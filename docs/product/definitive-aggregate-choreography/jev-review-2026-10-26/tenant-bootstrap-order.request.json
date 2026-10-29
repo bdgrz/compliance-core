@@ -1,0 +1,155 @@
+{
+  "model": "jev-1.14.0",
+  "state": {
+    "purpose": "Resolve the suspected ordering gap in tenant RBAC bootstrap, separating runtime correctness from whether the definitive target is explicit enough.",
+    "sourceExcerpt": "TenantRbacBootstrapReactor builds commands in this order: DefineRole(admin); DefineTeam(administrators); if ownerBecomesAdministrator, RegisterMember(owner); AssignTeamRole(administrators, adminRole); AssignPermission(TenantAccess); AssignPermission(TenantRbacManage); AssignPermission(ProgramManage); if ownerBecomesAdministrator, AssignTeamMember(administrators, ownerMember). The handler awaits commands serially. Assignment failure throws and prevents reactor checkpoint completion. Replayed role/team definition conflicts are tolerated; other effects retry identical source-derived identities.",
+    "selectedRows": [
+      {
+        "id": "S012",
+        "kind": "business_receiver",
+        "sourceOwner": "Tenant",
+        "logicalPrerequisiteFacts": [
+          "TenantRegistered"
+        ],
+        "receiverCommand": "DefineTeam",
+        "targetOwner": "Team",
+        "emittedSemanticFacts": [
+          "TeamDefined"
+        ],
+        "currentRegisteredRootTypes": [
+          "TenantRbacBootstrapReactor"
+        ],
+        "proofGate": "Use canonical built-in IDs and source-derived relationship command IDs. Register owner only when selected as first administrator; bind its registration episode. Administrative role link and core permissions precede activation-triggering assignment; guarded admin assignment retains its source-admission process.",
+        "recoveryContract": "Replayed bootstrap allows existing role/team-definition conflicts as explicitly coded; other effects retry identical deterministic identities. Never manufacture a missing permission or membership result."
+      },
+      {
+        "id": "S013",
+        "kind": "business_receiver",
+        "sourceOwner": "Tenant",
+        "logicalPrerequisiteFacts": [
+          "TenantRegistered"
+        ],
+        "receiverCommand": "RegisterMember",
+        "targetOwner": "Member",
+        "emittedSemanticFacts": [
+          "MemberRegistered"
+        ],
+        "currentRegisteredRootTypes": [
+          "TenantRbacBootstrapReactor"
+        ],
+        "proofGate": "Use canonical built-in IDs and source-derived relationship command IDs. Register owner only when selected as first administrator; bind its registration episode. Administrative role link and core permissions precede activation-triggering assignment; guarded admin assignment retains its source-admission process.",
+        "recoveryContract": "Replayed bootstrap allows existing role/team-definition conflicts as explicitly coded; other effects retry identical deterministic identities. Never manufacture a missing permission or membership result."
+      },
+      {
+        "id": "S014",
+        "kind": "business_receiver",
+        "sourceOwner": "Tenant",
+        "logicalPrerequisiteFacts": [
+          "TenantRegistered"
+        ],
+        "receiverCommand": "AssignTeamRole",
+        "targetOwner": "TeamRole",
+        "emittedSemanticFacts": [
+          "TeamRoleAssigned"
+        ],
+        "currentRegisteredRootTypes": [
+          "TenantRbacBootstrapReactor"
+        ],
+        "proofGate": "Use canonical built-in IDs and source-derived relationship command IDs. Register owner only when selected as first administrator; bind its registration episode. Administrative role link and core permissions precede activation-triggering assignment; guarded admin assignment retains its source-admission process.",
+        "recoveryContract": "Replayed bootstrap allows existing role/team-definition conflicts as explicitly coded; other effects retry identical deterministic identities. Never manufacture a missing permission or membership result."
+      },
+      {
+        "id": "S015",
+        "kind": "business_receiver",
+        "sourceOwner": "Tenant",
+        "logicalPrerequisiteFacts": [
+          "TenantRegistered"
+        ],
+        "receiverCommand": "AssignRolePermission",
+        "targetOwner": "RolePermission",
+        "emittedSemanticFacts": [
+          "RolePermissionAssigned"
+        ],
+        "currentRegisteredRootTypes": [
+          "TenantRbacBootstrapReactor"
+        ],
+        "proofGate": "Use canonical built-in IDs and source-derived relationship command IDs. Register owner only when selected as first administrator; bind its registration episode. Administrative role link and core permissions precede activation-triggering assignment; guarded admin assignment retains its source-admission process.",
+        "recoveryContract": "Replayed bootstrap allows existing role/team-definition conflicts as explicitly coded; other effects retry identical deterministic identities. Never manufacture a missing permission or membership result."
+      },
+      {
+        "id": "S016",
+        "kind": "business_receiver",
+        "sourceOwner": "Tenant",
+        "logicalPrerequisiteFacts": [
+          "TenantRegistered"
+        ],
+        "receiverCommand": "AssignTeamMember",
+        "targetOwner": "TeamMember",
+        "emittedSemanticFacts": [
+          "TeamMemberAssigned"
+        ],
+        "currentRegisteredRootTypes": [
+          "TenantRbacBootstrapReactor"
+        ],
+        "proofGate": "Use canonical built-in IDs and source-derived relationship command IDs. Register owner only when selected as first administrator; bind its registration episode. Administrative role link and core permissions precede activation-triggering assignment; guarded admin assignment retains its source-admission process.",
+        "recoveryContract": "Replayed bootstrap allows existing role/team-definition conflicts as explicitly coded; other effects retry identical deterministic identities. Never manufacture a missing permission or membership result."
+      }
+    ],
+    "physicalPlan": {
+      "type": "TenantRbacBootstrapReactor",
+      "workloadNameExpression": "\"TenantRbacBootstrap\"",
+      "workloadName": "TenantRbacBootstrap",
+      "scope": "Global",
+      "sourceEvents": [
+        "TenantRegistered"
+      ],
+      "source": {
+        "path": "src/Compliance.Core/Features/AccessControl/TenantRbacBootstrapReactor.cs",
+        "sha256": "63c50627f2de825bc2d66e3cfcb4756d9b5178902c3817b5dde3be62dafd3a52"
+      },
+      "registrationSource": {
+        "path": "src/Compliance.Core/ComplianceServiceCollectionExtensions.cs",
+        "sha256": "1290515b19e9a1cec369cf485c6ccca221b2fdf5f3b847e83abcf92bf59820ca"
+      },
+      "registrationLine": 1750,
+      "exactRegistrationExpression": ".AddReactor<TenantRbacBootstrapReactor>(\"TenantRbacBootstrap\", WorkloadScope.Global)",
+      "selectedEdgeIds": [],
+      "supplementalEdgeIds": [
+        "S011",
+        "S012",
+        "S013",
+        "S014",
+        "S015",
+        "S016"
+      ]
+    }
+  },
+  "questions": {
+    "flow": {
+      "type": "choice",
+      "instructions": "Which conclusion best fits this bootstrap flow and its approved target rows?",
+      "criteria": {
+        "runtime_and_target_sound": "The separate owner commands preserve authority; serial order makes TeamRole and all required admin permissions durable before the activation-triggering TeamMember assignment, and assignment occurs only when the owner is an administrator.",
+        "runtime_sound_target_under_specified": "The described runtime order is sound, but the target rows/physical plan do not explicitly encode the required command ordering and ownerBecomesAdministrator conditional, so target conformance is not decidable from the catalog alone.",
+        "runtime_flow_defect": "Even with the supplied serial order, the flow can activate before prerequisites, violate an owner invariant, or lose retry/recovery correctness.",
+        "evidence_insufficient": "The excerpt does not establish whether the target and runtime preserve the required authorization and activation semantics."
+      }
+    },
+    "target_order_explicit": {
+      "type": "noul",
+      "instructions": "Do the selected S012-S016 choreography rows explicitly encode the exact ordering and conditional branch needed for tenant activation safety?",
+      "criteria": {
+        "true": "The target states dependencies that require role definition/link and all admin permissions before TeamMember assignment, and states the assignment condition.",
+        "false": "The target only contains shared prose or edge membership and leaves the exact sequence/conditional assignment implicit."
+      }
+    },
+    "sequence_sufficient": {
+      "type": "noul",
+      "instructions": "Is the supplied serial runtime order sufficient to ensure the first administrator assignment cannot trigger activation before its required role link and core permissions are committed?",
+      "criteria": {
+        "true": "Each prior command completes durably before the awaited assignment command and failure prevents successful checkpoint completion.",
+        "false": "The order, durability, or failure handling permits activation before a required prerequisite."
+      }
+    }
+  }
+}

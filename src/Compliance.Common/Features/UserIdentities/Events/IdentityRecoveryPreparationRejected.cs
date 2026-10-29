@@ -1,0 +1,12 @@
+using Cntryl.Portia;
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.NativeOperations.Models;
+using Bdgrz.Compliance.Features.Proofs.Models;
+using Bdgrz.Compliance.Features.UserIdentities.Contracts;
+namespace Bdgrz.Compliance.Features.UserIdentities.Events;
+
+/// <summary>A definite competing association rejected the preparation before acceptance. It fences delayed protection and acceptance.</summary>
+[Discriminator("bdgrz.identity-recovery.identity-recovery-preparation-rejected", 1)]
+public sealed record IdentityRecoveryPreparationRejected(EventStreamAddress Owner, long Revision, long Generation,
+    ImmutableContentRef Intent, ImmutableContentRef? SourceProofs, OperationProvenance Operation, Uuid ChallengeId,
+    ImmutableContentRef? FirstResponse, ImmutableContentRef? OperationResult) : DomainEvent, IIdentityRecoveryFact;

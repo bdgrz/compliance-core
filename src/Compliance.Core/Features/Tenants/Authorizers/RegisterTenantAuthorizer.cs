@@ -1,0 +1,52 @@
+using Cntryl.Portia;
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.AccessControl.Processes;
+using Bdgrz.Compliance.Features.AccessControl.Rules;
+using Bdgrz.Compliance.Features.AuditPackages.Rules;
+using Bdgrz.Compliance.Features.Incidents.Rules;
+using Bdgrz.Compliance.Features.Operations.History;
+using Bdgrz.Compliance.Features.Operations.Models;
+using Bdgrz.Compliance.Features.Processes.Processes;
+using Bdgrz.Compliance.Features.Programs.Readers;
+using Bdgrz.Compliance.Features.Providers.Rules;
+using Bdgrz.Compliance.Features.Remediation.Rules;
+using Bdgrz.Compliance.Features.Risks.Models;
+using Bdgrz.Compliance.Features.Tenants.Processes;
+using Bdgrz.Compliance.Features.Tenants.Services;
+using Bdgrz.Compliance.Features.UserIdentities.Services;
+using Bdgrz.Compliance.Features.AttestRecords.Commands;
+using Bdgrz.Compliance.Features.Examinations.Aggregates;
+using Bdgrz.Compliance.Features.MethodologyTemplates.Events;
+using Bdgrz.Compliance.Features.Tenants.Commands;
+using Bdgrz.Compliance.Features.UserIdentities.Readers;
+using Bdgrz.Compliance.Features.Work.Authorizers;
+namespace Bdgrz.Compliance.Features.Tenants.Authorizers;
+
+/// <summary>Verifies the creator before a self-service organization is registered.</summary>
+sealed class RegisterTenantAuthorizer(PlatformOperatorAuthority operators,
+    IEmailAddressDirectoryReader emails) : IRequestAuthorizer<RegisterTenant>
+{
+    public async ValueTask<Result> AuthorizeAsync(IRequestContext<RegisterTenant> context,
+        CancellationToken ct)
+    {
+        if (!UserIdentityClaims.TryGetBdgrzSubject(context.Actor, out var userId))
+            return Result.Failure(new RequestError(RequestErrorKind.Unauthorized,
+                "Organization creation requires a Bdgrz user identity."));
+
+        // Local developer authentication retains legacy registration for existing fixtures.
+        if (operators.DeveloperAuthentication)
+            return Result.Success;
+
+        string? cursor = null;
+        do
+        {
+            var page = await emails.ListAsync(userId, 50, cursor, ct).ConfigureAwait(false);
+            if (page.Items.Any(address => address.UserId == userId && address.Verified))
+                return Result.Success;
+            cursor = page.NextCursor;
+        } while (cursor is not null);
+
+        return Result.Failure(new RequestError(RequestErrorKind.Forbidden,
+            "Verify an email address you own before creating an organization."));
+    }
+}

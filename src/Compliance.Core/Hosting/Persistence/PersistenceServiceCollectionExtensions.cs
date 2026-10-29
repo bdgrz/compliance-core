@@ -1,27 +1,36 @@
-using Bdgrz.Compliance.Features.Programs;
-using Bdgrz.Compliance.Features.Evidence;
-using Bdgrz.Compliance.Features.Content;
-using Bdgrz.Compliance.Features.AuditPopulations;
-using Bdgrz.Compliance.Features.Work;
-using Bdgrz.Compliance.Features.UserIdentities;
-using Bdgrz.Compliance.Features.SourceFacts;
-using Bdgrz.Compliance.Features.Providers;
-using Bdgrz.Compliance.Features.AccessControl;
-using Bdgrz.Compliance.Features.Applications;
-using Bdgrz.Compliance.Features.PolicyDistribution;
-using Bdgrz.Compliance.Features.AdvisorCollaboration;
-using Bdgrz.Compliance.Features.Evaluations;
-using Bdgrz.Compliance.Features.Examinations;
-using Bdgrz.Compliance.Features.AccessReviews;
-using Bdgrz.Compliance.Features.AuditorRequests;
-using Bdgrz.Compliance.Features.Operations;
-using Bdgrz.Compliance.Features.AuditPackages;
-using Bdgrz.Compliance.Features.ControlMappings;
-using Bdgrz.Compliance.Features.SourceUse;
 using Cntryl.Fitz;
 using Cntryl.Portia;
 using Microsoft.Extensions.DependencyInjection;
-
+using Bdgrz.Compliance.Features.AuditPackages.Rules;
+using Bdgrz.Compliance.Features.Content.Contracts;
+using Bdgrz.Compliance.Features.Evaluations.Rules;
+using Bdgrz.Compliance.Features.Evidence.Models;
+using Bdgrz.Compliance.Features.NamedRecords.Contracts;
+using Bdgrz.Compliance.Features.Processes.Processes;
+using Bdgrz.Compliance.Features.Programs.Readers;
+using Bdgrz.Compliance.Features.Providers.Models;
+using Bdgrz.Compliance.Features.SourceFacts.Contracts;
+using Bdgrz.Compliance.Features.Tenants.Processes;
+using Bdgrz.Compliance.Features.AccessControl.Readers;
+using Bdgrz.Compliance.Features.AccessReviews.Readers;
+using Bdgrz.Compliance.Features.AdvisorCollaboration.Readers;
+using Bdgrz.Compliance.Features.Applications.Readers;
+using Bdgrz.Compliance.Features.AuditPackages.Readers;
+using Bdgrz.Compliance.Features.AuditPopulations.Readers;
+using Bdgrz.Compliance.Features.AuditorRequests.Readers;
+using Bdgrz.Compliance.Features.ControlMappings.Readers;
+using Bdgrz.Compliance.Features.Evaluations.Readers;
+using Bdgrz.Compliance.Features.Evidence.Readers;
+using Bdgrz.Compliance.Features.Examinations.Aggregates;
+using Bdgrz.Compliance.Features.Examinations.Readers;
+using Bdgrz.Compliance.Features.Operations.Readers;
+using Bdgrz.Compliance.Features.PolicyDistribution.Readers;
+using Bdgrz.Compliance.Features.Providers.Projections;
+using Bdgrz.Compliance.Features.Providers.Readers;
+using Bdgrz.Compliance.Features.SourceUse.Readers;
+using Bdgrz.Compliance.Features.UserIdentities.Readers;
+using Bdgrz.Compliance.Features.Work.Readers;
+using Bdgrz.Compliance.Features.Workforce.Readers;
 namespace Bdgrz.Compliance.Hosting.Persistence;
 
 static class PersistenceServiceCollectionExtensions
@@ -90,7 +99,7 @@ static class PersistenceServiceCollectionExtensions
         Decorate<IAggregateReader>(services, (provider, inner) =>
             new ProductClientServiceAggregateReader(inner, provider.GetRequiredService<IDomainEventReader>()));
         Decorate<IAggregateReader>(services, (provider, inner) =>
-            new Bdgrz.Compliance.Features.Workforce.PersonAggregateReader(inner, provider.GetRequiredService<IDomainEventReader>()));
+            new Bdgrz.Compliance.Features.Workforce.Readers.PersonAggregateReader(inner, provider.GetRequiredService<IDomainEventReader>()));
         Decorate<IRequestBus>(services, (_, inner) => new PersistenceValidationRequestBus(inner));
     }
 

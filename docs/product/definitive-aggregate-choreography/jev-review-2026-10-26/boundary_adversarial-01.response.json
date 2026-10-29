@@ -1,0 +1,124 @@
+{
+  "httpStatus": 200,
+  "response": {
+    "model": "jev-1.14.0",
+    "answers": {
+      "item_0": {
+        "type": "choice",
+        "choice": "selected_boundary_supported",
+        "confidence": 0.38,
+        "probabilities": {
+          "selected_boundary_supported": 0.59,
+          "boundary_should_change": 0.15,
+          "evidence_insufficient": 0.26
+        }
+      },
+      "item_0_evidence": {
+        "type": "noul",
+        "noul": 0.44
+      },
+      "item_1": {
+        "type": "choice",
+        "choice": "selected_boundary_supported",
+        "confidence": 0.72,
+        "probabilities": {
+          "selected_boundary_supported": 0.81,
+          "boundary_should_change": 0.06,
+          "evidence_insufficient": 0.13
+        }
+      },
+      "item_1_evidence": {
+        "type": "noul",
+        "noul": 0.58
+      },
+      "item_2": {
+        "type": "choice",
+        "choice": "evidence_insufficient",
+        "confidence": 0.14,
+        "probabilities": {
+          "selected_boundary_supported": 0.35,
+          "boundary_should_change": 0.22,
+          "evidence_insufficient": 0.43
+        }
+      },
+      "item_2_evidence": {
+        "type": "noul",
+        "noul": 0.36
+      },
+      "item_3": {
+        "type": "choice",
+        "choice": "evidence_insufficient",
+        "confidence": 0.14,
+        "probabilities": {
+          "selected_boundary_supported": 0.26,
+          "boundary_should_change": 0.31,
+          "evidence_insufficient": 0.43
+        }
+      },
+      "item_3_evidence": {
+        "type": "noul",
+        "noul": 0.32
+      },
+      "item_4": {
+        "type": "choice",
+        "choice": "selected_boundary_supported",
+        "confidence": 0.13,
+        "probabilities": {
+          "selected_boundary_supported": 0.42,
+          "boundary_should_change": 0.19,
+          "evidence_insufficient": 0.39
+        }
+      },
+      "item_4_evidence": {
+        "type": "noul",
+        "noul": 0.33
+      },
+      "item_5": {
+        "type": "choice",
+        "choice": "selected_boundary_supported",
+        "confidence": 0.19,
+        "probabilities": {
+          "selected_boundary_supported": 0.45999999999999996,
+          "boundary_should_change": 0.19,
+          "evidence_insufficient": 0.35
+        }
+      },
+      "item_5_evidence": {
+        "type": "noul",
+        "noul": 0.35
+      },
+      "item_6": {
+        "type": "choice",
+        "choice": "selected_boundary_supported",
+        "confidence": 0.45,
+        "probabilities": {
+          "selected_boundary_supported": 0.63,
+          "boundary_should_change": 0.15,
+          "evidence_insufficient": 0.22
+        }
+      },
+      "item_6_evidence": {
+        "type": "noul",
+        "noul": 0.51
+      },
+      "item_7": {
+        "type": "choice",
+        "choice": "selected_boundary_supported",
+        "confidence": 0.4,
+        "probabilities": {
+          "selected_boundary_supported": 0.6,
+          "boundary_should_change": 0.16,
+          "evidence_insufficient": 0.24
+        }
+      },
+      "item_7_evidence": {
+        "type": "noul",
+        "noul": 0.46
+      }
+    },
+    "usage": {
+      "input_tokens": 9312,
+      "output_tokens": 572
+    }
+  }
+}

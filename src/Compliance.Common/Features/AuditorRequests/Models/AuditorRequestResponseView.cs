@@ -1,0 +1,6 @@
+using Cntryl.Portia;
+using Bdgrz.Compliance.Features.AttestRecords.Commands;
+namespace Bdgrz.Compliance.Features.AuditorRequests.Models;
+
+/// <summary>Submitted responses and governed delivery/disposition receipts.</summary>
+public sealed record AuditorRequestResponseView(Uuid TenantId, Uuid ProgramId, Uuid AuditorRequestResponseId, Uuid AuditorRequestId, string Status, DateTimeOffset SubmittedAt, Uuid? ArtifactId);

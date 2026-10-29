@@ -1,5 +1,5 @@
 {
-  "scope": "SELECTED physical target: retain exact existing65/28 plus planned Artifact root1/process1; reuse existing worker activation/common drivers. No implementation authorized.",
+  "scope": "SELECTED physical target: retain exact existing65/28 plus planned Artifact and ProgramRollover process roots; reuse existing worker activation/common drivers. No implementation authorized.",
   "reactors": [
     {
       "type": "TenantRegistrationReactor",
@@ -209,7 +209,68 @@
         "S014",
         "S015",
         "S016"
-      ]
+      ],
+      "orderedEffects": {
+        "group": "TenantRbacBootstrap",
+        "sourceEvent": "TenantRegistered",
+        "execution": "One reactor processes the command list serially; each send completes before the next command is sent.",
+        "condition": "ownerBecomesAdministrator = CreatorIsAdministrator OR FirstAdministratorEmail is null.",
+        "orderedEffects": [
+          {
+            "order": 1,
+            "command": "DefineRole",
+            "targetOwner": "Role",
+            "condition": "always",
+            "intent": "Define the canonical tenant-administrator role."
+          },
+          {
+            "order": 2,
+            "command": "DefineTeam",
+            "targetOwner": "Team",
+            "condition": "always",
+            "intent": "Define the canonical administrators team."
+          },
+          {
+            "order": 3,
+            "command": "RegisterMember",
+            "targetOwner": "Member",
+            "condition": "ownerBecomesAdministrator",
+            "intent": "Register the tenant owner for the administrator episode."
+          },
+          {
+            "order": 4,
+            "command": "AssignTeamRole",
+            "targetOwner": "TeamRole",
+            "condition": "always",
+            "intent": "Link the administrators team to the administrator role."
+          },
+          {
+            "order": 5,
+            "command": "AssignRolePermission",
+            "targetOwner": "RolePermission",
+            "condition": "always",
+            "requiredPermissionEffects": [
+              "TenantAccess",
+              "TenantRbacManage",
+              "ProgramManage"
+            ],
+            "intent": "Commit all three core administrator permissions."
+          },
+          {
+            "order": 6,
+            "command": "AssignTeamMember",
+            "targetOwner": "TeamMember",
+            "condition": "ownerBecomesAdministrator",
+            "intent": "Assign the exact owner member to the administrators team; TeamMemberAssigned can trigger tenant activation."
+          }
+        ],
+        "activationFence": "The order-6 TeamMemberAssigned effect is forbidden until the order-4 TeamRoleAssigned fact and all three order-5 RolePermissionAssigned facts have committed for this same tenant registration and administrator role.",
+        "failureBehavior": "Any prerequisite send failure stops before activation assignment; activation assignment failure fails the reactor invocation and prevents its checkpoint from completing. Replays reuse the same source-derived command identities.",
+        "sourceEvidence": {
+          "path": "src/Compliance.Core/Features/AccessControl/TenantRbacBootstrapReactor.cs",
+          "sha256": "63c50627f2de825bc2d66e3cfcb4756d9b5178902c3817b5dde3be62dafd3a52"
+        }
+      }
     },
     {
       "type": "TenantSelfServiceActivationReactor",
@@ -1615,7 +1676,7 @@
       ]
     }
   ],
-  "processDefinitionTypes": 28,
+  "processDefinitionTypes": 30,
   "registeredDefinitionTypes": [
     "AuditPackageBuildProcess",
     "AuditPackageDeliveryRecordingProcess",
@@ -1799,16 +1860,22 @@
     ],
     "authority": "Names, ownership, invariants and causal proof requirements are selected here. Native field/wire migration and runtime implementation remain separately verifiable work."
   },
-  "implementationStatus": "Exact current registrations are evidence, not conformance qualification; planned rows are absent.",
+  "implementationStatus": "Target definition only; process/reactor implementation and runtime conformance are not asserted.",
   "selectedCounts": {
     "existingRegisteredReactors": 65,
     "plannedAdditionalArtifactRootStarters": 1,
-    "selectedTotalPhysicalRootReactorsAfterImplementation": 66,
+    "selectedTotalPhysicalRootReactorsAfterImplementation": 67,
     "existingRegisteredProcessDefinitions": 28,
     "plannedAdditionalArtifactDefinitions": 1,
-    "selectedTotalProcessDefinitionsAfterImplementation": 29,
+    "selectedTotalProcessDefinitionsAfterImplementation": 30,
     "additionalProcessDriverTypes": 0,
-    "additionalHostedWorkerTypes": 0
+    "additionalHostedWorkerTypes": 0,
+    "existingProcessDefinitions": 28,
+    "plannedProcessDefinitions": 2,
+    "intendedProcessDefinitions": 30,
+    "plannedAdditionalRootReactors": 1,
+    "plannedAdditionalProgramRolloverRootStarters": 1,
+    "plannedAdditionalProgramRolloverDefinitions": 1
   },
   "plannedArtifactRootStarter": {
     "role": "one committed EvidenceArtifactDownloadRequested@v1 root subscriber",
@@ -1880,13 +1947,95 @@
     },
     "implementationStatus": "UNIMPLEMENTED_REQUIRED_TARGET; definition/receivers/owner/content/DI/JSON/wire implementation required"
   },
-  "plannedAdditionalRegistration": {
-    "status": "SELECTED_UNIMPLEMENTED",
-    "process": "ArtifactDownloadProcess",
-    "rootEvent": "EvidenceArtifactDownloadRequested@v1",
-    "rootType": "ArtifactDownloadRequestedReactor",
-    "workloadName": "ArtifactDownloadRequestedV1",
-    "noPerStageClassExpansion": true,
-    "decisionId": "ARTIFACT_DOWNLOAD"
+  "plannedAdditionalRegistration": [
+    {
+      "reactor": "ProgramRolloverExecutionClaimedReactor",
+      "sourceEvents": [
+        "ProgramRolloverExecutionClaimed"
+      ],
+      "scope": "PerTenant",
+      "process": "ProgramRolloverExecutionProcess",
+      "status": "PLANNED_TARGET_ONLY"
+    }
+  ],
+  "plannedProcessDefinitionTypes": [
+    "ArtifactDownloadProcess",
+    "ProgramRolloverExecutionProcess"
+  ],
+  "plannedProcessStarters": [
+    "ArtifactDownloadRequestedReactor",
+    "ProgramRolloverExecutionClaimedReactor"
+  ],
+  "programRolloverExecutionProcess": {
+    "process": "ProgramRolloverExecutionProcess",
+    "rootSourceEvents": [
+      "ProgramRolloverExecutionClaimed"
+    ],
+    "ordered": true,
+    "stages": [
+      {
+        "stage": "await_type_i_entry_approval",
+        "receivers": [],
+        "rule": "Require actual current TypeIEntryDecisionRecorded for this tenant/program with outcome approve or approve_with_exceptions before creating the successor Type I examination. This decision remains owned by ReadinessAssessment."
+      },
+      {
+        "stage": "await_successor_examination",
+        "receivers": [],
+        "rule": "A personal authorized actor creates exact NextExaminationId through CreateExaminationEngagement under ExaminationEngagement rules. Verify actual ExaminationEngagementOpened, exact tenant/program/examination identity and approved next-period dates; examination owner retains its own lifecycle."
+      },
+      {
+        "stage": "await_frozen_type_i_sources",
+        "receivers": [],
+        "rule": "Wait for actual TypeIBaselineFrozen on exact NextExaminationId; capture exact baseline ID/hash and complete source manifest. Require actual AuditOutcomeRecorded with status recorded, scope type_i, source kind auditor, same examination and exact baseline ID/hash. Require actual SystemDescriptionApproved and SystemDescriptionBound to same examination, type_i_baseline purpose, exact baseline ID and a system-description version present in the frozen baseline. These facts remain owned by their existing aggregates."
+      },
+      {
+        "stage": "await_successor_plan_proposal",
+        "receivers": [],
+        "rule": "A personal authorized actor authors complete TypeIIPlanContent under TypeIIPlan source validation, with exact NextExaminationId, exact Type I baseline/outcome/system-description IDs/hashes, NextTypeIIPlanId and approved period dates. Freeze actual proposal version/content hash; do not invent missing sources, controls, findings or required changes."
+      },
+      {
+        "stage": "validate_exhaustive_carry_forward_mapping",
+        "receivers": [],
+        "rule": "Every pinned rollover record and commitment has exactly one explicit plan destination or justified nonrepresentation consistent with approved disposition; preserve exact source/version/hash; reject omissions, duplicates, mismatches and unsupported conversions; freeze complete mapping manifest/hash privately."
+      },
+      {
+        "stage": "await_plan_review",
+        "receivers": [],
+        "rule": "Wait for actual TypeIIPlanReviewed on exact current frozen version/hash. Reviewer differs from proposer. approve advances; changes_requested loops through human revision, target-owner source validation and a newly frozen exhaustive mapping. reject terminates as failed."
+      },
+      {
+        "stage": "await_independent_executive_approval",
+        "receivers": [],
+        "rule": "Wait for actual TypeIIPlanApproved on same exact current version/hash whose review outcome is approve; approver differs from proposer and reviewer and satisfies owner rules. Approved plan is immutable."
+      },
+      {
+        "stage": "accept_period_opening",
+        "receivers": [
+          "StartTypeIIObservationPeriod"
+        ],
+        "rule": "Only after actual approved plan proof, submit exact NextPeriodId, NextTypeIIPlanId, NextExaminationId and dates from the claimed rollover. Verify TypeIIPeriodOpeningAccepted and original 202; accepted is pending."
+      },
+      {
+        "stage": "complete",
+        "receivers": [],
+        "rule": "Complete only on actual ObservationPeriodStarted chain linked to immutable opening intent, operation root/result, exact rollover claim and IDs, actual examination open fact, Type I entry decision, frozen baseline/hash/source manifest, auditor outcome/hash, approved+bound description fact/version, final plan proposal/revision/review/approval facts and hashes, exhaustive mapping manifest/hash, period/range and calendar authorization ID/generation. Store verified proof references privately; never emit ProgramNextPeriodCreated."
+      }
+    ],
+    "abort": [
+      "RejectTypeIIPeriodOpening"
+    ]
+  },
+  "plannedProgramRolloverRootStarter": {
+    "role": "one committed ProgramRolloverExecutionClaimed root subscriber",
+    "plannedTypeName": "ProgramRolloverExecutionClaimedReactor",
+    "plannedWorkloadName": "ProgramRolloverExecutionClaimedV1",
+    "scope": "WorkloadScope.PerTenant",
+    "existingRegistration": false,
+    "eventPattern": "exact tenant program-rollovers area",
+    "authority": "Verify actual latest approval and claimed version/hash/approval tuple; persist exact ProgramRolloverExecutionProcess state before advancing checkpoint. Process observes human-authored plan/review/approval facts and exact period terminal proof.",
+    "processDefinition": "ProgramRolloverExecutionProcess",
+    "recovery": "Existing ProcessRootReaction + ProcessDriver + IProcessRecordStore and worker ProcessSweep; no per-stage subscriber classes.",
+    "implementationStatus": "UNIMPLEMENTED_REQUIRED_TARGET",
+    "identityCompatibility": "New workload and process name; existing process identities unchanged."
   }
 }

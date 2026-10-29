@@ -1,0 +1,2400 @@
+[
+  {
+    "id": "D01-01",
+    "doc": "m0-d01-program-targets.md",
+    "kind": "lifecycle",
+    "rule": "A program keeps one identity through its readiness, Type I, and Type II stages; the stages are planned and do not assert that an examination or operating period occurred, and an engagement and its outcome are separate records from the program.",
+    "disposition": "owner",
+    "owner": "ComplianceProgram",
+    "evidence": "reassigned 2026-10-29 while drafting decides clause: The separate engagement/outcome records are other owners; the program only guarantees one stable identity across stages."
+  },
+  {
+    "id": "D01-02",
+    "doc": "m0-d01-program-targets.md",
+    "kind": "lifecycle",
+    "rule": "Program target dates are optional (nullable) values that carry author and revision attribution; a target date is never promoted to an auditor-confirmed date by passage of time, status display, or an imported note.",
+    "disposition": "owner",
+    "owner": "ComplianceProgram",
+    "evidence": "Jev choice 1.00"
+  },
+  {
+    "id": "D01-03",
+    "doc": "m0-d01-program-targets.md",
+    "kind": "approval",
+    "rule": "An auditor-confirmed engagement date is a distinct attributed value that requires an evidence reference and an attributable engagement-owned decision or auditor communication; it is never represented as a status flag on a target date.",
+    "disposition": "owner",
+    "owner": "ExaminationEngagement",
+    "evidence": "src/Compliance.Core/Features/Examinations/Aggregates/ExaminationEngagement.cs",
+    "note": "Auditor-confirmed date with evidence reference"
+  },
+  {
+    "id": "D01-04",
+    "doc": "m0-d01-program-targets.md",
+    "kind": "immutability",
+    "rule": "Revising a program plan preserves earlier target dates and their author attribution rather than overwriting them.",
+    "disposition": "owner",
+    "owner": "ComplianceProgram",
+    "evidence": "src/Compliance.Core/Features/Programs/Aggregates/ComplianceProgram.cs",
+    "note": "Target dates preserved with attribution"
+  },
+  {
+    "id": "D01-05",
+    "doc": "m0-d01-program-targets.md",
+    "kind": "cardinality",
+    "rule": "A system boundary's Trust Services categories form a set of 1 to 5 distinct values drawn from security, availability, confidentiality, processing_integrity, and privacy, and the set must always contain security; boundary draft creation, revision, and successor proposal reject any other shape.",
+    "disposition": "owner",
+    "owner": "SystemBoundary",
+    "evidence": "Jev choice 0.99"
+  },
+  {
+    "id": "D01-06",
+    "doc": "m0-d01-program-targets.md",
+    "kind": "consistency",
+    "rule": "Approving a system boundary draft re-validates it, so a draft recorded before the security rule existed cannot be approved without security, while earlier approved boundary versions remain readable history.",
+    "disposition": "owner",
+    "owner": "SystemBoundary",
+    "evidence": "Jev choice 1.00"
+  },
+  {
+    "id": "D01-07",
+    "doc": "m0-d01-program-targets.md",
+    "kind": "lifecycle",
+    "rule": "Optional Trust Services categories are never inferred from a program name or target path; they must be recorded explicitly on the boundary, and if a selected category proves not applicable management revises the boundary through an attributed successor version.",
+    "disposition": "owner",
+    "owner": "SystemBoundary",
+    "evidence": "Jev choice 0.95"
+  },
+  {
+    "id": "D01-08",
+    "doc": "m0-d01-program-targets.md",
+    "kind": "consistency",
+    "rule": "When Privacy is selected on a boundary, no readiness result, audit package, or export may claim personal-information lifecycle support until the separate Privacy lifecycle backlog is delivered; Privacy criteria may meanwhile be mapped to ordinary controls.",
+    "disposition": "product_policy",
+    "owner": null,
+    "evidence": "no write rule",
+    "note": "Scope limit on claims about Privacy support; no write rule"
+  },
+  {
+    "id": "D01-09",
+    "doc": "m0-d01-program-targets.md",
+    "kind": "consistency",
+    "rule": "A system boundary may carry a typed, owned, unresolved service reference before the client service register exists, but it cannot claim a governed service identity from an arbitrary UUID; the governed service and its exact boundary relationship must be validated later.",
+    "disposition": "owner",
+    "owner": "SystemBoundary",
+    "evidence": "src/Compliance.Core/Features/Boundaries/Aggregates/SystemBoundary.cs",
+    "note": "Unresolved service reference handling"
+  },
+  {
+    "id": "D01-10",
+    "doc": "m0-d01-program-targets.md",
+    "kind": "consistency",
+    "rule": "Milestone due dates for R1, R2, and T1 are never derived from a program target and stay undated until an agreed plan exists.",
+    "disposition": "projection",
+    "owner": null,
+    "evidence": "reassigned 2026-10-29 while drafting decides clause: Milestone due dates are derived/displayed values; the program only guarantees it never supplies a derived due date."
+  },
+  {
+    "id": "D01-11",
+    "doc": "m0-d01-program-targets.md",
+    "kind": "consistency",
+    "rule": "A missing audit firm, date, or service is recorded as unknown, never as a placeholder value.",
+    "disposition": "owner",
+    "owner": "ExaminationEngagement",
+    "evidence": "src/Compliance.Core/Features/Examinations/Aggregates/ExaminationEngagement.cs",
+    "note": "Unknown-vs-placeholder is content validation on engagement/prior audit content"
+  },
+  {
+    "id": "D02-01",
+    "doc": "m0-d02-criteria-content.md",
+    "kind": "immutability",
+    "rule": "A criteria catalog edition is platform-level and immutable once published; a new edition is added side by side as a new immutable edition and an existing edition is never mutated.",
+    "disposition": "open",
+    "owner": null,
+    "evidence": "Jev new_criteria_edition_owner 0.62 vs platform static content 0.35 (confidence 0.43)",
+    "note": "Catalog editions are static platform data (PlatformCriteriaCatalog)"
+  },
+  {
+    "id": "D02-02",
+    "doc": "m0-d02-criteria-content.md",
+    "kind": "immutability",
+    "rule": "A program references a criteria catalog edition by exact edition identifier, and existing programs and engagements keep the edition they selected; moving to a newer edition is an explicit, attributed remapping.",
+    "disposition": "owner",
+    "owner": "ComplianceProgram",
+    "evidence": "Jev choice 0.77"
+  },
+  {
+    "id": "D02-03",
+    "doc": "m0-d02-criteria-content.md",
+    "kind": "uniqueness",
+    "rule": "A criterion identifier is unique within its criteria catalog edition.",
+    "disposition": "product_policy",
+    "owner": null,
+    "evidence": "no write rule",
+    "note": "Criterion id uniqueness within static catalog edition"
+  },
+  {
+    "id": "D02-04",
+    "doc": "m0-d02-criteria-content.md",
+    "kind": "cardinality",
+    "rule": "A point of focus belongs to exactly one parent criterion within the same edition, and points of focus are first-class catalog entries that can be mapped to controls.",
+    "disposition": "product_policy",
+    "owner": null,
+    "evidence": "no write rule",
+    "note": "Catalog is static platform data (PlatformCriteriaCatalog), not event-sourced"
+  },
+  {
+    "id": "D02-05",
+    "doc": "m0-d02-criteria-content.md",
+    "kind": "consistency",
+    "rule": "The platform catalog contains only criterion identifiers, locally assigned point-of-focus identifiers, edition metadata, and original product-written summaries, and never licensed AICPA text.",
+    "disposition": "process",
+    "owner": null,
+    "evidence": "reassigned 2026-10-29 while drafting decides clause: Platform catalog content constraint (only identifiers, point-of-focus ids, edition metadata, original summaries) is a catalog content/ingestion rule, not enforced by this overlay owner."
+  },
+  {
+    "id": "D02-06",
+    "doc": "m0-d02-criteria-content.md",
+    "kind": "consistency",
+    "rule": "Licensed criteria text lives only in a tenant- or template-owned text overlay that records edition, identifier, supplier, license reference, and usage flags; it is never stored in platform-level content, and license restrictions are expressed as usage flags.",
+    "disposition": "owner",
+    "owner": "CriteriaTextOverlay",
+    "evidence": "Jev choice 1.00"
+  },
+  {
+    "id": "D02-07",
+    "doc": "m0-d02-criteria-content.md",
+    "kind": "consistency",
+    "rule": "A control mapping references a criterion by edition identifier and criterion identifier, never by criterion text.",
+    "disposition": "owner",
+    "owner": "ControlCriterionMapping",
+    "evidence": "Jev choice 0.99"
+  },
+  {
+    "id": "D03-01",
+    "doc": "m0-d03-roles-and-separation-of-duties.md",
+    "kind": "cardinality",
+    "rule": "The built-in role catalog is fixed to Org Admin, Compliance Lead, Contributor, Viewer, Advisor, and Attest; custom roles are not supported, and Contributors may stage and preview imports but not accept them.",
+    "disposition": "authorization",
+    "owner": null,
+    "evidence": "reassigned 2026-10-29 while drafting decides clause: Contributors staging but not accepting imports is a permission matrix rule, not Role lifecycle"
+  },
+  {
+    "id": "D03-02",
+    "doc": "m0-d03-roles-and-separation-of-duties.md",
+    "kind": "consistency",
+    "rule": "Reviewer, management approver, and control owner duties are Responsibility assignments, not roles; roles define what a member may do and responsibilities define what they are expected to do.",
+    "disposition": "product_policy",
+    "owner": null,
+    "evidence": "no write rule",
+    "note": "Role vs responsibility modelling principle"
+  },
+  {
+    "id": "D03-03",
+    "doc": "m0-d03-roles-and-separation-of-duties.md",
+    "kind": "consistency",
+    "rule": "A role grant applies to an organization, program, engagement, or deliberately shared resource, and a grant on a wider scope covers the narrower scopes inside it.",
+    "disposition": "authorization",
+    "owner": null,
+    "evidence": "reassigned 2026-10-29 while drafting decides clause: Wider-scope-covers-narrower is an evaluation-time authorizer/projection rule (AccessGrantPermissionAuthorizer), not a write-time invariant of the grant; the grant only guarantees a single immutable scope."
+  },
+  {
+    "id": "D03-04",
+    "doc": "m0-d03-roles-and-separation-of-duties.md",
+    "kind": "approval",
+    "rule": "Advisor and Attest roles are granted only through assignment to an accepted ServiceEngagement and never as a standing organization-wide grant.",
+    "disposition": "owner",
+    "owner": "ServiceEngagementIndependence",
+    "evidence": "Jev choice 0.86"
+  },
+  {
+    "id": "D03-05",
+    "doc": "m0-d03-roles-and-separation-of-duties.md",
+    "kind": "approval",
+    "rule": "Self-review and self-approval are blocked by default; the same member cannot review or approve a record they authored or own.",
+    "disposition": "owner",
+    "owner": "SeparationOfDutiesWaiver",
+    "evidence": "Jev choice 0.94"
+  },
+  {
+    "id": "D03-06",
+    "doc": "m0-d03-roles-and-separation-of-duties.md",
+    "kind": "expiry",
+    "rule": "An Org Admin may record a separation-of-duties waiver that is time-bound, reason-required, and scoped to a record type, recording scope, beneficiary, approver, rationale, and expiry.",
+    "disposition": "owner",
+    "owner": "SeparationOfDutiesWaiver",
+    "evidence": "Jev choice 1.00"
+  },
+  {
+    "id": "D03-07",
+    "doc": "m0-d03-roles-and-separation-of-duties.md",
+    "kind": "approval",
+    "rule": "A separation-of-duties waiver must be approved by a second person who is an Org Admin and is not the member the waiver benefits; a sole Org Admin cannot waive their own conflict.",
+    "disposition": "owner",
+    "owner": "SeparationOfDutiesWaiver",
+    "evidence": "Jev choice 1.00"
+  },
+  {
+    "id": "D03-08",
+    "doc": "m0-d03-roles-and-separation-of-duties.md",
+    "kind": "consistency",
+    "rule": "Every action taken under a separation-of-duties waiver is flagged in readiness results and audit exports.",
+    "disposition": "projection",
+    "owner": null,
+    "evidence": "reassigned 2026-10-29 while drafting decides clause: flagging waiver-backed actions in readiness and audit exports is a read-side rule"
+  },
+  {
+    "id": "D03-09",
+    "doc": "m0-d03-roles-and-separation-of-duties.md",
+    "kind": "cardinality",
+    "rule": "There is exactly one workspace per organization; programs and engagements provide sub-scoping.",
+    "disposition": "owner",
+    "owner": "Tenant",
+    "evidence": "Jev choice 0.95"
+  },
+  {
+    "id": "D03-10",
+    "doc": "m0-d03-roles-and-separation-of-duties.md",
+    "kind": "approval",
+    "rule": "An invitation is recorded by the platform and is accepted only when the invitee signs in through a trusted issuer with the invited, verified email address.",
+    "disposition": "owner",
+    "owner": "TenantInvitation",
+    "evidence": "Jev choice 0.77"
+  },
+  {
+    "id": "D03-11",
+    "doc": "m0-d03-roles-and-separation-of-duties.md",
+    "kind": "consistency",
+    "rule": "Identity-provider group mapping to teams or grants is not supported in the first release; teams are platform-managed only.",
+    "disposition": "product_policy",
+    "owner": null,
+    "evidence": "no write rule",
+    "note": "Scope statement: no IdP group mapping in first release"
+  },
+  {
+    "id": "D03-12",
+    "doc": "m0-d03-roles-and-separation-of-duties.md",
+    "kind": "consistency",
+    "rule": "A responsibility may be held by a workforce Person who never signs in; when their work is done outside the product a signed-in member records it on their behalf and the record attributes both the entering member and the performing person.",
+    "disposition": "product_policy",
+    "owner": null,
+    "evidence": "no write rule",
+    "note": "Attribution of on-behalf entry carried by each producing command; no single owner"
+  },
+  {
+    "id": "D03-13",
+    "doc": "m0-d03-roles-and-separation-of-duties.md",
+    "kind": "approval",
+    "rule": "A team may hold a responsibility but can never be the performer or approver of record.",
+    "disposition": "product_policy",
+    "owner": null,
+    "evidence": "no write rule",
+    "note": "Team cannot be performer/approver; enforced via personal-decision commands across owners"
+  },
+  {
+    "id": "D03-14",
+    "doc": "m0-d03-roles-and-separation-of-duties.md",
+    "kind": "approval",
+    "rule": "Firm staff hold Advisor or Attest only per engagement assignment, and a firm staff member may hold a client role only through an explicit membership grant, subject to independence walls.",
+    "disposition": "authorization",
+    "owner": null,
+    "evidence": "reassigned 2026-10-29 while drafting decides clause: Per-engagement assignment and client-role grant checks sit with engagement assignment/Member and independence evaluation, not duty designation itself.",
+    "note": "Per-engagement duty designation"
+  },
+  {
+    "id": "D03-15",
+    "doc": "m0-d03-roles-and-separation-of-duties.md",
+    "kind": "approval",
+    "rule": "Accepting or canceling an import requires the Compliance Lead or Org Admin role.",
+    "disposition": "authorization",
+    "owner": null,
+    "evidence": "authorization layer",
+    "note": "Role check on import accept/cancel is a permission, not aggregate state"
+  },
+  {
+    "id": "D04-01",
+    "doc": "m0-d04-readiness-material.md",
+    "kind": "consistency",
+    "rule": "Every imported row keeps its original source identifier as provenance separate from the product's own identity; a missing source identifier is recorded as source_identifier_absent and is never synthesized from row order.",
+    "disposition": "process",
+    "owner": null,
+    "evidence": "reassigned 2026-10-29 while drafting decides clause: Row-level import provenance may be owned by the import/reconcile step that admits the observation rather than the AuditObservation stream; confirm owner."
+  },
+  {
+    "id": "D04-02",
+    "doc": "m0-d04-readiness-material.md",
+    "kind": "consistency",
+    "rule": "An imported named owner matches a workforce person only by exact normalized email; a name-only or ambiguous match remains an unresolved_owner reference that a person must resolve.",
+    "disposition": "owner",
+    "owner": "ImportedOwnerResolution",
+    "evidence": "planned owner 2026-10-29",
+    "note": "Needs an import-owner resolution aggregate (unresolved_owner reference) - none exists"
+  },
+  {
+    "id": "D04-03",
+    "doc": "m0-d04-readiness-material.md",
+    "kind": "consistency",
+    "rule": "No platform member or workforce person is ever created from an import row.",
+    "disposition": "product_policy",
+    "owner": null,
+    "evidence": "no write rule",
+    "note": "Import accept never creates people/members; handler scope"
+  },
+  {
+    "id": "D04-04",
+    "doc": "m0-d04-readiness-material.md",
+    "kind": "consistency",
+    "rule": "Consultant-authored imported content keeps imported_from provenance (source file, row, stated author text) and is never attributed to a platform actor who did not act; the accepting member is the actor of the acceptance decision only.",
+    "disposition": "owner",
+    "owner": "AuditObservation",
+    "evidence": "Jev choice 0.73"
+  },
+  {
+    "id": "D04-05",
+    "doc": "m0-d04-readiness-material.md",
+    "kind": "consistency",
+    "rule": "Readiness records can be authored and maintained entirely within the product's owning workflows; import is never a prerequisite to using any feature.",
+    "disposition": "product_policy",
+    "owner": null,
+    "evidence": "no write rule",
+    "note": "Product principle: import never a prerequisite"
+  },
+  {
+    "id": "D05-01",
+    "doc": "m0-d05-application-inventory.md",
+    "kind": "consistency",
+    "rule": "The governed application inventory is authoritative for scope; external lists such as an IdP app catalog, spreadsheet, or SaaS-spend tool are only corroborating or discovery sources.",
+    "disposition": "product_policy",
+    "owner": null,
+    "evidence": "no write rule",
+    "note": "Source authority principle"
+  },
+  {
+    "id": "D05-02",
+    "doc": "m0-d05-application-inventory.md",
+    "kind": "cardinality",
+    "rule": "Every active application has a governed name, application kind, lifecycle, criticality, a system owner, and an access owner, and both owners are workforce Person references who need not be platform members.",
+    "disposition": "owner",
+    "owner": "DeclaredApplication",
+    "evidence": "Jev choice 1.00"
+  },
+  {
+    "id": "D05-03",
+    "doc": "m0-d05-application-inventory.md",
+    "kind": "cardinality",
+    "rule": "Access is reviewed per SystemInstance, never per application; a SystemInstance belongs to exactly one application and exactly one tenant, and an application has zero or more system instances.",
+    "disposition": "authorization",
+    "owner": null,
+    "evidence": "reassigned 2026-10-29 while drafting decides clause: Covered by invariant (immutable single application parent); per-instance review scope belongs to access review campaigns. Jev 0.82 already."
+  },
+  {
+    "id": "D05-04",
+    "doc": "m0-d05-application-inventory.md",
+    "kind": "consistency",
+    "rule": "A SystemInstance's instance_kind is one of cloud_account, source_code_organization, identity_provider_tenant, saas_tenant, environment, or other; the other kind requires a description, and platform is required for every kind except environment and other.",
+    "disposition": "owner",
+    "owner": "DeclaredSystemInstance",
+    "evidence": "Jev choice 0.99"
+  },
+  {
+    "id": "D05-05",
+    "doc": "m0-d05-application-inventory.md",
+    "kind": "uniqueness",
+    "rule": "An active SystemInstance's provider identifier is unique per tenant for the combination of instance kind, platform, and provider identifier, so same-named instances of different kinds or platforms do not collide.",
+    "disposition": "owner",
+    "owner": "DeclaredSystemInstance",
+    "evidence": "Jev choice 0.97"
+  },
+  {
+    "id": "D05-06",
+    "doc": "m0-d05-application-inventory.md",
+    "kind": "consistency",
+    "rule": "A system instance is in access-review scope when it is inside the approved boundary and grants access to in-scope data, production infrastructure, source code, or identity administration; excluding it requires a reason.",
+    "disposition": "projection",
+    "owner": null,
+    "evidence": "reassigned 2026-10-29 while drafting decides clause: derivation of in-scope (inside approved boundary and granting access to in-scope data, production infrastructure, source code or identity administration) is a scope evaluator, not decision append",
+    "note": "Scope with exclusion reason"
+  },
+  {
+    "id": "D05-07",
+    "doc": "m0-d05-application-inventory.md",
+    "kind": "approval",
+    "rule": "An access-review scope decision (included or excluded) must be approved by the Compliance Lead and the approver may not be the access owner of that system instance.",
+    "disposition": "owner",
+    "owner": "SystemInstanceAccessReviewScope",
+    "evidence": "Jev choice 0.98"
+  },
+  {
+    "id": "D05-08",
+    "doc": "m0-d05-application-inventory.md",
+    "kind": "immutability",
+    "rule": "An access-review scope decision is effective-dated and references an exact system instance version; a new decision supersedes the previous one and never edits it.",
+    "disposition": "owner",
+    "owner": "SystemInstanceAccessReviewScope",
+    "evidence": "Jev choice 1.00"
+  },
+  {
+    "id": "D05-09",
+    "doc": "m0-d05-application-inventory.md",
+    "kind": "uniqueness",
+    "rule": "An application has one canonical name and zero or more aliases, and each normalized alias is unique within the tenant.",
+    "disposition": "owner",
+    "owner": "ApplicationNameClaim",
+    "evidence": "OWNER_ApplicationNameClaim (Jev 0.83)"
+  },
+  {
+    "id": "D05-10",
+    "doc": "m0-d05-application-inventory.md",
+    "kind": "lifecycle",
+    "rule": "Duplicate applications are resolved by an attributed merge that retires one record with a merged_into reference to the survivor.",
+    "disposition": "owner",
+    "owner": "ApplicationNameClaim",
+    "evidence": "OWNER_ApplicationNameClaim (Jev 0.83)"
+  },
+  {
+    "id": "D05-11",
+    "doc": "m0-d05-application-inventory.md",
+    "kind": "lifecycle",
+    "rule": "Retiring an application is effective-dated, requires a reason, and never deletes history or any snapshot reference to it.",
+    "disposition": "owner",
+    "owner": "DeclaredApplication",
+    "evidence": "Jev choice 1.00"
+  },
+  {
+    "id": "D06-01",
+    "doc": "m0-d06-workforce-source.md",
+    "kind": "consistency",
+    "rule": "An HRIS roster export is authoritative for people, employment status, and manager, while the identity-provider directory only corroborates it; a disagreement is surfaced as a conflict requiring an attributable reconciliation decision and is never silently resolved.",
+    "disposition": "owner",
+    "owner": "WorkforceSourceObservation",
+    "evidence": "Jev choice 0.80"
+  },
+  {
+    "id": "D06-02",
+    "doc": "m0-d06-workforce-source.md",
+    "kind": "consistency",
+    "rule": "When no HRIS exists, or it is not connected, a manually maintained roster in the product is an accepted authoritative source, and each entry is attributed to the member who recorded it.",
+    "disposition": "product_policy",
+    "owner": null,
+    "evidence": "no write rule",
+    "note": "Manual roster is accepted source; product behaviour"
+  },
+  {
+    "id": "D06-03",
+    "doc": "m0-d06-workforce-source.md",
+    "kind": "cardinality",
+    "rule": "A workforce person requires a stable worker identifier, display name, work email, worker type (employee, contractor, external collaborator), lifecycle status, start and end dates, direct manager, and department or team; a manual roster uses an organization-maintained worker identifier, and an external source identifier is provenance only.",
+    "disposition": "owner",
+    "owner": "WorkRelationship",
+    "evidence": "src/Compliance.Core/Features/Workforce/Aggregates/WorkRelationship.cs",
+    "note": "Required worker fields and identifier rules"
+  },
+  {
+    "id": "D06-04",
+    "doc": "m0-d06-workforce-source.md",
+    "kind": "approval",
+    "rule": "Restricted workforce fields (personal contact details, employment status reason, manager chain) are readable only with an explicit grant, by default Org Admin and Compliance Lead, and lists, exports, search, and counts redact them.",
+    "disposition": "authorization",
+    "owner": null,
+    "evidence": "authorization layer",
+    "note": "Restricted-field visibility and redaction is read authorization"
+  },
+  {
+    "id": "D06-05",
+    "doc": "m0-d06-workforce-source.md",
+    "kind": "sequence",
+    "rule": "Joiners, movers, and leavers are observed by comparing accepted roster versions, and contractors follow the same rules as employees.",
+    "disposition": "process",
+    "owner": null,
+    "evidence": "process WorkRelationship->WorkforceSourceObservation",
+    "note": "JML observed by comparing roster versions"
+  },
+  {
+    "id": "D06-06",
+    "doc": "m0-d06-workforce-source.md",
+    "kind": "cardinality",
+    "rule": "An external collaborator with access to a reviewed system must be recorded as a workforce person of type external collaborator with an accountable internal sponsor.",
+    "disposition": "owner",
+    "owner": "WorkRelationship",
+    "evidence": "Jev choice 0.75"
+  },
+  {
+    "id": "D06-07",
+    "doc": "m0-d06-workforce-source.md",
+    "kind": "consistency",
+    "rule": "Joiner, mover, and leaver observations only create compliance work; they never grant platform access, revoke provider access, or decide a review outcome.",
+    "disposition": "process",
+    "owner": null,
+    "evidence": "process WorkforceSourceObservation->WorkItemAssignment",
+    "note": "Observations only produce compliance work"
+  },
+  {
+    "id": "D06-08",
+    "doc": "m0-d06-workforce-source.md",
+    "kind": "cardinality",
+    "rule": "Every non-human identity (ServiceIdentity) has exactly one accountable owner, either a person or a team, plus an approved purpose and a review date no more than one year in the future.",
+    "disposition": "owner",
+    "owner": "ServiceIdentity",
+    "evidence": "Jev choice 1.00"
+  },
+  {
+    "id": "D06-09",
+    "doc": "m0-d06-workforce-source.md",
+    "kind": "expiry",
+    "rule": "Non-human identity ownership is reviewed at least annually, and a non-human identity whose owner relationship has ended or whose review date has expired appears as unowned work.",
+    "disposition": "projection",
+    "owner": null,
+    "evidence": "reassigned 2026-10-29 while drafting decides clause: owner-ended or lapsed-review appearing as unowned work is a work projection"
+  },
+  {
+    "id": "D07-01",
+    "doc": "m0-d07-access-review-population.md",
+    "kind": "consistency",
+    "rule": "An access population stores direct assignments as observed; effective access is a derived, versioned calculation per population snapshot and is never stored as a source fact or conflated with direct access.",
+    "disposition": "projection",
+    "owner": null,
+    "evidence": "reassigned 2026-10-29 while drafting decides clause: The derived effective-access calculation belongs to AccessPopulationAnalysis/projection; the aggregate only guarantees it never stores effective access.",
+    "note": "Direct assignments stored as observed; effective access derived"
+  },
+  {
+    "id": "D07-02",
+    "doc": "m0-d07-access-review-population.md",
+    "kind": "uniqueness",
+    "rule": "Effective access expansion is transitive over nested group membership, rejects cycles, records every hop of a role-assumption path, and yields exactly one effective row per account and entitlement pair containing all of its paths.",
+    "disposition": "projection",
+    "owner": null,
+    "evidence": "derived read model",
+    "note": "Effective access is a derived calculation"
+  },
+  {
+    "id": "D07-03",
+    "doc": "m0-d07-access-review-population.md",
+    "kind": "consistency",
+    "rule": "Inherited access is never stored as an AccessAssignment; an assignment records only what the source asserts is granted directly to that principal within a snapshot.",
+    "disposition": "owner",
+    "owner": "AccessPopulation",
+    "evidence": "src/Compliance.Core/Features/AccessReviews/Aggregates/AccessPopulation.cs",
+    "note": "Population stores only direct assignments as asserted"
+  },
+  {
+    "id": "D07-04",
+    "doc": "m0-d07-access-review-population.md",
+    "kind": "immutability",
+    "rule": "An AccessPopulationSnapshot records the exact system instance version, observation time, source (manual attestation until imports exist), and content hash, and is immutable once accepted.",
+    "disposition": "owner",
+    "owner": "AccessPopulation",
+    "evidence": "src/Compliance.Core/Features/AccessReviews/Aggregates/AccessPopulation.cs",
+    "note": "Immutable accepted population definition with system instance and source revision"
+  },
+  {
+    "id": "D07-05",
+    "doc": "m0-d07-access-review-population.md",
+    "kind": "uniqueness",
+    "rule": "An account's provider subject identifier is unique per system instance.",
+    "disposition": "owner",
+    "owner": "AccessPopulation",
+    "evidence": "src/Compliance.Core/Features/AccessReviews/Aggregates/AccessPopulation.cs",
+    "note": "Subject id uniqueness within population content"
+  },
+  {
+    "id": "D07-06",
+    "doc": "m0-d07-access-review-population.md",
+    "kind": "consistency",
+    "rule": "An account classification is human, nhi, shared, or unclassified; human requires correlation to a workforce Person, nhi requires correlation to a governed ServiceIdentity, and an uncorrelated account is unclassified and a review exception.",
+    "disposition": "projection",
+    "owner": null,
+    "evidence": "reassigned 2026-10-29 while drafting decides clause: The 'review exception' surfacing for uncorrelated accounts is derived by the variance evaluator/reader, not decided at write time."
+  },
+  {
+    "id": "D07-07",
+    "doc": "m0-d07-access-review-population.md",
+    "kind": "cardinality",
+    "rule": "A shared account requires an accountable owner person and a shared justification and is never silently treated as human.",
+    "disposition": "process",
+    "owner": null,
+    "evidence": "reassigned 2026-10-29 while drafting decides clause: shared account may belong to a separate shared-account owner if one exists"
+  },
+  {
+    "id": "D07-08",
+    "doc": "m0-d07-access-review-population.md",
+    "kind": "lifecycle",
+    "rule": "An access expectation is scoped to a system instance, has a rule kind (forbidden_principal_kind, privileged_entitlement, or requires_expiry) with parameters and an approver, and is versioned.",
+    "disposition": "owner",
+    "owner": "AccessExpectation",
+    "evidence": "Jev choice 1.00"
+  },
+  {
+    "id": "D07-09",
+    "doc": "m0-d07-access-review-population.md",
+    "kind": "approval",
+    "rule": "Privileged entitlements require named reviewer approval in each review campaign.",
+    "disposition": "owner",
+    "owner": "AccessReviewItem",
+    "evidence": "AccessReviewRules.cs:92",
+    "note": "Privileged entitlement handling in AccessReviewRules/LaunchAccessReviewCampaignHandler"
+  },
+  {
+    "id": "D07-10",
+    "doc": "m0-d07-access-review-population.md",
+    "kind": "approval",
+    "rule": "An access reviewer must be the access owner of the system instance or a delegate, and may not review their own access.",
+    "disposition": "process",
+    "owner": null,
+    "evidence": "reassigned 2026-10-29 while drafting decides clause: access reviewer being the access owner or delegate and not reviewing own access belongs to the access review campaign"
+  },
+  {
+    "id": "D07-11",
+    "doc": "m0-d07-access-review-population.md",
+    "kind": "lifecycle",
+    "rule": "Access remediation is complete only when a later population snapshot shows the entitlement removed or changed; a ticket alone is not verification.",
+    "disposition": "owner",
+    "owner": "AccessReviewItem",
+    "evidence": "Jev choice 0.84"
+  },
+  {
+    "id": "D07-12",
+    "doc": "m0-d07-access-review-population.md",
+    "kind": "consistency",
+    "rule": "A team must declare scope, observation time, and completeness of a manually recorded population before it can claim an audit-ready population.",
+    "disposition": "owner",
+    "owner": "AuditPopulation",
+    "evidence": "Jev choice 0.85"
+  },
+  {
+    "id": "D08-01",
+    "doc": "m0-d08-technology-inventory.md",
+    "kind": "cardinality",
+    "rule": "The technology inventory is recorded at account and environment granularity with component categories cloud_account, environment, network, data_store, repository, and endpoint_class, not per resource; each component has a governed name, owner, environment reference, location reference, and lifecycle.",
+    "disposition": "owner",
+    "owner": "TechnologyComponent",
+    "evidence": "Jev choice 1.00"
+  },
+  {
+    "id": "D08-02",
+    "doc": "m0-d08-technology-inventory.md",
+    "kind": "cardinality",
+    "rule": "A cloud_account infrastructure component corresponds one-to-one with a SystemInstance of kind cloud_account and must not be duplicated.",
+    "disposition": "owner",
+    "owner": "TechnologyComponent",
+    "evidence": "Jev choice 1.00"
+  },
+  {
+    "id": "D08-03",
+    "doc": "m0-d08-technology-inventory.md",
+    "kind": "consistency",
+    "rule": "An endpoint class is a class record with a count and a management source; individual devices are not inventoried.",
+    "disposition": "owner",
+    "owner": "TechnologyComponent",
+    "evidence": "src/Compliance.Core/Features/TechnologyInventory/Aggregates/TechnologyComponent.cs",
+    "note": "Endpoint class record kind with count and management source"
+  },
+  {
+    "id": "D08-04",
+    "doc": "m0-d08-technology-inventory.md",
+    "kind": "cardinality",
+    "rule": "Each InformationAsset carries exactly one classification level from public, internal, confidential, or restricted, plus a retention reference.",
+    "disposition": "owner",
+    "owner": "InformationAsset",
+    "evidence": "Jev choice 1.00"
+  },
+  {
+    "id": "D08-05",
+    "doc": "m0-d08-technology-inventory.md",
+    "kind": "cardinality",
+    "rule": "A DataFlow runs from a service or system instance to a data store or external party, carries one or more information assets, a purpose, and encrypted_in_transit and encrypted_at_rest flags, and is effective-dated and versioned.",
+    "disposition": "owner",
+    "owner": "DataFlow",
+    "evidence": "Jev choice 1.00"
+  },
+  {
+    "id": "D08-06",
+    "doc": "m0-d08-technology-inventory.md",
+    "kind": "consistency",
+    "rule": "A DataFlow is invalid when any carried information asset is confidential or restricted and either encryption flag is false, unless an approved exception is referenced.",
+    "disposition": "owner",
+    "owner": "DataFlow",
+    "evidence": "Jev choice 1.00"
+  },
+  {
+    "id": "D08-07",
+    "doc": "m0-d08-technology-inventory.md",
+    "kind": "consistency",
+    "rule": "The governed Compliance inventory is authoritative; cloud console, MDM, and repository host data are discovery-only sources.",
+    "disposition": "product_policy",
+    "owner": null,
+    "evidence": "no write rule",
+    "note": "Source authority principle"
+  },
+  {
+    "id": "D09-01",
+    "doc": "m0-d09-commitments.md",
+    "kind": "lifecycle",
+    "rule": "Each commitment is one of four kinds (service_commitment, system_requirement, user_entity_responsibility, subservice_responsibility) and carries an identifier, statement, service reference, source citation, owner Person, applicable Trust Services categories, and lifecycle status of draft, approved, or retired.",
+    "disposition": "owner",
+    "owner": "CommitmentDraft",
+    "evidence": "Jev choice 0.99"
+  },
+  {
+    "id": "D09-02",
+    "doc": "m0-d09-commitments.md",
+    "kind": "uniqueness",
+    "rule": "A commitment identifier is unique per tenant, program, and commitment kind.",
+    "disposition": "owner",
+    "owner": "CommitmentDraft",
+    "evidence": "Jev choice 1.00"
+  },
+  {
+    "id": "D09-03",
+    "doc": "m0-d09-commitments.md",
+    "kind": "consistency",
+    "rule": "A commitment's source citation is a typed reference (artifact kind, title, version or date, section locator, optional governed artifact id), not pasted contract text.",
+    "disposition": "owner",
+    "owner": "CommitmentDraft",
+    "evidence": "Jev choice 0.99"
+  },
+  {
+    "id": "D09-04",
+    "doc": "m0-d09-commitments.md",
+    "kind": "consistency",
+    "rule": "A commitment's categories are validated against the program's current approved boundary version when the commitment is created, revised, or approved, and the approval records that boundary version id.",
+    "disposition": "owner",
+    "owner": "CommitmentDraft",
+    "evidence": "Jev choice 0.87"
+  },
+  {
+    "id": "D09-05",
+    "doc": "m0-d09-commitments.md",
+    "kind": "consistency",
+    "rule": "When a later approved boundary version drops a category, affected commitments are flagged category_out_of_scope for review and are never silently invalidated, deleted, or rewritten; earlier approvals keep their original boundary version.",
+    "disposition": "projection",
+    "owner": null,
+    "evidence": "reassigned 2026-10-29 while drafting decides clause: flagging commitments category_out_of_scope on a later version is a commitment-side reaction"
+  },
+  {
+    "id": "D09-06",
+    "doc": "m0-d09-commitments.md",
+    "kind": "approval",
+    "rule": "A commitment must be approved by a management approver, an Org Admin or Compliance Lead designated as the program's management approver; the approval is attributed, versioned, references the exact commitment version and boundary version, and self-approval of one's own draft requires a separation-of-duties exception.",
+    "disposition": "owner",
+    "owner": "CommitmentDraft",
+    "evidence": "src/Compliance.Core/Features/Commitments/Aggregates/CommitmentDraft.cs",
+    "note": "Independent approval bound to exact versions; SoD waiver via SeparationOfDutiesWaiver"
+  },
+  {
+    "id": "D09-07",
+    "doc": "m0-d09-commitments.md",
+    "kind": "consistency",
+    "rule": "A subservice_responsibility commitment requires a provider reference to the Provider that performs it.",
+    "disposition": "owner",
+    "owner": "CommitmentDraft",
+    "evidence": "src/Compliance.Core/Features/Commitments/Aggregates/CommitmentDraft.cs",
+    "note": "CommitmentRules enforces provider reference for subservice_responsibility"
+  },
+  {
+    "id": "D09-08",
+    "doc": "m0-d09-commitments.md",
+    "kind": "consistency",
+    "rule": "A user_entity_responsibility commitment never counts as an internally performed control.",
+    "disposition": "projection",
+    "owner": null,
+    "evidence": "derived read model",
+    "note": "Readiness/coverage derivation over commitment kind"
+  },
+  {
+    "id": "D09-09",
+    "doc": "m0-d09-commitments.md",
+    "kind": "cardinality",
+    "rule": "Commitments and controls are linked many-to-many through versioned commitment-control links.",
+    "disposition": "owner",
+    "owner": "CommitmentControlLink",
+    "evidence": "planned owner 2026-10-29",
+    "note": "No commitment-control link aggregate; needs versioned CommitmentControlLink owner"
+  },
+  {
+    "id": "D10-01",
+    "doc": "m0-d10-risk-method.md",
+    "kind": "lifecycle",
+    "rule": "A risk method is versioned per program, uses a qualitative 5x5 kind with five-level likelihood and impact scales, and carries a nullable appetite threshold (1 to 25 residual score) and a one-year reassessment interval.",
+    "disposition": "owner",
+    "owner": "RiskMethod",
+    "evidence": "Jev choice 1.00"
+  },
+  {
+    "id": "D10-02",
+    "doc": "m0-d10-risk-method.md",
+    "kind": "consistency",
+    "rule": "A risk assessment records inherent or residual phase, likelihood 1 to 5, impact 1 to 5, assessor, and time against a specific method version; the score is derived as likelihood times impact and never user-entered.",
+    "disposition": "owner",
+    "owner": "RiskEvaluation",
+    "evidence": "Jev choice 0.82"
+  },
+  {
+    "id": "D10-03",
+    "doc": "m0-d10-risk-method.md",
+    "kind": "consistency",
+    "rule": "A residual risk assessment requires at least one control risk treatment or a non-mitigate treatment.",
+    "disposition": "owner",
+    "owner": "RiskEvaluation",
+    "evidence": "Jev choice 1.00"
+  },
+  {
+    "id": "D10-04",
+    "doc": "m0-d10-risk-method.md",
+    "kind": "lifecycle",
+    "rule": "A risk treatment is one of mitigate, accept, transfer, or avoid and carries a rationale.",
+    "disposition": "owner",
+    "owner": "RiskEvaluation",
+    "evidence": "src/Compliance.Core/Features/Risks/Aggregates/RiskEvaluation.cs",
+    "note": "TreatmentKinds in RiskEvaluationRules"
+  },
+  {
+    "id": "D10-05",
+    "doc": "m0-d10-risk-method.md",
+    "kind": "consistency",
+    "rule": "A residual score above the method version's appetite threshold is above appetite, and while the threshold is unset every risk is treated as above appetite for acceptance.",
+    "disposition": "owner",
+    "owner": "RiskEvaluation",
+    "evidence": "Jev choice 0.70"
+  },
+  {
+    "id": "D10-06",
+    "doc": "m0-d10-risk-method.md",
+    "kind": "expiry",
+    "rule": "A risk acceptance must reference the residual assessment, be time-bounded with expiry no later than 12 months after acceptance, and on expiry the risk returns to reassessment.",
+    "disposition": "owner",
+    "owner": "RiskEvaluation",
+    "evidence": "Jev choice 0.89"
+  },
+  {
+    "id": "D10-07",
+    "doc": "m0-d10-risk-method.md",
+    "kind": "approval",
+    "rule": "The Compliance Lead may accept a risk only when its residual score is at or below a non-null appetite threshold; accepting a risk above appetite, or any acceptance while appetite is null, requires an executive approver.",
+    "disposition": "owner",
+    "owner": "RiskEvaluation",
+    "evidence": "Jev choice 0.98"
+  },
+  {
+    "id": "D10-08",
+    "doc": "m0-d10-risk-method.md",
+    "kind": "approval",
+    "rule": "A risk acceptance is invalid when the approver is the risk owner unless a separation-of-duties exception exists.",
+    "disposition": "owner",
+    "owner": "RiskEvaluation",
+    "evidence": "Jev choice 0.98"
+  },
+  {
+    "id": "D10-09",
+    "doc": "m0-d10-risk-method.md",
+    "kind": "sequence",
+    "rule": "A risk is flagged for reassessment by recorded triggers (significant change, incident, boundary change, new material vendor, expired acceptance) and is fully reassessed at least annually.",
+    "disposition": "projection",
+    "owner": null,
+    "evidence": "reassigned 2026-10-29 while drafting decides clause: annual overdue flagging is time-driven and belongs to a due-date projection; only triggers are recorded as facts here"
+  },
+  {
+    "id": "D11-01",
+    "doc": "m0-d11-vendors.md",
+    "kind": "consistency",
+    "rule": "A provider is material when it stores or processes customer data or is on the critical path for an in-scope service; spend is irrelevant, and the provider records materiality, its basis (customer_data and/or critical_path), and a rationale.",
+    "disposition": "owner",
+    "owner": "Provider",
+    "evidence": "Jev choice 0.90"
+  },
+  {
+    "id": "D11-02",
+    "doc": "m0-d11-vendors.md",
+    "kind": "expiry",
+    "rule": "A material provider requires a current SOC 2 report, ISO/IEC 27001 certificate, or, if neither exists, a completed security questionnaire, reviewed at onboarding and at least annually; a non-material provider needs only a recorded classification rationale.",
+    "disposition": "owner",
+    "owner": "ProviderAssuranceReview",
+    "evidence": "Jev round3 1.00; evidence kind and annual cadence are the review owner's rule"
+  },
+  {
+    "id": "D11-03",
+    "doc": "m0-d11-vendors.md",
+    "kind": "expiry",
+    "rule": "A provider review's next review due date must be no later than one year after the review date for a material provider.",
+    "disposition": "owner",
+    "owner": "ProviderAssuranceReview",
+    "evidence": "Jev choice 0.99"
+  },
+  {
+    "id": "D11-04",
+    "doc": "m0-d11-vendors.md",
+    "kind": "lifecycle",
+    "rule": "A provider review records the provider, review time, evidence kind (soc2_type1, soc2_type2, iso27001, questionnaire), optional assurance report, conclusion, and reviewer.",
+    "disposition": "owner",
+    "owner": "ProviderAssuranceReview",
+    "evidence": "Jev choice 1.00"
+  },
+  {
+    "id": "D11-05",
+    "doc": "m0-d11-vendors.md",
+    "kind": "consistency",
+    "rule": "An assurance report records kind, period or point-in-time date, issuing firm, opinion (unqualified, qualified, adverse, disclaimer), covered services, exceptions, relevant CUECs, coverage gaps, bridge letter when the report period ends before the need, and a governed artifact reference.",
+    "disposition": "owner",
+    "owner": "ProviderAssuranceReport",
+    "evidence": "Jev choice 0.99"
+  },
+  {
+    "id": "D11-06",
+    "doc": "m0-d11-vendors.md",
+    "kind": "consistency",
+    "rule": "A subservice provider must declare a boundary treatment of carve_out or inclusive; the default is carve_out and inclusive requires an explicit reasoned exception.",
+    "disposition": "owner",
+    "owner": "Provider",
+    "evidence": "reassigned 2026-10-29 while drafting decides clause: carve_out/inclusive treatment is enforced in ProviderRules on the subservice provider"
+  },
+  {
+    "id": "D11-07",
+    "doc": "m0-d11-vendors.md",
+    "kind": "consistency",
+    "rule": "A carved-out subservice organization must have at least one CSOC (subservice_responsibility commitment) recorded, otherwise it is a readiness gap; a material provider without a current review is also a readiness gap.",
+    "disposition": "projection",
+    "owner": null,
+    "evidence": "derived read model",
+    "note": "Readiness gap is derived by ReadinessAssessment rules over commitments/providers"
+  },
+  {
+    "id": "D12-01",
+    "doc": "m0-d12-policy-acknowledgement-training.md",
+    "kind": "consistency",
+    "rule": "Policy audiences are always sets of workforce people from the roster, never platform members, and are never inferred from application access, platform team membership, or the IdP.",
+    "disposition": "owner",
+    "owner": "PolicyDistributionCampaign",
+    "evidence": "Jev choice 0.85"
+  },
+  {
+    "id": "D12-02",
+    "doc": "m0-d12-policy-acknowledgement-training.md",
+    "kind": "cardinality",
+    "rule": "Each approved policy version carries exactly one audience kind (core_security or role_targeted); a role_targeted policy version names a non-empty list of roster teams.",
+    "disposition": "owner",
+    "owner": "Policy",
+    "evidence": "Jev choice 0.81"
+  },
+  {
+    "id": "D12-03",
+    "doc": "m0-d12-policy-acknowledgement-training.md",
+    "kind": "consistency",
+    "rule": "A core_security audience is every in-scope workforce person (employees and contractors with access to in-scope systems or data); a role_targeted audience is workforce people whose roster team is named on the policy version.",
+    "disposition": "owner",
+    "owner": "PolicyDistributionCampaign",
+    "evidence": "Jev choice 0.86"
+  },
+  {
+    "id": "D12-04",
+    "doc": "m0-d12-policy-acknowledgement-training.md",
+    "kind": "freeze",
+    "rule": "A PolicyDistributionCampaign freezes its launch audience by evaluating the audience rule against the roster at launch, and later roster changes never edit the frozen audience.",
+    "disposition": "owner",
+    "owner": "PolicyDistributionCampaign",
+    "evidence": "Jev choice 1.00"
+  },
+  {
+    "id": "D12-05",
+    "doc": "m0-d12-policy-acknowledgement-training.md",
+    "kind": "sequence",
+    "rule": "Roster changes during a campaign add attributed audience amendment entries (person, reason joiner/mover_in/mover_out/leaver, roster observation, time); the launch audience plus amendments is the evidence population.",
+    "disposition": "owner",
+    "owner": "PolicyDistributionCampaign",
+    "evidence": "Jev choice 0.90"
+  },
+  {
+    "id": "D12-06",
+    "doc": "m0-d12-policy-acknowledgement-training.md",
+    "kind": "immutability",
+    "rule": "An acknowledgement records that the person read, understood, and agrees to comply with the exact policy version identified by version and content hash, and stores the exact text shown (the organization's text if an Org Admin replaced the default).",
+    "disposition": "owner",
+    "owner": "PolicyCampaignParticipant",
+    "evidence": "Jev choice 0.98"
+  },
+  {
+    "id": "D12-07",
+    "doc": "m0-d12-policy-acknowledgement-training.md",
+    "kind": "expiry",
+    "rule": "New joiners must acknowledge within 30 days of their start date; everyone else re-acknowledges annually and whenever a new major policy version is approved.",
+    "disposition": "owner",
+    "owner": "PolicyCampaignParticipant",
+    "evidence": "Jev round3 1.00; the participant owns its own due date and re-acknowledgement obligation"
+  },
+  {
+    "id": "D12-08",
+    "doc": "m0-d12-policy-acknowledgement-training.md",
+    "kind": "lifecycle",
+    "rule": "An acknowledgement item is in exactly one state of pending, acknowledged, overdue, excepted, or removed.",
+    "disposition": "owner",
+    "owner": "PolicyCampaignParticipant",
+    "evidence": "Jev choice 1.00"
+  },
+  {
+    "id": "D12-09",
+    "doc": "m0-d12-policy-acknowledgement-training.md",
+    "kind": "sequence",
+    "rule": "A pending acknowledgement for a workforce person without membership becomes a work item assigned to the campaign owner who records it on the person's behalf, and escalates at 7 days overdue; no email is sent to non-members.",
+    "disposition": "process",
+    "owner": null,
+    "evidence": "process PolicyCampaignParticipant->WorkItemAssignment",
+    "note": "Pending acknowledgement for non-member becomes assigned work item with escalation"
+  },
+  {
+    "id": "D12-10",
+    "doc": "m0-d12-policy-acknowledgement-training.md",
+    "kind": "expiry",
+    "rule": "A TrainingRequirement names the course, an audience rule, and a cadence of within 30 days of hire then annually; the delivery source is manual or lms_export.",
+    "disposition": "owner",
+    "owner": "TrainingRequirement",
+    "evidence": "Jev choice 0.99"
+  },
+  {
+    "id": "D12-11",
+    "doc": "m0-d12-policy-acknowledgement-training.md",
+    "kind": "consistency",
+    "rule": "A training completion records person, course, completed date, and source, and the source artifact (LMS export row or uploaded certificate) is the evidence.",
+    "disposition": "process",
+    "owner": null,
+    "evidence": "reassigned 2026-10-29 while drafting decides clause: completion record (person, course, date, source, evidence) belongs to the training completion owner/CampaignRules, not the requirement line",
+    "note": "Completion record person/course/date/source with source artifact"
+  },
+  {
+    "id": "D12-12",
+    "doc": "m0-d12-policy-acknowledgement-training.md",
+    "kind": "expiry",
+    "rule": "An exception to acknowledgement is a Waiver with scope, Compliance Lead approver, reason, and expiry of at most 12 months, and waived people count as excepted, never as acknowledged.",
+    "disposition": "process",
+    "owner": null,
+    "evidence": "reassigned 2026-10-29 while drafting decides clause: acknowledgement waiver (Compliance Lead, 12 months) likely belongs to the policy acknowledgement owner, not the SoD waiver"
+  },
+  {
+    "id": "D12-13",
+    "doc": "m0-d12-policy-acknowledgement-training.md",
+    "kind": "sequence",
+    "rule": "A joiner is added by amendment to every active matching campaign (core_security or role_targeted) and their item is due 30 days after their start date.",
+    "disposition": "process",
+    "owner": null,
+    "evidence": "process PolicyDistributionCampaign/WorkRelationship->PolicyCampaignParticipant",
+    "note": "Joiner amendment to active campaigns"
+  },
+  {
+    "id": "D12-14",
+    "doc": "m0-d12-policy-acknowledgement-training.md",
+    "kind": "sequence",
+    "rule": "A mover is added by amendment to active role_targeted campaigns of the new team (mover_in) and removed from campaigns of the old team (mover_out), while earlier completions keep their history.",
+    "disposition": "owner",
+    "owner": "PolicyDistributionCampaign",
+    "evidence": "reassigned 2026-10-29 while drafting decides clause: Mover add/remove is an audience amendment decided by the campaign; participant only reflects the resulting removed/added state."
+  },
+  {
+    "id": "D12-15",
+    "doc": "m0-d12-policy-acknowledgement-training.md",
+    "kind": "lifecycle",
+    "rule": "A leaver moves to removed in open campaigns and keeps their history.",
+    "disposition": "owner",
+    "owner": "PolicyDistributionCampaign",
+    "evidence": "Jev round2 0.79; PolicyCampaignAudienceAmended records leaver removal against a later roster snapshot"
+  },
+  {
+    "id": "D13-01",
+    "doc": "m0-d13-control-evaluation.md",
+    "kind": "immutability",
+    "rule": "A ControlEvaluationPlan version names the exact approved control version it evaluates, and each procedure step keeps its exact inspected record version or artifact content reference so starting an evaluation never resolves to newer versions.",
+    "disposition": "owner",
+    "owner": "ControlEvaluationPlan",
+    "evidence": "Jev choice 0.93"
+  },
+  {
+    "id": "D13-02",
+    "doc": "m0-d13-control-evaluation.md",
+    "kind": "cardinality",
+    "rule": "Each procedure step records an assertion (design, implementation, evidence_sufficiency), a method (inquiry, inspection, observation, reperformance), typed inspected items, and an expected condition.",
+    "disposition": "owner",
+    "owner": "ControlEvaluation",
+    "evidence": "src/Compliance.Core/Features/Evaluations/Aggregates/ControlEvaluation.cs",
+    "note": "Step content validated in ControlEvaluationRules / ControlEvaluationPlanRules (plan defines expected condition)"
+  },
+  {
+    "id": "D13-03",
+    "doc": "m0-d13-control-evaluation.md",
+    "kind": "freeze",
+    "rule": "A control evaluation plan version is frozen when evaluation starts; a changed plan is a new version and never rewrites results already recorded.",
+    "disposition": "owner",
+    "owner": "ControlEvaluationPlan",
+    "evidence": "Jev round3 1.00; plan version immutability and successor-only append"
+  },
+  {
+    "id": "D13-04",
+    "doc": "m0-d13-control-evaluation.md",
+    "kind": "lifecycle",
+    "rule": "Each step result is met, not_met, or not_tested with a rationale, and per-assertion and overall results are effective, effective_with_exceptions, ineffective, or not_tested.",
+    "disposition": "owner",
+    "owner": "ControlEvaluation",
+    "evidence": "Jev choice 1.00"
+  },
+  {
+    "id": "D13-05",
+    "doc": "m0-d13-control-evaluation.md",
+    "kind": "consistency",
+    "rule": "An overall effective result requires every step of every assertion to be met.",
+    "disposition": "owner",
+    "owner": "ControlEvaluation",
+    "evidence": "Jev choice 0.95"
+  },
+  {
+    "id": "D13-06",
+    "doc": "m0-d13-control-evaluation.md",
+    "kind": "lifecycle",
+    "rule": "A not_met step creates a ControlEvaluationDeviation that the evaluator classifies as minor or material.",
+    "disposition": "owner",
+    "owner": "ControlEvaluation",
+    "evidence": "Jev choice 1.00"
+  },
+  {
+    "id": "D13-07",
+    "doc": "m0-d13-control-evaluation.md",
+    "kind": "sequence",
+    "rule": "A material deviation creates or links a Finding with a corrective action and requires a retest, which is a new evaluation of the same plan version or a successor that explicitly links to the deviation.",
+    "disposition": "owner",
+    "owner": "ControlEvaluation",
+    "evidence": "Jev round3 1.00; deviation disposition records the finding link and retest requirement; finding creation is a process edge to FindingAggregate"
+  },
+  {
+    "id": "D13-08",
+    "doc": "m0-d13-control-evaluation.md",
+    "kind": "lifecycle",
+    "rule": "A minor deviation needs a recorded disposition of corrected or accepted_with_waiver, and the overall result is at best effective_with_exceptions.",
+    "disposition": "owner",
+    "owner": "ControlEvaluation",
+    "evidence": "Jev choice 0.99"
+  },
+  {
+    "id": "D13-09",
+    "doc": "m0-d13-control-evaluation.md",
+    "kind": "lifecycle",
+    "rule": "A deviation never closes merely because a later evaluation passed; closure requires an explicit retest link.",
+    "disposition": "owner",
+    "owner": "ControlEvaluation",
+    "evidence": "Jev choice 1.00"
+  },
+  {
+    "id": "D13-10",
+    "doc": "m0-d13-control-evaluation.md",
+    "kind": "approval",
+    "rule": "The control owner may evaluate their own control's design and implementation.",
+    "disposition": "product_policy",
+    "owner": null,
+    "evidence": "no write rule",
+    "note": "Permissive statement, no restriction written"
+  },
+  {
+    "id": "D13-11",
+    "doc": "m0-d13-control-evaluation.md",
+    "kind": "approval",
+    "rule": "Every evaluation requires an independent review decision by a client member holding Compliance Lead or Org Admin who is not the evaluator; the only relief is a time-bound separation-of-duties exception approved by a different Org Admin who does not benefit, flagged in readiness and exports.",
+    "disposition": "process",
+    "owner": null,
+    "evidence": "reassigned 2026-10-29 while drafting decides clause: independent evaluation review gate belongs to the evaluation review owner; this owner only supplies the exception"
+  },
+  {
+    "id": "D13-12",
+    "doc": "m0-d13-control-evaluation.md",
+    "kind": "approval",
+    "rule": "Advisor validated feedback on an evaluation is additive and never counts as the independent review.",
+    "disposition": "owner",
+    "owner": "ControlEvaluation",
+    "evidence": "reassigned 2026-10-29 while drafting decides clause: The 'never counts as the independent review' decision is made where independent review is admitted (ControlEvaluation reviewer eligibility); the thread can only carry no approval effect."
+  },
+  {
+    "id": "D14-01",
+    "doc": "m0-d14-advisor-collaboration.md",
+    "kind": "lifecycle",
+    "rule": "Firm consultants work in the product only as Advisor-role assignees of an accepted ServiceEngagement for the client, and removing the assignment revokes access immediately.",
+    "disposition": "process",
+    "owner": null,
+    "evidence": "process ServiceEngagementIndependence->AccessGrant",
+    "note": "Assignment removal revokes access"
+  },
+  {
+    "id": "D14-02",
+    "doc": "m0-d14-advisor-collaboration.md",
+    "kind": "expiry",
+    "rule": "An external consultant hired directly by a client gets a guest membership limited to programs the Org Admin grants, with no approval rights and a required end date.",
+    "disposition": "owner",
+    "owner": "Member",
+    "evidence": "Jev choice 0.90"
+  },
+  {
+    "id": "D14-03",
+    "doc": "m0-d14-advisor-collaboration.md",
+    "kind": "consistency",
+    "rule": "An accepted guest receives only direct, program-scoped, time-limited Viewer grants, and guest authorization exposes tenant access only on open advisor handoffs while ordinary program reads remain denied.",
+    "disposition": "authorization",
+    "owner": null,
+    "evidence": "authorization layer",
+    "note": "Guest grant shape issued via AccessGrant; exposure limits are authorization"
+  },
+  {
+    "id": "D14-04",
+    "doc": "m0-d14-advisor-collaboration.md",
+    "kind": "expiry",
+    "rule": "The guest end date is persisted on the guest Member registration, access stops at the end of that UTC date, and later grant proposals cannot extend beyond it.",
+    "disposition": "owner",
+    "owner": "Member",
+    "evidence": "Jev choice 0.98"
+  },
+  {
+    "id": "D14-05",
+    "doc": "m0-d14-advisor-collaboration.md",
+    "kind": "consistency",
+    "rule": "Work queues, access reviews, and work digests are outside the guest handoff boundary and are not visible to guests.",
+    "disposition": "authorization",
+    "owner": null,
+    "evidence": "reassigned 2026-10-29 while drafting decides clause: Work queues, access reviews and digests being invisible to guests is a read-boundary/authorization rule with no handoff write decision."
+  },
+  {
+    "id": "D14-06",
+    "doc": "m0-d14-advisor-collaboration.md",
+    "kind": "freeze",
+    "rule": "An AdvisorHandoff is a bounded selection of exact draft record versions that the Compliance Lead marks ready_for_review; advisors and guests see only records in an open handoff plus already-approved records.",
+    "disposition": "owner",
+    "owner": "AdvisorHandoff",
+    "evidence": "Jev choice 1.00"
+  },
+  {
+    "id": "D14-07",
+    "doc": "m0-d14-advisor-collaboration.md",
+    "kind": "lifecycle",
+    "rule": "Closing or revoking a handoff removes advisor and guest access to its records while history stays.",
+    "disposition": "owner",
+    "owner": "AdvisorHandoff",
+    "evidence": "Jev choice 1.00"
+  },
+  {
+    "id": "D14-08",
+    "doc": "m0-d14-advisor-collaboration.md",
+    "kind": "cardinality",
+    "rule": "AdvisorFeedback is of kind comment, change_request, or validated and records author, time, target record version, and kind.",
+    "disposition": "owner",
+    "owner": "AdvisorFeedbackThread",
+    "evidence": "Jev choice 1.00"
+  },
+  {
+    "id": "D14-09",
+    "doc": "m0-d14-advisor-collaboration.md",
+    "kind": "approval",
+    "rule": "A validated feedback is an attributed review of an exact record version; it never changes the record's approval state and never satisfies a separation-of-duties or approval requirement.",
+    "disposition": "owner",
+    "owner": "AdvisorFeedbackThread",
+    "evidence": "Jev choice 0.96"
+  },
+  {
+    "id": "D14-10",
+    "doc": "m0-d14-advisor-collaboration.md",
+    "kind": "lifecycle",
+    "rule": "A validation is invalidated when a new version supersedes the validated record version.",
+    "disposition": "projection",
+    "owner": null,
+    "evidence": "reassigned 2026-10-29 while drafting decides clause: Invalidation by supersession is a derived currency state computed against the latest record version, not a write the immutable relationship performs."
+  },
+  {
+    "id": "D14-11",
+    "doc": "m0-d14-advisor-collaboration.md",
+    "kind": "immutability",
+    "rule": "Advisor feedback is immutable once posted; a correction is a new entry linking back, and revocation removes future access but never past attribution.",
+    "disposition": "owner",
+    "owner": "AdvisorFeedbackThread",
+    "evidence": "Jev choice 1.00"
+  },
+  {
+    "id": "D15-01",
+    "doc": "m0-d15-work-queue.md",
+    "kind": "consistency",
+    "rule": "An AccountableWorkItem (a person's or team's work-queue entry) is a projection of a source workflow record (control occurrence, evidence request, pending approval decision, finding corrective action, access review campaign decision, policy acknowledgement), never a second source of workflow truth; each item links to its exact source record and disappears from the queue when the work is completed in the source workflow.",
+    "disposition": "projection",
+    "owner": null,
+    "evidence": "reassigned 2026-10-29 while drafting decides clause: queue is a projection of source workflow (jev 0.69)"
+  },
+  {
+    "id": "D15-02",
+    "doc": "m0-d15-work-queue.md",
+    "kind": "lifecycle",
+    "rule": "A finding_closure_review work item exists only while the finding has at least one corrective action, every corrective action is completed, and the finding remains open awaiting independent verification; new incomplete corrective work removes the item and closure of the finding removes it.",
+    "disposition": "projection",
+    "owner": null,
+    "evidence": "reassigned 2026-10-29 while drafting decides clause: finding_closure_review work item existence is derived from corrective-action state; the work queue is a projection."
+  },
+  {
+    "id": "D15-03",
+    "doc": "m0-d15-work-queue.md",
+    "kind": "approval",
+    "rule": "The finding remains the authority for required closure evidence, verification rationale, program-management permission, and separation of duties; the work queue never infers or grants a separation-of-duties exception or waiver.",
+    "disposition": "owner",
+    "owner": "FindingAggregate",
+    "evidence": "Jev choice 0.94"
+  },
+  {
+    "id": "D15-04",
+    "doc": "m0-d15-work-queue.md",
+    "kind": "approval",
+    "rule": "A finding closure work item is visible only to active, non-firm-staff tenant members holding program.manage permission (including explicitly authorized persisted guest memberships) who are neither the finding's current owner nor an owner or completer of any of its corrective actions.",
+    "disposition": "authorization",
+    "owner": null,
+    "evidence": "authorization layer",
+    "note": "Work-item visibility by permission and role relationship"
+  },
+  {
+    "id": "D15-05",
+    "doc": "m0-d15-work-queue.md",
+    "kind": "uniqueness",
+    "rule": "The identity of a finding-closure work item includes the exact finding revision; revising or reopening a finding creates a new work identity, and an assignment made against an earlier revision cannot authorize or assign the new round.",
+    "disposition": "owner",
+    "owner": "WorkItemAssignment",
+    "evidence": "Jev choice 0.86"
+  },
+  {
+    "id": "D15-06",
+    "doc": "m0-d15-work-queue.md",
+    "kind": "consistency",
+    "rule": "Work-item counts, item reads, reminders, and digest content must all use the same source-derived item and eligibility rules.",
+    "disposition": "projection",
+    "owner": null,
+    "evidence": "reassigned 2026-10-29 while drafting decides clause: count/read/digest consistency is projection"
+  },
+  {
+    "id": "D15-07",
+    "doc": "m0-d15-work-queue.md",
+    "kind": "consistency",
+    "rule": "Finding decision-work inputs and the remediation checkpoint are stored together in one tenant-scoped projection in a single transaction; queue reads return a transient conflict when the projection lags or changes during enumeration.",
+    "disposition": "projection",
+    "owner": null,
+    "evidence": "derived read model",
+    "note": "Single-transaction projection and read conflict behavior"
+  },
+  {
+    "id": "D15-08",
+    "doc": "m0-d15-work-queue.md",
+    "kind": "sequence",
+    "rule": "Work items are ordered by due date ascending (undated items after all dated items), then source materiality high, medium, low (no materiality after low), then item creation time, then work-item identifier as final tie-break, deterministically for a given projection as-of time.",
+    "disposition": "projection",
+    "owner": null,
+    "evidence": "reassigned 2026-10-29 while drafting decides clause: ordering is a read rule"
+  },
+  {
+    "id": "D15-09",
+    "doc": "m0-d15-work-queue.md",
+    "kind": "approval",
+    "rule": "An unassigned team work item may be claimed only by a member of that team holding the role the source workflow requires; assign and reassign are limited to a Compliance Lead or Org Admin; delegate is limited to the current assignee and only to someone eligible under the source workflow; escalate may be done by any assignee or by the system.",
+    "disposition": "owner",
+    "owner": "WorkItemAssignment",
+    "evidence": "Jev choice 0.99"
+  },
+  {
+    "id": "D15-10",
+    "doc": "m0-d15-work-queue.md",
+    "kind": "approval",
+    "rule": "Every work-item assignment action is attributed and checked against separation-of-duties rules; an item cannot be assigned to a person the source workflow would reject.",
+    "disposition": "owner",
+    "owner": "WorkItemAssignment",
+    "evidence": "Jev choice 0.99"
+  },
+  {
+    "id": "D15-11",
+    "doc": "m0-d15-work-queue.md",
+    "kind": "lifecycle",
+    "rule": "A work item that is 7 days overdue escalates automatically to the Compliance Lead, recorded as a system-actor escalation; escalation adds visibility only and does not reassign the item.",
+    "disposition": "owner",
+    "owner": "WorkItemAssignment",
+    "evidence": "Jev choice 1.00"
+  },
+  {
+    "id": "D15-12",
+    "doc": "m0-d15-work-queue.md",
+    "kind": "consistency",
+    "rule": "Members may opt out of the weekly digest email but not out of in-app reminders; in-app reminders fire at the due date and when an item becomes overdue; no per-item email is sent.",
+    "disposition": "technical",
+    "owner": "WorkDigestPreference",
+    "evidence": "Jev choice 0.99",
+    "note": "WorkDigestPreference is a technical settings state owner since 2026-10-29; in-app reminders are a work-queue projection."
+  },
+  {
+    "id": "D15-13",
+    "doc": "m0-d15-work-queue.md",
+    "kind": "consistency",
+    "rule": "Source work remains actionable and its authority and completion unchanged when email delivery or optional external automation is unavailable.",
+    "disposition": "process",
+    "owner": null,
+    "evidence": "reassigned 2026-10-29 while drafting decides clause: delivery failure not affecting source work is a notification rule"
+  },
+  {
+    "id": "D16-01",
+    "doc": "m0-d16-evidence-handling.md",
+    "kind": "cardinality",
+    "rule": "Every evidence artifact carries exactly one handling_class from public, internal, confidential, or restricted.",
+    "disposition": "owner",
+    "owner": "EvidenceHandlingPolicy",
+    "evidence": "Jev choice 1.00"
+  },
+  {
+    "id": "D16-02",
+    "doc": "m0-d16-evidence-handling.md",
+    "kind": "consistency",
+    "rule": "Credentials, secrets, private keys, access tokens, and session cookies are never stored; uploads are scanned for them before content becomes available.",
+    "disposition": "owner",
+    "owner": "EvidenceArtifact",
+    "evidence": "Jev choice 1.00"
+  },
+  {
+    "id": "D16-03",
+    "doc": "m0-d16-evidence-handling.md",
+    "kind": "lifecycle",
+    "rule": "When a secret is detected in an upload, the upload moves to rejected with reason secret_detected, its content is purged immediately, and only a tombstone (content hash, size, uploader, time, reason) is kept.",
+    "disposition": "owner",
+    "owner": "EvidenceArtifact",
+    "evidence": "Jev choice 0.98"
+  },
+  {
+    "id": "D16-04",
+    "doc": "m0-d16-evidence-handling.md",
+    "kind": "lifecycle",
+    "rule": "A secret-bearing (secret_detected) upload can never be released, quarantined, or made available; the uploader must submit a redacted replacement as a new upload.",
+    "disposition": "owner",
+    "owner": "EvidenceArtifact",
+    "evidence": "Jev choice 1.00"
+  },
+  {
+    "id": "D16-05",
+    "doc": "m0-d16-evidence-handling.md",
+    "kind": "retention",
+    "rule": "Default evidence retention is 7 years after the end of the period the evidence supports; for point-in-time evidence the period end is its as-of date.",
+    "disposition": "owner",
+    "owner": "ArtifactRetentionBasis",
+    "evidence": "Jev choice 0.85"
+  },
+  {
+    "id": "D16-06",
+    "doc": "m0-d16-evidence-handling.md",
+    "kind": "retention",
+    "rule": "An EvidenceHold is either engagement kind, applying until the report is issued plus 1 year, or legal kind, applying until an Org Admin releases it with no end date.",
+    "disposition": "owner",
+    "owner": "ArtifactEngagementHold",
+    "evidence": "Jev choice 0.77"
+  },
+  {
+    "id": "D16-07",
+    "doc": "m0-d16-evidence-handling.md",
+    "kind": "retention",
+    "rule": "An evidence artifact is eligible for disposition only when its retention period has elapsed and it has no active hold.",
+    "disposition": "owner",
+    "owner": "ArtifactDisposition",
+    "evidence": "Jev choice 1.00"
+  },
+  {
+    "id": "D16-08",
+    "doc": "m0-d16-evidence-handling.md",
+    "kind": "approval",
+    "rule": "Disposition of evidence requires Org Admin approval recorded as an immutable decision, may be batched, and leaves a tombstone with content hash, size, retention basis, and the decision; nothing is disposed of automatically.",
+    "disposition": "owner",
+    "owner": "ArtifactDisposition",
+    "evidence": "Jev choice 1.00"
+  },
+  {
+    "id": "D16-09",
+    "doc": "m0-d16-evidence-handling.md",
+    "kind": "immutability",
+    "rule": "A redaction creates a new derived artifact with a new content identity linked to its original and never alters the original; the original keeps its own retention and access rules.",
+    "disposition": "owner",
+    "owner": "EvidenceRedaction",
+    "evidence": "Jev choice 0.81"
+  },
+  {
+    "id": "D16-10",
+    "doc": "m0-d16-evidence-handling.md",
+    "kind": "approval",
+    "rule": "Any Contributor may prepare a redacted derivative, but a Compliance Lead must approve it for disclosure.",
+    "disposition": "authorization",
+    "owner": null,
+    "evidence": "reassigned 2026-10-29 while drafting decides clause: Role gating (Contributor prepares, Compliance Lead approves) is a permission check at the handler; the aggregate enforces only preparer/approver independence and waiver proof."
+  },
+  {
+    "id": "D16-11",
+    "doc": "m0-d16-evidence-handling.md",
+    "kind": "lifecycle",
+    "rule": "Evidence artifact states are pending_inspection, available, quarantined (reason malware), rejected (reason secret_detected or invalid, content purged), and disposed; every upload must be scanned for malware and secrets before it becomes available.",
+    "disposition": "owner",
+    "owner": "EvidenceArtifact",
+    "evidence": "Jev choice 1.00"
+  },
+  {
+    "id": "D16-12",
+    "doc": "m0-d16-evidence-handling.md",
+    "kind": "approval",
+    "rule": "A quarantined artifact cannot be downloaded or shared; only an Org Admin may release a malware false positive (a recorded decision after rescan) or dispose of it.",
+    "disposition": "owner",
+    "owner": "EvidenceArtifact",
+    "evidence": "Jev choice 0.98"
+  },
+  {
+    "id": "D16-13",
+    "doc": "m0-d16-evidence-handling.md",
+    "kind": "consistency",
+    "rule": "Only available, non-quarantined artifacts, or their approved redacted derivatives, may be shared with auditors, and every disclosure is logged.",
+    "disposition": "owner",
+    "owner": "ArtifactDisclosure",
+    "evidence": "src/Compliance.Core/Features/Retention/Aggregates/ArtifactDisclosure.cs",
+    "note": "Disclosure binds approved artifact content and logs"
+  },
+  {
+    "id": "D16-14",
+    "doc": "m0-d16-evidence-handling.md",
+    "kind": "consistency",
+    "rule": "Evidence content identity (hash) is verified on restore.",
+    "disposition": "owner",
+    "owner": "EvidenceArtifact",
+    "evidence": "Jev choice 0.78"
+  },
+  {
+    "id": "D16-15",
+    "doc": "m0-d16-evidence-handling.md",
+    "kind": "retention",
+    "rule": "When a client offboards, active holds block disposition of held artifacts; everything else follows the retention schedule after the ClientExport is delivered.",
+    "disposition": "owner",
+    "owner": "ArtifactDisposition",
+    "evidence": "Jev round3 1.00; disposition refuses while active holds exist (invariant already states no active holds)"
+  },
+  {
+    "id": "D17-01",
+    "doc": "m0-d17-audit-deliverables.md",
+    "kind": "immutability",
+    "rule": "An exported audit population is one immutable version with its own content hash and a stable row identifier per item; its original version and hash never change.",
+    "disposition": "owner",
+    "owner": "PopulationSnapshot",
+    "evidence": "Jev choice 0.84"
+  },
+  {
+    "id": "D17-02",
+    "doc": "m0-d17-audit-deliverables.md",
+    "kind": "lifecycle",
+    "rule": "Late or corrected population rows produce a new population version that references the superseded version and each superseded row.",
+    "disposition": "owner",
+    "owner": "AuditPopulation",
+    "evidence": "Jev choice 0.96"
+  },
+  {
+    "id": "D17-03",
+    "doc": "m0-d17-audit-deliverables.md",
+    "kind": "immutability",
+    "rule": "A sample selection references population row identifiers and the exact population version's content hash; a later population version does not move an existing sample, and selecting from an amended population is a new, linked selection.",
+    "disposition": "owner",
+    "owner": "AuditorSampleSelection",
+    "evidence": "Jev choice 0.73"
+  },
+  {
+    "id": "D17-04",
+    "doc": "m0-d17-audit-deliverables.md",
+    "kind": "consistency",
+    "rule": "An audit package includes a manifest.json listing every file's path, hash, size, and source record version, with deterministic naming {engagement}/{section}/{stable_id}_{version}.{ext}.",
+    "disposition": "process",
+    "owner": null,
+    "evidence": "reassigned 2026-10-29 while drafting decides clause: The generated manifest.json and deterministic archive paths are built and verified in AuditPackageArchiveVerifier/builder; the aggregate holds references and approvals."
+  },
+  {
+    "id": "D17-05",
+    "doc": "m0-d17-audit-deliverables.md",
+    "kind": "consistency",
+    "rule": "The control matrix has one row per control version and the evidence index has one row per artifact version, each with stable identifiers.",
+    "disposition": "projection",
+    "owner": null,
+    "evidence": "derived read model",
+    "note": "Control matrix and evidence index are package projections"
+  },
+  {
+    "id": "D17-06",
+    "doc": "m0-d17-audit-deliverables.md",
+    "kind": "approval",
+    "rule": "The management assertion and the representation letter are each signed by the CEO or the CISO, recorded as an attributable sign-off decision on an exact package version.",
+    "disposition": "owner",
+    "owner": "ManagementAssertion",
+    "evidence": "src/Compliance.Core/Features/Examinations/Aggregates/ManagementAssertion.cs",
+    "note": "Named CEO/CISO decision; letter in ManagementRepresentationLetter"
+  },
+  {
+    "id": "D17-07",
+    "doc": "m0-d17-audit-deliverables.md",
+    "kind": "sequence",
+    "rule": "Package sign-off sequence is fixed: the package is validated, then the assertion is signed, then the representation letter is signed, then the outcome is recorded.",
+    "disposition": "owner",
+    "owner": "ExaminationSignOff",
+    "evidence": "Jev choice 0.98"
+  },
+  {
+    "id": "D17-08",
+    "doc": "m0-d17-audit-deliverables.md",
+    "kind": "approval",
+    "rule": "External audit firms receive packages and are never given direct product accounts; the firm's own attest team works in-product as Attest-role engagement assignees behind the independence wall.",
+    "disposition": "authorization",
+    "owner": null,
+    "evidence": "authorization layer",
+    "note": "External firms get no accounts; access model"
+  },
+  {
+    "id": "D18-01",
+    "doc": "m0-d18-success-measures.md",
+    "kind": "consistency",
+    "rule": "Success-measure instrumentation derives only from existing attributed domain events and projections (work-item state transitions and attributed actions), with no view tracking and no separate telemetry store for business data.",
+    "disposition": "projection",
+    "owner": null,
+    "evidence": "reassigned 2026-10-29 while drafting decides clause: instrumentation derivation"
+  },
+  {
+    "id": "D18-02",
+    "doc": "m0-d18-success-measures.md",
+    "kind": "consistency",
+    "rule": "Success measures are reported per organization and never aggregated across clients without cross-client authorization.",
+    "disposition": "authorization",
+    "owner": null,
+    "evidence": "authorization layer",
+    "note": "Cross-client aggregation requires authorization"
+  },
+  {
+    "id": "D18-03",
+    "doc": "m0-d18-success-measures.md",
+    "kind": "consistency",
+    "rule": "The parallel-tracking measure is a dated, attributed self-report record captured in the first 30 days and again at the R2 exit; the dated overdue backlog count uses the weekly digest's overdue calculation and must be recorded independent of email delivery.",
+    "disposition": "product_policy",
+    "owner": null,
+    "evidence": "no write rule",
+    "note": "Success-measure self-report capture is product measurement, no aggregate"
+  },
+  {
+    "id": "D18-04",
+    "doc": "m0-d18-success-measures.md",
+    "kind": "lifecycle",
+    "rule": "A work item's attention states are missing (required evidence not submitted by due date), stale (accepted evidence past its freshness period), rejected (evidence review rejection), and overdue.",
+    "disposition": "projection",
+    "owner": null,
+    "evidence": "reassigned 2026-10-29 while drafting decides clause: attention states are computed on read"
+  },
+  {
+    "id": "D19-01",
+    "doc": "m0-d19-periodic-reviews.md",
+    "kind": "consistency",
+    "rule": "Periodic policy, risk, vendor, and management compliance reviews are ordinary recurring controls: each has a cadence, an expected ControlOccurrence population, evidence, and an attributed sign-off, with no dedicated review aggregate.",
+    "disposition": "process",
+    "owner": null,
+    "evidence": "reassigned 2026-10-29 while drafting decides clause: Modeling decision (reviews are recurring controls, no review aggregate); realized by control/cadence setup, not a write-time refusal here."
+  },
+  {
+    "id": "D19-02",
+    "doc": "m0-d19-periodic-reviews.md",
+    "kind": "freeze",
+    "rule": "A management compliance review's ControlOccurrence has a frozen evidence set binding the exact readiness assessment version, the monitoring measure versions, and the agenda or minutes artifact; later data changes never alter the frozen set; it replaces a separate ManagementReviewSnapshot aggregate.",
+    "disposition": "owner",
+    "owner": "ControlOccurrence",
+    "evidence": "src/Compliance.Core/Features/Operations/Aggregates/ControlOccurrence.cs",
+    "note": "Frozen evidence binding on management review occurrence"
+  },
+  {
+    "id": "D19-03",
+    "doc": "m0-d19-periodic-reviews.md",
+    "kind": "approval",
+    "rule": "Management's sign-off on the review occurrence is an immutable decision with outcome approved, action_requested, or deferred and a rationale.",
+    "disposition": "owner",
+    "owner": "ControlOccurrence",
+    "evidence": "src/Compliance.Core/Features/Operations/Aggregates/ControlOccurrence.cs",
+    "note": "Reviewed occurrence decision with outcome and rationale"
+  },
+  {
+    "id": "D19-04",
+    "doc": "m0-d19-periodic-reviews.md",
+    "kind": "consistency",
+    "rule": "Each action requested by a management review is created as a Finding with a corrective action linked to the occurrence, and is tracked to completion in the accountable work queue.",
+    "disposition": "process",
+    "owner": null,
+    "evidence": "process ControlOccurrence->FindingAggregate/CorrectiveAction",
+    "note": "Review actions create findings"
+  },
+  {
+    "id": "D19-05",
+    "doc": "m0-d19-periodic-reviews.md",
+    "kind": "cardinality",
+    "rule": "Annual policy review is one occurrence per policy with evidence of the approved new or unchanged policy version; annual vendor review is one occurrence per material provider with evidence of the assurance-report review.",
+    "disposition": "owner",
+    "owner": "ControlOccurrence",
+    "evidence": "reassigned 2026-10-29 while drafting decides clause: Per-policy/per-material-provider occurrence population and required evidence (approved policy version, assurance-report review) is an occurrence expectation and evidence-binding rule, not plan-version line approval/non-overlap.",
+    "note": "Occurrence cardinality per policy/provider"
+  },
+  {
+    "id": "D20-01",
+    "doc": "m0-d20-integration-sources.md",
+    "kind": "consistency",
+    "rule": "No connector is built in R1 or R2; every feature must remain operable through the manual path when no connector or optional collection automation is enabled.",
+    "disposition": "product_policy",
+    "owner": null,
+    "evidence": "no write rule",
+    "note": "Delivery scope: no connector in R1/R2"
+  },
+  {
+    "id": "D20-02",
+    "doc": "m0-d20-integration-sources.md",
+    "kind": "approval",
+    "rule": "A connector never writes governed facts directly; it writes source observations into the canonical shape only through staged, all-or-nothing acceptance, with changes reviewable as proposals rather than automatic truth.",
+    "disposition": "product_policy",
+    "owner": null,
+    "evidence": "no write rule",
+    "note": "Connector principle; no connector built"
+  },
+  {
+    "id": "D20-03",
+    "doc": "m0-d20-integration-sources.md",
+    "kind": "consistency",
+    "rule": "Partner callbacks and status endpoints are observations, not proof of every transition or current local state; missing, late, duplicate, out-of-order, and unrecognized signals must be reconciled, and incomplete coverage and pending partner-side work must be shown rather than presented as complete.",
+    "disposition": "product_policy",
+    "owner": null,
+    "evidence": "no write rule",
+    "note": "Connector principle; no connector built"
+  },
+  {
+    "id": "D20-04",
+    "doc": "m0-d20-integration-sources.md",
+    "kind": "consistency",
+    "rule": "A connector must not blindly repeat a partner write whose response may have been lost; it needs a partner idempotency mechanism, a reliable lookup to determine whether the write took effect, or a visible operator recovery path.",
+    "disposition": "product_policy",
+    "owner": null,
+    "evidence": "no write rule",
+    "note": "Connector design requirement; no connector built"
+  },
+  {
+    "id": "D20-05",
+    "doc": "m0-d20-integration-sources.md",
+    "kind": "consistency",
+    "rule": "Records matched from sources must not silently merge identities or systems.",
+    "disposition": "owner",
+    "owner": "ApplicationImportSource",
+    "evidence": "Jev choice 0.74"
+  },
+  {
+    "id": "D21-01",
+    "doc": "m0-d21-significant-change.md",
+    "kind": "consistency",
+    "rule": "An authorized user may record a SignificantChange or ComplianceIncident directly when no source tool exists; the product keeps its own record identity, recorder, dates, assessment, and evidence, and external source_system, source_identifier, and source_url are optional provenance only.",
+    "disposition": "owner",
+    "owner": "SignificantChange",
+    "evidence": "src/Compliance.Core/Features/Changes/Aggregates/SignificantChange.cs",
+    "note": "Direct record with own identity; ComplianceIncident likewise"
+  },
+  {
+    "id": "D21-02",
+    "doc": "m0-d21-significant-change.md",
+    "kind": "consistency",
+    "rule": "Significance is a recorded human assessment of significant or not_significant with a required rationale and assessed_by and assessed_at; handling_class uses the evidence vocabulary and defaults to confidential.",
+    "disposition": "owner",
+    "owner": "SignificantChange",
+    "evidence": "Jev choice 0.98"
+  },
+  {
+    "id": "D21-03",
+    "doc": "m0-d21-significant-change.md",
+    "kind": "consistency",
+    "rule": "A change is significant when it changes the system boundary, changes a service commitment or system requirement, changes a key control, or changes infrastructure hosting in-scope data; an incident is significant when it is a security incident affecting customer data or an availability SLA.",
+    "disposition": "process",
+    "owner": null,
+    "evidence": "reassigned 2026-10-29 while drafting decides clause: significance criteria (including incident rule) guide the human assessment; ComplianceIncident is a separate owner"
+  },
+  {
+    "id": "D21-04",
+    "doc": "m0-d21-significant-change.md",
+    "kind": "consistency",
+    "rule": "A ComplianceIncident carries detected_at, resolved_at, and boolean customer_data_affected and availability_sla_affected; it may link to an earlier externally sourced IncidentReference, and linking does not rewrite earlier risk history or weaken the IncidentReference's required source identity, occurrence time, summary, and provenance.",
+    "disposition": "owner",
+    "owner": "ComplianceIncident",
+    "evidence": "Jev choice 0.99"
+  },
+  {
+    "id": "D21-05",
+    "doc": "m0-d21-significant-change.md",
+    "kind": "consistency",
+    "rule": "Change and incident records store no ticket bodies, logs, or personal data beyond actor attribution; supporting detail for manual items is governed evidence.",
+    "disposition": "product_policy",
+    "owner": null,
+    "evidence": "no write rule",
+    "note": "Data-minimisation contract for change/incident records"
+  },
+  {
+    "id": "D21-06",
+    "doc": "m0-d21-significant-change.md",
+    "kind": "approval",
+    "rule": "Every significant change or incident is always included in the auditor-visible engagement access or package regardless of handling_class; restricted handling_class limits internal view and edit to the Compliance Lead, Org Admin, the assessor, and engagement auditors but never removes the item from the auditor-visible significant set.",
+    "disposition": "authorization",
+    "owner": null,
+    "evidence": "authorization layer",
+    "note": "Auditor-visible access/handling_class visibility"
+  },
+  {
+    "id": "D21-07",
+    "doc": "m0-d21-significant-change.md",
+    "kind": "lifecycle",
+    "rule": "A significant change or incident flags every SystemDescription section referencing an affected record as needs_review; the flag clears only with a new approved section version or a recorded 'no change needed' decision.",
+    "disposition": "process",
+    "owner": null,
+    "evidence": "process SignificantChange/ComplianceIncident->SystemDescription",
+    "note": "Sources set needs_review; SystemDescription section flag clearing needs reactor/aggregate support (verify)"
+  },
+  {
+    "id": "D21-08",
+    "doc": "m0-d21-significant-change.md",
+    "kind": "consistency",
+    "rule": "Period close validation lists every significant item in the period and fails while any flagged system description section is unresolved.",
+    "disposition": "owner",
+    "owner": "TypeIIPeriod",
+    "evidence": "Jev choice 0.99"
+  },
+  {
+    "id": "D22-01",
+    "doc": "m0-d22-canonical-ownership.md",
+    "kind": "consistency",
+    "rule": "Application and SystemInstance are owned solely by application inventory; access review campaigns reference an exact system instance, and a campaign's review inclusion neither creates nor owns the instance (ReviewedSystem is a legacy name, not a second entity).",
+    "disposition": "owner",
+    "owner": "DeclaredSystemInstance",
+    "evidence": "Jev choice 0.98"
+  },
+  {
+    "id": "D22-02",
+    "doc": "m0-d22-canonical-ownership.md",
+    "kind": "consistency",
+    "rule": "Person and WorkRelationship are owned by workforce assurance; access governance correlates observed accounts to a person and must not import a competing person roster; a platform member is a separate access relationship.",
+    "disposition": "owner",
+    "owner": "Person",
+    "evidence": "Jev choice 0.81"
+  },
+  {
+    "id": "D22-03",
+    "doc": "m0-d22-canonical-ownership.md",
+    "kind": "consistency",
+    "rule": "ServiceIdentity (non-human identity) is owned by workforce assurance with an accountable owner relationship; a group or role never becomes a non-human identity.",
+    "disposition": "owner",
+    "owner": "ServiceIdentity",
+    "evidence": "Jev choice 1.00"
+  },
+  {
+    "id": "D22-04",
+    "doc": "m0-d22-canonical-ownership.md",
+    "kind": "consistency",
+    "rule": "ClientService is owned by program and scope, distinct from an application and from a firm ServiceEngagement; each new service belongs to a program, and a boundary draft may cite only active services owned by that same program.",
+    "disposition": "owner",
+    "owner": "ClientService",
+    "evidence": "Jev round3 1.00; the service register owns program binding and active-service citation"
+  },
+  {
+    "id": "D22-05",
+    "doc": "m0-d22-canonical-ownership.md",
+    "kind": "consistency",
+    "rule": "Older ClientService events without a program remain readable but cannot be used as governed scope references.",
+    "disposition": "projection",
+    "owner": null,
+    "evidence": "reassigned 2026-10-29 while drafting decides clause: Legacy no-program services being unusable is a read-side/reference-validation rule."
+  },
+  {
+    "id": "D22-06",
+    "doc": "m0-d22-canonical-ownership.md",
+    "kind": "uniqueness",
+    "rule": "Location and OperationalProcess are owned by technology and information inventory with stable identity and type; no other context silently re-creates them, and a written procedure is policy content, not an OperationalProcess record.",
+    "disposition": "owner",
+    "owner": "OperationalProcess",
+    "evidence": "src/Compliance.Core/Features/TechnologyInventory/Aggregates/OperationalProcess.cs",
+    "note": "Inventory owns Location/OperationalProcess identity"
+  },
+  {
+    "id": "D22-07",
+    "doc": "m0-d22-canonical-ownership.md",
+    "kind": "consistency",
+    "rule": "Risk assessment owns the externally sourced IncidentReference (source ID, occurrence time, summary, provenance); it can trigger reassessment but is not an incident workflow, and the later governed incident may correlate it without rewriting earlier risk history.",
+    "disposition": "owner",
+    "owner": "RiskEvaluation",
+    "evidence": "Jev round3 1.00; the IncidentReference decides clause sits on RiskEvaluation (risk assessment)",
+    "note": "IncidentReference owned by risk evaluation (RiskEvaluationRules / ComplianceIncidentRules)"
+  },
+  {
+    "id": "D22-08",
+    "doc": "m0-d22-canonical-ownership.md",
+    "kind": "consistency",
+    "rule": "The control-to-risk relationship is a versioned assertion owned by risk treatment that a specific control version treats a specific risk, with rationale and review; a control does not silently acquire risk coverage.",
+    "disposition": "owner",
+    "owner": "RiskTreatmentAssertion",
+    "evidence": "Jev choice 1.00"
+  },
+  {
+    "id": "D22-09",
+    "doc": "m0-d22-canonical-ownership.md",
+    "kind": "consistency",
+    "rule": "Cross-context references use tenant ID, stable record ID, and an exact version when a decision or snapshot relies on the record; before an owning inventory exists a boundary may keep a typed unresolved reference with owner and rationale.",
+    "disposition": "owner",
+    "owner": "SystemBoundary",
+    "evidence": "Jev choice 0.74"
+  },
+  {
+    "id": "D22-10",
+    "doc": "m0-d22-canonical-ownership.md",
+    "kind": "consistency",
+    "rule": "OwnerReference is user-supplied attribution; free text never becomes a verified owner identity.",
+    "disposition": "process",
+    "owner": null,
+    "evidence": "reassigned 2026-10-29 while drafting decides clause: OwnerReference attribution is a boundary rule on the intake contract; not a refusal here",
+    "note": "Owner reference is user-supplied attribution"
+  },
+  {
+    "id": "D23-01",
+    "doc": "m0-d23-assurance-vocabulary.md",
+    "kind": "consistency",
+    "rule": "Gap (readiness unmet rule for an exact assessment and as-of time), ProviderCoverageGap, ControlEvaluationDeviation, and Finding are distinct records; none silently changes into another or closes merely because a linked record changes state, and conversion to a Finding preserves source text, provenance, and links.",
+    "disposition": "owner",
+    "owner": "FindingAggregate",
+    "evidence": "src/Compliance.Core/Features/Remediation/Aggregates/FindingAggregate.cs",
+    "note": "Conversion preserves source/provenance; distinct records are distinct aggregates"
+  },
+  {
+    "id": "D23-02",
+    "doc": "m0-d23-assurance-vocabulary.md",
+    "kind": "consistency",
+    "rule": "A material ControlEvaluationDeviation creates or links to a Finding; the deviation retains the procedure, exact inputs, tester, and original result.",
+    "disposition": "owner",
+    "owner": "ControlEvaluation",
+    "evidence": "Jev round3 1.00; same as D13-07"
+  },
+  {
+    "id": "D23-03",
+    "doc": "m0-d23-assurance-vocabulary.md",
+    "kind": "consistency",
+    "rule": "ProviderCoverageGap links to a Gap when it affects readiness, but its source and closure remain with the provider assessment.",
+    "disposition": "projection",
+    "owner": null,
+    "evidence": "derived read model",
+    "note": "Gap linkage is derived readiness view; closure stays with ProviderAssuranceGap"
+  },
+  {
+    "id": "D23-04",
+    "doc": "m0-d23-assurance-vocabulary.md",
+    "kind": "expiry",
+    "rule": "A Waiver is an authorized, time-bounded exception recording scope, approver, rationale, expiry, and compensating action; an AuditTestException is an auditor-identified examination exception preserving auditor wording and response history and is not an approved waiver; the two types stay distinct.",
+    "disposition": "product_policy",
+    "owner": null,
+    "evidence": "no write rule",
+    "note": "Waiver vs AuditTestException distinction; each kind has own aggregate (SeparationOfDutiesWaiver, ProviderRiskAcceptance, AuditObservation)"
+  },
+  {
+    "id": "D23-05",
+    "doc": "m0-d23-assurance-vocabulary.md",
+    "kind": "consistency",
+    "rule": "RiskAcceptance is owned by risk treatment, with approver, rationale, affected risk and records, expiry, review trigger, and history; findings only link to it and project its effect, and acceptance does not close the finding, erase corrective work, or count as remediation.",
+    "disposition": "projection",
+    "owner": null,
+    "evidence": "reassigned 2026-10-29 while drafting decides clause: findings linking to acceptance and not closing on it is a finding-side projection rule; the acceptance fields belong here"
+  },
+  {
+    "id": "D23-06",
+    "doc": "m0-d23-assurance-vocabulary.md",
+    "kind": "immutability",
+    "rule": "An approval decision is immutable and records exact subject and version, decision kind, actor, role/scope, time, rationale, separation-of-duties result, and any policy exception reference.",
+    "disposition": "authorization",
+    "owner": null,
+    "evidence": "reassigned 2026-10-29 while drafting decides clause: immutable approval decision record is cross-cutting approval-decision contract; here only the waiver decision is covered"
+  },
+  {
+    "id": "D23-07",
+    "doc": "m0-d23-assurance-vocabulary.md",
+    "kind": "consistency",
+    "rule": "Each workflow owns its own request, outcomes, transitions, and decision history (boundary approval, control approval, mapping review, commitment approval, import acceptance, policy approval, evidence review, control evaluation review); there is no universal Review aggregate and no approval confers validity on unrelated records.",
+    "disposition": "product_policy",
+    "owner": null,
+    "evidence": "no write rule",
+    "note": "Architectural statement"
+  },
+  {
+    "id": "D23-08",
+    "doc": "m0-d23-assurance-vocabulary.md",
+    "kind": "approval",
+    "rule": "Human approvals and personal sign-offs are HTTP-only; machine operations may author drafts and read decisions when authorized but cannot approve.",
+    "disposition": "authorization",
+    "owner": null,
+    "evidence": "authorization layer",
+    "note": "HTTP-only human approvals"
+  },
+  {
+    "id": "D23-09",
+    "doc": "m0-d23-assurance-vocabulary.md",
+    "kind": "consistency",
+    "rule": "Readiness rule definitions, input selection, and assessment calculation are owned solely by R1-08; each ReadinessAssessment records rule version, source record versions, completeness, as-of time, output, and derived gaps.",
+    "disposition": "owner",
+    "owner": "ReadinessAssessment",
+    "evidence": "Jev choice 0.99"
+  },
+  {
+    "id": "D23-10",
+    "doc": "m0-d23-assurance-vocabulary.md",
+    "kind": "freeze",
+    "rule": "A ReadinessSnapshot is an immutable freeze of one reproducible readiness assessment calculation plus management's Type I entry decision, and does not redefine readiness rules; monitoring measures cannot silently change a readiness verdict.",
+    "disposition": "owner",
+    "owner": "ProgramReadiness",
+    "evidence": "Jev choice 0.80"
+  },
+  {
+    "id": "D23-11",
+    "doc": "m0-d23-assurance-vocabulary.md",
+    "kind": "consistency",
+    "rule": "Missing or stale readiness inputs remain visible and never become a positive score.",
+    "disposition": "projection",
+    "owner": null,
+    "evidence": "derived read model",
+    "note": "Readiness outputs never score missing inputs positively"
+  },
+  {
+    "id": "D23-12",
+    "doc": "m0-d23-assurance-vocabulary.md",
+    "kind": "consistency",
+    "rule": "A firm ServiceEngagement and a client AuditEngagement are different records; references must name the kind and tenant and neither implies the other's authorization.",
+    "disposition": "owner",
+    "owner": "ServiceEngagementIndependence",
+    "evidence": "Jev choice 0.88"
+  },
+  {
+    "id": "D24-01",
+    "doc": "m0-d24-accessibility-and-browsers.md",
+    "kind": "lifecycle",
+    "rule": "A known accessibility limitation is tracked as an issue and listed in the in-product accessibility statement until fixed (process rule, no backend aggregate enforcement).",
+    "disposition": "product_policy",
+    "owner": null,
+    "evidence": "no write rule",
+    "note": "Accessibility statement/issue tracking is process, no write model"
+  },
+  {
+    "id": "D25-01",
+    "doc": "m0-d25-client-tenancy.md",
+    "kind": "cardinality",
+    "rule": "The client Organization is the only tenant boundary; every business record belongs to exactly one organization and there is no firm entity.",
+    "disposition": "process",
+    "owner": null,
+    "evidence": "reassigned 2026-10-29 while drafting decides clause: no firm entity is an architectural rule, not an aggregate refusal"
+  },
+  {
+    "id": "D25-02",
+    "doc": "m0-d25-client-tenancy.md",
+    "kind": "consistency",
+    "rule": "Platform-level content (criteria catalog editions, firm templates, firm-staff directory, platform-operator roster) lives outside every tenant; a tenant references it by exact version or copies it with provenance, and client data never flows back except through an explicit, reviewed, de-identified contribution.",
+    "disposition": "process",
+    "owner": null,
+    "evidence": "reassigned 2026-10-29 while drafting decides clause: Mostly architectural boundary; already 0.81 covered by invariant. Keep only as design statement.",
+    "note": "Reviewed de-identified contribution only"
+  },
+  {
+    "id": "D25-03",
+    "doc": "m0-d25-client-tenancy.md",
+    "kind": "cardinality",
+    "rule": "Each Membership records exactly one affiliation: client_personnel, firm_staff, or guest.",
+    "disposition": "owner",
+    "owner": "Member",
+    "evidence": "Jev choice 0.99"
+  },
+  {
+    "id": "D25-04",
+    "doc": "m0-d25-client-tenancy.md",
+    "kind": "uniqueness",
+    "rule": "A firm staff member's practice designation (advisory or attest) is recorded once on the platform-level firm-staff directory, not in any client tenant.",
+    "disposition": "owner",
+    "owner": "FirmStaffIdentityClaim",
+    "evidence": "Jev choice 0.78"
+  },
+  {
+    "id": "D25-05",
+    "doc": "m0-d25-client-tenancy.md",
+    "kind": "lifecycle",
+    "rule": "Advisor or Attest access requires assignment to an accepted ServiceEngagement for that client; removing the assignment or ending the engagement revokes the access immediately, and standing firm-staff membership grants no business-record access.",
+    "disposition": "authorization",
+    "owner": null,
+    "evidence": "reassigned 2026-10-29 while drafting decides clause: immediate revocation on assignment removal or engagement end, and no standing firm-staff record access, is authorization evaluation; this owner supplies the assignment state"
+  },
+  {
+    "id": "D25-06",
+    "doc": "m0-d25-client-tenancy.md",
+    "kind": "approval",
+    "rule": "Creating or managing a client organization does not grant professional-service authority; an account holder acting as organization administrator needs an explicit client-role membership grant.",
+    "disposition": "authorization",
+    "owner": null,
+    "evidence": "authorization layer",
+    "note": "Org creation does not confer authority; explicit grants"
+  },
+  {
+    "id": "D25-07",
+    "doc": "m0-d25-client-tenancy.md",
+    "kind": "consistency",
+    "rule": "Advisory working notes live in the advisory compartment of the client organization and attest staff cannot read them; attest workpapers stay outside the platform in the attest team's own audit software.",
+    "disposition": "authorization",
+    "owner": null,
+    "evidence": "authorization layer",
+    "note": "Compartment read visibility, enforced by authorization"
+  },
+  {
+    "id": "D25-08",
+    "doc": "m0-d25-client-tenancy.md",
+    "kind": "lifecycle",
+    "rule": "Any signed-in platform user with a verified email address may create an organization and becomes its first Org Admin with client_personnel affiliation, with no operator action required.",
+    "disposition": "process",
+    "owner": null,
+    "evidence": "reassigned 2026-10-29 while drafting decides clause: organization creation by any verified-email user becoming first Org Admin is the registration process"
+  },
+  {
+    "id": "D25-09",
+    "doc": "m0-d25-client-tenancy.md",
+    "kind": "lifecycle",
+    "rule": "Only platform operators may suspend, reactivate, or offboard an organization; suspension blocks every member and assigned firm staff while preserving records.",
+    "disposition": "authorization",
+    "owner": null,
+    "evidence": "reassigned 2026-10-29 while drafting decides clause: platform-operator-only restriction is authorization; the lifecycle states stay here",
+    "note": "Tenant lifecycle suspend/offboard; operator-only check is authorization via PlatformOperatorRoster"
+  },
+  {
+    "id": "D25-10",
+    "doc": "m0-d25-client-tenancy.md",
+    "kind": "approval",
+    "rule": "A platform operator sees metadata only (tenant lifecycle, administrator roster, usage) and reads business records only by also holding a membership or engagement assignment, with every access authorized and attributed through it.",
+    "disposition": "authorization",
+    "owner": null,
+    "evidence": "reassigned 2026-10-29 while drafting decides clause: Metadata-only visibility and membership/engagement-gated business reads are access rules, not roster decisions."
+  },
+  {
+    "id": "D25-11",
+    "doc": "m0-d25-client-tenancy.md",
+    "kind": "approval",
+    "rule": "An existing operator grants or revokes operator status in the product, each audit logged with actor, subject, time, and reason, with no two-person rule.",
+    "disposition": "owner",
+    "owner": "PlatformOperatorRoster",
+    "evidence": "Jev choice 0.99"
+  },
+  {
+    "id": "D25-12",
+    "doc": "m0-d25-client-tenancy.md",
+    "kind": "sequence",
+    "rule": "Configured operator IDs bootstrap the operator roster only while the platform has no operator; afterward in-app grants and revocations are authoritative and a configured ID never re-grants a revoked operator on restart.",
+    "disposition": "owner",
+    "owner": "PlatformOperatorRoster",
+    "evidence": "Jev choice 0.99"
+  },
+  {
+    "id": "D25-13",
+    "doc": "m0-d25-client-tenancy.md",
+    "kind": "cardinality",
+    "rule": "The last remaining platform operator cannot be revoked.",
+    "disposition": "owner",
+    "owner": "PlatformOperatorRoster",
+    "evidence": "reassigned 2026-10-29 while drafting decides clause: Already covered (0.89) by the last-operator prohibition in the invariant."
+  },
+  {
+    "id": "D25-14",
+    "doc": "m0-d25-client-tenancy.md",
+    "kind": "uniqueness",
+    "rule": "tenant_id is the technical name of an organization in all API paths, events, jobs, logs, and telemetry; there is no second concept.",
+    "disposition": "process",
+    "owner": null,
+    "evidence": "reassigned 2026-10-29 while drafting decides clause: naming convention across API, events and logs is a platform-wide convention"
+  },
+  {
+    "id": "D26-01",
+    "doc": "m0-d26-independence.md",
+    "kind": "uniqueness",
+    "rule": "No person may hold both an Advisor and an Attest assignment for the same client organization, at the same time or ever; the check covers the person's full assignment history for that client.",
+    "disposition": "owner",
+    "owner": "ServiceEngagementIndependence",
+    "evidence": "src/Compliance.Core/Features/AccessControl/Aggregates/ServiceEngagementIndependence.cs",
+    "note": "Advisor/attest exclusion per person per client across history; uses ClientServiceIndependence history"
+  },
+  {
+    "id": "D26-02",
+    "doc": "m0-d26-independence.md",
+    "kind": "approval",
+    "rule": "Attest assignees cannot read advisory working-note records (AdvisorFeedback, AdvisorHandoff content, advisory notes) and advisors cannot read attest-side request discussions marked attest_internal.",
+    "disposition": "authorization",
+    "owner": null,
+    "evidence": "authorization layer",
+    "note": "Compartment read visibility"
+  },
+  {
+    "id": "D26-03",
+    "doc": "m0-d26-independence.md",
+    "kind": "expiry",
+    "rule": "An attest ServiceEngagement cannot be accepted for a client that received any service classified impairing in the active IndependenceRuleSet from the firm within 12 months before the examination period starts, evaluated against the client's NonattestServiceRecord history with no hard-coded service kinds.",
+    "disposition": "owner",
+    "owner": "ClientServiceIndependence",
+    "evidence": "Jev 0.62 (moderate)",
+    "note": "Acceptance evaluated against rule catalog and ClientServiceIndependence history epoch"
+  },
+  {
+    "id": "D26-04",
+    "doc": "m0-d26-independence.md",
+    "kind": "approval",
+    "rule": "A client whose only nonattest service was a readiness assessment is conditionally_compatible, and acceptance requires a recorded partner evaluation.",
+    "disposition": "owner",
+    "owner": "ClientServiceIndependence",
+    "evidence": "Jev round3: two-step 0.80; ClientIndependenceDecision classifies (D26-06), ClientServiceIndependence gates acceptance (0.58)",
+    "note": "Outcome from ClientIndependencePreviewEvaluator; acceptance gated on partner decision proof bound to engagement revision/epoch"
+  },
+  {
+    "id": "D26-05",
+    "doc": "m0-d26-independence.md",
+    "kind": "immutability",
+    "rule": "The IndependenceRuleSet is versioned; rule changes create new versions and never rewrite past evaluations.",
+    "disposition": "owner",
+    "owner": "IndependenceRuleCatalog",
+    "evidence": "Jev 0.97",
+    "note": "Versioned consecutive rules"
+  },
+  {
+    "id": "D26-06",
+    "doc": "m0-d26-independence.md",
+    "kind": "consistency",
+    "rule": "An IndependenceEvaluation records the rule-set version, nonattest services considered, result (compatible, conditionally_compatible, or impaired), partner evaluation when conditional, management's acknowledgement of responsibility for nonattest services, and the approver and time.",
+    "disposition": "owner",
+    "owner": "ClientIndependenceDecision",
+    "evidence": "Jev 0.55 (moderate)",
+    "note": "Evaluation facts split across PartnerIndependenceDecision, ClientIndependenceDecision, EngagementManagementAcknowledgement"
+  },
+  {
+    "id": "D26-07",
+    "doc": "m0-d26-independence.md",
+    "kind": "lifecycle",
+    "rule": "An impaired IndependenceEvaluation result blocks acceptance of the attest engagement with no override.",
+    "disposition": "owner",
+    "owner": "ServiceEngagementIndependence",
+    "evidence": "Jev 0.81",
+    "note": "Impaired result blocks acceptance (EngagementAcceptancePolicy / ServiceEngagementRules)"
+  },
+  {
+    "id": "D26-08",
+    "doc": "m0-d26-independence.md",
+    "kind": "consistency",
+    "rule": "A new attest ServiceEngagement for a client previously served with advisory work goes through the same evaluation using the client's full NonattestServiceRecord history, and advisory staff who served the client are excluded from the attest team.",
+    "disposition": "owner",
+    "owner": "ClientServiceIndependence",
+    "evidence": "Jev round3 0.99; the acceptance barrier uses the client's full nonattest service history",
+    "note": "Full service history manifest/epoch gates acceptance; staff exclusion enforced with ServiceEngagementRules"
+  },
+  {
+    "id": "D27-01",
+    "doc": "m0-d27-attest-scope.md",
+    "kind": "consistency",
+    "rule": "The platform holds no attest workpaper, test conclusion, or report draft; it may retain only an issued report and the auditor-authored outcome as received, and never authors or recalculates the auditor's opinion.",
+    "disposition": "owner",
+    "owner": "AuditOutcome",
+    "evidence": "Jev choice 0.88"
+  },
+  {
+    "id": "D27-02",
+    "doc": "m0-d27-attest-scope.md",
+    "kind": "consistency",
+    "rule": "Management's evaluations and sign-offs remain separate from the auditor-authored outcome received.",
+    "disposition": "owner",
+    "owner": "AuditOutcome",
+    "evidence": "src/Compliance.Core/Features/Examinations/Aggregates/AuditOutcome.cs",
+    "note": "Auditor outcome immutable, separate from sign-off"
+  },
+  {
+    "id": "D27-03",
+    "doc": "m0-d27-attest-scope.md",
+    "kind": "immutability",
+    "rule": "Auditor-identified exceptions are recorded as AuditTestException preserving the auditor's wording as received.",
+    "disposition": "owner",
+    "owner": "AuditObservation",
+    "evidence": "Jev choice 0.81"
+  },
+  {
+    "id": "D27-04",
+    "doc": "m0-d27-attest-scope.md",
+    "kind": "sequence",
+    "rule": "Closing an attest engagement, or offboarding a client with an attest engagement, requires generating an engagement record package (every request, response, population and sample version, and delivered evidence item, with manifest) in the standard package format.",
+    "disposition": "process",
+    "owner": null,
+    "evidence": "process ExaminationEngagement/Tenant->ClientExport",
+    "note": "Close/offboard requires package generation"
+  },
+  {
+    "id": "D27-05",
+    "doc": "m0-d27-attest-scope.md",
+    "kind": "retention",
+    "rule": "An attributed decision must record that the engagement record package was delivered into the attest team's audit software; the engagement hold blocks disposition until that delivery decision exists, so offboarding cannot complete without it.",
+    "disposition": "owner",
+    "owner": "ArtifactEngagementHold",
+    "evidence": "invariant extended 2026-10-29",
+    "note": "Hold blocks disposition until delivery decision exists"
+  },
+  {
+    "id": "D27-06",
+    "doc": "m0-d27-attest-scope.md",
+    "kind": "retention",
+    "rule": "The client tenant holds only collaboration records (requests, responses, delivered evidence, packages), which follow evidence retention and engagement holds; no firm-level store is created.",
+    "disposition": "product_policy",
+    "owner": null,
+    "evidence": "no write rule",
+    "note": "Data-placement/retention statement"
+  },
+  {
+    "id": "MD-01",
+    "doc": "member-deprovisioning.md",
+    "kind": "lifecycle",
+    "rule": "Deprovisioning permanently terminates one membership episode in one tenant; it is terminal and distinct from reversible suspension, and a deprovisioned person cannot be reinstated.",
+    "disposition": "owner",
+    "owner": "Member",
+    "evidence": "Jev choice 1.00"
+  },
+  {
+    "id": "MD-02",
+    "doc": "member-deprovisioning.md",
+    "kind": "sequence",
+    "rule": "A fresh invitation after deprovisioning creates a new membership episode, and only after the prior episode's tenant authority cleanup completes.",
+    "disposition": "owner",
+    "owner": "Member",
+    "evidence": "Jev choice 1.00"
+  },
+  {
+    "id": "MD-03",
+    "doc": "member-deprovisioning.md",
+    "kind": "approval",
+    "rule": "Any tenant RBAC manager may deprovision another member through the HTTP API; self-deprovisioning is refused.",
+    "disposition": "authorization",
+    "owner": null,
+    "evidence": "reassigned 2026-10-29 while drafting decides clause: Any tenant RBAC manager may deprovision via HTTP is a permission rule; self-refusal could stay here.",
+    "note": "Self-deprovision refusal in deprovision handler/Member; RBAC-manager check itself is authorization"
+  },
+  {
+    "id": "MD-04",
+    "doc": "member-deprovisioning.md",
+    "kind": "cardinality",
+    "rule": "The last active tenant administrator cannot be deprovisioned.",
+    "disposition": "owner",
+    "owner": "TenantManagerGuard",
+    "evidence": "Jev choice 1.00"
+  },
+  {
+    "id": "MD-05",
+    "doc": "member-deprovisioning.md",
+    "kind": "consistency",
+    "rule": "The deprovision command records actor, timestamp, and reason.",
+    "disposition": "owner",
+    "owner": "Member",
+    "evidence": "Jev choice 0.92"
+  },
+  {
+    "id": "MD-06",
+    "doc": "member-deprovisioning.md",
+    "kind": "lifecycle",
+    "rule": "Deprovisioning removes current team assignments and active member-scoped access grants prospectively while retaining the platform identity, Person, event history, business records, and unfinished work; the person loses prospective access under the same rules as a suspended member.",
+    "disposition": "process",
+    "owner": null,
+    "evidence": "reassigned 2026-10-29 while drafting decides clause: Removal of team assignments and grants is a reactor cleanup after MemberDeprovisioned; Member only records terminal state and cleanup completion."
+  },
+  {
+    "id": "MD-07",
+    "doc": "member-deprovisioning.md",
+    "kind": "consistency",
+    "rule": "A new invitation never restores old team assignments or member-scoped grants; each direct member grant is bound to the membership episode active when issued, so retained or delayed grant history from a prior episode cannot become effective after rejoining.",
+    "disposition": "owner",
+    "owner": "Member",
+    "evidence": "src/Compliance.Core/Features/AccessControl/Aggregates/Member.cs",
+    "note": "Membership episode binding"
+  }
+]

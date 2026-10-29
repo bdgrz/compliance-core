@@ -1,0 +1,281 @@
+{
+  "model": "jev-1.14.0",
+  "state": {
+    "review": "Adversarial review of selected causal cross-owner choreography. A reactor or command dispatch is not proof of target commitment. Treat missing proof as a gap.",
+    "pass": "flow_adversarial",
+    "flows": [
+      {
+        "id": "S024",
+        "kind": "business_receiver",
+        "sourceOwner": "TenantSlug",
+        "targetOwner": "Tenant",
+        "targetAuthorityKind": "business_aggregate",
+        "physicalRootEvents": [
+          "TenantSlugRegistered",
+          "TenantSlugRegistrationRejected",
+          "TenantSlugSurrendered",
+          "TenantSlugSurrenderRejected"
+        ],
+        "logicalPrerequisiteFacts": [
+          "TenantSlugSurrendered"
+        ],
+        "receiverCommand": "ConfirmTenantSlugSurrender",
+        "emittedSemanticFacts": [
+          "TenantSlugSurrenderConfirmed"
+        ],
+        "proofGate": "Exact slug-owner answer, tenant, source-derived response command and pending tenant logical operation; delayed response cannot mutate a newer lifecycle.",
+        "verification": {
+          "admission": "AdmissionReference is a locator only. Resolve and independently verify actual typed admitted fact, exact owner/tenant/program, saved metadata and physical/hydrated cut, original root/episode/actor/intent and immutable content.",
+          "stageAndTerminal": "Materialize each required typed stage/terminal proof from actual committed facts and full required immutable selections; prove complete grant/fence/provisional/child sets, not counts/checkpoints. Guard sets are not weakened by carrier choice.",
+          "earlyReplay": "If native receipt binding does not cover a supplied/interpreted command term, bind that term through the required actual typed proof/body before early replay. Exact receipt cannot bypass proof manifest or source tuple guards.",
+          "resultAndRecovery": "Current public authorization precedes replay. Original result/receipt and unknown-append recovery stay exact; requested cancellation propagates. Unavailable proof/content remains transient; corruption/changed intent is permanent; no inferred absence/release.",
+          "implementationStatus": "Installed pointer/handler/process presence is not proof of conformance. Field/wire migration and required behavioral tests remain separately verifiable implementation work."
+        },
+        "recoveryContract": "Original result replays; stale answer is durable/terminal no-op according to tenant receiver, so the global checkpoint advances.",
+        "implementationConformance": "NOT_ASSERTED; current source evidence only"
+      },
+      {
+        "id": "S025",
+        "kind": "business_receiver",
+        "sourceOwner": "TenantSlug",
+        "targetOwner": "Tenant",
+        "targetAuthorityKind": "business_aggregate",
+        "physicalRootEvents": [
+          "TenantSlugRegistered",
+          "TenantSlugRegistrationRejected",
+          "TenantSlugSurrendered",
+          "TenantSlugSurrenderRejected"
+        ],
+        "logicalPrerequisiteFacts": [
+          "TenantSlugSurrenderRejected"
+        ],
+        "receiverCommand": "RejectTenantSlugSurrender",
+        "emittedSemanticFacts": [
+          "TenantSlugSurrenderFailed"
+        ],
+        "proofGate": "Exact slug-owner answer, tenant, source-derived response command and pending tenant logical operation; delayed response cannot mutate a newer lifecycle.",
+        "verification": {
+          "admission": "AdmissionReference is a locator only. Resolve and independently verify actual typed admitted fact, exact owner/tenant/program, saved metadata and physical/hydrated cut, original root/episode/actor/intent and immutable content.",
+          "stageAndTerminal": "Materialize each required typed stage/terminal proof from actual committed facts and full required immutable selections; prove complete grant/fence/provisional/child sets, not counts/checkpoints. Guard sets are not weakened by carrier choice.",
+          "earlyReplay": "If native receipt binding does not cover a supplied/interpreted command term, bind that term through the required actual typed proof/body before early replay. Exact receipt cannot bypass proof manifest or source tuple guards.",
+          "resultAndRecovery": "Current public authorization precedes replay. Original result/receipt and unknown-append recovery stay exact; requested cancellation propagates. Unavailable proof/content remains transient; corruption/changed intent is permanent; no inferred absence/release.",
+          "implementationStatus": "Installed pointer/handler/process presence is not proof of conformance. Field/wire migration and required behavioral tests remain separately verifiable implementation work."
+        },
+        "recoveryContract": "Original result replays; stale answer is durable/terminal no-op according to tenant receiver, so the global checkpoint advances.",
+        "implementationConformance": "NOT_ASSERTED; current source evidence only"
+      },
+      {
+        "id": "S026",
+        "kind": "business_receiver",
+        "sourceOwner": "TenantInvitation",
+        "targetOwner": "Member",
+        "targetAuthorityKind": "business_aggregate",
+        "physicalRootEvents": [
+          "TenantInvitationAccepted"
+        ],
+        "logicalPrerequisiteFacts": [
+          "TenantInvitationAccepted"
+        ],
+        "receiverCommand": "RegisterMember",
+        "emittedSemanticFacts": [
+          "MemberRegistered"
+        ],
+        "proofGate": "Use exact accepted invitation. Register retains frozen affiliation/expiry, then binds assignment to that episode; guest scope comes from real immutable manifest and personal inviter attribution. Selected built-in/admin role controls assignment; only administrator offer triggers activation, which proves current member/assignment/permissions.",
+        "verification": {
+          "admission": "AdmissionReference is a locator only. Resolve and independently verify actual typed admitted fact, exact owner/tenant/program, saved metadata and physical/hydrated cut, original root/episode/actor/intent and immutable content.",
+          "stageAndTerminal": "Materialize each required typed stage/terminal proof from actual committed facts and full required immutable selections; prove complete grant/fence/provisional/child sets, not counts/checkpoints. Guard sets are not weakened by carrier choice.",
+          "earlyReplay": "If native receipt binding does not cover a supplied/interpreted command term, bind that term through the required actual typed proof/body before early replay. Exact receipt cannot bypass proof manifest or source tuple guards.",
+          "resultAndRecovery": "Current public authorization precedes replay. Original result/receipt and unknown-append recovery stay exact; requested cancellation propagates. Unavailable proof/content remains transient; corruption/changed intent is permanent; no inferred absence/release.",
+          "implementationStatus": "Installed pointer/handler/process presence is not proof of conformance. Field/wire migration and required behavioral tests remain separately verifiable implementation work."
+        },
+        "recoveryContract": "Stable source-derived IDs; exact live-member/already-assigned conflict is explicitly accepted for the existing episode; activation uses bounded TenantActivationPolicy retries. Guest grant never broadens captured program scope.",
+        "implementationConformance": "NOT_ASSERTED; current source evidence only"
+      },
+      {
+        "id": "S027",
+        "kind": "business_receiver",
+        "sourceOwner": "TenantInvitation",
+        "targetOwner": "TeamMember",
+        "targetAuthorityKind": "business_aggregate",
+        "physicalRootEvents": [
+          "TenantInvitationAccepted"
+        ],
+        "logicalPrerequisiteFacts": [
+          "TenantInvitationAccepted"
+        ],
+        "receiverCommand": "AssignTeamMember",
+        "emittedSemanticFacts": [
+          "TeamMemberAssigned"
+        ],
+        "proofGate": "Use exact accepted invitation. Register retains frozen affiliation/expiry, then binds assignment to that episode; guest scope comes from real immutable manifest and personal inviter attribution. Selected built-in/admin role controls assignment; only administrator offer triggers activation, which proves current member/assignment/permissions.",
+        "verification": {
+          "admission": "AdmissionReference is a locator only. Resolve and independently verify actual typed admitted fact, exact owner/tenant/program, saved metadata and physical/hydrated cut, original root/episode/actor/intent and immutable content.",
+          "stageAndTerminal": "Materialize each required typed stage/terminal proof from actual committed facts and full required immutable selections; prove complete grant/fence/provisional/child sets, not counts/checkpoints. Guard sets are not weakened by carrier choice.",
+          "earlyReplay": "If native receipt binding does not cover a supplied/interpreted command term, bind that term through the required actual typed proof/body before early replay. Exact receipt cannot bypass proof manifest or source tuple guards.",
+          "resultAndRecovery": "Current public authorization precedes replay. Original result/receipt and unknown-append recovery stay exact; requested cancellation propagates. Unavailable proof/content remains transient; corruption/changed intent is permanent; no inferred absence/release.",
+          "implementationStatus": "Installed pointer/handler/process presence is not proof of conformance. Field/wire migration and required behavioral tests remain separately verifiable implementation work."
+        },
+        "recoveryContract": "Stable source-derived IDs; exact live-member/already-assigned conflict is explicitly accepted for the existing episode; activation uses bounded TenantActivationPolicy retries. Guest grant never broadens captured program scope.",
+        "implementationConformance": "NOT_ASSERTED; current source evidence only"
+      },
+      {
+        "id": "S028",
+        "kind": "business_receiver",
+        "sourceOwner": "TenantInvitation",
+        "targetOwner": "AccessGrant",
+        "targetAuthorityKind": "business_aggregate",
+        "physicalRootEvents": [
+          "TenantInvitationAccepted"
+        ],
+        "logicalPrerequisiteFacts": [
+          "TenantInvitationAccepted"
+        ],
+        "receiverCommand": "ProvisionGuestProgramAccess",
+        "emittedSemanticFacts": [
+          "AccessGrantIssued"
+        ],
+        "proofGate": "Use exact accepted invitation. Register retains frozen affiliation/expiry, then binds assignment to that episode; guest scope comes from real immutable manifest and personal inviter attribution. Selected built-in/admin role controls assignment; only administrator offer triggers activation, which proves current member/assignment/permissions.",
+        "verification": {
+          "admission": "AdmissionReference is a locator only. Resolve and independently verify actual typed admitted fact, exact owner/tenant/program, saved metadata and physical/hydrated cut, original root/episode/actor/intent and immutable content.",
+          "stageAndTerminal": "Materialize each required typed stage/terminal proof from actual committed facts and full required immutable selections; prove complete grant/fence/provisional/child sets, not counts/checkpoints. Guard sets are not weakened by carrier choice.",
+          "earlyReplay": "If native receipt binding does not cover a supplied/interpreted command term, bind that term through the required actual typed proof/body before early replay. Exact receipt cannot bypass proof manifest or source tuple guards.",
+          "resultAndRecovery": "Current public authorization precedes replay. Original result/receipt and unknown-append recovery stay exact; requested cancellation propagates. Unavailable proof/content remains transient; corruption/changed intent is permanent; no inferred absence/release.",
+          "implementationStatus": "Installed pointer/handler/process presence is not proof of conformance. Field/wire migration and required behavioral tests remain separately verifiable implementation work."
+        },
+        "recoveryContract": "Stable source-derived IDs; exact live-member/already-assigned conflict is explicitly accepted for the existing episode; activation uses bounded TenantActivationPolicy retries. Guest grant never broadens captured program scope.",
+        "implementationConformance": "NOT_ASSERTED; current source evidence only"
+      },
+      {
+        "id": "S029",
+        "kind": "business_receiver",
+        "sourceOwner": "TenantInvitation",
+        "targetOwner": "Tenant",
+        "targetAuthorityKind": "business_aggregate",
+        "physicalRootEvents": [
+          "TenantInvitationAccepted"
+        ],
+        "logicalPrerequisiteFacts": [
+          "TenantInvitationAccepted"
+        ],
+        "receiverCommand": "ActivateTenant",
+        "emittedSemanticFacts": [
+          "TenantActivatedV2"
+        ],
+        "proofGate": "Use exact accepted invitation. Register retains frozen affiliation/expiry, then binds assignment to that episode; guest scope comes from real immutable manifest and personal inviter attribution. Selected built-in/admin role controls assignment; only administrator offer triggers activation, which proves current member/assignment/permissions.",
+        "verification": {
+          "admission": "AdmissionReference is a locator only. Resolve and independently verify actual typed admitted fact, exact owner/tenant/program, saved metadata and physical/hydrated cut, original root/episode/actor/intent and immutable content.",
+          "stageAndTerminal": "Materialize each required typed stage/terminal proof from actual committed facts and full required immutable selections; prove complete grant/fence/provisional/child sets, not counts/checkpoints. Guard sets are not weakened by carrier choice.",
+          "earlyReplay": "If native receipt binding does not cover a supplied/interpreted command term, bind that term through the required actual typed proof/body before early replay. Exact receipt cannot bypass proof manifest or source tuple guards.",
+          "resultAndRecovery": "Current public authorization precedes replay. Original result/receipt and unknown-append recovery stay exact; requested cancellation propagates. Unavailable proof/content remains transient; corruption/changed intent is permanent; no inferred absence/release.",
+          "implementationStatus": "Installed pointer/handler/process presence is not proof of conformance. Field/wire migration and required behavioral tests remain separately verifiable implementation work."
+        },
+        "recoveryContract": "Stable source-derived IDs; exact live-member/already-assigned conflict is explicitly accepted for the existing episode; activation uses bounded TenantActivationPolicy retries. Guest grant never broadens captured program scope.",
+        "implementationConformance": "NOT_ASSERTED; current source evidence only"
+      }
+    ]
+  },
+  "questions": {
+    "item_0": {
+      "type": "choice",
+      "instructions": "Find the strongest architectural objection to cross-owner flow S024.",
+      "criteria": {
+        "flow_is_logical": "The stated source fact, target command, proof requirements, terminal outcome and recovery/fencing rules form a coherent authorized sequence.",
+        "flow_boundary_or_order_defect": "The flow bypasses an owner decision, has an unjustified edge/order, or lets dispatch/pointer/checkpoint/count stand in for target authority.",
+        "proof_or_recovery_gap": "The flow lacks a required identity, source, intermediate/terminal proof, cancellation fence, retry, restart, or lost-ack rule."
+      }
+    },
+    "item_0_evidence": {
+      "type": "noul",
+      "instructions": "Is the supplied row enough to judge the business authority and safety of flow S024?",
+      "criteria": {
+        "true": "The row identifies source authority, target authority, exact causal proof and applicable failure/recovery behavior.",
+        "false": "A material authority, proof, failure, or recovery detail is absent from the supplied row."
+      }
+    },
+    "item_1": {
+      "type": "choice",
+      "instructions": "Find the strongest architectural objection to cross-owner flow S025.",
+      "criteria": {
+        "flow_is_logical": "The stated source fact, target command, proof requirements, terminal outcome and recovery/fencing rules form a coherent authorized sequence.",
+        "flow_boundary_or_order_defect": "The flow bypasses an owner decision, has an unjustified edge/order, or lets dispatch/pointer/checkpoint/count stand in for target authority.",
+        "proof_or_recovery_gap": "The flow lacks a required identity, source, intermediate/terminal proof, cancellation fence, retry, restart, or lost-ack rule."
+      }
+    },
+    "item_1_evidence": {
+      "type": "noul",
+      "instructions": "Is the supplied row enough to judge the business authority and safety of flow S025?",
+      "criteria": {
+        "true": "The row identifies source authority, target authority, exact causal proof and applicable failure/recovery behavior.",
+        "false": "A material authority, proof, failure, or recovery detail is absent from the supplied row."
+      }
+    },
+    "item_2": {
+      "type": "choice",
+      "instructions": "Find the strongest architectural objection to cross-owner flow S026.",
+      "criteria": {
+        "flow_is_logical": "The stated source fact, target command, proof requirements, terminal outcome and recovery/fencing rules form a coherent authorized sequence.",
+        "flow_boundary_or_order_defect": "The flow bypasses an owner decision, has an unjustified edge/order, or lets dispatch/pointer/checkpoint/count stand in for target authority.",
+        "proof_or_recovery_gap": "The flow lacks a required identity, source, intermediate/terminal proof, cancellation fence, retry, restart, or lost-ack rule."
+      }
+    },
+    "item_2_evidence": {
+      "type": "noul",
+      "instructions": "Is the supplied row enough to judge the business authority and safety of flow S026?",
+      "criteria": {
+        "true": "The row identifies source authority, target authority, exact causal proof and applicable failure/recovery behavior.",
+        "false": "A material authority, proof, failure, or recovery detail is absent from the supplied row."
+      }
+    },
+    "item_3": {
+      "type": "choice",
+      "instructions": "Find the strongest architectural objection to cross-owner flow S027.",
+      "criteria": {
+        "flow_is_logical": "The stated source fact, target command, proof requirements, terminal outcome and recovery/fencing rules form a coherent authorized sequence.",
+        "flow_boundary_or_order_defect": "The flow bypasses an owner decision, has an unjustified edge/order, or lets dispatch/pointer/checkpoint/count stand in for target authority.",
+        "proof_or_recovery_gap": "The flow lacks a required identity, source, intermediate/terminal proof, cancellation fence, retry, restart, or lost-ack rule."
+      }
+    },
+    "item_3_evidence": {
+      "type": "noul",
+      "instructions": "Is the supplied row enough to judge the business authority and safety of flow S027?",
+      "criteria": {
+        "true": "The row identifies source authority, target authority, exact causal proof and applicable failure/recovery behavior.",
+        "false": "A material authority, proof, failure, or recovery detail is absent from the supplied row."
+      }
+    },
+    "item_4": {
+      "type": "choice",
+      "instructions": "Find the strongest architectural objection to cross-owner flow S028.",
+      "criteria": {
+        "flow_is_logical": "The stated source fact, target command, proof requirements, terminal outcome and recovery/fencing rules form a coherent authorized sequence.",
+        "flow_boundary_or_order_defect": "The flow bypasses an owner decision, has an unjustified edge/order, or lets dispatch/pointer/checkpoint/count stand in for target authority.",
+        "proof_or_recovery_gap": "The flow lacks a required identity, source, intermediate/terminal proof, cancellation fence, retry, restart, or lost-ack rule."
+      }
+    },
+    "item_4_evidence": {
+      "type": "noul",
+      "instructions": "Is the supplied row enough to judge the business authority and safety of flow S028?",
+      "criteria": {
+        "true": "The row identifies source authority, target authority, exact causal proof and applicable failure/recovery behavior.",
+        "false": "A material authority, proof, failure, or recovery detail is absent from the supplied row."
+      }
+    },
+    "item_5": {
+      "type": "choice",
+      "instructions": "Find the strongest architectural objection to cross-owner flow S029.",
+      "criteria": {
+        "flow_is_logical": "The stated source fact, target command, proof requirements, terminal outcome and recovery/fencing rules form a coherent authorized sequence.",
+        "flow_boundary_or_order_defect": "The flow bypasses an owner decision, has an unjustified edge/order, or lets dispatch/pointer/checkpoint/count stand in for target authority.",
+        "proof_or_recovery_gap": "The flow lacks a required identity, source, intermediate/terminal proof, cancellation fence, retry, restart, or lost-ack rule."
+      }
+    },
+    "item_5_evidence": {
+      "type": "noul",
+      "instructions": "Is the supplied row enough to judge the business authority and safety of flow S029?",
+      "criteria": {
+        "true": "The row identifies source authority, target authority, exact causal proof and applicable failure/recovery behavior.",
+        "false": "A material authority, proof, failure, or recovery detail is absent from the supplied row."
+      }
+    }
+  }
+}

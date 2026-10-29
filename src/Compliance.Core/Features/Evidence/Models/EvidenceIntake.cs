@@ -1,0 +1,122 @@
+using Cntryl.Portia;
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.AccessControl.Processes;
+using Bdgrz.Compliance.Features.Applications.Models;
+using Bdgrz.Compliance.Features.Artifacts.Contracts;
+using Bdgrz.Compliance.Features.Artifacts.Models;
+using Bdgrz.Compliance.Features.AuditPackages.Models;
+using Bdgrz.Compliance.Features.AuditPackages.Rules;
+using Bdgrz.Compliance.Features.AuditPopulations.Models;
+using Bdgrz.Compliance.Features.AuditorRequests.Models;
+using Bdgrz.Compliance.Features.AuditorRequests.Processes;
+using Bdgrz.Compliance.Features.ControlMappings.History;
+using Bdgrz.Compliance.Features.Controls.Contracts;
+using Bdgrz.Compliance.Features.Evidence.Rules;
+using Bdgrz.Compliance.Features.Evidence.Services;
+using Bdgrz.Compliance.Features.Incidents.Rules;
+using Bdgrz.Compliance.Features.NamedRecords.Processes;
+using Bdgrz.Compliance.Features.NativeOperations.History;
+using Bdgrz.Compliance.Features.NativeOperations.Models;
+using Bdgrz.Compliance.Features.Operations.History;
+using Bdgrz.Compliance.Features.Operations.Models;
+using Bdgrz.Compliance.Features.Operations.Rules;
+using Bdgrz.Compliance.Features.Processes.Processes;
+using Bdgrz.Compliance.Features.Programs.Readers;
+using Bdgrz.Compliance.Features.Providers.History;
+using Bdgrz.Compliance.Features.Providers.Rules;
+using Bdgrz.Compliance.Features.Readiness.Models;
+using Bdgrz.Compliance.Features.Readiness.Rules;
+using Bdgrz.Compliance.Features.Remediation.Processes;
+using Bdgrz.Compliance.Features.Retention.Models;
+using Bdgrz.Compliance.Features.SourceFacts.Models;
+using Bdgrz.Compliance.Features.SourceFacts.Rules;
+using Bdgrz.Compliance.Features.SystemDescription.Projections;
+using Bdgrz.Compliance.Features.Tenants.Models;
+using Bdgrz.Compliance.Features.Tenants.Processes;
+using Bdgrz.Compliance.Features.Evidence.Aggregates;
+using Bdgrz.Compliance.Features.Retention.Commands;
+using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
+using Bdgrz.Compliance.Features.UserIdentities.Handlers;
+namespace Bdgrz.Compliance.Features.Evidence.Models;
+
+/// <summary>
+///     Captures uploaded content as evidence under M0-D16: store by digest, register as pending inspection, then apply
+///     the inspection result durably before its storage effect. Request retries resume pending inspection or the
+///     recorded verdict's storage effect. Malware is quarantined; a detected secret or invalid upload is purged.
+///     Identical content in a tenant resolves to one artifact, preserving its initial metadata and collector.
+/// </summary>
+public sealed class EvidenceIntake(IArtifactContentStore store, IArtifactInspector inspector,
+    IAggregateReader reader, IAggregateWriter writer, TimeProvider clock)
+{
+    public async ValueTask<Result<EvidenceCapture>> CaptureAsync(Uuid tenantId, Stream content,
+        EvidenceArtifactContent metadata, ActorReference collector, RequestDispatchContext dispatch,
+        CancellationToken ct)
+    {
+        var normalized = EvidenceRules.Normalize(metadata);
+        if (EvidenceRules.ValidateMetadata(normalized) is { } invalid)
+            return Validation(invalid);
+        ArtifactContentWrite written;
+        try
+        {
+            written = await store.StoreIfAbsentAsync(tenantId, content, ct).ConfigureAwait(false);
+        }
+        catch (ArgumentOutOfRangeException)
+        {
+            return Validation($"Evidence content may not exceed the maximum artifact size.");
+        }
+        var reference = written.Content;
+        if (reference.Length <= 0)
+        {
+            var cleanup = await store.DeleteAsync(reference, ct).ConfigureAwait(false);
+            return cleanup == ArtifactDeletionResult.Held
+                ? Conflict("Empty evidence content could not be removed because a storage hold is active.")
+                : Validation("Evidence content must contain at least one byte.");
+        }
+
+        var artifact = await reader.HydrateAsync(new EvidenceArtifact(tenantId, IdFor(tenantId, reference.Sha256)),
+            ct).ConfigureAwait(false);
+        var duplicate = artifact.IsCreated;
+        if (!duplicate)
+        {
+            var registered = artifact.Register(normalized, reference.Sha256, reference.Length, collector,
+                clock.GetUtcNow());
+            if (!registered.IsSuccess)
+                return Result<EvidenceCapture>.Failure(registered.Error);
+            await writer.SaveAsync(artifact, dispatch, ct).ConfigureAwait(false);
+        }
+        if (artifact.State == EvidenceArtifactStates.PendingInspection)
+        {
+            var inspection = await inspector.InspectAsync(reference, ct).ConfigureAwait(false);
+            var outcome = inspection.State switch
+            {
+                ArtifactInspectionState.Clean => EvidenceInspectionOutcome.Clean,
+                ArtifactInspectionState.Quarantined => EvidenceInspectionOutcome.Malware,
+                ArtifactInspectionState.SecretDetected => EvidenceInspectionOutcome.SecretDetected,
+                ArtifactInspectionState.Invalid => EvidenceInspectionOutcome.Invalid,
+                _ => (EvidenceInspectionOutcome?)null,
+            };
+            if (outcome is { } result)
+            {
+                if (artifact.RecordInspection(result, clock.GetUtcNow()) is { } failure)
+                    return Conflict(failure.Message ?? "The evidence artifact could not record its inspection.");
+                await writer.SaveAsync(artifact, dispatch, ct).ConfigureAwait(false);
+            }
+        }
+        var reconciled = await new EvidenceArtifactStorageReconciler(store, reader)
+            .ReconcileAsync(tenantId, artifact.Id, ct).ConfigureAwait(false);
+        if (!reconciled.IsSuccess)
+            return Result<EvidenceCapture>.Failure(reconciled.Error);
+        var current = reconciled.Value;
+        return Result<EvidenceCapture>.Success(new EvidenceCapture(current.Id, current.State!,
+            current.StateReason, duplicate));
+    }
+
+    public static Uuid IdFor(Uuid tenantId, string sha256) =>
+        Uuid.CreateVersion5(tenantId, "evidence-content:" + sha256);
+
+    static Result<EvidenceCapture> Conflict(string message) =>
+        Result<EvidenceCapture>.Failure(new RequestError(RequestErrorKind.Conflict, message));
+
+    static Result<EvidenceCapture> Validation(string message) =>
+        Result<EvidenceCapture>.Failure(new RequestError(RequestErrorKind.Validation, message));
+}

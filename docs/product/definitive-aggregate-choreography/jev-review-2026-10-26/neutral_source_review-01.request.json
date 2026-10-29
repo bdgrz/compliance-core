@@ -1,0 +1,343 @@
+{
+  "model": "jev-1.14.0",
+  "state": {
+    "review": "Review these selected domain boundaries against the included source records. Do not treat a catalog label as evidence by itself; do not invent policy.",
+    "pass": "neutral_source_review",
+    "owners": [
+      {
+        "owner": "AccessPopulation",
+        "classification": "business_aggregate",
+        "businessAggregate": true,
+        "identity": "populationId",
+        "invariant": "Immutable accepted population definition, exact system instance and source revision.",
+        "boundary": "selected_split",
+        "mustPreserve": "Classification requires exact accepted population proof and contiguous per-principal decision sequence.",
+        "technicalStateToSeparate": [],
+        "sources": [
+          {
+            "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
+            "jsonPointer": "/splitOwners/3/targetOwners/0",
+            "evidence": "{\"proposedAggregate\":\"AccessPopulation\",\"identity\":\"populationId\",\"owns\":\"Immutable accepted population definition, exact system instance and source revision.\",\"events\":\"Rehome the relevant existing business facts from the current owner; preserve fact meaning and source lineage.\",\"existingDomainEvents\":[\"AccessPopulationOpened\",\"AccessPopulationFactsRecorded\",\"AccessPopulationAccepted\"],\"newDomainEvents\":[],\"technicalProcessState\":[],\"commands\":[\"AcceptAccessPopulation\",\"OpenAccessPopulation\",\"RecordAccessPopulationFacts\"]}"
+          }
+        ],
+        "adoptedDecisions": [],
+        "commands": [
+          {
+            "name": "AcceptAccessPopulation",
+            "identity": {
+              "field": "CommandId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "one immutable authored operation"
+            },
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "PopulationId:Uuid",
+              "ExpectedRevision:long",
+              "Attestation:string"
+            ]
+          },
+          {
+            "name": "OpenAccessPopulation",
+            "identity": {
+              "field": "PopulationId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "exact immutable creation retry"
+            },
+            "fields": [
+              "PopulationId:Uuid",
+              "TenantId:Uuid",
+              "ApplicationId:Uuid",
+              "SystemInstanceId:Uuid",
+              "ExpectedSystemInstanceRevision:long",
+              "ObservedAt:DateTimeOffset",
+              "Source:string"
+            ]
+          },
+          {
+            "name": "RecordAccessPopulationFacts",
+            "identity": {
+              "field": "CommandId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "one immutable authored operation"
+            },
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "PopulationId:Uuid",
+              "ExpectedRevision:long",
+              "Principals:IReadOnlyList<AccessPrincipalFact>",
+              "Entitlements:IReadOnlyList<AccessEntitlementFact>",
+              "GroupMembers:IReadOnlyList<AccessGroupMemberFact>",
+              "Assignments:IReadOnlyList<AccessAssignmentFact>"
+            ]
+          }
+        ],
+        "events": [
+          {
+            "event": "AccessPopulationAccepted",
+            "discriminator": "bdgrz.access_population.accepted",
+            "version": 1
+          },
+          {
+            "event": "AccessPopulationFactsRecorded",
+            "discriminator": "bdgrz.access_population.facts_recorded",
+            "version": 1
+          },
+          {
+            "event": "AccessPopulationOpened",
+            "discriminator": "bdgrz.access_population.opened",
+            "version": 1
+          }
+        ],
+        "relatedFlows": []
+      },
+      {
+        "owner": "AccessPopulationException",
+        "classification": "business_aggregate",
+        "businessAggregate": true,
+        "identity": "(systemInstanceId, exceptionId)",
+        "invariant": "One expiring exception or missing-population exception decision.",
+        "boundary": "selected_split",
+        "mustPreserve": "Independent proposer/reviewer or exact waiver; exception references approved expectation and future expiry.",
+        "technicalStateToSeparate": [],
+        "sources": [
+          {
+            "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
+            "jsonPointer": "/splitOwners/5/targetOwners/1",
+            "evidence": "{\"proposedAggregate\":\"AccessPopulationException\",\"identity\":\"(systemInstanceId, exceptionId)\",\"owns\":\"One expiring exception or missing-population exception decision.\",\"events\":\"Rehome the relevant existing business facts from the current owner; preserve fact meaning and source lineage.\",\"existingDomainEvents\":[\"AccessPopulationExceptionRecorded\"],\"newDomainEvents\":[],\"technicalProcessState\":[],\"commands\":[\"ExemptMissingAccessPopulation\"]}"
+          }
+        ],
+        "adoptedDecisions": [],
+        "commands": [
+          {
+            "name": "ExemptMissingAccessPopulation",
+            "identity": {
+              "field": "ExceptionId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "exact immutable creation retry"
+            },
+            "fields": [
+              "ExceptionId:Uuid",
+              "TenantId:Uuid",
+              "ApplicationId:Uuid",
+              "SystemInstanceId:Uuid",
+              "ExpectedRevision:long",
+              "Reason:string",
+              "ExpiresAt:DateTimeOffset"
+            ]
+          }
+        ],
+        "events": [
+          {
+            "event": "AccessPopulationExceptionRecorded",
+            "discriminator": "bdgrz.access_population.exception_recorded",
+            "version": 1
+          }
+        ],
+        "relatedFlows": []
+      },
+      {
+        "owner": "AccessPrincipalClassification",
+        "classification": "business_aggregate",
+        "businessAggregate": true,
+        "identity": "tenant / (populationId, providerSubjectId)",
+        "invariant": "Independent classification decision history for one accepted principal.",
+        "boundary": "selected_split",
+        "mustPreserve": "Classification requires exact accepted population proof and contiguous per-principal decision sequence.",
+        "technicalStateToSeparate": [],
+        "sources": [
+          {
+            "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
+            "jsonPointer": "/splitOwners/3/targetOwners/1",
+            "evidence": "{\"proposedAggregate\":\"AccessPrincipalClassification\",\"identity\":\"tenant / (populationId, providerSubjectId)\",\"owns\":\"Independent classification decision history for one accepted principal.\",\"events\":\"Rehome the relevant existing business facts from the current owner; preserve fact meaning and source lineage.\",\"existingDomainEvents\":[\"AccessPrincipalClassified\"],\"newDomainEvents\":[],\"technicalProcessState\":[],\"commands\":[\"ClassifyAccessPrincipal\"]}"
+          }
+        ],
+        "adoptedDecisions": [],
+        "commands": [
+          {
+            "name": "ClassifyAccessPrincipal",
+            "identity": {
+              "field": "CommandId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "one immutable authored operation"
+            },
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "PopulationId:Uuid",
+              "ProviderSubjectId:string",
+              "ExpectedRevision:long",
+              "Classification:string",
+              "Rationale:string",
+              "PersonId:Uuid?",
+              "ServiceIdentityId:Uuid?",
+              "AccountableOwnerPersonId:Uuid?",
+              "SharedJustification:string?"
+            ]
+          }
+        ],
+        "events": [
+          {
+            "event": "AccessPrincipalClassified",
+            "discriminator": "bdgrz.access_population.principal_classified",
+            "version": 1
+          }
+        ],
+        "relatedFlows": []
+      },
+      {
+        "owner": "ArtifactLegalHold",
+        "classification": "business_aggregate",
+        "businessAggregate": true,
+        "identity": "holdId",
+        "invariant": "One legal hold lifecycle and one exact release after placement.",
+        "boundary": "selected_split",
+        "mustPreserve": "Retention is not itself disposal authority; no release by timeout or missing read.",
+        "technicalStateToSeparate": [],
+        "sources": [
+          {
+            "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
+            "jsonPointer": "/splitOwners/23/targetOwners/1",
+            "evidence": "{\"proposedAggregate\":\"ArtifactLegalHold\",\"identity\":\"holdId\",\"owns\":\"One legal hold lifecycle and one exact release after placement.\",\"events\":\"Rehome the relevant existing business facts from the current owner; preserve fact meaning and source lineage.\",\"existingDomainEvents\":[\"ArtifactLegalHoldPlaced\",\"ArtifactLegalHoldReleased\"],\"newDomainEvents\":[],\"technicalProcessState\":[],\"commands\":[\"PlaceArtifactLegalHold\",\"ReleaseArtifactLegalHold\"]}"
+          }
+        ],
+        "adoptedDecisions": [],
+        "commands": [
+          {
+            "name": "PlaceArtifactLegalHold",
+            "identity": {
+              "field": "HoldId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "exact immutable creation retry"
+            },
+            "fields": [
+              "TenantId:Uuid",
+              "SourceKind:string",
+              "SourceId:Uuid",
+              "ExpectedContentSha256:string",
+              "HoldId:Uuid",
+              "ExpectedRevision:long",
+              "Reason:string"
+            ]
+          },
+          {
+            "name": "ReleaseArtifactLegalHold",
+            "identity": {
+              "field": "CommandId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "one immutable authored operation"
+            },
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "SourceKind:string",
+              "SourceId:Uuid",
+              "ExpectedContentSha256:string",
+              "HoldId:Uuid",
+              "ExpectedRevision:long",
+              "Reason:string"
+            ]
+          }
+        ],
+        "events": [
+          {
+            "event": "ArtifactLegalHoldPlaced",
+            "discriminator": "bdgrz.artifact_retention.legal_hold_placed",
+            "version": 1
+          },
+          {
+            "event": "ArtifactLegalHoldReleased",
+            "discriminator": "bdgrz.artifact_retention.legal_hold_released",
+            "version": 1
+          }
+        ],
+        "relatedFlows": []
+      }
+    ]
+  },
+  "questions": {
+    "item_0": {
+      "type": "choice",
+      "instructions": "Which owner boundary best preserves AccessPopulation's explicit invariant and lifecycle?",
+      "criteria": {
+        "selected_boundary_supported": "The selected owner is the correct business decision boundary and any technical process or independent child lifecycle is separated.",
+        "boundary_change_required": "A specific alternative boundary is required by an explicit invariant, identity, concurrency, lifecycle, or recovery fact in the supplied sources.",
+        "source_gap": "The available source records are contradictory or fail to establish the material boundary rule."
+      }
+    },
+    "evidence_0": {
+      "type": "noul",
+      "instructions": "Do the source records establish AccessPopulation's identity, atomic invariant, and lifecycle well enough to settle its boundary?",
+      "criteria": {
+        "true": "The exact owner invariant and why plausible split or merge alternatives fail are source-backed.",
+        "false": "A required identity, lifecycle, concurrency, or source-authority rule is missing or contradictory."
+      }
+    },
+    "item_1": {
+      "type": "choice",
+      "instructions": "Which owner boundary best preserves AccessPopulationException's explicit invariant and lifecycle?",
+      "criteria": {
+        "selected_boundary_supported": "The selected owner is the correct business decision boundary and any technical process or independent child lifecycle is separated.",
+        "boundary_change_required": "A specific alternative boundary is required by an explicit invariant, identity, concurrency, lifecycle, or recovery fact in the supplied sources.",
+        "source_gap": "The available source records are contradictory or fail to establish the material boundary rule."
+      }
+    },
+    "evidence_1": {
+      "type": "noul",
+      "instructions": "Do the source records establish AccessPopulationException's identity, atomic invariant, and lifecycle well enough to settle its boundary?",
+      "criteria": {
+        "true": "The exact owner invariant and why plausible split or merge alternatives fail are source-backed.",
+        "false": "A required identity, lifecycle, concurrency, or source-authority rule is missing or contradictory."
+      }
+    },
+    "item_2": {
+      "type": "choice",
+      "instructions": "Which owner boundary best preserves AccessPrincipalClassification's explicit invariant and lifecycle?",
+      "criteria": {
+        "selected_boundary_supported": "The selected owner is the correct business decision boundary and any technical process or independent child lifecycle is separated.",
+        "boundary_change_required": "A specific alternative boundary is required by an explicit invariant, identity, concurrency, lifecycle, or recovery fact in the supplied sources.",
+        "source_gap": "The available source records are contradictory or fail to establish the material boundary rule."
+      }
+    },
+    "evidence_2": {
+      "type": "noul",
+      "instructions": "Do the source records establish AccessPrincipalClassification's identity, atomic invariant, and lifecycle well enough to settle its boundary?",
+      "criteria": {
+        "true": "The exact owner invariant and why plausible split or merge alternatives fail are source-backed.",
+        "false": "A required identity, lifecycle, concurrency, or source-authority rule is missing or contradictory."
+      }
+    },
+    "item_3": {
+      "type": "choice",
+      "instructions": "Which owner boundary best preserves ArtifactLegalHold's explicit invariant and lifecycle?",
+      "criteria": {
+        "selected_boundary_supported": "The selected owner is the correct business decision boundary and any technical process or independent child lifecycle is separated.",
+        "boundary_change_required": "A specific alternative boundary is required by an explicit invariant, identity, concurrency, lifecycle, or recovery fact in the supplied sources.",
+        "source_gap": "The available source records are contradictory or fail to establish the material boundary rule."
+      }
+    },
+    "evidence_3": {
+      "type": "noul",
+      "instructions": "Do the source records establish ArtifactLegalHold's identity, atomic invariant, and lifecycle well enough to settle its boundary?",
+      "criteria": {
+        "true": "The exact owner invariant and why plausible split or merge alternatives fail are source-backed.",
+        "false": "A required identity, lifecycle, concurrency, or source-authority rule is missing or contradictory."
+      }
+    }
+  }
+}

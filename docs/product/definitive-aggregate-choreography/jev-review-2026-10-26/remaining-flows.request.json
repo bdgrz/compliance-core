@@ -1,0 +1,70 @@
+{
+  "model": "jev-1.14.0",
+  "state": {
+    "flowT004": {
+      "definition": "EngagementAcceptanceProcess ordered stages acquire -> authorize(commit point requires complete grants) -> commit permanent practice walls -> complete acceptance/assignment -> settle only temporary uses. Abort requires target-native reject, then fences before authorization and settles held/unheld temporary keys; permanent commitments never released.",
+      "row": {
+        "root": [
+          "ServiceEngagementAcceptanceRequested",
+          "ServiceEngagementStaffAssignmentRequested"
+        ],
+        "receiver": "AcquireEngagementServiceEpoch",
+        "target": "ClientServiceIndependence",
+        "effect": "EngagementServiceEpochAuthorized",
+        "proof": "exact full service manifest and current epoch; admission holds epoch through accepted append"
+      },
+      "source": "AcquireEngagementServiceEpochHandler verifies owner.Epoch equals frozen requirement.ResourceRevision and LatestService.Metadata.EventId equals requirement.ContentEvent.EventId; then calls owner.AuthorizeEngagementEpoch(provenance,intent,generation). Source command is constructed from exact frozen intent; effect ID derives actual accepted root + canonical target + lifecycle episode."
+    },
+    "flowT098": {
+      "definition": "AdministratorTransitionProcess handles withdrawal/restoration/source mutation roots; restoration target stage applies exact admin team assignment.",
+      "row": {
+        "root": "TenantManagerRestorationAccepted",
+        "receiver": "ApplyAdministratorAssignmentRestoration",
+        "target": "TeamMember",
+        "effect": "TeamMemberAssigned",
+        "proof": "only restoration kind administrator_team_assign; exact current member episode; guard assignment commits first; unrelated member suspension/withdrawal reasons remain effective"
+      },
+      "source": "AdministratorAssignmentRestorationReactor triggers only from TenantManagerRestorationAccepted and selected kind RestoreAdministratorsAssignment or RegisterAdministratorsAssignment. Apply handler verifies actual admitted source, target stream, assignment ID/generation/expected revision, gate restoration on rehydrated guard, exact current member episode and then applies target TeamMember."
+    },
+    "flowS014": {
+      "row": "S014 follows S011 role definition and S012 team definition, never conditional S013 member registration. S015 follows S014. S016, if ownerBecomesAdministrator, requires S013, S014, S015; only S016 activates tenant. Handler executes one ordered awaited effect sequence; if false, skips member registration and assignment."
+    }
+  },
+  "questions": {
+    "t004": {
+      "type": "choice",
+      "instructions": "Is T004 logically defective or coherent with the complete cited process and receiver source?",
+      "criteria": {
+        "coherent": "The actual root supplies the source admission; receiver verifies current full-manifest source/epoch and atomically records use before authorize; process proof and release are correct.",
+        "defect": "A specific authority, epoch race or required proof is missing.",
+        "insufficient": "Evidence is still insufficient."
+      }
+    },
+    "t098": {
+      "type": "choice",
+      "instructions": "Is T098 logically defective or coherent with the exact restoration source handler?",
+      "criteria": {
+        "coherent": "Actual typed restoration admission pins correct restoration kind and episode, member episode and guard gate are rechecked before target assignment; unrelated reasons stay effective.",
+        "defect": "A concrete bypass/order/episode race remains.",
+        "insufficient": "Insufficient."
+      }
+    },
+    "s014": {
+      "type": "choice",
+      "instructions": "Are corrected S014-S016 dependency edges logically correct under conditional owner registration?",
+      "criteria": {
+        "correct": "S014 requires S011/S012; S015 follows S014; S016 conditionally requires S013 and always S014/S015.",
+        "defect": "A material dependency is omitted or made mandatory when conditional.",
+        "insufficient": "Cannot decide."
+      }
+    },
+    "evidence": {
+      "type": "noul",
+      "instructions": "Do the cited rows and source facts suffice to assess the three decisions above?",
+      "criteria": {
+        "true": "The exact owner roots, receiver guards, process order and branches are represented.",
+        "false": "A material fact is absent."
+      }
+    }
+  }
+}

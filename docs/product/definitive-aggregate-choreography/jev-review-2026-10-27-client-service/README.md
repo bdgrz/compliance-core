@@ -1,0 +1,11 @@
+# ClientService aggregate review
+
+The approved owner is one tenant and caller-selected ServiceId, permanently bound to its original ProgramId and creation intent. Its aggregate owns the service lifecycle: creation, revision and terminal retirement. Creation uses ServiceId; revision and retirement use caller CommandId. No separate child lifecycle is required. Program existence is checked at admission by the existing application operation; the aggregate does not decide another owner's lifecycle.
+
+The current aggregate retains its current service fact and retirement fact, rather than a collection of past revisions. Portia supplies its aggregate stream, replay and concurrency capabilities. No new infrastructure or event contracts were added in this review.
+
+Jev 1.14.0's focused judgments support terminal retirement (0.96), immutable program binding (0.97), creation identity (0.94), and the relevant replay test coverage (0.95). Its generic file review returned uncertain authority (0.51), invariant (0.55), recovery (0.63) and incomplete-path (0.33) signals. These are advisory and were checked against the code and tests, not treated as proof.
+
+The added test creates and retires a service, reloads its history, rejects new revision and retirement commands and changed program creation intent, and verifies original create and retirement retries preserve the original identity and do not append. Existing tests cover malformed replay, changed identities, stale revisions, prepared-cut conflicts, original responses and bounded native payloads.
+
+Validation: `dotnet test test/Compliance.Tests/Compliance.Tests.csproj -c Release --no-restore -p:EnforceCodeStyleInBuild=false --filter 'FullyQualifiedName~Bdgrz.Compliance.Tests.Features.Programs&FullyQualifiedName~ClientService&Category!=BrokerIntegration&Category!=WebIntegration' --verbosity quiet` passed 35 tests. The existing unmodified baseline passed 34. Code-style enforcement was disabled for this focused test build. An initial overly broad ClientService filter also ran broker-host end-to-end tests; three failed and the broader run is not qualification evidence. Repository-wide suite, hosted, durable-store, migration and production qualification are separate.

@@ -1,0 +1,61 @@
+{
+  "httpStatus": 200,
+  "response": {
+    "model": "jev-1.14.0",
+    "answers": {
+      "boundary": {
+        "type": "choice",
+        "choice": "coherent",
+        "confidence": 0.73,
+        "probabilities": {
+          "coherent": 0.82,
+          "missing_or_wrong": 0.16,
+          "insufficient": 0.02
+        }
+      },
+      "race": {
+        "type": "noul",
+        "noul": 0.83
+      },
+      "mapping": {
+        "type": "choice",
+        "choice": "safe_human_authored",
+        "confidence": 1,
+        "probabilities": {
+          "safe_human_authored": 1,
+          "implicit_mapping_gap": 0,
+          "rollover_must_own_plan": 0,
+          "insufficient": 0
+        }
+      },
+      "sequence": {
+        "type": "choice",
+        "choice": "correct",
+        "confidence": 0.97,
+        "probabilities": {
+          "correct": 0.98,
+          "incorrect": 0.01,
+          "insufficient": 0.01
+        }
+      },
+      "proof": {
+        "type": "noul",
+        "noul": 0.83
+      },
+      "event": {
+        "type": "choice",
+        "choice": "retire",
+        "confidence": 0.98,
+        "probabilities": {
+          "retire": 0.99,
+          "retain": 0.01,
+          "insufficient": 0
+        }
+      }
+    },
+    "usage": {
+      "input_tokens": 5095,
+      "output_tokens": 220
+    }
+  }
+}

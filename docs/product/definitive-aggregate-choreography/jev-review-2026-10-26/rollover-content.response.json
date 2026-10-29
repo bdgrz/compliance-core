@@ -1,0 +1,37 @@
+{
+  "httpStatus": 200,
+  "response": {
+    "model": "jev-1.14.0",
+    "answers": {
+      "choice": {
+        "type": "choice",
+        "choice": "explicit_human_authored_successor_plan",
+        "confidence": 0.95,
+        "probabilities": {
+          "explicit_human_authored_successor_plan": 0.96,
+          "add_complete_plan_to_rollover": 0.01,
+          "automatic_mapping": 0,
+          "business_policy_required": 0.03
+        }
+      },
+      "mapping": {
+        "type": "noul",
+        "noul": 0.05
+      },
+      "noomission": {
+        "type": "choice",
+        "choice": "exhaustive_mapping",
+        "confidence": 1,
+        "probabilities": {
+          "exhaustive_mapping": 1,
+          "best_effort": 0,
+          "policy_needed": 0
+        }
+      }
+    },
+    "usage": {
+      "input_tokens": 1068,
+      "output_tokens": 139
+    }
+  }
+}

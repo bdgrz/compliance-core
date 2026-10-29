@@ -1,0 +1,15 @@
+using Cntryl.Portia;
+using Bdgrz.Compliance.Features.AccessControl.Contracts;
+using Bdgrz.Compliance.Features.Policies.Models;
+using Bdgrz.Compliance.Features.Programs.Contracts;
+namespace Bdgrz.Compliance.Features.Policies.Commands;
+
+/// <summary>Approves the reviewed pending retirement. HTTP-only personal approval.</summary>
+[Discriminator("bdgrz.policy.retire", 2)]
+public sealed record ApprovePolicyRetirement(Uuid CommandId, Uuid TenantId, Uuid ProgramId, Uuid PolicyId,
+    long ExpectedRevision, Uuid AcceptedReviewDecisionId, string Rationale,
+    Uuid? SeparationOfDutiesWaiverId = null)
+    : IRequest<PolicyDecisionView>, IProgramScopedRequest, IClientManagementMutationRequest, IIdentifiedRequest, ICallable
+{
+    Uuid IIdentifiedRequest.RequestId => CommandId;
+}

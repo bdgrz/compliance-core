@@ -1,0 +1,13 @@
+using Cntryl.Portia;
+using Bdgrz.Compliance.Features.NamedRecords.Contracts;
+using Bdgrz.Compliance.Features.Retention.Models;
+namespace Bdgrz.Compliance.Features.Applications.Models;
+
+/// <summary>
+/// The decision effective at <see cref="AsOf"/> plus the full retained history. A status of
+/// <c>unresolved</c> means no approved decision is effective yet.
+/// </summary>
+public sealed record AccessReviewScopeView(Uuid TenantId, Uuid ApplicationId,
+    Uuid SystemInstanceId, DateTimeOffset AsOf, string Status,
+    AccessReviewScopeDecisionView? Effective,
+    IReadOnlyList<AccessReviewScopeDecisionView> Decisions);

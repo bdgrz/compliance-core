@@ -210,6 +210,663 @@
         }
       },
       "authority": "Explicit current architecture adjudication under user-directed Jev review; supersedes cited contradictory earlier candidate/locked labels only as stated. Documentation decision, not implementation or deployment qualification."
+    },
+    {
+      "id": "PROGRAM_ROLLOVER_EXECUTION",
+      "status": "SELECTED_FOR_TARGET_DEFINITION",
+      "choice": "atomic_claim_private_human_governed_process",
+      "rationale": "Atomically claim the exact approved version and actual approval tuple, including pinned NextExaminationId/NextTypeIIPlanId/NextPeriodId and dates. The private process coordinates existing readiness, examination, Type I baseline/auditor outcome/system description, TypeIIPlan review/approval and TypeIIPeriod start owners. It never synthesizes or owns their facts. A human-authored complete plan exhaustively maps every rollover item. Opening acceptance remains pending; actual ObservationPeriodStarted is terminal. Retire ProgramNextPeriodCreated from selected business emissions.",
+      "jev": {
+        "model": "jev-1.14.0",
+        "evidenceFiles": [
+          "jev-review-2026-10-26/program-rollover-gap.response.json",
+          "jev-review-2026-10-26/rollover-protocol.response.json",
+          "jev-review-2026-10-26/rollover-protocol-v2.response.json",
+          "jev-review-2026-10-26/rollover-content.response.json",
+          "jev-review-2026-10-26/rollover-final.response.json",
+          "jev-review-2026-10-26/rollover-typei-gap.response.json",
+          "jev-review-2026-10-26/rollover-r000.response.json",
+          "jev-review-2026-10-26/rollover-claim-state.response.json"
+        ]
+      },
+      "authority": "User-directed definitive target selection after source inspection and multi-pass Jev review. New target only; not implementation or runtime qualification."
+    },
+    {
+      "id": "OWNER_ApplicationNameClaim",
+      "status": "SELECTED_FOR_TARGET_DEFINITION",
+      "choice": "add_owner",
+      "rationale": "Tenant-wide application name/alias uniqueness needs an authoritative claim owner like the other inventories; the per-application owner and the directory projection cannot decide it.",
+      "date": "2026-10-29",
+      "jev": {
+        "application_name_claim_needed": {
+          "type": "noul",
+          "noul": 0.83
+        }
+      },
+      "authority": "Catalog polish adjudication 2026-10-29 under user-directed Jev review (jev-1.14.0); exact request/response in jev-review-2026-10-29-polish/. Documentation decision, not implementation or deployment qualification."
+    },
+    {
+      "id": "OWNER_WorkDigestPreference_Technical",
+      "status": "SELECTED_FOR_TARGET_DEFINITION",
+      "choice": "reclassify_technical",
+      "rationale": "A settings holder with no multi-part business invariant; moved to the technical state owners. Emission retained.",
+      "date": "2026-10-29",
+      "jev": {
+        "class__WorkDigestPreference": {
+          "type": "choice",
+          "choice": "technical_process",
+          "confidence": 1.0,
+          "probabilities": {
+            "business_aggregate": 0.0,
+            "business_governor": 0.0,
+            "technical_process": 1.0
+          }
+        }
+      },
+      "authority": "Catalog polish adjudication 2026-10-29 under user-directed Jev review (jev-1.14.0); exact request/response in jev-review-2026-10-29-polish/. Documentation decision, not implementation or deployment qualification."
+    },
+    {
+      "id": "EV-D06",
+      "status": "SELECTED_FOR_TARGET_DEFINITION",
+      "choice": "reservation_fact_on_owner_stream",
+      "rationale": "Use-authorized/settled and similar hold facts stay on the owner stream because the reducer must refuse conflicting commands while the hold exists; they are labelled a distinct reservation kind, not business decisions.",
+      "date": "2026-10-29",
+      "jev": {
+        "use_hold_is_owner_fact": {
+          "type": "noul",
+          "noul": 0.81
+        },
+        "use_receipt_classification": {
+          "type": "choice",
+          "choice": "reservation_fact_on_owner_stream",
+          "confidence": 0.69,
+          "probabilities": {
+            "business_fact": 0.13,
+            "reservation_fact_on_owner_stream": 0.79,
+            "technical_receipt_in_process_stream": 0.08
+          }
+        }
+      },
+      "authority": "Catalog polish adjudication 2026-10-29 under user-directed Jev review (jev-1.14.0); exact request/response in jev-review-2026-10-29-polish/. Documentation decision, not implementation or deployment qualification."
+    },
+    {
+      "id": "EV-D07",
+      "status": "SELECTED_FOR_TARGET_DEFINITION",
+      "choice": "add_planned_retirement_facts",
+      "rationale": "Provider and OperationalProcess retirement are distinct terminal decisions that consumers must recognise without reading content; planned ProviderRetired and OperationalProcessRetired.",
+      "date": "2026-10-29",
+      "jev": {
+        "lifecycle_fact__Provider": {
+          "type": "noul",
+          "noul": 0.75
+        },
+        "lifecycle_fact__OperationalProcess": {
+          "type": "noul",
+          "noul": 0.75
+        }
+      },
+      "authority": "Catalog polish adjudication 2026-10-29 under user-directed Jev review (jev-1.14.0); exact request/response in jev-review-2026-10-29-polish/. Documentation decision, not implementation or deployment qualification."
+    },
+    {
+      "id": "EV-D08",
+      "status": "SELECTED_FOR_TARGET_DEFINITION",
+      "choice": "keep_per_child_admission",
+      "rationale": "PolicyDistributionCampaign keeps per-participant result admission on its stream; growth is bounded by the campaign audience and life and is accepted.",
+      "date": "2026-10-29",
+      "jev": {
+        "per_child_admission_growth": {
+          "type": "noul",
+          "noul": 0.91
+        },
+        "admission_alternative": {
+          "type": "choice",
+          "choice": "keep_per_child_admission",
+          "confidence": 1.0,
+          "probabilities": {
+            "keep_per_child_admission": 1.0,
+            "admit_by_generation_or_batch": 0.0,
+            "child_owns_admission": 0.0
+          }
+        }
+      },
+      "authority": "Catalog polish adjudication 2026-10-29 under user-directed Jev review (jev-1.14.0); exact request/response in jev-review-2026-10-29-polish/. Documentation decision, not implementation or deployment qualification."
+    },
+    {
+      "id": "EV-D09",
+      "status": "SELECTED_FOR_TARGET_DEFINITION",
+      "choice": "refusals_retained_as_facts",
+      "rationale": "The thirteen Rejected/Failed events remain business facts (eleven at 0.78 or higher). TenantSlugRegistrationRejected (0.61) and TenantSlugSurrenderRejected (0.58) are retained but flagged for review.",
+      "date": "2026-10-29",
+      "jev": {
+        "refusal__TenantSlugRegistrationRejected": {
+          "type": "choice",
+          "choice": "durable_business_fact",
+          "confidence": 0.41,
+          "probabilities": {
+            "durable_business_fact": 0.61,
+            "process_reply": 0.37,
+            "unclear": 0.02
+          }
+        },
+        "refusal__TenantSlugSurrenderRejected": {
+          "type": "choice",
+          "choice": "durable_business_fact",
+          "confidence": 0.37,
+          "probabilities": {
+            "durable_business_fact": 0.58,
+            "process_reply": 0.41,
+            "unclear": 0.01
+          }
+        },
+        "refusal__TenantSlugChangeRejected": {
+          "type": "choice",
+          "choice": "durable_business_fact",
+          "confidence": 0.85,
+          "probabilities": {
+            "durable_business_fact": 0.9,
+            "process_reply": 0.09,
+            "unclear": 0.01
+          }
+        },
+        "refusal__TenantSlugRejected": {
+          "type": "choice",
+          "choice": "durable_business_fact",
+          "confidence": 0.86,
+          "probabilities": {
+            "durable_business_fact": 0.91,
+            "process_reply": 0.08,
+            "unclear": 0.01
+          }
+        },
+        "refusal__TenantSlugSurrenderFailed": {
+          "type": "choice",
+          "choice": "durable_business_fact",
+          "confidence": 0.92,
+          "probabilities": {
+            "durable_business_fact": 0.95,
+            "process_reply": 0.05,
+            "unclear": 0.0
+          }
+        },
+        "refusal__ClientExportBuildFailed": {
+          "type": "choice",
+          "choice": "durable_business_fact",
+          "confidence": 0.85,
+          "probabilities": {
+            "durable_business_fact": 0.9,
+            "process_reply": 0.07,
+            "unclear": 0.03
+          }
+        },
+        "refusal__ApplicationImportFailed": {
+          "type": "choice",
+          "choice": "durable_business_fact",
+          "confidence": 0.94,
+          "probabilities": {
+            "durable_business_fact": 0.96,
+            "process_reply": 0.03,
+            "unclear": 0.01
+          }
+        },
+        "refusal__FirmStaffRegistrationRejected": {
+          "type": "choice",
+          "choice": "durable_business_fact",
+          "confidence": 0.67,
+          "probabilities": {
+            "durable_business_fact": 0.78,
+            "process_reply": 0.2,
+            "unclear": 0.02
+          }
+        },
+        "refusal__ProfessionalDutyChangeRejected": {
+          "type": "choice",
+          "choice": "durable_business_fact",
+          "confidence": 0.88,
+          "probabilities": {
+            "durable_business_fact": 0.92,
+            "process_reply": 0.08,
+            "unclear": 0.0
+          }
+        },
+        "refusal__ServiceEngagementAcceptanceRejected": {
+          "type": "choice",
+          "choice": "durable_business_fact",
+          "confidence": 0.97,
+          "probabilities": {
+            "durable_business_fact": 0.98,
+            "process_reply": 0.02,
+            "unclear": 0.0
+          }
+        },
+        "refusal__ServiceEngagementStaffAssignmentRejected": {
+          "type": "choice",
+          "choice": "durable_business_fact",
+          "confidence": 0.92,
+          "probabilities": {
+            "durable_business_fact": 0.95,
+            "process_reply": 0.05,
+            "unclear": 0.0
+          }
+        },
+        "refusal__TypeIIPeriodOpeningRejected": {
+          "type": "choice",
+          "choice": "durable_business_fact",
+          "confidence": 0.94,
+          "probabilities": {
+            "durable_business_fact": 0.96,
+            "process_reply": 0.04,
+            "unclear": 0.0
+          }
+        },
+        "refusal__IdentityRecoveryPreparationRejected": {
+          "type": "choice",
+          "choice": "durable_business_fact",
+          "confidence": 0.88,
+          "probabilities": {
+            "durable_business_fact": 0.92,
+            "process_reply": 0.07,
+            "unclear": 0.01
+          }
+        }
+      },
+      "authority": "Catalog polish adjudication 2026-10-29 under user-directed Jev review (jev-1.14.0); exact request/response in jev-review-2026-10-29-polish/. Documentation decision, not implementation or deployment qualification."
+    },
+    {
+      "id": "RULE_D26_OWNERS",
+      "status": "SELECTED_FOR_TARGET_DEFINITION",
+      "choice": "assign_independence_rules",
+      "rationale": "D26-05 to IndependenceRuleCatalog, D26-07 to ServiceEngagementIndependence, D26-03 to ClientServiceIndependence (moderate), D26-06 to ClientIndependenceDecision (moderate); D26-04 remains open.",
+      "date": "2026-10-29",
+      "jev": {
+        "indep__D26-03": {
+          "type": "choice",
+          "choice": "ClientServiceIndependence",
+          "confidence": 0.57,
+          "probabilities": {
+            "ClientServiceIndependence": 0.62,
+            "ClientIndependenceDecision": 0.08,
+            "ServiceEngagementIndependence": 0.29,
+            "PartnerIndependenceDecision": 0.01,
+            "IndependenceRuleCatalog": 0.0,
+            "IndependenceRuleRatificationCatalog": 0.0,
+            "EngagementManagementAcknowledgement": 0.0,
+            "FirmProfessionalDutyDesignation": 0.0
+          }
+        },
+        "indep_any__D26-03": {
+          "type": "noul",
+          "noul": 0.16
+        },
+        "indep__D26-04": {
+          "type": "choice",
+          "choice": "ClientIndependenceDecision",
+          "confidence": 0.29,
+          "probabilities": {
+            "ClientServiceIndependence": 0.09,
+            "ClientIndependenceDecision": 0.38,
+            "ServiceEngagementIndependence": 0.24,
+            "PartnerIndependenceDecision": 0.26,
+            "IndependenceRuleCatalog": 0.03,
+            "IndependenceRuleRatificationCatalog": 0.0,
+            "EngagementManagementAcknowledgement": 0.0,
+            "FirmProfessionalDutyDesignation": 0.0
+          }
+        },
+        "indep_any__D26-04": {
+          "type": "noul",
+          "noul": 0.07
+        },
+        "indep__D26-05": {
+          "type": "choice",
+          "choice": "IndependenceRuleCatalog",
+          "confidence": 0.97,
+          "probabilities": {
+            "ClientServiceIndependence": 0.0,
+            "ClientIndependenceDecision": 0.01,
+            "ServiceEngagementIndependence": 0.0,
+            "PartnerIndependenceDecision": 0.0,
+            "IndependenceRuleCatalog": 0.97,
+            "IndependenceRuleRatificationCatalog": 0.02,
+            "EngagementManagementAcknowledgement": 0.0,
+            "FirmProfessionalDutyDesignation": 0.0
+          }
+        },
+        "indep_any__D26-05": {
+          "type": "noul",
+          "noul": 0.26
+        },
+        "indep__D26-06": {
+          "type": "choice",
+          "choice": "ClientIndependenceDecision",
+          "confidence": 0.49,
+          "probabilities": {
+            "ClientServiceIndependence": 0.12,
+            "ClientIndependenceDecision": 0.55,
+            "ServiceEngagementIndependence": 0.19,
+            "PartnerIndependenceDecision": 0.09,
+            "IndependenceRuleCatalog": 0.02,
+            "IndependenceRuleRatificationCatalog": 0.01,
+            "EngagementManagementAcknowledgement": 0.02,
+            "FirmProfessionalDutyDesignation": 0.0
+          }
+        },
+        "indep_any__D26-06": {
+          "type": "noul",
+          "noul": 0.1
+        },
+        "indep__D26-07": {
+          "type": "choice",
+          "choice": "ServiceEngagementIndependence",
+          "confidence": 0.78,
+          "probabilities": {
+            "ClientServiceIndependence": 0.09,
+            "ClientIndependenceDecision": 0.08,
+            "ServiceEngagementIndependence": 0.81,
+            "PartnerIndependenceDecision": 0.01,
+            "IndependenceRuleCatalog": 0.01,
+            "IndependenceRuleRatificationCatalog": 0.0,
+            "EngagementManagementAcknowledgement": 0.0,
+            "FirmProfessionalDutyDesignation": 0.0
+          }
+        },
+        "indep_any__D26-07": {
+          "type": "noul",
+          "noul": 0.12
+        }
+      },
+      "authority": "Catalog polish adjudication 2026-10-29 under user-directed Jev review (jev-1.14.0); exact request/response in jev-review-2026-10-29-polish/. Documentation decision, not implementation or deployment qualification."
+    },
+    {
+      "id": "OPEN_ResponseReceiptsInPayload",
+      "status": "OPEN",
+      "choice": null,
+      "rationale": "Whether FirstResponse/OperationResult belong inside the business event or in an operation receipt keyed by command identity is unsettled (0.57 vs 0.39, confidence 0.35). Revision-in-payload as metadata 0.68. No contract change adopted.",
+      "date": "2026-10-29",
+      "jev": {
+        "response_receipt_in_payload": {
+          "type": "choice",
+          "choice": "operation_receipt_keyed_by_command",
+          "confidence": 0.35,
+          "probabilities": {
+            "inside_the_business_event": 0.39,
+            "operation_receipt_keyed_by_command": 0.57,
+            "either_documented_choice": 0.04
+          }
+        },
+        "revision_in_payload_is_metadata": {
+          "type": "noul",
+          "noul": 0.68
+        }
+      },
+      "authority": "Catalog polish adjudication 2026-10-29 under user-directed Jev review (jev-1.14.0); exact request/response in jev-review-2026-10-29-polish/. Documentation decision, not implementation or deployment qualification."
+    },
+    {
+      "id": "OPEN_CriteriaEditionOwner",
+      "status": "OPEN",
+      "choice": null,
+      "rationale": "Whether a platform CriteriaEdition owner is needed for D02-01 is unsettled (0.62 at confidence 0.43).",
+      "date": "2026-10-29",
+      "jev": {
+        "criteria_edition_owner": {
+          "type": "choice",
+          "choice": "new_criteria_edition_owner",
+          "confidence": 0.43,
+          "probabilities": {
+            "platform_static_content_no_owner": 0.35,
+            "new_criteria_edition_owner": 0.62,
+            "overlay_owner_covers_it": 0.03
+          }
+        }
+      },
+      "authority": "Catalog polish adjudication 2026-10-29 under user-directed Jev review (jev-1.14.0); exact request/response in jev-review-2026-10-29-polish/. Documentation decision, not implementation or deployment qualification."
+    },
+    {
+      "id": "OPEN_LifecycleFactsOtherInventories",
+      "status": "OPEN",
+      "choice": null,
+      "rationale": "Distinct lifecycle facts for ServiceIdentity (0.67), Person (0.65), WorkRelationship, Location, DataFlow (0.60), TechnologyComponent (0.56), InformationAsset (0.54) are unsettled; generic revision facts stay.",
+      "date": "2026-10-29",
+      "jev": {
+        "lifecycle_fact__ServiceIdentity": {
+          "type": "noul",
+          "noul": 0.67
+        },
+        "lifecycle_fact__WorkRelationship": {
+          "type": "noul",
+          "noul": 0.6
+        },
+        "lifecycle_fact__Person": {
+          "type": "noul",
+          "noul": 0.65
+        },
+        "lifecycle_fact__Location": {
+          "type": "noul",
+          "noul": 0.6
+        },
+        "lifecycle_fact__TechnologyComponent": {
+          "type": "noul",
+          "noul": 0.56
+        },
+        "lifecycle_fact__InformationAsset": {
+          "type": "noul",
+          "noul": 0.54
+        },
+        "lifecycle_fact__DataFlow": {
+          "type": "noul",
+          "noul": 0.6
+        }
+      },
+      "authority": "Catalog polish adjudication 2026-10-29 under user-directed Jev review (jev-1.14.0); exact request/response in jev-review-2026-10-29-polish/. Documentation decision, not implementation or deployment qualification."
+    },
+    {
+      "id": "OPEN_ClientExportClassification",
+      "status": "OPEN",
+      "choice": null,
+      "rationale": "ClientExport reads as governor 0.50 / technical 0.38; classification unchanged.",
+      "date": "2026-10-29",
+      "jev": {
+        "class__ClientExport": {
+          "type": "choice",
+          "choice": "business_governor",
+          "confidence": 0.25,
+          "probabilities": {
+            "business_aggregate": 0.12,
+            "business_governor": 0.5,
+            "technical_process": 0.38
+          }
+        }
+      },
+      "authority": "Catalog polish adjudication 2026-10-29 under user-directed Jev review (jev-1.14.0); exact request/response in jev-review-2026-10-29-polish/. Documentation decision, not implementation or deployment qualification."
+    },
+    {
+      "id": "OWNER_CommitmentControlLink",
+      "status": "SELECTED_FOR_TARGET_DEFINITION",
+      "choice": "add_owner",
+      "rationale": "Versioned many-to-many commitment/control links need their own owner, mirroring RiskTreatmentAssertion.",
+      "date": "2026-10-29",
+      "jev": {
+        "gap_d09_09_owner": {
+          "type": "choice",
+          "choice": "new_link_owner",
+          "confidence": 0.97,
+          "probabilities": {
+            "new_link_owner": 0.98,
+            "commitment_owner": 0.02,
+            "control_owner": 0.0,
+            "projection": 0.0
+          }
+        }
+      },
+      "authority": "Catalog polish round 3 adjudication 2026-10-29 (jev-1.14.0); request/response in jev-review-2026-10-29-polish/round3-*.json. Documentation decision, not implementation qualification."
+    },
+    {
+      "id": "OWNER_ImportedOwnerResolution",
+      "status": "SELECTED_FOR_TARGET_DEFINITION",
+      "choice": "add_owner",
+      "rationale": "Exact-email match at import and attributed manual resolution are one write decision with no existing owner.",
+      "date": "2026-10-29",
+      "jev": {
+        "gap_d04_02_owner": {
+          "type": "choice",
+          "choice": "new_owner_resolution",
+          "confidence": 0.8,
+          "probabilities": {
+            "readiness_assessment_import": 0.11,
+            "new_owner_resolution": 0.85,
+            "person_owner": 0.03,
+            "projection": 0.01
+          }
+        }
+      },
+      "authority": "Catalog polish round 3 adjudication 2026-10-29 (jev-1.14.0); request/response in jev-review-2026-10-29-polish/round3-*.json. Documentation decision, not implementation qualification."
+    },
+    {
+      "id": "RULE_D26-04",
+      "status": "SELECTED_FOR_TARGET_DEFINITION",
+      "choice": "two_step",
+      "rationale": "ClientIndependenceDecision classifies conditionally_compatible; ClientServiceIndependence refuses acceptance admission without a referencing partner evaluation.",
+      "date": "2026-10-29",
+      "jev": {
+        "d26_04_two_step": {
+          "type": "noul",
+          "noul": 0.8
+        },
+        "d26_04_owner": {
+          "type": "choice",
+          "choice": "ClientServiceIndependence",
+          "confidence": 0.44,
+          "probabilities": {
+            "ClientServiceIndependence": 0.58,
+            "ClientIndependenceDecision": 0.05,
+            "ServiceEngagementIndependence": 0.35,
+            "PartnerIndependenceDecision": 0.02
+          }
+        }
+      },
+      "authority": "Catalog polish round 3 adjudication 2026-10-29 (jev-1.14.0); request/response in jev-review-2026-10-29-polish/round3-*.json. Documentation decision, not implementation qualification."
+    },
+    {
+      "id": "RULE_D16-15",
+      "status": "SELECTED_FOR_TARGET_DEFINITION",
+      "choice": "ArtifactEngagementHold",
+      "rationale": "Active holds block disposition at offboarding; the hold owner decides it.",
+      "date": "2026-10-29",
+      "jev": {
+        "d16_15_owner": {
+          "type": "choice",
+          "choice": "ArtifactEngagementHold",
+          "confidence": 0.48,
+          "probabilities": {
+            "ArtifactDisposition": 0.2,
+            "ArtifactEngagementHold": 0.61,
+            "ArtifactLegalHold": 0.11,
+            "ClientExport": 0.08
+          }
+        }
+      },
+      "authority": "Catalog polish round 3 adjudication 2026-10-29 (jev-1.14.0); request/response in jev-review-2026-10-29-polish/round3-*.json. Documentation decision, not implementation qualification."
+    },
+    {
+      "id": "OPEN_CampaignNaturalKey",
+      "status": "OPEN",
+      "choice": null,
+      "rationale": "Whether a second open PolicyDistributionCampaign for the same policy version and roster snapshot is an error is leaning yes (0.65); if so Jev prefers an active-campaign claim owner (0.72). Access review campaign overlap is unsettled (0.49); duplicate legal holds leaning error (0.63). No owner added.",
+      "date": "2026-10-29",
+      "jev": {
+        "campaign_duplicate_risk": {
+          "type": "noul",
+          "noul": 0.65
+        },
+        "campaign_dedup_design": {
+          "type": "choice",
+          "choice": "active_campaign_claim_owner",
+          "confidence": 0.63,
+          "probabilities": {
+            "active_campaign_claim_owner": 0.72,
+            "deterministic_campaign_id": 0.19,
+            "policy_owner_tracks_open_campaign": 0.01,
+            "no_rule_needed": 0.08
+          }
+        },
+        "access_review_campaign_duplicate_risk": {
+          "type": "noul",
+          "noul": 0.49
+        },
+        "legal_hold_duplicate_risk": {
+          "type": "noul",
+          "noul": 0.63
+        }
+      },
+      "authority": "Catalog polish round 3 adjudication 2026-10-29 (jev-1.14.0); request/response in jev-review-2026-10-29-polish/round3-*.json. Documentation decision, not implementation qualification."
+    },
+    {
+      "id": "CMD_ConcurrencyGuards",
+      "status": "SELECTED_FOR_TARGET_DEFINITION",
+      "choice": "per_command",
+      "rationale": "41 CommandId-identified mutations without ExpectedRevision were classified: adopted at confidence 0.7 or higher ({'creation_key_only': 5, 'terminal_idempotent_no_guard': 5, 'require_expected_revision': 4}); 27 remain unresolved and keep their current fields.",
+      "date": "2026-10-29",
+      "unresolved": [],
+      "authority": "Round 4 (jev-1.14.0); request/response in jev-review-2026-10-29-polish/round4-occ-*.json",
+      "resolution": {
+        "date": "2026-10-29",
+        "method": "three atomic Nouls per command (mutates existing state, absorbing transition, process reply); code applied the truth table, defaulted the 12 still-unsettled to ExpectedRevision, and bound the four Tenant slug replies to their operation for consistency",
+        "counts": {
+          "require_expected_revision": 20,
+          "process_reply_bound_by_operation": 7
+        }
+      }
+    },
+    {
+      "id": "CHOREO_PlannedEdges",
+      "status": "SELECTED_FOR_TARGET_DEFINITION",
+      "choice": "add_planned_edges",
+      "rationale": "Ten planned reaction rows X000-X009 for the planned owners and facts and for the pass F reactions Jev rated above 0.6 with a confident counterpart; receiver guards from the October 23 reactor contracts lifted onto 113 edges as their prerequisite rule.",
+      "date": "2026-10-29",
+      "authority": "Round 4 (jev-1.14.0); pass F request/response in the session scratchpad, summary in jev-review-2026-10-29-polish/README.md"
+    },
+    {
+      "id": "CHOREO_RecoveryContractCases",
+      "status": "SELECTED_FOR_TARGET_DEFINITION",
+      "choice": "state_four_cases",
+      "rationale": "The one-sentence recovery contract on every row is stated as four named cases (lost acknowledgement, retry after partial progress, concurrency conflict, abort of the admitted root) with unchanged meaning; calibration on five rows moved Jev recovery_complete from 0.14-0.41 to 0.94-0.98. 121 rows still have no edge-specific stage proof set and are marked stageProofStatus=to_be_specified.",
+      "date": "2026-10-29",
+      "authority": "Round 4 calibration (jev-1.14.0); calibE request/response in the session scratchpad"
+    },
+    {
+      "id": "TENANT_Lifecycle",
+      "status": "SELECTED_FOR_TARGET_DEFINITION",
+      "choice": "explicit_state_machine",
+      "rationale": "The Tenant owner decides suspension, reactivation and offboarding (0.89); the invariant now states the legal transitions (0.93).",
+      "date": "2026-10-29",
+      "jev": {
+        "tenant__lifecycle_owner": 0.89,
+        "tenant__lifecycle_states": {
+          "explicit_state_machine": 0.93,
+          "current_text_sufficient": 0.07
+        }
+      },
+      "authority": "Round 4 open-items adjudication (jev-1.14.0); open-request/response in jev-review-2026-10-29-polish/"
+    },
+    {
+      "id": "CHOREO_X008_ProofRead",
+      "status": "SELECTED_FOR_TARGET_DEFINITION",
+      "choice": "proof_read_at_signoff",
+      "rationale": "The signed letter is a stage proof the SignOffExamination command verifies; no reactor or availability fact.",
+      "date": "2026-10-29",
+      "jev": {
+        "proof_read_at_signoff": 0.75,
+        "reactor_records_availability": 0.12,
+        "both": 0.13
+      },
+      "authority": "Round 4 open-items adjudication (jev-1.14.0)"
+    },
+    {
+      "id": "CMD_AuditObservationPlanned",
+      "status": "SELECTED_FOR_TARGET_DEFINITION",
+      "choice": "planned_from_aggregate_methods",
+      "rationale": "Four planned command contracts derived from the existing aggregate methods so the owner is no longer command-less.",
+      "date": "2026-10-29",
+      "authority": "Source: AuditObservation.cs methods"
     }
   ],
   "artifactDownloadDetails": "reactors/artifact-download-decision.json optionA with explicit original-actor/current-rights read and no generic operation lookup",
@@ -228,5 +885,26 @@
     "rule": "Use only for this new unoccupied process identity domain; occupied v1 algorithms/target-key selections remain unchanged. Implementation must provide fixed byte/UUID vectors before activation."
   },
   "downloadReadActorRule": "Same original personal actor plus all current exact artifact/advisor rights; no admin-by-inference or generic operation status. Return original protected ticket bytes and original expiry; no renewal under same root.",
-  "scope": "Definitive target owners, emitted semantic facts, causal/prerequisite graph and proof/identity rules. Current source mapping and field/wire-schema reconciliation are implementation evidence, not alternate target ownership."
+  "scope": "Definitive target owners, emitted semantic facts, causal/prerequisite graph and proof/identity rules. Current source mapping and field/wire-schema reconciliation are implementation evidence, not alternate target ownership.",
+  "polish": {
+    "date": "2026-10-29",
+    "head": "60029b8f21b1474cc432370e4f5d931b0330ccda",
+    "model": "jev-1.14.0",
+    "summary": [
+      "wire adopted from source for 119 events",
+      "reconciliation rows added: ['AuditPopulationDefinedV4', 'AuditPopulationGeneratedV4', 'AuditPopulationDefinitionRevisedV2', 'AuditPopulationFactRecordedV3', 'AuditPopulationRowClassifiedV3', 'AuditPopulationReconciledV3', 'AuditPopulationAmendedV3', 'AuditPopulationFrozenV3', 'PersonRegistrationRecorded', 'PersonDetailsRevised', 'PersonMembershipCorrelationRecorded']",
+      "reservation kind: 48 events",
+      "meanings authored: 153",
+      "owners: +ApplicationNameClaim, WorkDigestPreference -> technical; planned events ApplicationNameClaimed/Released, ProviderRetired, OperationalProcessRetired",
+      "invariants extended for 10 owners",
+      "identity text expanded for 51 owners",
+      "commands moved: [('SuspendMember', 'TenantManagerGuard', 'Member'), ('DeprovisionMember', 'TenantManagerGuard', 'Member'), ('ReinstateMember', 'TenantManagerGuard', 'Member'), ('AssignTeamMember', 'TenantManagerGuard', 'TeamMember'), ('RemoveTeamMember', 'TenantManagerGuard', 'TeamMember'), ('AcknowledgePolicy', 'PolicyDistributionCampaign', 'PolicyCampaignParticipant'), ('ApproveCampaignWaiver', 'PolicyDistributionCampaign', 'PolicyCampaignParticipant'), ('RecordTrainingCompletion', 'PolicyDistributionCampaign', 'PolicyCampaignParticipant')]; commands added: {'ApplicationImportSource': 2, 'AuditPackageDelivery': 1, 'AuditorFeedbackThread': 1, 'AuditorSampleSelection': 1, 'ClientIndependenceDecision': 1, 'EngagementManagementAcknowledgement': 1, 'FirmStaffIdentityClaim': 1, 'LocationNameClaim': 2, 'OperationalProcessNameClaim': 2, 'PartnerIndependenceDecision': 1, 'PolicyCampaignParticipant': 3, 'PopulationSnapshot': 5, 'PracticeIndependenceCommitment': 3, 'ProfessionalAssertionIdentityClaim': 1, 'ProviderNameClaim': 2, 'ProviderRiskAcceptance': 1, 'ReadinessAssessment': 1, 'TeamMember': 4, 'TenantInvitationMailboxClaim': 4, 'TypeIIObservationCalendar': 2, 'UserIdentity': 7}",
+      "rule traceability: {'owner': 203, 'product_policy': 23, 'open': 2, 'authorization': 11, 'gap': 2, 'process': 8, 'projection': 7}"
+    ],
+    "round3": [
+      "decides clauses applied: 79; reassigned rules: 59; traced rules not enforced in source: 77",
+      "planned owners: CommitmentControlLink, ImportedOwnerResolution",
+      "D26-04 -> ClientServiceIndependence (two-step); D16-15 -> ArtifactEngagementHold"
+    ]
+  }
 }

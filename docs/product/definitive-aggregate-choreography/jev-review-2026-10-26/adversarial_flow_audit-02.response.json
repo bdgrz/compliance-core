@@ -1,0 +1,54 @@
+{
+  "httpStatus": 200,
+  "response": {
+    "model": "jev-1.14.0",
+    "answers": {
+      "flow_0": {
+        "type": "choice",
+        "choice": "source_evidence_incomplete",
+        "confidence": 0.4,
+        "probabilities": {
+          "coherent_and_sufficient": 0.2,
+          "concrete_flow_defect": 0.2,
+          "source_evidence_incomplete": 0.6
+        }
+      },
+      "evidence_0": {
+        "type": "noul",
+        "noul": 0.23
+      },
+      "flow_1": {
+        "type": "choice",
+        "choice": "source_evidence_incomplete",
+        "confidence": 0.28,
+        "probabilities": {
+          "coherent_and_sufficient": 0.13,
+          "concrete_flow_defect": 0.35,
+          "source_evidence_incomplete": 0.52
+        }
+      },
+      "evidence_1": {
+        "type": "noul",
+        "noul": 0.17
+      },
+      "flow_2": {
+        "type": "choice",
+        "choice": "source_evidence_incomplete",
+        "confidence": 0.33,
+        "probabilities": {
+          "coherent_and_sufficient": 0.2,
+          "concrete_flow_defect": 0.25,
+          "source_evidence_incomplete": 0.55
+        }
+      },
+      "evidence_2": {
+        "type": "noul",
+        "noul": 0.2
+      }
+    },
+    "usage": {
+      "input_tokens": 7918,
+      "output_tokens": 244
+    }
+  }
+}

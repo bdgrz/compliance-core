@@ -1,0 +1,467 @@
+{
+  "model": "jev-1.14.0",
+  "state": {
+    "review": "Re-evaluate selected choreography rows with the complete row, exact proof contract, selected source/target owner invariants, and full entry/read/abort contracts. A dispatcher or registered reactor is not proof of target commitment. Distinguish genuine missing proof from evidence not applicable to this row kind.",
+    "pass": "neutral_flow_audit",
+    "ownerFacts": [
+      {
+        "owner": "ServiceEngagementIndependence",
+        "classification": "business_aggregate",
+        "identity": "tenant / engagementId",
+        "invariant": "One engagement lifecycle, proposed and actual staff assignments, current content revision and accepted epoch bindings. Engagement revision and service epoch live in state; historical epoch streams cannot compete independently.",
+        "mustPreserve": "Never reactivate a permanent independence commitment from reevaluation; acceptance binds exact service, draft, acknowledgement and ratified-rule proofs."
+      },
+      {
+        "owner": "ClientServiceIndependence",
+        "classification": "business_governor",
+        "identity": "tenant / client-service-epoch",
+        "invariant": "Complete immutable nonattest-service history manifest, current service epoch and acceptance admission barrier. A changed service set advances epoch and makes old acceptance ineligible immediately through authoritative composed reads.",
+        "mustPreserve": "Never reactivate a permanent independence commitment from reevaluation; acceptance binds exact service, draft, acknowledgement and ratified-rule proofs."
+      },
+      {
+        "owner": "AccessReviewCampaign",
+        "classification": "business_governor",
+        "identity": "campaignId",
+        "invariant": "Frozen campaign snapshot, generation, and compact completion gate.",
+        "mustPreserve": "Keep reviewer and remediation owner distinct per item unless exact waiver; no stale projected summary may satisfy completion."
+      },
+      {
+        "owner": "AccessReviewItem",
+        "classification": "business_aggregate",
+        "identity": "(campaignId, itemId)",
+        "invariant": "One reviewer decision, reassignment, remediation verification, exception and history for one frozen item.",
+        "mustPreserve": "Keep reviewer and remediation owner distinct per item unless exact waiver; no stale projected summary may satisfy completion."
+      },
+      {
+        "owner": "Provider",
+        "classification": "business_aggregate",
+        "identity": "providerId",
+        "invariant": "One provider content, version and retirement lifecycle.",
+        "mustPreserve": "Exact creation identity and expected provider revision; active normalized name unique within tenant."
+      },
+      {
+        "owner": "ProviderNameClaim",
+        "classification": "business_identity_or_uniqueness_authority",
+        "identity": "(tenantId, normalizedGovernedName)",
+        "invariant": "Authoritative unique active name reservation.",
+        "mustPreserve": "Exact creation identity and expected provider revision; active normalized name unique within tenant."
+      },
+      {
+        "owner": "Location",
+        "classification": "business_aggregate",
+        "identity": "locationId",
+        "invariant": "Independent location record lifecycle.",
+        "mustPreserve": "Kind is immutable; only active same-kind names are unique."
+      },
+      {
+        "owner": "LocationNameClaim",
+        "classification": "business_identity_or_uniqueness_authority",
+        "identity": "(tenantId, locationKind, normalizedName)",
+        "invariant": "Authoritative active-name uniqueness claim.",
+        "mustPreserve": "Kind is immutable; only active same-kind names are unique."
+      },
+      {
+        "owner": "TenantManagerGuard",
+        "classification": "business_governor",
+        "identity": "Tenant singleton manager guard in its existing address. Selected CommandId binds exact contributor/member episode, generation and withdrawal/restoration transition; current complete eligible contributors remain authoritative.",
+        "invariant": "Removal from effective administrator set must leave another active tenant administrator.",
+        "boundaryRationale": "Without a shared authoritative decision/hold two removals could each rely on the other. The coordination boundary is justified; guard-to-member transition protocol is incomplete."
+      },
+      {
+        "owner": "Member",
+        "classification": "business_aggregate",
+        "identity": "Existing UUIDv5 of TenantId + UserId; membership episodes remain distinct and exact. Selected CommandId binds the original member/episode and intended transition.",
+        "invariant": "One tenant-user membership has one affiliation/expiry episode; deprovision closes authority and a fresh episode cannot start until authority cleanup completes.",
+        "boundaryRationale": "Affiliation, lifecycle and current episode must change together. Cleanup completion is an authority-release gate; membership roster/grants remain external."
+      },
+      {
+        "owner": "EmailAddress",
+        "classification": "business_aggregate",
+        "identity": "Existing UUIDv5 of the normalized email address. ChallengeId and selected CommandId are distinct stable operation identities bound to this exact address, owner and recovery episode.",
+        "invariant": "A normalized address reserves exactly one platform user; verification requires its current challenge; a claimed recovery binds one old/replacement pair.",
+        "boundaryRationale": "Ownership and current-proof consumption require one authority; delivery outcomes do not. A recovery lifecycle can be separate only with durable claim/admission and revocation recovery."
+      },
+      {
+        "owner": "IdentityRecovery",
+        "classification": "business_aggregate",
+        "identity": "platform / challengeId",
+        "invariant": "Immutable both-proof-verified candidate and preparation; complete protection proofs precede accepted exact swap. Preparation can reject/fence; accepted swap completes forward. Exact account, old/replacement identities and actor/proof provenance retained without bearer tokens."
+      },
+      {
+        "owner": "PolicyDistributionCampaign",
+        "classification": "business_aggregate",
+        "identity": "campaignId",
+        "invariant": "Immutable policy/material version and frozen audience plus closure generation.",
+        "mustPreserve": "Every result binds the accepted campaign version/hash and included participant; after close, no result accepted."
+      },
+      {
+        "owner": "PolicyCampaignParticipant",
+        "classification": "business_aggregate",
+        "identity": "(campaignId, personId)",
+        "invariant": "Independent acknowledgement, completion, exception and delivery status.",
+        "mustPreserve": "Every result binds the accepted campaign version/hash and included participant; after close, no result accepted."
+      },
+      {
+        "owner": "AuditPackageManifest",
+        "classification": "business_aggregate",
+        "identity": "packageId",
+        "invariant": "Manifest identity, selected immutable content version and delivery gate.",
+        "mustPreserve": "No current aggregate should retain all build attempts or delivery history as command state."
+      },
+      {
+        "owner": "AuditPackageDelivery",
+        "classification": "business_aggregate",
+        "identity": "tenant / (packageId, manifestVersion, deliveryId)",
+        "invariant": "One delivery authorization and terminal delivery for exact recipient/version.",
+        "mustPreserve": "No current aggregate should retain all build attempts or delivery history as command state."
+      },
+      {
+        "owner": "FirmProfessionalDutyDesignation",
+        "classification": "business_aggregate",
+        "identity": "platform / (canonicalUserId, duty, nullable tenantScope)",
+        "invariant": "One active signed duty designation and monotonic signed authority revision per exact subject/duty/scope; retain continuity proof. The platform scope is explicit and is not an empty tenant UUID.",
+        "mustPreserve": "Exact predecessor, monotonically increasing authority revision, stable signed subject, valid staff source proof."
+      },
+      {
+        "owner": "TeamMember",
+        "classification": "business_aggregate",
+        "identity": "Existing UUIDv5 of tenant + team + member. Each assignment episode remains exact; selected native operation/receiver identity is bound to that member/team episode.",
+        "invariant": "One tenant/team/member relationship is active only for one current membership episode.",
+        "boundaryRationale": "Membership episode and active flag must be together; team-wide roster does not need an atomic revision. Tenant-manager invariant requires separate authoritative removal coordination."
+      },
+      {
+        "owner": "EvidenceArtifact",
+        "classification": "business_aggregate",
+        "identity": "Tenant / existing EvidenceStreams artifact key / ArtifactId, with immutable source identity and verified content binding. ArtifactId identifies registration; selected mutations use CommandId. Download grants use the separately adopted artifact-qualified receiving identity.",
+        "invariant": "Immutable content remains unavailable until clean inspection; malware alone can be released with attributed clean rescan; secret/invalid rejection is final.",
+        "boundaryRationale": "Inspection and quarantine release share availability decision. Download authorization needs an admission proof against that decision but every historical download need not extend artifact lifecycle stream."
+      },
+      {
+        "owner": "AdvisorHandoff",
+        "classification": "business_aggregate",
+        "identity": "handoffId",
+        "invariant": "Small selection, readiness, revocation/closure and admission-generation authority.",
+        "mustPreserve": "Feedback records exact selected source version and admitted generation; later selection makes it historical."
+      },
+      {
+        "owner": "Tenant",
+        "classification": "business_aggregate",
+        "identity": "Caller TenantId is immutable tenant creation identity; lifecycle operations use caller CommandId.",
+        "invariant": "One tenant lifecycle activates only after its slug and first-administrator conditions; offboarding forbids new active service; one current slug transition admitted at a time.",
+        "boundaryRationale": "Tenant lifecycle and activation/current-slug link need coherence; global slug uniqueness belongs slug authority. Previous slug history and transport correlation need not live in tenant."
+      },
+      {
+        "owner": "TeamRole",
+        "classification": "business_aggregate",
+        "identity": "Existing UUIDv5 of tenant + team + role. Selected CommandId binds the exact assignment episode and removal intent.",
+        "invariant": "One tenant/team/role relationship has a single active assignment.",
+        "boundaryRationale": "Each role assignment lifecycle independent; Team need not own collection. Critical built-in role removal policy remains external command admission."
+      },
+      {
+        "owner": "RolePermission",
+        "classification": "business_aggregate",
+        "identity": "Existing UUIDv5 of tenant + role + normalized permission. Selected CommandId and assignment episode bind the exact assignment/removal intent.",
+        "invariant": "One normalized role-permission tuple has a single active relationship at a time.",
+        "boundaryRationale": "Relationship can be assigned/removed without serializing unrelated permissions; a roster in Role is unnecessary."
+      },
+      {
+        "owner": "ArtifactDownloadGrant",
+        "classification": "business_aggregate",
+        "identity": "UUIDv5 namespace ArtifactId, UTF8 artifact-download-grant:v1:{canonical TenantId}:{canonical CommandId}. Receiving root additionally verifies exact artifact/command/original-actor tuple. No generic operation lookup.",
+        "invariant": "One exact receiving grant owns the authenticated encrypted original artifact ticket/result after EvidenceArtifact first admitted and pinned availability with frozen202. Complete required held source uses and exact issue DecisionAt precede native issued-v2; cancellation fences delayed issuance and terminal proofs settle all uses. Original expiry never renews under the same root identity. Existing artifact-issued v1 decoder remains read-only compatibility."
+      }
+    ],
+    "flows": [
+      {
+        "id": "T076",
+        "kind": "reaction_or_regular_process_stage",
+        "status": "SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED",
+        "sourceOwner": "PolicyDistributionCampaign",
+        "logicalPrerequisiteFacts": [
+          "PolicyParticipantResultAdmitted"
+        ],
+        "logicalPrerequisiteRule": "selected applicable typed variant/set; see required proof contract",
+        "physicalRootEvents": [
+          "PolicyParticipantResultAdmitted"
+        ],
+        "originalAdmissionKinds": [
+          "AdvisorFeedbackAdmitted",
+          "AuditorResponseAdmitted",
+          "AuditorCommentAdmitted",
+          "CorrectiveActionAdmitted",
+          "AuditorSampleSelectionAdmitted",
+          "ProviderCoverageGapRiskAcceptanceAdmitted",
+          "PolicyParticipantResultAdmitted"
+        ],
+        "receiverCommand": "ApplyPolicyParticipantResult",
+        "targetOwner": "PolicyCampaignParticipant",
+        "targetAuthorityKind": "business_aggregate",
+        "emittedSemanticFacts": [
+          "PolicyAcknowledgementRecorded",
+          "TrainingCompletionRecorded",
+          "CampaignWaiverApproved"
+        ],
+        "emittedEventContracts": [],
+        "currentRegisteredRootTypes": [
+          "PolicyParticipantResultReactor"
+        ],
+        "plannedRootRole": null,
+        "processes": [
+          "IndependentChildMaterialization"
+        ],
+        "requiredProofContract": {
+          "canonicalCarrier": "original admitted root reference + required independently verified typed stage/terminal proof sets",
+          "admissionReferenceFactKinds": [
+            "AdvisorFeedbackAdmitted",
+            "AuditorResponseAdmitted",
+            "AuditorCommentAdmitted",
+            "CorrectiveActionAdmitted",
+            "AuditorSampleSelectionAdmitted",
+            "ProviderCoverageGapRiskAcceptanceAdmitted",
+            "PolicyParticipantResultAdmitted"
+          ],
+          "admissionReferenceRole": "original business admission/first-owner fact, distinct from subscription trigger and intermediate/terminal prerequisites",
+          "verification": {
+            "admission": "AdmissionReference is a locator only. Resolve and independently verify actual typed admitted fact, exact owner/tenant/program, saved metadata and physical/hydrated cut, original root/episode/actor/intent and immutable content.",
+            "stageAndTerminal": "Materialize each required typed stage/terminal proof from actual committed facts and full required immutable selections; prove complete grant/fence/provisional/child sets, not counts/checkpoints. Guard sets are not weakened by carrier choice.",
+            "earlyReplay": "If native receipt binding does not cover a supplied/interpreted command term, bind that term through the required actual typed proof/body before early replay. Exact receipt cannot bypass proof manifest or source tuple guards.",
+            "resultAndRecovery": "Current public authorization precedes replay. Original result/receipt and unknown-append recovery stay exact; requested cancellation propagates. Unavailable proof/content remains transient; corruption/changed intent is permanent; no inferred absence/release.",
+            "implementationStatus": "Installed pointer/handler/process presence is not proof of conformance. Field/wire migration and required behavioral tests remain separately verifiable implementation work."
+          },
+          "requiredTypedStageProofSets": [],
+          "pinnedSourceRequirements": "Every exact source owner/event/content revision and complete immutable manifest required by intendedProofGate remains mandatory; no absent optional source is fabricated.",
+          "proofGate": "Exact admitted open generation and material hash/version/text; native acknowledgement/completion/waiver is one typed variant.",
+          "requiredLogicalPrerequisiteProofs": "Every applicable logical prerequisite is independently verified as an actual typed saved fact (or actual technical proof where explicitly technical); a terminal proof may establish an earlier stage only through a verified native chain that includes that required typed stage. Stage order/checkpoint alone never substitutes."
+        },
+        "effectIdentity": {
+          "decisionId": "EFFECT_IDENTITIES",
+          "existingOccupiedV1": "Preserve exact source-event UUID namespace, current EffectIdentity UTF8 delimiter bytes, process/receiver text, each frozen target selector and exact episode. Retain root-derived IDs when adding required proofs; no source-event substitution or silent selector rewrite.",
+          "newAlgorithmPolicy": "Any new length-prefixed algorithm is explicitly versioned and uses injective field encoding with explicit process/effect/target/episode domains and compatibility/fencing. It never changes occupied v1 IDs.",
+          "implementationQualification": "Selected policy only; individual new algorithm/wire implementation must prove exact vectors and domain/compatibility fences before emission.",
+          "newArtifactAlgorithm": {
+            "version": "effect-identity-v2",
+            "namespace": "actual committed EvidenceArtifactDownloadRequested.Metadata.EventId",
+            "fieldsInOrder": [
+              "effectKind (canonical receiver command kind)",
+              "canonical target EventStreamAddress",
+              "episode (exact selected value, initial when absent)"
+            ],
+            "bytes": "UTF8(effect-identity:v2) followed by each field UTF8 bytes prefixed by its unsigned32-bit big-endian byte length; UUIDv5 over these exact name bytes and the actual source EventId namespace.",
+            "rule": "Use only for this new unoccupied process identity domain; occupied v1 algorithms/target-key selections remain unchanged. Implementation must provide fixed byte/UUID vectors before activation."
+          }
+        },
+        "recoveryContract": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
+        "implementationConformance": "NOT_ASSERTED; source evidence only",
+        "sourceOwners": [
+          "PolicyDistributionCampaign"
+        ],
+        "canonicalTargetOwner": "PolicyCampaignParticipant"
+      },
+      {
+        "id": "T081",
+        "kind": "reaction_or_regular_process_stage",
+        "status": "SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED",
+        "sourceOwner": "AuditPackageManifest",
+        "logicalPrerequisiteFacts": [
+          "AuditPackageDeliveryAdmitted"
+        ],
+        "logicalPrerequisiteRule": "selected applicable typed variant/set; see required proof contract",
+        "physicalRootEvents": [
+          "AuditPackageDeliveryAdmitted"
+        ],
+        "originalAdmissionKinds": [
+          "AuditPackageDeliveryAdmitted"
+        ],
+        "receiverCommand": "MaterializeRecordedAuditPackageDelivery",
+        "targetOwner": "AuditPackageDelivery",
+        "targetAuthorityKind": "business_aggregate",
+        "emittedSemanticFacts": [
+          "AuditPackageDelivered"
+        ],
+        "emittedEventContracts": [],
+        "currentRegisteredRootTypes": [
+          "AuditPackageDeliveryAdmissionReactor"
+        ],
+        "plannedRootRole": null,
+        "processes": [
+          "AuditPackageDeliveryRecordingProcess"
+        ],
+        "requiredProofContract": {
+          "canonicalCarrier": "original admitted root reference + required independently verified typed stage/terminal proof sets",
+          "admissionReferenceFactKinds": [
+            "AuditPackageDeliveryAdmitted"
+          ],
+          "admissionReferenceRole": "original business admission/first-owner fact, distinct from subscription trigger and intermediate/terminal prerequisites",
+          "verification": {
+            "admission": "AdmissionReference is a locator only. Resolve and independently verify actual typed admitted fact, exact owner/tenant/program, saved metadata and physical/hydrated cut, original root/episode/actor/intent and immutable content.",
+            "stageAndTerminal": "Materialize each required typed stage/terminal proof from actual committed facts and full required immutable selections; prove complete grant/fence/provisional/child sets, not counts/checkpoints. Guard sets are not weakened by carrier choice.",
+            "earlyReplay": "If native receipt binding does not cover a supplied/interpreted command term, bind that term through the required actual typed proof/body before early replay. Exact receipt cannot bypass proof manifest or source tuple guards.",
+            "resultAndRecovery": "Current public authorization precedes replay. Original result/receipt and unknown-append recovery stay exact; requested cancellation propagates. Unavailable proof/content remains transient; corruption/changed intent is permanent; no inferred absence/release.",
+            "implementationStatus": "Installed pointer/handler/process presence is not proof of conformance. Field/wire migration and required behavioral tests remain separately verifiable implementation work."
+          },
+          "requiredTypedStageProofSets": [],
+          "pinnedSourceRequirements": "Every exact source owner/event/content revision and complete immutable manifest required by intendedProofGate remains mandatory; no absent optional source is fabricated.",
+          "proofGate": "Verify exact parent personal delivery-recording admission, original actor/authored handoff time/reference and frozen manifest/archive/approval/validation. Materialize this accepted historical record even after a new package version; never send externally.",
+          "requiredLogicalPrerequisiteProofs": "Every applicable logical prerequisite is independently verified as an actual typed saved fact (or actual technical proof where explicitly technical); a terminal proof may establish an earlier stage only through a verified native chain that includes that required typed stage. Stage order/checkpoint alone never substitutes."
+        },
+        "effectIdentity": {
+          "decisionId": "EFFECT_IDENTITIES",
+          "existingOccupiedV1": "Preserve exact source-event UUID namespace, current EffectIdentity UTF8 delimiter bytes, process/receiver text, each frozen target selector and exact episode. Retain root-derived IDs when adding required proofs; no source-event substitution or silent selector rewrite.",
+          "newAlgorithmPolicy": "Any new length-prefixed algorithm is explicitly versioned and uses injective field encoding with explicit process/effect/target/episode domains and compatibility/fencing. It never changes occupied v1 IDs.",
+          "implementationQualification": "Selected policy only; individual new algorithm/wire implementation must prove exact vectors and domain/compatibility fences before emission.",
+          "newArtifactAlgorithm": {
+            "version": "effect-identity-v2",
+            "namespace": "actual committed EvidenceArtifactDownloadRequested.Metadata.EventId",
+            "fieldsInOrder": [
+              "effectKind (canonical receiver command kind)",
+              "canonical target EventStreamAddress",
+              "episode (exact selected value, initial when absent)"
+            ],
+            "bytes": "UTF8(effect-identity:v2) followed by each field UTF8 bytes prefixed by its unsigned32-bit big-endian byte length; UUIDv5 over these exact name bytes and the actual source EventId namespace.",
+            "rule": "Use only for this new unoccupied process identity domain; occupied v1 algorithms/target-key selections remain unchanged. Implementation must provide fixed byte/UUID vectors before activation."
+          }
+        },
+        "recoveryContract": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
+        "implementationConformance": "NOT_ASSERTED; source evidence only",
+        "sourceOwners": [
+          "AuditPackageManifest"
+        ],
+        "canonicalTargetOwner": "AuditPackageDelivery"
+      },
+      {
+        "id": "T091",
+        "kind": "reaction_or_regular_process_stage",
+        "status": "SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED",
+        "sourceOwner": "ServiceEngagementIndependence",
+        "logicalPrerequisiteFacts": [
+          "ServiceEngagementAcceptanceRequested",
+          "ServiceEngagementStaffAssignmentRequested",
+          "EngagementPersonalDecisionAdmitted"
+        ],
+        "logicalPrerequisiteRule": "selected applicable typed variant/set; see required proof contract",
+        "physicalRootEvents": [
+          "ServiceEngagementAcceptanceRequested",
+          "ServiceEngagementStaffAssignmentRequested",
+          "EngagementPersonalDecisionAdmitted"
+        ],
+        "originalAdmissionKinds": [
+          "ServiceEngagementAcceptanceRequested",
+          "ServiceEngagementStaffAssignmentRequested",
+          "EngagementPersonalDecisionAdmitted"
+        ],
+        "receiverCommand": "AuthorizeFirmProfessionalDutyDesignationEngagementUse",
+        "targetOwner": "FirmProfessionalDutyDesignation",
+        "targetAuthorityKind": "business_aggregate",
+        "emittedSemanticFacts": [
+          "FirmProfessionalDutyDesignationEngagementUseAuthorized"
+        ],
+        "emittedEventContracts": [],
+        "currentRegisteredRootTypes": [
+          "EngagementAcceptanceReactor",
+          "EngagementPersonalDecisionReactor"
+        ],
+        "plannedRootRole": null,
+        "processes": [
+          "EngagementAcceptanceProcess",
+          "EngagementPersonalDecisionProcess"
+        ],
+        "requiredProofContract": {
+          "canonicalCarrier": "original admitted root reference + required independently verified typed stage/terminal proof sets",
+          "admissionReferenceFactKinds": [
+            "ServiceEngagementAcceptanceRequested",
+            "ServiceEngagementStaffAssignmentRequested",
+            "EngagementPersonalDecisionAdmitted"
+          ],
+          "admissionReferenceRole": "original business admission/first-owner fact, distinct from subscription trigger and intermediate/terminal prerequisites",
+          "verification": {
+            "admission": "AdmissionReference is a locator only. Resolve and independently verify actual typed admitted fact, exact owner/tenant/program, saved metadata and physical/hydrated cut, original root/episode/actor/intent and immutable content.",
+            "stageAndTerminal": "Materialize each required typed stage/terminal proof from actual committed facts and full required immutable selections; prove complete grant/fence/provisional/child sets, not counts/checkpoints. Guard sets are not weakened by carrier choice.",
+            "earlyReplay": "If native receipt binding does not cover a supplied/interpreted command term, bind that term through the required actual typed proof/body before early replay. Exact receipt cannot bypass proof manifest or source tuple guards.",
+            "resultAndRecovery": "Current public authorization precedes replay. Original result/receipt and unknown-append recovery stay exact; requested cancellation propagates. Unavailable proof/content remains transient; corruption/changed intent is permanent; no inferred absence/release.",
+            "implementationStatus": "Installed pointer/handler/process presence is not proof of conformance. Field/wire migration and required behavioral tests remain separately verifiable implementation work."
+          },
+          "requiredTypedStageProofSets": [],
+          "pinnedSourceRequirements": "Every exact source owner/event/content revision and complete immutable manifest required by intendedProofGate remains mandatory; no absent optional source is fabricated.",
+          "proofGate": "Match exact frozen current eligibility/rule/ratification fact under this owner guard. Status/revocation/version changes conflict while granted; hold through irreversible engagement authorization. Deny stale/expired/future/wrong-subject scope.  Use events do not advance public ResourceRevision; the exact content-event identity and metadata owner version remain separate. For this source event, fan out only requirements of kind partner_evaluation; management acknowledgement does not fabricate firm-partner authority.",
+          "requiredLogicalPrerequisiteProofs": "Every applicable logical prerequisite is independently verified as an actual typed saved fact (or actual technical proof where explicitly technical); a terminal proof may establish an earlier stage only through a verified native chain that includes that required typed stage. Stage order/checkpoint alone never substitutes."
+        },
+        "effectIdentity": {
+          "decisionId": "EFFECT_IDENTITIES",
+          "existingOccupiedV1": "Preserve exact source-event UUID namespace, current EffectIdentity UTF8 delimiter bytes, process/receiver text, each frozen target selector and exact episode. Retain root-derived IDs when adding required proofs; no source-event substitution or silent selector rewrite.",
+          "newAlgorithmPolicy": "Any new length-prefixed algorithm is explicitly versioned and uses injective field encoding with explicit process/effect/target/episode domains and compatibility/fencing. It never changes occupied v1 IDs.",
+          "implementationQualification": "Selected policy only; individual new algorithm/wire implementation must prove exact vectors and domain/compatibility fences before emission.",
+          "newArtifactAlgorithm": {
+            "version": "effect-identity-v2",
+            "namespace": "actual committed EvidenceArtifactDownloadRequested.Metadata.EventId",
+            "fieldsInOrder": [
+              "effectKind (canonical receiver command kind)",
+              "canonical target EventStreamAddress",
+              "episode (exact selected value, initial when absent)"
+            ],
+            "bytes": "UTF8(effect-identity:v2) followed by each field UTF8 bytes prefixed by its unsigned32-bit big-endian byte length; UUIDv5 over these exact name bytes and the actual source EventId namespace.",
+            "rule": "Use only for this new unoccupied process identity domain; occupied v1 algorithms/target-key selections remain unchanged. Implementation must provide fixed byte/UUID vectors before activation."
+          }
+        },
+        "recoveryContract": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
+        "implementationConformance": "NOT_ASSERTED; source evidence only",
+        "sourceOwners": [
+          "ServiceEngagementIndependence"
+        ],
+        "canonicalTargetOwner": "FirmProfessionalDutyDesignation"
+      }
+    ]
+  },
+  "questions": {
+    "flow_0": {
+      "type": "choice",
+      "instructions": "Does selected flow T076 preserve each owner's authority and prove the exact source/terminal state needed before effect or settlement?",
+      "criteria": {
+        "coherent_and_sufficient": "The source fact is only a trigger/locator; the target owner makes its own decision from actual typed, identity-bound proofs; required intermediate and terminal facts, ordering, idempotency, cancellation fences and recovery are specified.",
+        "concrete_flow_defect": "A specific owner is bypassed, source authority is overclaimed, ordering admits an invalid race, or a required exact proof/fence/recovery case is absent.",
+        "source_evidence_incomplete": "The provided selected row does not contain enough evidence to determine whether the flow is safe."
+      }
+    },
+    "evidence_0": {
+      "type": "noul",
+      "instructions": "Does the complete selected row for flow T076 explicitly bind the source admission, exact target/episode/intent, applicable actual intermediate proofs and terminal/recovery behavior?",
+      "criteria": {
+        "true": "The row explicitly specifies every proof and recovery rule that applies to this flow, including conditional branches.",
+        "false": "At least one applicable authority, exact proof, conditional branch, terminal outcome, cancellation fence or restart/lost-ack rule is unspecified."
+      }
+    },
+    "flow_1": {
+      "type": "choice",
+      "instructions": "Does selected flow T081 preserve each owner's authority and prove the exact source/terminal state needed before effect or settlement?",
+      "criteria": {
+        "coherent_and_sufficient": "The source fact is only a trigger/locator; the target owner makes its own decision from actual typed, identity-bound proofs; required intermediate and terminal facts, ordering, idempotency, cancellation fences and recovery are specified.",
+        "concrete_flow_defect": "A specific owner is bypassed, source authority is overclaimed, ordering admits an invalid race, or a required exact proof/fence/recovery case is absent.",
+        "source_evidence_incomplete": "The provided selected row does not contain enough evidence to determine whether the flow is safe."
+      }
+    },
+    "evidence_1": {
+      "type": "noul",
+      "instructions": "Does the complete selected row for flow T081 explicitly bind the source admission, exact target/episode/intent, applicable actual intermediate proofs and terminal/recovery behavior?",
+      "criteria": {
+        "true": "The row explicitly specifies every proof and recovery rule that applies to this flow, including conditional branches.",
+        "false": "At least one applicable authority, exact proof, conditional branch, terminal outcome, cancellation fence or restart/lost-ack rule is unspecified."
+      }
+    },
+    "flow_2": {
+      "type": "choice",
+      "instructions": "Does selected flow T091 preserve each owner's authority and prove the exact source/terminal state needed before effect or settlement?",
+      "criteria": {
+        "coherent_and_sufficient": "The source fact is only a trigger/locator; the target owner makes its own decision from actual typed, identity-bound proofs; required intermediate and terminal facts, ordering, idempotency, cancellation fences and recovery are specified.",
+        "concrete_flow_defect": "A specific owner is bypassed, source authority is overclaimed, ordering admits an invalid race, or a required exact proof/fence/recovery case is absent.",
+        "source_evidence_incomplete": "The provided selected row does not contain enough evidence to determine whether the flow is safe."
+      }
+    },
+    "evidence_2": {
+      "type": "noul",
+      "instructions": "Does the complete selected row for flow T091 explicitly bind the source admission, exact target/episode/intent, applicable actual intermediate proofs and terminal/recovery behavior?",
+      "criteria": {
+        "true": "The row explicitly specifies every proof and recovery rule that applies to this flow, including conditional branches.",
+        "false": "At least one applicable authority, exact proof, conditional branch, terminal outcome, cancellation fence or restart/lost-ack rule is unspecified."
+      }
+    }
+  }
+}

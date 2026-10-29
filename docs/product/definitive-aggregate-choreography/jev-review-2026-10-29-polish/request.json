@@ -1,0 +1,542 @@
+{
+ "model": "jev-latest",
+ "state": {
+  "modeling_rules": [
+   "Model the compliance process, not CRUD screens.",
+   "Technical receipts and negative responses are not automatically business events.",
+   "Parent rosters, inboxes and histories are projections; keep facts together only when one owner must decide a rule over them atomically.",
+   "Persist an exact reservation or delegation before child admission where authority must survive progression; release only after the child durably acknowledges.",
+   "A projection check is never a substitute for authoritative admission."
+  ],
+  "use_receipt_example": {
+   "event": "EvidenceRequestActionCompletionUseAuthorized",
+   "owner": "EvidenceRequest",
+   "meaning": "/// A fulfilled evidence request is held for a risk action completion review. The use does not advance the public /// request revision: <paramref name=\"Revision\" /> is the held revision, and <paramref name=\"Generation\" /> is the /// action's submission generation the review seals. ///",
+   "pair": "EvidenceRequestActionCompletionUseSettled releases the hold after the review reaches a terminal fact."
+  },
+  "admission_example": {
+   "event": "PolicyParticipantResultAdmitted",
+   "owner": "PolicyDistributionCampaign",
+   "meaning": "The campaign admits one participant's acknowledgement, waiver or training result against its frozen audience; raised once per participant result on the campaign stream.",
+   "child_owner": "PolicyCampaignParticipant"
+  },
+  "response_receipt_fields": {
+   "FirstResponse": "a frozen copy of the HTTP response first returned for the accepted command, stored as an immutable content reference",
+   "OperationResult": "the frozen mutation result content",
+   "Revision": "the stream revision after this event, repeated inside the payload",
+   "count": "372 of 532 events carry FirstResponse, 340 OperationResult, 369 Revision"
+  },
+  "refusal_events": {
+   "TenantSlugRegistrationRejected": "/// The slug cannot be claimed for the tenant; the fact answers exactly one claim operation. ///",
+   "TenantSlugSurrenderRejected": "/// The tenant does not own the slug; the fact answers exactly one surrender operation. ///",
+   "TenantSlugChangeRejected": "/// A requested slug change ended because the slug owner refused the new slug. ///",
+   "TenantSlugRejected": "/// The slug owner refused the tenant's first slug. ///",
+   "TenantSlugSurrenderFailed": "/// The slug owner refused the tenant's surrender, so the tenant keeps the slug. ///",
+   "ClientExportBuildFailed": "Records the ClientExportBuildFailed domain fact for one tenant-owned subject revision.",
+   "ApplicationImportFailed": "A terminal failure of a batch. Existing native business fact, rehomed on the batch.",
+   "FirmStaffRegistrationRejected": "A pending registration was rejected because another staff record owns the canonical user.",
+   "ProfessionalDutyChangeRejected": "/// A pending professional-duty change was rejected before any designation changed. The rejection fences the /// assertion claim and the apply step against late delivery. ///",
+   "ServiceEngagementAcceptanceRejected": "/// A requested acceptance was rejected before the irreversible authorization. The rejection fences the pending /// acceptance against late delivery and releases the engagement content pin; no permanent practice commitment was /// ever made for it. ///",
+   "ServiceEngagementStaffAssignmentRejected": "/// A requested positive staff assignment was rejected before the irreversible authorization. The rejection fences /// the pending assignment against late delivery; the engagement and every earlier permanent wall are retained. ///",
+   "TypeIIPeriodOpeningRejected": "/// A pending opening was rejected because the calendar proved its range conflicts. The rejection fences a delayed /// apply; the same period identity is never reopened with changed intent. ///",
+   "IdentityRecoveryPreparationRejected": "A definite competing association rejected the preparation before acceptance. It fences delayed protection and acceptance."
+  },
+  "application_name_rules": [
+   "An application has one canonical name and zero or more aliases, and each normalized alias is unique within the tenant.",
+   "Duplicate applications are resolved by an attributed merge that retires one record with a merged_into reference to the survivor."
+  ],
+  "existing_name_claim_owners": {
+   "LocationNameClaim": "Authoritative active-name uniqueness claim.",
+   "ProviderNameClaim": "Authoritative unique active name reservation.",
+   "OperationalProcessNameClaim": "Authoritative active normalized-name uniqueness."
+  },
+  "declared_application_invariant": "Application creation, metadata revision, retirement and import admission generation.",
+  "independence_owners": {
+   "ClientServiceIndependence": "Complete immutable nonattest-service history manifest, current service epoch and acceptance admission barrier. A changed service set advances epoch and makes old acceptance ineligible immediately through authoritative composed reads.",
+   "ClientIndependenceDecision": "One immutable client independence preview and exact rule/service-epoch proofs; it never grants production acceptance.",
+   "ServiceEngagementIndependence": "One engagement lifecycle, proposed and actual staff assignments, current content revision and accepted epoch bindings. Engagement revision and service epoch live in state; historical epoch streams cannot compete independently.",
+   "PartnerIndependenceDecision": "One personal partner evaluation bound to exact engagement revision, complete service epoch and ratified-rule digest.",
+   "IndependenceRuleCatalog": "Authored independence rules advance consecutively and cannot falsely claim professional ratification.",
+   "IndependenceRuleRatificationCatalog": "Only valid professional proof can ratify an exact immutable rule digest, and active ratified rule version advances monotonically.",
+   "EngagementManagementAcknowledgement": "One personal management acknowledgement bound to exact engagement revision and complete service history.",
+   "FirmProfessionalDutyDesignation": "One active signed duty designation and monotonic signed authority revision per exact subject/duty/scope; retain continuity proof. The platform scope is explicit and is not an empty tenant UUID."
+  },
+  "independence_rules": {
+   "D26-03": "An attest ServiceEngagement cannot be accepted for a client that received any service classified impairing in the active IndependenceRuleSet from the firm within 12 months before the examination period starts, evaluated against the client's NonattestServiceRecord history with no hard-coded service kinds.",
+   "D26-04": "A client whose only nonattest service was a readiness assessment is conditionally_compatible, and acceptance requires a recorded partner evaluation.",
+   "D26-05": "The IndependenceRuleSet is versioned; rule changes create new versions and never rewrite past evaluations.",
+   "D26-06": "An IndependenceEvaluation records the rule-set version, nonattest services considered, result (compatible, conditionally_compatible, or impaired), partner evaluation when conditional, management's acknowledgement of responsibility for nonattest services, and the approver and time.",
+   "D26-07": "An impaired IndependenceEvaluation result blocks acceptance of the attest engagement with no override."
+  },
+  "generic_revision_owners": {
+   "Provider": {
+    "invariant": "One provider content, version and retirement lifecycle.",
+    "events": [
+     "ProviderChangeAccepted",
+     "ProviderChangeCanceled",
+     "ProviderRecorded",
+     "ProviderRevised"
+    ]
+   },
+   "ServiceIdentity": {
+    "invariant": "One governed nonhuman identity has exactly one accountable person/team owner, approved purpose, valid lifecycle/expiry and review date within one year.",
+    "events": [
+     "ServiceIdentityRecorded",
+     "ServiceIdentityRevised"
+    ]
+   },
+   "WorkRelationship": {
+    "invariant": "One stable source worker ID belongs permanently to one person; end date/status and sponsor/self-manager constraints must form valid governed relationship at each revision.",
+    "events": [
+     "WorkRelationshipRecorded",
+     "WorkRelationshipRevised"
+    ]
+   },
+   "Person": {
+    "invariant": "One recorded workforce person has immutable creation identity, revisioned contact content and at most one current platform membership correlation.",
+    "events": [
+     "PersonMembershipCorrelated",
+     "PersonRecorded",
+     "PersonRevised"
+    ]
+   },
+   "Location": {
+    "invariant": "Independent location record lifecycle.",
+    "events": [
+     "LocationChangeAccepted",
+     "LocationChangeCanceled",
+     "LocationRevisionRecorded"
+    ]
+   },
+   "OperationalProcess": {
+    "invariant": "Independent governed operational process lifecycle.",
+    "events": [
+     "OperationalProcessChangeAccepted",
+     "OperationalProcessChangeCanceled",
+     "OperationalProcessRevisionRecorded"
+    ]
+   },
+   "TechnologyComponent": {
+    "invariant": "One tenant inventory identity has exactly one record kind; a component keeps immutable category/system-instance binding, cloud account keyed to its unique instance, and category-specific valid content/lifecycle.",
+    "events": [
+     "TechnologyComponentRevisionRecorded"
+    ]
+   },
+   "InformationAsset": {
+    "invariant": "One tenant inventory identity has one record kind and one revisioned information classification/retention/owner/lifecycle record.",
+    "events": [
+     "InformationAssetRevisionRecorded"
+    ]
+   },
+   "DataFlow": {
+    "invariant": "One tenant inventory identity has one record kind; flow endpoint/asset scope and encryption or approved-exception terms must match highest admitted carried classification, and effective date never moves backward.",
+    "events": [
+     "DataFlowRevisionRecorded"
+    ]
+   }
+  },
+  "criteria_edition_rule": "A criteria catalog edition is platform-level and immutable once published; a new edition is added side by side as a new immutable edition and an existing edition is never mutated.",
+  "criteria_overlay_invariant": "One licensed text overlay and sequential revision line.",
+  "borderline": {
+   "ApplicationImportSource": "One exact tenant/source-key/namespace authority serializes batch admission and durable source-record mapping publication. Complete verified published-batch order and frozen SourceClaims define mutable replace/remove mappings; source revision/generation fences stale plans and omissions. There is no independent ApplicationSourceClaim root.",
+   "ClientExport": "Final export delivery requires archive counts matching frozen included/withheld inventory and a successful exact-manifest delivery for each required attest package.",
+   "WorkDigestPreference": "One member stores current notification consent and valid scheduling time zone; identical current setting is no-op. This is chiefly a settings state holder, with no multi-part business invariant identified."
+  }
+ },
+ "questions": {
+  "use_hold_is_owner_fact": {
+   "type": "noul",
+   "instructions": "A use authorization like `use_receipt_example` must be recorded on the owner's own stream for that owner to refuse conflicting commands atomically while the use is held.",
+   "criteria": {
+    "true": "The owner's reducer needs the hold in its own state to refuse cancellation or revision during the review; a projection or another stream would not be authoritative.",
+    "false": "The hold could live in the process manager's stream and the owner could still enforce its invariant without it."
+   }
+  },
+  "use_receipt_classification": {
+   "type": "choice",
+   "instructions": "How should the catalog classify use-authorized and use-settled events such as `use_receipt_example`?",
+   "criteria": {
+    "business_fact": "They record a business decision a compliance lead recognises and belong with the owner's other business facts.",
+    "reservation_fact_on_owner_stream": "They are owner-held reservations: authoritative for the owner's invariant, but a distinct kind from business decisions and should be labelled as reservations in the catalog.",
+    "technical_receipt_in_process_stream": "They are process bookkeeping and should move out of the owner stream into the process manager's private record."
+   }
+  },
+  "per_child_admission_growth": {
+   "type": "noul",
+   "instructions": "An admission event like `admission_example`, appended to the parent stream once per child result, makes the parent stream grow in proportion to the number of children even though each child is independently governed.",
+   "criteria": {
+    "true": "The parent's stream length becomes proportional to the audience or child count for the life of the parent.",
+    "false": "The admission is bounded by a small fixed number of children or by a generation rollover."
+   }
+  },
+  "admission_alternative": {
+   "type": "choice",
+   "instructions": "Which design keeps the campaign's atomic admission rule and bounds its stream for `admission_example`?",
+   "criteria": {
+    "keep_per_child_admission": "The campaign must serialise every participant result against the frozen audience, so per-child admission on the campaign stream is required.",
+    "admit_by_generation_or_batch": "Admit participant results in batches or per campaign generation so the campaign stream records one fact per batch, not per participant.",
+    "child_owns_admission": "The participant owner can verify the frozen audience from the immutable audience manifest and admit itself; the campaign records only launch, audience freeze and closure."
+   }
+  },
+  "response_receipt_in_payload": {
+   "type": "choice",
+   "instructions": "Where should the frozen first HTTP response and operation result described in `response_receipt_fields` live?",
+   "criteria": {
+    "inside_the_business_event": "Keeping them inside the domain event is correct because retry replay must return the original result from the same fact.",
+    "operation_receipt_keyed_by_command": "They belong in a separate operation receipt record keyed by the command's logical identity, referenced from the fact at most by id.",
+    "either_documented_choice": "Both are acceptable if the catalog states the rule explicitly."
+   }
+  },
+  "revision_in_payload_is_metadata": {
+   "type": "noul",
+   "instructions": "A `Revision` field inside the event payload that repeats the stream position after the event is envelope metadata duplicated into the fact.",
+   "criteria": {
+    "true": "The value is determined by the stream append position and carries no business meaning beyond what the envelope already records.",
+    "false": "The value carries business meaning distinct from the physical append position, such as a logical version chosen by the owner."
+   }
+  },
+  "refusal__TenantSlugRegistrationRejected": {
+   "type": "choice",
+   "instructions": "What is `TenantSlugRegistrationRejected` (see `refusal_events`)?",
+   "criteria": {
+    "durable_business_fact": "After this event the record is in a state later decisions depend on, so it is a business fact of this owner.",
+    "process_reply": "It only tells another aggregate or process that a request did not succeed; the owner's own state is unchanged.",
+    "unclear": "The description does not settle which it is."
+   }
+  },
+  "refusal__TenantSlugSurrenderRejected": {
+   "type": "choice",
+   "instructions": "What is `TenantSlugSurrenderRejected` (see `refusal_events`)?",
+   "criteria": {
+    "durable_business_fact": "After this event the record is in a state later decisions depend on, so it is a business fact of this owner.",
+    "process_reply": "It only tells another aggregate or process that a request did not succeed; the owner's own state is unchanged.",
+    "unclear": "The description does not settle which it is."
+   }
+  },
+  "refusal__TenantSlugChangeRejected": {
+   "type": "choice",
+   "instructions": "What is `TenantSlugChangeRejected` (see `refusal_events`)?",
+   "criteria": {
+    "durable_business_fact": "After this event the record is in a state later decisions depend on, so it is a business fact of this owner.",
+    "process_reply": "It only tells another aggregate or process that a request did not succeed; the owner's own state is unchanged.",
+    "unclear": "The description does not settle which it is."
+   }
+  },
+  "refusal__TenantSlugRejected": {
+   "type": "choice",
+   "instructions": "What is `TenantSlugRejected` (see `refusal_events`)?",
+   "criteria": {
+    "durable_business_fact": "After this event the record is in a state later decisions depend on, so it is a business fact of this owner.",
+    "process_reply": "It only tells another aggregate or process that a request did not succeed; the owner's own state is unchanged.",
+    "unclear": "The description does not settle which it is."
+   }
+  },
+  "refusal__TenantSlugSurrenderFailed": {
+   "type": "choice",
+   "instructions": "What is `TenantSlugSurrenderFailed` (see `refusal_events`)?",
+   "criteria": {
+    "durable_business_fact": "After this event the record is in a state later decisions depend on, so it is a business fact of this owner.",
+    "process_reply": "It only tells another aggregate or process that a request did not succeed; the owner's own state is unchanged.",
+    "unclear": "The description does not settle which it is."
+   }
+  },
+  "refusal__ClientExportBuildFailed": {
+   "type": "choice",
+   "instructions": "What is `ClientExportBuildFailed` (see `refusal_events`)?",
+   "criteria": {
+    "durable_business_fact": "After this event the record is in a state later decisions depend on, so it is a business fact of this owner.",
+    "process_reply": "It only tells another aggregate or process that a request did not succeed; the owner's own state is unchanged.",
+    "unclear": "The description does not settle which it is."
+   }
+  },
+  "refusal__ApplicationImportFailed": {
+   "type": "choice",
+   "instructions": "What is `ApplicationImportFailed` (see `refusal_events`)?",
+   "criteria": {
+    "durable_business_fact": "After this event the record is in a state later decisions depend on, so it is a business fact of this owner.",
+    "process_reply": "It only tells another aggregate or process that a request did not succeed; the owner's own state is unchanged.",
+    "unclear": "The description does not settle which it is."
+   }
+  },
+  "refusal__FirmStaffRegistrationRejected": {
+   "type": "choice",
+   "instructions": "What is `FirmStaffRegistrationRejected` (see `refusal_events`)?",
+   "criteria": {
+    "durable_business_fact": "After this event the record is in a state later decisions depend on, so it is a business fact of this owner.",
+    "process_reply": "It only tells another aggregate or process that a request did not succeed; the owner's own state is unchanged.",
+    "unclear": "The description does not settle which it is."
+   }
+  },
+  "refusal__ProfessionalDutyChangeRejected": {
+   "type": "choice",
+   "instructions": "What is `ProfessionalDutyChangeRejected` (see `refusal_events`)?",
+   "criteria": {
+    "durable_business_fact": "After this event the record is in a state later decisions depend on, so it is a business fact of this owner.",
+    "process_reply": "It only tells another aggregate or process that a request did not succeed; the owner's own state is unchanged.",
+    "unclear": "The description does not settle which it is."
+   }
+  },
+  "refusal__ServiceEngagementAcceptanceRejected": {
+   "type": "choice",
+   "instructions": "What is `ServiceEngagementAcceptanceRejected` (see `refusal_events`)?",
+   "criteria": {
+    "durable_business_fact": "After this event the record is in a state later decisions depend on, so it is a business fact of this owner.",
+    "process_reply": "It only tells another aggregate or process that a request did not succeed; the owner's own state is unchanged.",
+    "unclear": "The description does not settle which it is."
+   }
+  },
+  "refusal__ServiceEngagementStaffAssignmentRejected": {
+   "type": "choice",
+   "instructions": "What is `ServiceEngagementStaffAssignmentRejected` (see `refusal_events`)?",
+   "criteria": {
+    "durable_business_fact": "After this event the record is in a state later decisions depend on, so it is a business fact of this owner.",
+    "process_reply": "It only tells another aggregate or process that a request did not succeed; the owner's own state is unchanged.",
+    "unclear": "The description does not settle which it is."
+   }
+  },
+  "refusal__TypeIIPeriodOpeningRejected": {
+   "type": "choice",
+   "instructions": "What is `TypeIIPeriodOpeningRejected` (see `refusal_events`)?",
+   "criteria": {
+    "durable_business_fact": "After this event the record is in a state later decisions depend on, so it is a business fact of this owner.",
+    "process_reply": "It only tells another aggregate or process that a request did not succeed; the owner's own state is unchanged.",
+    "unclear": "The description does not settle which it is."
+   }
+  },
+  "refusal__IdentityRecoveryPreparationRejected": {
+   "type": "choice",
+   "instructions": "What is `IdentityRecoveryPreparationRejected` (see `refusal_events`)?",
+   "criteria": {
+    "durable_business_fact": "After this event the record is in a state later decisions depend on, so it is a business fact of this owner.",
+    "process_reply": "It only tells another aggregate or process that a request did not succeed; the owner's own state is unchanged.",
+    "unclear": "The description does not settle which it is."
+   }
+  },
+  "application_name_claim_needed": {
+   "type": "noul",
+   "instructions": "Enforcing `application_name_rules` (unique normalized aliases within a tenant and an attributed merge) requires an authoritative name-claim owner like `existing_name_claim_owners`, because `declared_application_invariant` is per application and cannot see other applications' aliases.",
+   "criteria": {
+    "true": "Tenant-wide alias uniqueness needs a stream keyed by tenant and normalized name that serialises claims and releases.",
+    "false": "The per-application owner or a projection check is sufficient to enforce uniqueness."
+   }
+  },
+  "indep__D26-03": {
+   "type": "choice",
+   "instructions": "Which owner in `independence_owners` must decide this rule at write time: \"An attest ServiceEngagement cannot be accepted for a client that received any service classified impairing in the active IndependenceRuleSet from the firm within 12 months before the examination period starts, evaluated against the client's NonattestServiceRecord history with no hard-coded service kinds.\"",
+   "criteria": {
+    "ClientServiceIndependence": "Complete immutable nonattest-service history manifest, current service epoch and acceptance admission barrier. A changed service set advances epoch and makes old acceptance ineligible immediately through authoritative composed reads.",
+    "ClientIndependenceDecision": "One immutable client independence preview and exact rule/service-epoch proofs; it never grants production acceptance.",
+    "ServiceEngagementIndependence": "One engagement lifecycle, proposed and actual staff assignments, current content revision and accepted epoch bindings. Engagement revision and service epoch live in state; historical epoch streams cannot compete independently.",
+    "PartnerIndependenceDecision": "One personal partner evaluation bound to exact engagement revision, complete service epoch and ratified-rule digest.",
+    "IndependenceRuleCatalog": "Authored independence rules advance consecutively and cannot falsely claim professional ratification.",
+    "IndependenceRuleRatificationCatalog": "Only valid professional proof can ratify an exact immutable rule digest, and active ratified rule version advances monotonically.",
+    "EngagementManagementAcknowledgement": "One personal management acknowledgement bound to exact engagement revision and complete service history.",
+    "FirmProfessionalDutyDesignation": "One active signed duty designation and monotonic signed authority revision per exact subject/duty/scope; retain continuity proof. The platform scope is explicit and is not an empty tenant UUID."
+   }
+  },
+  "indep_any__D26-03": {
+   "type": "noul",
+   "instructions": "Some owner in `independence_owners` has an invariant that already commits it to this rule: \"An attest ServiceEngagement cannot be accepted for a client that received any service classified impairing in the active IndependenceRuleSet from the firm within 12 months before the examination period starts, evaluated against the client's NonattestServiceRecord history with no hard-coded service kinds.\"",
+   "criteria": {
+    "true": "An invariant text covers the rule.",
+    "false": "No invariant mentions the lookback, impairment block, conditional partner evaluation or rule-set versioning this rule needs."
+   }
+  },
+  "indep__D26-04": {
+   "type": "choice",
+   "instructions": "Which owner in `independence_owners` must decide this rule at write time: \"A client whose only nonattest service was a readiness assessment is conditionally_compatible, and acceptance requires a recorded partner evaluation.\"",
+   "criteria": {
+    "ClientServiceIndependence": "Complete immutable nonattest-service history manifest, current service epoch and acceptance admission barrier. A changed service set advances epoch and makes old acceptance ineligible immediately through authoritative composed reads.",
+    "ClientIndependenceDecision": "One immutable client independence preview and exact rule/service-epoch proofs; it never grants production acceptance.",
+    "ServiceEngagementIndependence": "One engagement lifecycle, proposed and actual staff assignments, current content revision and accepted epoch bindings. Engagement revision and service epoch live in state; historical epoch streams cannot compete independently.",
+    "PartnerIndependenceDecision": "One personal partner evaluation bound to exact engagement revision, complete service epoch and ratified-rule digest.",
+    "IndependenceRuleCatalog": "Authored independence rules advance consecutively and cannot falsely claim professional ratification.",
+    "IndependenceRuleRatificationCatalog": "Only valid professional proof can ratify an exact immutable rule digest, and active ratified rule version advances monotonically.",
+    "EngagementManagementAcknowledgement": "One personal management acknowledgement bound to exact engagement revision and complete service history.",
+    "FirmProfessionalDutyDesignation": "One active signed duty designation and monotonic signed authority revision per exact subject/duty/scope; retain continuity proof. The platform scope is explicit and is not an empty tenant UUID."
+   }
+  },
+  "indep_any__D26-04": {
+   "type": "noul",
+   "instructions": "Some owner in `independence_owners` has an invariant that already commits it to this rule: \"A client whose only nonattest service was a readiness assessment is conditionally_compatible, and acceptance requires a recorded partner evaluation.\"",
+   "criteria": {
+    "true": "An invariant text covers the rule.",
+    "false": "No invariant mentions the lookback, impairment block, conditional partner evaluation or rule-set versioning this rule needs."
+   }
+  },
+  "indep__D26-05": {
+   "type": "choice",
+   "instructions": "Which owner in `independence_owners` must decide this rule at write time: \"The IndependenceRuleSet is versioned; rule changes create new versions and never rewrite past evaluations.\"",
+   "criteria": {
+    "ClientServiceIndependence": "Complete immutable nonattest-service history manifest, current service epoch and acceptance admission barrier. A changed service set advances epoch and makes old acceptance ineligible immediately through authoritative composed reads.",
+    "ClientIndependenceDecision": "One immutable client independence preview and exact rule/service-epoch proofs; it never grants production acceptance.",
+    "ServiceEngagementIndependence": "One engagement lifecycle, proposed and actual staff assignments, current content revision and accepted epoch bindings. Engagement revision and service epoch live in state; historical epoch streams cannot compete independently.",
+    "PartnerIndependenceDecision": "One personal partner evaluation bound to exact engagement revision, complete service epoch and ratified-rule digest.",
+    "IndependenceRuleCatalog": "Authored independence rules advance consecutively and cannot falsely claim professional ratification.",
+    "IndependenceRuleRatificationCatalog": "Only valid professional proof can ratify an exact immutable rule digest, and active ratified rule version advances monotonically.",
+    "EngagementManagementAcknowledgement": "One personal management acknowledgement bound to exact engagement revision and complete service history.",
+    "FirmProfessionalDutyDesignation": "One active signed duty designation and monotonic signed authority revision per exact subject/duty/scope; retain continuity proof. The platform scope is explicit and is not an empty tenant UUID."
+   }
+  },
+  "indep_any__D26-05": {
+   "type": "noul",
+   "instructions": "Some owner in `independence_owners` has an invariant that already commits it to this rule: \"The IndependenceRuleSet is versioned; rule changes create new versions and never rewrite past evaluations.\"",
+   "criteria": {
+    "true": "An invariant text covers the rule.",
+    "false": "No invariant mentions the lookback, impairment block, conditional partner evaluation or rule-set versioning this rule needs."
+   }
+  },
+  "indep__D26-06": {
+   "type": "choice",
+   "instructions": "Which owner in `independence_owners` must decide this rule at write time: \"An IndependenceEvaluation records the rule-set version, nonattest services considered, result (compatible, conditionally_compatible, or impaired), partner evaluation when conditional, management's acknowledgement of responsibility for nonattest services, and the approver and time.\"",
+   "criteria": {
+    "ClientServiceIndependence": "Complete immutable nonattest-service history manifest, current service epoch and acceptance admission barrier. A changed service set advances epoch and makes old acceptance ineligible immediately through authoritative composed reads.",
+    "ClientIndependenceDecision": "One immutable client independence preview and exact rule/service-epoch proofs; it never grants production acceptance.",
+    "ServiceEngagementIndependence": "One engagement lifecycle, proposed and actual staff assignments, current content revision and accepted epoch bindings. Engagement revision and service epoch live in state; historical epoch streams cannot compete independently.",
+    "PartnerIndependenceDecision": "One personal partner evaluation bound to exact engagement revision, complete service epoch and ratified-rule digest.",
+    "IndependenceRuleCatalog": "Authored independence rules advance consecutively and cannot falsely claim professional ratification.",
+    "IndependenceRuleRatificationCatalog": "Only valid professional proof can ratify an exact immutable rule digest, and active ratified rule version advances monotonically.",
+    "EngagementManagementAcknowledgement": "One personal management acknowledgement bound to exact engagement revision and complete service history.",
+    "FirmProfessionalDutyDesignation": "One active signed duty designation and monotonic signed authority revision per exact subject/duty/scope; retain continuity proof. The platform scope is explicit and is not an empty tenant UUID."
+   }
+  },
+  "indep_any__D26-06": {
+   "type": "noul",
+   "instructions": "Some owner in `independence_owners` has an invariant that already commits it to this rule: \"An IndependenceEvaluation records the rule-set version, nonattest services considered, result (compatible, conditionally_compatible, or impaired), partner evaluation when conditional, management's acknowledgement of responsibility for nonattest services, and the approver and time.\"",
+   "criteria": {
+    "true": "An invariant text covers the rule.",
+    "false": "No invariant mentions the lookback, impairment block, conditional partner evaluation or rule-set versioning this rule needs."
+   }
+  },
+  "indep__D26-07": {
+   "type": "choice",
+   "instructions": "Which owner in `independence_owners` must decide this rule at write time: \"An impaired IndependenceEvaluation result blocks acceptance of the attest engagement with no override.\"",
+   "criteria": {
+    "ClientServiceIndependence": "Complete immutable nonattest-service history manifest, current service epoch and acceptance admission barrier. A changed service set advances epoch and makes old acceptance ineligible immediately through authoritative composed reads.",
+    "ClientIndependenceDecision": "One immutable client independence preview and exact rule/service-epoch proofs; it never grants production acceptance.",
+    "ServiceEngagementIndependence": "One engagement lifecycle, proposed and actual staff assignments, current content revision and accepted epoch bindings. Engagement revision and service epoch live in state; historical epoch streams cannot compete independently.",
+    "PartnerIndependenceDecision": "One personal partner evaluation bound to exact engagement revision, complete service epoch and ratified-rule digest.",
+    "IndependenceRuleCatalog": "Authored independence rules advance consecutively and cannot falsely claim professional ratification.",
+    "IndependenceRuleRatificationCatalog": "Only valid professional proof can ratify an exact immutable rule digest, and active ratified rule version advances monotonically.",
+    "EngagementManagementAcknowledgement": "One personal management acknowledgement bound to exact engagement revision and complete service history.",
+    "FirmProfessionalDutyDesignation": "One active signed duty designation and monotonic signed authority revision per exact subject/duty/scope; retain continuity proof. The platform scope is explicit and is not an empty tenant UUID."
+   }
+  },
+  "indep_any__D26-07": {
+   "type": "noul",
+   "instructions": "Some owner in `independence_owners` has an invariant that already commits it to this rule: \"An impaired IndependenceEvaluation result blocks acceptance of the attest engagement with no override.\"",
+   "criteria": {
+    "true": "An invariant text covers the rule.",
+    "false": "No invariant mentions the lookback, impairment block, conditional partner evaluation or rule-set versioning this rule needs."
+   }
+  },
+  "lifecycle_fact__Provider": {
+   "type": "noul",
+   "instructions": "For `Provider` (see `generic_revision_owners`), a lifecycle transition such as retirement, deactivation, expiry or end of relationship is a distinct business decision that deserves its own event instead of being a value inside a generic revised or revision-recorded event.",
+   "criteria": {
+    "true": "The transition changes what other owners and reviewers may do with the record (for example, a retired provider cannot be referenced by a new boundary), so consumers need to recognise it without reading the content body.",
+    "false": "The record is a simple inventory entry whose status is just another attribute and a generic revision fact is adequate."
+   }
+  },
+  "lifecycle_fact__ServiceIdentity": {
+   "type": "noul",
+   "instructions": "For `ServiceIdentity` (see `generic_revision_owners`), a lifecycle transition such as retirement, deactivation, expiry or end of relationship is a distinct business decision that deserves its own event instead of being a value inside a generic revised or revision-recorded event.",
+   "criteria": {
+    "true": "The transition changes what other owners and reviewers may do with the record (for example, a retired provider cannot be referenced by a new boundary), so consumers need to recognise it without reading the content body.",
+    "false": "The record is a simple inventory entry whose status is just another attribute and a generic revision fact is adequate."
+   }
+  },
+  "lifecycle_fact__WorkRelationship": {
+   "type": "noul",
+   "instructions": "For `WorkRelationship` (see `generic_revision_owners`), a lifecycle transition such as retirement, deactivation, expiry or end of relationship is a distinct business decision that deserves its own event instead of being a value inside a generic revised or revision-recorded event.",
+   "criteria": {
+    "true": "The transition changes what other owners and reviewers may do with the record (for example, a retired provider cannot be referenced by a new boundary), so consumers need to recognise it without reading the content body.",
+    "false": "The record is a simple inventory entry whose status is just another attribute and a generic revision fact is adequate."
+   }
+  },
+  "lifecycle_fact__Person": {
+   "type": "noul",
+   "instructions": "For `Person` (see `generic_revision_owners`), a lifecycle transition such as retirement, deactivation, expiry or end of relationship is a distinct business decision that deserves its own event instead of being a value inside a generic revised or revision-recorded event.",
+   "criteria": {
+    "true": "The transition changes what other owners and reviewers may do with the record (for example, a retired provider cannot be referenced by a new boundary), so consumers need to recognise it without reading the content body.",
+    "false": "The record is a simple inventory entry whose status is just another attribute and a generic revision fact is adequate."
+   }
+  },
+  "lifecycle_fact__Location": {
+   "type": "noul",
+   "instructions": "For `Location` (see `generic_revision_owners`), a lifecycle transition such as retirement, deactivation, expiry or end of relationship is a distinct business decision that deserves its own event instead of being a value inside a generic revised or revision-recorded event.",
+   "criteria": {
+    "true": "The transition changes what other owners and reviewers may do with the record (for example, a retired provider cannot be referenced by a new boundary), so consumers need to recognise it without reading the content body.",
+    "false": "The record is a simple inventory entry whose status is just another attribute and a generic revision fact is adequate."
+   }
+  },
+  "lifecycle_fact__OperationalProcess": {
+   "type": "noul",
+   "instructions": "For `OperationalProcess` (see `generic_revision_owners`), a lifecycle transition such as retirement, deactivation, expiry or end of relationship is a distinct business decision that deserves its own event instead of being a value inside a generic revised or revision-recorded event.",
+   "criteria": {
+    "true": "The transition changes what other owners and reviewers may do with the record (for example, a retired provider cannot be referenced by a new boundary), so consumers need to recognise it without reading the content body.",
+    "false": "The record is a simple inventory entry whose status is just another attribute and a generic revision fact is adequate."
+   }
+  },
+  "lifecycle_fact__TechnologyComponent": {
+   "type": "noul",
+   "instructions": "For `TechnologyComponent` (see `generic_revision_owners`), a lifecycle transition such as retirement, deactivation, expiry or end of relationship is a distinct business decision that deserves its own event instead of being a value inside a generic revised or revision-recorded event.",
+   "criteria": {
+    "true": "The transition changes what other owners and reviewers may do with the record (for example, a retired provider cannot be referenced by a new boundary), so consumers need to recognise it without reading the content body.",
+    "false": "The record is a simple inventory entry whose status is just another attribute and a generic revision fact is adequate."
+   }
+  },
+  "lifecycle_fact__InformationAsset": {
+   "type": "noul",
+   "instructions": "For `InformationAsset` (see `generic_revision_owners`), a lifecycle transition such as retirement, deactivation, expiry or end of relationship is a distinct business decision that deserves its own event instead of being a value inside a generic revised or revision-recorded event.",
+   "criteria": {
+    "true": "The transition changes what other owners and reviewers may do with the record (for example, a retired provider cannot be referenced by a new boundary), so consumers need to recognise it without reading the content body.",
+    "false": "The record is a simple inventory entry whose status is just another attribute and a generic revision fact is adequate."
+   }
+  },
+  "lifecycle_fact__DataFlow": {
+   "type": "noul",
+   "instructions": "For `DataFlow` (see `generic_revision_owners`), a lifecycle transition such as retirement, deactivation, expiry or end of relationship is a distinct business decision that deserves its own event instead of being a value inside a generic revised or revision-recorded event.",
+   "criteria": {
+    "true": "The transition changes what other owners and reviewers may do with the record (for example, a retired provider cannot be referenced by a new boundary), so consumers need to recognise it without reading the content body.",
+    "false": "The record is a simple inventory entry whose status is just another attribute and a generic revision fact is adequate."
+   }
+  },
+  "criteria_edition_owner": {
+   "type": "choice",
+   "instructions": "How should the catalog handle `criteria_edition_rule` given `criteria_overlay_invariant`?",
+   "criteria": {
+    "platform_static_content_no_owner": "Catalog editions are versioned platform content loaded from files; immutability is a release property, not an aggregate decision, and the catalog should say so explicitly.",
+    "new_criteria_edition_owner": "A platform-level CriteriaEdition owner should exist to make publication and immutability an explicit decision.",
+    "overlay_owner_covers_it": "CriteriaTextOverlay already decides it."
+   }
+  },
+  "class__ApplicationImportSource": {
+   "type": "choice",
+   "instructions": "How should `ApplicationImportSource` (see `borderline`) be classified?",
+   "criteria": {
+    "business_aggregate": "It decides a rule a compliance program recognises about its own governed records.",
+    "business_governor": "It serialises admission or publication across other business records and decides an atomic rule over them.",
+    "technical_process": "It tracks execution, build, delivery or settings state and decides no business rule."
+   }
+  },
+  "class__ClientExport": {
+   "type": "choice",
+   "instructions": "How should `ClientExport` (see `borderline`) be classified?",
+   "criteria": {
+    "business_aggregate": "It decides a rule a compliance program recognises about its own governed records.",
+    "business_governor": "It serialises admission or publication across other business records and decides an atomic rule over them.",
+    "technical_process": "It tracks execution, build, delivery or settings state and decides no business rule."
+   }
+  },
+  "class__WorkDigestPreference": {
+   "type": "choice",
+   "instructions": "How should `WorkDigestPreference` (see `borderline`) be classified?",
+   "criteria": {
+    "business_aggregate": "It decides a rule a compliance program recognises about its own governed records.",
+    "business_governor": "It serialises admission or publication across other business records and decides an atomic rule over them.",
+    "technical_process": "It tracks execution, build, delivery or settings state and decides no business rule."
+   }
+  }
+ }
+}

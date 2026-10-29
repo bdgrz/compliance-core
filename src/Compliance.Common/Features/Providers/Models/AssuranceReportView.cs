@@ -1,0 +1,15 @@
+using Cntryl.Portia;
+using Bdgrz.Compliance.Features.AccessControl.Contracts;
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.Evidence.Models;
+namespace Bdgrz.Compliance.Features.Providers.Models;
+
+/// <summary>
+///     One retained assurance report revision. A reader without restricted authority receives
+///     <c>Redacted</c> content: exception, control and gap text and the citation are withheld, while
+///     the counts, kind, issuer, period and opinion stay shareable.
+/// </summary>
+public sealed record AssuranceReportView(Uuid TenantId, Uuid ReportId, Uuid ProviderId, long Revision,
+    AssuranceReportContent Content, long ProviderRevision, int ExceptionCount,
+    int ComplementaryControlCount, int CoverageGapCount, ActorReference RecordedBy,
+    DateTimeOffset RecordedAt, bool Redacted = false);

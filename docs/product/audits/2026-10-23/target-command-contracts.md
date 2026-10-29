@@ -14,7 +14,7 @@ Required route values fill identical typed properties; conflicting body duplicat
 - **Native facts:** `AccessPopulationAccepted`.
 - **Original response:** `{"mode":"immediate_original_result","responseType":"AccessPopulationAcceptance","firstHttpStatus":200,"terminalResultType":"AccessPopulationAcceptance"}`.
 - **Owner protocols:** Population acceptance and principal classification.
-- **Preserved source validation:** [src/Compliance.Common/Features/AccessReviews/AcceptAccessPopulation.cs](../../../../src/Compliance.Common/Features/AccessReviews/AcceptAccessPopulation.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/AccessReviews/AcceptAccessPopulation.cs](../../../../src/Compliance.Common/Features/AccessReviews/Commands/AcceptAccessPopulation.cs).
 - **Selected changes:** Add required CommandId.
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: `test/Compliance.Tests/Features/AccessReviews/RestrictedAccessPopulationReadTests.cs`, `test/Compliance.Tests/Features/AccessReviews/PersonalAccessReviewTransportTests.cs`, `test/Compliance.Tests/Features/AccessReviews/AccessPopulationHandlerTests.cs`, `test/Compliance.Tests/Features/AccessReviews/AccessReviewFixture.cs`.
 
@@ -28,7 +28,7 @@ Required route values fill identical typed properties; conflicting body duplicat
 - **Native facts:** `ApplicationImportPlanSealed`.
 - **Original response:** `{"mode":"async_fixed_ack","responseType":"OperationAcceptedResponse","firstHttpStatus":202,"terminalResultType":"Unit"}`.
 - **Owner protocols:** Complete batch application and publication.
-- **Preserved source validation:** [src/Compliance.Common/Features/Applications/AcceptApplicationImport.cs](../../../../src/Compliance.Common/Features/Applications/AcceptApplicationImport.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/Applications/AcceptApplicationImport.cs](../../../../src/Compliance.Common/Features/Applications/Commands/AcceptApplicationImport.cs).
 - **Selected changes:** Add required CommandId. Rename ExpectedBatchRevision to ExpectedRevision and compare the new target owner revision.
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: `test/Compliance.Tests/Features/Applications/ApplicationImportCompositionTests.cs`, `test/Compliance.Tests/Features/Applications/ApplicationImportPersonalTransportTests.cs`, `test/Compliance.Tests/Features/Applications/ApplicationImportOmissionConsumerTests.cs`, `test/Compliance.Tests/Features/Applications/ApplicationInventoryAuthorizerTests.cs`, `test/Compliance.Tests/Features/Applications/ApplicationImportExecutionTests.cs`.
 
@@ -42,7 +42,7 @@ Required route values fill identical typed properties; conflicting body duplicat
 - **Native facts:** `ServiceEngagementAcceptanceRequested`.
 - **Original response:** `{"mode":"async_fixed_ack","responseType":"OperationAcceptedResponse","firstHttpStatus":202,"terminalResultType":"ServiceEngagementAcceptanceView"}`.
 - **Owner protocols:** Service epoch and permanent practice commitments.
-- **Preserved source validation:** [src/Compliance.Common/Features/AccessControl/AcceptServiceEngagement.cs](../../../../src/Compliance.Common/Features/AccessControl/AcceptServiceEngagement.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/AccessControl/AcceptServiceEngagement.cs](../../../../src/Compliance.Common/Features/AccessControl/Commands/AcceptServiceEngagement.cs).
 - **Selected changes:** Add required CommandId. Rename ExpectedSequence to ExpectedRevision and compare the new target owner revision.
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: `test/Compliance.Tests/Features/AccessControl/AttestServiceEngagementManagementWriteWallTests.cs`, `test/Compliance.Tests/Features/AccessControl/ServiceEngagementAcceptanceTests.cs`.
 
@@ -56,7 +56,7 @@ Required route values fill identical typed properties; conflicting body duplicat
 - **Native facts:** `TenantInvitationAccepted`.
 - **Original response:** `{"mode":"immediate_original_result","responseType":"Unit","firstHttpStatus":200,"terminalResultType":"Unit"}`.
 - **Owner protocols:** Mailbox generation, invitation and delivery.
-- **Preserved source validation:** [src/Compliance.Common/Features/Tenants/AcceptTenantInvitation.cs](../../../../src/Compliance.Common/Features/Tenants/AcceptTenantInvitation.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/Tenants/AcceptTenantInvitation.cs](../../../../src/Compliance.Common/Features/Tenants/Commands/AcceptTenantInvitation.cs).
 - **Selected changes:** InvitationId is route-bound and token verification must resolve the same immutable invitation; token is a secret verification input and is excluded from persisted authored intent. Persist verified token/challenge provenance without bearer material. Add required InvitationId. No ExpectedRevision: acceptance consumes a one-time token, the invitee holds only the token link, and the invitation lifecycle already serializes acceptance (as CompleteIdentityRecovery does).
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: `test/Compliance.Tests/Features/Tenants/TenantInvitationConcurrencyTests.cs`.
 
@@ -70,7 +70,7 @@ Required route values fill identical typed properties; conflicting body duplicat
 - **Native facts:** `EngagementPersonalDecisionAdmitted`.
 - **Original response:** `{"mode":"async_fixed_ack","responseType":"OperationAcceptedResponse","firstHttpStatus":202,"terminalResultType":"EngagementManagementAcknowledgementView"}`.
 - **Owner protocols:** Service epoch and permanent practice commitments.
-- **Preserved source validation:** [src/Compliance.Common/Features/AccessControl/AcknowledgeEngagementManagement.cs](../../../../src/Compliance.Common/Features/AccessControl/AcknowledgeEngagementManagement.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/AccessControl/AcknowledgeEngagementManagement.cs](../../../../src/Compliance.Common/Features/AccessControl/Commands/AcknowledgeEngagementManagement.cs).
 - **Selected changes:** Drop obsolete tenant ExpectedSequence/ExpectedRevision. Admit personal decision against ExpectedEngagementRevision and ExpectedServiceEpoch, pin engagement content, then materialize after exact source uses. Personal records remain independently owned; admission alone does not approve production acceptance.
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: `test/Compliance.Tests/Testing/AttestAssignmentHistoryFixture.cs`, `test/Compliance.Tests/Features/AccessControl/PartnerIndependenceEvaluationTests.cs`, `test/Compliance.Tests/Features/AccessControl/IndependenceAssignmentBoundaryTests.cs`, `test/Compliance.Tests/Features/AccessControl/AssignmentIndependenceReevaluationTests.cs`, `test/Compliance.Tests/Features/AccessControl/ActualStaffEngagementLocatorTests.cs`, `test/Compliance.Tests/Features/AccessControl/AttestServiceEngagementManagementWriteWallTests.cs`, `test/Compliance.Tests/Features/AccessControl/EngagementManagementAcknowledgementHandlerTests.cs`, `test/Compliance.Tests/Features/AccessControl/EngagementManagementAcknowledgementTests.cs`, `test/Compliance.Tests/Features/AccessControl/ServiceEngagementAcceptanceTests.cs`, `test/Compliance.Tests/Features/AccessControl/SourceIndependenceReevaluationTests.cs`, `test/Compliance.Tests/Features/AccessControl/FirmOperationsCompositionTests.cs`.
 
@@ -84,7 +84,7 @@ Required route values fill identical typed properties; conflicting body duplicat
 - **Native facts:** `PolicyParticipantResultAdmitted`.
 - **Original response:** `{"mode":"async_fixed_ack","responseType":"OperationAcceptedResponse","firstHttpStatus":202,"terminalResultType":"CampaignAcknowledgementView"}`.
 - **Owner protocols:** Participant admission and campaign closure.
-- **Preserved source validation:** [src/Compliance.Common/Features/PolicyDistribution/AcknowledgePolicy.cs](../../../../src/Compliance.Common/Features/PolicyDistribution/AcknowledgePolicy.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/PolicyDistribution/AcknowledgePolicy.cs](../../../../src/Compliance.Common/Features/PolicyDistribution/Queries/AcknowledgePolicy.cs).
 - **Selected changes:** Add required CommandId. Add required owner-local ExpectedCampaignRevision; business Version remains an exact content version, not owner OCC. Admit complete participant result on the open campaign generation first; apply to participant through committed admission fact. Personal source actor is retained.
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: `test/Compliance.Tests/Features/AccessControl/AttestProgramManagementWriteWallTests.cs`, `test/Compliance.Tests/Features/PolicyDistribution/PolicyCampaignHandlerTests.cs`, `test/Compliance.Tests/Features/Work/WorkSourceCompositionTests.cs`, `test/Compliance.Tests/Features/Work/TrainingWorkAuthorityTests.cs`.
 
@@ -98,7 +98,7 @@ Required route values fill identical typed properties; conflicting body duplicat
 - **Native facts:** `ApplicationRelationshipAdded`.
 - **Original response:** `{"mode":"immediate_original_result","responseType":"ApplicationRelationshipChange","firstHttpStatus":200,"terminalResultType":"ApplicationRelationshipChange"}`.
 - **Owner protocols:** Application identity, relationships and import holds.
-- **Preserved source validation:** [src/Compliance.Common/Features/Applications/AddApplicationRelationship.cs](../../../../src/Compliance.Common/Features/Applications/AddApplicationRelationship.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/Applications/Commands/AddApplicationRelationship.cs](../../../../src/Compliance.Common/Features/Applications/Commands/AddApplicationRelationship.cs).
 - **Selected changes:** Rename ExpectedRelationshipRevision to ExpectedRevision and compare the new target owner revision. Canonical sole public relationship creation command. Preserve active endpoint/visibility and source/target revision guards from the removed RecordApplicationRelationship path; RelationshipId must equal exact existing tuple IdFor.
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: `test/Compliance.Tests/Features/Applications/ApplicationChangePreviewTests.cs`, `test/Compliance.Tests/Features/Applications/ApplicationRelationshipRequestTests.cs`, `test/Compliance.Tests/Features/Applications/ApplicationRelationshipTests.cs`.
 
@@ -112,7 +112,7 @@ Required route values fill identical typed properties; conflicting body duplicat
 - **Native facts:** `CorrectiveActionAdmitted`.
 - **Original response:** `{"mode":"async_fixed_ack","responseType":"OperationAcceptedResponse","firstHttpStatus":202,"terminalResultType":"FindingView"}`.
 - **Owner protocols:** Action admission and finding closure.
-- **Preserved source validation:** [src/Compliance.Common/Features/Remediation/AddCorrectiveAction.cs](../../../../src/Compliance.Common/Features/Remediation/AddCorrectiveAction.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/Remediation/AddCorrectiveAction.cs](../../../../src/Compliance.Common/Features/Remediation/Commands/AddCorrectiveAction.cs).
 - **Selected changes:** Add required ActionId.
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: `test/Compliance.Tests/Features/Work/WorkTestData.cs`, `test/Compliance.Tests/Features/Remediation/FindingTests.cs`.
 
@@ -126,7 +126,7 @@ Required route values fill identical typed properties; conflicting body duplicat
 - **Native facts:** `RiskTreatmentActionAdded`.
 - **Original response:** `{"mode":"immediate_original_result","responseType":"RiskTreatmentActionRegistration","firstHttpStatus":200,"terminalResultType":"RiskTreatmentActionRegistration"}`.
 - **Owner protocols:** Risk ownership, treatment lines and actions.
-- **Preserved source validation:** [src/Compliance.Common/Features/Risks/AddRiskTreatmentAction.cs](../../../../src/Compliance.Common/Features/Risks/AddRiskTreatmentAction.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/Risks/AddRiskTreatmentAction.cs](../../../../src/Compliance.Common/Features/Risks/Commands/AddRiskTreatmentAction.cs).
 - **Selected changes:** Add required ActionId.
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: `test/Compliance.Tests/Features/Risks/RiskGovernanceHandlerTests.cs`.
 
@@ -140,7 +140,7 @@ Required route values fill identical typed properties; conflicting body duplicat
 - **Native facts:** `AuditPackageAmended`.
 - **Original response:** `{"mode":"immediate_original_result","responseType":"Unit","firstHttpStatus":200,"terminalResultType":"Unit"}`.
 - **Owner protocols:** Manifest validation, immutable build and recipient delivery.
-- **Preserved source validation:** [src/Compliance.Common/Features/AuditPackages/AmendAuditPackage.cs](../../../../src/Compliance.Common/Features/AuditPackages/AmendAuditPackage.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/AuditPackages/AmendAuditPackage.cs](../../../../src/Compliance.Common/Features/AuditPackages/Commands/AmendAuditPackage.cs).
 - **Selected changes:** Add required CommandId.
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: `test/Compliance.Tests/Features/AuditPackages/AmendAuditPackageHandlerTests.cs`.
 
@@ -154,7 +154,7 @@ Required route values fill identical typed properties; conflicting body duplicat
 - **Native facts:** `AuditorSampleSelectionAdmitted`.
 - **Original response:** `{"mode":"async_fixed_ack","responseType":"OperationAcceptedResponse","firstHttpStatus":202,"terminalResultType":"Unit"}`.
 - **Owner protocols:** Response/comment admission and request resolution.
-- **Preserved source validation:** [src/Compliance.Common/Features/AuditorRequests/AmendSampleSelection.cs](../../../../src/Compliance.Common/Features/AuditorRequests/AmendSampleSelection.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/AuditorRequests/AmendSampleSelection.cs](../../../../src/Compliance.Common/Features/AuditorRequests/Commands/AmendSampleSelection.cs).
 - **Selected changes:** Admit exact immutable selection on the open request before materializing child. Amendment keeps prior population identity and strictly later population version. Remove the accidental comparison of request revision to child zero.
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: `test/Compliance.Tests/Features/AuditorRequests/AuditorRequestTests.cs`, `test/Compliance.Tests/Features/AuditorRequests/SampleSelectionCommandHandlerTests.cs`.
 
@@ -168,7 +168,7 @@ Required route values fill identical typed properties; conflicting body duplicat
 - **Native facts:** `ServiceEngagementMutationRecorded`.
 - **Original response:** `{"mode":"immediate_original_result","responseType":"ServiceEngagementView","firstHttpStatus":200,"terminalResultType":"ServiceEngagementView"}`.
 - **Owner protocols:** Service epoch and permanent practice commitments.
-- **Preserved source validation:** [src/Compliance.Common/Features/AccessControl/AmendServiceEngagement.cs](../../../../src/Compliance.Common/Features/AccessControl/AmendServiceEngagement.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/AccessControl/AmendServiceEngagement.cs](../../../../src/Compliance.Common/Features/AccessControl/Commands/AmendServiceEngagement.cs).
 - **Selected changes:** Add required CommandId. Rename ExpectedSequence to ExpectedRevision and compare the new target owner revision.
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: `test/Compliance.Tests/Features/AccessControl/AttestServiceEngagementManagementWriteWallTests.cs`, `test/Compliance.Tests/Features/AccessControl/FirmOperationsCompositionTests.cs`.
 
@@ -182,7 +182,7 @@ Required route values fill identical typed properties; conflicting body duplicat
 - **Native facts:** `ReadinessGapAnnotated`.
 - **Original response:** `{"mode":"immediate_original_result","responseType":"ReadinessAnnotationView","firstHttpStatus":200,"terminalResultType":"ReadinessAnnotationView"}`.
 - **Owner protocols:** Latest readiness and gap-plan decision seal.
-- **Preserved source validation:** [src/Compliance.Common/Features/Readiness/AnnotateReadinessGap.cs](../../../../src/Compliance.Common/Features/Readiness/AnnotateReadinessGap.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/Readiness/AnnotateReadinessGap.cs](../../../../src/Compliance.Common/Features/Readiness/Commands/AnnotateReadinessGap.cs).
 - **Selected changes:** Add required CommandId.
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: `test/Compliance.Tests/Features/Readiness/PersonalReadinessAnnotationTransportTests.cs`, `test/Compliance.Tests/Features/Readiness/ReadinessAssessmentHandlerTests.cs`.
 
@@ -197,7 +197,7 @@ Required route values fill identical typed properties; conflicting body duplicat
 - **Resolved intent:** `ImportTargetGroupIntent`.
 - **Original response:** `{"mode":"internal","responseType":"Unit","firstHttpStatus":null,"terminalResultType":"Unit"}`.
 - **Owner protocols:** Application identity, relationships and import holds.
-- **Preserved source validation:** [src/Compliance.Common/Features/Applications/ApplyApplicationImportEffect.cs](../../../../src/Compliance.Common/Features/Applications/ApplyApplicationImportEffect.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/Applications/ApplyApplicationImportEffect.cs](../../../../src/Compliance.Common/Features/Applications/Commands/ApplyApplicationImportEffect.cs).
 - **Selected changes:** Add required CommandId. Use the exact trusted internal receiver signature from the reactor catalog; Source is concretely typed and carries the accepted business fact, never a process-stage pseudo-event.
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: `test/Compliance.Tests/Features/Applications/ApplicationImportWriteGuardTests.cs`, `test/Compliance.Tests/Features/Applications/ApplicationImportPendingEffectTests.cs`, `test/Compliance.Tests/Features/Applications/ApplicationImportOmissionConsumerTests.cs`, `test/Compliance.Tests/Features/Applications/ApplicationImportEffectVerificationTests.cs`, `test/Compliance.Tests/Features/Applications/ApplicationImportExecutionTests.cs`.
 
@@ -211,7 +211,7 @@ Required route values fill identical typed properties; conflicting body duplicat
 - **Native facts:** `AccessExpectationApproved`.
 - **Original response:** `{"mode":"immediate_original_result","responseType":"AccessExpectationView","firstHttpStatus":200,"terminalResultType":"AccessExpectationView"}`.
 - **Owner protocols:** Expectation succession and population exceptions.
-- **Preserved source validation:** [src/Compliance.Common/Features/AccessReviews/ApproveAccessExpectation.cs](../../../../src/Compliance.Common/Features/AccessReviews/ApproveAccessExpectation.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/AccessReviews/ApproveAccessExpectation.cs](../../../../src/Compliance.Common/Features/AccessReviews/Commands/ApproveAccessExpectation.cs).
 - **Selected changes:** Add required CommandId. Rename ExpectedLedgerRevision to ExpectedRevision and compare the new target owner revision.
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: `test/Compliance.Tests/Features/AccessReviews/PersonalAccessReviewTransportTests.cs`, `test/Compliance.Tests/Features/AccessReviews/AccessReviewFixture.cs`, `test/Compliance.Tests/Features/AccessReviews/AccessClassificationAndVarianceTests.cs`.
 
@@ -225,7 +225,7 @@ Required route values fill identical typed properties; conflicting body duplicat
 - **Native facts:** `ApplicationRelationshipApproved`.
 - **Original response:** `{"mode":"immediate_original_result","responseType":"Unit","firstHttpStatus":200,"terminalResultType":"Unit"}`.
 - **Owner protocols:** Application identity, relationships and import holds.
-- **Preserved source validation:** [src/Compliance.Common/Features/Applications/ApproveApplicationSuccessor.cs](../../../../src/Compliance.Common/Features/Applications/ApproveApplicationSuccessor.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/Applications/Commands/ApproveApplicationSuccessor.cs](../../../../src/Compliance.Common/Features/Applications/Commands/ApproveApplicationSuccessor.cs).
 - **Selected changes:** Add required CommandId. Rename ExpectedRelationshipRevision to ExpectedRevision and compare the new target owner revision.
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: `test/Compliance.Tests/Features/Applications/ApplicationSuccessorApprovalTests.cs`, `test/Compliance.Tests/Features/Applications/ApplicationRelationshipRequestTests.cs`, `test/Compliance.Tests/Features/Applications/ApplicationInventoryAuthorizerTests.cs`.
 
@@ -239,7 +239,7 @@ Required route values fill identical typed properties; conflicting body duplicat
 - **Native facts:** `AuditPackageDisclosureApproved`.
 - **Original response:** `{"mode":"immediate_original_result","responseType":"Unit","firstHttpStatus":200,"terminalResultType":"Unit"}`.
 - **Owner protocols:** Manifest validation, immutable build and recipient delivery.
-- **Preserved source validation:** [src/Compliance.Common/Features/AuditPackages/ApproveAuditPackageDisclosure.cs](../../../../src/Compliance.Common/Features/AuditPackages/ApproveAuditPackageDisclosure.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/AuditPackages/ApproveAuditPackageDisclosure.cs](../../../../src/Compliance.Common/Features/AuditPackages/Commands/ApproveAuditPackageDisclosure.cs).
 - **Selected changes:** Add required CommandId. Add required owner-local ExpectedRevision; business Version remains an exact content version, not owner OCC.
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: `test/Compliance.Tests/Features/AuditPackages/AuditPackageCommandHandlerTests.cs`.
 
@@ -253,7 +253,7 @@ Required route values fill identical typed properties; conflicting body duplicat
 - **Native facts:** `AuditPackageValidationOverrideApproved`.
 - **Original response:** `{"mode":"immediate_original_result","responseType":"Unit","firstHttpStatus":200,"terminalResultType":"Unit"}`.
 - **Owner protocols:** Manifest validation, immutable build and recipient delivery.
-- **Preserved source validation:** [src/Compliance.Common/Features/AuditPackages/ApproveAuditPackageValidationOverride.cs](../../../../src/Compliance.Common/Features/AuditPackages/ApproveAuditPackageValidationOverride.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/AuditPackages/ApproveAuditPackageValidationOverride.cs](../../../../src/Compliance.Common/Features/AuditPackages/Commands/ApproveAuditPackageValidationOverride.cs).
 - **Selected changes:** Add required CommandId. Add required owner-local ExpectedRevision; business Version remains an exact content version, not owner OCC.
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: `test/Compliance.Tests/Features/AuditPackages/AuditPackageCommandHandlerTests.cs`.
 
@@ -267,7 +267,7 @@ Required route values fill identical typed properties; conflicting body duplicat
 - **Native facts:** `PolicyParticipantResultAdmitted`.
 - **Original response:** `{"mode":"async_fixed_ack","responseType":"OperationAcceptedResponse","firstHttpStatus":202,"terminalResultType":"CampaignWaiverView"}`.
 - **Owner protocols:** Participant admission and campaign closure.
-- **Preserved source validation:** [src/Compliance.Common/Features/PolicyDistribution/ApproveCampaignWaiver.cs](../../../../src/Compliance.Common/Features/PolicyDistribution/ApproveCampaignWaiver.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/PolicyDistribution/ApproveCampaignWaiver.cs](../../../../src/Compliance.Common/Features/PolicyDistribution/Commands/ApproveCampaignWaiver.cs).
 - **Selected changes:** Add required CommandId. Add required owner-local ExpectedCampaignRevision; business Version remains an exact content version, not owner OCC. Admit complete participant result on the open campaign generation first; apply to participant through committed admission fact. Personal source actor is retained.
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: `test/Compliance.Tests/Features/PolicyDistribution/PolicyCampaignHandlerTests.cs`, `test/Compliance.Tests/Features/PolicyDistribution/PersonalCampaignWaiverTransportTests.cs`.
 
@@ -281,7 +281,7 @@ Required route values fill identical typed properties; conflicting body duplicat
 - **Native facts:** `ControlOperatingPlanApproved`.
 - **Original response:** `{"mode":"immediate_original_result","responseType":"ControlOperatingPlanView","firstHttpStatus":200,"terminalResultType":"ControlOperatingPlanView"}`.
 - **Owner protocols:** Operating plan and business-window occurrence.
-- **Preserved source validation:** [src/Compliance.Common/Features/Operations/ApproveControlOperatingPlan.cs](../../../../src/Compliance.Common/Features/Operations/ApproveControlOperatingPlan.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/Operations/ApproveControlOperatingPlan.cs](../../../../src/Compliance.Common/Features/Operations/Commands/ApproveControlOperatingPlan.cs).
 - **Selected changes:** Add required CommandId.
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: `test/Compliance.Tests/Features/Operations/ControlOperatingPlanTests.cs`, `test/Compliance.Tests/Features/Operations/PersonalOperatingPlanApprovalTransportTests.cs`, `test/Compliance.Tests/Features/Operations/OperationsFixture.cs`, `test/Compliance.Tests/Features/Work/WorkAssignmentTests.cs`, `test/Compliance.Tests/Features/Work/WorkSourceCompositionTests.cs`, `test/Compliance.Tests/Features/Work/ControlOperatingPlanWorkTests.cs`, `test/Compliance.Tests/Features/Work/ReviewerWorkAuthorityTests.cs`.
 
@@ -295,7 +295,7 @@ Required route values fill identical typed properties; conflicting body duplicat
 - **Native facts:** `SystemDescriptionApproved`.
 - **Original response:** `{"mode":"immediate_original_result","responseType":"Unit","firstHttpStatus":200,"terminalResultType":"Unit"}`.
 - **Owner protocols:** Versioned description and independent export.
-- **Preserved source validation:** [src/Compliance.Common/Features/SystemDescription/ApproveSystemDescription.cs](../../../../src/Compliance.Common/Features/SystemDescription/ApproveSystemDescription.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/SystemDescription/ApproveSystemDescription.cs](../../../../src/Compliance.Common/Features/SystemDescription/Commands/ApproveSystemDescription.cs).
 - **Selected changes:** Add required CommandId. Add required owner-local ExpectedRevision; business Version remains an exact content version, not owner OCC.
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: `test/Compliance.Tests/Features/SystemDescription/SystemDescriptionCommandHandlerTests.cs`.
 
@@ -309,7 +309,7 @@ Required route values fill identical typed properties; conflicting body duplicat
 - **Native facts:** `AuditorRequestAssigned`.
 - **Original response:** `{"mode":"immediate_original_result","responseType":"Unit","firstHttpStatus":200,"terminalResultType":"Unit"}`.
 - **Owner protocols:** Response/comment admission and request resolution.
-- **Preserved source validation:** [src/Compliance.Common/Features/AuditorRequests/AssignAuditorRequest.cs](../../../../src/Compliance.Common/Features/AuditorRequests/AssignAuditorRequest.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/AuditorRequests/AssignAuditorRequest.cs](../../../../src/Compliance.Common/Features/AuditorRequests/Commands/AssignAuditorRequest.cs).
 - **Selected changes:** Add required CommandId. Add required owner-local ExpectedRevision; business Version remains an exact content version, not owner OCC.
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: `test/Compliance.Tests/Features/AuditorRequests/AuditorRequestCommandHandlerTests.cs`.
 
@@ -323,7 +323,7 @@ Required route values fill identical typed properties; conflicting body duplicat
 - **Native facts:** `RiskOwnerAssigned`.
 - **Original response:** `{"mode":"immediate_original_result","responseType":"Unit","firstHttpStatus":200,"terminalResultType":"Unit"}`.
 - **Owner protocols:** Risk ownership, treatment lines and actions.
-- **Preserved source validation:** [src/Compliance.Common/Features/Risks/AssignRiskOwner.cs](../../../../src/Compliance.Common/Features/Risks/AssignRiskOwner.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/Risks/AssignRiskOwner.cs](../../../../src/Compliance.Common/Features/Risks/Commands/AssignRiskOwner.cs).
 - **Selected changes:** Add required CommandId.
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: `test/Compliance.Tests/Features/Risks/RiskGovernanceHandlerTests.cs`.
 
@@ -337,7 +337,7 @@ Required route values fill identical typed properties; conflicting body duplicat
 - **Native facts:** `ServiceEngagementStaffAssignmentRequested`.
 - **Original response:** `{"mode":"async_fixed_ack","responseType":"OperationAcceptedResponse","firstHttpStatus":202,"terminalResultType":"ServiceEngagementAcceptanceView"}`.
 - **Owner protocols:** Service epoch and permanent practice commitments.
-- **Preserved source validation:** [src/Compliance.Common/Features/AccessControl/AssignServiceEngagementStaff.cs](../../../../src/Compliance.Common/Features/AccessControl/AssignServiceEngagementStaff.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/AccessControl/AssignServiceEngagementStaff.cs](../../../../src/Compliance.Common/Features/AccessControl/Commands/AssignServiceEngagementStaff.cs).
 - **Selected changes:** Add required CommandId. Rename ExpectedSequence to ExpectedRevision and compare the new target owner revision. Positive actual-staff assignment acquires the same exact current service-epoch, partner authority and permanent staff/user practice commitments as acceptance before emitting ServiceEngagementStaffAssigned.
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: `test/Compliance.Tests/Features/AccessControl/ServiceEngagementAcceptanceTests.cs`.
 
@@ -351,7 +351,7 @@ Required route values fill identical typed properties; conflicting body duplicat
 - **Native facts:** `ControlOccurrenceAttested`.
 - **Original response:** `{"mode":"immediate_original_result","responseType":"ControlOccurrenceView","firstHttpStatus":200,"terminalResultType":"ControlOccurrenceView"}`.
 - **Owner protocols:** Operating plan and business-window occurrence.
-- **Preserved source validation:** [src/Compliance.Common/Features/Operations/AttestControlOccurrence.cs](../../../../src/Compliance.Common/Features/Operations/AttestControlOccurrence.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/Operations/AttestControlOccurrence.cs](../../../../src/Compliance.Common/Features/Operations/Commands/AttestControlOccurrence.cs).
 - **Selected changes:** Add required CommandId.
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: `test/Compliance.Tests/Features/AccessControl/AttestManagementWriteWallTests.cs`, `test/Compliance.Tests/Features/Operations/OperationsFixture.cs`, `test/Compliance.Tests/Features/Work/ConcurrentOccurrenceSubmissionTests.cs`.
 
@@ -365,7 +365,7 @@ Required route values fill identical typed properties; conflicting body duplicat
 - **Native facts:** `SystemDescriptionSourcesBound`.
 - **Original response:** `{"mode":"immediate_original_result","responseType":"Unit","firstHttpStatus":200,"terminalResultType":"Unit"}`.
 - **Owner protocols:** Versioned description and independent export.
-- **Preserved source validation:** [src/Compliance.Common/Features/SystemDescription/BindSystemDescriptionSources.cs](../../../../src/Compliance.Common/Features/SystemDescription/BindSystemDescriptionSources.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/SystemDescription/BindSystemDescriptionSources.cs](../../../../src/Compliance.Common/Features/SystemDescription/Commands/BindSystemDescriptionSources.cs).
 - **Selected changes:** Add required CommandId.
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: `test/Compliance.Tests/Features/SystemDescription/SystemDescriptionDraftCommandHandlerTests.cs`.
 
@@ -379,7 +379,7 @@ Required route values fill identical typed properties; conflicting body duplicat
 - **Native facts:** `SystemDescriptionBound`.
 - **Original response:** `{"mode":"immediate_original_result","responseType":"Unit","firstHttpStatus":200,"terminalResultType":"Unit"}`.
 - **Owner protocols:** Versioned description and independent export.
-- **Preserved source validation:** [src/Compliance.Common/Features/SystemDescription/BindSystemDescriptionToExamination.cs](../../../../src/Compliance.Common/Features/SystemDescription/BindSystemDescriptionToExamination.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/SystemDescription/BindSystemDescriptionToExamination.cs](../../../../src/Compliance.Common/Features/SystemDescription/Commands/BindSystemDescriptionToExamination.cs).
 - **Selected changes:** Add required CommandId. Add required owner-local ExpectedRevision; business Version remains an exact content version, not owner OCC.
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: `test/Compliance.Tests/Features/SystemDescription/SystemDescriptionCommandHandlerTests.cs`.
 
@@ -393,7 +393,7 @@ Required route values fill identical typed properties; conflicting body duplicat
 - **Native facts:** `ApplicationImportCancellationAccepted`.
 - **Original response:** `{"mode":"async_fixed_ack","responseType":"OperationAcceptedResponse","firstHttpStatus":202,"terminalResultType":"Unit"}`.
 - **Owner protocols:** Complete batch application and publication.
-- **Preserved source validation:** [src/Compliance.Common/Features/Applications/CancelApplicationImport.cs](../../../../src/Compliance.Common/Features/Applications/CancelApplicationImport.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/Applications/CancelApplicationImport.cs](../../../../src/Compliance.Common/Features/Applications/Commands/CancelApplicationImport.cs).
 - **Selected changes:** Add required CommandId. Rename ExpectedBatchRevision to ExpectedRevision and compare the new target owner revision.
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: `test/Compliance.Tests/Features/Applications/ApplicationImportPersonalTransportTests.cs`, `test/Compliance.Tests/Features/Applications/ApplicationImportLifecycleHandlerTests.cs`, `test/Compliance.Tests/Features/Applications/ApplicationInventoryAuthorizerTests.cs`, `test/Compliance.Tests/Features/Applications/ApplicationImportExecutionTests.cs`.
 
@@ -407,7 +407,7 @@ Required route values fill identical typed properties; conflicting body duplicat
 - **Native facts:** `EvidenceRequestCancelled`.
 - **Original response:** `{"mode":"immediate_original_result","responseType":"EvidenceRequestView","firstHttpStatus":200,"terminalResultType":"EvidenceRequestView"}`.
 - **Owner protocols:** Independent evidence fulfilment.
-- **Preserved source validation:** [src/Compliance.Common/Features/Evidence/CancelEvidenceRequest.cs](../../../../src/Compliance.Common/Features/Evidence/CancelEvidenceRequest.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/Evidence/CancelEvidenceRequest.cs](../../../../src/Compliance.Common/Features/Evidence/Commands/CancelEvidenceRequest.cs).
 - **Selected changes:** Add required CommandId.
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: `test/Compliance.Tests/Features/Evidence/EvidenceRequestHandlerTests.cs`, `test/Compliance.Tests/Features/Work/WorkQueueSearchTests.cs`, `test/Compliance.Tests/Features/Work/WorkQueueTests.cs`, `test/Compliance.Tests/Features/Work/WorkSourceCompositionTests.cs`.
 
@@ -421,7 +421,7 @@ Required route values fill identical typed properties; conflicting body duplicat
 - **Native facts:** `RiskTreatmentActionCancelled`.
 - **Original response:** `{"mode":"immediate_original_result","responseType":"Unit","firstHttpStatus":200,"terminalResultType":"Unit"}`.
 - **Owner protocols:** Risk ownership, treatment lines and actions.
-- **Preserved source validation:** [src/Compliance.Common/Features/Risks/CancelRiskTreatmentAction.cs](../../../../src/Compliance.Common/Features/Risks/CancelRiskTreatmentAction.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/Risks/CancelRiskTreatmentAction.cs](../../../../src/Compliance.Common/Features/Risks/Commands/CancelRiskTreatmentAction.cs).
 - **Selected changes:** Add required CommandId.
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: .
 
@@ -435,7 +435,7 @@ Required route values fill identical typed properties; conflicting body duplicat
 - **Native facts:** `AccessPrincipalClassified`.
 - **Original response:** `{"mode":"immediate_original_result","responseType":"AccessPrincipalClassificationView","firstHttpStatus":200,"terminalResultType":"AccessPrincipalClassificationView"}`.
 - **Owner protocols:** Population acceptance and principal classification.
-- **Preserved source validation:** [src/Compliance.Common/Features/AccessReviews/ClassifyAccessPrincipal.cs](../../../../src/Compliance.Common/Features/AccessReviews/ClassifyAccessPrincipal.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/AccessReviews/ClassifyAccessPrincipal.cs](../../../../src/Compliance.Common/Features/AccessReviews/Commands/ClassifyAccessPrincipal.cs).
 - **Selected changes:** Add required CommandId. Rename ExpectedClassificationCount to ExpectedRevision and compare the new target owner revision.
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: `test/Compliance.Tests/Features/AccessReviews/AccessReviewFixture.cs`, `test/Compliance.Tests/Features/AccessReviews/AccessClassificationAndVarianceTests.cs`.
 
@@ -449,7 +449,7 @@ Required route values fill identical typed properties; conflicting body duplicat
 - **Native facts:** `AdvisorHandoffClosed`.
 - **Original response:** `{"mode":"immediate_original_result","responseType":"Unit","firstHttpStatus":200,"terminalResultType":"Unit"}`.
 - **Owner protocols:** Feedback admission versus handoff revocation.
-- **Preserved source validation:** [src/Compliance.Common/Features/AdvisorCollaboration/CloseAdvisorHandoff.cs](../../../../src/Compliance.Common/Features/AdvisorCollaboration/CloseAdvisorHandoff.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/AdvisorCollaboration/CloseAdvisorHandoff.cs](../../../../src/Compliance.Common/Features/AdvisorCollaboration/Commands/CloseAdvisorHandoff.cs).
 - **Selected changes:** Add required CommandId. Add required owner-local ExpectedRevision; business Version remains an exact content version, not owner OCC.
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: `test/Compliance.Tests/Features/AdvisorCollaboration/AdvisorHandoffCommandHandlerTests.cs`.
 
@@ -463,7 +463,7 @@ Required route values fill identical typed properties; conflicting body duplicat
 - **Native facts:** `PolicyCampaignClosureAccepted`.
 - **Original response:** `{"mode":"async_fixed_ack","responseType":"OperationAcceptedResponse","firstHttpStatus":202,"terminalResultType":"CampaignView"}`.
 - **Owner protocols:** Participant admission and campaign closure.
-- **Preserved source validation:** [src/Compliance.Common/Features/PolicyDistribution/CloseCampaign.cs](../../../../src/Compliance.Common/Features/PolicyDistribution/CloseCampaign.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/PolicyDistribution/CloseCampaign.cs](../../../../src/Compliance.Common/Features/PolicyDistribution/Commands/CloseCampaign.cs).
 - **Selected changes:** Add required CommandId. Add required owner-local ExpectedRevision; business Version remains an exact content version, not owner OCC.
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: .
 
@@ -477,7 +477,7 @@ Required route values fill identical typed properties; conflicting body duplicat
 - **Native facts:** `FindingClosureAccepted`.
 - **Original response:** `{"mode":"async_fixed_ack","responseType":"OperationAcceptedResponse","firstHttpStatus":202,"terminalResultType":"FindingView"}`.
 - **Owner protocols:** Action admission and finding closure.
-- **Preserved source validation:** [src/Compliance.Common/Features/Remediation/CloseFinding.cs](../../../../src/Compliance.Common/Features/Remediation/CloseFinding.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/Remediation/CloseFinding.cs](../../../../src/Compliance.Common/Features/Remediation/Commands/CloseFinding.cs).
 - **Selected changes:** Add required CommandId.
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: `test/Compliance.Tests/Features/Work/WorkSourceCompositionTests.cs`, `test/Compliance.Tests/Features/Work/FindingClosureWorkTests.cs`, `test/Compliance.Tests/Features/Work/ReviewerWorkAuthorityTests.cs`, `test/Compliance.Tests/Features/Readiness/PersonalReadinessClosureTransportTests.cs`, `test/Compliance.Tests/Features/Remediation/FindingTests.cs`.
 
@@ -491,7 +491,7 @@ Required route values fill identical typed properties; conflicting body duplicat
 - **Native facts:** `ProviderCoverageGapClosed`.
 - **Original response:** `{"mode":"immediate_original_result","responseType":"ProviderCoverageGapRegistration","firstHttpStatus":200,"terminalResultType":"ProviderCoverageGapRegistration"}`.
 - **Owner protocols:** Independent assurance facts and exact source proofs.
-- **Preserved source validation:** [src/Compliance.Common/Features/Providers/CloseProviderCoverageGap.cs](../../../../src/Compliance.Common/Features/Providers/CloseProviderCoverageGap.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/Providers/CloseProviderCoverageGap.cs](../../../../src/Compliance.Common/Features/Providers/Commands/CloseProviderCoverageGap.cs).
 - **Selected changes:** Add required CommandId.
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: .
 
@@ -505,7 +505,7 @@ Required route values fill identical typed properties; conflicting body duplicat
 - **Native facts:** `ServiceEngagementMutationRecorded`.
 - **Original response:** `{"mode":"immediate_original_result","responseType":"ServiceEngagementView","firstHttpStatus":200,"terminalResultType":"ServiceEngagementView"}`.
 - **Owner protocols:** Service epoch and permanent practice commitments.
-- **Preserved source validation:** [src/Compliance.Common/Features/AccessControl/CloseServiceEngagement.cs](../../../../src/Compliance.Common/Features/AccessControl/CloseServiceEngagement.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/AccessControl/CloseServiceEngagement.cs](../../../../src/Compliance.Common/Features/AccessControl/Commands/CloseServiceEngagement.cs).
 - **Selected changes:** Add required CommandId. Rename ExpectedSequence to ExpectedRevision and compare the new target owner revision.
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: `test/Compliance.Tests/Features/AccessControl/AssignmentIndependenceReevaluationTests.cs`, `test/Compliance.Tests/Features/AccessControl/AttestServiceEngagementManagementWriteWallTests.cs`, `test/Compliance.Tests/Features/AccessControl/FirmOperationsCompositionTests.cs`.
 
@@ -519,7 +519,7 @@ Required route values fill identical typed properties; conflicting body duplicat
 - **Native facts:** `AccessReviewCampaignCompletionAccepted`.
 - **Original response:** `{"mode":"async_fixed_ack","responseType":"OperationAcceptedResponse","firstHttpStatus":202,"terminalResultType":"AccessReviewCampaignCompletionView"}`.
 - **Owner protocols:** Campaign item and atomic bulk decision.
-- **Preserved source validation:** [src/Compliance.Common/Features/AccessReviews/CompleteAccessReviewCampaign.cs](../../../../src/Compliance.Common/Features/AccessReviews/CompleteAccessReviewCampaign.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/AccessReviews/CompleteAccessReviewCampaign.cs](../../../../src/Compliance.Common/Features/AccessReviews/Commands/CompleteAccessReviewCampaign.cs).
 - **Selected changes:** Add required CommandId.
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: `test/Compliance.Tests/Features/AccessReviews/AccessRemediationTests.cs`, `test/Compliance.Tests/Features/AccessReviews/PersonalAccessReviewTransportTests.cs`, `test/Compliance.Tests/Features/AccessReviews/RestrictedAccessReviewCampaignReadTests.cs`.
 
@@ -533,7 +533,7 @@ Required route values fill identical typed properties; conflicting body duplicat
 - **Native facts:** `CorrectiveActionCompletedV2`.
 - **Original response:** `{"mode":"immediate_original_result","responseType":"FindingView","firstHttpStatus":200,"terminalResultType":"FindingView"}`.
 - **Owner protocols:** Action admission and finding closure.
-- **Preserved source validation:** [src/Compliance.Common/Features/Remediation/CompleteCorrectiveAction.cs](../../../../src/Compliance.Common/Features/Remediation/CompleteCorrectiveAction.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/Remediation/CompleteCorrectiveAction.cs](../../../../src/Compliance.Common/Features/Remediation/Commands/CompleteCorrectiveAction.cs).
 - **Selected changes:** Add required CommandId.
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: `test/Compliance.Tests/Features/AccessControl/AttestManagementWriteWallTests.cs`, `test/Compliance.Tests/Features/Work/WorkQueueSearchTests.cs`, `test/Compliance.Tests/Features/Work/WorkQueueTests.cs`, `test/Compliance.Tests/Features/Work/WorkSourceCompositionTests.cs`, `test/Compliance.Tests/Features/Work/FindingClosureWorkTests.cs`, `test/Compliance.Tests/Features/Work/ReviewerWorkAuthorityTests.cs`, `test/Compliance.Tests/Features/Remediation/FindingTests.cs`.
 
@@ -547,7 +547,7 @@ Required route values fill identical typed properties; conflicting body duplicat
 - **Native facts:** `AdvisorFeedbackCorrected`.
 - **Original response:** `{"mode":"immediate_original_result","responseType":"Unit","firstHttpStatus":200,"terminalResultType":"Unit"}`.
 - **Owner protocols:** Feedback admission versus handoff revocation.
-- **Preserved source validation:** [src/Compliance.Common/Features/AdvisorCollaboration/CorrectAdvisorFeedback.cs](../../../../src/Compliance.Common/Features/AdvisorCollaboration/CorrectAdvisorFeedback.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/AdvisorCollaboration/CorrectAdvisorFeedback.cs](../../../../src/Compliance.Common/Features/AdvisorCollaboration/Commands/CorrectAdvisorFeedback.cs).
 - **Selected changes:** Add required owner-local ExpectedRevision; business Version remains an exact content version, not owner OCC.
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: `test/Compliance.Tests/Features/Readiness/AdvisoryReadinessNoteIndependenceTests.cs`, `test/Compliance.Tests/Features/AdvisorCollaboration/CorrectAdvisorFeedbackHandlerTests.cs`.
 
@@ -561,7 +561,7 @@ Required route values fill identical typed properties; conflicting body duplicat
 - **Native facts:** `ControlOccurrenceAttested`.
 - **Original response:** `{"mode":"immediate_original_result","responseType":"ControlOccurrenceView","firstHttpStatus":200,"terminalResultType":"ControlOccurrenceView"}`.
 - **Owner protocols:** Operating plan and business-window occurrence.
-- **Preserved source validation:** [src/Compliance.Common/Features/Operations/CorrectControlAttestation.cs](../../../../src/Compliance.Common/Features/Operations/CorrectControlAttestation.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/Operations/CorrectControlAttestation.cs](../../../../src/Compliance.Common/Features/Operations/Commands/CorrectControlAttestation.cs).
 - **Selected changes:** Add required CommandId.
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: `test/Compliance.Tests/Features/Operations/PersonalOccurrenceProofTransportTests.cs`, `test/Compliance.Tests/Features/Operations/OperationsFixture.cs`, `test/Compliance.Tests/Features/Operations/ControlOccurrenceTests.cs`, `test/Compliance.Tests/Features/Work/FitzControlOccurrenceWorkItemDirectoryTests.cs`, `test/Compliance.Tests/Features/Work/NotApplicableOccurrenceReviewTests.cs`.
 
@@ -575,7 +575,7 @@ Required route values fill identical typed properties; conflicting body duplicat
 - **Native facts:** `ApplicationImportRowCorrelated`.
 - **Original response:** `{"mode":"immediate_original_result","responseType":"Unit","firstHttpStatus":200,"terminalResultType":"Unit"}`.
 - **Owner protocols:** Complete batch application and publication.
-- **Preserved source validation:** [src/Compliance.Common/Features/Applications/CorrelateApplicationImportRow.cs](../../../../src/Compliance.Common/Features/Applications/CorrelateApplicationImportRow.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/Applications/CorrelateApplicationImportRow.cs](../../../../src/Compliance.Common/Features/Applications/Commands/CorrelateApplicationImportRow.cs).
 - **Selected changes:** Add required CommandId. Rename ExpectedBatchRevision to ExpectedRevision and compare the new target owner revision.
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: `test/Compliance.Tests/Features/Applications/ApplicationImportCommitTests.cs`, `test/Compliance.Tests/Features/Applications/ApplicationImportCompositionTests.cs`, `test/Compliance.Tests/Features/Applications/ApplicationImportMissingPreviewTests.cs`, `test/Compliance.Tests/Features/Applications/ApplicationImportWriteGuardTests.cs`, `test/Compliance.Tests/Features/Applications/ApplicationImportFrozenPlanTests.cs`, `test/Compliance.Tests/Features/Applications/ApplicationImportCorrelationTests.cs`, `test/Compliance.Tests/Features/Applications/ApplicationImportRetirementPlanTests.cs`, `test/Compliance.Tests/Features/Applications/ApplicationImportAcceptancePlanTests.cs`, `test/Compliance.Tests/Features/Applications/ApplicationImportSourceClaimTests.cs`, `test/Compliance.Tests/Features/Applications/ApplicationImportReconciliationPreviewTests.cs`, `test/Compliance.Tests/Features/Applications/ApplicationImportPreviewCorrelationTests.cs`, `test/Compliance.Tests/Features/Applications/ApplicationImportReadTests.cs`, `test/Compliance.Tests/Features/Applications/ApplicationImportPersonalTransportTests.cs`, `test/Compliance.Tests/Features/Applications/ApplicationImportPendingEffectTests.cs`, `test/Compliance.Tests/Features/Applications/ApplicationImportRetirementEffectTests.cs`, `test/Compliance.Tests/Features/Applications/ApplicationImportLifecycleHandlerTests.cs`, `test/Compliance.Tests/Features/Applications/ApplicationImportOmissionConsumerTests.cs`, `test/Compliance.Tests/Features/Applications/ApplicationInventoryAuthorizerTests.cs`, `test/Compliance.Tests/Features/Applications/ApplicationImportEffectVerificationTests.cs`, `test/Compliance.Tests/Features/Applications/ApplicationImportExecutionTests.cs`.
 
@@ -589,7 +589,7 @@ Required route values fill identical typed properties; conflicting body duplicat
 - **Native facts:** `AdvisorHandoffCreated`.
 - **Original response:** `{"mode":"immediate_original_result","responseType":"Unit","firstHttpStatus":200,"terminalResultType":"Unit"}`.
 - **Owner protocols:** Feedback admission versus handoff revocation.
-- **Preserved source validation:** [src/Compliance.Common/Features/AdvisorCollaboration/CreateAdvisorHandoff.cs](../../../../src/Compliance.Common/Features/AdvisorCollaboration/CreateAdvisorHandoff.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/AdvisorCollaboration/CreateAdvisorHandoff.cs](../../../../src/Compliance.Common/Features/AdvisorCollaboration/Commands/CreateAdvisorHandoff.cs).
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: `test/Compliance.Tests/Features/Controls/ControlDraftAuthorizationTests.cs`, `test/Compliance.Tests/Features/AdvisorCollaboration/AdvisorHandoffCommandHandlerTests.cs`.
 
 ## CreateAuditPackage
@@ -602,7 +602,7 @@ Required route values fill identical typed properties; conflicting body duplicat
 - **Native facts:** `AuditPackageCreated`.
 - **Original response:** `{"mode":"immediate_original_result","responseType":"Unit","firstHttpStatus":200,"terminalResultType":"Unit"}`.
 - **Owner protocols:** Manifest validation, immutable build and recipient delivery.
-- **Preserved source validation:** [src/Compliance.Common/Features/AuditPackages/CreateAuditPackage.cs](../../../../src/Compliance.Common/Features/AuditPackages/CreateAuditPackage.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/AuditPackages/CreateAuditPackage.cs](../../../../src/Compliance.Common/Features/AuditPackages/Commands/CreateAuditPackage.cs).
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: `test/Compliance.Tests/Features/AuditPackages/CreateAuditPackageHandlerTests.cs`, `test/Compliance.Tests/Features/AuditPackages/CreateAuditPackageContractTests.cs`.
 
 ## CreateAuditResponseDraft
@@ -615,7 +615,7 @@ Required route values fill identical typed properties; conflicting body duplicat
 - **Native facts:** `AuditorResponseAdmitted`.
 - **Original response:** `{"mode":"async_fixed_ack","responseType":"OperationAcceptedResponse","firstHttpStatus":202,"terminalResultType":"Unit"}`.
 - **Owner protocols:** Response/comment admission and request resolution.
-- **Preserved source validation:** [src/Compliance.Common/Features/AuditorRequests/CreateAuditResponseDraft.cs](../../../../src/Compliance.Common/Features/AuditorRequests/CreateAuditResponseDraft.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/AuditorRequests/CreateAuditResponseDraft.cs](../../../../src/Compliance.Common/Features/AuditorRequests/Commands/CreateAuditResponseDraft.cs).
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: `test/Compliance.Tests/Features/AuditorRequests/AuditorResponseCommandHandlerTests.cs`.
 
 ## CreateServiceEngagement
@@ -628,7 +628,7 @@ Required route values fill identical typed properties; conflicting body duplicat
 - **Native facts:** `ServiceEngagementMutationRecorded`.
 - **Original response:** `{"mode":"immediate_original_result","responseType":"ServiceEngagementView","firstHttpStatus":200,"terminalResultType":"ServiceEngagementView"}`.
 - **Owner protocols:** Service epoch and permanent practice commitments.
-- **Preserved source validation:** [src/Compliance.Common/Features/AccessControl/CreateServiceEngagement.cs](../../../../src/Compliance.Common/Features/AccessControl/CreateServiceEngagement.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/AccessControl/CreateServiceEngagement.cs](../../../../src/Compliance.Common/Features/AccessControl/Commands/CreateServiceEngagement.cs).
 - **Selected changes:** Rename ExpectedSequence to ExpectedRevision and compare the new target owner revision.
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: `test/Compliance.Tests/Features/AccessControl/IndependenceAssignmentBoundaryTests.cs`, `test/Compliance.Tests/Features/AccessControl/ServiceEngagementHandlerTests.cs`, `test/Compliance.Tests/Features/AccessControl/AttestServiceEngagementManagementWriteWallTests.cs`, `test/Compliance.Tests/Features/AccessControl/FirmOperationsCompositionTests.cs`.
 
@@ -642,7 +642,7 @@ Required route values fill identical typed properties; conflicting body duplicat
 - **Native facts:** `SystemDescriptionDraftCreated`.
 - **Original response:** `{"mode":"immediate_original_result","responseType":"Unit","firstHttpStatus":200,"terminalResultType":"Unit"}`.
 - **Owner protocols:** Versioned description and independent export.
-- **Preserved source validation:** [src/Compliance.Common/Features/SystemDescription/CreateSystemDescriptionDraft.cs](../../../../src/Compliance.Common/Features/SystemDescription/CreateSystemDescriptionDraft.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/SystemDescription/CreateSystemDescriptionDraft.cs](../../../../src/Compliance.Common/Features/SystemDescription/Commands/CreateSystemDescriptionDraft.cs).
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: `test/Compliance.Tests/Features/SystemDescription/SystemDescriptionDraftCommandHandlerTests.cs`.
 
 ## DecideReadiness
@@ -655,7 +655,7 @@ Required route values fill identical typed properties; conflicting body duplicat
 - **Native facts:** `ReadinessDecisionAccepted`.
 - **Original response:** `{"mode":"async_fixed_ack","responseType":"OperationAcceptedResponse","firstHttpStatus":202,"terminalResultType":"ReadinessDecisionView"}`.
 - **Owner protocols:** Latest readiness and gap-plan decision seal.
-- **Preserved source validation:** [src/Compliance.Common/Features/Readiness/DecideReadiness.cs](../../../../src/Compliance.Common/Features/Readiness/DecideReadiness.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/Readiness/DecideReadiness.cs](../../../../src/Compliance.Common/Features/Readiness/Commands/DecideReadiness.cs).
 - **Selected changes:** Add required CommandId.
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: `test/Compliance.Tests/Features/Readiness/PersonalReadinessClosureTransportTests.cs`, `test/Compliance.Tests/Features/Readiness/ReadinessAssessmentHandlerTests.cs`.
 
@@ -669,7 +669,7 @@ Required route values fill identical typed properties; conflicting body duplicat
 - **Native facts:** `TypeIEntryDecisionAccepted`.
 - **Original response:** `{"mode":"async_fixed_ack","responseType":"OperationAcceptedResponse","firstHttpStatus":202,"terminalResultType":"TypeIEntryDecisionView"}`.
 - **Owner protocols:** Latest readiness and gap-plan decision seal.
-- **Preserved source validation:** [src/Compliance.Common/Features/Readiness/DecideTypeIEntry.cs](../../../../src/Compliance.Common/Features/Readiness/DecideTypeIEntry.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/Readiness/DecideTypeIEntry.cs](../../../../src/Compliance.Common/Features/Readiness/Commands/DecideTypeIEntry.cs).
 - **Selected changes:** Add required CommandId.
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: `test/Compliance.Tests/Features/Programs/ProgramStageProjectionTests.cs`, `test/Compliance.Tests/Features/Readiness/PersonalTypeIEntryTransportTests.cs`, `test/Compliance.Tests/Features/Readiness/ReadinessAssessmentHandlerTests.cs`, `test/Compliance.Tests/Features/Examinations/ExaminationEngagementCommandHandlerTests.cs`.
 
@@ -683,7 +683,7 @@ Required route values fill identical typed properties; conflicting body duplicat
 - **Native facts:** `ApplicationDeclared`.
 - **Original response:** `{"mode":"immediate_original_result","responseType":"ApplicationRegistration","firstHttpStatus":200,"terminalResultType":"ApplicationRegistration"}`.
 - **Owner protocols:** Application identity, relationships and import holds.
-- **Preserved source validation:** [src/Compliance.Common/Features/Applications/DeclareApplication.cs](../../../../src/Compliance.Common/Features/Applications/DeclareApplication.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/Applications/DeclareApplication.cs](../../../../src/Compliance.Common/Features/Applications/Commands/DeclareApplication.cs).
 - **Selected changes:** Add required ApplicationId. Remove optional DeclarationKey; ApplicationId is the required creation key.
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: `test/Compliance.Tests/Features/AccessControl/InventoryManagementIndependenceTests.cs`, `test/Compliance.Tests/Features/Applications/PersonalAccessReviewScopeTransportTests.cs`, `test/Compliance.Tests/Features/Applications/ApplicationOwnerTests.cs`, `test/Compliance.Tests/Features/Applications/ApplicationInventoryAuthorizerTests.cs`, `test/Compliance.Tests/Features/Examinations/ReviewedSystemTypeIBaselineSourceContributorTests.cs`.
 
@@ -697,7 +697,7 @@ Required route values fill identical typed properties; conflicting body duplicat
 - **Native facts:** `TrainingRequirementDefined`.
 - **Original response:** `{"mode":"immediate_original_result","responseType":"TrainingRequirementRegistration","firstHttpStatus":200,"terminalResultType":"TrainingRequirementRegistration"}`.
 - **Owner protocols:** Independent training requirement.
-- **Preserved source validation:** [src/Compliance.Common/Features/PolicyDistribution/DefineTrainingRequirement.cs](../../../../src/Compliance.Common/Features/PolicyDistribution/DefineTrainingRequirement.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/PolicyDistribution/DefineTrainingRequirement.cs](../../../../src/Compliance.Common/Features/PolicyDistribution/Commands/DefineTrainingRequirement.cs).
 - **Selected changes:** Add required RequirementId. Supplied RequirementId must equal existing TrainingCatalog.IdFor(TenantId, ProgramId, Identifier); keep NormalizeIdentifier and its exact UUIDv5 algorithm unchanged.
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: `test/Compliance.Tests/Features/AccessControl/AttestProgramManagementWriteWallTests.cs`.
 
@@ -711,7 +711,7 @@ Required route values fill identical typed properties; conflicting body duplicat
 - **Native facts:** `AuditorResponseDelivered`.
 - **Original response:** `{"mode":"immediate_original_result","responseType":"Unit","firstHttpStatus":200,"terminalResultType":"Unit"}`.
 - **Owner protocols:** Response/comment admission and request resolution.
-- **Preserved source validation:** [src/Compliance.Common/Features/AuditorRequests/DeliverAuditResponse.cs](../../../../src/Compliance.Common/Features/AuditorRequests/DeliverAuditResponse.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/AuditorRequests/DeliverAuditResponse.cs](../../../../src/Compliance.Common/Features/AuditorRequests/Commands/DeliverAuditResponse.cs).
 - **Selected changes:** Add required CommandId. Add required owner-local ExpectedRevision; business Version remains an exact content version, not owner OCC.
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: `test/Compliance.Tests/Features/AuditorRequests/AuditorResponseCommandHandlerTests.cs`.
 
@@ -725,7 +725,7 @@ Required route values fill identical typed properties; conflicting body duplicat
 - **Native facts:** `ControlEvaluationDeviationDisposed`.
 - **Original response:** `{"mode":"immediate_original_result","responseType":"ControlEvaluationView","firstHttpStatus":200,"terminalResultType":"ControlEvaluationView"}`.
 - **Owner protocols:** Independent evaluation and retest.
-- **Preserved source validation:** [src/Compliance.Common/Features/Evaluations/DisposeControlEvaluationDeviation.cs](../../../../src/Compliance.Common/Features/Evaluations/DisposeControlEvaluationDeviation.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/Evaluations/DisposeControlEvaluationDeviation.cs](../../../../src/Compliance.Common/Features/Evaluations/Commands/DisposeControlEvaluationDeviation.cs).
 - **Selected changes:** Add required CommandId.
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: `test/Compliance.Tests/Features/Evaluations/ControlEvaluationTests.cs`.
 
@@ -739,7 +739,7 @@ Required route values fill identical typed properties; conflicting body duplicat
 - **Native facts:** `ClientIndependenceEvaluationAdmitted`.
 - **Original response:** `{"mode":"async_fixed_ack","responseType":"OperationAcceptedResponse","firstHttpStatus":202,"terminalResultType":"IndependenceEvaluationView"}`.
 - **Owner protocols:** Service epoch and permanent practice commitments.
-- **Preserved source validation:** [src/Compliance.Common/Features/AccessControl/EvaluateClientIndependence.cs](../../../../src/Compliance.Common/Features/AccessControl/EvaluateClientIndependence.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/AccessControl/EvaluateClientIndependence.cs](../../../../src/Compliance.Common/Features/AccessControl/Commands/EvaluateClientIndependence.cs).
 - **Selected changes:** Freeze complete as-of service/practice/rule input snapshot on source admission. Child computes pure historical preview and always keeps ProductionAcceptanceBlocked=true.
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: `test/Compliance.Tests/Features/AccessControl/IndependenceOperationTests.cs`, `test/Compliance.Tests/Features/AccessControl/AttestServiceEngagementManagementWriteWallTests.cs`, `test/Compliance.Tests/Features/AccessControl/FirmOperationsCompositionTests.cs`.
 
@@ -753,7 +753,7 @@ Required route values fill identical typed properties; conflicting body duplicat
 - **Native facts:** `ApplicationImportExecutionAuthorized`.
 - **Original response:** `{"mode":"internal","responseType":"Unit","firstHttpStatus":null,"terminalResultType":"Unit"}`.
 - **Owner protocols:** Complete batch application and publication.
-- **Preserved source validation:** [src/Compliance.Common/Features/Applications/ExecuteApplicationImport.cs](../../../../src/Compliance.Common/Features/Applications/ExecuteApplicationImport.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/Applications/ExecuteApplicationImport.cs](../../../../src/Compliance.Common/Features/Applications/Commands/ExecuteApplicationImport.cs).
 - **Selected changes:** Add required CommandId.
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: `test/Compliance.Tests/Features/Applications/ApplicationImportCompositionTests.cs`, `test/Compliance.Tests/Features/Applications/ApplicationImportExecutionTests.cs`.
 
@@ -767,7 +767,7 @@ Required route values fill identical typed properties; conflicting body duplicat
 - **Native facts:** `AccessExpectationExceptionRecorded`.
 - **Original response:** `{"mode":"immediate_original_result","responseType":"AccessExpectationExceptionView","firstHttpStatus":200,"terminalResultType":"AccessExpectationExceptionView"}`.
 - **Owner protocols:** Expectation succession and population exceptions.
-- **Preserved source validation:** [src/Compliance.Common/Features/AccessReviews/ExemptAccessExpectation.cs](../../../../src/Compliance.Common/Features/AccessReviews/ExemptAccessExpectation.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/AccessReviews/ExemptAccessExpectation.cs](../../../../src/Compliance.Common/Features/AccessReviews/Commands/ExemptAccessExpectation.cs).
 - **Selected changes:** Add required CommandId. Rename ExpectedLedgerRevision to ExpectedRevision and compare the new target owner revision.
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: `test/Compliance.Tests/Features/AccessReviews/PersonalAccessReviewTransportTests.cs`, `test/Compliance.Tests/Features/AccessReviews/AccessClassificationAndVarianceTests.cs`.
 
@@ -781,7 +781,7 @@ Required route values fill identical typed properties; conflicting body duplicat
 - **Native facts:** `AccessRemediationExceptionRecorded`.
 - **Original response:** `{"mode":"immediate_original_result","responseType":"AccessRemediationExceptionView","firstHttpStatus":200,"terminalResultType":"AccessRemediationExceptionView"}`.
 - **Owner protocols:** Campaign item and atomic bulk decision.
-- **Preserved source validation:** [src/Compliance.Common/Features/AccessReviews/ExemptAccessRemediation.cs](../../../../src/Compliance.Common/Features/AccessReviews/ExemptAccessRemediation.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/AccessReviews/ExemptAccessRemediation.cs](../../../../src/Compliance.Common/Features/AccessReviews/Commands/ExemptAccessRemediation.cs).
 - **Selected changes:** Add required CommandId.
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: `test/Compliance.Tests/Features/AccessReviews/AccessRemediationTests.cs`, `test/Compliance.Tests/Features/AccessReviews/PersonalAccessReviewTransportTests.cs`, `test/Compliance.Tests/Features/Work/FitzAccessReviewCampaignWorkItemDirectoryTests.cs`.
 
@@ -795,7 +795,7 @@ Required route values fill identical typed properties; conflicting body duplicat
 - **Native facts:** `AccessPopulationExceptionRecorded`.
 - **Original response:** `{"mode":"immediate_original_result","responseType":"AccessPopulationExceptionView","firstHttpStatus":200,"terminalResultType":"AccessPopulationExceptionView"}`.
 - **Owner protocols:** Expectation succession and population exceptions.
-- **Preserved source validation:** [src/Compliance.Common/Features/AccessReviews/ExemptMissingAccessPopulation.cs](../../../../src/Compliance.Common/Features/AccessReviews/ExemptMissingAccessPopulation.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/AccessReviews/ExemptMissingAccessPopulation.cs](../../../../src/Compliance.Common/Features/AccessReviews/Commands/ExemptMissingAccessPopulation.cs).
 - **Selected changes:** Add required ExceptionId. Rename ExpectedLedgerRevision to ExpectedRevision and compare the new target owner revision.
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: `test/Compliance.Tests/Features/AccessReviews/PersonalAccessReviewTransportTests.cs`.
 
@@ -809,7 +809,7 @@ Required route values fill identical typed properties; conflicting body duplicat
 - **Native facts:** `ApplicationImportRetirementProposalSealed`.
 - **Original response:** `{"mode":"immediate_original_result","responseType":"Unit","firstHttpStatus":200,"terminalResultType":"Unit"}`.
 - **Owner protocols:** Complete batch application and publication.
-- **Preserved source validation:** [src/Compliance.Common/Features/Applications/FreezeApplicationImportOmissionProposal.cs](../../../../src/Compliance.Common/Features/Applications/FreezeApplicationImportOmissionProposal.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/Applications/FreezeApplicationImportOmissionProposal.cs](../../../../src/Compliance.Common/Features/Applications/Commands/FreezeApplicationImportOmissionProposal.cs).
 - **Selected changes:** Add required CommandId. Rename ExpectedBatchRevision to ExpectedRevision and compare the new target owner revision.
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: `test/Compliance.Tests/Features/Applications/ApplicationImportOmissionConsumerTests.cs`.
 
@@ -823,7 +823,7 @@ Required route values fill identical typed properties; conflicting body duplicat
 - **Native facts:** `EvidenceRequestFulfilled`.
 - **Original response:** `{"mode":"immediate_original_result","responseType":"EvidenceRequestView","firstHttpStatus":200,"terminalResultType":"EvidenceRequestView"}`.
 - **Owner protocols:** Independent evidence fulfilment.
-- **Preserved source validation:** [src/Compliance.Common/Features/Evidence/FulfilEvidenceRequest.cs](../../../../src/Compliance.Common/Features/Evidence/FulfilEvidenceRequest.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/Evidence/FulfilEvidenceRequest.cs](../../../../src/Compliance.Common/Features/Evidence/Commands/FulfilEvidenceRequest.cs).
 - **Selected changes:** Add required CommandId.
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: `test/Compliance.Tests/Features/Evidence/EvidenceRequestHandlerTests.cs`.
 
@@ -837,7 +837,7 @@ Required route values fill identical typed properties; conflicting body duplicat
 - **Native facts:** Process CAS only..
 - **Original response:** `{"mode":"internal","responseType":"AuditPopulationExportReceipt","firstHttpStatus":null,"terminalResultType":"AuditPopulationExportReceipt"}`.
 - **Owner protocols:** Retention basis and authoritative legal-hold barrier.
-- **Preserved source validation:** [src/Compliance.Common/Features/AuditPopulations/GenerateAuditPopulationExport.cs](../../../../src/Compliance.Common/Features/AuditPopulations/GenerateAuditPopulationExport.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/AuditPopulations/GenerateAuditPopulationExport.cs](../../../../src/Compliance.Common/Features/AuditPopulations/Commands/GenerateAuditPopulationExport.cs).
 - **Selected changes:** Add required CommandId.
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: `test/Compliance.Tests/Features/AuditPopulations/GenerateAuditPopulationExportHandlerTests.cs`.
 
@@ -851,7 +851,7 @@ Required route values fill identical typed properties; conflicting body duplicat
 - **Native facts:** Process CAS only..
 - **Original response:** `{"mode":"internal","responseType":"Unit","firstHttpStatus":null,"terminalResultType":"Unit"}`.
 - **Owner protocols:** Versioned description and independent export.
-- **Preserved source validation:** [src/Compliance.Common/Features/SystemDescription/GenerateSystemDescriptionExport.cs](../../../../src/Compliance.Common/Features/SystemDescription/GenerateSystemDescriptionExport.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/SystemDescription/GenerateSystemDescriptionExport.cs](../../../../src/Compliance.Common/Features/SystemDescription/Commands/GenerateSystemDescriptionExport.cs).
 - **Selected changes:** Add required CommandId.
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: `test/Compliance.Tests/Features/SystemDescription/SystemDescriptionCommandHandlerTests.cs`.
 
@@ -865,7 +865,7 @@ Required route values fill identical typed properties; conflicting body duplicat
 - **Native facts:** `TenantMemberInvited`.
 - **Original response:** `{"mode":"immediate_original_result","responseType":"Unit","firstHttpStatus":200,"terminalResultType":"Unit"}`.
 - **Owner protocols:** Mailbox generation, invitation and delivery.
-- **Preserved source validation:** [src/Compliance.Common/Features/Tenants/InviteGuestConsultant.cs](../../../../src/Compliance.Common/Features/Tenants/InviteGuestConsultant.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/Tenants/InviteGuestConsultant.cs](../../../../src/Compliance.Common/Features/Tenants/Commands/InviteGuestConsultant.cs).
 - **Selected changes:** Add required InvitationId.
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: `test/Compliance.Tests/Features/AccessControl/RbacManagementAuthorizerTests.cs`, `test/Compliance.Tests/Features/Tenants/InviteGuestConsultantHandlerTests.cs`.
 
@@ -879,7 +879,7 @@ Required route values fill identical typed properties; conflicting body duplicat
 - **Native facts:** `TenantMemberInvited`.
 - **Original response:** `{"mode":"immediate_original_result","responseType":"Unit","firstHttpStatus":200,"terminalResultType":"Unit"}`.
 - **Owner protocols:** Mailbox generation, invitation and delivery.
-- **Preserved source validation:** [src/Compliance.Common/Features/Tenants/InviteOrganizationMember.cs](../../../../src/Compliance.Common/Features/Tenants/InviteOrganizationMember.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/Tenants/InviteOrganizationMember.cs](../../../../src/Compliance.Common/Features/Tenants/Commands/InviteOrganizationMember.cs).
 - **Selected changes:** Add required InvitationId.
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: `test/Compliance.Tests/Features/Tenants/TenantInvitationConcurrencyTests.cs`.
 
@@ -893,7 +893,7 @@ Required route values fill identical typed properties; conflicting body duplicat
 - **Native facts:** `TenantMemberInvited`.
 - **Original response:** `{"mode":"immediate_original_result","responseType":"Unit","firstHttpStatus":200,"terminalResultType":"Unit"}`.
 - **Owner protocols:** Mailbox generation, invitation and delivery.
-- **Preserved source validation:** [src/Compliance.Common/Features/Tenants/InviteTenantMember.cs](../../../../src/Compliance.Common/Features/Tenants/InviteTenantMember.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/Tenants/InviteTenantMember.cs](../../../../src/Compliance.Common/Features/Tenants/Commands/InviteTenantMember.cs).
 - **Selected changes:** Add required InvitationId.
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: .
 
@@ -907,7 +907,7 @@ Required route values fill identical typed properties; conflicting body duplicat
 - **Native facts:** `AccessReviewCampaignLaunched`.
 - **Original response:** `{"mode":"immediate_original_result","responseType":"AccessReviewCampaignRegistration","firstHttpStatus":200,"terminalResultType":"AccessReviewCampaignRegistration"}`.
 - **Owner protocols:** Campaign item and atomic bulk decision.
-- **Preserved source validation:** [src/Compliance.Common/Features/AccessReviews/LaunchAccessReviewCampaign.cs](../../../../src/Compliance.Common/Features/AccessReviews/LaunchAccessReviewCampaign.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/AccessReviews/LaunchAccessReviewCampaign.cs](../../../../src/Compliance.Common/Features/AccessReviews/Commands/LaunchAccessReviewCampaign.cs).
 - **Selected changes:** Add required CampaignId.
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: `test/Compliance.Tests/Features/AccessReviews/AccessReviewFixture.cs`, `test/Compliance.Tests/Features/AccessReviews/AccessReviewInfrastructureTests.cs`, `test/Compliance.Tests/Features/AccessReviews/AccessReviewCampaignTests.cs`.
 
@@ -921,7 +921,7 @@ Required route values fill identical typed properties; conflicting body duplicat
 - **Native facts:** `PolicyCampaignLaunched`.
 - **Original response:** `{"mode":"immediate_original_result","responseType":"CampaignRegistration","firstHttpStatus":200,"terminalResultType":"CampaignRegistration"}`.
 - **Owner protocols:** Participant admission and campaign closure.
-- **Preserved source validation:** [src/Compliance.Common/Features/PolicyDistribution/LaunchPolicyCampaign.cs](../../../../src/Compliance.Common/Features/PolicyDistribution/LaunchPolicyCampaign.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/PolicyDistribution/LaunchPolicyCampaign.cs](../../../../src/Compliance.Common/Features/PolicyDistribution/Commands/LaunchPolicyCampaign.cs).
 - **Selected changes:** Add required CampaignId.
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: `test/Compliance.Tests/Features/PolicyDistribution/PolicyCampaignHandlerTests.cs`, `test/Compliance.Tests/Features/PolicyDistribution/PersonalCampaignWaiverTransportTests.cs`.
 
@@ -935,7 +935,7 @@ Required route values fill identical typed properties; conflicting body duplicat
 - **Native facts:** `PolicyCampaignLaunched`.
 - **Original response:** `{"mode":"immediate_original_result","responseType":"CampaignRegistration","firstHttpStatus":200,"terminalResultType":"CampaignRegistration"}`.
 - **Owner protocols:** Participant admission and campaign closure.
-- **Preserved source validation:** [src/Compliance.Common/Features/PolicyDistribution/LaunchTrainingCampaign.cs](../../../../src/Compliance.Common/Features/PolicyDistribution/LaunchTrainingCampaign.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/PolicyDistribution/LaunchTrainingCampaign.cs](../../../../src/Compliance.Common/Features/PolicyDistribution/Commands/LaunchTrainingCampaign.cs).
 - **Selected changes:** Add required CampaignId.
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: .
 
@@ -949,7 +949,7 @@ Required route values fill identical typed properties; conflicting body duplicat
 - **Native facts:** `FindingAcceptanceLinkedV2`.
 - **Original response:** `{"mode":"immediate_original_result","responseType":"FindingView","firstHttpStatus":200,"terminalResultType":"FindingView"}`.
 - **Owner protocols:** Action admission and finding closure.
-- **Preserved source validation:** [src/Compliance.Common/Features/Remediation/LinkFindingAcceptance.cs](../../../../src/Compliance.Common/Features/Remediation/LinkFindingAcceptance.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/Remediation/LinkFindingAcceptance.cs](../../../../src/Compliance.Common/Features/Remediation/Commands/LinkFindingAcceptance.cs).
 - **Selected changes:** Add required CommandId.
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: `test/Compliance.Tests/Features/Remediation/FindingTests.cs`.
 
@@ -963,7 +963,7 @@ Required route values fill identical typed properties; conflicting body duplicat
 - **Native facts:** `ProviderCoverageGapRiskAcceptanceAdmitted`.
 - **Original response:** `{"mode":"async_fixed_ack","responseType":"OperationAcceptedResponse","firstHttpStatus":202,"terminalResultType":"ProviderCoverageGapRegistration"}`.
 - **Owner protocols:** Independent assurance facts and exact source proofs.
-- **Preserved source validation:** [src/Compliance.Common/Features/Providers/LinkProviderCoverageGapRiskAcceptance.cs](../../../../src/Compliance.Common/Features/Providers/LinkProviderCoverageGapRiskAcceptance.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/Providers/LinkProviderCoverageGapRiskAcceptance.cs](../../../../src/Compliance.Common/Features/Providers/Commands/LinkProviderCoverageGapRiskAcceptance.cs).
 - **Selected changes:** Add required CommandId. Open-gap and duplicate (RiskId, AcceptanceId) checks linearize on gap admission. Child LinkId is this CommandId; materialization preserves admission time even if gap subsequently closes or acceptance later expires.
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: .
 
@@ -977,7 +977,7 @@ Required route values fill identical typed properties; conflicting body duplicat
 - **Native facts:** `AdvisorHandoffReadiedForReview`.
 - **Original response:** `{"mode":"immediate_original_result","responseType":"Unit","firstHttpStatus":200,"terminalResultType":"Unit"}`.
 - **Owner protocols:** Feedback admission versus handoff revocation.
-- **Preserved source validation:** [src/Compliance.Common/Features/AdvisorCollaboration/MarkAdvisorHandoffReadyForReview.cs](../../../../src/Compliance.Common/Features/AdvisorCollaboration/MarkAdvisorHandoffReadyForReview.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/AdvisorCollaboration/MarkAdvisorHandoffReadyForReview.cs](../../../../src/Compliance.Common/Features/AdvisorCollaboration/Commands/MarkAdvisorHandoffReadyForReview.cs).
 - **Selected changes:** Add required CommandId.
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: `test/Compliance.Tests/Features/Controls/ControlDraftAuthorizationTests.cs`, `test/Compliance.Tests/Features/AdvisorCollaboration/AdvisorHandoffCommandHandlerTests.cs`.
 
@@ -995,7 +995,7 @@ Disposable pre-release history replacement; delete this migration command, produ
 - **Native facts:** `AccessPopulationOpened`.
 - **Original response:** `{"mode":"immediate_original_result","responseType":"AccessPopulationRegistration","firstHttpStatus":200,"terminalResultType":"AccessPopulationRegistration"}`.
 - **Owner protocols:** Population acceptance and principal classification.
-- **Preserved source validation:** [src/Compliance.Common/Features/AccessReviews/OpenAccessPopulation.cs](../../../../src/Compliance.Common/Features/AccessReviews/OpenAccessPopulation.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/AccessReviews/OpenAccessPopulation.cs](../../../../src/Compliance.Common/Features/AccessReviews/Commands/OpenAccessPopulation.cs).
 - **Selected changes:** Add required PopulationId.
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: `test/Compliance.Tests/Features/AccessReviews/PersonalAccessReviewTransportTests.cs`, `test/Compliance.Tests/Features/AccessReviews/AccessPopulationHandlerTests.cs`, `test/Compliance.Tests/Features/AccessReviews/AccessReviewFixture.cs`, `test/Compliance.Tests/Features/AccessReviews/AttestAccessReviewWriteWallTests.cs`, `test/Compliance.Tests/Features/AccessReviews/AccessClassificationAndVarianceTests.cs`.
 
@@ -1009,7 +1009,7 @@ Disposable pre-release history replacement; delete this migration command, produ
 - **Native facts:** `ControlOccurrenceOpened`.
 - **Original response:** `{"mode":"immediate_original_result","responseType":"ControlOccurrenceView","firstHttpStatus":200,"terminalResultType":"ControlOccurrenceView"}`.
 - **Owner protocols:** Operating plan and business-window occurrence.
-- **Preserved source validation:** [src/Compliance.Common/Features/Operations/OpenControlOccurrence.cs](../../../../src/Compliance.Common/Features/Operations/OpenControlOccurrence.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/Operations/OpenControlOccurrence.cs](../../../../src/Compliance.Common/Features/Operations/Commands/OpenControlOccurrence.cs).
 - **Selected changes:** Add required CommandId. Add required owner-local ExpectedRevision; business Version remains an exact content version, not owner OCC. Resolve OccurrenceId deterministically from tenant/program/control/BusinessWindow across all generators. CommandId distinguishes authored opening attempts; trigger and date cannot create a second occurrence for the same window.
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: `test/Compliance.Tests/Features/Operations/ControlOperatingPlanTests.cs`, `test/Compliance.Tests/Features/Operations/ControlOccurrenceTests.cs`, `test/Compliance.Tests/Features/Work/FitzControlOccurrenceWorkItemDirectoryTests.cs`, `test/Compliance.Tests/Features/Work/WorkSourceCompositionTests.cs`, `test/Compliance.Tests/Features/Work/NotApplicableOccurrenceReviewTests.cs`.
 
@@ -1023,7 +1023,7 @@ Disposable pre-release history replacement; delete this migration command, produ
 - **Native facts:** `EvidenceRequestOpened`.
 - **Original response:** `{"mode":"immediate_original_result","responseType":"EvidenceRequestView","firstHttpStatus":200,"terminalResultType":"EvidenceRequestView"}`.
 - **Owner protocols:** Independent evidence fulfilment.
-- **Preserved source validation:** [src/Compliance.Common/Features/Evidence/OpenEvidenceRequest.cs](../../../../src/Compliance.Common/Features/Evidence/OpenEvidenceRequest.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/Evidence/OpenEvidenceRequest.cs](../../../../src/Compliance.Common/Features/Evidence/Commands/OpenEvidenceRequest.cs).
 - **Selected changes:** Add required EvidenceRequestId.
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: `test/Compliance.Tests/Features/Evidence/EvidenceRequestHandlerTests.cs`, `test/Compliance.Tests/Features/AccessControl/AttestManagementWriteWallTests.cs`, `test/Compliance.Tests/Features/Work/WorkQueueSearchTests.cs`, `test/Compliance.Tests/Features/Work/WorkQueueTests.cs`, `test/Compliance.Tests/Features/Work/WorkSourceCompositionTests.cs`.
 
@@ -1037,7 +1037,7 @@ Disposable pre-release history replacement; delete this migration command, produ
 - **Native facts:** `ArtifactLegalHoldPlaced`.
 - **Original response:** `{"mode":"immediate_original_result","responseType":"Unit","firstHttpStatus":200,"terminalResultType":"Unit"}`.
 - **Owner protocols:** Retention basis and authoritative legal-hold barrier.
-- **Preserved source validation:** [src/Compliance.Common/Features/Retention/PlaceArtifactLegalHold.cs](../../../../src/Compliance.Common/Features/Retention/PlaceArtifactLegalHold.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/Retention/PlaceArtifactLegalHold.cs](../../../../src/Compliance.Common/Features/Retention/Commands/PlaceArtifactLegalHold.cs).
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: `test/Compliance.Tests/Features/Retention/ArtifactRetentionHandlerTests.cs`, `test/Compliance.Tests/Features/Retention/AttestRetentionManagementWriteWallTests.cs`.
 
 ## PlanReadinessGap
@@ -1050,7 +1050,7 @@ Disposable pre-release history replacement; delete this migration command, produ
 - **Native facts:** `ReadinessGapPlanned`.
 - **Original response:** `{"mode":"immediate_original_result","responseType":"ReadinessGapPlanView","firstHttpStatus":200,"terminalResultType":"ReadinessGapPlanView"}`.
 - **Owner protocols:** Latest readiness and gap-plan decision seal.
-- **Preserved source validation:** [src/Compliance.Common/Features/Readiness/PlanReadinessGap.cs](../../../../src/Compliance.Common/Features/Readiness/PlanReadinessGap.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/Readiness/PlanReadinessGap.cs](../../../../src/Compliance.Common/Features/Readiness/Commands/PlanReadinessGap.cs).
 - **Selected changes:** Add required CommandId.
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: `test/Compliance.Tests/Features/Readiness/ReadinessAssessmentHandlerTests.cs`.
 
@@ -1064,7 +1064,7 @@ Disposable pre-release history replacement; delete this migration command, produ
 - **Native facts:** `AccessExpectationProposed`.
 - **Original response:** `{"mode":"immediate_original_result","responseType":"AccessExpectationView","firstHttpStatus":200,"terminalResultType":"AccessExpectationView"}`.
 - **Owner protocols:** Expectation succession and population exceptions.
-- **Preserved source validation:** [src/Compliance.Common/Features/AccessReviews/ProposeAccessExpectation.cs](../../../../src/Compliance.Common/Features/AccessReviews/ProposeAccessExpectation.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/AccessReviews/ProposeAccessExpectation.cs](../../../../src/Compliance.Common/Features/AccessReviews/Commands/ProposeAccessExpectation.cs).
 - **Selected changes:** Add required ExpectationId. Rename ExpectedLedgerRevision to ExpectedRevision and compare the new target owner revision.
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: `test/Compliance.Tests/Features/AccessReviews/PersonalAccessReviewTransportTests.cs`, `test/Compliance.Tests/Features/AccessReviews/AccessReviewFixture.cs`, `test/Compliance.Tests/Features/AccessReviews/AccessClassificationAndVarianceTests.cs`.
 
@@ -1078,7 +1078,7 @@ Disposable pre-release history replacement; delete this migration command, produ
 - **Native facts:** `ControlCriterionMappingProposed`.
 - **Original response:** `{"mode":"immediate_original_result","responseType":"ControlCriterionMappingRegistration","firstHttpStatus":200,"terminalResultType":"ControlCriterionMappingRegistration"}`.
 - **Owner protocols:** Per-tuple mapping succession.
-- **Preserved source validation:** [src/Compliance.Common/Features/ControlMappings/ProposeControlCriterionMapping.cs](../../../../src/Compliance.Common/Features/ControlMappings/ProposeControlCriterionMapping.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/ControlMappings/ProposeControlCriterionMapping.cs](../../../../src/Compliance.Common/Features/ControlMappings/Commands/ProposeControlCriterionMapping.cs).
 - **Selected changes:** Add required MappingId.
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: `test/Compliance.Tests/Features/ControlMappings/ControlCriterionMappingHandlerTests.cs`, `test/Compliance.Tests/Features/ControlMappings/PersonalMappingDecisionTransportTests.cs`.
 
@@ -1092,7 +1092,7 @@ Disposable pre-release history replacement; delete this migration command, produ
 - **Native facts:** `ControlOperatingPlanProposed`.
 - **Original response:** `{"mode":"immediate_original_result","responseType":"ControlOperatingPlanView","firstHttpStatus":200,"terminalResultType":"ControlOperatingPlanView"}`.
 - **Owner protocols:** Operating plan and business-window occurrence.
-- **Preserved source validation:** [src/Compliance.Common/Features/Operations/ProposeControlOperatingPlan.cs](../../../../src/Compliance.Common/Features/Operations/ProposeControlOperatingPlan.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/Operations/ProposeControlOperatingPlan.cs](../../../../src/Compliance.Common/Features/Operations/Commands/ProposeControlOperatingPlan.cs).
 - **Selected changes:** Add required PlanVersionId.
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: `test/Compliance.Tests/Features/Operations/OperationsFixture.cs`.
 
@@ -1106,7 +1106,7 @@ Disposable pre-release history replacement; delete this migration command, produ
 - **Native facts:** `CriterionNotApplicableProposed`.
 - **Original response:** `{"mode":"immediate_original_result","responseType":"CriterionApplicabilityRegistration","firstHttpStatus":200,"terminalResultType":"CriterionApplicabilityRegistration"}`.
 - **Owner protocols:** Per-criterion applicability line.
-- **Preserved source validation:** [src/Compliance.Common/Features/ControlMappings/ProposeCriterionNotApplicable.cs](../../../../src/Compliance.Common/Features/ControlMappings/ProposeCriterionNotApplicable.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/ControlMappings/ProposeCriterionNotApplicable.cs](../../../../src/Compliance.Common/Features/ControlMappings/Commands/ProposeCriterionNotApplicable.cs).
 - **Selected changes:** Add required DecisionId.
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: `test/Compliance.Tests/Features/ControlMappings/ControlCriterionMappingHandlerTests.cs`, `test/Compliance.Tests/Features/ControlMappings/PersonalMappingDecisionTransportTests.cs`, `test/Compliance.Tests/Features/AccessControl/AttestProgramManagementWriteWallTests.cs`.
 
@@ -1120,7 +1120,7 @@ Disposable pre-release history replacement; delete this migration command, produ
 - **Native facts:** `RiskControlTreatmentProposed`.
 - **Original response:** `{"mode":"immediate_original_result","responseType":"RiskControlTreatmentRegistration","firstHttpStatus":200,"terminalResultType":"RiskControlTreatmentRegistration"}`.
 - **Owner protocols:** Risk ownership, treatment lines and actions.
-- **Preserved source validation:** [src/Compliance.Common/Features/Risks/ProposeRiskControlTreatment.cs](../../../../src/Compliance.Common/Features/Risks/ProposeRiskControlTreatment.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/Risks/ProposeRiskControlTreatment.cs](../../../../src/Compliance.Common/Features/Risks/Commands/ProposeRiskControlTreatment.cs).
 - **Selected changes:** Add required CommandId.
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: `test/Compliance.Tests/Features/Risks/AttestRiskManagementWriteWallTests.cs`, `test/Compliance.Tests/Features/Risks/RiskGovernanceHandlerTests.cs`, `test/Compliance.Tests/Features/Risks/PersonalRiskSignoffTransportTests.cs`.
 
@@ -1134,7 +1134,7 @@ Disposable pre-release history replacement; delete this migration command, produ
 - **Native facts:** `ServiceEngagementMutationRecorded`.
 - **Original response:** `{"mode":"immediate_original_result","responseType":"ServiceEngagementView","firstHttpStatus":200,"terminalResultType":"ServiceEngagementView"}`.
 - **Owner protocols:** Service epoch and permanent practice commitments.
-- **Preserved source validation:** [src/Compliance.Common/Features/AccessControl/ProposeServiceEngagementStaff.cs](../../../../src/Compliance.Common/Features/AccessControl/ProposeServiceEngagementStaff.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/AccessControl/ProposeServiceEngagementStaff.cs](../../../../src/Compliance.Common/Features/AccessControl/Commands/ProposeServiceEngagementStaff.cs).
 - **Selected changes:** Add required CommandId. Rename ExpectedSequence to ExpectedRevision and compare the new target owner revision.
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: `test/Compliance.Tests/Features/AccessControl/IndependenceAssignmentBoundaryTests.cs`, `test/Compliance.Tests/Features/AccessControl/AttestServiceEngagementManagementWriteWallTests.cs`, `test/Compliance.Tests/Features/AccessControl/FirmOperationsCompositionTests.cs`.
 
@@ -1148,7 +1148,7 @@ Disposable pre-release history replacement; delete this migration command, produ
 - **Native facts:** `SystemDescriptionSuccessorProposed`.
 - **Original response:** `{"mode":"immediate_original_result","responseType":"Unit","firstHttpStatus":200,"terminalResultType":"Unit"}`.
 - **Owner protocols:** Versioned description and independent export.
-- **Preserved source validation:** [src/Compliance.Common/Features/SystemDescription/ProposeSystemDescriptionSuccessor.cs](../../../../src/Compliance.Common/Features/SystemDescription/ProposeSystemDescriptionSuccessor.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/SystemDescription/ProposeSystemDescriptionSuccessor.cs](../../../../src/Compliance.Common/Features/SystemDescription/Commands/ProposeSystemDescriptionSuccessor.cs).
 - **Selected changes:** Add required CommandId.
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: `test/Compliance.Tests/Features/SystemDescription/SystemDescriptionCommandHandlerTests.cs`.
 
@@ -1162,7 +1162,7 @@ Disposable pre-release history replacement; delete this migration command, produ
 - **Native facts:** `FindingRaisedV2`.
 - **Original response:** `{"mode":"immediate_original_result","responseType":"FindingRegistration","firstHttpStatus":200,"terminalResultType":"FindingRegistration"}`.
 - **Owner protocols:** Action admission and finding closure.
-- **Preserved source validation:** [src/Compliance.Common/Features/Remediation/RaiseFinding.cs](../../../../src/Compliance.Common/Features/Remediation/RaiseFinding.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/Remediation/RaiseFinding.cs](../../../../src/Compliance.Common/Features/Remediation/Commands/RaiseFinding.cs).
 - **Selected changes:** Add required FindingId.
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: `test/Compliance.Tests/Features/AccessControl/AttestProgramManagementWriteWallTests.cs`, `test/Compliance.Tests/Features/Operations/OperationsFixture.cs`.
 
@@ -1176,7 +1176,7 @@ Disposable pre-release history replacement; delete this migration command, produ
 - **Native facts:** `FindingRaisedV2`, `CorrectiveActionAdmitted`.
 - **Original response:** `{"mode":"internal","responseType":"Unit","firstHttpStatus":null,"terminalResultType":"Unit"}`.
 - **Owner protocols:** Action admission and finding closure.
-- **Preserved source validation:** [src/Compliance.Common/Features/Remediation/RaiseOccurrenceFinding.cs](../../../../src/Compliance.Common/Features/Remediation/RaiseOccurrenceFinding.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/Remediation/RaiseOccurrenceFinding.cs](../../../../src/Compliance.Common/Features/Remediation/Commands/RaiseOccurrenceFinding.cs).
 - **Selected changes:** When source kind is occurrence_review, preserve the default requested corrective action by atomically admitting its complete deterministic ActionId/content alongside FindingRaisedV2; materialize it independently. Failed/skipped attestation variants without requested action emit FindingRaisedV2 only.
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: `test/Compliance.Tests/Features/Remediation/OccurrenceFindingTests.cs`.
 
@@ -1190,7 +1190,7 @@ Disposable pre-release history replacement; delete this migration command, produ
 - **Native facts:** `RiskReassessmentTriggered`.
 - **Original response:** `{"mode":"internal","responseType":"Unit","firstHttpStatus":null,"terminalResultType":"Unit"}`.
 - **Owner protocols:** Risk ownership, treatment lines and actions.
-- **Preserved source validation:** [src/Compliance.Common/Features/Risks/RaiseRiskReassessmentTriggers.cs](../../../../src/Compliance.Common/Features/Risks/RaiseRiskReassessmentTriggers.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/Risks/RaiseRiskReassessmentTriggers.cs](../../../../src/Compliance.Common/Features/Risks/Commands/RaiseRiskReassessmentTriggers.cs).
 - **Selected changes:** Add required CommandId. Retain public type name during direct cutover but process exactly one RiskId per source-derived internal command; reactor owns complete fan-out.
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: `test/Compliance.Tests/Features/Risks/RiskGovernanceHandlerTests.cs`.
 
@@ -1204,7 +1204,7 @@ Disposable pre-release history replacement; delete this migration command, produ
 - **Native facts:** `AccessReviewResponsibilityReassigned`.
 - **Original response:** `{"mode":"immediate_original_result","responseType":"AccessReviewResponsibilityReassignmentView","firstHttpStatus":200,"terminalResultType":"AccessReviewResponsibilityReassignmentView"}`.
 - **Owner protocols:** Campaign item and atomic bulk decision.
-- **Preserved source validation:** [src/Compliance.Common/Features/AccessReviews/ReassignAccessReviewResponsibility.cs](../../../../src/Compliance.Common/Features/AccessReviews/ReassignAccessReviewResponsibility.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/AccessReviews/ReassignAccessReviewResponsibility.cs](../../../../src/Compliance.Common/Features/AccessReviews/Commands/ReassignAccessReviewResponsibility.cs).
 - **Selected changes:** Add required CommandId.
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: `test/Compliance.Tests/Features/AccessReviews/AccessReviewCampaignTests.cs`, `test/Compliance.Tests/Features/Work/FitzAccessReviewCampaignWorkItemDirectoryTests.cs`.
 
@@ -1218,7 +1218,7 @@ Disposable pre-release history replacement; delete this migration command, produ
 - **Native facts:** `PolicyCampaignAudienceAmended`.
 - **Original response:** `{"mode":"immediate_original_result","responseType":"CampaignReconciliationView","firstHttpStatus":200,"terminalResultType":"CampaignReconciliationView"}`.
 - **Owner protocols:** Participant admission and campaign closure.
-- **Preserved source validation:** [src/Compliance.Common/Features/PolicyDistribution/ReconcileCampaignAudience.cs](../../../../src/Compliance.Common/Features/PolicyDistribution/ReconcileCampaignAudience.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/PolicyDistribution/ReconcileCampaignAudience.cs](../../../../src/Compliance.Common/Features/PolicyDistribution/Commands/ReconcileCampaignAudience.cs).
 - **Selected changes:** Add required CommandId. Add required owner-local ExpectedRevision; business Version remains an exact content version, not owner OCC.
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: .
 
@@ -1232,7 +1232,7 @@ Disposable pre-release history replacement; delete this migration command, produ
 - **Native facts:** `AccessDecisionsRecorded`.
 - **Original response:** `{"mode":"immediate_original_result","responseType":"AccessDecisionView","firstHttpStatus":200,"terminalResultType":"AccessDecisionView"}`.
 - **Owner protocols:** Campaign item and atomic bulk decision.
-- **Preserved source validation:** [src/Compliance.Common/Features/AccessReviews/RecordAccessDecision.cs](../../../../src/Compliance.Common/Features/AccessReviews/RecordAccessDecision.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/AccessReviews/RecordAccessDecision.cs](../../../../src/Compliance.Common/Features/AccessReviews/Commands/RecordAccessDecision.cs).
 - **Selected changes:** Add required CommandId.
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: `test/Compliance.Tests/Features/AccessReviews/AccessRemediationTests.cs`, `test/Compliance.Tests/Features/AccessReviews/PersonalAccessReviewTransportTests.cs`, `test/Compliance.Tests/Features/AccessReviews/RestrictedAccessReviewCampaignReadTests.cs`, `test/Compliance.Tests/Features/AccessReviews/AttestAccessReviewWriteWallTests.cs`, `test/Compliance.Tests/Features/AccessReviews/AccessReviewCampaignTests.cs`, `test/Compliance.Tests/Features/Work/FitzAccessReviewCampaignWorkItemDirectoryTests.cs`, `test/Compliance.Tests/Features/Work/WorkSourceCompositionTests.cs`.
 
@@ -1246,7 +1246,7 @@ Disposable pre-release history replacement; delete this migration command, produ
 - **Native facts:** `AccessPopulationFactsRecorded`.
 - **Original response:** `{"mode":"immediate_original_result","responseType":"AccessPopulationRegistration","firstHttpStatus":200,"terminalResultType":"AccessPopulationRegistration"}`.
 - **Owner protocols:** Population acceptance and principal classification.
-- **Preserved source validation:** [src/Compliance.Common/Features/AccessReviews/RecordAccessPopulationFacts.cs](../../../../src/Compliance.Common/Features/AccessReviews/RecordAccessPopulationFacts.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/AccessReviews/RecordAccessPopulationFacts.cs](../../../../src/Compliance.Common/Features/AccessReviews/Commands/RecordAccessPopulationFacts.cs).
 - **Selected changes:** Add required CommandId.
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: `test/Compliance.Tests/Features/AccessReviews/RestrictedAccessPopulationReadTests.cs`, `test/Compliance.Tests/Features/AccessReviews/PersonalAccessReviewTransportTests.cs`, `test/Compliance.Tests/Features/AccessReviews/AccessPopulationHandlerTests.cs`, `test/Compliance.Tests/Features/AccessReviews/AccessReviewFixture.cs`.
 
@@ -1260,7 +1260,7 @@ Disposable pre-release history replacement; delete this migration command, produ
 - **Native facts:** `AccessRemediationChangeRecorded`.
 - **Original response:** `{"mode":"immediate_original_result","responseType":"AccessRemediationChangeView","firstHttpStatus":200,"terminalResultType":"AccessRemediationChangeView"}`.
 - **Owner protocols:** Campaign item and atomic bulk decision.
-- **Preserved source validation:** [src/Compliance.Common/Features/AccessReviews/RecordAccessRemediationChange.cs](../../../../src/Compliance.Common/Features/AccessReviews/RecordAccessRemediationChange.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/AccessReviews/RecordAccessRemediationChange.cs](../../../../src/Compliance.Common/Features/AccessReviews/Commands/RecordAccessRemediationChange.cs).
 - **Selected changes:** Add required CommandId.
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: `test/Compliance.Tests/Features/AccessReviews/AccessRemediationTests.cs`, `test/Compliance.Tests/Features/AccessReviews/AccessReviewCampaignTests.cs`, `test/Compliance.Tests/Features/Work/FitzAccessReviewCampaignWorkItemDirectoryTests.cs`, `test/Compliance.Tests/Features/Work/WorkSourceCompositionTests.cs`.
 
@@ -1274,7 +1274,7 @@ Disposable pre-release history replacement; delete this migration command, produ
 - **Native facts:** `AdvisorFeedbackAdmitted`.
 - **Original response:** `{"mode":"async_fixed_ack","responseType":"OperationAcceptedResponse","firstHttpStatus":202,"terminalResultType":"Unit"}`.
 - **Owner protocols:** Feedback admission versus handoff revocation.
-- **Preserved source validation:** [src/Compliance.Common/Features/AdvisorCollaboration/RecordAdvisorFeedback.cs](../../../../src/Compliance.Common/Features/AdvisorCollaboration/RecordAdvisorFeedback.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/AdvisorCollaboration/RecordAdvisorFeedback.cs](../../../../src/Compliance.Common/Features/AdvisorCollaboration/Commands/RecordAdvisorFeedback.cs).
 - **Selected changes:** Include init-only authored scope and field-presence semantics omitted by the earlier positional-record scan. JsonIgnore presence flags are adapter-owned and canonicalized explicitly; never serialize/replay them as if false meant omitted.
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: `test/Compliance.Tests/Features/Readiness/AdvisoryReadinessNoteIndependenceTests.cs`, `test/Compliance.Tests/Features/AdvisorCollaboration/AdvisorHandoffCommandHandlerTests.cs`.
 
@@ -1292,7 +1292,7 @@ Remove this overlapping compatibility command/handler/route/MCP tool and Applica
 - **Native facts:** `ArtifactRetentionBasisRecorded`.
 - **Original response:** `{"mode":"immediate_original_result","responseType":"Unit","firstHttpStatus":200,"terminalResultType":"Unit"}`.
 - **Owner protocols:** Retention basis and authoritative legal-hold barrier.
-- **Preserved source validation:** [src/Compliance.Common/Features/Retention/RecordArtifactRetentionBasis.cs](../../../../src/Compliance.Common/Features/Retention/RecordArtifactRetentionBasis.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/Retention/RecordArtifactRetentionBasis.cs](../../../../src/Compliance.Common/Features/Retention/Commands/RecordArtifactRetentionBasis.cs).
 - **Selected changes:** Add required CommandId.
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: `test/Compliance.Tests/Features/Retention/ArtifactRetentionHandlerTests.cs`, `test/Compliance.Tests/Features/Retention/AttestRetentionManagementWriteWallTests.cs`.
 
@@ -1306,7 +1306,7 @@ Remove this overlapping compatibility command/handler/route/MCP tool and Applica
 - **Native facts:** `AssuranceReportRecorded`.
 - **Original response:** `{"mode":"immediate_original_result","responseType":"AssuranceReportRegistration","firstHttpStatus":200,"terminalResultType":"AssuranceReportRegistration"}`.
 - **Owner protocols:** Independent assurance facts and exact source proofs.
-- **Preserved source validation:** [src/Compliance.Common/Features/Providers/RecordAssuranceReport.cs](../../../../src/Compliance.Common/Features/Providers/RecordAssuranceReport.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/Providers/RecordAssuranceReport.cs](../../../../src/Compliance.Common/Features/Providers/Commands/RecordAssuranceReport.cs).
 - **Selected changes:** Add required ReportId.
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: `test/Compliance.Tests/Features/Providers/PersonalProviderReviewTransportTests.cs`, `test/Compliance.Tests/Features/Providers/ProviderAssurancePipelineTests.cs`.
 
@@ -1321,7 +1321,7 @@ Remove this overlapping compatibility command/handler/route/MCP tool and Applica
 - **Resolved intent:** `PackageBuildIntent`.
 - **Original response:** `{"mode":"internal","responseType":"Unit","firstHttpStatus":null,"terminalResultType":"Unit"}`.
 - **Owner protocols:** Manifest validation, immutable build and recipient delivery.
-- **Preserved source validation:** [src/Compliance.Common/Features/AuditPackages/RecordAuditPackageBuildResult.cs](../../../../src/Compliance.Common/Features/AuditPackages/RecordAuditPackageBuildResult.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/AuditPackages/RecordAuditPackageBuildResult.cs](../../../../src/Compliance.Common/Features/AuditPackages/Commands/RecordAuditPackageBuildResult.cs).
 - **Selected changes:** Add required CommandId. Use the exact trusted internal receiver signature from the reactor catalog; Source is concretely typed and carries the accepted business fact, never a process-stage pseudo-event.
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: `test/Compliance.Tests/Features/AuditPackages/RecordAuditPackageBuildResultHandlerTests.cs`.
 
@@ -1335,7 +1335,7 @@ Remove this overlapping compatibility command/handler/route/MCP tool and Applica
 - **Native facts:** `AuditPackageDeliveryAdmitted`.
 - **Original response:** `{"mode":"async_fixed_ack","responseType":"OperationAcceptedResponse","firstHttpStatus":202,"terminalResultType":"Unit"}`.
 - **Owner protocols:** Manifest validation, immutable build and recipient delivery.
-- **Preserved source validation:** [src/Compliance.Common/Features/AuditPackages/RecordAuditPackageDelivery.cs](../../../../src/Compliance.Common/Features/AuditPackages/RecordAuditPackageDelivery.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/AuditPackages/RecordAuditPackageDelivery.cs](../../../../src/Compliance.Common/Features/AuditPackages/Commands/RecordAuditPackageDelivery.cs).
 - **Selected changes:** Retain personal HTTP actor and authored DeliveredAt/DeliveryReference. Verify deterministic DeliveryId and current exact archive/manifest/validation/recipient approval before admission. Freeze delivered version at this admission. Child AuditPackageDelivery materializes the accepted record; no automated send or provider callback is introduced.
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: `test/Compliance.Tests/Features/AuditPackages/AuditPackageCommandHandlerTests.cs`.
 
@@ -1349,7 +1349,7 @@ Remove this overlapping compatibility command/handler/route/MCP tool and Applica
 - **Native facts:** `AuditorRequestRecorded`.
 - **Original response:** `{"mode":"immediate_original_result","responseType":"Unit","firstHttpStatus":200,"terminalResultType":"Unit"}`.
 - **Owner protocols:** Response/comment admission and request resolution.
-- **Preserved source validation:** [src/Compliance.Common/Features/AuditorRequests/RecordAuditorRequest.cs](../../../../src/Compliance.Common/Features/AuditorRequests/RecordAuditorRequest.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/AuditorRequests/RecordAuditorRequest.cs](../../../../src/Compliance.Common/Features/AuditorRequests/Commands/RecordAuditorRequest.cs).
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: `test/Compliance.Tests/Features/AuditorRequests/AuditorRequestCommandHandlerTests.cs`.
 
 ## RecordAuditorRequestComment
@@ -1362,7 +1362,7 @@ Remove this overlapping compatibility command/handler/route/MCP tool and Applica
 - **Native facts:** `AuditorCommentAdmitted`.
 - **Original response:** `{"mode":"async_fixed_ack","responseType":"OperationAcceptedResponse","firstHttpStatus":202,"terminalResultType":"Unit"}`.
 - **Owner protocols:** Response/comment admission and request resolution.
-- **Preserved source validation:** [src/Compliance.Common/Features/AuditorRequests/RecordAuditorRequestComment.cs](../../../../src/Compliance.Common/Features/AuditorRequests/RecordAuditorRequestComment.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/AuditorRequests/RecordAuditorRequestComment.cs](../../../../src/Compliance.Common/Features/AuditorRequests/Commands/RecordAuditorRequestComment.cs).
 - **Selected changes:** Add required CommentId.
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: `test/Compliance.Tests/Features/AuditorRequests/AuditorRequestCommandHandlerTests.cs`.
 
@@ -1376,7 +1376,7 @@ Remove this overlapping compatibility command/handler/route/MCP tool and Applica
 - **Native facts:** `AuditorResponseDispositionRecorded`.
 - **Original response:** `{"mode":"immediate_original_result","responseType":"Unit","firstHttpStatus":200,"terminalResultType":"Unit"}`.
 - **Owner protocols:** Response/comment admission and request resolution.
-- **Preserved source validation:** [src/Compliance.Common/Features/AuditorRequests/RecordAuditorResponseDisposition.cs](../../../../src/Compliance.Common/Features/AuditorRequests/RecordAuditorResponseDisposition.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/AuditorRequests/RecordAuditorResponseDisposition.cs](../../../../src/Compliance.Common/Features/AuditorRequests/Commands/RecordAuditorResponseDisposition.cs).
 - **Selected changes:** Add required CommandId. Add required owner-local ExpectedRevision; business Version remains an exact content version, not owner OCC.
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: `test/Compliance.Tests/Features/AuditorRequests/AuditorResponseCommandHandlerTests.cs`.
 
@@ -1390,7 +1390,7 @@ Remove this overlapping compatibility command/handler/route/MCP tool and Applica
 - **Native facts:** `AccessReviewDecisionBatchAdmitted`.
 - **Original response:** `{"mode":"async_fixed_ack","responseType":"OperationAcceptedResponse","firstHttpStatus":202,"terminalResultType":"BulkAccessDecisionResult"}`.
 - **Owner protocols:** Campaign item and atomic bulk decision.
-- **Preserved source validation:** [src/Compliance.Common/Features/AccessReviews/RecordBulkAccessDecision.cs](../../../../src/Compliance.Common/Features/AccessReviews/RecordBulkAccessDecision.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/AccessReviews/RecordBulkAccessDecision.cs](../../../../src/Compliance.Common/Features/AccessReviews/Commands/RecordBulkAccessDecision.cs).
 - **Selected changes:** Add required DecisionBatchId. Add required owner-local ExpectedCampaignRevision; business Version remains an exact content version, not owner OCC. Admit complete batch intent on the campaign before child creation, so completion observes every admitted bulk operation. Preview binds exact selected item heads; child batch starts at revision zero.
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: `test/Compliance.Tests/Features/AccessReviews/PersonalAccessReviewTransportTests.cs`, `test/Compliance.Tests/Features/AccessReviews/AttestAccessReviewWriteWallTests.cs`, `test/Compliance.Tests/Features/AccessReviews/AccessReviewCampaignTests.cs`.
 
@@ -1404,7 +1404,7 @@ Remove this overlapping compatibility command/handler/route/MCP tool and Applica
 - **Native facts:** `ControlEvaluationStepRecorded`.
 - **Original response:** `{"mode":"immediate_original_result","responseType":"ControlEvaluationView","firstHttpStatus":200,"terminalResultType":"ControlEvaluationView"}`.
 - **Owner protocols:** Independent evaluation and retest.
-- **Preserved source validation:** [src/Compliance.Common/Features/Evaluations/RecordControlEvaluationStep.cs](../../../../src/Compliance.Common/Features/Evaluations/RecordControlEvaluationStep.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/Evaluations/RecordControlEvaluationStep.cs](../../../../src/Compliance.Common/Features/Evaluations/Commands/RecordControlEvaluationStep.cs).
 - **Selected changes:** Add required CommandId.
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: `test/Compliance.Tests/Features/Evaluations/ControlEvaluationTests.cs`, `test/Compliance.Tests/Features/Evaluations/EvaluationDeviationFindingTests.cs`, `test/Compliance.Tests/Features/Work/ControlEvaluationWorkTests.cs`, `test/Compliance.Tests/Features/Work/WorkSourceCompositionTests.cs`, `test/Compliance.Tests/Features/Work/ReviewerWorkAuthorityTests.cs`.
 
@@ -1418,7 +1418,7 @@ Remove this overlapping compatibility command/handler/route/MCP tool and Applica
 - **Native facts:** `DirectoryIndependenceReevaluated`.
 - **Original response:** `{"mode":"internal","responseType":"Unit","firstHttpStatus":null,"terminalResultType":"Unit"}`.
 - **Owner protocols:** Service epoch and permanent practice commitments.
-- **Preserved source validation:** [src/Compliance.Core/Features/AccessControl/RecordDirectoryIndependenceReevaluation.cs](../../../../src/Compliance.Core/Features/AccessControl/RecordDirectoryIndependenceReevaluation.cs).
+- **Preserved source validation:** [src/Compliance.Core/Features/AccessControl/RecordDirectoryIndependenceReevaluation.cs](../../../../src/Compliance.Core/Features/AccessControl/Models/RecordDirectoryIndependenceReevaluation.cs).
 - **Selected changes:** Add required CommandId. Target one engagement acceptance pair; discovery/fan-out belongs to the reactor, not a tenant-wide mutation.
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: `test/Compliance.Tests/Features/AccessControl/DirectoryIndependenceReevaluationTests.cs`.
 
@@ -1432,7 +1432,7 @@ Remove this overlapping compatibility command/handler/route/MCP tool and Applica
 - **Native facts:** `ProfessionalDutyChangeAccepted`.
 - **Original response:** `{"mode":"async_fixed_ack","responseType":"OperationAcceptedResponse","firstHttpStatus":202,"terminalResultType":"FirmProfessionalDutyDesignationView"}`.
 - **Owner protocols:** Signed assertion claims and duty-scope designation.
-- **Preserved source validation:** [src/Compliance.Common/Features/AccessControl/RecordFirmProfessionalDutyDesignation.cs](../../../../src/Compliance.Common/Features/AccessControl/RecordFirmProfessionalDutyDesignation.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/AccessControl/RecordFirmProfessionalDutyDesignation.cs](../../../../src/Compliance.Common/Features/AccessControl/Commands/RecordFirmProfessionalDutyDesignation.cs).
 - **Selected changes:** Rename ExpectedSequence to ExpectedRevision and compare the new target owner revision. AssertionId is required and must equal the verified signed assertion identity; DesignationId cannot identify repeated refresh/revocation assertions.
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: `test/Compliance.Tests/Features/AccessControl/ProfessionalDutyGovernanceCompositionTests.cs`.
 
@@ -1446,7 +1446,7 @@ Remove this overlapping compatibility command/handler/route/MCP tool and Applica
 - **Native facts:** `LocationChangeAccepted`.
 - **Original response:** `{"mode":"async_fixed_ack","responseType":"OperationAcceptedResponse","firstHttpStatus":202,"terminalResultType":"LocationRegistration"}`.
 - **Owner protocols:** Name claims and record lifecycle.
-- **Preserved source validation:** [src/Compliance.Common/Features/TechnologyInventory/RecordLocation.cs](../../../../src/Compliance.Common/Features/TechnologyInventory/RecordLocation.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/TechnologyInventory/RecordLocation.cs](../../../../src/Compliance.Common/Features/TechnologyInventory/Commands/RecordLocation.cs).
 - **Selected changes:** Add required LocationId.
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: .
 
@@ -1460,7 +1460,7 @@ Remove this overlapping compatibility command/handler/route/MCP tool and Applica
 - **Native facts:** `NonattestServiceRecorded`.
 - **Original response:** `{"mode":"immediate_original_result","responseType":"NonattestServiceView","firstHttpStatus":200,"terminalResultType":"NonattestServiceView"}`.
 - **Owner protocols:** Service epoch and permanent practice commitments.
-- **Preserved source validation:** [src/Compliance.Common/Features/AccessControl/RecordNonattestService.cs](../../../../src/Compliance.Common/Features/AccessControl/RecordNonattestService.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/AccessControl/RecordNonattestService.cs](../../../../src/Compliance.Common/Features/AccessControl/Commands/RecordNonattestService.cs).
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: `test/Compliance.Tests/Features/AccessControl/AttestServiceEngagementManagementWriteWallTests.cs`, `test/Compliance.Tests/Features/AccessControl/SourceIndependenceReevaluationTests.cs`, `test/Compliance.Tests/Features/AccessControl/FirmOperationsCompositionTests.cs`.
 
 ## RecordOperationalProcess
@@ -1473,7 +1473,7 @@ Remove this overlapping compatibility command/handler/route/MCP tool and Applica
 - **Native facts:** `OperationalProcessChangeAccepted`.
 - **Original response:** `{"mode":"async_fixed_ack","responseType":"OperationAcceptedResponse","firstHttpStatus":202,"terminalResultType":"OperationalProcessRegistration"}`.
 - **Owner protocols:** Name claims and record lifecycle.
-- **Preserved source validation:** [src/Compliance.Common/Features/TechnologyInventory/RecordOperationalProcess.cs](../../../../src/Compliance.Common/Features/TechnologyInventory/RecordOperationalProcess.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/TechnologyInventory/RecordOperationalProcess.cs](../../../../src/Compliance.Common/Features/TechnologyInventory/Commands/RecordOperationalProcess.cs).
 - **Selected changes:** Add required OperationalProcessId.
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: .
 
@@ -1487,7 +1487,7 @@ Remove this overlapping compatibility command/handler/route/MCP tool and Applica
 - **Native facts:** `EngagementPersonalDecisionAdmitted`.
 - **Original response:** `{"mode":"async_fixed_ack","responseType":"OperationAcceptedResponse","firstHttpStatus":202,"terminalResultType":"PartnerIndependenceEvaluationView"}`.
 - **Owner protocols:** Service epoch and permanent practice commitments.
-- **Preserved source validation:** [src/Compliance.Common/Features/AccessControl/RecordPartnerIndependenceEvaluation.cs](../../../../src/Compliance.Common/Features/AccessControl/RecordPartnerIndependenceEvaluation.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/AccessControl/RecordPartnerIndependenceEvaluation.cs](../../../../src/Compliance.Common/Features/AccessControl/Commands/RecordPartnerIndependenceEvaluation.cs).
 - **Selected changes:** Drop obsolete tenant ExpectedSequence/ExpectedRevision. Admit personal decision against ExpectedEngagementRevision and ExpectedServiceEpoch, pin engagement content, then materialize after exact source uses. Personal records remain independently owned; admission alone does not approve production acceptance.
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: `test/Compliance.Tests/Features/AccessControl/PartnerIndependenceEvaluationTests.cs`, `test/Compliance.Tests/Features/AccessControl/ServiceEngagementAcceptanceTests.cs`, `test/Compliance.Tests/Features/AccessControl/SourceIndependenceReevaluationTests.cs`.
 
@@ -1501,7 +1501,7 @@ Remove this overlapping compatibility command/handler/route/MCP tool and Applica
 - **Native facts:** `ProviderChangeAccepted`.
 - **Original response:** `{"mode":"async_fixed_ack","responseType":"OperationAcceptedResponse","firstHttpStatus":202,"terminalResultType":"ProviderRegistration"}`.
 - **Owner protocols:** Name claims and record lifecycle.
-- **Preserved source validation:** [src/Compliance.Common/Features/Providers/RecordProvider.cs](../../../../src/Compliance.Common/Features/Providers/RecordProvider.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/Providers/RecordProvider.cs](../../../../src/Compliance.Common/Features/Providers/Commands/RecordProvider.cs).
 - **Selected changes:** Add required ProviderId.
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: `test/Compliance.Tests/Features/Providers/ProviderReferenceTests.cs`, `test/Compliance.Tests/Features/Providers/PersonalProviderReviewTransportTests.cs`, `test/Compliance.Tests/Features/Providers/AttestProviderManagementWriteWallTests.cs`, `test/Compliance.Tests/Features/Providers/ProviderWriteAuthorizationProbeHandler.cs`, `test/Compliance.Tests/Features/Providers/ProviderAuthorizationTests.cs`.
 
@@ -1515,7 +1515,7 @@ Remove this overlapping compatibility command/handler/route/MCP tool and Applica
 - **Native facts:** `ProviderCoverageGapRecorded`.
 - **Original response:** `{"mode":"immediate_original_result","responseType":"ProviderCoverageGapRegistration","firstHttpStatus":200,"terminalResultType":"ProviderCoverageGapRegistration"}`.
 - **Owner protocols:** Independent assurance facts and exact source proofs.
-- **Preserved source validation:** [src/Compliance.Common/Features/Providers/RecordProviderCoverageGap.cs](../../../../src/Compliance.Common/Features/Providers/RecordProviderCoverageGap.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/Providers/RecordProviderCoverageGap.cs](../../../../src/Compliance.Common/Features/Providers/Commands/RecordProviderCoverageGap.cs).
 - **Selected changes:** Add required GapId.
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: .
 
@@ -1529,7 +1529,7 @@ Remove this overlapping compatibility command/handler/route/MCP tool and Applica
 - **Native facts:** `ProviderReviewRequested`.
 - **Original response:** `{"mode":"async_fixed_ack","responseType":"OperationAcceptedResponse","firstHttpStatus":202,"terminalResultType":"ProviderReviewRegistration"}`.
 - **Owner protocols:** Independent assurance facts and exact source proofs.
-- **Preserved source validation:** [src/Compliance.Common/Features/Providers/RecordProviderReview.cs](../../../../src/Compliance.Common/Features/Providers/RecordProviderReview.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/Providers/RecordProviderReview.cs](../../../../src/Compliance.Common/Features/Providers/Commands/RecordProviderReview.cs).
 - **Selected changes:** Add required ReviewId.
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: `test/Compliance.Tests/Features/Providers/PersonalProviderReviewTransportTests.cs`, `test/Compliance.Tests/Features/Providers/ProviderAssurancePipelineTests.cs`.
 
@@ -1543,7 +1543,7 @@ Remove this overlapping compatibility command/handler/route/MCP tool and Applica
 - **Native facts:** `AuditorSampleSelectionAdmitted`.
 - **Original response:** `{"mode":"async_fixed_ack","responseType":"OperationAcceptedResponse","firstHttpStatus":202,"terminalResultType":"Unit"}`.
 - **Owner protocols:** Response/comment admission and request resolution.
-- **Preserved source validation:** [src/Compliance.Common/Features/AuditorRequests/RecordSampleSelection.cs](../../../../src/Compliance.Common/Features/AuditorRequests/RecordSampleSelection.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/AuditorRequests/RecordSampleSelection.cs](../../../../src/Compliance.Common/Features/AuditorRequests/Commands/RecordSampleSelection.cs).
 - **Selected changes:** Admit exact immutable selection on the open request before materializing child. Amendment keeps prior population identity and strictly later population version. Remove the accidental comparison of request revision to child zero.
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: `test/Compliance.Tests/Features/AuditorRequests/AuditorRequestTests.cs`, `test/Compliance.Tests/Features/AuditorRequests/SampleSelectionCommandHandlerTests.cs`.
 
@@ -1557,7 +1557,7 @@ Remove this overlapping compatibility command/handler/route/MCP tool and Applica
 - **Native facts:** `SystemDescriptionNoChangeRecorded`.
 - **Original response:** `{"mode":"immediate_original_result","responseType":"Unit","firstHttpStatus":200,"terminalResultType":"Unit"}`.
 - **Owner protocols:** Versioned description and independent export.
-- **Preserved source validation:** [src/Compliance.Common/Features/SystemDescription/RecordSystemDescriptionNoChangeDecision.cs](../../../../src/Compliance.Common/Features/SystemDescription/RecordSystemDescriptionNoChangeDecision.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/SystemDescription/RecordSystemDescriptionNoChangeDecision.cs](../../../../src/Compliance.Common/Features/SystemDescription/Commands/RecordSystemDescriptionNoChangeDecision.cs).
 - **Selected changes:** Add required CommandId. Add required owner-local ExpectedRevision; business Version remains an exact content version, not owner OCC.
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: `test/Compliance.Tests/Features/SystemDescription/SystemDescriptionCommandHandlerTests.cs`.
 
@@ -1571,7 +1571,7 @@ Remove this overlapping compatibility command/handler/route/MCP tool and Applica
 - **Native facts:** `PolicyParticipantResultAdmitted`.
 - **Original response:** `{"mode":"async_fixed_ack","responseType":"OperationAcceptedResponse","firstHttpStatus":202,"terminalResultType":"CampaignCompletionView"}`.
 - **Owner protocols:** Participant admission and campaign closure.
-- **Preserved source validation:** [src/Compliance.Common/Features/PolicyDistribution/RecordTrainingCompletion.cs](../../../../src/Compliance.Common/Features/PolicyDistribution/RecordTrainingCompletion.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/PolicyDistribution/RecordTrainingCompletion.cs](../../../../src/Compliance.Common/Features/PolicyDistribution/Commands/RecordTrainingCompletion.cs).
 - **Selected changes:** Add required CommandId. Add required owner-local ExpectedCampaignRevision; business Version remains an exact content version, not owner OCC. Admit complete participant result on the open campaign generation first; apply to participant through committed admission fact. Personal source actor is retained.
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: `test/Compliance.Tests/Features/Work/TrainingWorkAuthorityTests.cs`.
 
@@ -1585,7 +1585,7 @@ Remove this overlapping compatibility command/handler/route/MCP tool and Applica
 - **Native facts:** `FirmStaffRegistrationAccepted`.
 - **Original response:** `{"mode":"async_fixed_ack","responseType":"OperationAcceptedResponse","firstHttpStatus":202,"terminalResultType":"FirmStaffMemberView"}`.
 - **Owner protocols:** Permanent staff identity mapping.
-- **Preserved source validation:** [src/Compliance.Common/Features/AccessControl/RegisterFirmStaff.cs](../../../../src/Compliance.Common/Features/AccessControl/RegisterFirmStaff.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/AccessControl/RegisterFirmStaff.cs](../../../../src/Compliance.Common/Features/AccessControl/Commands/RegisterFirmStaff.cs).
 - **Selected changes:** Rename ExpectedSequence to ExpectedRevision and compare the new target owner revision.
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: `test/Compliance.Tests/Features/AccessControl/ServiceEngagementHandlerTests.cs`, `test/Compliance.Tests/Features/AccessControl/ProfessionalDutyGovernanceCompositionTests.cs`, `test/Compliance.Tests/Features/AccessControl/FirmOperationsCompositionTests.cs`.
 
@@ -1599,7 +1599,7 @@ Remove this overlapping compatibility command/handler/route/MCP tool and Applica
 - **Native facts:** `ArtifactLegalHoldReleased`.
 - **Original response:** `{"mode":"immediate_original_result","responseType":"Unit","firstHttpStatus":200,"terminalResultType":"Unit"}`.
 - **Owner protocols:** Retention basis and authoritative legal-hold barrier.
-- **Preserved source validation:** [src/Compliance.Common/Features/Retention/ReleaseArtifactLegalHold.cs](../../../../src/Compliance.Common/Features/Retention/ReleaseArtifactLegalHold.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/Retention/ReleaseArtifactLegalHold.cs](../../../../src/Compliance.Common/Features/Retention/Commands/ReleaseArtifactLegalHold.cs).
 - **Selected changes:** Add required CommandId.
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: `test/Compliance.Tests/Features/Retention/ArtifactRetentionHandlerTests.cs`, `test/Compliance.Tests/Features/Retention/AttestRetentionManagementWriteWallTests.cs`.
 
@@ -1613,7 +1613,7 @@ Remove this overlapping compatibility command/handler/route/MCP tool and Applica
 - **Native facts:** `ApplicationRelationshipRemoved`.
 - **Original response:** `{"mode":"immediate_original_result","responseType":"ApplicationRelationshipChange","firstHttpStatus":200,"terminalResultType":"ApplicationRelationshipChange"}`.
 - **Owner protocols:** Application identity, relationships and import holds.
-- **Preserved source validation:** [src/Compliance.Common/Features/Applications/RemoveApplicationRelationship.cs](../../../../src/Compliance.Common/Features/Applications/RemoveApplicationRelationship.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/Applications/Commands/RemoveApplicationRelationship.cs](../../../../src/Compliance.Common/Features/Applications/Commands/RemoveApplicationRelationship.cs).
 - **Selected changes:** Add required CommandId. Rename ExpectedRelationshipRevision to ExpectedRevision and compare the new target owner revision. Canonical sole relationship removal command; preserve all endpoint/type/authority and reason rules from removed governed-removal path. Require Reason. Use owner-local ExpectedRevision, not a directory visible revision.
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: `test/Compliance.Tests/Features/Applications/ApplicationChangePreviewTests.cs`, `test/Compliance.Tests/Features/Applications/ApplicationRelationshipRequestTests.cs`, `test/Compliance.Tests/Features/Applications/ApplicationRelationshipTests.cs`.
 
@@ -1631,7 +1631,7 @@ Remove overlapping governed-removal compatibility handler/route/tool and Applica
 - **Native facts:** `AuditorRequestReopened`.
 - **Original response:** `{"mode":"immediate_original_result","responseType":"Unit","firstHttpStatus":200,"terminalResultType":"Unit"}`.
 - **Owner protocols:** Response/comment admission and request resolution.
-- **Preserved source validation:** [src/Compliance.Common/Features/AuditorRequests/ReopenAuditorRequest.cs](../../../../src/Compliance.Common/Features/AuditorRequests/ReopenAuditorRequest.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/AuditorRequests/ReopenAuditorRequest.cs](../../../../src/Compliance.Common/Features/AuditorRequests/Commands/ReopenAuditorRequest.cs).
 - **Selected changes:** Add required CommandId. Add required owner-local ExpectedRevision; business Version remains an exact content version, not owner OCC.
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: `test/Compliance.Tests/Features/AuditorRequests/AuditorRequestCommandHandlerTests.cs`.
 
@@ -1645,7 +1645,7 @@ Remove overlapping governed-removal compatibility handler/route/tool and Applica
 - **Native facts:** `FindingReopenedV2`.
 - **Original response:** `{"mode":"immediate_original_result","responseType":"FindingView","firstHttpStatus":200,"terminalResultType":"FindingView"}`.
 - **Owner protocols:** Action admission and finding closure.
-- **Preserved source validation:** [src/Compliance.Common/Features/Remediation/ReopenFinding.cs](../../../../src/Compliance.Common/Features/Remediation/ReopenFinding.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/Remediation/ReopenFinding.cs](../../../../src/Compliance.Common/Features/Remediation/Commands/ReopenFinding.cs).
 - **Selected changes:** Add required CommandId.
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: `test/Compliance.Tests/Features/Remediation/FindingTests.cs`.
 
@@ -1659,7 +1659,7 @@ Remove overlapping governed-removal compatibility handler/route/tool and Applica
 - **Native facts:** `AuditPackageBuildRequested`.
 - **Original response:** `{"mode":"async_fixed_ack","responseType":"OperationAcceptedResponse","firstHttpStatus":202,"terminalResultType":"Unit"}`.
 - **Owner protocols:** Manifest validation, immutable build and recipient delivery.
-- **Preserved source validation:** [src/Compliance.Common/Features/AuditPackages/RequestAuditPackageBuild.cs](../../../../src/Compliance.Common/Features/AuditPackages/RequestAuditPackageBuild.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/AuditPackages/RequestAuditPackageBuild.cs](../../../../src/Compliance.Common/Features/AuditPackages/Commands/RequestAuditPackageBuild.cs).
 - **Selected changes:** Add required owner-local ExpectedManifestRevision; business Version remains an exact content version, not owner OCC. Freeze BuildId derived by the existing BuildNamespace algorithm, exact manifest version/reference/selection and original actor in PackageBuildIntent before starting worker. Technical AttemptId is a separate process field.
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: `test/Compliance.Tests/Features/AuditPackages/AuditPackageCommandHandlerTests.cs`.
 
@@ -1673,7 +1673,7 @@ Remove overlapping governed-removal compatibility handler/route/tool and Applica
 - **Native facts:** `AdvisorFeedbackResolved`.
 - **Original response:** `{"mode":"immediate_original_result","responseType":"Unit","firstHttpStatus":200,"terminalResultType":"Unit"}`.
 - **Owner protocols:** Feedback admission versus handoff revocation.
-- **Preserved source validation:** [src/Compliance.Common/Features/AdvisorCollaboration/ResolveAdvisorFeedback.cs](../../../../src/Compliance.Common/Features/AdvisorCollaboration/ResolveAdvisorFeedback.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/AdvisorCollaboration/ResolveAdvisorFeedback.cs](../../../../src/Compliance.Common/Features/AdvisorCollaboration/Commands/ResolveAdvisorFeedback.cs).
 - **Selected changes:** Add required CommandId. Add required owner-local ExpectedRevision; business Version remains an exact content version, not owner OCC.
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: `test/Compliance.Tests/Features/Work/WorkSourceCompositionTests.cs`, `test/Compliance.Tests/Features/AdvisorCollaboration/AdvisorHandoffCommandHandlerTests.cs`.
 
@@ -1687,7 +1687,7 @@ Remove overlapping governed-removal compatibility handler/route/tool and Applica
 - **Native facts:** `AuditorRequestResolutionAccepted`.
 - **Original response:** `{"mode":"async_fixed_ack","responseType":"OperationAcceptedResponse","firstHttpStatus":202,"terminalResultType":"Unit"}`.
 - **Owner protocols:** Response/comment admission and request resolution.
-- **Preserved source validation:** [src/Compliance.Common/Features/AuditorRequests/ResolveAuditorRequest.cs](../../../../src/Compliance.Common/Features/AuditorRequests/ResolveAuditorRequest.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/AuditorRequests/ResolveAuditorRequest.cs](../../../../src/Compliance.Common/Features/AuditorRequests/Commands/ResolveAuditorRequest.cs).
 - **Selected changes:** Add required CommandId. Add required owner-local ExpectedRevision; business Version remains an exact content version, not owner OCC. ResponseIds must be nonempty, duplicate-free and exactly equal to every admitted response in this request resolution universe; freeze complete selection at admission.
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: `test/Compliance.Tests/Features/AuditorRequests/AuditorResponseCommandHandlerTests.cs`, `test/Compliance.Tests/Features/AuditorRequests/AuditorRequestCommandHandlerTests.cs`.
 
@@ -1701,7 +1701,7 @@ Remove overlapping governed-removal compatibility handler/route/tool and Applica
 - **Native facts:** `AdvisorFeedbackResponded`.
 - **Original response:** `{"mode":"immediate_original_result","responseType":"Unit","firstHttpStatus":200,"terminalResultType":"Unit"}`.
 - **Owner protocols:** Feedback admission versus handoff revocation.
-- **Preserved source validation:** [src/Compliance.Common/Features/AdvisorCollaboration/RespondToAdvisorFeedback.cs](../../../../src/Compliance.Common/Features/AdvisorCollaboration/RespondToAdvisorFeedback.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/AdvisorCollaboration/RespondToAdvisorFeedback.cs](../../../../src/Compliance.Common/Features/AdvisorCollaboration/Commands/RespondToAdvisorFeedback.cs).
 - **Selected changes:** Add required CommandId. Add required owner-local ExpectedRevision; business Version remains an exact content version, not owner OCC.
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: `test/Compliance.Tests/Features/AdvisorCollaboration/AdvisorHandoffCommandHandlerTests.cs`.
 
@@ -1715,7 +1715,7 @@ Remove overlapping governed-removal compatibility handler/route/tool and Applica
 - **Native facts:** `ApplicationRetired`.
 - **Original response:** `{"mode":"immediate_original_result","responseType":"Unit","firstHttpStatus":200,"terminalResultType":"Unit"}`.
 - **Owner protocols:** Application identity, relationships and import holds.
-- **Preserved source validation:** [src/Compliance.Common/Features/Applications/RetireApplication.cs](../../../../src/Compliance.Common/Features/Applications/RetireApplication.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/Applications/RetireApplication.cs](../../../../src/Compliance.Common/Features/Applications/Commands/RetireApplication.cs).
 - **Selected changes:** Add required CommandId.
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: `test/Compliance.Tests/Features/Applications/ApplicationImportWriteGuardTests.cs`.
 
@@ -1729,7 +1729,7 @@ Remove overlapping governed-removal compatibility handler/route/tool and Applica
 - **Native facts:** `ControlCriterionMappingRetired`.
 - **Original response:** `{"mode":"immediate_original_result","responseType":"Unit","firstHttpStatus":200,"terminalResultType":"Unit"}`.
 - **Owner protocols:** Per-tuple mapping succession.
-- **Preserved source validation:** [src/Compliance.Common/Features/ControlMappings/RetireControlCriterionMapping.cs](../../../../src/Compliance.Common/Features/ControlMappings/RetireControlCriterionMapping.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/ControlMappings/RetireControlCriterionMapping.cs](../../../../src/Compliance.Common/Features/ControlMappings/Commands/RetireControlCriterionMapping.cs).
 - **Selected changes:** Add required CommandId.
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: `test/Compliance.Tests/Features/ControlMappings/ControlCriterionMappingHandlerTests.cs`.
 
@@ -1743,7 +1743,7 @@ Remove overlapping governed-removal compatibility handler/route/tool and Applica
 - **Native facts:** `RiskControlTreatmentRetired`.
 - **Original response:** `{"mode":"immediate_original_result","responseType":"Unit","firstHttpStatus":200,"terminalResultType":"Unit"}`.
 - **Owner protocols:** Risk ownership, treatment lines and actions.
-- **Preserved source validation:** [src/Compliance.Common/Features/Risks/RetireRiskControlTreatment.cs](../../../../src/Compliance.Common/Features/Risks/RetireRiskControlTreatment.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/Risks/RetireRiskControlTreatment.cs](../../../../src/Compliance.Common/Features/Risks/Commands/RetireRiskControlTreatment.cs).
 - **Selected changes:** Add required CommandId.
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: .
 
@@ -1757,7 +1757,7 @@ Remove overlapping governed-removal compatibility handler/route/tool and Applica
 - **Native facts:** `AuditorResponseDisclosureReviewed`.
 - **Original response:** `{"mode":"immediate_original_result","responseType":"Unit","firstHttpStatus":200,"terminalResultType":"Unit"}`.
 - **Owner protocols:** Response/comment admission and request resolution.
-- **Preserved source validation:** [src/Compliance.Common/Features/AuditorRequests/ReviewAuditResponse.cs](../../../../src/Compliance.Common/Features/AuditorRequests/ReviewAuditResponse.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/AuditorRequests/ReviewAuditResponse.cs](../../../../src/Compliance.Common/Features/AuditorRequests/Commands/ReviewAuditResponse.cs).
 - **Selected changes:** Add required CommandId. Add required owner-local ExpectedRevision; business Version remains an exact content version, not owner OCC.
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: `test/Compliance.Tests/Features/AuditorRequests/AuditorResponseCommandHandlerTests.cs`.
 
@@ -1771,7 +1771,7 @@ Remove overlapping governed-removal compatibility handler/route/tool and Applica
 - **Native facts:** `ControlCriterionMappingReviewed`.
 - **Original response:** `{"mode":"immediate_original_result","responseType":"Unit","firstHttpStatus":200,"terminalResultType":"Unit"}`.
 - **Owner protocols:** Per-tuple mapping succession.
-- **Preserved source validation:** [src/Compliance.Common/Features/ControlMappings/ReviewControlCriterionMapping.cs](../../../../src/Compliance.Common/Features/ControlMappings/ReviewControlCriterionMapping.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/ControlMappings/ReviewControlCriterionMapping.cs](../../../../src/Compliance.Common/Features/ControlMappings/Commands/ReviewControlCriterionMapping.cs).
 - **Selected changes:** Add required CommandId.
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: `test/Compliance.Tests/Features/ControlMappings/ControlCriterionMappingHandlerTests.cs`, `test/Compliance.Tests/Features/ControlMappings/PersonalMappingDecisionTransportTests.cs`, `test/Compliance.Tests/Features/Work/ReviewerWorkAuthorityTests.cs`.
 
@@ -1785,7 +1785,7 @@ Remove overlapping governed-removal compatibility handler/route/tool and Applica
 - **Native facts:** `ControlEvaluationReviewed`.
 - **Original response:** `{"mode":"immediate_original_result","responseType":"ControlEvaluationView","firstHttpStatus":200,"terminalResultType":"ControlEvaluationView"}`.
 - **Owner protocols:** Independent evaluation and retest.
-- **Preserved source validation:** [src/Compliance.Common/Features/Evaluations/ReviewControlEvaluation.cs](../../../../src/Compliance.Common/Features/Evaluations/ReviewControlEvaluation.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/Evaluations/ReviewControlEvaluation.cs](../../../../src/Compliance.Common/Features/Evaluations/Commands/ReviewControlEvaluation.cs).
 - **Selected changes:** Add required CommandId.
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: `test/Compliance.Tests/Features/Evaluations/ControlEvaluationTests.cs`, `test/Compliance.Tests/Features/Operations/OperationsFixture.cs`, `test/Compliance.Tests/Features/Work/ControlEvaluationWorkTests.cs`, `test/Compliance.Tests/Features/Work/ReviewerWorkAuthorityTests.cs`.
 
@@ -1799,7 +1799,7 @@ Remove overlapping governed-removal compatibility handler/route/tool and Applica
 - **Native facts:** `ControlOccurrenceReviewed`.
 - **Original response:** `{"mode":"immediate_original_result","responseType":"ControlOccurrenceView","firstHttpStatus":200,"terminalResultType":"ControlOccurrenceView"}`.
 - **Owner protocols:** Operating plan and business-window occurrence.
-- **Preserved source validation:** [src/Compliance.Common/Features/Operations/ReviewControlOccurrence.cs](../../../../src/Compliance.Common/Features/Operations/ReviewControlOccurrence.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/Operations/ReviewControlOccurrence.cs](../../../../src/Compliance.Common/Features/Operations/Commands/ReviewControlOccurrence.cs).
 - **Selected changes:** Add required CommandId.
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: `test/Compliance.Tests/Features/AccessControl/AttestManagementWriteWallTests.cs`, `test/Compliance.Tests/Features/Operations/OperationsFixture.cs`.
 
@@ -1813,7 +1813,7 @@ Remove overlapping governed-removal compatibility handler/route/tool and Applica
 - **Native facts:** `CriterionApplicabilityReviewed`.
 - **Original response:** `{"mode":"immediate_original_result","responseType":"Unit","firstHttpStatus":200,"terminalResultType":"Unit"}`.
 - **Owner protocols:** Per-criterion applicability line.
-- **Preserved source validation:** [src/Compliance.Common/Features/ControlMappings/ReviewCriterionApplicability.cs](../../../../src/Compliance.Common/Features/ControlMappings/ReviewCriterionApplicability.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/ControlMappings/ReviewCriterionApplicability.cs](../../../../src/Compliance.Common/Features/ControlMappings/Commands/ReviewCriterionApplicability.cs).
 - **Selected changes:** Add required CommandId.
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: `test/Compliance.Tests/Features/ControlMappings/ControlCriterionMappingHandlerTests.cs`, `test/Compliance.Tests/Features/ControlMappings/PersonalMappingDecisionTransportTests.cs`, `test/Compliance.Tests/Features/Work/ReviewerWorkAuthorityTests.cs`.
 
@@ -1827,7 +1827,7 @@ Remove overlapping governed-removal compatibility handler/route/tool and Applica
 - **Native facts:** `RiskControlTreatmentReviewed`.
 - **Original response:** `{"mode":"immediate_original_result","responseType":"Unit","firstHttpStatus":200,"terminalResultType":"Unit"}`.
 - **Owner protocols:** Risk ownership, treatment lines and actions.
-- **Preserved source validation:** [src/Compliance.Common/Features/Risks/ReviewRiskControlTreatment.cs](../../../../src/Compliance.Common/Features/Risks/ReviewRiskControlTreatment.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/Risks/ReviewRiskControlTreatment.cs](../../../../src/Compliance.Common/Features/Risks/Commands/ReviewRiskControlTreatment.cs).
 - **Selected changes:** Add required CommandId.
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: `test/Compliance.Tests/Features/Work/ReviewerWorkAuthorityTests.cs`, `test/Compliance.Tests/Features/Risks/RiskGovernanceHandlerTests.cs`.
 
@@ -1841,7 +1841,7 @@ Remove overlapping governed-removal compatibility handler/route/tool and Applica
 - **Native facts:** `RiskTreatmentActionCompletionReviewAccepted`.
 - **Original response:** `{"mode":"async_fixed_ack","responseType":"OperationAcceptedResponse","firstHttpStatus":202,"terminalResultType":"Unit"}`.
 - **Owner protocols:** Risk ownership, treatment lines and actions.
-- **Preserved source validation:** [src/Compliance.Common/Features/Risks/ReviewRiskTreatmentActionCompletion.cs](../../../../src/Compliance.Common/Features/Risks/ReviewRiskTreatmentActionCompletion.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/Risks/ReviewRiskTreatmentActionCompletion.cs](../../../../src/Compliance.Common/Features/Risks/Commands/ReviewRiskTreatmentActionCompletion.cs).
 - **Selected changes:** Add required CommandId.
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: `test/Compliance.Tests/Features/Work/ReviewerWorkAuthorityTests.cs`, `test/Compliance.Tests/Features/Risks/RiskGovernanceHandlerTests.cs`.
 
@@ -1855,7 +1855,7 @@ Remove overlapping governed-removal compatibility handler/route/tool and Applica
 - **Native facts:** `SystemDescriptionReviewed`.
 - **Original response:** `{"mode":"immediate_original_result","responseType":"Unit","firstHttpStatus":200,"terminalResultType":"Unit"}`.
 - **Owner protocols:** Versioned description and independent export.
-- **Preserved source validation:** [src/Compliance.Common/Features/SystemDescription/ReviewSystemDescription.cs](../../../../src/Compliance.Common/Features/SystemDescription/ReviewSystemDescription.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/SystemDescription/ReviewSystemDescription.cs](../../../../src/Compliance.Common/Features/SystemDescription/Commands/ReviewSystemDescription.cs).
 - **Selected changes:** Add required CommandId. Add required owner-local ExpectedRevision; business Version remains an exact content version, not owner OCC.
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: `test/Compliance.Tests/Features/SystemDescription/SystemDescriptionCommandHandlerTests.cs`.
 
@@ -1869,7 +1869,7 @@ Remove overlapping governed-removal compatibility handler/route/tool and Applica
 - **Native facts:** `AdvisorHandoffSelectionRevised`.
 - **Original response:** `{"mode":"immediate_original_result","responseType":"Unit","firstHttpStatus":200,"terminalResultType":"Unit"}`.
 - **Owner protocols:** Feedback admission versus handoff revocation.
-- **Preserved source validation:** [src/Compliance.Common/Features/AdvisorCollaboration/ReviseAdvisorHandoffSelection.cs](../../../../src/Compliance.Common/Features/AdvisorCollaboration/ReviseAdvisorHandoffSelection.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/AdvisorCollaboration/ReviseAdvisorHandoffSelection.cs](../../../../src/Compliance.Common/Features/AdvisorCollaboration/Commands/ReviseAdvisorHandoffSelection.cs).
 - **Selected changes:** Add required CommandId.
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: `test/Compliance.Tests/Features/Controls/ControlDraftAuthorizationTests.cs`, `test/Compliance.Tests/Features/AdvisorCollaboration/AdvisorHandoffCommandHandlerTests.cs`.
 
@@ -1883,7 +1883,7 @@ Remove overlapping governed-removal compatibility handler/route/tool and Applica
 - **Native facts:** `ApplicationRevised`.
 - **Original response:** `{"mode":"immediate_original_result","responseType":"Unit","firstHttpStatus":200,"terminalResultType":"Unit"}`.
 - **Owner protocols:** Application identity, relationships and import holds.
-- **Preserved source validation:** [src/Compliance.Common/Features/Applications/ReviseApplication.cs](../../../../src/Compliance.Common/Features/Applications/ReviseApplication.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/Applications/ReviseApplication.cs](../../../../src/Compliance.Common/Features/Applications/Commands/ReviseApplication.cs).
 - **Selected changes:** Add required CommandId. Include init-only authored scope and field-presence semantics omitted by the earlier positional-record scan. JsonIgnore presence flags are adapter-owned and canonicalized explicitly; never serialize/replay them as if false meant omitted.
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: `test/Compliance.Tests/Features/AccessControl/InventoryManagementIndependenceTests.cs`, `test/Compliance.Tests/Features/Applications/ApplicationImportWriteGuardTests.cs`, `test/Compliance.Tests/Features/Applications/ApplicationRevisionFieldPresenceHttpTests.cs`, `test/Compliance.Tests/Features/Applications/ApplicationRevisionPreviewContractTests.cs`, `test/Compliance.Tests/Features/Applications/ApplicationRevisionGovernanceTests.cs`, `test/Compliance.Tests/Features/Applications/ApplicationOwnerTests.cs`, `test/Compliance.Tests/Features/Applications/ApplicationImportOmissionConsumerTests.cs`.
 
@@ -1897,7 +1897,7 @@ Remove overlapping governed-removal compatibility handler/route/tool and Applica
 - **Native facts:** `AssuranceReportRevised`.
 - **Original response:** `{"mode":"immediate_original_result","responseType":"AssuranceReportRegistration","firstHttpStatus":200,"terminalResultType":"AssuranceReportRegistration"}`.
 - **Owner protocols:** Independent assurance facts and exact source proofs.
-- **Preserved source validation:** [src/Compliance.Common/Features/Providers/ReviseAssuranceReport.cs](../../../../src/Compliance.Common/Features/Providers/ReviseAssuranceReport.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/Providers/ReviseAssuranceReport.cs](../../../../src/Compliance.Common/Features/Providers/Commands/ReviseAssuranceReport.cs).
 - **Selected changes:** Add required CommandId.
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: `test/Compliance.Tests/Features/Providers/PersonalProviderReviewTransportTests.cs`, `test/Compliance.Tests/Features/Providers/ProviderAssurancePipelineTests.cs`.
 
@@ -1911,7 +1911,7 @@ Remove overlapping governed-removal compatibility handler/route/tool and Applica
 - **Native facts:** `AuditResponseDraftRevised`.
 - **Original response:** `{"mode":"immediate_original_result","responseType":"Unit","firstHttpStatus":200,"terminalResultType":"Unit"}`.
 - **Owner protocols:** Response/comment admission and request resolution.
-- **Preserved source validation:** [src/Compliance.Common/Features/AuditorRequests/ReviseAuditResponseDraft.cs](../../../../src/Compliance.Common/Features/AuditorRequests/ReviseAuditResponseDraft.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/AuditorRequests/ReviseAuditResponseDraft.cs](../../../../src/Compliance.Common/Features/AuditorRequests/Commands/ReviseAuditResponseDraft.cs).
 - **Selected changes:** Add required CommandId.
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: `test/Compliance.Tests/Features/AuditorRequests/AuditorResponseCommandHandlerTests.cs`.
 
@@ -1925,7 +1925,7 @@ Remove overlapping governed-removal compatibility handler/route/tool and Applica
 - **Native facts:** `AuditorRequestRevised`.
 - **Original response:** `{"mode":"immediate_original_result","responseType":"Unit","firstHttpStatus":200,"terminalResultType":"Unit"}`.
 - **Owner protocols:** Response/comment admission and request resolution.
-- **Preserved source validation:** [src/Compliance.Common/Features/AuditorRequests/ReviseAuditorRequest.cs](../../../../src/Compliance.Common/Features/AuditorRequests/ReviseAuditorRequest.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/AuditorRequests/ReviseAuditorRequest.cs](../../../../src/Compliance.Common/Features/AuditorRequests/Commands/ReviseAuditorRequest.cs).
 - **Selected changes:** Add required CommandId.
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: `test/Compliance.Tests/Features/AuditorRequests/AuditorRequestCommandHandlerTests.cs`.
 
@@ -1939,7 +1939,7 @@ Remove overlapping governed-removal compatibility handler/route/tool and Applica
 - **Native facts:** `FindingRevisedV2`.
 - **Original response:** `{"mode":"immediate_original_result","responseType":"FindingView","firstHttpStatus":200,"terminalResultType":"FindingView"}`.
 - **Owner protocols:** Action admission and finding closure.
-- **Preserved source validation:** [src/Compliance.Common/Features/Remediation/ReviseFinding.cs](../../../../src/Compliance.Common/Features/Remediation/ReviseFinding.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/Remediation/ReviseFinding.cs](../../../../src/Compliance.Common/Features/Remediation/Commands/ReviseFinding.cs).
 - **Selected changes:** Add required CommandId.
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: `test/Compliance.Tests/Features/Work/FindingClosureWorkTests.cs`, `test/Compliance.Tests/Features/Work/ReviewerWorkAuthorityTests.cs`, `test/Compliance.Tests/Features/Remediation/FindingTests.cs`.
 
@@ -1953,7 +1953,7 @@ Remove overlapping governed-removal compatibility handler/route/tool and Applica
 - **Native facts:** `LocationChangeAccepted`.
 - **Original response:** `{"mode":"async_fixed_ack","responseType":"OperationAcceptedResponse","firstHttpStatus":202,"terminalResultType":"Unit"}`.
 - **Owner protocols:** Name claims and record lifecycle.
-- **Preserved source validation:** [src/Compliance.Common/Features/TechnologyInventory/ReviseLocation.cs](../../../../src/Compliance.Common/Features/TechnologyInventory/ReviseLocation.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/TechnologyInventory/ReviseLocation.cs](../../../../src/Compliance.Common/Features/TechnologyInventory/Commands/ReviseLocation.cs).
 - **Selected changes:** Add required CommandId.
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: .
 
@@ -1967,7 +1967,7 @@ Remove overlapping governed-removal compatibility handler/route/tool and Applica
 - **Native facts:** `OperationalProcessChangeAccepted`.
 - **Original response:** `{"mode":"async_fixed_ack","responseType":"OperationAcceptedResponse","firstHttpStatus":202,"terminalResultType":"Unit"}`.
 - **Owner protocols:** Name claims and record lifecycle.
-- **Preserved source validation:** [src/Compliance.Common/Features/TechnologyInventory/ReviseOperationalProcess.cs](../../../../src/Compliance.Common/Features/TechnologyInventory/ReviseOperationalProcess.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/TechnologyInventory/ReviseOperationalProcess.cs](../../../../src/Compliance.Common/Features/TechnologyInventory/Commands/ReviseOperationalProcess.cs).
 - **Selected changes:** Add required CommandId.
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: .
 
@@ -1981,7 +1981,7 @@ Remove overlapping governed-removal compatibility handler/route/tool and Applica
 - **Native facts:** `ProviderChangeAccepted`.
 - **Original response:** `{"mode":"async_fixed_ack","responseType":"OperationAcceptedResponse","firstHttpStatus":202,"terminalResultType":"ProviderRegistration"}`.
 - **Owner protocols:** Name claims and record lifecycle.
-- **Preserved source validation:** [src/Compliance.Common/Features/Providers/ReviseProvider.cs](../../../../src/Compliance.Common/Features/Providers/ReviseProvider.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/Providers/ReviseProvider.cs](../../../../src/Compliance.Common/Features/Providers/Commands/ReviseProvider.cs).
 - **Selected changes:** Add required CommandId.
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: `test/Compliance.Tests/Features/Providers/ProviderReferenceTests.cs`, `test/Compliance.Tests/Features/Providers/PersonalProviderReviewTransportTests.cs`, `test/Compliance.Tests/Features/Providers/AttestProviderManagementWriteWallTests.cs`.
 
@@ -1995,7 +1995,7 @@ Remove overlapping governed-removal compatibility handler/route/tool and Applica
 - **Native facts:** `RiskTreatmentActionRevised`.
 - **Original response:** `{"mode":"immediate_original_result","responseType":"Unit","firstHttpStatus":200,"terminalResultType":"Unit"}`.
 - **Owner protocols:** Risk ownership, treatment lines and actions.
-- **Preserved source validation:** [src/Compliance.Common/Features/Risks/ReviseRiskTreatmentAction.cs](../../../../src/Compliance.Common/Features/Risks/ReviseRiskTreatmentAction.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/Risks/ReviseRiskTreatmentAction.cs](../../../../src/Compliance.Common/Features/Risks/Commands/ReviseRiskTreatmentAction.cs).
 - **Selected changes:** Add required CommandId.
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: `test/Compliance.Tests/Features/Risks/RiskGovernanceHandlerTests.cs`.
 
@@ -2009,7 +2009,7 @@ Remove overlapping governed-removal compatibility handler/route/tool and Applica
 - **Native facts:** `SystemDescriptionDraftRevised`.
 - **Original response:** `{"mode":"immediate_original_result","responseType":"Unit","firstHttpStatus":200,"terminalResultType":"Unit"}`.
 - **Owner protocols:** Versioned description and independent export.
-- **Preserved source validation:** [src/Compliance.Common/Features/SystemDescription/ReviseSystemDescriptionDraft.cs](../../../../src/Compliance.Common/Features/SystemDescription/ReviseSystemDescriptionDraft.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/SystemDescription/ReviseSystemDescriptionDraft.cs](../../../../src/Compliance.Common/Features/SystemDescription/Commands/ReviseSystemDescriptionDraft.cs).
 - **Selected changes:** Add required CommandId.
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: `test/Compliance.Tests/Features/SystemDescription/SystemDescriptionDraftCommandHandlerTests.cs`.
 
@@ -2023,7 +2023,7 @@ Remove overlapping governed-removal compatibility handler/route/tool and Applica
 - **Native facts:** `TrainingRequirementDefined`.
 - **Original response:** `{"mode":"immediate_original_result","responseType":"TrainingRequirementRegistration","firstHttpStatus":200,"terminalResultType":"TrainingRequirementRegistration"}`.
 - **Owner protocols:** Independent training requirement.
-- **Preserved source validation:** [src/Compliance.Common/Features/PolicyDistribution/ReviseTrainingRequirement.cs](../../../../src/Compliance.Common/Features/PolicyDistribution/ReviseTrainingRequirement.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/PolicyDistribution/ReviseTrainingRequirement.cs](../../../../src/Compliance.Common/Features/PolicyDistribution/Commands/ReviseTrainingRequirement.cs).
 - **Selected changes:** Add required CommandId. Keep ExpectedVersion as the sole logical concurrency counter; do not require a redundant ExpectedRevision with the same meaning.
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: .
 
@@ -2037,7 +2037,7 @@ Remove overlapping governed-removal compatibility handler/route/tool and Applica
 - **Native facts:** `AdvisorHandoffRevoked`.
 - **Original response:** `{"mode":"immediate_original_result","responseType":"Unit","firstHttpStatus":200,"terminalResultType":"Unit"}`.
 - **Owner protocols:** Feedback admission versus handoff revocation.
-- **Preserved source validation:** [src/Compliance.Common/Features/AdvisorCollaboration/RevokeAdvisorHandoff.cs](../../../../src/Compliance.Common/Features/AdvisorCollaboration/RevokeAdvisorHandoff.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/AdvisorCollaboration/RevokeAdvisorHandoff.cs](../../../../src/Compliance.Common/Features/AdvisorCollaboration/Commands/RevokeAdvisorHandoff.cs).
 - **Selected changes:** Add required CommandId. Add required owner-local ExpectedRevision; business Version remains an exact content version, not owner OCC.
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: `test/Compliance.Tests/Features/AdvisorCollaboration/AdvisorHandoffCommandHandlerTests.cs`.
 
@@ -2051,7 +2051,7 @@ Remove overlapping governed-removal compatibility handler/route/tool and Applica
 - **Native facts:** `ProfessionalDutyChangeAccepted`.
 - **Original response:** `{"mode":"async_fixed_ack","responseType":"OperationAcceptedResponse","firstHttpStatus":202,"terminalResultType":"FirmProfessionalDutyDesignationView"}`.
 - **Owner protocols:** Signed assertion claims and duty-scope designation.
-- **Preserved source validation:** [src/Compliance.Common/Features/AccessControl/RevokeFirmProfessionalDutyDesignation.cs](../../../../src/Compliance.Common/Features/AccessControl/RevokeFirmProfessionalDutyDesignation.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/AccessControl/RevokeFirmProfessionalDutyDesignation.cs](../../../../src/Compliance.Common/Features/AccessControl/Commands/RevokeFirmProfessionalDutyDesignation.cs).
 - **Selected changes:** Rename ExpectedSequence to ExpectedRevision and compare the new target owner revision. AssertionId is required and must equal the verified signed assertion identity; DesignationId cannot identify repeated refresh/revocation assertions.
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: `test/Compliance.Tests/Features/AccessControl/ProfessionalDutyGovernanceCompositionTests.cs`.
 
@@ -2065,7 +2065,7 @@ Remove overlapping governed-removal compatibility handler/route/tool and Applica
 - **Native facts:** `ServiceEngagementAssignmentRevoked`.
 - **Original response:** `{"mode":"immediate_original_result","responseType":"ServiceEngagementAcceptanceView","firstHttpStatus":200,"terminalResultType":"ServiceEngagementAcceptanceView"}`.
 - **Owner protocols:** Service epoch and permanent practice commitments.
-- **Preserved source validation:** [src/Compliance.Common/Features/AccessControl/RevokeServiceEngagementActualStaff.cs](../../../../src/Compliance.Common/Features/AccessControl/RevokeServiceEngagementActualStaff.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/AccessControl/RevokeServiceEngagementActualStaff.cs](../../../../src/Compliance.Common/Features/AccessControl/Commands/RevokeServiceEngagementActualStaff.cs).
 - **Selected changes:** Add required CommandId. Rename ExpectedSequence to ExpectedRevision and compare the new target owner revision.
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: `test/Compliance.Tests/Features/AccessControl/AssignmentIndependenceReevaluationTests.cs`, `test/Compliance.Tests/Features/AccessControl/AttestServiceEngagementManagementWriteWallTests.cs`.
 
@@ -2079,7 +2079,7 @@ Remove overlapping governed-removal compatibility handler/route/tool and Applica
 - **Native facts:** `ReadinessAssessmentRequested`.
 - **Original response:** `{"mode":"async_fixed_ack","responseType":"OperationAcceptedResponse","firstHttpStatus":202,"terminalResultType":"ReadinessAssessmentRegistration"}`.
 - **Owner protocols:** Latest readiness and gap-plan decision seal.
-- **Preserved source validation:** [src/Compliance.Common/Features/Readiness/RunReadinessAssessment.cs](../../../../src/Compliance.Common/Features/Readiness/RunReadinessAssessment.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/Readiness/RunReadinessAssessment.cs](../../../../src/Compliance.Common/Features/Readiness/Commands/RunReadinessAssessment.cs).
 - **Selected changes:** Add required AssessmentId. Persist complete fixed-as-of input snapshot and latest-adoption admission before child computation. At most one pending latest-adoption operation; source absence is recorded as a gap only after authoritative completeness, infrastructure failure remains transient.
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: `test/Compliance.Tests/Features/AccessControl/AttestProgramManagementWriteWallTests.cs`, `test/Compliance.Tests/Features/Readiness/ReadinessAssessmentHandlerTests.cs`.
 
@@ -2093,7 +2093,7 @@ Remove overlapping governed-removal compatibility handler/route/tool and Applica
 - **Native facts:** `CriteriaTextOverlayEntryRevised`.
 - **Original response:** `{"mode":"immediate_original_result","responseType":"CriteriaTextOverlayRegistration","firstHttpStatus":200,"terminalResultType":"CriteriaTextOverlayRegistration"}`.
 - **Owner protocols:** Per-criterion overlay revision.
-- **Preserved source validation:** [src/Compliance.Common/Features/Criteria/SetCriteriaTextOverlay.cs](../../../../src/Compliance.Common/Features/Criteria/SetCriteriaTextOverlay.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/Criteria/SetCriteriaTextOverlay.cs](../../../../src/Compliance.Common/Features/Criteria/Commands/SetCriteriaTextOverlay.cs).
 - **Selected changes:** Add required CommandId.
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: `test/Compliance.Tests/Features/AccessControl/AttestProgramManagementWriteWallTests.cs`, `test/Compliance.Tests/Features/Criteria/CriteriaTextOverlayAuthorizationTests.cs`, `test/Compliance.Tests/Features/Criteria/SetCriteriaTextOverlayHandlerTests.cs`.
 
@@ -2107,7 +2107,7 @@ Remove overlapping governed-removal compatibility handler/route/tool and Applica
 - **Native facts:** `FirmStaffChangeRecorded`.
 - **Original response:** `{"mode":"immediate_original_result","responseType":"FirmStaffMemberView","firstHttpStatus":200,"terminalResultType":"FirmStaffMemberView"}`.
 - **Owner protocols:** Permanent staff identity mapping.
-- **Preserved source validation:** [src/Compliance.Common/Features/AccessControl/SetFirmStaffStatus.cs](../../../../src/Compliance.Common/Features/AccessControl/SetFirmStaffStatus.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/AccessControl/SetFirmStaffStatus.cs](../../../../src/Compliance.Common/Features/AccessControl/Commands/SetFirmStaffStatus.cs).
 - **Selected changes:** Add required CommandId. Rename ExpectedSequence to ExpectedRevision and compare the new target owner revision.
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: `test/Compliance.Tests/Features/AccessControl/FirmOperationsCompositionTests.cs`.
 
@@ -2121,7 +2121,7 @@ Remove overlapping governed-removal compatibility handler/route/tool and Applica
 - **Native facts:** `ControlEvaluationStarted`.
 - **Original response:** `{"mode":"immediate_original_result","responseType":"ControlEvaluationView","firstHttpStatus":200,"terminalResultType":"ControlEvaluationView"}`.
 - **Owner protocols:** Independent evaluation and retest.
-- **Preserved source validation:** [src/Compliance.Common/Features/Evaluations/StartControlEvaluation.cs](../../../../src/Compliance.Common/Features/Evaluations/StartControlEvaluation.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/Evaluations/StartControlEvaluation.cs](../../../../src/Compliance.Common/Features/Evaluations/Commands/StartControlEvaluation.cs).
 - **Selected changes:** Add required EvaluationId.
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: `test/Compliance.Tests/Features/Evaluations/ControlEvaluationTests.cs`, `test/Compliance.Tests/Features/Evaluations/ControlEvaluationPlanHandlerTests.cs`, `test/Compliance.Tests/Features/Evaluations/EvaluationDeviationFindingTests.cs`, `test/Compliance.Tests/Features/AccessControl/AttestManagementWriteWallTests.cs`, `test/Compliance.Tests/Features/Work/ControlEvaluationWorkTests.cs`, `test/Compliance.Tests/Features/Work/WorkSourceCompositionTests.cs`, `test/Compliance.Tests/Features/Work/ReviewerWorkAuthorityTests.cs`.
 
@@ -2135,7 +2135,7 @@ Remove overlapping governed-removal compatibility handler/route/tool and Applica
 - **Native facts:** `AuditorResponseSubmitted`.
 - **Original response:** `{"mode":"immediate_original_result","responseType":"Unit","firstHttpStatus":200,"terminalResultType":"Unit"}`.
 - **Owner protocols:** Response/comment admission and request resolution.
-- **Preserved source validation:** [src/Compliance.Common/Features/AuditorRequests/SubmitAuditResponse.cs](../../../../src/Compliance.Common/Features/AuditorRequests/SubmitAuditResponse.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/AuditorRequests/SubmitAuditResponse.cs](../../../../src/Compliance.Common/Features/AuditorRequests/Commands/SubmitAuditResponse.cs).
 - **Selected changes:** Add required CommandId. Add required owner-local ExpectedRevision; business Version remains an exact content version, not owner OCC.
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: `test/Compliance.Tests/Features/AuditorRequests/AuditorResponseCommandHandlerTests.cs`.
 
@@ -2149,7 +2149,7 @@ Remove overlapping governed-removal compatibility handler/route/tool and Applica
 - **Native facts:** `ControlEvaluationSubmitted`.
 - **Original response:** `{"mode":"immediate_original_result","responseType":"ControlEvaluationView","firstHttpStatus":200,"terminalResultType":"ControlEvaluationView"}`.
 - **Owner protocols:** Independent evaluation and retest.
-- **Preserved source validation:** [src/Compliance.Common/Features/Evaluations/SubmitControlEvaluation.cs](../../../../src/Compliance.Common/Features/Evaluations/SubmitControlEvaluation.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/Evaluations/SubmitControlEvaluation.cs](../../../../src/Compliance.Common/Features/Evaluations/Commands/SubmitControlEvaluation.cs).
 - **Selected changes:** Add required CommandId.
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: `test/Compliance.Tests/Features/Evaluations/ControlEvaluationTests.cs`, `test/Compliance.Tests/Features/Evaluations/EvaluationDeviationFindingTests.cs`, `test/Compliance.Tests/Features/Operations/OperationsFixture.cs`, `test/Compliance.Tests/Features/Work/ControlEvaluationWorkTests.cs`, `test/Compliance.Tests/Features/Work/WorkSourceCompositionTests.cs`, `test/Compliance.Tests/Features/Work/ReviewerWorkAuthorityTests.cs`.
 
@@ -2163,7 +2163,7 @@ Remove overlapping governed-removal compatibility handler/route/tool and Applica
 - **Native facts:** `RiskTreatmentActionCompletionSubmitted`.
 - **Original response:** `{"mode":"immediate_original_result","responseType":"RiskTreatmentActionCompletionRegistration","firstHttpStatus":200,"terminalResultType":"RiskTreatmentActionCompletionRegistration"}`.
 - **Owner protocols:** Risk ownership, treatment lines and actions.
-- **Preserved source validation:** [src/Compliance.Common/Features/Risks/SubmitRiskTreatmentActionCompletion.cs](../../../../src/Compliance.Common/Features/Risks/SubmitRiskTreatmentActionCompletion.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/Risks/SubmitRiskTreatmentActionCompletion.cs](../../../../src/Compliance.Common/Features/Risks/Commands/SubmitRiskTreatmentActionCompletion.cs).
 - **Selected changes:** Add required CommandId.
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: `test/Compliance.Tests/Features/Risks/RiskGovernanceHandlerTests.cs`.
 
@@ -2177,7 +2177,7 @@ Remove overlapping governed-removal compatibility handler/route/tool and Applica
 - **Native facts:** `AuditPackageValidated`.
 - **Original response:** `{"mode":"immediate_original_result","responseType":"Unit","firstHttpStatus":200,"terminalResultType":"Unit"}`.
 - **Owner protocols:** Manifest validation, immutable build and recipient delivery.
-- **Preserved source validation:** [src/Compliance.Common/Features/AuditPackages/ValidateAuditPackage.cs](../../../../src/Compliance.Common/Features/AuditPackages/ValidateAuditPackage.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/AuditPackages/ValidateAuditPackage.cs](../../../../src/Compliance.Common/Features/AuditPackages/Commands/ValidateAuditPackage.cs).
 - **Selected changes:** Add required CommandId. Add required owner-local ExpectedRevision; business Version remains an exact content version, not owner OCC.
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: `test/Compliance.Tests/Features/AuditPackages/ValidateAuditPackageHandlerTests.cs`.
 
@@ -2191,7 +2191,7 @@ Remove overlapping governed-removal compatibility handler/route/tool and Applica
 - **Native facts:** `AccessRemediationVerified`.
 - **Original response:** `{"mode":"immediate_original_result","responseType":"AccessRemediationVerificationView","firstHttpStatus":200,"terminalResultType":"AccessRemediationVerificationView"}`.
 - **Owner protocols:** Campaign item and atomic bulk decision.
-- **Preserved source validation:** [src/Compliance.Common/Features/AccessReviews/VerifyAccessRemediation.cs](../../../../src/Compliance.Common/Features/AccessReviews/VerifyAccessRemediation.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/AccessReviews/VerifyAccessRemediation.cs](../../../../src/Compliance.Common/Features/AccessReviews/Commands/VerifyAccessRemediation.cs).
 - **Selected changes:** Add required CommandId.
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: `test/Compliance.Tests/Features/AccessReviews/AccessRemediationTests.cs`, `test/Compliance.Tests/Features/Work/FitzAccessReviewCampaignWorkItemDirectoryTests.cs`.
 
@@ -2205,7 +2205,7 @@ Remove overlapping governed-removal compatibility handler/route/tool and Applica
 - **Native facts:** `CriterionNotApplicableWithdrawn`.
 - **Original response:** `{"mode":"immediate_original_result","responseType":"Unit","firstHttpStatus":200,"terminalResultType":"Unit"}`.
 - **Owner protocols:** Per-criterion applicability line.
-- **Preserved source validation:** [src/Compliance.Common/Features/ControlMappings/WithdrawCriterionNotApplicable.cs](../../../../src/Compliance.Common/Features/ControlMappings/WithdrawCriterionNotApplicable.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/ControlMappings/WithdrawCriterionNotApplicable.cs](../../../../src/Compliance.Common/Features/ControlMappings/Commands/WithdrawCriterionNotApplicable.cs).
 - **Selected changes:** Add required CommandId.
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: `test/Compliance.Tests/Features/ControlMappings/ControlCriterionMappingHandlerTests.cs`.
 
@@ -2219,6 +2219,6 @@ Remove overlapping governed-removal compatibility handler/route/tool and Applica
 - **Native facts:** `ServiceEngagementMutationRecorded`.
 - **Original response:** `{"mode":"immediate_original_result","responseType":"ServiceEngagementView","firstHttpStatus":200,"terminalResultType":"ServiceEngagementView"}`.
 - **Owner protocols:** Service epoch and permanent practice commitments.
-- **Preserved source validation:** [src/Compliance.Common/Features/AccessControl/WithdrawServiceEngagementStaffProposal.cs](../../../../src/Compliance.Common/Features/AccessControl/WithdrawServiceEngagementStaffProposal.cs).
+- **Preserved source validation:** [src/Compliance.Common/Features/AccessControl/WithdrawServiceEngagementStaffProposal.cs](../../../../src/Compliance.Common/Features/AccessControl/Commands/WithdrawServiceEngagementStaffProposal.cs).
 - **Selected changes:** Add required CommandId. Rename ExpectedSequence to ExpectedRevision and compare the new target owner revision.
 - **Required regressions:** `ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange`, `ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision`, `ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity`, `ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof`, `ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome`; include each applicable [ordered race](design-review-traces.json). Existing fixtures: `test/Compliance.Tests/Features/AccessControl/AttestServiceEngagementManagementWriteWallTests.cs`, `test/Compliance.Tests/Features/AccessControl/FirmOperationsCompositionTests.cs`.

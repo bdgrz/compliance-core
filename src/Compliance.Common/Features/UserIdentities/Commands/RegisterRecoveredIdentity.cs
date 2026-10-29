@@ -1,0 +1,16 @@
+using Cntryl.Portia;
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.Proofs.Models;
+using Bdgrz.Compliance.Features.UserIdentities.Contracts;
+using Bdgrz.Compliance.Features.UserIdentities.Events;
+namespace Bdgrz.Compliance.Features.UserIdentities.Commands;
+
+/// <summary>Registers the replacement identity for the account, or returns the proof of its existing same-account registration.</summary>
+[Discriminator("bdgrz.identity-recovery.register-recovered-identity", 1)]
+public sealed record RegisterRecoveredIdentity(Uuid CommandId, SourceFactProof<IdentityRecoveryAccepted> Source, EventStreamAddress Target, Uuid OperationId,
+    long Generation, long? ExpectedRevision, ImmutableContentRef Intent, Uuid ChallengeId,
+    Uuid AccountId, Uuid ReplacementIdentityId, ImmutableContentRef ProtectionProofManifest)
+    : IIdentityRecoveryStepReceiver
+{
+    Uuid IIdentifiedRequest.RequestId => CommandId;
+}

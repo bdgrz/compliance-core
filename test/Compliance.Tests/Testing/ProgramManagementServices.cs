@@ -1,26 +1,124 @@
-using Bdgrz.Compliance.Features.Workforce;
-using Bdgrz.Compliance.Features.Work;
-using Bdgrz.Compliance.Features.Risks;
-using Bdgrz.Compliance.Features.Boundaries;
-using Bdgrz.Compliance.Features.Commitments;
-using Bdgrz.Compliance.Features.Policies;
-using Bdgrz.Compliance.Features.Controls;
 using System.Security.Claims;
-using Bdgrz.Compliance.Features.AccessControl;
-using Bdgrz.Compliance.Features.Content;
-using Bdgrz.Compliance.Features.ControlMappings;
-using Bdgrz.Compliance.Features.Evaluations;
-using Bdgrz.Compliance.Features.NativeOperations;
-using Bdgrz.Compliance.Features.Operations;
-using Bdgrz.Compliance.Features.Programs;
-using Bdgrz.Compliance.Features.Providers;
 using Bdgrz.Compliance.Hosting.Persistence;
 using Cntryl.Fitz.Testing;
-using Bdgrz.Compliance.Tests.Features.AccessControl;
 using Cntryl.Portia;
 using Cntryl.Portia.Testing;
 using Microsoft.Extensions.DependencyInjection;
-
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.AccessControl.Rules;
+using Bdgrz.Compliance.Features.AccessControl.Services;
+using Bdgrz.Compliance.Features.AccessReviews.Services;
+using Bdgrz.Compliance.Features.Applications.Models;
+using Bdgrz.Compliance.Features.AuditPackages.Rules;
+using Bdgrz.Compliance.Features.AuditPopulations.Models;
+using Bdgrz.Compliance.Features.AuditorRequests.Models;
+using Bdgrz.Compliance.Features.AuditorRequests.Processes;
+using Bdgrz.Compliance.Features.Boundaries.Rules;
+using Bdgrz.Compliance.Features.Boundaries.Services;
+using Bdgrz.Compliance.Features.Commitments.Rules;
+using Bdgrz.Compliance.Features.Commitments.Services;
+using Bdgrz.Compliance.Features.Content.Contracts;
+using Bdgrz.Compliance.Features.Content.Persistence;
+using Bdgrz.Compliance.Features.ControlMappings.History;
+using Bdgrz.Compliance.Features.ControlMappings.Rules;
+using Bdgrz.Compliance.Features.Controls.Contracts;
+using Bdgrz.Compliance.Features.Controls.Rules;
+using Bdgrz.Compliance.Features.Controls.Services;
+using Bdgrz.Compliance.Features.Evidence.Models;
+using Bdgrz.Compliance.Features.Incidents.Rules;
+using Bdgrz.Compliance.Features.NamedRecords.Models;
+using Bdgrz.Compliance.Features.NamedRecords.Processes;
+using Bdgrz.Compliance.Features.NativeOperations.History;
+using Bdgrz.Compliance.Features.NativeOperations.Models;
+using Bdgrz.Compliance.Features.Operations.History;
+using Bdgrz.Compliance.Features.Operations.Models;
+using Bdgrz.Compliance.Features.Policies.Rules;
+using Bdgrz.Compliance.Features.PolicyDistribution.Rules;
+using Bdgrz.Compliance.Features.Processes.Processes;
+using Bdgrz.Compliance.Features.Programs.Contracts;
+using Bdgrz.Compliance.Features.Programs.Models;
+using Bdgrz.Compliance.Features.Programs.Readers;
+using Bdgrz.Compliance.Features.Programs.Rules;
+using Bdgrz.Compliance.Features.Programs.Services;
+using Bdgrz.Compliance.Features.Providers.History;
+using Bdgrz.Compliance.Features.Providers.Rules;
+using Bdgrz.Compliance.Features.Providers.Services;
+using Bdgrz.Compliance.Features.Readiness.Rules;
+using Bdgrz.Compliance.Features.Remediation.Processes;
+using Bdgrz.Compliance.Features.Retention.Models;
+using Bdgrz.Compliance.Features.Risks.Rules;
+using Bdgrz.Compliance.Features.Risks.Services;
+using Bdgrz.Compliance.Features.SourceFacts.Models;
+using Bdgrz.Compliance.Features.SourceFacts.Rules;
+using Bdgrz.Compliance.Features.SystemDescription.Projections;
+using Bdgrz.Compliance.Features.TechnologyInventory.Models;
+using Bdgrz.Compliance.Features.Tenants.Contracts;
+using Bdgrz.Compliance.Features.Tenants.Models;
+using Bdgrz.Compliance.Features.Tenants.Processes;
+using Bdgrz.Compliance.Features.Versioning.Models;
+using Bdgrz.Compliance.Features.Work.History;
+using Bdgrz.Compliance.Features.Work.Models;
+using Bdgrz.Compliance.Features.Work.Services;
+using Bdgrz.Compliance.Features.Workforce.Rules;
+using Bdgrz.Compliance.Features.Workforce.Services;
+using Bdgrz.Compliance.Tests.Features.AccessControl.Tests;
+using Bdgrz.Compliance.Tests.Features.AccessReviews.Tests;
+using Bdgrz.Compliance.Tests.Features.AdvisorCollaboration.Tests;
+using Bdgrz.Compliance.Tests.Features.Applications.Tests;
+using Bdgrz.Compliance.Tests.Features.AuditPackages.Tests;
+using Bdgrz.Compliance.Tests.Features.AuditPopulations.Tests;
+using Bdgrz.Compliance.Tests.Features.AuditorRequests.Tests;
+using Bdgrz.Compliance.Tests.Features.Boundaries.Tests;
+using Bdgrz.Compliance.Tests.Features.Changes.Tests;
+using Bdgrz.Compliance.Tests.Features.Commitments.Tests;
+using Bdgrz.Compliance.Tests.Features.ControlMappings.Tests;
+using Bdgrz.Compliance.Tests.Features.Controls.Tests;
+using Bdgrz.Compliance.Tests.Features.Criteria.Tests;
+using Bdgrz.Compliance.Tests.Features.Evaluations.Tests;
+using Bdgrz.Compliance.Tests.Features.Evidence.Tests;
+using Bdgrz.Compliance.Tests.Features.Examinations.Tests;
+using Bdgrz.Compliance.Tests.Features.Exports.Tests;
+using Bdgrz.Compliance.Tests.Features.Incidents.Tests;
+using Bdgrz.Compliance.Tests.Features.MethodologyTemplates.Tests;
+using Bdgrz.Compliance.Tests.Features.NativeOperations.Tests;
+using Bdgrz.Compliance.Tests.Features.Operations.Tests;
+using Bdgrz.Compliance.Tests.Features.Policies.Tests;
+using Bdgrz.Compliance.Tests.Features.PolicyDistribution.Tests;
+using Bdgrz.Compliance.Tests.Features.Programs.Tests;
+using Bdgrz.Compliance.Tests.Features.Providers.Tests;
+using Bdgrz.Compliance.Tests.Features.Readiness.Tests;
+using Bdgrz.Compliance.Tests.Features.Remediation.Tests;
+using Bdgrz.Compliance.Tests.Features.Retention.Tests;
+using Bdgrz.Compliance.Tests.Features.Risks.Tests;
+using Bdgrz.Compliance.Tests.Features.Snapshots.Tests;
+using Bdgrz.Compliance.Tests.Features.SourceFacts.Tests;
+using Bdgrz.Compliance.Tests.Features.SourceUse.Tests;
+using Bdgrz.Compliance.Tests.Features.SystemDescription.Tests;
+using Bdgrz.Compliance.Tests.Features.TechnologyInventory.Tests;
+using Bdgrz.Compliance.Tests.Features.Tenants.Tests;
+using Bdgrz.Compliance.Tests.Features.UserIdentities.Tests;
+using Bdgrz.Compliance.Tests.Features.Work.Tests;
+using Bdgrz.Compliance.Tests.Features.Workforce.Tests;
+using Bdgrz.Compliance.Features.AccessControl.Authorizers;
+using Bdgrz.Compliance.Features.AccessControl.Readers;
+using Bdgrz.Compliance.Features.AccessReviews.Readers;
+using Bdgrz.Compliance.Features.Commitments.Readers;
+using Bdgrz.Compliance.Features.ControlMappings.Readers;
+using Bdgrz.Compliance.Features.Controls.Readers;
+using Bdgrz.Compliance.Features.Evaluations.Readers;
+using Bdgrz.Compliance.Features.Evidence.Readers;
+using Bdgrz.Compliance.Features.Examinations.Aggregates;
+using Bdgrz.Compliance.Features.Operations.Readers;
+using Bdgrz.Compliance.Features.Policies.Readers;
+using Bdgrz.Compliance.Features.Programs.Authorizers;
+using Bdgrz.Compliance.Features.Readiness.Readers;
+using Bdgrz.Compliance.Features.Risks.Readers;
+using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
+using Bdgrz.Compliance.Features.Tenants.Readers;
+using Bdgrz.Compliance.Features.Work.Authorizers;
+using Bdgrz.Compliance.Features.Work.Readers;
+using Bdgrz.Compliance.Features.Workforce.Readers;
+using Bdgrz.Compliance.Features.Boundaries.Readers;
 namespace Bdgrz.Compliance.Tests.Testing;
 
 /// <summary>
@@ -55,10 +153,10 @@ static class ProgramManagementServices
         collection.AddScoped<IndependenceRuleCatalogReader>();
         collection.AddScoped<IndependenceRuleRatificationReader>();
         collection.AddScoped<IndependenceRuleCatalogOperations>();
-        collection.AddScoped<Bdgrz.Compliance.Features.AccessReviews.AccessReviewManifests>();
-        collection.AddScoped<Bdgrz.Compliance.Features.AccessReviews.AccessReviewReader>();
+        collection.AddScoped<Bdgrz.Compliance.Features.AccessReviews.Services.AccessReviewManifests>();
+        collection.AddScoped<Bdgrz.Compliance.Features.AccessReviews.Readers.AccessReviewReader>();
         collection.AddScoped<ClientManagementIndependenceGuard>();
-        collection.AddScoped<Bdgrz.Compliance.Features.PolicyDistribution.PolicyAcknowledgementRecorderGuard>();
+        collection.AddScoped<Bdgrz.Compliance.Features.PolicyDistribution.Rules.PolicyAcknowledgementRecorderGuard>();
         collection.AddScoped<LegacyWorkAssignmentHistory>();
         collection.AddScoped<WorkAssignmentReader>();
         collection.AddScoped<WorkAssignmentAuthorization>();
@@ -70,9 +168,9 @@ static class ProgramManagementServices
         collection.AddScoped<ControlMappingReader>();
         collection.AddScoped<ApplicabilityReader>();
         collection.AddScoped<ControlEvaluationReader>();
-        collection.AddScoped<Bdgrz.Compliance.Features.Risks.RiskGovernanceReader>();
-        collection.AddScoped<Bdgrz.Compliance.Features.Evidence.EvidenceRequestReader>();
-        collection.AddScoped<Bdgrz.Compliance.Features.Readiness.ReadinessReader>();
+        collection.AddScoped<Bdgrz.Compliance.Features.Risks.Readers.RiskGovernanceReader>();
+        collection.AddScoped<Bdgrz.Compliance.Features.Evidence.Readers.EvidenceRequestReader>();
+        collection.AddScoped<Bdgrz.Compliance.Features.Readiness.Readers.ReadinessReader>();
         collection.AddScoped<ControlReader>();
         collection.AddScoped<ControlOperations>();
         collection.AddScoped<BoundaryReader>();
@@ -132,7 +230,7 @@ static class ProgramManagementServices
     }
 
     public static Task SeedAsync(IServiceProvider provider, ProgramRules selected,
-        Func<ProgramRules, Bdgrz.Compliance.Features.Versioning.CommandFailure?> operation) =>
+        Func<ProgramRules, Bdgrz.Compliance.Features.Versioning.Models.CommandFailure?> operation) =>
         SeedAsync(provider, selected, rules =>
         {
             var failure = operation(rules);
@@ -490,7 +588,7 @@ static class ProgramManagementServices
         await PersonSeeds.AppendAsync(reader, services.GetRequiredService<IAggregateWriter>(), events, content, rules);
     }
 
-    public static Task SeedAsync(IServiceProvider provider, PersonRules selected, Func<PersonRules, Bdgrz.Compliance.Features.Versioning.CommandFailure?> operation) =>
+    public static Task SeedAsync(IServiceProvider provider, PersonRules selected, Func<PersonRules, Bdgrz.Compliance.Features.Versioning.Models.CommandFailure?> operation) =>
         SeedAsync(provider, selected, person =>
         {
             var failure = operation(person);

@@ -1,0 +1,382 @@
+using Bdgrz.Compliance.Tests.Testing;
+using Cntryl.Fitz.Testing;
+using Cntryl.Portia;
+using Microsoft.Extensions.DependencyInjection;
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.AccessControl.Services;
+using Bdgrz.Compliance.Features.Applications.Models;
+using Bdgrz.Compliance.Features.AuditPackages.Rules;
+using Bdgrz.Compliance.Features.AuditPopulations.Models;
+using Bdgrz.Compliance.Features.AuditorRequests.Models;
+using Bdgrz.Compliance.Features.AuditorRequests.Processes;
+using Bdgrz.Compliance.Features.Content.Contracts;
+using Bdgrz.Compliance.Features.ControlMappings.History;
+using Bdgrz.Compliance.Features.Controls.Contracts;
+using Bdgrz.Compliance.Features.Evidence.Models;
+using Bdgrz.Compliance.Features.Incidents.Rules;
+using Bdgrz.Compliance.Features.NamedRecords.Processes;
+using Bdgrz.Compliance.Features.NativeOperations.History;
+using Bdgrz.Compliance.Features.Operations.History;
+using Bdgrz.Compliance.Features.Operations.Services;
+using Bdgrz.Compliance.Features.Policies.Rules;
+using Bdgrz.Compliance.Features.Processes.Processes;
+using Bdgrz.Compliance.Features.Providers.History;
+using Bdgrz.Compliance.Features.Readiness.Rules;
+using Bdgrz.Compliance.Features.Remediation.Processes;
+using Bdgrz.Compliance.Features.Responsibilities.Models;
+using Bdgrz.Compliance.Features.Retention.Models;
+using Bdgrz.Compliance.Features.SourceFacts.Models;
+using Bdgrz.Compliance.Features.SourceFacts.Rules;
+using Bdgrz.Compliance.Features.SystemDescription.Projections;
+using Bdgrz.Compliance.Features.Tenants.Models;
+using Bdgrz.Compliance.Features.Tenants.Processes;
+using Bdgrz.Compliance.Features.Work.Models;
+using Bdgrz.Compliance.Features.Work.Readers;
+using Bdgrz.Compliance.Features.Work.Rules;
+using Bdgrz.Compliance.Features.Work.Services;
+using Bdgrz.Compliance.Features.Workforce.Rules;
+using Bdgrz.Compliance.Tests.Features.AccessControl.Tests;
+using Bdgrz.Compliance.Tests.Features.AccessReviews.Tests;
+using Bdgrz.Compliance.Tests.Features.Applications.Tests;
+using Bdgrz.Compliance.Tests.Features.AuditPackages.Tests;
+using Bdgrz.Compliance.Tests.Features.AuditPopulations.Tests;
+using Bdgrz.Compliance.Tests.Features.AuditorRequests.Tests;
+using Bdgrz.Compliance.Tests.Features.Boundaries.Tests;
+using Bdgrz.Compliance.Tests.Features.Changes.Tests;
+using Bdgrz.Compliance.Tests.Features.Commitments.Tests;
+using Bdgrz.Compliance.Tests.Features.ControlMappings.Tests;
+using Bdgrz.Compliance.Tests.Features.Controls.Tests;
+using Bdgrz.Compliance.Tests.Features.Criteria.Tests;
+using Bdgrz.Compliance.Tests.Features.Evaluations.Tests;
+using Bdgrz.Compliance.Tests.Features.Evidence.Tests;
+using Bdgrz.Compliance.Tests.Features.Examinations.Tests;
+using Bdgrz.Compliance.Tests.Features.Exports.Tests;
+using Bdgrz.Compliance.Tests.Features.Incidents.Tests;
+using Bdgrz.Compliance.Tests.Features.MethodologyTemplates.Tests;
+using Bdgrz.Compliance.Tests.Features.NamedRecords.Tests;
+using Bdgrz.Compliance.Tests.Features.NativeOperations.Tests;
+using Bdgrz.Compliance.Tests.Features.Operations.Tests;
+using Bdgrz.Compliance.Tests.Features.Policies.Tests;
+using Bdgrz.Compliance.Tests.Features.PolicyDistribution.Tests;
+using Bdgrz.Compliance.Tests.Features.Processes.Tests;
+using Bdgrz.Compliance.Tests.Features.Programs.Tests;
+using Bdgrz.Compliance.Tests.Features.Providers.Tests;
+using Bdgrz.Compliance.Tests.Features.Readiness.Tests;
+using Bdgrz.Compliance.Tests.Features.Remediation.Tests;
+using Bdgrz.Compliance.Tests.Features.Retention.Tests;
+using Bdgrz.Compliance.Tests.Features.Risks.Tests;
+using Bdgrz.Compliance.Tests.Features.Snapshots.Tests;
+using Bdgrz.Compliance.Tests.Features.SourceFacts.Tests;
+using Bdgrz.Compliance.Tests.Features.SourceUse.Tests;
+using Bdgrz.Compliance.Tests.Features.SystemDescription.Tests;
+using Bdgrz.Compliance.Tests.Features.TechnologyInventory.Tests;
+using Bdgrz.Compliance.Tests.Features.Tenants.Tests;
+using Bdgrz.Compliance.Tests.Features.UserIdentities.Tests;
+using Bdgrz.Compliance.Tests.Features.Workforce.Tests;
+using Bdgrz.Compliance.Features.AccessControl.Aggregates;
+using Bdgrz.Compliance.Features.AccessControl.Events;
+using Bdgrz.Compliance.Features.AccessControl.Handlers;
+using Bdgrz.Compliance.Features.ControlMappings.Readers;
+using Bdgrz.Compliance.Features.Controls.Readers;
+using Bdgrz.Compliance.Features.Evaluations.Readers;
+using Bdgrz.Compliance.Features.Evidence.Readers;
+using Bdgrz.Compliance.Features.Operations.Models;
+using Bdgrz.Compliance.Features.Operations.Readers;
+using Bdgrz.Compliance.Features.Policies.Aggregates;
+using Bdgrz.Compliance.Features.Policies.Readers;
+using Bdgrz.Compliance.Features.PolicyDistribution.Events;
+using Bdgrz.Compliance.Features.PolicyDistribution.Models;
+using Bdgrz.Compliance.Features.PolicyDistribution.Readers;
+using Bdgrz.Compliance.Features.Providers.Aggregates;
+using Bdgrz.Compliance.Features.Risks.Readers;
+using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
+using Bdgrz.Compliance.Features.Work.Commands;
+using Bdgrz.Compliance.Tests;
+namespace Bdgrz.Compliance.Tests.Features.Work.Tests;
+
+public sealed class FitzPolicyCampaignWorkItemDirectoryTests
+{
+    static readonly DateOnly Today = new(2026, 10, 5);
+    static readonly DateTimeOffset Now = new(2026, 10, 5, 12, 0, 0, TimeSpan.Zero);
+
+    [Fact]
+    public async Task ShouldProjectPendingCampaignParticipantAsAccountableWorkGivenCampaignLaunch()
+    {
+        // Arrange
+        var fixture = await OperationsFixture.CreateAsync();
+        var personId = Uuid.CreateVersion4();
+        var userId = Uuid.CreateVersion4();
+        var campaignId = Uuid.CreateVersion4();
+        await using var sourceScope = fixture.Provider.CreateAsyncScope();
+        var writer = sourceScope.ServiceProvider.GetRequiredService<IAggregateWriter>();
+        var directory = new FitzPolicyCampaignWorkItemDirectory(new InMemoryKvClient(),
+            sourceScope.ServiceProvider.GetRequiredService<IAggregateReader>(),
+            sourceScope.ServiceProvider.GetRequiredService<IImmutableContentStore>());
+        var content = sourceScope.ServiceProvider.GetRequiredService<IImmutableContentStore>();
+        var person = new PersonRules(fixture.TenantId, personId);
+        var actor = ActorReference.ForMember(fixture.LeadMemberId, "Compliance Lead");
+        Assert.True(person.Record("Ada Lovelace", null, actor, Now).IsSuccess);
+        Assert.Null(person.CorrelateMembership(1, userId, actor, Now));
+        await PersonSeeds.AppendAsync(sourceScope.ServiceProvider, person);
+        var launched = await Launched(fixture, content, campaignId, 1);
+        var audience = await CampaignFacts.FrozenAsync(content, fixture.TenantId, campaignId,
+            new CampaignAudienceEntry(personId, "Ada Lovelace", "employee", "Engineering",
+                Today.AddYears(-1), Today.AddDays(7)));
+
+        // Act
+        await ProjectAsync(directory, fixture.TenantId, launched, audience);
+        var result = await directory.LoadProgramAsync(fixture.TenantId, fixture.ProgramId,
+            Today, Today.AddDays(30), null);
+        var outsideHorizon = await directory.LoadProgramAsync(fixture.TenantId,
+            fixture.ProgramId, Today, Today.AddDays(6), null);
+        var otherProgram = await directory.LoadProgramAsync(fixture.TenantId,
+            Uuid.CreateVersion4(), Today, DateOnly.MaxValue, null);
+        var otherTenant = await directory.LoadProgramAsync(Uuid.CreateVersion4(),
+            fixture.ProgramId, Today, DateOnly.MaxValue, null);
+
+        // Assert
+        Assert.True(result.IsSuccess);
+        var item = Assert.Single(result.Value);
+        Assert.Equal(PolicyCampaignWork.Acknowledgement, item.Kind);
+        Assert.Equal(Uuid.CreateVersion5(campaignId, "participant:" + personId), item.SourceId);
+        Assert.Equal(Today.AddDays(7), item.DueOn);
+        Assert.Equal("acknowledge", item.NextAction);
+        Assert.Equal($"/api/v1/tenants/{fixture.TenantId}/programs/{fixture.ProgramId}/" +
+                     $"campaigns/{campaignId}/acknowledgements", item.ActionPath);
+        Assert.Equal(new OperatingHolder(OperatingAuthority.MemberHolder,
+            RbacIds.Member(fixture.TenantId, userId)), item.Responsible);
+        Assert.Equal(Now, item.CreatedAt);
+        Assert.Empty(outsideHorizon.Value);
+        Assert.Empty(otherProgram.Value);
+        Assert.Empty(otherTenant.Value);
+        Assert.Equal(2, await directory.LoadRevisionAsync(fixture.TenantId));
+        Assert.Equal(FitzPolicyCampaignWorkItemDirectory.ProjectorName,
+            ((IAccountableWorkItemDirectoryReader)directory).ProjectorName);
+        Assert.Equal(new ProjectionCheckpoint(new EventCursor("campaign-work-cursor")),
+            await directory.LoadCheckpointAsync(fixture.TenantId));
+    }
+
+    [Fact]
+    public async Task ShouldRestoreParticipantWorkGivenWaiverExpiresWithoutFurtherCampaignEvents()
+    {
+        // Arrange
+        var fixture = await OperationsFixture.CreateAsync();
+        var personId = Uuid.CreateVersion4();
+        var campaignId = Uuid.CreateVersion4();
+        await using var sourceScope = fixture.Provider.CreateAsyncScope();
+        var directory = new FitzPolicyCampaignWorkItemDirectory(new InMemoryKvClient(),
+            sourceScope.ServiceProvider.GetRequiredService<IAggregateReader>(),
+            sourceScope.ServiceProvider.GetRequiredService<IImmutableContentStore>());
+        var content = sourceScope.ServiceProvider.GetRequiredService<IImmutableContentStore>();
+        var launched = await Launched(fixture, content, campaignId, 1);
+        var audience = await Audience(content, fixture.TenantId, campaignId, personId);
+        var waiver = CampaignFacts.Waived(fixture.TenantId, campaignId, personId, "Leave", Today.AddDays(10),
+            ActorReference.ForMember(fixture.LeadMemberId, "Compliance Lead"), fixture.LeadMemberId, Now);
+        await ProjectAsync(directory, fixture.TenantId, launched, audience, waiver);
+
+        // Act
+        var covered = await directory.LoadProgramAsync(fixture.TenantId, fixture.ProgramId,
+            Today.AddDays(9), DateOnly.MaxValue, null);
+        var expired = await directory.LoadProgramAsync(fixture.TenantId, fixture.ProgramId,
+            Today.AddDays(10), DateOnly.MaxValue, null);
+
+        // Assert
+        Assert.Empty(covered.Value);
+        var item = Assert.Single(expired.Value);
+        Assert.Equal(Uuid.CreateVersion5(campaignId, "participant:" + personId), item.SourceId);
+    }
+
+    [Fact]
+    public async Task ShouldKeepAcknowledgementSatisfiedGivenAcknowledgedParticipantLeavesAndRejoins()
+    {
+        // Arrange
+        var fixture = await OperationsFixture.CreateAsync();
+        var personId = Uuid.CreateVersion4();
+        var campaignId = Uuid.CreateVersion4();
+        await using var sourceScope = fixture.Provider.CreateAsyncScope();
+        var directory = new FitzPolicyCampaignWorkItemDirectory(new InMemoryKvClient(),
+            sourceScope.ServiceProvider.GetRequiredService<IAggregateReader>(),
+            sourceScope.ServiceProvider.GetRequiredService<IImmutableContentStore>());
+        var content = sourceScope.ServiceProvider.GetRequiredService<IImmutableContentStore>();
+        var launched = await Launched(fixture, content, campaignId, 1);
+        var audience = await Audience(content, fixture.TenantId, campaignId, personId);
+        var actor = ActorReference.ForMember(fixture.LeadMemberId, "Compliance Lead");
+        var acknowledgement = CampaignFacts.Acknowledged(fixture.TenantId, campaignId, personId, launched.Subject,
+            new ActorReference("workforce_person", personId.ToString(), "Ada"), actor, true, Now);
+        var removal = await CampaignFacts.AmendedAsync(content, fixture.TenantId, campaignId, 1, Today, actor,
+            Now.AddDays(1), new CampaignAudienceAmendment(personId, "Ada Lovelace", "leaver", null, null, null));
+        var rejoin = await CampaignFacts.AmendedAsync(content, fixture.TenantId, campaignId, 2, Today.AddDays(2),
+            actor, Now.AddDays(2), new CampaignAudienceAmendment(personId, "Ada Lovelace", "joiner", "employee",
+                "Engineering", Today.AddDays(20)));
+        await ProjectAsync(directory, fixture.TenantId, launched, audience, acknowledgement,
+            removal, rejoin);
+
+        // Act
+        var result = await directory.LoadProgramAsync(fixture.TenantId, fixture.ProgramId,
+            Today.AddDays(3), DateOnly.MaxValue, null);
+
+        // Assert
+        Assert.Empty(result.Value);
+    }
+
+    [Fact]
+    public async Task ShouldRemoveTrainingWorkAfterCompletionIsRecordedGivenTrainingCampaign()
+    {
+        // Arrange
+        var fixture = await OperationsFixture.CreateAsync();
+        var personId = Uuid.CreateVersion4();
+        var campaignId = Uuid.CreateVersion4();
+        await using var sourceScope = fixture.Provider.CreateAsyncScope();
+        var directory = new FitzPolicyCampaignWorkItemDirectory(new InMemoryKvClient(),
+            sourceScope.ServiceProvider.GetRequiredService<IAggregateReader>(),
+            sourceScope.ServiceProvider.GetRequiredService<IImmutableContentStore>());
+        var content = sourceScope.ServiceProvider.GetRequiredService<IImmutableContentStore>();
+        var launched = (await Launched(fixture, content, campaignId, 1)) with
+        {
+            Subject = new CampaignSubject("training", Uuid.CreateVersion4(), "TR-SEC",
+                "Security Awareness", 1, "training-hash"),
+            AcknowledgementText = null,
+        };
+        var audience = await Audience(content, fixture.TenantId, campaignId, personId);
+        var completed = CampaignFacts.Completed(fixture.TenantId, campaignId, personId, launched.Subject, Today,
+            ActorReference.ForMember(fixture.LeadMemberId, "Compliance Lead"), Now);
+        await ProjectAsync(directory, fixture.TenantId, launched, audience, completed);
+
+        // Act
+        var result = await directory.LoadProgramAsync(fixture.TenantId, fixture.ProgramId,
+            Today, DateOnly.MaxValue, null);
+
+        // Assert
+        Assert.Empty(result.Value);
+    }
+
+    [Fact]
+    public async Task ShouldRemoveCampaignWorkAfterClosureGivenPendingParticipant()
+    {
+        // Arrange
+        var fixture = await OperationsFixture.CreateAsync();
+        var personId = Uuid.CreateVersion4();
+        var campaignId = Uuid.CreateVersion4();
+        await using var sourceScope = fixture.Provider.CreateAsyncScope();
+        var directory = new FitzPolicyCampaignWorkItemDirectory(new InMemoryKvClient(),
+            sourceScope.ServiceProvider.GetRequiredService<IAggregateReader>(),
+            sourceScope.ServiceProvider.GetRequiredService<IImmutableContentStore>());
+        var content = sourceScope.ServiceProvider.GetRequiredService<IImmutableContentStore>();
+        var launched = await Launched(fixture, content, campaignId, 1);
+        var audience = await Audience(content, fixture.TenantId, campaignId, personId);
+        var closed = CampaignFacts.Closed(fixture.TenantId, campaignId, Today, "Period ended",
+            ActorReference.ForMember(fixture.LeadMemberId, "Compliance Lead"), Now);
+        await ProjectAsync(directory, fixture.TenantId, launched, audience, closed);
+
+        // Act
+        var result = await directory.LoadProgramAsync(fixture.TenantId, fixture.ProgramId,
+            Today, DateOnly.MaxValue, null);
+
+        // Assert
+        Assert.Empty(result.Value);
+    }
+
+    [Fact]
+    public async Task ShouldListProjectedCampaignWithoutDirectCampaignReadGivenCaughtUpProjection()
+    {
+        // Arrange
+        var fixture = await OperationsFixture.CreateAsync();
+        var campaignId = Uuid.CreateVersion4();
+        var personId = Uuid.CreateVersion4();
+        var candidate = PolicyCampaignWork.CreateCandidate(fixture.TenantId, fixture.ProgramId,
+            campaignId, new CampaignSubject("policy", Uuid.CreateVersion4(), "POL-AC",
+                "Access Control Policy", 2, "content-hash"), fixture.ApproverMemberId, Now,
+            personId, "Ada Lovelace", Today.AddDays(7), fixture.ApproverMemberId);
+        var projected = new CampaignProjection(candidate);
+        var events = fixture.Provider.GetRequiredService<IDomainEventReader>();
+        var consistency = new WorkQueueReadConsistency(events, [projected]);
+        await using var scope = fixture.Provider.CreateAsyncScope();
+        var services = scope.ServiceProvider;
+        var queue = new WorkQueueReader(services.GetRequiredService<IAggregateReader>(), services.GetRequiredService<WorkAssignmentReader>(), services.GetRequiredService<ControlReader>(), services.GetRequiredService<PolicyReader>(),
+            services.GetRequiredService<OperatingAuthority>(), TimeProvider.System, consistency,
+            campaigns: new UnexpectedCampaignDirectory(), accountableWorkItems: [projected],
+            operatingReader: services.GetRequiredService<ControlOperationsReader>(),
+            mappingReader: services.GetRequiredService<ControlMappingReader>(),
+            applicabilityReader: services.GetRequiredService<ApplicabilityReader>(),
+            evaluationReader: services.GetRequiredService<ControlEvaluationReader>(),
+            riskGovernance: services.GetRequiredService<Bdgrz.Compliance.Features.Risks.Readers.RiskGovernanceReader>(),
+            evidenceRequests: services.GetRequiredService<Bdgrz.Compliance.Features.Evidence.Readers.EvidenceRequestReader>());
+        var actor = new OperationsActor(fixture.ApproverUserId, fixture.ApproverMemberId,
+            "Approver");
+
+        // Act
+        var result = await queue.ReadAsync(fixture.TenantId, fixture.ProgramId, actor, 30,
+            CancellationToken.None);
+
+        // Assert
+        Assert.True(result.IsSuccess);
+        Assert.Single(result.Value.Entries,
+            entry => entry.Candidate.Kind == PolicyCampaignWork.Acknowledgement);
+    }
+
+    static Task<PolicyCampaignLaunched> Launched(OperationsFixture fixture, IImmutableContentStore content,
+        Uuid campaignId, int audienceCount) => CampaignFacts.LaunchedAsync(content, fixture.TenantId,
+        fixture.ProgramId, campaignId, new CampaignSubject("policy", Uuid.CreateVersion4(), "POL-AC",
+            "Access Control Policy", 2, "content-hash"), PolicyAudience.CoreSecurity, [], Today, Today.AddDays(7),
+        "Read and acknowledge", audienceCount,
+        ActorReference.ForMember(fixture.LeadMemberId, "Compliance Lead"), fixture.LeadMemberId, Now);
+
+    static Task<PolicyCampaignAudienceFrozen> Audience(IImmutableContentStore content, Uuid tenantId,
+        Uuid campaignId, Uuid personId) => CampaignFacts.FrozenAsync(content, tenantId, campaignId,
+        new CampaignAudienceEntry(personId, "Ada Lovelace", "employee", "Engineering", Today.AddYears(-1),
+            Today.AddDays(7)));
+
+    static async Task ProjectAsync(FitzPolicyCampaignWorkItemDirectory directory,
+        Uuid tenantId, params DomainEvent[] events)
+    {
+        var identity = new CheckpointIdentity(FitzPolicyCampaignWorkItemDirectory.ProjectorName,
+            EventStreamPattern.ForPattern(tenantId.ToString()));
+        var cursor = new ProjectionCheckpoint(new EventCursor("campaign-work-cursor"));
+        await using var batch = await directory.BeginAsync(
+            new ProjectionBatchContext(identity, ProjectionCheckpoint.Start));
+        foreach (var domainEvent in events)
+            await directory.ApplyAsync(domainEvent);
+        await batch.CommitAsync(cursor);
+    }
+
+    sealed class CampaignProjection(WorkCandidate candidate) : IAccountableWorkItemDirectoryReader
+    {
+        public string ProjectorName => "TestPolicyCampaignWorkItems";
+
+        public IReadOnlyCollection<string> ProjectedKinds => PolicyCampaignWork.ProjectedKinds;
+
+        public EventStreamPattern SourcePattern(Uuid tenantId) =>
+            EventStreamPattern.ForPattern(tenantId.ToString(), "policy-distribution-campaigns");
+
+        public ValueTask<ProjectionCheckpoint> LoadCheckpointAsync(Uuid tenantId,
+            CancellationToken ct = default) => ValueTask.FromResult(ProjectionCheckpoint.Start);
+
+        public ValueTask<Result<IReadOnlyList<WorkCandidate>>> LoadProgramAsync(Uuid tenantId,
+            Uuid programId, CancellationToken ct = default) =>
+            ValueTask.FromResult(Result<IReadOnlyList<WorkCandidate>>.Success([candidate]));
+
+        public ValueTask<Result<IReadOnlyList<WorkCandidate>>> LoadProgramAsync(Uuid tenantId,
+            Uuid programId, DateOnly today, DateOnly horizon, Uuid? workItemId,
+            CancellationToken ct = default) =>
+            ValueTask.FromResult(Result<IReadOnlyList<WorkCandidate>>.Success(
+                candidate.DueOn is { } dueOn && dueOn > horizon ||
+                workItemId is { } wanted && candidate.WorkItemId != wanted ? [] : [candidate]));
+    }
+
+    sealed class UnexpectedCampaignDirectory : ICampaignDirectoryReader
+    {
+        public ValueTask<ProjectionCheckpoint> LoadCheckpointAsync(Uuid tenantId,
+            CancellationToken ct = default) => throw new InvalidOperationException(
+            "The campaign source directory should not be read when all campaign work is projected.");
+
+        public ValueTask<Page<CampaignSummaryView>> ListProgramAsync(Uuid tenantId, Uuid programId,
+            int limit, string? cursor, CancellationToken ct = default) =>
+            throw new InvalidOperationException(
+                "The campaign source directory should not be read when all campaign work is projected.");
+
+        public ValueTask<IReadOnlyList<Uuid>> ListForSubjectAsync(Uuid tenantId, Uuid programId,
+            Uuid subjectId, long version, CancellationToken ct = default) =>
+            throw new InvalidOperationException(
+                "The campaign source directory should not be read when all campaign work is projected.");
+    }
+}

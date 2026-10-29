@@ -1,0 +1,20 @@
+using Bdgrz.Compliance.Features.AccessControl.Processes;
+using Bdgrz.Compliance.Features.AccessControl.Services;
+using Bdgrz.Compliance.Features.NamedRecords.Processes;
+using Bdgrz.Compliance.Features.Processes.Processes;
+using Bdgrz.Compliance.Features.Programs.Readers;
+using Bdgrz.Compliance.Features.Tenants.Processes;
+using Bdgrz.Compliance.Features.UserIdentities.Models;
+using Bdgrz.Compliance.Features.UserIdentities.Processes;
+using Bdgrz.Compliance.Features.Work.Models;
+using Bdgrz.Compliance.Features.AccessControl.Aggregates;
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.Providers.Projections;
+namespace Bdgrz.Compliance.Features.AccessControl.Readers;
+
+/// <summary>Reads the staff directory read model; it has no size cap.</summary>
+public interface IFirmStaffDirectoryReader
+{
+    /// <summary>Lists registered staff ordered by staff member id, optionally only active staff.</summary>
+    ValueTask<FirmStaffDirectoryView> ListAsync(bool activeOnly, CancellationToken ct = default);
+}

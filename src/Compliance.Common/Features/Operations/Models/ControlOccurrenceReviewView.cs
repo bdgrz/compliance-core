@@ -1,0 +1,13 @@
+using Cntryl.Portia;
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.Retention.Models;
+namespace Bdgrz.Compliance.Features.Operations.Models;
+
+/// <summary>
+///     The independent review decision on one exact attestation version: approved, returned,
+///     action_requested, or deferred. Requested actions become findings.
+/// </summary>
+public sealed record ControlOccurrenceReviewView(Uuid DecisionId, Uuid AttestationId,
+    int AttestationVersion, string Outcome, string Rationale,
+    IReadOnlyList<string> RequestedActions, Uuid ReviewerMemberId, ActorReference ReviewedBy,
+    DateTimeOffset ReviewedAt, Uuid? SeparationOfDutiesWaiverId = null);

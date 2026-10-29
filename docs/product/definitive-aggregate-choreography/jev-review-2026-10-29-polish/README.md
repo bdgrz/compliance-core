@@ -1,0 +1,3 @@
+# Catalog polish Jev review (2026-10-29)
+
+Model `jev-1.14.0`. The request carries the modelling rules, one use-receipt example, one admission example, the thirteen refusal events, the application-name rules, the independence owners and D26 rules, the generic-revision owners and the borderline classifications; the response carries 43 answers. Adopted and open decisions are recorded in `../decisions.json` (ids OWNER_ApplicationNameClaim, OWNER_WorkDigestPreference_Technical, EV-D06 to EV-D09, RULE_D26_OWNERS, and the OPEN_* items). Jev is advisory; every adopted answer was checked against the C# source or the product decision text first.

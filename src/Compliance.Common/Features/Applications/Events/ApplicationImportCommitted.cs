@@ -1,0 +1,19 @@
+using Cntryl.Portia;
+using Bdgrz.Compliance.Features.NamedRecords.Contracts;
+using Bdgrz.Compliance.Features.Evidence.Models;
+using Bdgrz.Compliance.Features.NativeOperations.Contracts;
+using Bdgrz.Compliance.Features.NativeOperations.Models;
+using Bdgrz.Compliance.Features.Proofs.Models;
+namespace Bdgrz.Compliance.Features.Applications.Events;
+
+/// <summary>
+///     The one publication fact of a batch: every target is published together. <paramref name="EffectsManifest" />
+///     lists the native proof of every frozen row; <paramref name="FrozenRows" /> is the complete frozen row list.
+///     <paramref name="SourceGeneration" /> is the source revision the plan was frozen against.
+/// </summary>
+[Discriminator("bdgrz.application_import.committed", 2)]
+public sealed record ApplicationImportCommitted(Uuid TenantId, string SourceKey,
+    string SourceNamespace, Uuid BatchId, long Revision, string PlanSha256,
+    ImmutableContentRef EffectsManifest, DateTimeOffset CommittedAt, OperationProvenance Operation,
+    ImmutableContentRef FrozenRows, long SourceGeneration, ImmutableContentRef Intent,
+    ImmutableContentRef? FirstResponse, ImmutableContentRef? OperationResult) : DomainEvent, INativeOperationFact;

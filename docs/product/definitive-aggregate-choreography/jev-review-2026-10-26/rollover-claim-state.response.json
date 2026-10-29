@@ -1,0 +1,42 @@
+{
+  "httpStatus": 200,
+  "response": {
+    "model": "jev-1.14.0",
+    "answers": {
+      "shape": {
+        "type": "choice",
+        "choice": "adequate",
+        "confidence": 1,
+        "probabilities": {
+          "adequate": 1,
+          "insufficient": 0,
+          "wrong_boundary": 0,
+          "overloaded": 0
+        }
+      },
+      "transition": {
+        "type": "noul",
+        "noul": 0.82
+      },
+      "approval": {
+        "type": "noul",
+        "noul": 0.94
+      },
+      "process": {
+        "type": "choice",
+        "choice": "process",
+        "confidence": 1,
+        "probabilities": {
+          "process": 1,
+          "aggregate": 0,
+          "both": 0,
+          "insufficient": 0
+        }
+      }
+    },
+    "usage": {
+      "input_tokens": 2522,
+      "output_tokens": 132
+    }
+  }
+}

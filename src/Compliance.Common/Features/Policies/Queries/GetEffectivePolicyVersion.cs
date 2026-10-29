@@ -1,0 +1,11 @@
+using Cntryl.Portia;
+using Bdgrz.Compliance.Features.AccessControl.Commands;
+using Bdgrz.Compliance.Features.Policies.Models;
+using Bdgrz.Compliance.Features.Programs.Contracts;
+namespace Bdgrz.Compliance.Features.Policies.Queries;
+
+/// <summary>The approved version whose effective interval contains the date.</summary>
+[Discriminator("bdgrz.policy.version.effective.get", 1)]
+public sealed record GetEffectivePolicyVersion(Uuid TenantId, Uuid ProgramId, Uuid PolicyId,
+    DateOnly EffectiveOn)
+    : IRequest<PolicyVersionView>, IProgramReadRequest, ICallable;

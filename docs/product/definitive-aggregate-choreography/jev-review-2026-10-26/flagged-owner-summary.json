@@ -1,0 +1,618 @@
+{
+  "model": "jev-1.14.0",
+  "owners": 24,
+  "batches": [
+    {
+      "pass": "neutral_source_review",
+      "stem": "neutral_source_review-01",
+      "status": 200,
+      "usage": {
+        "input_tokens": 3935,
+        "output_tokens": 260
+      },
+      "flaggedRows": [
+        {
+          "owner": "AccessPopulation",
+          "choice": "selected_boundary_supported",
+          "probabilities": {
+            "selected_boundary_supported": 0.76,
+            "boundary_change_required": 0.13,
+            "source_gap": 0.11
+          },
+          "evidence": 0.21
+        },
+        {
+          "owner": "AccessPopulationException",
+          "choice": "selected_boundary_supported",
+          "probabilities": {
+            "selected_boundary_supported": 0.81,
+            "boundary_change_required": 0.1,
+            "source_gap": 0.09
+          },
+          "evidence": 0.17
+        },
+        {
+          "owner": "AccessPrincipalClassification",
+          "choice": "selected_boundary_supported",
+          "probabilities": {
+            "selected_boundary_supported": 0.89,
+            "boundary_change_required": 0.04,
+            "source_gap": 0.07
+          },
+          "evidence": 0.19
+        },
+        {
+          "owner": "ArtifactLegalHold",
+          "choice": "selected_boundary_supported",
+          "probabilities": {
+            "selected_boundary_supported": 0.98,
+            "boundary_change_required": 0.01,
+            "source_gap": 0.01
+          },
+          "evidence": 0.25
+        }
+      ]
+    },
+    {
+      "pass": "neutral_source_review",
+      "stem": "neutral_source_review-02",
+      "status": 200,
+      "usage": {
+        "input_tokens": 4677,
+        "output_tokens": 260
+      },
+      "flaggedRows": [
+        {
+          "owner": "ArtifactRetentionBasis",
+          "choice": "selected_boundary_supported",
+          "probabilities": {
+            "selected_boundary_supported": 0.89,
+            "boundary_change_required": 0.03,
+            "source_gap": 0.08
+          },
+          "evidence": 0.12
+        },
+        {
+          "owner": "AuditPackageDelivery",
+          "choice": "selected_boundary_supported",
+          "probabilities": {
+            "selected_boundary_supported": 0.75,
+            "boundary_change_required": 0.13,
+            "source_gap": 0.12
+          },
+          "evidence": 0.1
+        },
+        {
+          "owner": "AuditorSampleSelection",
+          "choice": "selected_boundary_supported",
+          "probabilities": {
+            "selected_boundary_supported": 0.81,
+            "boundary_change_required": 0.05,
+            "source_gap": 0.14
+          },
+          "evidence": 0.12
+        },
+        {
+          "owner": "CommitmentDraft",
+          "choice": "selected_boundary_supported",
+          "probabilities": {
+            "selected_boundary_supported": 0.77,
+            "boundary_change_required": 0.22,
+            "source_gap": 0.01
+          },
+          "evidence": 0.34
+        }
+      ]
+    },
+    {
+      "pass": "neutral_source_review",
+      "stem": "neutral_source_review-03",
+      "status": 200,
+      "usage": {
+        "input_tokens": 4793,
+        "output_tokens": 260
+      },
+      "flaggedRows": [
+        {
+          "owner": "ControlCriterionMapping",
+          "choice": "selected_boundary_supported",
+          "probabilities": {
+            "selected_boundary_supported": 0.95,
+            "boundary_change_required": 0.03,
+            "source_gap": 0.02
+          },
+          "evidence": 0.2
+        },
+        {
+          "owner": "ControlOccurrence",
+          "choice": "selected_boundary_supported",
+          "probabilities": {
+            "selected_boundary_supported": 0.86,
+            "boundary_change_required": 0.1,
+            "source_gap": 0.04
+          },
+          "evidence": 0.13
+        },
+        {
+          "owner": "CriteriaTextOverlay",
+          "choice": "selected_boundary_supported",
+          "probabilities": {
+            "selected_boundary_supported": 0.93,
+            "boundary_change_required": 0.03,
+            "source_gap": 0.04
+          },
+          "evidence": 0.15
+        },
+        {
+          "owner": "EngagementManagementAcknowledgement",
+          "choice": "selected_boundary_supported",
+          "probabilities": {
+            "selected_boundary_supported": 0.85,
+            "boundary_change_required": 0.05,
+            "source_gap": 0.1
+          },
+          "evidence": 0.09
+        }
+      ]
+    },
+    {
+      "pass": "neutral_source_review",
+      "stem": "neutral_source_review-04",
+      "status": 200,
+      "usage": {
+        "input_tokens": 8281,
+        "output_tokens": 260
+      },
+      "flaggedRows": [
+        {
+          "owner": "FindingAggregate",
+          "choice": "selected_boundary_supported",
+          "probabilities": {
+            "selected_boundary_supported": 0.84,
+            "boundary_change_required": 0.1,
+            "source_gap": 0.06
+          },
+          "evidence": 0.13
+        },
+        {
+          "owner": "FirmStaffIdentityClaim",
+          "choice": "selected_boundary_supported",
+          "probabilities": {
+            "selected_boundary_supported": 0.91,
+            "boundary_change_required": 0.05,
+            "source_gap": 0.04
+          },
+          "evidence": 0.12
+        },
+        {
+          "owner": "IdentityRecovery",
+          "choice": "selected_boundary_supported",
+          "probabilities": {
+            "selected_boundary_supported": 0.89,
+            "boundary_change_required": 0.08,
+            "source_gap": 0.03
+          },
+          "evidence": 0.22
+        },
+        {
+          "owner": "OperationalProcessNameClaim",
+          "choice": "selected_boundary_supported",
+          "probabilities": {
+            "selected_boundary_supported": 0.92,
+            "boundary_change_required": 0.05,
+            "source_gap": 0.03
+          },
+          "evidence": 0.13
+        }
+      ]
+    },
+    {
+      "pass": "neutral_source_review",
+      "stem": "neutral_source_review-05",
+      "status": 200,
+      "usage": {
+        "input_tokens": 5738,
+        "output_tokens": 260
+      },
+      "flaggedRows": [
+        {
+          "owner": "PartnerIndependenceDecision",
+          "choice": "selected_boundary_supported",
+          "probabilities": {
+            "selected_boundary_supported": 0.85,
+            "boundary_change_required": 0.04,
+            "source_gap": 0.11
+          },
+          "evidence": 0.14
+        },
+        {
+          "owner": "PolicyCampaignParticipant",
+          "choice": "selected_boundary_supported",
+          "probabilities": {
+            "selected_boundary_supported": 0.88,
+            "boundary_change_required": 0.06,
+            "source_gap": 0.06
+          },
+          "evidence": 0.18
+        },
+        {
+          "owner": "ProgramRollover",
+          "choice": "selected_boundary_supported",
+          "probabilities": {
+            "selected_boundary_supported": 0.94,
+            "boundary_change_required": 0.06,
+            "source_gap": 0
+          },
+          "evidence": 0.53
+        },
+        {
+          "owner": "ProviderAssuranceReview",
+          "choice": "selected_boundary_supported",
+          "probabilities": {
+            "selected_boundary_supported": 0.88,
+            "boundary_change_required": 0.09,
+            "source_gap": 0.03
+          },
+          "evidence": 0.2
+        }
+      ]
+    },
+    {
+      "pass": "neutral_source_review",
+      "stem": "neutral_source_review-06",
+      "status": 200,
+      "usage": {
+        "input_tokens": 3976,
+        "output_tokens": 260
+      },
+      "flaggedRows": [
+        {
+          "owner": "ProviderNameClaim",
+          "choice": "selected_boundary_supported",
+          "probabilities": {
+            "selected_boundary_supported": 0.88,
+            "boundary_change_required": 0.03,
+            "source_gap": 0.09
+          },
+          "evidence": 0.17
+        },
+        {
+          "owner": "ReadinessAssessment",
+          "choice": "selected_boundary_supported",
+          "probabilities": {
+            "selected_boundary_supported": 0.89,
+            "boundary_change_required": 0.03,
+            "source_gap": 0.08
+          },
+          "evidence": 0.15
+        },
+        {
+          "owner": "TenantInvitationMailboxClaim",
+          "choice": "selected_boundary_supported",
+          "probabilities": {
+            "selected_boundary_supported": 0.63,
+            "boundary_change_required": 0.1,
+            "source_gap": 0.27
+          },
+          "evidence": 0.15
+        },
+        {
+          "owner": "TrainingRequirement",
+          "choice": "selected_boundary_supported",
+          "probabilities": {
+            "selected_boundary_supported": 0.9,
+            "boundary_change_required": 0.04,
+            "source_gap": 0.06
+          },
+          "evidence": 0.18
+        }
+      ]
+    },
+    {
+      "pass": "adversarial_source_review",
+      "stem": "adversarial_source_review-01",
+      "status": 200,
+      "usage": {
+        "input_tokens": 3981,
+        "output_tokens": 260
+      },
+      "flaggedRows": [
+        {
+          "owner": "AccessPopulation",
+          "choice": "selected_boundary_supported",
+          "probabilities": {
+            "selected_boundary_supported": 0.69,
+            "boundary_change_required": 0.05,
+            "source_gap": 0.26
+          },
+          "evidence": 0.21
+        },
+        {
+          "owner": "AccessPopulationException",
+          "choice": "selected_boundary_supported",
+          "probabilities": {
+            "selected_boundary_supported": 0.64,
+            "boundary_change_required": 0.04,
+            "source_gap": 0.32
+          },
+          "evidence": 0.16
+        },
+        {
+          "owner": "AccessPrincipalClassification",
+          "choice": "selected_boundary_supported",
+          "probabilities": {
+            "selected_boundary_supported": 0.79,
+            "boundary_change_required": 0.02,
+            "source_gap": 0.19
+          },
+          "evidence": 0.19
+        },
+        {
+          "owner": "ArtifactLegalHold",
+          "choice": "selected_boundary_supported",
+          "probabilities": {
+            "selected_boundary_supported": 0.86,
+            "boundary_change_required": 0.02,
+            "source_gap": 0.12
+          },
+          "evidence": 0.26
+        }
+      ]
+    },
+    {
+      "pass": "adversarial_source_review",
+      "stem": "adversarial_source_review-02",
+      "status": 200,
+      "usage": {
+        "input_tokens": 4723,
+        "output_tokens": 260
+      },
+      "flaggedRows": [
+        {
+          "owner": "ArtifactRetentionBasis",
+          "choice": "selected_boundary_supported",
+          "probabilities": {
+            "selected_boundary_supported": 0.73,
+            "boundary_change_required": 0.02,
+            "source_gap": 0.25
+          },
+          "evidence": 0.13
+        },
+        {
+          "owner": "AuditPackageDelivery",
+          "choice": "selected_boundary_supported",
+          "probabilities": {
+            "selected_boundary_supported": 0.45999999999999996,
+            "boundary_change_required": 0.08,
+            "source_gap": 0.46
+          },
+          "evidence": 0.11
+        },
+        {
+          "owner": "AuditorSampleSelection",
+          "choice": "selected_boundary_supported",
+          "probabilities": {
+            "selected_boundary_supported": 0.61,
+            "boundary_change_required": 0.03,
+            "source_gap": 0.36
+          },
+          "evidence": 0.13
+        },
+        {
+          "owner": "CommitmentDraft",
+          "choice": "selected_boundary_supported",
+          "probabilities": {
+            "selected_boundary_supported": 0.6,
+            "boundary_change_required": 0.34,
+            "source_gap": 0.06
+          },
+          "evidence": 0.29
+        }
+      ]
+    },
+    {
+      "pass": "adversarial_source_review",
+      "stem": "adversarial_source_review-03",
+      "status": 200,
+      "usage": {
+        "input_tokens": 4839,
+        "output_tokens": 260
+      },
+      "flaggedRows": [
+        {
+          "owner": "ControlCriterionMapping",
+          "choice": "selected_boundary_supported",
+          "probabilities": {
+            "selected_boundary_supported": 0.93,
+            "boundary_change_required": 0.03,
+            "source_gap": 0.04
+          },
+          "evidence": 0.2
+        },
+        {
+          "owner": "ControlOccurrence",
+          "choice": "selected_boundary_supported",
+          "probabilities": {
+            "selected_boundary_supported": 0.77,
+            "boundary_change_required": 0.1,
+            "source_gap": 0.13
+          },
+          "evidence": 0.12
+        },
+        {
+          "owner": "CriteriaTextOverlay",
+          "choice": "selected_boundary_supported",
+          "probabilities": {
+            "selected_boundary_supported": 0.86,
+            "boundary_change_required": 0.03,
+            "source_gap": 0.11
+          },
+          "evidence": 0.16
+        },
+        {
+          "owner": "EngagementManagementAcknowledgement",
+          "choice": "selected_boundary_supported",
+          "probabilities": {
+            "selected_boundary_supported": 0.67,
+            "boundary_change_required": 0.06,
+            "source_gap": 0.27
+          },
+          "evidence": 0.11
+        }
+      ]
+    },
+    {
+      "pass": "adversarial_source_review",
+      "stem": "adversarial_source_review-04",
+      "status": 200,
+      "usage": {
+        "input_tokens": 8327,
+        "output_tokens": 260
+      },
+      "flaggedRows": [
+        {
+          "owner": "FindingAggregate",
+          "choice": "selected_boundary_supported",
+          "probabilities": {
+            "selected_boundary_supported": 0.71,
+            "boundary_change_required": 0.08,
+            "source_gap": 0.21
+          },
+          "evidence": 0.15
+        },
+        {
+          "owner": "FirmStaffIdentityClaim",
+          "choice": "selected_boundary_supported",
+          "probabilities": {
+            "selected_boundary_supported": 0.64,
+            "boundary_change_required": 0.03,
+            "source_gap": 0.33
+          },
+          "evidence": 0.14
+        },
+        {
+          "owner": "IdentityRecovery",
+          "choice": "selected_boundary_supported",
+          "probabilities": {
+            "selected_boundary_supported": 0.71,
+            "boundary_change_required": 0.04,
+            "source_gap": 0.25
+          },
+          "evidence": 0.22
+        },
+        {
+          "owner": "OperationalProcessNameClaim",
+          "choice": "selected_boundary_supported",
+          "probabilities": {
+            "selected_boundary_supported": 0.68,
+            "boundary_change_required": 0.09,
+            "source_gap": 0.23
+          },
+          "evidence": 0.17
+        }
+      ]
+    },
+    {
+      "pass": "adversarial_source_review",
+      "stem": "adversarial_source_review-05",
+      "status": 200,
+      "usage": {
+        "input_tokens": 5784,
+        "output_tokens": 260
+      },
+      "flaggedRows": [
+        {
+          "owner": "PartnerIndependenceDecision",
+          "choice": "selected_boundary_supported",
+          "probabilities": {
+            "selected_boundary_supported": 0.61,
+            "boundary_change_required": 0.04,
+            "source_gap": 0.35
+          },
+          "evidence": 0.16
+        },
+        {
+          "owner": "PolicyCampaignParticipant",
+          "choice": "selected_boundary_supported",
+          "probabilities": {
+            "selected_boundary_supported": 0.72,
+            "boundary_change_required": 0.04,
+            "source_gap": 0.24
+          },
+          "evidence": 0.21
+        },
+        {
+          "owner": "ProgramRollover",
+          "choice": "selected_boundary_supported",
+          "probabilities": {
+            "selected_boundary_supported": 0.81,
+            "boundary_change_required": 0.13,
+            "source_gap": 0.06
+          },
+          "evidence": 0.5
+        },
+        {
+          "owner": "ProviderAssuranceReview",
+          "choice": "selected_boundary_supported",
+          "probabilities": {
+            "selected_boundary_supported": 0.6,
+            "boundary_change_required": 0.06,
+            "source_gap": 0.34
+          },
+          "evidence": 0.22
+        }
+      ]
+    },
+    {
+      "pass": "adversarial_source_review",
+      "stem": "adversarial_source_review-06",
+      "status": 200,
+      "usage": {
+        "input_tokens": 4022,
+        "output_tokens": 259
+      },
+      "flaggedRows": [
+        {
+          "owner": "ProviderNameClaim",
+          "choice": "selected_boundary_supported",
+          "probabilities": {
+            "selected_boundary_supported": 0.66,
+            "boundary_change_required": 0.02,
+            "source_gap": 0.32
+          },
+          "evidence": 0.17
+        },
+        {
+          "owner": "ReadinessAssessment",
+          "choice": "selected_boundary_supported",
+          "probabilities": {
+            "selected_boundary_supported": 0.52,
+            "boundary_change_required": 0.02,
+            "source_gap": 0.46
+          },
+          "evidence": 0.16
+        },
+        {
+          "owner": "TenantInvitationMailboxClaim",
+          "choice": "source_gap",
+          "probabilities": {
+            "selected_boundary_supported": 0.28,
+            "boundary_change_required": 0.04,
+            "source_gap": 0.68
+          },
+          "evidence": 0.16
+        },
+        {
+          "owner": "TrainingRequirement",
+          "choice": "selected_boundary_supported",
+          "probabilities": {
+            "selected_boundary_supported": 0.64,
+            "boundary_change_required": 0.05,
+            "source_gap": 0.31
+          },
+          "evidence": 0.19
+        }
+      ]
+    }
+  ]
+}

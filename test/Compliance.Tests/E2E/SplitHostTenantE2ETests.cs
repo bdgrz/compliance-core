@@ -12,7 +12,111 @@ using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-
+using Bdgrz.Compliance.Features.AccessControl.Contracts;
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.AccessControl.Rules;
+using Bdgrz.Compliance.Features.AccessControl.Services;
+using Bdgrz.Compliance.Features.AdvisorCollaboration.Processes;
+using Bdgrz.Compliance.Features.Applications.Models;
+using Bdgrz.Compliance.Features.AuditPackages.Models;
+using Bdgrz.Compliance.Features.AuditPackages.Rules;
+using Bdgrz.Compliance.Features.AuditPopulations.Models;
+using Bdgrz.Compliance.Features.AuditorRequests.Models;
+using Bdgrz.Compliance.Features.AuditorRequests.Processes;
+using Bdgrz.Compliance.Features.Boundaries.Rules;
+using Bdgrz.Compliance.Features.Commitments.Rules;
+using Bdgrz.Compliance.Features.ControlMappings.History;
+using Bdgrz.Compliance.Features.Controls.Contracts;
+using Bdgrz.Compliance.Features.Controls.Rules;
+using Bdgrz.Compliance.Features.Evaluations.Rules;
+using Bdgrz.Compliance.Features.Evidence.Models;
+using Bdgrz.Compliance.Features.Evidence.Rules;
+using Bdgrz.Compliance.Features.Incidents.Rules;
+using Bdgrz.Compliance.Features.NamedRecords.Contracts;
+using Bdgrz.Compliance.Features.NamedRecords.Models;
+using Bdgrz.Compliance.Features.NamedRecords.Processes;
+using Bdgrz.Compliance.Features.NativeOperations.History;
+using Bdgrz.Compliance.Features.NativeOperations.Models;
+using Bdgrz.Compliance.Features.Operations.History;
+using Bdgrz.Compliance.Features.Operations.Models;
+using Bdgrz.Compliance.Features.Operations.Rules;
+using Bdgrz.Compliance.Features.Processes.Processes;
+using Bdgrz.Compliance.Features.Programs.Readers;
+using Bdgrz.Compliance.Features.Providers.History;
+using Bdgrz.Compliance.Features.Providers.Rules;
+using Bdgrz.Compliance.Features.Readiness.Models;
+using Bdgrz.Compliance.Features.Readiness.Rules;
+using Bdgrz.Compliance.Features.Remediation.Models;
+using Bdgrz.Compliance.Features.Remediation.Processes;
+using Bdgrz.Compliance.Features.Remediation.Rules;
+using Bdgrz.Compliance.Features.Retention.Models;
+using Bdgrz.Compliance.Features.Risks.Models;
+using Bdgrz.Compliance.Features.SourceFacts.Models;
+using Bdgrz.Compliance.Features.SourceFacts.Rules;
+using Bdgrz.Compliance.Features.SystemDescription.Projections;
+using Bdgrz.Compliance.Features.Tenants.Contracts;
+using Bdgrz.Compliance.Features.Tenants.Models;
+using Bdgrz.Compliance.Features.Tenants.Processes;
+using Bdgrz.Compliance.Features.Tenants.Services;
+using Bdgrz.Compliance.Features.UserIdentities.Models;
+using Bdgrz.Compliance.Features.UserIdentities.Services;
+using Bdgrz.Compliance.Features.Work.Models;
+using Bdgrz.Compliance.Tests.Features.AccessControl.Tests;
+using Bdgrz.Compliance.Tests.Features.AccessReviews.Tests;
+using Bdgrz.Compliance.Tests.Features.AdvisorCollaboration.Tests;
+using Bdgrz.Compliance.Tests.Features.Applications.Tests;
+using Bdgrz.Compliance.Tests.Features.AuditPackages.Tests;
+using Bdgrz.Compliance.Tests.Features.AuditPopulations.Tests;
+using Bdgrz.Compliance.Tests.Features.AuditorRequests.Tests;
+using Bdgrz.Compliance.Tests.Features.Boundaries.Tests;
+using Bdgrz.Compliance.Tests.Features.Changes.Tests;
+using Bdgrz.Compliance.Tests.Features.Commitments.Tests;
+using Bdgrz.Compliance.Tests.Features.ControlMappings.Tests;
+using Bdgrz.Compliance.Tests.Features.Controls.Tests;
+using Bdgrz.Compliance.Tests.Features.Criteria.Tests;
+using Bdgrz.Compliance.Tests.Features.Evaluations.Tests;
+using Bdgrz.Compliance.Tests.Features.Evidence.Tests;
+using Bdgrz.Compliance.Tests.Features.Examinations.Tests;
+using Bdgrz.Compliance.Tests.Features.Exports.Tests;
+using Bdgrz.Compliance.Tests.Features.Incidents.Tests;
+using Bdgrz.Compliance.Tests.Features.MethodologyTemplates.Tests;
+using Bdgrz.Compliance.Tests.Features.NativeOperations.Tests;
+using Bdgrz.Compliance.Tests.Features.Operations.Tests;
+using Bdgrz.Compliance.Tests.Features.Policies.Tests;
+using Bdgrz.Compliance.Tests.Features.PolicyDistribution.Tests;
+using Bdgrz.Compliance.Tests.Features.Programs.Tests;
+using Bdgrz.Compliance.Tests.Features.Providers.Tests;
+using Bdgrz.Compliance.Tests.Features.Readiness.Tests;
+using Bdgrz.Compliance.Tests.Features.Remediation.Tests;
+using Bdgrz.Compliance.Tests.Features.Retention.Tests;
+using Bdgrz.Compliance.Tests.Features.Risks.Tests;
+using Bdgrz.Compliance.Tests.Features.Snapshots.Tests;
+using Bdgrz.Compliance.Tests.Features.SourceFacts.Tests;
+using Bdgrz.Compliance.Tests.Features.SourceUse.Tests;
+using Bdgrz.Compliance.Tests.Features.SystemDescription.Tests;
+using Bdgrz.Compliance.Tests.Features.TechnologyInventory.Tests;
+using Bdgrz.Compliance.Tests.Features.Tenants.Tests;
+using Bdgrz.Compliance.Tests.Features.UserIdentities.Tests;
+using Bdgrz.Compliance.Tests.Features.Work.Tests;
+using Bdgrz.Compliance.Tests.Features.Workforce.Tests;
+using Bdgrz.Compliance.Features.AccessControl.Aggregates;
+using Bdgrz.Compliance.Features.AccessControl.Authorizers;
+using Bdgrz.Compliance.Features.AccessControl.Commands;
+using Bdgrz.Compliance.Features.AccessControl.Events;
+using Bdgrz.Compliance.Features.AccessControl.Projections;
+using Bdgrz.Compliance.Features.AccessControl.Readers;
+using Bdgrz.Compliance.Features.Examinations.Aggregates;
+using Bdgrz.Compliance.Features.Exports.Commands;
+using Bdgrz.Compliance.Features.Incidents.Commands;
+using Bdgrz.Compliance.Features.Retention.Commands;
+using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
+using Bdgrz.Compliance.Features.TechnologyInventory.Aggregates;
+using Bdgrz.Compliance.Features.Tenants.Aggregates;
+using Bdgrz.Compliance.Features.Tenants.Authorizers;
+using Bdgrz.Compliance.Features.Tenants.Reactors;
+using Bdgrz.Compliance.Features.Tenants.Readers;
+using Bdgrz.Compliance.Features.Work.Authorizers;
+using Bdgrz.Compliance.Tests.Testing;
 namespace Bdgrz.Compliance.Tests.E2E;
 
 [Collection(BrokerCollectionDefinition.Name)]
@@ -83,9 +187,9 @@ public sealed class SplitHostTenantE2ETests(BrokerStackFixture broker)
             {
                 await using var scope = factory.Services.CreateAsyncScope();
                 var reader = scope.ServiceProvider.GetRequiredService<IAggregateReader>();
-                var first = await reader.HydrateAsync(new Bdgrz.Compliance.Features.Tenants.Tenant(firstId));
-                var second = await reader.HydrateAsync(new Bdgrz.Compliance.Features.Tenants.Tenant(secondId));
-                var later = await reader.HydrateAsync(new Bdgrz.Compliance.Features.Tenants.Tenant(laterId));
+                var first = await reader.HydrateAsync(new Bdgrz.Compliance.Features.Tenants.Aggregates.Tenant(firstId));
+                var second = await reader.HydrateAsync(new Bdgrz.Compliance.Features.Tenants.Aggregates.Tenant(secondId));
+                var later = await reader.HydrateAsync(new Bdgrz.Compliance.Features.Tenants.Aggregates.Tenant(laterId));
                 firstActive = first.IsActive;
                 firstRejected = !first.IsRegistered;
                 secondActive = second.IsActive;
@@ -155,7 +259,7 @@ public sealed class SplitHostTenantE2ETests(BrokerStackFixture broker)
         await using (var scope = factory.Services.CreateAsyncScope())
         {
             var source = await scope.ServiceProvider.GetRequiredService<IAggregateReader>()
-                .HydrateAsync(new Bdgrz.Compliance.Features.Tenants.Tenant(tenantId));
+                .HydrateAsync(new Bdgrz.Compliance.Features.Tenants.Aggregates.Tenant(tenantId));
             Assert.False(source.IsActive);
         }
 
@@ -359,7 +463,7 @@ public sealed class SplitHostTenantE2ETests(BrokerStackFixture broker)
             Uuid memberEpisodeId;
             await using (var episodeScope = worker.Services.CreateAsyncScope())
                 memberEpisodeId = (await episodeScope.ServiceProvider.GetRequiredService<IAggregateReader>()
-                    .HydrateAsync(Bdgrz.Compliance.Features.AccessControl.Member.ForVerification(tenantId, memberId)))
+                    .HydrateAsync(Bdgrz.Compliance.Features.AccessControl.Aggregates.Member.ForVerification(tenantId, memberId)))
                     .MembershipEpisodeId;
             using var assigned = await creator.PutAsJsonAsync(
                 $"/api/v1/tenants/{tenantId}/teams/{administratorsTeamId}/members/{memberId}/{Uuid.CreateVersion4()}",
@@ -989,14 +1093,14 @@ public sealed class SplitHostTenantE2ETests(BrokerStackFixture broker)
             var projectionServices = checkpointScope.ServiceProvider;
             var projectionGate = new BrokerProjectionGate(
                 projectionServices.GetRequiredService<IDomainEventReader>(),
-                projectionServices.GetRequiredService<Bdgrz.Compliance.Features.AccessControl.IPermissionProjection>(),
+                projectionServices.GetRequiredService<Bdgrz.Compliance.Features.AccessControl.Projections.IPermissionProjection>(),
                 permissionProjectionIdentity);
             var requiredGrantEvents = new Dictionary<string, DomainEventRecord>(StringComparer.Ordinal);
             var requiredPermissions = new HashSet<string>(StringComparer.Ordinal)
             {
-                Bdgrz.Compliance.Features.AccessControl.RbacPermissions.TenantAccess,
-                Bdgrz.Compliance.Features.AccessControl.RbacPermissions.TenantRbacManage,
-                Bdgrz.Compliance.Features.AccessControl.RbacPermissions.ProgramManage,
+                Bdgrz.Compliance.Features.AccessControl.Services.RbacPermissions.TenantAccess,
+                Bdgrz.Compliance.Features.AccessControl.Services.RbacPermissions.TenantRbacManage,
+                Bdgrz.Compliance.Features.AccessControl.Services.RbacPermissions.ProgramManage,
             };
             var permissionProgress = new List<string>();
             string? lastPermissionCursor = null;
@@ -1009,12 +1113,12 @@ public sealed class SplitHostTenantE2ETests(BrokerStackFixture broker)
             var requiredEventsCheckpointed = false;
             var localRetryWindowExpired = false;
             var permissionCheckpoint = ProjectionCheckpoint.Start;
-            IReadOnlyList<Bdgrz.Compliance.Features.AccessControl.MemberAccessEdge> projectedAccessEdges = [];
+            IReadOnlyList<Bdgrz.Compliance.Features.AccessControl.Models.MemberAccessEdge> projectedAccessEdges = [];
             while (DateTimeOffset.UtcNow < projectionDeadline)
             {
                 foreach (var record in await projectionGate.ReadNewEventsAsync())
                 {
-                    if (record.Event is Bdgrz.Compliance.Features.AccessControl.RolePermissionAssigned grant &&
+                    if (record.Event is Bdgrz.Compliance.Features.AccessControl.Events.RolePermissionAssigned grant &&
                         grant.RoleId == administratorRoleId && requiredPermissions.Contains(grant.Permission))
                         requiredGrantEvents[grant.Permission] = record;
                 }
@@ -1023,22 +1127,22 @@ public sealed class SplitHostTenantE2ETests(BrokerStackFixture broker)
                 (permissionCheckpoint, requiredEventsCheckpointed) =
                     await projectionGate.ObserveAsync(requiredEventIds);
                 membershipProjected = await projectionServices.GetRequiredService<
-                    Bdgrz.Compliance.Features.Tenants.ITenantMembershipDirectoryReader>()
+                    Bdgrz.Compliance.Features.Tenants.Readers.ITenantMembershipDirectoryReader>()
                     .IsMemberAsync(tenantId.ToString(), parsedAdministratorId);
                 projectedAccessEdges = await projectionServices.GetRequiredService<
-                        Bdgrz.Compliance.Features.AccessControl.IMemberAccessReader>()
+                        Bdgrz.Compliance.Features.AccessControl.Readers.IMemberAccessReader>()
                     .ReadAsync(tenantId, memberId);
                 var underlyingPermissions = projectionServices.GetRequiredService<
-                    Bdgrz.Compliance.Features.AccessControl.FitzPermissionAuthorizer>();
+                    Bdgrz.Compliance.Features.AccessControl.Authorizers.FitzPermissionAuthorizer>();
                 underlyingTenantAccess = await underlyingPermissions.IsAllowedAsync(tenantId,
                     parsedAdministratorId, memberId,
-                    Bdgrz.Compliance.Features.AccessControl.RbacPermissions.TenantAccess);
+                    Bdgrz.Compliance.Features.AccessControl.Services.RbacPermissions.TenantAccess);
                 underlyingRbacManage = await underlyingPermissions.IsAllowedAsync(tenantId,
                     parsedAdministratorId, memberId,
-                    Bdgrz.Compliance.Features.AccessControl.RbacPermissions.TenantRbacManage);
+                    Bdgrz.Compliance.Features.AccessControl.Services.RbacPermissions.TenantRbacManage);
                 underlyingProgramManage = await underlyingPermissions.IsAllowedAsync(tenantId,
                     parsedAdministratorId, memberId,
-                    Bdgrz.Compliance.Features.AccessControl.RbacPermissions.ProgramManage);
+                    Bdgrz.Compliance.Features.AccessControl.Services.RbacPermissions.ProgramManage);
                 var cursor = permissionCheckpoint.Cursor.ToString();
                 var elapsedMs = Stopwatch.GetElapsedTime(projectionStarted).TotalMilliseconds;
                 localRetryWindowExpired = workerLogs.Records.Any(record =>
@@ -1124,34 +1228,34 @@ public sealed class SplitHostTenantE2ETests(BrokerStackFixture broker)
                 var services = diagnostics.ServiceProvider;
                 var reader = services.GetRequiredService<IAggregateReader>();
                 var tenant = await reader.HydrateAsync(
-                    new Bdgrz.Compliance.Features.Tenants.Tenant(tenantId));
+                    new Bdgrz.Compliance.Features.Tenants.Aggregates.Tenant(tenantId));
                 var member = await reader.HydrateAsync(
-                    new Bdgrz.Compliance.Features.AccessControl.Member(tenantId, parsedAdministratorId));
+                    new Bdgrz.Compliance.Features.AccessControl.Aggregates.Member(tenantId, parsedAdministratorId));
                 var assignment = await reader.HydrateAsync(
-                    new Bdgrz.Compliance.Features.AccessControl.TeamMember(tenantId,
+                    new Bdgrz.Compliance.Features.AccessControl.Aggregates.TeamMember(tenantId,
                         administratorsTeamId, memberId));
                 var memberships = services.GetRequiredService<
-                    Bdgrz.Compliance.Features.Tenants.ITenantMembershipDirectoryReader>();
+                    Bdgrz.Compliance.Features.Tenants.Readers.ITenantMembershipDirectoryReader>();
                 var isMember = await memberships.IsMemberAsync(tenantId.ToString(), parsedAdministratorId);
                 var permissions = services.GetRequiredService<
-                    Bdgrz.Compliance.Features.AccessControl.IPermissionAuthorizer>();
+                    Bdgrz.Compliance.Features.AccessControl.Authorizers.IPermissionAuthorizer>();
                 var tenantAccess = await permissions.IsAllowedAsync(tenantId, parsedAdministratorId,
-                    memberId, Bdgrz.Compliance.Features.AccessControl.RbacPermissions.TenantAccess);
+                    memberId, Bdgrz.Compliance.Features.AccessControl.Services.RbacPermissions.TenantAccess);
                 var rbacManage = await permissions.IsAllowedAsync(tenantId, parsedAdministratorId,
-                    memberId, Bdgrz.Compliance.Features.AccessControl.RbacPermissions.TenantRbacManage);
+                    memberId, Bdgrz.Compliance.Features.AccessControl.Services.RbacPermissions.TenantRbacManage);
                 var programManage = await permissions.IsAllowedAsync(tenantId, parsedAdministratorId,
-                    memberId, Bdgrz.Compliance.Features.AccessControl.RbacPermissions.ProgramManage);
+                    memberId, Bdgrz.Compliance.Features.AccessControl.Services.RbacPermissions.ProgramManage);
                 var accessEdges = await services.GetRequiredService<
-                    Bdgrz.Compliance.Features.AccessControl.IMemberAccessReader>()
+                    Bdgrz.Compliance.Features.AccessControl.Readers.IMemberAccessReader>()
                     .ReadAsync(tenantId, memberId);
                 var rolePermissionPage = await services.GetRequiredService<
-                    Bdgrz.Compliance.Features.AccessControl.IRolePermissionDirectoryReader>()
+                    Bdgrz.Compliance.Features.AccessControl.Readers.IRolePermissionDirectoryReader>()
                     .ListAsync(tenantId, administratorRoleId, 200, null, null, descending: false);
                 var administratorRoleTeams = await services.GetRequiredService<
-                    Bdgrz.Compliance.Features.AccessControl.IRoleTeamDirectoryReader>()
+                    Bdgrz.Compliance.Features.AccessControl.Readers.IRoleTeamDirectoryReader>()
                     .ListAsync(tenantId, administratorRoleId, 200, null, null, descending: false);
                 var permissionCheckpointAfterRecovery = await services.GetRequiredService<
-                        Bdgrz.Compliance.Features.AccessControl.IPermissionProjection>()
+                        Bdgrz.Compliance.Features.AccessControl.Projections.IPermissionProjection>()
                     .LoadCheckpointAsync(new CheckpointIdentity("PermissionProjection",
                         EventStreamPattern.ForPattern(tenantId.ToString())));
                 var pendingPermissionEventTypes = new List<string>();

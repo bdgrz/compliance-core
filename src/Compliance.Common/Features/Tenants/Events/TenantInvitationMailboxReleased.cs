@@ -1,0 +1,11 @@
+using Cntryl.Portia;
+using Bdgrz.Compliance.Features.PolicyDistribution.Queries;
+namespace Bdgrz.Compliance.Features.Tenants.Events;
+
+/// <summary>
+///     The invitation that held the mailbox in <paramref name="Generation" /> no longer does, which lets a later
+///     invitation claim it. A release names the exact invitation and generation it ends.
+/// </summary>
+[Discriminator("bdgrz.tenant-invitation-mailbox.released", 1)]
+public sealed record TenantInvitationMailboxReleased(Uuid TenantId, string EmailAddress, Uuid InvitationId,
+    long Generation, string Reason, DateTimeOffset ReleasedAt) : DomainEvent;

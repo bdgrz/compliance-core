@@ -1,0 +1,31 @@
+{
+  "httpStatus": 200,
+  "response": {
+    "model": "jev-1.14.0",
+    "answers": {
+      "completeness": {
+        "type": "choice",
+        "choice": "missing_process_or_flows",
+        "confidence": 0.92,
+        "probabilities": {
+          "complete_selected_split": 0,
+          "missing_process_or_flows": 0.9400000000000001,
+          "wrong_business_boundary": 0,
+          "insufficient_evidence": 0.06
+        }
+      },
+      "process_named": {
+        "type": "noul",
+        "noul": 0.09
+      },
+      "flow_complete": {
+        "type": "noul",
+        "noul": 0.03
+      }
+    },
+    "usage": {
+      "input_tokens": 1610,
+      "output_tokens": 101
+    }
+  }
+}

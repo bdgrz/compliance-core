@@ -1,0 +1,13 @@
+using Cntryl.Portia;
+using Bdgrz.Compliance.Features.AccessControl.Aggregates;
+using Bdgrz.Compliance.Features.AccessControl.Projections;
+namespace Bdgrz.Compliance.Features.AccessControl.Projectors;
+
+sealed class ActualStaffEngagementLocatorProjector(IActualStaffEngagementLocatorProjection projection)
+    : Projector(projection, EventStreamPattern.ForTenant(ServiceEngagementIndependence.Area), WorkloadName)
+{
+    public const string WorkloadName = "ActualStaffEngagementLocatorV1";
+
+    protected override ValueTask ProjectEventAsync(DomainEventRecord record, IProjectorContext context,
+        CancellationToken ct) => projection.ApplyAsync(record, context, ct);
+}

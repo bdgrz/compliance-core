@@ -1,0 +1,110 @@
+{
+  "model": "jev-1.14.0",
+  "state": {
+    "owner": {
+      "name": "ProgramRollover",
+      "classification": "business_aggregate",
+      "businessAggregate": true,
+      "boundaryDecision": "process",
+      "boundaryRationale": "Proposal/current approval and execution claim must coordinate to prevent approved version changing while successor is created. Prior proposal history is unnecessary state; successor creation acknowledgement belongs to recoverable process storage.",
+      "invariant": "One exact carry-forward proposal version needs independent approved decision before recording exact successor period/plan identities; completed source provenance remains immutable.",
+      "identity": "Tenant / program-rollovers / RolloverId, with exact source program/version and successor proof. RolloverId identifies creation; selected mutations use CommandId.",
+      "commands": [
+        "ApproveProgramRollover",
+        "ProposeProgramRollover"
+      ],
+      "events": [
+        "ProgramNextPeriodCreated",
+        "ProgramRolloverApproved",
+        "ProgramRolloverDecisionRecorded",
+        "ProgramRolloverProposed",
+        "ProgramRolloverRevised"
+      ],
+      "choreography": []
+    },
+    "selectedProcessDefinitions": [
+      "ProfessionalDutyChangeProcess",
+      "FirmStaffRegistrationProcess",
+      "EngagementAcceptanceProcess",
+      "EngagementPersonalDecisionProcess",
+      "ClientIndependencePreviewProcess",
+      "AccessReviewLaunchFanOut",
+      "BulkAccessDecisionProcess",
+      "AccessReviewCampaignCompletionProcess",
+      "AuditorRequestResolutionProcess",
+      "FindingClosureProcess",
+      "ReadinessDecisionProcess",
+      "PolicyCampaignClosureProcess",
+      "ProviderReviewProcess",
+      "RiskActionCompletionReviewProcess",
+      "ApplicationImportExecutionProcess",
+      "ProviderNameChangeProcess",
+      "LocationNameChangeProcess",
+      "OperationalProcessNameChangeProcess",
+      "AuditPackageBuildProcess",
+      "AuditPackageDeliveryRecordingProcess",
+      "ReadinessRunProcess",
+      "IdentityRecoveryProcess",
+      "AdministratorTransitionProcess",
+      "TypeIIRangeProcess",
+      "ArtifactDownloadProcess",
+      "ControlOccurrenceFanOut",
+      "IndependentChildMaterialization",
+      "EmailChallengeDeliveryProcess",
+      "TenantInvitationDeliveryProcess"
+    ],
+    "matchingChoreographyRows": [],
+    "architectureCounts": {
+      "businessAuthorityAggregates": 129,
+      "declaredTechnicalStateOwners": 13,
+      "additionalWeeklySchedulingTechnicalRole": 1,
+      "canonicalEmittedSemanticEvents": 492,
+      "businessSemanticEvents": 480,
+      "technicalEmissions": 9,
+      "auditEmissions": 2,
+      "migrationImportEmissions": 1,
+      "rawEventNamesReconciled": 558,
+      "nonEmittedCompatibilityOrExcludedNames": 66,
+      "regularReactionOrStageEdges": 161,
+      "abortOrFenceBindings": 22,
+      "admissionAndReadRows": 2,
+      "architectureRows": 185,
+      "existingReactors": 65,
+      "plannedReactors": 1,
+      "intendedPhysicalReactors": 66,
+      "existingProcessDefinitions": 28,
+      "plannedProcessDefinitions": 1,
+      "intendedProcessDefinitions": 29,
+      "newHostedWorkers": 0
+    },
+    "interpretation": "The proposal and independent approval may be business state while execution claim/progress and successor acknowledgements may be private process state. A complete selected set must identify the process definition and causal source/target steps if that process is required."
+  },
+  "questions": {
+    "completeness": {
+      "type": "choice",
+      "instructions": "Which conclusion is best supported about the ProgramRollover business/process boundary and its execution choreography?",
+      "criteria": {
+        "complete_selected_split": "The proposal/approval aggregate is distinct from execution, and the selected process inventory plus flow rows identify a complete recoverable execution process and its causal owner steps.",
+        "missing_process_or_flows": "Proposal/approval belongs in the business aggregate, but the approved inventory omits the required private execution process, successor proof steps, or both.",
+        "wrong_business_boundary": "The proposal/approval itself should not be a business aggregate; a different ownership boundary is required.",
+        "insufficient_evidence": "The supplied catalog does not establish whether rollover execution is required or how successor creation is authorized."
+      }
+    },
+    "process_named": {
+      "type": "noul",
+      "instructions": "Does the selected process inventory contain a named process for the approved ProgramRollover execution boundary?",
+      "criteria": {
+        "true": "A selected process definition explicitly owns rollover execution claim/progress and successor creation acknowledgements.",
+        "false": "No selected process definition names this rollover execution."
+      }
+    },
+    "flow_complete": {
+      "type": "noul",
+      "instructions": "Do selected choreography rows specify the approved sequence that creates each exact successor and records its actual committed proof against the pinned approved rollover version?",
+      "criteria": {
+        "true": "The catalog includes each needed source admission, target owner command, exact version/identity proof and terminal recovery step.",
+        "false": "The required successor creation and proof/settlement steps are absent or unspecified."
+      }
+    }
+  }
+}

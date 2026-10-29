@@ -1,0 +1,61 @@
+{
+  "httpStatus": 200,
+  "response": {
+    "model": "jev-1.14.0",
+    "answers": {
+      "engagement_boundary": {
+        "type": "choice",
+        "choice": "separate_decision",
+        "confidence": 1,
+        "probabilities": {
+          "separate_decision": 1,
+          "absorb_into_engagement": 0,
+          "process_only": 0,
+          "insufficient": 0
+        }
+      },
+      "engagement_evidence": {
+        "type": "noul",
+        "noul": 0.89
+      },
+      "finding_boundary": {
+        "type": "choice",
+        "choice": "selected_split",
+        "confidence": 1,
+        "probabilities": {
+          "selected_split": 1,
+          "combined_root": 0,
+          "split_finding_further": 0,
+          "insufficient": 0
+        }
+      },
+      "finding_evidence": {
+        "type": "noul",
+        "noul": 0.88
+      },
+      "rollover_boundary": {
+        "type": "choice",
+        "choice": "proposal_owner_private_execution",
+        "confidence": 0.96,
+        "probabilities": {
+          "proposal_owner_private_execution": 0.97,
+          "all_in_business_aggregate": 0.02,
+          "process_only": 0.01,
+          "insufficient": 0
+        }
+      },
+      "rollover_evidence": {
+        "type": "noul",
+        "noul": 0.92
+      },
+      "unresolved_boundary": {
+        "type": "noul",
+        "noul": 0.91
+      }
+    },
+    "usage": {
+      "input_tokens": 4515,
+      "output_tokens": 263
+    }
+  }
+}

@@ -1,0 +1,899 @@
+{
+  "model": "jev-1.14.0",
+  "state": {
+    "review": "Adversarial review of the selected definitive business/authority owner boundary. Treat the supplied row as a proposal; do not infer omitted policy.",
+    "pass": "boundary_fit",
+    "owners": [
+      {
+        "owner": "AccessExpectation",
+        "classification": "business_aggregate",
+        "declaredIdentity": "(systemInstanceId, expectationId)",
+        "selectedIdentity": "Tenant realm and immutable system-instance binding plus root expectation-line identity. The first proposal roots the line; every successor shares the exact approved predecessor line conflict key. Existing physical identity is preserved.",
+        "invariant": "One exact system-instance expectation lineage owns predecessor/successor competition, independent approval and same-line exceptions. Different lines may coexist, including different policies on one system. No cross-line exclusion governor or ban is implied; a future ban requires a separately reviewed precise predicate.",
+        "boundaryDecision": "selected_split",
+        "mustPreserve": "Independent proposer/reviewer or exact waiver; exception references approved expectation and future expiry.",
+        "technicalStateToSeparate": [],
+        "commands": [
+          {
+            "command": "ApproveAccessExpectation",
+            "logicalIdentity": {
+              "field": "CommandId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "one immutable authored operation"
+            },
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "SystemInstanceId:Uuid",
+              "ExpectationId:Uuid",
+              "ExpectedRevision:long",
+              "SeparationOfDutiesWaiverId:Uuid?"
+            ]
+          },
+          {
+            "command": "ExemptAccessExpectation",
+            "logicalIdentity": {
+              "field": "CommandId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "one immutable authored operation"
+            },
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "SystemInstanceId:Uuid",
+              "ExpectationId:Uuid",
+              "ExpectedRevision:long",
+              "ProviderSubjectId:string",
+              "Rationale:string",
+              "ExpiresAt:DateTimeOffset",
+              "ProviderEntitlementId:string?"
+            ]
+          },
+          {
+            "command": "ProposeAccessExpectation",
+            "logicalIdentity": {
+              "field": "ExpectationId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "exact immutable creation retry"
+            },
+            "fields": [
+              "ExpectationId:Uuid",
+              "TenantId:Uuid",
+              "ApplicationId:Uuid",
+              "SystemInstanceId:Uuid",
+              "ExpectedRevision:long",
+              "RuleKind:string",
+              "Parameters:AccessExpectationParameters",
+              "Rationale:string",
+              "EffectiveFrom:DateTimeOffset",
+              "EffectiveUntil:DateTimeOffset?",
+              "SupersedesExpectationId:Uuid?"
+            ]
+          }
+        ],
+        "events": [
+          {
+            "event": "AccessExpectationApproved",
+            "discriminator": "bdgrz.access_expectation.approved",
+            "version": 1
+          },
+          {
+            "event": "AccessExpectationExceptionRecorded",
+            "discriminator": "bdgrz.access_expectation.exception_recorded",
+            "version": 1
+          },
+          {
+            "event": "AccessExpectationProposed",
+            "discriminator": "bdgrz.access_expectation.proposed",
+            "version": 1
+          }
+        ],
+        "choreography": []
+      },
+      {
+        "owner": "AccessGrant",
+        "classification": "business_aggregate",
+        "declaredIdentity": "Tenant+grantId; caller supplies stable grant identity. Issue compares terms/episode; Revoke exact retry conflicts. Portia expected stream position handles append OCC.",
+        "selectedIdentity": "Tenant + GrantId; immutable grant identity and exact issuance episode. Mutations use the selected CommandId with the original grant and episode binding.",
+        "invariant": "One stable grant identity has one immutable set of scope/principal/effective terms and, once revoked, can never be reissued.",
+        "boundaryDecision": "retain",
+        "boundaryRationale": "Splitting terms from revocation could permit reissue or activation with mismatched membership episode. No other grants need the same revision.",
+        "commands": [
+          {
+            "command": "GrantAccess",
+            "logicalIdentity": "GrantId",
+            "fields": [
+              "TenantId:Uuid",
+              "GrantId:Uuid",
+              "Proposal:AccessGrantProposal"
+            ]
+          },
+          {
+            "command": "ProvisionGuestProgramAccess",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "UserId:Uuid",
+              "ProgramId:Uuid",
+              "InvitationId:Uuid",
+              "ExpiresOn:DateOnly",
+              "AcceptedAt:DateTimeOffset",
+              "InvitedBy:Uuid",
+              "InvitedByDisplay:string"
+            ]
+          },
+          {
+            "command": "RevokeAccessGrant",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "GrantId:Uuid"
+            ]
+          }
+        ],
+        "events": [
+          {
+            "event": "AccessGrantIssued"
+          },
+          {
+            "event": "AccessGrantRevoked"
+          }
+        ],
+        "choreography": []
+      },
+      {
+        "owner": "AccessPopulation",
+        "classification": "business_aggregate",
+        "declaredIdentity": "populationId",
+        "selectedIdentity": "populationId",
+        "invariant": "Immutable accepted population definition, exact system instance and source revision.",
+        "boundaryDecision": "selected_split",
+        "mustPreserve": "Classification requires exact accepted population proof and contiguous per-principal decision sequence.",
+        "technicalStateToSeparate": [],
+        "commands": [
+          {
+            "command": "AcceptAccessPopulation",
+            "logicalIdentity": {
+              "field": "CommandId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "one immutable authored operation"
+            },
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "PopulationId:Uuid",
+              "ExpectedRevision:long",
+              "Attestation:string"
+            ]
+          },
+          {
+            "command": "OpenAccessPopulation",
+            "logicalIdentity": {
+              "field": "PopulationId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "exact immutable creation retry"
+            },
+            "fields": [
+              "PopulationId:Uuid",
+              "TenantId:Uuid",
+              "ApplicationId:Uuid",
+              "SystemInstanceId:Uuid",
+              "ExpectedSystemInstanceRevision:long",
+              "ObservedAt:DateTimeOffset",
+              "Source:string"
+            ]
+          },
+          {
+            "command": "RecordAccessPopulationFacts",
+            "logicalIdentity": {
+              "field": "CommandId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "one immutable authored operation"
+            },
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "PopulationId:Uuid",
+              "ExpectedRevision:long",
+              "Principals:IReadOnlyList<AccessPrincipalFact>",
+              "Entitlements:IReadOnlyList<AccessEntitlementFact>",
+              "GroupMembers:IReadOnlyList<AccessGroupMemberFact>",
+              "Assignments:IReadOnlyList<AccessAssignmentFact>"
+            ]
+          }
+        ],
+        "events": [
+          {
+            "event": "AccessPopulationAccepted",
+            "discriminator": "bdgrz.access_population.accepted",
+            "version": 1
+          },
+          {
+            "event": "AccessPopulationFactsRecorded",
+            "discriminator": "bdgrz.access_population.facts_recorded",
+            "version": 1
+          },
+          {
+            "event": "AccessPopulationOpened",
+            "discriminator": "bdgrz.access_population.opened",
+            "version": 1
+          }
+        ],
+        "choreography": []
+      },
+      {
+        "owner": "AccessPopulationException",
+        "classification": "business_aggregate",
+        "declaredIdentity": "(systemInstanceId, exceptionId)",
+        "selectedIdentity": "(systemInstanceId, exceptionId)",
+        "invariant": "One expiring exception or missing-population exception decision.",
+        "boundaryDecision": "selected_split",
+        "mustPreserve": "Independent proposer/reviewer or exact waiver; exception references approved expectation and future expiry.",
+        "technicalStateToSeparate": [],
+        "commands": [
+          {
+            "command": "ExemptMissingAccessPopulation",
+            "logicalIdentity": {
+              "field": "ExceptionId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "exact immutable creation retry"
+            },
+            "fields": [
+              "ExceptionId:Uuid",
+              "TenantId:Uuid",
+              "ApplicationId:Uuid",
+              "SystemInstanceId:Uuid",
+              "ExpectedRevision:long",
+              "Reason:string",
+              "ExpiresAt:DateTimeOffset"
+            ]
+          }
+        ],
+        "events": [
+          {
+            "event": "AccessPopulationExceptionRecorded",
+            "discriminator": "bdgrz.access_population.exception_recorded",
+            "version": 1
+          }
+        ],
+        "choreography": []
+      },
+      {
+        "owner": "AccessPrincipalClassification",
+        "classification": "business_aggregate",
+        "declaredIdentity": "tenant / (populationId, providerSubjectId)",
+        "selectedIdentity": "tenant / (populationId, providerSubjectId)",
+        "invariant": "Independent classification decision history for one accepted principal.",
+        "boundaryDecision": "selected_split",
+        "mustPreserve": "Classification requires exact accepted population proof and contiguous per-principal decision sequence.",
+        "technicalStateToSeparate": [],
+        "commands": [
+          {
+            "command": "ClassifyAccessPrincipal",
+            "logicalIdentity": {
+              "field": "CommandId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "one immutable authored operation"
+            },
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "PopulationId:Uuid",
+              "ProviderSubjectId:string",
+              "ExpectedRevision:long",
+              "Classification:string",
+              "Rationale:string",
+              "PersonId:Uuid?",
+              "ServiceIdentityId:Uuid?",
+              "AccountableOwnerPersonId:Uuid?",
+              "SharedJustification:string?"
+            ]
+          }
+        ],
+        "events": [
+          {
+            "event": "AccessPrincipalClassified",
+            "discriminator": "bdgrz.access_population.principal_classified",
+            "version": 1
+          }
+        ],
+        "choreography": []
+      },
+      {
+        "owner": "AccessReviewCampaign",
+        "classification": "business_governor",
+        "declaredIdentity": "campaignId",
+        "selectedIdentity": "campaignId",
+        "invariant": "Frozen campaign snapshot, generation, and compact completion gate.",
+        "boundaryDecision": "selected_split",
+        "mustPreserve": "Keep reviewer and remediation owner distinct per item unless exact waiver; no stale projected summary may satisfy completion.",
+        "technicalStateToSeparate": [],
+        "commands": [
+          {
+            "command": "CompleteAccessReviewCampaign",
+            "logicalIdentity": {
+              "field": "CommandId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "one immutable authored operation"
+            },
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "CampaignId:Uuid",
+              "ExpectedRevision:long",
+              "Attestation:string"
+            ]
+          },
+          {
+            "command": "LaunchAccessReviewCampaign",
+            "logicalIdentity": {
+              "field": "CampaignId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "exact immutable creation retry"
+            },
+            "fields": [
+              "CampaignId:Uuid",
+              "TenantId:Uuid",
+              "Name:string",
+              "Instructions:string",
+              "Deadline:DateTimeOffset",
+              "Assignments:IReadOnlyList<AccessReviewAssignment>",
+              "ProgramId:Uuid?",
+              "RemediationOwnerMemberId:Uuid?"
+            ]
+          },
+          {
+            "command": "RecordBulkAccessDecision",
+            "logicalIdentity": {
+              "field": "DecisionBatchId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "one immutable authored operation"
+            },
+            "fields": [
+              "TenantId:Uuid",
+              "CampaignId:Uuid",
+              "ItemIds:IReadOnlyList<Uuid>",
+              "Decision:string",
+              "Rationale:string",
+              "PreviewToken:string",
+              "ExpectedCampaignRevision:long",
+              "DecisionBatchId:Uuid"
+            ]
+          },
+          {
+            "command": "AbortAccessReviewCampaignCompletion",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "OperationId:Uuid",
+              "Target:EventStreamAddress",
+              "Generation:long",
+              "ExpectedRevision:long",
+              "FailureProof:ImmutableContentRef"
+            ]
+          }
+        ],
+        "events": [
+          {
+            "event": "AccessReviewCampaignCompleted",
+            "discriminator": "bdgrz.access_review.campaign.completed",
+            "version": 1
+          },
+          {
+            "event": "AccessReviewCampaignCompletionAccepted",
+            "discriminator": "bdgrz.access-review-campaign.access-review-campaign-completion-accepted",
+            "version": 1
+          },
+          {
+            "event": "AccessReviewCampaignCompletionCanceled",
+            "discriminator": "bdgrz.access-review-campaign.access-review-campaign-completion-canceled",
+            "version": 1
+          },
+          {
+            "event": "AccessReviewCampaignLaunched",
+            "discriminator": "bdgrz.access_review.campaign.launched",
+            "version": 1
+          },
+          {
+            "event": "AccessReviewDecisionBatchAdmitted",
+            "discriminator": "bdgrz.access-review-campaign.access-review-decision-batch-admitted",
+            "version": 1
+          }
+        ],
+        "choreography": [
+          {
+            "reactor": "AccessReviewItemMaterializationReactor",
+            "sourceOwner": "AccessReviewCampaign",
+            "targetOwner": "AccessReviewItem",
+            "command": "MaterializeAccessReviewItem"
+          },
+          {
+            "reactor": "CampaignCompletionAccessReviewItemAuthorizationReactor",
+            "sourceOwner": "AccessReviewCampaign",
+            "targetOwner": "AccessReviewItem",
+            "command": "AuthorizeAccessReviewItemCampaignCompletionUse"
+          },
+          {
+            "reactor": "CampaignCompletionAccessReviewItemSettlementReactor",
+            "sourceOwner": "AccessReviewCampaign",
+            "targetOwner": "AccessReviewItem",
+            "command": "SettleAccessReviewItemCampaignCompletionUse"
+          },
+          {
+            "reactor": "AccessReviewCampaignCompletionReactor",
+            "sourceOwner": "AccessReviewCampaign",
+            "targetOwner": "AccessReviewCampaign",
+            "command": "CompleteAccessReviewCampaignClosure"
+          },
+          {
+            "reactor": "AccessReviewDecisionBatchAdmissionReactor",
+            "sourceOwner": "AccessReviewCampaign",
+            "targetOwner": "AccessReviewDecisionBatch",
+            "command": "MaterializeAccessReviewDecisionBatch"
+          }
+        ]
+      },
+      {
+        "owner": "AccessReviewDecisionBatch",
+        "classification": "business_aggregate",
+        "declaredIdentity": "tenant / (campaignId, decisionBatchId)",
+        "selectedIdentity": "tenant / (campaignId, decisionBatchId)",
+        "invariant": "One immutable exact preview/item selection and shared-rationale bulk decision, item reservations and one all-item publication decision. Partial item application stays unpublished.",
+        "boundaryDecision": "selected_split",
+        "mustPreserve": "Keep reviewer and remediation owner distinct per item unless exact waiver; no stale projected summary may satisfy completion.",
+        "technicalStateToSeparate": [],
+        "commands": [
+          {
+            "command": "CancelAccessReviewDecisionBatch",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "DecisionBatchId:Uuid",
+              "ExpectedRevision:long",
+              "FailureProof:ImmutableContentRef"
+            ]
+          }
+        ],
+        "events": [
+          {
+            "event": "AccessReviewDecisionBatchAccepted",
+            "discriminator": "bdgrz.access-review-decision-batch.access-review-decision-batch-accepted",
+            "version": 1
+          },
+          {
+            "event": "AccessReviewDecisionBatchCanceled",
+            "discriminator": "bdgrz.access-review-decision-batch.access-review-decision-batch-canceled",
+            "version": 1
+          },
+          {
+            "event": "AccessReviewDecisionBatchCancellationAccepted",
+            "discriminator": "bdgrz.access-review-decision-batch.access-review-decision-batch-cancellation-accepted",
+            "version": 1
+          },
+          {
+            "event": "AccessReviewDecisionBatchPublished",
+            "discriminator": "bdgrz.access-review-decision-batch.access-review-decision-batch-published",
+            "version": 1
+          }
+        ],
+        "choreography": [
+          {
+            "reactor": "AccessReviewBulkReservationReactor",
+            "sourceOwner": "AccessReviewDecisionBatch",
+            "targetOwner": "AccessReviewItem",
+            "command": "ReserveAccessReviewItemDecision"
+          },
+          {
+            "reactor": "AccessReviewBulkApplicationReactor",
+            "sourceOwner": "AccessReviewDecisionBatch",
+            "targetOwner": "AccessReviewItem",
+            "command": "ApplyAccessReviewItemDecision"
+          },
+          {
+            "reactor": "AccessReviewBulkPublicationReactor",
+            "sourceOwner": "AccessReviewDecisionBatch",
+            "targetOwner": "AccessReviewDecisionBatch",
+            "command": "PublishAccessReviewDecisionBatch"
+          },
+          {
+            "reactor": "AccessReviewBulkCancellationReactor",
+            "sourceOwner": "AccessReviewDecisionBatch",
+            "targetOwner": "AccessReviewItem",
+            "command": "FenceAccessReviewItemDecision"
+          },
+          {
+            "reactor": "AccessReviewBulkCancellationCompletionReactor",
+            "sourceOwner": "AccessReviewDecisionBatch",
+            "targetOwner": "AccessReviewDecisionBatch",
+            "command": "CompleteAccessReviewDecisionBatchCancellation"
+          },
+          {
+            "reactor": "AccessReviewBulkSettlementReactor",
+            "sourceOwner": "AccessReviewDecisionBatch",
+            "targetOwner": "AccessReviewItem",
+            "command": "SettleAccessReviewItemDecision"
+          },
+          {
+            "reactor": "AccessReviewDecisionBatchAdmissionReactor",
+            "sourceOwner": "AccessReviewCampaign",
+            "targetOwner": "AccessReviewDecisionBatch",
+            "command": "MaterializeAccessReviewDecisionBatch"
+          }
+        ]
+      },
+      {
+        "owner": "AccessReviewItem",
+        "classification": "business_aggregate",
+        "declaredIdentity": "(campaignId, itemId)",
+        "selectedIdentity": "(campaignId, itemId)",
+        "invariant": "One reviewer decision, reassignment, remediation verification, exception and history for one frozen item.",
+        "boundaryDecision": "selected_split",
+        "mustPreserve": "Keep reviewer and remediation owner distinct per item unless exact waiver; no stale projected summary may satisfy completion.",
+        "technicalStateToSeparate": [],
+        "commands": [
+          {
+            "command": "ExemptAccessRemediation",
+            "logicalIdentity": {
+              "field": "CommandId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "one immutable authored operation"
+            },
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "CampaignId:Uuid",
+              "ItemId:Uuid",
+              "ExpectedRevision:long",
+              "Rationale:string",
+              "ExpiresAt:DateTimeOffset?"
+            ]
+          },
+          {
+            "command": "ReassignAccessReviewResponsibility",
+            "logicalIdentity": {
+              "field": "CommandId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "one immutable authored operation"
+            },
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "CampaignId:Uuid",
+              "ItemId:Uuid",
+              "Responsibility:string",
+              "ExpectedRevision:long",
+              "AssignedMemberId:Uuid",
+              "Reason:string",
+              "DelegationReason:string?"
+            ]
+          },
+          {
+            "command": "RecordAccessDecision",
+            "logicalIdentity": {
+              "field": "CommandId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "one immutable authored operation"
+            },
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "CampaignId:Uuid",
+              "ItemId:Uuid",
+              "ExpectedRevision:long",
+              "Decision:string",
+              "Rationale:string",
+              "SeparationOfDutiesWaiverId:Uuid?"
+            ]
+          },
+          {
+            "command": "RecordAccessRemediationChange",
+            "logicalIdentity": {
+              "field": "CommandId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "one immutable authored operation"
+            },
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "CampaignId:Uuid",
+              "ItemId:Uuid",
+              "ExpectedRevision:long",
+              "Reference:string",
+              "Description:string",
+              "ChangedAt:DateTimeOffset"
+            ]
+          },
+          {
+            "command": "VerifyAccessRemediation",
+            "logicalIdentity": {
+              "field": "CommandId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "one immutable authored operation"
+            },
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "CampaignId:Uuid",
+              "ItemId:Uuid",
+              "ExpectedRevision:long",
+              "PopulationId:Uuid"
+            ]
+          }
+        ],
+        "events": [
+          {
+            "event": "AccessDecisionsRecorded",
+            "discriminator": "bdgrz.access_review.decisions.recorded",
+            "version": 1
+          },
+          {
+            "event": "AccessRemediationChangeRecorded",
+            "discriminator": "bdgrz.access_review.remediation.change_recorded",
+            "version": 1
+          },
+          {
+            "event": "AccessRemediationExceptionRecorded",
+            "discriminator": "bdgrz.access_review.remediation.exception_recorded",
+            "version": 1
+          },
+          {
+            "event": "AccessRemediationVerified",
+            "discriminator": "bdgrz.access_review.remediation.verified",
+            "version": 1
+          },
+          {
+            "event": "AccessReviewItemCampaignCompletionUseAuthorized",
+            "discriminator": "bdgrz.access-review-item.access-review-item-campaign-completion-use-authorized",
+            "version": 1
+          },
+          {
+            "event": "AccessReviewItemCampaignCompletionUseSettled",
+            "discriminator": "bdgrz.access-review-item.access-review-item-campaign-completion-use-settled",
+            "version": 1
+          },
+          {
+            "event": "AccessReviewItemDecisionAuthorized",
+            "discriminator": "bdgrz.access-review-item.access-review-item-decision-authorized",
+            "version": 1
+          },
+          {
+            "event": "AccessReviewItemDecisionCanceled",
+            "discriminator": "bdgrz.access-review-item.access-review-item-decision-canceled",
+            "version": 1
+          },
+          {
+            "event": "AccessReviewItemDecisionSettled",
+            "discriminator": "bdgrz.access-review-item.access-review-item-decision-settled",
+            "version": 1
+          },
+          {
+            "event": "AccessReviewItemOpened",
+            "discriminator": "bdgrz.access-review-item.access-review-item-opened",
+            "version": 1
+          },
+          {
+            "event": "AccessReviewResponsibilityReassigned",
+            "discriminator": "bdgrz.access_review.responsibility.reassigned",
+            "version": 1
+          }
+        ],
+        "choreography": [
+          {
+            "reactor": "AccessReviewItemMaterializationReactor",
+            "sourceOwner": "AccessReviewCampaign",
+            "targetOwner": "AccessReviewItem",
+            "command": "MaterializeAccessReviewItem"
+          },
+          {
+            "reactor": "AccessReviewBulkReservationReactor",
+            "sourceOwner": "AccessReviewDecisionBatch",
+            "targetOwner": "AccessReviewItem",
+            "command": "ReserveAccessReviewItemDecision"
+          },
+          {
+            "reactor": "AccessReviewBulkApplicationReactor",
+            "sourceOwner": "AccessReviewDecisionBatch",
+            "targetOwner": "AccessReviewItem",
+            "command": "ApplyAccessReviewItemDecision"
+          },
+          {
+            "reactor": "AccessReviewBulkCancellationReactor",
+            "sourceOwner": "AccessReviewDecisionBatch",
+            "targetOwner": "AccessReviewItem",
+            "command": "FenceAccessReviewItemDecision"
+          },
+          {
+            "reactor": "CampaignCompletionAccessReviewItemAuthorizationReactor",
+            "sourceOwner": "AccessReviewCampaign",
+            "targetOwner": "AccessReviewItem",
+            "command": "AuthorizeAccessReviewItemCampaignCompletionUse"
+          },
+          {
+            "reactor": "CampaignCompletionAccessReviewItemSettlementReactor",
+            "sourceOwner": "AccessReviewCampaign",
+            "targetOwner": "AccessReviewItem",
+            "command": "SettleAccessReviewItemCampaignCompletionUse"
+          },
+          {
+            "reactor": "AccessReviewBulkSettlementReactor",
+            "sourceOwner": "AccessReviewDecisionBatch",
+            "targetOwner": "AccessReviewItem",
+            "command": "SettleAccessReviewItemDecision"
+          }
+        ]
+      }
+    ]
+  },
+  "questions": {
+    "item_0": {
+      "type": "choice",
+      "instructions": "Does the selected boundary for AccessExpectation fit its identity, atomic invariant, command decisions, event facts, and independent lifecycle?",
+      "criteria": {
+        "selected_boundary_supported": "The selected owner matches the stable business decision and atomic conflict set; independently governed facts are separated.",
+        "boundary_should_change": "A concrete split or merge is required to preserve an explicit invariant or independent lifecycle.",
+        "evidence_insufficient": "Identity, source authority, lifecycle, contention, or concurrency evidence is missing or contradictory."
+      }
+    },
+    "item_0_evidence": {
+      "type": "noul",
+      "instructions": "Does this row provide enough explicit evidence to settle AccessExpectation's boundary without adding an unstated business policy?",
+      "criteria": {
+        "true": "Identity, invariant, lifecycle and exclusions are explicit enough to decide.",
+        "false": "A material boundary assumption is missing, contradictory or unsupported."
+      }
+    },
+    "item_1": {
+      "type": "choice",
+      "instructions": "Does the selected boundary for AccessGrant fit its identity, atomic invariant, command decisions, event facts, and independent lifecycle?",
+      "criteria": {
+        "selected_boundary_supported": "The selected owner matches the stable business decision and atomic conflict set; independently governed facts are separated.",
+        "boundary_should_change": "A concrete split or merge is required to preserve an explicit invariant or independent lifecycle.",
+        "evidence_insufficient": "Identity, source authority, lifecycle, contention, or concurrency evidence is missing or contradictory."
+      }
+    },
+    "item_1_evidence": {
+      "type": "noul",
+      "instructions": "Does this row provide enough explicit evidence to settle AccessGrant's boundary without adding an unstated business policy?",
+      "criteria": {
+        "true": "Identity, invariant, lifecycle and exclusions are explicit enough to decide.",
+        "false": "A material boundary assumption is missing, contradictory or unsupported."
+      }
+    },
+    "item_2": {
+      "type": "choice",
+      "instructions": "Does the selected boundary for AccessPopulation fit its identity, atomic invariant, command decisions, event facts, and independent lifecycle?",
+      "criteria": {
+        "selected_boundary_supported": "The selected owner matches the stable business decision and atomic conflict set; independently governed facts are separated.",
+        "boundary_should_change": "A concrete split or merge is required to preserve an explicit invariant or independent lifecycle.",
+        "evidence_insufficient": "Identity, source authority, lifecycle, contention, or concurrency evidence is missing or contradictory."
+      }
+    },
+    "item_2_evidence": {
+      "type": "noul",
+      "instructions": "Does this row provide enough explicit evidence to settle AccessPopulation's boundary without adding an unstated business policy?",
+      "criteria": {
+        "true": "Identity, invariant, lifecycle and exclusions are explicit enough to decide.",
+        "false": "A material boundary assumption is missing, contradictory or unsupported."
+      }
+    },
+    "item_3": {
+      "type": "choice",
+      "instructions": "Does the selected boundary for AccessPopulationException fit its identity, atomic invariant, command decisions, event facts, and independent lifecycle?",
+      "criteria": {
+        "selected_boundary_supported": "The selected owner matches the stable business decision and atomic conflict set; independently governed facts are separated.",
+        "boundary_should_change": "A concrete split or merge is required to preserve an explicit invariant or independent lifecycle.",
+        "evidence_insufficient": "Identity, source authority, lifecycle, contention, or concurrency evidence is missing or contradictory."
+      }
+    },
+    "item_3_evidence": {
+      "type": "noul",
+      "instructions": "Does this row provide enough explicit evidence to settle AccessPopulationException's boundary without adding an unstated business policy?",
+      "criteria": {
+        "true": "Identity, invariant, lifecycle and exclusions are explicit enough to decide.",
+        "false": "A material boundary assumption is missing, contradictory or unsupported."
+      }
+    },
+    "item_4": {
+      "type": "choice",
+      "instructions": "Does the selected boundary for AccessPrincipalClassification fit its identity, atomic invariant, command decisions, event facts, and independent lifecycle?",
+      "criteria": {
+        "selected_boundary_supported": "The selected owner matches the stable business decision and atomic conflict set; independently governed facts are separated.",
+        "boundary_should_change": "A concrete split or merge is required to preserve an explicit invariant or independent lifecycle.",
+        "evidence_insufficient": "Identity, source authority, lifecycle, contention, or concurrency evidence is missing or contradictory."
+      }
+    },
+    "item_4_evidence": {
+      "type": "noul",
+      "instructions": "Does this row provide enough explicit evidence to settle AccessPrincipalClassification's boundary without adding an unstated business policy?",
+      "criteria": {
+        "true": "Identity, invariant, lifecycle and exclusions are explicit enough to decide.",
+        "false": "A material boundary assumption is missing, contradictory or unsupported."
+      }
+    },
+    "item_5": {
+      "type": "choice",
+      "instructions": "Does the selected boundary for AccessReviewCampaign fit its identity, atomic invariant, command decisions, event facts, and independent lifecycle?",
+      "criteria": {
+        "selected_boundary_supported": "The selected owner matches the stable business decision and atomic conflict set; independently governed facts are separated.",
+        "boundary_should_change": "A concrete split or merge is required to preserve an explicit invariant or independent lifecycle.",
+        "evidence_insufficient": "Identity, source authority, lifecycle, contention, or concurrency evidence is missing or contradictory."
+      }
+    },
+    "item_5_evidence": {
+      "type": "noul",
+      "instructions": "Does this row provide enough explicit evidence to settle AccessReviewCampaign's boundary without adding an unstated business policy?",
+      "criteria": {
+        "true": "Identity, invariant, lifecycle and exclusions are explicit enough to decide.",
+        "false": "A material boundary assumption is missing, contradictory or unsupported."
+      }
+    },
+    "item_6": {
+      "type": "choice",
+      "instructions": "Does the selected boundary for AccessReviewDecisionBatch fit its identity, atomic invariant, command decisions, event facts, and independent lifecycle?",
+      "criteria": {
+        "selected_boundary_supported": "The selected owner matches the stable business decision and atomic conflict set; independently governed facts are separated.",
+        "boundary_should_change": "A concrete split or merge is required to preserve an explicit invariant or independent lifecycle.",
+        "evidence_insufficient": "Identity, source authority, lifecycle, contention, or concurrency evidence is missing or contradictory."
+      }
+    },
+    "item_6_evidence": {
+      "type": "noul",
+      "instructions": "Does this row provide enough explicit evidence to settle AccessReviewDecisionBatch's boundary without adding an unstated business policy?",
+      "criteria": {
+        "true": "Identity, invariant, lifecycle and exclusions are explicit enough to decide.",
+        "false": "A material boundary assumption is missing, contradictory or unsupported."
+      }
+    },
+    "item_7": {
+      "type": "choice",
+      "instructions": "Does the selected boundary for AccessReviewItem fit its identity, atomic invariant, command decisions, event facts, and independent lifecycle?",
+      "criteria": {
+        "selected_boundary_supported": "The selected owner matches the stable business decision and atomic conflict set; independently governed facts are separated.",
+        "boundary_should_change": "A concrete split or merge is required to preserve an explicit invariant or independent lifecycle.",
+        "evidence_insufficient": "Identity, source authority, lifecycle, contention, or concurrency evidence is missing or contradictory."
+      }
+    },
+    "item_7_evidence": {
+      "type": "noul",
+      "instructions": "Does this row provide enough explicit evidence to settle AccessReviewItem's boundary without adding an unstated business policy?",
+      "criteria": {
+        "true": "Identity, invariant, lifecycle and exclusions are explicit enough to decide.",
+        "false": "A material boundary assumption is missing, contradictory or unsupported."
+      }
+    }
+  }
+}

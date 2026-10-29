@@ -1,0 +1,279 @@
+using Cntryl.Portia;
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.AccessControl.Processes;
+using Bdgrz.Compliance.Features.AccessControl.Readers;
+using Bdgrz.Compliance.Features.AccessControl.Rules;
+using Bdgrz.Compliance.Features.AdvisorCollaboration.Processes;
+using Bdgrz.Compliance.Features.Applications.Models;
+using Bdgrz.Compliance.Features.Applications.Processes;
+using Bdgrz.Compliance.Features.AuditPackages.Models;
+using Bdgrz.Compliance.Features.AuditPackages.Rules;
+using Bdgrz.Compliance.Features.AuditPopulations.Models;
+using Bdgrz.Compliance.Features.AuditorRequests.Models;
+using Bdgrz.Compliance.Features.AuditorRequests.Processes;
+using Bdgrz.Compliance.Features.Boundaries.Rules;
+using Bdgrz.Compliance.Features.Commitments.Rules;
+using Bdgrz.Compliance.Features.Content.Contracts;
+using Bdgrz.Compliance.Features.Content.Services;
+using Bdgrz.Compliance.Features.ControlMappings.History;
+using Bdgrz.Compliance.Features.Controls.Contracts;
+using Bdgrz.Compliance.Features.Controls.Rules;
+using Bdgrz.Compliance.Features.Evaluations.Rules;
+using Bdgrz.Compliance.Features.Evidence.Models;
+using Bdgrz.Compliance.Features.Evidence.Rules;
+using Bdgrz.Compliance.Features.Incidents.Rules;
+using Bdgrz.Compliance.Features.Kernel.Services;
+using Bdgrz.Compliance.Features.NamedRecords.Contracts;
+using Bdgrz.Compliance.Features.NamedRecords.Models;
+using Bdgrz.Compliance.Features.NamedRecords.Processes;
+using Bdgrz.Compliance.Features.NativeOperations.History;
+using Bdgrz.Compliance.Features.NativeOperations.Models;
+using Bdgrz.Compliance.Features.NativeOperations.Processes;
+using Bdgrz.Compliance.Features.Operations.History;
+using Bdgrz.Compliance.Features.Operations.Models;
+using Bdgrz.Compliance.Features.Operations.Processes;
+using Bdgrz.Compliance.Features.Operations.Rules;
+using Bdgrz.Compliance.Features.PolicyDistribution.Models;
+using Bdgrz.Compliance.Features.PolicyDistribution.Processes;
+using Bdgrz.Compliance.Features.PolicyDistribution.Rules;
+using Bdgrz.Compliance.Features.PolicyDistribution.Services;
+using Bdgrz.Compliance.Features.Processes.Processes;
+using Bdgrz.Compliance.Features.Programs.Readers;
+using Bdgrz.Compliance.Features.Providers.History;
+using Bdgrz.Compliance.Features.Providers.Models;
+using Bdgrz.Compliance.Features.Providers.Rules;
+using Bdgrz.Compliance.Features.Readiness.Models;
+using Bdgrz.Compliance.Features.Readiness.Rules;
+using Bdgrz.Compliance.Features.Remediation.Models;
+using Bdgrz.Compliance.Features.Remediation.Processes;
+using Bdgrz.Compliance.Features.Remediation.Rules;
+using Bdgrz.Compliance.Features.Retention.Models;
+using Bdgrz.Compliance.Features.Risks.Models;
+using Bdgrz.Compliance.Features.SourceFacts.Models;
+using Bdgrz.Compliance.Features.SourceFacts.Rules;
+using Bdgrz.Compliance.Features.SourceUse.Processes;
+using Bdgrz.Compliance.Features.SystemDescription.Projections;
+using Bdgrz.Compliance.Features.TechnologyInventory.Models;
+using Bdgrz.Compliance.Features.Tenants.Models;
+using Bdgrz.Compliance.Features.Tenants.Processes;
+using Bdgrz.Compliance.Features.UserIdentities.Models;
+using Bdgrz.Compliance.Features.Work.Models;
+using Bdgrz.Compliance.Features.SourceUse.Services;
+using Bdgrz.Compliance.Features.AccessControl.Events;
+using Bdgrz.Compliance.Features.Examinations.Aggregates;
+using Bdgrz.Compliance.Features.PolicyDistribution.Aggregates;
+using Bdgrz.Compliance.Features.PolicyDistribution.Commands;
+using Bdgrz.Compliance.Features.Processes.Models;
+using Bdgrz.Compliance.Features.Proofs.Models;
+using Bdgrz.Compliance.Features.Providers.Projections;
+using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
+namespace Bdgrz.Compliance.Features.PolicyDistribution.Handlers;
+
+/// <summary>
+///     Completes the pending closure. Every participant's exact use must be granted and still held, which proves that
+///     every admitted result was applied and that no result can append any more. The totals are then computed from the
+///     complete applied results as of the closure date, and the closed campaign is appended with the complete
+///     participant proofs. A cancellation recorded before this append fences it; an exact replay returns the original
+///     fact. A use that is not visible yet is transient.
+/// </summary>
+sealed class CompletePolicyCampaignClosureHandler(IAggregateReader reader, IAggregateExecutor executor,
+    IImmutableContentStore content, TimeProvider clock, PolicyCampaignClosureVerifier verifier,
+    CampaignSource campaigns) : IRequestHandler<CompletePolicyCampaignClosure, ReceiverOutcome>
+{
+    const int MaximumAttempts = 4;
+
+    public ValueTask<Result<ReceiverOutcome>> HandleAsync(IRequestContext<CompletePolicyCampaignClosure> context,
+        CancellationToken ct) =>
+        PolicyCampaignFailures.ClassifyAsync(() => HandleCoreAsync(context, ct), ct);
+
+    async ValueTask<Result<ReceiverOutcome>> HandleCoreAsync(IRequestContext<CompletePolicyCampaignClosure> context,
+        CancellationToken ct)
+    {
+        var command = context.Request;
+        if (command.CommandId == Uuid.Empty || command.OperationId == Uuid.Empty || command.Generation < 1 ||
+            command.ExpectedRevision is not null)
+            return SourceUseReceiverSupport.Permanent("The completion names another generation or operation.");
+        var closure = await verifier.ReadAcceptedAsync(command.Source, command.Intent, command.OperationId,
+            command.CommandId, ct).ConfigureAwait(false);
+        if (closure.Error is not null)
+            return Result<ReceiverOutcome>.Failure(closure.Error);
+        var (campaign, accepted) = (closure.Campaign!, closure.Accepted!);
+        if (command.Target != campaign.Stream || command.CampaignId != campaign.Id ||
+            command.Generation != accepted.Generation)
+            return SourceUseReceiverSupport.Permanent("The completion differs from the frozen closure intent.");
+
+        // This command carries an extra manifest term absent from its native receipt binding. Verify it before replay.
+        closure = await verifier.BindAsync(closure, ct).ConfigureAwait(false);
+        if (closure.Error is not null)
+            return Result<ReceiverOutcome>.Failure(closure.Error);
+        if (command.ParticipantProofManifest != closure.Intent!.SourceUses.Content)
+            return SourceUseReceiverSupport.Permanent("The completion differs from the frozen closure intent.");
+        var header = PolicyCampaignContent.HeaderOf(accepted.Operation, campaign.Stream, campaign.Stream,
+            accepted.Operation.AcceptedAt);
+        var provenance = PolicyCampaignContent.Child(command.CommandId, nameof(CompletePolicyCampaignClosure),
+            command.Source.EventId, header, campaign.Stream, clock.GetUtcNow());
+        var binding = AcceptedOperationBinding.Of(provenance);
+        for (var attempt = 1; ; attempt++)
+        {
+            try
+            {
+                var preparation = await NativeReceiverPreparation.PrepareAsync<PolicyDistributionCampaign, Built>(reader,
+                    () => new PolicyDistributionCampaign(campaign.TenantId, campaign.Id, command.CommandId,
+                        selectedClosureRootId: command.OperationId), owner => Decide(owner, binding, command.OperationId),
+                    (owner, token) => PrepareAsync(owner, closure, command, token), ct).ConfigureAwait(false);
+                if (!preparation.IsSuccess)
+                    return Result<ReceiverOutcome>.Failure(preparation.Error!);
+                if (preparation.Value!.Outcome is { } known)
+                    return known;
+                var built = preparation.Value.Value!;
+                if (built.Superseded is not null)
+                    return built.Superseded.Value;
+                var step = await executor.ExecuteAsync(new PolicyDistributionCampaign(campaign.TenantId, campaign.Id,
+                    command.CommandId, selectedClosureRootId: command.OperationId), fresh =>
+                    {
+                        if (Decide(fresh, binding, command.OperationId) is { } decided)
+                            return AggregateOutcome.Discard(Result<Step>.Success(new Step(decided)));
+                        if (built.Cut is null || !built.Cut.Matches(fresh))
+                            return AggregateOutcome.Discard(Result<Step>.Success(new Step(null)));
+                        var raised = fresh.CompleteClosure(provenance, built.ClosedOn, built.Rationale!,
+                            built.Totals!, header.OriginalActor, header.AcceptedAt, built.Proofs!,
+                            command.Intent, built.Result!);
+                        return raised.IsSuccess
+                            ? AggregateOutcome.Commit(Result<Step>.Success(new Step(SourceUseReceiverSupport.Applied(
+                                NativeFactReference.Of(fresh.Stream, fresh.Acceptance.SelectedFact!)))))
+                            : AggregateOutcome.Discard(Result<Step>.Failure(raised.Error!));
+                    }, context, ct).ConfigureAwait(false);
+                if (!step.IsSuccess)
+                    return Result<ReceiverOutcome>.Failure(step.Error!);
+                if (step.Value!.Outcome is { } outcome)
+                    return outcome;
+                if (attempt >= MaximumAttempts)
+                    return SourceUseReceiverSupport.Transient("The campaign kept changing while the closure completed.");
+            }
+            catch (EventStreamConcurrencyException) when (attempt < MaximumAttempts)
+            {
+                // The campaign changed concurrently; rehydrate and decide again.
+            }
+        }
+    }
+
+    /// <summary>An exact replay, a conflicting binding, or a terminal fact that supersedes this completion.</summary>
+    static Result<ReceiverOutcome>? Decide(PolicyDistributionCampaign campaign, AcceptedOperationBinding binding,
+        Uuid operationId)
+    {
+        switch (campaign.Acceptance.Decide(binding))
+        {
+            case NativeAcceptanceDecision.Replayed:
+                return SourceUseReceiverSupport.Replayed(NativeFactReference.Of(campaign.Stream,
+                    campaign.Acceptance.SelectedFact!));
+            case NativeAcceptanceDecision.Conflict:
+                return Result<ReceiverOutcome>.Failure(AcceptedAppendResult.ConflictError);
+        }
+
+        if (campaign.SelectedCancellation is { } canceled)
+            return Result<ReceiverOutcome>.Success(new ReceiverOutcome.Rejected("The closure was canceled.",
+                NativeFactReference.Of(campaign.Stream, canceled)));
+        return campaign.Closing is { } closed && closed.Operation.RootOperationId == operationId
+            ? SourceUseReceiverSupport.Replayed(NativeFactReference.Of(campaign.Stream, closed))
+            : null;
+    }
+
+    async ValueTask<Result<Built>> PrepareAsync(PolicyDistributionCampaign campaign, PolicyCampaignClosure closure,
+        CompletePolicyCampaignClosure command, CancellationToken ct)
+    {
+        var cut = PolicyCampaignPreparedCut.Capture(campaign);
+        var prepared = await verifier.PrepareAsync(closure, ct).ConfigureAwait(false);
+        if (prepared.Error is not null)
+            return Result<Built>.Failure(prepared.Error);
+        if (command.ParticipantProofManifest != prepared.Intent!.SourceUses.Content)
+            return Result<Built>.Failure(SourceUseReceiverSupport.Permanent(
+                "The completion differs from the frozen closure intent.").Error!);
+        var built = await BuildAsync(campaign, prepared, command, ct).ConfigureAwait(false);
+        return built.Error is not null ? Result<Built>.Failure(built.Error) : Result<Built>.Success(built with { Cut = cut });
+    }
+
+    async ValueTask<Built> BuildAsync(PolicyDistributionCampaign campaign, PolicyCampaignClosure closure,
+        CompletePolicyCampaignClosure command, CancellationToken ct)
+    {
+        var intent = closure.Intent!;
+        var tenantId = campaign.TenantId;
+        var proofs = new List<CampaignParticipantProof>();
+        foreach (var participant in closure.Participants!)
+        {
+            var key = PolicyCampaignClosureEffects.UseKey(command.OperationId, intent.Header.FirstOwner,
+                command.Generation, participant.Requirement.SourceOwner);
+            var owner = await reader.HydrateAsync(new PolicyCampaignParticipant(tenantId, campaign.Id,
+                participant.PersonId).ForSourceUse(candidate => key), ct).ConfigureAwait(false);
+            if (owner.Uses.Find(key) is not { } entry)
+                return Built.Failed(SourceUseReceiverSupport.Transient("A participant use is not visible yet.").Error!);
+            if (entry.IsFence)
+                return Built.Cancelled(SourceUseReceiverSupport.Superseded(
+                    "A participant use was fenced before it was granted; the closure cannot complete.",
+                    NativeFactReference.Of(owner.Stream, entry.SettleFact!)));
+            if (!entry.IsActive || owner.Revision != (long)participant.Requirement.ResourceRevision)
+                return Built.Failed(SourceUseReceiverSupport.Permanent(
+                    "A participant use ended or changed before the closure completed.").Error!);
+            proofs.Add(new CampaignParticipantProof(participant.PersonId, owner.Stream, owner.Revision,
+                owner.Uses.GrantOf(key)!));
+        }
+
+        CloseCampaign authored;
+        try
+        {
+            authored = await PolicyCampaignContent.ReadAsync<CloseCampaign>(content, tenantId,
+                intent.AuthoredDecision, ct).ConfigureAwait(false);
+        }
+        catch (ImmutableContentIntegrityException exception)
+        {
+            ct.ThrowIfCancellationRequested();
+            return Built.Failed(SourceUseReceiverSupport.Permanent(
+                $"The frozen closure decision cannot be verified: {exception.Message}").Error!);
+        }
+
+        if (authored.CommandId != command.OperationId || authored.TenantId != tenantId ||
+            authored.ProgramId != campaign.ProgramId || authored.CampaignId != campaign.Id || authored.ExpectedRevision < 0 ||
+            string.IsNullOrWhiteSpace(authored.Rationale) || authored.Rationale.Length > 4000 ||
+            intent.Header.OriginalExpectedRevision != (ulong)authored.ExpectedRevision ||
+            AuthoredIntentDigest.Compute(authored) != intent.Header.AuthoredIntentSha256)
+            return Built.Failed(SourceUseReceiverSupport.Permanent(
+                "The frozen closure decision differs from its original authored operation.").Error!);
+
+        var state = await campaigns.StateOfAsync(campaign, ct).ConfigureAwait(false);
+        if (!state.IsSuccess)
+            return Built.Failed(state.Error!);
+        var closedOn = DateOnly.FromDateTime(intent.Header.AcceptedAt.UtcDateTime);
+        var totals = state.Value!.Totals(closedOn);
+        var rationale = authored.Rationale.Trim();
+        var totalsContent = await PolicyCampaignContent.WriteDerivedAsync(content, tenantId, command.CommandId,
+            "closing-totals", PolicyCampaignContent.TotalsSchema, totals, ct).ConfigureAwait(false);
+        var proofsContent = await PolicyCampaignContent.WriteDerivedAsync(content, tenantId, command.CommandId,
+            "participant-proofs", PolicyCampaignContent.ParticipantProofsSchema,
+            (IReadOnlyList<CampaignParticipantProof>)proofs, ct).ConfigureAwait(false);
+        var view = state.Value.ToView(closedOn) with
+        {
+            Status = "closed",
+            ClosedBy = intent.Header.OriginalActor,
+            ClosedAt = intent.Header.AcceptedAt,
+            ClosingTotals = totals,
+            Revision = campaign.Revision + 1,
+        };
+        var body = await PolicyCampaignContent.WriteDerivedAsync(content, tenantId, command.CommandId,
+            "campaign-view", PolicyCampaignContent.CampaignSchema, view, ct).ConfigureAwait(false);
+        var result = await PolicyCampaignContent.WriteDerivedResultAsync(content, tenantId, command.CommandId,
+            PolicyCampaignContent.CampaignSchema, body, ct).ConfigureAwait(false);
+        return new Built(null, null, closedOn, rationale, totalsContent, proofsContent, result);
+    }
+
+    sealed record Step(Result<ReceiverOutcome>? Outcome);
+
+    sealed record Built(RequestError? Error, Result<ReceiverOutcome>? Superseded, DateOnly ClosedOn,
+        string? Rationale, ImmutableContentRef? Totals, ImmutableContentRef? Proofs, ImmutableContentRef? Result)
+    {
+        public PolicyCampaignPreparedCut? Cut { get; init; }
+
+        public static Built Failed(RequestError error) => new(error, null, default, null, null, null, null);
+
+        public static Built Cancelled(Result<ReceiverOutcome> superseded) =>
+            new(null, superseded, default, null, null, null, null);
+    }
+}

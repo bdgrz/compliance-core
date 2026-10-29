@@ -1,0 +1,29 @@
+using System.Text.Json.Serialization;
+using Cntryl.Portia;
+using Bdgrz.Compliance.Features.NamedRecords.Contracts;
+using Bdgrz.Compliance.Features.PolicyDistribution.Contracts;
+using Bdgrz.Compliance.Features.AccessControl.Commands;
+using Bdgrz.Compliance.Features.NativeOperations.Models;
+using Bdgrz.Compliance.Features.PolicyDistribution.Events;
+using Bdgrz.Compliance.Features.Proofs.Models;
+using Bdgrz.Compliance.Features.SourceUse.Contracts;
+using Bdgrz.Compliance.Features.SourceUse.Models;
+namespace Bdgrz.Compliance.Features.PolicyDistribution.Commands;
+
+/// <summary>
+///     Settles one participant's closure use after the campaign's terminal fact. <paramref name="Source" /> is the
+///     terminal <see cref="PolicyCampaignClosed" /> or <see cref="PolicyCampaignClosureCanceled" /> fact; the
+///     disposition must match its kind. A settlement before any grant fences the key against late acquisition.
+/// </summary>
+[Discriminator("bdgrz.policy-campaign-participant.settle-campaign-closure-use", 1)]
+public sealed record SettlePolicyCampaignParticipantCampaignClosureUse(Uuid CommandId, NativeFactReference Source,
+    EventStreamAddress Target, Uuid OperationId, long Generation, long? ExpectedRevision, ImmutableContentRef Intent,
+    Uuid SourceOwnerId, Uuid ReceivingOwnerId, Uuid PersonId, SourceUseSettlementDisposition Disposition)
+    : ISourceUseSettlement, IPolicyCampaignReceiver
+{
+    /// <summary>The receiving owner whose exact accepted operation this use serves.</summary>
+    [JsonIgnore]
+    public Uuid CampaignId => ReceivingOwnerId;
+
+    Uuid IIdentifiedRequest.RequestId => CommandId;
+}

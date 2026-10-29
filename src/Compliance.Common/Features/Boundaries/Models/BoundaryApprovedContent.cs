@@ -1,0 +1,19 @@
+using System.Text.Json.Serialization;
+using Cntryl.Portia;
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.Boundaries.Contracts;
+namespace Bdgrz.Compliance.Features.Boundaries.Models;
+
+public sealed record BoundaryApprovedContent(Uuid TenantId, Uuid BoundaryId, Uuid DraftVersionId,
+    long Revision, Uuid ApprovalDecisionId, Uuid AcceptedReviewDecisionId, Uuid ActorMemberId,
+    string ActorDisplay, string Rationale, DateOnly EffectiveFrom,
+    DateTimeOffset DecidedAt, string ImpactDigest,
+    Uuid? SeparationOfDutiesWaiverId = null) : IBoundaryMutationContent
+{
+    [JsonPropertyName("actor")]
+    public ActorReference? StoredActor { get; init; }
+
+    [JsonIgnore]
+    public ActorReference Actor => StoredActor ?? ActorReference.ForMember(
+        ActorMemberId, ActorDisplay);
+}

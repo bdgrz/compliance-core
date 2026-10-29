@@ -1,0 +1,15 @@
+using Cntryl.Portia;
+using Bdgrz.Compliance.Features.Incidents.Rules;
+using Bdgrz.Compliance.Features.Operations.Models;
+using Bdgrz.Compliance.Features.Providers.Rules;
+using Bdgrz.Compliance.Features.Tenants.Commands;
+namespace Bdgrz.Compliance.Features.Tenants.Authorizers;
+
+sealed class ActivateTenantAuthorizer : IRequestAuthorizer<ActivateTenant>
+{
+    public ValueTask<Result> AuthorizeAsync(IRequestContext<ActivateTenant> context, CancellationToken ct) =>
+        ValueTask.FromResult(RequestActor.IsSystem(context.Actor)
+            ? Result.Success
+            : Result.Failure(new RequestError(RequestErrorKind.Forbidden,
+                "Only tenant bootstrap reactions may activate a tenant.")));
+}

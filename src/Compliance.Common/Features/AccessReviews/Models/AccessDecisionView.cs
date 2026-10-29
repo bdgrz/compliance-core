@@ -1,0 +1,12 @@
+using Cntryl.Portia;
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.Retention.Models;
+namespace Bdgrz.Compliance.Features.AccessReviews.Models;
+
+/// <summary>
+///     An attributable reviewer decision: <c>keep</c>, <c>modify</c>, <c>revoke</c>, or
+///     <c>unable_to_determine</c>. A bulk decision shares one rationale and preview token.
+/// </summary>
+public sealed record AccessDecisionView(Uuid DecisionId, Uuid ItemId, string Decision,
+    string Rationale, Uuid ReviewerMemberId, ActorReference DecidedBy, DateTimeOffset DecidedAt,
+    string? BulkPreviewToken, bool AfterDeadline, Uuid? SeparationOfDutiesWaiverId);

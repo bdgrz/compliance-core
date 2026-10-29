@@ -1,0 +1,119 @@
+using Cntryl.Portia;
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.AccessControl.Rules;
+using Bdgrz.Compliance.Features.Applications.Models;
+using Bdgrz.Compliance.Features.AuditPackages.Rules;
+using Bdgrz.Compliance.Features.AuditorRequests.History;
+using Bdgrz.Compliance.Features.AuditorRequests.Processes;
+using Bdgrz.Compliance.Features.AuditorRequests.Projections;
+using Bdgrz.Compliance.Features.AuditorRequests.Rules;
+using Bdgrz.Compliance.Features.Content.Contracts;
+using Bdgrz.Compliance.Features.Content.Services;
+using Bdgrz.Compliance.Features.Evidence.Models;
+using Bdgrz.Compliance.Features.Incidents.Rules;
+using Bdgrz.Compliance.Features.NamedRecords.Processes;
+using Bdgrz.Compliance.Features.NativeOperations.Models;
+using Bdgrz.Compliance.Features.Operations.History;
+using Bdgrz.Compliance.Features.Operations.Models;
+using Bdgrz.Compliance.Features.Processes.Processes;
+using Bdgrz.Compliance.Features.Programs.Readers;
+using Bdgrz.Compliance.Features.Proofs.Models;
+using Bdgrz.Compliance.Features.Providers.History;
+using Bdgrz.Compliance.Features.Providers.Rules;
+using Bdgrz.Compliance.Features.Remediation.Rules;
+using Bdgrz.Compliance.Features.Responsibilities.Models;
+using Bdgrz.Compliance.Features.Risks.Models;
+using Bdgrz.Compliance.Features.SourceFacts.Models;
+using Bdgrz.Compliance.Features.SourceFacts.Rules;
+using Bdgrz.Compliance.Features.TechnologyInventory.Models;
+using Bdgrz.Compliance.Features.Tenants.Models;
+using Bdgrz.Compliance.Features.Tenants.Processes;
+using Bdgrz.Compliance.Features.UserIdentities.Models;
+using Bdgrz.Compliance.Features.AccessControl.Aggregates;
+using Bdgrz.Compliance.Features.AttestRecords.Commands;
+using Bdgrz.Compliance.Features.AuditPopulations.Readers;
+using Bdgrz.Compliance.Features.AuditorRequests.Aggregates;
+using Bdgrz.Compliance.Features.AuditorRequests.Readers;
+namespace Bdgrz.Compliance.Features.AuditorRequests.Models;
+
+/// <summary>
+///     Admits one exact sample selection on the open request for both the record and the amend command. The exact frozen
+///     population version content and the nonempty duplicate-free row manifest are frozen on the request before the 202
+///     acknowledgment, so the selection owner materializes from the accepted proof without reading the live request or
+///     the latest population, even after the request resolved.
+/// </summary>
+sealed class SampleSelectionAdmission(NativeOperationExecutor operations, AuditPopulationReader populations,
+    IDomainEventReader events,
+    IImmutableContentStore content, TimeProvider clock)
+{
+    public async ValueTask<Result<OperationAcceptedResponse>> AdmitAsync(IExecutionContext context, Uuid actorMemberId,
+        string actorDisplay, string commandKind, string digest, Uuid tenantId, Uuid programId, Uuid examinationId,
+        Uuid requestId, long expectedRevision, Uuid selectionId, Uuid? supersedesSelectionId, Uuid populationId,
+        int populationVersion, IReadOnlyList<Uuid> rowIds, string method, string source, string externalReference,
+        string? amendmentReason, CancellationToken ct)
+    {
+        if (selectionId == Uuid.Empty || requestId == Uuid.Empty || expectedRevision < 0)
+            return AuditorCommands.Validation<OperationAcceptedResponse>(
+                "A sample selection requires its own identity and a non-negative expected request revision.");
+        var now = clock.GetUtcNow();
+        var address = new AuditorRequest(tenantId, programId, requestId, selectionId);
+        var provenance = AuditorContent.Provenance(selectionId, commandKind, address.Stream,
+            AuditorCommands.Actor(actorMemberId, actorDisplay), (ulong)expectedRevision, digest, now);
+        var binding = AcceptedOperationBinding.Of(provenance);
+
+        ImmutableContentRef? intent = null;
+        FirstResponseDescriptor? response = null;
+        AuditorRequestPreparedCut? preparedCut = null;
+        AuditorRequestHistorySnapshot? history = null;
+
+        var outcome = await operations.ExecuteAsync(new NativeOperation<AuditorRequest>(binding,
+            () => new AuditorRequest(tenantId, programId, requestId, selectionId),
+            auditorRequest => auditorRequest.Acceptance,
+            async (snapshot, prepareCt) =>
+            {
+                history = await AuditorRequestHistory.ReadAsync(events, snapshot, prepareCt).ConfigureAwait(false);
+                var terms = await AuditorCommands.TermsAsync(content, tenantId, snapshot, prepareCt).ConfigureAwait(false);
+                if (!terms.IsSuccess)
+                    return Result<FirstResponseDescriptor>.Failure(terms.Error!);
+                var prepared = snapshot.PrepareSelection(expectedRevision, selectionId, supersedesSelectionId, populationId,
+                populationVersion, history);
+                if (!prepared.IsSuccess)
+                    return Result<FirstResponseDescriptor>.Failure(prepared.Error!);
+                if (terms.Value!.ExaminationId != examinationId)
+                    return Result<FirstResponseDescriptor>.Failure(new RequestError(RequestErrorKind.Conflict,
+                        "The auditor request belongs to a different examination."));
+                var selection = AuditorRequestRules.Selection(method, source, externalReference, amendmentReason,
+                supersedesSelectionId is not null, rowIds);
+                if (!selection.IsSuccess)
+                    return Result<FirstResponseDescriptor>.Failure(selection.Error!);
+                var population = await SampleSelectionPopulationSourceReader.LoadAsync(populations, tenantId, programId,
+                examinationId, populationId, populationVersion, selection.Value!.RowIds, prepareCt).ConfigureAwait(false);
+                if (!population.IsSuccess)
+                    return Result<FirstResponseDescriptor>.Failure(population.Error);
+                var populationContent = await AuditorContent.WriteAsync(content, tenantId,
+                AuditorContent.PopulationVersionSchema, population.Value, prepareCt).ConfigureAwait(false);
+                var rows = await ImmutableSelectionManifests.WriteAsync<Uuid>(content, tenantId.ToString(),
+                Uuid.CreateVersion4(), AuditorContent.PopulationRowSchema,
+                selection.Value.RowIds, SelectionOrder.CanonicalKey, prepareCt).ConfigureAwait(false);
+                intent = await AuditorContent.WriteAsync(content, tenantId, AuditorSampleSelectionIntent.Schema,
+                new AuditorSampleSelectionIntent(AuditorContent.Header(provenance, now), programId, requestId,
+                    (ulong)snapshot.Generation, (ulong)expectedRevision + 1, selectionId, supersedesSelectionId,
+                    populationId, populationVersion, populationContent, rows, selection.Value.Method,
+                    selection.Value.Source, selection.Value.ExternalReference, selection.Value.AmendmentReason, now), prepareCt)
+                .ConfigureAwait(false);
+                response = await AuditorContent.AcceptedResponseAsync(content, tenantId, selectionId, now, prepareCt)
+                .ConfigureAwait(false);
+                preparedCut = AuditorRequestPreparedCut.Capture(snapshot);
+                return Result<FirstResponseDescriptor>.Success(response!);
+            },
+            (AuditorRequest auditorRequest, ImmutableContentRef acknowledgment) =>
+            {
+                if (preparedCut?.Matches(auditorRequest) != true)
+                    return AuditorRequestPreparedCut.Changed();
+                return auditorRequest.AdmitSelection(provenance, intent!, populationId, populationVersion,
+                    supersedesSelectionId, acknowledgment, history!);
+            }), context, ct).ConfigureAwait(false);
+        return await AuditorContent.ResponseAsync<OperationAcceptedResponse>(content, tenantId, outcome, ct)
+            .ConfigureAwait(false);
+    }
+}

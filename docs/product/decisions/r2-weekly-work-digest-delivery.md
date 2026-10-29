@@ -74,12 +74,12 @@ visibility checks again; the email is not an authorization grant. Do not
 include a restricted item when the recipient cannot currently see its source
 system.
 
-The existing [GetWorkDigestHandler](../../../src/Compliance.Core/Features/Work/GetWorkDigestHandler.cs)
+The existing [GetWorkDigestHandler](../../../src/Compliance.Core/Features/Work/Handlers/GetWorkDigestHandler.cs)
 query is Program-scoped and returns overdue and next-seven-day assigned work.
 A dispatcher that implements this policy must aggregate that content across
 the member's eligible Programs and deduplicate by stable work-item identity
 before creating the one tenant/member/week dispatch. The existing
-[WorkDigestView](../../../src/Compliance.Common/Features/Work/WorkDigestView.cs)
+[WorkDigestView](../../../src/Compliance.Common/Features/Work/Models/WorkDigestView.cs)
 is likewise a Program query; its `DigestId` is not the cross-Program delivery
 identity.
 
@@ -125,7 +125,7 @@ payloads or provider secrets.
 ## Backend implementation boundary
 
 The #292 implementation keeps the existing Program-scoped in-product
-[GetWorkDigestHandler](../../../src/Compliance.Core/Features/Work/GetWorkDigestHandler.cs)
+[GetWorkDigestHandler](../../../src/Compliance.Core/Features/Work/Handlers/GetWorkDigestHandler.cs)
 and adds a separate tenant/member/week dispatch ledger. The worker freezes the
 member's local week and schedule, checks the current tenant membership,
 `tenant.access` Program visibility, verified destination, email opt-out, and
@@ -145,7 +145,7 @@ attempt, evidence reference, and rationale. The retry operation is not exposed
 through MCP. The status omits the recipient, body, provider response, and
 source payload.
 
-The existing [email-challenge reactor](../../../src/Compliance.Core/Features/UserIdentities/EmailChallengeDeliveryReactor.cs)
+The existing [email-challenge reactor](../../../src/Compliance.Core/Features/UserIdentities/Reactors/EmailChallengeDeliveryReactor.cs)
 and [tenant-invitation reactor](../../../src/Compliance.Core/Features/Tenants/TenantInvitationDeliveryReactor.cs)
 retain their own delivery and replay behavior. Digest dispatch does not reuse
 those reactors because its retry rule must distinguish definite SMTP

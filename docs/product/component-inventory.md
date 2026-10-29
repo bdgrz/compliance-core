@@ -291,762 +291,762 @@ The aggregate count and source list were reconciled on 2026-10-21 against the
 
 #### AccessControl
 
-- [AcknowledgeEngagementManagement](../../src/Compliance.Common/Features/AccessControl/AcknowledgeEngagementManagement.cs#L6) — `bdgrz.service-engagement.management-acknowledge` v1
-- [AmendServiceEngagement](../../src/Compliance.Common/Features/AccessControl/AmendServiceEngagement.cs#L6) — `bdgrz.service-engagement.amend` v1
-- [ApproveSeparationOfDutiesWaiver](../../src/Compliance.Common/Features/AccessControl/ApproveSeparationOfDutiesWaiver.cs#L6) — `bdgrz.sod-waiver.approve` v1
-- [AssignRolePermission](../../src/Compliance.Common/Features/AccessControl/AssignRolePermission.cs#L9) — `bdgrz.rbac.role-permission.assign` v1
-- [AssignTeamMember](../../src/Compliance.Common/Features/AccessControl/AssignTeamMember.cs#L7) — `bdgrz.rbac.team-member.assign` v1
-- [AssignTeamRole](../../src/Compliance.Common/Features/AccessControl/AssignTeamRole.cs#L7) — `bdgrz.rbac.team-role.assign` v1
-- [CloseServiceEngagement](../../src/Compliance.Common/Features/AccessControl/CloseServiceEngagement.cs#L6) — `bdgrz.service-engagement.close` v1
-- [CreateServiceEngagement](../../src/Compliance.Common/Features/AccessControl/CreateServiceEngagement.cs#L6) — `bdgrz.service-engagement.create` v1
-- [DefineRole](../../src/Compliance.Common/Features/AccessControl/DefineRole.cs#L7) — `bdgrz.rbac.role.define` v1
-- [DefineTeam](../../src/Compliance.Common/Features/AccessControl/DefineTeam.cs#L7) — `bdgrz.rbac.team.define` v1
-- [DeleteRole](../../src/Compliance.Common/Features/AccessControl/DeleteRole.cs#L7) — `bdgrz.rbac.role.delete` v1
-- [DeleteTeam](../../src/Compliance.Common/Features/AccessControl/DeleteTeam.cs#L7) — `bdgrz.rbac.team.delete` v1
-- [DeprovisionMember](../../src/Compliance.Common/Features/AccessControl/DeprovisionMember.cs#L6) — `bdgrz.tenant.member.deprovision` v1
-- [EvaluateClientIndependence](../../src/Compliance.Common/Features/AccessControl/EvaluateClientIndependence.cs#L7) — `bdgrz.independence.evaluate` v1
-- [GrantAccess](../../src/Compliance.Common/Features/AccessControl/GrantAccess.cs#L6) — `bdgrz.access-grant.issue` v1
-- [ProvisionGuestProgramAccess](../../src/Compliance.Common/Features/AccessControl/ProvisionGuestProgramAccess.cs#L7) — `bdgrz.access-grant.guest-invitation.provision` v1 (internal reaction)
-- [ProposeServiceEngagementStaff](../../src/Compliance.Common/Features/AccessControl/ProposeServiceEngagementStaff.cs#L6) — `bdgrz.service-engagement.staff.propose` v1
+- [AcknowledgeEngagementManagement](../../src/Compliance.Common/Features/AccessControl/Commands/AcknowledgeEngagementManagement.cs#L6) — `bdgrz.service-engagement.management-acknowledge` v1
+- [AmendServiceEngagement](../../src/Compliance.Common/Features/AccessControl/Commands/AmendServiceEngagement.cs#L6) — `bdgrz.service-engagement.amend` v1
+- [ApproveSeparationOfDutiesWaiver](../../src/Compliance.Common/Features/AccessControl/Commands/ApproveSeparationOfDutiesWaiver.cs#L6) — `bdgrz.sod-waiver.approve` v1
+- [AssignRolePermission](../../src/Compliance.Common/Features/AccessControl/Commands/AssignRolePermission.cs#L9) — `bdgrz.rbac.role-permission.assign` v1
+- [AssignTeamMember](../../src/Compliance.Common/Features/AccessControl/Commands/AssignTeamMember.cs#L7) — `bdgrz.rbac.team-member.assign` v1
+- [AssignTeamRole](../../src/Compliance.Common/Features/AccessControl/Commands/AssignTeamRole.cs#L7) — `bdgrz.rbac.team-role.assign` v1
+- [CloseServiceEngagement](../../src/Compliance.Common/Features/AccessControl/Commands/CloseServiceEngagement.cs#L6) — `bdgrz.service-engagement.close` v1
+- [CreateServiceEngagement](../../src/Compliance.Common/Features/AccessControl/Commands/CreateServiceEngagement.cs#L6) — `bdgrz.service-engagement.create` v1
+- [DefineRole](../../src/Compliance.Common/Features/AccessControl/Commands/DefineRole.cs#L7) — `bdgrz.rbac.role.define` v1
+- [DefineTeam](../../src/Compliance.Common/Features/AccessControl/Commands/DefineTeam.cs#L7) — `bdgrz.rbac.team.define` v1
+- [DeleteRole](../../src/Compliance.Common/Features/AccessControl/Commands/DeleteRole.cs#L7) — `bdgrz.rbac.role.delete` v1
+- [DeleteTeam](../../src/Compliance.Common/Features/AccessControl/Commands/DeleteTeam.cs#L7) — `bdgrz.rbac.team.delete` v1
+- [DeprovisionMember](../../src/Compliance.Common/Features/AccessControl/Commands/DeprovisionMember.cs#L6) — `bdgrz.tenant.member.deprovision` v1
+- [EvaluateClientIndependence](../../src/Compliance.Common/Features/AccessControl/Commands/EvaluateClientIndependence.cs#L7) — `bdgrz.independence.evaluate` v1
+- [GrantAccess](../../src/Compliance.Common/Features/AccessControl/Commands/GrantAccess.cs#L6) — `bdgrz.access-grant.issue` v1
+- [ProvisionGuestProgramAccess](../../src/Compliance.Common/Features/AccessControl/Commands/ProvisionGuestProgramAccess.cs#L7) — `bdgrz.access-grant.guest-invitation.provision` v1 (internal reaction)
+- [ProposeServiceEngagementStaff](../../src/Compliance.Common/Features/AccessControl/Commands/ProposeServiceEngagementStaff.cs#L6) — `bdgrz.service-engagement.staff.propose` v1
 - [RecordDirectoryIndependenceReevaluation](../../src/Compliance.Core/Features/AccessControl/RecordDirectoryIndependenceReevaluation.cs#L7) — `bdgrz.independence.record-directory-reevaluation` v1
-- [RecordNonattestService](../../src/Compliance.Common/Features/AccessControl/RecordNonattestService.cs#L6) — `bdgrz.independence.service.record` v1
-- [RecordSeparationOfDutiesWaiver](../../src/Compliance.Common/Features/AccessControl/RecordSeparationOfDutiesWaiver.cs#L6) — `bdgrz.sod-waiver.record` v1
-- [RegisterFirmStaff](../../src/Compliance.Common/Features/AccessControl/RegisterFirmStaff.cs#L6) — `bdgrz.firm-staff.register` v1
-- [RegisterMember](../../src/Compliance.Common/Features/AccessControl/RegisterMember.cs#L6) — `bdgrz.rbac.member.register` v1
-- [ReinstateMember](../../src/Compliance.Common/Features/AccessControl/ReinstateMember.cs#L6) — `bdgrz.tenant.member.reinstate` v1
-- [RemoveRolePermission](../../src/Compliance.Common/Features/AccessControl/RemoveRolePermission.cs#L10) — `bdgrz.rbac.role-permission.remove` v1
-- [RemoveTeamMember](../../src/Compliance.Common/Features/AccessControl/RemoveTeamMember.cs#L7) — `bdgrz.rbac.team-member.remove` v1
-- [RemoveTeamRole](../../src/Compliance.Common/Features/AccessControl/RemoveTeamRole.cs#L7) — `bdgrz.rbac.team-role.remove` v1
-- [RenameRole](../../src/Compliance.Common/Features/AccessControl/RenameRole.cs#L6) — `bdgrz.rbac.role.rename` v1
-- [ReviseIndependenceRules](../../src/Compliance.Common/Features/AccessControl/ReviseIndependenceRules.cs#L6) — `bdgrz.independence.rules.revise` v1
-- [RevokeAccessGrant](../../src/Compliance.Common/Features/AccessControl/RevokeAccessGrant.cs#L6) — `bdgrz.access-grant.revoke` v1
-- [RevokeServiceEngagementActualStaff](../../src/Compliance.Common/Features/AccessControl/RevokeServiceEngagementActualStaff.cs#L5) — `bdgrz.service-engagement.actual-staff.revoke` v1
-- [SetFirmStaffStatus](../../src/Compliance.Common/Features/AccessControl/SetFirmStaffStatus.cs#L6) — `bdgrz.firm-staff.status.set` v1
-- [SuspendMember](../../src/Compliance.Common/Features/AccessControl/SuspendMember.cs#L6) — `bdgrz.tenant.member.suspend` v1
-- [WithdrawServiceEngagementStaffProposal](../../src/Compliance.Common/Features/AccessControl/WithdrawServiceEngagementStaffProposal.cs#L6) — `bdgrz.service-engagement.staff.withdraw` v1
+- [RecordNonattestService](../../src/Compliance.Common/Features/AccessControl/Commands/RecordNonattestService.cs#L6) — `bdgrz.independence.service.record` v1
+- [RecordSeparationOfDutiesWaiver](../../src/Compliance.Common/Features/AccessControl/Commands/RecordSeparationOfDutiesWaiver.cs#L6) — `bdgrz.sod-waiver.record` v1
+- [RegisterFirmStaff](../../src/Compliance.Common/Features/AccessControl/Commands/RegisterFirmStaff.cs#L6) — `bdgrz.firm-staff.register` v1
+- [RegisterMember](../../src/Compliance.Common/Features/AccessControl/Commands/RegisterMember.cs#L6) — `bdgrz.rbac.member.register` v1
+- [ReinstateMember](../../src/Compliance.Common/Features/AccessControl/Commands/ReinstateMember.cs#L6) — `bdgrz.tenant.member.reinstate` v1
+- [RemoveRolePermission](../../src/Compliance.Common/Features/AccessControl/Commands/RemoveRolePermission.cs#L10) — `bdgrz.rbac.role-permission.remove` v1
+- [RemoveTeamMember](../../src/Compliance.Common/Features/AccessControl/Commands/RemoveTeamMember.cs#L7) — `bdgrz.rbac.team-member.remove` v1
+- [RemoveTeamRole](../../src/Compliance.Common/Features/AccessControl/Commands/RemoveTeamRole.cs#L7) — `bdgrz.rbac.team-role.remove` v1
+- [RenameRole](../../src/Compliance.Common/Features/AccessControl/Commands/RenameRole.cs#L6) — `bdgrz.rbac.role.rename` v1
+- [ReviseIndependenceRules](../../src/Compliance.Common/Features/AccessControl/Commands/ReviseIndependenceRules.cs#L6) — `bdgrz.independence.rules.revise` v1
+- [RevokeAccessGrant](../../src/Compliance.Common/Features/AccessControl/Commands/RevokeAccessGrant.cs#L6) — `bdgrz.access-grant.revoke` v1
+- [RevokeServiceEngagementActualStaff](../../src/Compliance.Common/Features/AccessControl/Commands/RevokeServiceEngagementActualStaff.cs#L5) — `bdgrz.service-engagement.actual-staff.revoke` v1
+- [SetFirmStaffStatus](../../src/Compliance.Common/Features/AccessControl/Commands/SetFirmStaffStatus.cs#L6) — `bdgrz.firm-staff.status.set` v1
+- [SuspendMember](../../src/Compliance.Common/Features/AccessControl/Commands/SuspendMember.cs#L6) — `bdgrz.tenant.member.suspend` v1
+- [WithdrawServiceEngagementStaffProposal](../../src/Compliance.Common/Features/AccessControl/Commands/WithdrawServiceEngagementStaffProposal.cs#L6) — `bdgrz.service-engagement.staff.withdraw` v1
 
 #### AdvisorCollaboration
 
-- [CloseAdvisorHandoff](../../src/Compliance.Common/Features/AdvisorCollaboration/CloseAdvisorHandoff.cs#L7) — `bdgrz.advisor-collaboration.close-advisor-handoff` v1
-- [CorrectAdvisorFeedback](../../src/Compliance.Common/Features/AdvisorCollaboration/CorrectAdvisorFeedback.cs#L7) — `bdgrz.advisor-collaboration.correct-advisor-feedback` v1
-- [CreateAdvisorHandoff](../../src/Compliance.Common/Features/AdvisorCollaboration/CreateAdvisorHandoff.cs#L7) — `bdgrz.advisor-collaboration.create-advisor-handoff` v1
-- [MarkAdvisorHandoffReadyForReview](../../src/Compliance.Common/Features/AdvisorCollaboration/MarkAdvisorHandoffReadyForReview.cs#L7) — `bdgrz.advisor-collaboration.mark-advisor-handoff-ready-for-review` v1
-- [RecordAdvisorFeedback](../../src/Compliance.Common/Features/AdvisorCollaboration/RecordAdvisorFeedback.cs#L7) — `bdgrz.advisor-collaboration.record-advisor-feedback` v1
-- [ResolveAdvisorFeedback](../../src/Compliance.Common/Features/AdvisorCollaboration/ResolveAdvisorFeedback.cs#L9) — `bdgrz.advisor-collaboration.resolve-advisor-feedback` v1
-- [RespondToAdvisorFeedback](../../src/Compliance.Common/Features/AdvisorCollaboration/RespondToAdvisorFeedback.cs#L8) — `bdgrz.advisor-collaboration.respond-to-advisor-feedback` v1
-- [ReviseAdvisorHandoffSelection](../../src/Compliance.Common/Features/AdvisorCollaboration/ReviseAdvisorHandoffSelection.cs#L7) — `bdgrz.advisor-collaboration.revise-advisor-handoff-selection` v1
-- [RevokeAdvisorHandoff](../../src/Compliance.Common/Features/AdvisorCollaboration/RevokeAdvisorHandoff.cs#L7) — `bdgrz.advisor-collaboration.revoke-advisor-handoff` v1
+- [CloseAdvisorHandoff](../../src/Compliance.Common/Features/AdvisorCollaboration/Commands/CloseAdvisorHandoff.cs#L7) — `bdgrz.advisor-collaboration.close-advisor-handoff` v1
+- [CorrectAdvisorFeedback](../../src/Compliance.Common/Features/AdvisorCollaboration/Commands/CorrectAdvisorFeedback.cs#L7) — `bdgrz.advisor-collaboration.correct-advisor-feedback` v1
+- [CreateAdvisorHandoff](../../src/Compliance.Common/Features/AdvisorCollaboration/Commands/CreateAdvisorHandoff.cs#L7) — `bdgrz.advisor-collaboration.create-advisor-handoff` v1
+- [MarkAdvisorHandoffReadyForReview](../../src/Compliance.Common/Features/AdvisorCollaboration/Commands/MarkAdvisorHandoffReadyForReview.cs#L7) — `bdgrz.advisor-collaboration.mark-advisor-handoff-ready-for-review` v1
+- [RecordAdvisorFeedback](../../src/Compliance.Common/Features/AdvisorCollaboration/Commands/RecordAdvisorFeedback.cs#L7) — `bdgrz.advisor-collaboration.record-advisor-feedback` v1
+- [ResolveAdvisorFeedback](../../src/Compliance.Common/Features/AdvisorCollaboration/Commands/ResolveAdvisorFeedback.cs#L9) — `bdgrz.advisor-collaboration.resolve-advisor-feedback` v1
+- [RespondToAdvisorFeedback](../../src/Compliance.Common/Features/AdvisorCollaboration/Commands/RespondToAdvisorFeedback.cs#L8) — `bdgrz.advisor-collaboration.respond-to-advisor-feedback` v1
+- [ReviseAdvisorHandoffSelection](../../src/Compliance.Common/Features/AdvisorCollaboration/Commands/ReviseAdvisorHandoffSelection.cs#L7) — `bdgrz.advisor-collaboration.revise-advisor-handoff-selection` v1
+- [RevokeAdvisorHandoff](../../src/Compliance.Common/Features/AdvisorCollaboration/Commands/RevokeAdvisorHandoff.cs#L7) — `bdgrz.advisor-collaboration.revoke-advisor-handoff` v1
 
 #### AccessReviews
 
-- [AcceptAccessPopulation](../../src/Compliance.Common/Features/AccessReviews/AcceptAccessPopulation.cs#L10) — `bdgrz.access_population.accept` v1
-- [ApproveAccessExpectation](../../src/Compliance.Common/Features/AccessReviews/ApproveAccessExpectation.cs#L10) — `bdgrz.access_expectation.approve` v1
-- [ClassifyAccessPrincipal](../../src/Compliance.Common/Features/AccessReviews/ClassifyAccessPrincipal.cs#L7) — `bdgrz.access_population.principal.classify` v1
-- [CompleteAccessReviewCampaign](../../src/Compliance.Common/Features/AccessReviews/CompleteAccessReviewCampaign.cs#L11) — `bdgrz.access_review.campaign.complete` v1
-- [ExemptAccessExpectation](../../src/Compliance.Common/Features/AccessReviews/ExemptAccessExpectation.cs#L10) — `bdgrz.access_expectation.exception.record` v1
-- [ExemptAccessRemediation](../../src/Compliance.Common/Features/AccessReviews/ExemptAccessRemediation.cs#L10) — `bdgrz.access_review.remediation.exception.record` v1
-- [ExemptMissingAccessPopulation](../../src/Compliance.Common/Features/AccessReviews/ExemptMissingAccessPopulation.cs#L10) — `bdgrz.access_population.exception.record` v1
-- [LaunchAccessReviewCampaign](../../src/Compliance.Common/Features/AccessReviews/LaunchAccessReviewCampaign.cs#L10) — `bdgrz.access_review.campaign.launch` v1
-- [OpenAccessPopulation](../../src/Compliance.Common/Features/AccessReviews/OpenAccessPopulation.cs#L7) — `bdgrz.access_population.open` v1
-- [ProposeAccessExpectation](../../src/Compliance.Common/Features/AccessReviews/ProposeAccessExpectation.cs#L7) — `bdgrz.access_expectation.propose` v1
-- [RecordAccessDecision](../../src/Compliance.Common/Features/AccessReviews/RecordAccessDecision.cs#L10) — `bdgrz.access_review.decision.record` v1
-- [RecordAccessPopulationFacts](../../src/Compliance.Common/Features/AccessReviews/RecordAccessPopulationFacts.cs#L7) — `bdgrz.access_population.facts.record` v1
-- [RecordAccessRemediationChange](../../src/Compliance.Common/Features/AccessReviews/RecordAccessRemediationChange.cs#L7) — `bdgrz.access_review.remediation.change.record` v1
-- [RecordBulkAccessDecision](../../src/Compliance.Common/Features/AccessReviews/RecordBulkAccessDecision.cs#L10) — `bdgrz.access_review.decision.bulk_record` v1
-- [VerifyAccessRemediation](../../src/Compliance.Common/Features/AccessReviews/VerifyAccessRemediation.cs#L7) — `bdgrz.access_review.remediation.verify` v1
+- [AcceptAccessPopulation](../../src/Compliance.Common/Features/AccessReviews/Commands/AcceptAccessPopulation.cs#L10) — `bdgrz.access_population.accept` v1
+- [ApproveAccessExpectation](../../src/Compliance.Common/Features/AccessReviews/Commands/ApproveAccessExpectation.cs#L10) — `bdgrz.access_expectation.approve` v1
+- [ClassifyAccessPrincipal](../../src/Compliance.Common/Features/AccessReviews/Commands/ClassifyAccessPrincipal.cs#L7) — `bdgrz.access_population.principal.classify` v1
+- [CompleteAccessReviewCampaign](../../src/Compliance.Common/Features/AccessReviews/Commands/CompleteAccessReviewCampaign.cs#L11) — `bdgrz.access_review.campaign.complete` v1
+- [ExemptAccessExpectation](../../src/Compliance.Common/Features/AccessReviews/Commands/ExemptAccessExpectation.cs#L10) — `bdgrz.access_expectation.exception.record` v1
+- [ExemptAccessRemediation](../../src/Compliance.Common/Features/AccessReviews/Commands/ExemptAccessRemediation.cs#L10) — `bdgrz.access_review.remediation.exception.record` v1
+- [ExemptMissingAccessPopulation](../../src/Compliance.Common/Features/AccessReviews/Commands/ExemptMissingAccessPopulation.cs#L10) — `bdgrz.access_population.exception.record` v1
+- [LaunchAccessReviewCampaign](../../src/Compliance.Common/Features/AccessReviews/Commands/LaunchAccessReviewCampaign.cs#L10) — `bdgrz.access_review.campaign.launch` v1
+- [OpenAccessPopulation](../../src/Compliance.Common/Features/AccessReviews/Commands/OpenAccessPopulation.cs#L7) — `bdgrz.access_population.open` v1
+- [ProposeAccessExpectation](../../src/Compliance.Common/Features/AccessReviews/Commands/ProposeAccessExpectation.cs#L7) — `bdgrz.access_expectation.propose` v1
+- [RecordAccessDecision](../../src/Compliance.Common/Features/AccessReviews/Commands/RecordAccessDecision.cs#L10) — `bdgrz.access_review.decision.record` v1
+- [RecordAccessPopulationFacts](../../src/Compliance.Common/Features/AccessReviews/Commands/RecordAccessPopulationFacts.cs#L7) — `bdgrz.access_population.facts.record` v1
+- [RecordAccessRemediationChange](../../src/Compliance.Common/Features/AccessReviews/Commands/RecordAccessRemediationChange.cs#L7) — `bdgrz.access_review.remediation.change.record` v1
+- [RecordBulkAccessDecision](../../src/Compliance.Common/Features/AccessReviews/Commands/RecordBulkAccessDecision.cs#L10) — `bdgrz.access_review.decision.bulk_record` v1
+- [VerifyAccessRemediation](../../src/Compliance.Common/Features/AccessReviews/Commands/VerifyAccessRemediation.cs#L7) — `bdgrz.access_review.remediation.verify` v1
 
 #### Applications
 
-- [AcceptApplicationImport](../../src/Compliance.Common/Features/Applications/AcceptApplicationImport.cs#L6) — `bdgrz.application_import.accept` v1
-- [AddApplicationRelationship](../../src/Compliance.Common/Features/Applications/AddApplicationRelationship.cs#L6) — `bdgrz.application.relationship.add` v1
-- [ApplyApplicationImportEffect](../../src/Compliance.Common/Features/Applications/ApplyApplicationImportEffect.cs#L7) — `bdgrz.application_import.apply_effect` v1
-- [CancelApplicationImport](../../src/Compliance.Common/Features/Applications/CancelApplicationImport.cs#L6) — `bdgrz.application_import.cancel` v1
-- [CorrelateApplicationImportRow](../../src/Compliance.Common/Features/Applications/CorrelateApplicationImportRow.cs#L6) — `bdgrz.application_import.correlate_row` v1
-- [DecideAccessReviewScope](../../src/Compliance.Common/Features/Applications/DecideAccessReviewScope.cs#L10) — `bdgrz.system_instance.access_review_scope.decide` v1
-- [DeclareApplication](../../src/Compliance.Common/Features/Applications/DeclareApplication.cs#L6) — `bdgrz.application.declare` v1
-- [DeclareSystemInstance](../../src/Compliance.Common/Features/Applications/DeclareSystemInstance.cs#L6) — `bdgrz.system_instance.declare` v1
-- [ExecuteApplicationImport](../../src/Compliance.Common/Features/Applications/ExecuteApplicationImport.cs#L7) — `bdgrz.application_import.execute` v1
-- [FreezeApplicationImportOmissionProposal](../../src/Compliance.Common/Features/Applications/FreezeApplicationImportOmissionProposal.cs#L7) — `bdgrz.application_import.omission.freeze` v1
-- [RemoveApplicationRelationship](../../src/Compliance.Common/Features/Applications/RemoveApplicationRelationship.cs#L6) — `bdgrz.application.relationship.remove` v1
-- [RetireApplication](../../src/Compliance.Common/Features/Applications/RetireApplication.cs#L6) — `bdgrz.application.retire` v1
-- [RetireSystemInstance](../../src/Compliance.Common/Features/Applications/RetireSystemInstance.cs#L6) — `bdgrz.system_instance.retire` v1
-- [ReviseApplication](../../src/Compliance.Common/Features/Applications/ReviseApplication.cs#L7) — `bdgrz.application.revise` v1
+- [AcceptApplicationImport](../../src/Compliance.Common/Features/Applications/Commands/AcceptApplicationImport.cs#L6) — `bdgrz.application_import.accept` v1
+- [AddApplicationRelationship](../../src/Compliance.Common/Features/Applications/Commands/AddApplicationRelationship.cs#L6) — `bdgrz.application.relationship.add` v1
+- [ApplyApplicationImportEffect](../../src/Compliance.Common/Features/Applications/Commands/ApplyApplicationImportEffect.cs#L7) — `bdgrz.application_import.apply_effect` v1
+- [CancelApplicationImport](../../src/Compliance.Common/Features/Applications/Commands/CancelApplicationImport.cs#L6) — `bdgrz.application_import.cancel` v1
+- [CorrelateApplicationImportRow](../../src/Compliance.Common/Features/Applications/Commands/CorrelateApplicationImportRow.cs#L6) — `bdgrz.application_import.correlate_row` v1
+- [DecideAccessReviewScope](../../src/Compliance.Common/Features/Applications/Commands/DecideAccessReviewScope.cs#L10) — `bdgrz.system_instance.access_review_scope.decide` v1
+- [DeclareApplication](../../src/Compliance.Common/Features/Applications/Commands/DeclareApplication.cs#L6) — `bdgrz.application.declare` v1
+- [DeclareSystemInstance](../../src/Compliance.Common/Features/Applications/Commands/DeclareSystemInstance.cs#L6) — `bdgrz.system_instance.declare` v1
+- [ExecuteApplicationImport](../../src/Compliance.Common/Features/Applications/Commands/ExecuteApplicationImport.cs#L7) — `bdgrz.application_import.execute` v1
+- [FreezeApplicationImportOmissionProposal](../../src/Compliance.Common/Features/Applications/Commands/FreezeApplicationImportOmissionProposal.cs#L7) — `bdgrz.application_import.omission.freeze` v1
+- [RemoveApplicationRelationship](../../src/Compliance.Common/Features/Applications/Commands/RemoveApplicationRelationship.cs#L6) — `bdgrz.application.relationship.remove` v1
+- [RetireApplication](../../src/Compliance.Common/Features/Applications/Commands/RetireApplication.cs#L6) — `bdgrz.application.retire` v1
+- [RetireSystemInstance](../../src/Compliance.Common/Features/Applications/Commands/RetireSystemInstance.cs#L6) — `bdgrz.system_instance.retire` v1
+- [ReviseApplication](../../src/Compliance.Common/Features/Applications/Commands/ReviseApplication.cs#L7) — `bdgrz.application.revise` v1
 - [ReviseApplicationMcpInput](../../src/Compliance.App/Features/Applications/ReviseApplicationMcpInput.cs#L7) — `bdgrz.application.revise.mcp-input` v1
-- [StageApplicationImport](../../src/Compliance.Common/Features/Applications/StageApplicationImport.cs#L6) — `bdgrz.application_import.stage` v1
+- [StageApplicationImport](../../src/Compliance.Common/Features/Applications/Commands/StageApplicationImport.cs#L6) — `bdgrz.application_import.stage` v1
 
 #### AuditPackages
 
-- [CreateAuditPackage](../../src/Compliance.Common/Features/AuditPackages/CreateAuditPackage.cs#L9) — `bdgrz.audit-packages.create-audit-package` v1
+- [CreateAuditPackage](../../src/Compliance.Common/Features/AuditPackages/Commands/CreateAuditPackage.cs#L9) — `bdgrz.audit-packages.create-audit-package` v1
 
 #### Boundaries
 
-- [ApproveBoundary](../../src/Compliance.Common/Features/Boundaries/ApproveBoundary.cs#L7) — `bdgrz.boundary.approve` v1
-- [CreateBoundary](../../src/Compliance.Common/Features/Boundaries/CreateBoundary.cs#L8) — `bdgrz.boundary.create` v1
-- [DiscardBoundaryDraft](../../src/Compliance.Common/Features/Boundaries/DiscardBoundaryDraft.cs#L7) — `bdgrz.boundary.draft.discard` v1
-- [ProposeBoundarySuccessor](../../src/Compliance.Common/Features/Boundaries/ProposeBoundarySuccessor.cs#L7) — `bdgrz.boundary.successor.propose` v1
-- [ReviewBoundary](../../src/Compliance.Common/Features/Boundaries/ReviewBoundary.cs#L7) — `bdgrz.boundary.review` v1
-- [ReviseBoundaryDraft](../../src/Compliance.Common/Features/Boundaries/ReviseBoundaryDraft.cs#L7) — `bdgrz.boundary.draft.revise` v1
+- [ApproveBoundary](../../src/Compliance.Common/Features/Boundaries/Commands/ApproveBoundary.cs#L7) — `bdgrz.boundary.approve` v1
+- [CreateBoundary](../../src/Compliance.Common/Features/Boundaries/Commands/CreateBoundary.cs#L8) — `bdgrz.boundary.create` v1
+- [DiscardBoundaryDraft](../../src/Compliance.Common/Features/Boundaries/Commands/DiscardBoundaryDraft.cs#L7) — `bdgrz.boundary.draft.discard` v1
+- [ProposeBoundarySuccessor](../../src/Compliance.Common/Features/Boundaries/Commands/ProposeBoundarySuccessor.cs#L7) — `bdgrz.boundary.successor.propose` v1
+- [ReviewBoundary](../../src/Compliance.Common/Features/Boundaries/Commands/ReviewBoundary.cs#L7) — `bdgrz.boundary.review` v1
+- [ReviseBoundaryDraft](../../src/Compliance.Common/Features/Boundaries/Commands/ReviseBoundaryDraft.cs#L7) — `bdgrz.boundary.draft.revise` v1
 
 #### Changes
 
-- [AssessSignificantChange](../../src/Compliance.Common/Features/Changes/AssessSignificantChange.cs#L8) — `bdgrz.changes.assess-significant-change` v2
-- [RecordSignificantChange](../../src/Compliance.Common/Features/Changes/RecordSignificantChange.cs#L8) — `bdgrz.changes.record-significant-change` v2
-- [ReviseSignificantChange](../../src/Compliance.Common/Features/Changes/ReviseSignificantChange.cs#L8) — `bdgrz.changes.revise-significant-change` v2
-- [LinkImpactReviewWork](../../src/Compliance.Common/Features/Changes/LinkImpactReviewWork.cs#L6) — `bdgrz.changes.link-impact-review-work` v1 (internal reaction)
-- [RecordSignificantChangeSystemDescriptionDecision](../../src/Compliance.Common/Features/Changes/RecordSignificantChangeSystemDescriptionDecision.cs#L6) — `bdgrz.changes.record-system-description-decision` v2 (internal reaction)
+- [AssessSignificantChange](../../src/Compliance.Common/Features/Changes/Commands/AssessSignificantChange.cs#L8) — `bdgrz.changes.assess-significant-change` v2
+- [RecordSignificantChange](../../src/Compliance.Common/Features/Changes/Commands/RecordSignificantChange.cs#L8) — `bdgrz.changes.record-significant-change` v2
+- [ReviseSignificantChange](../../src/Compliance.Common/Features/Changes/Commands/ReviseSignificantChange.cs#L8) — `bdgrz.changes.revise-significant-change` v2
+- [LinkImpactReviewWork](../../src/Compliance.Common/Features/Changes/Commands/LinkImpactReviewWork.cs#L6) — `bdgrz.changes.link-impact-review-work` v1 (internal reaction)
+- [RecordSignificantChangeSystemDescriptionDecision](../../src/Compliance.Common/Features/Changes/Commands/RecordSignificantChangeSystemDescriptionDecision.cs#L6) — `bdgrz.changes.record-system-description-decision` v2 (internal reaction)
 
 #### Commitments
 
-- [ApproveCommitmentDraft](../../src/Compliance.Common/Features/Commitments/ApproveCommitmentDraft.cs#L12) — `bdgrz.commitment.draft.approve` v1
-- [CreateCommitmentDraft](../../src/Compliance.Common/Features/Commitments/CreateCommitmentDraft.cs#L8) — `bdgrz.commitment.draft.create` v1
-- [ReviewCommitmentDraft](../../src/Compliance.Common/Features/Commitments/ReviewCommitmentDraft.cs#L13) — `bdgrz.commitment.draft.review` v1
-- [ReviseCommitmentDraft](../../src/Compliance.Common/Features/Commitments/ReviseCommitmentDraft.cs#L8) — `bdgrz.commitment.draft.revise` v1
+- [ApproveCommitmentDraft](../../src/Compliance.Common/Features/Commitments/Commands/ApproveCommitmentDraft.cs#L12) — `bdgrz.commitment.draft.approve` v1
+- [CreateCommitmentDraft](../../src/Compliance.Common/Features/Commitments/Commands/CreateCommitmentDraft.cs#L8) — `bdgrz.commitment.draft.create` v1
+- [ReviewCommitmentDraft](../../src/Compliance.Common/Features/Commitments/Commands/ReviewCommitmentDraft.cs#L13) — `bdgrz.commitment.draft.review` v1
+- [ReviseCommitmentDraft](../../src/Compliance.Common/Features/Commitments/Commands/ReviseCommitmentDraft.cs#L8) — `bdgrz.commitment.draft.revise` v1
 
 #### ControlMappings
 
-- [ProposeControlCriterionMapping](../../src/Compliance.Common/Features/ControlMappings/ProposeControlCriterionMapping.cs#L12) — `bdgrz.control_mapping.propose` v1
-- [ProposeCriterionNotApplicable](../../src/Compliance.Common/Features/ControlMappings/ProposeCriterionNotApplicable.cs#L13) — `bdgrz.criterion_applicability.propose_not_applicable` v1
-- [RetireControlCriterionMapping](../../src/Compliance.Common/Features/ControlMappings/RetireControlCriterionMapping.cs#L9) — `bdgrz.control_mapping.retire` v1
-- [ReviewControlCriterionMapping](../../src/Compliance.Common/Features/ControlMappings/ReviewControlCriterionMapping.cs#L9) — `bdgrz.control_mapping.review` v1
-- [ReviewCriterionApplicability](../../src/Compliance.Common/Features/ControlMappings/ReviewCriterionApplicability.cs#L13) — `bdgrz.criterion_applicability.review` v1
-- [WithdrawCriterionNotApplicable](../../src/Compliance.Common/Features/ControlMappings/WithdrawCriterionNotApplicable.cs#L9) — `bdgrz.criterion_applicability.withdraw_not_applicable` v1
+- [ProposeControlCriterionMapping](../../src/Compliance.Common/Features/ControlMappings/Commands/ProposeControlCriterionMapping.cs#L12) — `bdgrz.control_mapping.propose` v1
+- [ProposeCriterionNotApplicable](../../src/Compliance.Common/Features/ControlMappings/Commands/ProposeCriterionNotApplicable.cs#L13) — `bdgrz.criterion_applicability.propose_not_applicable` v1
+- [RetireControlCriterionMapping](../../src/Compliance.Common/Features/ControlMappings/Commands/RetireControlCriterionMapping.cs#L9) — `bdgrz.control_mapping.retire` v1
+- [ReviewControlCriterionMapping](../../src/Compliance.Common/Features/ControlMappings/Commands/ReviewControlCriterionMapping.cs#L9) — `bdgrz.control_mapping.review` v1
+- [ReviewCriterionApplicability](../../src/Compliance.Common/Features/ControlMappings/Commands/ReviewCriterionApplicability.cs#L13) — `bdgrz.criterion_applicability.review` v1
+- [WithdrawCriterionNotApplicable](../../src/Compliance.Common/Features/ControlMappings/Commands/WithdrawCriterionNotApplicable.cs#L9) — `bdgrz.criterion_applicability.withdraw_not_applicable` v1
 
 #### Controls
 
-- [ApproveControl](../../src/Compliance.Common/Features/Controls/ApproveControl.cs#L8) — `bdgrz.control.approve` v1
-- [CreateControlDraft](../../src/Compliance.Common/Features/Controls/CreateControlDraft.cs#L8) — `bdgrz.control.draft.create` v1
-- [DesignateControlOwnerPerson](../../src/Compliance.Common/Features/Controls/DesignateControlOwnerPerson.cs#L13) — `bdgrz.control.owner_person.designate` v1
-- [DiscardControlDraft](../../src/Compliance.Common/Features/Controls/DiscardControlDraft.cs#L8) — `bdgrz.control.draft.discard` v1
-- [ProposeControlRetirement](../../src/Compliance.Common/Features/Controls/ProposeControlRetirement.cs#L8) — `bdgrz.control.retirement.propose` v1
-- [ProposeControlSuccessor](../../src/Compliance.Common/Features/Controls/ProposeControlSuccessor.cs#L8) — `bdgrz.control.successor.propose` v1
-- [RetireControl](../../src/Compliance.Common/Features/Controls/RetireControl.cs#L8) — `bdgrz.control.retire` v1
-- [ReviewControl](../../src/Compliance.Common/Features/Controls/ReviewControl.cs#L8) — `bdgrz.control.review` v1
-- [ReviseControlDraft](../../src/Compliance.Common/Features/Controls/ReviseControlDraft.cs#L8) — `bdgrz.control.draft.revise` v1
-- [WithdrawControlProposal](../../src/Compliance.Common/Features/Controls/WithdrawControlProposal.cs#L12) — `bdgrz.control.proposal.withdraw` v1
+- [ApproveControl](../../src/Compliance.Common/Features/Controls/Commands/ApproveControl.cs#L8) — `bdgrz.control.approve` v1
+- [CreateControlDraft](../../src/Compliance.Common/Features/Controls/Commands/CreateControlDraft.cs#L8) — `bdgrz.control.draft.create` v1
+- [DesignateControlOwnerPerson](../../src/Compliance.Common/Features/Controls/Commands/DesignateControlOwnerPerson.cs#L13) — `bdgrz.control.owner_person.designate` v1
+- [DiscardControlDraft](../../src/Compliance.Common/Features/Controls/Commands/DiscardControlDraft.cs#L8) — `bdgrz.control.draft.discard` v1
+- [ProposeControlRetirement](../../src/Compliance.Common/Features/Controls/Commands/ProposeControlRetirement.cs#L8) — `bdgrz.control.retirement.propose` v1
+- [ProposeControlSuccessor](../../src/Compliance.Common/Features/Controls/Commands/ProposeControlSuccessor.cs#L8) — `bdgrz.control.successor.propose` v1
+- [RetireControl](../../src/Compliance.Common/Features/Controls/Commands/RetireControl.cs#L8) — `bdgrz.control.retire` v1
+- [ReviewControl](../../src/Compliance.Common/Features/Controls/Commands/ReviewControl.cs#L8) — `bdgrz.control.review` v1
+- [ReviseControlDraft](../../src/Compliance.Common/Features/Controls/Commands/ReviseControlDraft.cs#L8) — `bdgrz.control.draft.revise` v1
+- [WithdrawControlProposal](../../src/Compliance.Common/Features/Controls/Commands/WithdrawControlProposal.cs#L12) — `bdgrz.control.proposal.withdraw` v1
 
 #### Criteria
 
-- [SetCriteriaTextOverlay](../../src/Compliance.Common/Features/Criteria/SetCriteriaTextOverlay.cs#L9) — `bdgrz.criteria.overlay.set` v1
+- [SetCriteriaTextOverlay](../../src/Compliance.Common/Features/Criteria/Commands/SetCriteriaTextOverlay.cs#L9) — `bdgrz.criteria.overlay.set` v1
 
 #### Evaluations
 
-- [DefineControlEvaluationPlan](../../src/Compliance.Common/Features/Evaluations/DefineControlEvaluationPlan.cs#L8) — `bdgrz.control.evaluation.plan.define` v1
-- [DisposeControlEvaluationDeviation](../../src/Compliance.Common/Features/Evaluations/DisposeControlEvaluationDeviation.cs#L9) — `bdgrz.control.evaluation.deviation.dispose` v1
-- [RaiseEvaluationDeviationFinding](../../src/Compliance.Common/Features/Evaluations/RaiseEvaluationDeviationFinding.cs#L11) — `bdgrz.finding.raise_from_evaluation_deviation` v1
-- [RecordControlEvaluationStep](../../src/Compliance.Common/Features/Evaluations/RecordControlEvaluationStep.cs#L12) — `bdgrz.control.evaluation.step.record` v1
-- [ReviewControlEvaluation](../../src/Compliance.Common/Features/Evaluations/ReviewControlEvaluation.cs#L12) — `bdgrz.control.evaluation.review` v1
-- [StartControlEvaluation](../../src/Compliance.Common/Features/Evaluations/StartControlEvaluation.cs#L12) — `bdgrz.control.evaluation.start` v1
-- [SubmitControlEvaluation](../../src/Compliance.Common/Features/Evaluations/SubmitControlEvaluation.cs#L12) — `bdgrz.control.evaluation.submit` v1
+- [DefineControlEvaluationPlan](../../src/Compliance.Common/Features/Evaluations/Commands/DefineControlEvaluationPlan.cs#L8) — `bdgrz.control.evaluation.plan.define` v1
+- [DisposeControlEvaluationDeviation](../../src/Compliance.Common/Features/Evaluations/Commands/DisposeControlEvaluationDeviation.cs#L9) — `bdgrz.control.evaluation.deviation.dispose` v1
+- [RaiseEvaluationDeviationFinding](../../src/Compliance.Common/Features/Evaluations/Commands/RaiseEvaluationDeviationFinding.cs#L11) — `bdgrz.finding.raise_from_evaluation_deviation` v1
+- [RecordControlEvaluationStep](../../src/Compliance.Common/Features/Evaluations/Commands/RecordControlEvaluationStep.cs#L12) — `bdgrz.control.evaluation.step.record` v1
+- [ReviewControlEvaluation](../../src/Compliance.Common/Features/Evaluations/Commands/ReviewControlEvaluation.cs#L12) — `bdgrz.control.evaluation.review` v1
+- [StartControlEvaluation](../../src/Compliance.Common/Features/Evaluations/Commands/StartControlEvaluation.cs#L12) — `bdgrz.control.evaluation.start` v1
+- [SubmitControlEvaluation](../../src/Compliance.Common/Features/Evaluations/Commands/SubmitControlEvaluation.cs#L12) — `bdgrz.control.evaluation.submit` v1
 
 #### Incidents
 
-- [AssessComplianceIncident](../../src/Compliance.Common/Features/Incidents/AssessComplianceIncident.cs#L8) — `bdgrz.incidents.assess-compliance-incident` v2
-- [RecordComplianceIncident](../../src/Compliance.Common/Features/Incidents/RecordComplianceIncident.cs#L8) — `bdgrz.incidents.record-compliance-incident` v2
-- [RecordComplianceIncidentResolution](../../src/Compliance.Common/Features/Incidents/RecordComplianceIncidentResolution.cs#L8) — `bdgrz.incidents.record-compliance-incident-resolution` v2
-- [ReviseComplianceIncident](../../src/Compliance.Common/Features/Incidents/ReviseComplianceIncident.cs#L8) — `bdgrz.incidents.revise-compliance-incident` v2
-- [RecordComplianceIncidentSystemDescriptionDecision](../../src/Compliance.Common/Features/Incidents/RecordComplianceIncidentSystemDescriptionDecision.cs#L7) — `bdgrz.incidents.record-system-description-decision` v2 (internal reaction)
+- [AssessComplianceIncident](../../src/Compliance.Common/Features/Incidents/Commands/AssessComplianceIncident.cs#L8) — `bdgrz.incidents.assess-compliance-incident` v2
+- [RecordComplianceIncident](../../src/Compliance.Common/Features/Incidents/Commands/RecordComplianceIncident.cs#L8) — `bdgrz.incidents.record-compliance-incident` v2
+- [RecordComplianceIncidentResolution](../../src/Compliance.Common/Features/Incidents/Commands/RecordComplianceIncidentResolution.cs#L8) — `bdgrz.incidents.record-compliance-incident-resolution` v2
+- [ReviseComplianceIncident](../../src/Compliance.Common/Features/Incidents/Commands/ReviseComplianceIncident.cs#L8) — `bdgrz.incidents.revise-compliance-incident` v2
+- [RecordComplianceIncidentSystemDescriptionDecision](../../src/Compliance.Common/Features/Incidents/Commands/RecordComplianceIncidentSystemDescriptionDecision.cs#L7) — `bdgrz.incidents.record-system-description-decision` v2 (internal reaction)
 
 #### Evidence
 
-- [ApproveEvidenceRedaction](../../src/Compliance.Common/Features/Evidence/ApproveEvidenceRedaction.cs#L7) — `bdgrz.evidence.redaction.approve` v1
-- [CancelEvidenceRequest](../../src/Compliance.Common/Features/Evidence/CancelEvidenceRequest.cs#L9) — `bdgrz.evidence.request.cancel` v1
-- [FulfilEvidenceRequest](../../src/Compliance.Common/Features/Evidence/FulfilEvidenceRequest.cs#L10) — `bdgrz.evidence.request.fulfil` v1
-- [OpenEvidenceRequest](../../src/Compliance.Common/Features/Evidence/OpenEvidenceRequest.cs#L9) — `bdgrz.evidence.request.open` v1
-- [PrepareEvidenceRedaction](../../src/Compliance.Common/Features/Evidence/PrepareEvidenceRedaction.cs#L6) — `bdgrz.evidence.redaction.prepare` v1
+- [ApproveEvidenceRedaction](../../src/Compliance.Common/Features/Evidence/Commands/ApproveEvidenceRedaction.cs#L7) — `bdgrz.evidence.redaction.approve` v1
+- [CancelEvidenceRequest](../../src/Compliance.Common/Features/Evidence/Commands/CancelEvidenceRequest.cs#L9) — `bdgrz.evidence.request.cancel` v1
+- [FulfilEvidenceRequest](../../src/Compliance.Common/Features/Evidence/Commands/FulfilEvidenceRequest.cs#L10) — `bdgrz.evidence.request.fulfil` v1
+- [OpenEvidenceRequest](../../src/Compliance.Common/Features/Evidence/Commands/OpenEvidenceRequest.cs#L9) — `bdgrz.evidence.request.open` v1
+- [PrepareEvidenceRedaction](../../src/Compliance.Common/Features/Evidence/Commands/PrepareEvidenceRedaction.cs#L6) — `bdgrz.evidence.redaction.prepare` v1
 
 #### Examinations
 
-- [AmendTypeIBaseline](../../src/Compliance.Common/Features/Examinations/AmendTypeIBaseline.cs#L9) — `bdgrz.examinations.amend-type-i-baseline` v1
-- [CreateExaminationEngagement](../../src/Compliance.Common/Features/Examinations/CreateExaminationEngagement.cs#L9) — `bdgrz.examinations.create-examination-engagement` v1
-- [FreezeTypeIBaseline](../../src/Compliance.Common/Features/Examinations/FreezeTypeIBaseline.cs#L9) — `bdgrz.examinations.freeze-type-i-baseline` v1
-- [ReviseExaminationEngagement](../../src/Compliance.Common/Features/Examinations/ReviseExaminationEngagement.cs#L9) — `bdgrz.examinations.revise-examination-engagement` v1
-- [RecordManagementAssertion](../../src/Compliance.Common/Features/Examinations/RecordManagementAssertion.cs#L8) — `bdgrz.examinations.record-management-assertion` v2; [handler](../../src/Compliance.Core/Features/Examinations/RecordManagementAssertionHandler.cs#L10) binds assertion wording to exact validated package and approved examination inputs
-- [RecordManagementRepresentationLetter](../../src/Compliance.Common/Features/Examinations/RecordManagementRepresentationLetter.cs#L6) — `bdgrz.examinations.record-management-representation-letter` v2
+- [AmendTypeIBaseline](../../src/Compliance.Common/Features/Examinations/Commands/AmendTypeIBaseline.cs#L9) — `bdgrz.examinations.amend-type-i-baseline` v1
+- [CreateExaminationEngagement](../../src/Compliance.Common/Features/Examinations/Commands/CreateExaminationEngagement.cs#L9) — `bdgrz.examinations.create-examination-engagement` v1
+- [FreezeTypeIBaseline](../../src/Compliance.Common/Features/Examinations/Commands/FreezeTypeIBaseline.cs#L9) — `bdgrz.examinations.freeze-type-i-baseline` v1
+- [ReviseExaminationEngagement](../../src/Compliance.Common/Features/Examinations/Commands/ReviseExaminationEngagement.cs#L9) — `bdgrz.examinations.revise-examination-engagement` v1
+- [RecordManagementAssertion](../../src/Compliance.Common/Features/Examinations/Commands/RecordManagementAssertion.cs#L8) — `bdgrz.examinations.record-management-assertion` v2; [handler](../../src/Compliance.Core/Features/Examinations/Handlers/RecordManagementAssertionHandler.cs#L10) binds assertion wording to exact validated package and approved examination inputs
+- [RecordManagementRepresentationLetter](../../src/Compliance.Common/Features/Examinations/Commands/RecordManagementRepresentationLetter.cs#L6) — `bdgrz.examinations.record-management-representation-letter` v2
 
 #### Operations
 
-- [ApproveControlOperatingPlan](../../src/Compliance.Common/Features/Operations/ApproveControlOperatingPlan.cs#L12) — `bdgrz.control.operating_plan.approve` v1
-- [AttestControlOccurrence](../../src/Compliance.Common/Features/Operations/AttestControlOccurrence.cs#L11) — `bdgrz.control.occurrence.attest` v1
-- [CorrectControlAttestation](../../src/Compliance.Common/Features/Operations/CorrectControlAttestation.cs#L8) — `bdgrz.control.occurrence.correct` v1
-- [OpenControlOccurrence](../../src/Compliance.Common/Features/Operations/OpenControlOccurrence.cs#L8) — `bdgrz.control.occurrence.open` v1
-- [ProposeControlOperatingPlan](../../src/Compliance.Common/Features/Operations/ProposeControlOperatingPlan.cs#L12) — `bdgrz.control.operating_plan.propose` v1
-- [ReviewControlOccurrence](../../src/Compliance.Common/Features/Operations/ReviewControlOccurrence.cs#L11) — `bdgrz.control.occurrence.review` v1
+- [ApproveControlOperatingPlan](../../src/Compliance.Common/Features/Operations/Commands/ApproveControlOperatingPlan.cs#L12) — `bdgrz.control.operating_plan.approve` v1
+- [AttestControlOccurrence](../../src/Compliance.Common/Features/Operations/Commands/AttestControlOccurrence.cs#L11) — `bdgrz.control.occurrence.attest` v1
+- [CorrectControlAttestation](../../src/Compliance.Common/Features/Operations/Commands/CorrectControlAttestation.cs#L8) — `bdgrz.control.occurrence.correct` v1
+- [OpenControlOccurrence](../../src/Compliance.Common/Features/Operations/Commands/OpenControlOccurrence.cs#L8) — `bdgrz.control.occurrence.open` v1
+- [ProposeControlOperatingPlan](../../src/Compliance.Common/Features/Operations/Commands/ProposeControlOperatingPlan.cs#L12) — `bdgrz.control.operating_plan.propose` v1
+- [ReviewControlOccurrence](../../src/Compliance.Common/Features/Operations/Commands/ReviewControlOccurrence.cs#L11) — `bdgrz.control.occurrence.review` v1
 
 #### Policies
 
-- [ApprovePolicy](../../src/Compliance.Common/Features/Policies/ApprovePolicy.cs#L12) — `bdgrz.policy.approve` v1
-- [ApprovePolicyRetirement](../../src/Compliance.Common/Features/Policies/ApprovePolicyRetirement.cs#L9) — `bdgrz.policy.retire` v1
-- [ConfirmPolicyReview](../../src/Compliance.Common/Features/Policies/ConfirmPolicyReview.cs#L12) — `bdgrz.policy.periodic_review.confirm` v1
-- [CreatePolicyDraft](../../src/Compliance.Common/Features/Policies/CreatePolicyDraft.cs#L8) — `bdgrz.policy.draft.create` v1
-- [DiscardPolicyDraft](../../src/Compliance.Common/Features/Policies/DiscardPolicyDraft.cs#L9) — `bdgrz.policy.draft.discard` v1
-- [ProposePolicyRetirement](../../src/Compliance.Common/Features/Policies/ProposePolicyRetirement.cs#L8) — `bdgrz.policy.retirement.propose` v1
-- [ProposePolicySuccessor](../../src/Compliance.Common/Features/Policies/ProposePolicySuccessor.cs#L9) — `bdgrz.policy.successor.propose` v1
-- [ReviewPolicyDraft](../../src/Compliance.Common/Features/Policies/ReviewPolicyDraft.cs#L12) — `bdgrz.policy.review` v1
-- [RevisePolicyDraft](../../src/Compliance.Common/Features/Policies/RevisePolicyDraft.cs#L8) — `bdgrz.policy.draft.revise` v1
+- [ApprovePolicy](../../src/Compliance.Common/Features/Policies/Commands/ApprovePolicy.cs#L12) — `bdgrz.policy.approve` v1
+- [ApprovePolicyRetirement](../../src/Compliance.Common/Features/Policies/Commands/ApprovePolicyRetirement.cs#L9) — `bdgrz.policy.retire` v1
+- [ConfirmPolicyReview](../../src/Compliance.Common/Features/Policies/Commands/ConfirmPolicyReview.cs#L12) — `bdgrz.policy.periodic_review.confirm` v1
+- [CreatePolicyDraft](../../src/Compliance.Common/Features/Policies/Commands/CreatePolicyDraft.cs#L8) — `bdgrz.policy.draft.create` v1
+- [DiscardPolicyDraft](../../src/Compliance.Common/Features/Policies/Commands/DiscardPolicyDraft.cs#L9) — `bdgrz.policy.draft.discard` v1
+- [ProposePolicyRetirement](../../src/Compliance.Common/Features/Policies/Commands/ProposePolicyRetirement.cs#L8) — `bdgrz.policy.retirement.propose` v1
+- [ProposePolicySuccessor](../../src/Compliance.Common/Features/Policies/Commands/ProposePolicySuccessor.cs#L9) — `bdgrz.policy.successor.propose` v1
+- [ReviewPolicyDraft](../../src/Compliance.Common/Features/Policies/Commands/ReviewPolicyDraft.cs#L12) — `bdgrz.policy.review` v1
+- [RevisePolicyDraft](../../src/Compliance.Common/Features/Policies/Commands/RevisePolicyDraft.cs#L8) — `bdgrz.policy.draft.revise` v1
 
 #### PolicyDistribution
 
-- [AcknowledgePolicy](../../src/Compliance.Common/Features/PolicyDistribution/AcknowledgePolicy.cs#L12) — `bdgrz.policy.acknowledge` v1
-- [ApproveCampaignWaiver](../../src/Compliance.Common/Features/PolicyDistribution/ApproveCampaignWaiver.cs#L12) — `bdgrz.campaign.waiver.approve` v1
-- [CloseCampaign](../../src/Compliance.Common/Features/PolicyDistribution/CloseCampaign.cs#L9) — `bdgrz.campaign.close` v1
-- [DefineTrainingRequirement](../../src/Compliance.Common/Features/PolicyDistribution/DefineTrainingRequirement.cs#L8) — `bdgrz.training_requirement.define` v1
-- [LaunchPolicyCampaign](../../src/Compliance.Common/Features/PolicyDistribution/LaunchPolicyCampaign.cs#L12) — `bdgrz.policy_campaign.launch` v1
-- [LaunchTrainingCampaign](../../src/Compliance.Common/Features/PolicyDistribution/LaunchTrainingCampaign.cs#L8) — `bdgrz.training_campaign.launch` v1
-- [ReconcileCampaignAudience](../../src/Compliance.Common/Features/PolicyDistribution/ReconcileCampaignAudience.cs#L12) — `bdgrz.campaign.audience.reconcile` v1
-- [RecordTrainingCompletion](../../src/Compliance.Common/Features/PolicyDistribution/RecordTrainingCompletion.cs#L9) — `bdgrz.training_completion.record` v1
-- [ReviseTrainingRequirement](../../src/Compliance.Common/Features/PolicyDistribution/ReviseTrainingRequirement.cs#L9) — `bdgrz.training_requirement.revise` v1
+- [AcknowledgePolicy](../../src/Compliance.Common/Features/PolicyDistribution/Queries/AcknowledgePolicy.cs#L12) — `bdgrz.policy.acknowledge` v1
+- [ApproveCampaignWaiver](../../src/Compliance.Common/Features/PolicyDistribution/Commands/ApproveCampaignWaiver.cs#L12) — `bdgrz.campaign.waiver.approve` v1
+- [CloseCampaign](../../src/Compliance.Common/Features/PolicyDistribution/Commands/CloseCampaign.cs#L9) — `bdgrz.campaign.close` v1
+- [DefineTrainingRequirement](../../src/Compliance.Common/Features/PolicyDistribution/Commands/DefineTrainingRequirement.cs#L8) — `bdgrz.training_requirement.define` v1
+- [LaunchPolicyCampaign](../../src/Compliance.Common/Features/PolicyDistribution/Commands/LaunchPolicyCampaign.cs#L12) — `bdgrz.policy_campaign.launch` v1
+- [LaunchTrainingCampaign](../../src/Compliance.Common/Features/PolicyDistribution/Commands/LaunchTrainingCampaign.cs#L8) — `bdgrz.training_campaign.launch` v1
+- [ReconcileCampaignAudience](../../src/Compliance.Common/Features/PolicyDistribution/Commands/ReconcileCampaignAudience.cs#L12) — `bdgrz.campaign.audience.reconcile` v1
+- [RecordTrainingCompletion](../../src/Compliance.Common/Features/PolicyDistribution/Commands/RecordTrainingCompletion.cs#L9) — `bdgrz.training_completion.record` v1
+- [ReviseTrainingRequirement](../../src/Compliance.Common/Features/PolicyDistribution/Commands/ReviseTrainingRequirement.cs#L9) — `bdgrz.training_requirement.revise` v1
 
 #### Programs
 
-- [CreateClientService](../../src/Compliance.Common/Features/Programs/CreateClientService.cs#L7) — `bdgrz.client-service.create` v2
-- [CreateProgram](../../src/Compliance.Common/Features/Programs/CreateProgram.cs#L7) — `bdgrz.program.create` v1
-- [ProposeProgramRollover](../../src/Compliance.Common/Features/Programs/ProposeProgramRollover.cs#L7) — `bdgrz.programs.propose-program-rollover` v2; [handler](../../src/Compliance.Core/Features/Programs/ProposeProgramRolloverHandler.cs#L8) binds full rollover content to the exact closed-period snapshot and auditor outcome
-- [ApproveProgramRollover](../../src/Compliance.Common/Features/Programs/ApproveProgramRollover.cs#L7) — `bdgrz.programs.approve-program-rollover` v1
-- [RetireClientService](../../src/Compliance.Common/Features/Programs/RetireClientService.cs#L7) — `bdgrz.client-service.retire` v1
-- [ReviseClientService](../../src/Compliance.Common/Features/Programs/ReviseClientService.cs#L7) — `bdgrz.client-service.revise` v1
-- [ReviseProgram](../../src/Compliance.Common/Features/Programs/ReviseProgram.cs#L7) — `bdgrz.program.revise` v1
-- [SelectProgramCriteriaEdition](../../src/Compliance.Common/Features/Programs/SelectProgramCriteriaEdition.cs#L7) — `bdgrz.program.criteria.select` v1
+- [CreateClientService](../../src/Compliance.Common/Features/Programs/Commands/CreateClientService.cs#L7) — `bdgrz.client-service.create` v2
+- [CreateProgram](../../src/Compliance.Common/Features/Programs/Commands/CreateProgram.cs#L7) — `bdgrz.program.create` v1
+- [ProposeProgramRollover](../../src/Compliance.Common/Features/Programs/Commands/ProposeProgramRollover.cs#L7) — `bdgrz.programs.propose-program-rollover` v2; [handler](../../src/Compliance.Core/Features/Programs/Handlers/ProposeProgramRolloverHandler.cs#L8) binds full rollover content to the exact closed-period snapshot and auditor outcome
+- [ApproveProgramRollover](../../src/Compliance.Common/Features/Programs/Commands/ApproveProgramRollover.cs#L7) — `bdgrz.programs.approve-program-rollover` v1
+- [RetireClientService](../../src/Compliance.Common/Features/Programs/Commands/RetireClientService.cs#L7) — `bdgrz.client-service.retire` v1
+- [ReviseClientService](../../src/Compliance.Common/Features/Programs/Commands/ReviseClientService.cs#L7) — `bdgrz.client-service.revise` v1
+- [ReviseProgram](../../src/Compliance.Common/Features/Programs/Commands/ReviseProgram.cs#L7) — `bdgrz.program.revise` v1
+- [SelectProgramCriteriaEdition](../../src/Compliance.Common/Features/Programs/Commands/SelectProgramCriteriaEdition.cs#L7) — `bdgrz.program.criteria.select` v1
 
 #### Providers
 
-- [CloseProviderCoverageGap](../../src/Compliance.Common/Features/Providers/CloseProviderCoverageGap.cs#L8) — `bdgrz.provider.coverage_gap.close` v1
-- [LinkProviderCoverageGapRiskAcceptance](../../src/Compliance.Common/Features/Providers/LinkProviderCoverageGapRiskAcceptance.cs#L9) — `bdgrz.provider.coverage_gap.link_risk_acceptance` v1
-- [RecordAssuranceReport](../../src/Compliance.Common/Features/Providers/RecordAssuranceReport.cs#L8) — `bdgrz.provider.assurance_report.record` v1
-- [RecordProvider](../../src/Compliance.Common/Features/Providers/RecordProvider.cs#L8) — `bdgrz.provider.record` v1
-- [RecordProviderCoverageGap](../../src/Compliance.Common/Features/Providers/RecordProviderCoverageGap.cs#L7) — `bdgrz.provider.coverage_gap.record` v1
-- [RecordProviderReview](../../src/Compliance.Common/Features/Providers/RecordProviderReview.cs#L11) — `bdgrz.provider.review.record` v1
-- [ReviseAssuranceReport](../../src/Compliance.Common/Features/Providers/ReviseAssuranceReport.cs#L8) — `bdgrz.provider.assurance_report.revise` v1
-- [ReviseProvider](../../src/Compliance.Common/Features/Providers/ReviseProvider.cs#L8) — `bdgrz.provider.revise` v1
+- [CloseProviderCoverageGap](../../src/Compliance.Common/Features/Providers/Commands/CloseProviderCoverageGap.cs#L8) — `bdgrz.provider.coverage_gap.close` v1
+- [LinkProviderCoverageGapRiskAcceptance](../../src/Compliance.Common/Features/Providers/Commands/LinkProviderCoverageGapRiskAcceptance.cs#L9) — `bdgrz.provider.coverage_gap.link_risk_acceptance` v1
+- [RecordAssuranceReport](../../src/Compliance.Common/Features/Providers/Commands/RecordAssuranceReport.cs#L8) — `bdgrz.provider.assurance_report.record` v1
+- [RecordProvider](../../src/Compliance.Common/Features/Providers/Commands/RecordProvider.cs#L8) — `bdgrz.provider.record` v1
+- [RecordProviderCoverageGap](../../src/Compliance.Common/Features/Providers/Commands/RecordProviderCoverageGap.cs#L7) — `bdgrz.provider.coverage_gap.record` v1
+- [RecordProviderReview](../../src/Compliance.Common/Features/Providers/Commands/RecordProviderReview.cs#L11) — `bdgrz.provider.review.record` v1
+- [ReviseAssuranceReport](../../src/Compliance.Common/Features/Providers/Commands/ReviseAssuranceReport.cs#L8) — `bdgrz.provider.assurance_report.revise` v1
+- [ReviseProvider](../../src/Compliance.Common/Features/Providers/Commands/ReviseProvider.cs#L8) — `bdgrz.provider.revise` v1
 
 #### Readiness
 
-- [AnnotateReadinessGap](../../src/Compliance.Common/Features/Readiness/AnnotateReadinessGap.cs#L9) — `bdgrz.readiness.gap.annotate` v1
-- [DecideReadiness](../../src/Compliance.Common/Features/Readiness/DecideReadiness.cs#L12) — `bdgrz.readiness.decide` v1
-- [DecideTypeIEntry](../../src/Compliance.Common/Features/Readiness/DecideTypeIEntry.cs#L13) — `bdgrz.readiness.type_i_entry.decide` v1
-- [PlanReadinessGap](../../src/Compliance.Common/Features/Readiness/PlanReadinessGap.cs#L9) — `bdgrz.readiness.gap.plan` v1
-- [RunReadinessAssessment](../../src/Compliance.Common/Features/Readiness/RunReadinessAssessment.cs#L12) — `bdgrz.readiness.assessment.run` v1
+- [AnnotateReadinessGap](../../src/Compliance.Common/Features/Readiness/Commands/AnnotateReadinessGap.cs#L9) — `bdgrz.readiness.gap.annotate` v1
+- [DecideReadiness](../../src/Compliance.Common/Features/Readiness/Commands/DecideReadiness.cs#L12) — `bdgrz.readiness.decide` v1
+- [DecideTypeIEntry](../../src/Compliance.Common/Features/Readiness/Commands/DecideTypeIEntry.cs#L13) — `bdgrz.readiness.type_i_entry.decide` v1
+- [PlanReadinessGap](../../src/Compliance.Common/Features/Readiness/Commands/PlanReadinessGap.cs#L9) — `bdgrz.readiness.gap.plan` v1
+- [RunReadinessAssessment](../../src/Compliance.Common/Features/Readiness/Commands/RunReadinessAssessment.cs#L12) — `bdgrz.readiness.assessment.run` v1
 
 #### Remediation
 
-- [AddCorrectiveAction](../../src/Compliance.Common/Features/Remediation/AddCorrectiveAction.cs#L8) — `bdgrz.finding.corrective_action.add` v1
-- [CloseFinding](../../src/Compliance.Common/Features/Remediation/CloseFinding.cs#L14) — `bdgrz.finding.close` v1
-- [CompleteCorrectiveAction](../../src/Compliance.Common/Features/Remediation/CompleteCorrectiveAction.cs#L9) — `bdgrz.finding.corrective_action.complete` v1
-- [LinkFindingAcceptance](../../src/Compliance.Common/Features/Remediation/LinkFindingAcceptance.cs#L12) — `bdgrz.finding.acceptance.link` v1
-- [RaiseFinding](../../src/Compliance.Common/Features/Remediation/RaiseFinding.cs#L9) — `bdgrz.finding.raise` v1
-- [RaiseOccurrenceFinding](../../src/Compliance.Common/Features/Remediation/RaiseOccurrenceFinding.cs#L11) — `bdgrz.finding.raise_from_occurrence` v1
-- [ReopenFinding](../../src/Compliance.Common/Features/Remediation/ReopenFinding.cs#L8) — `bdgrz.finding.reopen` v1
-- [ReviseFinding](../../src/Compliance.Common/Features/Remediation/ReviseFinding.cs#L9) — `bdgrz.finding.revise` v1
+- [AddCorrectiveAction](../../src/Compliance.Common/Features/Remediation/Commands/AddCorrectiveAction.cs#L8) — `bdgrz.finding.corrective_action.add` v1
+- [CloseFinding](../../src/Compliance.Common/Features/Remediation/Commands/CloseFinding.cs#L14) — `bdgrz.finding.close` v1
+- [CompleteCorrectiveAction](../../src/Compliance.Common/Features/Remediation/Commands/CompleteCorrectiveAction.cs#L9) — `bdgrz.finding.corrective_action.complete` v1
+- [LinkFindingAcceptance](../../src/Compliance.Common/Features/Remediation/Commands/LinkFindingAcceptance.cs#L12) — `bdgrz.finding.acceptance.link` v1
+- [RaiseFinding](../../src/Compliance.Common/Features/Remediation/Commands/RaiseFinding.cs#L9) — `bdgrz.finding.raise` v1
+- [RaiseOccurrenceFinding](../../src/Compliance.Common/Features/Remediation/Commands/RaiseOccurrenceFinding.cs#L11) — `bdgrz.finding.raise_from_occurrence` v1
+- [ReopenFinding](../../src/Compliance.Common/Features/Remediation/Commands/ReopenFinding.cs#L8) — `bdgrz.finding.reopen` v1
+- [ReviseFinding](../../src/Compliance.Common/Features/Remediation/Commands/ReviseFinding.cs#L9) — `bdgrz.finding.revise` v1
 
 #### Responsibilities
 
-- [AssignResponsibility](../../src/Compliance.Common/Features/Responsibilities/AssignResponsibility.cs#L8) — `bdgrz.responsibility.assign` v1
-- [RevokeResponsibility](../../src/Compliance.Common/Features/Responsibilities/RevokeResponsibility.cs#L8) — `bdgrz.responsibility.revoke` v1
+- [AssignResponsibility](../../src/Compliance.Common/Features/Responsibilities/Commands/AssignResponsibility.cs#L8) — `bdgrz.responsibility.assign` v1
+- [RevokeResponsibility](../../src/Compliance.Common/Features/Responsibilities/Commands/RevokeResponsibility.cs#L8) — `bdgrz.responsibility.revoke` v1
 
 #### Retention
 
-- [PlaceArtifactLegalHold](../../src/Compliance.Common/Features/Retention/PlaceArtifactLegalHold.cs#L7) — `bdgrz.artifact_retention.legal_hold.place` v1
-- [RecordArtifactRetentionBasis](../../src/Compliance.Common/Features/Retention/RecordArtifactRetentionBasis.cs#L7) — `bdgrz.artifact_retention.basis.record` v1
-- [ReleaseArtifactLegalHold](../../src/Compliance.Common/Features/Retention/ReleaseArtifactLegalHold.cs#L7) — `bdgrz.artifact_retention.legal_hold.release` v1
+- [PlaceArtifactLegalHold](../../src/Compliance.Common/Features/Retention/Commands/PlaceArtifactLegalHold.cs#L7) — `bdgrz.artifact_retention.legal_hold.place` v1
+- [RecordArtifactRetentionBasis](../../src/Compliance.Common/Features/Retention/Commands/RecordArtifactRetentionBasis.cs#L7) — `bdgrz.artifact_retention.basis.record` v1
+- [ReleaseArtifactLegalHold](../../src/Compliance.Common/Features/Retention/Commands/ReleaseArtifactLegalHold.cs#L7) — `bdgrz.artifact_retention.legal_hold.release` v1
 
 #### Risks
 
-- [AcceptRisk](../../src/Compliance.Common/Features/Risks/AcceptRisk.cs#L13) — `bdgrz.risk.accept` v1
-- [AddRiskTreatmentAction](../../src/Compliance.Common/Features/Risks/AddRiskTreatmentAction.cs#L14) — `bdgrz.risk.treatment_action.add` v1
-- [AssignRiskOwner](../../src/Compliance.Common/Features/Risks/AssignRiskOwner.cs#L9) — `bdgrz.risk.owner.assign` v1
-- [CancelRiskTreatmentAction](../../src/Compliance.Common/Features/Risks/CancelRiskTreatmentAction.cs#L11) — `bdgrz.risk.treatment_action.cancel` v1
-- [ChooseRiskTreatment](../../src/Compliance.Common/Features/Risks/ChooseRiskTreatment.cs#L8) — `bdgrz.risk.treatment.choose` v1
-- [CreateRiskDraft](../../src/Compliance.Common/Features/Risks/CreateRiskDraft.cs#L8) — `bdgrz.risk.draft.create` v1
-- [ProposeRiskControlTreatment](../../src/Compliance.Common/Features/Risks/ProposeRiskControlTreatment.cs#L12) — `bdgrz.risk.control_treatment.propose` v1
-- [PublishRiskMethodVersion](../../src/Compliance.Common/Features/Risks/PublishRiskMethodVersion.cs#L8) — `bdgrz.risk.method.publish` v1
-- [RaiseRiskReassessmentTriggers](../../src/Compliance.Common/Features/Risks/RaiseRiskReassessmentTriggers.cs#L10) — `bdgrz.risk.reassessment.raise` v1
-- [RecordRiskAssessment](../../src/Compliance.Common/Features/Risks/RecordRiskAssessment.cs#L8) — `bdgrz.risk.assessment.record` v1
-- [RetireRiskControlTreatment](../../src/Compliance.Common/Features/Risks/RetireRiskControlTreatment.cs#L9) — `bdgrz.risk.control_treatment.retire` v1
-- [ReviewRiskControlTreatment](../../src/Compliance.Common/Features/Risks/ReviewRiskControlTreatment.cs#L13) — `bdgrz.risk.control_treatment.review` v1
-- [ReviewRiskTreatmentActionCompletion](../../src/Compliance.Common/Features/Risks/ReviewRiskTreatmentActionCompletion.cs#L13) — `bdgrz.risk.treatment_action.completion.review` v1
-- [ReviseRiskDraft](../../src/Compliance.Common/Features/Risks/ReviseRiskDraft.cs#L8) — `bdgrz.risk.draft.revise` v1
-- [ReviseRiskTreatmentAction](../../src/Compliance.Common/Features/Risks/ReviseRiskTreatmentAction.cs#L9) — `bdgrz.risk.treatment_action.revise` v1
-- [SubmitRiskTreatmentActionCompletion](../../src/Compliance.Common/Features/Risks/SubmitRiskTreatmentActionCompletion.cs#L13) — `bdgrz.risk.treatment_action.completion.submit` v1
+- [AcceptRisk](../../src/Compliance.Common/Features/Risks/Commands/AcceptRisk.cs#L13) — `bdgrz.risk.accept` v1
+- [AddRiskTreatmentAction](../../src/Compliance.Common/Features/Risks/Commands/AddRiskTreatmentAction.cs#L14) — `bdgrz.risk.treatment_action.add` v1
+- [AssignRiskOwner](../../src/Compliance.Common/Features/Risks/Commands/AssignRiskOwner.cs#L9) — `bdgrz.risk.owner.assign` v1
+- [CancelRiskTreatmentAction](../../src/Compliance.Common/Features/Risks/Commands/CancelRiskTreatmentAction.cs#L11) — `bdgrz.risk.treatment_action.cancel` v1
+- [ChooseRiskTreatment](../../src/Compliance.Common/Features/Risks/Commands/ChooseRiskTreatment.cs#L8) — `bdgrz.risk.treatment.choose` v1
+- [CreateRiskDraft](../../src/Compliance.Common/Features/Risks/Commands/CreateRiskDraft.cs#L8) — `bdgrz.risk.draft.create` v1
+- [ProposeRiskControlTreatment](../../src/Compliance.Common/Features/Risks/Commands/ProposeRiskControlTreatment.cs#L12) — `bdgrz.risk.control_treatment.propose` v1
+- [PublishRiskMethodVersion](../../src/Compliance.Common/Features/Risks/Commands/PublishRiskMethodVersion.cs#L8) — `bdgrz.risk.method.publish` v1
+- [RaiseRiskReassessmentTriggers](../../src/Compliance.Common/Features/Risks/Commands/RaiseRiskReassessmentTriggers.cs#L10) — `bdgrz.risk.reassessment.raise` v1
+- [RecordRiskAssessment](../../src/Compliance.Common/Features/Risks/Commands/RecordRiskAssessment.cs#L8) — `bdgrz.risk.assessment.record` v1
+- [RetireRiskControlTreatment](../../src/Compliance.Common/Features/Risks/Commands/RetireRiskControlTreatment.cs#L9) — `bdgrz.risk.control_treatment.retire` v1
+- [ReviewRiskControlTreatment](../../src/Compliance.Common/Features/Risks/Commands/ReviewRiskControlTreatment.cs#L13) — `bdgrz.risk.control_treatment.review` v1
+- [ReviewRiskTreatmentActionCompletion](../../src/Compliance.Common/Features/Risks/Commands/ReviewRiskTreatmentActionCompletion.cs#L13) — `bdgrz.risk.treatment_action.completion.review` v1
+- [ReviseRiskDraft](../../src/Compliance.Common/Features/Risks/Commands/ReviseRiskDraft.cs#L8) — `bdgrz.risk.draft.revise` v1
+- [ReviseRiskTreatmentAction](../../src/Compliance.Common/Features/Risks/Commands/ReviseRiskTreatmentAction.cs#L9) — `bdgrz.risk.treatment_action.revise` v1
+- [SubmitRiskTreatmentActionCompletion](../../src/Compliance.Common/Features/Risks/Commands/SubmitRiskTreatmentActionCompletion.cs#L13) — `bdgrz.risk.treatment_action.completion.submit` v1
 
 #### Snapshots
 
-- [AmendProgramScopeSnapshot](../../src/Compliance.Common/Features/Snapshots/AmendProgramScopeSnapshot.cs#L8) — `bdgrz.snapshot.program_scope.amend` v1
-- [FreezeProgramScopeSnapshot](../../src/Compliance.Common/Features/Snapshots/FreezeProgramScopeSnapshot.cs#L8) — `bdgrz.snapshot.program_scope.freeze` v1
+- [AmendProgramScopeSnapshot](../../src/Compliance.Common/Features/Snapshots/Commands/AmendProgramScopeSnapshot.cs#L8) — `bdgrz.snapshot.program_scope.amend` v1
+- [FreezeProgramScopeSnapshot](../../src/Compliance.Common/Features/Snapshots/Commands/FreezeProgramScopeSnapshot.cs#L8) — `bdgrz.snapshot.program_scope.freeze` v1
 
 #### TechnologyInventory
 
-- [RecordDataFlow](../../src/Compliance.Common/Features/TechnologyInventory/RecordDataFlow.cs#L7) — `bdgrz.inventory.data_flow.record` v1
-- [RecordInformationAsset](../../src/Compliance.Common/Features/TechnologyInventory/RecordInformationAsset.cs#L7) — `bdgrz.inventory.information_asset.record` v1
-- [RecordLocation](../../src/Compliance.Common/Features/TechnologyInventory/RecordLocation.cs#L7) — `bdgrz.inventory.location.record` v1
-- [RecordOperationalProcess](../../src/Compliance.Common/Features/TechnologyInventory/RecordOperationalProcess.cs#L7) — `bdgrz.inventory.operational_process.record` v1
-- [RecordTechnologyComponent](../../src/Compliance.Common/Features/TechnologyInventory/RecordTechnologyComponent.cs#L7) — `bdgrz.inventory.component.record` v1
-- [ReviseDataFlow](../../src/Compliance.Common/Features/TechnologyInventory/ReviseDataFlow.cs#L7) — `bdgrz.inventory.data_flow.revise` v1
-- [ReviseInformationAsset](../../src/Compliance.Common/Features/TechnologyInventory/ReviseInformationAsset.cs#L6) — `bdgrz.inventory.information_asset.revise` v1
-- [ReviseLocation](../../src/Compliance.Common/Features/TechnologyInventory/ReviseLocation.cs#L7) — `bdgrz.inventory.location.revise` v1
-- [ReviseOperationalProcess](../../src/Compliance.Common/Features/TechnologyInventory/ReviseOperationalProcess.cs#L6) — `bdgrz.inventory.operational_process.revise` v1
-- [ReviseTechnologyComponent](../../src/Compliance.Common/Features/TechnologyInventory/ReviseTechnologyComponent.cs#L7) — `bdgrz.inventory.component.revise` v1
+- [RecordDataFlow](../../src/Compliance.Common/Features/TechnologyInventory/Commands/RecordDataFlow.cs#L7) — `bdgrz.inventory.data_flow.record` v1
+- [RecordInformationAsset](../../src/Compliance.Common/Features/TechnologyInventory/Commands/RecordInformationAsset.cs#L7) — `bdgrz.inventory.information_asset.record` v1
+- [RecordLocation](../../src/Compliance.Common/Features/TechnologyInventory/Commands/RecordLocation.cs#L7) — `bdgrz.inventory.location.record` v1
+- [RecordOperationalProcess](../../src/Compliance.Common/Features/TechnologyInventory/Commands/RecordOperationalProcess.cs#L7) — `bdgrz.inventory.operational_process.record` v1
+- [RecordTechnologyComponent](../../src/Compliance.Common/Features/TechnologyInventory/Commands/RecordTechnologyComponent.cs#L7) — `bdgrz.inventory.component.record` v1
+- [ReviseDataFlow](../../src/Compliance.Common/Features/TechnologyInventory/Commands/ReviseDataFlow.cs#L7) — `bdgrz.inventory.data_flow.revise` v1
+- [ReviseInformationAsset](../../src/Compliance.Common/Features/TechnologyInventory/Commands/ReviseInformationAsset.cs#L6) — `bdgrz.inventory.information_asset.revise` v1
+- [ReviseLocation](../../src/Compliance.Common/Features/TechnologyInventory/Commands/ReviseLocation.cs#L7) — `bdgrz.inventory.location.revise` v1
+- [ReviseOperationalProcess](../../src/Compliance.Common/Features/TechnologyInventory/Commands/ReviseOperationalProcess.cs#L6) — `bdgrz.inventory.operational_process.revise` v1
+- [ReviseTechnologyComponent](../../src/Compliance.Common/Features/TechnologyInventory/Commands/ReviseTechnologyComponent.cs#L7) — `bdgrz.inventory.component.revise` v1
 
 #### Tenants
 
-- [AcceptTenantInvitation](../../src/Compliance.Common/Features/Tenants/AcceptTenantInvitation.cs#L6) — `bdgrz.tenant-invitation.accept` v1
-- [ActivateTenant](../../src/Compliance.Common/Features/Tenants/ActivateTenant.cs#L6) — `bdgrz.tenant.activate` v1
-- [ChangeTenantSlug](../../src/Compliance.Common/Features/Tenants/ChangeTenantSlug.cs#L6) — `bdgrz.tenant.change-slug` v1
-- [ConfirmTenantSlug](../../src/Compliance.Common/Features/Tenants/ConfirmTenantSlug.cs#L6) — `bdgrz.tenant-slug.confirm` v1
-- [ConfirmTenantSlugSurrender](../../src/Compliance.Common/Features/Tenants/ConfirmTenantSlugSurrender.cs#L6) — `bdgrz.tenant-slug-surrender.confirm` v1
-- [GrantPlatformOperator](../../src/Compliance.Common/Features/Tenants/GrantPlatformOperator.cs#L6) — `bdgrz.platform.operator.grant` v1
-- [InviteOrganizationMember](../../src/Compliance.Common/Features/Tenants/InviteOrganizationMember.cs#L7) — `bdgrz.organization-member.invite` v1
-- [InviteGuestConsultant](../../src/Compliance.Common/Features/Tenants/InviteGuestConsultant.cs#L7) — `bdgrz.tenant.guest-consultant.invite` v1
-- [InviteTenantMember](../../src/Compliance.Common/Features/Tenants/InviteTenantMember.cs#L6) — `bdgrz.tenant-member.invite` v1
-- [OffboardTenant](../../src/Compliance.Common/Features/Tenants/OffboardTenant.cs#L6) — `bdgrz.tenant.offboard` v1
-- [ReactivateTenant](../../src/Compliance.Common/Features/Tenants/ReactivateTenant.cs#L6) — `bdgrz.tenant.reactivate` v2
-- [RegisterTenant](../../src/Compliance.Common/Features/Tenants/RegisterTenant.cs#L10) — `bdgrz.tenant.register` v1
+- [AcceptTenantInvitation](../../src/Compliance.Common/Features/Tenants/Commands/AcceptTenantInvitation.cs#L6) — `bdgrz.tenant-invitation.accept` v1
+- [ActivateTenant](../../src/Compliance.Common/Features/Tenants/Commands/ActivateTenant.cs#L6) — `bdgrz.tenant.activate` v1
+- [ChangeTenantSlug](../../src/Compliance.Common/Features/Tenants/Commands/ChangeTenantSlug.cs#L6) — `bdgrz.tenant.change-slug` v1
+- [ConfirmTenantSlug](../../src/Compliance.Common/Features/Tenants/Commands/ConfirmTenantSlug.cs#L6) — `bdgrz.tenant-slug.confirm` v1
+- [ConfirmTenantSlugSurrender](../../src/Compliance.Common/Features/Tenants/Commands/ConfirmTenantSlugSurrender.cs#L6) — `bdgrz.tenant-slug-surrender.confirm` v1
+- [GrantPlatformOperator](../../src/Compliance.Common/Features/Tenants/Commands/GrantPlatformOperator.cs#L6) — `bdgrz.platform.operator.grant` v1
+- [InviteOrganizationMember](../../src/Compliance.Common/Features/Tenants/Commands/InviteOrganizationMember.cs#L7) — `bdgrz.organization-member.invite` v1
+- [InviteGuestConsultant](../../src/Compliance.Common/Features/Tenants/Commands/InviteGuestConsultant.cs#L7) — `bdgrz.tenant.guest-consultant.invite` v1
+- [InviteTenantMember](../../src/Compliance.Common/Features/Tenants/Commands/InviteTenantMember.cs#L6) — `bdgrz.tenant-member.invite` v1
+- [OffboardTenant](../../src/Compliance.Common/Features/Tenants/Commands/OffboardTenant.cs#L6) — `bdgrz.tenant.offboard` v1
+- [ReactivateTenant](../../src/Compliance.Common/Features/Tenants/Commands/ReactivateTenant.cs#L6) — `bdgrz.tenant.reactivate` v2
+- [RegisterTenant](../../src/Compliance.Common/Features/Tenants/Commands/RegisterTenant.cs#L10) — `bdgrz.tenant.register` v1
 - [RegisterTenantOwner](../../src/Compliance.Common/Features/Tenants/RegisterTenantOwner.cs#L6) — `bdgrz.tenant-owner.register` v1
-- [RegisterTenantSlug](../../src/Compliance.Common/Features/Tenants/RegisterTenantSlug.cs#L6) — `bdgrz.tenant-slug.register` v1
-- [RejectTenantSlug](../../src/Compliance.Common/Features/Tenants/RejectTenantSlug.cs#L6) — `bdgrz.tenant-slug.reject` v1
-- [RejectTenantSlugSurrender](../../src/Compliance.Common/Features/Tenants/RejectTenantSlugSurrender.cs#L6) — `bdgrz.tenant-slug-surrender.reject` v1
-- [RequestTenantSlugSurrender](../../src/Compliance.Common/Features/Tenants/RequestTenantSlugSurrender.cs#L6) — `bdgrz.tenant-slug-surrender.request` v1
-- [RevokePlatformOperator](../../src/Compliance.Common/Features/Tenants/RevokePlatformOperator.cs#L6) — `bdgrz.platform.operator.revoke` v1
-- [SeedPlatformOperatorRoster](../../src/Compliance.Common/Features/Tenants/SeedPlatformOperatorRoster.cs#L5)
-- [SurrenderTenantSlug](../../src/Compliance.Common/Features/Tenants/SurrenderTenantSlug.cs#L6) — `bdgrz.tenant-slug.surrender` v1
-- [SuspendTenant](../../src/Compliance.Common/Features/Tenants/SuspendTenant.cs#L6) — `bdgrz.tenant.suspend` v2
+- [RegisterTenantSlug](../../src/Compliance.Common/Features/Tenants/Commands/RegisterTenantSlug.cs#L6) — `bdgrz.tenant-slug.register` v1
+- [RejectTenantSlug](../../src/Compliance.Common/Features/Tenants/Commands/RejectTenantSlug.cs#L6) — `bdgrz.tenant-slug.reject` v1
+- [RejectTenantSlugSurrender](../../src/Compliance.Common/Features/Tenants/Commands/RejectTenantSlugSurrender.cs#L6) — `bdgrz.tenant-slug-surrender.reject` v1
+- [RequestTenantSlugSurrender](../../src/Compliance.Common/Features/Tenants/Commands/RequestTenantSlugSurrender.cs#L6) — `bdgrz.tenant-slug-surrender.request` v1
+- [RevokePlatformOperator](../../src/Compliance.Common/Features/Tenants/Commands/RevokePlatformOperator.cs#L6) — `bdgrz.platform.operator.revoke` v1
+- [SeedPlatformOperatorRoster](../../src/Compliance.Common/Features/Tenants/Commands/SeedPlatformOperatorRoster.cs#L5)
+- [SurrenderTenantSlug](../../src/Compliance.Common/Features/Tenants/Commands/SurrenderTenantSlug.cs#L6) — `bdgrz.tenant-slug.surrender` v1
+- [SuspendTenant](../../src/Compliance.Common/Features/Tenants/Commands/SuspendTenant.cs#L6) — `bdgrz.tenant.suspend` v2
 
 #### UserIdentities
 
-- [CompleteEmailChallenge](../../src/Compliance.Common/Features/UserIdentities/CompleteEmailChallenge.cs#L6) — `bdgrz.email-address.complete-challenge` v1
-- [CompleteIdentityRecovery](../../src/Compliance.Common/Features/UserIdentities/CompleteIdentityRecovery.cs#L6) — `bdgrz.user-identity.complete-recovery` v1
-- [ConfigureTenantIdentityProvider](../../src/Compliance.Common/Features/UserIdentities/ConfigureTenantIdentityProvider.cs#L7) — `bdgrz.user-identities.configure-tenant-identity-provider` v1
-- [ContinueWithDeveloperIdentity](../../src/Compliance.Common/Features/UserIdentities/ContinueWithDeveloperIdentity.cs#L7) — `bdgrz.developer-identity.continue` v1
-- [ContinueWithOidcProvider](../../src/Compliance.Common/Features/UserIdentities/ContinueWithOidcProvider.cs#L7) — `bdgrz.oidc-provider.continue` v1
-- [DisableTenantIdentityProvider](../../src/Compliance.Common/Features/UserIdentities/DisableTenantIdentityProvider.cs#L7) — `bdgrz.user-identities.disable-tenant-identity-provider` v1
-- [IssueEmailChallenge](../../src/Compliance.Common/Features/UserIdentities/IssueEmailChallenge.cs#L6) — `bdgrz.email-address.issue-challenge` v1
-- [LinkOidcProviderIdentity](../../src/Compliance.Common/Features/UserIdentities/LinkOidcProviderIdentity.cs#L7) — `bdgrz.oidc-provider.link` v1
-- [ReserveEmail](../../src/Compliance.Common/Features/UserIdentities/ReserveEmail.cs#L6) — `bdgrz.email-address.reserve` v1
-- [RotateTenantIdentityProviderCredentials](../../src/Compliance.Common/Features/UserIdentities/RotateTenantIdentityProviderCredentials.cs#L7) — `bdgrz.user-identities.rotate-tenant-identity-provider-credentials` v1
-- [RecordTenantIdentityProviderTestResult](../../src/Compliance.Common/Features/UserIdentities/RecordTenantIdentityProviderTestResult.cs#L7) — `bdgrz.user-identities.record-tenant-identity-provider-test-result` v1
-- [StartIdentityRecovery](../../src/Compliance.Common/Features/UserIdentities/StartIdentityRecovery.cs#L6) — `bdgrz.user-identity.start-recovery` v1
-- [TestTenantIdentityProvider](../../src/Compliance.Common/Features/UserIdentities/TestTenantIdentityProvider.cs#L7) — `bdgrz.user-identities.test-tenant-identity-provider` v2
+- [CompleteEmailChallenge](../../src/Compliance.Common/Features/UserIdentities/Commands/CompleteEmailChallenge.cs#L6) — `bdgrz.email-address.complete-challenge` v1
+- [CompleteIdentityRecovery](../../src/Compliance.Common/Features/UserIdentities/Commands/CompleteIdentityRecovery.cs#L6) — `bdgrz.user-identity.complete-recovery` v1
+- [ConfigureTenantIdentityProvider](../../src/Compliance.Common/Features/UserIdentities/Commands/ConfigureTenantIdentityProvider.cs#L7) — `bdgrz.user-identities.configure-tenant-identity-provider` v1
+- [ContinueWithDeveloperIdentity](../../src/Compliance.Common/Features/UserIdentities/Commands/ContinueWithDeveloperIdentity.cs#L7) — `bdgrz.developer-identity.continue` v1
+- [ContinueWithOidcProvider](../../src/Compliance.Common/Features/UserIdentities/Commands/ContinueWithOidcProvider.cs#L7) — `bdgrz.oidc-provider.continue` v1
+- [DisableTenantIdentityProvider](../../src/Compliance.Common/Features/UserIdentities/Commands/DisableTenantIdentityProvider.cs#L7) — `bdgrz.user-identities.disable-tenant-identity-provider` v1
+- [IssueEmailChallenge](../../src/Compliance.Common/Features/UserIdentities/Commands/IssueEmailChallenge.cs#L6) — `bdgrz.email-address.issue-challenge` v1
+- [LinkOidcProviderIdentity](../../src/Compliance.Common/Features/UserIdentities/Commands/LinkOidcProviderIdentity.cs#L7) — `bdgrz.oidc-provider.link` v1
+- [ReserveEmail](../../src/Compliance.Common/Features/UserIdentities/Commands/ReserveEmail.cs#L6) — `bdgrz.email-address.reserve` v1
+- [RotateTenantIdentityProviderCredentials](../../src/Compliance.Common/Features/UserIdentities/Commands/RotateTenantIdentityProviderCredentials.cs#L7) — `bdgrz.user-identities.rotate-tenant-identity-provider-credentials` v1
+- [RecordTenantIdentityProviderTestResult](../../src/Compliance.Common/Features/UserIdentities/Commands/RecordTenantIdentityProviderTestResult.cs#L7) — `bdgrz.user-identities.record-tenant-identity-provider-test-result` v1
+- [StartIdentityRecovery](../../src/Compliance.Common/Features/UserIdentities/Commands/StartIdentityRecovery.cs#L6) — `bdgrz.user-identity.start-recovery` v1
+- [TestTenantIdentityProvider](../../src/Compliance.Common/Features/UserIdentities/Commands/TestTenantIdentityProvider.cs#L7) — `bdgrz.user-identities.test-tenant-identity-provider` v2
 
 #### Work
 
-- [AssignWorkItem](../../src/Compliance.Common/Features/Work/AssignWorkItem.cs#L8) — `bdgrz.work.assign` v1
-- [ClaimWorkItem](../../src/Compliance.Common/Features/Work/ClaimWorkItem.cs#L8) — `bdgrz.work.claim` v1
-- [DelegateWorkItem](../../src/Compliance.Common/Features/Work/DelegateWorkItem.cs#L8) — `bdgrz.work.delegate` v1
-- [EscalateWorkItem](../../src/Compliance.Common/Features/Work/EscalateWorkItem.cs#L8) — `bdgrz.work.escalate` v1
-- [SetWorkDigestPreference](../../src/Compliance.Common/Features/Work/SetWorkDigestPreference.cs#L8) — `bdgrz.work.digest_preference.set` v1
-- [ScheduleWeeklyWorkDigest](../../src/Compliance.Common/Features/Work/ScheduleWeeklyWorkDigest.cs#L7) — `bdgrz.work.schedule-weekly-work-digest` v2
-- [DeliverWeeklyWorkDigest](../../src/Compliance.Common/Features/Work/DeliverWeeklyWorkDigest.cs#L7) — `bdgrz.work.deliver-weekly-work-digest` v2
-- [RecordWorkDigestDelivery](../../src/Compliance.Common/Features/Work/RecordWorkDigestDelivery.cs#L7) — `bdgrz.work.record-work-digest-delivery` v2
+- [AssignWorkItem](../../src/Compliance.Common/Features/Work/Commands/AssignWorkItem.cs#L8) — `bdgrz.work.assign` v1
+- [ClaimWorkItem](../../src/Compliance.Common/Features/Work/Commands/ClaimWorkItem.cs#L8) — `bdgrz.work.claim` v1
+- [DelegateWorkItem](../../src/Compliance.Common/Features/Work/Commands/DelegateWorkItem.cs#L8) — `bdgrz.work.delegate` v1
+- [EscalateWorkItem](../../src/Compliance.Common/Features/Work/Commands/EscalateWorkItem.cs#L8) — `bdgrz.work.escalate` v1
+- [SetWorkDigestPreference](../../src/Compliance.Common/Features/Work/Commands/SetWorkDigestPreference.cs#L8) — `bdgrz.work.digest_preference.set` v1
+- [ScheduleWeeklyWorkDigest](../../src/Compliance.Common/Features/Work/Commands/ScheduleWeeklyWorkDigest.cs#L7) — `bdgrz.work.schedule-weekly-work-digest` v2
+- [DeliverWeeklyWorkDigest](../../src/Compliance.Common/Features/Work/Commands/DeliverWeeklyWorkDigest.cs#L7) — `bdgrz.work.deliver-weekly-work-digest` v2
+- [RecordWorkDigestDelivery](../../src/Compliance.Common/Features/Work/Commands/RecordWorkDigestDelivery.cs#L7) — `bdgrz.work.record-work-digest-delivery` v2
 
 #### Workforce
 
-- [AmendWorkforceRosterSnapshot](../../src/Compliance.Common/Features/Workforce/AmendWorkforceRosterSnapshot.cs#L12) — `bdgrz.snapshot.workforce_roster.amend` v1
-- [CorrelatePersonMembership](../../src/Compliance.Common/Features/Workforce/CorrelatePersonMembership.cs#L13) — `bdgrz.workforce.person.correlate-membership` v1
-- [FreezeWorkforceRosterSnapshot](../../src/Compliance.Common/Features/Workforce/FreezeWorkforceRosterSnapshot.cs#L9) — `bdgrz.snapshot.workforce_roster.freeze` v1
-- [ReconcileWorkforceSourceObservation](../../src/Compliance.Common/Features/Workforce/ReconcileWorkforceSourceObservation.cs#L12) — `bdgrz.workforce.source.reconcile` v1
-- [RecordPerson](../../src/Compliance.Common/Features/Workforce/RecordPerson.cs#L8) — `bdgrz.workforce.person.record` v1
-- [RecordServiceIdentity](../../src/Compliance.Common/Features/Workforce/RecordServiceIdentity.cs#L13) — `bdgrz.workforce.service-identity.record` v1
-- [RecordWorkRelationship](../../src/Compliance.Common/Features/Workforce/RecordWorkRelationship.cs#L11) — `bdgrz.workforce.work-relationship.record` v1
-- [RecordWorkforceSourceObservation](../../src/Compliance.Common/Features/Workforce/RecordWorkforceSourceObservation.cs#L8) — `bdgrz.workforce.source.record` v1
-- [ResolveWorkforceObservation](../../src/Compliance.Common/Features/Workforce/ResolveWorkforceObservation.cs#L14) — `bdgrz.workforce.observation.resolve` v1
-- [RevisePerson](../../src/Compliance.Common/Features/Workforce/RevisePerson.cs#L7) — `bdgrz.workforce.person.revise` v1
-- [ReviseServiceIdentity](../../src/Compliance.Common/Features/Workforce/ReviseServiceIdentity.cs#L9) — `bdgrz.workforce.service-identity.revise` v1
-- [ReviseWorkRelationship](../../src/Compliance.Common/Features/Workforce/ReviseWorkRelationship.cs#L8) — `bdgrz.workforce.work-relationship.revise` v1
+- [AmendWorkforceRosterSnapshot](../../src/Compliance.Common/Features/Workforce/Commands/AmendWorkforceRosterSnapshot.cs#L12) — `bdgrz.snapshot.workforce_roster.amend` v1
+- [CorrelatePersonMembership](../../src/Compliance.Common/Features/Workforce/Commands/CorrelatePersonMembership.cs#L13) — `bdgrz.workforce.person.correlate-membership` v1
+- [FreezeWorkforceRosterSnapshot](../../src/Compliance.Common/Features/Workforce/Commands/FreezeWorkforceRosterSnapshot.cs#L9) — `bdgrz.snapshot.workforce_roster.freeze` v1
+- [ReconcileWorkforceSourceObservation](../../src/Compliance.Common/Features/Workforce/Commands/ReconcileWorkforceSourceObservation.cs#L12) — `bdgrz.workforce.source.reconcile` v1
+- [RecordPerson](../../src/Compliance.Common/Features/Workforce/Commands/RecordPerson.cs#L8) — `bdgrz.workforce.person.record` v1
+- [RecordServiceIdentity](../../src/Compliance.Common/Features/Workforce/Commands/RecordServiceIdentity.cs#L13) — `bdgrz.workforce.service-identity.record` v1
+- [RecordWorkRelationship](../../src/Compliance.Common/Features/Workforce/Commands/RecordWorkRelationship.cs#L11) — `bdgrz.workforce.work-relationship.record` v1
+- [RecordWorkforceSourceObservation](../../src/Compliance.Common/Features/Workforce/Commands/RecordWorkforceSourceObservation.cs#L8) — `bdgrz.workforce.source.record` v1
+- [ResolveWorkforceObservation](../../src/Compliance.Common/Features/Workforce/Commands/ResolveWorkforceObservation.cs#L14) — `bdgrz.workforce.observation.resolve` v1
+- [RevisePerson](../../src/Compliance.Common/Features/Workforce/Commands/RevisePerson.cs#L7) — `bdgrz.workforce.person.revise` v1
+- [ReviseServiceIdentity](../../src/Compliance.Common/Features/Workforce/Commands/ReviseServiceIdentity.cs#L9) — `bdgrz.workforce.service-identity.revise` v1
+- [ReviseWorkRelationship](../../src/Compliance.Common/Features/Workforce/Commands/ReviseWorkRelationship.cs#L8) — `bdgrz.workforce.work-relationship.revise` v1
 
 ### Existing queries
 
 #### AccessControl
 
-- [GetClientIndependenceHistory](../../src/Compliance.Common/Features/AccessControl/GetClientIndependenceHistory.cs#L6) — `bdgrz.independence.history.get` v1
-- [GetClientIndependenceRules](../../src/Compliance.Common/Features/AccessControl/GetClientIndependenceRules.cs#L7) — `bdgrz.independence.client-rules.get` v1
-- [GetEngagementManagementAcknowledgements](../../src/Compliance.Common/Features/AccessControl/GetEngagementManagementAcknowledgements.cs#L6) — `bdgrz.service-engagement.management-acknowledgements.get` v1
-- [GetFirmStaffDirectory](../../src/Compliance.Common/Features/AccessControl/GetFirmStaffDirectory.cs#L6) — `bdgrz.firm-staff.list` v1
-- [GetIndependenceRuleVersions](../../src/Compliance.Common/Features/AccessControl/GetIndependenceRuleVersions.cs#L6) — `bdgrz.independence.rules.list` v1
-- [GetMemberAccess](../../src/Compliance.Common/Features/AccessControl/GetMemberAccess.cs#L6) — `bdgrz.member.access.get` v1
-- [GetRole](../../src/Compliance.Common/Features/AccessControl/GetRole.cs#L7) — `bdgrz.rbac.role.get` v1
-- [GetSeparationOfDutiesWaiver](../../src/Compliance.Common/Features/AccessControl/GetSeparationOfDutiesWaiver.cs#L6) — `bdgrz.sod-waiver.get` v1
-- [GetServiceEngagement](../../src/Compliance.Common/Features/AccessControl/GetServiceEngagement.cs#L6) — `bdgrz.service-engagement.get` v1
-- [GetServiceEngagementAcceptance](../../src/Compliance.Common/Features/AccessControl/GetServiceEngagementAcceptance.cs#L6) — `bdgrz.service-engagement.acceptance.get` v1
-- [GetServiceEngagementAcceptanceHistory](../../src/Compliance.Common/Features/AccessControl/GetServiceEngagementAcceptanceHistory.cs#L6) — `bdgrz.service-engagement.acceptance-history.get` v1
-- [GetServiceEngagementHistory](../../src/Compliance.Common/Features/AccessControl/GetServiceEngagementHistory.cs#L6) — `bdgrz.service-engagement.history.get` v1
-- [GetTeam](../../src/Compliance.Common/Features/AccessControl/GetTeam.cs#L7) — `bdgrz.rbac.team.get` v1
-- [GetTenantMember](../../src/Compliance.Common/Features/AccessControl/GetTenantMember.cs#L7) — `bdgrz.tenant.member.get` v1
-- [ListAccessGrants](../../src/Compliance.Common/Features/AccessControl/ListAccessGrants.cs#L6) — `bdgrz.access-grant.list` v1
-- [ListAssignableFirmStaff](../../src/Compliance.Common/Features/AccessControl/ListAssignableFirmStaff.cs#L6) — `bdgrz.firm-staff.assignable.list` v1
-- [ListRolePermissions](../../src/Compliance.Common/Features/AccessControl/ListRolePermissions.cs#L13) — `bdgrz.rbac.role-permission.list` v1
-- [ListRoleTeams](../../src/Compliance.Common/Features/AccessControl/ListRoleTeams.cs#L13) — `bdgrz.rbac.role-team.list` v1
-- [ListRoles](../../src/Compliance.Common/Features/AccessControl/ListRoles.cs#L13) — `bdgrz.rbac.role.list` v1
-- [ListServiceEngagements](../../src/Compliance.Common/Features/AccessControl/ListServiceEngagements.cs#L6) — `bdgrz.service-engagement.list` v1
-- [ListTeamMembers](../../src/Compliance.Common/Features/AccessControl/ListTeamMembers.cs#L13) — `bdgrz.rbac.team-member.list` v1
-- [ListTeamRoles](../../src/Compliance.Common/Features/AccessControl/ListTeamRoles.cs#L13) — `bdgrz.rbac.team-role.list` v1
-- [ListTeams](../../src/Compliance.Common/Features/AccessControl/ListTeams.cs#L13) — `bdgrz.rbac.team.list` v1
+- [GetClientIndependenceHistory](../../src/Compliance.Common/Features/AccessControl/Queries/GetClientIndependenceHistory.cs#L6) — `bdgrz.independence.history.get` v1
+- [GetClientIndependenceRules](../../src/Compliance.Common/Features/AccessControl/Queries/GetClientIndependenceRules.cs#L7) — `bdgrz.independence.client-rules.get` v1
+- [GetEngagementManagementAcknowledgements](../../src/Compliance.Common/Features/AccessControl/Queries/GetEngagementManagementAcknowledgements.cs#L6) — `bdgrz.service-engagement.management-acknowledgements.get` v1
+- [GetFirmStaffDirectory](../../src/Compliance.Common/Features/AccessControl/Queries/GetFirmStaffDirectory.cs#L6) — `bdgrz.firm-staff.list` v1
+- [GetIndependenceRuleVersions](../../src/Compliance.Common/Features/AccessControl/Queries/GetIndependenceRuleVersions.cs#L6) — `bdgrz.independence.rules.list` v1
+- [GetMemberAccess](../../src/Compliance.Common/Features/AccessControl/Queries/GetMemberAccess.cs#L6) — `bdgrz.member.access.get` v1
+- [GetRole](../../src/Compliance.Common/Features/AccessControl/Queries/GetRole.cs#L7) — `bdgrz.rbac.role.get` v1
+- [GetSeparationOfDutiesWaiver](../../src/Compliance.Common/Features/AccessControl/Queries/GetSeparationOfDutiesWaiver.cs#L6) — `bdgrz.sod-waiver.get` v1
+- [GetServiceEngagement](../../src/Compliance.Common/Features/AccessControl/Queries/GetServiceEngagement.cs#L6) — `bdgrz.service-engagement.get` v1
+- [GetServiceEngagementAcceptance](../../src/Compliance.Common/Features/AccessControl/Queries/GetServiceEngagementAcceptance.cs#L6) — `bdgrz.service-engagement.acceptance.get` v1
+- [GetServiceEngagementAcceptanceHistory](../../src/Compliance.Common/Features/AccessControl/Queries/GetServiceEngagementAcceptanceHistory.cs#L6) — `bdgrz.service-engagement.acceptance-history.get` v1
+- [GetServiceEngagementHistory](../../src/Compliance.Common/Features/AccessControl/Queries/GetServiceEngagementHistory.cs#L6) — `bdgrz.service-engagement.history.get` v1
+- [GetTeam](../../src/Compliance.Common/Features/AccessControl/Queries/GetTeam.cs#L7) — `bdgrz.rbac.team.get` v1
+- [GetTenantMember](../../src/Compliance.Common/Features/AccessControl/Queries/GetTenantMember.cs#L7) — `bdgrz.tenant.member.get` v1
+- [ListAccessGrants](../../src/Compliance.Common/Features/AccessControl/Queries/ListAccessGrants.cs#L6) — `bdgrz.access-grant.list` v1
+- [ListAssignableFirmStaff](../../src/Compliance.Common/Features/AccessControl/Queries/ListAssignableFirmStaff.cs#L6) — `bdgrz.firm-staff.assignable.list` v1
+- [ListRolePermissions](../../src/Compliance.Common/Features/AccessControl/Queries/ListRolePermissions.cs#L13) — `bdgrz.rbac.role-permission.list` v1
+- [ListRoleTeams](../../src/Compliance.Common/Features/AccessControl/Queries/ListRoleTeams.cs#L13) — `bdgrz.rbac.role-team.list` v1
+- [ListRoles](../../src/Compliance.Common/Features/AccessControl/Queries/ListRoles.cs#L13) — `bdgrz.rbac.role.list` v1
+- [ListServiceEngagements](../../src/Compliance.Common/Features/AccessControl/Queries/ListServiceEngagements.cs#L6) — `bdgrz.service-engagement.list` v1
+- [ListTeamMembers](../../src/Compliance.Common/Features/AccessControl/Queries/ListTeamMembers.cs#L13) — `bdgrz.rbac.team-member.list` v1
+- [ListTeamRoles](../../src/Compliance.Common/Features/AccessControl/Queries/ListTeamRoles.cs#L13) — `bdgrz.rbac.team-role.list` v1
+- [ListTeams](../../src/Compliance.Common/Features/AccessControl/Queries/ListTeams.cs#L13) — `bdgrz.rbac.team.list` v1
 
 #### AccessReviews
 
-- [GetAccessPopulation](../../src/Compliance.Common/Features/AccessReviews/GetAccessPopulation.cs#L7) — `bdgrz.access_population.get` v1
-- [GetAccessReviewCampaign](../../src/Compliance.Common/Features/AccessReviews/GetAccessReviewCampaign.cs#L10) — `bdgrz.access_review.campaign.get` v1
-- [GetAccessReviewCoverage](../../src/Compliance.Common/Features/AccessReviews/GetAccessReviewCoverage.cs#L7) — `bdgrz.access_review.coverage.get` v1
-- [GetAccessVariance](../../src/Compliance.Common/Features/AccessReviews/GetAccessVariance.cs#L7) — `bdgrz.access_population.variance.get` v1
-- [ListAccessExpectations](../../src/Compliance.Common/Features/AccessReviews/ListAccessExpectations.cs#L7) — `bdgrz.access_expectation.list` v1
-- [ListAccessPopulations](../../src/Compliance.Common/Features/AccessReviews/ListAccessPopulations.cs#L8) — `bdgrz.access_population.list` v1
-- [ListAccessPrincipals](../../src/Compliance.Common/Features/AccessReviews/ListAccessPrincipals.cs#L8) — `bdgrz.access_population.principals.list` v1
-- [ListAccessReviewCampaigns](../../src/Compliance.Common/Features/AccessReviews/ListAccessReviewCampaigns.cs#L8) — `bdgrz.access_review.campaign.list` v1
-- [PreviewAccessPopulation](../../src/Compliance.Common/Features/AccessReviews/PreviewAccessPopulation.cs#L7) — `bdgrz.access_population.preview` v1
-- [PreviewBulkAccessDecision](../../src/Compliance.Common/Features/AccessReviews/PreviewBulkAccessDecision.cs#L7) — `bdgrz.access_review.decision.bulk_preview` v1
+- [GetAccessPopulation](../../src/Compliance.Common/Features/AccessReviews/Queries/GetAccessPopulation.cs#L7) — `bdgrz.access_population.get` v1
+- [GetAccessReviewCampaign](../../src/Compliance.Common/Features/AccessReviews/Queries/GetAccessReviewCampaign.cs#L10) — `bdgrz.access_review.campaign.get` v1
+- [GetAccessReviewCoverage](../../src/Compliance.Common/Features/AccessReviews/Queries/GetAccessReviewCoverage.cs#L7) — `bdgrz.access_review.coverage.get` v1
+- [GetAccessVariance](../../src/Compliance.Common/Features/AccessReviews/Queries/GetAccessVariance.cs#L7) — `bdgrz.access_population.variance.get` v1
+- [ListAccessExpectations](../../src/Compliance.Common/Features/AccessReviews/Queries/ListAccessExpectations.cs#L7) — `bdgrz.access_expectation.list` v1
+- [ListAccessPopulations](../../src/Compliance.Common/Features/AccessReviews/Queries/ListAccessPopulations.cs#L8) — `bdgrz.access_population.list` v1
+- [ListAccessPrincipals](../../src/Compliance.Common/Features/AccessReviews/Queries/ListAccessPrincipals.cs#L8) — `bdgrz.access_population.principals.list` v1
+- [ListAccessReviewCampaigns](../../src/Compliance.Common/Features/AccessReviews/Queries/ListAccessReviewCampaigns.cs#L8) — `bdgrz.access_review.campaign.list` v1
+- [PreviewAccessPopulation](../../src/Compliance.Common/Features/AccessReviews/Queries/PreviewAccessPopulation.cs#L7) — `bdgrz.access_population.preview` v1
+- [PreviewBulkAccessDecision](../../src/Compliance.Common/Features/AccessReviews/Queries/PreviewBulkAccessDecision.cs#L7) — `bdgrz.access_review.decision.bulk_preview` v1
 
 #### Applications
 
-- [GetAccessReviewScope](../../src/Compliance.Common/Features/Applications/GetAccessReviewScope.cs#L6) — `bdgrz.system_instance.access_review_scope.get` v1
-- [GetApplication](../../src/Compliance.Common/Features/Applications/GetApplication.cs#L6) — `bdgrz.application.get` v1
-- [GetApplicationImport](../../src/Compliance.Common/Features/Applications/GetApplicationImport.cs#L6) — `bdgrz.application_import.get` v1
-- [GetApplicationImportOmissionProposal](../../src/Compliance.Common/Features/Applications/GetApplicationImportOmissionProposal.cs#L7) — `bdgrz.application_import.omission.get` v1
-- [GetApplicationImportProgress](../../src/Compliance.Common/Features/Applications/GetApplicationImportProgress.cs#L6) — `bdgrz.application_import.progress` v1
-- [GetApplicationImportRejectedReport](../../src/Compliance.Common/Features/Applications/GetApplicationImportRejectedReport.cs#L6) — `bdgrz.application_import.rejected_report` v1
-- [GetApplicationRevision](../../src/Compliance.Common/Features/Applications/GetApplicationRevision.cs#L6) — `bdgrz.application.revision.get` v1
-- [GetSystemInstance](../../src/Compliance.Common/Features/Applications/GetSystemInstance.cs#L6) — `bdgrz.system_instance.get` v1
-- [ListAccessReviewScopes](../../src/Compliance.Common/Features/Applications/ListAccessReviewScopes.cs#L11) — `bdgrz.application.access_review_scopes.list` v1
-- [ListApplicationBoundaryReferences](../../src/Compliance.Common/Features/Applications/ListApplicationBoundaryReferences.cs#L8) — `bdgrz.application.boundary_references.list` v1
-- [ListApplicationImportRows](../../src/Compliance.Common/Features/Applications/ListApplicationImportRows.cs#L7) — `bdgrz.application_import.rows.list` v1
-- [ListApplicationRelationships](../../src/Compliance.Common/Features/Applications/ListApplicationRelationships.cs#L6) — `bdgrz.application.relationship.list` v1
-- [ListApplicationRevisions](../../src/Compliance.Common/Features/Applications/ListApplicationRevisions.cs#L7) — `bdgrz.application.revision.list` v1
-- [ListApplications](../../src/Compliance.Common/Features/Applications/ListApplications.cs#L7) — `bdgrz.application.list` v1
-- [ListSystemInstanceBoundaryReferences](../../src/Compliance.Common/Features/Applications/ListSystemInstanceBoundaryReferences.cs#L8) — `bdgrz.system_instance.boundary_references.list` v1
-- [ListSystemInstances](../../src/Compliance.Common/Features/Applications/ListSystemInstances.cs#L7) — `bdgrz.system_instance.list` v1
-- [PreviewApplicationChange](../../src/Compliance.Common/Features/Applications/PreviewApplicationChange.cs#L8) — `bdgrz.application.change.preview` v1
+- [GetAccessReviewScope](../../src/Compliance.Common/Features/Applications/Queries/GetAccessReviewScope.cs#L6) — `bdgrz.system_instance.access_review_scope.get` v1
+- [GetApplication](../../src/Compliance.Common/Features/Applications/Queries/GetApplication.cs#L6) — `bdgrz.application.get` v1
+- [GetApplicationImport](../../src/Compliance.Common/Features/Applications/Queries/GetApplicationImport.cs#L6) — `bdgrz.application_import.get` v1
+- [GetApplicationImportOmissionProposal](../../src/Compliance.Common/Features/Applications/Queries/GetApplicationImportOmissionProposal.cs#L7) — `bdgrz.application_import.omission.get` v1
+- [GetApplicationImportProgress](../../src/Compliance.Common/Features/Applications/Queries/GetApplicationImportProgress.cs#L6) — `bdgrz.application_import.progress` v1
+- [GetApplicationImportRejectedReport](../../src/Compliance.Common/Features/Applications/Queries/GetApplicationImportRejectedReport.cs#L6) — `bdgrz.application_import.rejected_report` v1
+- [GetApplicationRevision](../../src/Compliance.Common/Features/Applications/Queries/GetApplicationRevision.cs#L6) — `bdgrz.application.revision.get` v1
+- [GetSystemInstance](../../src/Compliance.Common/Features/Applications/Queries/GetSystemInstance.cs#L6) — `bdgrz.system_instance.get` v1
+- [ListAccessReviewScopes](../../src/Compliance.Common/Features/Applications/Queries/ListAccessReviewScopes.cs#L11) — `bdgrz.application.access_review_scopes.list` v1
+- [ListApplicationBoundaryReferences](../../src/Compliance.Common/Features/Applications/Queries/ListApplicationBoundaryReferences.cs#L8) — `bdgrz.application.boundary_references.list` v1
+- [ListApplicationImportRows](../../src/Compliance.Common/Features/Applications/Queries/ListApplicationImportRows.cs#L7) — `bdgrz.application_import.rows.list` v1
+- [ListApplicationRelationships](../../src/Compliance.Common/Features/Applications/Queries/ListApplicationRelationships.cs#L6) — `bdgrz.application.relationship.list` v1
+- [ListApplicationRevisions](../../src/Compliance.Common/Features/Applications/Queries/ListApplicationRevisions.cs#L7) — `bdgrz.application.revision.list` v1
+- [ListApplications](../../src/Compliance.Common/Features/Applications/Queries/ListApplications.cs#L7) — `bdgrz.application.list` v1
+- [ListSystemInstanceBoundaryReferences](../../src/Compliance.Common/Features/Applications/Queries/ListSystemInstanceBoundaryReferences.cs#L8) — `bdgrz.system_instance.boundary_references.list` v1
+- [ListSystemInstances](../../src/Compliance.Common/Features/Applications/Queries/ListSystemInstances.cs#L7) — `bdgrz.system_instance.list` v1
+- [PreviewApplicationChange](../../src/Compliance.Common/Features/Applications/Queries/PreviewApplicationChange.cs#L8) — `bdgrz.application.change.preview` v1
 - [PreviewApplicationChangeMcpInput](../../src/Compliance.App/Features/Applications/PreviewApplicationChangeMcpInput.cs#L7) — `bdgrz.application.change.preview.mcp-input` v1
-- [PreviewApplicationImport](../../src/Compliance.Common/Features/Applications/PreviewApplicationImport.cs#L7) — `bdgrz.application_import.preview` v1
-- [PreviewApplicationImportOmissionProposal](../../src/Compliance.Common/Features/Applications/PreviewApplicationImportOmissionProposal.cs#L6) — `bdgrz.application_import.omission.preview` v1
-- [PreviewMissingApplicationImportRows](../../src/Compliance.Common/Features/Applications/PreviewMissingApplicationImportRows.cs#L7) — `bdgrz.application_import.missing.preview` v1
+- [PreviewApplicationImport](../../src/Compliance.Common/Features/Applications/Queries/PreviewApplicationImport.cs#L7) — `bdgrz.application_import.preview` v1
+- [PreviewApplicationImportOmissionProposal](../../src/Compliance.Common/Features/Applications/Queries/PreviewApplicationImportOmissionProposal.cs#L6) — `bdgrz.application_import.omission.preview` v1
+- [PreviewMissingApplicationImportRows](../../src/Compliance.Common/Features/Applications/Queries/PreviewMissingApplicationImportRows.cs#L7) — `bdgrz.application_import.missing.preview` v1
 
 #### Boundaries
 
-- [GetBoundary](../../src/Compliance.Common/Features/Boundaries/GetBoundary.cs#L6) — `bdgrz.boundary.get` v1
-- [GetBoundaryDecision](../../src/Compliance.Common/Features/Boundaries/GetBoundaryDecision.cs#L6) — `bdgrz.boundary.decision.get` v1
-- [GetBoundaryVersion](../../src/Compliance.Common/Features/Boundaries/GetBoundaryVersion.cs#L6) — `bdgrz.boundary.version.get` v1
-- [GetEffectiveBoundaryVersion](../../src/Compliance.Common/Features/Boundaries/GetEffectiveBoundaryVersion.cs#L6) — `bdgrz.boundary.version.effective.get` v1
-- [ListBoundaryDecisions](../../src/Compliance.Common/Features/Boundaries/ListBoundaryDecisions.cs#L7) — `bdgrz.boundary.decisions.list` v1
-- [ListBoundaryVersions](../../src/Compliance.Common/Features/Boundaries/ListBoundaryVersions.cs#L7) — `bdgrz.boundary.versions.list` v1
-- [ListProgramBoundaries](../../src/Compliance.Common/Features/Boundaries/ListProgramBoundaries.cs#L9) — `bdgrz.boundary.program.list` v1
-- [PreviewBoundaryImpact](../../src/Compliance.Common/Features/Boundaries/PreviewBoundaryImpact.cs#L6) — `bdgrz.boundary.impact.preview` v1
+- [GetBoundary](../../src/Compliance.Common/Features/Boundaries/Queries/GetBoundary.cs#L6) — `bdgrz.boundary.get` v1
+- [GetBoundaryDecision](../../src/Compliance.Common/Features/Boundaries/Queries/GetBoundaryDecision.cs#L6) — `bdgrz.boundary.decision.get` v1
+- [GetBoundaryVersion](../../src/Compliance.Common/Features/Boundaries/Queries/GetBoundaryVersion.cs#L6) — `bdgrz.boundary.version.get` v1
+- [GetEffectiveBoundaryVersion](../../src/Compliance.Common/Features/Boundaries/Queries/GetEffectiveBoundaryVersion.cs#L6) — `bdgrz.boundary.version.effective.get` v1
+- [ListBoundaryDecisions](../../src/Compliance.Common/Features/Boundaries/Queries/ListBoundaryDecisions.cs#L7) — `bdgrz.boundary.decisions.list` v1
+- [ListBoundaryVersions](../../src/Compliance.Common/Features/Boundaries/Queries/ListBoundaryVersions.cs#L7) — `bdgrz.boundary.versions.list` v1
+- [ListProgramBoundaries](../../src/Compliance.Common/Features/Boundaries/Queries/ListProgramBoundaries.cs#L9) — `bdgrz.boundary.program.list` v1
+- [PreviewBoundaryImpact](../../src/Compliance.Common/Features/Boundaries/Queries/PreviewBoundaryImpact.cs#L6) — `bdgrz.boundary.impact.preview` v1
 
 #### Commitments
 
-- [GetCommitmentDraft](../../src/Compliance.Common/Features/Commitments/GetCommitmentDraft.cs#L7) — `bdgrz.commitment.draft.get` v1
-- [GetCommitmentDraftRevision](../../src/Compliance.Common/Features/Commitments/GetCommitmentDraftRevision.cs#L7) — `bdgrz.commitment.draft.revision.get` v1
-- [GetCommitmentVersion](../../src/Compliance.Common/Features/Commitments/GetCommitmentVersion.cs#L7) — `bdgrz.commitment.version.get` v1
-- [GetEffectiveCommitmentVersion](../../src/Compliance.Common/Features/Commitments/GetEffectiveCommitmentVersion.cs#L7) — `bdgrz.commitment.version.effective.get` v1
-- [ListCommitmentDecisions](../../src/Compliance.Common/Features/Commitments/ListCommitmentDecisions.cs#L8) — `bdgrz.commitment.decision.list` v1
-- [ListCommitmentDraftRevisions](../../src/Compliance.Common/Features/Commitments/ListCommitmentDraftRevisions.cs#L8) — `bdgrz.commitment.draft.revision.list` v1
-- [ListCommitmentDrafts](../../src/Compliance.Common/Features/Commitments/ListCommitmentDrafts.cs#L8) — `bdgrz.commitment.draft.list` v1
-- [ListCommitmentVersions](../../src/Compliance.Common/Features/Commitments/ListCommitmentVersions.cs#L8) — `bdgrz.commitment.version.list` v1
-- [PreviewCommitmentImpact](../../src/Compliance.Common/Features/Commitments/PreviewCommitmentImpact.cs#L7) — `bdgrz.commitment.impact.preview` v1
+- [GetCommitmentDraft](../../src/Compliance.Common/Features/Commitments/Queries/GetCommitmentDraft.cs#L7) — `bdgrz.commitment.draft.get` v1
+- [GetCommitmentDraftRevision](../../src/Compliance.Common/Features/Commitments/Queries/GetCommitmentDraftRevision.cs#L7) — `bdgrz.commitment.draft.revision.get` v1
+- [GetCommitmentVersion](../../src/Compliance.Common/Features/Commitments/Queries/GetCommitmentVersion.cs#L7) — `bdgrz.commitment.version.get` v1
+- [GetEffectiveCommitmentVersion](../../src/Compliance.Common/Features/Commitments/Queries/GetEffectiveCommitmentVersion.cs#L7) — `bdgrz.commitment.version.effective.get` v1
+- [ListCommitmentDecisions](../../src/Compliance.Common/Features/Commitments/Queries/ListCommitmentDecisions.cs#L8) — `bdgrz.commitment.decision.list` v1
+- [ListCommitmentDraftRevisions](../../src/Compliance.Common/Features/Commitments/Queries/ListCommitmentDraftRevisions.cs#L8) — `bdgrz.commitment.draft.revision.list` v1
+- [ListCommitmentDrafts](../../src/Compliance.Common/Features/Commitments/Queries/ListCommitmentDrafts.cs#L8) — `bdgrz.commitment.draft.list` v1
+- [ListCommitmentVersions](../../src/Compliance.Common/Features/Commitments/Queries/ListCommitmentVersions.cs#L8) — `bdgrz.commitment.version.list` v1
+- [PreviewCommitmentImpact](../../src/Compliance.Common/Features/Commitments/Queries/PreviewCommitmentImpact.cs#L7) — `bdgrz.commitment.impact.preview` v1
 
 #### ControlMappings
 
-- [GetControlCriterionMapping](../../src/Compliance.Common/Features/ControlMappings/GetControlCriterionMapping.cs#L7) — `bdgrz.control_mapping.get` v1
-- [GetCriterionApplicability](../../src/Compliance.Common/Features/ControlMappings/GetCriterionApplicability.cs#L7) — `bdgrz.criterion_applicability.get` v1
-- [ListControlCriterionMappings](../../src/Compliance.Common/Features/ControlMappings/ListControlCriterionMappings.cs#L9) — `bdgrz.control_mappings.list` v1
-- [ListCriteriaCoverage](../../src/Compliance.Common/Features/ControlMappings/ListCriteriaCoverage.cs#L12) — `bdgrz.control_mappings.coverage.list` v1
-- [ListCriterionApplicability](../../src/Compliance.Common/Features/ControlMappings/ListCriterionApplicability.cs#L9) — `bdgrz.criterion_applicability.list` v1
+- [GetControlCriterionMapping](../../src/Compliance.Common/Features/ControlMappings/Queries/GetControlCriterionMapping.cs#L7) — `bdgrz.control_mapping.get` v1
+- [GetCriterionApplicability](../../src/Compliance.Common/Features/ControlMappings/Queries/GetCriterionApplicability.cs#L7) — `bdgrz.criterion_applicability.get` v1
+- [ListControlCriterionMappings](../../src/Compliance.Common/Features/ControlMappings/Queries/ListControlCriterionMappings.cs#L9) — `bdgrz.control_mappings.list` v1
+- [ListCriteriaCoverage](../../src/Compliance.Common/Features/ControlMappings/Queries/ListCriteriaCoverage.cs#L12) — `bdgrz.control_mappings.coverage.list` v1
+- [ListCriterionApplicability](../../src/Compliance.Common/Features/ControlMappings/Queries/ListCriterionApplicability.cs#L9) — `bdgrz.criterion_applicability.list` v1
 
 #### Controls
 
-- [GetControlDecision](../../src/Compliance.Common/Features/Controls/GetControlDecision.cs#L7) — `bdgrz.control.decision.get` v1
-- [GetControlDraft](../../src/Compliance.Common/Features/Controls/GetControlDraft.cs#L7) — `bdgrz.control.draft.get` v1
-- [GetControlDraftOwnerPerson](../../src/Compliance.Common/Features/Controls/GetControlDraftOwnerPerson.cs#L7) — `bdgrz.control.draft.owner_person.get` v1
-- [GetControlDraftRevision](../../src/Compliance.Common/Features/Controls/GetControlDraftRevision.cs#L7) — `bdgrz.control.draft.revision.get` v1
-- [GetControlVersion](../../src/Compliance.Common/Features/Controls/GetControlVersion.cs#L7) — `bdgrz.control.version.get` v1
-- [GetCurrentControlVersion](../../src/Compliance.Common/Features/Controls/GetCurrentControlVersion.cs#L7) — `bdgrz.control.version.current.get` v1
-- [GetEffectiveControlVersion](../../src/Compliance.Common/Features/Controls/GetEffectiveControlVersion.cs#L7) — `bdgrz.control.version.effective.get` v1
-- [ListControlDecisions](../../src/Compliance.Common/Features/Controls/ListControlDecisions.cs#L8) — `bdgrz.control.decisions.list` v1
-- [ListControlDraftRevisions](../../src/Compliance.Common/Features/Controls/ListControlDraftRevisions.cs#L8) — `bdgrz.control.draft.revisions.list` v1
-- [ListControlDrafts](../../src/Compliance.Common/Features/Controls/ListControlDrafts.cs#L8) — `bdgrz.control.draft.list` v1
-- [ListControlVersions](../../src/Compliance.Common/Features/Controls/ListControlVersions.cs#L8) — `bdgrz.control.versions.list` v1
-- [PreviewControlImpact](../../src/Compliance.Common/Features/Controls/PreviewControlImpact.cs#L8) — `bdgrz.control.impact.preview` v1
+- [GetControlDecision](../../src/Compliance.Common/Features/Controls/Queries/GetControlDecision.cs#L7) — `bdgrz.control.decision.get` v1
+- [GetControlDraft](../../src/Compliance.Common/Features/Controls/Queries/GetControlDraft.cs#L7) — `bdgrz.control.draft.get` v1
+- [GetControlDraftOwnerPerson](../../src/Compliance.Common/Features/Controls/Queries/GetControlDraftOwnerPerson.cs#L7) — `bdgrz.control.draft.owner_person.get` v1
+- [GetControlDraftRevision](../../src/Compliance.Common/Features/Controls/Queries/GetControlDraftRevision.cs#L7) — `bdgrz.control.draft.revision.get` v1
+- [GetControlVersion](../../src/Compliance.Common/Features/Controls/Queries/GetControlVersion.cs#L7) — `bdgrz.control.version.get` v1
+- [GetCurrentControlVersion](../../src/Compliance.Common/Features/Controls/Queries/GetCurrentControlVersion.cs#L7) — `bdgrz.control.version.current.get` v1
+- [GetEffectiveControlVersion](../../src/Compliance.Common/Features/Controls/Queries/GetEffectiveControlVersion.cs#L7) — `bdgrz.control.version.effective.get` v1
+- [ListControlDecisions](../../src/Compliance.Common/Features/Controls/Queries/ListControlDecisions.cs#L8) — `bdgrz.control.decisions.list` v1
+- [ListControlDraftRevisions](../../src/Compliance.Common/Features/Controls/Queries/ListControlDraftRevisions.cs#L8) — `bdgrz.control.draft.revisions.list` v1
+- [ListControlDrafts](../../src/Compliance.Common/Features/Controls/Queries/ListControlDrafts.cs#L8) — `bdgrz.control.draft.list` v1
+- [ListControlVersions](../../src/Compliance.Common/Features/Controls/Queries/ListControlVersions.cs#L8) — `bdgrz.control.versions.list` v1
+- [PreviewControlImpact](../../src/Compliance.Common/Features/Controls/Queries/PreviewControlImpact.cs#L8) — `bdgrz.control.impact.preview` v1
 
 #### Criteria
 
-- [ExportCriteriaCatalogEntries](../../src/Compliance.Common/Features/Criteria/ExportCriteriaCatalogEntries.cs#L8) — `bdgrz.criteria.entries.export` v1
-- [GetCriteriaCatalogEdition](../../src/Compliance.Common/Features/Criteria/GetCriteriaCatalogEdition.cs#L8) — `bdgrz.criteria.edition.get` v1
-- [GetCriteriaCatalogEntry](../../src/Compliance.Common/Features/Criteria/GetCriteriaCatalogEntry.cs#L8) — `bdgrz.criteria.entry.get` v1
-- [ListCriteriaCatalogEditions](../../src/Compliance.Common/Features/Criteria/ListCriteriaCatalogEditions.cs#L8) — `bdgrz.criteria.editions.list` v1
-- [ListCriteriaCatalogEntries](../../src/Compliance.Common/Features/Criteria/ListCriteriaCatalogEntries.cs#L8) — `bdgrz.criteria.entries.list` v1
+- [ExportCriteriaCatalogEntries](../../src/Compliance.Common/Features/Criteria/Commands/ExportCriteriaCatalogEntries.cs#L8) — `bdgrz.criteria.entries.export` v1
+- [GetCriteriaCatalogEdition](../../src/Compliance.Common/Features/Criteria/Queries/GetCriteriaCatalogEdition.cs#L8) — `bdgrz.criteria.edition.get` v1
+- [GetCriteriaCatalogEntry](../../src/Compliance.Common/Features/Criteria/Queries/GetCriteriaCatalogEntry.cs#L8) — `bdgrz.criteria.entry.get` v1
+- [ListCriteriaCatalogEditions](../../src/Compliance.Common/Features/Criteria/Queries/ListCriteriaCatalogEditions.cs#L8) — `bdgrz.criteria.editions.list` v1
+- [ListCriteriaCatalogEntries](../../src/Compliance.Common/Features/Criteria/Queries/ListCriteriaCatalogEntries.cs#L8) — `bdgrz.criteria.entries.list` v1
 
 #### Evaluations
 
-- [GetControlEvaluation](../../src/Compliance.Common/Features/Evaluations/GetControlEvaluation.cs#L7) — `bdgrz.control.evaluation.get` v1
-- [GetControlEvaluationPlanVersion](../../src/Compliance.Common/Features/Evaluations/GetControlEvaluationPlanVersion.cs#L7) — `bdgrz.control.evaluation.plan.version.get` v1
-- [ListControlEvaluationPlanVersions](../../src/Compliance.Common/Features/Evaluations/ListControlEvaluationPlanVersions.cs#L8) — `bdgrz.control.evaluation.plan.versions.list` v1
-- [ListControlEvaluations](../../src/Compliance.Common/Features/Evaluations/ListControlEvaluations.cs#L9) — `bdgrz.control.evaluations.list` v1
+- [GetControlEvaluation](../../src/Compliance.Common/Features/Evaluations/Queries/GetControlEvaluation.cs#L7) — `bdgrz.control.evaluation.get` v1
+- [GetControlEvaluationPlanVersion](../../src/Compliance.Common/Features/Evaluations/Queries/GetControlEvaluationPlanVersion.cs#L7) — `bdgrz.control.evaluation.plan.version.get` v1
+- [ListControlEvaluationPlanVersions](../../src/Compliance.Common/Features/Evaluations/Queries/ListControlEvaluationPlanVersions.cs#L8) — `bdgrz.control.evaluation.plan.versions.list` v1
+- [ListControlEvaluations](../../src/Compliance.Common/Features/Evaluations/Queries/ListControlEvaluations.cs#L9) — `bdgrz.control.evaluations.list` v1
 
 #### Evidence
 
-- [GetEvidenceArtifactMetadata](../../src/Compliance.Common/Features/Evidence/GetEvidenceArtifactMetadata.cs#L6) — `bdgrz.evidence.artifact.metadata.get` v1
-- [GetEvidenceRedaction](../../src/Compliance.Common/Features/Evidence/GetEvidenceRedaction.cs#L6) — `bdgrz.evidence.redaction.get` v1
-- [GetEvidenceRequest](../../src/Compliance.Common/Features/Evidence/GetEvidenceRequest.cs#L7) — `bdgrz.evidence.request.get` v1
-- [ListEvidenceRequests](../../src/Compliance.Common/Features/Evidence/ListEvidenceRequests.cs#L9) — `bdgrz.evidence.requests.list` v1
+- [GetEvidenceArtifactMetadata](../../src/Compliance.Common/Features/Evidence/Queries/GetEvidenceArtifactMetadata.cs#L6) — `bdgrz.evidence.artifact.metadata.get` v1
+- [GetEvidenceRedaction](../../src/Compliance.Common/Features/Evidence/Queries/GetEvidenceRedaction.cs#L6) — `bdgrz.evidence.redaction.get` v1
+- [GetEvidenceRequest](../../src/Compliance.Common/Features/Evidence/Queries/GetEvidenceRequest.cs#L7) — `bdgrz.evidence.request.get` v1
+- [ListEvidenceRequests](../../src/Compliance.Common/Features/Evidence/Queries/ListEvidenceRequests.cs#L9) — `bdgrz.evidence.requests.list` v1
 
 #### Operations
 
-- [GetControlOccurrence](../../src/Compliance.Common/Features/Operations/GetControlOccurrence.cs#L7) — `bdgrz.control.occurrence.get` v1
-- [GetControlOperatingPlan](../../src/Compliance.Common/Features/Operations/GetControlOperatingPlan.cs#L7) — `bdgrz.control.operating_plan.get` v1
-- [ListControlOccurrences](../../src/Compliance.Common/Features/Operations/ListControlOccurrences.cs#L9) — `bdgrz.control.occurrences.list` v1
-- [ListControlOperatingBlockers](../../src/Compliance.Common/Features/Operations/ListControlOperatingBlockers.cs#L9) — `bdgrz.control.operating_blockers.list` v1
-- [ListMyControlWork](../../src/Compliance.Common/Features/Operations/ListMyControlWork.cs#L8) — `bdgrz.control.work.mine` v1
-- [PreviewControlOperatingPlan](../../src/Compliance.Common/Features/Operations/PreviewControlOperatingPlan.cs#L8) — `bdgrz.control.operating_plan.preview` v1
+- [GetControlOccurrence](../../src/Compliance.Common/Features/Operations/Queries/GetControlOccurrence.cs#L7) — `bdgrz.control.occurrence.get` v1
+- [GetControlOperatingPlan](../../src/Compliance.Common/Features/Operations/Queries/GetControlOperatingPlan.cs#L7) — `bdgrz.control.operating_plan.get` v1
+- [ListControlOccurrences](../../src/Compliance.Common/Features/Operations/Queries/ListControlOccurrences.cs#L9) — `bdgrz.control.occurrences.list` v1
+- [ListControlOperatingBlockers](../../src/Compliance.Common/Features/Operations/Queries/ListControlOperatingBlockers.cs#L9) — `bdgrz.control.operating_blockers.list` v1
+- [ListMyControlWork](../../src/Compliance.Common/Features/Operations/Queries/ListMyControlWork.cs#L8) — `bdgrz.control.work.mine` v1
+- [PreviewControlOperatingPlan](../../src/Compliance.Common/Features/Operations/Queries/PreviewControlOperatingPlan.cs#L8) — `bdgrz.control.operating_plan.preview` v1
 
 #### Policies
 
-- [GetEffectivePolicyVersion](../../src/Compliance.Common/Features/Policies/GetEffectivePolicyVersion.cs#L8) — `bdgrz.policy.version.effective.get` v1
-- [GetPolicy](../../src/Compliance.Common/Features/Policies/GetPolicy.cs#L7) — `bdgrz.policy.get` v1
-- [GetPolicyVersion](../../src/Compliance.Common/Features/Policies/GetPolicyVersion.cs#L7) — `bdgrz.policy.version.get` v1
-- [ListPolicies](../../src/Compliance.Common/Features/Policies/ListPolicies.cs#L8) — `bdgrz.policies.list` v1
-- [ListPolicyDecisions](../../src/Compliance.Common/Features/Policies/ListPolicyDecisions.cs#L8) — `bdgrz.policy.decisions.list` v1
-- [ListPolicyVersions](../../src/Compliance.Common/Features/Policies/ListPolicyVersions.cs#L8) — `bdgrz.policy.versions.list` v1
-- [PreviewPolicyImpact](../../src/Compliance.Common/Features/Policies/PreviewPolicyImpact.cs#L7) — `bdgrz.policy.impact.preview` v1
+- [GetEffectivePolicyVersion](../../src/Compliance.Common/Features/Policies/Queries/GetEffectivePolicyVersion.cs#L8) — `bdgrz.policy.version.effective.get` v1
+- [GetPolicy](../../src/Compliance.Common/Features/Policies/Queries/GetPolicy.cs#L7) — `bdgrz.policy.get` v1
+- [GetPolicyVersion](../../src/Compliance.Common/Features/Policies/Queries/GetPolicyVersion.cs#L7) — `bdgrz.policy.version.get` v1
+- [ListPolicies](../../src/Compliance.Common/Features/Policies/Queries/ListPolicies.cs#L8) — `bdgrz.policies.list` v1
+- [ListPolicyDecisions](../../src/Compliance.Common/Features/Policies/Queries/ListPolicyDecisions.cs#L8) — `bdgrz.policy.decisions.list` v1
+- [ListPolicyVersions](../../src/Compliance.Common/Features/Policies/Queries/ListPolicyVersions.cs#L8) — `bdgrz.policy.versions.list` v1
+- [PreviewPolicyImpact](../../src/Compliance.Common/Features/Policies/Queries/PreviewPolicyImpact.cs#L7) — `bdgrz.policy.impact.preview` v1
 
 #### PolicyDistribution
 
-- [GetCampaign](../../src/Compliance.Common/Features/PolicyDistribution/GetCampaign.cs#L8) — `bdgrz.campaign.get` v1
-- [GetTrainingRequirement](../../src/Compliance.Common/Features/PolicyDistribution/GetTrainingRequirement.cs#L8) — `bdgrz.training_requirement.get` v1
-- [ListCampaignAmendments](../../src/Compliance.Common/Features/PolicyDistribution/ListCampaignAmendments.cs#L8) — `bdgrz.campaign.amendments.list` v1
-- [ListCampaignParticipants](../../src/Compliance.Common/Features/PolicyDistribution/ListCampaignParticipants.cs#L12) — `bdgrz.campaign.participants.list` v1
-- [ListCampaigns](../../src/Compliance.Common/Features/PolicyDistribution/ListCampaigns.cs#L8) — `bdgrz.campaigns.list` v1
-- [ListTrainingRequirements](../../src/Compliance.Common/Features/PolicyDistribution/ListTrainingRequirements.cs#L8) — `bdgrz.training_requirements.list` v1
+- [GetCampaign](../../src/Compliance.Common/Features/PolicyDistribution/Queries/GetCampaign.cs#L8) — `bdgrz.campaign.get` v1
+- [GetTrainingRequirement](../../src/Compliance.Common/Features/PolicyDistribution/Queries/GetTrainingRequirement.cs#L8) — `bdgrz.training_requirement.get` v1
+- [ListCampaignAmendments](../../src/Compliance.Common/Features/PolicyDistribution/Queries/ListCampaignAmendments.cs#L8) — `bdgrz.campaign.amendments.list` v1
+- [ListCampaignParticipants](../../src/Compliance.Common/Features/PolicyDistribution/Queries/ListCampaignParticipants.cs#L12) — `bdgrz.campaign.participants.list` v1
+- [ListCampaigns](../../src/Compliance.Common/Features/PolicyDistribution/Queries/ListCampaigns.cs#L8) — `bdgrz.campaigns.list` v1
+- [ListTrainingRequirements](../../src/Compliance.Common/Features/PolicyDistribution/Queries/ListTrainingRequirements.cs#L8) — `bdgrz.training_requirements.list` v1
 
 #### Programs
 
-- [GetClientService](../../src/Compliance.Common/Features/Programs/GetClientService.cs#L6) — `bdgrz.client-service.get` v1
-- [GetClientServiceRevision](../../src/Compliance.Common/Features/Programs/GetClientServiceRevision.cs#L6) — `bdgrz.client-service.revision.get` v1
-- [GetProgram](../../src/Compliance.Common/Features/Programs/GetProgram.cs#L7) — `bdgrz.program.get` v1
-- [GetProgramRevision](../../src/Compliance.Common/Features/Programs/GetProgramRevision.cs#L7) — `bdgrz.program.revision.get` v1
-- [GetProgramSetupWork](../../src/Compliance.Common/Features/Programs/GetProgramSetupWork.cs#L7) — `bdgrz.program.setup-work.get` v1
-- [ListClientServiceRevisions](../../src/Compliance.Common/Features/Programs/ListClientServiceRevisions.cs#L7) — `bdgrz.client-service.revisions.list` v1
-- [ListClientServices](../../src/Compliance.Common/Features/Programs/ListClientServices.cs#L7) — `bdgrz.client-service.list` v1
-- [ListProgramClientServices](../../src/Compliance.Common/Features/Programs/ListProgramClientServices.cs#L8) — `bdgrz.client-service.program.list` v1
-- [ListProgramRevisions](../../src/Compliance.Common/Features/Programs/ListProgramRevisions.cs#L8) — `bdgrz.program.revisions.list` v1
-- [ListPrograms](../../src/Compliance.Common/Features/Programs/ListPrograms.cs#L8) — `bdgrz.program.list` v1
+- [GetClientService](../../src/Compliance.Common/Features/Programs/Queries/GetClientService.cs#L6) — `bdgrz.client-service.get` v1
+- [GetClientServiceRevision](../../src/Compliance.Common/Features/Programs/Queries/GetClientServiceRevision.cs#L6) — `bdgrz.client-service.revision.get` v1
+- [GetProgram](../../src/Compliance.Common/Features/Programs/Queries/GetProgram.cs#L7) — `bdgrz.program.get` v1
+- [GetProgramRevision](../../src/Compliance.Common/Features/Programs/Queries/GetProgramRevision.cs#L7) — `bdgrz.program.revision.get` v1
+- [GetProgramSetupWork](../../src/Compliance.Common/Features/Programs/Queries/GetProgramSetupWork.cs#L7) — `bdgrz.program.setup-work.get` v1
+- [ListClientServiceRevisions](../../src/Compliance.Common/Features/Programs/Queries/ListClientServiceRevisions.cs#L7) — `bdgrz.client-service.revisions.list` v1
+- [ListClientServices](../../src/Compliance.Common/Features/Programs/Queries/ListClientServices.cs#L7) — `bdgrz.client-service.list` v1
+- [ListProgramClientServices](../../src/Compliance.Common/Features/Programs/Queries/ListProgramClientServices.cs#L8) — `bdgrz.client-service.program.list` v1
+- [ListProgramRevisions](../../src/Compliance.Common/Features/Programs/Queries/ListProgramRevisions.cs#L8) — `bdgrz.program.revisions.list` v1
+- [ListPrograms](../../src/Compliance.Common/Features/Programs/Queries/ListPrograms.cs#L8) — `bdgrz.program.list` v1
 
 #### Providers
 
-- [GetProvider](../../src/Compliance.Common/Features/Providers/GetProvider.cs#L6) — `bdgrz.provider.get` v1
-- [GetProviderAssuranceCoverage](../../src/Compliance.Common/Features/Providers/GetProviderAssuranceCoverage.cs#L7) — `bdgrz.provider.assurance_coverage.get` v1
-- [GetProviderCoverageGap](../../src/Compliance.Common/Features/Providers/GetProviderCoverageGap.cs#L6) — `bdgrz.provider.coverage_gap.get` v1
-- [GetProviderRevision](../../src/Compliance.Common/Features/Providers/GetProviderRevision.cs#L6) — `bdgrz.provider.revision.get` v1
-- [ListProviderAssuranceReports](../../src/Compliance.Common/Features/Providers/ListProviderAssuranceReports.cs#L7) — `bdgrz.provider.assurance_reports.list` v1
-- [ListProviderCoverageGaps](../../src/Compliance.Common/Features/Providers/ListProviderCoverageGaps.cs#L7) — `bdgrz.provider.coverage_gaps.list` v1
-- [ListProviderReviews](../../src/Compliance.Common/Features/Providers/ListProviderReviews.cs#L7) — `bdgrz.provider.reviews.list` v1
-- [ListProviderRevisions](../../src/Compliance.Common/Features/Providers/ListProviderRevisions.cs#L7) — `bdgrz.provider.revisions.list` v1
-- [ListProviders](../../src/Compliance.Common/Features/Providers/ListProviders.cs#L7) — `bdgrz.providers.list` v1
-- [PreviewProviderChange](../../src/Compliance.Common/Features/Providers/PreviewProviderChange.cs#L7) — `bdgrz.provider.change.preview` v1
+- [GetProvider](../../src/Compliance.Common/Features/Providers/Queries/GetProvider.cs#L6) — `bdgrz.provider.get` v1
+- [GetProviderAssuranceCoverage](../../src/Compliance.Common/Features/Providers/Queries/GetProviderAssuranceCoverage.cs#L7) — `bdgrz.provider.assurance_coverage.get` v1
+- [GetProviderCoverageGap](../../src/Compliance.Common/Features/Providers/Queries/GetProviderCoverageGap.cs#L6) — `bdgrz.provider.coverage_gap.get` v1
+- [GetProviderRevision](../../src/Compliance.Common/Features/Providers/Queries/GetProviderRevision.cs#L6) — `bdgrz.provider.revision.get` v1
+- [ListProviderAssuranceReports](../../src/Compliance.Common/Features/Providers/Queries/ListProviderAssuranceReports.cs#L7) — `bdgrz.provider.assurance_reports.list` v1
+- [ListProviderCoverageGaps](../../src/Compliance.Common/Features/Providers/Queries/ListProviderCoverageGaps.cs#L7) — `bdgrz.provider.coverage_gaps.list` v1
+- [ListProviderReviews](../../src/Compliance.Common/Features/Providers/Queries/ListProviderReviews.cs#L7) — `bdgrz.provider.reviews.list` v1
+- [ListProviderRevisions](../../src/Compliance.Common/Features/Providers/Queries/ListProviderRevisions.cs#L7) — `bdgrz.provider.revisions.list` v1
+- [ListProviders](../../src/Compliance.Common/Features/Providers/Queries/ListProviders.cs#L7) — `bdgrz.providers.list` v1
+- [PreviewProviderChange](../../src/Compliance.Common/Features/Providers/Queries/PreviewProviderChange.cs#L7) — `bdgrz.provider.change.preview` v1
 
 #### Readiness
 
-- [GetReadinessAssessment](../../src/Compliance.Common/Features/Readiness/GetReadinessAssessment.cs#L7) — `bdgrz.readiness.assessment.get` v1
-- [ListReadinessAnnotations](../../src/Compliance.Common/Features/Readiness/ListReadinessAnnotations.cs#L9) — `bdgrz.readiness.annotations.list` v1
-- [ListReadinessAssessments](../../src/Compliance.Common/Features/Readiness/ListReadinessAssessments.cs#L8) — `bdgrz.readiness.assessments.list` v1
-- [ListReadinessGaps](../../src/Compliance.Common/Features/Readiness/ListReadinessGaps.cs#L12) — `bdgrz.readiness.gaps.list` v1
-- [ListTypeIEntryDecisions](../../src/Compliance.Common/Features/Readiness/ListTypeIEntryDecisions.cs#L9) — `bdgrz.readiness.type_i_entry.list` v1
+- [GetReadinessAssessment](../../src/Compliance.Common/Features/Readiness/Queries/GetReadinessAssessment.cs#L7) — `bdgrz.readiness.assessment.get` v1
+- [ListReadinessAnnotations](../../src/Compliance.Common/Features/Readiness/Queries/ListReadinessAnnotations.cs#L9) — `bdgrz.readiness.annotations.list` v1
+- [ListReadinessAssessments](../../src/Compliance.Common/Features/Readiness/Queries/ListReadinessAssessments.cs#L8) — `bdgrz.readiness.assessments.list` v1
+- [ListReadinessGaps](../../src/Compliance.Common/Features/Readiness/Queries/ListReadinessGaps.cs#L12) — `bdgrz.readiness.gaps.list` v1
+- [ListTypeIEntryDecisions](../../src/Compliance.Common/Features/Readiness/Queries/ListTypeIEntryDecisions.cs#L9) — `bdgrz.readiness.type_i_entry.list` v1
 
 #### Remediation
 
-- [GetFinding](../../src/Compliance.Common/Features/Remediation/GetFinding.cs#L7) — `bdgrz.finding.get` v1
-- [ListFindings](../../src/Compliance.Common/Features/Remediation/ListFindings.cs#L9) — `bdgrz.findings.list` v1
+- [GetFinding](../../src/Compliance.Common/Features/Remediation/Queries/GetFinding.cs#L7) — `bdgrz.finding.get` v1
+- [ListFindings](../../src/Compliance.Common/Features/Remediation/Queries/ListFindings.cs#L9) — `bdgrz.findings.list` v1
 
 #### Responsibilities
 
-- [ListMemberResponsibilities](../../src/Compliance.Common/Features/Responsibilities/ListMemberResponsibilities.cs#L7) — `bdgrz.member.responsibilities.list` v1
-- [ListResponsibilities](../../src/Compliance.Common/Features/Responsibilities/ListResponsibilities.cs#L8) — `bdgrz.responsibilities.list` v1
-- [PreviewResponsibilityConflicts](../../src/Compliance.Common/Features/Responsibilities/PreviewResponsibilityConflicts.cs#L8) — `bdgrz.responsibilities.conflicts.preview` v1
+- [ListMemberResponsibilities](../../src/Compliance.Common/Features/Responsibilities/Queries/ListMemberResponsibilities.cs#L7) — `bdgrz.member.responsibilities.list` v1
+- [ListResponsibilities](../../src/Compliance.Common/Features/Responsibilities/Queries/ListResponsibilities.cs#L8) — `bdgrz.responsibilities.list` v1
+- [PreviewResponsibilityConflicts](../../src/Compliance.Common/Features/Responsibilities/Queries/PreviewResponsibilityConflicts.cs#L8) — `bdgrz.responsibilities.conflicts.preview` v1
 
 #### Retention
 
-- [GetApplicationImportRetention](../../src/Compliance.Common/Features/Retention/GetApplicationImportRetention.cs#L7) — `bdgrz.application_import.retention.get` v1
-- [GetArtifactRetention](../../src/Compliance.Common/Features/Retention/GetArtifactRetention.cs#L6) — `bdgrz.artifact_retention.get` v1
-- [ListArtifactLegalHolds](../../src/Compliance.Common/Features/Retention/ListArtifactLegalHolds.cs#L7) — `bdgrz.artifact_retention.legal_holds.list` v1
+- [GetApplicationImportRetention](../../src/Compliance.Common/Features/Retention/Queries/GetApplicationImportRetention.cs#L7) — `bdgrz.application_import.retention.get` v1
+- [GetArtifactRetention](../../src/Compliance.Common/Features/Retention/Queries/GetArtifactRetention.cs#L6) — `bdgrz.artifact_retention.get` v1
+- [ListArtifactLegalHolds](../../src/Compliance.Common/Features/Retention/Queries/ListArtifactLegalHolds.cs#L7) — `bdgrz.artifact_retention.legal_holds.list` v1
 
 #### Risks
 
-- [GetRiskDraft](../../src/Compliance.Common/Features/Risks/GetRiskDraft.cs#L7) — `bdgrz.risk.draft.get` v1
-- [GetRiskDraftRevision](../../src/Compliance.Common/Features/Risks/GetRiskDraftRevision.cs#L7) — `bdgrz.risk.draft.revision.get` v1
-- [GetRiskEvaluation](../../src/Compliance.Common/Features/Risks/GetRiskEvaluation.cs#L7) — `bdgrz.risk.evaluation.get` v1
-- [GetRiskGovernance](../../src/Compliance.Common/Features/Risks/GetRiskGovernance.cs#L7) — `bdgrz.risk.governance.get` v1
-- [GetRiskMethod](../../src/Compliance.Common/Features/Risks/GetRiskMethod.cs#L7) — `bdgrz.risk.method.get` v1
-- [GetRiskMethodVersion](../../src/Compliance.Common/Features/Risks/GetRiskMethodVersion.cs#L7) — `bdgrz.risk.method.version.get` v1
-- [ListRiskDraftRevisions](../../src/Compliance.Common/Features/Risks/ListRiskDraftRevisions.cs#L8) — `bdgrz.risk.draft.revisions.list` v1
-- [ListRiskDrafts](../../src/Compliance.Common/Features/Risks/ListRiskDrafts.cs#L8) — `bdgrz.risk.draft.list` v1
-- [ListRiskEvaluationHistory](../../src/Compliance.Common/Features/Risks/ListRiskEvaluationHistory.cs#L8) — `bdgrz.risk.evaluation.history.list` v1
+- [GetRiskDraft](../../src/Compliance.Common/Features/Risks/Queries/GetRiskDraft.cs#L7) — `bdgrz.risk.draft.get` v1
+- [GetRiskDraftRevision](../../src/Compliance.Common/Features/Risks/Queries/GetRiskDraftRevision.cs#L7) — `bdgrz.risk.draft.revision.get` v1
+- [GetRiskEvaluation](../../src/Compliance.Common/Features/Risks/Queries/GetRiskEvaluation.cs#L7) — `bdgrz.risk.evaluation.get` v1
+- [GetRiskGovernance](../../src/Compliance.Common/Features/Risks/Queries/GetRiskGovernance.cs#L7) — `bdgrz.risk.governance.get` v1
+- [GetRiskMethod](../../src/Compliance.Common/Features/Risks/Queries/GetRiskMethod.cs#L7) — `bdgrz.risk.method.get` v1
+- [GetRiskMethodVersion](../../src/Compliance.Common/Features/Risks/Queries/GetRiskMethodVersion.cs#L7) — `bdgrz.risk.method.version.get` v1
+- [ListRiskDraftRevisions](../../src/Compliance.Common/Features/Risks/Queries/ListRiskDraftRevisions.cs#L8) — `bdgrz.risk.draft.revisions.list` v1
+- [ListRiskDrafts](../../src/Compliance.Common/Features/Risks/Queries/ListRiskDrafts.cs#L8) — `bdgrz.risk.draft.list` v1
+- [ListRiskEvaluationHistory](../../src/Compliance.Common/Features/Risks/Queries/ListRiskEvaluationHistory.cs#L8) — `bdgrz.risk.evaluation.history.list` v1
 
 #### Snapshots
 
-- [GetSnapshot](../../src/Compliance.Common/Features/Snapshots/GetSnapshot.cs#L6) — `bdgrz.snapshot.get` v1
-- [ListProgramSnapshots](../../src/Compliance.Common/Features/Snapshots/ListProgramSnapshots.cs#L9) — `bdgrz.snapshot.program.list` v1
-- [RegenerateProgramScopeSnapshotManifest](../../src/Compliance.Common/Features/Snapshots/RegenerateProgramScopeSnapshotManifest.cs#L6) — `bdgrz.snapshot.program_scope.manifest_regenerate` v1
-- [VerifyProgramScopeSnapshot](../../src/Compliance.Common/Features/Snapshots/VerifyProgramScopeSnapshot.cs#L6) — `bdgrz.snapshot.program_scope.verify` v1
+- [GetSnapshot](../../src/Compliance.Common/Features/Snapshots/Queries/GetSnapshot.cs#L6) — `bdgrz.snapshot.get` v1
+- [ListProgramSnapshots](../../src/Compliance.Common/Features/Snapshots/Queries/ListProgramSnapshots.cs#L9) — `bdgrz.snapshot.program.list` v1
+- [RegenerateProgramScopeSnapshotManifest](../../src/Compliance.Common/Features/Snapshots/Commands/RegenerateProgramScopeSnapshotManifest.cs#L6) — `bdgrz.snapshot.program_scope.manifest_regenerate` v1
+- [VerifyProgramScopeSnapshot](../../src/Compliance.Common/Features/Snapshots/Queries/VerifyProgramScopeSnapshot.cs#L6) — `bdgrz.snapshot.program_scope.verify` v1
 
 #### TechnologyInventory
 
-- [GetDataFlow](../../src/Compliance.Common/Features/TechnologyInventory/GetDataFlow.cs#L6) — `bdgrz.inventory.data_flow.get` v1
-- [GetInformationAsset](../../src/Compliance.Common/Features/TechnologyInventory/GetInformationAsset.cs#L6) — `bdgrz.inventory.information_asset.get` v1
-- [GetLocation](../../src/Compliance.Common/Features/TechnologyInventory/GetLocation.cs#L6) — `bdgrz.inventory.location.get` v1
-- [GetOperationalProcess](../../src/Compliance.Common/Features/TechnologyInventory/GetOperationalProcess.cs#L6) — `bdgrz.inventory.operational_process.get` v1
-- [GetTechnologyComponent](../../src/Compliance.Common/Features/TechnologyInventory/GetTechnologyComponent.cs#L6) — `bdgrz.inventory.component.get` v1
-- [ListDataFlowRevisions](../../src/Compliance.Common/Features/TechnologyInventory/ListDataFlowRevisions.cs#L7) — `bdgrz.inventory.data_flow.revision.list` v1
-- [ListDataFlows](../../src/Compliance.Common/Features/TechnologyInventory/ListDataFlows.cs#L7) — `bdgrz.inventory.data_flow.list` v1
-- [ListInformationAssetBoundaryReferences](../../src/Compliance.Common/Features/TechnologyInventory/ListInformationAssetBoundaryReferences.cs#L9) — `bdgrz.inventory.asset.boundary_references.list` v1
-- [ListInformationAssetRevisions](../../src/Compliance.Common/Features/TechnologyInventory/ListInformationAssetRevisions.cs#L7) — `bdgrz.inventory.information_asset.revision.list` v1
-- [ListInformationAssets](../../src/Compliance.Common/Features/TechnologyInventory/ListInformationAssets.cs#L7) — `bdgrz.inventory.information_asset.list` v1
-- [ListLocationRevisions](../../src/Compliance.Common/Features/TechnologyInventory/ListLocationRevisions.cs#L7) — `bdgrz.inventory.location.revision.list` v1
-- [ListLocations](../../src/Compliance.Common/Features/TechnologyInventory/ListLocations.cs#L7) — `bdgrz.inventory.location.list` v1
-- [ListOperationalProcessRevisions](../../src/Compliance.Common/Features/TechnologyInventory/ListOperationalProcessRevisions.cs#L7) — `bdgrz.inventory.operational_process.revision.list` v1
-- [ListOperationalProcesses](../../src/Compliance.Common/Features/TechnologyInventory/ListOperationalProcesses.cs#L7) — `bdgrz.inventory.operational_process.list` v1
-- [ListTechnologyComponentBoundaryReferences](../../src/Compliance.Common/Features/TechnologyInventory/ListTechnologyComponentBoundaryReferences.cs#L9) — `bdgrz.inventory.component.boundary_references.list` v1
-- [ListTechnologyComponentRevisions](../../src/Compliance.Common/Features/TechnologyInventory/ListTechnologyComponentRevisions.cs#L7) — `bdgrz.inventory.component.revision.list` v1
-- [ListTechnologyComponents](../../src/Compliance.Common/Features/TechnologyInventory/ListTechnologyComponents.cs#L7) — `bdgrz.inventory.component.list` v1
-- [PreviewInformationAssetChange](../../src/Compliance.Common/Features/TechnologyInventory/PreviewInformationAssetChange.cs#L10) — `bdgrz.inventory.information_asset.change.preview` v1
+- [GetDataFlow](../../src/Compliance.Common/Features/TechnologyInventory/Queries/GetDataFlow.cs#L6) — `bdgrz.inventory.data_flow.get` v1
+- [GetInformationAsset](../../src/Compliance.Common/Features/TechnologyInventory/Queries/GetInformationAsset.cs#L6) — `bdgrz.inventory.information_asset.get` v1
+- [GetLocation](../../src/Compliance.Common/Features/TechnologyInventory/Queries/GetLocation.cs#L6) — `bdgrz.inventory.location.get` v1
+- [GetOperationalProcess](../../src/Compliance.Common/Features/TechnologyInventory/Queries/GetOperationalProcess.cs#L6) — `bdgrz.inventory.operational_process.get` v1
+- [GetTechnologyComponent](../../src/Compliance.Common/Features/TechnologyInventory/Queries/GetTechnologyComponent.cs#L6) — `bdgrz.inventory.component.get` v1
+- [ListDataFlowRevisions](../../src/Compliance.Common/Features/TechnologyInventory/Queries/ListDataFlowRevisions.cs#L7) — `bdgrz.inventory.data_flow.revision.list` v1
+- [ListDataFlows](../../src/Compliance.Common/Features/TechnologyInventory/Queries/ListDataFlows.cs#L7) — `bdgrz.inventory.data_flow.list` v1
+- [ListInformationAssetBoundaryReferences](../../src/Compliance.Common/Features/TechnologyInventory/Queries/ListInformationAssetBoundaryReferences.cs#L9) — `bdgrz.inventory.asset.boundary_references.list` v1
+- [ListInformationAssetRevisions](../../src/Compliance.Common/Features/TechnologyInventory/Queries/ListInformationAssetRevisions.cs#L7) — `bdgrz.inventory.information_asset.revision.list` v1
+- [ListInformationAssets](../../src/Compliance.Common/Features/TechnologyInventory/Queries/ListInformationAssets.cs#L7) — `bdgrz.inventory.information_asset.list` v1
+- [ListLocationRevisions](../../src/Compliance.Common/Features/TechnologyInventory/Queries/ListLocationRevisions.cs#L7) — `bdgrz.inventory.location.revision.list` v1
+- [ListLocations](../../src/Compliance.Common/Features/TechnologyInventory/Queries/ListLocations.cs#L7) — `bdgrz.inventory.location.list` v1
+- [ListOperationalProcessRevisions](../../src/Compliance.Common/Features/TechnologyInventory/Queries/ListOperationalProcessRevisions.cs#L7) — `bdgrz.inventory.operational_process.revision.list` v1
+- [ListOperationalProcesses](../../src/Compliance.Common/Features/TechnologyInventory/Queries/ListOperationalProcesses.cs#L7) — `bdgrz.inventory.operational_process.list` v1
+- [ListTechnologyComponentBoundaryReferences](../../src/Compliance.Common/Features/TechnologyInventory/Queries/ListTechnologyComponentBoundaryReferences.cs#L9) — `bdgrz.inventory.component.boundary_references.list` v1
+- [ListTechnologyComponentRevisions](../../src/Compliance.Common/Features/TechnologyInventory/Queries/ListTechnologyComponentRevisions.cs#L7) — `bdgrz.inventory.component.revision.list` v1
+- [ListTechnologyComponents](../../src/Compliance.Common/Features/TechnologyInventory/Queries/ListTechnologyComponents.cs#L7) — `bdgrz.inventory.component.list` v1
+- [PreviewInformationAssetChange](../../src/Compliance.Common/Features/TechnologyInventory/Queries/PreviewInformationAssetChange.cs#L10) — `bdgrz.inventory.information_asset.change.preview` v1
 
 #### Tenants
 
-- [GetTenant](../../src/Compliance.Common/Features/Tenants/GetTenant.cs#L6) — `bdgrz.tenant.get` v1
-- [GetTenantProvisioningStatus](../../src/Compliance.Common/Features/Tenants/GetTenantProvisioningStatus.cs#L6) — `bdgrz.tenant.provisioning_status.get` v1
-- [ListMyTenants](../../src/Compliance.Common/Features/Tenants/ListMyTenants.cs#L14) — `bdgrz.tenant-membership.list-mine` v1
-- [ListPlatformOperators](../../src/Compliance.Common/Features/Tenants/ListPlatformOperators.cs#L6) — `bdgrz.platform.operator.list` v1
-- [ListTenantInvitations](../../src/Compliance.Common/Features/Tenants/ListTenantInvitations.cs#L8) — `bdgrz.tenant-invitation.list` v1
-- [ListTenantMembers](../../src/Compliance.Common/Features/Tenants/ListTenantMembers.cs#L7) — `bdgrz.tenant-member.list` v1
-- [ListTenants](../../src/Compliance.Common/Features/Tenants/ListTenants.cs#L11) — `bdgrz.platform.tenant.list` v1
-- [ResolveMyTenantSlug](../../src/Compliance.Common/Features/Tenants/ResolveMyTenantSlug.cs#L6) — `bdgrz.tenant-slug.resolve-mine` v1
+- [GetTenant](../../src/Compliance.Common/Features/Tenants/Queries/GetTenant.cs#L6) — `bdgrz.tenant.get` v1
+- [GetTenantProvisioningStatus](../../src/Compliance.Common/Features/Tenants/Queries/GetTenantProvisioningStatus.cs#L6) — `bdgrz.tenant.provisioning_status.get` v1
+- [ListMyTenants](../../src/Compliance.Common/Features/Tenants/Queries/ListMyTenants.cs#L14) — `bdgrz.tenant-membership.list-mine` v1
+- [ListPlatformOperators](../../src/Compliance.Common/Features/Tenants/Queries/ListPlatformOperators.cs#L6) — `bdgrz.platform.operator.list` v1
+- [ListTenantInvitations](../../src/Compliance.Common/Features/Tenants/Queries/ListTenantInvitations.cs#L8) — `bdgrz.tenant-invitation.list` v1
+- [ListTenantMembers](../../src/Compliance.Common/Features/Tenants/Queries/ListTenantMembers.cs#L7) — `bdgrz.tenant-member.list` v1
+- [ListTenants](../../src/Compliance.Common/Features/Tenants/Queries/ListTenants.cs#L11) — `bdgrz.platform.tenant.list` v1
+- [ResolveMyTenantSlug](../../src/Compliance.Common/Features/Tenants/Commands/ResolveMyTenantSlug.cs#L6) — `bdgrz.tenant-slug.resolve-mine` v1
 
 #### UserIdentities
 
-- [GetEmailAddress](../../src/Compliance.Common/Features/UserIdentities/GetEmailAddress.cs#L6) — `bdgrz.email-address.get` v1
-- [GetEmailChallengeStatus](../../src/Compliance.Common/Features/UserIdentities/GetEmailChallengeStatus.cs#L5)
-- [GetIdentityRecoveryOptions](../../src/Compliance.Common/Features/UserIdentities/GetIdentityRecoveryOptions.cs#L7) — `bdgrz.user-identity.recovery-options` v1
-- [ListEmailAddresses](../../src/Compliance.Common/Features/UserIdentities/ListEmailAddresses.cs#L7) — `bdgrz.email-address.list` v1
+- [GetEmailAddress](../../src/Compliance.Common/Features/UserIdentities/Queries/GetEmailAddress.cs#L6) — `bdgrz.email-address.get` v1
+- [GetEmailChallengeStatus](../../src/Compliance.Common/Features/UserIdentities/Queries/GetEmailChallengeStatus.cs#L5)
+- [GetIdentityRecoveryOptions](../../src/Compliance.Common/Features/UserIdentities/Queries/GetIdentityRecoveryOptions.cs#L7) — `bdgrz.user-identity.recovery-options` v1
+- [ListEmailAddresses](../../src/Compliance.Common/Features/UserIdentities/Queries/ListEmailAddresses.cs#L7) — `bdgrz.email-address.list` v1
 
 #### Work
 
-- [GetWorkDigest](../../src/Compliance.Common/Features/Work/GetWorkDigest.cs#L8) — `bdgrz.work.digest.get` v1
-- [GetWorkDigestPreference](../../src/Compliance.Common/Features/Work/GetWorkDigestPreference.cs#L8) — `bdgrz.work.digest_preference.get` v1
-- [GetWorkItem](../../src/Compliance.Common/Features/Work/GetWorkItem.cs#L8) — `bdgrz.work.get` v1
-- [ListWork](../../src/Compliance.Common/Features/Work/ListWork.cs#L13) — `bdgrz.work.list` v1
-- [ListWorkReminders](../../src/Compliance.Common/Features/Work/ListWorkReminders.cs#L11) — `bdgrz.work.reminders.list` v1
+- [GetWorkDigest](../../src/Compliance.Common/Features/Work/Queries/GetWorkDigest.cs#L8) — `bdgrz.work.digest.get` v1
+- [GetWorkDigestPreference](../../src/Compliance.Common/Features/Work/Queries/GetWorkDigestPreference.cs#L8) — `bdgrz.work.digest_preference.get` v1
+- [GetWorkItem](../../src/Compliance.Common/Features/Work/Queries/GetWorkItem.cs#L8) — `bdgrz.work.get` v1
+- [ListWork](../../src/Compliance.Common/Features/Work/Queries/ListWork.cs#L13) — `bdgrz.work.list` v1
+- [ListWorkReminders](../../src/Compliance.Common/Features/Work/Queries/ListWorkReminders.cs#L11) — `bdgrz.work.reminders.list` v1
 
 #### Workforce
 
-- [GetPerson](../../src/Compliance.Common/Features/Workforce/GetPerson.cs#L6) — `bdgrz.workforce.person.get` v1
-- [GetServiceIdentity](../../src/Compliance.Common/Features/Workforce/GetServiceIdentity.cs#L6) — `bdgrz.workforce.service-identity.get` v1
-- [GetWorkRelationship](../../src/Compliance.Common/Features/Workforce/GetWorkRelationship.cs#L6) — `bdgrz.workforce.work-relationship.get` v1
-- [GetWorkforceRosterSnapshot](../../src/Compliance.Common/Features/Workforce/GetWorkforceRosterSnapshot.cs#L7) — `bdgrz.snapshot.workforce_roster.get` v1
-- [GetWorkforceRosterSnapshotAsOf](../../src/Compliance.Common/Features/Workforce/GetWorkforceRosterSnapshotAsOf.cs#L7) — `bdgrz.snapshot.workforce_roster.as_of` v1
-- [GetWorkforceSourceObservation](../../src/Compliance.Common/Features/Workforce/GetWorkforceSourceObservation.cs#L7) — `bdgrz.workforce.source.get` v1
-- [ListPeople](../../src/Compliance.Common/Features/Workforce/ListPeople.cs#L7) — `bdgrz.workforce.person.list` v1
-- [ListServiceIdentities](../../src/Compliance.Common/Features/Workforce/ListServiceIdentities.cs#L11) — `bdgrz.workforce.service-identity.list` v1
-- [ListWorkRelationships](../../src/Compliance.Common/Features/Workforce/ListWorkRelationships.cs#L8) — `bdgrz.workforce.work-relationship.list` v1
-- [ListWorkforceObservations](../../src/Compliance.Common/Features/Workforce/ListWorkforceObservations.cs#L11) — `bdgrz.workforce.observation.list` v1
-- [ListWorkforceReconciliationObservations](../../src/Compliance.Common/Features/Workforce/ListWorkforceReconciliationObservations.cs#L12) — `bdgrz.workforce.reconciliation.list` v1
-- [ListWorkforceRosterSnapshots](../../src/Compliance.Common/Features/Workforce/ListWorkforceRosterSnapshots.cs#L9) — `bdgrz.snapshot.workforce_roster.list` v1
-- [ListWorkforceSourceObservations](../../src/Compliance.Common/Features/Workforce/ListWorkforceSourceObservations.cs#L8) — `bdgrz.workforce.source.list` v1
-- [PreviewWorkforceSourceObservation](../../src/Compliance.Common/Features/Workforce/PreviewWorkforceSourceObservation.cs#L7) — `bdgrz.workforce.source.preview` v1
-- [RegenerateWorkforceRosterSnapshotManifest](../../src/Compliance.Common/Features/Workforce/RegenerateWorkforceRosterSnapshotManifest.cs#L8) — `bdgrz.snapshot.workforce_roster.manifest_regenerate` v1
+- [GetPerson](../../src/Compliance.Common/Features/Workforce/Queries/GetPerson.cs#L6) — `bdgrz.workforce.person.get` v1
+- [GetServiceIdentity](../../src/Compliance.Common/Features/Workforce/Queries/GetServiceIdentity.cs#L6) — `bdgrz.workforce.service-identity.get` v1
+- [GetWorkRelationship](../../src/Compliance.Common/Features/Workforce/Queries/GetWorkRelationship.cs#L6) — `bdgrz.workforce.work-relationship.get` v1
+- [GetWorkforceRosterSnapshot](../../src/Compliance.Common/Features/Workforce/Queries/GetWorkforceRosterSnapshot.cs#L7) — `bdgrz.snapshot.workforce_roster.get` v1
+- [GetWorkforceRosterSnapshotAsOf](../../src/Compliance.Common/Features/Workforce/Queries/GetWorkforceRosterSnapshotAsOf.cs#L7) — `bdgrz.snapshot.workforce_roster.as_of` v1
+- [GetWorkforceSourceObservation](../../src/Compliance.Common/Features/Workforce/Queries/GetWorkforceSourceObservation.cs#L7) — `bdgrz.workforce.source.get` v1
+- [ListPeople](../../src/Compliance.Common/Features/Workforce/Queries/ListPeople.cs#L7) — `bdgrz.workforce.person.list` v1
+- [ListServiceIdentities](../../src/Compliance.Common/Features/Workforce/Queries/ListServiceIdentities.cs#L11) — `bdgrz.workforce.service-identity.list` v1
+- [ListWorkRelationships](../../src/Compliance.Common/Features/Workforce/Queries/ListWorkRelationships.cs#L8) — `bdgrz.workforce.work-relationship.list` v1
+- [ListWorkforceObservations](../../src/Compliance.Common/Features/Workforce/Queries/ListWorkforceObservations.cs#L11) — `bdgrz.workforce.observation.list` v1
+- [ListWorkforceReconciliationObservations](../../src/Compliance.Common/Features/Workforce/Queries/ListWorkforceReconciliationObservations.cs#L12) — `bdgrz.workforce.reconciliation.list` v1
+- [ListWorkforceRosterSnapshots](../../src/Compliance.Common/Features/Workforce/Queries/ListWorkforceRosterSnapshots.cs#L9) — `bdgrz.snapshot.workforce_roster.list` v1
+- [ListWorkforceSourceObservations](../../src/Compliance.Common/Features/Workforce/Queries/ListWorkforceSourceObservations.cs#L8) — `bdgrz.workforce.source.list` v1
+- [PreviewWorkforceSourceObservation](../../src/Compliance.Common/Features/Workforce/Queries/PreviewWorkforceSourceObservation.cs#L7) — `bdgrz.workforce.source.preview` v1
+- [RegenerateWorkforceRosterSnapshotManifest](../../src/Compliance.Common/Features/Workforce/Commands/RegenerateWorkforceRosterSnapshotManifest.cs#L8) — `bdgrz.snapshot.workforce_roster.manifest_regenerate` v1
 
 #### Requirement-backed read contracts added 2026-10-17 to 2026-10-18
 
 ##### AdvisorCollaboration
 
-- [GetAdvisorRequest](../../src/Compliance.Common/Features/AdvisorCollaboration/GetAdvisorRequest.cs#L9) — `bdgrz.advisor-collaboration.get-advisor-request` v1
-- [GetAdvisorSharedSource](../../src/Compliance.Common/Features/AdvisorCollaboration/GetAdvisorSharedSource.cs#L9) — `bdgrz.advisor-collaboration.get-shared-source` v1
-- [PreviewAdvisorHandoff](../../src/Compliance.Common/Features/AdvisorCollaboration/PreviewAdvisorHandoff.cs#L7) — `bdgrz.advisor-collaboration.preview-advisor-handoff` v1
-- [ListAdvisorRequests](../../src/Compliance.Common/Features/AdvisorCollaboration/ListAdvisorRequests.cs#L9) — `bdgrz.advisor-collaboration.list-advisor-requests` v1
-- [ListAdvisorFeedback](../../src/Compliance.Common/Features/AdvisorCollaboration/ListAdvisorFeedback.cs#L9) — `bdgrz.advisor-collaboration.list-advisor-feedback` v1
+- [GetAdvisorRequest](../../src/Compliance.Common/Features/AdvisorCollaboration/Queries/GetAdvisorRequest.cs#L9) — `bdgrz.advisor-collaboration.get-advisor-request` v1
+- [GetAdvisorSharedSource](../../src/Compliance.Common/Features/AdvisorCollaboration/Queries/GetAdvisorSharedSource.cs#L9) — `bdgrz.advisor-collaboration.get-shared-source` v1
+- [PreviewAdvisorHandoff](../../src/Compliance.Common/Features/AdvisorCollaboration/Queries/PreviewAdvisorHandoff.cs#L7) — `bdgrz.advisor-collaboration.preview-advisor-handoff` v1
+- [ListAdvisorRequests](../../src/Compliance.Common/Features/AdvisorCollaboration/Queries/ListAdvisorRequests.cs#L9) — `bdgrz.advisor-collaboration.list-advisor-requests` v1
+- [ListAdvisorFeedback](../../src/Compliance.Common/Features/AdvisorCollaboration/Queries/ListAdvisorFeedback.cs#L9) — `bdgrz.advisor-collaboration.list-advisor-feedback` v1
 
 ##### Examinations
 
-- [GetExaminationEngagement](../../src/Compliance.Common/Features/Examinations/GetExaminationEngagement.cs#L9) — `bdgrz.examinations.get-examination-engagement` v1
-- [GetTypeIBaseline](../../src/Compliance.Common/Features/Examinations/GetTypeIBaseline.cs#L9) — `bdgrz.examinations.get-type-i-baseline` v1
-- [PreviewTypeIBaseline](../../src/Compliance.Common/Features/Examinations/PreviewTypeIBaseline.cs#L9) — `bdgrz.examinations.preview-type-i-baseline` v1
+- [GetExaminationEngagement](../../src/Compliance.Common/Features/Examinations/Queries/GetExaminationEngagement.cs#L9) — `bdgrz.examinations.get-examination-engagement` v1
+- [GetTypeIBaseline](../../src/Compliance.Common/Features/Examinations/Queries/GetTypeIBaseline.cs#L9) — `bdgrz.examinations.get-type-i-baseline` v1
+- [PreviewTypeIBaseline](../../src/Compliance.Common/Features/Examinations/Queries/PreviewTypeIBaseline.cs#L9) — `bdgrz.examinations.preview-type-i-baseline` v1
 
 ##### SystemDescription
 
-- [GetSystemDescription](../../src/Compliance.Common/Features/SystemDescription/GetSystemDescription.cs#L9) — `bdgrz.system-description.get-system-description` v1
-- [ListSystemDescriptionVersions](../../src/Compliance.Common/Features/SystemDescription/ListSystemDescriptionVersions.cs#L9) — `bdgrz.system-description.list-system-description-versions` v1
-- [PreviewSystemDescriptionImpact](../../src/Compliance.Common/Features/SystemDescription/PreviewSystemDescriptionImpact.cs#L9) — `bdgrz.system-description.preview-system-description-impact` v1
+- [GetSystemDescription](../../src/Compliance.Common/Features/SystemDescription/Queries/GetSystemDescription.cs#L9) — `bdgrz.system-description.get-system-description` v1
+- [ListSystemDescriptionVersions](../../src/Compliance.Common/Features/SystemDescription/Queries/ListSystemDescriptionVersions.cs#L9) — `bdgrz.system-description.list-system-description-versions` v1
+- [PreviewSystemDescriptionImpact](../../src/Compliance.Common/Features/SystemDescription/Queries/PreviewSystemDescriptionImpact.cs#L9) — `bdgrz.system-description.preview-system-description-impact` v1
 
 ##### AuditorRequests
 
-- [GetAuditorRequest](../../src/Compliance.Common/Features/AuditorRequests/GetAuditorRequest.cs#L9) — `bdgrz.auditor-requests.get-auditor-request` v1
-- [ListAuditorRequests](../../src/Compliance.Common/Features/AuditorRequests/ListAuditorRequests.cs#L9) — `bdgrz.auditor-requests.list-auditor-requests` v1
-- [GetSampleSelection](../../src/Compliance.Common/Features/AuditorRequests/GetSampleSelection.cs#L9) — `bdgrz.auditor-requests.get-sample-selection` v1
-- [ListRequestResponses](../../src/Compliance.Common/Features/AuditorRequests/ListRequestResponses.cs#L9) — `bdgrz.auditor-requests.list-request-responses` v1
+- [GetAuditorRequest](../../src/Compliance.Common/Features/AuditorRequests/Queries/GetAuditorRequest.cs#L9) — `bdgrz.auditor-requests.get-auditor-request` v1
+- [ListAuditorRequests](../../src/Compliance.Common/Features/AuditorRequests/Queries/ListAuditorRequests.cs#L9) — `bdgrz.auditor-requests.list-auditor-requests` v1
+- [GetSampleSelection](../../src/Compliance.Common/Features/AuditorRequests/Queries/GetSampleSelection.cs#L9) — `bdgrz.auditor-requests.get-sample-selection` v1
+- [ListRequestResponses](../../src/Compliance.Common/Features/AuditorRequests/Queries/ListRequestResponses.cs#L9) — `bdgrz.auditor-requests.list-request-responses` v1
 
 ##### AuditPackages
 
-- [GetAuditPackage](../../src/Compliance.Common/Features/AuditPackages/GetAuditPackage.cs#L9) — `bdgrz.audit-packages.get-audit-package` v1
-- [ListAuditPackages](../../src/Compliance.Common/Features/AuditPackages/ListAuditPackages.cs#L9) — `bdgrz.audit-packages.list-audit-packages` v1
-- [GetAuditPackageManifest](../../src/Compliance.Common/Features/AuditPackages/GetAuditPackageManifest.cs#L9) — `bdgrz.audit-packages.get-audit-package-manifest` v1
-- [GetAuditPackageValidation](../../src/Compliance.Common/Features/AuditPackages/GetAuditPackageValidation.cs#L9) — `bdgrz.audit-packages.get-audit-package-validation` v1
-- [GetAuditPackageDelivery](../../src/Compliance.Common/Features/AuditPackages/GetAuditPackageDelivery.cs#L9) — `bdgrz.audit-packages.get-audit-package-delivery` v1
+- [GetAuditPackage](../../src/Compliance.Common/Features/AuditPackages/Queries/GetAuditPackage.cs#L9) — `bdgrz.audit-packages.get-audit-package` v1
+- [ListAuditPackages](../../src/Compliance.Common/Features/AuditPackages/Queries/ListAuditPackages.cs#L9) — `bdgrz.audit-packages.list-audit-packages` v1
+- [GetAuditPackageManifest](../../src/Compliance.Common/Features/AuditPackages/Queries/GetAuditPackageManifest.cs#L9) — `bdgrz.audit-packages.get-audit-package-manifest` v1
+- [GetAuditPackageValidation](../../src/Compliance.Common/Features/AuditPackages/Queries/GetAuditPackageValidation.cs#L9) — `bdgrz.audit-packages.get-audit-package-validation` v1
+- [GetAuditPackageDelivery](../../src/Compliance.Common/Features/AuditPackages/Queries/GetAuditPackageDelivery.cs#L9) — `bdgrz.audit-packages.get-audit-package-delivery` v1
 
 ##### Examinations
 
-- [ListAuditObservations](../../src/Compliance.Common/Features/Examinations/ListAuditObservations.cs#L9) — `bdgrz.examinations.list-audit-observations` v1
-- [GetAuditOutcome](../../src/Compliance.Common/Features/Examinations/GetAuditOutcome.cs#L9) — `bdgrz.examinations.get-audit-outcome` v1
-- [GetTypeIIPlan](../../src/Compliance.Common/Features/Examinations/GetTypeIIPlan.cs#L9) — `bdgrz.examinations.get-type-i-i-plan` v1
-- [GetManagementAssertion](../../src/Compliance.Common/Features/Examinations/GetManagementAssertion.cs#L9) — `bdgrz.examinations.get-management-assertion` v1
-- [GetExaminationSignOff](../../src/Compliance.Common/Features/Examinations/GetExaminationSignOff.cs#L9) — `bdgrz.examinations.get-examination-sign-off` v1
+- [ListAuditObservations](../../src/Compliance.Common/Features/Examinations/Queries/ListAuditObservations.cs#L9) — `bdgrz.examinations.list-audit-observations` v1
+- [GetAuditOutcome](../../src/Compliance.Common/Features/Examinations/Queries/GetAuditOutcome.cs#L9) — `bdgrz.examinations.get-audit-outcome` v1
+- [GetTypeIIPlan](../../src/Compliance.Common/Features/Examinations/Queries/GetTypeIIPlan.cs#L9) — `bdgrz.examinations.get-type-i-i-plan` v1
+- [GetManagementAssertion](../../src/Compliance.Common/Features/Examinations/Queries/GetManagementAssertion.cs#L9) — `bdgrz.examinations.get-management-assertion` v1
+- [GetExaminationSignOff](../../src/Compliance.Common/Features/Examinations/Queries/GetExaminationSignOff.cs#L9) — `bdgrz.examinations.get-examination-sign-off` v1
 
 ##### Operations
 
-- [GetObservationPeriod](../../src/Compliance.Common/Features/Operations/GetObservationPeriod.cs#L9) — `bdgrz.operations.get-observation-period` v1
-- [ListObservationPeriods](../../src/Compliance.Common/Features/Operations/ListObservationPeriods.cs#L9) — `bdgrz.operations.list-observation-periods` v1
-- [GetControlCalendar](../../src/Compliance.Common/Features/Operations/GetControlCalendar.cs#L9) — `bdgrz.operations.get-control-calendar` v1
-- [ListMissingOccurrences](../../src/Compliance.Common/Features/Operations/ListMissingOccurrences.cs#L9) — `bdgrz.operations.list-missing-occurrences` v1
-- [ListDueGovernanceReviews](../../src/Compliance.Common/Features/Operations/ListDueGovernanceReviews.cs#L9) — `bdgrz.operations.list-due-governance-reviews` v1
-- [GetManagementReview](../../src/Compliance.Common/Features/Operations/GetManagementReview.cs#L9) — `bdgrz.operations.get-management-review` v1
-- [ListManagementReviewActions](../../src/Compliance.Common/Features/Operations/ListManagementReviewActions.cs#L9) — `bdgrz.operations.list-management-review-actions` v1
+- [GetObservationPeriod](../../src/Compliance.Common/Features/Operations/Queries/GetObservationPeriod.cs#L9) — `bdgrz.operations.get-observation-period` v1
+- [ListObservationPeriods](../../src/Compliance.Common/Features/Operations/Queries/ListObservationPeriods.cs#L9) — `bdgrz.operations.list-observation-periods` v1
+- [GetControlCalendar](../../src/Compliance.Common/Features/Operations/Queries/GetControlCalendar.cs#L9) — `bdgrz.operations.get-control-calendar` v1
+- [ListMissingOccurrences](../../src/Compliance.Common/Features/Operations/Queries/ListMissingOccurrences.cs#L9) — `bdgrz.operations.list-missing-occurrences` v1
+- [ListDueGovernanceReviews](../../src/Compliance.Common/Features/Operations/Queries/ListDueGovernanceReviews.cs#L9) — `bdgrz.operations.list-due-governance-reviews` v1
+- [GetManagementReview](../../src/Compliance.Common/Features/Operations/Queries/GetManagementReview.cs#L9) — `bdgrz.operations.get-management-review` v1
+- [ListManagementReviewActions](../../src/Compliance.Common/Features/Operations/Queries/ListManagementReviewActions.cs#L9) — `bdgrz.operations.list-management-review-actions` v1
 
 ##### Changes
 
-- [GetSignificantChange](../../src/Compliance.Common/Features/Changes/GetSignificantChange.cs#L9) — `bdgrz.changes.get-significant-change` v2
-- [ListSignificantChanges](../../src/Compliance.Common/Features/Changes/ListSignificantChanges.cs#L9) — `bdgrz.changes.list-significant-changes` v1
+- [GetSignificantChange](../../src/Compliance.Common/Features/Changes/Queries/GetSignificantChange.cs#L9) — `bdgrz.changes.get-significant-change` v2
+- [ListSignificantChanges](../../src/Compliance.Common/Features/Changes/Queries/ListSignificantChanges.cs#L9) — `bdgrz.changes.list-significant-changes` v1
 
 ##### Incidents
 
-- [GetComplianceIncident](../../src/Compliance.Common/Features/Incidents/GetComplianceIncident.cs#L9) — `bdgrz.incidents.get-compliance-incident` v2
-- [ListComplianceIncidents](../../src/Compliance.Common/Features/Incidents/ListComplianceIncidents.cs#L9) — `bdgrz.incidents.list-compliance-incidents` v1
-- [GetComplianceImpactAssessment](../../src/Compliance.Common/Features/Incidents/GetComplianceImpactAssessment.cs#L9) — `bdgrz.incidents.get-compliance-impact-assessment` v2
+- [GetComplianceIncident](../../src/Compliance.Common/Features/Incidents/Queries/GetComplianceIncident.cs#L9) — `bdgrz.incidents.get-compliance-incident` v2
+- [ListComplianceIncidents](../../src/Compliance.Common/Features/Incidents/Queries/ListComplianceIncidents.cs#L9) — `bdgrz.incidents.list-compliance-incidents` v1
+- [GetComplianceImpactAssessment](../../src/Compliance.Common/Features/Incidents/Queries/GetComplianceImpactAssessment.cs#L9) — `bdgrz.incidents.get-compliance-impact-assessment` v2
 
 ##### AuditPopulations
 
-- [PreviewObservationPeriodClose](../../src/Compliance.Common/Features/AuditPopulations/PreviewObservationPeriodClose.cs#L9) — `bdgrz.audit-populations.preview-observation-period-close` v1
-- [GetObservationPeriodClose](../../src/Compliance.Common/Features/AuditPopulations/GetObservationPeriodClose.cs#L9) — `bdgrz.audit-populations.get-observation-period-close` v1
-- [ListAuditPopulationDefinitions](../../src/Compliance.Common/Features/AuditPopulations/ListAuditPopulationDefinitions.cs#L9) — `bdgrz.audit-populations.list-audit-population-definitions` v1
-- [GetAuditPopulation](../../src/Compliance.Common/Features/AuditPopulations/GetAuditPopulation.cs#L9) — `bdgrz.audit-populations.get-audit-population` v1
-- [ListAuditPopulationRows](../../src/Compliance.Common/Features/AuditPopulations/ListAuditPopulationRows.cs#L9) — `bdgrz.audit-populations.list-audit-population-rows` v1
-- [GetPopulationReconciliation](../../src/Compliance.Common/Features/AuditPopulations/GetPopulationReconciliation.cs#L9) — `bdgrz.audit-populations.get-population-reconciliation` v1
+- [PreviewObservationPeriodClose](../../src/Compliance.Common/Features/AuditPopulations/Queries/PreviewObservationPeriodClose.cs#L9) — `bdgrz.audit-populations.preview-observation-period-close` v1
+- [GetObservationPeriodClose](../../src/Compliance.Common/Features/AuditPopulations/Queries/GetObservationPeriodClose.cs#L9) — `bdgrz.audit-populations.get-observation-period-close` v1
+- [ListAuditPopulationDefinitions](../../src/Compliance.Common/Features/AuditPopulations/Queries/ListAuditPopulationDefinitions.cs#L9) — `bdgrz.audit-populations.list-audit-population-definitions` v1
+- [GetAuditPopulation](../../src/Compliance.Common/Features/AuditPopulations/Queries/GetAuditPopulation.cs#L9) — `bdgrz.audit-populations.get-audit-population` v1
+- [ListAuditPopulationRows](../../src/Compliance.Common/Features/AuditPopulations/Queries/ListAuditPopulationRows.cs#L9) — `bdgrz.audit-populations.list-audit-population-rows` v1
+- [GetPopulationReconciliation](../../src/Compliance.Common/Features/AuditPopulations/Queries/GetPopulationReconciliation.cs#L9) — `bdgrz.audit-populations.get-population-reconciliation` v1
 
 ##### Programs
 
-- [PreviewProgramRollover](../../src/Compliance.Common/Features/Programs/PreviewProgramRollover.cs#L9) — `bdgrz.programs.preview-program-rollover` v1
-- [GetProgramRollover](../../src/Compliance.Common/Features/Programs/GetProgramRollover.cs#L9) — `bdgrz.programs.get-program-rollover` v1
-- [GetNextPeriodPlan](../../src/Compliance.Common/Features/Programs/GetNextPeriodPlan.cs#L9) — `bdgrz.programs.get-next-period-plan` v1
-- [ListCarryForwardReferences](../../src/Compliance.Common/Features/Programs/ListCarryForwardReferences.cs#L9) — `bdgrz.programs.list-carry-forward-references` v1
+- [PreviewProgramRollover](../../src/Compliance.Common/Features/Programs/Queries/PreviewProgramRollover.cs#L9) — `bdgrz.programs.preview-program-rollover` v1
+- [GetProgramRollover](../../src/Compliance.Common/Features/Programs/Queries/GetProgramRollover.cs#L9) — `bdgrz.programs.get-program-rollover` v1
+- [GetNextPeriodPlan](../../src/Compliance.Common/Features/Programs/Queries/GetNextPeriodPlan.cs#L9) — `bdgrz.programs.get-next-period-plan` v1
+- [ListCarryForwardReferences](../../src/Compliance.Common/Features/Programs/Queries/ListCarryForwardReferences.cs#L9) — `bdgrz.programs.list-carry-forward-references` v1
 
 ##### FirmPortfolio
 
-- [ListAuthorizedClientPortfolio](../../src/Compliance.Common/Features/FirmPortfolio/ListAuthorizedClientPortfolio.cs#L9) — `bdgrz.firm-portfolio.list-authorized-client-portfolio` v1
-- [GetAuthorizedClientSummary](../../src/Compliance.Common/Features/FirmPortfolio/GetAuthorizedClientSummary.cs#L9) — `bdgrz.firm-portfolio.get-authorized-client-summary` v1
-- [ListMyCrossClientWork](../../src/Compliance.Common/Features/FirmPortfolio/ListMyCrossClientWork.cs#L9) — `bdgrz.firm-portfolio.list-my-cross-client-work` v1
+- [ListAuthorizedClientPortfolio](../../src/Compliance.Common/Features/FirmPortfolio/Queries/ListAuthorizedClientPortfolio.cs#L9) — `bdgrz.firm-portfolio.list-authorized-client-portfolio` v1
+- [GetAuthorizedClientSummary](../../src/Compliance.Common/Features/FirmPortfolio/Queries/GetAuthorizedClientSummary.cs#L9) — `bdgrz.firm-portfolio.get-authorized-client-summary` v1
+- [ListMyCrossClientWork](../../src/Compliance.Common/Features/FirmPortfolio/Queries/ListMyCrossClientWork.cs#L9) — `bdgrz.firm-portfolio.list-my-cross-client-work` v1
 
 ##### MethodologyTemplates
 
-- [ListMethodologyTemplates](../../src/Compliance.Common/Features/MethodologyTemplates/ListMethodologyTemplates.cs#L9) — `bdgrz.methodology-templates.list-methodology-templates` v1
-- [GetMethodologyTemplateVersion](../../src/Compliance.Common/Features/MethodologyTemplates/GetMethodologyTemplateVersion.cs#L9) — `bdgrz.methodology-templates.get-methodology-template-version` v1
-- [PreviewMethodologyTemplateApplication](../../src/Compliance.Common/Features/MethodologyTemplates/PreviewMethodologyTemplateApplication.cs#L9) — `bdgrz.methodology-templates.preview-methodology-template-application` v1
-- [GetTemplateApplication](../../src/Compliance.Common/Features/MethodologyTemplates/GetTemplateApplication.cs#L9) — `bdgrz.methodology-templates.get-template-application` v1
+- [ListMethodologyTemplates](../../src/Compliance.Common/Features/MethodologyTemplates/Queries/ListMethodologyTemplates.cs#L9) — `bdgrz.methodology-templates.list-methodology-templates` v1
+- [GetMethodologyTemplateVersion](../../src/Compliance.Common/Features/MethodologyTemplates/Queries/GetMethodologyTemplateVersion.cs#L9) — `bdgrz.methodology-templates.get-methodology-template-version` v1
+- [PreviewMethodologyTemplateApplication](../../src/Compliance.Common/Features/MethodologyTemplates/Queries/PreviewMethodologyTemplateApplication.cs#L9) — `bdgrz.methodology-templates.preview-methodology-template-application` v1
+- [GetTemplateApplication](../../src/Compliance.Common/Features/MethodologyTemplates/Queries/GetTemplateApplication.cs#L9) — `bdgrz.methodology-templates.get-template-application` v1
 
 ##### AttestRecords
 
-- [GetOwnAttestRecordPackage](../../src/Compliance.Common/Features/AttestRecords/GetOwnAttestRecordPackage.cs#L9) — `bdgrz.attest-records.get-own-attest-record-package` v1
-- [GetOwnAttestRecordDelivery](../../src/Compliance.Common/Features/AttestRecords/GetOwnAttestRecordDelivery.cs#L9) — `bdgrz.attest-records.get-own-attest-record-delivery` v1
-- [ListOutstandingAttestDeliveryHolds](../../src/Compliance.Common/Features/AttestRecords/ListOutstandingAttestDeliveryHolds.cs#L9) — `bdgrz.attest-records.list-outstanding-attest-delivery-holds` v1
+- [GetOwnAttestRecordPackage](../../src/Compliance.Common/Features/AttestRecords/Queries/GetOwnAttestRecordPackage.cs#L9) — `bdgrz.attest-records.get-own-attest-record-package` v1
+- [GetOwnAttestRecordDelivery](../../src/Compliance.Common/Features/AttestRecords/Queries/GetOwnAttestRecordDelivery.cs#L9) — `bdgrz.attest-records.get-own-attest-record-delivery` v1
+- [ListOutstandingAttestDeliveryHolds](../../src/Compliance.Common/Features/AttestRecords/Queries/ListOutstandingAttestDeliveryHolds.cs#L9) — `bdgrz.attest-records.list-outstanding-attest-delivery-holds` v1
 
 ### Backfilled event contracts
 
@@ -1054,33 +1054,33 @@ These 140 requirement-backed event contracts have been added since the existing-
 
 #### AccessControl
 
-- [IndependenceRuleVersionRatified](../../src/Compliance.Common/Features/AccessControl/IndependenceRuleVersionRatified.cs#L6)
+- [IndependenceRuleVersionRatified](../../src/Compliance.Common/Features/AccessControl/Events/IndependenceRuleVersionRatified.cs#L6)
 
-- [PartnerIndependenceEvaluationRecorded](../../src/Compliance.Common/Features/AccessControl/PartnerIndependenceEvaluationRecorded.cs#L6)
+- [PartnerIndependenceEvaluationRecorded](../../src/Compliance.Common/Features/AccessControl/Events/PartnerIndependenceEvaluationRecorded.cs#L6)
 
-- [ServiceEngagementStaffAssigned](../../src/Compliance.Common/Features/AccessControl/ServiceEngagementStaffAssigned.cs#L6)
+- [ServiceEngagementStaffAssigned](../../src/Compliance.Common/Features/AccessControl/Events/ServiceEngagementStaffAssigned.cs#L6)
 
 
 
 #### AdvisorCollaboration
 
-- [AdvisorFeedbackCorrected](../../src/Compliance.Common/Features/AdvisorCollaboration/AdvisorFeedbackCorrected.cs#L6)
+- [AdvisorFeedbackCorrected](../../src/Compliance.Common/Features/AdvisorCollaboration/Events/AdvisorFeedbackCorrected.cs#L6)
 
-- [AdvisorFeedbackRecorded](../../src/Compliance.Common/Features/AdvisorCollaboration/AdvisorFeedbackRecorded.cs#L6)
+- [AdvisorFeedbackRecorded](../../src/Compliance.Common/Features/AdvisorCollaboration/Events/AdvisorFeedbackRecorded.cs#L6)
 
-- [AdvisorFeedbackResolved](../../src/Compliance.Common/Features/AdvisorCollaboration/AdvisorFeedbackResolved.cs#L6)
+- [AdvisorFeedbackResolved](../../src/Compliance.Common/Features/AdvisorCollaboration/Events/AdvisorFeedbackResolved.cs#L6)
 
-- [AdvisorFeedbackResponded](../../src/Compliance.Common/Features/AdvisorCollaboration/AdvisorFeedbackResponded.cs#L6)
+- [AdvisorFeedbackResponded](../../src/Compliance.Common/Features/AdvisorCollaboration/Events/AdvisorFeedbackResponded.cs#L6)
 
-- [AdvisorHandoffClosed](../../src/Compliance.Common/Features/AdvisorCollaboration/AdvisorHandoffClosed.cs#L6)
+- [AdvisorHandoffClosed](../../src/Compliance.Common/Features/AdvisorCollaboration/Events/AdvisorHandoffClosed.cs#L6)
 
-- [AdvisorHandoffReadiedForReview](../../src/Compliance.Common/Features/AdvisorCollaboration/AdvisorHandoffReadiedForReview.cs#L6)
+- [AdvisorHandoffReadiedForReview](../../src/Compliance.Common/Features/AdvisorCollaboration/Events/AdvisorHandoffReadiedForReview.cs#L6)
 
-- [AdvisorHandoffRevoked](../../src/Compliance.Common/Features/AdvisorCollaboration/AdvisorHandoffRevoked.cs#L6)
+- [AdvisorHandoffRevoked](../../src/Compliance.Common/Features/AdvisorCollaboration/Events/AdvisorHandoffRevoked.cs#L6)
 
-- [AdvisorHandoffSelectionRevised](../../src/Compliance.Common/Features/AdvisorCollaboration/AdvisorHandoffSelectionRevised.cs#L6)
+- [AdvisorHandoffSelectionRevised](../../src/Compliance.Common/Features/AdvisorCollaboration/Events/AdvisorHandoffSelectionRevised.cs#L6)
 
-- [AdvisorHandoffCreated](../../src/Compliance.Common/Features/AdvisorCollaboration/AdvisorHandoffCreated.cs#L8)
+- [AdvisorHandoffCreated](../../src/Compliance.Common/Features/AdvisorCollaboration/Events/AdvisorHandoffCreated.cs#L8)
 
 
 #### Applications
@@ -1093,19 +1093,19 @@ These 140 requirement-backed event contracts have been added since the existing-
 
 
 
-- [SystemInstanceRevised](../../src/Compliance.Common/Features/Applications/SystemInstanceRevised.cs#L6)
+- [SystemInstanceRevised](../../src/Compliance.Common/Features/Applications/Events/SystemInstanceRevised.cs#L6)
 
 
 
 #### AttestRecords
 
-- [DeliveredEngagementHoldReleased](../../src/Compliance.Common/Features/AttestRecords/DeliveredEngagementHoldReleased.cs#L6)
+- [DeliveredEngagementHoldReleased](../../src/Compliance.Common/Features/AttestRecords/Events/DeliveredEngagementHoldReleased.cs#L6)
 
-- [OwnAttestRecordDeliveryRecorded](../../src/Compliance.Common/Features/AttestRecords/OwnAttestRecordDeliveryRecorded.cs#L6)
+- [OwnAttestRecordDeliveryRecorded](../../src/Compliance.Common/Features/AttestRecords/Events/OwnAttestRecordDeliveryRecorded.cs#L6)
 
-- [OwnAttestRecordDeliveryVerified](../../src/Compliance.Common/Features/AttestRecords/OwnAttestRecordDeliveryVerified.cs#L6)
+- [OwnAttestRecordDeliveryVerified](../../src/Compliance.Common/Features/AttestRecords/Events/OwnAttestRecordDeliveryVerified.cs#L6)
 
-- [OwnAttestRecordPackagePrepared](../../src/Compliance.Common/Features/AttestRecords/OwnAttestRecordPackagePrepared.cs#L6)
+- [OwnAttestRecordPackagePrepared](../../src/Compliance.Common/Features/AttestRecords/Events/OwnAttestRecordPackagePrepared.cs#L6)
 
 
 
@@ -1113,81 +1113,81 @@ These 140 requirement-backed event contracts have been added since the existing-
 
 - [AuditPackageBuildProgressRecorded](../../src/Compliance.Common/Features/AuditPackages/AuditPackageBuildProgressRecorded.cs#L6)
 
-- [AuditPackageCreated](../../src/Compliance.Common/Features/AuditPackages/AuditPackageCreated.cs#L6)
+- [AuditPackageCreated](../../src/Compliance.Common/Features/AuditPackages/Events/AuditPackageCreated.cs#L6)
 
-- [AuditPackageAmended](../../src/Compliance.Common/Features/AuditPackages/AuditPackageAmended.cs#L6)
+- [AuditPackageAmended](../../src/Compliance.Common/Features/AuditPackages/Events/AuditPackageAmended.cs#L6)
 
 - [AuditPackageBuildFailed](../../src/Compliance.Common/Features/AuditPackages/AuditPackageBuildFailed.cs#L6)
 
-- [AuditPackageBuildRequested](../../src/Compliance.Common/Features/AuditPackages/AuditPackageBuildRequested.cs#L6)
+- [AuditPackageBuildRequested](../../src/Compliance.Common/Features/AuditPackages/Events/AuditPackageBuildRequested.cs#L6)
 
-- [AuditPackageBuilt](../../src/Compliance.Common/Features/AuditPackages/AuditPackageBuilt.cs#L6)
+- [AuditPackageBuilt](../../src/Compliance.Common/Features/AuditPackages/Events/AuditPackageBuilt.cs#L6)
 
-- [AuditPackageDelivered](../../src/Compliance.Common/Features/AuditPackages/AuditPackageDelivered.cs#L6)
+- [AuditPackageDelivered](../../src/Compliance.Common/Features/AuditPackages/Events/AuditPackageDelivered.cs#L6)
 
-- [AuditPackageDisclosureApproved](../../src/Compliance.Common/Features/AuditPackages/AuditPackageDisclosureApproved.cs#L6)
+- [AuditPackageDisclosureApproved](../../src/Compliance.Common/Features/AuditPackages/Events/AuditPackageDisclosureApproved.cs#L6)
 
-- [AuditPackageValidated](../../src/Compliance.Common/Features/AuditPackages/AuditPackageValidated.cs#L6)
+- [AuditPackageValidated](../../src/Compliance.Common/Features/AuditPackages/Events/AuditPackageValidated.cs#L6)
 
-- [AuditPackageValidationOverrideApproved](../../src/Compliance.Common/Features/AuditPackages/AuditPackageValidationOverrideApproved.cs#L6)
+- [AuditPackageValidationOverrideApproved](../../src/Compliance.Common/Features/AuditPackages/Events/AuditPackageValidationOverrideApproved.cs#L6)
 
 
 
 #### AuditPopulations
 
-- [AuditPopulationAmended](../../src/Compliance.Common/Features/AuditPopulations/AuditPopulationAmended.cs#L6)
+- [AuditPopulationAmended](../../src/Compliance.Common/Features/AuditPopulations/Events/AuditPopulationAmended.cs#L6)
 
-- [AuditPopulationDefined](../../src/Compliance.Common/Features/AuditPopulations/AuditPopulationDefined.cs#L6)
+- [AuditPopulationDefined](../../src/Compliance.Common/Features/AuditPopulations/Events/AuditPopulationDefined.cs#L6)
 
-- [AuditPopulationExportGenerated](../../src/Compliance.Common/Features/AuditPopulations/AuditPopulationExportGenerated.cs#L6)
+- [AuditPopulationExportGenerated](../../src/Compliance.Common/Features/AuditPopulations/Events/AuditPopulationExportGenerated.cs#L6)
 
-- [AuditPopulationFactRecorded](../../src/Compliance.Common/Features/AuditPopulations/AuditPopulationFactRecorded.cs#L6)
+- [AuditPopulationFactRecorded](../../src/Compliance.Common/Features/AuditPopulations/Events/AuditPopulationFactRecorded.cs#L6)
 
-- [AuditPopulationFrozen](../../src/Compliance.Common/Features/AuditPopulations/AuditPopulationFrozen.cs#L6)
+- [AuditPopulationFrozen](../../src/Compliance.Common/Features/AuditPopulations/Events/AuditPopulationFrozen.cs#L6)
 
-- [AuditPopulationGenerated](../../src/Compliance.Common/Features/AuditPopulations/AuditPopulationGenerated.cs#L6)
+- [AuditPopulationGenerated](../../src/Compliance.Common/Features/AuditPopulations/Events/AuditPopulationGenerated.cs#L6)
 
-- [AuditPopulationReconciled](../../src/Compliance.Common/Features/AuditPopulations/AuditPopulationReconciled.cs#L6)
+- [AuditPopulationReconciled](../../src/Compliance.Common/Features/AuditPopulations/Events/AuditPopulationReconciled.cs#L6)
 
-- [AuditPopulationRowClassified](../../src/Compliance.Common/Features/AuditPopulations/AuditPopulationRowClassified.cs#L6)
+- [AuditPopulationRowClassified](../../src/Compliance.Common/Features/AuditPopulations/Events/AuditPopulationRowClassified.cs#L6)
 
-- [ObservationPeriodCloseFrozen](../../src/Compliance.Common/Features/AuditPopulations/ObservationPeriodCloseFrozen.cs#L6)
+- [ObservationPeriodCloseFrozen](../../src/Compliance.Common/Features/AuditPopulations/Events/ObservationPeriodCloseFrozen.cs#L6)
 
-- [ObservationPeriodCloseProposed](../../src/Compliance.Common/Features/AuditPopulations/ObservationPeriodCloseProposed.cs#L6)
+- [ObservationPeriodCloseProposed](../../src/Compliance.Common/Features/AuditPopulations/Events/ObservationPeriodCloseProposed.cs#L6)
 
-- [TypeIIPeriodCloseAmended](../../src/Compliance.Common/Features/AuditPopulations/TypeIIPeriodCloseAmended.cs#L6)
+- [TypeIIPeriodCloseAmended](../../src/Compliance.Common/Features/AuditPopulations/Events/TypeIIPeriodCloseAmended.cs#L6)
 
-- [TypeIIPeriodCloseApproved](../../src/Compliance.Common/Features/AuditPopulations/TypeIIPeriodCloseApproved.cs#L6)
+- [TypeIIPeriodCloseApproved](../../src/Compliance.Common/Features/AuditPopulations/Events/TypeIIPeriodCloseApproved.cs#L6)
 
 
 
 #### AuditorRequests
 
-- [AuditResponseDraftCreated](../../src/Compliance.Common/Features/AuditorRequests/AuditResponseDraftCreated.cs#L6)
+- [AuditResponseDraftCreated](../../src/Compliance.Common/Features/AuditorRequests/Events/AuditResponseDraftCreated.cs#L6)
 
-- [AuditResponseDraftRevised](../../src/Compliance.Common/Features/AuditorRequests/AuditResponseDraftRevised.cs#L6)
+- [AuditResponseDraftRevised](../../src/Compliance.Common/Features/AuditorRequests/Events/AuditResponseDraftRevised.cs#L6)
 
-- [AuditorRequestAssigned](../../src/Compliance.Common/Features/AuditorRequests/AuditorRequestAssigned.cs#L6)
+- [AuditorRequestAssigned](../../src/Compliance.Common/Features/AuditorRequests/Events/AuditorRequestAssigned.cs#L6)
 
-- [AuditorRequestCommentRecorded](../../src/Compliance.Common/Features/AuditorRequests/AuditorRequestCommentRecorded.cs#L6)
+- [AuditorRequestCommentRecorded](../../src/Compliance.Common/Features/AuditorRequests/Events/AuditorRequestCommentRecorded.cs#L6)
 
-- [AuditorRequestRecorded](../../src/Compliance.Common/Features/AuditorRequests/AuditorRequestRecorded.cs#L6)
+- [AuditorRequestRecorded](../../src/Compliance.Common/Features/AuditorRequests/Events/AuditorRequestRecorded.cs#L6)
 
-- [AuditorRequestReopened](../../src/Compliance.Common/Features/AuditorRequests/AuditorRequestReopened.cs#L6)
+- [AuditorRequestReopened](../../src/Compliance.Common/Features/AuditorRequests/Events/AuditorRequestReopened.cs#L6)
 
-- [AuditorRequestResolved](../../src/Compliance.Common/Features/AuditorRequests/AuditorRequestResolved.cs#L6)
+- [AuditorRequestResolved](../../src/Compliance.Common/Features/AuditorRequests/Events/AuditorRequestResolved.cs#L6)
 
-- [AuditorRequestRevised](../../src/Compliance.Common/Features/AuditorRequests/AuditorRequestRevised.cs#L6)
+- [AuditorRequestRevised](../../src/Compliance.Common/Features/AuditorRequests/Events/AuditorRequestRevised.cs#L6)
 
-- [AuditorResponseDelivered](../../src/Compliance.Common/Features/AuditorRequests/AuditorResponseDelivered.cs#L6)
+- [AuditorResponseDelivered](../../src/Compliance.Common/Features/AuditorRequests/Events/AuditorResponseDelivered.cs#L6)
 
-- [AuditorResponseDisclosureReviewed](../../src/Compliance.Common/Features/AuditorRequests/AuditorResponseDisclosureReviewed.cs#L6)
+- [AuditorResponseDisclosureReviewed](../../src/Compliance.Common/Features/AuditorRequests/Events/AuditorResponseDisclosureReviewed.cs#L6)
 
-- [AuditorResponseDispositionRecorded](../../src/Compliance.Common/Features/AuditorRequests/AuditorResponseDispositionRecorded.cs#L6)
+- [AuditorResponseDispositionRecorded](../../src/Compliance.Common/Features/AuditorRequests/Events/AuditorResponseDispositionRecorded.cs#L6)
 
-- [AuditorResponseSubmitted](../../src/Compliance.Common/Features/AuditorRequests/AuditorResponseSubmitted.cs#L6)
+- [AuditorResponseSubmitted](../../src/Compliance.Common/Features/AuditorRequests/Events/AuditorResponseSubmitted.cs#L6)
 
-- [SampleSelectionRecorded](../../src/Compliance.Common/Features/AuditorRequests/SampleSelectionRecorded.cs#L6)
+- [SampleSelectionRecorded](../../src/Compliance.Common/Features/AuditorRequests/Events/SampleSelectionRecorded.cs#L6)
 
 
 
@@ -1196,121 +1196,121 @@ These 140 requirement-backed event contracts have been added since the existing-
 
 
 
-- [ImpactReviewWorkLinked](../../src/Compliance.Common/Features/Changes/ImpactReviewWorkLinked.cs#L6)
-- [SignificantChangeSystemDescriptionDecisionRecorded](../../src/Compliance.Common/Features/Changes/SignificantChangeSystemDescriptionDecisionRecorded.cs#L6)
+- [ImpactReviewWorkLinked](../../src/Compliance.Common/Features/Changes/Events/ImpactReviewWorkLinked.cs#L6)
+- [SignificantChangeSystemDescriptionDecisionRecorded](../../src/Compliance.Common/Features/Changes/Events/SignificantChangeSystemDescriptionDecisionRecorded.cs#L6)
 
 
-- [SignificantChangeImpactAssessed](../../src/Compliance.Common/Features/Changes/SignificantChangeImpactAssessed.cs#L6)
+- [SignificantChangeImpactAssessed](../../src/Compliance.Common/Features/Changes/Events/SignificantChangeImpactAssessed.cs#L6)
 
-- [SignificantChangeRecorded](../../src/Compliance.Common/Features/Changes/SignificantChangeRecorded.cs#L6)
+- [SignificantChangeRecorded](../../src/Compliance.Common/Features/Changes/Events/SignificantChangeRecorded.cs#L6)
 
-- [SignificantChangeRevised](../../src/Compliance.Common/Features/Changes/SignificantChangeRevised.cs#L6)
+- [SignificantChangeRevised](../../src/Compliance.Common/Features/Changes/Events/SignificantChangeRevised.cs#L6)
 
 
 
 #### Commitments
 
-- [CommitmentRetired](../../src/Compliance.Common/Features/Commitments/CommitmentRetired.cs#L6)
+- [CommitmentRetired](../../src/Compliance.Common/Features/Commitments/Events/CommitmentRetired.cs#L6)
 
 
 
 #### Evidence
 
-- [EvidenceArtifactDownloadIssued](../../src/Compliance.Common/Features/Evidence/EvidenceArtifactDownloadIssued.cs#L6)
+- [EvidenceArtifactDownloadIssued](../../src/Compliance.Common/Features/Evidence/Events/EvidenceArtifactDownloadIssued.cs#L6)
 
-- [EvidenceSupportLinked](../../src/Compliance.Common/Features/Evidence/EvidenceSupportLinked.cs#L6)
+- [EvidenceSupportLinked](../../src/Compliance.Common/Features/Evidence/Events/EvidenceSupportLinked.cs#L6)
 
 
 
 #### Examinations
 
-- [AuditObservationFindingLinked](../../src/Compliance.Common/Features/Examinations/AuditObservationFindingLinked.cs#L6)
+- [AuditObservationFindingLinked](../../src/Compliance.Common/Features/Examinations/Events/AuditObservationFindingLinked.cs#L6)
 
-- [AuditObservationRecorded](../../src/Compliance.Common/Features/Examinations/AuditObservationRecorded.cs#L6)
+- [AuditObservationRecorded](../../src/Compliance.Common/Features/Examinations/Events/AuditObservationRecorded.cs#L6)
 
-- [AuditOutcomeRecorded](../../src/Compliance.Common/Features/Examinations/AuditOutcomeRecorded.cs#L6)
+- [AuditOutcomeRecorded](../../src/Compliance.Common/Features/Examinations/Events/AuditOutcomeRecorded.cs#L6)
 
-- [ManagementAssertionApproved](../../src/Compliance.Common/Features/Examinations/ManagementAssertionApproved.cs#L6)
+- [ManagementAssertionApproved](../../src/Compliance.Common/Features/Examinations/Events/ManagementAssertionApproved.cs#L6)
 
-- [ManagementAssertionRevised](../../src/Compliance.Common/Features/Examinations/ManagementAssertionRevised.cs#L6)
+- [ManagementAssertionRevised](../../src/Compliance.Common/Features/Examinations/Events/ManagementAssertionRevised.cs#L6)
 
-- [ManagementRepresentationLetterSigned](../../src/Compliance.Common/Features/Examinations/ManagementRepresentationLetterSigned.cs#L6)
+- [ManagementRepresentationLetterSigned](../../src/Compliance.Common/Features/Examinations/Events/ManagementRepresentationLetterSigned.cs#L6)
 
-- [ExaminationEngagementOpened](../../src/Compliance.Common/Features/Examinations/ExaminationEngagementOpened.cs#L6)
+- [ExaminationEngagementOpened](../../src/Compliance.Common/Features/Examinations/Events/ExaminationEngagementOpened.cs#L6)
 
-- [ExaminationEngagementRevised](../../src/Compliance.Common/Features/Examinations/ExaminationEngagementRevised.cs#L6)
+- [ExaminationEngagementRevised](../../src/Compliance.Common/Features/Examinations/Events/ExaminationEngagementRevised.cs#L6)
 
-- [ExaminationSignedOff](../../src/Compliance.Common/Features/Examinations/ExaminationSignedOff.cs#L6)
+- [ExaminationSignedOff](../../src/Compliance.Common/Features/Examinations/Events/ExaminationSignedOff.cs#L6)
 
-- [ManagementAssertionRecorded](../../src/Compliance.Common/Features/Examinations/ManagementAssertionRecorded.cs#L6)
+- [ManagementAssertionRecorded](../../src/Compliance.Common/Features/Examinations/Events/ManagementAssertionRecorded.cs#L6)
 
-- [RepresentationLetterRecorded](../../src/Compliance.Common/Features/Examinations/RepresentationLetterRecorded.cs#L6)
+- [RepresentationLetterRecorded](../../src/Compliance.Common/Features/Examinations/Events/RepresentationLetterRecorded.cs#L6)
 
-- [TypeIBaselineAmended](../../src/Compliance.Common/Features/Examinations/TypeIBaselineAmended.cs#L6)
+- [TypeIBaselineAmended](../../src/Compliance.Common/Features/Examinations/Events/TypeIBaselineAmended.cs#L6)
 
-- [TypeIBaselineFrozen](../../src/Compliance.Common/Features/Examinations/TypeIBaselineFrozen.cs#L6)
+- [TypeIBaselineFrozen](../../src/Compliance.Common/Features/Examinations/Events/TypeIBaselineFrozen.cs#L6)
 
-- [TypeIIPlanApproved](../../src/Compliance.Common/Features/Examinations/TypeIIPlanApproved.cs#L6)
+- [TypeIIPlanApproved](../../src/Compliance.Common/Features/Examinations/Events/TypeIIPlanApproved.cs#L6)
 
-- [TypeIIPlanProposed](../../src/Compliance.Common/Features/Examinations/TypeIIPlanProposed.cs#L6)
+- [TypeIIPlanProposed](../../src/Compliance.Common/Features/Examinations/Events/TypeIIPlanProposed.cs#L6)
 
-- [TypeIIPlanReviewed](../../src/Compliance.Common/Features/Examinations/TypeIIPlanReviewed.cs#L6)
+- [TypeIIPlanReviewed](../../src/Compliance.Common/Features/Examinations/Events/TypeIIPlanReviewed.cs#L6)
 
-- [TypeIIPlanRevised](../../src/Compliance.Common/Features/Examinations/TypeIIPlanRevised.cs#L6)
+- [TypeIIPlanRevised](../../src/Compliance.Common/Features/Examinations/Events/TypeIIPlanRevised.cs#L6)
 
 
 
 #### Exports
 
-- [ClientExportBuildFailed](../../src/Compliance.Common/Features/Exports/ClientExportBuildFailed.cs#L6)
+- [ClientExportBuildFailed](../../src/Compliance.Common/Features/Exports/Events/ClientExportBuildFailed.cs#L6)
 
-- [ClientExportBuilt](../../src/Compliance.Common/Features/Exports/ClientExportBuilt.cs#L6)
+- [ClientExportBuilt](../../src/Compliance.Common/Features/Exports/Events/ClientExportBuilt.cs#L6)
 
-- [ClientExportDelivered](../../src/Compliance.Common/Features/Exports/ClientExportDelivered.cs#L6)
+- [ClientExportDelivered](../../src/Compliance.Common/Features/Exports/Events/ClientExportDelivered.cs#L6)
 
-- [ClientExportRequested](../../src/Compliance.Common/Features/Exports/ClientExportRequested.cs#L6)
+- [ClientExportRequested](../../src/Compliance.Common/Features/Exports/Events/ClientExportRequested.cs#L6)
 
 
 
 #### MethodologyTemplates
 
-- [MethodologyTemplateApplied](../../src/Compliance.Common/Features/MethodologyTemplates/MethodologyTemplateApplied.cs#L6)
+- [MethodologyTemplateApplied](../../src/Compliance.Common/Features/MethodologyTemplates/Events/MethodologyTemplateApplied.cs#L6)
 
-- [MethodologyTemplateContributionAccepted](../../src/Compliance.Common/Features/MethodologyTemplates/MethodologyTemplateContributionAccepted.cs#L6)
+- [MethodologyTemplateContributionAccepted](../../src/Compliance.Common/Features/MethodologyTemplates/Events/MethodologyTemplateContributionAccepted.cs#L6)
 
-- [MethodologyTemplateContributionProposed](../../src/Compliance.Common/Features/MethodologyTemplates/MethodologyTemplateContributionProposed.cs#L6)
+- [MethodologyTemplateContributionProposed](../../src/Compliance.Common/Features/MethodologyTemplates/Events/MethodologyTemplateContributionProposed.cs#L6)
 
-- [MethodologyTemplateContributionReviewed](../../src/Compliance.Common/Features/MethodologyTemplates/MethodologyTemplateContributionReviewed.cs#L6)
+- [MethodologyTemplateContributionReviewed](../../src/Compliance.Common/Features/MethodologyTemplates/Events/MethodologyTemplateContributionReviewed.cs#L6)
 
-- [MethodologyTemplateCreated](../../src/Compliance.Common/Features/MethodologyTemplates/MethodologyTemplateCreated.cs#L6)
+- [MethodologyTemplateCreated](../../src/Compliance.Common/Features/MethodologyTemplates/Events/MethodologyTemplateCreated.cs#L6)
 
-- [MethodologyTemplateDraftRevised](../../src/Compliance.Common/Features/MethodologyTemplates/MethodologyTemplateDraftRevised.cs#L6)
+- [MethodologyTemplateDraftRevised](../../src/Compliance.Common/Features/MethodologyTemplates/Events/MethodologyTemplateDraftRevised.cs#L6)
 
-- [MethodologyTemplateRetired](../../src/Compliance.Common/Features/MethodologyTemplates/MethodologyTemplateRetired.cs#L6)
+- [MethodologyTemplateRetired](../../src/Compliance.Common/Features/MethodologyTemplates/Events/MethodologyTemplateRetired.cs#L6)
 
-- [MethodologyTemplateVersionPublished](../../src/Compliance.Common/Features/MethodologyTemplates/MethodologyTemplateVersionPublished.cs#L6)
+- [MethodologyTemplateVersionPublished](../../src/Compliance.Common/Features/MethodologyTemplates/Events/MethodologyTemplateVersionPublished.cs#L6)
 
-- [TemplateSuccessorAdoptionProposed](../../src/Compliance.Common/Features/MethodologyTemplates/TemplateSuccessorAdoptionProposed.cs#L6)
+- [TemplateSuccessorAdoptionProposed](../../src/Compliance.Common/Features/MethodologyTemplates/Events/TemplateSuccessorAdoptionProposed.cs#L6)
 
-- [TemplateSuccessorDispositionRecorded](../../src/Compliance.Common/Features/MethodologyTemplates/TemplateSuccessorDispositionRecorded.cs#L6)
+- [TemplateSuccessorDispositionRecorded](../../src/Compliance.Common/Features/MethodologyTemplates/Events/TemplateSuccessorDispositionRecorded.cs#L6)
 
 
 
 #### Operations
 
-- [DueControlOccurrencesGenerated](../../src/Compliance.Common/Features/Operations/DueControlOccurrencesGenerated.cs#L6)
+- [DueControlOccurrencesGenerated](../../src/Compliance.Common/Features/Operations/Events/DueControlOccurrencesGenerated.cs#L6)
 
-- [FutureControlScheduleRevised](../../src/Compliance.Common/Features/Operations/FutureControlScheduleRevised.cs#L6)
+- [FutureControlScheduleRevised](../../src/Compliance.Common/Features/Operations/Events/FutureControlScheduleRevised.cs#L6)
 
-- [GovernanceReviewScheduled](../../src/Compliance.Common/Features/Operations/GovernanceReviewScheduled.cs#L6)
+- [GovernanceReviewScheduled](../../src/Compliance.Common/Features/Operations/Events/GovernanceReviewScheduled.cs#L6)
 
-- [ManagementReviewActionCompleted](../../src/Compliance.Common/Features/Operations/ManagementReviewActionCompleted.cs#L6)
+- [ManagementReviewActionCompleted](../../src/Compliance.Common/Features/Operations/Events/ManagementReviewActionCompleted.cs#L6)
 
-- [ManagementReviewActionRecorded](../../src/Compliance.Common/Features/Operations/ManagementReviewActionRecorded.cs#L6)
+- [ManagementReviewActionRecorded](../../src/Compliance.Common/Features/Operations/Events/ManagementReviewActionRecorded.cs#L6)
 
-- [ManagementReviewRecorded](../../src/Compliance.Common/Features/Operations/ManagementReviewRecorded.cs#L6)
+- [ManagementReviewRecorded](../../src/Compliance.Common/Features/Operations/Events/ManagementReviewRecorded.cs#L6)
 
-- [MissingOccurrenceRecorded](../../src/Compliance.Common/Features/Operations/MissingOccurrenceRecorded.cs#L6)
+- [MissingOccurrenceRecorded](../../src/Compliance.Common/Features/Operations/Events/MissingOccurrenceRecorded.cs#L6)
 
 - [ObservationPeriodAmendmentCancelled](../../src/Compliance.Common/Features/Operations/ObservationPeriodAmendmentCancelled.cs#L6)
 
@@ -1320,315 +1320,315 @@ These 140 requirement-backed event contracts have been added since the existing-
 
 - [ObservationPeriodReservationReleased](../../src/Compliance.Common/Features/Operations/ObservationPeriodReservationReleased.cs#L6)
 
-- [ObservationPeriodAmended](../../src/Compliance.Common/Features/Operations/ObservationPeriodAmended.cs#L6)
+- [ObservationPeriodAmended](../../src/Compliance.Common/Features/Operations/Events/ObservationPeriodAmended.cs#L6)
 
-- [ObservationPeriodEnded](../../src/Compliance.Common/Features/Operations/ObservationPeriodEnded.cs#L6)
+- [ObservationPeriodEnded](../../src/Compliance.Common/Features/Operations/Events/ObservationPeriodEnded.cs#L6)
 
-- [ObservationPeriodStarted](../../src/Compliance.Common/Features/Operations/ObservationPeriodStarted.cs#L6)
+- [ObservationPeriodStarted](../../src/Compliance.Common/Features/Operations/Events/ObservationPeriodStarted.cs#L6)
 
 - [ObservationPeriodReserved](../../src/Compliance.Common/Features/Operations/ObservationPeriodReserved.cs#L6)
 
-- [TypeIIOperatingPlanApproved](../../src/Compliance.Common/Features/Operations/TypeIIOperatingPlanApproved.cs#L6)
+- [TypeIIOperatingPlanApproved](../../src/Compliance.Common/Features/Operations/Events/TypeIIOperatingPlanApproved.cs#L6)
 
-- [TypeIIOperatingPlanProposed](../../src/Compliance.Common/Features/Operations/TypeIIOperatingPlanProposed.cs#L6)
+- [TypeIIOperatingPlanProposed](../../src/Compliance.Common/Features/Operations/Events/TypeIIOperatingPlanProposed.cs#L6)
 
-- [TypeIIOperatingPlanReviewed](../../src/Compliance.Common/Features/Operations/TypeIIOperatingPlanReviewed.cs#L6)
+- [TypeIIOperatingPlanReviewed](../../src/Compliance.Common/Features/Operations/Events/TypeIIOperatingPlanReviewed.cs#L6)
 
 
 
 #### Programs
 
-- [NextObservationPeriodStarted](../../src/Compliance.Common/Features/Programs/NextObservationPeriodStarted.cs#L6)
+- [NextObservationPeriodStarted](../../src/Compliance.Common/Features/Programs/Events/NextObservationPeriodStarted.cs#L6)
 
-- [OpenRemediationCarriedForward](../../src/Compliance.Common/Features/Programs/OpenRemediationCarriedForward.cs#L6)
+- [OpenRemediationCarriedForward](../../src/Compliance.Common/Features/Programs/Events/OpenRemediationCarriedForward.cs#L6)
 
-- [ProgramRolloverApproved](../../src/Compliance.Common/Features/Programs/ProgramRolloverApproved.cs#L6)
+- [ProgramRolloverApproved](../../src/Compliance.Common/Features/Programs/Events/ProgramRolloverApproved.cs#L6)
 
-- [ProgramRolloverProposed](../../src/Compliance.Common/Features/Programs/ProgramRolloverProposed.cs#L6)
+- [ProgramRolloverProposed](../../src/Compliance.Common/Features/Programs/Events/ProgramRolloverProposed.cs#L6)
 
 
 
 #### Retention
 
-- [ArtifactDisclosureApproved](../../src/Compliance.Common/Features/Retention/ArtifactDisclosureApproved.cs#L6)
+- [ArtifactDisclosureApproved](../../src/Compliance.Common/Features/Retention/Events/ArtifactDisclosureApproved.cs#L6)
 
-- [ArtifactDisclosureDelivered](../../src/Compliance.Common/Features/Retention/ArtifactDisclosureDelivered.cs#L6)
+- [ArtifactDisclosureDelivered](../../src/Compliance.Common/Features/Retention/Events/ArtifactDisclosureDelivered.cs#L6)
 
-- [ArtifactDisclosureRevoked](../../src/Compliance.Common/Features/Retention/ArtifactDisclosureRevoked.cs#L6)
+- [ArtifactDisclosureRevoked](../../src/Compliance.Common/Features/Retention/Events/ArtifactDisclosureRevoked.cs#L6)
 
-- [ArtifactDispositionApproved](../../src/Compliance.Common/Features/Retention/ArtifactDispositionApproved.cs#L6)
+- [ArtifactDispositionApproved](../../src/Compliance.Common/Features/Retention/Events/ArtifactDispositionApproved.cs#L6)
 
-- [ArtifactDispositionExecutionRequested](../../src/Compliance.Common/Features/Retention/ArtifactDispositionExecutionRequested.cs#L6)
+- [ArtifactDispositionExecutionRequested](../../src/Compliance.Common/Features/Retention/Events/ArtifactDispositionExecutionRequested.cs#L6)
 
-- [ArtifactDispositionResultRecorded](../../src/Compliance.Common/Features/Retention/ArtifactDispositionResultRecorded.cs#L6)
+- [ArtifactDispositionResultRecorded](../../src/Compliance.Common/Features/Retention/Events/ArtifactDispositionResultRecorded.cs#L6)
 
-- [ArtifactEngagementHoldPlaced](../../src/Compliance.Common/Features/Retention/ArtifactEngagementHoldPlaced.cs#L6)
+- [ArtifactEngagementHoldPlaced](../../src/Compliance.Common/Features/Retention/Events/ArtifactEngagementHoldPlaced.cs#L6)
 
-- [ArtifactEngagementHoldReleased](../../src/Compliance.Common/Features/Retention/ArtifactEngagementHoldReleased.cs#L6)
+- [ArtifactEngagementHoldReleased](../../src/Compliance.Common/Features/Retention/Events/ArtifactEngagementHoldReleased.cs#L6)
 
-- [ArtifactHandlingPolicyAssigned](../../src/Compliance.Common/Features/Retention/ArtifactHandlingPolicyAssigned.cs#L6)
+- [ArtifactHandlingPolicyAssigned](../../src/Compliance.Common/Features/Retention/Events/ArtifactHandlingPolicyAssigned.cs#L6)
 
-- [ArtifactHandlingPolicyRevised](../../src/Compliance.Common/Features/Retention/ArtifactHandlingPolicyRevised.cs#L6)
+- [ArtifactHandlingPolicyRevised](../../src/Compliance.Common/Features/Retention/Events/ArtifactHandlingPolicyRevised.cs#L6)
 
-- [EngagementReportIssued](../../src/Compliance.Common/Features/Retention/EngagementReportIssued.cs#L6)
+- [EngagementReportIssued](../../src/Compliance.Common/Features/Retention/Events/EngagementReportIssued.cs#L6)
 
 
 
 #### SystemDescription
 
-- [SystemDescriptionApproved](../../src/Compliance.Common/Features/SystemDescription/SystemDescriptionApproved.cs#L6)
+- [SystemDescriptionApproved](../../src/Compliance.Common/Features/SystemDescription/Events/SystemDescriptionApproved.cs#L6)
 
-- [SystemDescriptionBound](../../src/Compliance.Common/Features/SystemDescription/SystemDescriptionBound.cs#L6)
+- [SystemDescriptionBound](../../src/Compliance.Common/Features/SystemDescription/Events/SystemDescriptionBound.cs#L6)
 
-- [SystemDescriptionDraftCreated](../../src/Compliance.Common/Features/SystemDescription/SystemDescriptionDraftCreated.cs#L6)
+- [SystemDescriptionDraftCreated](../../src/Compliance.Common/Features/SystemDescription/Events/SystemDescriptionDraftCreated.cs#L6)
 
-- [SystemDescriptionDraftRevised](../../src/Compliance.Common/Features/SystemDescription/SystemDescriptionDraftRevised.cs#L6)
+- [SystemDescriptionDraftRevised](../../src/Compliance.Common/Features/SystemDescription/Events/SystemDescriptionDraftRevised.cs#L6)
 
 - [SystemDescriptionExportGenerated](../../src/Compliance.Common/Features/SystemDescription/SystemDescriptionExportGenerated.cs#L6)
 
-- [SystemDescriptionNoChangeRecorded](../../src/Compliance.Common/Features/SystemDescription/SystemDescriptionNoChangeRecorded.cs#L6)
+- [SystemDescriptionNoChangeRecorded](../../src/Compliance.Common/Features/SystemDescription/Events/SystemDescriptionNoChangeRecorded.cs#L6)
 
-- [SystemDescriptionReviewed](../../src/Compliance.Common/Features/SystemDescription/SystemDescriptionReviewed.cs#L6)
+- [SystemDescriptionReviewed](../../src/Compliance.Common/Features/SystemDescription/Events/SystemDescriptionReviewed.cs#L6)
 
-- [SystemDescriptionSourcesBound](../../src/Compliance.Common/Features/SystemDescription/SystemDescriptionSourcesBound.cs#L6)
+- [SystemDescriptionSourcesBound](../../src/Compliance.Common/Features/SystemDescription/Events/SystemDescriptionSourcesBound.cs#L6)
 
-- [SystemDescriptionSuccessorProposed](../../src/Compliance.Common/Features/SystemDescription/SystemDescriptionSuccessorProposed.cs#L6)
+- [SystemDescriptionSuccessorProposed](../../src/Compliance.Common/Features/SystemDescription/Events/SystemDescriptionSuccessorProposed.cs#L6)
 
 
 
 #### Tenants
 
-- [TenantOffboardingCompleted](../../src/Compliance.Common/Features/Tenants/TenantOffboardingCompleted.cs#L6)
+- [TenantOffboardingCompleted](../../src/Compliance.Common/Features/Tenants/Events/TenantOffboardingCompleted.cs#L6)
 
 
 
 #### UserIdentities
 
-- [TenantIdentityProviderConfigured](../../src/Compliance.Common/Features/UserIdentities/TenantIdentityProviderConfigured.cs#L6)
+- [TenantIdentityProviderConfigured](../../src/Compliance.Common/Features/UserIdentities/Events/TenantIdentityProviderConfigured.cs#L6)
 
-- [TenantIdentityProviderCredentialsRotated](../../src/Compliance.Common/Features/UserIdentities/TenantIdentityProviderCredentialsRotated.cs#L6)
+- [TenantIdentityProviderCredentialsRotated](../../src/Compliance.Common/Features/UserIdentities/Events/TenantIdentityProviderCredentialsRotated.cs#L6)
 
-- [TenantIdentityProviderDisabled](../../src/Compliance.Common/Features/UserIdentities/TenantIdentityProviderDisabled.cs#L6)
+- [TenantIdentityProviderDisabled](../../src/Compliance.Common/Features/UserIdentities/Events/TenantIdentityProviderDisabled.cs#L6)
 
-- [TenantIdentityProviderTested](../../src/Compliance.Common/Features/UserIdentities/TenantIdentityProviderTested.cs#L6)
+- [TenantIdentityProviderTested](../../src/Compliance.Common/Features/UserIdentities/Events/TenantIdentityProviderTested.cs#L6)
 
-- [TenantIdentityProviderTestRequested](../../src/Compliance.Common/Features/UserIdentities/TenantIdentityProviderTestRequested.cs#L6)
+- [TenantIdentityProviderTestRequested](../../src/Compliance.Common/Features/UserIdentities/Events/TenantIdentityProviderTestRequested.cs#L6)
 
 
 #### Work
 
-- [WeeklyWorkDigestScheduled](../../src/Compliance.Common/Features/Work/WeeklyWorkDigestScheduled.cs#L7)
-- [WeeklyWorkDigestDeliveryRequested](../../src/Compliance.Common/Features/Work/WeeklyWorkDigestDeliveryRequested.cs#L7)
-- [WeeklyWorkDigestDeliveryRecorded](../../src/Compliance.Common/Features/Work/WeeklyWorkDigestDeliveryRecorded.cs#L7)
-- [WeeklyWorkDigestDeliverySuppressed](../../src/Compliance.Common/Features/Work/WeeklyWorkDigestDeliverySuppressed.cs#L7)
+- [WeeklyWorkDigestScheduled](../../src/Compliance.Common/Features/Work/Events/WeeklyWorkDigestScheduled.cs#L7)
+- [WeeklyWorkDigestDeliveryRequested](../../src/Compliance.Common/Features/Work/Events/WeeklyWorkDigestDeliveryRequested.cs#L7)
+- [WeeklyWorkDigestDeliveryRecorded](../../src/Compliance.Common/Features/Work/Events/WeeklyWorkDigestDeliveryRecorded.cs#L7)
+- [WeeklyWorkDigestDeliverySuppressed](../../src/Compliance.Common/Features/Work/Events/WeeklyWorkDigestDeliverySuppressed.cs#L7)
 
 
 ### Incidents
 
-- [ComplianceIncidentImpactAssessed](../../src/Compliance.Common/Features/Incidents/ComplianceIncidentImpactAssessed.cs#L6)
-- [ComplianceIncidentRecorded](../../src/Compliance.Common/Features/Incidents/ComplianceIncidentRecorded.cs#L6)
-- [ComplianceIncidentRevised](../../src/Compliance.Common/Features/Incidents/ComplianceIncidentRevised.cs#L6)
-- [ComplianceIncidentSystemDescriptionDecisionRecorded](../../src/Compliance.Common/Features/Incidents/ComplianceIncidentSystemDescriptionDecisionRecorded.cs#L6)
-- [IncidentResolutionRecorded](../../src/Compliance.Common/Features/Incidents/IncidentResolutionRecorded.cs#L6)
+- [ComplianceIncidentImpactAssessed](../../src/Compliance.Common/Features/Incidents/Events/ComplianceIncidentImpactAssessed.cs#L6)
+- [ComplianceIncidentRecorded](../../src/Compliance.Common/Features/Incidents/Events/ComplianceIncidentRecorded.cs#L6)
+- [ComplianceIncidentRevised](../../src/Compliance.Common/Features/Incidents/Events/ComplianceIncidentRevised.cs#L6)
+- [ComplianceIncidentSystemDescriptionDecisionRecorded](../../src/Compliance.Common/Features/Incidents/Events/ComplianceIncidentSystemDescriptionDecisionRecorded.cs#L6)
+- [IncidentResolutionRecorded](../../src/Compliance.Common/Features/Incidents/Events/IncidentResolutionRecorded.cs#L6)
 
 ### Existing events
 
 #### AccessControl
 
-- [AccessGrantIssued](../../src/Compliance.Common/Features/AccessControl/AccessGrantIssued.cs#L6) — `bdgrz.access-grant.issued` v1
-- [AccessGrantRevoked](../../src/Compliance.Common/Features/AccessControl/AccessGrantRevoked.cs#L6) — `bdgrz.access-grant.revoked` v1
-- [AssignmentIndependenceReevaluated](../../src/Compliance.Common/Features/AccessControl/AssignmentIndependenceReevaluated.cs#L6) — `bdgrz.independence.assignment-reevaluated` v1
-- [ClientIndependenceEvaluated](../../src/Compliance.Common/Features/AccessControl/ClientIndependenceEvaluated.cs#L6) — `bdgrz.independence.evaluated` v1
-- [DirectoryIndependenceReevaluated](../../src/Compliance.Common/Features/AccessControl/DirectoryIndependenceReevaluated.cs#L6) — `bdgrz.independence.directory-reevaluated` v1
-- [EngagementManagementAcknowledged](../../src/Compliance.Common/Features/AccessControl/EngagementManagementAcknowledged.cs#L6) — `bdgrz.service-engagement.management-acknowledged` v1
-- [FirmStaffChangeRecorded](../../src/Compliance.Common/Features/AccessControl/FirmStaffChangeRecorded.cs#L6) — `bdgrz.firm-staff.changed` v1
-- [IndependenceRulesRevised](../../src/Compliance.Common/Features/AccessControl/IndependenceRulesRevised.cs#L6) — `bdgrz.independence.rules.revised` v1
-- [MemberDeprovisionCleanupCompleted](../../src/Compliance.Common/Features/AccessControl/MemberDeprovisionCleanupCompleted.cs#L6) — `bdgrz.rbac.member.deprovision_cleanup_completed` v2
-- [MemberDeprovisioned](../../src/Compliance.Common/Features/AccessControl/MemberDeprovisioned.cs#L6) — `bdgrz.rbac.member.deprovisioned` v2
-- [MemberRegistered](../../src/Compliance.Common/Features/AccessControl/MemberRegistered.cs#L6) — `bdgrz.rbac.member.registered` v1
-- [MemberReinstated](../../src/Compliance.Common/Features/AccessControl/MemberReinstated.cs#L6) — `bdgrz.rbac.member.reinstated` v1
-- [MemberSuspended](../../src/Compliance.Common/Features/AccessControl/MemberSuspended.cs#L6) — `bdgrz.rbac.member.suspended` v1
-- [NonattestServiceRecorded](../../src/Compliance.Common/Features/AccessControl/NonattestServiceRecorded.cs#L6) — `bdgrz.independence.service.recorded` v1
-- [RoleDefined](../../src/Compliance.Common/Features/AccessControl/RoleDefined.cs#L6) — `bdgrz.rbac.role.defined` v1
-- [RoleDeleted](../../src/Compliance.Common/Features/AccessControl/RoleDeleted.cs#L6) — `bdgrz.rbac.role.deleted` v1
-- [RolePermissionAssigned](../../src/Compliance.Common/Features/AccessControl/RolePermissionAssigned.cs#L6) — `bdgrz.rbac.role-permission.assigned` v1
-- [RolePermissionRemoved](../../src/Compliance.Common/Features/AccessControl/RolePermissionRemoved.cs#L6) — `bdgrz.rbac.role-permission.removed` v1
-- [RoleRenamed](../../src/Compliance.Common/Features/AccessControl/RoleRenamed.cs#L6) — `bdgrz.rbac.role.renamed` v1
-- [SeparationOfDutiesWaiverApproved](../../src/Compliance.Common/Features/AccessControl/SeparationOfDutiesWaiverApproved.cs#L7) — `bdgrz.sod-waiver.approved` v1
-- [SeparationOfDutiesWaiverRecorded](../../src/Compliance.Common/Features/AccessControl/SeparationOfDutiesWaiverRecorded.cs#L8) — `bdgrz.sod-waiver.recorded` v1
-- [ServiceEngagementAcceptanceRecorded](../../src/Compliance.Common/Features/AccessControl/ServiceEngagementAcceptanceRecorded.cs#L6) — `bdgrz.service-engagement.acceptance-recorded` v1
-- [ServiceEngagementAssignmentRevoked](../../src/Compliance.Common/Features/AccessControl/ServiceEngagementAssignmentRevoked.cs#L6) — `bdgrz.service-engagement.assignment-revoked` v1
-- [ServiceEngagementMutationRecorded](../../src/Compliance.Common/Features/AccessControl/ServiceEngagementMutationRecorded.cs#L6) — `bdgrz.service-engagement.changed` v1
-- [ServiceIndependenceReevaluated](../../src/Compliance.Common/Features/AccessControl/ServiceIndependenceReevaluated.cs#L6) — `bdgrz.independence.service-reevaluated` v1
-- [TeamDefined](../../src/Compliance.Common/Features/AccessControl/TeamDefined.cs#L6) — `bdgrz.rbac.team.defined` v1
-- [TeamDeleted](../../src/Compliance.Common/Features/AccessControl/TeamDeleted.cs#L6) — `bdgrz.rbac.team.deleted` v1
-- [TeamMemberAssigned](../../src/Compliance.Common/Features/AccessControl/TeamMemberAssigned.cs#L6) — `bdgrz.rbac.team-member.assigned` v1
-- [TeamMemberRemoved](../../src/Compliance.Common/Features/AccessControl/TeamMemberRemoved.cs#L6) — `bdgrz.rbac.team-member.removed` v2
-- [TeamRoleAssigned](../../src/Compliance.Common/Features/AccessControl/TeamRoleAssigned.cs#L6) — `bdgrz.rbac.team-role.assigned` v1
-- [TeamRoleRemoved](../../src/Compliance.Common/Features/AccessControl/TeamRoleRemoved.cs#L6) — `bdgrz.rbac.team-role.removed` v1
-- [TenantManagerRestored](../../src/Compliance.Common/Features/AccessControl/TenantManagerRestored.cs#L7) — `bdgrz.rbac.manager_guard.restored` v1
+- [AccessGrantIssued](../../src/Compliance.Common/Features/AccessControl/Events/AccessGrantIssued.cs#L6) — `bdgrz.access-grant.issued` v1
+- [AccessGrantRevoked](../../src/Compliance.Common/Features/AccessControl/Events/AccessGrantRevoked.cs#L6) — `bdgrz.access-grant.revoked` v1
+- [AssignmentIndependenceReevaluated](../../src/Compliance.Common/Features/AccessControl/Events/AssignmentIndependenceReevaluated.cs#L6) — `bdgrz.independence.assignment-reevaluated` v1
+- [ClientIndependenceEvaluated](../../src/Compliance.Common/Features/AccessControl/Events/ClientIndependenceEvaluated.cs#L6) — `bdgrz.independence.evaluated` v1
+- [DirectoryIndependenceReevaluated](../../src/Compliance.Common/Features/AccessControl/Events/DirectoryIndependenceReevaluated.cs#L6) — `bdgrz.independence.directory-reevaluated` v1
+- [EngagementManagementAcknowledged](../../src/Compliance.Common/Features/AccessControl/Events/EngagementManagementAcknowledged.cs#L6) — `bdgrz.service-engagement.management-acknowledged` v1
+- [FirmStaffChangeRecorded](../../src/Compliance.Common/Features/AccessControl/Events/FirmStaffChangeRecorded.cs#L6) — `bdgrz.firm-staff.changed` v1
+- [IndependenceRulesRevised](../../src/Compliance.Common/Features/AccessControl/Events/IndependenceRulesRevised.cs#L6) — `bdgrz.independence.rules.revised` v1
+- [MemberDeprovisionCleanupCompleted](../../src/Compliance.Common/Features/AccessControl/Events/MemberDeprovisionCleanupCompleted.cs#L6) — `bdgrz.rbac.member.deprovision_cleanup_completed` v2
+- [MemberDeprovisioned](../../src/Compliance.Common/Features/AccessControl/Events/MemberDeprovisioned.cs#L6) — `bdgrz.rbac.member.deprovisioned` v2
+- [MemberRegistered](../../src/Compliance.Common/Features/AccessControl/Events/MemberRegistered.cs#L6) — `bdgrz.rbac.member.registered` v1
+- [MemberReinstated](../../src/Compliance.Common/Features/AccessControl/Events/MemberReinstated.cs#L6) — `bdgrz.rbac.member.reinstated` v1
+- [MemberSuspended](../../src/Compliance.Common/Features/AccessControl/Events/MemberSuspended.cs#L6) — `bdgrz.rbac.member.suspended` v1
+- [NonattestServiceRecorded](../../src/Compliance.Common/Features/AccessControl/Events/NonattestServiceRecorded.cs#L6) — `bdgrz.independence.service.recorded` v1
+- [RoleDefined](../../src/Compliance.Common/Features/AccessControl/Events/RoleDefined.cs#L6) — `bdgrz.rbac.role.defined` v1
+- [RoleDeleted](../../src/Compliance.Common/Features/AccessControl/Events/RoleDeleted.cs#L6) — `bdgrz.rbac.role.deleted` v1
+- [RolePermissionAssigned](../../src/Compliance.Common/Features/AccessControl/Events/RolePermissionAssigned.cs#L6) — `bdgrz.rbac.role-permission.assigned` v1
+- [RolePermissionRemoved](../../src/Compliance.Common/Features/AccessControl/Events/RolePermissionRemoved.cs#L6) — `bdgrz.rbac.role-permission.removed` v1
+- [RoleRenamed](../../src/Compliance.Common/Features/AccessControl/Events/RoleRenamed.cs#L6) — `bdgrz.rbac.role.renamed` v1
+- [SeparationOfDutiesWaiverApproved](../../src/Compliance.Common/Features/AccessControl/Events/SeparationOfDutiesWaiverApproved.cs#L7) — `bdgrz.sod-waiver.approved` v1
+- [SeparationOfDutiesWaiverRecorded](../../src/Compliance.Common/Features/AccessControl/Events/SeparationOfDutiesWaiverRecorded.cs#L8) — `bdgrz.sod-waiver.recorded` v1
+- [ServiceEngagementAcceptanceRecorded](../../src/Compliance.Common/Features/AccessControl/Events/ServiceEngagementAcceptanceRecorded.cs#L6) — `bdgrz.service-engagement.acceptance-recorded` v1
+- [ServiceEngagementAssignmentRevoked](../../src/Compliance.Common/Features/AccessControl/Events/ServiceEngagementAssignmentRevoked.cs#L6) — `bdgrz.service-engagement.assignment-revoked` v1
+- [ServiceEngagementMutationRecorded](../../src/Compliance.Common/Features/AccessControl/Events/ServiceEngagementMutationRecorded.cs#L6) — `bdgrz.service-engagement.changed` v1
+- [ServiceIndependenceReevaluated](../../src/Compliance.Common/Features/AccessControl/Events/ServiceIndependenceReevaluated.cs#L6) — `bdgrz.independence.service-reevaluated` v1
+- [TeamDefined](../../src/Compliance.Common/Features/AccessControl/Events/TeamDefined.cs#L6) — `bdgrz.rbac.team.defined` v1
+- [TeamDeleted](../../src/Compliance.Common/Features/AccessControl/Events/TeamDeleted.cs#L6) — `bdgrz.rbac.team.deleted` v1
+- [TeamMemberAssigned](../../src/Compliance.Common/Features/AccessControl/Events/TeamMemberAssigned.cs#L6) — `bdgrz.rbac.team-member.assigned` v1
+- [TeamMemberRemoved](../../src/Compliance.Common/Features/AccessControl/Events/TeamMemberRemoved.cs#L6) — `bdgrz.rbac.team-member.removed` v2
+- [TeamRoleAssigned](../../src/Compliance.Common/Features/AccessControl/Events/TeamRoleAssigned.cs#L6) — `bdgrz.rbac.team-role.assigned` v1
+- [TeamRoleRemoved](../../src/Compliance.Common/Features/AccessControl/Events/TeamRoleRemoved.cs#L6) — `bdgrz.rbac.team-role.removed` v1
+- [TenantManagerRestored](../../src/Compliance.Common/Features/AccessControl/Events/TenantManagerRestored.cs#L7) — `bdgrz.rbac.manager_guard.restored` v1
 - [TenantManagerWithdrawn](../../src/Compliance.Common/Features/AccessControl/TenantManagerWithdrawn.cs#L10) — `bdgrz.rbac.manager_guard.withdrawn` v1
 
 #### AccessReviews
 
-- [AccessDecisionsRecorded](../../src/Compliance.Common/Features/AccessReviews/AccessDecisionsRecorded.cs#L8) — `bdgrz.access_review.decisions.recorded` v1
-- [AccessExpectationApproved](../../src/Compliance.Common/Features/AccessReviews/AccessExpectationApproved.cs#L8) — `bdgrz.access_expectation.approved` v1
-- [AccessExpectationExceptionRecorded](../../src/Compliance.Common/Features/AccessReviews/AccessExpectationExceptionRecorded.cs#L8) — `bdgrz.access_expectation.exception_recorded` v1
-- [AccessExpectationProposed](../../src/Compliance.Common/Features/AccessReviews/AccessExpectationProposed.cs#L8) — `bdgrz.access_expectation.proposed` v1
-- [AccessPopulationAccepted](../../src/Compliance.Common/Features/AccessReviews/AccessPopulationAccepted.cs#L8) — `bdgrz.access_population.accepted` v1
-- [AccessPopulationExceptionRecorded](../../src/Compliance.Common/Features/AccessReviews/AccessPopulationExceptionRecorded.cs#L8) — `bdgrz.access_population.exception_recorded` v1
-- [AccessPopulationFactsRecorded](../../src/Compliance.Common/Features/AccessReviews/AccessPopulationFactsRecorded.cs#L8) — `bdgrz.access_population.facts_recorded` v1
-- [AccessPopulationOpened](../../src/Compliance.Common/Features/AccessReviews/AccessPopulationOpened.cs#L8) — `bdgrz.access_population.opened` v1
-- [AccessPrincipalClassified](../../src/Compliance.Common/Features/AccessReviews/AccessPrincipalClassified.cs#L8) — `bdgrz.access_population.principal_classified` v1
-- [AccessRemediationChangeRecorded](../../src/Compliance.Common/Features/AccessReviews/AccessRemediationChangeRecorded.cs#L8) — `bdgrz.access_review.remediation.change_recorded` v1
-- [AccessRemediationExceptionRecorded](../../src/Compliance.Common/Features/AccessReviews/AccessRemediationExceptionRecorded.cs#L8) — `bdgrz.access_review.remediation.exception_recorded` v1
-- [AccessRemediationVerified](../../src/Compliance.Common/Features/AccessReviews/AccessRemediationVerified.cs#L8) — `bdgrz.access_review.remediation.verified` v1
-- [AccessReviewCampaignCompleted](../../src/Compliance.Common/Features/AccessReviews/AccessReviewCampaignCompleted.cs#L8) — `bdgrz.access_review.campaign.completed` v1
-- [AccessReviewCampaignLaunched](../../src/Compliance.Common/Features/AccessReviews/AccessReviewCampaignLaunched.cs#L8) — `bdgrz.access_review.campaign.launched` v1
+- [AccessDecisionsRecorded](../../src/Compliance.Common/Features/AccessReviews/Events/AccessDecisionsRecorded.cs#L8) — `bdgrz.access_review.decisions.recorded` v1
+- [AccessExpectationApproved](../../src/Compliance.Common/Features/AccessReviews/Events/AccessExpectationApproved.cs#L8) — `bdgrz.access_expectation.approved` v1
+- [AccessExpectationExceptionRecorded](../../src/Compliance.Common/Features/AccessReviews/Events/AccessExpectationExceptionRecorded.cs#L8) — `bdgrz.access_expectation.exception_recorded` v1
+- [AccessExpectationProposed](../../src/Compliance.Common/Features/AccessReviews/Events/AccessExpectationProposed.cs#L8) — `bdgrz.access_expectation.proposed` v1
+- [AccessPopulationAccepted](../../src/Compliance.Common/Features/AccessReviews/Events/AccessPopulationAccepted.cs#L8) — `bdgrz.access_population.accepted` v1
+- [AccessPopulationExceptionRecorded](../../src/Compliance.Common/Features/AccessReviews/Events/AccessPopulationExceptionRecorded.cs#L8) — `bdgrz.access_population.exception_recorded` v1
+- [AccessPopulationFactsRecorded](../../src/Compliance.Common/Features/AccessReviews/Events/AccessPopulationFactsRecorded.cs#L8) — `bdgrz.access_population.facts_recorded` v1
+- [AccessPopulationOpened](../../src/Compliance.Common/Features/AccessReviews/Events/AccessPopulationOpened.cs#L8) — `bdgrz.access_population.opened` v1
+- [AccessPrincipalClassified](../../src/Compliance.Common/Features/AccessReviews/Events/AccessPrincipalClassified.cs#L8) — `bdgrz.access_population.principal_classified` v1
+- [AccessRemediationChangeRecorded](../../src/Compliance.Common/Features/AccessReviews/Events/AccessRemediationChangeRecorded.cs#L8) — `bdgrz.access_review.remediation.change_recorded` v1
+- [AccessRemediationExceptionRecorded](../../src/Compliance.Common/Features/AccessReviews/Events/AccessRemediationExceptionRecorded.cs#L8) — `bdgrz.access_review.remediation.exception_recorded` v1
+- [AccessRemediationVerified](../../src/Compliance.Common/Features/AccessReviews/Events/AccessRemediationVerified.cs#L8) — `bdgrz.access_review.remediation.verified` v1
+- [AccessReviewCampaignCompleted](../../src/Compliance.Common/Features/AccessReviews/Events/AccessReviewCampaignCompleted.cs#L8) — `bdgrz.access_review.campaign.completed` v1
+- [AccessReviewCampaignLaunched](../../src/Compliance.Common/Features/AccessReviews/Events/AccessReviewCampaignLaunched.cs#L8) — `bdgrz.access_review.campaign.launched` v1
 
 #### Applications
 
-- [AccessReviewScopeDecided](../../src/Compliance.Common/Features/Applications/AccessReviewScopeDecided.cs#L9) — `bdgrz.system_instance.access_review_scope.decided` v1
-- [ApplicationDeclared](../../src/Compliance.Common/Features/Applications/ApplicationDeclared.cs#L8) — `bdgrz.application.declared` v1
-- [ApplicationImportCanceled](../../src/Compliance.Common/Features/Applications/ApplicationImportCanceled.cs#L6) — `bdgrz.application_import.canceled` v1
-- [ApplicationImportCommitted](../../src/Compliance.Common/Features/Applications/ApplicationImportCommitted.cs#L6) — `bdgrz.application_import.committed` v1
-- [ApplicationImportEffectPending](../../src/Compliance.Common/Features/Applications/ApplicationImportEffectPending.cs#L8) — `bdgrz.application_import.effect_pending` v1
-- [ApplicationImportFailed](../../src/Compliance.Common/Features/Applications/ApplicationImportFailed.cs#L6) — `bdgrz.application_import.failed` v1
+- [AccessReviewScopeDecided](../../src/Compliance.Common/Features/Applications/Events/AccessReviewScopeDecided.cs#L9) — `bdgrz.system_instance.access_review_scope.decided` v1
+- [ApplicationDeclared](../../src/Compliance.Common/Features/Applications/Events/ApplicationDeclared.cs#L8) — `bdgrz.application.declared` v1
+- [ApplicationImportCanceled](../../src/Compliance.Common/Features/Applications/Events/ApplicationImportCanceled.cs#L6) — `bdgrz.application_import.canceled` v1
+- [ApplicationImportCommitted](../../src/Compliance.Common/Features/Applications/Events/ApplicationImportCommitted.cs#L6) — `bdgrz.application_import.committed` v1
+- [ApplicationImportEffectPending](../../src/Compliance.Common/Features/Applications/Events/ApplicationImportEffectPending.cs#L8) — `bdgrz.application_import.effect_pending` v1
+- [ApplicationImportFailed](../../src/Compliance.Common/Features/Applications/Events/ApplicationImportFailed.cs#L6) — `bdgrz.application_import.failed` v1
 - [ApplicationImportPlanRowFrozen](../../src/Compliance.Common/Features/Applications/ApplicationImportPlanRowFrozen.cs#L6) — `bdgrz.application_import.plan_row_frozen` v1
-- [ApplicationImportPlanSealed](../../src/Compliance.Common/Features/Applications/ApplicationImportPlanSealed.cs#L6) — `bdgrz.application_import.plan_sealed` v1
+- [ApplicationImportPlanSealed](../../src/Compliance.Common/Features/Applications/Events/ApplicationImportPlanSealed.cs#L6) — `bdgrz.application_import.plan_sealed` v1
 - [ApplicationImportPlanStarted](../../src/Compliance.Common/Features/Applications/ApplicationImportPlanStarted.cs#L6) — `bdgrz.application_import.plan_started` v1
-- [ApplicationImportRetirementProposalSealed](../../src/Compliance.Common/Features/Applications/ApplicationImportRetirementProposalSealed.cs#L6) — `bdgrz.application_import.retirement_proposal_sealed` v1
+- [ApplicationImportRetirementProposalSealed](../../src/Compliance.Common/Features/Applications/Events/ApplicationImportRetirementProposalSealed.cs#L6) — `bdgrz.application_import.retirement_proposal_sealed` v1
 - [ApplicationImportRetirementProposalStarted](../../src/Compliance.Common/Features/Applications/ApplicationImportRetirementProposalStarted.cs#L6) — `bdgrz.application_import.retirement_proposal_started` v1
 - [ApplicationImportRetirementRowFrozen](../../src/Compliance.Common/Features/Applications/ApplicationImportRetirementRowFrozen.cs#L6) — `bdgrz.application_import.retirement_row_frozen` v1
-- [ApplicationImportRowCorrelated](../../src/Compliance.Common/Features/Applications/ApplicationImportRowCorrelated.cs#L6) — `bdgrz.application_import.row_correlated` v1
-- [ApplicationImportStaged](../../src/Compliance.Common/Features/Applications/ApplicationImportStaged.cs#L6) — `bdgrz.application_import.staged` v1
-- [ApplicationRelationshipAdded](../../src/Compliance.Common/Features/Applications/ApplicationRelationshipAdded.cs#L8) — `bdgrz.application.relationship.added` v1
-- [ApplicationRelationshipRemoved](../../src/Compliance.Common/Features/Applications/ApplicationRelationshipRemoved.cs#L8) — `bdgrz.application.relationship.removed` v1
-- [ApplicationRetired](../../src/Compliance.Common/Features/Applications/ApplicationRetired.cs#L9) — `bdgrz.application.retired` v1
-- [ApplicationRevised](../../src/Compliance.Common/Features/Applications/ApplicationRevised.cs#L8) — `bdgrz.application.revised` v1
-- [SystemInstanceDeclared](../../src/Compliance.Common/Features/Applications/SystemInstanceDeclared.cs#L8) — `bdgrz.system_instance.declared` v1
-- [SystemInstanceRegistered](../../src/Compliance.Common/Features/Applications/SystemInstanceRegistered.cs#L8) — `bdgrz.system_instance.registered` v1
-- [SystemInstanceRetired](../../src/Compliance.Common/Features/Applications/SystemInstanceRetired.cs#L9) — `bdgrz.system_instance.retired` v1
+- [ApplicationImportRowCorrelated](../../src/Compliance.Common/Features/Applications/Events/ApplicationImportRowCorrelated.cs#L6) — `bdgrz.application_import.row_correlated` v1
+- [ApplicationImportStaged](../../src/Compliance.Common/Features/Applications/Events/ApplicationImportStaged.cs#L6) — `bdgrz.application_import.staged` v1
+- [ApplicationRelationshipAdded](../../src/Compliance.Common/Features/Applications/Events/ApplicationRelationshipAdded.cs#L8) — `bdgrz.application.relationship.added` v1
+- [ApplicationRelationshipRemoved](../../src/Compliance.Common/Features/Applications/Events/ApplicationRelationshipRemoved.cs#L8) — `bdgrz.application.relationship.removed` v1
+- [ApplicationRetired](../../src/Compliance.Common/Features/Applications/Events/ApplicationRetired.cs#L9) — `bdgrz.application.retired` v1
+- [ApplicationRevised](../../src/Compliance.Common/Features/Applications/Events/ApplicationRevised.cs#L8) — `bdgrz.application.revised` v1
+- [SystemInstanceDeclared](../../src/Compliance.Common/Features/Applications/Events/SystemInstanceDeclared.cs#L8) — `bdgrz.system_instance.declared` v1
+- [SystemInstanceRegistered](../../src/Compliance.Common/Features/Applications/Events/SystemInstanceRegistered.cs#L8) — `bdgrz.system_instance.registered` v1
+- [SystemInstanceRetired](../../src/Compliance.Common/Features/Applications/Events/SystemInstanceRetired.cs#L9) — `bdgrz.system_instance.retired` v1
 
 #### Boundaries
 
-- [BoundaryApproved](../../src/Compliance.Common/Features/Boundaries/BoundaryApproved.cs#L8) — `bdgrz.boundary.approved` v1
-- [BoundaryDraftCreated](../../src/Compliance.Common/Features/Boundaries/BoundaryDraftCreated.cs#L6) — `bdgrz.boundary.draft.created` v1
-- [BoundaryDraftDiscarded](../../src/Compliance.Common/Features/Boundaries/BoundaryDraftDiscarded.cs#L8) — `bdgrz.boundary.draft.discarded` v1
-- [BoundaryDraftRevised](../../src/Compliance.Common/Features/Boundaries/BoundaryDraftRevised.cs#L6) — `bdgrz.boundary.draft.revised` v1
-- [BoundaryReviewed](../../src/Compliance.Common/Features/Boundaries/BoundaryReviewed.cs#L8) — `bdgrz.boundary.reviewed` v1
-- [BoundarySuccessorProposed](../../src/Compliance.Common/Features/Boundaries/BoundarySuccessorProposed.cs#L6) — `bdgrz.boundary.successor.proposed` v1
+- [BoundaryApproved](../../src/Compliance.Common/Features/Boundaries/Events/BoundaryApproved.cs#L8) — `bdgrz.boundary.approved` v1
+- [BoundaryDraftCreated](../../src/Compliance.Common/Features/Boundaries/Events/BoundaryDraftCreated.cs#L6) — `bdgrz.boundary.draft.created` v1
+- [BoundaryDraftDiscarded](../../src/Compliance.Common/Features/Boundaries/Events/BoundaryDraftDiscarded.cs#L8) — `bdgrz.boundary.draft.discarded` v1
+- [BoundaryDraftRevised](../../src/Compliance.Common/Features/Boundaries/Events/BoundaryDraftRevised.cs#L6) — `bdgrz.boundary.draft.revised` v1
+- [BoundaryReviewed](../../src/Compliance.Common/Features/Boundaries/Events/BoundaryReviewed.cs#L8) — `bdgrz.boundary.reviewed` v1
+- [BoundarySuccessorProposed](../../src/Compliance.Common/Features/Boundaries/Events/BoundarySuccessorProposed.cs#L6) — `bdgrz.boundary.successor.proposed` v1
 
 #### Commitments
 
-- [CommitmentApproved](../../src/Compliance.Common/Features/Commitments/CommitmentApproved.cs#L9) — `bdgrz.commitment.approved` v1
-- [CommitmentDraftCreated](../../src/Compliance.Common/Features/Commitments/CommitmentDraftCreated.cs#L8) — `bdgrz.commitment.draft.created` v1
-- [CommitmentDraftRevised](../../src/Compliance.Common/Features/Commitments/CommitmentDraftRevised.cs#L8) — `bdgrz.commitment.draft.revised` v1
-- [CommitmentReviewed](../../src/Compliance.Common/Features/Commitments/CommitmentReviewed.cs#L12) — `bdgrz.commitment.reviewed` v1
+- [CommitmentApproved](../../src/Compliance.Common/Features/Commitments/Events/CommitmentApproved.cs#L9) — `bdgrz.commitment.approved` v1
+- [CommitmentDraftCreated](../../src/Compliance.Common/Features/Commitments/Events/CommitmentDraftCreated.cs#L8) — `bdgrz.commitment.draft.created` v1
+- [CommitmentDraftRevised](../../src/Compliance.Common/Features/Commitments/Events/CommitmentDraftRevised.cs#L8) — `bdgrz.commitment.draft.revised` v1
+- [CommitmentReviewed](../../src/Compliance.Common/Features/Commitments/Events/CommitmentReviewed.cs#L12) — `bdgrz.commitment.reviewed` v1
 
 #### ControlMappings
 
-- [ControlCriterionMappingProposed](../../src/Compliance.Common/Features/ControlMappings/ControlCriterionMappingProposed.cs#L8) — `bdgrz.control_mapping.proposed` v1
-- [ControlCriterionMappingRetired](../../src/Compliance.Common/Features/ControlMappings/ControlCriterionMappingRetired.cs#L8) — `bdgrz.control_mapping.retired` v1
-- [ControlCriterionMappingReviewed](../../src/Compliance.Common/Features/ControlMappings/ControlCriterionMappingReviewed.cs#L8) — `bdgrz.control_mapping.reviewed` v1
-- [CriterionApplicabilityReviewed](../../src/Compliance.Common/Features/ControlMappings/CriterionApplicabilityReviewed.cs#L7) — `bdgrz.criterion_applicability.reviewed` v1
-- [CriterionNotApplicableProposed](../../src/Compliance.Common/Features/ControlMappings/CriterionNotApplicableProposed.cs#L7) — `bdgrz.criterion_applicability.not_applicable_proposed` v1
-- [CriterionNotApplicableWithdrawn](../../src/Compliance.Common/Features/ControlMappings/CriterionNotApplicableWithdrawn.cs#L7) — `bdgrz.criterion_applicability.not_applicable_withdrawn` v1
+- [ControlCriterionMappingProposed](../../src/Compliance.Common/Features/ControlMappings/Events/ControlCriterionMappingProposed.cs#L8) — `bdgrz.control_mapping.proposed` v1
+- [ControlCriterionMappingRetired](../../src/Compliance.Common/Features/ControlMappings/Events/ControlCriterionMappingRetired.cs#L8) — `bdgrz.control_mapping.retired` v1
+- [ControlCriterionMappingReviewed](../../src/Compliance.Common/Features/ControlMappings/Events/ControlCriterionMappingReviewed.cs#L8) — `bdgrz.control_mapping.reviewed` v1
+- [CriterionApplicabilityReviewed](../../src/Compliance.Common/Features/ControlMappings/Events/CriterionApplicabilityReviewed.cs#L7) — `bdgrz.criterion_applicability.reviewed` v1
+- [CriterionNotApplicableProposed](../../src/Compliance.Common/Features/ControlMappings/Events/CriterionNotApplicableProposed.cs#L7) — `bdgrz.criterion_applicability.not_applicable_proposed` v1
+- [CriterionNotApplicableWithdrawn](../../src/Compliance.Common/Features/ControlMappings/Events/CriterionNotApplicableWithdrawn.cs#L7) — `bdgrz.criterion_applicability.not_applicable_withdrawn` v1
 
 #### Controls
 
-- [ControlApproved](../../src/Compliance.Common/Features/Controls/ControlApproved.cs#L9) — `bdgrz.control.approved` v1
-- [ControlDraftCreated](../../src/Compliance.Common/Features/Controls/ControlDraftCreated.cs#L8) — `bdgrz.control.draft.created` v1
-- [ControlDraftDiscarded](../../src/Compliance.Common/Features/Controls/ControlDraftDiscarded.cs#L8) — `bdgrz.control.draft.discarded` v1
-- [ControlDraftRevised](../../src/Compliance.Common/Features/Controls/ControlDraftRevised.cs#L8) — `bdgrz.control.draft.revised` v1
-- [ControlOwnerPersonDesignated](../../src/Compliance.Common/Features/Controls/ControlOwnerPersonDesignated.cs#L13) — `bdgrz.control.owner_person.designated` v1
-- [ControlProposalWithdrawn](../../src/Compliance.Common/Features/Controls/ControlProposalWithdrawn.cs#L15) — `bdgrz.control.proposal.withdrawn` v1
-- [ControlRetired](../../src/Compliance.Common/Features/Controls/ControlRetired.cs#L12) — `bdgrz.control.retired` v1
-- [ControlRetirementProposed](../../src/Compliance.Common/Features/Controls/ControlRetirementProposed.cs#L9) — `bdgrz.control.retirement.proposed` v1
-- [ControlReviewed](../../src/Compliance.Common/Features/Controls/ControlReviewed.cs#L8) — `bdgrz.control.reviewed` v1
-- [ControlSuccessorProposed](../../src/Compliance.Common/Features/Controls/ControlSuccessorProposed.cs#L12) — `bdgrz.control.successor.proposed` v1
+- [ControlApproved](../../src/Compliance.Common/Features/Controls/Events/ControlApproved.cs#L9) — `bdgrz.control.approved` v1
+- [ControlDraftCreated](../../src/Compliance.Common/Features/Controls/Events/ControlDraftCreated.cs#L8) — `bdgrz.control.draft.created` v1
+- [ControlDraftDiscarded](../../src/Compliance.Common/Features/Controls/Events/ControlDraftDiscarded.cs#L8) — `bdgrz.control.draft.discarded` v1
+- [ControlDraftRevised](../../src/Compliance.Common/Features/Controls/Events/ControlDraftRevised.cs#L8) — `bdgrz.control.draft.revised` v1
+- [ControlOwnerPersonDesignated](../../src/Compliance.Common/Features/Controls/Events/ControlOwnerPersonDesignated.cs#L13) — `bdgrz.control.owner_person.designated` v1
+- [ControlProposalWithdrawn](../../src/Compliance.Common/Features/Controls/Events/ControlProposalWithdrawn.cs#L15) — `bdgrz.control.proposal.withdrawn` v1
+- [ControlRetired](../../src/Compliance.Common/Features/Controls/Events/ControlRetired.cs#L12) — `bdgrz.control.retired` v1
+- [ControlRetirementProposed](../../src/Compliance.Common/Features/Controls/Events/ControlRetirementProposed.cs#L9) — `bdgrz.control.retirement.proposed` v1
+- [ControlReviewed](../../src/Compliance.Common/Features/Controls/Events/ControlReviewed.cs#L8) — `bdgrz.control.reviewed` v1
+- [ControlSuccessorProposed](../../src/Compliance.Common/Features/Controls/Events/ControlSuccessorProposed.cs#L12) — `bdgrz.control.successor.proposed` v1
 
 #### Criteria
 
-- [CriteriaTextOverlayEntryRevised](../../src/Compliance.Common/Features/Criteria/CriteriaTextOverlayEntryRevised.cs#L7) — `bdgrz.criteria-overlay.entry-revised` v1
+- [CriteriaTextOverlayEntryRevised](../../src/Compliance.Common/Features/Criteria/Events/CriteriaTextOverlayEntryRevised.cs#L7) — `bdgrz.criteria-overlay.entry-revised` v1
 
 #### Evaluations
 
-- [ControlEvaluationDeviationDisposed](../../src/Compliance.Common/Features/Evaluations/ControlEvaluationDeviationDisposed.cs#L6) — `bdgrz.control.evaluation.deviation_disposed` v1
-- [ControlEvaluationPlanVersionDefined](../../src/Compliance.Common/Features/Evaluations/ControlEvaluationPlanVersionDefined.cs#L7) — `bdgrz.control.evaluation.plan.version-defined` v1
-- [ControlEvaluationReviewed](../../src/Compliance.Common/Features/Evaluations/ControlEvaluationReviewed.cs#L6) — `bdgrz.control.evaluation.reviewed` v1
-- [ControlEvaluationStarted](../../src/Compliance.Common/Features/Evaluations/ControlEvaluationStarted.cs#L7) — `bdgrz.control.evaluation.started` v1
-- [ControlEvaluationStepRecorded](../../src/Compliance.Common/Features/Evaluations/ControlEvaluationStepRecorded.cs#L6) — `bdgrz.control.evaluation.step_recorded` v1
-- [ControlEvaluationSubmitted](../../src/Compliance.Common/Features/Evaluations/ControlEvaluationSubmitted.cs#L6) — `bdgrz.control.evaluation.submitted` v1
+- [ControlEvaluationDeviationDisposed](../../src/Compliance.Common/Features/Evaluations/Events/ControlEvaluationDeviationDisposed.cs#L6) — `bdgrz.control.evaluation.deviation_disposed` v1
+- [ControlEvaluationPlanVersionDefined](../../src/Compliance.Common/Features/Evaluations/Events/ControlEvaluationPlanVersionDefined.cs#L7) — `bdgrz.control.evaluation.plan.version-defined` v1
+- [ControlEvaluationReviewed](../../src/Compliance.Common/Features/Evaluations/Events/ControlEvaluationReviewed.cs#L6) — `bdgrz.control.evaluation.reviewed` v1
+- [ControlEvaluationStarted](../../src/Compliance.Common/Features/Evaluations/Events/ControlEvaluationStarted.cs#L7) — `bdgrz.control.evaluation.started` v1
+- [ControlEvaluationStepRecorded](../../src/Compliance.Common/Features/Evaluations/Events/ControlEvaluationStepRecorded.cs#L6) — `bdgrz.control.evaluation.step_recorded` v1
+- [ControlEvaluationSubmitted](../../src/Compliance.Common/Features/Evaluations/Events/ControlEvaluationSubmitted.cs#L6) — `bdgrz.control.evaluation.submitted` v1
 
 #### Evidence
 
-- [EvidenceArtifactInspected](../../src/Compliance.Common/Features/Evidence/EvidenceArtifactInspected.cs#L7) — `bdgrz.evidence.artifact.inspected` v1
-- [EvidenceArtifactQuarantineReleased](../../src/Compliance.Common/Features/Evidence/EvidenceArtifactQuarantineReleased.cs#L8) — `bdgrz.evidence.artifact.quarantine_released` v1
-- [EvidenceArtifactRegistered](../../src/Compliance.Common/Features/Evidence/EvidenceArtifactRegistered.cs#L8) — `bdgrz.evidence.artifact.registered` v1
-- [EvidenceRedactionApproved](../../src/Compliance.Common/Features/Evidence/EvidenceRedactionApproved.cs#L6) — `bdgrz.evidence.redaction.approved` v1
-- [EvidenceRedactionPrepared](../../src/Compliance.Common/Features/Evidence/EvidenceRedactionPrepared.cs#L6) — `bdgrz.evidence.redaction.prepared` v1
-- [EvidenceRequestCancelled](../../src/Compliance.Common/Features/Evidence/EvidenceRequestCancelled.cs#L8) — `bdgrz.evidence.request.cancelled` v1
-- [EvidenceRequestFulfilled](../../src/Compliance.Common/Features/Evidence/EvidenceRequestFulfilled.cs#L8) — `bdgrz.evidence.request.fulfilled` v1
-- [EvidenceRequestOpened](../../src/Compliance.Common/Features/Evidence/EvidenceRequestOpened.cs#L8) — `bdgrz.evidence.request.opened` v1
+- [EvidenceArtifactInspected](../../src/Compliance.Common/Features/Evidence/Events/EvidenceArtifactInspected.cs#L7) — `bdgrz.evidence.artifact.inspected` v1
+- [EvidenceArtifactQuarantineReleased](../../src/Compliance.Common/Features/Evidence/Events/EvidenceArtifactQuarantineReleased.cs#L8) — `bdgrz.evidence.artifact.quarantine_released` v1
+- [EvidenceArtifactRegistered](../../src/Compliance.Common/Features/Evidence/Events/EvidenceArtifactRegistered.cs#L8) — `bdgrz.evidence.artifact.registered` v1
+- [EvidenceRedactionApproved](../../src/Compliance.Common/Features/Evidence/Events/EvidenceRedactionApproved.cs#L6) — `bdgrz.evidence.redaction.approved` v1
+- [EvidenceRedactionPrepared](../../src/Compliance.Common/Features/Evidence/Events/EvidenceRedactionPrepared.cs#L6) — `bdgrz.evidence.redaction.prepared` v1
+- [EvidenceRequestCancelled](../../src/Compliance.Common/Features/Evidence/Events/EvidenceRequestCancelled.cs#L8) — `bdgrz.evidence.request.cancelled` v1
+- [EvidenceRequestFulfilled](../../src/Compliance.Common/Features/Evidence/Events/EvidenceRequestFulfilled.cs#L8) — `bdgrz.evidence.request.fulfilled` v1
+- [EvidenceRequestOpened](../../src/Compliance.Common/Features/Evidence/Events/EvidenceRequestOpened.cs#L8) — `bdgrz.evidence.request.opened` v1
 
 #### Operations
 
-- [ControlOccurrenceAttested](../../src/Compliance.Common/Features/Operations/ControlOccurrenceAttested.cs#L6) — `bdgrz.control.occurrence.attested` v1
-- [ControlOccurrenceOpened](../../src/Compliance.Common/Features/Operations/ControlOccurrenceOpened.cs#L7) — `bdgrz.control.occurrence.opened` v1
-- [ControlOccurrenceReviewed](../../src/Compliance.Common/Features/Operations/ControlOccurrenceReviewed.cs#L6) — `bdgrz.control.occurrence.reviewed` v1
-- [ControlOperatingPlanApproved](../../src/Compliance.Common/Features/Operations/ControlOperatingPlanApproved.cs#L7) — `bdgrz.control.operating_plan.approved` v1
-- [ControlOperatingPlanProposed](../../src/Compliance.Common/Features/Operations/ControlOperatingPlanProposed.cs#L6) — `bdgrz.control.operating_plan.proposed` v1
+- [ControlOccurrenceAttested](../../src/Compliance.Common/Features/Operations/Events/ControlOccurrenceAttested.cs#L6) — `bdgrz.control.occurrence.attested` v1
+- [ControlOccurrenceOpened](../../src/Compliance.Common/Features/Operations/Events/ControlOccurrenceOpened.cs#L7) — `bdgrz.control.occurrence.opened` v1
+- [ControlOccurrenceReviewed](../../src/Compliance.Common/Features/Operations/Events/ControlOccurrenceReviewed.cs#L6) — `bdgrz.control.occurrence.reviewed` v1
+- [ControlOperatingPlanApproved](../../src/Compliance.Common/Features/Operations/Events/ControlOperatingPlanApproved.cs#L7) — `bdgrz.control.operating_plan.approved` v1
+- [ControlOperatingPlanProposed](../../src/Compliance.Common/Features/Operations/Events/ControlOperatingPlanProposed.cs#L6) — `bdgrz.control.operating_plan.proposed` v1
 
 #### Policies
 
-- [PolicyApproved](../../src/Compliance.Common/Features/Policies/PolicyApproved.cs#L11) — `bdgrz.policy.approved` v1
-- [PolicyDraftCreated](../../src/Compliance.Common/Features/Policies/PolicyDraftCreated.cs#L7) — `bdgrz.policy.draft.created` v1
-- [PolicyDraftDiscarded](../../src/Compliance.Common/Features/Policies/PolicyDraftDiscarded.cs#L7) — `bdgrz.policy.draft.discarded` v1
-- [PolicyDraftRevised](../../src/Compliance.Common/Features/Policies/PolicyDraftRevised.cs#L11) — `bdgrz.policy.draft.revised` v1
-- [PolicyPeriodicReviewConfirmed](../../src/Compliance.Common/Features/Policies/PolicyPeriodicReviewConfirmed.cs#L8) — `bdgrz.policy.periodic_review.confirmed` v1
-- [PolicyRetired](../../src/Compliance.Common/Features/Policies/PolicyRetired.cs#L7) — `bdgrz.policy.retired` v1
-- [PolicyRetirementProposed](../../src/Compliance.Common/Features/Policies/PolicyRetirementProposed.cs#L7) — `bdgrz.policy.retirement.proposed` v1
-- [PolicyReviewed](../../src/Compliance.Common/Features/Policies/PolicyReviewed.cs#L7) — `bdgrz.policy.reviewed` v1
+- [PolicyApproved](../../src/Compliance.Common/Features/Policies/Events/PolicyApproved.cs#L11) — `bdgrz.policy.approved` v1
+- [PolicyDraftCreated](../../src/Compliance.Common/Features/Policies/Events/PolicyDraftCreated.cs#L7) — `bdgrz.policy.draft.created` v1
+- [PolicyDraftDiscarded](../../src/Compliance.Common/Features/Policies/Events/PolicyDraftDiscarded.cs#L7) — `bdgrz.policy.draft.discarded` v1
+- [PolicyDraftRevised](../../src/Compliance.Common/Features/Policies/Events/PolicyDraftRevised.cs#L11) — `bdgrz.policy.draft.revised` v1
+- [PolicyPeriodicReviewConfirmed](../../src/Compliance.Common/Features/Policies/Events/PolicyPeriodicReviewConfirmed.cs#L8) — `bdgrz.policy.periodic_review.confirmed` v1
+- [PolicyRetired](../../src/Compliance.Common/Features/Policies/Events/PolicyRetired.cs#L7) — `bdgrz.policy.retired` v1
+- [PolicyRetirementProposed](../../src/Compliance.Common/Features/Policies/Events/PolicyRetirementProposed.cs#L7) — `bdgrz.policy.retirement.proposed` v1
+- [PolicyReviewed](../../src/Compliance.Common/Features/Policies/Events/PolicyReviewed.cs#L7) — `bdgrz.policy.reviewed` v1
 
 #### PolicyDistribution
 
-- [CampaignWaiverApproved](../../src/Compliance.Common/Features/PolicyDistribution/CampaignWaiverApproved.cs#L8) — `bdgrz.policy_campaign.waiver.approved` v1
-- [PolicyAcknowledgementRecorded](../../src/Compliance.Common/Features/PolicyDistribution/PolicyAcknowledgementRecorded.cs#L12) — `bdgrz.policy.acknowledgement.recorded` v1
-- [PolicyCampaignAudienceAmended](../../src/Compliance.Common/Features/PolicyDistribution/PolicyCampaignAudienceAmended.cs#L11) — `bdgrz.policy_campaign.audience.amended` v1
-- [PolicyCampaignAudienceFrozen](../../src/Compliance.Common/Features/PolicyDistribution/PolicyCampaignAudienceFrozen.cs#L6) — `bdgrz.policy_campaign.audience.frozen` v1
-- [PolicyCampaignClosed](../../src/Compliance.Common/Features/PolicyDistribution/PolicyCampaignClosed.cs#L7) — `bdgrz.policy_campaign.closed` v1
-- [PolicyCampaignLaunched](../../src/Compliance.Common/Features/PolicyDistribution/PolicyCampaignLaunched.cs#L11) — `bdgrz.policy_campaign.launched` v1
-- [TrainingCompletionRecorded](../../src/Compliance.Common/Features/PolicyDistribution/TrainingCompletionRecorded.cs#L11) — `bdgrz.training_completion.recorded` v1
-- [TrainingRequirementDefined](../../src/Compliance.Common/Features/PolicyDistribution/TrainingRequirementDefined.cs#L8) — `bdgrz.training_requirement.defined` v1
+- [CampaignWaiverApproved](../../src/Compliance.Common/Features/PolicyDistribution/Events/CampaignWaiverApproved.cs#L8) — `bdgrz.policy_campaign.waiver.approved` v1
+- [PolicyAcknowledgementRecorded](../../src/Compliance.Common/Features/PolicyDistribution/Events/PolicyAcknowledgementRecorded.cs#L12) — `bdgrz.policy.acknowledgement.recorded` v1
+- [PolicyCampaignAudienceAmended](../../src/Compliance.Common/Features/PolicyDistribution/Events/PolicyCampaignAudienceAmended.cs#L11) — `bdgrz.policy_campaign.audience.amended` v1
+- [PolicyCampaignAudienceFrozen](../../src/Compliance.Common/Features/PolicyDistribution/Events/PolicyCampaignAudienceFrozen.cs#L6) — `bdgrz.policy_campaign.audience.frozen` v1
+- [PolicyCampaignClosed](../../src/Compliance.Common/Features/PolicyDistribution/Events/PolicyCampaignClosed.cs#L7) — `bdgrz.policy_campaign.closed` v1
+- [PolicyCampaignLaunched](../../src/Compliance.Common/Features/PolicyDistribution/Events/PolicyCampaignLaunched.cs#L11) — `bdgrz.policy_campaign.launched` v1
+- [TrainingCompletionRecorded](../../src/Compliance.Common/Features/PolicyDistribution/Events/TrainingCompletionRecorded.cs#L11) — `bdgrz.training_completion.recorded` v1
+- [TrainingRequirementDefined](../../src/Compliance.Common/Features/PolicyDistribution/Events/TrainingRequirementDefined.cs#L8) — `bdgrz.training_requirement.defined` v1
 
 #### Programs
 
-- [ClientServiceCreated](../../src/Compliance.Common/Features/Programs/ClientServiceCreated.cs#L8) — `bdgrz.client-service.created` v1
-- [ClientServiceRetired](../../src/Compliance.Common/Features/Programs/ClientServiceRetired.cs#L8) — `bdgrz.client-service.retired` v1
-- [ClientServiceRevised](../../src/Compliance.Common/Features/Programs/ClientServiceRevised.cs#L8) — `bdgrz.client-service.revised` v1
-- [ProgramCreated](../../src/Compliance.Common/Features/Programs/ProgramCreated.cs#L8) — `bdgrz.program.created` v1
-- [ProgramCriteriaEditionSelected](../../src/Compliance.Common/Features/Programs/ProgramCriteriaEditionSelected.cs#L8) — `bdgrz.program.criteria.selected` v1
-- [ProgramRevised](../../src/Compliance.Common/Features/Programs/ProgramRevised.cs#L8) — `bdgrz.program.revised` v1
+- [ClientServiceCreated](../../src/Compliance.Common/Features/Programs/Events/ClientServiceCreated.cs#L8) — `bdgrz.client-service.created` v1
+- [ClientServiceRetired](../../src/Compliance.Common/Features/Programs/Events/ClientServiceRetired.cs#L8) — `bdgrz.client-service.retired` v1
+- [ClientServiceRevised](../../src/Compliance.Common/Features/Programs/Events/ClientServiceRevised.cs#L8) — `bdgrz.client-service.revised` v1
+- [ProgramCreated](../../src/Compliance.Common/Features/Programs/Events/ProgramCreated.cs#L8) — `bdgrz.program.created` v1
+- [ProgramCriteriaEditionSelected](../../src/Compliance.Common/Features/Programs/Events/ProgramCriteriaEditionSelected.cs#L8) — `bdgrz.program.criteria.selected` v1
+- [ProgramRevised](../../src/Compliance.Common/Features/Programs/Events/ProgramRevised.cs#L8) — `bdgrz.program.revised` v1
 
 #### Providers
 
-- [AssuranceReportRecorded](../../src/Compliance.Common/Features/Providers/AssuranceReportRecorded.cs#L7) — `bdgrz.provider.assurance_report.recorded` v1
-- [AssuranceReportRevised](../../src/Compliance.Common/Features/Providers/AssuranceReportRevised.cs#L7) — `bdgrz.provider.assurance_report.revised` v1
-- [ProviderCoverageGapClosed](../../src/Compliance.Common/Features/Providers/ProviderCoverageGapClosed.cs#L7) — `bdgrz.provider.coverage_gap.closed` v1
-- [ProviderCoverageGapRecorded](../../src/Compliance.Common/Features/Providers/ProviderCoverageGapRecorded.cs#L7) — `bdgrz.provider.coverage_gap.recorded` v1
-- [ProviderCoverageGapRiskAcceptanceLinked](../../src/Compliance.Common/Features/Providers/ProviderCoverageGapRiskAcceptanceLinked.cs#L6) — `bdgrz.provider.coverage_gap.risk_acceptance_linked` v1
-- [ProviderRecorded](../../src/Compliance.Common/Features/Providers/ProviderRecorded.cs#L7) — `bdgrz.provider.recorded` v1
-- [ProviderReviewRecorded](../../src/Compliance.Common/Features/Providers/ProviderReviewRecorded.cs#L7) — `bdgrz.provider.review.recorded` v1
-- [ProviderRevised](../../src/Compliance.Common/Features/Providers/ProviderRevised.cs#L7) — `bdgrz.provider.revised` v1
+- [AssuranceReportRecorded](../../src/Compliance.Common/Features/Providers/Events/AssuranceReportRecorded.cs#L7) — `bdgrz.provider.assurance_report.recorded` v1
+- [AssuranceReportRevised](../../src/Compliance.Common/Features/Providers/Events/AssuranceReportRevised.cs#L7) — `bdgrz.provider.assurance_report.revised` v1
+- [ProviderCoverageGapClosed](../../src/Compliance.Common/Features/Providers/Events/ProviderCoverageGapClosed.cs#L7) — `bdgrz.provider.coverage_gap.closed` v1
+- [ProviderCoverageGapRecorded](../../src/Compliance.Common/Features/Providers/Events/ProviderCoverageGapRecorded.cs#L7) — `bdgrz.provider.coverage_gap.recorded` v1
+- [ProviderCoverageGapRiskAcceptanceLinked](../../src/Compliance.Common/Features/Providers/Events/ProviderCoverageGapRiskAcceptanceLinked.cs#L6) — `bdgrz.provider.coverage_gap.risk_acceptance_linked` v1
+- [ProviderRecorded](../../src/Compliance.Common/Features/Providers/Events/ProviderRecorded.cs#L7) — `bdgrz.provider.recorded` v1
+- [ProviderReviewRecorded](../../src/Compliance.Common/Features/Providers/Events/ProviderReviewRecorded.cs#L7) — `bdgrz.provider.review.recorded` v1
+- [ProviderRevised](../../src/Compliance.Common/Features/Providers/Events/ProviderRevised.cs#L7) — `bdgrz.provider.revised` v1
 
 #### Readiness
 
-- [ReadinessAssessmentRecorded](../../src/Compliance.Common/Features/Readiness/ReadinessAssessmentRecorded.cs#L7) — `bdgrz.readiness.assessment.recorded` v1
-- [ReadinessDecisionRecorded](../../src/Compliance.Common/Features/Readiness/ReadinessDecisionRecorded.cs#L6) — `bdgrz.readiness.decision.recorded` v1
-- [ReadinessGapAnnotated](../../src/Compliance.Common/Features/Readiness/ReadinessGapAnnotated.cs#L6) — `bdgrz.readiness.gap.annotated` v1
-- [ReadinessGapPlanned](../../src/Compliance.Common/Features/Readiness/ReadinessGapPlanned.cs#L6) — `bdgrz.readiness.gap.planned` v1
-- [TypeIEntryDecisionRecorded](../../src/Compliance.Common/Features/Readiness/TypeIEntryDecisionRecorded.cs#L6) — `bdgrz.readiness.type_i_entry.decided` v1
+- [ReadinessAssessmentRecorded](../../src/Compliance.Common/Features/Readiness/Events/ReadinessAssessmentRecorded.cs#L7) — `bdgrz.readiness.assessment.recorded` v1
+- [ReadinessDecisionRecorded](../../src/Compliance.Common/Features/Readiness/Events/ReadinessDecisionRecorded.cs#L6) — `bdgrz.readiness.decision.recorded` v1
+- [ReadinessGapAnnotated](../../src/Compliance.Common/Features/Readiness/Events/ReadinessGapAnnotated.cs#L6) — `bdgrz.readiness.gap.annotated` v1
+- [ReadinessGapPlanned](../../src/Compliance.Common/Features/Readiness/Events/ReadinessGapPlanned.cs#L6) — `bdgrz.readiness.gap.planned` v1
+- [TypeIEntryDecisionRecorded](../../src/Compliance.Common/Features/Readiness/Events/TypeIEntryDecisionRecorded.cs#L6) — `bdgrz.readiness.type_i_entry.decided` v1
 
 #### Remediation
 
@@ -1642,149 +1642,149 @@ These 140 requirement-backed event contracts have been added since the existing-
 
 #### Responsibilities
 
-- [ResponsibilityAssigned](../../src/Compliance.Common/Features/Responsibilities/ResponsibilityAssigned.cs#L8) — `bdgrz.responsibility.assigned` v1
-- [ResponsibilityRevoked](../../src/Compliance.Common/Features/Responsibilities/ResponsibilityRevoked.cs#L8) — `bdgrz.responsibility.revoked` v1
+- [ResponsibilityAssigned](../../src/Compliance.Common/Features/Responsibilities/Events/ResponsibilityAssigned.cs#L8) — `bdgrz.responsibility.assigned` v1
+- [ResponsibilityRevoked](../../src/Compliance.Common/Features/Responsibilities/Events/ResponsibilityRevoked.cs#L8) — `bdgrz.responsibility.revoked` v1
 
 #### Retention
 
-- [ArtifactLegalHoldPlaced](../../src/Compliance.Common/Features/Retention/ArtifactLegalHoldPlaced.cs#L6) — `bdgrz.artifact_retention.legal_hold_placed` v1
-- [ArtifactLegalHoldReleased](../../src/Compliance.Common/Features/Retention/ArtifactLegalHoldReleased.cs#L6) — `bdgrz.artifact_retention.legal_hold_released` v1
-- [ArtifactRetentionBasisRecorded](../../src/Compliance.Common/Features/Retention/ArtifactRetentionBasisRecorded.cs#L6) — `bdgrz.artifact_retention.basis_recorded` v1
-- [ArtifactRetentionBound](../../src/Compliance.Common/Features/Retention/ArtifactRetentionBound.cs#L6) — `bdgrz.artifact_retention.bound` v1
+- [ArtifactLegalHoldPlaced](../../src/Compliance.Common/Features/Retention/Events/ArtifactLegalHoldPlaced.cs#L6) — `bdgrz.artifact_retention.legal_hold_placed` v1
+- [ArtifactLegalHoldReleased](../../src/Compliance.Common/Features/Retention/Events/ArtifactLegalHoldReleased.cs#L6) — `bdgrz.artifact_retention.legal_hold_released` v1
+- [ArtifactRetentionBasisRecorded](../../src/Compliance.Common/Features/Retention/Events/ArtifactRetentionBasisRecorded.cs#L6) — `bdgrz.artifact_retention.basis_recorded` v1
+- [ArtifactRetentionBound](../../src/Compliance.Common/Features/Retention/Events/ArtifactRetentionBound.cs#L6) — `bdgrz.artifact_retention.bound` v1
 
 #### Risks
 
-- [RiskAccepted](../../src/Compliance.Common/Features/Risks/RiskAccepted.cs#L6) — `bdgrz.risk.accepted` v1
-- [RiskAssessmentRecorded](../../src/Compliance.Common/Features/Risks/RiskAssessmentRecorded.cs#L6) — `bdgrz.risk.assessment.recorded` v1
-- [RiskControlTreatmentProposed](../../src/Compliance.Common/Features/Risks/RiskControlTreatmentProposed.cs#L6) — `bdgrz.risk.control_treatment.proposed` v1
-- [RiskControlTreatmentRetired](../../src/Compliance.Common/Features/Risks/RiskControlTreatmentRetired.cs#L7) — `bdgrz.risk.control_treatment.retired` v1
-- [RiskControlTreatmentReviewed](../../src/Compliance.Common/Features/Risks/RiskControlTreatmentReviewed.cs#L7) — `bdgrz.risk.control_treatment.reviewed` v1
-- [RiskDraftCreated](../../src/Compliance.Common/Features/Risks/RiskDraftCreated.cs#L8) — `bdgrz.risk.draft.created` v1
-- [RiskDraftRevised](../../src/Compliance.Common/Features/Risks/RiskDraftRevised.cs#L8) — `bdgrz.risk.draft.revised` v1
-- [RiskMethodVersionPublished](../../src/Compliance.Common/Features/Risks/RiskMethodVersionPublished.cs#L6) — `bdgrz.risk.method.version_published` v1
-- [RiskOwnerAssigned](../../src/Compliance.Common/Features/Risks/RiskOwnerAssigned.cs#L6) — `bdgrz.risk.owner.assigned` v1
-- [RiskReassessmentTriggered](../../src/Compliance.Common/Features/Risks/RiskReassessmentTriggered.cs#L6) — `bdgrz.risk.reassessment.triggered` v1
-- [RiskTreatmentActionAdded](../../src/Compliance.Common/Features/Risks/RiskTreatmentActionAdded.cs#L6) — `bdgrz.risk.treatment_action.added` v1
-- [RiskTreatmentActionCancelled](../../src/Compliance.Common/Features/Risks/RiskTreatmentActionCancelled.cs#L7) — `bdgrz.risk.treatment_action.cancelled` v1
-- [RiskTreatmentActionCompletionReviewed](../../src/Compliance.Common/Features/Risks/RiskTreatmentActionCompletionReviewed.cs#L7) — `bdgrz.risk.treatment_action.completion_reviewed` v1
-- [RiskTreatmentActionCompletionSubmitted](../../src/Compliance.Common/Features/Risks/RiskTreatmentActionCompletionSubmitted.cs#L7) — `bdgrz.risk.treatment_action.completion_submitted` v1
-- [RiskTreatmentActionRevised](../../src/Compliance.Common/Features/Risks/RiskTreatmentActionRevised.cs#L7) — `bdgrz.risk.treatment_action.revised` v1
-- [RiskTreatmentChosen](../../src/Compliance.Common/Features/Risks/RiskTreatmentChosen.cs#L6) — `bdgrz.risk.treatment.chosen` v1
+- [RiskAccepted](../../src/Compliance.Common/Features/Risks/Events/RiskAccepted.cs#L6) — `bdgrz.risk.accepted` v1
+- [RiskAssessmentRecorded](../../src/Compliance.Common/Features/Risks/Events/RiskAssessmentRecorded.cs#L6) — `bdgrz.risk.assessment.recorded` v1
+- [RiskControlTreatmentProposed](../../src/Compliance.Common/Features/Risks/Events/RiskControlTreatmentProposed.cs#L6) — `bdgrz.risk.control_treatment.proposed` v1
+- [RiskControlTreatmentRetired](../../src/Compliance.Common/Features/Risks/Events/RiskControlTreatmentRetired.cs#L7) — `bdgrz.risk.control_treatment.retired` v1
+- [RiskControlTreatmentReviewed](../../src/Compliance.Common/Features/Risks/Events/RiskControlTreatmentReviewed.cs#L7) — `bdgrz.risk.control_treatment.reviewed` v1
+- [RiskDraftCreated](../../src/Compliance.Common/Features/Risks/Events/RiskDraftCreated.cs#L8) — `bdgrz.risk.draft.created` v1
+- [RiskDraftRevised](../../src/Compliance.Common/Features/Risks/Events/RiskDraftRevised.cs#L8) — `bdgrz.risk.draft.revised` v1
+- [RiskMethodVersionPublished](../../src/Compliance.Common/Features/Risks/Events/RiskMethodVersionPublished.cs#L6) — `bdgrz.risk.method.version_published` v1
+- [RiskOwnerAssigned](../../src/Compliance.Common/Features/Risks/Events/RiskOwnerAssigned.cs#L6) — `bdgrz.risk.owner.assigned` v1
+- [RiskReassessmentTriggered](../../src/Compliance.Common/Features/Risks/Events/RiskReassessmentTriggered.cs#L6) — `bdgrz.risk.reassessment.triggered` v1
+- [RiskTreatmentActionAdded](../../src/Compliance.Common/Features/Risks/Events/RiskTreatmentActionAdded.cs#L6) — `bdgrz.risk.treatment_action.added` v1
+- [RiskTreatmentActionCancelled](../../src/Compliance.Common/Features/Risks/Events/RiskTreatmentActionCancelled.cs#L7) — `bdgrz.risk.treatment_action.cancelled` v1
+- [RiskTreatmentActionCompletionReviewed](../../src/Compliance.Common/Features/Risks/Events/RiskTreatmentActionCompletionReviewed.cs#L7) — `bdgrz.risk.treatment_action.completion_reviewed` v1
+- [RiskTreatmentActionCompletionSubmitted](../../src/Compliance.Common/Features/Risks/Events/RiskTreatmentActionCompletionSubmitted.cs#L7) — `bdgrz.risk.treatment_action.completion_submitted` v1
+- [RiskTreatmentActionRevised](../../src/Compliance.Common/Features/Risks/Events/RiskTreatmentActionRevised.cs#L7) — `bdgrz.risk.treatment_action.revised` v1
+- [RiskTreatmentChosen](../../src/Compliance.Common/Features/Risks/Events/RiskTreatmentChosen.cs#L6) — `bdgrz.risk.treatment.chosen` v1
 
 #### Snapshots
 
-- [PopulationSnapshotChunkStored](../../src/Compliance.Common/Features/Snapshots/PopulationSnapshotChunkStored.cs#L11) — `bdgrz.snapshot.population.chunk_stored` v1
-- [PopulationSnapshotFrozen](../../src/Compliance.Common/Features/Snapshots/PopulationSnapshotFrozen.cs#L14) — `bdgrz.snapshot.population.frozen` v1
-- [SnapshotFrozen](../../src/Compliance.Common/Features/Snapshots/SnapshotFrozen.cs#L6) — `bdgrz.snapshot.frozen` v1
+- [PopulationSnapshotChunkStored](../../src/Compliance.Common/Features/Snapshots/Events/PopulationSnapshotChunkStored.cs#L11) — `bdgrz.snapshot.population.chunk_stored` v1
+- [PopulationSnapshotFrozen](../../src/Compliance.Common/Features/Snapshots/Events/PopulationSnapshotFrozen.cs#L14) — `bdgrz.snapshot.population.frozen` v1
+- [SnapshotFrozen](../../src/Compliance.Common/Features/Snapshots/Events/SnapshotFrozen.cs#L6) — `bdgrz.snapshot.frozen` v1
 
 #### TechnologyInventory
 
-- [DataFlowRevisionRecorded](../../src/Compliance.Common/Features/TechnologyInventory/DataFlowRevisionRecorded.cs#L8) — `bdgrz.inventory.data_flow.revision_recorded` v1
-- [InformationAssetRevisionRecorded](../../src/Compliance.Common/Features/TechnologyInventory/InformationAssetRevisionRecorded.cs#L8) — `bdgrz.inventory.information_asset.revision_recorded` v1
-- [LocationRevisionRecorded](../../src/Compliance.Common/Features/TechnologyInventory/LocationRevisionRecorded.cs#L8) — `bdgrz.inventory.location.revision_recorded` v1
-- [OperationalProcessRevisionRecorded](../../src/Compliance.Common/Features/TechnologyInventory/OperationalProcessRevisionRecorded.cs#L8) — `bdgrz.inventory.operational_process.revision_recorded` v1
-- [TechnologyComponentRevisionRecorded](../../src/Compliance.Common/Features/TechnologyInventory/TechnologyComponentRevisionRecorded.cs#L8) — `bdgrz.inventory.component.revision_recorded` v1
+- [DataFlowRevisionRecorded](../../src/Compliance.Common/Features/TechnologyInventory/Events/DataFlowRevisionRecorded.cs#L8) — `bdgrz.inventory.data_flow.revision_recorded` v1
+- [InformationAssetRevisionRecorded](../../src/Compliance.Common/Features/TechnologyInventory/Events/InformationAssetRevisionRecorded.cs#L8) — `bdgrz.inventory.information_asset.revision_recorded` v1
+- [LocationRevisionRecorded](../../src/Compliance.Common/Features/TechnologyInventory/Events/LocationRevisionRecorded.cs#L8) — `bdgrz.inventory.location.revision_recorded` v1
+- [OperationalProcessRevisionRecorded](../../src/Compliance.Common/Features/TechnologyInventory/Events/OperationalProcessRevisionRecorded.cs#L8) — `bdgrz.inventory.operational_process.revision_recorded` v1
+- [TechnologyComponentRevisionRecorded](../../src/Compliance.Common/Features/TechnologyInventory/Events/TechnologyComponentRevisionRecorded.cs#L8) — `bdgrz.inventory.component.revision_recorded` v1
 
 #### Tenants
 
-- [PlatformOperatorGranted](../../src/Compliance.Common/Features/Tenants/PlatformOperatorGranted.cs#L6) — `bdgrz.platform.operator.granted` v1
-- [PlatformOperatorRevoked](../../src/Compliance.Common/Features/Tenants/PlatformOperatorRevoked.cs#L6) — `bdgrz.platform.operator.revoked` v1
-- [PlatformOperatorRosterSeeded](../../src/Compliance.Common/Features/Tenants/PlatformOperatorRosterSeeded.cs#L6) — `bdgrz.platform.operator-roster.seeded` v1
-- [TenantActivated](../../src/Compliance.Common/Features/Tenants/TenantActivated.cs#L6) — `bdgrz.tenant.activated` v1
-- [TenantInvitationAccepted](../../src/Compliance.Common/Features/Tenants/TenantInvitationAccepted.cs#L6) — `bdgrz.tenant-invitation.accepted` v1
+- [PlatformOperatorGranted](../../src/Compliance.Common/Features/Tenants/Events/PlatformOperatorGranted.cs#L6) — `bdgrz.platform.operator.granted` v1
+- [PlatformOperatorRevoked](../../src/Compliance.Common/Features/Tenants/Events/PlatformOperatorRevoked.cs#L6) — `bdgrz.platform.operator.revoked` v1
+- [PlatformOperatorRosterSeeded](../../src/Compliance.Common/Features/Tenants/Events/PlatformOperatorRosterSeeded.cs#L6) — `bdgrz.platform.operator-roster.seeded` v1
+- [TenantActivated](../../src/Compliance.Common/Features/Tenants/Events/TenantActivated.cs#L6) — `bdgrz.tenant.activated` v1
+- [TenantInvitationAccepted](../../src/Compliance.Common/Features/Tenants/Events/TenantInvitationAccepted.cs#L6) — `bdgrz.tenant-invitation.accepted` v1
 - [TenantInvitationDeliveryFailed](../../src/Compliance.Common/Features/Tenants/TenantInvitationDeliveryFailed.cs#L6) — `bdgrz.tenant-invitation.delivery.failed` v1
 - [TenantInvitationDeliverySent](../../src/Compliance.Common/Features/Tenants/TenantInvitationDeliverySent.cs#L6) — `bdgrz.tenant-invitation.delivery.sent` v1
-- [TenantMemberInvited](../../src/Compliance.Common/Features/Tenants/TenantMemberInvited.cs#L6) — `bdgrz.tenant-member.invited` v1
-- [TenantOffboardingStarted](../../src/Compliance.Common/Features/Tenants/TenantOffboardingStarted.cs#L6) — `bdgrz.tenant.offboarding.started` v1
+- [TenantMemberInvited](../../src/Compliance.Common/Features/Tenants/Events/TenantMemberInvited.cs#L6) — `bdgrz.tenant-member.invited` v1
+- [TenantOffboardingStarted](../../src/Compliance.Common/Features/Tenants/Events/TenantOffboardingStarted.cs#L6) — `bdgrz.tenant.offboarding.started` v1
 - [TenantOwnerRegistered](../../src/Compliance.Common/Features/Tenants/TenantOwnerRegistered.cs#L6) — `bdgrz.tenant-owner.registered` v1
-- [TenantReactivated](../../src/Compliance.Common/Features/Tenants/TenantReactivated.cs#L6) — `bdgrz.tenant.reactivated` v1
-- [TenantRegistered](../../src/Compliance.Common/Features/Tenants/TenantRegistered.cs#L6) — `bdgrz.tenant.registered` v1
-- [TenantSlugChangeRejected](../../src/Compliance.Common/Features/Tenants/TenantSlugChangeRejected.cs#L6) — `bdgrz.tenant-slug.change-rejected` v1
-- [TenantSlugChangeRequested](../../src/Compliance.Common/Features/Tenants/TenantSlugChangeRequested.cs#L7) — `bdgrz.tenant-slug.change-requested` v1
-- [TenantSlugChanged](../../src/Compliance.Common/Features/Tenants/TenantSlugChanged.cs#L7) — `bdgrz.tenant-slug.changed` v1
-- [TenantSlugConfirmed](../../src/Compliance.Common/Features/Tenants/TenantSlugConfirmed.cs#L6) — `bdgrz.tenant-slug.confirmed` v1
-- [TenantSlugRegistered](../../src/Compliance.Common/Features/Tenants/TenantSlugRegistered.cs#L6) — `bdgrz.tenant-slug.registered` v1
-- [TenantSlugRegistrationRejected](../../src/Compliance.Common/Features/Tenants/TenantSlugRegistrationRejected.cs#L6) — `bdgrz.tenant-slug.registration-rejected` v1
-- [TenantSlugRejected](../../src/Compliance.Common/Features/Tenants/TenantSlugRejected.cs#L6) — `bdgrz.tenant-slug.rejected` v1
-- [TenantSlugSurrenderConfirmed](../../src/Compliance.Common/Features/Tenants/TenantSlugSurrenderConfirmed.cs#L6) — `bdgrz.tenant-slug-surrender.confirmed` v1
-- [TenantSlugSurrenderFailed](../../src/Compliance.Common/Features/Tenants/TenantSlugSurrenderFailed.cs#L6) — `bdgrz.tenant-slug-surrender.failed` v1
-- [TenantSlugSurrenderRejected](../../src/Compliance.Common/Features/Tenants/TenantSlugSurrenderRejected.cs#L6) — `bdgrz.tenant-slug.surrender-rejected` v1
-- [TenantSlugSurrenderRequested](../../src/Compliance.Common/Features/Tenants/TenantSlugSurrenderRequested.cs#L6) — `bdgrz.tenant-slug.surrender-requested` v1
-- [TenantSlugSurrendered](../../src/Compliance.Common/Features/Tenants/TenantSlugSurrendered.cs#L6) — `bdgrz.tenant-slug.surrendered` v1
-- [TenantSuspended](../../src/Compliance.Common/Features/Tenants/TenantSuspended.cs#L6) — `bdgrz.tenant.suspended` v1
+- [TenantReactivated](../../src/Compliance.Common/Features/Tenants/Events/TenantReactivated.cs#L6) — `bdgrz.tenant.reactivated` v1
+- [TenantRegistered](../../src/Compliance.Common/Features/Tenants/Events/TenantRegistered.cs#L6) — `bdgrz.tenant.registered` v1
+- [TenantSlugChangeRejected](../../src/Compliance.Common/Features/Tenants/Events/TenantSlugChangeRejected.cs#L6) — `bdgrz.tenant-slug.change-rejected` v1
+- [TenantSlugChangeRequested](../../src/Compliance.Common/Features/Tenants/Events/TenantSlugChangeRequested.cs#L7) — `bdgrz.tenant-slug.change-requested` v1
+- [TenantSlugChanged](../../src/Compliance.Common/Features/Tenants/Events/TenantSlugChanged.cs#L7) — `bdgrz.tenant-slug.changed` v1
+- [TenantSlugConfirmed](../../src/Compliance.Common/Features/Tenants/Events/TenantSlugConfirmed.cs#L6) — `bdgrz.tenant-slug.confirmed` v1
+- [TenantSlugRegistered](../../src/Compliance.Common/Features/Tenants/Events/TenantSlugRegistered.cs#L6) — `bdgrz.tenant-slug.registered` v1
+- [TenantSlugRegistrationRejected](../../src/Compliance.Common/Features/Tenants/Events/TenantSlugRegistrationRejected.cs#L6) — `bdgrz.tenant-slug.registration-rejected` v1
+- [TenantSlugRejected](../../src/Compliance.Common/Features/Tenants/Events/TenantSlugRejected.cs#L6) — `bdgrz.tenant-slug.rejected` v1
+- [TenantSlugSurrenderConfirmed](../../src/Compliance.Common/Features/Tenants/Events/TenantSlugSurrenderConfirmed.cs#L6) — `bdgrz.tenant-slug-surrender.confirmed` v1
+- [TenantSlugSurrenderFailed](../../src/Compliance.Common/Features/Tenants/Events/TenantSlugSurrenderFailed.cs#L6) — `bdgrz.tenant-slug-surrender.failed` v1
+- [TenantSlugSurrenderRejected](../../src/Compliance.Common/Features/Tenants/Events/TenantSlugSurrenderRejected.cs#L6) — `bdgrz.tenant-slug.surrender-rejected` v1
+- [TenantSlugSurrenderRequested](../../src/Compliance.Common/Features/Tenants/Events/TenantSlugSurrenderRequested.cs#L6) — `bdgrz.tenant-slug.surrender-requested` v1
+- [TenantSlugSurrendered](../../src/Compliance.Common/Features/Tenants/Events/TenantSlugSurrendered.cs#L6) — `bdgrz.tenant-slug.surrendered` v1
+- [TenantSuspended](../../src/Compliance.Common/Features/Tenants/Events/TenantSuspended.cs#L6) — `bdgrz.tenant.suspended` v1
 
 #### UserIdentities
 
-- [EmailAddressReserved](../../src/Compliance.Common/Features/UserIdentities/EmailAddressReserved.cs#L6) — `bdgrz.email-address.reserved` v1
-- [EmailAddressVerified](../../src/Compliance.Common/Features/UserIdentities/EmailAddressVerified.cs#L6) — `bdgrz.email-address.verified` v1
-- [EmailChallengeIssued](../../src/Compliance.Common/Features/UserIdentities/EmailChallengeIssued.cs#L6) — `bdgrz.email-address.challenge-issued` v1
-- [IdentityRecoveryChallengeClaimed](../../src/Compliance.Common/Features/UserIdentities/IdentityRecoveryChallengeClaimed.cs#L7) — `bdgrz.identity-recovery.challenge-claimed` v1
-- [IdentityRecoveryChallengeCompleted](../../src/Compliance.Common/Features/UserIdentities/IdentityRecoveryChallengeCompleted.cs#L7) — `bdgrz.identity-recovery.challenge-completed` v1
-- [IdentityRecoveryChallengeIssued](../../src/Compliance.Common/Features/UserIdentities/IdentityRecoveryChallengeIssued.cs#L7) — `bdgrz.identity-recovery.challenge-issued` v1
-- [UserIdentityAuthenticated](../../src/Compliance.Common/Features/UserIdentities/UserIdentityAuthenticated.cs#L7) — `bdgrz.user-identity.authenticated` v1
-- [UserIdentityProfileObserved](../../src/Compliance.Common/Features/UserIdentities/UserIdentityProfileObserved.cs#L7) — `bdgrz.user-identity.profile-observed` v2
-- [UserIdentityRegistered](../../src/Compliance.Common/Features/UserIdentities/UserIdentityRegistered.cs#L7) — `bdgrz.user-identity.registered` v1
-- [UserIdentityRevoked](../../src/Compliance.Common/Features/UserIdentities/UserIdentityRevoked.cs#L7) — `bdgrz.user-identity.revoked` v1
+- [EmailAddressReserved](../../src/Compliance.Common/Features/UserIdentities/Events/EmailAddressReserved.cs#L6) — `bdgrz.email-address.reserved` v1
+- [EmailAddressVerified](../../src/Compliance.Common/Features/UserIdentities/Events/EmailAddressVerified.cs#L6) — `bdgrz.email-address.verified` v1
+- [EmailChallengeIssued](../../src/Compliance.Common/Features/UserIdentities/Events/EmailChallengeIssued.cs#L6) — `bdgrz.email-address.challenge-issued` v1
+- [IdentityRecoveryChallengeClaimed](../../src/Compliance.Common/Features/UserIdentities/Events/IdentityRecoveryChallengeClaimed.cs#L7) — `bdgrz.identity-recovery.challenge-claimed` v1
+- [IdentityRecoveryChallengeCompleted](../../src/Compliance.Common/Features/UserIdentities/Events/IdentityRecoveryChallengeCompleted.cs#L7) — `bdgrz.identity-recovery.challenge-completed` v1
+- [IdentityRecoveryChallengeIssued](../../src/Compliance.Common/Features/UserIdentities/Events/IdentityRecoveryChallengeIssued.cs#L7) — `bdgrz.identity-recovery.challenge-issued` v1
+- [UserIdentityAuthenticated](../../src/Compliance.Common/Features/UserIdentities/Events/UserIdentityAuthenticated.cs#L7) — `bdgrz.user-identity.authenticated` v1
+- [UserIdentityProfileObserved](../../src/Compliance.Common/Features/UserIdentities/Events/UserIdentityProfileObserved.cs#L7) — `bdgrz.user-identity.profile-observed` v2
+- [UserIdentityRegistered](../../src/Compliance.Common/Features/UserIdentities/Events/UserIdentityRegistered.cs#L7) — `bdgrz.user-identity.registered` v1
+- [UserIdentityRevoked](../../src/Compliance.Common/Features/UserIdentities/Events/UserIdentityRevoked.cs#L7) — `bdgrz.user-identity.revoked` v1
 
 #### Work
 
-- [WorkDigestPreferenceChanged](../../src/Compliance.Common/Features/Work/WorkDigestPreferenceChanged.cs#L7) — `bdgrz.work.digest_preference.changed` v1
-- [WorkItemAssigned](../../src/Compliance.Common/Features/Work/WorkItemAssigned.cs#L8) — `bdgrz.work.assigned` v1
-- [WorkItemEscalated](../../src/Compliance.Common/Features/Work/WorkItemEscalated.cs#L8) — `bdgrz.work.escalated` v1
+- [WorkDigestPreferenceChanged](../../src/Compliance.Common/Features/Work/Events/WorkDigestPreferenceChanged.cs#L7) — `bdgrz.work.digest_preference.changed` v1
+- [WorkItemAssigned](../../src/Compliance.Common/Features/Work/Events/WorkItemAssigned.cs#L8) — `bdgrz.work.assigned` v1
+- [WorkItemEscalated](../../src/Compliance.Common/Features/Work/Events/WorkItemEscalated.cs#L8) — `bdgrz.work.escalated` v1
 
 #### Workforce
 
-- [PersonMembershipCorrelated](../../src/Compliance.Common/Features/Workforce/PersonMembershipCorrelated.cs#L11) — `bdgrz.workforce.person.membership-correlated` v1
-- [PersonRecorded](../../src/Compliance.Common/Features/Workforce/PersonRecorded.cs#L7) — `bdgrz.workforce.person.recorded` v1
-- [PersonRevised](../../src/Compliance.Common/Features/Workforce/PersonRevised.cs#L7) — `bdgrz.workforce.person.revised` v1
-- [ServiceIdentityRecorded](../../src/Compliance.Common/Features/Workforce/ServiceIdentityRecorded.cs#L7) — `bdgrz.workforce.service-identity.recorded` v1
-- [ServiceIdentityRevised](../../src/Compliance.Common/Features/Workforce/ServiceIdentityRevised.cs#L7) — `bdgrz.workforce.service-identity.revised` v1
-- [WorkRelationshipRecorded](../../src/Compliance.Common/Features/Workforce/WorkRelationshipRecorded.cs#L7) — `bdgrz.workforce.work-relationship.recorded` v1
-- [WorkRelationshipRevised](../../src/Compliance.Common/Features/Workforce/WorkRelationshipRevised.cs#L7) — `bdgrz.workforce.work-relationship.revised` v1
-- [WorkforceObservationResolved](../../src/Compliance.Common/Features/Workforce/WorkforceObservationResolved.cs#L7) — `bdgrz.workforce.observation.resolved` v1
-- [WorkforceSourceObserved](../../src/Compliance.Common/Features/Workforce/WorkforceSourceObserved.cs#L7) — `bdgrz.workforce.source.observed` v1
-- [WorkforceSourceReconciled](../../src/Compliance.Common/Features/Workforce/WorkforceSourceReconciled.cs#L6) — `bdgrz.workforce.source.reconciled` v1
+- [PersonMembershipCorrelated](../../src/Compliance.Common/Features/Workforce/Events/PersonMembershipCorrelated.cs#L11) — `bdgrz.workforce.person.membership-correlated` v1
+- [PersonRecorded](../../src/Compliance.Common/Features/Workforce/Events/PersonRecorded.cs#L7) — `bdgrz.workforce.person.recorded` v1
+- [PersonRevised](../../src/Compliance.Common/Features/Workforce/Events/PersonRevised.cs#L7) — `bdgrz.workforce.person.revised` v1
+- [ServiceIdentityRecorded](../../src/Compliance.Common/Features/Workforce/Events/ServiceIdentityRecorded.cs#L7) — `bdgrz.workforce.service-identity.recorded` v1
+- [ServiceIdentityRevised](../../src/Compliance.Common/Features/Workforce/Events/ServiceIdentityRevised.cs#L7) — `bdgrz.workforce.service-identity.revised` v1
+- [WorkRelationshipRecorded](../../src/Compliance.Common/Features/Workforce/Events/WorkRelationshipRecorded.cs#L7) — `bdgrz.workforce.work-relationship.recorded` v1
+- [WorkRelationshipRevised](../../src/Compliance.Common/Features/Workforce/Events/WorkRelationshipRevised.cs#L7) — `bdgrz.workforce.work-relationship.revised` v1
+- [WorkforceObservationResolved](../../src/Compliance.Common/Features/Workforce/Events/WorkforceObservationResolved.cs#L7) — `bdgrz.workforce.observation.resolved` v1
+- [WorkforceSourceObserved](../../src/Compliance.Common/Features/Workforce/Events/WorkforceSourceObserved.cs#L7) — `bdgrz.workforce.source.observed` v1
+- [WorkforceSourceReconciled](../../src/Compliance.Common/Features/Workforce/Events/WorkforceSourceReconciled.cs#L6) — `bdgrz.workforce.source.reconciled` v1
 
 ### Existing aggregates
 
 #### AccessControl
 
-- [AccessGrant](../../src/Compliance.Core/Features/AccessControl/AccessGrant.cs#L5)
-- [FirmStaffRecord](../../src/Compliance.Core/Features/AccessControl/FirmStaffRecord.cs#L12)
-- [FirmStaffIdentityClaim](../../src/Compliance.Core/Features/AccessControl/FirmStaffIdentityClaim.cs#L11)
-- [FirmProfessionalDutyDesignation](../../src/Compliance.Core/Features/AccessControl/FirmProfessionalDutyDesignation.cs#L16)
-- [ProfessionalAssertionIdentityClaim](../../src/Compliance.Core/Features/AccessControl/ProfessionalAssertionIdentityClaim.cs#L15)
-- [ClientServiceIndependence](../../src/Compliance.Core/Features/AccessControl/ClientServiceIndependence.cs#L11)
-- [ClientIndependenceDecision](../../src/Compliance.Core/Features/AccessControl/ClientIndependenceDecision.cs#L10)
-- [ServiceEngagementIndependence](../../src/Compliance.Core/Features/AccessControl/ServiceEngagementIndependence.cs#L11)
-- [PracticeIndependenceCommitment](../../src/Compliance.Core/Features/AccessControl/PracticeIndependenceCommitment.cs#L19)
-- [IndependenceRuleRatificationCatalog](../../src/Compliance.Core/Features/AccessControl/IndependenceRuleRatificationCatalog.cs#L8)
-- [IndependenceRuleCatalog](../../src/Compliance.Core/Features/AccessControl/IndependenceRuleCatalog.cs#L8)
-- [Member](../../src/Compliance.Core/Features/AccessControl/Member.cs#L5)
-- [Role](../../src/Compliance.Core/Features/AccessControl/Role.cs#L5)
-- [RolePermission](../../src/Compliance.Core/Features/AccessControl/RolePermission.cs#L8)
-- [SeparationOfDutiesWaiver](../../src/Compliance.Core/Features/AccessControl/SeparationOfDutiesWaiver.cs#L7)
-- [Team](../../src/Compliance.Core/Features/AccessControl/Team.cs#L5)
-- [TeamMember](../../src/Compliance.Core/Features/AccessControl/TeamMember.cs#L5)
-- [TeamRole](../../src/Compliance.Core/Features/AccessControl/TeamRole.cs#L5)
-- [TenantManagerGuard](../../src/Compliance.Core/Features/AccessControl/TenantManagerGuard.cs#L11)
+- [AccessGrant](../../src/Compliance.Core/Features/AccessControl/Aggregates/AccessGrant.cs#L5)
+- [FirmStaffRecord](../../src/Compliance.Core/Features/AccessControl/Aggregates/FirmStaffRecord.cs#L12)
+- [FirmStaffIdentityClaim](../../src/Compliance.Core/Features/AccessControl/Aggregates/FirmStaffIdentityClaim.cs#L11)
+- [FirmProfessionalDutyDesignation](../../src/Compliance.Core/Features/AccessControl/Aggregates/FirmProfessionalDutyDesignation.cs#L16)
+- [ProfessionalAssertionIdentityClaim](../../src/Compliance.Core/Features/AccessControl/Aggregates/ProfessionalAssertionIdentityClaim.cs#L15)
+- [ClientServiceIndependence](../../src/Compliance.Core/Features/AccessControl/Aggregates/ClientServiceIndependence.cs#L11)
+- [ClientIndependenceDecision](../../src/Compliance.Core/Features/AccessControl/Aggregates/ClientIndependenceDecision.cs#L10)
+- [ServiceEngagementIndependence](../../src/Compliance.Core/Features/AccessControl/Aggregates/ServiceEngagementIndependence.cs#L11)
+- [PracticeIndependenceCommitment](../../src/Compliance.Core/Features/AccessControl/Aggregates/PracticeIndependenceCommitment.cs#L19)
+- [IndependenceRuleRatificationCatalog](../../src/Compliance.Core/Features/AccessControl/Aggregates/IndependenceRuleRatificationCatalog.cs#L8)
+- [IndependenceRuleCatalog](../../src/Compliance.Core/Features/AccessControl/Aggregates/IndependenceRuleCatalog.cs#L8)
+- [Member](../../src/Compliance.Core/Features/AccessControl/Aggregates/Member.cs#L5)
+- [Role](../../src/Compliance.Core/Features/AccessControl/Aggregates/Role.cs#L5)
+- [RolePermission](../../src/Compliance.Core/Features/AccessControl/Aggregates/RolePermission.cs#L8)
+- [SeparationOfDutiesWaiver](../../src/Compliance.Core/Features/AccessControl/Aggregates/SeparationOfDutiesWaiver.cs#L7)
+- [Team](../../src/Compliance.Core/Features/AccessControl/Aggregates/Team.cs#L5)
+- [TeamMember](../../src/Compliance.Core/Features/AccessControl/Aggregates/TeamMember.cs#L5)
+- [TeamRole](../../src/Compliance.Core/Features/AccessControl/Aggregates/TeamRole.cs#L5)
+- [TenantManagerGuard](../../src/Compliance.Core/Features/AccessControl/Aggregates/TenantManagerGuard.cs#L11)
 
 #### AccessReviews
 
-- [AccessExpectation](../../src/Compliance.Core/Features/AccessReviews/AccessExpectation.cs#L18)
-- [AccessPopulation](../../src/Compliance.Core/Features/AccessReviews/AccessPopulation.cs#L16)
-- [AccessPopulationException](../../src/Compliance.Core/Features/AccessReviews/AccessPopulationException.cs#L16)
-- [AccessPrincipalClassification](../../src/Compliance.Core/Features/AccessReviews/AccessPrincipalClassification.cs#L15)
-- [AccessReviewCampaign](../../src/Compliance.Core/Features/AccessReviews/AccessReviewCampaign.cs#L11)
-- [AccessReviewItem](../../src/Compliance.Core/Features/AccessReviews/AccessReviewItem.cs#L17)
+- [AccessExpectation](../../src/Compliance.Core/Features/AccessReviews/Aggregates/AccessExpectation.cs#L18)
+- [AccessPopulation](../../src/Compliance.Core/Features/AccessReviews/Aggregates/AccessPopulation.cs#L16)
+- [AccessPopulationException](../../src/Compliance.Core/Features/AccessReviews/Aggregates/AccessPopulationException.cs#L16)
+- [AccessPrincipalClassification](../../src/Compliance.Core/Features/AccessReviews/Aggregates/AccessPrincipalClassification.cs#L15)
+- [AccessReviewCampaign](../../src/Compliance.Core/Features/AccessReviews/Aggregates/AccessReviewCampaign.cs#L11)
+- [AccessReviewItem](../../src/Compliance.Core/Features/AccessReviews/Aggregates/AccessReviewItem.cs#L17)
 
 #### AdvisorCollaboration
 
-- [AdvisorHandoff](../../src/Compliance.Core/Features/AdvisorCollaboration/AdvisorHandoff.cs#L9)
+- [AdvisorHandoff](../../src/Compliance.Core/Features/AdvisorCollaboration/Aggregates/AdvisorHandoff.cs#L9)
 
 #### AuditorRequests
 
-- [AuditorRequest](../../src/Compliance.Core/Features/AuditorRequests/AuditorRequest.cs#L13)
+- [AuditorRequest](../../src/Compliance.Core/Features/AuditorRequests/Aggregates/AuditorRequest.cs#L13)
 
 #### AuditPackages
 
@@ -1792,110 +1792,110 @@ These 140 requirement-backed event contracts have been added since the existing-
 
 #### AuditPopulations
 
-- [AuditPopulation](../../src/Compliance.Core/Features/AuditPopulations/AuditPopulation.cs#L14)
+- [AuditPopulation](../../src/Compliance.Core/Features/AuditPopulations/Aggregates/AuditPopulation.cs#L14)
 
 #### Applications
 
-- [ApplicationImportBatch](../../src/Compliance.Core/Features/Applications/ApplicationImportBatch.cs#L19)
-- [ApplicationImportSource](../../src/Compliance.Core/Features/Applications/ApplicationImportSource.cs#L16)
-- [DeclaredApplication](../../src/Compliance.Core/Features/Applications/DeclaredApplication.cs#L8)
-- [DeclaredSystemInstance](../../src/Compliance.Core/Features/Applications/DeclaredSystemInstance.cs#L8)
-- [SystemInstanceAccessReviewScope](../../src/Compliance.Core/Features/Applications/SystemInstanceAccessReviewScope.cs#L10)
+- [ApplicationImportBatch](../../src/Compliance.Core/Features/Applications/Aggregates/ApplicationImportBatch.cs#L19)
+- [ApplicationImportSource](../../src/Compliance.Core/Features/Applications/Aggregates/ApplicationImportSource.cs#L16)
+- [DeclaredApplication](../../src/Compliance.Core/Features/Applications/Aggregates/DeclaredApplication.cs#L8)
+- [DeclaredSystemInstance](../../src/Compliance.Core/Features/Applications/Aggregates/DeclaredSystemInstance.cs#L8)
+- [SystemInstanceAccessReviewScope](../../src/Compliance.Core/Features/Applications/Aggregates/SystemInstanceAccessReviewScope.cs#L10)
 
 #### Boundaries
 
-- [SystemBoundary](../../src/Compliance.Core/Features/Boundaries/SystemBoundary.cs#L7)
+- [SystemBoundary](../../src/Compliance.Core/Features/Boundaries/Aggregates/SystemBoundary.cs#L7)
 
 #### Changes
 
-- [SignificantChange](../../src/Compliance.Core/Features/Changes/SignificantChange.cs#L10)
+- [SignificantChange](../../src/Compliance.Core/Features/Changes/Aggregates/SignificantChange.cs#L10)
 
 #### Commitments
 
-- [CommitmentDraft](../../src/Compliance.Core/Features/Commitments/CommitmentDraft.cs#L9)
+- [CommitmentDraft](../../src/Compliance.Core/Features/Commitments/Aggregates/CommitmentDraft.cs#L9)
 
 #### ControlMappings
 
-- [ControlCriterionMapping](../../src/Compliance.Core/Features/ControlMappings/ControlCriterionMapping.cs#L15)
-- [CriterionApplicability](../../src/Compliance.Core/Features/ControlMappings/CriterionApplicability.cs#L15)
+- [ControlCriterionMapping](../../src/Compliance.Core/Features/ControlMappings/Aggregates/ControlCriterionMapping.cs#L15)
+- [CriterionApplicability](../../src/Compliance.Core/Features/ControlMappings/Aggregates/CriterionApplicability.cs#L15)
 
 #### Controls
 
-- [ControlDraft](../../src/Compliance.Core/Features/Controls/ControlDraft.cs#L13)
+- [ControlDraft](../../src/Compliance.Core/Features/Controls/Aggregates/ControlDraft.cs#L13)
 
 #### Criteria
 
-- [CriteriaTextOverlay](../../src/Compliance.Core/Features/Criteria/CriteriaTextOverlay.cs#L15)
+- [CriteriaTextOverlay](../../src/Compliance.Core/Features/Criteria/Aggregates/CriteriaTextOverlay.cs#L15)
 
 #### Evaluations
 
-- [ControlEvaluation](../../src/Compliance.Core/Features/Evaluations/ControlEvaluation.cs#L16)
-- [ControlEvaluationPlan](../../src/Compliance.Core/Features/Evaluations/ControlEvaluationPlan.cs#L9)
+- [ControlEvaluation](../../src/Compliance.Core/Features/Evaluations/Aggregates/ControlEvaluation.cs#L16)
+- [ControlEvaluationPlan](../../src/Compliance.Core/Features/Evaluations/Aggregates/ControlEvaluationPlan.cs#L9)
 
 #### Evidence
 
-- [EvidenceArtifact](../../src/Compliance.Core/Features/Evidence/EvidenceArtifact.cs#L12)
-- [EvidenceRedaction](../../src/Compliance.Core/Features/Evidence/EvidenceRedaction.cs#L9)
-- [EvidenceSupport](../../src/Compliance.Core/Features/Evidence/EvidenceSupport.cs#L9)
+- [EvidenceArtifact](../../src/Compliance.Core/Features/Evidence/Aggregates/EvidenceArtifact.cs#L12)
+- [EvidenceRedaction](../../src/Compliance.Core/Features/Evidence/Aggregates/EvidenceRedaction.cs#L9)
+- [EvidenceSupport](../../src/Compliance.Core/Features/Evidence/Aggregates/EvidenceSupport.cs#L9)
 - [EvidenceRequestLedger](../../src/Compliance.Core/Features/Evidence/EvidenceRequestLedger.cs#L11)
 
 #### Exports
 
-- [ClientExport](../../src/Compliance.Core/Features/Exports/ClientExport.cs#L14)
+- [ClientExport](../../src/Compliance.Core/Features/Exports/Aggregates/ClientExport.cs#L14)
 
 #### Examinations
 
-- [ExaminationEngagement](../../src/Compliance.Core/Features/Examinations/ExaminationEngagement.cs#L13)
-- [ManagementAssertion](../../src/Compliance.Core/Features/Examinations/ManagementAssertion.cs#L12)
-- [ManagementRepresentationLetter](../../src/Compliance.Core/Features/Examinations/ManagementRepresentationLetter.cs#L10)
-- [AuditOutcome](../../src/Compliance.Core/Features/Examinations/AuditOutcome.cs#L10)
-- [ExaminationSignOff](../../src/Compliance.Core/Features/Examinations/ExaminationSignOff.cs#L11)
-- [TypeIIPlan](../../src/Compliance.Core/Features/Examinations/TypeIIPlan.cs#L14)
+- [ExaminationEngagement](../../src/Compliance.Core/Features/Examinations/Aggregates/ExaminationEngagement.cs#L13)
+- [ManagementAssertion](../../src/Compliance.Core/Features/Examinations/Aggregates/ManagementAssertion.cs#L12)
+- [ManagementRepresentationLetter](../../src/Compliance.Core/Features/Examinations/Aggregates/ManagementRepresentationLetter.cs#L10)
+- [AuditOutcome](../../src/Compliance.Core/Features/Examinations/Aggregates/AuditOutcome.cs#L10)
+- [ExaminationSignOff](../../src/Compliance.Core/Features/Examinations/Aggregates/ExaminationSignOff.cs#L11)
+- [TypeIIPlan](../../src/Compliance.Core/Features/Examinations/Aggregates/TypeIIPlan.cs#L14)
 
 #### Incidents
 
-- [ComplianceIncident](../../src/Compliance.Core/Features/Incidents/ComplianceIncident.cs#L10)
+- [ComplianceIncident](../../src/Compliance.Core/Features/Incidents/Aggregates/ComplianceIncident.cs#L10)
 
 #### MethodologyTemplates
 
-- [MethodologyTemplate](../../src/Compliance.Core/Features/MethodologyTemplates/MethodologyTemplate.cs#L10)
-- [MethodologyTemplateContribution](../../src/Compliance.Core/Features/MethodologyTemplates/MethodologyTemplateContribution.cs#L10)
-- [TemplateApplication](../../src/Compliance.Core/Features/MethodologyTemplates/TemplateApplication.cs#L10)
+- [MethodologyTemplate](../../src/Compliance.Core/Features/MethodologyTemplates/Aggregates/MethodologyTemplate.cs#L10)
+- [MethodologyTemplateContribution](../../src/Compliance.Core/Features/MethodologyTemplates/Aggregates/MethodologyTemplateContribution.cs#L10)
+- [TemplateApplication](../../src/Compliance.Core/Features/MethodologyTemplates/Aggregates/TemplateApplication.cs#L10)
 
 #### SystemDescription
 
-- [SystemDescription](../../src/Compliance.Core/Features/SystemDescription/SystemDescription.cs#L11)
+- [SystemDescription](../../src/Compliance.Core/Features/SystemDescription/Aggregates/SystemDescription.cs#L11)
 
 #### Operations
 
-- [ControlOperatingPlan](../../src/Compliance.Core/Features/Operations/ControlOperatingPlan.cs#L14)
-- [ControlOccurrence](../../src/Compliance.Core/Features/Operations/ControlOccurrence.cs#L15)
-- [TypeIIPeriod](../../src/Compliance.Core/Features/Operations/TypeIIPeriod.cs#L17)
-- [TypeIIObservationCalendar](../../src/Compliance.Core/Features/Operations/TypeIIObservationCalendar.cs#L8)
+- [ControlOperatingPlan](../../src/Compliance.Core/Features/Operations/Aggregates/ControlOperatingPlan.cs#L14)
+- [ControlOccurrence](../../src/Compliance.Core/Features/Operations/Aggregates/ControlOccurrence.cs#L15)
+- [TypeIIPeriod](../../src/Compliance.Core/Features/Operations/Aggregates/TypeIIPeriod.cs#L17)
+- [TypeIIObservationCalendar](../../src/Compliance.Core/Features/Operations/Aggregates/TypeIIObservationCalendar.cs#L8)
 
 #### Policies
 
-- [Policy](../../src/Compliance.Core/Features/Policies/Policy.cs#L13)
+- [Policy](../../src/Compliance.Core/Features/Policies/Aggregates/Policy.cs#L13)
 
 #### PolicyDistribution
 
-- [PolicyDistributionCampaign](../../src/Compliance.Core/Features/PolicyDistribution/PolicyDistributionCampaign.cs#L18)
-- [PolicyCampaignParticipant](../../src/Compliance.Core/Features/PolicyDistribution/PolicyCampaignParticipant.cs#L16)
-- [TrainingRequirement](../../src/Compliance.Core/Features/PolicyDistribution/TrainingRequirement.cs#L14)
+- [PolicyDistributionCampaign](../../src/Compliance.Core/Features/PolicyDistribution/Aggregates/PolicyDistributionCampaign.cs#L18)
+- [PolicyCampaignParticipant](../../src/Compliance.Core/Features/PolicyDistribution/Aggregates/PolicyCampaignParticipant.cs#L16)
+- [TrainingRequirement](../../src/Compliance.Core/Features/PolicyDistribution/Aggregates/TrainingRequirement.cs#L14)
 
 #### Programs
 
-- [ClientService](../../src/Compliance.Core/Features/Programs/ClientService.cs#L7)
-- [ComplianceProgram](../../src/Compliance.Core/Features/Programs/ComplianceProgram.cs#L7)
-- [ProgramRollover](../../src/Compliance.Core/Features/Programs/ProgramRollover.cs#L15)
+- [ClientService](../../src/Compliance.Core/Features/Programs/Aggregates/ClientService.cs#L7)
+- [ComplianceProgram](../../src/Compliance.Core/Features/Programs/Aggregates/ComplianceProgram.cs#L7)
+- [ProgramRollover](../../src/Compliance.Core/Features/Programs/Aggregates/ProgramRollover.cs#L15)
 
 #### Providers
 
-- [ProviderAssuranceGap](../../src/Compliance.Core/Features/Providers/ProviderAssuranceGap.cs)
-- [ProviderAssuranceReport](../../src/Compliance.Core/Features/Providers/ProviderAssuranceReport.cs)
-- [ProviderAssuranceReview](../../src/Compliance.Core/Features/Providers/ProviderAssuranceReview.cs)
+- [ProviderAssuranceGap](../../src/Compliance.Core/Features/Providers/Aggregates/ProviderAssuranceGap.cs)
+- [ProviderAssuranceReport](../../src/Compliance.Core/Features/Providers/Aggregates/ProviderAssuranceReport.cs)
+- [ProviderAssuranceReview](../../src/Compliance.Core/Features/Providers/Aggregates/ProviderAssuranceReview.cs)
 - [ProviderRegister](../../src/Compliance.Core/Features/Providers/ProviderRegister.cs#L9)
-- [ProviderRiskAcceptance](../../src/Compliance.Core/Features/Providers/ProviderRiskAcceptance.cs)
+- [ProviderRiskAcceptance](../../src/Compliance.Core/Features/Providers/Aggregates/ProviderRiskAcceptance.cs)
 
 #### Readiness
 
@@ -1903,90 +1903,90 @@ These 140 requirement-backed event contracts have been added since the existing-
 
 #### Remediation
 
-- [CorrectiveAction](../../src/Compliance.Core/Features/Remediation/CorrectiveAction.cs)
+- [CorrectiveAction](../../src/Compliance.Core/Features/Remediation/Aggregates/CorrectiveAction.cs)
 
 #### Retention
 
-- [ArtifactDisclosure](../../src/Compliance.Core/Features/Retention/ArtifactDisclosure.cs#L10)
-- [ArtifactDisposition](../../src/Compliance.Core/Features/Retention/ArtifactDisposition.cs#L11)
-- [ArtifactEngagementHold](../../src/Compliance.Core/Features/Retention/ArtifactEngagementHold.cs#L9)
+- [ArtifactDisclosure](../../src/Compliance.Core/Features/Retention/Aggregates/ArtifactDisclosure.cs#L10)
+- [ArtifactDisposition](../../src/Compliance.Core/Features/Retention/Aggregates/ArtifactDisposition.cs#L11)
+- [ArtifactEngagementHold](../../src/Compliance.Core/Features/Retention/Aggregates/ArtifactEngagementHold.cs#L9)
 - [ArtifactRetention](../../src/Compliance.Core/Features/Retention/ArtifactRetention.cs#L7)
-- [EvidenceHandlingPolicy](../../src/Compliance.Core/Features/Retention/EvidenceHandlingPolicy.cs#L10)
+- [EvidenceHandlingPolicy](../../src/Compliance.Core/Features/Retention/Aggregates/EvidenceHandlingPolicy.cs#L10)
 
 #### Risks
 
-- [RiskDraft](../../src/Compliance.Core/Features/Risks/RiskDraft.cs#L8)
-- [RiskEvaluation](../../src/Compliance.Core/Features/Risks/RiskEvaluation.cs#L11)
+- [RiskDraft](../../src/Compliance.Core/Features/Risks/Aggregates/RiskDraft.cs#L8)
+- [RiskEvaluation](../../src/Compliance.Core/Features/Risks/Aggregates/RiskEvaluation.cs#L11)
 - [RiskGovernanceLedger](../../src/Compliance.Core/Features/Risks/RiskGovernanceLedger.cs#L13)
-- [RiskMethod](../../src/Compliance.Core/Features/Risks/RiskMethod.cs#L8)
+- [RiskMethod](../../src/Compliance.Core/Features/Risks/Aggregates/RiskMethod.cs#L8)
 
 #### Snapshots
 
-- [ImmutableSnapshot](../../src/Compliance.Core/Features/Snapshots/ImmutableSnapshot.cs#L5)
-- [PopulationSnapshot](../../src/Compliance.Core/Features/Snapshots/PopulationSnapshot.cs#L14)
-- [PopulationSnapshotChunk](../../src/Compliance.Core/Features/Snapshots/PopulationSnapshotChunk.cs#L10)
+- [ImmutableSnapshot](../../src/Compliance.Core/Features/Snapshots/Aggregates/ImmutableSnapshot.cs#L5)
+- [PopulationSnapshot](../../src/Compliance.Core/Features/Snapshots/Aggregates/PopulationSnapshot.cs#L14)
+- [PopulationSnapshotChunk](../../src/Compliance.Core/Features/Snapshots/Aggregates/PopulationSnapshotChunk.cs#L10)
 
 #### TechnologyInventory
 
-- [DataFlow](../../src/Compliance.Core/Features/TechnologyInventory/DataFlow.cs#L8)
-- [InformationAsset](../../src/Compliance.Core/Features/TechnologyInventory/InformationAsset.cs#L8)
+- [DataFlow](../../src/Compliance.Core/Features/TechnologyInventory/Aggregates/DataFlow.cs#L8)
+- [InformationAsset](../../src/Compliance.Core/Features/TechnologyInventory/Aggregates/InformationAsset.cs#L8)
 - [LocationRegister](../../src/Compliance.Core/Features/TechnologyInventory/LocationRegister.cs#L11)
 - [OperationalProcessRegister](../../src/Compliance.Core/Features/TechnologyInventory/OperationalProcessRegister.cs#L11)
-- [TechnologyComponent](../../src/Compliance.Core/Features/TechnologyInventory/TechnologyComponent.cs#L8)
+- [TechnologyComponent](../../src/Compliance.Core/Features/TechnologyInventory/Aggregates/TechnologyComponent.cs#L8)
 
 #### Tenants
 
-- [PlatformOperatorRoster](../../src/Compliance.Core/Features/Tenants/PlatformOperatorRoster.cs#L9)
-- [Tenant](../../src/Compliance.Core/Features/Tenants/Tenant.cs#L6)
-- [TenantInvitation](../../src/Compliance.Core/Features/Tenants/TenantInvitation.cs#L9)
+- [PlatformOperatorRoster](../../src/Compliance.Core/Features/Tenants/Aggregates/PlatformOperatorRoster.cs#L9)
+- [Tenant](../../src/Compliance.Core/Features/Tenants/Aggregates/Tenant.cs#L6)
+- [TenantInvitation](../../src/Compliance.Core/Features/Tenants/Aggregates/TenantInvitation.cs#L9)
 - [TenantOwner](../../src/Compliance.Core/Features/Tenants/TenantOwner.cs#L6)
-- [TenantSlug](../../src/Compliance.Core/Features/Tenants/TenantSlug.cs#L6)
+- [TenantSlug](../../src/Compliance.Core/Features/Tenants/Aggregates/TenantSlug.cs#L6)
 
 #### UserIdentities
 
-- [EmailAddress](../../src/Compliance.Core/Features/UserIdentities/EmailAddress.cs#L9)
-- [TenantIdentityProvider](../../src/Compliance.Core/Features/UserIdentities/TenantIdentityProvider.cs#L11)
-- [UserIdentity](../../src/Compliance.Core/Features/UserIdentities/UserIdentity.cs#L7)
+- [EmailAddress](../../src/Compliance.Core/Features/UserIdentities/Aggregates/EmailAddress.cs#L9)
+- [TenantIdentityProvider](../../src/Compliance.Core/Features/UserIdentities/Aggregates/TenantIdentityProvider.cs#L11)
+- [UserIdentity](../../src/Compliance.Core/Features/UserIdentities/Aggregates/UserIdentity.cs#L7)
 
 #### Work
 
-- [WorkItemAssignment](../../src/Compliance.Core/Features/Work/WorkItemAssignment.cs#L10)
-- [LegacyWorkAssignmentLedger](../../src/Compliance.Core/Features/Work/LegacyWorkAssignmentLedger.cs#L6) (read-only legacy stream adapter)
-- [WorkDigestDispatch](../../src/Compliance.Core/Features/Work/WorkDigestDispatch.cs#L6)
-- [WorkDigestPreference](../../src/Compliance.Core/Features/Work/WorkDigestPreference.cs#L9)
-- [WeeklyWorkDigest](../../src/Compliance.Core/Features/Work/WeeklyWorkDigest.cs#L11)
+- [WorkItemAssignment](../../src/Compliance.Core/Features/Work/Aggregates/WorkItemAssignment.cs#L10)
+- [LegacyWorkAssignmentLedger](../../src/Compliance.Core/Features/Work/Aggregates/LegacyWorkAssignmentLedger.cs#L6) (read-only legacy stream adapter)
+- [WorkDigestDispatch](../../src/Compliance.Core/Features/Work/Aggregates/WorkDigestDispatch.cs#L6)
+- [WorkDigestPreference](../../src/Compliance.Core/Features/Work/Aggregates/WorkDigestPreference.cs#L9)
+- [WeeklyWorkDigest](../../src/Compliance.Core/Features/Work/Aggregates/WeeklyWorkDigest.cs#L11)
 
 #### Workforce
 
-- [Person](../../src/Compliance.Core/Features/Workforce/Person.cs#L8)
-- [ServiceIdentity](../../src/Compliance.Core/Features/Workforce/ServiceIdentity.cs#L12)
-- [WorkRelationship](../../src/Compliance.Core/Features/Workforce/WorkRelationship.cs#L11)
-- [WorkforceObservationResolution](../../src/Compliance.Core/Features/Workforce/WorkforceObservationResolution.cs#L11)
-- [WorkforceSourceObservation](../../src/Compliance.Core/Features/Workforce/WorkforceSourceObservation.cs#L8)
+- [Person](../../src/Compliance.Core/Features/Workforce/Aggregates/Person.cs#L8)
+- [ServiceIdentity](../../src/Compliance.Core/Features/Workforce/Aggregates/ServiceIdentity.cs#L12)
+- [WorkRelationship](../../src/Compliance.Core/Features/Workforce/Aggregates/WorkRelationship.cs#L11)
+- [WorkforceObservationResolution](../../src/Compliance.Core/Features/Workforce/Aggregates/WorkforceObservationResolution.cs#L11)
+- [WorkforceSourceObservation](../../src/Compliance.Core/Features/Workforce/Aggregates/WorkforceSourceObservation.cs#L8)
 
 ### Existing models and supporting contracts
 
 #### AccessControl
 
-- [AccessGrantPrincipal](../../src/Compliance.Common/Features/AccessControl/AccessGrantPrincipal.cs#L5)
+- [AccessGrantPrincipal](../../src/Compliance.Common/Features/AccessControl/Models/AccessGrantPrincipal.cs#L5)
 - [AccessGrantPrincipalKind](../../src/Compliance.Common/Features/AccessControl/AccessGrantPrincipalKind.cs#L6)
-- [AccessGrantProposal](../../src/Compliance.Common/Features/AccessControl/AccessGrantProposal.cs#L5)
-- [AccessGrantScope](../../src/Compliance.Common/Features/AccessControl/AccessGrantScope.cs#L5)
+- [AccessGrantProposal](../../src/Compliance.Common/Features/AccessControl/Models/AccessGrantProposal.cs#L5)
+- [AccessGrantScope](../../src/Compliance.Common/Features/AccessControl/Models/AccessGrantScope.cs#L5)
 - [AccessGrantScopeKind](../../src/Compliance.Common/Features/AccessControl/AccessGrantScopeKind.cs#L6)
-- [AccessGrantSetView](../../src/Compliance.Common/Features/AccessControl/AccessGrantSetView.cs#L5)
-- [AccessGrantSource](../../src/Compliance.Common/Features/AccessControl/AccessGrantSource.cs#L3)
-- [AccessGrantTerms](../../src/Compliance.Common/Features/AccessControl/AccessGrantTerms.cs#L5)
-- [AccessGrantView](../../src/Compliance.Common/Features/AccessControl/AccessGrantView.cs#L5)
-- [ActorReference](../../src/Compliance.Common/Features/AccessControl/ActorReference.cs#L6)
-- [AssignmentIndependenceReevaluationView](../../src/Compliance.Common/Features/AccessControl/AssignmentIndependenceReevaluationView.cs#L6)
-- [DirectoryIndependenceReevaluationView](../../src/Compliance.Common/Features/AccessControl/DirectoryIndependenceReevaluationView.cs#L6)
-- [DirectoryStatusSourceView](../../src/Compliance.Common/Features/AccessControl/DirectoryStatusSourceView.cs#L6)
-- [EngagementAcceptanceSourceTimes](../../src/Compliance.Common/Features/AccessControl/EngagementAcceptanceSourceTimes.cs#L3)
-- [EngagementActualAssignmentView](../../src/Compliance.Common/Features/AccessControl/EngagementActualAssignmentView.cs#L5)
-- [EngagementManagementAcknowledgementView](../../src/Compliance.Common/Features/AccessControl/EngagementManagementAcknowledgementView.cs#L5)
-- [FirmStaffDirectoryView](../../src/Compliance.Common/Features/AccessControl/FirmStaffDirectoryView.cs#L5)
-- [FirmStaffMemberView](../../src/Compliance.Common/Features/AccessControl/FirmStaffMemberView.cs#L5)
-- [HistoricalEngagementAssignmentView](../../src/Compliance.Common/Features/AccessControl/HistoricalEngagementAssignmentView.cs#L5)
+- [AccessGrantSetView](../../src/Compliance.Common/Features/AccessControl/Models/AccessGrantSetView.cs#L5)
+- [AccessGrantSource](../../src/Compliance.Common/Features/AccessControl/Models/AccessGrantSource.cs#L3)
+- [AccessGrantTerms](../../src/Compliance.Common/Features/AccessControl/Models/AccessGrantTerms.cs#L5)
+- [AccessGrantView](../../src/Compliance.Common/Features/AccessControl/Models/AccessGrantView.cs#L5)
+- [ActorReference](../../src/Compliance.Common/Features/AccessControl/Models/ActorReference.cs#L6)
+- [AssignmentIndependenceReevaluationView](../../src/Compliance.Common/Features/AccessControl/Models/AssignmentIndependenceReevaluationView.cs#L6)
+- [DirectoryIndependenceReevaluationView](../../src/Compliance.Common/Features/AccessControl/Models/DirectoryIndependenceReevaluationView.cs#L6)
+- [DirectoryStatusSourceView](../../src/Compliance.Common/Features/AccessControl/Models/DirectoryStatusSourceView.cs#L6)
+- [EngagementAcceptanceSourceTimes](../../src/Compliance.Common/Features/AccessControl/Models/EngagementAcceptanceSourceTimes.cs#L3)
+- [EngagementActualAssignmentView](../../src/Compliance.Common/Features/AccessControl/Models/EngagementActualAssignmentView.cs#L5)
+- [EngagementManagementAcknowledgementView](../../src/Compliance.Common/Features/AccessControl/Models/EngagementManagementAcknowledgementView.cs#L5)
+- [FirmStaffDirectoryView](../../src/Compliance.Common/Features/AccessControl/Models/FirmStaffDirectoryView.cs#L5)
+- [FirmStaffMemberView](../../src/Compliance.Common/Features/AccessControl/Models/FirmStaffMemberView.cs#L5)
+- [HistoricalEngagementAssignmentView](../../src/Compliance.Common/Features/AccessControl/Models/HistoricalEngagementAssignmentView.cs#L5)
 - [IClientManagementMutationRequest](../../src/Compliance.Common/Features/AccessControl/IClientManagementMutationRequest.cs#L6)
 - [IClientRbacMutationRequest](../../src/Compliance.Common/Features/AccessControl/IClientRbacMutationRequest.cs#L4)
 - [IFirmStaffAdministrationRequest](../../src/Compliance.Common/Features/AccessControl/IFirmStaffAdministrationRequest.cs#L5)
@@ -1995,148 +1995,148 @@ These 140 requirement-backed event contracts have been added since the existing-
 - [IRbacManagementRequest](../../src/Compliance.Common/Features/AccessControl/IRbacManagementRequest.cs#L6)
 - [ISeparationOfDutiesWaiverAdminRequest](../../src/Compliance.Common/Features/AccessControl/ISeparationOfDutiesWaiverAdminRequest.cs#L6)
 - [ITenantAccessRequest](../../src/Compliance.Common/Features/AccessControl/ITenantAccessRequest.cs#L6)
-- [IndependenceEvaluationView](../../src/Compliance.Common/Features/AccessControl/IndependenceEvaluationView.cs#L6)
-- [IndependenceHistoryView](../../src/Compliance.Common/Features/AccessControl/IndependenceHistoryView.cs#L5)
-- [IndependenceRuleContent](../../src/Compliance.Common/Features/AccessControl/IndependenceRuleContent.cs#L3)
-- [IndependenceRuleVersionView](../../src/Compliance.Common/Features/AccessControl/IndependenceRuleVersionView.cs#L6)
-- [IndependenceServiceRuleContent](../../src/Compliance.Common/Features/AccessControl/IndependenceServiceRuleContent.cs#L3)
-- [MemberAccessGrantPath](../../src/Compliance.Common/Features/AccessControl/MemberAccessGrantPath.cs#L3)
-- [MemberAccessPath](../../src/Compliance.Common/Features/AccessControl/MemberAccessPath.cs#L5)
-- [MemberAccessView](../../src/Compliance.Common/Features/AccessControl/MemberAccessView.cs#L5)
-- [NonattestServiceContent](../../src/Compliance.Common/Features/AccessControl/NonattestServiceContent.cs#L5)
-- [NonattestServiceView](../../src/Compliance.Common/Features/AccessControl/NonattestServiceView.cs#L5)
-- [RolePermissionView](../../src/Compliance.Common/Features/AccessControl/RolePermissionView.cs#L5)
-- [RoleTeamView](../../src/Compliance.Common/Features/AccessControl/RoleTeamView.cs#L5)
-- [RoleView](../../src/Compliance.Common/Features/AccessControl/RoleView.cs#L5)
-- [SeparationOfDutiesActions](../../src/Compliance.Common/Features/AccessControl/SeparationOfDutiesWaiverScope.cs#L72)
-- [SeparationOfDutiesRecordTypes](../../src/Compliance.Common/Features/AccessControl/SeparationOfDutiesWaiverScope.cs#L13)
-- [SeparationOfDutiesWaiverScope](../../src/Compliance.Common/Features/AccessControl/SeparationOfDutiesWaiverScope.cs#L6)
-- [SeparationOfDutiesWaiverView](../../src/Compliance.Common/Features/AccessControl/SeparationOfDutiesWaiverView.cs#L7)
-- [ServiceEngagementAcceptanceView](../../src/Compliance.Common/Features/AccessControl/ServiceEngagementAcceptanceView.cs#L5)
-- [ServiceEngagementBoundaryReference](../../src/Compliance.Common/Features/AccessControl/ServiceEngagementBoundaryReference.cs#L5)
-- [ServiceEngagementDraftContent](../../src/Compliance.Common/Features/AccessControl/ServiceEngagementDraftContent.cs#L5)
-- [ServiceEngagementStaffProposalView](../../src/Compliance.Common/Features/AccessControl/ServiceEngagementStaffProposalView.cs#L5)
-- [ServiceEngagementView](../../src/Compliance.Common/Features/AccessControl/ServiceEngagementView.cs#L5)
-- [ServiceIndependenceReevaluationView](../../src/Compliance.Common/Features/AccessControl/ServiceIndependenceReevaluationView.cs#L6)
-- [TeamMemberView](../../src/Compliance.Common/Features/AccessControl/TeamMemberView.cs#L5)
-- [TeamRoleView](../../src/Compliance.Common/Features/AccessControl/TeamRoleView.cs#L5)
-- [TeamView](../../src/Compliance.Common/Features/AccessControl/TeamView.cs#L5)
+- [IndependenceEvaluationView](../../src/Compliance.Common/Features/AccessControl/Models/IndependenceEvaluationView.cs#L6)
+- [IndependenceHistoryView](../../src/Compliance.Common/Features/AccessControl/Models/IndependenceHistoryView.cs#L5)
+- [IndependenceRuleContent](../../src/Compliance.Common/Features/AccessControl/Models/IndependenceRuleContent.cs#L3)
+- [IndependenceRuleVersionView](../../src/Compliance.Common/Features/AccessControl/Models/IndependenceRuleVersionView.cs#L6)
+- [IndependenceServiceRuleContent](../../src/Compliance.Common/Features/AccessControl/Models/IndependenceServiceRuleContent.cs#L3)
+- [MemberAccessGrantPath](../../src/Compliance.Common/Features/AccessControl/Models/MemberAccessGrantPath.cs#L3)
+- [MemberAccessPath](../../src/Compliance.Common/Features/AccessControl/Models/MemberAccessPath.cs#L5)
+- [MemberAccessView](../../src/Compliance.Common/Features/AccessControl/Models/MemberAccessView.cs#L5)
+- [NonattestServiceContent](../../src/Compliance.Common/Features/AccessControl/Models/NonattestServiceContent.cs#L5)
+- [NonattestServiceView](../../src/Compliance.Common/Features/AccessControl/Models/NonattestServiceView.cs#L5)
+- [RolePermissionView](../../src/Compliance.Common/Features/AccessControl/Models/RolePermissionView.cs#L5)
+- [RoleTeamView](../../src/Compliance.Common/Features/AccessControl/Models/RoleTeamView.cs#L5)
+- [RoleView](../../src/Compliance.Common/Features/AccessControl/Models/RoleView.cs#L5)
+- [SeparationOfDutiesActions](../../src/Compliance.Common/Features/AccessControl/Models/SeparationOfDutiesWaiverScope.cs#L72)
+- [SeparationOfDutiesRecordTypes](../../src/Compliance.Common/Features/AccessControl/Models/SeparationOfDutiesWaiverScope.cs#L13)
+- [SeparationOfDutiesWaiverScope](../../src/Compliance.Common/Features/AccessControl/Models/SeparationOfDutiesWaiverScope.cs#L6)
+- [SeparationOfDutiesWaiverView](../../src/Compliance.Common/Features/AccessControl/Models/SeparationOfDutiesWaiverView.cs#L7)
+- [ServiceEngagementAcceptanceView](../../src/Compliance.Common/Features/AccessControl/Models/ServiceEngagementAcceptanceView.cs#L5)
+- [ServiceEngagementBoundaryReference](../../src/Compliance.Common/Features/AccessControl/Models/ServiceEngagementBoundaryReference.cs#L5)
+- [ServiceEngagementDraftContent](../../src/Compliance.Common/Features/AccessControl/Models/ServiceEngagementDraftContent.cs#L5)
+- [ServiceEngagementStaffProposalView](../../src/Compliance.Common/Features/AccessControl/Models/ServiceEngagementStaffProposalView.cs#L5)
+- [ServiceEngagementView](../../src/Compliance.Common/Features/AccessControl/Models/ServiceEngagementView.cs#L5)
+- [ServiceIndependenceReevaluationView](../../src/Compliance.Common/Features/AccessControl/Models/ServiceIndependenceReevaluationView.cs#L6)
+- [TeamMemberView](../../src/Compliance.Common/Features/AccessControl/Models/TeamMemberView.cs#L5)
+- [TeamRoleView](../../src/Compliance.Common/Features/AccessControl/Models/TeamRoleView.cs#L5)
+- [TeamView](../../src/Compliance.Common/Features/AccessControl/Models/TeamView.cs#L5)
 
 #### AccessReviews
 
-- [AccessAssignmentFact](../../src/Compliance.Common/Features/AccessReviews/AccessAssignmentFact.cs#L7)
-- [AccessDecisionView](../../src/Compliance.Common/Features/AccessReviews/AccessDecisionView.cs#L10)
-- [AccessEntitlementFact](../../src/Compliance.Common/Features/AccessReviews/AccessEntitlementFact.cs#L8)
-- [AccessExpectationExceptionView](../../src/Compliance.Common/Features/AccessReviews/AccessExpectationExceptionView.cs#L7)
-- [AccessExpectationParameters](../../src/Compliance.Common/Features/AccessReviews/AccessExpectationParameters.cs#L9)
-- [AccessExpectationView](../../src/Compliance.Common/Features/AccessReviews/AccessExpectationView.cs#L10)
-- [AccessExpectationsView](../../src/Compliance.Common/Features/AccessReviews/AccessExpectationsView.cs#L6)
-- [AccessGroupMemberFact](../../src/Compliance.Common/Features/AccessReviews/AccessGroupMemberFact.cs#L7)
-- [AccessPopulationAcceptance](../../src/Compliance.Common/Features/AccessReviews/AccessPopulationAcceptance.cs#L6)
-- [AccessPopulationExceptionView](../../src/Compliance.Common/Features/AccessReviews/AccessPopulationExceptionView.cs#L10)
-- [AccessPopulationFacts](../../src/Compliance.Common/Features/AccessReviews/AccessPopulationFacts.cs#L4)
-- [AccessPopulationIssue](../../src/Compliance.Common/Features/AccessReviews/AccessPopulationIssue.cs#L7)
-- [AccessPopulationPreview](../../src/Compliance.Common/Features/AccessReviews/AccessPopulationPreview.cs#L9)
-- [AccessPopulationRegistration](../../src/Compliance.Common/Features/AccessReviews/AccessPopulationRegistration.cs#L5)
-- [AccessPopulationSummaryView](../../src/Compliance.Common/Features/AccessReviews/AccessPopulationSummaryView.cs#L6)
-- [AccessPopulationView](../../src/Compliance.Common/Features/AccessReviews/AccessPopulationView.cs#L11)
-- [AccessPrincipalClassificationView](../../src/Compliance.Common/Features/AccessReviews/AccessPrincipalClassificationView.cs#L11)
-- [AccessPrincipalFact](../../src/Compliance.Common/Features/AccessReviews/AccessPrincipalFact.cs#L8)
-- [AccessPrincipalProposalView](../../src/Compliance.Common/Features/AccessReviews/AccessPrincipalProposalView.cs#L6)
-- [AccessPrincipalView](../../src/Compliance.Common/Features/AccessReviews/AccessPrincipalView.cs#L9)
-- [AccessRemediationChangeView](../../src/Compliance.Common/Features/AccessReviews/AccessRemediationChangeView.cs#L7)
-- [AccessRemediationExceptionView](../../src/Compliance.Common/Features/AccessReviews/AccessRemediationExceptionView.cs#L7)
-- [AccessRemediationVerificationView](../../src/Compliance.Common/Features/AccessReviews/AccessRemediationVerificationView.cs#L10)
-- [AccessReviewAssignment](../../src/Compliance.Common/Features/AccessReviews/AccessReviewAssignment.cs#L9)
-- [AccessReviewCampaignCompletionView](../../src/Compliance.Common/Features/AccessReviews/AccessReviewCampaignCompletionView.cs#L7)
-- [AccessReviewCampaignRegistration](../../src/Compliance.Common/Features/AccessReviews/AccessReviewCampaignRegistration.cs#L5)
-- [AccessReviewCampaignSummaryView](../../src/Compliance.Common/Features/AccessReviews/AccessReviewCampaignSummaryView.cs#L6)
-- [AccessReviewCampaignView](../../src/Compliance.Common/Features/AccessReviews/AccessReviewCampaignView.cs#L10)
-- [AccessReviewCoverageView](../../src/Compliance.Common/Features/AccessReviews/AccessReviewCoverageView.cs#L6)
-- [AccessReviewInstanceCoverageView](../../src/Compliance.Common/Features/AccessReviews/AccessReviewInstanceCoverageView.cs#L10)
-- [AccessReviewItemStateView](../../src/Compliance.Common/Features/AccessReviews/AccessReviewItemStateView.cs#L10)
-- [AccessReviewItemView](../../src/Compliance.Common/Features/AccessReviews/AccessReviewItemView.cs#L9)
-- [AccessReviewerView](../../src/Compliance.Common/Features/AccessReviews/AccessReviewerView.cs#L6)
-- [AccessVarianceFinding](../../src/Compliance.Common/Features/AccessReviews/AccessVarianceFinding.cs#L6)
-- [AccessVarianceItemView](../../src/Compliance.Common/Features/AccessReviews/AccessVarianceItemView.cs#L10)
-- [AccessVarianceView](../../src/Compliance.Common/Features/AccessReviews/AccessVarianceView.cs#L6)
-- [BulkAccessDecisionPreview](../../src/Compliance.Common/Features/AccessReviews/BulkAccessDecisionPreview.cs#L9)
-- [BulkAccessDecisionRejection](../../src/Compliance.Common/Features/AccessReviews/BulkAccessDecisionRejection.cs#L9)
-- [BulkAccessDecisionResult](../../src/Compliance.Common/Features/AccessReviews/BulkAccessDecisionResult.cs#L4)
-- [EffectiveAccessHop](../../src/Compliance.Common/Features/AccessReviews/EffectiveAccessHop.cs#L7)
-- [EffectiveAccessPathView](../../src/Compliance.Common/Features/AccessReviews/EffectiveAccessPathView.cs#L4)
-- [EffectiveAccessView](../../src/Compliance.Common/Features/AccessReviews/EffectiveAccessView.cs#L8)
+- [AccessAssignmentFact](../../src/Compliance.Common/Features/AccessReviews/Models/AccessAssignmentFact.cs#L7)
+- [AccessDecisionView](../../src/Compliance.Common/Features/AccessReviews/Models/AccessDecisionView.cs#L10)
+- [AccessEntitlementFact](../../src/Compliance.Common/Features/AccessReviews/Models/AccessEntitlementFact.cs#L8)
+- [AccessExpectationExceptionView](../../src/Compliance.Common/Features/AccessReviews/Models/AccessExpectationExceptionView.cs#L7)
+- [AccessExpectationParameters](../../src/Compliance.Common/Features/AccessReviews/Models/AccessExpectationParameters.cs#L9)
+- [AccessExpectationView](../../src/Compliance.Common/Features/AccessReviews/Models/AccessExpectationView.cs#L10)
+- [AccessExpectationsView](../../src/Compliance.Common/Features/AccessReviews/Models/AccessExpectationsView.cs#L6)
+- [AccessGroupMemberFact](../../src/Compliance.Common/Features/AccessReviews/Models/AccessGroupMemberFact.cs#L7)
+- [AccessPopulationAcceptance](../../src/Compliance.Common/Features/AccessReviews/Models/AccessPopulationAcceptance.cs#L6)
+- [AccessPopulationExceptionView](../../src/Compliance.Common/Features/AccessReviews/Models/AccessPopulationExceptionView.cs#L10)
+- [AccessPopulationFacts](../../src/Compliance.Common/Features/AccessReviews/Models/AccessPopulationFacts.cs#L4)
+- [AccessPopulationIssue](../../src/Compliance.Common/Features/AccessReviews/Models/AccessPopulationIssue.cs#L7)
+- [AccessPopulationPreview](../../src/Compliance.Common/Features/AccessReviews/Models/AccessPopulationPreview.cs#L9)
+- [AccessPopulationRegistration](../../src/Compliance.Common/Features/AccessReviews/Models/AccessPopulationRegistration.cs#L5)
+- [AccessPopulationSummaryView](../../src/Compliance.Common/Features/AccessReviews/Models/AccessPopulationSummaryView.cs#L6)
+- [AccessPopulationView](../../src/Compliance.Common/Features/AccessReviews/Models/AccessPopulationView.cs#L11)
+- [AccessPrincipalClassificationView](../../src/Compliance.Common/Features/AccessReviews/Models/AccessPrincipalClassificationView.cs#L11)
+- [AccessPrincipalFact](../../src/Compliance.Common/Features/AccessReviews/Models/AccessPrincipalFact.cs#L8)
+- [AccessPrincipalProposalView](../../src/Compliance.Common/Features/AccessReviews/Models/AccessPrincipalProposalView.cs#L6)
+- [AccessPrincipalView](../../src/Compliance.Common/Features/AccessReviews/Models/AccessPrincipalView.cs#L9)
+- [AccessRemediationChangeView](../../src/Compliance.Common/Features/AccessReviews/Models/AccessRemediationChangeView.cs#L7)
+- [AccessRemediationExceptionView](../../src/Compliance.Common/Features/AccessReviews/Models/AccessRemediationExceptionView.cs#L7)
+- [AccessRemediationVerificationView](../../src/Compliance.Common/Features/AccessReviews/Models/AccessRemediationVerificationView.cs#L10)
+- [AccessReviewAssignment](../../src/Compliance.Common/Features/AccessReviews/Models/AccessReviewAssignment.cs#L9)
+- [AccessReviewCampaignCompletionView](../../src/Compliance.Common/Features/AccessReviews/Models/AccessReviewCampaignCompletionView.cs#L7)
+- [AccessReviewCampaignRegistration](../../src/Compliance.Common/Features/AccessReviews/Models/AccessReviewCampaignRegistration.cs#L5)
+- [AccessReviewCampaignSummaryView](../../src/Compliance.Common/Features/AccessReviews/Models/AccessReviewCampaignSummaryView.cs#L6)
+- [AccessReviewCampaignView](../../src/Compliance.Common/Features/AccessReviews/Models/AccessReviewCampaignView.cs#L10)
+- [AccessReviewCoverageView](../../src/Compliance.Common/Features/AccessReviews/Models/AccessReviewCoverageView.cs#L6)
+- [AccessReviewInstanceCoverageView](../../src/Compliance.Common/Features/AccessReviews/Models/AccessReviewInstanceCoverageView.cs#L10)
+- [AccessReviewItemStateView](../../src/Compliance.Common/Features/AccessReviews/Models/AccessReviewItemStateView.cs#L10)
+- [AccessReviewItemView](../../src/Compliance.Common/Features/AccessReviews/Models/AccessReviewItemView.cs#L9)
+- [AccessReviewerView](../../src/Compliance.Common/Features/AccessReviews/Models/AccessReviewerView.cs#L6)
+- [AccessVarianceFinding](../../src/Compliance.Common/Features/AccessReviews/Models/AccessVarianceFinding.cs#L6)
+- [AccessVarianceItemView](../../src/Compliance.Common/Features/AccessReviews/Models/AccessVarianceItemView.cs#L10)
+- [AccessVarianceView](../../src/Compliance.Common/Features/AccessReviews/Models/AccessVarianceView.cs#L6)
+- [BulkAccessDecisionPreview](../../src/Compliance.Common/Features/AccessReviews/Models/BulkAccessDecisionPreview.cs#L9)
+- [BulkAccessDecisionRejection](../../src/Compliance.Common/Features/AccessReviews/Models/BulkAccessDecisionRejection.cs#L9)
+- [BulkAccessDecisionResult](../../src/Compliance.Common/Features/AccessReviews/Models/BulkAccessDecisionResult.cs#L4)
+- [EffectiveAccessHop](../../src/Compliance.Common/Features/AccessReviews/Models/EffectiveAccessHop.cs#L7)
+- [EffectiveAccessPathView](../../src/Compliance.Common/Features/AccessReviews/Models/EffectiveAccessPathView.cs#L4)
+- [EffectiveAccessView](../../src/Compliance.Common/Features/AccessReviews/Models/EffectiveAccessView.cs#L8)
 - [IAccessReviewMutationRequest](../../src/Compliance.Common/Features/AccessReviews/IAccessReviewMutationRequest.cs#L6)
 - [IAccessReviewParticipantRequest](../../src/Compliance.Common/Features/AccessReviews/IAccessReviewParticipantRequest.cs#L9)
 - [IAccessReviewRequest](../../src/Compliance.Common/Features/AccessReviews/IAccessReviewRequest.cs#L6)
 
 #### Applications
 
-- [AccessReviewScopeDecisionView](../../src/Compliance.Common/Features/Applications/AccessReviewScopeDecisionView.cs#L6)
-- [AccessReviewScopeStatusView](../../src/Compliance.Common/Features/Applications/AccessReviewScopeStatusView.cs#L11)
-- [AccessReviewScopeView](../../src/Compliance.Common/Features/Applications/AccessReviewScopeView.cs#L9)
-- [ApplicationBoundaryReferenceView](../../src/Compliance.Common/Features/Applications/ApplicationBoundaryReferenceView.cs#L9)
-- [ApplicationChangePreview](../../src/Compliance.Common/Features/Applications/ApplicationChangePreview.cs#L6)
-- [ApplicationIncomingRelationshipView](../../src/Compliance.Common/Features/Applications/ApplicationIncomingRelationshipView.cs#L5)
-- [ApplicationControlDraftReferenceView](../../src/Compliance.Common/Features/Applications/ApplicationControlDraftReferenceView.cs#L9)
-- [ApplicationFieldChange](../../src/Compliance.Common/Features/Applications/ApplicationFieldChange.cs#L3)
-- [ApplicationImportCorrelationView](../../src/Compliance.Common/Features/Applications/ApplicationImportCorrelationView.cs#L5)
-- [ApplicationImportEffectProof](../../src/Compliance.Common/Features/Applications/ApplicationImportEffectProof.cs#L5)
-- [ApplicationImportInputRow](../../src/Compliance.Common/Features/Applications/ApplicationImportInputRow.cs#L4)
-- [ApplicationImportMissingRow](../../src/Compliance.Common/Features/Applications/ApplicationImportMissingRow.cs#L6)
-- [ApplicationImportOmissionPreview](../../src/Compliance.Common/Features/Applications/ApplicationImportOmissionPreview.cs#L5)
-- [ApplicationImportOmissionProposalView](../../src/Compliance.Common/Features/Applications/ApplicationImportOmissionProposalView.cs#L5)
-- [ApplicationImportPlannedRow](../../src/Compliance.Common/Features/Applications/ApplicationImportPlannedRow.cs#L5)
-- [ApplicationImportPreviewRow](../../src/Compliance.Common/Features/Applications/ApplicationImportPreviewRow.cs#L6)
-- [ApplicationImportProgress](../../src/Compliance.Common/Features/Applications/ApplicationImportProgress.cs#L5)
-- [ApplicationImportRegistration](../../src/Compliance.Common/Features/Applications/ApplicationImportRegistration.cs#L5)
-- [ApplicationImportRejectedReport](../../src/Compliance.Common/Features/Applications/ApplicationImportRejectedReport.cs#L6)
-- [ApplicationImportRejectedRow](../../src/Compliance.Common/Features/Applications/ApplicationImportRejectedRow.cs#L5)
-- [ApplicationImportRetirementRow](../../src/Compliance.Common/Features/Applications/ApplicationImportRetirementRow.cs#L5)
-- [ApplicationImportRowView](../../src/Compliance.Common/Features/Applications/ApplicationImportRowView.cs#L5)
-- [ApplicationImportStagedRow](../../src/Compliance.Common/Features/Applications/ApplicationImportStagedRow.cs#L5)
-- [ApplicationImportView](../../src/Compliance.Common/Features/Applications/ApplicationImportView.cs#L5)
-- [ApplicationRegistration](../../src/Compliance.Common/Features/Applications/ApplicationRegistration.cs#L5)
-- [ApplicationRelationshipChange](../../src/Compliance.Common/Features/Applications/ApplicationRelationshipChange.cs#L5)
-- [ApplicationRelationshipPage](../../src/Compliance.Common/Features/Applications/ApplicationRelationshipPage.cs#L5)
-- [ApplicationRelationshipView](../../src/Compliance.Common/Features/Applications/ApplicationRelationshipView.cs#L5)
-- [ApplicationRevisionField](../../src/Compliance.Common/Features/Applications/ApplicationRevisionField.cs#L4)
-- [ApplicationRevisionView](../../src/Compliance.Common/Features/Applications/ApplicationRevisionView.cs#L8)
-- [ApplicationView](../../src/Compliance.Common/Features/Applications/ApplicationView.cs#L8)
+- [AccessReviewScopeDecisionView](../../src/Compliance.Common/Features/Applications/Models/AccessReviewScopeDecisionView.cs#L6)
+- [AccessReviewScopeStatusView](../../src/Compliance.Common/Features/Applications/Models/AccessReviewScopeStatusView.cs#L11)
+- [AccessReviewScopeView](../../src/Compliance.Common/Features/Applications/Models/AccessReviewScopeView.cs#L9)
+- [ApplicationBoundaryReferenceView](../../src/Compliance.Common/Features/Applications/Models/ApplicationBoundaryReferenceView.cs#L9)
+- [ApplicationChangePreview](../../src/Compliance.Common/Features/Applications/Models/ApplicationChangePreview.cs#L6)
+- [ApplicationIncomingRelationshipView](../../src/Compliance.Common/Features/Applications/Models/ApplicationIncomingRelationshipView.cs#L5)
+- [ApplicationControlDraftReferenceView](../../src/Compliance.Common/Features/Applications/Models/ApplicationControlDraftReferenceView.cs#L9)
+- [ApplicationFieldChange](../../src/Compliance.Common/Features/Applications/Models/ApplicationFieldChange.cs#L3)
+- [ApplicationImportCorrelationView](../../src/Compliance.Common/Features/Applications/Models/ApplicationImportCorrelationView.cs#L5)
+- [ApplicationImportEffectProof](../../src/Compliance.Common/Features/Applications/Models/ApplicationImportEffectProof.cs#L5)
+- [ApplicationImportInputRow](../../src/Compliance.Common/Features/Applications/Models/ApplicationImportInputRow.cs#L4)
+- [ApplicationImportMissingRow](../../src/Compliance.Common/Features/Applications/Models/ApplicationImportMissingRow.cs#L6)
+- [ApplicationImportOmissionPreview](../../src/Compliance.Common/Features/Applications/Models/ApplicationImportOmissionPreview.cs#L5)
+- [ApplicationImportOmissionProposalView](../../src/Compliance.Common/Features/Applications/Models/ApplicationImportOmissionProposalView.cs#L5)
+- [ApplicationImportPlannedRow](../../src/Compliance.Common/Features/Applications/Models/ApplicationImportPlannedRow.cs#L5)
+- [ApplicationImportPreviewRow](../../src/Compliance.Common/Features/Applications/Models/ApplicationImportPreviewRow.cs#L6)
+- [ApplicationImportProgress](../../src/Compliance.Common/Features/Applications/Models/ApplicationImportProgress.cs#L5)
+- [ApplicationImportRegistration](../../src/Compliance.Common/Features/Applications/Models/ApplicationImportRegistration.cs#L5)
+- [ApplicationImportRejectedReport](../../src/Compliance.Common/Features/Applications/Models/ApplicationImportRejectedReport.cs#L6)
+- [ApplicationImportRejectedRow](../../src/Compliance.Common/Features/Applications/Models/ApplicationImportRejectedRow.cs#L5)
+- [ApplicationImportRetirementRow](../../src/Compliance.Common/Features/Applications/Models/ApplicationImportRetirementRow.cs#L5)
+- [ApplicationImportRowView](../../src/Compliance.Common/Features/Applications/Models/ApplicationImportRowView.cs#L5)
+- [ApplicationImportStagedRow](../../src/Compliance.Common/Features/Applications/Models/ApplicationImportStagedRow.cs#L5)
+- [ApplicationImportView](../../src/Compliance.Common/Features/Applications/Models/ApplicationImportView.cs#L5)
+- [ApplicationRegistration](../../src/Compliance.Common/Features/Applications/Models/ApplicationRegistration.cs#L5)
+- [ApplicationRelationshipChange](../../src/Compliance.Common/Features/Applications/Models/ApplicationRelationshipChange.cs#L5)
+- [ApplicationRelationshipPage](../../src/Compliance.Common/Features/Applications/Models/ApplicationRelationshipPage.cs#L5)
+- [ApplicationRelationshipView](../../src/Compliance.Common/Features/Applications/Models/ApplicationRelationshipView.cs#L5)
+- [ApplicationRevisionField](../../src/Compliance.Common/Features/Applications/Models/ApplicationRevisionField.cs#L4)
+- [ApplicationRevisionView](../../src/Compliance.Common/Features/Applications/Models/ApplicationRevisionView.cs#L8)
+- [ApplicationView](../../src/Compliance.Common/Features/Applications/Models/ApplicationView.cs#L8)
 - [IApplicationInventoryRequest](../../src/Compliance.Common/Features/Applications/IApplicationInventoryRequest.cs#L6)
 - [IApplicationInventoryWriteRequest](../../src/Compliance.Common/Features/Applications/IApplicationInventoryRequest.cs#L19)
 - [IRestrictedApplicationResourceReadRequest](../../src/Compliance.Common/Features/Applications/IApplicationInventoryRequest.cs#L15)
-- [RetirementView](../../src/Compliance.Common/Features/Applications/RetirementView.cs#L6)
-- [SystemInstanceRegistration](../../src/Compliance.Common/Features/Applications/SystemInstanceRegistration.cs#L5)
-- [SystemInstanceView](../../src/Compliance.Common/Features/Applications/SystemInstanceView.cs#L8)
+- [RetirementView](../../src/Compliance.Common/Features/Applications/Models/RetirementView.cs#L6)
+- [SystemInstanceRegistration](../../src/Compliance.Common/Features/Applications/Models/SystemInstanceRegistration.cs#L5)
+- [SystemInstanceView](../../src/Compliance.Common/Features/Applications/Models/SystemInstanceView.cs#L8)
 
 #### Boundaries
 
-- [BoundaryAffectedRecord](../../src/Compliance.Common/Features/Boundaries/BoundaryAffectedRecord.cs#L5)
-- [BoundaryChange](../../src/Compliance.Common/Features/Boundaries/BoundaryChange.cs#L5)
-- [BoundaryContent](../../src/Compliance.Common/Features/Boundaries/BoundaryContent.cs#L3)
-- [BoundaryDecisionView](../../src/Compliance.Common/Features/Boundaries/BoundaryDecisionView.cs#L7)
-- [BoundaryImpactContribution](../../src/Compliance.Common/Features/Boundaries/BoundaryImpactContribution.cs#L3)
-- [BoundaryImpactPreview](../../src/Compliance.Common/Features/Boundaries/BoundaryImpactPreview.cs#L5)
-- [BoundaryRegistration](../../src/Compliance.Common/Features/Boundaries/BoundaryRegistration.cs#L5)
-- [BoundaryScopeEntry](../../src/Compliance.Common/Features/Boundaries/BoundaryScopeEntry.cs#L5)
-- [BoundaryVersionView](../../src/Compliance.Common/Features/Boundaries/BoundaryVersionView.cs#L5)
-- [BoundaryView](../../src/Compliance.Common/Features/Boundaries/BoundaryView.cs#L5)
+- [BoundaryAffectedRecord](../../src/Compliance.Common/Features/Boundaries/Models/BoundaryAffectedRecord.cs#L5)
+- [BoundaryChange](../../src/Compliance.Common/Features/Boundaries/Models/BoundaryChange.cs#L5)
+- [BoundaryContent](../../src/Compliance.Common/Features/Boundaries/Models/BoundaryContent.cs#L3)
+- [BoundaryDecisionView](../../src/Compliance.Common/Features/Boundaries/Models/BoundaryDecisionView.cs#L7)
+- [BoundaryImpactContribution](../../src/Compliance.Common/Features/Boundaries/Models/BoundaryImpactContribution.cs#L3)
+- [BoundaryImpactPreview](../../src/Compliance.Common/Features/Boundaries/Models/BoundaryImpactPreview.cs#L5)
+- [BoundaryRegistration](../../src/Compliance.Common/Features/Boundaries/Models/BoundaryRegistration.cs#L5)
+- [BoundaryScopeEntry](../../src/Compliance.Common/Features/Boundaries/Models/BoundaryScopeEntry.cs#L5)
+- [BoundaryVersionView](../../src/Compliance.Common/Features/Boundaries/Models/BoundaryVersionView.cs#L5)
+- [BoundaryView](../../src/Compliance.Common/Features/Boundaries/Models/BoundaryView.cs#L5)
 - [IBoundaryAuthoringRequest](../../src/Compliance.Common/Features/Boundaries/IBoundaryAuthoringRequest.cs#L5)
 - [IBoundaryProgramReadRequest](../../src/Compliance.Common/Features/Boundaries/IBoundaryProgramResourceRequest.cs#L12)
 - [IBoundaryProgramResourceRequest](../../src/Compliance.Common/Features/Boundaries/IBoundaryProgramResourceRequest.cs#L5)
 
 #### Commitments
 
-- [CommitmentChange](../../src/Compliance.Common/Features/Commitments/CommitmentChange.cs#L3)
-- [CommitmentDecisionView](../../src/Compliance.Common/Features/Commitments/CommitmentDecisionView.cs#L7)
-- [CommitmentDependent](../../src/Compliance.Common/Features/Commitments/CommitmentDependent.cs#L5)
-- [CommitmentDraftRegistration](../../src/Compliance.Common/Features/Commitments/CommitmentDraftRegistration.cs#L5)
-- [CommitmentDraftRevisionView](../../src/Compliance.Common/Features/Commitments/CommitmentDraftRevisionView.cs#L7)
-- [CommitmentDraftView](../../src/Compliance.Common/Features/Commitments/CommitmentDraftView.cs#L7)
-- [CommitmentImpactPreview](../../src/Compliance.Common/Features/Commitments/CommitmentImpactPreview.cs#L10)
-- [CommitmentUnlinkedContext](../../src/Compliance.Common/Features/Commitments/CommitmentUnlinkedContext.cs#L4)
-- [CommitmentVersionView](../../src/Compliance.Common/Features/Commitments/CommitmentVersionView.cs#L11)
+- [CommitmentChange](../../src/Compliance.Common/Features/Commitments/Models/CommitmentChange.cs#L3)
+- [CommitmentDecisionView](../../src/Compliance.Common/Features/Commitments/Models/CommitmentDecisionView.cs#L7)
+- [CommitmentDependent](../../src/Compliance.Common/Features/Commitments/Models/CommitmentDependent.cs#L5)
+- [CommitmentDraftRegistration](../../src/Compliance.Common/Features/Commitments/Models/CommitmentDraftRegistration.cs#L5)
+- [CommitmentDraftRevisionView](../../src/Compliance.Common/Features/Commitments/Models/CommitmentDraftRevisionView.cs#L7)
+- [CommitmentDraftView](../../src/Compliance.Common/Features/Commitments/Models/CommitmentDraftView.cs#L7)
+- [CommitmentImpactPreview](../../src/Compliance.Common/Features/Commitments/Models/CommitmentImpactPreview.cs#L10)
+- [CommitmentUnlinkedContext](../../src/Compliance.Common/Features/Commitments/Models/CommitmentUnlinkedContext.cs#L4)
+- [CommitmentVersionView](../../src/Compliance.Common/Features/Commitments/Models/CommitmentVersionView.cs#L11)
 
 #### Compliance.Common
 
@@ -2144,135 +2144,135 @@ These 140 requirement-backed event contracts have been added since the existing-
 
 #### ControlMappings
 
-- [ControlCriterionMappingRegistration](../../src/Compliance.Common/Features/ControlMappings/ControlCriterionMappingRegistration.cs#L5)
-- [ControlCriterionMappingVersionView](../../src/Compliance.Common/Features/ControlMappings/ControlCriterionMappingVersionView.cs#L10)
-- [ControlCriterionMappingView](../../src/Compliance.Common/Features/ControlMappings/ControlCriterionMappingView.cs#L10)
-- [CriterionApplicabilityRegistration](../../src/Compliance.Common/Features/ControlMappings/CriterionApplicabilityRegistration.cs#L5)
-- [CriterionApplicabilityVersionView](../../src/Compliance.Common/Features/ControlMappings/CriterionApplicabilityVersionView.cs#L10)
-- [CriterionApplicabilityView](../../src/Compliance.Common/Features/ControlMappings/CriterionApplicabilityView.cs#L11)
-- [CriterionCoverageView](../../src/Compliance.Common/Features/ControlMappings/CriterionCoverageView.cs#L12)
-- [MappedControlReference](../../src/Compliance.Common/Features/ControlMappings/MappedControlReference.cs#L10)
+- [ControlCriterionMappingRegistration](../../src/Compliance.Common/Features/ControlMappings/Models/ControlCriterionMappingRegistration.cs#L5)
+- [ControlCriterionMappingVersionView](../../src/Compliance.Common/Features/ControlMappings/Models/ControlCriterionMappingVersionView.cs#L10)
+- [ControlCriterionMappingView](../../src/Compliance.Common/Features/ControlMappings/Models/ControlCriterionMappingView.cs#L10)
+- [CriterionApplicabilityRegistration](../../src/Compliance.Common/Features/ControlMappings/Models/CriterionApplicabilityRegistration.cs#L5)
+- [CriterionApplicabilityVersionView](../../src/Compliance.Common/Features/ControlMappings/Models/CriterionApplicabilityVersionView.cs#L10)
+- [CriterionApplicabilityView](../../src/Compliance.Common/Features/ControlMappings/Models/CriterionApplicabilityView.cs#L11)
+- [CriterionCoverageView](../../src/Compliance.Common/Features/ControlMappings/Models/CriterionCoverageView.cs#L12)
+- [MappedControlReference](../../src/Compliance.Common/Features/ControlMappings/Models/MappedControlReference.cs#L10)
 
 #### Controls
 
-- [ControlAffectedRecord](../../src/Compliance.Common/Features/Controls/ControlAffectedRecord.cs#L5)
-- [ControlApplicabilityReference](../../src/Compliance.Common/Features/Controls/ControlApplicabilityReference.cs#L5)
-- [ControlChange](../../src/Compliance.Common/Features/Controls/ControlChange.cs#L5)
-- [ControlContentProvenance](../../src/Compliance.Common/Features/Controls/ControlContentProvenance.cs#L10)
-- [ControlDecisionView](../../src/Compliance.Common/Features/Controls/ControlDecisionView.cs#L8)
-- [ControlDraftContent](../../src/Compliance.Common/Features/Controls/ControlDraftContent.cs#L3)
-- [ControlDraftOwnerPersonView](../../src/Compliance.Common/Features/Controls/ControlDraftOwnerPersonView.cs#L6)
-- [ControlDraftRevisionView](../../src/Compliance.Common/Features/Controls/ControlDraftRevisionView.cs#L7)
-- [ControlDraftView](../../src/Compliance.Common/Features/Controls/ControlDraftView.cs#L7)
-- [ControlImpactContribution](../../src/Compliance.Common/Features/Controls/ControlImpactContribution.cs#L8)
-- [ControlImpactPreview](../../src/Compliance.Common/Features/Controls/ControlImpactPreview.cs#L12)
-- [ControlPersonOwnerDesignationView](../../src/Compliance.Common/Features/Controls/ControlPersonOwnerDesignationView.cs#L7)
-- [ControlRegistration](../../src/Compliance.Common/Features/Controls/ControlRegistration.cs#L5)
-- [ControlRetirementRegistration](../../src/Compliance.Common/Features/Controls/ControlRetirementRegistration.cs#L5)
-- [ControlSuccessorRegistration](../../src/Compliance.Common/Features/Controls/ControlSuccessorRegistration.cs#L5)
-- [ControlVersionIds](../../src/Compliance.Common/Features/Controls/ControlVersionIds.cs#L7)
-- [ControlVersionView](../../src/Compliance.Common/Features/Controls/ControlVersionView.cs#L10)
+- [ControlAffectedRecord](../../src/Compliance.Common/Features/Controls/Models/ControlAffectedRecord.cs#L5)
+- [ControlApplicabilityReference](../../src/Compliance.Common/Features/Controls/Models/ControlApplicabilityReference.cs#L5)
+- [ControlChange](../../src/Compliance.Common/Features/Controls/Models/ControlChange.cs#L5)
+- [ControlContentProvenance](../../src/Compliance.Common/Features/Controls/Models/ControlContentProvenance.cs#L10)
+- [ControlDecisionView](../../src/Compliance.Common/Features/Controls/Models/ControlDecisionView.cs#L8)
+- [ControlDraftContent](../../src/Compliance.Common/Features/Controls/Models/ControlDraftContent.cs#L3)
+- [ControlDraftOwnerPersonView](../../src/Compliance.Common/Features/Controls/Models/ControlDraftOwnerPersonView.cs#L6)
+- [ControlDraftRevisionView](../../src/Compliance.Common/Features/Controls/Models/ControlDraftRevisionView.cs#L7)
+- [ControlDraftView](../../src/Compliance.Common/Features/Controls/Models/ControlDraftView.cs#L7)
+- [ControlImpactContribution](../../src/Compliance.Common/Features/Controls/Models/ControlImpactContribution.cs#L8)
+- [ControlImpactPreview](../../src/Compliance.Common/Features/Controls/Models/ControlImpactPreview.cs#L12)
+- [ControlPersonOwnerDesignationView](../../src/Compliance.Common/Features/Controls/Models/ControlPersonOwnerDesignationView.cs#L7)
+- [ControlRegistration](../../src/Compliance.Common/Features/Controls/Models/ControlRegistration.cs#L5)
+- [ControlRetirementRegistration](../../src/Compliance.Common/Features/Controls/Models/ControlRetirementRegistration.cs#L5)
+- [ControlSuccessorRegistration](../../src/Compliance.Common/Features/Controls/Models/ControlSuccessorRegistration.cs#L5)
+- [ControlVersionIds](../../src/Compliance.Common/Features/Controls/Models/ControlVersionIds.cs#L7)
+- [ControlVersionView](../../src/Compliance.Common/Features/Controls/Models/ControlVersionView.cs#L10)
 
 #### Criteria
 
-- [CriteriaCatalogEdition](../../src/Compliance.Common/Features/Criteria/CriteriaCatalogEdition.cs#L11)
-- [CriteriaOverlayUsageFlags](../../src/Compliance.Common/Features/Criteria/CriteriaOverlayUsageFlags.cs#L4)
-- [CriteriaSupportGap](../../src/Compliance.Common/Features/Criteria/CriteriaSupportGap.cs#L4)
-- [CriteriaTextOverlayContent](../../src/Compliance.Common/Features/Criteria/CriteriaTextOverlayContent.cs#L4)
-- [CriteriaTextOverlayMetadata](../../src/Compliance.Common/Features/Criteria/CriteriaTextOverlayMetadata.cs#L5)
-- [CriteriaTextOverlayRegistration](../../src/Compliance.Common/Features/Criteria/CriteriaTextOverlayRegistration.cs#L5)
-- [CriteriaTextOverlayRevision](../../src/Compliance.Common/Features/Criteria/CriteriaTextOverlayRevision.cs#L7)
-- [Criterion](../../src/Compliance.Common/Features/Criteria/Criterion.cs#L11)
+- [CriteriaCatalogEdition](../../src/Compliance.Common/Features/Criteria/Models/CriteriaCatalogEdition.cs#L11)
+- [CriteriaOverlayUsageFlags](../../src/Compliance.Common/Features/Criteria/Models/CriteriaOverlayUsageFlags.cs#L4)
+- [CriteriaSupportGap](../../src/Compliance.Common/Features/Criteria/Models/CriteriaSupportGap.cs#L4)
+- [CriteriaTextOverlayContent](../../src/Compliance.Common/Features/Criteria/Models/CriteriaTextOverlayContent.cs#L4)
+- [CriteriaTextOverlayMetadata](../../src/Compliance.Common/Features/Criteria/Models/CriteriaTextOverlayMetadata.cs#L5)
+- [CriteriaTextOverlayRegistration](../../src/Compliance.Common/Features/Criteria/Models/CriteriaTextOverlayRegistration.cs#L5)
+- [CriteriaTextOverlayRevision](../../src/Compliance.Common/Features/Criteria/Models/CriteriaTextOverlayRevision.cs#L7)
+- [Criterion](../../src/Compliance.Common/Features/Criteria/Models/Criterion.cs#L11)
 
 #### Evaluations
 
-- [ControlEvaluationPlanVersionView](../../src/Compliance.Common/Features/Evaluations/ControlEvaluationPlanVersionView.cs#L6)
-- [ControlEvaluationReviewView](../../src/Compliance.Common/Features/Evaluations/ControlEvaluationReviewView.cs#L7)
-- [ControlEvaluationStepView](../../src/Compliance.Common/Features/Evaluations/ControlEvaluationStepView.cs#L6)
-- [ControlEvaluationView](../../src/Compliance.Common/Features/Evaluations/ControlEvaluationView.cs#L11)
-- [EvaluationAssertionConclusion](../../src/Compliance.Common/Features/Evaluations/EvaluationAssertionConclusion.cs#L8)
-- [EvaluationDeviationView](../../src/Compliance.Common/Features/Evaluations/EvaluationDeviationView.cs#L11)
-- [EvaluationInspectedItem](../../src/Compliance.Common/Features/Evaluations/EvaluationInspectedItem.cs#L8)
-- [EvaluationProcedureStep](../../src/Compliance.Common/Features/Evaluations/EvaluationProcedureStep.cs#L7)
-- [EvaluationStepResultView](../../src/Compliance.Common/Features/Evaluations/EvaluationStepResultView.cs#L6)
-- [EvaluationSubmissionView](../../src/Compliance.Common/Features/Evaluations/EvaluationSubmissionView.cs#L9)
+- [ControlEvaluationPlanVersionView](../../src/Compliance.Common/Features/Evaluations/Models/ControlEvaluationPlanVersionView.cs#L6)
+- [ControlEvaluationReviewView](../../src/Compliance.Common/Features/Evaluations/Models/ControlEvaluationReviewView.cs#L7)
+- [ControlEvaluationStepView](../../src/Compliance.Common/Features/Evaluations/Models/ControlEvaluationStepView.cs#L6)
+- [ControlEvaluationView](../../src/Compliance.Common/Features/Evaluations/Models/ControlEvaluationView.cs#L11)
+- [EvaluationAssertionConclusion](../../src/Compliance.Common/Features/Evaluations/Models/EvaluationAssertionConclusion.cs#L8)
+- [EvaluationDeviationView](../../src/Compliance.Common/Features/Evaluations/Models/EvaluationDeviationView.cs#L11)
+- [EvaluationInspectedItem](../../src/Compliance.Common/Features/Evaluations/Models/EvaluationInspectedItem.cs#L8)
+- [EvaluationProcedureStep](../../src/Compliance.Common/Features/Evaluations/Models/EvaluationProcedureStep.cs#L7)
+- [EvaluationStepResultView](../../src/Compliance.Common/Features/Evaluations/Models/EvaluationStepResultView.cs#L6)
+- [EvaluationSubmissionView](../../src/Compliance.Common/Features/Evaluations/Models/EvaluationSubmissionView.cs#L9)
 
 #### Evidence
 
-- [EvidenceArtifactContent](../../src/Compliance.Common/Features/Evidence/EvidenceArtifactContent.cs#L7)
-- [EvidenceArtifactMetadataView](../../src/Compliance.Common/Features/Evidence/EvidenceArtifactMetadataView.cs#L7)
-- [EvidenceSupportView](../../src/Compliance.Common/Features/Evidence/EvidenceSupportView.cs#L7)
-- [EvidenceArtifactRegistration](../../src/Compliance.Common/Features/Evidence/EvidenceArtifactRegistration.cs#L5)
-- [EvidenceArtifactResourceTypes](../../src/Compliance.Common/Features/Evidence/EvidenceArtifactResourceTypes.cs#L3)
-- [EvidenceArtifactStates](../../src/Compliance.Common/Features/Evidence/EvidenceArtifactStates.cs#L4)
-- [EvidenceCapture](../../src/Compliance.Common/Features/Evidence/EvidenceCapture.cs#L10)
+- [EvidenceArtifactContent](../../src/Compliance.Common/Features/Evidence/Models/EvidenceArtifactContent.cs#L7)
+- [EvidenceArtifactMetadataView](../../src/Compliance.Common/Features/Evidence/Models/EvidenceArtifactMetadataView.cs#L7)
+- [EvidenceSupportView](../../src/Compliance.Common/Features/Evidence/Models/EvidenceSupportView.cs#L7)
+- [EvidenceArtifactRegistration](../../src/Compliance.Common/Features/Evidence/Models/EvidenceArtifactRegistration.cs#L5)
+- [EvidenceArtifactResourceTypes](../../src/Compliance.Common/Features/Evidence/Models/EvidenceArtifactResourceTypes.cs#L3)
+- [EvidenceArtifactStates](../../src/Compliance.Common/Features/Evidence/Models/EvidenceArtifactStates.cs#L4)
+- [EvidenceCapture](../../src/Compliance.Common/Features/Evidence/Models/EvidenceCapture.cs#L10)
 - [EvidenceInspectionOutcome](../../src/Compliance.Common/Features/Evidence/EvidenceInspectionOutcome.cs#L4)
-- [EvidenceRedactionApprovalFact](../../src/Compliance.Common/Features/Evidence/EvidenceRedactionApprovalFact.cs#L6)
-- [EvidenceRedactionApprovalView](../../src/Compliance.Common/Features/Evidence/EvidenceRedactionApprovalView.cs#L6)
-- [EvidenceRedactionArtifactView](../../src/Compliance.Common/Features/Evidence/EvidenceRedactionArtifactView.cs#L6)
-- [EvidenceRedactionPreparationFact](../../src/Compliance.Common/Features/Evidence/EvidenceRedactionPreparationFact.cs#L6)
-- [EvidenceRedactionPreparationView](../../src/Compliance.Common/Features/Evidence/EvidenceRedactionPreparationView.cs#L6)
-- [EvidenceRedactionSourceCapsule](../../src/Compliance.Common/Features/Evidence/EvidenceRedactionSourceCapsule.cs#L6)
-- [EvidenceRedactionView](../../src/Compliance.Common/Features/Evidence/EvidenceRedactionView.cs#L6)
-- [EvidenceRedactionWaiverSnapshot](../../src/Compliance.Common/Features/Evidence/EvidenceRedactionWaiverSnapshot.cs#L7)
-- [EvidenceRequestView](../../src/Compliance.Common/Features/Evidence/EvidenceRequestView.cs#L10)
+- [EvidenceRedactionApprovalFact](../../src/Compliance.Common/Features/Evidence/Models/EvidenceRedactionApprovalFact.cs#L6)
+- [EvidenceRedactionApprovalView](../../src/Compliance.Common/Features/Evidence/Models/EvidenceRedactionApprovalView.cs#L6)
+- [EvidenceRedactionArtifactView](../../src/Compliance.Common/Features/Evidence/Models/EvidenceRedactionArtifactView.cs#L6)
+- [EvidenceRedactionPreparationFact](../../src/Compliance.Common/Features/Evidence/Models/EvidenceRedactionPreparationFact.cs#L6)
+- [EvidenceRedactionPreparationView](../../src/Compliance.Common/Features/Evidence/Models/EvidenceRedactionPreparationView.cs#L6)
+- [EvidenceRedactionSourceCapsule](../../src/Compliance.Common/Features/Evidence/Models/EvidenceRedactionSourceCapsule.cs#L6)
+- [EvidenceRedactionView](../../src/Compliance.Common/Features/Evidence/Models/EvidenceRedactionView.cs#L6)
+- [EvidenceRedactionWaiverSnapshot](../../src/Compliance.Common/Features/Evidence/Models/EvidenceRedactionWaiverSnapshot.cs#L7)
+- [EvidenceRequestView](../../src/Compliance.Common/Features/Evidence/Models/EvidenceRequestView.cs#L10)
 - [IEvidenceRedactionMutationRequest](../../src/Compliance.Common/Features/Evidence/IEvidenceRedactionMutationRequest.cs#L6)
 
 #### Operations
 
-- [ControlAttestationView](../../src/Compliance.Common/Features/Operations/ControlAttestationView.cs#L11)
-- [ControlCadence](../../src/Compliance.Common/Features/Operations/ControlCadence.cs#L8)
-- [ControlOccurrenceReviewView](../../src/Compliance.Common/Features/Operations/ControlOccurrenceReviewView.cs#L10)
-- [ControlOccurrenceView](../../src/Compliance.Common/Features/Operations/ControlOccurrenceView.cs#L10)
-- [ControlOperatingBlockerView](../../src/Compliance.Common/Features/Operations/ControlOperatingBlockerView.cs#L10)
-- [ControlOperatingPlanPreview](../../src/Compliance.Common/Features/Operations/ControlOperatingPlanPreview.cs#L7)
-- [ControlOperatingPlanSetView](../../src/Compliance.Common/Features/Operations/ControlOperatingPlanSetView.cs#L6)
-- [ControlOperatingPlanView](../../src/Compliance.Common/Features/Operations/ControlOperatingPlanView.cs#L11)
-- [ControlResponsibilityView](../../src/Compliance.Common/Features/Operations/ControlResponsibilityView.cs#L6)
-- [EvidenceReference](../../src/Compliance.Common/Features/Operations/EvidenceReference.cs#L8)
+- [ControlAttestationView](../../src/Compliance.Common/Features/Operations/Models/ControlAttestationView.cs#L11)
+- [ControlCadence](../../src/Compliance.Common/Features/Operations/Models/ControlCadence.cs#L8)
+- [ControlOccurrenceReviewView](../../src/Compliance.Common/Features/Operations/Models/ControlOccurrenceReviewView.cs#L10)
+- [ControlOccurrenceView](../../src/Compliance.Common/Features/Operations/Models/ControlOccurrenceView.cs#L10)
+- [ControlOperatingBlockerView](../../src/Compliance.Common/Features/Operations/Models/ControlOperatingBlockerView.cs#L10)
+- [ControlOperatingPlanPreview](../../src/Compliance.Common/Features/Operations/Models/ControlOperatingPlanPreview.cs#L7)
+- [ControlOperatingPlanSetView](../../src/Compliance.Common/Features/Operations/Models/ControlOperatingPlanSetView.cs#L6)
+- [ControlOperatingPlanView](../../src/Compliance.Common/Features/Operations/Models/ControlOperatingPlanView.cs#L11)
+- [ControlResponsibilityView](../../src/Compliance.Common/Features/Operations/Models/ControlResponsibilityView.cs#L6)
+- [EvidenceReference](../../src/Compliance.Common/Features/Operations/Models/EvidenceReference.cs#L8)
 - [IControlOperationRequest](../../src/Compliance.Common/Features/Operations/IControlOperationRequest.cs#L9)
 - [IOperationsReactionRequest](../../src/Compliance.Common/Features/Operations/IOperationsReactionRequest.cs#L6)
-- [MyControlWorkView](../../src/Compliance.Common/Features/Operations/MyControlWorkView.cs#L4)
-- [OccurrenceReassignmentView](../../src/Compliance.Common/Features/Operations/OccurrenceReassignmentView.cs#L6)
-- [OperatingHolder](../../src/Compliance.Common/Features/Operations/OperatingHolder.cs#L9)
-- [WorkItemView](../../src/Compliance.Common/Features/Operations/WorkItemView.cs#L9)
+- [MyControlWorkView](../../src/Compliance.Common/Features/Operations/Models/MyControlWorkView.cs#L4)
+- [OccurrenceReassignmentView](../../src/Compliance.Common/Features/Operations/Models/OccurrenceReassignmentView.cs#L6)
+- [OperatingHolder](../../src/Compliance.Common/Features/Operations/Models/OperatingHolder.cs#L9)
+- [WorkItemView](../../src/Compliance.Common/Features/Operations/Models/WorkItemView.cs#L9)
 
 #### Policies
 
-- [PolicyApplicabilityReference](../../src/Compliance.Common/Features/Policies/PolicyApplicabilityReference.cs#L11)
-- [PolicyContent](../../src/Compliance.Common/Features/Policies/PolicyContent.cs#L9)
-- [PolicyDecisionView](../../src/Compliance.Common/Features/Policies/PolicyDecisionView.cs#L10)
-- [PolicyImpactPreview](../../src/Compliance.Common/Features/Policies/PolicyImpactPreview.cs#L11)
-- [PolicyRegistration](../../src/Compliance.Common/Features/Policies/PolicyRegistration.cs#L5)
-- [PolicyRetirementProposalView](../../src/Compliance.Common/Features/Policies/PolicyRetirementProposalView.cs#L5)
-- [PolicySummaryView](../../src/Compliance.Common/Features/Policies/PolicySummaryView.cs#L6)
-- [PolicyVersionView](../../src/Compliance.Common/Features/Policies/PolicyVersionView.cs#L11)
-- [PolicyView](../../src/Compliance.Common/Features/Policies/PolicyView.cs#L12)
+- [PolicyApplicabilityReference](../../src/Compliance.Common/Features/Policies/Models/PolicyApplicabilityReference.cs#L11)
+- [PolicyContent](../../src/Compliance.Common/Features/Policies/Models/PolicyContent.cs#L9)
+- [PolicyDecisionView](../../src/Compliance.Common/Features/Policies/Models/PolicyDecisionView.cs#L10)
+- [PolicyImpactPreview](../../src/Compliance.Common/Features/Policies/Models/PolicyImpactPreview.cs#L11)
+- [PolicyRegistration](../../src/Compliance.Common/Features/Policies/Models/PolicyRegistration.cs#L5)
+- [PolicyRetirementProposalView](../../src/Compliance.Common/Features/Policies/Models/PolicyRetirementProposalView.cs#L5)
+- [PolicySummaryView](../../src/Compliance.Common/Features/Policies/Models/PolicySummaryView.cs#L6)
+- [PolicyVersionView](../../src/Compliance.Common/Features/Policies/Models/PolicyVersionView.cs#L11)
+- [PolicyView](../../src/Compliance.Common/Features/Policies/Models/PolicyView.cs#L12)
 
 #### PolicyDistribution
 
-- [CampaignAcknowledgementView](../../src/Compliance.Common/Features/PolicyDistribution/CampaignAcknowledgementView.cs#L6)
-- [CampaignAmendmentView](../../src/Compliance.Common/Features/PolicyDistribution/CampaignAmendmentView.cs#L6)
-- [CampaignAudienceAmendment](../../src/Compliance.Common/Features/PolicyDistribution/CampaignAudienceAmendment.cs#L9)
-- [CampaignAudienceEntry](../../src/Compliance.Common/Features/PolicyDistribution/CampaignAudienceEntry.cs#L6)
-- [CampaignCompletionView](../../src/Compliance.Common/Features/PolicyDistribution/CampaignCompletionView.cs#L6)
-- [CampaignParticipantView](../../src/Compliance.Common/Features/PolicyDistribution/CampaignParticipantView.cs#L11)
-- [CampaignReconciliationView](../../src/Compliance.Common/Features/PolicyDistribution/CampaignReconciliationView.cs#L5)
-- [CampaignRegistration](../../src/Compliance.Common/Features/PolicyDistribution/CampaignRegistration.cs#L5)
-- [CampaignSubject](../../src/Compliance.Common/Features/PolicyDistribution/CampaignSubject.cs#L9)
-- [CampaignSummaryView](../../src/Compliance.Common/Features/PolicyDistribution/CampaignSummaryView.cs#L6)
-- [CampaignTotalsView](../../src/Compliance.Common/Features/PolicyDistribution/CampaignTotalsView.cs#L8)
-- [CampaignView](../../src/Compliance.Common/Features/PolicyDistribution/CampaignView.cs#L7)
-- [CampaignWaiverView](../../src/Compliance.Common/Features/PolicyDistribution/CampaignWaiverView.cs#L6)
-- [TrainingRequirementContent](../../src/Compliance.Common/Features/PolicyDistribution/TrainingRequirementContent.cs#L8)
-- [TrainingRequirementRegistration](../../src/Compliance.Common/Features/PolicyDistribution/TrainingRequirementRegistration.cs#L5)
-- [TrainingRequirementView](../../src/Compliance.Common/Features/PolicyDistribution/TrainingRequirementView.cs#L10)
+- [CampaignAcknowledgementView](../../src/Compliance.Common/Features/PolicyDistribution/Models/CampaignAcknowledgementView.cs#L6)
+- [CampaignAmendmentView](../../src/Compliance.Common/Features/PolicyDistribution/Models/CampaignAmendmentView.cs#L6)
+- [CampaignAudienceAmendment](../../src/Compliance.Common/Features/PolicyDistribution/Models/CampaignAudienceAmendment.cs#L9)
+- [CampaignAudienceEntry](../../src/Compliance.Common/Features/PolicyDistribution/Models/CampaignAudienceEntry.cs#L6)
+- [CampaignCompletionView](../../src/Compliance.Common/Features/PolicyDistribution/Models/CampaignCompletionView.cs#L6)
+- [CampaignParticipantView](../../src/Compliance.Common/Features/PolicyDistribution/Models/CampaignParticipantView.cs#L11)
+- [CampaignReconciliationView](../../src/Compliance.Common/Features/PolicyDistribution/Models/CampaignReconciliationView.cs#L5)
+- [CampaignRegistration](../../src/Compliance.Common/Features/PolicyDistribution/Models/CampaignRegistration.cs#L5)
+- [CampaignSubject](../../src/Compliance.Common/Features/PolicyDistribution/Models/CampaignSubject.cs#L9)
+- [CampaignSummaryView](../../src/Compliance.Common/Features/PolicyDistribution/Models/CampaignSummaryView.cs#L6)
+- [CampaignTotalsView](../../src/Compliance.Common/Features/PolicyDistribution/Models/CampaignTotalsView.cs#L8)
+- [CampaignView](../../src/Compliance.Common/Features/PolicyDistribution/Models/CampaignView.cs#L7)
+- [CampaignWaiverView](../../src/Compliance.Common/Features/PolicyDistribution/Models/CampaignWaiverView.cs#L6)
+- [TrainingRequirementContent](../../src/Compliance.Common/Features/PolicyDistribution/Models/TrainingRequirementContent.cs#L8)
+- [TrainingRequirementRegistration](../../src/Compliance.Common/Features/PolicyDistribution/Models/TrainingRequirementRegistration.cs#L5)
+- [TrainingRequirementView](../../src/Compliance.Common/Features/PolicyDistribution/Models/TrainingRequirementView.cs#L10)
 
 #### Programs
 
-- [ClientServiceRegistration](../../src/Compliance.Common/Features/Programs/ClientServiceRegistration.cs#L5)
-- [ClientServiceRevisionView](../../src/Compliance.Common/Features/Programs/ClientServiceRevisionView.cs#L6)
-- [ClientServiceView](../../src/Compliance.Common/Features/Programs/ClientServiceView.cs#L6)
+- [ClientServiceRegistration](../../src/Compliance.Common/Features/Programs/Models/ClientServiceRegistration.cs#L5)
+- [ClientServiceRevisionView](../../src/Compliance.Common/Features/Programs/Models/ClientServiceRevisionView.cs#L6)
+- [ClientServiceView](../../src/Compliance.Common/Features/Programs/Models/ClientServiceView.cs#L6)
 - [IClientServiceProgramReadRequest](../../src/Compliance.Common/Features/Programs/IClientServiceProgramResourceRequest.cs#L10)
 - [IClientServiceProgramResourceRequest](../../src/Compliance.Common/Features/Programs/IClientServiceProgramResourceRequest.cs#L3)
 - [IProgramManagementRequest](../../src/Compliance.Common/Features/Programs/IProgramManagementRequest.cs#L5)
@@ -2280,232 +2280,232 @@ These 140 requirement-backed event contracts have been added since the existing-
 - [IProgramReadResourceRequest](../../src/Compliance.Common/Features/Programs/IProgramResourceRequest.cs#L15)
 - [IProgramResourceRequest](../../src/Compliance.Common/Features/Programs/IProgramResourceRequest.cs#L6)
 - [IProgramScopedRequest](../../src/Compliance.Common/Features/Programs/IProgramScopedRequest.cs#L6)
-- [ProgramPlan](../../src/Compliance.Common/Features/Programs/ProgramPlan.cs#L3)
-- [ProgramRegistration](../../src/Compliance.Common/Features/Programs/ProgramRegistration.cs#L5)
+- [ProgramPlan](../../src/Compliance.Common/Features/Programs/Models/ProgramPlan.cs#L3)
+- [ProgramRegistration](../../src/Compliance.Common/Features/Programs/Models/ProgramRegistration.cs#L5)
 - [ProgramResourceKind](../../src/Compliance.Common/Features/Programs/ProgramResourceKind.cs#L3)
-- [ProgramRevisionView](../../src/Compliance.Common/Features/Programs/ProgramRevisionView.cs#L6)
-- [ProgramSetupWorkItem](../../src/Compliance.Common/Features/Programs/ProgramSetupWorkItem.cs#L5)
-- [ProgramSetupWorkView](../../src/Compliance.Common/Features/Programs/ProgramSetupWorkView.cs#L5)
-- [ProgramStageView](../../src/Compliance.Common/Features/Programs/ProgramStageView.cs#L3)
-- [ProgramView](../../src/Compliance.Common/Features/Programs/ProgramView.cs#L6)
+- [ProgramRevisionView](../../src/Compliance.Common/Features/Programs/Models/ProgramRevisionView.cs#L6)
+- [ProgramSetupWorkItem](../../src/Compliance.Common/Features/Programs/Models/ProgramSetupWorkItem.cs#L5)
+- [ProgramSetupWorkView](../../src/Compliance.Common/Features/Programs/Models/ProgramSetupWorkView.cs#L5)
+- [ProgramStageView](../../src/Compliance.Common/Features/Programs/Models/ProgramStageView.cs#L3)
+- [ProgramView](../../src/Compliance.Common/Features/Programs/Models/ProgramView.cs#L6)
 
 #### Providers
 
-- [AssuranceBridgeLetter](../../src/Compliance.Common/Features/Providers/AssuranceBridgeLetter.cs#L7)
-- [AssuranceExceptionNote](../../src/Compliance.Common/Features/Providers/AssuranceExceptionNote.cs#L4)
-- [AssuranceReportContent](../../src/Compliance.Common/Features/Providers/AssuranceReportContent.cs#L9)
-- [AssuranceReportCoverageView](../../src/Compliance.Common/Features/Providers/AssuranceReportCoverageView.cs#L10)
-- [AssuranceReportRegistration](../../src/Compliance.Common/Features/Providers/AssuranceReportRegistration.cs#L5)
-- [AssuranceReportView](../../src/Compliance.Common/Features/Providers/AssuranceReportView.cs#L11)
+- [AssuranceBridgeLetter](../../src/Compliance.Common/Features/Providers/Models/AssuranceBridgeLetter.cs#L7)
+- [AssuranceExceptionNote](../../src/Compliance.Common/Features/Providers/Models/AssuranceExceptionNote.cs#L4)
+- [AssuranceReportContent](../../src/Compliance.Common/Features/Providers/Models/AssuranceReportContent.cs#L9)
+- [AssuranceReportCoverageView](../../src/Compliance.Common/Features/Providers/Models/AssuranceReportCoverageView.cs#L10)
+- [AssuranceReportRegistration](../../src/Compliance.Common/Features/Providers/Models/AssuranceReportRegistration.cs#L5)
+- [AssuranceReportView](../../src/Compliance.Common/Features/Providers/Models/AssuranceReportView.cs#L11)
 - [IProviderManagementRequest](../../src/Compliance.Common/Features/Providers/IProviderManagementRequest.cs#L5)
 - [IProviderRequest](../../src/Compliance.Common/Features/Providers/IProviderRequest.cs#L5)
-- [ProviderAssuranceCoverageView](../../src/Compliance.Common/Features/Providers/ProviderAssuranceCoverageView.cs#L15)
-- [ProviderChangeAffectedRecord](../../src/Compliance.Common/Features/Providers/ProviderChangeImpactPreview.cs#L17)
-- [ProviderChangeImpactPreview](../../src/Compliance.Common/Features/Providers/ProviderChangeImpactPreview.cs#L9)
-- [ProviderChangeImpactSection](../../src/Compliance.Common/Features/Providers/ProviderChangeImpactPreview.cs#L14)
-- [ProviderContent](../../src/Compliance.Common/Features/Providers/ProviderContent.cs#L6)
-- [ProviderCoverageGapClosureContent](../../src/Compliance.Common/Features/Providers/ProviderCoverageGapView.cs#L16)
-- [ProviderCoverageGapClosureView](../../src/Compliance.Common/Features/Providers/ProviderCoverageGapView.cs#L19)
-- [ProviderCoverageGapContent](../../src/Compliance.Common/Features/Providers/ProviderCoverageGapContent.cs#L6)
-- [ProviderCoverageGapRegistration](../../src/Compliance.Common/Features/Providers/ProviderCoverageGapView.cs#L36)
-- [ProviderCoverageGapRiskAcceptanceContent](../../src/Compliance.Common/Features/Providers/ProviderCoverageGapView.cs#L33)
-- [ProviderCoverageGapRiskAcceptanceView](../../src/Compliance.Common/Features/Providers/ProviderCoverageGapView.cs#L26)
-- [ProviderCoverageGapView](../../src/Compliance.Common/Features/Providers/ProviderCoverageGapView.cs#L7)
-- [ProviderDependency](../../src/Compliance.Common/Features/Providers/ProviderDependency.cs#L6)
-- [ProviderRegistration](../../src/Compliance.Common/Features/Providers/ProviderRegistration.cs#L5)
-- [ProviderReviewContent](../../src/Compliance.Common/Features/Providers/ProviderReviewContent.cs#L10)
-- [ProviderReviewRegistration](../../src/Compliance.Common/Features/Providers/ProviderReviewRegistration.cs#L5)
-- [ProviderReviewView](../../src/Compliance.Common/Features/Providers/ProviderReviewView.cs#L11)
-- [ProviderSourceCitation](../../src/Compliance.Common/Features/Providers/ProviderSourceCitation.cs#L6)
-- [ProviderView](../../src/Compliance.Common/Features/Providers/ProviderView.cs#L7)
+- [ProviderAssuranceCoverageView](../../src/Compliance.Common/Features/Providers/Models/ProviderAssuranceCoverageView.cs#L15)
+- [ProviderChangeAffectedRecord](../../src/Compliance.Common/Features/Providers/Models/ProviderChangeImpactPreview.cs#L17)
+- [ProviderChangeImpactPreview](../../src/Compliance.Common/Features/Providers/Models/ProviderChangeImpactPreview.cs#L9)
+- [ProviderChangeImpactSection](../../src/Compliance.Common/Features/Providers/Models/ProviderChangeImpactPreview.cs#L14)
+- [ProviderContent](../../src/Compliance.Common/Features/Providers/Models/ProviderContent.cs#L6)
+- [ProviderCoverageGapClosureContent](../../src/Compliance.Common/Features/Providers/Models/ProviderCoverageGapView.cs#L16)
+- [ProviderCoverageGapClosureView](../../src/Compliance.Common/Features/Providers/Models/ProviderCoverageGapView.cs#L19)
+- [ProviderCoverageGapContent](../../src/Compliance.Common/Features/Providers/Models/ProviderCoverageGapContent.cs#L6)
+- [ProviderCoverageGapRegistration](../../src/Compliance.Common/Features/Providers/Models/ProviderCoverageGapView.cs#L36)
+- [ProviderCoverageGapRiskAcceptanceContent](../../src/Compliance.Common/Features/Providers/Models/ProviderCoverageGapView.cs#L33)
+- [ProviderCoverageGapRiskAcceptanceView](../../src/Compliance.Common/Features/Providers/Models/ProviderCoverageGapView.cs#L26)
+- [ProviderCoverageGapView](../../src/Compliance.Common/Features/Providers/Models/ProviderCoverageGapView.cs#L7)
+- [ProviderDependency](../../src/Compliance.Common/Features/Providers/Models/ProviderDependency.cs#L6)
+- [ProviderRegistration](../../src/Compliance.Common/Features/Providers/Models/ProviderRegistration.cs#L5)
+- [ProviderReviewContent](../../src/Compliance.Common/Features/Providers/Models/ProviderReviewContent.cs#L10)
+- [ProviderReviewRegistration](../../src/Compliance.Common/Features/Providers/Models/ProviderReviewRegistration.cs#L5)
+- [ProviderReviewView](../../src/Compliance.Common/Features/Providers/Models/ProviderReviewView.cs#L11)
+- [ProviderSourceCitation](../../src/Compliance.Common/Features/Providers/Models/ProviderSourceCitation.cs#L6)
+- [ProviderView](../../src/Compliance.Common/Features/Providers/Models/ProviderView.cs#L7)
 
 #### Readiness
 
-- [ReadinessAccessReviewScopeView](../../src/Compliance.Common/Features/Readiness/ReadinessAccessReviewScopeView.cs#L6)
-- [ReadinessAnnotationView](../../src/Compliance.Common/Features/Readiness/ReadinessAnnotationView.cs#L10)
-- [ReadinessAssessmentRegistration](../../src/Compliance.Common/Features/Readiness/ReadinessAssessmentRegistration.cs#L5)
-- [ReadinessAssessmentSummaryView](../../src/Compliance.Common/Features/Readiness/ReadinessAssessmentSummaryView.cs#L6)
-- [ReadinessAssessmentView](../../src/Compliance.Common/Features/Readiness/ReadinessAssessmentView.cs#L11)
-- [ReadinessDecisionView](../../src/Compliance.Common/Features/Readiness/ReadinessDecisionView.cs#L7)
-- [ReadinessFindingView](../../src/Compliance.Common/Features/Readiness/ReadinessFindingView.cs#L9)
-- [ReadinessGapPlanView](../../src/Compliance.Common/Features/Readiness/ReadinessGapPlanView.cs#L7)
-- [ReadinessGapView](../../src/Compliance.Common/Features/Readiness/ReadinessGapView.cs#L6)
-- [ReadinessInputView](../../src/Compliance.Common/Features/Readiness/ReadinessInputView.cs#L8)
-- [ReadinessSourceReference](../../src/Compliance.Common/Features/Readiness/ReadinessSourceReference.cs#L6)
-- [TypeIEntryDecisionView](../../src/Compliance.Common/Features/Readiness/TypeIEntryDecisionView.cs#L12)
-- [TypeIEntryUnresolvedItemView](../../src/Compliance.Common/Features/Readiness/TypeIEntryUnresolvedItemView.cs#L6)
+- [ReadinessAccessReviewScopeView](../../src/Compliance.Common/Features/Readiness/Models/ReadinessAccessReviewScopeView.cs#L6)
+- [ReadinessAnnotationView](../../src/Compliance.Common/Features/Readiness/Models/ReadinessAnnotationView.cs#L10)
+- [ReadinessAssessmentRegistration](../../src/Compliance.Common/Features/Readiness/Models/ReadinessAssessmentRegistration.cs#L5)
+- [ReadinessAssessmentSummaryView](../../src/Compliance.Common/Features/Readiness/Models/ReadinessAssessmentSummaryView.cs#L6)
+- [ReadinessAssessmentView](../../src/Compliance.Common/Features/Readiness/Models/ReadinessAssessmentView.cs#L11)
+- [ReadinessDecisionView](../../src/Compliance.Common/Features/Readiness/Models/ReadinessDecisionView.cs#L7)
+- [ReadinessFindingView](../../src/Compliance.Common/Features/Readiness/Models/ReadinessFindingView.cs#L9)
+- [ReadinessGapPlanView](../../src/Compliance.Common/Features/Readiness/Models/ReadinessGapPlanView.cs#L7)
+- [ReadinessGapView](../../src/Compliance.Common/Features/Readiness/Models/ReadinessGapView.cs#L6)
+- [ReadinessInputView](../../src/Compliance.Common/Features/Readiness/Models/ReadinessInputView.cs#L8)
+- [ReadinessSourceReference](../../src/Compliance.Common/Features/Readiness/Models/ReadinessSourceReference.cs#L6)
+- [TypeIEntryDecisionView](../../src/Compliance.Common/Features/Readiness/Models/TypeIEntryDecisionView.cs#L12)
+- [TypeIEntryUnresolvedItemView](../../src/Compliance.Common/Features/Readiness/Models/TypeIEntryUnresolvedItemView.cs#L6)
 
 #### Remediation
 
-- [CorrectiveActionView](../../src/Compliance.Common/Features/Remediation/CorrectiveActionView.cs#L8)
-- [FindingAcceptanceView](../../src/Compliance.Common/Features/Remediation/FindingAcceptanceView.cs#L11)
-- [FindingClosureView](../../src/Compliance.Common/Features/Remediation/FindingClosureView.cs#L8)
-- [FindingHistoryEntryView](../../src/Compliance.Common/Features/Remediation/FindingHistoryEntryView.cs#L6)
-- [FindingLink](../../src/Compliance.Common/Features/Remediation/FindingLink.cs#L7)
-- [FindingRegistration](../../src/Compliance.Common/Features/Remediation/FindingRegistration.cs#L5)
-- [FindingSource](../../src/Compliance.Common/Features/Remediation/FindingSource.cs#L10)
-- [FindingView](../../src/Compliance.Common/Features/Remediation/FindingView.cs#L10)
+- [CorrectiveActionView](../../src/Compliance.Common/Features/Remediation/Models/CorrectiveActionView.cs#L8)
+- [FindingAcceptanceView](../../src/Compliance.Common/Features/Remediation/Models/FindingAcceptanceView.cs#L11)
+- [FindingClosureView](../../src/Compliance.Common/Features/Remediation/Models/FindingClosureView.cs#L8)
+- [FindingHistoryEntryView](../../src/Compliance.Common/Features/Remediation/Models/FindingHistoryEntryView.cs#L6)
+- [FindingLink](../../src/Compliance.Common/Features/Remediation/Models/FindingLink.cs#L7)
+- [FindingRegistration](../../src/Compliance.Common/Features/Remediation/Models/FindingRegistration.cs#L5)
+- [FindingSource](../../src/Compliance.Common/Features/Remediation/Models/FindingSource.cs#L10)
+- [FindingView](../../src/Compliance.Common/Features/Remediation/Models/FindingView.cs#L10)
 
 #### Responsibilities
 
-- [ResponsibilityAssignmentView](../../src/Compliance.Common/Features/Responsibilities/ResponsibilityAssignmentView.cs#L5)
+- [ResponsibilityAssignmentView](../../src/Compliance.Common/Features/Responsibilities/Models/ResponsibilityAssignmentView.cs#L5)
 - [ResponsibilityConflictKind](../../src/Compliance.Common/Features/Responsibilities/ResponsibilityConflictKind.cs#L6)
-- [ResponsibilityConflictPreview](../../src/Compliance.Common/Features/Responsibilities/ResponsibilityConflictPreview.cs#L3)
-- [ResponsibilityConflictView](../../src/Compliance.Common/Features/Responsibilities/ResponsibilityConflictView.cs#L5)
-- [ResponsibilityScope](../../src/Compliance.Common/Features/Responsibilities/ResponsibilityScope.cs#L5)
-- [ResponsibilitySetView](../../src/Compliance.Common/Features/Responsibilities/ResponsibilitySetView.cs#L5)
+- [ResponsibilityConflictPreview](../../src/Compliance.Common/Features/Responsibilities/Models/ResponsibilityConflictPreview.cs#L3)
+- [ResponsibilityConflictView](../../src/Compliance.Common/Features/Responsibilities/Models/ResponsibilityConflictView.cs#L5)
+- [ResponsibilityScope](../../src/Compliance.Common/Features/Responsibilities/Models/ResponsibilityScope.cs#L5)
+- [ResponsibilitySetView](../../src/Compliance.Common/Features/Responsibilities/Models/ResponsibilitySetView.cs#L5)
 - [ResponsibilityType](../../src/Compliance.Common/Features/Responsibilities/ResponsibilityType.cs#L6)
-- [ResponsibilityTypeWireName](../../src/Compliance.Common/Features/Responsibilities/ResponsibilityTypeWireName.cs#L3)
+- [ResponsibilityTypeWireName](../../src/Compliance.Common/Features/Responsibilities/Models/ResponsibilityTypeWireName.cs#L3)
 
 #### Retention
 
-- [ArtifactLegalHoldView](../../src/Compliance.Common/Features/Retention/ArtifactLegalHoldView.cs#L5)
-- [ArtifactRetentionSource](../../src/Compliance.Common/Features/Retention/ArtifactRetentionSource.cs#L6)
-- [ArtifactRetentionView](../../src/Compliance.Common/Features/Retention/ArtifactRetentionView.cs#L5)
+- [ArtifactLegalHoldView](../../src/Compliance.Common/Features/Retention/Models/ArtifactLegalHoldView.cs#L5)
+- [ArtifactRetentionSource](../../src/Compliance.Common/Features/Retention/Models/ArtifactRetentionSource.cs#L6)
+- [ArtifactRetentionView](../../src/Compliance.Common/Features/Retention/Models/ArtifactRetentionView.cs#L5)
 - [IArtifactRetentionAdminRequest](../../src/Compliance.Common/Features/Retention/IArtifactRetentionAdminRequest.cs#L5)
 
 #### Risks
 
 - [IRiskReassessmentReactionRequest](../../src/Compliance.Common/Features/Risks/IRiskReassessmentReactionRequest.cs#L6)
-- [RiskAcceptanceView](../../src/Compliance.Common/Features/Risks/RiskAcceptanceView.cs#L7)
-- [RiskAssessmentView](../../src/Compliance.Common/Features/Risks/RiskAssessmentView.cs#L7)
-- [RiskControlTreatmentRegistration](../../src/Compliance.Common/Features/Risks/RiskControlTreatmentRegistration.cs#L5)
-- [RiskControlTreatmentView](../../src/Compliance.Common/Features/Risks/RiskControlTreatmentView.cs#L12)
-- [RiskDraftContent](../../src/Compliance.Common/Features/Risks/RiskDraftContent.cs#L3)
-- [RiskDraftRevisionView](../../src/Compliance.Common/Features/Risks/RiskDraftRevisionView.cs#L7)
-- [RiskDraftView](../../src/Compliance.Common/Features/Risks/RiskDraftView.cs#L7)
-- [RiskEvaluationHistoryEntryView](../../src/Compliance.Common/Features/Risks/RiskEvaluationHistoryEntryView.cs#L7)
-- [RiskEvaluationView](../../src/Compliance.Common/Features/Risks/RiskEvaluationView.cs#L6)
-- [RiskGovernanceView](../../src/Compliance.Common/Features/Risks/RiskGovernanceView.cs#L12)
-- [RiskMethodVersionView](../../src/Compliance.Common/Features/Risks/RiskMethodVersionView.cs#L7)
-- [RiskOwnerView](../../src/Compliance.Common/Features/Risks/RiskOwnerView.cs#L11)
-- [RiskReassessmentTriggerView](../../src/Compliance.Common/Features/Risks/RiskReassessmentTriggerView.cs#L11)
-- [RiskRegistration](../../src/Compliance.Common/Features/Risks/RiskRegistration.cs#L5)
-- [RiskTreatmentActionCompletionRegistration](../../src/Compliance.Common/Features/Risks/RiskTreatmentActionCompletionRegistration.cs#L5)
-- [RiskTreatmentActionCompletionView](../../src/Compliance.Common/Features/Risks/RiskTreatmentActionCompletionView.cs#L11)
-- [RiskTreatmentActionRegistration](../../src/Compliance.Common/Features/Risks/RiskTreatmentActionRegistration.cs#L5)
-- [RiskTreatmentActionView](../../src/Compliance.Common/Features/Risks/RiskTreatmentActionView.cs#L13)
-- [RiskTreatmentView](../../src/Compliance.Common/Features/Risks/RiskTreatmentView.cs#L5)
+- [RiskAcceptanceView](../../src/Compliance.Common/Features/Risks/Models/RiskAcceptanceView.cs#L7)
+- [RiskAssessmentView](../../src/Compliance.Common/Features/Risks/Models/RiskAssessmentView.cs#L7)
+- [RiskControlTreatmentRegistration](../../src/Compliance.Common/Features/Risks/Models/RiskControlTreatmentRegistration.cs#L5)
+- [RiskControlTreatmentView](../../src/Compliance.Common/Features/Risks/Models/RiskControlTreatmentView.cs#L12)
+- [RiskDraftContent](../../src/Compliance.Common/Features/Risks/Models/RiskDraftContent.cs#L3)
+- [RiskDraftRevisionView](../../src/Compliance.Common/Features/Risks/Models/RiskDraftRevisionView.cs#L7)
+- [RiskDraftView](../../src/Compliance.Common/Features/Risks/Models/RiskDraftView.cs#L7)
+- [RiskEvaluationHistoryEntryView](../../src/Compliance.Common/Features/Risks/Models/RiskEvaluationHistoryEntryView.cs#L7)
+- [RiskEvaluationView](../../src/Compliance.Common/Features/Risks/Models/RiskEvaluationView.cs#L6)
+- [RiskGovernanceView](../../src/Compliance.Common/Features/Risks/Models/RiskGovernanceView.cs#L12)
+- [RiskMethodVersionView](../../src/Compliance.Common/Features/Risks/Models/RiskMethodVersionView.cs#L7)
+- [RiskOwnerView](../../src/Compliance.Common/Features/Risks/Models/RiskOwnerView.cs#L11)
+- [RiskReassessmentTriggerView](../../src/Compliance.Common/Features/Risks/Models/RiskReassessmentTriggerView.cs#L11)
+- [RiskRegistration](../../src/Compliance.Common/Features/Risks/Models/RiskRegistration.cs#L5)
+- [RiskTreatmentActionCompletionRegistration](../../src/Compliance.Common/Features/Risks/Models/RiskTreatmentActionCompletionRegistration.cs#L5)
+- [RiskTreatmentActionCompletionView](../../src/Compliance.Common/Features/Risks/Models/RiskTreatmentActionCompletionView.cs#L11)
+- [RiskTreatmentActionRegistration](../../src/Compliance.Common/Features/Risks/Models/RiskTreatmentActionRegistration.cs#L5)
+- [RiskTreatmentActionView](../../src/Compliance.Common/Features/Risks/Models/RiskTreatmentActionView.cs#L13)
+- [RiskTreatmentView](../../src/Compliance.Common/Features/Risks/Models/RiskTreatmentView.cs#L5)
 
 #### Snapshots
 
 - [ISnapshotProgramReadRequest](../../src/Compliance.Common/Features/Snapshots/ISnapshotProgramResourceRequest.cs#L12)
 - [ISnapshotProgramResourceRequest](../../src/Compliance.Common/Features/Snapshots/ISnapshotProgramResourceRequest.cs#L5)
-- [PopulationRow](../../src/Compliance.Common/Features/Snapshots/PopulationRow.cs#L5)
-- [PopulationSnapshotManifestRegeneration](../../src/Compliance.Common/Features/Snapshots/PopulationSnapshotManifestRegeneration.cs#L9)
-- [PopulationSnapshotSummary](../../src/Compliance.Common/Features/Snapshots/PopulationSnapshotSummary.cs#L7)
-- [ProgramScopeManifest](../../src/Compliance.Common/Features/Snapshots/ProgramScopeManifest.cs#L5)
-- [ProgramScopeSnapshotManifestRegeneration](../../src/Compliance.Common/Features/Snapshots/ProgramScopeSnapshotManifestRegeneration.cs#L5)
-- [ProgramScopeSnapshotVerification](../../src/Compliance.Common/Features/Snapshots/ProgramScopeSnapshotVerification.cs#L5)
-- [SnapshotRegistration](../../src/Compliance.Common/Features/Snapshots/SnapshotRegistration.cs#L5)
-- [SnapshotSourceCheck](../../src/Compliance.Common/Features/Snapshots/SnapshotSourceCheck.cs#L3)
-- [SnapshotView](../../src/Compliance.Common/Features/Snapshots/SnapshotView.cs#L5)
+- [PopulationRow](../../src/Compliance.Common/Features/Snapshots/Models/PopulationRow.cs#L5)
+- [PopulationSnapshotManifestRegeneration](../../src/Compliance.Common/Features/Snapshots/Models/PopulationSnapshotManifestRegeneration.cs#L9)
+- [PopulationSnapshotSummary](../../src/Compliance.Common/Features/Snapshots/Models/PopulationSnapshotSummary.cs#L7)
+- [ProgramScopeManifest](../../src/Compliance.Common/Features/Snapshots/Models/ProgramScopeManifest.cs#L5)
+- [ProgramScopeSnapshotManifestRegeneration](../../src/Compliance.Common/Features/Snapshots/Models/ProgramScopeSnapshotManifestRegeneration.cs#L5)
+- [ProgramScopeSnapshotVerification](../../src/Compliance.Common/Features/Snapshots/Models/ProgramScopeSnapshotVerification.cs#L5)
+- [SnapshotRegistration](../../src/Compliance.Common/Features/Snapshots/Models/SnapshotRegistration.cs#L5)
+- [SnapshotSourceCheck](../../src/Compliance.Common/Features/Snapshots/Models/SnapshotSourceCheck.cs#L3)
+- [SnapshotView](../../src/Compliance.Common/Features/Snapshots/Models/SnapshotView.cs#L5)
 
 #### TechnologyInventory
 
-- [DataFlowContent](../../src/Compliance.Common/Features/TechnologyInventory/DataFlowContent.cs#L10)
-- [DataFlowImpactView](../../src/Compliance.Common/Features/TechnologyInventory/DataFlowImpactView.cs#L10)
-- [DataFlowRegistration](../../src/Compliance.Common/Features/TechnologyInventory/DataFlowRegistration.cs#L5)
-- [DataFlowView](../../src/Compliance.Common/Features/TechnologyInventory/DataFlowView.cs#L7)
+- [DataFlowContent](../../src/Compliance.Common/Features/TechnologyInventory/Models/DataFlowContent.cs#L10)
+- [DataFlowImpactView](../../src/Compliance.Common/Features/TechnologyInventory/Models/DataFlowImpactView.cs#L10)
+- [DataFlowRegistration](../../src/Compliance.Common/Features/TechnologyInventory/Models/DataFlowRegistration.cs#L5)
+- [DataFlowView](../../src/Compliance.Common/Features/TechnologyInventory/Models/DataFlowView.cs#L7)
 - [ITechnologyInventoryReadRequest](../../src/Compliance.Common/Features/TechnologyInventory/ITechnologyInventoryReadRequest.cs#L4)
 - [ITechnologyInventoryRequest](../../src/Compliance.Common/Features/TechnologyInventory/ITechnologyInventoryRequest.cs#L5)
 - [ITechnologyInventoryWriteRequest](../../src/Compliance.Common/Features/TechnologyInventory/ITechnologyInventoryWriteRequest.cs#L6)
-- [InformationAssetChangePreview](../../src/Compliance.Common/Features/TechnologyInventory/InformationAssetChangePreview.cs#L10)
-- [InformationAssetContent](../../src/Compliance.Common/Features/TechnologyInventory/InformationAssetContent.cs#L6)
-- [InformationAssetRegistration](../../src/Compliance.Common/Features/TechnologyInventory/InformationAssetRegistration.cs#L5)
-- [InformationAssetView](../../src/Compliance.Common/Features/TechnologyInventory/InformationAssetView.cs#L7)
-- [LocationContent](../../src/Compliance.Common/Features/TechnologyInventory/LocationContent.cs#L9)
-- [LocationRegistration](../../src/Compliance.Common/Features/TechnologyInventory/LocationRegistration.cs#L5)
-- [LocationView](../../src/Compliance.Common/Features/TechnologyInventory/LocationView.cs#L7)
-- [OperationalProcessContent](../../src/Compliance.Common/Features/TechnologyInventory/OperationalProcessContent.cs#L9)
-- [OperationalProcessRegistration](../../src/Compliance.Common/Features/TechnologyInventory/OperationalProcessRegistration.cs#L5)
-- [OperationalProcessView](../../src/Compliance.Common/Features/TechnologyInventory/OperationalProcessView.cs#L7)
-- [TechnologyComponentContent](../../src/Compliance.Common/Features/TechnologyInventory/TechnologyComponentContent.cs#L9)
-- [TechnologyComponentRegistration](../../src/Compliance.Common/Features/TechnologyInventory/TechnologyComponentRegistration.cs#L5)
-- [TechnologyComponentView](../../src/Compliance.Common/Features/TechnologyInventory/TechnologyComponentView.cs#L7)
-- [TechnologyInventoryResourceTypes](../../src/Compliance.Common/Features/TechnologyInventory/TechnologyInventoryResourceTypes.cs#L4)
+- [InformationAssetChangePreview](../../src/Compliance.Common/Features/TechnologyInventory/Models/InformationAssetChangePreview.cs#L10)
+- [InformationAssetContent](../../src/Compliance.Common/Features/TechnologyInventory/Models/InformationAssetContent.cs#L6)
+- [InformationAssetRegistration](../../src/Compliance.Common/Features/TechnologyInventory/Models/InformationAssetRegistration.cs#L5)
+- [InformationAssetView](../../src/Compliance.Common/Features/TechnologyInventory/Models/InformationAssetView.cs#L7)
+- [LocationContent](../../src/Compliance.Common/Features/TechnologyInventory/Models/LocationContent.cs#L9)
+- [LocationRegistration](../../src/Compliance.Common/Features/TechnologyInventory/Models/LocationRegistration.cs#L5)
+- [LocationView](../../src/Compliance.Common/Features/TechnologyInventory/Models/LocationView.cs#L7)
+- [OperationalProcessContent](../../src/Compliance.Common/Features/TechnologyInventory/Models/OperationalProcessContent.cs#L9)
+- [OperationalProcessRegistration](../../src/Compliance.Common/Features/TechnologyInventory/Models/OperationalProcessRegistration.cs#L5)
+- [OperationalProcessView](../../src/Compliance.Common/Features/TechnologyInventory/Models/OperationalProcessView.cs#L7)
+- [TechnologyComponentContent](../../src/Compliance.Common/Features/TechnologyInventory/Models/TechnologyComponentContent.cs#L9)
+- [TechnologyComponentRegistration](../../src/Compliance.Common/Features/TechnologyInventory/Models/TechnologyComponentRegistration.cs#L5)
+- [TechnologyComponentView](../../src/Compliance.Common/Features/TechnologyInventory/Models/TechnologyComponentView.cs#L7)
+- [TechnologyInventoryResourceTypes](../../src/Compliance.Common/Features/TechnologyInventory/Models/TechnologyInventoryResourceTypes.cs#L4)
 
 #### Tenants
 
 - [IPlatformOperatorOrTenantAdminRequest](../../src/Compliance.Common/Features/Tenants/IPlatformOperatorOrTenantAdminRequest.cs#L6)
 - [IPlatformOperatorRequest](../../src/Compliance.Common/Features/Tenants/IPlatformOperatorRequest.cs#L5)
 - [ITenantLifecycleReactionRequest](../../src/Compliance.Common/Features/Tenants/ITenantLifecycleReactionRequest.cs#L6)
-- [PlatformOperatorRosterView](../../src/Compliance.Common/Features/Tenants/PlatformOperatorRosterView.cs#L5)
-- [TenantInvitationView](../../src/Compliance.Common/Features/Tenants/TenantInvitationView.cs#L6)
-- [TenantMembershipSummary](../../src/Compliance.Common/Features/Tenants/TenantMembershipSummary.cs#L5)
-- [TenantMembershipView](../../src/Compliance.Common/Features/Tenants/TenantMembershipView.cs#L9)
-- [TenantProvisioningStatusView](../../src/Compliance.Common/Features/Tenants/TenantProvisioningStatusView.cs#L5)
-- [TenantRegistration](../../src/Compliance.Common/Features/Tenants/TenantRegistration.cs#L5)
-- [TenantSlugResolution](../../src/Compliance.Common/Features/Tenants/TenantSlugResolution.cs#L5)
-- [TenantView](../../src/Compliance.Common/Features/Tenants/TenantView.cs#L5)
+- [PlatformOperatorRosterView](../../src/Compliance.Common/Features/Tenants/Models/PlatformOperatorRosterView.cs#L5)
+- [TenantInvitationView](../../src/Compliance.Common/Features/Tenants/Models/TenantInvitationView.cs#L6)
+- [TenantMembershipSummary](../../src/Compliance.Common/Features/Tenants/Models/TenantMembershipSummary.cs#L5)
+- [TenantMembershipView](../../src/Compliance.Common/Features/Tenants/Models/TenantMembershipView.cs#L9)
+- [TenantProvisioningStatusView](../../src/Compliance.Common/Features/Tenants/Models/TenantProvisioningStatusView.cs#L5)
+- [TenantRegistration](../../src/Compliance.Common/Features/Tenants/Models/TenantRegistration.cs#L5)
+- [TenantSlugResolution](../../src/Compliance.Common/Features/Tenants/Models/TenantSlugResolution.cs#L5)
+- [TenantView](../../src/Compliance.Common/Features/Tenants/Models/TenantView.cs#L5)
 
 #### UserIdentities
 
-- [AuthenticatedUserIdentity](../../src/Compliance.Common/Features/UserIdentities/AuthenticatedUserIdentity.cs#L6)
-- [EmailAddressView](../../src/Compliance.Common/Features/UserIdentities/EmailAddressView.cs#L5)
-- [EmailChallengeStatusView](../../src/Compliance.Common/Features/UserIdentities/EmailChallengeStatusView.cs#L3)
+- [AuthenticatedUserIdentity](../../src/Compliance.Common/Features/UserIdentities/Models/AuthenticatedUserIdentity.cs#L6)
+- [EmailAddressView](../../src/Compliance.Common/Features/UserIdentities/Models/EmailAddressView.cs#L5)
+- [EmailChallengeStatusView](../../src/Compliance.Common/Features/UserIdentities/Models/EmailChallengeStatusView.cs#L3)
 - [IEmailOwnershipRequest](../../src/Compliance.Common/Features/UserIdentities/IEmailOwnershipRequest.cs#L5)
-- [IdentityRecoveryOption](../../src/Compliance.Common/Features/UserIdentities/GetIdentityRecoveryOptions.cs#L19)
-- [IdentityRecoveryOptions](../../src/Compliance.Common/Features/UserIdentities/GetIdentityRecoveryOptions.cs#L15)
+- [IdentityRecoveryOption](../../src/Compliance.Common/Features/UserIdentities/Queries/GetIdentityRecoveryOptions.cs#L19)
+- [IdentityRecoveryOptions](../../src/Compliance.Common/Features/UserIdentities/Queries/GetIdentityRecoveryOptions.cs#L15)
 
 #### Work
 
-- [WorkAssignmentEntryView](../../src/Compliance.Common/Features/Work/WorkAssignmentEntryView.cs#L7)
-- [WorkCountsView](../../src/Compliance.Common/Features/Work/WorkCountsView.cs#L4)
-- [WorkDigestPreferenceView](../../src/Compliance.Common/Features/Work/WorkDigestPreferenceView.cs#L4)
-- [WorkDigestView](../../src/Compliance.Common/Features/Work/WorkDigestView.cs#L9)
-- [WeeklyWorkDigestView](../../src/Compliance.Common/Features/Work/WeeklyWorkDigestView.cs#L7)
-- [WorkDigestDeliveryAttemptView](../../src/Compliance.Common/Features/Work/WeeklyWorkDigestView.cs#L20)
-- [WorkDigestSchedulePageView](../../src/Compliance.Common/Features/Work/WorkDigestSchedulePageView.cs#L4)
-- [WorkItemDetailView](../../src/Compliance.Common/Features/Work/WorkItemDetailView.cs#L4)
-- [WorkQueueItemView](../../src/Compliance.Common/Features/Work/WorkQueueItemView.cs#L15)
-- [WorkQueueView](../../src/Compliance.Common/Features/Work/WorkQueueView.cs#L4)
-- [WorkReminderView](../../src/Compliance.Common/Features/Work/WorkReminderView.cs#L9)
+- [WorkAssignmentEntryView](../../src/Compliance.Common/Features/Work/Models/WorkAssignmentEntryView.cs#L7)
+- [WorkCountsView](../../src/Compliance.Common/Features/Work/Models/WorkCountsView.cs#L4)
+- [WorkDigestPreferenceView](../../src/Compliance.Common/Features/Work/Models/WorkDigestPreferenceView.cs#L4)
+- [WorkDigestView](../../src/Compliance.Common/Features/Work/Models/WorkDigestView.cs#L9)
+- [WeeklyWorkDigestView](../../src/Compliance.Common/Features/Work/Models/WeeklyWorkDigestView.cs#L7)
+- [WorkDigestDeliveryAttemptView](../../src/Compliance.Common/Features/Work/Models/WeeklyWorkDigestView.cs#L20)
+- [WorkDigestSchedulePageView](../../src/Compliance.Common/Features/Work/Models/WorkDigestSchedulePageView.cs#L4)
+- [WorkItemDetailView](../../src/Compliance.Common/Features/Work/Models/WorkItemDetailView.cs#L4)
+- [WorkQueueItemView](../../src/Compliance.Common/Features/Work/Models/WorkQueueItemView.cs#L15)
+- [WorkQueueView](../../src/Compliance.Common/Features/Work/Models/WorkQueueView.cs#L4)
+- [WorkReminderView](../../src/Compliance.Common/Features/Work/Models/WorkReminderView.cs#L9)
 
 #### Workforce
 
-- [FrozenPerson](../../src/Compliance.Common/Features/Workforce/FrozenPerson.cs#L6)
-- [FrozenWorkRelationship](../../src/Compliance.Common/Features/Workforce/FrozenWorkRelationship.cs#L9)
+- [FrozenPerson](../../src/Compliance.Common/Features/Workforce/Models/FrozenPerson.cs#L6)
+- [FrozenWorkRelationship](../../src/Compliance.Common/Features/Workforce/Models/FrozenWorkRelationship.cs#L9)
 - [IWorkforceRequest](../../src/Compliance.Common/Features/Workforce/IWorkforceRequest.cs#L5)
-- [PersonRegistration](../../src/Compliance.Common/Features/Workforce/PersonRegistration.cs#L5)
-- [PersonView](../../src/Compliance.Common/Features/Workforce/PersonView.cs#L11)
-- [PersonalContactDetails](../../src/Compliance.Common/Features/Workforce/PersonalContactDetails.cs#L4)
-- [ServiceIdentityRegistration](../../src/Compliance.Common/Features/Workforce/ServiceIdentityRegistration.cs#L5)
-- [ServiceIdentityTerms](../../src/Compliance.Common/Features/Workforce/ServiceIdentityTerms.cs#L10)
-- [ServiceIdentityView](../../src/Compliance.Common/Features/Workforce/ServiceIdentityView.cs#L13)
-- [WorkRelationshipRegistration](../../src/Compliance.Common/Features/Workforce/WorkRelationshipRegistration.cs#L5)
-- [WorkRelationshipTerms](../../src/Compliance.Common/Features/Workforce/WorkRelationshipTerms.cs#L10)
-- [WorkRelationshipView](../../src/Compliance.Common/Features/Workforce/WorkRelationshipView.cs#L10)
-- [WorkforceObservationResolutionView](../../src/Compliance.Common/Features/Workforce/WorkforceObservationResolutionView.cs#L10)
-- [WorkforceObservationView](../../src/Compliance.Common/Features/Workforce/WorkforceObservationView.cs#L13)
-- [WorkforcePersonSourceFacts](../../src/Compliance.Common/Features/Workforce/WorkforcePersonSourceFacts.cs#L4)
-- [WorkforceReconciliationObservationView](../../src/Compliance.Common/Features/Workforce/WorkforceReconciliationObservationView.cs#L12)
-- [WorkforceRosterSnapshotView](../../src/Compliance.Common/Features/Workforce/WorkforceRosterSnapshotView.cs#L10)
-- [WorkforceServiceSourceFacts](../../src/Compliance.Common/Features/Workforce/WorkforceServiceSourceFacts.cs#L4)
-- [WorkforceSourceDecision](../../src/Compliance.Common/Features/Workforce/WorkforceSourceDecision.cs#L6)
-- [WorkforceSourceFacts](../../src/Compliance.Common/Features/Workforce/WorkforceSourceFacts.cs#L4)
-- [WorkforceSourceIdentity](../../src/Compliance.Common/Features/Workforce/WorkforceSourceIdentity.cs#L4)
-- [WorkforceSourcePreview](../../src/Compliance.Common/Features/Workforce/WorkforceSourcePreview.cs#L6)
-- [WorkforceSourceRegistration](../../src/Compliance.Common/Features/Workforce/WorkforceSourceRegistration.cs#L5)
-- [WorkforceSourceView](../../src/Compliance.Common/Features/Workforce/WorkforceSourceView.cs#L10)
+- [PersonRegistration](../../src/Compliance.Common/Features/Workforce/Models/PersonRegistration.cs#L5)
+- [PersonView](../../src/Compliance.Common/Features/Workforce/Models/PersonView.cs#L11)
+- [PersonalContactDetails](../../src/Compliance.Common/Features/Workforce/Models/PersonalContactDetails.cs#L4)
+- [ServiceIdentityRegistration](../../src/Compliance.Common/Features/Workforce/Models/ServiceIdentityRegistration.cs#L5)
+- [ServiceIdentityTerms](../../src/Compliance.Common/Features/Workforce/Models/ServiceIdentityTerms.cs#L10)
+- [ServiceIdentityView](../../src/Compliance.Common/Features/Workforce/Models/ServiceIdentityView.cs#L13)
+- [WorkRelationshipRegistration](../../src/Compliance.Common/Features/Workforce/Models/WorkRelationshipRegistration.cs#L5)
+- [WorkRelationshipTerms](../../src/Compliance.Common/Features/Workforce/Models/WorkRelationshipTerms.cs#L10)
+- [WorkRelationshipView](../../src/Compliance.Common/Features/Workforce/Models/WorkRelationshipView.cs#L10)
+- [WorkforceObservationResolutionView](../../src/Compliance.Common/Features/Workforce/Models/WorkforceObservationResolutionView.cs#L10)
+- [WorkforceObservationView](../../src/Compliance.Common/Features/Workforce/Models/WorkforceObservationView.cs#L13)
+- [WorkforcePersonSourceFacts](../../src/Compliance.Common/Features/Workforce/Models/WorkforcePersonSourceFacts.cs#L4)
+- [WorkforceReconciliationObservationView](../../src/Compliance.Common/Features/Workforce/Models/WorkforceReconciliationObservationView.cs#L12)
+- [WorkforceRosterSnapshotView](../../src/Compliance.Common/Features/Workforce/Models/WorkforceRosterSnapshotView.cs#L10)
+- [WorkforceServiceSourceFacts](../../src/Compliance.Common/Features/Workforce/Models/WorkforceServiceSourceFacts.cs#L4)
+- [WorkforceSourceDecision](../../src/Compliance.Common/Features/Workforce/Models/WorkforceSourceDecision.cs#L6)
+- [WorkforceSourceFacts](../../src/Compliance.Common/Features/Workforce/Models/WorkforceSourceFacts.cs#L4)
+- [WorkforceSourceIdentity](../../src/Compliance.Common/Features/Workforce/Models/WorkforceSourceIdentity.cs#L4)
+- [WorkforceSourcePreview](../../src/Compliance.Common/Features/Workforce/Models/WorkforceSourcePreview.cs#L6)
+- [WorkforceSourceRegistration](../../src/Compliance.Common/Features/Workforce/Models/WorkforceSourceRegistration.cs#L5)
+- [WorkforceSourceView](../../src/Compliance.Common/Features/Workforce/Models/WorkforceSourceView.cs#L10)
 
 ### Existing reactors
 
 #### AccessControl
 
-- [AcceptedStaffDirectoryReconciliationReactor](../../src/Compliance.Core/Features/AccessControl/AcceptedStaffDirectoryReconciliationReactor.cs#L5)
+- [AcceptedStaffDirectoryReconciliationReactor](../../src/Compliance.Core/Features/AccessControl/Reactors/AcceptedStaffDirectoryReconciliationReactor.cs#L5)
 - [AccessReviewGrantBackfillReactor](../../src/Compliance.Core/Features/AccessControl/AccessReviewGrantBackfillReactor.cs#L8)
 - [ApplicationImportGrantBackfillReactor](../../src/Compliance.Core/Features/AccessControl/ApplicationImportGrantBackfillReactor.cs#L6)
 - [ApplicationInventoryGrantBackfillReactor](../../src/Compliance.Core/Features/AccessControl/ApplicationInventoryGrantBackfillReactor.cs#L8)
 - [BuiltInRoleCatalogMigrationReactor](../../src/Compliance.Core/Features/AccessControl/BuiltInRoleCatalogMigrationReactor.cs#L6)
 - [EvidenceArtifactReadPermissionReactor](../../src/Compliance.Core/Features/AccessControl/EvidenceArtifactReadPermissionReactor.cs#L6)
 - [EvidenceRedactionPermissionsReactor](../../src/Compliance.Core/Features/AccessControl/EvidenceRedactionPermissionsReactor.cs#L6)
-- [FirmStaffStatusReevaluationReactor](../../src/Compliance.Core/Features/AccessControl/FirmStaffStatusReevaluationReactor.cs#L5)
+- [FirmStaffStatusReevaluationReactor](../../src/Compliance.Core/Features/AccessControl/Reactors/FirmStaffStatusReevaluationReactor.cs#L5)
 - [ProviderInventoryGrantBackfillReactor](../../src/Compliance.Core/Features/AccessControl/ProviderInventoryGrantBackfillReactor.cs#L8)
-- [RoleCleanupReactor](../../src/Compliance.Core/Features/AccessControl/RoleCleanupReactor.cs#L10)
-- [TeamCleanupReactor](../../src/Compliance.Core/Features/AccessControl/TeamCleanupReactor.cs#L11)
+- [RoleCleanupReactor](../../src/Compliance.Core/Features/AccessControl/Reactors/RoleCleanupReactor.cs#L10)
+- [TeamCleanupReactor](../../src/Compliance.Core/Features/AccessControl/Reactors/TeamCleanupReactor.cs#L11)
 - [TechnologyInventoryGrantBackfillReactor](../../src/Compliance.Core/Features/AccessControl/TechnologyInventoryGrantBackfillReactor.cs#L6)
-- [TenantRbacBootstrapReactor](../../src/Compliance.Core/Features/AccessControl/TenantRbacBootstrapReactor.cs#L5)
+- [TenantRbacBootstrapReactor](../../src/Compliance.Core/Features/AccessControl/Reactors/TenantRbacBootstrapReactor.cs#L5)
 - [WorkforceGrantBackfillReactor](../../src/Compliance.Core/Features/AccessControl/WorkforceGrantBackfillReactor.cs#L8)
 - [WorkforcePersonalDetailsGrantBackfillReactor](../../src/Compliance.Core/Features/AccessControl/WorkforcePersonalDetailsGrantBackfillReactor.cs#L10)
 - [WorkforceRestrictedFieldGrantBackfillReactor](../../src/Compliance.Core/Features/AccessControl/WorkforceRestrictedFieldGrantBackfillReactor.cs#L9)
@@ -2517,131 +2517,131 @@ These 140 requirement-backed event contracts have been added since the existing-
 
 #### Evaluations
 
-- [ControlEvaluationDeviationFindingReactor](../../src/Compliance.Core/Features/Evaluations/ControlEvaluationDeviationFindingReactor.cs#L9)
+- [ControlEvaluationDeviationFindingReactor](../../src/Compliance.Core/Features/Evaluations/Reactors/ControlEvaluationDeviationFindingReactor.cs#L9)
 
 #### Evidence
 
-- [EvidenceArtifactInspectionEffectsReactor](../../src/Compliance.Core/Features/Evidence/EvidenceArtifactInspectionEffectsReactor.cs#L6)
+- [EvidenceArtifactInspectionEffectsReactor](../../src/Compliance.Core/Features/Evidence/Reactors/EvidenceArtifactInspectionEffectsReactor.cs#L6)
 
 #### Changes
 
-- [LinkImpactReviewWorkReactor](../../src/Compliance.Core/Features/Changes/LinkImpactReviewWorkReactor.cs#L5)
-- [SystemDescriptionDecisionReactor](../../src/Compliance.Core/Features/Changes/SystemDescriptionDecisionReactor.cs#L8)
+- [LinkImpactReviewWorkReactor](../../src/Compliance.Core/Features/Changes/Reactors/LinkImpactReviewWorkReactor.cs#L5)
+- [SystemDescriptionDecisionReactor](../../src/Compliance.Core/Features/Changes/Reactors/SystemDescriptionDecisionReactor.cs#L8)
 
 #### Remediation
 
-- [ControlOccurrenceFindingReactor](../../src/Compliance.Core/Features/Remediation/ControlOccurrenceFindingReactor.cs#L11)
+- [ControlOccurrenceFindingReactor](../../src/Compliance.Core/Features/Remediation/Reactors/ControlOccurrenceFindingReactor.cs#L11)
 
 #### Risks
 
-- [BoundaryRiskReassessmentReactor](../../src/Compliance.Core/Features/Risks/BoundaryRiskReassessmentReactor.cs#L10)
-- [RiskMethodReassessmentReactor](../../src/Compliance.Core/Features/Risks/RiskMethodReassessmentReactor.cs#L9)
+- [BoundaryRiskReassessmentReactor](../../src/Compliance.Core/Features/Risks/Reactors/BoundaryRiskReassessmentReactor.cs#L10)
+- [RiskMethodReassessmentReactor](../../src/Compliance.Core/Features/Risks/Reactors/RiskMethodReassessmentReactor.cs#L9)
 
 #### Tenants
 
 - [TenantInvitationDeliveryReactor](../../src/Compliance.Core/Features/Tenants/TenantInvitationDeliveryReactor.cs#L8)
-- [TenantInvitationReactor](../../src/Compliance.Core/Features/Tenants/TenantInvitationReactor.cs#L6)
-- [TenantRegistrationReactor](../../src/Compliance.Core/Features/Tenants/TenantRegistrationReactor.cs#L5)
-- [TenantSelfServiceActivationReactor](../../src/Compliance.Core/Features/Tenants/TenantSelfServiceActivationReactor.cs#L6)
-- [TenantSlugReactor](../../src/Compliance.Core/Features/Tenants/TenantSlugReactor.cs#L5)
+- [TenantInvitationReactor](../../src/Compliance.Core/Features/Tenants/Reactors/TenantInvitationReactor.cs#L6)
+- [TenantRegistrationReactor](../../src/Compliance.Core/Features/Tenants/Reactors/TenantRegistrationReactor.cs#L5)
+- [TenantSelfServiceActivationReactor](../../src/Compliance.Core/Features/Tenants/Reactors/TenantSelfServiceActivationReactor.cs#L6)
+- [TenantSlugReactor](../../src/Compliance.Core/Features/Tenants/Reactors/TenantSlugReactor.cs#L5)
 
 #### UserIdentities
 
-- [EmailChallengeDeliveryReactor](../../src/Compliance.Core/Features/UserIdentities/EmailChallengeDeliveryReactor.cs#L8)
-- [EmailReservationReactor](../../src/Compliance.Core/Features/UserIdentities/EmailReservationReactor.cs#L5)
+- [EmailChallengeDeliveryReactor](../../src/Compliance.Core/Features/UserIdentities/Reactors/EmailChallengeDeliveryReactor.cs#L8)
+- [EmailReservationReactor](../../src/Compliance.Core/Features/UserIdentities/Reactors/EmailReservationReactor.cs#L5)
 - [IdentityRecoveryNoticeReactor](../../src/Compliance.Core/Features/UserIdentities/IdentityRecoveryNoticeReactor.cs#L6)
 
 ### Existing projectors
 
 #### AccessControl
 
-- [AccessGrantProjector](../../src/Compliance.Core/Features/AccessControl/AccessGrantProjector.cs#L5)
-- [ActualStaffEngagementLocatorProjector](../../src/Compliance.Core/Features/AccessControl/ActualStaffEngagementLocatorProjector.cs#L5)
-- [PermissionProjector](../../src/Compliance.Core/Features/AccessControl/PermissionProjector.cs#L5)
-- [RoleDirectoryProjector](../../src/Compliance.Core/Features/AccessControl/RoleDirectoryProjector.cs#L5)
-- [RolePermissionDirectoryProjector](../../src/Compliance.Core/Features/AccessControl/RolePermissionDirectoryProjector.cs#L5)
-- [RoleTeamDirectoryProjector](../../src/Compliance.Core/Features/AccessControl/RoleTeamDirectoryProjector.cs#L5)
-- [TeamDirectoryProjector](../../src/Compliance.Core/Features/AccessControl/TeamDirectoryProjector.cs#L5)
-- [TeamMemberDirectoryProjector](../../src/Compliance.Core/Features/AccessControl/TeamMemberDirectoryProjector.cs#L5)
-- [TeamRoleDirectoryProjector](../../src/Compliance.Core/Features/AccessControl/TeamRoleDirectoryProjector.cs#L5)
+- [AccessGrantProjector](../../src/Compliance.Core/Features/AccessControl/Projectors/AccessGrantProjector.cs#L5)
+- [ActualStaffEngagementLocatorProjector](../../src/Compliance.Core/Features/AccessControl/Projectors/ActualStaffEngagementLocatorProjector.cs#L5)
+- [PermissionProjector](../../src/Compliance.Core/Features/AccessControl/Projectors/PermissionProjector.cs#L5)
+- [RoleDirectoryProjector](../../src/Compliance.Core/Features/AccessControl/Projectors/RoleDirectoryProjector.cs#L5)
+- [RolePermissionDirectoryProjector](../../src/Compliance.Core/Features/AccessControl/Projectors/RolePermissionDirectoryProjector.cs#L5)
+- [RoleTeamDirectoryProjector](../../src/Compliance.Core/Features/AccessControl/Projectors/RoleTeamDirectoryProjector.cs#L5)
+- [TeamDirectoryProjector](../../src/Compliance.Core/Features/AccessControl/Projectors/TeamDirectoryProjector.cs#L5)
+- [TeamMemberDirectoryProjector](../../src/Compliance.Core/Features/AccessControl/Projectors/TeamMemberDirectoryProjector.cs#L5)
+- [TeamRoleDirectoryProjector](../../src/Compliance.Core/Features/AccessControl/Projectors/TeamRoleDirectoryProjector.cs#L5)
 
 #### AccessReviews
 
-- [AccessPopulationDirectoryProjector](../../src/Compliance.Core/Features/AccessReviews/AccessPopulationDirectoryProjector.cs#L5)
-- [AccessReviewCampaignDirectoryProjector](../../src/Compliance.Core/Features/AccessReviews/AccessReviewCampaignDirectoryProjector.cs#L5)
-- [AccessReviewCampaignImpactProjector](../../src/Compliance.Core/Features/AccessReviews/AccessReviewCampaignImpactProjector.cs#L5)
-- [AccessReviewCampaignWorkItemProjector](../../src/Compliance.Core/Features/Work/AccessReviewCampaignWorkItemProjector.cs#L5)
+- [AccessPopulationDirectoryProjector](../../src/Compliance.Core/Features/AccessReviews/Projectors/AccessPopulationDirectoryProjector.cs#L5)
+- [AccessReviewCampaignDirectoryProjector](../../src/Compliance.Core/Features/AccessReviews/Projectors/AccessReviewCampaignDirectoryProjector.cs#L5)
+- [AccessReviewCampaignImpactProjector](../../src/Compliance.Core/Features/AccessReviews/Projectors/AccessReviewCampaignImpactProjector.cs#L5)
+- [AccessReviewCampaignWorkItemProjector](../../src/Compliance.Core/Features/Work/Projectors/AccessReviewCampaignWorkItemProjector.cs#L5)
 
 #### AdvisorCollaboration
 
-- [AdvisorHandoffDirectoryProjector](../../src/Compliance.Core/Features/AdvisorCollaboration/AdvisorHandoffDirectoryProjector.cs#L5)
-- [AdvisorFeedbackWorkItemProjector](../../src/Compliance.Core/Features/AdvisorCollaboration/AdvisorFeedbackWorkItemProjector.cs#L5)
+- [AdvisorHandoffDirectoryProjector](../../src/Compliance.Core/Features/AdvisorCollaboration/Projectors/AdvisorHandoffDirectoryProjector.cs#L5)
+- [AdvisorFeedbackWorkItemProjector](../../src/Compliance.Core/Features/AdvisorCollaboration/Projectors/AdvisorFeedbackWorkItemProjector.cs#L5)
 
 #### Applications
 
-- [AccessReviewScopeDirectoryProjector](../../src/Compliance.Core/Features/Applications/AccessReviewScopeDirectoryProjector.cs#L5)
-- [ApplicationBoundaryReferenceProjector](../../src/Compliance.Core/Features/Applications/ApplicationBoundaryReferenceProjector.cs#L6)
-- [ApplicationControlDraftReferenceProjector](../../src/Compliance.Core/Features/Applications/ApplicationControlDraftReferenceProjector.cs#L7)
-- [ApplicationControlVersionReferenceProjector](../../src/Compliance.Core/Features/Applications/ApplicationControlVersionReferenceProjector.cs#L5)
-- [ApplicationDirectoryProjector](../../src/Compliance.Core/Features/Applications/ApplicationDirectoryProjector.cs#L5)
-- [ApplicationEvidenceSourceReferenceProjector](../../src/Compliance.Core/Features/Applications/ApplicationEvidenceSourceReferenceProjector.cs#L5)
-- [ApplicationImportProjector](../../src/Compliance.Core/Features/Applications/ApplicationImportProjector.cs#L5)
-- [ApplicationIncomingRelationshipProjector](../../src/Compliance.Core/Features/Applications/ApplicationIncomingRelationshipProjector.cs#L5)
-- [ApplicationPolicyReferenceProjector](../../src/Compliance.Core/Features/Applications/ApplicationPolicyReferenceProjector.cs#L5)
-- [ApplicationRelationshipProjector](../../src/Compliance.Core/Features/Applications/ApplicationRelationshipProjector.cs#L5)
+- [AccessReviewScopeDirectoryProjector](../../src/Compliance.Core/Features/Applications/Projectors/AccessReviewScopeDirectoryProjector.cs#L5)
+- [ApplicationBoundaryReferenceProjector](../../src/Compliance.Core/Features/Applications/Projectors/ApplicationBoundaryReferenceProjector.cs#L6)
+- [ApplicationControlDraftReferenceProjector](../../src/Compliance.Core/Features/Applications/Projectors/ApplicationControlDraftReferenceProjector.cs#L7)
+- [ApplicationControlVersionReferenceProjector](../../src/Compliance.Core/Features/Applications/Projectors/ApplicationControlVersionReferenceProjector.cs#L5)
+- [ApplicationDirectoryProjector](../../src/Compliance.Core/Features/Applications/Projectors/ApplicationDirectoryProjector.cs#L5)
+- [ApplicationEvidenceSourceReferenceProjector](../../src/Compliance.Core/Features/Applications/Projectors/ApplicationEvidenceSourceReferenceProjector.cs#L5)
+- [ApplicationImportProjector](../../src/Compliance.Core/Features/Applications/Projectors/ApplicationImportProjector.cs#L5)
+- [ApplicationIncomingRelationshipProjector](../../src/Compliance.Core/Features/Applications/Projectors/ApplicationIncomingRelationshipProjector.cs#L5)
+- [ApplicationPolicyReferenceProjector](../../src/Compliance.Core/Features/Applications/Projectors/ApplicationPolicyReferenceProjector.cs#L5)
+- [ApplicationRelationshipProjector](../../src/Compliance.Core/Features/Applications/Projectors/ApplicationRelationshipProjector.cs#L5)
 
 #### Boundaries
 
-- [BoundaryDirectoryProjector](../../src/Compliance.Core/Features/Boundaries/BoundaryDirectoryProjector.cs#L5)
+- [BoundaryDirectoryProjector](../../src/Compliance.Core/Features/Boundaries/Projectors/BoundaryDirectoryProjector.cs#L5)
 
 #### Commitments
 
-- [CommitmentDraftDirectoryProjector](../../src/Compliance.Core/Features/Commitments/CommitmentDraftDirectoryProjector.cs#L5)
+- [CommitmentDraftDirectoryProjector](../../src/Compliance.Core/Features/Commitments/Projectors/CommitmentDraftDirectoryProjector.cs#L5)
 - [CommitmentDraftHistoryDirectoryProjectorV1](../../src/Compliance.Core/Features/Commitments/CommitmentDraftHistoryDirectoryProjectorV1.cs#L5)
 
 #### ControlMappings
 
-- [ControlMappingDirectoryV1Projector](../../src/Compliance.Core/Features/ControlMappings/ControlMappingDirectoryV1Projector.cs#L5)
-- [CriterionApplicabilityDirectoryV1Projector](../../src/Compliance.Core/Features/ControlMappings/CriterionApplicabilityDirectoryV1Projector.cs#L5)
+- [ControlMappingDirectoryV1Projector](../../src/Compliance.Core/Features/ControlMappings/Projectors/ControlMappingDirectoryV1Projector.cs#L5)
+- [CriterionApplicabilityDirectoryV1Projector](../../src/Compliance.Core/Features/ControlMappings/Projectors/CriterionApplicabilityDirectoryV1Projector.cs#L5)
 
 #### Controls
 
-- [ControlDraftDirectoryV2Projector](../../src/Compliance.Core/Features/Controls/ControlDraftDirectoryV2Projector.cs#L5)
-- [ControlDraftHistoryDirectoryV1Projector](../../src/Compliance.Core/Features/Controls/ControlDraftHistoryDirectoryV1Projector.cs#L5)
+- [ControlDraftDirectoryV2Projector](../../src/Compliance.Core/Features/Controls/Projectors/ControlDraftDirectoryV2Projector.cs#L5)
+- [ControlDraftHistoryDirectoryV1Projector](../../src/Compliance.Core/Features/Controls/Projectors/ControlDraftHistoryDirectoryV1Projector.cs#L5)
 
 #### Criteria
 
-- [CriteriaTextOverlayDirectoryProjector](../../src/Compliance.Core/Features/Criteria/CriteriaTextOverlayDirectoryProjector.cs#L5)
+- [CriteriaTextOverlayDirectoryProjector](../../src/Compliance.Core/Features/Criteria/Projectors/CriteriaTextOverlayDirectoryProjector.cs#L5)
 
 #### Examinations
 
-- [ExaminationEngagementDirectoryProjector](../../src/Compliance.Core/Features/Examinations/ExaminationEngagementDirectoryProjector.cs#L5)
+- [ExaminationEngagementDirectoryProjector](../../src/Compliance.Core/Features/Examinations/Projectors/ExaminationEngagementDirectoryProjector.cs#L5)
 
 #### Changes
 
-- [SignificantChangeDirectoryProjector](../../src/Compliance.Core/Features/Changes/SignificantChangeDirectoryProjector.cs#L5)
+- [SignificantChangeDirectoryProjector](../../src/Compliance.Core/Features/Changes/Projectors/SignificantChangeDirectoryProjector.cs#L5)
 
 #### Incidents
 
-- [ComplianceIncidentDirectoryProjector](../../src/Compliance.Core/Features/Incidents/ComplianceIncidentDirectoryProjector.cs#L5)
+- [ComplianceIncidentDirectoryProjector](../../src/Compliance.Core/Features/Incidents/Projectors/ComplianceIncidentDirectoryProjector.cs#L5)
 
 #### Policies
 
-- [PolicyDirectoryProjector](../../src/Compliance.Core/Features/Policies/PolicyDirectoryProjector.cs#L5)
+- [PolicyDirectoryProjector](../../src/Compliance.Core/Features/Policies/Projectors/PolicyDirectoryProjector.cs#L5)
 
 #### PolicyDistribution
 
-- [CampaignDirectoryProjector](../../src/Compliance.Core/Features/PolicyDistribution/CampaignDirectoryProjector.cs#L5)
+- [CampaignDirectoryProjector](../../src/Compliance.Core/Features/PolicyDistribution/Projectors/CampaignDirectoryProjector.cs#L5)
 
 #### Programs
 
-- [ClientServiceDirectoryProjector](../../src/Compliance.Core/Features/Programs/ClientServiceDirectoryProjector.cs#L5)
-- [ProgramDirectoryProjector](../../src/Compliance.Core/Features/Programs/ProgramDirectoryProjector.cs#L6)
+- [ClientServiceDirectoryProjector](../../src/Compliance.Core/Features/Programs/Projectors/ClientServiceDirectoryProjector.cs#L5)
+- [ProgramDirectoryProjector](../../src/Compliance.Core/Features/Programs/Projectors/ProgramDirectoryProjector.cs#L6)
 
 #### Providers
 
-- [AssuranceProjector](../../src/Compliance.Core/Features/Providers/AssuranceProjector.cs#L5)
-- [ProviderProjector](../../src/Compliance.Core/Features/Providers/ProviderProjector.cs#L5)
+- [AssuranceProjector](../../src/Compliance.Core/Features/Providers/Projectors/AssuranceProjector.cs#L5)
+- [ProviderProjector](../../src/Compliance.Core/Features/Providers/Projectors/ProviderProjector.cs#L5)
 
 #### Readiness
 
@@ -2649,232 +2649,232 @@ These 140 requirement-backed event contracts have been added since the existing-
 
 #### Responsibilities
 
-- [MemberResponsibilityProjector](../../src/Compliance.Core/Features/Responsibilities/MemberResponsibilityProjector.cs#L5)
-- [ResponsibilitySetProjector](../../src/Compliance.Core/Features/Responsibilities/ResponsibilitySetProjector.cs#L5)
+- [MemberResponsibilityProjector](../../src/Compliance.Core/Features/Responsibilities/Projectors/MemberResponsibilityProjector.cs#L5)
+- [ResponsibilitySetProjector](../../src/Compliance.Core/Features/Responsibilities/Projectors/ResponsibilitySetProjector.cs#L5)
 
 #### Risks
 
-- [RiskDraftDirectoryProjector](../../src/Compliance.Core/Features/Risks/RiskDraftDirectoryProjector.cs#L5)
+- [RiskDraftDirectoryProjector](../../src/Compliance.Core/Features/Risks/Projectors/RiskDraftDirectoryProjector.cs#L5)
 - [RiskDraftHistoryProjectorV1](../../src/Compliance.Core/Features/Risks/RiskDraftHistoryProjectorV1.cs#L5)
 - [RiskEvaluationDirectoryProjectorV1](../../src/Compliance.Core/Features/Risks/RiskEvaluationDirectoryProjectorV1.cs#L5)
 
 #### Snapshots
 
-- [PopulationSnapshotDirectoryProjector](../../src/Compliance.Core/Features/Snapshots/PopulationSnapshotDirectoryProjector.cs#L5)
-- [SnapshotDirectoryProjector](../../src/Compliance.Core/Features/Snapshots/SnapshotDirectoryProjector.cs#L5)
+- [PopulationSnapshotDirectoryProjector](../../src/Compliance.Core/Features/Snapshots/Projectors/PopulationSnapshotDirectoryProjector.cs#L5)
+- [SnapshotDirectoryProjector](../../src/Compliance.Core/Features/Snapshots/Projectors/SnapshotDirectoryProjector.cs#L5)
 
 #### TechnologyInventory
 
-- [InventoryRegisterProjector](../../src/Compliance.Core/Features/TechnologyInventory/InventoryRegisterProjector.cs#L5)
-- [TechnologyInventoryDirectoryProjector](../../src/Compliance.Core/Features/TechnologyInventory/TechnologyInventoryDirectoryProjector.cs#L5)
+- [InventoryRegisterProjector](../../src/Compliance.Core/Features/TechnologyInventory/Projectors/InventoryRegisterProjector.cs#L5)
+- [TechnologyInventoryDirectoryProjector](../../src/Compliance.Core/Features/TechnologyInventory/Projectors/TechnologyInventoryDirectoryProjector.cs#L5)
 
 #### Tenants
 
-- [TenantDirectoryProjector](../../src/Compliance.Core/Features/Tenants/TenantDirectoryProjector.cs#L5)
-- [TenantInvitationDirectoryProjector](../../src/Compliance.Core/Features/Tenants/TenantInvitationDirectoryProjector.cs#L5)
-- [TenantMembershipProjector](../../src/Compliance.Core/Features/Tenants/TenantMembershipProjector.cs#L5)
+- [TenantDirectoryProjector](../../src/Compliance.Core/Features/Tenants/Projectors/TenantDirectoryProjector.cs#L5)
+- [TenantInvitationDirectoryProjector](../../src/Compliance.Core/Features/Tenants/Projectors/TenantInvitationDirectoryProjector.cs#L5)
+- [TenantMembershipProjector](../../src/Compliance.Core/Features/Tenants/Projectors/TenantMembershipProjector.cs#L5)
 
 #### UserIdentities
 
-- [EmailAddressDirectoryProjector](../../src/Compliance.Core/Features/UserIdentities/EmailAddressDirectoryProjector.cs#L5)
-- [IdentityDirectoryProjector](../../src/Compliance.Core/Features/UserIdentities/IdentityDirectoryProjector.cs#L5)
-- [PlatformUserDirectoryProjector](../../src/Compliance.Core/Features/UserIdentities/PlatformUserDirectoryProjector.cs#L5)
+- [EmailAddressDirectoryProjector](../../src/Compliance.Core/Features/UserIdentities/Projectors/EmailAddressDirectoryProjector.cs#L5)
+- [IdentityDirectoryProjector](../../src/Compliance.Core/Features/UserIdentities/Projectors/IdentityDirectoryProjector.cs#L5)
+- [PlatformUserDirectoryProjector](../../src/Compliance.Core/Features/UserIdentities/Projectors/PlatformUserDirectoryProjector.cs#L5)
 
 #### Work
 
-- [BoundaryDecisionWorkItemProjector](../../src/Compliance.Core/Features/Work/BoundaryDecisionWorkItemProjector.cs#L7)
-- [CommitmentDecisionWorkItemProjector](../../src/Compliance.Core/Features/Work/CommitmentDecisionWorkItemProjector.cs#L7)
-- [ControlCriterionMappingWorkItemProjector](../../src/Compliance.Core/Features/Work/ControlCriterionMappingWorkItemProjector.cs#L6)
-- [ControlDecisionWorkItemProjector](../../src/Compliance.Core/Features/Work/ControlDecisionWorkItemProjector.cs#L7)
-- [ControlEvaluationWorkItemProjector](../../src/Compliance.Core/Features/Work/ControlEvaluationWorkItemProjector.cs#L6)
-- [ControlOccurrenceWorkItemProjector](../../src/Compliance.Core/Features/Work/ControlOccurrenceWorkItemProjector.cs#L6)
-- [ControlOperatingPlanWorkItemProjector](../../src/Compliance.Core/Features/Work/ControlOperatingPlanWorkItemProjector.cs#L6)
-- [CorrectiveActionWorkItemProjector](../../src/Compliance.Core/Features/Work/CorrectiveActionWorkItemProjector.cs#L6)
-- [CriterionApplicabilityWorkItemProjector](../../src/Compliance.Core/Features/Work/CriterionApplicabilityWorkItemProjector.cs#L6)
-- [EvidenceWorkItemProjector](../../src/Compliance.Core/Features/Work/EvidenceWorkItemProjector.cs#L6)
-- [FindingClosureWorkItemProjector](../../src/Compliance.Core/Features/Work/FindingClosureWorkItemProjector.cs#L6)
-- [PolicyCampaignWorkItemProjector](../../src/Compliance.Core/Features/Work/PolicyCampaignWorkItemProjector.cs#L6)
-- [PolicyDecisionWorkItemProjector](../../src/Compliance.Core/Features/Work/PolicyDecisionWorkItemProjector.cs#L6)
+- [BoundaryDecisionWorkItemProjector](../../src/Compliance.Core/Features/Work/Projectors/BoundaryDecisionWorkItemProjector.cs#L7)
+- [CommitmentDecisionWorkItemProjector](../../src/Compliance.Core/Features/Work/Projectors/CommitmentDecisionWorkItemProjector.cs#L7)
+- [ControlCriterionMappingWorkItemProjector](../../src/Compliance.Core/Features/Work/Projectors/ControlCriterionMappingWorkItemProjector.cs#L6)
+- [ControlDecisionWorkItemProjector](../../src/Compliance.Core/Features/Work/Projectors/ControlDecisionWorkItemProjector.cs#L7)
+- [ControlEvaluationWorkItemProjector](../../src/Compliance.Core/Features/Work/Projectors/ControlEvaluationWorkItemProjector.cs#L6)
+- [ControlOccurrenceWorkItemProjector](../../src/Compliance.Core/Features/Work/Projectors/ControlOccurrenceWorkItemProjector.cs#L6)
+- [ControlOperatingPlanWorkItemProjector](../../src/Compliance.Core/Features/Work/Projectors/ControlOperatingPlanWorkItemProjector.cs#L6)
+- [CorrectiveActionWorkItemProjector](../../src/Compliance.Core/Features/Work/Projectors/CorrectiveActionWorkItemProjector.cs#L6)
+- [CriterionApplicabilityWorkItemProjector](../../src/Compliance.Core/Features/Work/Projectors/CriterionApplicabilityWorkItemProjector.cs#L6)
+- [EvidenceWorkItemProjector](../../src/Compliance.Core/Features/Work/Projectors/EvidenceWorkItemProjector.cs#L6)
+- [FindingClosureWorkItemProjector](../../src/Compliance.Core/Features/Work/Projectors/FindingClosureWorkItemProjector.cs#L6)
+- [PolicyCampaignWorkItemProjector](../../src/Compliance.Core/Features/Work/Projectors/PolicyCampaignWorkItemProjector.cs#L6)
+- [PolicyDecisionWorkItemProjector](../../src/Compliance.Core/Features/Work/Projectors/PolicyDecisionWorkItemProjector.cs#L6)
 - [RiskGovernanceWorkItemProjector](../../src/Compliance.Core/Features/Work/RiskGovernanceWorkItemProjector.cs#L6)
 
 #### Workforce
 
-- [PersonDirectoryProjector](../../src/Compliance.Core/Features/Workforce/PersonDirectoryProjector.cs#L5)
-- [ServiceIdentityDirectoryProjector](../../src/Compliance.Core/Features/Workforce/ServiceIdentityDirectoryProjector.cs#L5)
-- [WorkRelationshipDirectoryProjector](../../src/Compliance.Core/Features/Workforce/WorkRelationshipDirectoryProjector.cs#L5)
-- [WorkforceObservationProjector](../../src/Compliance.Core/Features/Workforce/WorkforceObservationProjector.cs#L5)
-- [WorkforceObservationResolutionProjector](../../src/Compliance.Core/Features/Workforce/WorkforceObservationResolutionProjector.cs#L5)
-- [WorkforceSourceProjector](../../src/Compliance.Core/Features/Workforce/WorkforceSourceProjector.cs#L5)
+- [PersonDirectoryProjector](../../src/Compliance.Core/Features/Workforce/Projectors/PersonDirectoryProjector.cs#L5)
+- [ServiceIdentityDirectoryProjector](../../src/Compliance.Core/Features/Workforce/Projectors/ServiceIdentityDirectoryProjector.cs#L5)
+- [WorkRelationshipDirectoryProjector](../../src/Compliance.Core/Features/Workforce/Projectors/WorkRelationshipDirectoryProjector.cs#L5)
+- [WorkforceObservationProjector](../../src/Compliance.Core/Features/Workforce/Projectors/WorkforceObservationProjector.cs#L5)
+- [WorkforceObservationResolutionProjector](../../src/Compliance.Core/Features/Workforce/Projectors/WorkforceObservationResolutionProjector.cs#L5)
+- [WorkforceSourceProjector](../../src/Compliance.Core/Features/Workforce/Projectors/WorkforceSourceProjector.cs#L5)
 
 #### Requirement-backed response views added 2026-10-17 to 2026-10-18
 
 ##### AdvisorCollaboration
 
-- [AdvisorRequestView](../../src/Compliance.Common/Features/AdvisorCollaboration/AdvisorRequestView.cs#L6)
-- [AdvisorRequestSummaryView](../../src/Compliance.Common/Features/AdvisorCollaboration/AdvisorRequestSummaryView.cs#L6)
-- [AdvisorFeedbackView](../../src/Compliance.Common/Features/AdvisorCollaboration/AdvisorFeedbackView.cs#L6)
-- [AdvisorSharedSourceView](../../src/Compliance.Common/Features/AdvisorCollaboration/AdvisorSharedSourceView.cs#L8)
-- [AdvisorHandoffPreviewView](../../src/Compliance.Common/Features/AdvisorCollaboration/AdvisorHandoffPreviewView.cs#L6)
-- [AdvisorHandoffPreviewItemView](../../src/Compliance.Common/Features/AdvisorCollaboration/AdvisorHandoffPreviewItemView.cs#L4)
+- [AdvisorRequestView](../../src/Compliance.Common/Features/AdvisorCollaboration/Models/AdvisorRequestView.cs#L6)
+- [AdvisorRequestSummaryView](../../src/Compliance.Common/Features/AdvisorCollaboration/Models/AdvisorRequestSummaryView.cs#L6)
+- [AdvisorFeedbackView](../../src/Compliance.Common/Features/AdvisorCollaboration/Models/AdvisorFeedbackView.cs#L6)
+- [AdvisorSharedSourceView](../../src/Compliance.Common/Features/AdvisorCollaboration/Models/AdvisorSharedSourceView.cs#L8)
+- [AdvisorHandoffPreviewView](../../src/Compliance.Common/Features/AdvisorCollaboration/Models/AdvisorHandoffPreviewView.cs#L6)
+- [AdvisorHandoffPreviewItemView](../../src/Compliance.Common/Features/AdvisorCollaboration/Models/AdvisorHandoffPreviewItemView.cs#L4)
 
 ##### Examinations
 
-- [ExaminationEngagementView](../../src/Compliance.Common/Features/Examinations/ExaminationEngagementView.cs#L6)
-- [TypeIBaselineView](../../src/Compliance.Common/Features/Examinations/TypeIBaselineView.cs#L6)
-- [TypeIBaselinePreviewView](../../src/Compliance.Common/Features/Examinations/TypeIBaselinePreviewView.cs#L6)
+- [ExaminationEngagementView](../../src/Compliance.Common/Features/Examinations/Models/ExaminationEngagementView.cs#L6)
+- [TypeIBaselineView](../../src/Compliance.Common/Features/Examinations/Models/TypeIBaselineView.cs#L6)
+- [TypeIBaselinePreviewView](../../src/Compliance.Common/Features/Examinations/Models/TypeIBaselinePreviewView.cs#L6)
 
 ##### SystemDescription
 
-- [SystemDescriptionView](../../src/Compliance.Common/Features/SystemDescription/SystemDescriptionView.cs#L6)
-- [SystemDescriptionVersionView](../../src/Compliance.Common/Features/SystemDescription/SystemDescriptionVersionView.cs#L6)
-- [SystemDescriptionImpactPreview](../../src/Compliance.Common/Features/SystemDescription/SystemDescriptionImpactPreview.cs#L6)
+- [SystemDescriptionView](../../src/Compliance.Common/Features/SystemDescription/Models/SystemDescriptionView.cs#L6)
+- [SystemDescriptionVersionView](../../src/Compliance.Common/Features/SystemDescription/Models/SystemDescriptionVersionView.cs#L6)
+- [SystemDescriptionImpactPreview](../../src/Compliance.Common/Features/SystemDescription/Models/SystemDescriptionImpactPreview.cs#L6)
 
 ##### AuditorRequests
 
-- [AuditorRequestView](../../src/Compliance.Common/Features/AuditorRequests/AuditorRequestView.cs#L6)
-- [AuditorRequestSummaryView](../../src/Compliance.Common/Features/AuditorRequests/AuditorRequestSummaryView.cs#L6)
-- [SampleSelectionView](../../src/Compliance.Common/Features/AuditorRequests/SampleSelectionView.cs#L6)
-- [AuditorRequestResponseView](../../src/Compliance.Common/Features/AuditorRequests/AuditorRequestResponseView.cs#L6)
+- [AuditorRequestView](../../src/Compliance.Common/Features/AuditorRequests/Models/AuditorRequestView.cs#L6)
+- [AuditorRequestSummaryView](../../src/Compliance.Common/Features/AuditorRequests/Models/AuditorRequestSummaryView.cs#L6)
+- [SampleSelectionView](../../src/Compliance.Common/Features/AuditorRequests/Models/SampleSelectionView.cs#L6)
+- [AuditorRequestResponseView](../../src/Compliance.Common/Features/AuditorRequests/Models/AuditorRequestResponseView.cs#L6)
 
 #### TDD-backed aggregate payload and support models added 2026-10-17
 
 ##### AuditorRequests
 
 - [AuditorRequestContent](../../src/Compliance.Core/Features/AuditorRequests/AuditorRequestContent.cs#L6)
-- [AuditorRequestTermsVersion](../../src/Compliance.Common/Features/AuditorRequests/AuditorRequestTermsVersion.cs#L6)
-- [AuditorRequestCommentView](../../src/Compliance.Common/Features/AuditorRequests/AuditorRequestCommentView.cs#L6)
-- [AuditorRequestHistoryEntry](../../src/Compliance.Common/Features/AuditorRequests/AuditorRequestHistoryEntry.cs#L6)
-- [AuditorRequestResponseHistoryView](../../src/Compliance.Common/Features/AuditorRequests/AuditorRequestResponseHistoryView.cs#L6)
-- [AuditorResponseVersionView](../../src/Compliance.Common/Features/AuditorRequests/AuditorResponseVersionView.cs#L6)
-- [AuditorResponseReviewView](../../src/Compliance.Common/Features/AuditorRequests/AuditorResponseReviewView.cs#L6)
-- [AuditorResponseDeliveryView](../../src/Compliance.Common/Features/AuditorRequests/AuditorResponseDeliveryView.cs#L6)
-- [AuditorResponseDispositionView](../../src/Compliance.Common/Features/AuditorRequests/AuditorResponseDispositionView.cs#L6)
-- [AuditorSampleSelectionView](../../src/Compliance.Common/Features/AuditorRequests/AuditorSampleSelectionView.cs#L6)
+- [AuditorRequestTermsVersion](../../src/Compliance.Common/Features/AuditorRequests/Models/AuditorRequestTermsVersion.cs#L6)
+- [AuditorRequestCommentView](../../src/Compliance.Common/Features/AuditorRequests/Models/AuditorRequestCommentView.cs#L6)
+- [AuditorRequestHistoryEntry](../../src/Compliance.Common/Features/AuditorRequests/Models/AuditorRequestHistoryEntry.cs#L6)
+- [AuditorRequestResponseHistoryView](../../src/Compliance.Common/Features/AuditorRequests/Models/AuditorRequestResponseHistoryView.cs#L6)
+- [AuditorResponseVersionView](../../src/Compliance.Common/Features/AuditorRequests/Models/AuditorResponseVersionView.cs#L6)
+- [AuditorResponseReviewView](../../src/Compliance.Common/Features/AuditorRequests/Models/AuditorResponseReviewView.cs#L6)
+- [AuditorResponseDeliveryView](../../src/Compliance.Common/Features/AuditorRequests/Models/AuditorResponseDeliveryView.cs#L6)
+- [AuditorResponseDispositionView](../../src/Compliance.Common/Features/AuditorRequests/Models/AuditorResponseDispositionView.cs#L6)
+- [AuditorSampleSelectionView](../../src/Compliance.Common/Features/AuditorRequests/Models/AuditorSampleSelectionView.cs#L6)
 
 ##### AuditPackages
 
-- [AuditPackageBuildOutput](../../src/Compliance.Common/Features/AuditPackages/AuditPackageBuildOutput.cs#L6)
-- [AuditPackageBuildAttemptView](../../src/Compliance.Common/Features/AuditPackages/AuditPackageBuildAttemptView.cs#L6)
-- [AuditPackageContent](../../src/Compliance.Common/Features/AuditPackages/AuditPackageContent.cs#L6)
-- [AuditPackageDisclosureApprovalView](../../src/Compliance.Common/Features/AuditPackages/AuditPackageDisclosureApprovalView.cs#L6)
-- [AuditPackageManifestEntryView](../../src/Compliance.Common/Features/AuditPackages/AuditPackageManifestEntryView.cs#L6)
-- [AuditPackageSelectionEntry](../../src/Compliance.Common/Features/AuditPackages/AuditPackageSelectionEntry.cs#L6)
-- [AuditPackageValidationFinding](../../src/Compliance.Common/Features/AuditPackages/AuditPackageValidationFinding.cs#L6)
-- [AuditPackageValidationOverrideView](../../src/Compliance.Common/Features/AuditPackages/AuditPackageValidationOverrideView.cs#L6)
-- [AuditPackageVersionView](../../src/Compliance.Common/Features/AuditPackages/AuditPackageVersionView.cs#L6)
-- [AuditPackageView](../../src/Compliance.Common/Features/AuditPackages/AuditPackageView.cs#L6)
-- [AuditPackageSummaryView](../../src/Compliance.Common/Features/AuditPackages/AuditPackageSummaryView.cs#L6)
-- [AuditPackageManifestView](../../src/Compliance.Common/Features/AuditPackages/AuditPackageManifestView.cs#L6)
-- [AuditPackageValidationView](../../src/Compliance.Common/Features/AuditPackages/AuditPackageValidationView.cs#L6)
-- [AuditPackageDeliveryView](../../src/Compliance.Common/Features/AuditPackages/AuditPackageDeliveryView.cs#L6)
+- [AuditPackageBuildOutput](../../src/Compliance.Common/Features/AuditPackages/Models/AuditPackageBuildOutput.cs#L6)
+- [AuditPackageBuildAttemptView](../../src/Compliance.Common/Features/AuditPackages/Models/AuditPackageBuildAttemptView.cs#L6)
+- [AuditPackageContent](../../src/Compliance.Common/Features/AuditPackages/Models/AuditPackageContent.cs#L6)
+- [AuditPackageDisclosureApprovalView](../../src/Compliance.Common/Features/AuditPackages/Models/AuditPackageDisclosureApprovalView.cs#L6)
+- [AuditPackageManifestEntryView](../../src/Compliance.Common/Features/AuditPackages/Models/AuditPackageManifestEntryView.cs#L6)
+- [AuditPackageSelectionEntry](../../src/Compliance.Common/Features/AuditPackages/Models/AuditPackageSelectionEntry.cs#L6)
+- [AuditPackageValidationFinding](../../src/Compliance.Common/Features/AuditPackages/Models/AuditPackageValidationFinding.cs#L6)
+- [AuditPackageValidationOverrideView](../../src/Compliance.Common/Features/AuditPackages/Models/AuditPackageValidationOverrideView.cs#L6)
+- [AuditPackageVersionView](../../src/Compliance.Common/Features/AuditPackages/Models/AuditPackageVersionView.cs#L6)
+- [AuditPackageView](../../src/Compliance.Common/Features/AuditPackages/Models/AuditPackageView.cs#L6)
+- [AuditPackageSummaryView](../../src/Compliance.Common/Features/AuditPackages/Models/AuditPackageSummaryView.cs#L6)
+- [AuditPackageManifestView](../../src/Compliance.Common/Features/AuditPackages/Models/AuditPackageManifestView.cs#L6)
+- [AuditPackageValidationView](../../src/Compliance.Common/Features/AuditPackages/Models/AuditPackageValidationView.cs#L6)
+- [AuditPackageDeliveryView](../../src/Compliance.Common/Features/AuditPackages/Models/AuditPackageDeliveryView.cs#L6)
 
 ##### Examinations
 
-- [AuditObservationView](../../src/Compliance.Common/Features/Examinations/AuditObservationView.cs#L6)
-- [AuditOutcomeView](../../src/Compliance.Common/Features/Examinations/AuditOutcomeView.cs#L6)
-- [AuditOutcomeContent](../../src/Compliance.Common/Features/Examinations/AuditOutcomeContent.cs#L6)
-- [ExaminationContentReference](../../src/Compliance.Common/Features/Examinations/ExaminationContentReference.cs#L6)
-- [ExaminationSignOffContent](../../src/Compliance.Common/Features/Examinations/ExaminationSignOffContent.cs#L6)
-- [ManagementAssertionContent](../../src/Compliance.Common/Features/Examinations/ManagementAssertionContent.cs#L6)
-- [ManagementAssertionVersionView](../../src/Compliance.Common/Features/Examinations/ManagementAssertionVersionView.cs#L6)
-- [ManagementAssertionApprovalView](../../src/Compliance.Common/Features/Examinations/ManagementAssertionApprovalView.cs#L6)
-- [TypeIIPlanView](../../src/Compliance.Common/Features/Examinations/TypeIIPlanView.cs#L6)
-- [ManagementAssertionView](../../src/Compliance.Common/Features/Examinations/ManagementAssertionView.cs#L6)
-- [ManagementAssertionSigner](../../src/Compliance.Common/Features/Examinations/ManagementAssertionSigner.cs#L6)
-- [ManagementRepresentationLetterContent](../../src/Compliance.Common/Features/Examinations/ManagementRepresentationLetterContent.cs#L6)
-- [ManagementRepresentationLetterView](../../src/Compliance.Common/Features/Examinations/ManagementRepresentationLetterView.cs#L6)
-- [ManagementRepresentationLetterSignatureView](../../src/Compliance.Common/Features/Examinations/ManagementRepresentationLetterSignatureView.cs#L6)
-- [ExaminationSignOffView](../../src/Compliance.Common/Features/Examinations/ExaminationSignOffView.cs#L6)
-- [TypeIBaselineSourceReference](../../src/Compliance.Common/Features/Examinations/TypeIBaselineSourceReference.cs#L6)
-- [TypeIBaselineSourceCoverage](../../src/Compliance.Common/Features/Examinations/TypeIBaselineSourceCoverage.cs#L3)
-- [TypeIIPlanContent](../../src/Compliance.Common/Features/Examinations/TypeIIPlanContent.cs#L6)
-- [TypeIIPlanVersionView](../../src/Compliance.Common/Features/Examinations/TypeIIPlanVersionView.cs#L6)
-- [TypeIIPlanReviewView](../../src/Compliance.Common/Features/Examinations/TypeIIPlanReviewView.cs#L6)
-- [TypeIIPlanApprovalView](../../src/Compliance.Common/Features/Examinations/TypeIIPlanApprovalView.cs#L6)
-- [TypeIIControlPlanEntry](../../src/Compliance.Common/Features/Examinations/TypeIIControlPlanEntry.cs#L6)
-- [TypeIICarriedForwardGap](../../src/Compliance.Common/Features/Examinations/TypeIICarriedForwardGap.cs#L6)
-- [TypeIIPlanGapAcknowledgement](../../src/Compliance.Common/Features/Examinations/TypeIIPlanGapAcknowledgement.cs#L6)
-- [TypeIIPlannedChange](../../src/Compliance.Common/Features/Examinations/TypeIIPlannedChange.cs#L6)
+- [AuditObservationView](../../src/Compliance.Common/Features/Examinations/Models/AuditObservationView.cs#L6)
+- [AuditOutcomeView](../../src/Compliance.Common/Features/Examinations/Models/AuditOutcomeView.cs#L6)
+- [AuditOutcomeContent](../../src/Compliance.Common/Features/Examinations/Models/AuditOutcomeContent.cs#L6)
+- [ExaminationContentReference](../../src/Compliance.Common/Features/Examinations/Models/ExaminationContentReference.cs#L6)
+- [ExaminationSignOffContent](../../src/Compliance.Common/Features/Examinations/Models/ExaminationSignOffContent.cs#L6)
+- [ManagementAssertionContent](../../src/Compliance.Common/Features/Examinations/Models/ManagementAssertionContent.cs#L6)
+- [ManagementAssertionVersionView](../../src/Compliance.Common/Features/Examinations/Models/ManagementAssertionVersionView.cs#L6)
+- [ManagementAssertionApprovalView](../../src/Compliance.Common/Features/Examinations/Models/ManagementAssertionApprovalView.cs#L6)
+- [TypeIIPlanView](../../src/Compliance.Common/Features/Examinations/Models/TypeIIPlanView.cs#L6)
+- [ManagementAssertionView](../../src/Compliance.Common/Features/Examinations/Models/ManagementAssertionView.cs#L6)
+- [ManagementAssertionSigner](../../src/Compliance.Common/Features/Examinations/Models/ManagementAssertionSigner.cs#L6)
+- [ManagementRepresentationLetterContent](../../src/Compliance.Common/Features/Examinations/Models/ManagementRepresentationLetterContent.cs#L6)
+- [ManagementRepresentationLetterView](../../src/Compliance.Common/Features/Examinations/Models/ManagementRepresentationLetterView.cs#L6)
+- [ManagementRepresentationLetterSignatureView](../../src/Compliance.Common/Features/Examinations/Models/ManagementRepresentationLetterSignatureView.cs#L6)
+- [ExaminationSignOffView](../../src/Compliance.Common/Features/Examinations/Models/ExaminationSignOffView.cs#L6)
+- [TypeIBaselineSourceReference](../../src/Compliance.Common/Features/Examinations/Models/TypeIBaselineSourceReference.cs#L6)
+- [TypeIBaselineSourceCoverage](../../src/Compliance.Common/Features/Examinations/Models/TypeIBaselineSourceCoverage.cs#L3)
+- [TypeIIPlanContent](../../src/Compliance.Common/Features/Examinations/Models/TypeIIPlanContent.cs#L6)
+- [TypeIIPlanVersionView](../../src/Compliance.Common/Features/Examinations/Models/TypeIIPlanVersionView.cs#L6)
+- [TypeIIPlanReviewView](../../src/Compliance.Common/Features/Examinations/Models/TypeIIPlanReviewView.cs#L6)
+- [TypeIIPlanApprovalView](../../src/Compliance.Common/Features/Examinations/Models/TypeIIPlanApprovalView.cs#L6)
+- [TypeIIControlPlanEntry](../../src/Compliance.Common/Features/Examinations/Models/TypeIIControlPlanEntry.cs#L6)
+- [TypeIICarriedForwardGap](../../src/Compliance.Common/Features/Examinations/Models/TypeIICarriedForwardGap.cs#L6)
+- [TypeIIPlanGapAcknowledgement](../../src/Compliance.Common/Features/Examinations/Models/TypeIIPlanGapAcknowledgement.cs#L6)
+- [TypeIIPlannedChange](../../src/Compliance.Common/Features/Examinations/Models/TypeIIPlannedChange.cs#L6)
 
 ##### Retention
 
-- [ArtifactDisclosureDeliveryView](../../src/Compliance.Common/Features/Retention/ArtifactDisclosureDeliveryView.cs#L6)
-- [ArtifactDisclosureView](../../src/Compliance.Common/Features/Retention/ArtifactDisclosureView.cs#L6)
-- [ArtifactDispositionAttemptView](../../src/Compliance.Common/Features/Retention/ArtifactDispositionAttemptView.cs#L6)
-- [ArtifactDispositionTombstoneView](../../src/Compliance.Common/Features/Retention/ArtifactDispositionTombstoneView.cs#L6)
-- [ArtifactDispositionView](../../src/Compliance.Common/Features/Retention/ArtifactDispositionView.cs#L6)
-- [ArtifactEngagementHoldView](../../src/Compliance.Common/Features/Retention/ArtifactEngagementHoldView.cs#L6)
-- [EvidenceHandlingPolicyHistoryEntry](../../src/Compliance.Common/Features/Retention/EvidenceHandlingPolicyHistoryEntry.cs#L6)
-- [EvidenceHandlingPolicyView](../../src/Compliance.Common/Features/Retention/EvidenceHandlingPolicyView.cs#L6)
+- [ArtifactDisclosureDeliveryView](../../src/Compliance.Common/Features/Retention/Models/ArtifactDisclosureDeliveryView.cs#L6)
+- [ArtifactDisclosureView](../../src/Compliance.Common/Features/Retention/Models/ArtifactDisclosureView.cs#L6)
+- [ArtifactDispositionAttemptView](../../src/Compliance.Common/Features/Retention/Models/ArtifactDispositionAttemptView.cs#L6)
+- [ArtifactDispositionTombstoneView](../../src/Compliance.Common/Features/Retention/Models/ArtifactDispositionTombstoneView.cs#L6)
+- [ArtifactDispositionView](../../src/Compliance.Common/Features/Retention/Models/ArtifactDispositionView.cs#L6)
+- [ArtifactEngagementHoldView](../../src/Compliance.Common/Features/Retention/Models/ArtifactEngagementHoldView.cs#L6)
+- [EvidenceHandlingPolicyHistoryEntry](../../src/Compliance.Common/Features/Retention/Models/EvidenceHandlingPolicyHistoryEntry.cs#L6)
+- [EvidenceHandlingPolicyView](../../src/Compliance.Common/Features/Retention/Models/EvidenceHandlingPolicyView.cs#L6)
 - [ArtifactDisclosureSourceSnapshot](../../src/Compliance.Core/Features/Retention/ArtifactDisclosureSourceSnapshot.cs#L6)
 - [ArtifactDispositionEligibilitySnapshot](../../src/Compliance.Core/Features/Retention/ArtifactDispositionEligibilitySnapshot.cs#L6)
 - [EvidenceHandlingPolicySourceSnapshot](../../src/Compliance.Core/Features/Retention/EvidenceHandlingPolicySourceSnapshot.cs#L6)
 
 ##### Operations
 
-- [ObservationPeriodView](../../src/Compliance.Common/Features/Operations/ObservationPeriodView.cs#L6)
-- [ObservationPeriodSummaryView](../../src/Compliance.Common/Features/Operations/ObservationPeriodSummaryView.cs#L6)
-- [TypeIIPeriodView](../../src/Compliance.Common/Features/Operations/TypeIIPeriodView.cs#L8)
-- [TypeIIPeriodOpeningContent](../../src/Compliance.Common/Features/Operations/TypeIIPeriodOpeningContent.cs#L7)
-- [TypeIIPeriodOccurrenceView](../../src/Compliance.Common/Features/Operations/TypeIIPeriodOccurrenceView.cs#L7)
-- [TypeIIPeriodAmendmentView](../../src/Compliance.Common/Features/Operations/TypeIIPeriodAmendmentView.cs#L7)
-- [TypeIIPeriodCloseValidationContent](../../src/Compliance.Common/Features/Operations/TypeIIPeriodCloseValidationContent.cs#L7)
-- [TypeIIPeriodCloseValidationView](../../src/Compliance.Common/Features/Operations/TypeIIPeriodCloseValidationView.cs#L7)
-- [TypeIIPeriodCloseSnapshotContent](../../src/Compliance.Common/Features/Operations/TypeIIPeriodCloseSnapshotContent.cs#L7)
-- [TypeIIPeriodCloseSnapshotView](../../src/Compliance.Common/Features/Operations/TypeIIPeriodCloseSnapshotView.cs#L7)
-- [TypeIIPeriodCloseApprovalView](../../src/Compliance.Common/Features/Operations/TypeIIPeriodCloseApprovalView.cs#L7)
-- [ControlCalendarView](../../src/Compliance.Common/Features/Operations/ControlCalendarView.cs#L6)
-- [MissingOccurrenceView](../../src/Compliance.Common/Features/Operations/MissingOccurrenceView.cs#L6)
-- [GovernanceReviewDueView](../../src/Compliance.Common/Features/Operations/GovernanceReviewDueView.cs#L6)
-- [ManagementReviewView](../../src/Compliance.Common/Features/Operations/ManagementReviewView.cs#L6)
-- [ManagementReviewActionView](../../src/Compliance.Common/Features/Operations/ManagementReviewActionView.cs#L6)
+- [ObservationPeriodView](../../src/Compliance.Common/Features/Operations/Models/ObservationPeriodView.cs#L6)
+- [ObservationPeriodSummaryView](../../src/Compliance.Common/Features/Operations/Models/ObservationPeriodSummaryView.cs#L6)
+- [TypeIIPeriodView](../../src/Compliance.Common/Features/Operations/Models/TypeIIPeriodView.cs#L8)
+- [TypeIIPeriodOpeningContent](../../src/Compliance.Common/Features/Operations/Models/TypeIIPeriodOpeningContent.cs#L7)
+- [TypeIIPeriodOccurrenceView](../../src/Compliance.Common/Features/Operations/Models/TypeIIPeriodOccurrenceView.cs#L7)
+- [TypeIIPeriodAmendmentView](../../src/Compliance.Common/Features/Operations/Models/TypeIIPeriodAmendmentView.cs#L7)
+- [TypeIIPeriodCloseValidationContent](../../src/Compliance.Common/Features/Operations/Models/TypeIIPeriodCloseValidationContent.cs#L7)
+- [TypeIIPeriodCloseValidationView](../../src/Compliance.Common/Features/Operations/Models/TypeIIPeriodCloseValidationView.cs#L7)
+- [TypeIIPeriodCloseSnapshotContent](../../src/Compliance.Common/Features/Operations/Models/TypeIIPeriodCloseSnapshotContent.cs#L7)
+- [TypeIIPeriodCloseSnapshotView](../../src/Compliance.Common/Features/Operations/Models/TypeIIPeriodCloseSnapshotView.cs#L7)
+- [TypeIIPeriodCloseApprovalView](../../src/Compliance.Common/Features/Operations/Models/TypeIIPeriodCloseApprovalView.cs#L7)
+- [ControlCalendarView](../../src/Compliance.Common/Features/Operations/Models/ControlCalendarView.cs#L6)
+- [MissingOccurrenceView](../../src/Compliance.Common/Features/Operations/Models/MissingOccurrenceView.cs#L6)
+- [GovernanceReviewDueView](../../src/Compliance.Common/Features/Operations/Models/GovernanceReviewDueView.cs#L6)
+- [ManagementReviewView](../../src/Compliance.Common/Features/Operations/Models/ManagementReviewView.cs#L6)
+- [ManagementReviewActionView](../../src/Compliance.Common/Features/Operations/Models/ManagementReviewActionView.cs#L6)
 
 ##### Changes
 
-- [SignificantChangeView](../../src/Compliance.Common/Features/Changes/SignificantChangeView.cs#L6)
-- [SignificantChangeSummaryView](../../src/Compliance.Common/Features/Changes/SignificantChangeSummaryView.cs#L6)
+- [SignificantChangeView](../../src/Compliance.Common/Features/Changes/Models/SignificantChangeView.cs#L6)
+- [SignificantChangeSummaryView](../../src/Compliance.Common/Features/Changes/Models/SignificantChangeSummaryView.cs#L6)
 
 ##### Incidents
 
-- [ComplianceIncidentView](../../src/Compliance.Common/Features/Incidents/ComplianceIncidentView.cs#L6)
-- [ComplianceIncidentSummaryView](../../src/Compliance.Common/Features/Incidents/ComplianceIncidentSummaryView.cs#L6)
-- [ComplianceIncidentImpactAssessmentView](../../src/Compliance.Common/Features/Incidents/ComplianceIncidentImpactAssessmentView.cs#L6)
+- [ComplianceIncidentView](../../src/Compliance.Common/Features/Incidents/Models/ComplianceIncidentView.cs#L6)
+- [ComplianceIncidentSummaryView](../../src/Compliance.Common/Features/Incidents/Models/ComplianceIncidentSummaryView.cs#L6)
+- [ComplianceIncidentImpactAssessmentView](../../src/Compliance.Common/Features/Incidents/Models/ComplianceIncidentImpactAssessmentView.cs#L6)
 
 ##### AuditPopulations
 
-- [ObservationPeriodClosePreview](../../src/Compliance.Common/Features/AuditPopulations/ObservationPeriodClosePreview.cs#L6)
-- [ObservationPeriodCloseView](../../src/Compliance.Common/Features/AuditPopulations/ObservationPeriodCloseView.cs#L6)
-- [AuditPopulationDefinitionView](../../src/Compliance.Common/Features/AuditPopulations/AuditPopulationDefinitionView.cs#L6)
-- [AuditPopulationExportView](../../src/Compliance.Common/Features/AuditPopulations/AuditPopulationExportView.cs#L6)
-- [AuditPopulationExportReceipt](../../src/Compliance.Common/Features/AuditPopulations/AuditPopulationExportReceipt.cs#L4)
-- [AuditPopulationView](../../src/Compliance.Common/Features/AuditPopulations/AuditPopulationView.cs#L6)
-- [AuditPopulationRowView](../../src/Compliance.Common/Features/AuditPopulations/AuditPopulationRowView.cs#L6)
-- [PopulationReconciliationView](../../src/Compliance.Common/Features/AuditPopulations/PopulationReconciliationView.cs#L6)
+- [ObservationPeriodClosePreview](../../src/Compliance.Common/Features/AuditPopulations/Models/ObservationPeriodClosePreview.cs#L6)
+- [ObservationPeriodCloseView](../../src/Compliance.Common/Features/AuditPopulations/Models/ObservationPeriodCloseView.cs#L6)
+- [AuditPopulationDefinitionView](../../src/Compliance.Common/Features/AuditPopulations/Models/AuditPopulationDefinitionView.cs#L6)
+- [AuditPopulationExportView](../../src/Compliance.Common/Features/AuditPopulations/Models/AuditPopulationExportView.cs#L6)
+- [AuditPopulationExportReceipt](../../src/Compliance.Common/Features/AuditPopulations/Models/AuditPopulationExportReceipt.cs#L4)
+- [AuditPopulationView](../../src/Compliance.Common/Features/AuditPopulations/Models/AuditPopulationView.cs#L6)
+- [AuditPopulationRowView](../../src/Compliance.Common/Features/AuditPopulations/Models/AuditPopulationRowView.cs#L6)
+- [PopulationReconciliationView](../../src/Compliance.Common/Features/AuditPopulations/Models/PopulationReconciliationView.cs#L6)
 
 ##### Programs
 
-- [ProgramRolloverPreview](../../src/Compliance.Common/Features/Programs/ProgramRolloverPreview.cs#L6)
-- [ProgramRolloverView](../../src/Compliance.Common/Features/Programs/ProgramRolloverView.cs#L6)
-- [NextPeriodPlanView](../../src/Compliance.Common/Features/Programs/NextPeriodPlanView.cs#L6)
-- [CarryForwardReferenceView](../../src/Compliance.Common/Features/Programs/CarryForwardReferenceView.cs#L6)
+- [ProgramRolloverPreview](../../src/Compliance.Common/Features/Programs/Models/ProgramRolloverPreview.cs#L6)
+- [ProgramRolloverView](../../src/Compliance.Common/Features/Programs/Models/ProgramRolloverView.cs#L6)
+- [NextPeriodPlanView](../../src/Compliance.Common/Features/Programs/Models/NextPeriodPlanView.cs#L6)
+- [CarryForwardReferenceView](../../src/Compliance.Common/Features/Programs/Models/CarryForwardReferenceView.cs#L6)
 
 ##### FirmPortfolio
 
-- [AuthorizedClientSummaryView](../../src/Compliance.Common/Features/FirmPortfolio/AuthorizedClientSummaryView.cs#L6)
-- [CrossClientWorkItemView](../../src/Compliance.Common/Features/FirmPortfolio/CrossClientWorkItemView.cs#L6)
+- [AuthorizedClientSummaryView](../../src/Compliance.Common/Features/FirmPortfolio/Models/AuthorizedClientSummaryView.cs#L6)
+- [CrossClientWorkItemView](../../src/Compliance.Common/Features/FirmPortfolio/Models/CrossClientWorkItemView.cs#L6)
 
 ##### MethodologyTemplates
 
-- [MethodologyTemplateSummaryView](../../src/Compliance.Common/Features/MethodologyTemplates/MethodologyTemplateSummaryView.cs#L6)
-- [MethodologyTemplateVersionView](../../src/Compliance.Common/Features/MethodologyTemplates/MethodologyTemplateVersionView.cs#L6)
-- [MethodologyTemplateApplicationPreview](../../src/Compliance.Common/Features/MethodologyTemplates/MethodologyTemplateApplicationPreview.cs#L6)
-- [TemplateApplicationView](../../src/Compliance.Common/Features/MethodologyTemplates/TemplateApplicationView.cs#L6)
+- [MethodologyTemplateSummaryView](../../src/Compliance.Common/Features/MethodologyTemplates/Models/MethodologyTemplateSummaryView.cs#L6)
+- [MethodologyTemplateVersionView](../../src/Compliance.Common/Features/MethodologyTemplates/Models/MethodologyTemplateVersionView.cs#L6)
+- [MethodologyTemplateApplicationPreview](../../src/Compliance.Common/Features/MethodologyTemplates/Models/MethodologyTemplateApplicationPreview.cs#L6)
+- [TemplateApplicationView](../../src/Compliance.Common/Features/MethodologyTemplates/Models/TemplateApplicationView.cs#L6)
 
 ##### AttestRecords
 
-- [OwnAttestRecordPackageView](../../src/Compliance.Common/Features/AttestRecords/OwnAttestRecordPackageView.cs#L6)
-- [OwnAttestRecordDeliveryView](../../src/Compliance.Common/Features/AttestRecords/OwnAttestRecordDeliveryView.cs#L6)
-- [AttestDeliveryHoldView](../../src/Compliance.Common/Features/AttestRecords/AttestDeliveryHoldView.cs#L6)
+- [OwnAttestRecordPackageView](../../src/Compliance.Common/Features/AttestRecords/Models/OwnAttestRecordPackageView.cs#L6)
+- [OwnAttestRecordDeliveryView](../../src/Compliance.Common/Features/AttestRecords/Models/OwnAttestRecordDeliveryView.cs#L6)
+- [AttestDeliveryHoldView](../../src/Compliance.Common/Features/AttestRecords/Models/AttestDeliveryHoldView.cs#L6)
 
 ### Existing HTTP APIs
 

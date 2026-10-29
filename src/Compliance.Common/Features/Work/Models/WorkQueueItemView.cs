@@ -1,0 +1,29 @@
+using Cntryl.Portia;
+using Bdgrz.Compliance.Features.AttestRecords.Commands;
+using Bdgrz.Compliance.Features.Operations.Models;
+using Bdgrz.Compliance.Features.PolicyDistribution.Queries;
+using Bdgrz.Compliance.Features.TechnologyInventory.Events;
+using Bdgrz.Compliance.Features.Work.Commands;
+namespace Bdgrz.Compliance.Features.Work.Models;
+
+/// <summary>
+///     An accountable work item linked to its exact source record: control_occurrence,
+///     occurrence_review, corrective_action, evidence_request, risk_treatment_action, or
+///     risk_treatment_action_review, commitment_draft_review, or commitment_draft_approval. It has
+///     no completion state of its own; completing the source through <c>ActionPath</c> removes it.
+///     <c>Responsible</c> is the source holder;
+///     <c>AssigneeMemberId</c> is who is accountable now, or null for unclaimed team work.
+///     <c>EscalatedBy</c> is member or system when escalated.
+/// </summary>
+public sealed record WorkQueueItemView(Uuid WorkItemId, string Kind, Uuid SourceId,
+    Uuid? ControlId, Uuid? FindingId, string Summary, string Reason, DateOnly? DueOn,
+    bool Overdue, string? Materiality, string NextAction, string ActionPath,
+    OperatingHolder Responsible, Uuid? AssigneeMemberId, long AssignmentRevision, bool Escalated,
+    string? EscalatedBy, DateTimeOffset CreatedAt)
+{
+    /// <summary>True when the source responsibility has lost current action eligibility.</summary>
+    public bool IsOrphaned { get; init; }
+
+    /// <summary>True when self-review requires the source's exact-scope waiver path.</summary>
+    public bool RequiresSeparationOfDutiesWaiver { get; init; }
+}

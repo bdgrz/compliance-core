@@ -1,0 +1,55 @@
+{
+  "path": "src/Compliance.Core/Features/AccessControl/Role.cs",
+  "kinds": [
+    "aggregate"
+  ],
+  "sha256": "055b1f65ef8738e1a03bef0b3234b73cb358fead89a89876455cb919bd1fb15b",
+  "dependency_sha256": [
+    {
+      "path": "src/Compliance.Common/Features/AccessControl/RenameRole.cs",
+      "sha256": "b5640fa8c10adc551b090825776c88aa87ec3b47d294a37faf1dbbbe4735511e"
+    },
+    {
+      "path": "src/Compliance.Common/Features/AccessControl/RoleDefined.cs",
+      "sha256": "d9bdf5fcfe1e093701b6990e7924ebe249b8923a48addad9bc06021c84793e26"
+    },
+    {
+      "path": "src/Compliance.Common/Features/AccessControl/RoleDeleted.cs",
+      "sha256": "ff9a4000c6338674848c1321d5ff0d42189784623bedfcbe78d36f1acbdc5d28"
+    },
+    {
+      "path": "src/Compliance.Common/Features/AccessControl/RoleRenamed.cs",
+      "sha256": "122d4d491c1760805dfc35c3a4af6ce029a69391d2c59edad6bf25f398dc4540"
+    },
+    {
+      "path": "src/Compliance.Common/Features/NativeOperations/OperationProvenance.cs",
+      "sha256": "ee7d24e13014067e9c988dba257fcc029b6d7eb99b20638bf55edbf1d99cbcba"
+    }
+  ],
+  "review_key": "b8f0800464c3a3e340151ebb2e9cb8b1ec6c136fffc275c255453b9fda7f5adf",
+  "reviewed_at": "2026-10-27T12:45:37.772Z",
+  "status": "reviewed",
+  "model": "jev-1.14.0",
+  "answers": {
+    "authority_gap": {
+      "type": "noul",
+      "noul": 0.48
+    },
+    "invariant_gap": {
+      "type": "noul",
+      "noul": 0.6
+    },
+    "recovery_gap": {
+      "type": "noul",
+      "noul": 0.51
+    },
+    "incomplete_path": {
+      "type": "noul",
+      "noul": 0.33
+    }
+  },
+  "usage": {
+    "input_tokens": 3886,
+    "output_tokens": 78
+  }
+}

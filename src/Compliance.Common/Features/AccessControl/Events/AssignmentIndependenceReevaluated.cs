@@ -1,0 +1,7 @@
+using Cntryl.Portia;
+using Bdgrz.Compliance.Features.AccessControl.Models;
+namespace Bdgrz.Compliance.Features.AccessControl.Events;
+
+[Discriminator("bdgrz.independence.assignment-reevaluated", 1)]
+public sealed record AssignmentIndependenceReevaluated(Uuid TenantId, long ExpectedSequence,
+    AssignmentIndependenceReevaluationView Reevaluation) : DomainEvent;

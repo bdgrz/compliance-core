@@ -1,0 +1,12 @@
+using Cntryl.Portia;
+using Bdgrz.Compliance.Features.MethodologyTemplates.Models;
+using Bdgrz.Compliance.Features.Tenants.Contracts;
+namespace Bdgrz.Compliance.Features.MethodologyTemplates.Commands;
+
+/// <summary>Creates the first authored draft of a platform methodology template.</summary>
+[Discriminator("bdgrz.methodology-templates.create-methodology-template", 2)]
+public sealed record CreateMethodologyTemplate(Uuid TemplateId, MethodologyTemplateContent Content,
+    string ChangeNotes) : IRequest, IPlatformOperatorRequest, IIdentifiedRequest, ICallable
+{
+    Uuid IIdentifiedRequest.RequestId => TemplateId;
+}

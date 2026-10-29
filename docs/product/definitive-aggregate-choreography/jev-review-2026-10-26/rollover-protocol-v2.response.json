@@ -1,0 +1,57 @@
+{
+  "httpStatus": 200,
+  "response": {
+    "model": "jev-1.14.0",
+    "answers": {
+      "atomicity": {
+        "type": "choice",
+        "choice": "adequate",
+        "confidence": 0.82,
+        "probabilities": {
+          "adequate": 0.88,
+          "too_much_state": 0.01,
+          "insufficient": 0.11
+        }
+      },
+      "terminal": {
+        "type": "choice",
+        "choice": "correct",
+        "confidence": 1,
+        "probabilities": {
+          "correct": 1,
+          "early": 0,
+          "too_strict": 0,
+          "insufficient": 0
+        }
+      },
+      "proof": {
+        "type": "noul",
+        "noul": 0.39
+      },
+      "revision": {
+        "type": "choice",
+        "choice": "pinned_approved_exact",
+        "confidence": 0.97,
+        "probabilities": {
+          "pinned_approved_exact": 0.98,
+          "allow_plan_revision": 0.01,
+          "require_business_decision": 0.01
+        }
+      },
+      "claim_version": {
+        "type": "choice",
+        "choice": "pin_approval_tuple",
+        "confidence": 0.82,
+        "probabilities": {
+          "pin_approval_tuple": 0.88,
+          "version_only": 0.11,
+          "insufficient": 0.01
+        }
+      }
+    },
+    "usage": {
+      "input_tokens": 1194,
+      "output_tokens": 212
+    }
+  }
+}

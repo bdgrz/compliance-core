@@ -1,0 +1,31 @@
+using Cntryl.Portia;
+using Bdgrz.Compliance.Features.Work.Readers;
+using Bdgrz.Compliance.Features.Operations.Events;
+using Bdgrz.Compliance.Features.Work.Projections;
+namespace Bdgrz.Compliance.Features.Work.Projectors;
+
+public sealed partial class ControlOccurrenceWorkItemProjector(
+    IControlOccurrenceWorkItemProjection projection)
+    : Projector(projection, EventStreamPattern.ForTenant(),
+        FitzControlOccurrenceWorkItemDirectory.ProjectorName),
+      IProjectorHandler<ControlOperatingPlanProposed>,
+      IProjectorHandler<ControlOperatingPlanApproved>,
+      IProjectorHandler<ControlOccurrenceOpened>,
+      IProjectorHandler<ControlOccurrenceAttested>,
+      IProjectorHandler<ControlOccurrenceReviewed>
+{
+    public ValueTask HandleAsync(ControlOperatingPlanProposed ev, IProjectorContext context,
+        CancellationToken ct) => projection.ApplyAsync(ev, ct);
+
+    public ValueTask HandleAsync(ControlOperatingPlanApproved ev, IProjectorContext context,
+        CancellationToken ct) => projection.ApplyAsync(ev, ct);
+
+    public ValueTask HandleAsync(ControlOccurrenceOpened ev, IProjectorContext context,
+        CancellationToken ct) => projection.ApplyAsync(ev, ct);
+
+    public ValueTask HandleAsync(ControlOccurrenceAttested ev, IProjectorContext context,
+        CancellationToken ct) => projection.ApplyAsync(ev, ct);
+
+    public ValueTask HandleAsync(ControlOccurrenceReviewed ev, IProjectorContext context,
+        CancellationToken ct) => projection.ApplyAsync(ev, ct);
+}

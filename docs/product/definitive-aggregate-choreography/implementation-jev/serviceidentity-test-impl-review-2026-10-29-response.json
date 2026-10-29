@@ -1,0 +1,37 @@
+{
+ "model": "jev-1.14.0",
+ "answers": {
+  "noop_revise_asserts_invariant": {
+   "type": "noul",
+   "noul": 0.94
+  },
+  "retry_before_validation": {
+   "type": "choice",
+   "choice": "acknowledge_without_event",
+   "confidence": 1,
+   "probabilities": {
+    "acknowledge_without_event": 1,
+    "reject_validation": 0,
+    "append_new_event": 0
+   }
+  },
+  "tests_assert_behavior": {
+   "type": "noul",
+   "noul": 0.97
+  },
+  "revise_idempotence_via_command_id": {
+   "type": "choice",
+   "choice": "add_to_model",
+   "confidence": 0.3,
+   "probabilities": {
+    "add_to_model": 0.53,
+    "handler_framework_identity": 0.31,
+    "needs_source_resolution": 0.16
+   }
+  }
+ },
+ "usage": {
+  "input_tokens": 942,
+  "output_tokens": 146
+ }
+}

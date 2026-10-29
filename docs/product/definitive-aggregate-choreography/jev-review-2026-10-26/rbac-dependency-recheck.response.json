@@ -1,0 +1,27 @@
+{
+  "httpStatus": 200,
+  "response": {
+    "model": "jev-1.14.0",
+    "answers": {
+      "edges": {
+        "type": "choice",
+        "choice": "conditional_dependency",
+        "confidence": 0.96,
+        "probabilities": {
+          "conditional_dependency": 0.97,
+          "keep_current": 0.03,
+          "only_total_order": 0,
+          "insufficient": 0
+        }
+      },
+      "sufficiency": {
+        "type": "noul",
+        "noul": 0.85
+      }
+    },
+    "usage": {
+      "input_tokens": 1841,
+      "output_tokens": 73
+    }
+  }
+}

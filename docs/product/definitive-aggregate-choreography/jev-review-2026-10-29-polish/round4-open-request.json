@@ -1,0 +1,1828 @@
+{
+ "model": "jev-latest",
+ "state": {
+  "commands": [
+   {
+    "key": "ApplicationImportBatch.ExecuteApplicationImport",
+    "owner": "ApplicationImportBatch",
+    "command": "ExecuteApplicationImport",
+    "kind": "command",
+    "fields": [
+     "CommandId",
+     "TenantId",
+     "BatchId"
+    ],
+    "route": null,
+    "owner_invariant": "Frozen source rows, row outcomes, per-batch execution and terminal disposition. ",
+    "owner_events": [
+     {
+      "event": "ApplicationImportCanceled",
+      "meaning": "The batch is canceled: every target was fenced and nothing was published."
+     },
+     {
+      "event": "ApplicationImportCancellationAccepted",
+      "meaning": "The root native acceptance of a cancellation. It is the batch-local fence: a later commit of the batch is refused. Every target is then fenced before any hold i"
+     },
+     {
+      "event": "ApplicationImportCommitted",
+      "meaning": "The one publication fact of a batch: every target is published together. EffectsManifest lists the native proof of every frozen row; FrozenRows is the complete "
+     },
+     {
+      "event": "ApplicationImportExecutionAuthorized",
+      "meaning": "The batch authorizes execution after its source claim: the target reservations, applications and publication are driven by this fact. It carries the sealed plan"
+     },
+     {
+      "event": "ApplicationImportFailed",
+      "meaning": "A terminal failure of a batch. Existing native business fact, rehomed on the batch."
+     },
+     {
+      "event": "ApplicationImportPlanSealed",
+      "meaning": "The root native acceptance of a batch plan. FrozenPlan is the complete ImportFrozenPlanIntent: every row, target group and source claim, the actors, counts, dig"
+     },
+     {
+      "event": "ApplicationImportRetirementProposalSealed",
+      "meaning": "The preparer's omission proposal, sealed with its complete immutable content. It is never authority to retire: acceptance still requires current impact evidence"
+     },
+     {
+      "event": "ApplicationImportRowCorrelated",
+      "meaning": "A personal link-existing or create-new decision for one staged row."
+     },
+     {
+      "event": "ApplicationImportStaged",
+      "meaning": "The immutable staged observation of a source and the root native acceptance of its submission. The complete row content is the immutable RowsManifest; RowCount "
+     }
+    ]
+   },
+   {
+    "key": "ArtifactDisclosure.ApproveArtifactDisclosure",
+    "owner": "ArtifactDisclosure",
+    "command": "ApproveArtifactDisclosure",
+    "kind": "command",
+    "fields": [
+     "CommandId",
+     "TenantId",
+     "DisclosureId",
+     "ArtifactId",
+     "Recipient",
+     "Purpose",
+     "ArtifactRevision",
+     "Rationale"
+    ],
+    "route": null,
+    "owner_invariant": "One disclosure binds immutable artifact content, handling-policy revision, recipient and purpose; delivery requires that approved identity and revocation is final. Disclosure to an auditor is admitted only for an artifact in available state (quarantined or uninspected artifacts are refused) or for its approved redacted derivative, and every disclosure records the recipient, purpose and handling-policy revision.",
+    "owner_events": [
+     {
+      "event": "ArtifactDisclosureApproved",
+      "meaning": "Records the ArtifactDisclosureApproved domain fact for one tenant-owned subject revision."
+     },
+     {
+      "event": "ArtifactDisclosureDelivered",
+      "meaning": "Records the ArtifactDisclosureDelivered domain fact for one tenant-owned subject revision."
+     },
+     {
+      "event": "ArtifactDisclosureRevoked",
+      "meaning": "Records the ArtifactDisclosureRevoked domain fact for one tenant-owned subject revision."
+     }
+    ]
+   },
+   {
+    "key": "ArtifactDisposition.ApproveArtifactDisposition",
+    "owner": "ArtifactDisposition",
+    "command": "ApproveArtifactDisposition",
+    "kind": "command",
+    "fields": [
+     "CommandId",
+     "TenantId",
+     "DispositionId",
+     "ArtifactId",
+     "Rationale"
+    ],
+    "route": null,
+    "owner_invariant": "Only an approved exact source with elapsed retention/no active holds or reliance may start execution; one outstanding attempt; disposed result is terminal and yields tombstone. Approval requires an Org Admin actor and a bounded rationale recorded as an immutable decision; approvals may be batched across artifacts, and nothing is disposed of automatically. Disposition leaves a tombstone carrying content hash, size, retention basis and the approving decision. An active hold on a held artifact blocks disposition during client offboarding, and all other artifacts follow the retention schedule once the ClientExport is delivered.",
+    "owner_events": [
+     {
+      "event": "ArtifactDispositionApproved",
+      "meaning": "Records the ArtifactDispositionApproved domain fact for one tenant-owned subject revision."
+     },
+     {
+      "event": "ArtifactDispositionExecutionRequested",
+      "meaning": "Records the ArtifactDispositionExecutionRequested domain fact for one tenant-owned subject revision."
+     },
+     {
+      "event": "ArtifactDispositionResultRecorded",
+      "meaning": "Records the ArtifactDispositionResultRecorded domain fact for one tenant-owned subject revision."
+     }
+    ]
+   },
+   {
+    "key": "ArtifactEngagementHold.RecordEngagementReportIssued",
+    "owner": "ArtifactEngagementHold",
+    "command": "RecordEngagementReportIssued",
+    "kind": "command",
+    "fields": [
+     "CommandId",
+     "TenantId",
+     "HoldId",
+     "EngagementId",
+     "ReportArtifactId",
+     "IssuedAt",
+     "IssuerReference"
+    ],
+    "route": null,
+    "owner_invariant": "One preservation hold cannot release before one year after its exact report issuance; report identity and release decision are immutable. Release also requires the attributed decision that the engagement record package was delivered into the attest team's audit software; until that delivery fact exists the hold blocks disposition and offboarding cannot complete (M0-D27 D27-05) A hold is either engagement kind, applying until the report is issued plus one year, or legal kind, applying until an Org Admin releases it with no end date. An engagement hold stays active until one year after report issuance.",
+    "owner_events": [
+     {
+      "event": "ArtifactEngagementHoldPlaced",
+      "meaning": "Records the ArtifactEngagementHoldPlaced domain fact for one tenant-owned subject revision."
+     },
+     {
+      "event": "ArtifactEngagementHoldReleased",
+      "meaning": "Records the ArtifactEngagementHoldReleased domain fact for one tenant-owned subject revision."
+     },
+     {
+      "event": "EngagementReportIssued",
+      "meaning": "Records the EngagementReportIssued domain fact for one tenant-owned subject revision."
+     }
+    ]
+   },
+   {
+    "key": "ClientExport.RecordOwnAttestRecordDelivery",
+    "owner": "ClientExport",
+    "command": "RecordOwnAttestRecordDelivery",
+    "kind": "command",
+    "fields": [
+     "CommandId",
+     "TenantId",
+     "EngagementId",
+     "PackageId",
+     "Recipient",
+     "DeliveredAt",
+     "DeliveryReference"
+    ],
+    "route": null,
+    "owner_invariant": "Final export delivery requires archive counts matching frozen included/withheld inventory and a successful exact-manifest delivery for each required attest package. ",
+    "owner_events": [
+     {
+      "event": "ClientExportAttestPackageDeliveryRecorded",
+      "meaning": "A delivery decision for an attest package was recorded on a successfully built client export, with its rationale, recipient and delivery reference, for the exac"
+     },
+     {
+      "event": "ClientExportBuildFailed",
+      "meaning": "Records the ClientExportBuildFailed domain fact for one tenant-owned subject revision."
+     },
+     {
+      "event": "ClientExportBuilt",
+      "meaning": "Records the ClientExportBuilt domain fact for one tenant-owned subject revision."
+     },
+     {
+      "event": "ClientExportDelivered",
+      "meaning": "Records the ClientExportDelivered domain fact for one tenant-owned subject revision."
+     },
+     {
+      "event": "ClientExportRequested",
+      "meaning": "Records the ClientExportRequested domain fact for one tenant-owned subject revision."
+     }
+    ]
+   },
+   {
+    "key": "ClientExport.RecordOwnAttestRecordPackageResult",
+    "owner": "ClientExport",
+    "command": "RecordOwnAttestRecordPackageResult",
+    "kind": "command",
+    "fields": [
+     "CommandId",
+     "TenantId",
+     "PackageId",
+     "Outcome",
+     "ArtifactId",
+     "FailureCode",
+     "CompletedAt"
+    ],
+    "route": null,
+    "owner_invariant": "Final export delivery requires archive counts matching frozen included/withheld inventory and a successful exact-manifest delivery for each required attest package. ",
+    "owner_events": [
+     {
+      "event": "ClientExportAttestPackageDeliveryRecorded",
+      "meaning": "A delivery decision for an attest package was recorded on a successfully built client export, with its rationale, recipient and delivery reference, for the exac"
+     },
+     {
+      "event": "ClientExportBuildFailed",
+      "meaning": "Records the ClientExportBuildFailed domain fact for one tenant-owned subject revision."
+     },
+     {
+      "event": "ClientExportBuilt",
+      "meaning": "Records the ClientExportBuilt domain fact for one tenant-owned subject revision."
+     },
+     {
+      "event": "ClientExportDelivered",
+      "meaning": "Records the ClientExportDelivered domain fact for one tenant-owned subject revision."
+     },
+     {
+      "event": "ClientExportRequested",
+      "meaning": "Records the ClientExportRequested domain fact for one tenant-owned subject revision."
+     }
+    ]
+   },
+   {
+    "key": "ComplianceIncident.RecordComplianceIncidentSystemDescriptionDecision",
+    "owner": "ComplianceIncident",
+    "command": "RecordComplianceIncidentSystemDescriptionDecision",
+    "kind": "command",
+    "fields": [
+     "CommandId",
+     "TenantId",
+     "ProgramId",
+     "IncidentId",
+     "ContentVersion",
+     "SystemDescriptionId",
+     "SystemDescriptionVersionId",
+     "DecisionId",
+     "AssessmentSha256"
+    ],
+    "route": null,
+    "owner_invariant": "One incident version may be assessed once; current-version independent description decision and required follow-up eligibility gate advancement; incident resolution requires every admitted follow-up work item completed. An incident carries detected_at, resolved_at and boolean customer_data_affected and availability_sla_affected; the recorded time cannot precede detected_at and a revision cannot change detected_at. It may link to an earlier externally sourced IncidentReference; linking never rewrites earlier risk history and the reference keeps its source identity, occurrence time, summary and provenance.",
+    "owner_events": [
+     {
+      "event": "ComplianceIncidentImpactAssessed",
+      "meaning": "The impact of a compliance incident was assessed by a named member, becoming the incident's current assessment."
+     },
+     {
+      "event": "ComplianceIncidentRecorded",
+      "meaning": "A compliance incident was recorded for a program by a named member as the incident's first revision."
+     },
+     {
+      "event": "ComplianceIncidentRevised",
+      "meaning": "A recorded compliance incident was revised by a named member, changing its content at the next revision."
+     },
+     {
+      "event": "ComplianceIncidentSystemDescriptionDecisionRecorded",
+      "meaning": "A decision was recorded on whether a compliance incident requires a change to the system description, made by a named member."
+     },
+     {
+      "event": "IncidentResolutionRecorded",
+      "meaning": "The resolution of a compliance incident was recorded by a named member, closing the incident."
+     }
+    ]
+   },
+   {
+    "key": "EvidenceArtifact.RecordEvidenceArtifactInspection",
+    "owner": "EvidenceArtifact",
+    "command": "RecordEvidenceArtifactInspection",
+    "kind": "command",
+    "fields": [
+     "CommandId",
+     "TenantId",
+     "ArtifactId",
+     "Outcome",
+     "InspectedAt"
+    ],
+    "route": null,
+    "owner_invariant": "Immutable content remains unavailable until clean inspection; malware alone can be released with attributed clean rescan; secret/invalid rejection is final. Rejects an upload with reason secret_detected, purges its content immediately, and keeps only a tombstone (content hash, size, uploader, time, reason); credentials, private keys, access tokens, and session cookies are never stored. A quarantined (malware) artifact cannot be downloaded or shared, and only an Org Admin may release a false positive after rescan or dispose of it. Content hash is verified on restore.",
+    "owner_events": [
+     {
+      "event": "ArtifactDownloadAvailabilityUseSettled",
+      "meaning": ""
+     },
+     {
+      "event": "EvidenceArtifactDownloadRequested",
+      "meaning": ""
+     },
+     {
+      "event": "EvidenceArtifactInspected",
+      "meaning": "Records the inspection result that moves an artifact out of pending inspection."
+     },
+     {
+      "event": "EvidenceArtifactQuarantineReleased",
+      "meaning": "A quarantined evidence artifact was released after a clean rescan, with a rationale and the deciding actor recording that the malware detection was a false posi"
+     },
+     {
+      "event": "EvidenceArtifactRegistered",
+      "meaning": "Registers uploaded content as evidence awaiting inspection; the content is not yet available."
+     }
+    ]
+   },
+   {
+    "key": "ManagementAssertion.ApproveManagementAssertion",
+    "owner": "ManagementAssertion",
+    "command": "ApproveManagementAssertion",
+    "kind": "command",
+    "fields": [
+     "CommandId",
+     "TenantId",
+     "ProgramId",
+     "AssertionId",
+     "Version",
+     "Outcome",
+     "Rationale"
+    ],
+    "route": null,
+    "owner_invariant": "One exact current authored assertion version receives at most one immutable independent named CEO/CISO decision; revision creates changed wording/input bindings. The assertion decision is signed only by the CEO or the CISO as an attributable named decision on an exact package version; the representation letter has the same signer rule, owned by its own aggregate.",
+    "owner_events": [
+     {
+      "event": "ManagementAssertionApproved",
+      "meaning": "Records an independent management decision on one exact assertion version."
+     },
+     {
+      "event": "ManagementAssertionRecorded",
+      "meaning": "Creates a versioned assertion and records its exact input bindings and wording."
+     },
+     {
+      "event": "ManagementAssertionRevised",
+      "meaning": "Appends a new immutable wording and input binding to a management assertion."
+     }
+    ]
+   },
+   {
+    "key": "ManagementRepresentationLetter.SignManagementRepresentationLetter",
+    "owner": "ManagementRepresentationLetter",
+    "command": "SignManagementRepresentationLetter",
+    "kind": "command",
+    "fields": [
+     "CommandId",
+     "TenantId",
+     "ProgramId",
+     "LetterId",
+     "SignerMemberId",
+     "SignedArtifactId",
+     "SignedAt"
+    ],
+    "route": null,
+    "owner_invariant": "Letter becomes signed exactly when every fixed named required signer has one immutable distinct signed artifact; no unlisted signer may sign. ",
+    "owner_events": [
+     {
+      "event": "ManagementRepresentationLetterSigned",
+      "meaning": "A named executive signed the management representation letter, retaining their signed letter artifact; once every required signer has signed the letter is final"
+     },
+     {
+      "event": "RepresentationLetterRecorded",
+      "meaning": "Records an externally sourced representation letter and its required signers."
+     }
+    ]
+   },
+   {
+    "key": "Member.CompleteMemberRetirement",
+    "owner": "Member",
+    "command": "CompleteMemberRetirement",
+    "kind": "command",
+    "fields": [
+     "TenantId",
+     "MemberId",
+     "MembershipEpisodeId",
+     "TerminationEventId",
+     "CommandId"
+    ],
+    "route": null,
+    "owner_invariant": "One tenant-user membership has one affiliation/expiry episode; deprovision closes authority and a fresh episode cannot start until authority cleanup completes. Affiliation is exactly one of client_personnel, firm_staff, or guest; a guest requires a finite end date, persisted on the registration, access stops at the end of that UTC date, and grants cannot extend beyond it (guests are limited to Org Admin-granted programs and hold no approval rights). Deprovision records actor, timestamp, and reason, refuses self-deprovisioning, and removes team assignments and member-scoped grants prospectively while retaining platform identity, Person, history, business records, and unfinished work. A new in",
+    "owner_events": [
+     {
+      "event": "MemberDeprovisionCleanupCompleted",
+      "meaning": "Cleanup of a deprovisioned member's access authority for one membership episode was completed against the original termination proof."
+     },
+     {
+      "event": "MemberDeprovisioned",
+      "meaning": "A member's membership episode was ended by deprovisioning, with a stated reason by a named actor, removing the member's access to the tenant."
+     },
+     {
+      "event": "MemberRegistered",
+      "meaning": "A member was registered. The registration's logical CommandId is the membership episode id, and the fact is the native acceptance of that logical operation on t"
+     },
+     {
+      "event": "MemberReinstated",
+      "meaning": "A suspended member was reinstated with their affiliation by a named actor, restoring their access to the tenant."
+     },
+     {
+      "event": "MemberSuspended",
+      "meaning": "A member was suspended with a stated reason by a named actor, blocking their access until reinstated."
+     }
+    ]
+   },
+   {
+    "key": "MethodologyTemplate.ApproveMethodologyTemplateVersion",
+    "owner": "MethodologyTemplate",
+    "command": "ApproveMethodologyTemplateVersion",
+    "kind": "command",
+    "fields": [
+     "CommandId",
+     "TemplateId",
+     "Version",
+     "ApprovalRationale"
+    ],
+    "route": null,
+    "owner_invariant": "Publish current authored template only after independent review and distinct third-party approver; published content immutable; retirement stops further template revisions. Contributed records require exact accepted deidentified provenance. ",
+    "owner_events": [
+     {
+      "event": "MethodologyTemplateCreated",
+      "meaning": "A methodology template was created with its first authored version by a named author, awaiting review and publication."
+     },
+     {
+      "event": "MethodologyTemplateDraftReviewed",
+      "meaning": "A compact native MethodologyTemplateDraftReviewed delta; authored bodies and historical versions are immutable content."
+     },
+     {
+      "event": "MethodologyTemplateDraftRevised",
+      "meaning": "A compact native MethodologyTemplateDraftRevised delta; authored bodies and historical versions are immutable content."
+     },
+     {
+      "event": "MethodologyTemplateRetired",
+      "meaning": "An active published methodology template was retired by a named member, ending its availability while its historical versions remain."
+     },
+     {
+      "event": "MethodologyTemplateVersionPublished",
+      "meaning": "A compact native MethodologyTemplateVersionPublished delta; authored bodies and historical versions are immutable content."
+     }
+    ]
+   },
+   {
+    "key": "MethodologyTemplate.ReviewMethodologyTemplate",
+    "owner": "MethodologyTemplate",
+    "command": "ReviewMethodologyTemplate",
+    "kind": "command",
+    "fields": [
+     "CommandId",
+     "TemplateId",
+     "Version",
+     "Outcome",
+     "Comments"
+    ],
+    "route": null,
+    "owner_invariant": "Publish current authored template only after independent review and distinct third-party approver; published content immutable; retirement stops further template revisions. Contributed records require exact accepted deidentified provenance. ",
+    "owner_events": [
+     {
+      "event": "MethodologyTemplateCreated",
+      "meaning": "A methodology template was created with its first authored version by a named author, awaiting review and publication."
+     },
+     {
+      "event": "MethodologyTemplateDraftReviewed",
+      "meaning": "A compact native MethodologyTemplateDraftReviewed delta; authored bodies and historical versions are immutable content."
+     },
+     {
+      "event": "MethodologyTemplateDraftRevised",
+      "meaning": "A compact native MethodologyTemplateDraftRevised delta; authored bodies and historical versions are immutable content."
+     },
+     {
+      "event": "MethodologyTemplateRetired",
+      "meaning": "An active published methodology template was retired by a named member, ending its availability while its historical versions remain."
+     },
+     {
+      "event": "MethodologyTemplateVersionPublished",
+      "meaning": "A compact native MethodologyTemplateVersionPublished delta; authored bodies and historical versions are immutable content."
+     }
+    ]
+   },
+   {
+    "key": "MethodologyTemplateContribution.AcceptTemplateContribution",
+    "owner": "MethodologyTemplateContribution",
+    "command": "AcceptTemplateContribution",
+    "kind": "command",
+    "fields": [
+     "CommandId",
+     "TenantId",
+     "ContributionId",
+     "AcceptanceRationale"
+    ],
+    "route": null,
+    "owner_invariant": "Only immutable proposed deidentified record that receives independent approved review then acceptance by a third platform operator becomes shareable; tenant/source lineage stays in tenant-owned stream. No additional write-time refusals beyond the invariant; D25-02 is largely an architectural boundary already stated by the invariant (de-identified, reviewed contribution only).",
+    "owner_events": [
+     {
+      "event": "MethodologyTemplateContributionAccepted",
+      "meaning": "Records the exact accepted contribution content without copying a retained read snapshot."
+     },
+     {
+      "event": "MethodologyTemplateContributionProposed",
+      "meaning": "Records the exact proposed contribution content without copying a retained read snapshot."
+     },
+     {
+      "event": "MethodologyTemplateContributionReviewed",
+      "meaning": "Records the exact reviewed contribution content without copying a retained read snapshot."
+     }
+    ]
+   },
+   {
+    "key": "MethodologyTemplateContribution.ReviewTemplateContribution",
+    "owner": "MethodologyTemplateContribution",
+    "command": "ReviewTemplateContribution",
+    "kind": "command",
+    "fields": [
+     "CommandId",
+     "TenantId",
+     "ContributionId",
+     "Outcome",
+     "ReviewNotes"
+    ],
+    "route": null,
+    "owner_invariant": "Only immutable proposed deidentified record that receives independent approved review then acceptance by a third platform operator becomes shareable; tenant/source lineage stays in tenant-owned stream. No additional write-time refusals beyond the invariant; D25-02 is largely an architectural boundary already stated by the invariant (de-identified, reviewed contribution only).",
+    "owner_events": [
+     {
+      "event": "MethodologyTemplateContributionAccepted",
+      "meaning": "Records the exact accepted contribution content without copying a retained read snapshot."
+     },
+     {
+      "event": "MethodologyTemplateContributionProposed",
+      "meaning": "Records the exact proposed contribution content without copying a retained read snapshot."
+     },
+     {
+      "event": "MethodologyTemplateContributionReviewed",
+      "meaning": "Records the exact reviewed contribution content without copying a retained read snapshot."
+     }
+    ]
+   },
+   {
+    "key": "ServiceEngagementIndependence.RecordDirectoryIndependenceReevaluation",
+    "owner": "ServiceEngagementIndependence",
+    "command": "RecordDirectoryIndependenceReevaluation",
+    "kind": "command",
+    "fields": [
+     "CommandId",
+     "TenantId",
+     "DirectoryResourceOffset",
+     "DirectoryEventId",
+     "DirectoryPayloadSha256",
+     "AcceptanceResourceOffset",
+     "AcceptanceEventId",
+     "AcceptanceRequestId",
+     "AcceptancePayloadSha256",
+     "StaffMemberId",
+     "UserId",
+     "EngagementId",
+     "AcceptedServiceEpoch"
+    ],
+    "route": null,
+    "owner_invariant": "One engagement lifecycle, proposed and actual staff assignments, current content revision and accepted epoch bindings. Engagement revision and service epoch live in state; historical epoch streams cannot compete independently. An impaired independence evaluation result blocks acceptance of the attest engagement with no override (M0-D26 D26-07; Jev 0.81) Advisor and Attest access exists only through assignment to an accepted ServiceEngagement for that client, and no person may hold both an Advisor and an Attest assignment for the same client ever, checked over their full assignment history. An impaired evaluation blocks acceptance with no override, and a firm ServiceEngagement and a client Au",
+    "owner_events": [
+     {
+      "event": "AssignmentIndependenceReevaluated",
+      "meaning": "A lifecycle change prompted a reassessment of an engagement staff assignment's independence, retained as a receipt that blocks production acceptance and never r"
+     },
+     {
+      "event": "DirectoryIndependenceReevaluated",
+      "meaning": "A denial-only receipt that one accepted staff member's directory record changed after the acceptance. The complete original DirectoryIndependenceReevaluationVie"
+     },
+     {
+      "event": "EngagementPersonalDecisionAdmitted",
+      "meaning": "The root native acceptance of a personal engagement decision on the engagement owner. It freezes the complete decision intent at Revision, the engagement conten"
+     },
+     {
+      "event": "EngagementPersonalDecisionAuthorized",
+      "meaning": "The irreversible authorization of a personal engagement decision, appended only after every required source use was acquired. DecisionAt is the server-frozen de"
+     },
+     {
+      "event": "EngagementPersonalDecisionCanceled",
+      "meaning": "The decision was canceled before authorization: it fences authorization and releases the engagement content pin. An authorized decision recovers forward and is "
+     },
+     {
+      "event": "EngagementPersonalDecisionMaterialized",
+      "meaning": "The materialized personal decision was recorded on the engagement: the content pin is released and the engagement's current personal decision pointer advances u"
+     },
+     {
+      "event": "EngagementPracticeCommitmentsAuthorized",
+      "meaning": "The irreversible authorization of an acceptance or positive staff assignment, appended only when every temporary reservation and every source use is held by its"
+     },
+     {
+      "event": "ServiceEngagementAcceptanceRecorded",
+      "meaning": "The engagement was accepted: every temporary grant was authorized irreversibly and every permanent practice wall was committed before this fact. AcceptanceConte"
+     },
+     {
+      "event": "ServiceEngagementAcceptanceRejected",
+      "meaning": "A requested acceptance was rejected before the irreversible authorization. The rejection fences the pending acceptance against late delivery and releases the en"
+     },
+     {
+      "event": "ServiceEngagementAcceptanceRequested",
+      "meaning": "The root native acceptance of an engagement acceptance on the engagement owner. It freezes the complete engagement independence intent at Revision, the engageme"
+     },
+     {
+      "event": "ServiceEngagementAssignmentRevoked",
+      "meaning": "A staff member's assignment on an accepted service engagement was revoked with a stated reason, or the whole engagement was closed when no staff member is named"
+     },
+     {
+      "event": "ServiceEngagementMutationRecorded",
+      "meaning": "One accepted lifecycle change of a service engagement draft: create, amend, propose, withdraw or close. Intent is the stable command kind and Change is the immu"
+     }
+    ]
+   },
+   {
+    "key": "SignificantChange.LinkImpactReviewWork",
+    "owner": "SignificantChange",
+    "command": "LinkImpactReviewWork",
+    "kind": "command",
+    "fields": [
+     "CommandId",
+     "TenantId",
+     "ProgramId",
+     "ChangeId",
+     "ContentVersion"
+    ],
+    "route": null,
+    "owner_invariant": "One change version may be assessed once; current-version independent description decision and required follow-up eligibility gate advancement. A change records a human significance assessment of significant or not_significant with required rationale, assessed_by and assessed_at, and a handling_class from the evidence vocabulary defaulting to confidential. It is significant when it changes the system boundary, a service commitment or system requirement, a key control, or infrastructure hosting in-scope data; the product keeps its own record identity, recorder and dates, and source_system, source_identifier and source_url are optional provenance only.",
+    "owner_events": [
+     {
+      "event": "ImpactReviewWorkLinked",
+      "meaning": "Review work was linked to a significant change to carry out the follow-up its impact requires, recorded by a named member."
+     },
+     {
+      "event": "SignificantChangeImpactAssessed",
+      "meaning": "The impact of a significant change on the system and its controls was assessed by a named member, becoming the change's current assessment."
+     },
+     {
+      "event": "SignificantChangeRecorded",
+      "meaning": "A significant change to the system was recorded for a program by a named member as the change's first revision."
+     },
+     {
+      "event": "SignificantChangeRevised",
+      "meaning": "A recorded significant change was revised by a named member, changing its content at the next revision."
+     },
+     {
+      "event": "SignificantChangeSystemDescriptionDecisionRecorded",
+      "meaning": "A decision was recorded on whether a significant change requires an update to the system description, made by a named member."
+     }
+    ]
+   },
+   {
+    "key": "SignificantChange.RecordSignificantChangeSystemDescriptionDecision",
+    "owner": "SignificantChange",
+    "command": "RecordSignificantChangeSystemDescriptionDecision",
+    "kind": "command",
+    "fields": [
+     "CommandId",
+     "TenantId",
+     "ProgramId",
+     "ChangeId",
+     "ContentVersion",
+     "SystemDescriptionId",
+     "SystemDescriptionVersionId",
+     "DecisionId",
+     "Decision",
+     "AssessmentSha256"
+    ],
+    "route": null,
+    "owner_invariant": "One change version may be assessed once; current-version independent description decision and required follow-up eligibility gate advancement. A change records a human significance assessment of significant or not_significant with required rationale, assessed_by and assessed_at, and a handling_class from the evidence vocabulary defaulting to confidential. It is significant when it changes the system boundary, a service commitment or system requirement, a key control, or infrastructure hosting in-scope data; the product keeps its own record identity, recorder and dates, and source_system, source_identifier and source_url are optional provenance only.",
+    "owner_events": [
+     {
+      "event": "ImpactReviewWorkLinked",
+      "meaning": "Review work was linked to a significant change to carry out the follow-up its impact requires, recorded by a named member."
+     },
+     {
+      "event": "SignificantChangeImpactAssessed",
+      "meaning": "The impact of a significant change on the system and its controls was assessed by a named member, becoming the change's current assessment."
+     },
+     {
+      "event": "SignificantChangeRecorded",
+      "meaning": "A significant change to the system was recorded for a program by a named member as the change's first revision."
+     },
+     {
+      "event": "SignificantChangeRevised",
+      "meaning": "A recorded significant change was revised by a named member, changing its content at the next revision."
+     },
+     {
+      "event": "SignificantChangeSystemDescriptionDecisionRecorded",
+      "meaning": "A decision was recorded on whether a significant change requires an update to the system description, made by a named member."
+     }
+    ]
+   },
+   {
+    "key": "TeamMember.CleanupRetiredMembershipRelationship",
+    "owner": "TeamMember",
+    "command": "CleanupRetiredMembershipRelationship",
+    "kind": "reactor",
+    "fields": [
+     "TenantId",
+     "MemberId",
+     "MembershipEpisodeId",
+     "Kind",
+     "TargetId",
+     "SourceEventId",
+     "SourcePosition",
+     "TerminationEventId",
+     "CommandId"
+    ],
+    "route": null,
+    "owner_invariant": "One tenant/team/member relationship is active only for one current membership episode. ",
+    "owner_events": [
+     {
+      "event": "TeamMemberAssigned",
+      "meaning": "A member was assigned to a team for one membership episode. The fact is the native acceptance of the logical CommandId on the team-member stream."
+     },
+     {
+      "event": "TeamMemberRemoved",
+      "meaning": "A member's team assignment ended. The fact is the native acceptance of the logical CommandId on the team-member stream; a retirement removal carries the termina"
+     }
+    ]
+   },
+   {
+    "key": "Tenant.ActivateTenant",
+    "owner": "Tenant",
+    "command": "ActivateTenant",
+    "kind": "command",
+    "fields": [
+     "CommandId",
+     "TenantId",
+     "FirstAdministratorUserId",
+     "FirstAdministratorEmail"
+    ],
+    "route": null,
+    "owner_invariant": "One tenant lifecycle activates only after its slug and first-administrator conditions; offboarding forbids new active service; one current slug transition admitted at a time. There is exactly one workspace per organization, and the client organization is the only tenant boundary with tenant_id its sole technical name. Only platform operators suspend, reactivate or offboard, and suspension blocks every member and assigned firm staff while preserving records. Suspension stops new authenticated service for every member until an operator reactivates the tenant; reactivation requires the suspension to be the current state; offboarding starts only from active or suspended, forbids new active servi",
+    "owner_events": [
+     {
+      "event": "TenantActivatedV2",
+      "meaning": "A native activation decision bound to the exact authored administrator, email and command identity."
+     },
+     {
+      "event": "TenantOffboardingCompleted",
+      "meaning": "Records the TenantOffboardingCompleted domain fact for one tenant-owned subject revision."
+     },
+     {
+      "event": "TenantOffboardingStartedV2",
+      "meaning": "A platform operator started offboarding the tenant with a stated reason, beginning the wind-down of the tenant's service."
+     },
+     {
+      "event": "TenantReactivatedV2",
+      "meaning": "A platform operator reactivated a suspended tenant with a stated reason, restoring its service."
+     },
+     {
+      "event": "TenantRegistered",
+      "meaning": "A tenant was registered with an owner user, name and slug, optionally naming its first administrator and whether activation is required."
+     },
+     {
+      "event": "TenantSlugChangeRejected",
+      "meaning": "A requested slug change ended because the slug owner refused the new slug."
+     },
+     {
+      "event": "TenantSlugChangeRequested",
+      "meaning": "An active tenant requested changing its slug from the old to a new value; the change stays pending until completed and blocks a second slug change."
+     },
+     {
+      "event": "TenantSlugChanged",
+      "meaning": "A tenant adopted the slug its slug owner registered. The fact is the native acceptance of the confirming receiver."
+     },
+     {
+      "event": "TenantSlugConfirmed",
+      "meaning": "The slug owner registered the tenant's first slug and the tenant confirmed it."
+     },
+     {
+      "event": "TenantSlugRejected",
+      "meaning": "The slug owner refused the tenant's first slug."
+     },
+     {
+      "event": "TenantSlugSurrenderConfirmed",
+      "meaning": "The slug owner released the slug the tenant was surrendering."
+     },
+     {
+      "event": "TenantSlugSurrenderFailed",
+      "meaning": "The slug owner refused the tenant's surrender, so the tenant keeps the slug."
+     }
+    ]
+   },
+   {
+    "key": "Tenant.ConfirmTenantSlug",
+    "owner": "Tenant",
+    "command": "ConfirmTenantSlug",
+    "kind": "command",
+    "fields": [
+     "CommandId",
+     "TenantId",
+     "Slug"
+    ],
+    "route": null,
+    "owner_invariant": "One tenant lifecycle activates only after its slug and first-administrator conditions; offboarding forbids new active service; one current slug transition admitted at a time. There is exactly one workspace per organization, and the client organization is the only tenant boundary with tenant_id its sole technical name. Only platform operators suspend, reactivate or offboard, and suspension blocks every member and assigned firm staff while preserving records. Suspension stops new authenticated service for every member until an operator reactivates the tenant; reactivation requires the suspension to be the current state; offboarding starts only from active or suspended, forbids new active servi",
+    "owner_events": [
+     {
+      "event": "TenantActivatedV2",
+      "meaning": "A native activation decision bound to the exact authored administrator, email and command identity."
+     },
+     {
+      "event": "TenantOffboardingCompleted",
+      "meaning": "Records the TenantOffboardingCompleted domain fact for one tenant-owned subject revision."
+     },
+     {
+      "event": "TenantOffboardingStartedV2",
+      "meaning": "A platform operator started offboarding the tenant with a stated reason, beginning the wind-down of the tenant's service."
+     },
+     {
+      "event": "TenantReactivatedV2",
+      "meaning": "A platform operator reactivated a suspended tenant with a stated reason, restoring its service."
+     },
+     {
+      "event": "TenantRegistered",
+      "meaning": "A tenant was registered with an owner user, name and slug, optionally naming its first administrator and whether activation is required."
+     },
+     {
+      "event": "TenantSlugChangeRejected",
+      "meaning": "A requested slug change ended because the slug owner refused the new slug."
+     },
+     {
+      "event": "TenantSlugChangeRequested",
+      "meaning": "An active tenant requested changing its slug from the old to a new value; the change stays pending until completed and blocks a second slug change."
+     },
+     {
+      "event": "TenantSlugChanged",
+      "meaning": "A tenant adopted the slug its slug owner registered. The fact is the native acceptance of the confirming receiver."
+     },
+     {
+      "event": "TenantSlugConfirmed",
+      "meaning": "The slug owner registered the tenant's first slug and the tenant confirmed it."
+     },
+     {
+      "event": "TenantSlugRejected",
+      "meaning": "The slug owner refused the tenant's first slug."
+     },
+     {
+      "event": "TenantSlugSurrenderConfirmed",
+      "meaning": "The slug owner released the slug the tenant was surrendering."
+     },
+     {
+      "event": "TenantSlugSurrenderFailed",
+      "meaning": "The slug owner refused the tenant's surrender, so the tenant keeps the slug."
+     }
+    ]
+   },
+   {
+    "key": "Tenant.ConfirmTenantSlugSurrender",
+    "owner": "Tenant",
+    "command": "ConfirmTenantSlugSurrender",
+    "kind": "command",
+    "fields": [
+     "CommandId",
+     "TenantId",
+     "Slug"
+    ],
+    "route": null,
+    "owner_invariant": "One tenant lifecycle activates only after its slug and first-administrator conditions; offboarding forbids new active service; one current slug transition admitted at a time. There is exactly one workspace per organization, and the client organization is the only tenant boundary with tenant_id its sole technical name. Only platform operators suspend, reactivate or offboard, and suspension blocks every member and assigned firm staff while preserving records. Suspension stops new authenticated service for every member until an operator reactivates the tenant; reactivation requires the suspension to be the current state; offboarding starts only from active or suspended, forbids new active servi",
+    "owner_events": [
+     {
+      "event": "TenantActivatedV2",
+      "meaning": "A native activation decision bound to the exact authored administrator, email and command identity."
+     },
+     {
+      "event": "TenantOffboardingCompleted",
+      "meaning": "Records the TenantOffboardingCompleted domain fact for one tenant-owned subject revision."
+     },
+     {
+      "event": "TenantOffboardingStartedV2",
+      "meaning": "A platform operator started offboarding the tenant with a stated reason, beginning the wind-down of the tenant's service."
+     },
+     {
+      "event": "TenantReactivatedV2",
+      "meaning": "A platform operator reactivated a suspended tenant with a stated reason, restoring its service."
+     },
+     {
+      "event": "TenantRegistered",
+      "meaning": "A tenant was registered with an owner user, name and slug, optionally naming its first administrator and whether activation is required."
+     },
+     {
+      "event": "TenantSlugChangeRejected",
+      "meaning": "A requested slug change ended because the slug owner refused the new slug."
+     },
+     {
+      "event": "TenantSlugChangeRequested",
+      "meaning": "An active tenant requested changing its slug from the old to a new value; the change stays pending until completed and blocks a second slug change."
+     },
+     {
+      "event": "TenantSlugChanged",
+      "meaning": "A tenant adopted the slug its slug owner registered. The fact is the native acceptance of the confirming receiver."
+     },
+     {
+      "event": "TenantSlugConfirmed",
+      "meaning": "The slug owner registered the tenant's first slug and the tenant confirmed it."
+     },
+     {
+      "event": "TenantSlugRejected",
+      "meaning": "The slug owner refused the tenant's first slug."
+     },
+     {
+      "event": "TenantSlugSurrenderConfirmed",
+      "meaning": "The slug owner released the slug the tenant was surrendering."
+     },
+     {
+      "event": "TenantSlugSurrenderFailed",
+      "meaning": "The slug owner refused the tenant's surrender, so the tenant keeps the slug."
+     }
+    ]
+   },
+   {
+    "key": "Tenant.RejectTenantSlug",
+    "owner": "Tenant",
+    "command": "RejectTenantSlug",
+    "kind": "command",
+    "fields": [
+     "CommandId",
+     "TenantId",
+     "Slug"
+    ],
+    "route": null,
+    "owner_invariant": "One tenant lifecycle activates only after its slug and first-administrator conditions; offboarding forbids new active service; one current slug transition admitted at a time. There is exactly one workspace per organization, and the client organization is the only tenant boundary with tenant_id its sole technical name. Only platform operators suspend, reactivate or offboard, and suspension blocks every member and assigned firm staff while preserving records. Suspension stops new authenticated service for every member until an operator reactivates the tenant; reactivation requires the suspension to be the current state; offboarding starts only from active or suspended, forbids new active servi",
+    "owner_events": [
+     {
+      "event": "TenantActivatedV2",
+      "meaning": "A native activation decision bound to the exact authored administrator, email and command identity."
+     },
+     {
+      "event": "TenantOffboardingCompleted",
+      "meaning": "Records the TenantOffboardingCompleted domain fact for one tenant-owned subject revision."
+     },
+     {
+      "event": "TenantOffboardingStartedV2",
+      "meaning": "A platform operator started offboarding the tenant with a stated reason, beginning the wind-down of the tenant's service."
+     },
+     {
+      "event": "TenantReactivatedV2",
+      "meaning": "A platform operator reactivated a suspended tenant with a stated reason, restoring its service."
+     },
+     {
+      "event": "TenantRegistered",
+      "meaning": "A tenant was registered with an owner user, name and slug, optionally naming its first administrator and whether activation is required."
+     },
+     {
+      "event": "TenantSlugChangeRejected",
+      "meaning": "A requested slug change ended because the slug owner refused the new slug."
+     },
+     {
+      "event": "TenantSlugChangeRequested",
+      "meaning": "An active tenant requested changing its slug from the old to a new value; the change stays pending until completed and blocks a second slug change."
+     },
+     {
+      "event": "TenantSlugChanged",
+      "meaning": "A tenant adopted the slug its slug owner registered. The fact is the native acceptance of the confirming receiver."
+     },
+     {
+      "event": "TenantSlugConfirmed",
+      "meaning": "The slug owner registered the tenant's first slug and the tenant confirmed it."
+     },
+     {
+      "event": "TenantSlugRejected",
+      "meaning": "The slug owner refused the tenant's first slug."
+     },
+     {
+      "event": "TenantSlugSurrenderConfirmed",
+      "meaning": "The slug owner released the slug the tenant was surrendering."
+     },
+     {
+      "event": "TenantSlugSurrenderFailed",
+      "meaning": "The slug owner refused the tenant's surrender, so the tenant keeps the slug."
+     }
+    ]
+   },
+   {
+    "key": "Tenant.RejectTenantSlugSurrender",
+    "owner": "Tenant",
+    "command": "RejectTenantSlugSurrender",
+    "kind": "command",
+    "fields": [
+     "CommandId",
+     "TenantId",
+     "Slug"
+    ],
+    "route": null,
+    "owner_invariant": "One tenant lifecycle activates only after its slug and first-administrator conditions; offboarding forbids new active service; one current slug transition admitted at a time. There is exactly one workspace per organization, and the client organization is the only tenant boundary with tenant_id its sole technical name. Only platform operators suspend, reactivate or offboard, and suspension blocks every member and assigned firm staff while preserving records. Suspension stops new authenticated service for every member until an operator reactivates the tenant; reactivation requires the suspension to be the current state; offboarding starts only from active or suspended, forbids new active servi",
+    "owner_events": [
+     {
+      "event": "TenantActivatedV2",
+      "meaning": "A native activation decision bound to the exact authored administrator, email and command identity."
+     },
+     {
+      "event": "TenantOffboardingCompleted",
+      "meaning": "Records the TenantOffboardingCompleted domain fact for one tenant-owned subject revision."
+     },
+     {
+      "event": "TenantOffboardingStartedV2",
+      "meaning": "A platform operator started offboarding the tenant with a stated reason, beginning the wind-down of the tenant's service."
+     },
+     {
+      "event": "TenantReactivatedV2",
+      "meaning": "A platform operator reactivated a suspended tenant with a stated reason, restoring its service."
+     },
+     {
+      "event": "TenantRegistered",
+      "meaning": "A tenant was registered with an owner user, name and slug, optionally naming its first administrator and whether activation is required."
+     },
+     {
+      "event": "TenantSlugChangeRejected",
+      "meaning": "A requested slug change ended because the slug owner refused the new slug."
+     },
+     {
+      "event": "TenantSlugChangeRequested",
+      "meaning": "An active tenant requested changing its slug from the old to a new value; the change stays pending until completed and blocks a second slug change."
+     },
+     {
+      "event": "TenantSlugChanged",
+      "meaning": "A tenant adopted the slug its slug owner registered. The fact is the native acceptance of the confirming receiver."
+     },
+     {
+      "event": "TenantSlugConfirmed",
+      "meaning": "The slug owner registered the tenant's first slug and the tenant confirmed it."
+     },
+     {
+      "event": "TenantSlugRejected",
+      "meaning": "The slug owner refused the tenant's first slug."
+     },
+     {
+      "event": "TenantSlugSurrenderConfirmed",
+      "meaning": "The slug owner released the slug the tenant was surrendering."
+     },
+     {
+      "event": "TenantSlugSurrenderFailed",
+      "meaning": "The slug owner refused the tenant's surrender, so the tenant keeps the slug."
+     }
+    ]
+   },
+   {
+    "key": "Tenant.RequestTenantSlugSurrender",
+    "owner": "Tenant",
+    "command": "RequestTenantSlugSurrender",
+    "kind": "command",
+    "fields": [
+     "CommandId",
+     "TenantId",
+     "Slug"
+    ],
+    "route": null,
+    "owner_invariant": "One tenant lifecycle activates only after its slug and first-administrator conditions; offboarding forbids new active service; one current slug transition admitted at a time. There is exactly one workspace per organization, and the client organization is the only tenant boundary with tenant_id its sole technical name. Only platform operators suspend, reactivate or offboard, and suspension blocks every member and assigned firm staff while preserving records. Suspension stops new authenticated service for every member until an operator reactivates the tenant; reactivation requires the suspension to be the current state; offboarding starts only from active or suspended, forbids new active servi",
+    "owner_events": [
+     {
+      "event": "TenantActivatedV2",
+      "meaning": "A native activation decision bound to the exact authored administrator, email and command identity."
+     },
+     {
+      "event": "TenantOffboardingCompleted",
+      "meaning": "Records the TenantOffboardingCompleted domain fact for one tenant-owned subject revision."
+     },
+     {
+      "event": "TenantOffboardingStartedV2",
+      "meaning": "A platform operator started offboarding the tenant with a stated reason, beginning the wind-down of the tenant's service."
+     },
+     {
+      "event": "TenantReactivatedV2",
+      "meaning": "A platform operator reactivated a suspended tenant with a stated reason, restoring its service."
+     },
+     {
+      "event": "TenantRegistered",
+      "meaning": "A tenant was registered with an owner user, name and slug, optionally naming its first administrator and whether activation is required."
+     },
+     {
+      "event": "TenantSlugChangeRejected",
+      "meaning": "A requested slug change ended because the slug owner refused the new slug."
+     },
+     {
+      "event": "TenantSlugChangeRequested",
+      "meaning": "An active tenant requested changing its slug from the old to a new value; the change stays pending until completed and blocks a second slug change."
+     },
+     {
+      "event": "TenantSlugChanged",
+      "meaning": "A tenant adopted the slug its slug owner registered. The fact is the native acceptance of the confirming receiver."
+     },
+     {
+      "event": "TenantSlugConfirmed",
+      "meaning": "The slug owner registered the tenant's first slug and the tenant confirmed it."
+     },
+     {
+      "event": "TenantSlugRejected",
+      "meaning": "The slug owner refused the tenant's first slug."
+     },
+     {
+      "event": "TenantSlugSurrenderConfirmed",
+      "meaning": "The slug owner released the slug the tenant was surrendering."
+     },
+     {
+      "event": "TenantSlugSurrenderFailed",
+      "meaning": "The slug owner refused the tenant's surrender, so the tenant keeps the slug."
+     }
+    ]
+   },
+   {
+    "key": "TypeIIPlan.ApproveTypeIIOperatingPlan",
+    "owner": "TypeIIPlan",
+    "command": "ApproveTypeIIOperatingPlan",
+    "kind": "command",
+    "fields": [
+     "CommandId",
+     "TenantId",
+     "ProgramId",
+     "PlanId",
+     "Version",
+     "Rationale"
+    ],
+    "route": null,
+    "owner_invariant": "Only current proposed content with exact carried-gap acknowledgements receives an independent review; executive approval requires review and three distinct roles, after which plan is immutable. ",
+    "owner_events": [
+     {
+      "event": "TypeIIPlanApproved",
+      "meaning": "Records independent executive approval of the reviewed Type II plan version."
+     },
+     {
+      "event": "TypeIIPlanProposed",
+      "meaning": "Creates a versioned Type II operating plan with exact source and control bindings."
+     },
+     {
+      "event": "TypeIIPlanReviewed",
+      "meaning": "Records the independent review of the current Type II plan version."
+     },
+     {
+      "event": "TypeIIPlanRevised",
+      "meaning": "Appends a revised immutable Type II plan after a review requests changes."
+     }
+    ]
+   },
+   {
+    "key": "WorkforceObservationResolution.ResolveWorkforceObservation",
+    "owner": "WorkforceObservationResolution",
+    "command": "ResolveWorkforceObservation",
+    "kind": "command",
+    "fields": [
+     "CommandId",
+     "TenantId",
+     "ObservationId",
+     "Resolution",
+     "Note"
+    ],
+    "route": null,
+    "owner_invariant": "One observation may receive one final attributed resolved/dismissed decision; changed resolution intent conflicts. ",
+    "owner_events": [
+     {
+      "event": "WorkforceObservationResolved",
+      "meaning": "A workforce observation was closed as resolved or dismissed with a note by a named actor."
+     }
+    ]
+   }
+  ],
+  "principle": "Optimistic concurrency: a command that changes a record which already has state must carry ExpectedRevision (or the admission Generation) so a stale caller cannot overwrite a newer decision. A command that creates the record needs only its creation key. A terminal or absorbing transition may omit the guard only when any later state makes it a no-op.",
+  "x008": {
+   "source_fact": "ManagementRepresentationLetterSigned (letter fully signed for the exact examination)",
+   "target_owner": "ExaminationSignOff",
+   "target_invariant": "One final personal management decision binds exact package/assertion/letter/outcome and acknowledges exactly every unresolved material item.",
+   "current_design": "The fully signed representation letter (every required signer signed) for the exact examination, package version and manifest, approved assertion version and content hash becomes an available proof; the personal sign-off may then be recorded only if the delivered package, approved assertion, signed letter, and recorded auditor outcome all match the sign-off content and the letter's original and signed artifacts remain available and unchanged."
+  }
+ },
+ "questions": {
+  "ApplicationImportBatch.ExecuteApplicationImport__mutates_existing": {
+   "type": "noul",
+   "instructions": "When `ApplicationImportBatch.ExecuteApplicationImport` (see `commands`) is accepted, the owner's record already has state that an earlier decision established, and this command changes that state.",
+   "criteria": {
+    "true": "The record exists before the command (an event in owner_events precedes it) and the command appends a new decision to it.",
+    "false": "The command is the first fact of the record, or it only replays or confirms an outcome already fixed by an earlier operation."
+   }
+  },
+  "ApplicationImportBatch.ExecuteApplicationImport__absorbing": {
+   "type": "noul",
+   "instructions": "`ApplicationImportBatch.ExecuteApplicationImport` is an absorbing transition: once accepted, any later repeat or any stale caller sending it again is a harmless no-op regardless of what happened in between.",
+   "criteria": {
+    "true": "After this command no later decision on the record could be overwritten by a repeat of it (for example delete, revoke, complete, surrender).",
+    "false": "A later decision (a newer version, a reversal, a reactivation) could be overwritten or contradicted by a stale repeat of this command."
+   }
+  },
+  "ApplicationImportBatch.ExecuteApplicationImport__process_reply": {
+   "type": "noul",
+   "instructions": "`ApplicationImportBatch.ExecuteApplicationImport` is a reply inside a process (confirmation, rejection or result of an operation the owner admitted earlier) and is bound by that operation's identity rather than by a revision.",
+   "criteria": {
+    "true": "The fields carry an operation, generation or request identity and the command resolves an earlier admitted operation.",
+    "false": "The command is an ordinary user or owner decision with no earlier admitted operation to resolve."
+   }
+  },
+  "ArtifactDisclosure.ApproveArtifactDisclosure__mutates_existing": {
+   "type": "noul",
+   "instructions": "When `ArtifactDisclosure.ApproveArtifactDisclosure` (see `commands`) is accepted, the owner's record already has state that an earlier decision established, and this command changes that state.",
+   "criteria": {
+    "true": "The record exists before the command (an event in owner_events precedes it) and the command appends a new decision to it.",
+    "false": "The command is the first fact of the record, or it only replays or confirms an outcome already fixed by an earlier operation."
+   }
+  },
+  "ArtifactDisclosure.ApproveArtifactDisclosure__absorbing": {
+   "type": "noul",
+   "instructions": "`ArtifactDisclosure.ApproveArtifactDisclosure` is an absorbing transition: once accepted, any later repeat or any stale caller sending it again is a harmless no-op regardless of what happened in between.",
+   "criteria": {
+    "true": "After this command no later decision on the record could be overwritten by a repeat of it (for example delete, revoke, complete, surrender).",
+    "false": "A later decision (a newer version, a reversal, a reactivation) could be overwritten or contradicted by a stale repeat of this command."
+   }
+  },
+  "ArtifactDisclosure.ApproveArtifactDisclosure__process_reply": {
+   "type": "noul",
+   "instructions": "`ArtifactDisclosure.ApproveArtifactDisclosure` is a reply inside a process (confirmation, rejection or result of an operation the owner admitted earlier) and is bound by that operation's identity rather than by a revision.",
+   "criteria": {
+    "true": "The fields carry an operation, generation or request identity and the command resolves an earlier admitted operation.",
+    "false": "The command is an ordinary user or owner decision with no earlier admitted operation to resolve."
+   }
+  },
+  "ArtifactDisposition.ApproveArtifactDisposition__mutates_existing": {
+   "type": "noul",
+   "instructions": "When `ArtifactDisposition.ApproveArtifactDisposition` (see `commands`) is accepted, the owner's record already has state that an earlier decision established, and this command changes that state.",
+   "criteria": {
+    "true": "The record exists before the command (an event in owner_events precedes it) and the command appends a new decision to it.",
+    "false": "The command is the first fact of the record, or it only replays or confirms an outcome already fixed by an earlier operation."
+   }
+  },
+  "ArtifactDisposition.ApproveArtifactDisposition__absorbing": {
+   "type": "noul",
+   "instructions": "`ArtifactDisposition.ApproveArtifactDisposition` is an absorbing transition: once accepted, any later repeat or any stale caller sending it again is a harmless no-op regardless of what happened in between.",
+   "criteria": {
+    "true": "After this command no later decision on the record could be overwritten by a repeat of it (for example delete, revoke, complete, surrender).",
+    "false": "A later decision (a newer version, a reversal, a reactivation) could be overwritten or contradicted by a stale repeat of this command."
+   }
+  },
+  "ArtifactDisposition.ApproveArtifactDisposition__process_reply": {
+   "type": "noul",
+   "instructions": "`ArtifactDisposition.ApproveArtifactDisposition` is a reply inside a process (confirmation, rejection or result of an operation the owner admitted earlier) and is bound by that operation's identity rather than by a revision.",
+   "criteria": {
+    "true": "The fields carry an operation, generation or request identity and the command resolves an earlier admitted operation.",
+    "false": "The command is an ordinary user or owner decision with no earlier admitted operation to resolve."
+   }
+  },
+  "ArtifactEngagementHold.RecordEngagementReportIssued__mutates_existing": {
+   "type": "noul",
+   "instructions": "When `ArtifactEngagementHold.RecordEngagementReportIssued` (see `commands`) is accepted, the owner's record already has state that an earlier decision established, and this command changes that state.",
+   "criteria": {
+    "true": "The record exists before the command (an event in owner_events precedes it) and the command appends a new decision to it.",
+    "false": "The command is the first fact of the record, or it only replays or confirms an outcome already fixed by an earlier operation."
+   }
+  },
+  "ArtifactEngagementHold.RecordEngagementReportIssued__absorbing": {
+   "type": "noul",
+   "instructions": "`ArtifactEngagementHold.RecordEngagementReportIssued` is an absorbing transition: once accepted, any later repeat or any stale caller sending it again is a harmless no-op regardless of what happened in between.",
+   "criteria": {
+    "true": "After this command no later decision on the record could be overwritten by a repeat of it (for example delete, revoke, complete, surrender).",
+    "false": "A later decision (a newer version, a reversal, a reactivation) could be overwritten or contradicted by a stale repeat of this command."
+   }
+  },
+  "ArtifactEngagementHold.RecordEngagementReportIssued__process_reply": {
+   "type": "noul",
+   "instructions": "`ArtifactEngagementHold.RecordEngagementReportIssued` is a reply inside a process (confirmation, rejection or result of an operation the owner admitted earlier) and is bound by that operation's identity rather than by a revision.",
+   "criteria": {
+    "true": "The fields carry an operation, generation or request identity and the command resolves an earlier admitted operation.",
+    "false": "The command is an ordinary user or owner decision with no earlier admitted operation to resolve."
+   }
+  },
+  "ClientExport.RecordOwnAttestRecordDelivery__mutates_existing": {
+   "type": "noul",
+   "instructions": "When `ClientExport.RecordOwnAttestRecordDelivery` (see `commands`) is accepted, the owner's record already has state that an earlier decision established, and this command changes that state.",
+   "criteria": {
+    "true": "The record exists before the command (an event in owner_events precedes it) and the command appends a new decision to it.",
+    "false": "The command is the first fact of the record, or it only replays or confirms an outcome already fixed by an earlier operation."
+   }
+  },
+  "ClientExport.RecordOwnAttestRecordDelivery__absorbing": {
+   "type": "noul",
+   "instructions": "`ClientExport.RecordOwnAttestRecordDelivery` is an absorbing transition: once accepted, any later repeat or any stale caller sending it again is a harmless no-op regardless of what happened in between.",
+   "criteria": {
+    "true": "After this command no later decision on the record could be overwritten by a repeat of it (for example delete, revoke, complete, surrender).",
+    "false": "A later decision (a newer version, a reversal, a reactivation) could be overwritten or contradicted by a stale repeat of this command."
+   }
+  },
+  "ClientExport.RecordOwnAttestRecordDelivery__process_reply": {
+   "type": "noul",
+   "instructions": "`ClientExport.RecordOwnAttestRecordDelivery` is a reply inside a process (confirmation, rejection or result of an operation the owner admitted earlier) and is bound by that operation's identity rather than by a revision.",
+   "criteria": {
+    "true": "The fields carry an operation, generation or request identity and the command resolves an earlier admitted operation.",
+    "false": "The command is an ordinary user or owner decision with no earlier admitted operation to resolve."
+   }
+  },
+  "ClientExport.RecordOwnAttestRecordPackageResult__mutates_existing": {
+   "type": "noul",
+   "instructions": "When `ClientExport.RecordOwnAttestRecordPackageResult` (see `commands`) is accepted, the owner's record already has state that an earlier decision established, and this command changes that state.",
+   "criteria": {
+    "true": "The record exists before the command (an event in owner_events precedes it) and the command appends a new decision to it.",
+    "false": "The command is the first fact of the record, or it only replays or confirms an outcome already fixed by an earlier operation."
+   }
+  },
+  "ClientExport.RecordOwnAttestRecordPackageResult__absorbing": {
+   "type": "noul",
+   "instructions": "`ClientExport.RecordOwnAttestRecordPackageResult` is an absorbing transition: once accepted, any later repeat or any stale caller sending it again is a harmless no-op regardless of what happened in between.",
+   "criteria": {
+    "true": "After this command no later decision on the record could be overwritten by a repeat of it (for example delete, revoke, complete, surrender).",
+    "false": "A later decision (a newer version, a reversal, a reactivation) could be overwritten or contradicted by a stale repeat of this command."
+   }
+  },
+  "ClientExport.RecordOwnAttestRecordPackageResult__process_reply": {
+   "type": "noul",
+   "instructions": "`ClientExport.RecordOwnAttestRecordPackageResult` is a reply inside a process (confirmation, rejection or result of an operation the owner admitted earlier) and is bound by that operation's identity rather than by a revision.",
+   "criteria": {
+    "true": "The fields carry an operation, generation or request identity and the command resolves an earlier admitted operation.",
+    "false": "The command is an ordinary user or owner decision with no earlier admitted operation to resolve."
+   }
+  },
+  "ComplianceIncident.RecordComplianceIncidentSystemDescriptionDecision__mutates_existing": {
+   "type": "noul",
+   "instructions": "When `ComplianceIncident.RecordComplianceIncidentSystemDescriptionDecision` (see `commands`) is accepted, the owner's record already has state that an earlier decision established, and this command changes that state.",
+   "criteria": {
+    "true": "The record exists before the command (an event in owner_events precedes it) and the command appends a new decision to it.",
+    "false": "The command is the first fact of the record, or it only replays or confirms an outcome already fixed by an earlier operation."
+   }
+  },
+  "ComplianceIncident.RecordComplianceIncidentSystemDescriptionDecision__absorbing": {
+   "type": "noul",
+   "instructions": "`ComplianceIncident.RecordComplianceIncidentSystemDescriptionDecision` is an absorbing transition: once accepted, any later repeat or any stale caller sending it again is a harmless no-op regardless of what happened in between.",
+   "criteria": {
+    "true": "After this command no later decision on the record could be overwritten by a repeat of it (for example delete, revoke, complete, surrender).",
+    "false": "A later decision (a newer version, a reversal, a reactivation) could be overwritten or contradicted by a stale repeat of this command."
+   }
+  },
+  "ComplianceIncident.RecordComplianceIncidentSystemDescriptionDecision__process_reply": {
+   "type": "noul",
+   "instructions": "`ComplianceIncident.RecordComplianceIncidentSystemDescriptionDecision` is a reply inside a process (confirmation, rejection or result of an operation the owner admitted earlier) and is bound by that operation's identity rather than by a revision.",
+   "criteria": {
+    "true": "The fields carry an operation, generation or request identity and the command resolves an earlier admitted operation.",
+    "false": "The command is an ordinary user or owner decision with no earlier admitted operation to resolve."
+   }
+  },
+  "EvidenceArtifact.RecordEvidenceArtifactInspection__mutates_existing": {
+   "type": "noul",
+   "instructions": "When `EvidenceArtifact.RecordEvidenceArtifactInspection` (see `commands`) is accepted, the owner's record already has state that an earlier decision established, and this command changes that state.",
+   "criteria": {
+    "true": "The record exists before the command (an event in owner_events precedes it) and the command appends a new decision to it.",
+    "false": "The command is the first fact of the record, or it only replays or confirms an outcome already fixed by an earlier operation."
+   }
+  },
+  "EvidenceArtifact.RecordEvidenceArtifactInspection__absorbing": {
+   "type": "noul",
+   "instructions": "`EvidenceArtifact.RecordEvidenceArtifactInspection` is an absorbing transition: once accepted, any later repeat or any stale caller sending it again is a harmless no-op regardless of what happened in between.",
+   "criteria": {
+    "true": "After this command no later decision on the record could be overwritten by a repeat of it (for example delete, revoke, complete, surrender).",
+    "false": "A later decision (a newer version, a reversal, a reactivation) could be overwritten or contradicted by a stale repeat of this command."
+   }
+  },
+  "EvidenceArtifact.RecordEvidenceArtifactInspection__process_reply": {
+   "type": "noul",
+   "instructions": "`EvidenceArtifact.RecordEvidenceArtifactInspection` is a reply inside a process (confirmation, rejection or result of an operation the owner admitted earlier) and is bound by that operation's identity rather than by a revision.",
+   "criteria": {
+    "true": "The fields carry an operation, generation or request identity and the command resolves an earlier admitted operation.",
+    "false": "The command is an ordinary user or owner decision with no earlier admitted operation to resolve."
+   }
+  },
+  "ManagementAssertion.ApproveManagementAssertion__mutates_existing": {
+   "type": "noul",
+   "instructions": "When `ManagementAssertion.ApproveManagementAssertion` (see `commands`) is accepted, the owner's record already has state that an earlier decision established, and this command changes that state.",
+   "criteria": {
+    "true": "The record exists before the command (an event in owner_events precedes it) and the command appends a new decision to it.",
+    "false": "The command is the first fact of the record, or it only replays or confirms an outcome already fixed by an earlier operation."
+   }
+  },
+  "ManagementAssertion.ApproveManagementAssertion__absorbing": {
+   "type": "noul",
+   "instructions": "`ManagementAssertion.ApproveManagementAssertion` is an absorbing transition: once accepted, any later repeat or any stale caller sending it again is a harmless no-op regardless of what happened in between.",
+   "criteria": {
+    "true": "After this command no later decision on the record could be overwritten by a repeat of it (for example delete, revoke, complete, surrender).",
+    "false": "A later decision (a newer version, a reversal, a reactivation) could be overwritten or contradicted by a stale repeat of this command."
+   }
+  },
+  "ManagementAssertion.ApproveManagementAssertion__process_reply": {
+   "type": "noul",
+   "instructions": "`ManagementAssertion.ApproveManagementAssertion` is a reply inside a process (confirmation, rejection or result of an operation the owner admitted earlier) and is bound by that operation's identity rather than by a revision.",
+   "criteria": {
+    "true": "The fields carry an operation, generation or request identity and the command resolves an earlier admitted operation.",
+    "false": "The command is an ordinary user or owner decision with no earlier admitted operation to resolve."
+   }
+  },
+  "ManagementRepresentationLetter.SignManagementRepresentationLetter__mutates_existing": {
+   "type": "noul",
+   "instructions": "When `ManagementRepresentationLetter.SignManagementRepresentationLetter` (see `commands`) is accepted, the owner's record already has state that an earlier decision established, and this command changes that state.",
+   "criteria": {
+    "true": "The record exists before the command (an event in owner_events precedes it) and the command appends a new decision to it.",
+    "false": "The command is the first fact of the record, or it only replays or confirms an outcome already fixed by an earlier operation."
+   }
+  },
+  "ManagementRepresentationLetter.SignManagementRepresentationLetter__absorbing": {
+   "type": "noul",
+   "instructions": "`ManagementRepresentationLetter.SignManagementRepresentationLetter` is an absorbing transition: once accepted, any later repeat or any stale caller sending it again is a harmless no-op regardless of what happened in between.",
+   "criteria": {
+    "true": "After this command no later decision on the record could be overwritten by a repeat of it (for example delete, revoke, complete, surrender).",
+    "false": "A later decision (a newer version, a reversal, a reactivation) could be overwritten or contradicted by a stale repeat of this command."
+   }
+  },
+  "ManagementRepresentationLetter.SignManagementRepresentationLetter__process_reply": {
+   "type": "noul",
+   "instructions": "`ManagementRepresentationLetter.SignManagementRepresentationLetter` is a reply inside a process (confirmation, rejection or result of an operation the owner admitted earlier) and is bound by that operation's identity rather than by a revision.",
+   "criteria": {
+    "true": "The fields carry an operation, generation or request identity and the command resolves an earlier admitted operation.",
+    "false": "The command is an ordinary user or owner decision with no earlier admitted operation to resolve."
+   }
+  },
+  "Member.CompleteMemberRetirement__mutates_existing": {
+   "type": "noul",
+   "instructions": "When `Member.CompleteMemberRetirement` (see `commands`) is accepted, the owner's record already has state that an earlier decision established, and this command changes that state.",
+   "criteria": {
+    "true": "The record exists before the command (an event in owner_events precedes it) and the command appends a new decision to it.",
+    "false": "The command is the first fact of the record, or it only replays or confirms an outcome already fixed by an earlier operation."
+   }
+  },
+  "Member.CompleteMemberRetirement__absorbing": {
+   "type": "noul",
+   "instructions": "`Member.CompleteMemberRetirement` is an absorbing transition: once accepted, any later repeat or any stale caller sending it again is a harmless no-op regardless of what happened in between.",
+   "criteria": {
+    "true": "After this command no later decision on the record could be overwritten by a repeat of it (for example delete, revoke, complete, surrender).",
+    "false": "A later decision (a newer version, a reversal, a reactivation) could be overwritten or contradicted by a stale repeat of this command."
+   }
+  },
+  "Member.CompleteMemberRetirement__process_reply": {
+   "type": "noul",
+   "instructions": "`Member.CompleteMemberRetirement` is a reply inside a process (confirmation, rejection or result of an operation the owner admitted earlier) and is bound by that operation's identity rather than by a revision.",
+   "criteria": {
+    "true": "The fields carry an operation, generation or request identity and the command resolves an earlier admitted operation.",
+    "false": "The command is an ordinary user or owner decision with no earlier admitted operation to resolve."
+   }
+  },
+  "MethodologyTemplate.ApproveMethodologyTemplateVersion__mutates_existing": {
+   "type": "noul",
+   "instructions": "When `MethodologyTemplate.ApproveMethodologyTemplateVersion` (see `commands`) is accepted, the owner's record already has state that an earlier decision established, and this command changes that state.",
+   "criteria": {
+    "true": "The record exists before the command (an event in owner_events precedes it) and the command appends a new decision to it.",
+    "false": "The command is the first fact of the record, or it only replays or confirms an outcome already fixed by an earlier operation."
+   }
+  },
+  "MethodologyTemplate.ApproveMethodologyTemplateVersion__absorbing": {
+   "type": "noul",
+   "instructions": "`MethodologyTemplate.ApproveMethodologyTemplateVersion` is an absorbing transition: once accepted, any later repeat or any stale caller sending it again is a harmless no-op regardless of what happened in between.",
+   "criteria": {
+    "true": "After this command no later decision on the record could be overwritten by a repeat of it (for example delete, revoke, complete, surrender).",
+    "false": "A later decision (a newer version, a reversal, a reactivation) could be overwritten or contradicted by a stale repeat of this command."
+   }
+  },
+  "MethodologyTemplate.ApproveMethodologyTemplateVersion__process_reply": {
+   "type": "noul",
+   "instructions": "`MethodologyTemplate.ApproveMethodologyTemplateVersion` is a reply inside a process (confirmation, rejection or result of an operation the owner admitted earlier) and is bound by that operation's identity rather than by a revision.",
+   "criteria": {
+    "true": "The fields carry an operation, generation or request identity and the command resolves an earlier admitted operation.",
+    "false": "The command is an ordinary user or owner decision with no earlier admitted operation to resolve."
+   }
+  },
+  "MethodologyTemplate.ReviewMethodologyTemplate__mutates_existing": {
+   "type": "noul",
+   "instructions": "When `MethodologyTemplate.ReviewMethodologyTemplate` (see `commands`) is accepted, the owner's record already has state that an earlier decision established, and this command changes that state.",
+   "criteria": {
+    "true": "The record exists before the command (an event in owner_events precedes it) and the command appends a new decision to it.",
+    "false": "The command is the first fact of the record, or it only replays or confirms an outcome already fixed by an earlier operation."
+   }
+  },
+  "MethodologyTemplate.ReviewMethodologyTemplate__absorbing": {
+   "type": "noul",
+   "instructions": "`MethodologyTemplate.ReviewMethodologyTemplate` is an absorbing transition: once accepted, any later repeat or any stale caller sending it again is a harmless no-op regardless of what happened in between.",
+   "criteria": {
+    "true": "After this command no later decision on the record could be overwritten by a repeat of it (for example delete, revoke, complete, surrender).",
+    "false": "A later decision (a newer version, a reversal, a reactivation) could be overwritten or contradicted by a stale repeat of this command."
+   }
+  },
+  "MethodologyTemplate.ReviewMethodologyTemplate__process_reply": {
+   "type": "noul",
+   "instructions": "`MethodologyTemplate.ReviewMethodologyTemplate` is a reply inside a process (confirmation, rejection or result of an operation the owner admitted earlier) and is bound by that operation's identity rather than by a revision.",
+   "criteria": {
+    "true": "The fields carry an operation, generation or request identity and the command resolves an earlier admitted operation.",
+    "false": "The command is an ordinary user or owner decision with no earlier admitted operation to resolve."
+   }
+  },
+  "MethodologyTemplateContribution.AcceptTemplateContribution__mutates_existing": {
+   "type": "noul",
+   "instructions": "When `MethodologyTemplateContribution.AcceptTemplateContribution` (see `commands`) is accepted, the owner's record already has state that an earlier decision established, and this command changes that state.",
+   "criteria": {
+    "true": "The record exists before the command (an event in owner_events precedes it) and the command appends a new decision to it.",
+    "false": "The command is the first fact of the record, or it only replays or confirms an outcome already fixed by an earlier operation."
+   }
+  },
+  "MethodologyTemplateContribution.AcceptTemplateContribution__absorbing": {
+   "type": "noul",
+   "instructions": "`MethodologyTemplateContribution.AcceptTemplateContribution` is an absorbing transition: once accepted, any later repeat or any stale caller sending it again is a harmless no-op regardless of what happened in between.",
+   "criteria": {
+    "true": "After this command no later decision on the record could be overwritten by a repeat of it (for example delete, revoke, complete, surrender).",
+    "false": "A later decision (a newer version, a reversal, a reactivation) could be overwritten or contradicted by a stale repeat of this command."
+   }
+  },
+  "MethodologyTemplateContribution.AcceptTemplateContribution__process_reply": {
+   "type": "noul",
+   "instructions": "`MethodologyTemplateContribution.AcceptTemplateContribution` is a reply inside a process (confirmation, rejection or result of an operation the owner admitted earlier) and is bound by that operation's identity rather than by a revision.",
+   "criteria": {
+    "true": "The fields carry an operation, generation or request identity and the command resolves an earlier admitted operation.",
+    "false": "The command is an ordinary user or owner decision with no earlier admitted operation to resolve."
+   }
+  },
+  "MethodologyTemplateContribution.ReviewTemplateContribution__mutates_existing": {
+   "type": "noul",
+   "instructions": "When `MethodologyTemplateContribution.ReviewTemplateContribution` (see `commands`) is accepted, the owner's record already has state that an earlier decision established, and this command changes that state.",
+   "criteria": {
+    "true": "The record exists before the command (an event in owner_events precedes it) and the command appends a new decision to it.",
+    "false": "The command is the first fact of the record, or it only replays or confirms an outcome already fixed by an earlier operation."
+   }
+  },
+  "MethodologyTemplateContribution.ReviewTemplateContribution__absorbing": {
+   "type": "noul",
+   "instructions": "`MethodologyTemplateContribution.ReviewTemplateContribution` is an absorbing transition: once accepted, any later repeat or any stale caller sending it again is a harmless no-op regardless of what happened in between.",
+   "criteria": {
+    "true": "After this command no later decision on the record could be overwritten by a repeat of it (for example delete, revoke, complete, surrender).",
+    "false": "A later decision (a newer version, a reversal, a reactivation) could be overwritten or contradicted by a stale repeat of this command."
+   }
+  },
+  "MethodologyTemplateContribution.ReviewTemplateContribution__process_reply": {
+   "type": "noul",
+   "instructions": "`MethodologyTemplateContribution.ReviewTemplateContribution` is a reply inside a process (confirmation, rejection or result of an operation the owner admitted earlier) and is bound by that operation's identity rather than by a revision.",
+   "criteria": {
+    "true": "The fields carry an operation, generation or request identity and the command resolves an earlier admitted operation.",
+    "false": "The command is an ordinary user or owner decision with no earlier admitted operation to resolve."
+   }
+  },
+  "ServiceEngagementIndependence.RecordDirectoryIndependenceReevaluation__mutates_existing": {
+   "type": "noul",
+   "instructions": "When `ServiceEngagementIndependence.RecordDirectoryIndependenceReevaluation` (see `commands`) is accepted, the owner's record already has state that an earlier decision established, and this command changes that state.",
+   "criteria": {
+    "true": "The record exists before the command (an event in owner_events precedes it) and the command appends a new decision to it.",
+    "false": "The command is the first fact of the record, or it only replays or confirms an outcome already fixed by an earlier operation."
+   }
+  },
+  "ServiceEngagementIndependence.RecordDirectoryIndependenceReevaluation__absorbing": {
+   "type": "noul",
+   "instructions": "`ServiceEngagementIndependence.RecordDirectoryIndependenceReevaluation` is an absorbing transition: once accepted, any later repeat or any stale caller sending it again is a harmless no-op regardless of what happened in between.",
+   "criteria": {
+    "true": "After this command no later decision on the record could be overwritten by a repeat of it (for example delete, revoke, complete, surrender).",
+    "false": "A later decision (a newer version, a reversal, a reactivation) could be overwritten or contradicted by a stale repeat of this command."
+   }
+  },
+  "ServiceEngagementIndependence.RecordDirectoryIndependenceReevaluation__process_reply": {
+   "type": "noul",
+   "instructions": "`ServiceEngagementIndependence.RecordDirectoryIndependenceReevaluation` is a reply inside a process (confirmation, rejection or result of an operation the owner admitted earlier) and is bound by that operation's identity rather than by a revision.",
+   "criteria": {
+    "true": "The fields carry an operation, generation or request identity and the command resolves an earlier admitted operation.",
+    "false": "The command is an ordinary user or owner decision with no earlier admitted operation to resolve."
+   }
+  },
+  "SignificantChange.LinkImpactReviewWork__mutates_existing": {
+   "type": "noul",
+   "instructions": "When `SignificantChange.LinkImpactReviewWork` (see `commands`) is accepted, the owner's record already has state that an earlier decision established, and this command changes that state.",
+   "criteria": {
+    "true": "The record exists before the command (an event in owner_events precedes it) and the command appends a new decision to it.",
+    "false": "The command is the first fact of the record, or it only replays or confirms an outcome already fixed by an earlier operation."
+   }
+  },
+  "SignificantChange.LinkImpactReviewWork__absorbing": {
+   "type": "noul",
+   "instructions": "`SignificantChange.LinkImpactReviewWork` is an absorbing transition: once accepted, any later repeat or any stale caller sending it again is a harmless no-op regardless of what happened in between.",
+   "criteria": {
+    "true": "After this command no later decision on the record could be overwritten by a repeat of it (for example delete, revoke, complete, surrender).",
+    "false": "A later decision (a newer version, a reversal, a reactivation) could be overwritten or contradicted by a stale repeat of this command."
+   }
+  },
+  "SignificantChange.LinkImpactReviewWork__process_reply": {
+   "type": "noul",
+   "instructions": "`SignificantChange.LinkImpactReviewWork` is a reply inside a process (confirmation, rejection or result of an operation the owner admitted earlier) and is bound by that operation's identity rather than by a revision.",
+   "criteria": {
+    "true": "The fields carry an operation, generation or request identity and the command resolves an earlier admitted operation.",
+    "false": "The command is an ordinary user or owner decision with no earlier admitted operation to resolve."
+   }
+  },
+  "SignificantChange.RecordSignificantChangeSystemDescriptionDecision__mutates_existing": {
+   "type": "noul",
+   "instructions": "When `SignificantChange.RecordSignificantChangeSystemDescriptionDecision` (see `commands`) is accepted, the owner's record already has state that an earlier decision established, and this command changes that state.",
+   "criteria": {
+    "true": "The record exists before the command (an event in owner_events precedes it) and the command appends a new decision to it.",
+    "false": "The command is the first fact of the record, or it only replays or confirms an outcome already fixed by an earlier operation."
+   }
+  },
+  "SignificantChange.RecordSignificantChangeSystemDescriptionDecision__absorbing": {
+   "type": "noul",
+   "instructions": "`SignificantChange.RecordSignificantChangeSystemDescriptionDecision` is an absorbing transition: once accepted, any later repeat or any stale caller sending it again is a harmless no-op regardless of what happened in between.",
+   "criteria": {
+    "true": "After this command no later decision on the record could be overwritten by a repeat of it (for example delete, revoke, complete, surrender).",
+    "false": "A later decision (a newer version, a reversal, a reactivation) could be overwritten or contradicted by a stale repeat of this command."
+   }
+  },
+  "SignificantChange.RecordSignificantChangeSystemDescriptionDecision__process_reply": {
+   "type": "noul",
+   "instructions": "`SignificantChange.RecordSignificantChangeSystemDescriptionDecision` is a reply inside a process (confirmation, rejection or result of an operation the owner admitted earlier) and is bound by that operation's identity rather than by a revision.",
+   "criteria": {
+    "true": "The fields carry an operation, generation or request identity and the command resolves an earlier admitted operation.",
+    "false": "The command is an ordinary user or owner decision with no earlier admitted operation to resolve."
+   }
+  },
+  "TeamMember.CleanupRetiredMembershipRelationship__mutates_existing": {
+   "type": "noul",
+   "instructions": "When `TeamMember.CleanupRetiredMembershipRelationship` (see `commands`) is accepted, the owner's record already has state that an earlier decision established, and this command changes that state.",
+   "criteria": {
+    "true": "The record exists before the command (an event in owner_events precedes it) and the command appends a new decision to it.",
+    "false": "The command is the first fact of the record, or it only replays or confirms an outcome already fixed by an earlier operation."
+   }
+  },
+  "TeamMember.CleanupRetiredMembershipRelationship__absorbing": {
+   "type": "noul",
+   "instructions": "`TeamMember.CleanupRetiredMembershipRelationship` is an absorbing transition: once accepted, any later repeat or any stale caller sending it again is a harmless no-op regardless of what happened in between.",
+   "criteria": {
+    "true": "After this command no later decision on the record could be overwritten by a repeat of it (for example delete, revoke, complete, surrender).",
+    "false": "A later decision (a newer version, a reversal, a reactivation) could be overwritten or contradicted by a stale repeat of this command."
+   }
+  },
+  "TeamMember.CleanupRetiredMembershipRelationship__process_reply": {
+   "type": "noul",
+   "instructions": "`TeamMember.CleanupRetiredMembershipRelationship` is a reply inside a process (confirmation, rejection or result of an operation the owner admitted earlier) and is bound by that operation's identity rather than by a revision.",
+   "criteria": {
+    "true": "The fields carry an operation, generation or request identity and the command resolves an earlier admitted operation.",
+    "false": "The command is an ordinary user or owner decision with no earlier admitted operation to resolve."
+   }
+  },
+  "Tenant.ActivateTenant__mutates_existing": {
+   "type": "noul",
+   "instructions": "When `Tenant.ActivateTenant` (see `commands`) is accepted, the owner's record already has state that an earlier decision established, and this command changes that state.",
+   "criteria": {
+    "true": "The record exists before the command (an event in owner_events precedes it) and the command appends a new decision to it.",
+    "false": "The command is the first fact of the record, or it only replays or confirms an outcome already fixed by an earlier operation."
+   }
+  },
+  "Tenant.ActivateTenant__absorbing": {
+   "type": "noul",
+   "instructions": "`Tenant.ActivateTenant` is an absorbing transition: once accepted, any later repeat or any stale caller sending it again is a harmless no-op regardless of what happened in between.",
+   "criteria": {
+    "true": "After this command no later decision on the record could be overwritten by a repeat of it (for example delete, revoke, complete, surrender).",
+    "false": "A later decision (a newer version, a reversal, a reactivation) could be overwritten or contradicted by a stale repeat of this command."
+   }
+  },
+  "Tenant.ActivateTenant__process_reply": {
+   "type": "noul",
+   "instructions": "`Tenant.ActivateTenant` is a reply inside a process (confirmation, rejection or result of an operation the owner admitted earlier) and is bound by that operation's identity rather than by a revision.",
+   "criteria": {
+    "true": "The fields carry an operation, generation or request identity and the command resolves an earlier admitted operation.",
+    "false": "The command is an ordinary user or owner decision with no earlier admitted operation to resolve."
+   }
+  },
+  "Tenant.ConfirmTenantSlug__mutates_existing": {
+   "type": "noul",
+   "instructions": "When `Tenant.ConfirmTenantSlug` (see `commands`) is accepted, the owner's record already has state that an earlier decision established, and this command changes that state.",
+   "criteria": {
+    "true": "The record exists before the command (an event in owner_events precedes it) and the command appends a new decision to it.",
+    "false": "The command is the first fact of the record, or it only replays or confirms an outcome already fixed by an earlier operation."
+   }
+  },
+  "Tenant.ConfirmTenantSlug__absorbing": {
+   "type": "noul",
+   "instructions": "`Tenant.ConfirmTenantSlug` is an absorbing transition: once accepted, any later repeat or any stale caller sending it again is a harmless no-op regardless of what happened in between.",
+   "criteria": {
+    "true": "After this command no later decision on the record could be overwritten by a repeat of it (for example delete, revoke, complete, surrender).",
+    "false": "A later decision (a newer version, a reversal, a reactivation) could be overwritten or contradicted by a stale repeat of this command."
+   }
+  },
+  "Tenant.ConfirmTenantSlug__process_reply": {
+   "type": "noul",
+   "instructions": "`Tenant.ConfirmTenantSlug` is a reply inside a process (confirmation, rejection or result of an operation the owner admitted earlier) and is bound by that operation's identity rather than by a revision.",
+   "criteria": {
+    "true": "The fields carry an operation, generation or request identity and the command resolves an earlier admitted operation.",
+    "false": "The command is an ordinary user or owner decision with no earlier admitted operation to resolve."
+   }
+  },
+  "Tenant.ConfirmTenantSlugSurrender__mutates_existing": {
+   "type": "noul",
+   "instructions": "When `Tenant.ConfirmTenantSlugSurrender` (see `commands`) is accepted, the owner's record already has state that an earlier decision established, and this command changes that state.",
+   "criteria": {
+    "true": "The record exists before the command (an event in owner_events precedes it) and the command appends a new decision to it.",
+    "false": "The command is the first fact of the record, or it only replays or confirms an outcome already fixed by an earlier operation."
+   }
+  },
+  "Tenant.ConfirmTenantSlugSurrender__absorbing": {
+   "type": "noul",
+   "instructions": "`Tenant.ConfirmTenantSlugSurrender` is an absorbing transition: once accepted, any later repeat or any stale caller sending it again is a harmless no-op regardless of what happened in between.",
+   "criteria": {
+    "true": "After this command no later decision on the record could be overwritten by a repeat of it (for example delete, revoke, complete, surrender).",
+    "false": "A later decision (a newer version, a reversal, a reactivation) could be overwritten or contradicted by a stale repeat of this command."
+   }
+  },
+  "Tenant.ConfirmTenantSlugSurrender__process_reply": {
+   "type": "noul",
+   "instructions": "`Tenant.ConfirmTenantSlugSurrender` is a reply inside a process (confirmation, rejection or result of an operation the owner admitted earlier) and is bound by that operation's identity rather than by a revision.",
+   "criteria": {
+    "true": "The fields carry an operation, generation or request identity and the command resolves an earlier admitted operation.",
+    "false": "The command is an ordinary user or owner decision with no earlier admitted operation to resolve."
+   }
+  },
+  "Tenant.RejectTenantSlug__mutates_existing": {
+   "type": "noul",
+   "instructions": "When `Tenant.RejectTenantSlug` (see `commands`) is accepted, the owner's record already has state that an earlier decision established, and this command changes that state.",
+   "criteria": {
+    "true": "The record exists before the command (an event in owner_events precedes it) and the command appends a new decision to it.",
+    "false": "The command is the first fact of the record, or it only replays or confirms an outcome already fixed by an earlier operation."
+   }
+  },
+  "Tenant.RejectTenantSlug__absorbing": {
+   "type": "noul",
+   "instructions": "`Tenant.RejectTenantSlug` is an absorbing transition: once accepted, any later repeat or any stale caller sending it again is a harmless no-op regardless of what happened in between.",
+   "criteria": {
+    "true": "After this command no later decision on the record could be overwritten by a repeat of it (for example delete, revoke, complete, surrender).",
+    "false": "A later decision (a newer version, a reversal, a reactivation) could be overwritten or contradicted by a stale repeat of this command."
+   }
+  },
+  "Tenant.RejectTenantSlug__process_reply": {
+   "type": "noul",
+   "instructions": "`Tenant.RejectTenantSlug` is a reply inside a process (confirmation, rejection or result of an operation the owner admitted earlier) and is bound by that operation's identity rather than by a revision.",
+   "criteria": {
+    "true": "The fields carry an operation, generation or request identity and the command resolves an earlier admitted operation.",
+    "false": "The command is an ordinary user or owner decision with no earlier admitted operation to resolve."
+   }
+  },
+  "Tenant.RejectTenantSlugSurrender__mutates_existing": {
+   "type": "noul",
+   "instructions": "When `Tenant.RejectTenantSlugSurrender` (see `commands`) is accepted, the owner's record already has state that an earlier decision established, and this command changes that state.",
+   "criteria": {
+    "true": "The record exists before the command (an event in owner_events precedes it) and the command appends a new decision to it.",
+    "false": "The command is the first fact of the record, or it only replays or confirms an outcome already fixed by an earlier operation."
+   }
+  },
+  "Tenant.RejectTenantSlugSurrender__absorbing": {
+   "type": "noul",
+   "instructions": "`Tenant.RejectTenantSlugSurrender` is an absorbing transition: once accepted, any later repeat or any stale caller sending it again is a harmless no-op regardless of what happened in between.",
+   "criteria": {
+    "true": "After this command no later decision on the record could be overwritten by a repeat of it (for example delete, revoke, complete, surrender).",
+    "false": "A later decision (a newer version, a reversal, a reactivation) could be overwritten or contradicted by a stale repeat of this command."
+   }
+  },
+  "Tenant.RejectTenantSlugSurrender__process_reply": {
+   "type": "noul",
+   "instructions": "`Tenant.RejectTenantSlugSurrender` is a reply inside a process (confirmation, rejection or result of an operation the owner admitted earlier) and is bound by that operation's identity rather than by a revision.",
+   "criteria": {
+    "true": "The fields carry an operation, generation or request identity and the command resolves an earlier admitted operation.",
+    "false": "The command is an ordinary user or owner decision with no earlier admitted operation to resolve."
+   }
+  },
+  "Tenant.RequestTenantSlugSurrender__mutates_existing": {
+   "type": "noul",
+   "instructions": "When `Tenant.RequestTenantSlugSurrender` (see `commands`) is accepted, the owner's record already has state that an earlier decision established, and this command changes that state.",
+   "criteria": {
+    "true": "The record exists before the command (an event in owner_events precedes it) and the command appends a new decision to it.",
+    "false": "The command is the first fact of the record, or it only replays or confirms an outcome already fixed by an earlier operation."
+   }
+  },
+  "Tenant.RequestTenantSlugSurrender__absorbing": {
+   "type": "noul",
+   "instructions": "`Tenant.RequestTenantSlugSurrender` is an absorbing transition: once accepted, any later repeat or any stale caller sending it again is a harmless no-op regardless of what happened in between.",
+   "criteria": {
+    "true": "After this command no later decision on the record could be overwritten by a repeat of it (for example delete, revoke, complete, surrender).",
+    "false": "A later decision (a newer version, a reversal, a reactivation) could be overwritten or contradicted by a stale repeat of this command."
+   }
+  },
+  "Tenant.RequestTenantSlugSurrender__process_reply": {
+   "type": "noul",
+   "instructions": "`Tenant.RequestTenantSlugSurrender` is a reply inside a process (confirmation, rejection or result of an operation the owner admitted earlier) and is bound by that operation's identity rather than by a revision.",
+   "criteria": {
+    "true": "The fields carry an operation, generation or request identity and the command resolves an earlier admitted operation.",
+    "false": "The command is an ordinary user or owner decision with no earlier admitted operation to resolve."
+   }
+  },
+  "TypeIIPlan.ApproveTypeIIOperatingPlan__mutates_existing": {
+   "type": "noul",
+   "instructions": "When `TypeIIPlan.ApproveTypeIIOperatingPlan` (see `commands`) is accepted, the owner's record already has state that an earlier decision established, and this command changes that state.",
+   "criteria": {
+    "true": "The record exists before the command (an event in owner_events precedes it) and the command appends a new decision to it.",
+    "false": "The command is the first fact of the record, or it only replays or confirms an outcome already fixed by an earlier operation."
+   }
+  },
+  "TypeIIPlan.ApproveTypeIIOperatingPlan__absorbing": {
+   "type": "noul",
+   "instructions": "`TypeIIPlan.ApproveTypeIIOperatingPlan` is an absorbing transition: once accepted, any later repeat or any stale caller sending it again is a harmless no-op regardless of what happened in between.",
+   "criteria": {
+    "true": "After this command no later decision on the record could be overwritten by a repeat of it (for example delete, revoke, complete, surrender).",
+    "false": "A later decision (a newer version, a reversal, a reactivation) could be overwritten or contradicted by a stale repeat of this command."
+   }
+  },
+  "TypeIIPlan.ApproveTypeIIOperatingPlan__process_reply": {
+   "type": "noul",
+   "instructions": "`TypeIIPlan.ApproveTypeIIOperatingPlan` is a reply inside a process (confirmation, rejection or result of an operation the owner admitted earlier) and is bound by that operation's identity rather than by a revision.",
+   "criteria": {
+    "true": "The fields carry an operation, generation or request identity and the command resolves an earlier admitted operation.",
+    "false": "The command is an ordinary user or owner decision with no earlier admitted operation to resolve."
+   }
+  },
+  "WorkforceObservationResolution.ResolveWorkforceObservation__mutates_existing": {
+   "type": "noul",
+   "instructions": "When `WorkforceObservationResolution.ResolveWorkforceObservation` (see `commands`) is accepted, the owner's record already has state that an earlier decision established, and this command changes that state.",
+   "criteria": {
+    "true": "The record exists before the command (an event in owner_events precedes it) and the command appends a new decision to it.",
+    "false": "The command is the first fact of the record, or it only replays or confirms an outcome already fixed by an earlier operation."
+   }
+  },
+  "WorkforceObservationResolution.ResolveWorkforceObservation__absorbing": {
+   "type": "noul",
+   "instructions": "`WorkforceObservationResolution.ResolveWorkforceObservation` is an absorbing transition: once accepted, any later repeat or any stale caller sending it again is a harmless no-op regardless of what happened in between.",
+   "criteria": {
+    "true": "After this command no later decision on the record could be overwritten by a repeat of it (for example delete, revoke, complete, surrender).",
+    "false": "A later decision (a newer version, a reversal, a reactivation) could be overwritten or contradicted by a stale repeat of this command."
+   }
+  },
+  "WorkforceObservationResolution.ResolveWorkforceObservation__process_reply": {
+   "type": "noul",
+   "instructions": "`WorkforceObservationResolution.ResolveWorkforceObservation` is a reply inside a process (confirmation, rejection or result of an operation the owner admitted earlier) and is bound by that operation's identity rather than by a revision.",
+   "criteria": {
+    "true": "The fields carry an operation, generation or request identity and the command resolves an earlier admitted operation.",
+    "false": "The command is an ordinary user or owner decision with no earlier admitted operation to resolve."
+   }
+  },
+  "tenant__lifecycle_owner": {
+   "type": "noul",
+   "instructions": "Suspension, reactivation and offboarding of a tenant are state transitions that the Tenant owner itself must decide at write time (refusing an invalid transition such as reactivating an active tenant or offboarding an offboarded one), even though a platform operator initiates them.",
+   "criteria": {
+    "true": "The Tenant stream is where the current lifecycle state lives, so only the Tenant owner can refuse an invalid transition atomically.",
+    "false": "The transition is decided elsewhere (for example by the platform operator roster) and the Tenant stream only mirrors it."
+   }
+  },
+  "tenant__lifecycle_states": {
+   "type": "choice",
+   "instructions": "Which lifecycle statement should the Tenant invariant adopt?",
+   "criteria": {
+    "explicit_state_machine": "State the legal transitions: registered to active (after slug and first administrator), active to suspended and back (operator), active or suspended to offboarding (operator), offboarding to offboarded (after package delivery and disposition); every other transition is refused.",
+    "current_text_sufficient": "The current invariant and decides clause already make the Tenant owner responsible for these transitions."
+   }
+  },
+  "x008__proof_read": {
+   "type": "choice",
+   "instructions": "How should the dependency in `x008` be modelled?",
+   "criteria": {
+    "proof_read_at_signoff": "No reactor: the SignOffExamination command's required stage proofs include the signed letter fact, verified when the personal sign-off is accepted.",
+    "reactor_records_availability": "A reactor appends an availability fact on the sign-off stream when the letter is signed, so sign-off can check its own stream.",
+    "both": "Keep both the reactor and the proof check."
+   }
+  }
+ }
+}

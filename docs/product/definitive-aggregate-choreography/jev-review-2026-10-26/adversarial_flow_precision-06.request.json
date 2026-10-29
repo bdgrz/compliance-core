@@ -1,0 +1,309 @@
+{
+  "model": "jev-1.14.0",
+  "state": {
+    "review": "Re-evaluate selected choreography rows using only their material source/target facts and proof rules. A dispatcher is not proof of target commitment. Do not require child-stage proofs where the selected row has no intermediate stage; judge the row kind and its actual conditions.",
+    "pass": "adversarial_flow_precision",
+    "ownerFacts": [
+      {
+        "owner": "Tenant",
+        "classification": "business_aggregate",
+        "identity": "Caller TenantId is immutable tenant creation identity; lifecycle operations use caller CommandId.",
+        "invariant": "One tenant lifecycle activates only after its slug and first-administrator conditions; offboarding forbids new active service; one current slug transition admitted at a time.",
+        "boundaryRationale": "Tenant lifecycle and activation/current-slug link need coherence; global slug uniqueness belongs slug authority. Previous slug history and transport correlation need not live in tenant."
+      },
+      {
+        "owner": "RolePermission",
+        "classification": "business_aggregate",
+        "identity": "Existing UUIDv5 of tenant + role + normalized permission. Selected CommandId and assignment episode bind the exact assignment/removal intent.",
+        "invariant": "One normalized role-permission tuple has a single active relationship at a time.",
+        "boundaryRationale": "Relationship can be assigned/removed without serializing unrelated permissions; a roster in Role is unnecessary."
+      },
+      {
+        "owner": "TeamMember",
+        "classification": "business_aggregate",
+        "identity": "Existing UUIDv5 of tenant + team + member. Each assignment episode remains exact; selected native operation/receiver identity is bound to that member/team episode.",
+        "invariant": "One tenant/team/member relationship is active only for one current membership episode.",
+        "boundaryRationale": "Membership episode and active flag must be together; team-wide roster does not need an atomic revision. Tenant-manager invariant requires separate authoritative removal coordination."
+      },
+      {
+        "owner": "EvidenceArtifact",
+        "classification": "business_aggregate",
+        "identity": "Tenant / existing EvidenceStreams artifact key / ArtifactId, with immutable source identity and verified content binding. ArtifactId identifies registration; selected mutations use CommandId. Download grants use the separately adopted artifact-qualified receiving identity.",
+        "invariant": "Immutable content remains unavailable until clean inspection; malware alone can be released with attributed clean rescan; secret/invalid rejection is final.",
+        "boundaryRationale": "Inspection and quarantine release share availability decision. Download authorization needs an admission proof against that decision but every historical download need not extend artifact lifecycle stream."
+      },
+      {
+        "owner": "ArtifactDownloadGrant",
+        "classification": "business_aggregate",
+        "identity": "UUIDv5 namespace ArtifactId, UTF8 artifact-download-grant:v1:{canonical TenantId}:{canonical CommandId}. Receiving root additionally verifies exact artifact/command/original-actor tuple. No generic operation lookup.",
+        "invariant": "One exact receiving grant owns the authenticated encrypted original artifact ticket/result after EvidenceArtifact first admitted and pinned availability with frozen202. Complete required held source uses and exact issue DecisionAt precede native issued-v2; cancellation fences delayed issuance and terminal proofs settle all uses. Original expiry never renews under the same root identity. Existing artifact-issued v1 decoder remains read-only compatibility."
+      }
+    ],
+    "orderedPhysicalPlans": [
+      {
+        "group": "TenantRbacBootstrap",
+        "sourceEvent": "TenantRegistered",
+        "execution": "One reactor processes the command list serially; each send completes before the next command is sent.",
+        "condition": "ownerBecomesAdministrator = CreatorIsAdministrator OR FirstAdministratorEmail is null.",
+        "orderedEffects": [
+          {
+            "order": 1,
+            "command": "DefineRole",
+            "targetOwner": "Role",
+            "condition": "always",
+            "intent": "Define the canonical tenant-administrator role."
+          },
+          {
+            "order": 2,
+            "command": "DefineTeam",
+            "targetOwner": "Team",
+            "condition": "always",
+            "intent": "Define the canonical administrators team."
+          },
+          {
+            "order": 3,
+            "command": "RegisterMember",
+            "targetOwner": "Member",
+            "condition": "ownerBecomesAdministrator",
+            "intent": "Register the tenant owner for the administrator episode."
+          },
+          {
+            "order": 4,
+            "command": "AssignTeamRole",
+            "targetOwner": "TeamRole",
+            "condition": "always",
+            "intent": "Link the administrators team to the administrator role."
+          },
+          {
+            "order": 5,
+            "command": "AssignRolePermission",
+            "targetOwner": "RolePermission",
+            "condition": "always",
+            "requiredPermissionEffects": [
+              "TenantAccess",
+              "TenantRbacManage",
+              "ProgramManage"
+            ],
+            "intent": "Commit all three core administrator permissions."
+          },
+          {
+            "order": 6,
+            "command": "AssignTeamMember",
+            "targetOwner": "TeamMember",
+            "condition": "ownerBecomesAdministrator",
+            "intent": "Assign the exact owner member to the administrators team; TeamMemberAssigned can trigger tenant activation."
+          }
+        ],
+        "activationFence": "The order-6 TeamMemberAssigned effect is forbidden until the order-4 TeamRoleAssigned fact and all three order-5 RolePermissionAssigned facts have committed for this same tenant registration and administrator role.",
+        "failureBehavior": "Any prerequisite send failure stops before activation assignment; activation assignment failure fails the reactor invocation and prevents its checkpoint from completing. Replays reuse the same source-derived command identities.",
+        "sourceEvidence": {
+          "path": "src/Compliance.Core/Features/AccessControl/TenantRbacBootstrapReactor.cs",
+          "sha256": "63c50627f2de825bc2d66e3cfcb4756d9b5178902c3817b5dde3be62dafd3a52"
+        }
+      }
+    ],
+    "flows": [
+      {
+        "id": "S015",
+        "kind": "business_receiver",
+        "sourceOwner": "Tenant",
+        "targetOwner": "RolePermission",
+        "targetAuthorityKind": "business_aggregate",
+        "physicalRootEvents": [
+          "TenantRegistered"
+        ],
+        "logicalPrerequisiteFacts": [
+          "TenantRegistered"
+        ],
+        "receiverCommand": "AssignRolePermission",
+        "emittedSemanticFacts": [
+          "RolePermissionAssigned"
+        ],
+        "orderedGroup": "TenantRbacBootstrap",
+        "orderingConstraint": {
+          "order": 5,
+          "condition": "always",
+          "after": [
+            "S014"
+          ],
+          "requiredEffects": [
+            "TenantAccess",
+            "TenantRbacManage",
+            "ProgramManage"
+          ]
+        },
+        "proofGate": "Use canonical built-in IDs and source-derived relationship command IDs. Register owner only when selected as first administrator; bind its registration episode. Administrative role link and core permissions precede activation-triggering assignment; guarded admin assignment retains its source-admission process.",
+        "recoveryContract": "Replayed bootstrap allows existing role/team-definition conflicts as explicitly coded; other effects retry identical deterministic identities. Never manufacture a missing permission or membership result.",
+        "effectIdentity": {}
+      },
+      {
+        "id": "S016",
+        "kind": "business_receiver",
+        "sourceOwner": "Tenant",
+        "targetOwner": "TeamMember",
+        "targetAuthorityKind": "business_aggregate",
+        "physicalRootEvents": [
+          "TenantRegistered"
+        ],
+        "logicalPrerequisiteFacts": [
+          "TenantRegistered"
+        ],
+        "receiverCommand": "AssignTeamMember",
+        "emittedSemanticFacts": [
+          "TeamMemberAssigned"
+        ],
+        "orderedGroup": "TenantRbacBootstrap",
+        "orderingConstraint": {
+          "order": 6,
+          "condition": "ownerBecomesAdministrator",
+          "after": [
+            "S013",
+            "S014",
+            "S015"
+          ],
+          "activationTrigger": true
+        },
+        "proofGate": "Use canonical built-in IDs and source-derived relationship command IDs. Register owner only when selected as first administrator; bind its registration episode. Administrative role link and core permissions precede activation-triggering assignment; guarded admin assignment retains its source-admission process.",
+        "recoveryContract": "Replayed bootstrap allows existing role/team-definition conflicts as explicitly coded; other effects retry identical deterministic identities. Never manufacture a missing permission or membership result.",
+        "effectIdentity": {}
+      },
+      {
+        "id": "A021",
+        "kind": "process_abort_binding",
+        "sourceOwner": "EvidenceArtifact",
+        "targetOwner": "ArtifactDownloadGrant",
+        "targetAuthorityKind": "business_aggregate",
+        "physicalRootEvents": [
+          "EvidenceArtifactDownloadRequested"
+        ],
+        "logicalPrerequisiteFacts": [
+          "EvidenceArtifactDownloadRequested"
+        ],
+        "receiverCommand": "CancelProtectedArtifactDownloadGrant",
+        "emittedSemanticFacts": [
+          "ArtifactDownloadGrantCanceled"
+        ],
+        "processes": [
+          "ArtifactDownloadProcess"
+        ],
+        "recoveryContract": "Exact source/generation fence before source-use release, including not-yet-acquired keys where selected. Published/irreversible outcomes recover forward; unknown append/unavailable remains transient; no unproven absence or clear-all release.",
+        "effectIdentity": {
+          "version": "effect-identity-v2",
+          "namespace": "actual committed EvidenceArtifactDownloadRequested.Metadata.EventId",
+          "fieldsInOrder": [
+            "effectKind (canonical receiver command kind)",
+            "canonical target EventStreamAddress",
+            "episode (exact selected value, initial when absent)"
+          ],
+          "rule": "Use only for this new unoccupied process identity domain; occupied v1 algorithms/target-key selections remain unchanged. Implementation must provide fixed byte/UUID vectors before activation."
+        },
+        "abortAuthority": "Actual provable pre-issue expiry/revocation/conflict/terminal failure bound to accepted root and complete held/not-yet-held key set; no cancellation from unavailable body alone. Atomically fence receiving issue before any settlement. Already issued recovers forward.",
+        "selectedContract": {
+          "command": "CancelProtectedArtifactDownloadGrant",
+          "handler": "CancelProtectedArtifactDownloadGrantHandler",
+          "owner": "ArtifactDownloadGrant",
+          "logicalIdentity": "CommandId",
+          "fields": [
+            {
+              "name": "CommandId",
+              "type": "Uuid",
+              "required": true
+            },
+            {
+              "name": "GrantId",
+              "type": "Uuid",
+              "required": true
+            },
+            {
+              "name": "RootOperationId",
+              "type": "Uuid",
+              "required": true
+            },
+            {
+              "name": "Generation",
+              "type": "long",
+              "required": true
+            },
+            {
+              "name": "FailureProof",
+              "type": "ImmutableContentRef",
+              "required": true
+            }
+          ],
+          "events": [
+            "ArtifactDownloadGrantCanceled"
+          ],
+          "http": null,
+          "mcp": false,
+          "entry": "trusted_internal",
+          "guards": "Only before EvidenceArtifactDownloadIssued; prove expired/revoked/conflicting required source or invalid/unavailable ticket outcome. Atomically fence grant issuance before source use settlement, including not-yet-acquired uses. Already issued grant cannot renew or change result; release uses from its exact issued fact.",
+          "sourceContract": null,
+          "tests": [
+            "failure before source use grant",
+            "ticket encrypted before native append crash",
+            "cancellation races native issue",
+            "late issue after cancellation rejected"
+          ],
+          "expectedRevisionScope": {
+            "field": null,
+            "owner": "ArtifactDownloadGrant",
+            "counter": "No primary caller ResourceRevision. Enforce required authored source/epoch/version tokens, immutable creation identity or trusted proof/generation as declared; append uses physical OCC."
+          }
+        }
+      }
+    ]
+  },
+  "questions": {
+    "flow_0": {
+      "type": "choice",
+      "instructions": "Can you identify a concrete defect in selected flow S015 from the supplied source facts, or is its design coherent?",
+      "criteria": {
+        "coherent": "The flow preserves the source owner decision, delegates to the target owner, and uses exact admission/proof/terminal rules suited to the row kind.",
+        "concrete_defect": "A specific owner is bypassed, causal ordering is wrong, an invariant is lost, or a required proof/fence/recovery rule is missing.",
+        "insufficient_evidence": "The row and source/target invariant facts do not establish enough to decide."
+      }
+    },
+    "evidence_0": {
+      "type": "noul",
+      "instructions": "Does selected flow S015 name the material causal facts and applicable proof/recovery requirements for its own flow kind?",
+      "criteria": {
+        "true": "The row states the source/target relation, the applicable identity and typed fact proofs, important conditional branches, and terminal or recovery behavior.",
+        "false": "A material source/target authority, typed proof, conditional branch, terminal fence, or recovery rule is not represented."
+      }
+    },
+    "flow_1": {
+      "type": "choice",
+      "instructions": "Can you identify a concrete defect in selected flow S016 from the supplied source facts, or is its design coherent?",
+      "criteria": {
+        "coherent": "The flow preserves the source owner decision, delegates to the target owner, and uses exact admission/proof/terminal rules suited to the row kind.",
+        "concrete_defect": "A specific owner is bypassed, causal ordering is wrong, an invariant is lost, or a required proof/fence/recovery rule is missing.",
+        "insufficient_evidence": "The row and source/target invariant facts do not establish enough to decide."
+      }
+    },
+    "evidence_1": {
+      "type": "noul",
+      "instructions": "Does selected flow S016 name the material causal facts and applicable proof/recovery requirements for its own flow kind?",
+      "criteria": {
+        "true": "The row states the source/target relation, the applicable identity and typed fact proofs, important conditional branches, and terminal or recovery behavior.",
+        "false": "A material source/target authority, typed proof, conditional branch, terminal fence, or recovery rule is not represented."
+      }
+    },
+    "flow_2": {
+      "type": "choice",
+      "instructions": "Can you identify a concrete defect in selected flow A021 from the supplied source facts, or is its design coherent?",
+      "criteria": {
+        "coherent": "The flow preserves the source owner decision, delegates to the target owner, and uses exact admission/proof/terminal rules suited to the row kind.",
+        "concrete_defect": "A specific owner is bypassed, causal ordering is wrong, an invariant is lost, or a required proof/fence/recovery rule is missing.",
+        "insufficient_evidence": "The row and source/target invariant facts do not establish enough to decide."
+      }
+    },
+    "evidence_2": {
+      "type": "noul",
+      "instructions": "Does selected flow A021 name the material causal facts and applicable proof/recovery requirements for its own flow kind?",
+      "criteria": {
+        "true": "The row states the source/target relation, the applicable identity and typed fact proofs, important conditional branches, and terminal or recovery behavior.",
+        "false": "A material source/target authority, typed proof, conditional branch, terminal fence, or recovery rule is not represented."
+      }
+    }
+  }
+}

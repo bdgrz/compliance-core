@@ -1,0 +1,47 @@
+using Cntryl.Portia;
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.AccessControl.Services;
+using Bdgrz.Compliance.Features.AuditPackages.Rules;
+using Bdgrz.Compliance.Features.Incidents.Rules;
+using Bdgrz.Compliance.Features.Operations.History;
+using Bdgrz.Compliance.Features.Operations.Models;
+using Bdgrz.Compliance.Features.Processes.Processes;
+using Bdgrz.Compliance.Features.Providers.Rules;
+using Bdgrz.Compliance.Features.Tenants.Processes;
+using Bdgrz.Compliance.Features.UserIdentities.Services;
+using Bdgrz.Compliance.Features.Versioning.Services;
+using Bdgrz.Compliance.Features.AccessControl.Aggregates;
+using Bdgrz.Compliance.Features.AccessControl.Commands;
+namespace Bdgrz.Compliance.Features.AccessControl.Handlers;
+
+public sealed class ApproveSeparationOfDutiesWaiverHandler(IAggregateExecutor executor,
+    TimeProvider clock) : IRequestHandler<ApproveSeparationOfDutiesWaiver, SeparationOfDutiesWaiverView>
+{
+    public ValueTask<Result<SeparationOfDutiesWaiverView>> HandleAsync(
+        IRequestContext<ApproveSeparationOfDutiesWaiver> context, CancellationToken ct)
+    {
+        if (context.Invocation is not HttpInvocation || RequestActor.IsSystem(context.Actor) ||
+            !UserIdentityClaims.TryGetBdgrzSubject(context.Actor, out _))
+            return ValueTask.FromResult(Result<SeparationOfDutiesWaiverView>.Failure(
+                new RequestError(RequestErrorKind.Forbidden,
+                    "Waiver approval requires personal HTTP submission.")));
+        if (!UserIdentityClaims.TryGetBdgrzSubject(context.Actor, out var approverUserId))
+            return ValueTask.FromResult(Result<SeparationOfDutiesWaiverView>.Failure(
+                new RequestError(RequestErrorKind.Unauthorized,
+                    "Waiver administration requires a Bdgrz user identity.")));
+        var request = context.Request;
+        var memberId = RbacIds.Member(request.TenantId, approverUserId);
+        var display = UserIdentityClaims.BdgrzDisplay(context.Actor, approverUserId);
+        var now = clock.GetUtcNow();
+        return executor.ExecuteAsync(new SeparationOfDutiesWaiver(request.TenantId, request.WaiverId),
+            waiver =>
+            {
+                var failure = waiver.Approve(memberId, display, now);
+                return failure is null
+                    ? AggregateOutcome.Commit(Result<SeparationOfDutiesWaiverView>.Success(
+                        waiver.ToView(now)))
+                    : CommandFailureRequestAdapter.ToOutcome<SeparationOfDutiesWaiverView>(
+                        failure, default!);
+            }, context, ct);
+    }
+}

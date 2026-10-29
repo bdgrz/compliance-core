@@ -1,0 +1,20 @@
+using Cntryl.Portia;
+using Bdgrz.Compliance.Features.AccessControl.Contracts;
+using Bdgrz.Compliance.Features.Evidence.Models;
+using Bdgrz.Compliance.Features.NativeOperations.Models;
+using Bdgrz.Compliance.Features.Programs.Contracts;
+namespace Bdgrz.Compliance.Features.PolicyDistribution.Commands;
+
+/// <summary>
+///     Closes a campaign and freezes its reconciled result. The campaign seals result admission, every admitted
+///     participant result is applied, the participants' uses are held, and only then are the exact totals frozen.
+///     <paramref name="ExpectedRevision" /> is the campaign's logical revision.
+/// </summary>
+[Discriminator("bdgrz.campaign.close", 2)]
+public sealed record CloseCampaign(Uuid CommandId, Uuid TenantId, Uuid ProgramId, Uuid CampaignId,
+    string Rationale, long ExpectedRevision)
+    : IRequest<OperationAcceptedResponse>, IProgramScopedRequest, IClientManagementMutationRequest,
+        IIdentifiedRequest, ICallable
+{
+    Uuid IIdentifiedRequest.RequestId => CommandId;
+}

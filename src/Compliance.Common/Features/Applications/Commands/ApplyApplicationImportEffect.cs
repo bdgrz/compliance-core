@@ -1,0 +1,21 @@
+using Cntryl.Portia;
+using Bdgrz.Compliance.Features.Applications.Contracts;
+using Bdgrz.Compliance.Features.Applications.Events;
+using Bdgrz.Compliance.Features.NativeOperations.Models;
+using Bdgrz.Compliance.Features.Processes.Models;
+using Bdgrz.Compliance.Features.Proofs.Models;
+namespace Bdgrz.Compliance.Features.Applications.Commands;
+
+/// <summary>
+///     Applies one frozen target group under its hold as one preflighted native append batch: a provisional
+///     <see cref="ApplicationImportEffectPending" /> for every frozen row in original row order. The baseline is
+///     compared once; a fence recorded on the target wins over a delayed apply.
+/// </summary>
+[Discriminator("bdgrz.declared_application.apply_import_effect", 2)]
+public sealed record ApplyApplicationImportEffect(Uuid CommandId, NativeFactReference Source,
+    EventStreamAddress Target, Uuid OperationId, long Generation, long? ExpectedRevision, ImmutableContentRef Intent,
+    Uuid BatchId, Uuid ApplicationId, ImmutableContentRef RowGroup)
+    : IRequest<ReceiverOutcome>, IApplicationImportReceiver, IIdentifiedRequest
+{
+    Uuid IIdentifiedRequest.RequestId => CommandId;
+}

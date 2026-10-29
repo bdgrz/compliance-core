@@ -1,0 +1,335 @@
+{
+  "model": "jev-1.14.0",
+  "state": {
+    "review": "Review these selected domain boundaries against the included source records. Do not treat a catalog label as evidence by itself; do not invent policy.",
+    "pass": "neutral_source_review",
+    "owners": [
+      {
+        "owner": "ArtifactRetentionBasis",
+        "classification": "business_aggregate",
+        "businessAggregate": true,
+        "identity": "artifactContentId",
+        "invariant": "One supported retention basis for exact content identity.",
+        "boundary": "selected_split",
+        "mustPreserve": "Retention is not itself disposal authority; no release by timeout or missing read.",
+        "technicalStateToSeparate": [],
+        "sources": [
+          {
+            "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
+            "jsonPointer": "/splitOwners/23/targetOwners/0",
+            "evidence": "{\"proposedAggregate\":\"ArtifactRetentionBasis\",\"identity\":\"artifactContentId\",\"owns\":\"One supported retention basis for exact content identity.\",\"events\":\"Rehome the relevant existing business facts from the current owner; preserve fact meaning and source lineage.\",\"existingDomainEvents\":[\"ArtifactRetentionBasisRecorded\",\"ArtifactRetentionBound\"],\"newDomainEvents\":[],\"technicalProcessState\":[],\"commands\":[\"RecordArtifactRetentionBasis\"]}"
+          }
+        ],
+        "adoptedDecisions": [],
+        "commands": [
+          {
+            "name": "RecordArtifactRetentionBasis",
+            "identity": {
+              "field": "CommandId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "one immutable authored operation"
+            },
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "SourceKind:string",
+              "SourceId:Uuid",
+              "ExpectedContentSha256:string",
+              "ExpectedRevision:long",
+              "Reason:string",
+              "PeriodStart:DateOnly?",
+              "PeriodEnd:DateOnly?"
+            ]
+          }
+        ],
+        "events": [
+          {
+            "event": "ArtifactRetentionBasisRecorded",
+            "discriminator": "bdgrz.artifact_retention.basis_recorded",
+            "version": 1
+          },
+          {
+            "event": "ArtifactRetentionBound",
+            "discriminator": "bdgrz.artifact_retention.bound",
+            "version": 1
+          }
+        ],
+        "relatedFlows": []
+      },
+      {
+        "owner": "AuditPackageDelivery",
+        "classification": "business_aggregate",
+        "businessAggregate": true,
+        "identity": "tenant / (packageId, manifestVersion, deliveryId)",
+        "invariant": "One delivery authorization and terminal delivery for exact recipient/version.",
+        "boundary": "selected_split",
+        "mustPreserve": "No current aggregate should retain all build attempts or delivery history as command state.",
+        "technicalStateToSeparate": [],
+        "sources": [
+          {
+            "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
+            "jsonPointer": "/splitOwners/9/targetOwners/2",
+            "evidence": "{\"proposedAggregate\":\"AuditPackageDelivery\",\"identity\":\"tenant / (packageId, manifestVersion, deliveryId)\",\"owns\":\"One delivery authorization and terminal delivery for exact recipient/version.\",\"events\":\"Rehome the relevant existing business facts from the current owner; preserve fact meaning and source lineage.\",\"existingDomainEvents\":[\"AuditPackageDelivered\"],\"newDomainEvents\":[\"AuditPackageDeliveryAuthorized\"],\"technicalProcessState\":[],\"commands\":[]}"
+          }
+        ],
+        "adoptedDecisions": [],
+        "commands": [],
+        "events": [
+          {
+            "event": "AuditPackageDelivered",
+            "discriminator": "bdgrz.auditpackages.audit-package-delivered",
+            "version": 1
+          }
+        ],
+        "relatedFlows": [
+          {
+            "reactor": "AuditPackageDeliveryAdmissionReactor",
+            "sourceOwner": "AuditPackageManifest",
+            "targetOwner": "AuditPackageDelivery",
+            "command": "MaterializeRecordedAuditPackageDelivery",
+            "source": {
+              "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
+              "jsonPointer": "/reactors/81",
+              "line": 6957,
+              "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
+            }
+          }
+        ]
+      },
+      {
+        "owner": "AuditorSampleSelection",
+        "classification": "business_aggregate",
+        "businessAggregate": true,
+        "identity": "(requestId, selectionId)",
+        "invariant": "Independent exact sample selection lifecycle.",
+        "boundary": "selected_split",
+        "mustPreserve": "Admission cannot race resolution; exact response selections and dispositions are immutable proofs.",
+        "technicalStateToSeparate": [],
+        "sources": [
+          {
+            "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
+            "jsonPointer": "/splitOwners/10/targetOwners/2",
+            "evidence": "{\"proposedAggregate\":\"AuditorSampleSelection\",\"identity\":\"(requestId, selectionId)\",\"owns\":\"Independent exact sample selection lifecycle.\",\"events\":\"Rehome the relevant existing business facts from the current owner; preserve fact meaning and source lineage.\",\"existingDomainEvents\":[\"SampleSelectionRecorded\"],\"newDomainEvents\":[],\"technicalProcessState\":[],\"commands\":[]}"
+          }
+        ],
+        "adoptedDecisions": [],
+        "commands": [],
+        "events": [
+          {
+            "event": "SampleSelectionRecorded",
+            "discriminator": "bdgrz.auditorrequests.sample-selection-recorded",
+            "version": 1
+          }
+        ],
+        "relatedFlows": [
+          {
+            "reactor": "AuditorSampleSelectionMaterializationReactor",
+            "sourceOwner": "AuditorRequest",
+            "targetOwner": "AuditorSampleSelection",
+            "command": "MaterializeAuditorSampleSelection",
+            "source": {
+              "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
+              "jsonPointer": "/reactors/105",
+              "line": 9083,
+              "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
+            }
+          }
+        ]
+      },
+      {
+        "owner": "CommitmentDraft",
+        "classification": "business_aggregate",
+        "businessAggregate": true,
+        "identity": "Tenant + ProgramId + normalized kind/identifier retain the existing deterministic UUIDv5 owner algorithm. Supplied DraftId must equal that existing identity; later selected commands use CommandId and the exact draft/version/review bindings.",
+        "invariant": "One tenant/program/kind/identifier has immutable identity/source creation, revisioned authored content, exact verified-source accepted review and independent approval that publishes strictly later effective versions; retired commitment remains terminal.",
+        "boundary": "narrow",
+        "rationale": "Current pending authors, accepted review and current-revision responsibility conflicts must remain atomically coherent. Past effective version list/history query and old scope sets can leave current command state. Provider/service owners can be checked at admission using values.",
+        "sources": [
+          {
+            "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
+            "jsonPointer": "/aggregates/17",
+            "evidence": "{\"aggregate\":\"CommitmentDraft\",\"source\":\"src/Compliance.Core/Features/Commitments/CommitmentDraft.cs\",\"feature\":null,\"identity\":\"UUIDv5 tenant+program+normalizedKind/identifier; explicit createRequestId retained and compares complete initial normalized terms. Revision expected; review/approval DecisionId=RequestId but review lacks retry comparison. Retirement compares generated timestamp so handler retry fails. Physical append OCC.\",\"invariant\":\"One tenant/program/kind/identifier has immutable identity/source creation, revisioned authored content, exact verified-source accepted review and independent approval that publishes strictly later effective versions; retired commitment remains terminal.\",\"boundaryDecision\":\"narrow\",\"boundaryRationale\":\"Current pending authors, accepted review and current-revision responsibility conflicts must remain atomically coherent. Past effective version list/history query and old scope sets can leave current command state. Provider/service owners can be checked at admission using values.\",\"observations\":[{\"id\":\"ROOTACCESS-01\",\"priority\":\"P2\",\"state\":\"pending\",\"title\":\"Boundary and commitment owners invoke another live aggregate to decide waiver authority\"},{\"id\":\"ROOTACCESS-02\",\"priority\":\"P2\",\"state\":\"pending\",\"title\":\"Continuing boundary and commitment roots retain all historical approvals and responsibility lifecycles\"},{\"id\":\"ROOTACCESS-04\",\"priority\":\"P2\",\"state\":\"pending\",\"title\":\"Decision and mutation retry handling differs from the required exact-intent contract\"}],\"commands\":[{\"request\":\"ApproveCommitmentDraft\",\"classification\":\"command\",\"contract\":\"src/Compliance.Common/Features/Commitments/ApproveCommitmentDraft.cs\",\"interfaces\":\"IRequest, IProgramScopedRequest, IClientManagementMutationRequest, ICallable\",\"authorizationScopes\":[\"IProgramScopedRequest\",\"IClientManagementMutationRequest\"],\"identityFields\":[\"TenantId\",\"ProgramId\",\"DraftId\",\"ExpectedRevision\",\"AcceptedReviewDecisionId\",\"EffectiveFrom\",\"Rationale\",\"ImpactDigest\"],\"handlers\":[{\"name\":\"ApproveCommitmentDraftHandler\",\"source\":\"src/Compliance.Core/Features/Commitments/ApproveCommitmentDraftHandler.cs\",\"registered\":true}],\"registered\":true,\"authorizerSources\":[\"src/Compliance.Core/Features/AccessControl/ClientManagementMutationAuthorizer.cs\",\"src/Compliance.Core/Features/Programs/ProgramManagementAuthorizer.cs\"],\"operatesOn\":[\"CommitmentDraft\"],\"helperServices\":[],\"guardsRequired\":[\"Authorize before resolving exact retries; use the request authorization scope IProgramScopedRequest, IClientManagementMutationRequest.\",\"Validate tenant/program and typed owner identity against the target stream before loading or mutating it.\",\"For an accepted operation identity, compare owner, lifecycle episode, original actor, canonical authored intent and original expected revision; exact retry returns the original result without appending.\",\"For a new operation, enforce expected revision/physical append OCC. If a repeated mutation has no stable typed identity or re"
+          }
+        ],
+        "adoptedDecisions": [],
+        "commands": [
+          {
+            "name": "ApproveCommitmentDraft",
+            "identity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "DraftId:Uuid",
+              "ExpectedRevision:long",
+              "AcceptedReviewDecisionId:Uuid",
+              "EffectiveFrom:DateOnly",
+              "Rationale:string",
+              "ImpactDigest:string",
+              "SeparationOfDutiesWaiverId:Uuid?"
+            ]
+          },
+          {
+            "name": "CreateCommitmentDraft",
+            "identity": "DraftId",
+            "fields": [
+              "DraftId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "ServiceId:Uuid",
+              "Kind:string",
+              "Identifier:string",
+              "Statement:string",
+              "Context:string",
+              "SourceReference:string",
+              "ProviderId:Uuid?"
+            ]
+          },
+          {
+            "name": "RetireCommitment",
+            "identity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "CommitmentId:Uuid",
+              "ExpectedRevision:long",
+              "EffectiveOn:DateOnly",
+              "Rationale:string"
+            ]
+          },
+          {
+            "name": "ReviewCommitmentDraft",
+            "identity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "DraftId:Uuid",
+              "ExpectedRevision:long",
+              "Outcome:string",
+              "Rationale:string",
+              "OwnerReference:string?",
+              "Applicability:string?",
+              "Interpretation:string?",
+              "InterpretationNote:string?",
+              "SourceVerifiedReference:string?",
+              "SourceEvidence:string?",
+              "SeparationOfDutiesWaiverId:Uuid?"
+            ]
+          },
+          {
+            "name": "ReviseCommitmentDraft",
+            "identity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "DraftId:Uuid",
+              "ExpectedRevision:long",
+              "Statement:string",
+              "Context:string",
+              "SourceReference:string"
+            ]
+          }
+        ],
+        "events": [
+          {
+            "event": "CommitmentApproved"
+          },
+          {
+            "event": "CommitmentDraftCreated"
+          },
+          {
+            "event": "CommitmentDraftRevised"
+          },
+          {
+            "event": "CommitmentRetired"
+          },
+          {
+            "event": "CommitmentReviewed"
+          },
+          {
+            "event": "ResponsibilityAssigned"
+          },
+          {
+            "event": "ResponsibilityRevoked"
+          }
+        ],
+        "relatedFlows": []
+      }
+    ]
+  },
+  "questions": {
+    "item_0": {
+      "type": "choice",
+      "instructions": "Which owner boundary best preserves ArtifactRetentionBasis's explicit invariant and lifecycle?",
+      "criteria": {
+        "selected_boundary_supported": "The selected owner is the correct business decision boundary and any technical process or independent child lifecycle is separated.",
+        "boundary_change_required": "A specific alternative boundary is required by an explicit invariant, identity, concurrency, lifecycle, or recovery fact in the supplied sources.",
+        "source_gap": "The available source records are contradictory or fail to establish the material boundary rule."
+      }
+    },
+    "evidence_0": {
+      "type": "noul",
+      "instructions": "Do the source records establish ArtifactRetentionBasis's identity, atomic invariant, and lifecycle well enough to settle its boundary?",
+      "criteria": {
+        "true": "The exact owner invariant and why plausible split or merge alternatives fail are source-backed.",
+        "false": "A required identity, lifecycle, concurrency, or source-authority rule is missing or contradictory."
+      }
+    },
+    "item_1": {
+      "type": "choice",
+      "instructions": "Which owner boundary best preserves AuditPackageDelivery's explicit invariant and lifecycle?",
+      "criteria": {
+        "selected_boundary_supported": "The selected owner is the correct business decision boundary and any technical process or independent child lifecycle is separated.",
+        "boundary_change_required": "A specific alternative boundary is required by an explicit invariant, identity, concurrency, lifecycle, or recovery fact in the supplied sources.",
+        "source_gap": "The available source records are contradictory or fail to establish the material boundary rule."
+      }
+    },
+    "evidence_1": {
+      "type": "noul",
+      "instructions": "Do the source records establish AuditPackageDelivery's identity, atomic invariant, and lifecycle well enough to settle its boundary?",
+      "criteria": {
+        "true": "The exact owner invariant and why plausible split or merge alternatives fail are source-backed.",
+        "false": "A required identity, lifecycle, concurrency, or source-authority rule is missing or contradictory."
+      }
+    },
+    "item_2": {
+      "type": "choice",
+      "instructions": "Which owner boundary best preserves AuditorSampleSelection's explicit invariant and lifecycle?",
+      "criteria": {
+        "selected_boundary_supported": "The selected owner is the correct business decision boundary and any technical process or independent child lifecycle is separated.",
+        "boundary_change_required": "A specific alternative boundary is required by an explicit invariant, identity, concurrency, lifecycle, or recovery fact in the supplied sources.",
+        "source_gap": "The available source records are contradictory or fail to establish the material boundary rule."
+      }
+    },
+    "evidence_2": {
+      "type": "noul",
+      "instructions": "Do the source records establish AuditorSampleSelection's identity, atomic invariant, and lifecycle well enough to settle its boundary?",
+      "criteria": {
+        "true": "The exact owner invariant and why plausible split or merge alternatives fail are source-backed.",
+        "false": "A required identity, lifecycle, concurrency, or source-authority rule is missing or contradictory."
+      }
+    },
+    "item_3": {
+      "type": "choice",
+      "instructions": "Which owner boundary best preserves CommitmentDraft's explicit invariant and lifecycle?",
+      "criteria": {
+        "selected_boundary_supported": "The selected owner is the correct business decision boundary and any technical process or independent child lifecycle is separated.",
+        "boundary_change_required": "A specific alternative boundary is required by an explicit invariant, identity, concurrency, lifecycle, or recovery fact in the supplied sources.",
+        "source_gap": "The available source records are contradictory or fail to establish the material boundary rule."
+      }
+    },
+    "evidence_3": {
+      "type": "noul",
+      "instructions": "Do the source records establish CommitmentDraft's identity, atomic invariant, and lifecycle well enough to settle its boundary?",
+      "criteria": {
+        "true": "The exact owner invariant and why plausible split or merge alternatives fail are source-backed.",
+        "false": "A required identity, lifecycle, concurrency, or source-authority rule is missing or contradictory."
+      }
+    }
+  }
+}

@@ -1,0 +1,35 @@
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.AccessControl.Processes;
+using Bdgrz.Compliance.Features.AuditorRequests.Models;
+using Bdgrz.Compliance.Features.NamedRecords.Processes;
+using Bdgrz.Compliance.Features.Processes.Processes;
+using Bdgrz.Compliance.Features.Programs.Readers;
+using Bdgrz.Compliance.Features.Providers.History;
+using Bdgrz.Compliance.Features.SourceFacts.Models;
+using Bdgrz.Compliance.Features.SourceFacts.Rules;
+using Bdgrz.Compliance.Features.Tenants.Processes;
+using Bdgrz.Compliance.Features.Evidence.Aggregates;
+using Bdgrz.Compliance.Features.Risks.Commands;
+using Bdgrz.Compliance.Features.Risks.Events;
+using Bdgrz.Compliance.Features.Risks.Models;
+namespace Bdgrz.Compliance.Features.Risks.Services;
+
+/// <summary>The schema names of the immutable content referenced by risk governance, treatment and action facts.</summary>
+static class RiskContent
+{
+    public const string OwnerSchema = "RiskOwnerAssigned.OwnerContent.v1";
+    public const string TriggerSchema = "RiskReassessmentTriggered.TriggerContent.v1";
+    public const string TreatmentSchema = "RiskControlTreatmentProposed.TreatmentContent.v1";
+    public const string ActionSchema = "RiskTreatmentActionAdded.ActionContent.v1";
+    public const string RevisedEvidenceSchema = "RiskTreatmentActionRevised.EvidenceRequestIdsManifest.v1";
+    public const string SubmittedEvidenceSchema = "RiskTreatmentActionCompletionSubmitted.EvidenceRequestIdsManifest.v1";
+    public const string AuthoredReviewSchema = "ReviewRiskTreatmentActionCompletion.AuthoredReview.v1";
+    public const string ReviewedEvidenceSchema = "risk-action-reviewed-evidence.v1";
+    public const string EvidenceFactsSchema = "EvidenceRequest.ActionCompletionFacts.v1";
+    public const string ProofsSchema = "RiskTreatmentActionCompletionReviewed.EvidenceUseProofs.v1";
+    public const string FailureSchema = "RiskTreatmentActionCompletionReviewCanceled.FailureProof.v2";
+    public const string WaiverProofSchema = "separation-of-duties-waiver-proof.v1";
+    public const string ControlTreatmentRegistrationSchema = "Risk.RiskControlTreatmentRegistration.v1";
+    public const string ActionRegistrationSchema = "Risk.RiskTreatmentActionRegistration.v1";
+    public const string CompletionRegistrationSchema = "Risk.RiskTreatmentActionCompletionRegistration.v1";
+}

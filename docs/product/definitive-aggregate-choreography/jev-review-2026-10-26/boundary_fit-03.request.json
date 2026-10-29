@@ -1,0 +1,779 @@
+{
+  "model": "jev-1.14.0",
+  "state": {
+    "review": "Adversarial review of the selected definitive business/authority owner boundary. Treat the supplied row as a proposal; do not infer omitted policy.",
+    "pass": "boundary_fit",
+    "owners": [
+      {
+        "owner": "ArtifactEngagementHold",
+        "classification": "business_aggregate",
+        "declaredIdentity": "Tenant / artifact-engagement-holds / holdId; place/issuance immutable compares; release expected revision; placement uses newly computed server time. Portia appends against the hydrated physical stream position; a logical revision does not create another physical boundary.",
+        "selectedIdentity": "Tenant / artifact-engagement-holds / HoldId, bound to exact artifact, engagement and report issuance. Selected mutations use CommandId.",
+        "invariant": "One preservation hold cannot release before one year after its exact report issuance; report identity and release decision are immutable.",
+        "boundaryDecision": "retain",
+        "boundaryRationale": "Separating report issuance and release without an immutable issuance proof would allow early release; three irreversible transitions are cohesive.",
+        "commands": [
+          {
+            "command": "PlaceArtifactEngagementHold",
+            "logicalIdentity": "HoldId",
+            "fields": [
+              "TenantId:Uuid",
+              "HoldId:Uuid",
+              "EngagementId:Uuid",
+              "ReportArtifactId:Uuid?",
+              "Scope:string",
+              "Authority:string",
+              "Reason:string"
+            ]
+          },
+          {
+            "command": "RecordEngagementReportIssued",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "HoldId:Uuid",
+              "EngagementId:Uuid",
+              "ReportArtifactId:Uuid",
+              "IssuedAt:DateTimeOffset",
+              "IssuerReference:string"
+            ]
+          },
+          {
+            "command": "ReleaseArtifactEngagementHold",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "HoldId:Uuid",
+              "ExpectedRevision:long",
+              "ReleaseAuthority:string",
+              "Rationale:string"
+            ]
+          }
+        ],
+        "events": [
+          {
+            "event": "ArtifactEngagementHoldPlaced"
+          },
+          {
+            "event": "ArtifactEngagementHoldReleased"
+          },
+          {
+            "event": "EngagementReportIssued"
+          }
+        ],
+        "choreography": []
+      },
+      {
+        "owner": "ArtifactLegalHold",
+        "classification": "business_aggregate",
+        "declaredIdentity": "holdId",
+        "selectedIdentity": "holdId",
+        "invariant": "One legal hold lifecycle and one exact release after placement.",
+        "boundaryDecision": "selected_split",
+        "mustPreserve": "Retention is not itself disposal authority; no release by timeout or missing read.",
+        "technicalStateToSeparate": [],
+        "commands": [
+          {
+            "command": "PlaceArtifactLegalHold",
+            "logicalIdentity": {
+              "field": "HoldId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "exact immutable creation retry"
+            },
+            "fields": [
+              "TenantId:Uuid",
+              "SourceKind:string",
+              "SourceId:Uuid",
+              "ExpectedContentSha256:string",
+              "HoldId:Uuid",
+              "ExpectedRevision:long",
+              "Reason:string"
+            ]
+          },
+          {
+            "command": "ReleaseArtifactLegalHold",
+            "logicalIdentity": {
+              "field": "CommandId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "one immutable authored operation"
+            },
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "SourceKind:string",
+              "SourceId:Uuid",
+              "ExpectedContentSha256:string",
+              "HoldId:Uuid",
+              "ExpectedRevision:long",
+              "Reason:string"
+            ]
+          }
+        ],
+        "events": [
+          {
+            "event": "ArtifactLegalHoldPlaced",
+            "discriminator": "bdgrz.artifact_retention.legal_hold_placed",
+            "version": 1
+          },
+          {
+            "event": "ArtifactLegalHoldReleased",
+            "discriminator": "bdgrz.artifact_retention.legal_hold_released",
+            "version": 1
+          }
+        ],
+        "choreography": []
+      },
+      {
+        "owner": "ArtifactRetentionBasis",
+        "classification": "business_aggregate",
+        "declaredIdentity": "artifactContentId",
+        "selectedIdentity": "artifactContentId",
+        "invariant": "One supported retention basis for exact content identity.",
+        "boundaryDecision": "selected_split",
+        "mustPreserve": "Retention is not itself disposal authority; no release by timeout or missing read.",
+        "technicalStateToSeparate": [],
+        "commands": [
+          {
+            "command": "RecordArtifactRetentionBasis",
+            "logicalIdentity": {
+              "field": "CommandId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "one immutable authored operation"
+            },
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "SourceKind:string",
+              "SourceId:Uuid",
+              "ExpectedContentSha256:string",
+              "ExpectedRevision:long",
+              "Reason:string",
+              "PeriodStart:DateOnly?",
+              "PeriodEnd:DateOnly?"
+            ]
+          }
+        ],
+        "events": [
+          {
+            "event": "ArtifactRetentionBasisRecorded",
+            "discriminator": "bdgrz.artifact_retention.basis_recorded",
+            "version": 1
+          },
+          {
+            "event": "ArtifactRetentionBound",
+            "discriminator": "bdgrz.artifact_retention.bound",
+            "version": 1
+          }
+        ],
+        "choreography": []
+      },
+      {
+        "owner": "AuditObservation",
+        "classification": "business_aggregate",
+        "declaredIdentity": "Tenant / audit-observations / observationId; program checked inside stream; mutation requires exact nonempty command selector; replay retains only selected command fact and compares intent before revision. Portia appends against the hydrated physical stream position; a logical revision does not create another physical boundary.",
+        "selectedIdentity": "Tenant / audit-observations / ObservationId, with immutable ProgramId and examination/source lineage; the exact selected command selector addresses a mutation.",
+        "invariant": "Received auditor source corrections preserve examination/snapshot and exact source lineage; response/link commands must name current source version, and each selected command identity has immutable intent.",
+        "boundaryDecision": "retain",
+        "boundaryRationale": "A correction racing a response/link would lose the current-source-version gate if moved without source-owner admission authorization. Retaining these current facts is defensible; independent response/link ownership is a close alternative if historical version proofs suffice.",
+        "commands": [],
+        "events": [
+          {
+            "event": "AuditObservationCorrected"
+          },
+          {
+            "event": "AuditObservationFindingLinked"
+          },
+          {
+            "event": "AuditObservationManagementResponseRecorded"
+          },
+          {
+            "event": "AuditObservationRecorded"
+          }
+        ],
+        "choreography": []
+      },
+      {
+        "owner": "AuditOutcome",
+        "classification": "business_aggregate",
+        "declaredIdentity": "Tenant / audit-outcomes / outcomeId; program checked; same normalized content plus canonical recorder no-ops despite later server time; one creation append. Portia appends against the hydrated physical stream position; a logical revision does not create another physical boundary.",
+        "selectedIdentity": "Tenant / audit-outcomes / OutcomeId, with immutable ProgramId, delivered package and snapshot provenance. OutcomeId is the selected immutable creation identity.",
+        "invariant": "One auditor-supplied report conclusion is immutable for its outcome identity and exact delivered package/snapshot provenance.",
+        "boundaryDecision": "retain",
+        "boundaryRationale": "Nothing within the single accepted record can be independently mutated; the report artifact already has its own lifecycle.",
+        "commands": [
+          {
+            "command": "RecordExaminationOutcome",
+            "logicalIdentity": "OutcomeId",
+            "fields": [
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "ExaminationId:Uuid",
+              "OutcomeId:Uuid",
+              "PackageId:Uuid",
+              "PackageVersion:int",
+              "OutcomeCode:string",
+              "OutcomeSummary:string",
+              "IssuedReportReference:string",
+              "ReportArtifactId:Uuid?",
+              "IssuedOn:DateOnly"
+            ]
+          }
+        ],
+        "events": [
+          {
+            "event": "AuditOutcomeRecorded"
+          }
+        ],
+        "choreography": []
+      },
+      {
+        "owner": "AuditPackageDelivery",
+        "classification": "business_aggregate",
+        "declaredIdentity": "tenant / (packageId, manifestVersion, deliveryId)",
+        "selectedIdentity": "tenant / (packageId, manifestVersion, deliveryId)",
+        "invariant": "One delivery authorization and terminal delivery for exact recipient/version.",
+        "boundaryDecision": "selected_split",
+        "mustPreserve": "No current aggregate should retain all build attempts or delivery history as command state.",
+        "technicalStateToSeparate": [],
+        "commands": [],
+        "events": [
+          {
+            "event": "AuditPackageDelivered",
+            "discriminator": "bdgrz.auditpackages.audit-package-delivered",
+            "version": 1
+          }
+        ],
+        "choreography": [
+          {
+            "reactor": "AuditPackageDeliveryAdmissionReactor",
+            "sourceOwner": "AuditPackageManifest",
+            "targetOwner": "AuditPackageDelivery",
+            "command": "MaterializeRecordedAuditPackageDelivery"
+          }
+        ]
+      },
+      {
+        "owner": "AuditPackageManifest",
+        "classification": "business_aggregate",
+        "declaredIdentity": "packageId",
+        "selectedIdentity": "packageId",
+        "invariant": "Manifest identity, selected immutable content version and delivery gate.",
+        "boundaryDecision": "selected_split",
+        "mustPreserve": "No current aggregate should retain all build attempts or delivery history as command state.",
+        "technicalStateToSeparate": [],
+        "commands": [
+          {
+            "command": "AmendAuditPackage",
+            "logicalIdentity": {
+              "field": "CommandId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "one immutable authored operation"
+            },
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "PackageId:Uuid",
+              "ExpectedRevision:long",
+              "AmendmentReason:string",
+              "IncludedRecordIds:IReadOnlyList<Uuid>?",
+              "Content:AuditPackageContent?"
+            ]
+          },
+          {
+            "command": "ApproveAuditPackageDisclosure",
+            "logicalIdentity": {
+              "field": "CommandId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "one immutable authored operation"
+            },
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "PackageId:Uuid",
+              "PackageVersion:long",
+              "Recipient:string",
+              "Purpose:string",
+              "Rationale:string",
+              "ExpectedRevision:long"
+            ]
+          },
+          {
+            "command": "ApproveAuditPackageValidationOverride",
+            "logicalIdentity": {
+              "field": "CommandId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "one immutable authored operation"
+            },
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "PackageId:Uuid",
+              "PackageVersion:long",
+              "ValidationIssue:string",
+              "Rationale:string",
+              "ExpectedRevision:long"
+            ]
+          },
+          {
+            "command": "CreateAuditPackage",
+            "logicalIdentity": {
+              "field": "PackageId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "exact immutable creation retry"
+            },
+            "fields": [
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "PackageId:Uuid",
+              "Content:AuditPackageContent"
+            ]
+          },
+          {
+            "command": "RecordAuditPackageBuildResult",
+            "logicalIdentity": {
+              "field": "CommandId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "source_event_effect",
+              "rule": "UUIDv5(source eventId, length-prefixed effectKind + canonical target stream + source lifecycle episode); external process callback source is the immutable accepted business source event plus exact effect key, never attemptId."
+            },
+            "fields": [
+              "CommandId:Uuid",
+              "Source:SourceFactProof<AuditPackageBuildRequested>",
+              "Target:EventStreamAddress",
+              "OperationId:Uuid",
+              "Generation:long",
+              "ExpectedRevision:long?",
+              "Intent:ImmutableContentRef",
+              "PackageId:Uuid",
+              "BuildId:Uuid",
+              "Output:AuditPackageBuildOutput"
+            ]
+          },
+          {
+            "command": "RecordAuditPackageDelivery",
+            "logicalIdentity": {
+              "field": "DeliveryId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "Must equal existing UUIDv5(53cb20d6-01ef-5fd5-99b3-04087e39bf77, packageId + newline + packageVersion + newline + Clean(recipient) + newline + Clean(deliveryReference)); this identifies exact manual delivery recording."
+            },
+            "fields": [
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "PackageId:Uuid",
+              "PackageVersion:long",
+              "Recipient:string",
+              "DeliveredAt:DateTimeOffset",
+              "DeliveryReference:string",
+              "DeliveryId:Uuid",
+              "ExpectedManifestRevision:long"
+            ]
+          },
+          {
+            "command": "RequestAuditPackageBuild",
+            "logicalIdentity": {
+              "field": "BuildKey",
+              "type": "string",
+              "required": true,
+              "origin": "client",
+              "rule": "Required BuildKey with PackageId/PackageVersion. IIdentifiedRequest.RequestId = UUIDv5(698c0bb6-2dfc-58b3-b2fd-2f3dc04369f8, $\"{PackageId}\\n{PackageVersion}\\n{BuildKey.Trim()}\"); preserve existing token validation."
+            },
+            "fields": [
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "ExaminationId:Uuid",
+              "PackageId:Uuid",
+              "PackageKind:string",
+              "BuildKey:string",
+              "ExpectedManifestRevision:long",
+              "PackageVersion:long"
+            ]
+          },
+          {
+            "command": "ValidateAuditPackage",
+            "logicalIdentity": {
+              "field": "CommandId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "one immutable authored operation"
+            },
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "PackageId:Uuid",
+              "PackageVersion:long",
+              "ValidationKey:string",
+              "ExpectedRevision:long"
+            ]
+          }
+        ],
+        "events": [
+          {
+            "event": "AuditPackageAmended",
+            "discriminator": "bdgrz.auditpackages.audit-package-amended",
+            "version": 1
+          },
+          {
+            "event": "AuditPackageBuildRequested",
+            "discriminator": "bdgrz.auditpackages.audit-package-build-requested",
+            "version": 1
+          },
+          {
+            "event": "AuditPackageBuilt",
+            "discriminator": "bdgrz.auditpackages.audit-package-built",
+            "version": 1
+          },
+          {
+            "event": "AuditPackageCreated",
+            "discriminator": "bdgrz.auditpackages.audit-package-created",
+            "version": 1
+          },
+          {
+            "event": "AuditPackageDeliveryAdmitted",
+            "discriminator": "bdgrz.audit-package-manifest.audit-package-delivery-admitted",
+            "version": 1
+          },
+          {
+            "event": "AuditPackageDisclosureApproved",
+            "discriminator": "bdgrz.auditpackages.audit-package-disclosure-approved",
+            "version": 1
+          },
+          {
+            "event": "AuditPackageValidated",
+            "discriminator": "bdgrz.auditpackages.audit-package-validated",
+            "version": 1
+          },
+          {
+            "event": "AuditPackageValidationOverrideApproved",
+            "discriminator": "bdgrz.auditpackages.audit-package-validation-override-approved",
+            "version": 1
+          }
+        ],
+        "choreography": [
+          {
+            "reactor": "AuditPackageBuildProcessReactor",
+            "sourceOwner": "AuditPackageManifest",
+            "targetOwner": "AuditPackageBuildProcess",
+            "command": "StartAuditPackageBuild"
+          },
+          {
+            "reactor": "AuditPackageBuildResultReactor",
+            "sourceOwner": "AuditPackageBuildProcess",
+            "targetOwner": "AuditPackageManifest",
+            "command": "RecordAuditPackageBuildResult"
+          },
+          {
+            "reactor": "AuditPackageDeliveryAdmissionReactor",
+            "sourceOwner": "AuditPackageManifest",
+            "targetOwner": "AuditPackageDelivery",
+            "command": "MaterializeRecordedAuditPackageDelivery"
+          }
+        ]
+      },
+      {
+        "owner": "AuditPopulation",
+        "classification": "business_aggregate",
+        "declaredIdentity": "Tenant / audit-populations / populationId (Define handler uses DefinitionId); definition/source/row/export identities checked; one shared expectedRevision; several mutators check revision before retry. Portia appends against the hydrated physical stream position; a logical revision does not create another physical boundary.",
+        "selectedIdentity": "Tenant / audit-populations / PopulationId. Selected definition creation is identified by DefinitionId; later selected commands use their exact CommandId or GenerationKey and population/source scope from the signature.",
+        "invariant": "One population owns complete current definition/source/row classification, reconciliation invalidation, completeness proof and freeze seal. Immutable row/version bodies are values outside retained command state; no independent AuditPopulationRowDecision root or projected-count freeze authority.",
+        "boundaryDecision": "narrow",
+        "boundaryRationale": "Keep current complete row/category/source reconciliation and authoritative freeze seal together. Immutable row/version content may use chunked capsules and history projections; independent export attempts need their own process/identity. No per-row projected counts may decide freeze.",
+        "commands": [
+          {
+            "command": "AmendAuditPopulation",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "PopulationId:Uuid",
+              "ExpectedRevision:long",
+              "AmendmentReason:string",
+              "SourceSnapshot:AuditPopulationSourceSnapshotContent",
+              "ChangedRows:IReadOnlyList<AuditPopulationRowContent>"
+            ]
+          },
+          {
+            "command": "ClassifyAuditPopulationRow",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "PopulationId:Uuid",
+              "RowId:Uuid",
+              "Classification:string",
+              "Rationale:string"
+            ]
+          },
+          {
+            "command": "DefineAuditPopulation",
+            "logicalIdentity": "DefinitionId",
+            "fields": [
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "DefinitionId:Uuid",
+              "PeriodId:Uuid",
+              "PeriodCloseId:Uuid",
+              "Definition:AuditPopulationDefinitionContent"
+            ]
+          },
+          {
+            "command": "FreezeAuditPopulation",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "PopulationId:Uuid",
+              "ExpectedRevision:long",
+              "FreezeRationale:string"
+            ]
+          },
+          {
+            "command": "GenerateAuditPopulation",
+            "logicalIdentity": "GenerationKey",
+            "fields": [
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "DefinitionId:Uuid",
+              "PeriodCloseId:Uuid",
+              "GenerationKey:string"
+            ]
+          },
+          {
+            "command": "ReconcileAuditPopulation",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "PopulationId:Uuid",
+              "ExpectedRevision:long",
+              "Rationale:string"
+            ]
+          },
+          {
+            "command": "RecordAuditPopulationFacts",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "DefinitionId:Uuid",
+              "ExpectedRevision:long",
+              "SourceSnapshot:AuditPopulationSourceSnapshotContent",
+              "Rows:IReadOnlyList<AuditPopulationRowContent>"
+            ]
+          },
+          {
+            "command": "ReviseAuditPopulationDefinition",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "DefinitionId:Uuid",
+              "ExpectedRevision:long",
+              "SourceBoundary:string",
+              "InclusionRules:string",
+              "ExclusionRules:string",
+              "ChangeReason:string"
+            ]
+          }
+        ],
+        "events": [
+          {
+            "event": "AuditPopulationAmended"
+          },
+          {
+            "event": "AuditPopulationDefined"
+          },
+          {
+            "event": "AuditPopulationDefinitionRevised"
+          },
+          {
+            "event": "AuditPopulationExportGenerated"
+          },
+          {
+            "event": "AuditPopulationFactRecorded"
+          },
+          {
+            "event": "AuditPopulationFrozen"
+          },
+          {
+            "event": "AuditPopulationGenerated"
+          },
+          {
+            "event": "AuditPopulationReconciled"
+          },
+          {
+            "event": "AuditPopulationRowClassified"
+          }
+        ],
+        "choreography": []
+      }
+    ]
+  },
+  "questions": {
+    "item_0": {
+      "type": "choice",
+      "instructions": "Does the selected boundary for ArtifactEngagementHold fit its identity, atomic invariant, command decisions, event facts, and independent lifecycle?",
+      "criteria": {
+        "selected_boundary_supported": "The selected owner matches the stable business decision and atomic conflict set; independently governed facts are separated.",
+        "boundary_should_change": "A concrete split or merge is required to preserve an explicit invariant or independent lifecycle.",
+        "evidence_insufficient": "Identity, source authority, lifecycle, contention, or concurrency evidence is missing or contradictory."
+      }
+    },
+    "item_0_evidence": {
+      "type": "noul",
+      "instructions": "Does this row provide enough explicit evidence to settle ArtifactEngagementHold's boundary without adding an unstated business policy?",
+      "criteria": {
+        "true": "Identity, invariant, lifecycle and exclusions are explicit enough to decide.",
+        "false": "A material boundary assumption is missing, contradictory or unsupported."
+      }
+    },
+    "item_1": {
+      "type": "choice",
+      "instructions": "Does the selected boundary for ArtifactLegalHold fit its identity, atomic invariant, command decisions, event facts, and independent lifecycle?",
+      "criteria": {
+        "selected_boundary_supported": "The selected owner matches the stable business decision and atomic conflict set; independently governed facts are separated.",
+        "boundary_should_change": "A concrete split or merge is required to preserve an explicit invariant or independent lifecycle.",
+        "evidence_insufficient": "Identity, source authority, lifecycle, contention, or concurrency evidence is missing or contradictory."
+      }
+    },
+    "item_1_evidence": {
+      "type": "noul",
+      "instructions": "Does this row provide enough explicit evidence to settle ArtifactLegalHold's boundary without adding an unstated business policy?",
+      "criteria": {
+        "true": "Identity, invariant, lifecycle and exclusions are explicit enough to decide.",
+        "false": "A material boundary assumption is missing, contradictory or unsupported."
+      }
+    },
+    "item_2": {
+      "type": "choice",
+      "instructions": "Does the selected boundary for ArtifactRetentionBasis fit its identity, atomic invariant, command decisions, event facts, and independent lifecycle?",
+      "criteria": {
+        "selected_boundary_supported": "The selected owner matches the stable business decision and atomic conflict set; independently governed facts are separated.",
+        "boundary_should_change": "A concrete split or merge is required to preserve an explicit invariant or independent lifecycle.",
+        "evidence_insufficient": "Identity, source authority, lifecycle, contention, or concurrency evidence is missing or contradictory."
+      }
+    },
+    "item_2_evidence": {
+      "type": "noul",
+      "instructions": "Does this row provide enough explicit evidence to settle ArtifactRetentionBasis's boundary without adding an unstated business policy?",
+      "criteria": {
+        "true": "Identity, invariant, lifecycle and exclusions are explicit enough to decide.",
+        "false": "A material boundary assumption is missing, contradictory or unsupported."
+      }
+    },
+    "item_3": {
+      "type": "choice",
+      "instructions": "Does the selected boundary for AuditObservation fit its identity, atomic invariant, command decisions, event facts, and independent lifecycle?",
+      "criteria": {
+        "selected_boundary_supported": "The selected owner matches the stable business decision and atomic conflict set; independently governed facts are separated.",
+        "boundary_should_change": "A concrete split or merge is required to preserve an explicit invariant or independent lifecycle.",
+        "evidence_insufficient": "Identity, source authority, lifecycle, contention, or concurrency evidence is missing or contradictory."
+      }
+    },
+    "item_3_evidence": {
+      "type": "noul",
+      "instructions": "Does this row provide enough explicit evidence to settle AuditObservation's boundary without adding an unstated business policy?",
+      "criteria": {
+        "true": "Identity, invariant, lifecycle and exclusions are explicit enough to decide.",
+        "false": "A material boundary assumption is missing, contradictory or unsupported."
+      }
+    },
+    "item_4": {
+      "type": "choice",
+      "instructions": "Does the selected boundary for AuditOutcome fit its identity, atomic invariant, command decisions, event facts, and independent lifecycle?",
+      "criteria": {
+        "selected_boundary_supported": "The selected owner matches the stable business decision and atomic conflict set; independently governed facts are separated.",
+        "boundary_should_change": "A concrete split or merge is required to preserve an explicit invariant or independent lifecycle.",
+        "evidence_insufficient": "Identity, source authority, lifecycle, contention, or concurrency evidence is missing or contradictory."
+      }
+    },
+    "item_4_evidence": {
+      "type": "noul",
+      "instructions": "Does this row provide enough explicit evidence to settle AuditOutcome's boundary without adding an unstated business policy?",
+      "criteria": {
+        "true": "Identity, invariant, lifecycle and exclusions are explicit enough to decide.",
+        "false": "A material boundary assumption is missing, contradictory or unsupported."
+      }
+    },
+    "item_5": {
+      "type": "choice",
+      "instructions": "Does the selected boundary for AuditPackageDelivery fit its identity, atomic invariant, command decisions, event facts, and independent lifecycle?",
+      "criteria": {
+        "selected_boundary_supported": "The selected owner matches the stable business decision and atomic conflict set; independently governed facts are separated.",
+        "boundary_should_change": "A concrete split or merge is required to preserve an explicit invariant or independent lifecycle.",
+        "evidence_insufficient": "Identity, source authority, lifecycle, contention, or concurrency evidence is missing or contradictory."
+      }
+    },
+    "item_5_evidence": {
+      "type": "noul",
+      "instructions": "Does this row provide enough explicit evidence to settle AuditPackageDelivery's boundary without adding an unstated business policy?",
+      "criteria": {
+        "true": "Identity, invariant, lifecycle and exclusions are explicit enough to decide.",
+        "false": "A material boundary assumption is missing, contradictory or unsupported."
+      }
+    },
+    "item_6": {
+      "type": "choice",
+      "instructions": "Does the selected boundary for AuditPackageManifest fit its identity, atomic invariant, command decisions, event facts, and independent lifecycle?",
+      "criteria": {
+        "selected_boundary_supported": "The selected owner matches the stable business decision and atomic conflict set; independently governed facts are separated.",
+        "boundary_should_change": "A concrete split or merge is required to preserve an explicit invariant or independent lifecycle.",
+        "evidence_insufficient": "Identity, source authority, lifecycle, contention, or concurrency evidence is missing or contradictory."
+      }
+    },
+    "item_6_evidence": {
+      "type": "noul",
+      "instructions": "Does this row provide enough explicit evidence to settle AuditPackageManifest's boundary without adding an unstated business policy?",
+      "criteria": {
+        "true": "Identity, invariant, lifecycle and exclusions are explicit enough to decide.",
+        "false": "A material boundary assumption is missing, contradictory or unsupported."
+      }
+    },
+    "item_7": {
+      "type": "choice",
+      "instructions": "Does the selected boundary for AuditPopulation fit its identity, atomic invariant, command decisions, event facts, and independent lifecycle?",
+      "criteria": {
+        "selected_boundary_supported": "The selected owner matches the stable business decision and atomic conflict set; independently governed facts are separated.",
+        "boundary_should_change": "A concrete split or merge is required to preserve an explicit invariant or independent lifecycle.",
+        "evidence_insufficient": "Identity, source authority, lifecycle, contention, or concurrency evidence is missing or contradictory."
+      }
+    },
+    "item_7_evidence": {
+      "type": "noul",
+      "instructions": "Does this row provide enough explicit evidence to settle AuditPopulation's boundary without adding an unstated business policy?",
+      "criteria": {
+        "true": "Identity, invariant, lifecycle and exclusions are explicit enough to decide.",
+        "false": "A material boundary assumption is missing, contradictory or unsupported."
+      }
+    }
+  }
+}

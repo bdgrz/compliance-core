@@ -1,0 +1,43 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "provider_name_claim": {
+      "invariant": "One normalized provider name is uniquely reserved within a tenant.",
+      "implementation": "ProviderNameClaim checks the claim stream realm and area, then delegates Claim and Release plus replay to shared NameClaim. Unlike LocationNameClaim, it has no feature-specific validation that holder is a provider stream in the same tenant."
+    },
+    "control_criterion_mapping": {
+      "invariant": "One program, control, edition, criterion tuple has an independently revised proposal line with an immutable approved successor.",
+      "implementation": "ControlCriterionMapping identity is a typed hash of tenant, program, control, edition, criterion. It uses MappingLineTransitions for proposal/review/retirement and sequence checks; historical composition is delegated to a reader."
+    },
+    "program_readiness": {
+      "invariant": "One tenant/program readiness governor retains a compact latest assessment pointer, serializes latest-assessment adoption with decision append, holds one pending adoption generation, and retains latest management and permanent approved Type I entry decisions.",
+      "implementation": "ProgramReadiness has one tenant/program stream, run and decision admission checks, pending run/decision state, adoption generation, accepted and terminal decision pointers, and reducers for readiness and Type I entry events."
+    }
+  },
+  "questions": {
+    "provider_name_claim_holder": {
+      "type": "noul",
+      "instructions": "Does the tenant-scoped provider-name uniqueness invariant require ProviderNameClaim to accept and replay claims only when the holder is a provider stream in the same tenant?",
+      "criteria": {
+        "true": "A claim or replay naming a foreign-tenant or non-provider stream violates the provider-name claim owner rule.",
+        "false": "The selected invariant only constrains the claim stream and does not constrain the holder stream identity."
+      }
+    },
+    "control_criterion_mapping_boundary": {
+      "type": "noul",
+      "instructions": "Does the stated tuple identity and independently revised mapping lifecycle support keeping each control-criterion mapping line as its own aggregate?",
+      "criteria": {
+        "true": "Each tuple has its own proposal, review, and retirement history, so the line can be revised independently.",
+        "false": "The rule requires multiple mapping tuples to be decided atomically as one owner."
+      }
+    },
+    "program_readiness_boundary": {
+      "type": "noul",
+      "instructions": "Does the readiness lifecycle described here justify one tenant/program governor that serializes adoption and decision admission while keeping full assessment content outside that stream?",
+      "criteria": {
+        "true": "The current/latest pointer and pending-generation rules require serialized program-level decisions, while full content can remain elsewhere.",
+        "false": "There is no shared program-level decision to serialize, or full assessment content must be owned inside the readiness stream."
+      }
+    }
+  }
+}

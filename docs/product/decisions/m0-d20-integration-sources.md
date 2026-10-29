@@ -44,7 +44,37 @@ proposed. They come from the gap analysis.
 10. How does this integration make the existing manual workflow easier to
     start, maintain, or operate, and how does that workflow stay usable when the
     integration is unavailable or disabled?
+11. Which partner-side writes can have an ambiguous outcome when a request or
+    response is lost, and what idempotency key, lookup, or operator recovery
+    path prevents an unsafe duplicate write?
+12. Which states depend on callbacks, partner staff, or partner communications;
+    how are missing, late, duplicate, out-of-order, and unknown signals detected
+    and reconciled, and who owns each manual follow-up?
+13. What contract version, authentication and signature rules, validation and
+    product rules, limits, and environment differences have been verified
+    against representative test cases? Which behaviors remain untestable or
+    unconfirmed before launch?
 
 Any future connector writes source observations into the M0-D28 canonical shape
 through the ADR 0005 staged, all-or-nothing acceptance. A connector never writes
 governed facts directly.
+
+Partner callbacks and status endpoints are observations, not proof that the
+partner emitted every transition or that local state is current. A proposed
+integration must define freshness and reconciliation for missing, late,
+duplicate, out-of-order, and unrecognized signals. It must expose incomplete
+coverage and partner-side work that is pending rather than presenting those
+states as complete.
+
+Writes to a partner can succeed even when the caller loses the response. A
+connector must not blindly repeat such a write: it needs a partner-supported
+idempotency mechanism, a reliable lookup to determine whether the write took
+effect, or a visible operator recovery path. The contract record must also
+identify partner-managed communications and manual steps that affect the
+customer or the observed status.
+
+Before implementation and launch, record the verified partner contract and
+environment-specific behavior, including authentication and callback
+verification, identifiers, status transitions, validation and product rules,
+limits, retries, and representative test outcomes. Open questions remain
+explicit launch risks; examples and assumptions are not verified behavior.

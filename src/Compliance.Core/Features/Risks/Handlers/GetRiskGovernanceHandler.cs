@@ -1,0 +1,65 @@
+using Cntryl.Portia;
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.AccessControl.Readers;
+using Bdgrz.Compliance.Features.AccessControl.Services;
+using Bdgrz.Compliance.Features.AuditPackages.Rules;
+using Bdgrz.Compliance.Features.Content.Services;
+using Bdgrz.Compliance.Features.Evidence.Models;
+using Bdgrz.Compliance.Features.Incidents.Rules;
+using Bdgrz.Compliance.Features.NamedRecords.Processes;
+using Bdgrz.Compliance.Features.NativeOperations.Models;
+using Bdgrz.Compliance.Features.Operations.Models;
+using Bdgrz.Compliance.Features.Processes.Processes;
+using Bdgrz.Compliance.Features.Programs.Readers;
+using Bdgrz.Compliance.Features.Providers.Rules;
+using Bdgrz.Compliance.Features.Risks.Projections;
+using Bdgrz.Compliance.Features.Risks.Services;
+using Bdgrz.Compliance.Features.SourceFacts.Models;
+using Bdgrz.Compliance.Features.TechnologyInventory.Models;
+using Bdgrz.Compliance.Features.Tenants.Processes;
+using Bdgrz.Compliance.Features.UserIdentities.Models;
+using Bdgrz.Compliance.Features.AttestRecords.Commands;
+using Bdgrz.Compliance.Features.Risks.Models;
+using Bdgrz.Compliance.Features.Risks.Queries;
+using Bdgrz.Compliance.Features.Risks.Readers;
+namespace Bdgrz.Compliance.Features.Risks.Handlers;
+
+/// <summary>
+///     Reads a risk's governance composed from its own owner streams, the authoritative source. Treatment action
+///     overdue state is evaluated at read time.
+/// </summary>
+public sealed class GetRiskGovernanceHandler(IAggregateReader reader, RiskGovernanceReader governance,
+    TimeProvider clock, RiskEvaluationReader evaluations) : IRequestHandler<GetRiskGovernance, RiskGovernanceView>
+{
+    public async ValueTask<Result<RiskGovernanceView>> HandleAsync(
+        IRequestContext<GetRiskGovernance> context, CancellationToken ct)
+    {
+        try
+        {
+            var request = context.Request;
+            var risk = await RiskOwnerResolution.RequireRiskAsync(reader, request.TenantId,
+                request.ProgramId, request.RiskId, ct).ConfigureAwait(false);
+            if (!risk.IsSuccess)
+                return Result<RiskGovernanceView>.Failure(risk.Error);
+            RiskGovernanceSnapshot snapshot;
+            try
+            {
+                snapshot = await governance.ReadRiskAsync(request.TenantId, request.ProgramId, request.RiskId, ct)
+                    .ConfigureAwait(false);
+            }
+            catch (ImmutableContentIntegrityException exception)
+            {
+                return Result<RiskGovernanceView>.Failure(new RequestError(RequestErrorKind.Conflict,
+                    "The exact risk governance content cannot be verified.", exception is ImmutableContentUnavailableException));
+            }
+
+            var evaluation = await evaluations.ReadAsync(request.TenantId, request.ProgramId, request.RiskId, ct).ConfigureAwait(false);
+            return Result<RiskGovernanceView>.Success(snapshot.View(request.RiskId,
+                evaluation.ToView().Assessments, DateOnly.FromDateTime(clock.GetUtcNow().UtcDateTime)));
+        }
+        catch (ImmutableContentIntegrityException failure)
+        {
+            return Result<RiskGovernanceView>.Failure(RiskEvaluationReadFailure.Of(failure));
+        }
+    }
+}

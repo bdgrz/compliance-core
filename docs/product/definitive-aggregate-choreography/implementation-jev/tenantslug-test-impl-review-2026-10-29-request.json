@@ -1,0 +1,54 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "rule": "TenantSlug: one normalized global slug can belong to one tenant and once surrendered is permanently retired. Identity is the UUIDv5 of the normalized slug.",
+    "code": "Register by a second tenant on a claimed slug, or by anyone on a retired slug (including the former owner), appends TenantSlugRegistrationRejected. Surrender by the owner appends TenantSlugSurrendered and sets retired; surrender by a non-owner or of an unclaimed slug appends TenantSlugSurrenderRejected. Both rejection facts are native operation answers so a replayed receiver is answered once. The four event payloads carry tenant id, slug, command id, operation provenance and first response; the slug repeats the stream identity.",
+    "tests": "After claim by A and surrender by A, a claim by B appends a rejection and history replay restores owner A as retired. Surrender of an unclaimed slug by B appends a surrender rejection and leaves it unclaimed and available. An exact retry of a committed claim after a later surrender is a replay; the same logical id with changed intent is a conflict."
+  },
+  "questions": {
+    "retired_claim_test": {
+      "type": "noul",
+      "instructions": "Does the test where history is claim by A then surrender by A, and then B claims and is rejected with owner A still retired, assert 'once surrendered is permanently retired'?",
+      "criteria": {
+        "true": "A claim on a retired slug is refused and the retired state survives replay.",
+        "false": "The test does not show permanent retirement."
+      }
+    },
+    "unclaimed_surrender_still_available": {
+      "type": "noul",
+      "instructions": "Is it consistent with the rule that a surrender attempt by a non-owner on an unclaimed slug does not retire it and leaves it available?",
+      "criteria": {
+        "true": "Only an owner's surrender retires a slug.",
+        "false": "Any surrender attempt should retire the slug."
+      }
+    },
+    "slug_payload_disposition": {
+      "type": "choice",
+      "instructions": "The four slug events repeat the slug, which is already the stream identity source. Changing event payloads is a shared wire change outside the aggregate stage. Which disposition applies now?",
+      "options": {
+        "keep_for_now": "Keep the field and leave removal to the shared schema stage.",
+        "remove_now": "Remove it in the aggregate stage.",
+        "needs_source_resolution": "A source decision is required."
+      },
+      "criteria": {
+        "keep_for_now": "The reconciled catalog keeps the slug as a business fact readers use, and schema changes belong to a shared stage.",
+        "remove_now": "The aggregate stage may change the wire contract.",
+        "needs_source_resolution": "The model is silent."
+      }
+    },
+    "refusal_fact_disposition": {
+      "type": "choice",
+      "instructions": "TenantSlugRegistrationRejected and TenantSlugSurrenderRejected record an owner decision gating a business outcome (tenant slug confirm or reject) answered to a reactor. Which disposition applies?",
+      "options": {
+        "keep_as_event": "Keep as business domain events.",
+        "remove": "Remove, keeping technical state private.",
+        "needs_source_resolution": "A source decision is required."
+      },
+      "criteria": {
+        "keep_as_event": "The owner decision gates the tenant slug outcome and a replayed receiver must be answered once.",
+        "remove": "A negative outcome alone creates no event.",
+        "needs_source_resolution": "The model is silent."
+      }
+    }
+  }
+}

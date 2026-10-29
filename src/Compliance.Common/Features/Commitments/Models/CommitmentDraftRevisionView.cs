@@ -1,0 +1,24 @@
+using System.Text.Json.Serialization;
+using Cntryl.Portia;
+using Bdgrz.Compliance.Features.NamedRecords.Contracts;
+using Bdgrz.Compliance.Features.AccessControl.Models;
+namespace Bdgrz.Compliance.Features.Commitments.Models;
+
+public sealed record CommitmentDraftRevisionView(Uuid TenantId, Uuid ProgramId, Uuid DraftId,
+    Uuid ServiceId, string Kind, string Identifier, long Revision,
+    string Statement, string Context, string SourceReference,
+    Uuid ChangedByMemberId, string ChangedByDisplay, DateTimeOffset ChangedAt)
+{
+    /// <summary>The subservice provider responsible for this CSOC, when recorded.</summary>
+    public Uuid? ProviderId { get; init; }
+
+    readonly ActorReference? _actor;
+
+    /// <summary>The snapshotted actor; pre-snapshot rows fall back to the member columns.</summary>
+    [JsonPropertyName("actor")]
+    public ActorReference Actor
+    {
+        get => _actor ?? ActorReference.ForMember(ChangedByMemberId, ChangedByDisplay);
+        init => _actor = value;
+    }
+}

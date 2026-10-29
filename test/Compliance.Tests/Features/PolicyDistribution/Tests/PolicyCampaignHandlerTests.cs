@@ -1,0 +1,446 @@
+using Bdgrz.Compliance.Tests.Testing;
+using Cntryl.Fitz.Extensions;
+using Cntryl.Fitz.Testing;
+using Cntryl.Portia;
+using Cntryl.Portia.Testing;
+using Microsoft.Extensions.DependencyInjection;
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.AccessControl.Readers;
+using Bdgrz.Compliance.Features.AccessControl.Services;
+using Bdgrz.Compliance.Features.Applications.Models;
+using Bdgrz.Compliance.Features.AuditPackages.Rules;
+using Bdgrz.Compliance.Features.AuditPopulations.Models;
+using Bdgrz.Compliance.Features.AuditorRequests.Processes;
+using Bdgrz.Compliance.Features.ControlMappings.History;
+using Bdgrz.Compliance.Features.Controls.Contracts;
+using Bdgrz.Compliance.Features.Evidence.Models;
+using Bdgrz.Compliance.Features.Incidents.Rules;
+using Bdgrz.Compliance.Features.NamedRecords.Processes;
+using Bdgrz.Compliance.Features.NativeOperations.History;
+using Bdgrz.Compliance.Features.NativeOperations.Models;
+using Bdgrz.Compliance.Features.Operations.History;
+using Bdgrz.Compliance.Features.Operations.Models;
+using Bdgrz.Compliance.Features.Policies.Rules;
+using Bdgrz.Compliance.Features.PolicyDistribution.Models;
+using Bdgrz.Compliance.Features.PolicyDistribution.Readers;
+using Bdgrz.Compliance.Features.PolicyDistribution.Rules;
+using Bdgrz.Compliance.Features.PolicyDistribution.Services;
+using Bdgrz.Compliance.Features.Processes.Processes;
+using Bdgrz.Compliance.Features.Programs.Contracts;
+using Bdgrz.Compliance.Features.Programs.Readers;
+using Bdgrz.Compliance.Features.Providers.Models;
+using Bdgrz.Compliance.Features.Providers.Rules;
+using Bdgrz.Compliance.Features.Readiness.Rules;
+using Bdgrz.Compliance.Features.Remediation.Processes;
+using Bdgrz.Compliance.Features.Responsibilities.Models;
+using Bdgrz.Compliance.Features.Retention.Models;
+using Bdgrz.Compliance.Features.Snapshots.Services;
+using Bdgrz.Compliance.Features.SourceFacts.Models;
+using Bdgrz.Compliance.Features.SystemDescription.Projections;
+using Bdgrz.Compliance.Features.Tenants.Models;
+using Bdgrz.Compliance.Features.Tenants.Processes;
+using Bdgrz.Compliance.Features.Versioning.Models;
+using Bdgrz.Compliance.Features.Workforce.Projections;
+using Bdgrz.Compliance.Features.Workforce.Rules;
+using Bdgrz.Compliance.Tests.Features.AccessControl.Tests;
+using Bdgrz.Compliance.Tests.Features.AccessReviews.Tests;
+using Bdgrz.Compliance.Tests.Features.AdvisorCollaboration.Tests;
+using Bdgrz.Compliance.Tests.Features.Applications.Tests;
+using Bdgrz.Compliance.Tests.Features.AuditPackages.Tests;
+using Bdgrz.Compliance.Tests.Features.AuditPopulations.Tests;
+using Bdgrz.Compliance.Tests.Features.AuditorRequests.Tests;
+using Bdgrz.Compliance.Tests.Features.Boundaries.Tests;
+using Bdgrz.Compliance.Tests.Features.Changes.Tests;
+using Bdgrz.Compliance.Tests.Features.Commitments.Tests;
+using Bdgrz.Compliance.Tests.Features.ControlMappings.Tests;
+using Bdgrz.Compliance.Tests.Features.Controls.Tests;
+using Bdgrz.Compliance.Tests.Features.Criteria.Tests;
+using Bdgrz.Compliance.Tests.Features.Evaluations.Tests;
+using Bdgrz.Compliance.Tests.Features.Evidence.Tests;
+using Bdgrz.Compliance.Tests.Features.Examinations.Tests;
+using Bdgrz.Compliance.Tests.Features.Exports.Tests;
+using Bdgrz.Compliance.Tests.Features.Incidents.Tests;
+using Bdgrz.Compliance.Tests.Features.Independence.Tests;
+using Bdgrz.Compliance.Tests.Features.MethodologyTemplates.Tests;
+using Bdgrz.Compliance.Tests.Features.NamedRecords.Tests;
+using Bdgrz.Compliance.Tests.Features.NativeOperations.Tests;
+using Bdgrz.Compliance.Tests.Features.Operations.Tests;
+using Bdgrz.Compliance.Tests.Features.Policies.Tests;
+using Bdgrz.Compliance.Tests.Features.Processes.Tests;
+using Bdgrz.Compliance.Tests.Features.Programs.Tests;
+using Bdgrz.Compliance.Tests.Features.Providers.Tests;
+using Bdgrz.Compliance.Tests.Features.Readiness.Tests;
+using Bdgrz.Compliance.Tests.Features.Remediation.Tests;
+using Bdgrz.Compliance.Tests.Features.Retention.Tests;
+using Bdgrz.Compliance.Tests.Features.Risks.Tests;
+using Bdgrz.Compliance.Tests.Features.Snapshots.Tests;
+using Bdgrz.Compliance.Tests.Features.SourceFacts.Tests;
+using Bdgrz.Compliance.Tests.Features.SourceUse.Tests;
+using Bdgrz.Compliance.Tests.Features.SystemDescription.Tests;
+using Bdgrz.Compliance.Tests.Features.TechnologyInventory.Tests;
+using Bdgrz.Compliance.Tests.Features.Tenants.Tests;
+using Bdgrz.Compliance.Tests.Features.UserIdentities.Tests;
+using Bdgrz.Compliance.Tests.Features.Work.Tests;
+using Bdgrz.Compliance.Tests.Features.Workforce.Tests;
+using Bdgrz.Compliance.Features.AccessControl.Aggregates;
+using Bdgrz.Compliance.Features.AccessControl.Authorizers;
+using Bdgrz.Compliance.Features.Examinations.Aggregates;
+using Bdgrz.Compliance.Features.Policies.Aggregates;
+using Bdgrz.Compliance.Features.Policies.Commands;
+using Bdgrz.Compliance.Features.Policies.Handlers;
+using Bdgrz.Compliance.Features.Policies.Models;
+using Bdgrz.Compliance.Features.Policies.Queries;
+using Bdgrz.Compliance.Features.PolicyDistribution.Aggregates;
+using Bdgrz.Compliance.Features.PolicyDistribution.Commands;
+using Bdgrz.Compliance.Features.PolicyDistribution.Events;
+using Bdgrz.Compliance.Features.PolicyDistribution.Handlers;
+using Bdgrz.Compliance.Features.PolicyDistribution.Queries;
+using Bdgrz.Compliance.Features.Providers.Aggregates;
+using Bdgrz.Compliance.Features.Snapshots.Aggregates;
+using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
+using Bdgrz.Compliance.Features.Tenants.Authorizers;
+using Bdgrz.Compliance.Features.Workforce.Aggregates;
+using Bdgrz.Compliance.Features.Workforce.Models;
+using Bdgrz.Compliance.Tests;
+namespace Bdgrz.Compliance.Tests.Features.PolicyDistribution.Tests;
+
+public sealed class PolicyCampaignHandlerTests
+{
+    static readonly DateTimeOffset Now = DateTimeOffset.UtcNow;
+
+    [Fact]
+    public async Task ShouldRejectSuccessorApprovalGivenUnprojectedPredecessorCampaign()
+    {
+        // Arrange
+        var fixture = await Fixture.CreateAsync();
+        var predecessor = await fixture.ApprovePolicyAsync();
+        var successor = await fixture.Scenario(fixture.AuthorUserId)
+            .When(new ProposePolicySuccessor(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId,
+                predecessor.PolicyId, 1, predecessor.Content with { Title = "Successor" }))
+            .ExpectSuccess();
+        var review = await PersonalPolicyDecisionTransportTests.SendHttpAsync(fixture.Provider, fixture.ReviewerUserId, new ReviewPolicyDraft(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId,
+                predecessor.PolicyId, successor.Value.Revision, "accept", "Reviewed"));
+        var preview = await fixture.Scenario(fixture.ManagerUserId)
+            .When(new PreviewPolicyImpact(fixture.TenantId, fixture.ProgramId,
+                predecessor.PolicyId, successor.Value.Revision)).ExpectSuccess();
+        var campaign = await fixture.LaunchAsync(predecessor);
+
+        // Act
+        var approval = await PersonalPolicyDecisionTransportTests.SendHttpAsync(fixture.Provider, fixture.ManagerUserId, new ApprovePolicy(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId, predecessor.PolicyId,
+                successor.Value.Revision, review.Value.DecisionId,
+                new DateOnly(2026, 11, 1), true, "Approved", preview.Value.Digest), RequestErrorKind.Conflict);
+        var retained = await ProgramManagementServices.HydrateAsync(fixture.Provider,
+            new PolicyRules(fixture.TenantId, predecessor.PolicyId));
+
+        // Assert
+        Assert.True(approval.Error!.IsTransient);
+        Assert.Equal(1, retained.CurrentVersion!.Version);
+        Assert.NotNull(retained.DraftContent);
+
+        // Act: the projector catches up; an old digest still cannot acknowledge the new impact.
+        await fixture.ProjectCampaignsAsync();
+        await PersonalPolicyDecisionTransportTests.SendHttpAsync(fixture.Provider, fixture.ManagerUserId, new ApprovePolicy(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId, predecessor.PolicyId,
+                successor.Value.Revision, review.Value.DecisionId,
+                new DateOnly(2026, 11, 1), true, "Approved", preview.Value.Digest), RequestErrorKind.Conflict);
+        var refreshed = await fixture.Scenario(fixture.ManagerUserId)
+            .When(new PreviewPolicyImpact(fixture.TenantId, fixture.ProgramId,
+                predecessor.PolicyId, successor.Value.Revision)).ExpectSuccess();
+        var approved = await PersonalPolicyDecisionTransportTests.SendHttpAsync(fixture.Provider, fixture.ManagerUserId, new ApprovePolicy(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId, predecessor.PolicyId,
+                successor.Value.Revision, review.Value.DecisionId,
+                new DateOnly(2026, 11, 1), true, "Approved", refreshed.Value.Digest));
+
+        // Assert
+        Assert.Equal([campaign.CampaignId], refreshed.Value.AffectedCampaignIds);
+        Assert.Equal(2, approved.Value.Version);
+    }
+
+    [Fact]
+    public async Task ShouldApproveExactVersionAndLaunchFrozenAudienceGivenIndependentMembers()
+    {
+        // Arrange
+        var fixture = await Fixture.CreateAsync();
+
+        // Act
+        var version = await fixture.ApprovePolicyAsync();
+        var campaign = await fixture.LaunchAsync(version);
+
+        // Assert
+        Assert.Equal(1, version.Version);
+        Assert.Equal(2, campaign.AudienceCount);
+        var view = await fixture.Scenario(fixture.MemberUserId)
+            .When(new GetCampaign(fixture.TenantId, fixture.ProgramId, campaign.CampaignId))
+            .ExpectSuccess();
+        Assert.Equal(version.ContentSha256, view.Value.Subject.ContentSha256);
+        Assert.Equal(fixture.RosterSnapshotId, view.Value.RosterSnapshotId);
+        Assert.Equal(2, view.Value.Totals.Pending);
+    }
+
+    [Fact]
+    public async Task ShouldAttributePersonalAndRecordedAcknowledgementsGivenMemberAndNonMember()
+    {
+        // Arrange
+        var fixture = await Fixture.CreateAsync();
+        var version = await fixture.ApprovePolicyAsync();
+        var campaign = await fixture.LaunchAsync(version);
+
+        // Act
+        var memberForOther = await fixture.AcknowledgeHttpAsync(fixture.Acknowledge(campaign.CampaignId, fixture.NonMemberPersonId, version), fixture.MemberUserId, RequestErrorKind.NotFound);
+        var managerForMember = await fixture.AcknowledgeHttpAsync(fixture.Acknowledge(campaign.CampaignId, fixture.MemberPersonId, version), fixture.ManagerUserId, RequestErrorKind.Forbidden);
+        var personal = await fixture.AcknowledgeHttpAsync(fixture.Acknowledge(campaign.CampaignId, fixture.MemberPersonId, version), fixture.MemberUserId);
+        var recorded = await fixture.AcknowledgeHttpAsync(fixture.Acknowledge(campaign.CampaignId, fixture.NonMemberPersonId, version, 2), fixture.ManagerUserId);
+        var wrongVersion = await fixture.AcknowledgeHttpAsync(fixture.Acknowledge(campaign.CampaignId, fixture.MemberPersonId, version, 3) with
+        {
+            PolicyVersion = 2,
+        }, fixture.MemberUserId, RequestErrorKind.Conflict);
+        var personalFact = await fixture.AppliedAcknowledgementAsync(campaign.CampaignId, fixture.MemberPersonId);
+        var recordedFact = await fixture.AppliedAcknowledgementAsync(campaign.CampaignId, fixture.NonMemberPersonId);
+
+        // Assert
+        Assert.False(memberForOther.IsSuccess);
+        Assert.False(managerForMember.IsSuccess);
+        Assert.False(wrongVersion.IsSuccess);
+        Assert.True(personal.IsSuccess);
+        Assert.True(recorded.IsSuccess);
+        Assert.False(personalFact.RecordedOnBehalf);
+        Assert.Equal(fixture.MemberPersonId.ToString(), personalFact.Performer.Id);
+        Assert.True(recordedFact.RecordedOnBehalf);
+        Assert.Equal("workforce_person", recordedFact.Performer.Kind);
+        Assert.Equal(RbacIds.Member(fixture.TenantId, fixture.ManagerUserId).ToString(),
+            recordedFact.Recorder.Id);
+        var totals = (await fixture.Scenario(fixture.MemberUserId)
+            .When(new GetCampaign(fixture.TenantId, fixture.ProgramId, campaign.CampaignId,
+                DateOnly.FromDateTime(Now.UtcDateTime).AddDays(1)))
+            .ExpectSuccess()).Value.Totals;
+        Assert.Equal(2, totals.Satisfied);
+    }
+
+    [Fact]
+    public async Task ShouldNotDiscloseAudienceMembershipGivenMemberAcknowledgingForOthers()
+    {
+        // Arrange
+        var fixture = await Fixture.CreateAsync();
+        var version = await fixture.ApprovePolicyAsync();
+        var campaign = await fixture.LaunchAsync(version);
+
+        // Act
+        var inAudience = await fixture.AcknowledgeHttpAsync(fixture.Acknowledge(campaign.CampaignId, fixture.NonMemberPersonId, version), fixture.MemberUserId, RequestErrorKind.NotFound);
+        var outsideAudience = await fixture.AcknowledgeHttpAsync(fixture.Acknowledge(campaign.CampaignId, Uuid.CreateVersion4(), version), fixture.MemberUserId, RequestErrorKind.NotFound);
+
+        // Assert
+        Assert.Equal(outsideAudience.Error!.Message, inAudience.Error!.Message);
+    }
+
+    [Fact]
+    public async Task ShouldRestrictPersonDetailAndWaiversGivenReadOnlyMember()
+    {
+        // Arrange
+        var fixture = await Fixture.CreateAsync();
+        var version = await fixture.ApprovePolicyAsync();
+        var campaign = await fixture.LaunchAsync(version);
+        var expires = DateOnly.FromDateTime(Now.UtcDateTime).AddMonths(3);
+
+        // Act
+        await fixture.Scenario(fixture.MemberUserId)
+            .When(new ListCampaignParticipants(fixture.TenantId, fixture.ProgramId,
+                campaign.CampaignId))
+            .ExpectFailure(RequestErrorKind.Forbidden);
+        await fixture.Scenario(fixture.MemberUserId)
+            .When(new ApproveCampaignWaiver(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId,
+                campaign.CampaignId, fixture.NonMemberPersonId, "Leave", expires, 1))
+            .ExpectFailure(RequestErrorKind.Forbidden);
+        var waiver = await PersonalPolicyDecisionTransportTests.SendHttpAsync(fixture.Provider, fixture.ManagerUserId,
+            new ApproveCampaignWaiver(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId,
+                campaign.CampaignId, fixture.NonMemberPersonId, "Extended leave", expires, 1));
+        var applied = await CampaignSeed.ApplyAdmittedAsync(fixture.Provider, fixture.TenantId, campaign.CampaignId,
+            fixture.NonMemberPersonId, waiver.Value.OperationId, CampaignParticipantResultKind.Waiver);
+        var people = await fixture.Scenario(fixture.ManagerUserId)
+            .When(new ListCampaignParticipants(fixture.TenantId, fixture.ProgramId,
+                campaign.CampaignId, State: "excepted"))
+            .ExpectSuccess();
+        await fixture.Scenario(fixture.ManagerUserId)
+            .When(new GetCampaign(fixture.TenantId, Uuid.CreateVersion4(), campaign.CampaignId))
+            .ExpectFailure(RequestErrorKind.NotFound);
+
+        // Assert
+        Assert.True(applied.IsSuccess, applied.Error?.Message);
+        var excepted = Assert.Single(people.Value.Items);
+        Assert.Equal(fixture.NonMemberPersonId, excepted.PersonId);
+        Assert.Equal(expires, excepted.Waiver!.ExpiresOn);
+    }
+
+    [Fact]
+    public async Task ShouldRejectLaunchGivenSupersededVersionOrMissingRoster()
+    {
+        // Arrange
+        var fixture = await Fixture.CreateAsync();
+        var version = await fixture.ApprovePolicyAsync();
+
+        // Act
+        await fixture.Scenario(fixture.ManagerUserId)
+            .When(new LaunchPolicyCampaign(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId, version.PolicyId,
+                2, fixture.RosterSnapshotId, DateOnly.FromDateTime(Now.UtcDateTime).AddDays(30)))
+            .ExpectFailure(RequestErrorKind.NotFound);
+        await fixture.Scenario(fixture.ManagerUserId)
+            .When(new LaunchPolicyCampaign(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId, version.PolicyId,
+                1, Uuid.CreateVersion4(), DateOnly.FromDateTime(Now.UtcDateTime).AddDays(30)))
+            .ExpectFailure(RequestErrorKind.NotFound);
+
+        // Assert
+        Assert.Equal("approved", version.Status);
+    }
+
+    internal sealed class Fixture
+    {
+        public required ServiceProvider Provider { get; init; }
+        public Uuid TenantId { get; } = Uuid.CreateVersion4();
+        public Uuid ProgramId { get; } = Uuid.CreateVersion4();
+        public Uuid AuthorUserId { get; } = Uuid.CreateVersion4();
+        public Uuid ReviewerUserId { get; } = Uuid.CreateVersion4();
+        public Uuid ManagerUserId { get; } = Uuid.CreateVersion4();
+        public Uuid MemberUserId { get; } = Uuid.CreateVersion4();
+        public Uuid MemberPersonId { get; } = Uuid.CreateVersion4();
+        public Uuid NonMemberPersonId { get; } = Uuid.CreateVersion4();
+        public Uuid RosterSnapshotId { get; } = Uuid.CreateVersion4();
+
+        public static async Task<Fixture> CreateAsync()
+        {
+            var managers = new HashSet<Uuid>();
+            var provider = ProgramManagementServices.Build(new ManagerPermissions(managers),
+                portia => portia.AddRequestHandler<CreatePolicyDraftHandler>()
+                    .AddRequestHandler<ProposePolicySuccessorHandler>()
+                    .AddRequestHandler<PreviewPolicyImpactHandler>()
+                    .AddRequestHandler<ReviewPolicyDraftHandler>()
+                    .AddRequestHandler<ApprovePolicyHandler>()
+                    .AddRequestHandler<LaunchPolicyCampaignHandler>()
+                    .AddRequestHandler<AcknowledgePolicyHandler>()
+                    .AddRequestHandler<ApproveCampaignWaiverHandler>()
+                    .AddRequestHandler<GetCampaignHandler>()
+                    .AddRequestHandler<ListCampaignParticipantsHandler>(),
+                services => services.AddScoped<PolicyImpactService>()
+                    .AddScoped<ClientManagementIndependenceGuard>()
+                    .AddScoped<PolicyAcknowledgementRecorderGuard>()
+                    .AddScoped<CampaignSource>()
+                    .AddScoped<CampaignLaunch>()
+                    .AddScoped<PolicyParticipantAdmission>()
+                    .AddSingleton<IDomainEventReader>(provider =>
+                        (IDomainEventReader)provider.GetRequiredService<IEventStore>())
+                    .AddSingleton<ICampaignDirectoryReader>(
+                        new FitzCampaignDirectory(new InMemoryKvClient())));
+            var fixture = new Fixture { Provider = provider };
+            managers.UnionWith([fixture.AuthorUserId, fixture.ReviewerUserId,
+                fixture.ManagerUserId]);
+            var actor = ActorReference.ForMember(Uuid.CreateVersion4(), "Admin");
+            var member = new PersonView(fixture.TenantId, fixture.MemberPersonId, 2, "Mia Member",
+                null, "manual", actor, Now, fixture.MemberUserId);
+            var outsider = new PersonView(fixture.TenantId, fixture.NonMemberPersonId, 1,
+                "Nate Nonmember", null, "manual", actor, Now);
+            await ProgramManagementServices.SeedAsync(provider,
+                new PersonRules(fixture.TenantId, fixture.MemberPersonId), person =>
+                {
+                    Assert.True(person.Record(member.DisplayName, null, actor, Now).IsSuccess);
+                    return Command(person.CorrelateMembership(1, fixture.MemberUserId, actor, Now));
+                });
+            var rows = WorkforceRosterSnapshotContent.Rows([member, outsider],
+                [Job(fixture.TenantId, member.PersonId, "E-1"),
+                    Job(fixture.TenantId, outsider.PersonId, "E-2")]);
+            var digest = PopulationContentIdentity.Compute(WorkforceRosterSnapshotContent.Kind,
+                rows).Value;
+            await ProgramManagementServices.SeedAsync(provider,
+                new PopulationSnapshot(fixture.TenantId, fixture.RosterSnapshotId), snapshot =>
+                    snapshot.Freeze(fixture.RosterSnapshotId, null,
+                        WorkforceRosterSnapshotContent.Kind, rows, digest.Sha256, null, actor, Now));
+            return fixture;
+        }
+
+        static WorkRelationshipView Job(Uuid tenantId, Uuid personId, string workerId) =>
+            new(tenantId, WorkRelationship.IdFor(tenantId, workerId), 1, personId, workerId,
+                "employee", "active", new DateOnly(2025, 1, 6), null, "Engineering", null, null,
+                false, "manual", ActorReference.ForMember(Uuid.CreateVersion4(), "Admin"), Now);
+
+        static Result Command(CommandFailure? failure) => failure is null
+            ? Result.Success
+            : Result.Failure(new RequestError(RequestErrorKind.Conflict, failure.Message!));
+
+        /// <summary>Dispatches the personal request; a successful admission is applied to its participant at once.</summary>
+        public async Task<Result<OperationAcceptedResponse>> AcknowledgeHttpAsync(AcknowledgePolicy request,
+            Uuid userId, RequestErrorKind? expectedFailure = null)
+        {
+            await using var scope = Provider.CreateAsyncScope();
+            var result = await scope.ServiceProvider.GetRequiredService<IRequestBus>().DispatchAsync(request,
+                new RequestDispatchContext(ProgramManagementServices.Actor(userId),
+                    new HttpInvocation("PUT", "/synthetic/policy-acknowledgement", "/synthetic/policy-acknowledgement", "synthetic")),
+                CancellationToken.None);
+            if (expectedFailure is { } error)
+            {
+                Assert.Equal(error, result.Error?.Kind);
+                return result;
+            }
+
+            Assert.True(result.IsSuccess, result.Error?.Message);
+            var applied = await CampaignSeed.ApplyAdmittedAsync(Provider, TenantId, request.CampaignId,
+                request.PersonId, result.Value.OperationId, CampaignParticipantResultKind.PolicyAcknowledgement);
+            Assert.True(applied.IsSuccess, applied.Error?.Message);
+            return result;
+        }
+
+        public async Task<PolicyAcknowledgementRecorded> AppliedAcknowledgementAsync(Uuid campaignId, Uuid personId) =>
+            (await CampaignSeed.ParticipantAsync(Provider, TenantId, campaignId, personId)).Acknowledgement!;
+
+        public RequestScenario Scenario(Uuid userId) => RequestScenario.For(Provider)
+            .GivenActor(ProgramManagementServices.Actor(userId));
+
+        public async Task ProjectCampaignsAsync()
+        {
+            var events = Provider.GetRequiredService<IDomainEventReader>();
+            var directory = (FitzCampaignDirectory)Provider.GetRequiredService<ICampaignDirectoryReader>();
+            var pattern = EventStreamPattern.ForPattern(TenantId.ToString(), "policy-distribution-campaigns");
+            var checkpoint = await directory.LoadCheckpointAsync(TenantId);
+            await using var batch = await directory.BeginAsync(new ProjectionBatchContext(
+                new CheckpointIdentity(FitzCampaignDirectory.ProjectorName, pattern), checkpoint));
+            var cursor = checkpoint.Cursor;
+            await foreach (var record in events.ReadAsync(pattern, cursor, CancellationToken.None))
+            {
+                await directory.ApplyAsync(record.Event);
+                cursor = record.NextCursor;
+            }
+            await batch.CommitAsync(new ProjectionCheckpoint(cursor));
+        }
+
+        public async Task<PolicyVersionView> ApprovePolicyAsync()
+        {
+            var registration = await Scenario(AuthorUserId).When(new CreatePolicyDraft(Policy.IdFor(TenantId, ProgramId, "POL-AC"), TenantId,
+                ProgramId, "POL-AC", new PolicyContent("Access Control Policy", "Govern access",
+                    PolicyAudience.CoreSecurity, null, 12, "All access is reviewed.", null,
+                    "Security lead", []))).ExpectSuccess();
+            var review = await PersonalPolicyDecisionTransportTests.SendHttpAsync(Provider, ReviewerUserId, new ReviewPolicyDraft(Uuid.CreateVersion4(), TenantId,
+                ProgramId, registration.Value.PolicyId, 1, "accept", "Accurate"));
+            await PersonalPolicyDecisionTransportTests.SendHttpAsync(Provider, AuthorUserId, new ApprovePolicy(Uuid.CreateVersion4(), TenantId, ProgramId,
+                    registration.Value.PolicyId, 1, review.Value.DecisionId,
+                    new DateOnly(2026, 10, 1), true, "Self approval"), RequestErrorKind.Forbidden);
+            var approved = await PersonalPolicyDecisionTransportTests.SendHttpAsync(Provider, ManagerUserId, new ApprovePolicy(Uuid.CreateVersion4(), TenantId,
+                ProgramId, registration.Value.PolicyId, 1, review.Value.DecisionId,
+                new DateOnly(2026, 10, 1), true, "Approved"));
+            return approved.Value;
+        }
+
+        public async Task<CampaignRegistration> LaunchAsync(PolicyVersionView version)
+        {
+            var launched = await Scenario(ManagerUserId).When(new LaunchPolicyCampaign(Uuid.CreateVersion4(), TenantId,
+                ProgramId, version.PolicyId, version.Version, RosterSnapshotId,
+                DateOnly.FromDateTime(Now.UtcDateTime).AddDays(30))).ExpectSuccess();
+            return launched.Value;
+        }
+
+        public AcknowledgePolicy Acknowledge(Uuid campaignId, Uuid personId,
+            PolicyVersionView version, long expectedRevision = 1) => new(Uuid.CreateVersion4(), TenantId, ProgramId,
+            campaignId, personId, version.Version, version.ContentSha256,
+            PolicyDistributionCampaign.DefaultAcknowledgementText, expectedRevision);
+    }
+
+    sealed class ManagerPermissions(IReadOnlySet<Uuid> managers) : IPermissionAuthorizer
+    {
+        public ValueTask<bool> IsAllowedAsync(Uuid tenantId, Uuid userId, Uuid memberId,
+            string permission, CancellationToken ct = default) => ValueTask.FromResult(
+            permission == IProgramReadRequest.ReadPermission || managers.Contains(userId));
+    }
+}

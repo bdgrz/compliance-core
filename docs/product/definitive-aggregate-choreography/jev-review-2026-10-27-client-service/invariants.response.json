@@ -1,0 +1,28 @@
+{
+  "httpStatus": 200,
+  "response": {
+    "model": "jev-1.14.0",
+    "answers": {
+      "terminal": {
+        "type": "noul",
+        "noul": 0.96
+      },
+      "program_scope": {
+        "type": "noul",
+        "noul": 0.97
+      },
+      "creation_identity": {
+        "type": "noul",
+        "noul": 0.94
+      },
+      "coverage": {
+        "type": "noul",
+        "noul": 0.95
+      }
+    },
+    "usage": {
+      "input_tokens": 7198,
+      "output_tokens": 70
+    }
+  }
+}

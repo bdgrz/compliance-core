@@ -1,0 +1,50 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "rule": "Person invariant: one recorded workforce person has immutable creation identity, revisioned contact content and at most one current platform membership correlation. Revisions and correlation use an expected revision; an exact successful revision retry becomes stale by design.",
+    "revise_behavior": "Revise with expected revision equal to current and valid values identical to current values appends a PersonRevised fact and increments the revision. The catalog states no no-op rule for revise.",
+    "correlate_behavior": "Correlate to the user already correlated, at the current revision, appends nothing and succeeds. Correlate with a different user at the current revision replaces the link with revision plus one. Clearing a never-correlated person appends nothing.",
+    "record_retry": "Record after later revise and correlate facts, with the original normalized values, returns the original registration with no new fact. Record with different values returns a conflict with no new fact.",
+    "tests": "Replay of the three facts into a fresh rules object restores revision 3 and the correlated user; a stale revise at revision 2 is refused and a revise at revision 3 succeeds."
+  },
+  "questions": {
+    "replace_correlation_consistent": {
+      "type": "noul",
+      "instructions": "Is replacing the current correlation with a different user at the current revision (one new revision, one fact) consistent with 'at most one current platform membership correlation'?",
+      "criteria": {
+        "true": "A single current link is kept; replacement is one atomic revision.",
+        "false": "Replacement must first be cleared by a separate fact."
+      }
+    },
+    "record_retry_consistent": {
+      "type": "noul",
+      "instructions": "Is acknowledging a creation retry with the original normalized values after later facts, without a new fact, and refusing changed values, consistent with 'immutable creation identity'?",
+      "criteria": {
+        "true": "Creation identity and original intent are immutable; an exact retry is acknowledged without a new fact.",
+        "false": "A retry after later facts must be refused or must append a fact."
+      }
+    },
+    "revise_unchanged": {
+      "type": "choice",
+      "instructions": "A revise at the current revision carries values identical to the current values. Which disposition fits the stated rule and the stated absence of a no-op rule?",
+      "options": {
+        "append_revision": "Keep appending a revision fact because the catalog states no no-op rule.",
+        "noop_success": "Acknowledge with no fact because nothing changed.",
+        "needs_source_resolution": "The catalog is silent; a source decision is needed before changing behavior."
+      },
+      "criteria": {
+        "append_revision": "The expected revision is consumed as a recorded decision by the caller.",
+        "noop_success": "A fact with no business change records nothing and bumps the revision needlessly.",
+        "needs_source_resolution": "Behavior change should wait for an owner decision."
+      }
+    },
+    "revise_unchanged_premise": {
+      "type": "noul",
+      "instructions": "Is it true that the approved model text gives no rule on revise-with-unchanged-values, so the code behavior (append a revision fact) is not contradicted by the model?",
+      "criteria": {
+        "true": "The model is silent on this case.",
+        "false": "The model explicitly requires a no-op."
+      }
+    }
+  }
+}

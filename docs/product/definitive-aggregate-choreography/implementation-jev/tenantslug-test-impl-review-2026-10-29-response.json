@@ -1,0 +1,40 @@
+{
+  "httpStatus": 200,
+  "response": {
+    "model": "jev-1.14.0",
+    "answers": {
+      "retired_claim_test": {
+        "type": "noul",
+        "noul": 0.96
+      },
+      "unclaimed_surrender_still_available": {
+        "type": "noul",
+        "noul": 0.97
+      },
+      "slug_payload_disposition": {
+        "type": "choice",
+        "choice": "keep_for_now",
+        "confidence": 0.94,
+        "probabilities": {
+          "keep_for_now": 0.96,
+          "remove_now": 0.02,
+          "needs_source_resolution": 0.02
+        }
+      },
+      "refusal_fact_disposition": {
+        "type": "choice",
+        "choice": "keep_as_event",
+        "confidence": 0.89,
+        "probabilities": {
+          "keep_as_event": 0.93,
+          "remove": 0.01,
+          "needs_source_resolution": 0.05
+        }
+      }
+    },
+    "usage": {
+      "input_tokens": 927,
+      "output_tokens": 141
+    }
+  }
+}

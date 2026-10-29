@@ -1,0 +1,49 @@
+using System.Text.Json.Serialization;
+using Cntryl.Portia;
+using Bdgrz.Compliance.Features.NamedRecords.Contracts;
+using Bdgrz.Compliance.Features.AccessControl.Commands;
+using Bdgrz.Compliance.Features.AccessControl.Contracts;
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.Evidence.Models;
+using Bdgrz.Compliance.Features.TechnologyInventory.Events;
+using Bdgrz.Compliance.Features.Workforce.Models;
+namespace Bdgrz.Compliance.Features.Applications.Models;
+
+/// <summary>An immutable tenant-authored application state after one aggregate event.</summary>
+public sealed record ApplicationRevisionView(Uuid TenantId, Uuid ApplicationId, long Revision,
+    string Name, string Purpose, string? OwnerReference,
+    string SourceKind, string SourceIdentifier, bool HasSystemInstances,
+    IReadOnlyList<string> Unresolved, Uuid LastChangedByMemberId,
+    string LastChangedByDisplay, DateTimeOffset LastChangedAt,
+    string ChangeKind, Uuid? SystemInstanceId, SystemInstanceView? SystemInstance)
+{
+    readonly ActorReference? _actor;
+
+    [JsonPropertyName("actor")]
+    public ActorReference Actor
+    {
+        get => _actor ?? ActorReference.ForMember(LastChangedByMemberId,
+            LastChangedByDisplay);
+        init => _actor = value;
+    }
+
+    public string? Classification { get; init; }
+
+    public string? ApplicationKind { get; init; }
+
+    public string? Criticality { get; init; }
+
+    /// <summary>Whether this application revision required restricted-read authority.</summary>
+    public bool IsRestricted { get; init; }
+
+    /// <summary>The workforce person accountable for the system (M0-D05).</summary>
+    public Uuid? SystemOwnerPersonId { get; init; }
+
+    /// <summary>The workforce person accountable for who has access (M0-D05).</summary>
+    public Uuid? AccessOwnerPersonId { get; init; }
+
+    /// <summary><c>active</c> or <c>retired</c>; retirement never removes history.</summary>
+    public string Lifecycle { get; init; } = "active";
+
+    public RetirementView? Retirement { get; init; }
+}

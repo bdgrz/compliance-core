@@ -1,0 +1,173 @@
+using Cntryl.Portia;
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.AccessControl.Readers;
+using Bdgrz.Compliance.Features.Applications.Models;
+using Bdgrz.Compliance.Features.AuditPackages.Models;
+using Bdgrz.Compliance.Features.AuditPackages.Rules;
+using Bdgrz.Compliance.Features.AuditPopulations.Models;
+using Bdgrz.Compliance.Features.AuditorRequests.Models;
+using Bdgrz.Compliance.Features.AuditorRequests.Processes;
+using Bdgrz.Compliance.Features.Boundaries.Rules;
+using Bdgrz.Compliance.Features.Commitments.Rules;
+using Bdgrz.Compliance.Features.ControlMappings.History;
+using Bdgrz.Compliance.Features.Controls.Contracts;
+using Bdgrz.Compliance.Features.Controls.Rules;
+using Bdgrz.Compliance.Features.Evaluations.Rules;
+using Bdgrz.Compliance.Features.Evidence.Models;
+using Bdgrz.Compliance.Features.Evidence.Rules;
+using Bdgrz.Compliance.Features.Examinations.Rules;
+using Bdgrz.Compliance.Features.Incidents.Rules;
+using Bdgrz.Compliance.Features.NamedRecords.Contracts;
+using Bdgrz.Compliance.Features.NamedRecords.Processes;
+using Bdgrz.Compliance.Features.NativeOperations.History;
+using Bdgrz.Compliance.Features.NativeOperations.Models;
+using Bdgrz.Compliance.Features.Operations.History;
+using Bdgrz.Compliance.Features.Operations.Models;
+using Bdgrz.Compliance.Features.Operations.Rules;
+using Bdgrz.Compliance.Features.Processes.Processes;
+using Bdgrz.Compliance.Features.Programs.Readers;
+using Bdgrz.Compliance.Features.Providers.History;
+using Bdgrz.Compliance.Features.Providers.Rules;
+using Bdgrz.Compliance.Features.Readiness.Models;
+using Bdgrz.Compliance.Features.Readiness.Rules;
+using Bdgrz.Compliance.Features.Remediation.Processes;
+using Bdgrz.Compliance.Features.Retention.Models;
+using Bdgrz.Compliance.Features.SourceFacts.Models;
+using Bdgrz.Compliance.Features.SourceFacts.Rules;
+using Bdgrz.Compliance.Features.SystemDescription.Projections;
+using Bdgrz.Compliance.Features.TechnologyInventory.Models;
+using Bdgrz.Compliance.Features.Tenants.Models;
+using Bdgrz.Compliance.Features.Tenants.Processes;
+using Bdgrz.Compliance.Features.UserIdentities.Models;
+using Bdgrz.Compliance.Features.Versioning.Models;
+using Bdgrz.Compliance.Features.Versioning.Rules;
+using Bdgrz.Compliance.Features.Examinations.Aggregates;
+using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
+using Bdgrz.Compliance.Features.Workforce.Events;
+using Bdgrz.Compliance.Features.Workforce.Models;
+namespace Bdgrz.Compliance.Features.Workforce.Aggregates;
+
+/// <summary>
+///     Owns one governed non-human identity (M0-D06): exactly one accountable owner, a person or a
+///     team, an approved purpose, and a review date at most one year out. Groups and roles are
+///     never owners.
+/// </summary>
+public sealed class ServiceIdentity : Aggregate
+{
+    static readonly string[] IdentityKinds = ["workload", "service", "automation", "bot", "integration"];
+    static readonly string[] LifecycleStatuses = ["active", "disabled", "retired"];
+    static readonly string[] OwnerKinds = ["person", "team"];
+
+    readonly Uuid _tenantId;
+    bool _created;
+    long _revision;
+    ServiceIdentityTerms? _initialTerms;
+    ServiceIdentityTerms? _terms;
+
+    public bool IsCreated => _created;
+    public long Revision => _revision;
+
+    public ServiceIdentity(Uuid tenantId, Uuid serviceIdentityId)
+        : base(serviceIdentityId, new EventStreamAddress(tenantId.ToString(), "service-identities",
+            serviceIdentityId.ToString()))
+    {
+        _tenantId = tenantId;
+        On<ServiceIdentityRecorded>(ObserveRecorded);
+        On<ServiceIdentityRevised>(ObserveRevised);
+    }
+
+    public Result<ServiceIdentityRegistration> Record(ServiceIdentityTerms terms, DateOnly today,
+        ActorReference actor, DateTimeOffset changedAt)
+    {
+        if (_created && terms is { DisplayName: not null, Purpose: not null } &&
+            _initialTerms == Clean(terms))
+            return Result<ServiceIdentityRegistration>.Success(new ServiceIdentityRegistration(Id));
+        var validation = Validate(terms, today);
+        if (validation is not null)
+            return Result<ServiceIdentityRegistration>.Failure(validation);
+        if (_created)
+            return Result<ServiceIdentityRegistration>.Failure(new RequestError(
+                RequestErrorKind.Conflict,
+                "The service identity already exists with different content."));
+        RaiseEvent(new ServiceIdentityRecorded(_tenantId, Id, Clean(terms), actor, changedAt));
+        return Result<ServiceIdentityRegistration>.Success(new ServiceIdentityRegistration(Id));
+    }
+
+    public CommandFailure? Revise(long expectedRevision, ServiceIdentityTerms terms, DateOnly today,
+        ActorReference actor, DateTimeOffset changedAt)
+    {
+        if (!_created)
+            return CommandFailure.MissingRecord("The service identity was not found.");
+        if (expectedRevision != _revision)
+            return CommandFailure.ForVersion(
+                VersionedRecordRules.StaleRevision("service identity", _revision));
+        var validation = Validate(terms, today);
+        if (validation is not null)
+            return CommandFailure.InvalidContent(validation.Message!);
+        var clean = Clean(terms);
+        if (_terms == clean)
+            return null;
+        RaiseEvent(new ServiceIdentityRevised(_tenantId, Id, _revision + 1, clean, actor,
+            changedAt));
+        return null;
+    }
+
+    static RequestError? Validate(ServiceIdentityTerms terms, DateOnly today)
+    {
+        static RequestError Invalid(string message) => new(RequestErrorKind.Validation, message);
+        if (terms is null || string.IsNullOrWhiteSpace(terms.DisplayName) ||
+            terms.DisplayName.Trim().Length > 200)
+            return Invalid("A service identity requires a display name of at most 200 characters.");
+        if (!IdentityKinds.Contains(terms.IdentityKind))
+            return Invalid(
+                "The identity kind must be workload, service, automation, bot, or integration.");
+        if (string.IsNullOrWhiteSpace(terms.Purpose) || terms.Purpose.Trim().Length > 1000)
+            return Invalid("A service identity requires an approved purpose of at most 1000 characters.");
+        if (terms.Environment is { } environment && environment.Trim().Length > 100)
+            return Invalid("The environment must be at most 100 characters.");
+        if (!LifecycleStatuses.Contains(terms.LifecycleStatus))
+            return Invalid("The lifecycle status must be active, disabled, or retired.");
+        if (!OwnerKinds.Contains(terms.OwnerKind) || terms.OwnerId == Uuid.Empty)
+            return Invalid("A service identity requires exactly one accountable person or team owner.");
+        if (terms.ReviewBy > today.AddYears(1))
+            return Invalid("The review date must be at most one year out.");
+        if (terms.LifecycleStatus != "retired" && terms.ReviewBy <= today)
+            return Invalid("The review date must be in the future.");
+        if (terms.LifecycleStatus == "active" && terms.ExpiresOn is { } expiresOn &&
+            expiresOn <= today)
+            return Invalid("An active service identity cannot already be expired.");
+        return null;
+    }
+
+    static ServiceIdentityTerms Clean(ServiceIdentityTerms terms) => terms with
+    {
+        DisplayName = terms.DisplayName.Trim(),
+        Purpose = terms.Purpose.Trim(),
+        Environment = string.IsNullOrWhiteSpace(terms.Environment) ? null : terms.Environment.Trim(),
+    };
+
+    void ObserveRecorded(ServiceIdentityRecorded fact)
+    {
+        if (fact.TenantId != _tenantId || fact.ServiceIdentityId != Id || _created)
+            throw new InvalidOperationException("A service identity record must create this tenant's identity exactly once.");
+        var validation = Validate(fact.Terms, DateOnly.FromDateTime(fact.ChangedAt.UtcDateTime));
+        if (validation is not null || fact.Terms != Clean(fact.Terms))
+            throw new InvalidOperationException("A service identity record must contain valid canonical terms.");
+        _created = true;
+        _revision = 1;
+        _initialTerms = fact.Terms;
+        _terms = fact.Terms;
+    }
+
+    void ObserveRevised(ServiceIdentityRevised fact)
+    {
+        if (fact.TenantId != _tenantId || fact.ServiceIdentityId != Id || !_created ||
+            fact.Revision != _revision + 1)
+            throw new InvalidOperationException("A service identity revision must follow its tenant's current identity revision.");
+        var validation = Validate(fact.Terms, DateOnly.FromDateTime(fact.ChangedAt.UtcDateTime));
+        if (validation is not null || fact.Terms != Clean(fact.Terms))
+            throw new InvalidOperationException("A service identity revision must contain valid canonical terms.");
+        _revision = fact.Revision;
+        _terms = fact.Terms;
+    }
+}

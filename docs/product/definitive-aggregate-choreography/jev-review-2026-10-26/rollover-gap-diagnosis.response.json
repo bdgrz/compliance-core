@@ -1,0 +1,41 @@
+{
+  "httpStatus": 200,
+  "response": {
+    "model": "jev-1.14.0",
+    "answers": {
+      "gap": {
+        "type": "choice",
+        "choice": "terminal_chain",
+        "confidence": 0.27,
+        "probabilities": {
+          "claim_transition": 0.07,
+          "plan_correlation": 0.2,
+          "plan_revision": 0.04,
+          "terminal_chain": 0.36,
+          "failure_recovery": 0.04,
+          "duplicate_source_rollover": 0.19,
+          "no_concrete_gap": 0.09,
+          "other_business_policy": 0.01
+        }
+      },
+      "correlation": {
+        "type": "noul",
+        "noul": 0.36
+      },
+      "recovery": {
+        "type": "choice",
+        "choice": "permanent_fence",
+        "confidence": 0.76,
+        "probabilities": {
+          "permanent_fence": 0.84,
+          "release_required": 0.02,
+          "policy_missing": 0.14
+        }
+      }
+    },
+    "usage": {
+      "input_tokens": 982,
+      "output_tokens": 157
+    }
+  }
+}

@@ -1,0 +1,13 @@
+using Cntryl.Portia;
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.Applications.Contracts;
+namespace Bdgrz.Compliance.Features.Applications.Commands;
+
+/// <summary>Retires a system instance; <paramref name="CommandId" /> is the logical identity of the operation.</summary>
+[Discriminator("bdgrz.system_instance.retire", 1)]
+public sealed record RetireSystemInstance(Uuid CommandId, Uuid TenantId, Uuid ApplicationId,
+    Uuid SystemInstanceId, long ExpectedRevision, DateTimeOffset EffectiveAt, string Reason)
+    : IRequest, IApplicationInventoryWriteRequest, ICallable, IIdentifiedRequest
+{
+    Uuid IIdentifiedRequest.RequestId => CommandId;
+}

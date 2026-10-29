@@ -1,0 +1,8 @@
+using Cntryl.Fitz.Extensions;
+using Cntryl.Portia;
+using Bdgrz.Compliance.Features.Tenants.Models;
+namespace Bdgrz.Compliance.Features.Tenants.Queries;
+
+[Discriminator("bdgrz.tenant-member.list", 1)]
+public sealed record ListTenantMembers(Uuid TenantId, int? Limit = null, string? Cursor = null)
+    : IRequest<Page<TenantMembershipView>>, ICallable;

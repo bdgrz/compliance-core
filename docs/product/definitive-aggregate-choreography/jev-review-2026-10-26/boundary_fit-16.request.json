@@ -1,0 +1,684 @@
+{
+  "model": "jev-1.14.0",
+  "state": {
+    "review": "Adversarial review of the selected definitive business/authority owner boundary. Treat the supplied row as a proposal; do not infer omitted policy.",
+    "pass": "boundary_fit",
+    "owners": [
+      {
+        "owner": "TypeIIObservationCalendar",
+        "classification": "business_governor",
+        "declaredIdentity": "tenant/type-ii-observation-calendars/programId; stable periodId and exact opening intent. Amendment retries compare exact intent. Release of any already inactive period returns success without comparing closed snapshot, so changed release facts can be acknowledged as old success.",
+        "selectedIdentity": "Tenant / type-ii-observation-calendars / ProgramId. Every active reservation remains bound to exact PeriodId/opening intent; release/cancel/close operations retain exact selected period, generation and terminal source proof.",
+        "invariant": "Active program Type II date ranges, including both current and reserved amendment ranges, must never overlap; a pending amendment must finish or cancel before date range release.",
+        "boundaryDecision": "narrow",
+        "boundaryRationale": "Splitting period reservations by period without a shared admission owner breaks non-overlap. Retain program-wide reservation owner; keep only active ranges/pending holds, project inactive histories. If sharding by date buckets becomes necessary reserve all intersecting buckets in canonical order and recover/release partial reservations.",
+        "commands": [],
+        "events": [
+          {
+            "event": "TypeIIPeriodRangeAuthorized",
+            "discriminator": "bdgrz.type-i-i-observation-calendar.type-i-i-period-range-authorized",
+            "version": 1
+          },
+          {
+            "event": "TypeIIPeriodRangeSettled",
+            "discriminator": "bdgrz.type-i-i-observation-calendar.type-i-i-period-range-settled",
+            "version": 1
+          }
+        ],
+        "choreography": [
+          {
+            "reactor": "TypeIIPeriodRangeReactor",
+            "sourceOwner": "TypeIIPeriod",
+            "targetOwner": "TypeIIObservationCalendar",
+            "command": "AcquireTypeIIPeriodRange"
+          },
+          {
+            "reactor": "TypeIIPeriodRangeApplicationReactor",
+            "sourceOwner": "TypeIIObservationCalendar",
+            "targetOwner": "TypeIIPeriod",
+            "command": "ApplyTypeIIPeriodRange"
+          },
+          {
+            "reactor": "TypeIIPeriodRangeReleaseReactor",
+            "sourceOwner": "TypeIIPeriod",
+            "targetOwner": "TypeIIObservationCalendar",
+            "command": "SettleTypeIIPeriodRange"
+          }
+        ]
+      },
+      {
+        "owner": "TypeIIPeriod",
+        "classification": "business_aggregate",
+        "declaredIdentity": "tenant/type-ii-periods/periodId, supplied stable minted ID; Start compares exact plan/opening, but uses mutable current actor fields. Other commands vary: generationKey exact compares intent; approval/amendment recognize latest intent, close snapshots use stable IDs; no uniform historical request intent.",
+        "selectedIdentity": "Tenant / type-ii-periods / PeriodId, with immutable ProgramId and exact accepted plan/opening. PeriodId identifies creation; selected CommandId/GenerationKey identify exact freeze/reconciliation/amendment operations and their immutable closing identities.",
+        "invariant": "One period binds exact approved opening plan/population; close must reconcile the approved expected population, independently acknowledge all unresolved material items, and freeze the same approved sources. Close amendments preserve original expected population/acknowledgements and chain exact changed sources.",
+        "boundaryDecision": "narrow",
+        "boundaryRationale": "The immutable approved expected-population manifest is a legitimate value proof for close, not a live roster of occurrence children. Keep a narrow period close/lineage owner; move occurrence-generation process/batches and immutable close snapshots/history out of active state. Preserve canonical frozen manifest and current closure lineage digest so atomic close rules remain exact.",
+        "commands": [
+          {
+            "command": "AmendTypeIIPeriodClose",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "PeriodId:Uuid",
+              "CloseSnapshotId:Uuid",
+              "ExpectedRevision:long",
+              "AmendmentReason:string"
+            ]
+          },
+          {
+            "command": "ApproveTypeIIPeriodClose",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "PeriodId:Uuid",
+              "ExpectedRevision:long",
+              "Rationale:string",
+              "AcknowledgedMaterialItemIds:IReadOnlyList<Uuid>"
+            ]
+          },
+          {
+            "command": "FreezeTypeIIPeriodClose",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "PeriodId:Uuid",
+              "CloseSnapshotId:Uuid",
+              "ExpectedRevision:long"
+            ]
+          },
+          {
+            "command": "GenerateDueControlOccurrences",
+            "logicalIdentity": "GenerationKey",
+            "fields": [
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "PeriodId:Uuid",
+              "ThroughDate:DateOnly",
+              "GenerationKey:string"
+            ]
+          },
+          {
+            "command": "StartTypeIIObservationPeriod",
+            "logicalIdentity": "PeriodId",
+            "fields": [
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "PeriodId:Uuid",
+              "ExaminationId:Uuid",
+              "PlanId:Uuid",
+              "PeriodStart:DateOnly",
+              "PeriodEnd:DateOnly"
+            ]
+          },
+          {
+            "command": "AmendTypeIIObservationPeriod",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "PeriodId:Uuid",
+              "ExpectedRevision:long",
+              "PeriodStart:DateOnly?",
+              "PeriodEnd:DateOnly?",
+              "AmendmentReason:string"
+            ]
+          },
+          {
+            "command": "CancelTypeIIPeriodAmendment",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "PeriodId:Uuid",
+              "AmendmentId:Uuid",
+              "ExpectedRevision:long",
+              "Reason:string"
+            ]
+          },
+          {
+            "command": "RejectTypeIIPeriodOpening",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "OperationId:Uuid",
+              "Target:EventStreamAddress",
+              "Generation:long",
+              "ExpectedRevision:long",
+              "FailureProof:ImmutableContentRef"
+            ]
+          },
+          {
+            "command": "RejectTypeIIPeriodAmendment",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "OperationId:Uuid",
+              "Target:EventStreamAddress",
+              "Generation:long",
+              "ExpectedRevision:long",
+              "FailureProof:ImmutableContentRef"
+            ]
+          }
+        ],
+        "events": [
+          {
+            "event": "DueControlOccurrencesGenerated",
+            "discriminator": "bdgrz.operations.due-control-occurrences-generated",
+            "version": 1
+          },
+          {
+            "event": "ObservationPeriodAmended",
+            "discriminator": "bdgrz.operations.observation-period-amended",
+            "version": 1
+          },
+          {
+            "event": "ObservationPeriodCloseFrozen",
+            "discriminator": "bdgrz.auditpopulations.observation-period-close-frozen",
+            "version": 1
+          },
+          {
+            "event": "ObservationPeriodStarted",
+            "discriminator": "bdgrz.operations.observation-period-started",
+            "version": 1
+          },
+          {
+            "event": "TypeIIPeriodAmendmentAccepted",
+            "discriminator": "bdgrz.type-i-i-period.type-i-i-period-amendment-accepted",
+            "version": 1
+          },
+          {
+            "event": "TypeIIPeriodAmendmentCanceled",
+            "discriminator": "bdgrz.type-i-i-period.type-i-i-period-amendment-canceled",
+            "version": 1
+          },
+          {
+            "event": "TypeIIPeriodOpeningAccepted",
+            "discriminator": "bdgrz.type-i-i-period.type-i-i-period-opening-accepted",
+            "version": 1
+          },
+          {
+            "event": "TypeIIPeriodOpeningRejected",
+            "discriminator": "bdgrz.type-i-i-period.type-i-i-period-opening-rejected",
+            "version": 1
+          }
+        ],
+        "choreography": [
+          {
+            "reactor": "ControlOccurrenceMaterializationReactor",
+            "sourceOwner": "TypeIIPeriod",
+            "targetOwner": "ControlOccurrence",
+            "command": "MaterializeControlOccurrence"
+          },
+          {
+            "reactor": "TypeIIPeriodRangeReactor",
+            "sourceOwner": "TypeIIPeriod",
+            "targetOwner": "TypeIIObservationCalendar",
+            "command": "AcquireTypeIIPeriodRange"
+          },
+          {
+            "reactor": "TypeIIPeriodRangeApplicationReactor",
+            "sourceOwner": "TypeIIObservationCalendar",
+            "targetOwner": "TypeIIPeriod",
+            "command": "ApplyTypeIIPeriodRange"
+          },
+          {
+            "reactor": "TypeIIPeriodRangeReleaseReactor",
+            "sourceOwner": "TypeIIPeriod",
+            "targetOwner": "TypeIIObservationCalendar",
+            "command": "SettleTypeIIPeriodRange"
+          }
+        ]
+      },
+      {
+        "owner": "TypeIIPlan",
+        "classification": "business_aggregate",
+        "declaredIdentity": "Tenant / type-ii-plans / planId; initial/decision intent compares; revision command fails stale retry before comparison; current decision immutable. Portia appends against the hydrated physical stream position; a logical revision does not create another physical boundary.",
+        "selectedIdentity": "Tenant / type-ii-plans / PlanId, with immutable ProgramId. PlanId identifies creation; selected mutations use CommandId with exact plan version/source/decision bindings.",
+        "invariant": "Only current proposed content with exact carried-gap acknowledgements receives an independent review; executive approval requires review and three distinct roles, after which plan is immutable.",
+        "boundaryDecision": "narrow",
+        "boundaryRationale": "Current authored content/reviewer/approver must remain one same-version decision. Past proposal bodies/reviews are historical records and need not remain state.",
+        "commands": [
+          {
+            "command": "ApproveTypeIIOperatingPlan",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "PlanId:Uuid",
+              "Version:long",
+              "Rationale:string"
+            ]
+          },
+          {
+            "command": "ProposeTypeIIOperatingPlan",
+            "logicalIdentity": "PlanId",
+            "fields": [
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "PlanId:Uuid",
+              "ExaminationId:Uuid",
+              "Content:TypeIIPlanContent"
+            ]
+          },
+          {
+            "command": "ReviewTypeIIOperatingPlan",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "PlanId:Uuid",
+              "Version:long",
+              "Outcome:string",
+              "Comments:string"
+            ]
+          }
+        ],
+        "events": [
+          {
+            "event": "TypeIIPlanApproved"
+          },
+          {
+            "event": "TypeIIPlanProposed"
+          },
+          {
+            "event": "TypeIIPlanReviewed"
+          },
+          {
+            "event": "TypeIIPlanRevised"
+          }
+        ],
+        "choreography": []
+      },
+      {
+        "owner": "UserIdentity",
+        "classification": "business_aggregate",
+        "declaredIdentity": "UUIDv5 provider+subject; registration stable optional user binding; revoke retries exact replacement no-op, changed replacement conflict. OCC.",
+        "selectedIdentity": "Existing UUIDv5 of identity provider + subject. Exact registration/user binding and revoke/replacement episode remain immutable; native operation terms retain that full binding.",
+        "invariant": "External provider+subject associates to exactly one platform user; revoked identity cannot authenticate and has one exact replacement.",
+        "boundaryDecision": "narrow",
+        "boundaryRationale": "Association/revocation must stay together. Provider presentation observations do not decide identity authority and can be separate observation/audit source.",
+        "commands": [],
+        "events": [
+          {
+            "event": "RecoveryIdentityProtected",
+            "discriminator": "bdgrz.user-identity.recovery-identity-protected",
+            "version": 1
+          },
+          {
+            "event": "RecoveryIdentityProtectionSettled",
+            "discriminator": "bdgrz.user-identity.recovery-identity-protection-settled",
+            "version": 1
+          },
+          {
+            "event": "UserIdentityRegistered",
+            "discriminator": "bdgrz.user-identity.registered",
+            "version": 1
+          },
+          {
+            "event": "UserIdentityRevoked",
+            "discriminator": "bdgrz.user-identity.revoked",
+            "version": 1
+          }
+        ],
+        "choreography": [
+          {
+            "reactor": "IdentityRecoveryContinuationReactor",
+            "sourceOwner": "IdentityRecovery",
+            "targetOwner": "UserIdentity",
+            "command": "ProtectRecoveryIdentity"
+          },
+          {
+            "reactor": "IdentityRecoveryReplacementReactor",
+            "sourceOwner": "IdentityRecovery",
+            "targetOwner": "UserIdentity",
+            "command": "RegisterRecoveredIdentity"
+          },
+          {
+            "reactor": "IdentityRecoveryOldRevocationReactor",
+            "sourceOwner": "IdentityRecovery",
+            "targetOwner": "UserIdentity",
+            "command": "RevokeRecoveredOldIdentity"
+          },
+          {
+            "reactor": "IdentityRecoveryProtectionReleaseReactor",
+            "sourceOwner": "IdentityRecovery",
+            "targetOwner": "UserIdentity",
+            "command": "SettleRecoveryIdentityProtection"
+          }
+        ]
+      },
+      {
+        "owner": "WorkDigestPreference",
+        "classification": "business_aggregate",
+        "declaredIdentity": "tenant/work-digest-preferences/memberId; scalar values only, no explicit expected revision/request identity. Same values no-op but retry of old setting after a later update will change state again.",
+        "selectedIdentity": "Tenant / work-digest-preferences / MemberId. Selected CommandId binds the exact preference update; unchanged values still have an original recorded result under the adopted preference decision.",
+        "invariant": "One member stores current notification consent and valid scheduling time zone; identical current setting is no-op. This is chiefly a settings state holder, with no multi-part business invariant identified.",
+        "boundaryDecision": "retain",
+        "boundaryRationale": "Retain per-member notification consent/time-zone authority or equivalent dedicated versioned consent owner. Matching Member identity does not justify a shared revision. Add logical retry and expected revision so an old consent command cannot override later consent.",
+        "commands": [
+          {
+            "command": "SetWorkDigestPreference",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "EmailDigestEnabled:bool",
+              "TimeZoneId:string?"
+            ]
+          }
+        ],
+        "events": [
+          {
+            "event": "WorkDigestPreferenceChanged"
+          }
+        ],
+        "choreography": []
+      },
+      {
+        "owner": "WorkItemAssignment",
+        "classification": "business_aggregate",
+        "declaredIdentity": "tenant/work-item-assignments/v5(programId,workItemId); expectedRevision protects per-item mutation and physical append. AssignTo/Escalate receive no request identity, so exact successful replay is stale/conflict; history import only empty target.",
+        "selectedIdentity": "Tenant / work-item-assignments / existing UUIDv5 of ProgramId and WorkItemId. Selected CommandId binds original actor, exact source work identity and assignment episode; imported ledger history is read-only provenance.",
+        "invariant": "One source-derived work item has current assignee/escalation revision; escalation is accepted at most once, assignment commands require expected revision. Source eligibility and completion belong to producing workflow.",
+        "boundaryDecision": "narrow",
+        "boundaryRationale": "Per-item boundary is correct; different items/programs already isolate streams. Keep current assignee/escalated and required assignment action guards; move full history to projection and legacy import to process storage while preserving attribution.",
+        "commands": [
+          {
+            "command": "AssignWorkItem",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "WorkItemId:Uuid",
+              "ExpectedRevision:long",
+              "AssigneeMemberId:Uuid",
+              "Reason:string?"
+            ]
+          },
+          {
+            "command": "ClaimWorkItem",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "WorkItemId:Uuid",
+              "ExpectedRevision:long"
+            ]
+          },
+          {
+            "command": "DelegateWorkItem",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "WorkItemId:Uuid",
+              "ExpectedRevision:long",
+              "AssigneeMemberId:Uuid",
+              "Reason:string"
+            ]
+          },
+          {
+            "command": "EscalateWorkItem",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "WorkItemId:Uuid",
+              "ExpectedRevision:long",
+              "Reason:string"
+            ]
+          }
+        ],
+        "events": [
+          {
+            "event": "WorkItemAssigned"
+          },
+          {
+            "event": "WorkItemAssignmentHistoryImported"
+          },
+          {
+            "event": "WorkItemEscalated"
+          }
+        ],
+        "choreography": []
+      },
+      {
+        "owner": "WorkRelationship",
+        "classification": "business_aggregate",
+        "declaredIdentity": "UUIDv5 tenant+normalized sourceWorkerId chosen by handler; initial person/terms compare. Constructor accepts arbitrary id but route uses IdFor. Revise exact retry stale under expectedRevision.",
+        "selectedIdentity": "Existing tenant-scoped UUIDv5 of normalized SourceWorkerId. Supplied RelationshipId must equal that unchanged algorithm; selected revisions use CommandId with exact person/membership/source-worker binding.",
+        "invariant": "One stable source worker ID belongs permanently to one person; end date/status and sponsor/self-manager constraints must form valid governed relationship at each revision.",
+        "boundaryDecision": "retain",
+        "boundaryRationale": "Immutable worker-person identity and lifecycle terms must cohere; workforce roster/history belongs projection.",
+        "commands": [
+          {
+            "command": "RecordWorkRelationship",
+            "logicalIdentity": "RelationshipId",
+            "fields": [
+              "RelationshipId:Uuid",
+              "TenantId:Uuid",
+              "PersonId:Uuid",
+              "SourceWorkerId:string",
+              "WorkerType:string",
+              "LifecycleStatus:string",
+              "StartDate:DateOnly",
+              "EndDate:DateOnly?",
+              "Department:string?",
+              "ManagerPersonId:Uuid?",
+              "SponsorPersonId:Uuid?",
+              "EmploymentStatusReason:string?"
+            ]
+          },
+          {
+            "command": "ReviseWorkRelationship",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "RelationshipId:Uuid",
+              "ExpectedRevision:long",
+              "WorkerType:string",
+              "LifecycleStatus:string",
+              "StartDate:DateOnly",
+              "EndDate:DateOnly?",
+              "Department:string?",
+              "ManagerPersonId:Uuid?",
+              "SponsorPersonId:Uuid?",
+              "EmploymentStatusReason:string?"
+            ]
+          }
+        ],
+        "events": [
+          {
+            "event": "WorkRelationshipRecorded"
+          },
+          {
+            "event": "WorkRelationshipRevised"
+          }
+        ],
+        "choreography": []
+      },
+      {
+        "owner": "WorkforceObservationResolution",
+        "classification": "business_aggregate",
+        "declaredIdentity": "Tenant+observationId; exact normalized resolution/note retry no-op, changed intent conflict; append OCC.",
+        "selectedIdentity": "Tenant + ObservationId, with immutable source observation identity. Selected CommandId binds the exact normalized resolution/note and authorized actor.",
+        "invariant": "One observation may receive one final attributed resolved/dismissed decision; changed resolution intent conflicts.",
+        "boundaryDecision": "retain",
+        "boundaryRationale": "Decision and its note are one lifecycle; observations for other underlying facts are independently keyed.",
+        "commands": [
+          {
+            "command": "ResolveWorkforceObservation",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ObservationId:Uuid",
+              "Resolution:string",
+              "Note:string"
+            ]
+          }
+        ],
+        "events": [
+          {
+            "event": "WorkforceObservationResolved"
+          }
+        ],
+        "choreography": []
+      }
+    ]
+  },
+  "questions": {
+    "item_0": {
+      "type": "choice",
+      "instructions": "Does the selected boundary for TypeIIObservationCalendar fit its identity, atomic invariant, command decisions, event facts, and independent lifecycle?",
+      "criteria": {
+        "selected_boundary_supported": "The selected owner matches the stable business decision and atomic conflict set; independently governed facts are separated.",
+        "boundary_should_change": "A concrete split or merge is required to preserve an explicit invariant or independent lifecycle.",
+        "evidence_insufficient": "Identity, source authority, lifecycle, contention, or concurrency evidence is missing or contradictory."
+      }
+    },
+    "item_0_evidence": {
+      "type": "noul",
+      "instructions": "Does this row provide enough explicit evidence to settle TypeIIObservationCalendar's boundary without adding an unstated business policy?",
+      "criteria": {
+        "true": "Identity, invariant, lifecycle and exclusions are explicit enough to decide.",
+        "false": "A material boundary assumption is missing, contradictory or unsupported."
+      }
+    },
+    "item_1": {
+      "type": "choice",
+      "instructions": "Does the selected boundary for TypeIIPeriod fit its identity, atomic invariant, command decisions, event facts, and independent lifecycle?",
+      "criteria": {
+        "selected_boundary_supported": "The selected owner matches the stable business decision and atomic conflict set; independently governed facts are separated.",
+        "boundary_should_change": "A concrete split or merge is required to preserve an explicit invariant or independent lifecycle.",
+        "evidence_insufficient": "Identity, source authority, lifecycle, contention, or concurrency evidence is missing or contradictory."
+      }
+    },
+    "item_1_evidence": {
+      "type": "noul",
+      "instructions": "Does this row provide enough explicit evidence to settle TypeIIPeriod's boundary without adding an unstated business policy?",
+      "criteria": {
+        "true": "Identity, invariant, lifecycle and exclusions are explicit enough to decide.",
+        "false": "A material boundary assumption is missing, contradictory or unsupported."
+      }
+    },
+    "item_2": {
+      "type": "choice",
+      "instructions": "Does the selected boundary for TypeIIPlan fit its identity, atomic invariant, command decisions, event facts, and independent lifecycle?",
+      "criteria": {
+        "selected_boundary_supported": "The selected owner matches the stable business decision and atomic conflict set; independently governed facts are separated.",
+        "boundary_should_change": "A concrete split or merge is required to preserve an explicit invariant or independent lifecycle.",
+        "evidence_insufficient": "Identity, source authority, lifecycle, contention, or concurrency evidence is missing or contradictory."
+      }
+    },
+    "item_2_evidence": {
+      "type": "noul",
+      "instructions": "Does this row provide enough explicit evidence to settle TypeIIPlan's boundary without adding an unstated business policy?",
+      "criteria": {
+        "true": "Identity, invariant, lifecycle and exclusions are explicit enough to decide.",
+        "false": "A material boundary assumption is missing, contradictory or unsupported."
+      }
+    },
+    "item_3": {
+      "type": "choice",
+      "instructions": "Does the selected boundary for UserIdentity fit its identity, atomic invariant, command decisions, event facts, and independent lifecycle?",
+      "criteria": {
+        "selected_boundary_supported": "The selected owner matches the stable business decision and atomic conflict set; independently governed facts are separated.",
+        "boundary_should_change": "A concrete split or merge is required to preserve an explicit invariant or independent lifecycle.",
+        "evidence_insufficient": "Identity, source authority, lifecycle, contention, or concurrency evidence is missing or contradictory."
+      }
+    },
+    "item_3_evidence": {
+      "type": "noul",
+      "instructions": "Does this row provide enough explicit evidence to settle UserIdentity's boundary without adding an unstated business policy?",
+      "criteria": {
+        "true": "Identity, invariant, lifecycle and exclusions are explicit enough to decide.",
+        "false": "A material boundary assumption is missing, contradictory or unsupported."
+      }
+    },
+    "item_4": {
+      "type": "choice",
+      "instructions": "Does the selected boundary for WorkDigestPreference fit its identity, atomic invariant, command decisions, event facts, and independent lifecycle?",
+      "criteria": {
+        "selected_boundary_supported": "The selected owner matches the stable business decision and atomic conflict set; independently governed facts are separated.",
+        "boundary_should_change": "A concrete split or merge is required to preserve an explicit invariant or independent lifecycle.",
+        "evidence_insufficient": "Identity, source authority, lifecycle, contention, or concurrency evidence is missing or contradictory."
+      }
+    },
+    "item_4_evidence": {
+      "type": "noul",
+      "instructions": "Does this row provide enough explicit evidence to settle WorkDigestPreference's boundary without adding an unstated business policy?",
+      "criteria": {
+        "true": "Identity, invariant, lifecycle and exclusions are explicit enough to decide.",
+        "false": "A material boundary assumption is missing, contradictory or unsupported."
+      }
+    },
+    "item_5": {
+      "type": "choice",
+      "instructions": "Does the selected boundary for WorkItemAssignment fit its identity, atomic invariant, command decisions, event facts, and independent lifecycle?",
+      "criteria": {
+        "selected_boundary_supported": "The selected owner matches the stable business decision and atomic conflict set; independently governed facts are separated.",
+        "boundary_should_change": "A concrete split or merge is required to preserve an explicit invariant or independent lifecycle.",
+        "evidence_insufficient": "Identity, source authority, lifecycle, contention, or concurrency evidence is missing or contradictory."
+      }
+    },
+    "item_5_evidence": {
+      "type": "noul",
+      "instructions": "Does this row provide enough explicit evidence to settle WorkItemAssignment's boundary without adding an unstated business policy?",
+      "criteria": {
+        "true": "Identity, invariant, lifecycle and exclusions are explicit enough to decide.",
+        "false": "A material boundary assumption is missing, contradictory or unsupported."
+      }
+    },
+    "item_6": {
+      "type": "choice",
+      "instructions": "Does the selected boundary for WorkRelationship fit its identity, atomic invariant, command decisions, event facts, and independent lifecycle?",
+      "criteria": {
+        "selected_boundary_supported": "The selected owner matches the stable business decision and atomic conflict set; independently governed facts are separated.",
+        "boundary_should_change": "A concrete split or merge is required to preserve an explicit invariant or independent lifecycle.",
+        "evidence_insufficient": "Identity, source authority, lifecycle, contention, or concurrency evidence is missing or contradictory."
+      }
+    },
+    "item_6_evidence": {
+      "type": "noul",
+      "instructions": "Does this row provide enough explicit evidence to settle WorkRelationship's boundary without adding an unstated business policy?",
+      "criteria": {
+        "true": "Identity, invariant, lifecycle and exclusions are explicit enough to decide.",
+        "false": "A material boundary assumption is missing, contradictory or unsupported."
+      }
+    },
+    "item_7": {
+      "type": "choice",
+      "instructions": "Does the selected boundary for WorkforceObservationResolution fit its identity, atomic invariant, command decisions, event facts, and independent lifecycle?",
+      "criteria": {
+        "selected_boundary_supported": "The selected owner matches the stable business decision and atomic conflict set; independently governed facts are separated.",
+        "boundary_should_change": "A concrete split or merge is required to preserve an explicit invariant or independent lifecycle.",
+        "evidence_insufficient": "Identity, source authority, lifecycle, contention, or concurrency evidence is missing or contradictory."
+      }
+    },
+    "item_7_evidence": {
+      "type": "noul",
+      "instructions": "Does this row provide enough explicit evidence to settle WorkforceObservationResolution's boundary without adding an unstated business policy?",
+      "criteria": {
+        "true": "Identity, invariant, lifecycle and exclusions are explicit enough to decide.",
+        "false": "A material boundary assumption is missing, contradictory or unsupported."
+      }
+    }
+  }
+}

@@ -1,0 +1,306 @@
+using Cntryl.Fitz;
+using Cntryl.Portia;
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.AccessControl.Readers;
+using Bdgrz.Compliance.Features.Applications.Models;
+using Bdgrz.Compliance.Features.AuditPackages.Models;
+using Bdgrz.Compliance.Features.AuditPackages.Rules;
+using Bdgrz.Compliance.Features.AuditPopulations.Models;
+using Bdgrz.Compliance.Features.AuditorRequests.Models;
+using Bdgrz.Compliance.Features.AuditorRequests.Processes;
+using Bdgrz.Compliance.Features.Content.Contracts;
+using Bdgrz.Compliance.Features.ControlMappings.History;
+using Bdgrz.Compliance.Features.Controls.Contracts;
+using Bdgrz.Compliance.Features.Evidence.Models;
+using Bdgrz.Compliance.Features.Evidence.Rules;
+using Bdgrz.Compliance.Features.Incidents.Rules;
+using Bdgrz.Compliance.Features.NamedRecords.Processes;
+using Bdgrz.Compliance.Features.NativeOperations.History;
+using Bdgrz.Compliance.Features.NativeOperations.Models;
+using Bdgrz.Compliance.Features.Operations.History;
+using Bdgrz.Compliance.Features.Operations.Models;
+using Bdgrz.Compliance.Features.Operations.Rules;
+using Bdgrz.Compliance.Features.PolicyDistribution.Processes;
+using Bdgrz.Compliance.Features.Processes.Processes;
+using Bdgrz.Compliance.Features.Programs.Readers;
+using Bdgrz.Compliance.Features.Providers.History;
+using Bdgrz.Compliance.Features.Providers.Processes;
+using Bdgrz.Compliance.Features.Providers.Rules;
+using Bdgrz.Compliance.Features.Readiness.Rules;
+using Bdgrz.Compliance.Features.Remediation.Processes;
+using Bdgrz.Compliance.Features.Retention.Models;
+using Bdgrz.Compliance.Features.SourceFacts.Models;
+using Bdgrz.Compliance.Features.SourceFacts.Rules;
+using Bdgrz.Compliance.Features.SystemDescription.Projections;
+using Bdgrz.Compliance.Features.Tenants.Models;
+using Bdgrz.Compliance.Features.Tenants.Processes;
+using Bdgrz.Compliance.Features.UserIdentities.Processes;
+using Bdgrz.Compliance.Features.Work.Models;
+using Bdgrz.Compliance.Features.Work.Projections;
+using Bdgrz.Compliance.Features.AccessControl.Aggregates;
+using Bdgrz.Compliance.Features.Evaluations.Events;
+using Bdgrz.Compliance.Features.Evaluations.Models;
+using Bdgrz.Compliance.Features.Examinations.Aggregates;
+using Bdgrz.Compliance.Features.Exports.Commands;
+using Bdgrz.Compliance.Features.Processes.Models;
+using Bdgrz.Compliance.Features.Providers.Handlers;
+using Bdgrz.Compliance.Features.Providers.Projections;
+using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
+using Bdgrz.Compliance.Features.Work.Commands;
+using Bdgrz.Compliance.Features.Content.Persistence;
+namespace Bdgrz.Compliance.Features.Work.Readers;
+
+sealed class FitzControlEvaluationWorkItemDirectory(IKvClient client, IImmutableContentStore content)
+    : FitzKvProjectionStore(client,
+        "kv://bdgrz/accountable-work-items/control-evaluations-v1", ProjectorName),
+      IAccountableWorkItemDirectoryReader, IControlEvaluationWorkItemProjection
+{
+    public const string ProjectorName = "AccountableWorkItemControlEvaluationV1";
+    const string RevisionKey = ProjectorName;
+    const string InProgress = "in_progress";
+    const string Submitted = "submitted";
+    const string Accepted = "accepted";
+    const string Rejected = "rejected";
+    const string ChangesRequested = "changes_requested";
+
+    string IAccountableWorkItemDirectoryReader.ProjectorName => ProjectorName;
+
+    public IReadOnlyCollection<string> ProjectedKinds => [WorkSource.ControlEvaluationReview];
+
+    public EventStreamPattern SourcePattern(Uuid tenantId) =>
+        EventStreamPattern.ForPattern(tenantId.ToString(), "control-evaluations");
+
+    public ValueTask<ProjectionCheckpoint> LoadCheckpointAsync(Uuid tenantId,
+        CancellationToken ct = default) => base.LoadCheckpointAsync(new CheckpointIdentity(
+        ProjectorName, SourcePattern(tenantId)), ct);
+
+    public async ValueTask<long> LoadRevisionAsync(Uuid tenantId,
+        CancellationToken ct = default)
+    {
+        await using var tx = await BeginReadAsync(tenantId.ToString(), ct).ConfigureAwait(false);
+        return (await ControlEvaluationWorkItemDirectorySchema.Revisions.GetAsync(tx,
+            RevisionKey, ct).ConfigureAwait(false))?.Revision ?? 0;
+    }
+
+    public async ValueTask ApplyAsync(DomainEvent domainEvent, CancellationToken ct = default)
+    {
+        var scope = ScopeFor(domainEvent);
+        if (scope.TenantId == Uuid.Empty || scope.ProgramId == Uuid.Empty ||
+            scope.ControlId == Uuid.Empty || scope.EvaluationId == Uuid.Empty)
+            throw new InvalidOperationException(
+                "A control evaluation event must have a complete tenant and source scope.");
+
+        var key = ControlEvaluationWorkItemDirectorySchema.EvaluationKey(scope.ProgramId,
+            scope.EvaluationId);
+        var current = await ControlEvaluationWorkItemDirectorySchema.Evaluations.GetAsync(
+            Transaction, key, ct).ConfigureAwait(false);
+        if (domainEvent is ControlEvaluationStarted started)
+        {
+            if (current is not null || scope.Revision != 1 || started.EvaluatorMemberId == Uuid.Empty)
+                throw new InvalidOperationException(
+                    "A control evaluation must start once at revision one with an evaluator.");
+            var initial = new ControlEvaluationWorkState(started.TenantId, started.ProgramId,
+                started.ControlId, started.EvaluationId, started.EvaluatorMemberId,
+                started.Revision, 1, InProgress, null);
+            await ControlEvaluationWorkItemDirectorySchema.Evaluations.InsertAsync(Transaction,
+                initial, ct).ConfigureAwait(false);
+        }
+        else
+        {
+            if (current is null || current.TenantId != scope.TenantId ||
+                current.ProgramId != scope.ProgramId || current.ControlId != scope.ControlId ||
+                current.EvaluationId != scope.EvaluationId ||
+                scope.Revision != checked(current.Revision + 1))
+                throw new InvalidOperationException(
+                    "A control evaluation event must advance its existing source revision and scope.");
+
+            var next = domainEvent switch
+            {
+                ControlEvaluationStepRecorded step => await ApplyStepAsync(current, step, ct).ConfigureAwait(false),
+                ControlEvaluationDeviationDisposed disposed => ApplyDisposition(current, disposed),
+                ControlEvaluationSubmitted submitted => await SubmitAsync(current, submitted, ct)
+                    .ConfigureAwait(false),
+                ControlEvaluationReviewed reviewed => await ReviewAsync(current, reviewed, ct)
+                    .ConfigureAwait(false),
+                _ => throw new InvalidOperationException(
+                    $"The control evaluation projector cannot apply {domainEvent.GetType().Name}.")
+            };
+            await ControlEvaluationWorkItemDirectorySchema.Evaluations.ReplaceAsync(Transaction,
+                current, next, ct).ConfigureAwait(false);
+        }
+
+        await IncrementRevisionAsync(ct).ConfigureAwait(false);
+    }
+
+    public async ValueTask<Result<IReadOnlyList<WorkCandidate>>> LoadProgramAsync(Uuid tenantId,
+        Uuid programId, CancellationToken ct = default)
+    {
+        var candidates = new List<WorkCandidate>();
+        string? cursor = null;
+        await using var tx = await BeginReadAsync(tenantId.ToString(), ct).ConfigureAwait(false);
+        do
+        {
+            var page = await ControlEvaluationWorkItemDirectorySchema.WorkItems.QueryAsync(tx,
+                ControlEvaluationWorkItemDirectorySchema.ByProgram.Query()
+                    .WithPrefix(programId.ToString()).Take(200).After(cursor), ct)
+                .ConfigureAwait(false);
+            foreach (var item in page.Items)
+            {
+                var state = await ControlEvaluationWorkItemDirectorySchema.Evaluations.GetAsync(tx,
+                    ControlEvaluationWorkItemDirectorySchema.EvaluationKey(programId,
+                        item.SourceId), ct).ConfigureAwait(false);
+                if (item.TenantId != tenantId || item.ProgramId != programId ||
+                    item.Kind != WorkSource.ControlEvaluationReview || item.FindingId is not null ||
+                    item.RiskId is not null || state is null || state.TenantId != tenantId ||
+                    state.ProgramId != programId || state.EvaluationId != item.SourceId ||
+                    state.ControlId != item.ControlId || state.State != Submitted ||
+                    state.SubmittedAt != item.CreatedAt ||
+                    item.WorkItemId != WorkItemIdFor(state.EvaluationId, state.Round))
+                    return Result<IReadOnlyList<WorkCandidate>>.Failure(InvalidScope());
+                candidates.Add(item.ToCandidate());
+            }
+            cursor = page.NextCursor;
+        } while (cursor is not null);
+
+        return Result<IReadOnlyList<WorkCandidate>>.Success(candidates);
+    }
+
+    async ValueTask<ControlEvaluationWorkState> ApplyStepAsync(ControlEvaluationWorkState current,
+        ControlEvaluationStepRecorded step, CancellationToken ct)
+    {
+        var result = await content.ReadJsonAsync<EvaluationStepResultView>(step.TenantId.ToString(),
+            step.ResultContent, ct).ConfigureAwait(false);
+        if (current.State != InProgress || result.Round != current.Round)
+            throw new InvalidOperationException(
+                "A control evaluation step must belong to its current open round.");
+        return current with { Revision = step.Revision };
+    }
+
+    static ControlEvaluationWorkState ApplyDisposition(ControlEvaluationWorkState current,
+        ControlEvaluationDeviationDisposed disposed)
+    {
+        if (current.State != InProgress)
+            throw new InvalidOperationException(
+                "A control evaluation deviation can only be dispositioned in an open round.");
+        return current with { Revision = disposed.Revision };
+    }
+
+    async ValueTask<ControlEvaluationWorkState> SubmitAsync(ControlEvaluationWorkState current,
+        ControlEvaluationSubmitted submitted, CancellationToken ct)
+    {
+        var submission = await content.ReadJsonAsync<EvaluationSubmissionView>(submitted.TenantId.ToString(),
+            submitted.SubmissionContent, ct).ConfigureAwait(false);
+        if (current.State != InProgress || submission.Round != current.Round)
+            throw new InvalidOperationException(
+                "A control evaluation submission must belong to its current open round.");
+        var candidate = ReviewCandidate(submitted.TenantId, submitted.ProgramId,
+            submitted.ControlId, submitted.EvaluationId, current.EvaluatorMemberId,
+            current.Round, submission.SubmittedAt);
+        await AddWorkItemAsync(submitted.TenantId, submitted.ProgramId, candidate, ct)
+            .ConfigureAwait(false);
+        return current with
+        {
+            Revision = submitted.Revision,
+            State = Submitted,
+            SubmittedAt = submission.SubmittedAt,
+        };
+    }
+
+    async ValueTask<ControlEvaluationWorkState> ReviewAsync(ControlEvaluationWorkState current,
+        ControlEvaluationReviewed reviewed, CancellationToken ct)
+    {
+        var review = await content.ReadJsonAsync<ControlEvaluationReviewView>(reviewed.TenantId.ToString(),
+            reviewed.ReviewContent, ct).ConfigureAwait(false);
+        if (current.State != Submitted || review.Round != current.Round ||
+            reviewed.Decision != review.Decision || reviewed.Decision is not (Accepted or Rejected or ChangesRequested))
+            throw new InvalidOperationException(
+                "A control evaluation review must resolve the currently submitted round.");
+        await RemoveWorkItemAsync(reviewed.TenantId, reviewed.ProgramId,
+            reviewed.EvaluationId, current.Round, ct).ConfigureAwait(false);
+        var accepted = reviewed.Decision == Accepted;
+        return current with
+        {
+            Revision = reviewed.Revision,
+            Round = accepted ? current.Round : checked(current.Round + 1),
+            State = accepted ? Accepted : InProgress,
+            SubmittedAt = null,
+        };
+    }
+
+    async ValueTask AddWorkItemAsync(Uuid tenantId, Uuid programId, WorkCandidate candidate,
+        CancellationToken ct)
+    {
+        var workItem = AccountableWorkItemView.FromCandidate(tenantId, programId, candidate);
+        var existing = await ControlEvaluationWorkItemDirectorySchema.WorkItems.GetAsync(
+            Transaction, candidate.WorkItemId, ct).ConfigureAwait(false);
+        if (existing is null)
+            await ControlEvaluationWorkItemDirectorySchema.WorkItems.InsertAsync(Transaction,
+                workItem, ct).ConfigureAwait(false);
+        else if (existing.TenantId != tenantId || existing.ProgramId != programId ||
+                 existing.SourceId != candidate.SourceId || existing.Kind != candidate.Kind)
+            throw new InvalidOperationException(
+                "A control evaluation work item cannot change its source scope.");
+        else
+            await ControlEvaluationWorkItemDirectorySchema.WorkItems.ReplaceAsync(Transaction,
+                existing, workItem, ct).ConfigureAwait(false);
+    }
+
+    async ValueTask RemoveWorkItemAsync(Uuid tenantId, Uuid programId, Uuid evaluationId,
+        int round, CancellationToken ct)
+    {
+        var workItemId = WorkItemIdFor(evaluationId, round);
+        var existing = await ControlEvaluationWorkItemDirectorySchema.WorkItems.GetAsync(
+            Transaction, workItemId, ct).ConfigureAwait(false) ??
+            throw new InvalidOperationException(
+                "A control evaluation review cannot complete before its submission is projected.");
+        if (existing.TenantId != tenantId || existing.ProgramId != programId ||
+            existing.SourceId != evaluationId || existing.Kind != WorkSource.ControlEvaluationReview ||
+            existing.WorkItemId != workItemId)
+            throw new InvalidOperationException(
+                "A control evaluation review cannot be removed outside its source scope.");
+        await ControlEvaluationWorkItemDirectorySchema.WorkItems.DeleteAsync(Transaction, existing,
+            ct).ConfigureAwait(false);
+    }
+
+    async ValueTask IncrementRevisionAsync(CancellationToken ct)
+    {
+        var current = await ControlEvaluationWorkItemDirectorySchema.Revisions.GetAsync(
+            Transaction, RevisionKey, ct).ConfigureAwait(false);
+        var next = new AccountableWorkItemProjectionRevision(ProjectorName,
+            checked((current?.Revision ?? 0) + 1));
+        if (current is null)
+            await ControlEvaluationWorkItemDirectorySchema.Revisions.InsertAsync(Transaction, next,
+                ct).ConfigureAwait(false);
+        else
+            await ControlEvaluationWorkItemDirectorySchema.Revisions.ReplaceAsync(Transaction,
+                current, next, ct).ConfigureAwait(false);
+    }
+
+    static WorkCandidate ReviewCandidate(Uuid tenantId, Uuid programId, Uuid controlId,
+        Uuid evaluationId, Uuid evaluatorMemberId, int round, DateTimeOffset submittedAt)
+        => WorkSource.ControlEvaluationReviewCandidate(tenantId, programId, controlId,
+            evaluationId, evaluatorMemberId, round, submittedAt);
+
+    static Uuid WorkItemIdFor(Uuid evaluationId, int round) =>
+        WorkSource.ControlEvaluationReviewWorkItemId(evaluationId, round);
+
+    static (Uuid TenantId, Uuid ProgramId, Uuid ControlId, Uuid EvaluationId, long Revision)
+        ScopeFor(DomainEvent domainEvent) => domainEvent switch
+        {
+            ControlEvaluationStarted ev => (ev.TenantId, ev.ProgramId, ev.ControlId, ev.EvaluationId,
+                ev.Revision),
+            ControlEvaluationStepRecorded ev => (ev.TenantId, ev.ProgramId, ev.ControlId,
+                ev.EvaluationId, ev.Revision),
+            ControlEvaluationDeviationDisposed ev => (ev.TenantId, ev.ProgramId, ev.ControlId,
+                ev.EvaluationId, ev.Revision),
+            ControlEvaluationSubmitted ev => (ev.TenantId, ev.ProgramId, ev.ControlId,
+                ev.EvaluationId, ev.Revision),
+            ControlEvaluationReviewed ev => (ev.TenantId, ev.ProgramId, ev.ControlId, ev.EvaluationId,
+                ev.Revision),
+            _ => throw new InvalidOperationException(
+                $"The control evaluation projector cannot apply {domainEvent.GetType().Name}.")
+        };
+
+    static RequestError InvalidScope() => new(RequestErrorKind.Conflict,
+        "The control evaluation work projection has an invalid tenant or program scope.");
+}

@@ -1,0 +1,184 @@
+using System.Net;
+using System.Net.Http.Json;
+using System.Text;
+using System.Text.Json;
+using Cntryl.Portia;
+using Cntryl.Portia.Testing;
+using Microsoft.Extensions.DependencyInjection;
+using Bdgrz.Compliance.Features.AccessControl.Rules;
+using Bdgrz.Compliance.Features.Applications.Models;
+using Bdgrz.Compliance.Features.AuditPackages.Rules;
+using Bdgrz.Compliance.Features.AuditPopulations.Models;
+using Bdgrz.Compliance.Features.AuditorRequests.Models;
+using Bdgrz.Compliance.Features.AuditorRequests.Processes;
+using Bdgrz.Compliance.Features.ControlMappings.History;
+using Bdgrz.Compliance.Features.Controls.Contracts;
+using Bdgrz.Compliance.Features.Evidence.Models;
+using Bdgrz.Compliance.Features.Incidents.Rules;
+using Bdgrz.Compliance.Features.NativeOperations.History;
+using Bdgrz.Compliance.Features.Operations.History;
+using Bdgrz.Compliance.Features.Processes.Processes;
+using Bdgrz.Compliance.Features.Readiness.Rules;
+using Bdgrz.Compliance.Features.Remediation.Processes;
+using Bdgrz.Compliance.Features.Remediation.Rules;
+using Bdgrz.Compliance.Features.Retention.Models;
+using Bdgrz.Compliance.Features.Risks.Models;
+using Bdgrz.Compliance.Features.SourceFacts.Models;
+using Bdgrz.Compliance.Features.SystemDescription.Projections;
+using Bdgrz.Compliance.Features.Tenants.Models;
+using Bdgrz.Compliance.Features.Tenants.Processes;
+using Bdgrz.Compliance.Tests.Features.AccessControl.Tests;
+using Bdgrz.Compliance.Tests.Features.AccessReviews.Tests;
+using Bdgrz.Compliance.Tests.Features.Applications.Tests;
+using Bdgrz.Compliance.Tests.Features.AuditPackages.Tests;
+using Bdgrz.Compliance.Tests.Features.AuditPopulations.Tests;
+using Bdgrz.Compliance.Tests.Features.AuditorRequests.Tests;
+using Bdgrz.Compliance.Tests.Features.Boundaries.Tests;
+using Bdgrz.Compliance.Tests.Features.Changes.Tests;
+using Bdgrz.Compliance.Tests.Features.Commitments.Tests;
+using Bdgrz.Compliance.Tests.Features.ControlMappings.Tests;
+using Bdgrz.Compliance.Tests.Features.Controls.Tests;
+using Bdgrz.Compliance.Tests.Features.Criteria.Tests;
+using Bdgrz.Compliance.Tests.Features.Evaluations.Tests;
+using Bdgrz.Compliance.Tests.Features.Evidence.Tests;
+using Bdgrz.Compliance.Tests.Features.Examinations.Tests;
+using Bdgrz.Compliance.Tests.Features.Exports.Tests;
+using Bdgrz.Compliance.Tests.Features.Incidents.Tests;
+using Bdgrz.Compliance.Tests.Features.MethodologyTemplates.Tests;
+using Bdgrz.Compliance.Tests.Features.NativeOperations.Tests;
+using Bdgrz.Compliance.Tests.Features.Operations.Tests;
+using Bdgrz.Compliance.Tests.Features.Policies.Tests;
+using Bdgrz.Compliance.Tests.Features.PolicyDistribution.Tests;
+using Bdgrz.Compliance.Tests.Features.Programs.Tests;
+using Bdgrz.Compliance.Tests.Features.Readiness.Tests;
+using Bdgrz.Compliance.Tests.Features.Remediation.Tests;
+using Bdgrz.Compliance.Tests.Features.Retention.Tests;
+using Bdgrz.Compliance.Tests.Features.Risks.Tests;
+using Bdgrz.Compliance.Tests.Features.Snapshots.Tests;
+using Bdgrz.Compliance.Tests.Features.SourceFacts.Tests;
+using Bdgrz.Compliance.Tests.Features.SourceUse.Tests;
+using Bdgrz.Compliance.Tests.Features.SystemDescription.Tests;
+using Bdgrz.Compliance.Tests.Features.TechnologyInventory.Tests;
+using Bdgrz.Compliance.Tests.Features.Tenants.Tests;
+using Bdgrz.Compliance.Tests.Features.UserIdentities.Tests;
+using Bdgrz.Compliance.Tests.Features.Work.Tests;
+using Bdgrz.Compliance.Tests.Features.Workforce.Tests;
+using Bdgrz.Compliance.Features.Exports.Commands;
+using Bdgrz.Compliance.Features.Providers.Models;
+using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
+using Bdgrz.Compliance.Features.Tenants.Aggregates;
+namespace Bdgrz.Compliance.Tests.Features.Providers.Tests;
+
+public sealed class ProviderPagingHttpMcpTests
+{
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task ShouldExhaustScopedCurrentAndHistoryPagesGivenTwoTenantsAndHttpOrMcp(bool mcp)
+    {
+        // Arrange
+        await using var factory = ProviderHttpMcpTests.CreateFactory();
+        using var client = factory.CreateClient();
+        using var login = await client.PostAsJsonAsync("/api/v1/developer-user-sessions", new { email_address = "provider-pages@example.com" });
+        Assert.Equal(HttpStatusCode.OK, login.StatusCode);
+        Uuid[] tenants = [Uuid.CreateVersion4(), Uuid.CreateVersion4()];
+        var identities = new Dictionary<Uuid, List<Uuid>>();
+        foreach (var tenant in tenants)
+        {
+            identities[tenant] = [];
+            for (var index = 0; index < 2; index++)
+            {
+                var providerId = Uuid.CreateVersion4();
+                await NamedRecordFacts.SeedProviderAsync(factory.Services, tenant, providerId,
+                    new ProviderContent($"Tenant {tenant} provider {index}", "supplier"));
+                await NamedRecordFacts.SeedProviderAsync(factory.Services, tenant, providerId,
+                    new ProviderContent($"Revised {tenant} provider {index}", "supplier"));
+                identities[tenant].Add(providerId);
+            }
+            await CatchUpAsync(factory.Services, tenant);
+        }
+        await using var scenario = mcp ? await McpScenario.ConnectAsync(client, new Uri(client.BaseAddress!, "/mcp")) : null;
+
+        // Act
+        foreach (var tenant in tenants)
+        {
+            var otherTenant = tenants.Single(item => item != tenant);
+            var first = await ReadPageAsync(client, scenario, tenant, null, null);
+            var next = first.GetProperty("next_cursor").GetString();
+            Assert.NotNull(next);
+            var second = await ReadPageAsync(client, scenario, tenant, null, next);
+            Assert.Equal(JsonValueKind.Null, second.GetProperty("next_cursor").ValueKind);
+            var current = first.GetProperty("items").EnumerateArray().Concat(second.GetProperty("items").EnumerateArray()).ToArray();
+            Assert.Equal(2, current.Length);
+            Assert.Equal(identities[tenant].Order(), current.Select(item => Uuid.Parse(item.GetProperty("provider_id").GetString()!, null)).Order());
+            Assert.All(current, item =>
+            {
+                Assert.Equal(2, item.GetProperty("revision").GetInt64());
+                Assert.Equal(tenant.ToString(), item.GetProperty("tenant_id").GetString());
+                Assert.StartsWith($"Revised {tenant} provider ", item.GetProperty("content").GetProperty("name").GetString());
+            });
+            await ExpectCursorDeniedAsync(client, scenario, otherTenant, null, next);
+            foreach (var provider in identities[tenant])
+            {
+                var firstHistory = await ReadPageAsync(client, scenario, tenant, provider, null);
+                var historyCursor = firstHistory.GetProperty("next_cursor").GetString();
+                Assert.NotNull(historyCursor);
+                var secondHistory = await ReadPageAsync(client, scenario, tenant, provider, historyCursor);
+                var history = firstHistory.GetProperty("items").EnumerateArray().Concat(secondHistory.GetProperty("items").EnumerateArray()).OrderBy(item => item.GetProperty("revision").GetInt64()).ToArray();
+                Assert.Equal(JsonValueKind.Null, secondHistory.GetProperty("next_cursor").ValueKind);
+                Assert.Equal(new long[] { 1, 2 }, history.Select(item => item.GetProperty("revision").GetInt64()));
+                Assert.StartsWith($"Tenant {tenant} provider ", history[0].GetProperty("content").GetProperty("name").GetString());
+                Assert.StartsWith($"Revised {tenant} provider ", history[1].GetProperty("content").GetProperty("name").GetString());
+                Assert.All(history, item => Assert.Equal(provider.ToString(), item.GetProperty("provider_id").GetString()));
+                var otherProvider = identities[tenant].Single(item => item != provider);
+                await ExpectCursorDeniedAsync(client, scenario, tenant, otherProvider, historyCursor);
+                await ExpectCursorDeniedAsync(client, scenario, tenant, provider, next);
+            }
+        }
+
+        // Assert
+        Assert.Equal(4, identities.Values.Sum(items => items.Count));
+    }
+
+    static string Path(Uuid tenant, Uuid? provider = null) => $"/api/v1/tenants/{tenant}/providers" + (provider is null ? "" : $"/{provider}");
+
+    static Dictionary<string, object?> Arguments(Uuid tenant, Uuid? provider, string? cursor)
+    {
+        var arguments = new Dictionary<string, object?> { ["tenant_id"] = tenant.ToString(), ["limit"] = 1 };
+        if (provider is not null)
+            arguments["provider_id"] = provider.ToString();
+        if (cursor is not null)
+            arguments["cursor"] = cursor;
+        return arguments;
+    }
+
+    static string ListPath(Uuid tenant, Uuid? provider, string? cursor) => Path(tenant, provider) +
+        (provider is null ? "" : "/revisions") + "?limit=1" + (cursor is null ? "" : "&cursor=" + Uri.EscapeDataString(cursor));
+
+    static async Task<JsonElement> ReadPageAsync(HttpClient client, McpScenario? scenario, Uuid tenant, Uuid? provider, string? cursor)
+    {
+        if (scenario is not null)
+        {
+            var snapshot = await scenario.When(provider is null ? "bdgrz.providers.list" : "bdgrz.provider.revisions.list", Arguments(tenant, provider, cursor)).ExpectSuccess();
+            return Assert.IsType<JsonElement>(snapshot.StructuredJson).GetProperty("result");
+        }
+        using var response = await client.GetAsync(ListPath(tenant, provider, cursor));
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        using var json = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+        return json.RootElement.Clone();
+    }
+
+    static async Task ExpectCursorDeniedAsync(HttpClient client, McpScenario? scenario, Uuid tenant, Uuid? provider, string cursor)
+    {
+        if (scenario is not null)
+        {
+            await scenario.When(provider is null ? "bdgrz.providers.list" : "bdgrz.provider.revisions.list", Arguments(tenant, provider, cursor)).ExpectFailure("Validation");
+            return;
+        }
+        using var response = await client.GetAsync(ListPath(tenant, provider, cursor));
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    static Task CatchUpAsync(IServiceProvider provider, Uuid tenant) =>
+        ProviderProjectionHelper.CatchUpAsync(provider, tenant);
+}

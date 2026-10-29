@@ -1,0 +1,9 @@
+using Cntryl.Portia;
+using Bdgrz.Compliance.Features.Commitments.Models;
+using Bdgrz.Compliance.Features.Programs.Contracts;
+namespace Bdgrz.Compliance.Features.Commitments.Queries;
+
+[Discriminator("bdgrz.commitment.impact.preview", 1)]
+public sealed record PreviewCommitmentImpact(Uuid TenantId, Uuid ProgramId, Uuid DraftId,
+    long ExpectedRevision)
+    : IRequest<CommitmentImpactPreview>, IProgramScopedRequest, ICallable;

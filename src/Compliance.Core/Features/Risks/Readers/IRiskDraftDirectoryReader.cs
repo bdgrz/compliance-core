@@ -1,0 +1,16 @@
+using Cntryl.Portia;
+using Bdgrz.Compliance.Features.Evidence.Models;
+using Bdgrz.Compliance.Features.Risks.Models;
+namespace Bdgrz.Compliance.Features.Risks.Readers;
+
+public interface IRiskDraftDirectoryReader
+{
+    ValueTask<ProjectionCheckpoint> LoadCheckpointAsync(Uuid tenantId,
+        CancellationToken ct = default);
+    ValueTask<RiskDraftView?> GetAsync(Uuid tenantId, Uuid riskId,
+        CancellationToken ct = default);
+    ValueTask<Page<RiskDraftView>> ListProgramAsync(Uuid tenantId, Uuid programId,
+        int limit, string? cursor, CancellationToken ct = default);
+    ValueTask<RiskDraftRevisionView?> GetRevisionAsync(Uuid tenantId, Uuid riskId,
+        long revision, CancellationToken ct = default);
+}

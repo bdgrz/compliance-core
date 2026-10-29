@@ -1,0 +1,428 @@
+{
+  "model": "jev-1.14.0",
+  "state": {
+    "review": "Second-stage focused review of low-consensus boundary judgments. The catalog is a proposal under review; selected choices are not assumed correct. Distinguish business authority from private process state and preserve independently governed lifecycle.",
+    "owners": [
+      {
+        "owner": "EngagementManagementAcknowledgement",
+        "classification": "immutable_business_artifact_or_decision",
+        "identity": "tenant / acknowledgementId",
+        "invariant": "One personal management acknowledgement bound to exact engagement revision and complete service history.",
+        "boundary": "selected_split",
+        "mustPreserve": "Never reactivate a permanent independence commitment from reevaluation; acceptance binds exact service, draft, acknowledgement and ratified-rule proofs.",
+        "technicalStateToSeparate": [],
+        "commands": [],
+        "events": [
+          {
+            "event": "EngagementManagementAcknowledged",
+            "wire": "bdgrz.service-engagement.management-acknowledged",
+            "version": 1
+          }
+        ],
+        "flows": [
+          {
+            "reactor": "ManagementAcknowledgementMaterializationReactor",
+            "sourceOwner": "ServiceEngagementIndependence",
+            "targetOwner": "EngagementManagementAcknowledgement",
+            "command": "MaterializeEngagementManagementAcknowledgement",
+            "source": {
+              "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
+              "jsonPointer": "/reactors/108",
+              "line": 9324,
+              "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
+            }
+          }
+        ]
+      },
+      {
+        "owner": "FindingAggregate",
+        "classification": "business_aggregate",
+        "identity": "(tenantId, programId, findingId)",
+        "invariant": "Finding description, status and closure admission generation.",
+        "boundary": "selected_split",
+        "mustPreserve": "Close only with at least one action, all complete, evidence/rationale present and independent closer unless exact waiver. Closed finding is immutable until reopen.",
+        "technicalStateToSeparate": [],
+        "commands": [
+          {
+            "name": "AddCorrectiveAction",
+            "identity": {
+              "field": "ActionId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "exact immutable creation retry"
+            },
+            "fields": [
+              "ActionId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "FindingId:Uuid",
+              "ExpectedFindingRevision:long",
+              "Description:string",
+              "OwnerMemberId:Uuid",
+              "DueOn:DateOnly"
+            ]
+          },
+          {
+            "name": "CloseFinding",
+            "identity": {
+              "field": "CommandId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "one immutable authored operation"
+            },
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "FindingId:Uuid",
+              "ExpectedRevision:long",
+              "VerificationRationale:string",
+              "ResolutionEvidence:IReadOnlyList<EvidenceReference>",
+              "Rationale:string",
+              "SeparationOfDutiesWaiverId:Uuid?"
+            ]
+          },
+          {
+            "name": "LinkFindingAcceptance",
+            "identity": {
+              "field": "CommandId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "one immutable authored operation"
+            },
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "FindingId:Uuid",
+              "ExpectedRevision:long",
+              "Kind:string",
+              "RecordId:Uuid",
+              "DecisionId:Uuid?"
+            ]
+          },
+          {
+            "name": "RaiseFinding",
+            "identity": {
+              "field": "FindingId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "exact immutable creation retry"
+            },
+            "fields": [
+              "FindingId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "Source:FindingSource",
+              "Title:string",
+              "Description:string",
+              "Severity:string",
+              "AffectedScope:string",
+              "OwnerMemberId:Uuid",
+              "DueOn:DateOnly",
+              "Links:IReadOnlyList<FindingLink>?"
+            ]
+          },
+          {
+            "name": "RaiseOccurrenceFinding",
+            "identity": {
+              "field": "FindingId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "source_event_effect",
+              "rule": "exact immutable creation retry"
+            },
+            "fields": [
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "FindingId:Uuid",
+              "ControlId:Uuid",
+              "OccurrenceId:Uuid",
+              "SourceVersion:string",
+              "SourceKind:string",
+              "SourceText:string"
+            ]
+          },
+          {
+            "name": "ReopenFinding",
+            "identity": {
+              "field": "CommandId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "one immutable authored operation"
+            },
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "FindingId:Uuid",
+              "ExpectedRevision:long",
+              "Reason:string"
+            ]
+          },
+          {
+            "name": "ReviseFinding",
+            "identity": {
+              "field": "CommandId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "one immutable authored operation"
+            },
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "FindingId:Uuid",
+              "ExpectedRevision:long",
+              "Severity:string",
+              "OwnerMemberId:Uuid",
+              "DueOn:DateOnly",
+              "AffectedScope:string",
+              "RootCause:string?",
+              "Reason:string"
+            ]
+          },
+          {
+            "name": "RaiseEvaluationDeviationFinding",
+            "identity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "FindingId:Uuid",
+              "ControlId:Uuid",
+              "EvaluationId:Uuid",
+              "DeviationId:Uuid"
+            ]
+          },
+          {
+            "name": "AbortFindingClosure",
+            "identity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "OperationId:Uuid",
+              "Target:EventStreamAddress",
+              "Generation:long",
+              "ExpectedRevision:long",
+              "FailureProof:ImmutableContentRef"
+            ]
+          }
+        ],
+        "events": [
+          {
+            "event": "CorrectiveActionAdmitted",
+            "wire": "bdgrz.finding-aggregate.corrective-action-admitted",
+            "version": 1
+          },
+          {
+            "event": "FindingAcceptanceLinkedV2",
+            "wire": "bdgrz.finding.acceptance.linked",
+            "version": 1
+          },
+          {
+            "event": "FindingClosedV2",
+            "wire": "bdgrz.finding.closed",
+            "version": 1
+          },
+          {
+            "event": "FindingClosureAccepted",
+            "wire": "bdgrz.finding-aggregate.finding-closure-accepted",
+            "version": 1
+          },
+          {
+            "event": "FindingClosureCanceled",
+            "wire": "bdgrz.finding-aggregate.finding-closure-canceled",
+            "version": 1
+          },
+          {
+            "event": "FindingRaisedV2",
+            "wire": "bdgrz.finding.raised",
+            "version": 1
+          },
+          {
+            "event": "FindingReopenedV2",
+            "wire": "bdgrz.finding.reopened",
+            "version": 1
+          },
+          {
+            "event": "FindingRevisedV2",
+            "wire": "bdgrz.finding.revised",
+            "version": 1
+          }
+        ],
+        "flows": [
+          {
+            "reactor": "CorrectiveActionMaterializationReactor",
+            "sourceOwner": "FindingAggregate",
+            "targetOwner": "CorrectiveAction",
+            "command": "MaterializeCorrectiveAction",
+            "source": {
+              "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
+              "jsonPointer": "/reactors/36",
+              "line": 3049,
+              "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
+            }
+          },
+          {
+            "reactor": "FindingClosureReactor",
+            "sourceOwner": "FindingAggregate",
+            "targetOwner": "FindingAggregate",
+            "command": "CompleteFindingClosure",
+            "source": {
+              "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
+              "jsonPointer": "/reactors/37",
+              "line": 3131,
+              "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
+            }
+          },
+          {
+            "reactor": "FindingClosureCorrectiveActionAuthorizationReactor",
+            "sourceOwner": "FindingAggregate",
+            "targetOwner": "CorrectiveAction",
+            "command": "AuthorizeCorrectiveActionFindingClosureUse",
+            "source": {
+              "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
+              "jsonPointer": "/reactors/63",
+              "line": 5408,
+              "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
+            }
+          },
+          {
+            "reactor": "FindingClosureCorrectiveActionSettlementReactor",
+            "sourceOwner": "FindingAggregate",
+            "targetOwner": "CorrectiveAction",
+            "command": "SettleCorrectiveActionFindingClosureUse",
+            "source": {
+              "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
+              "jsonPointer": "/reactors/64",
+              "line": 5495,
+              "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
+            }
+          }
+        ]
+      },
+      {
+        "owner": "ProgramRollover",
+        "classification": "business_aggregate",
+        "identity": "Tenant / program-rollovers / RolloverId, with exact source program/version and successor proof. RolloverId identifies creation; selected mutations use CommandId.",
+        "invariant": "One exact carry-forward proposal version needs independent approved decision before recording exact successor period/plan identities; completed source provenance remains immutable.",
+        "boundary": "process",
+        "rationale": "Proposal/current approval and execution claim must coordinate to prevent approved version changing while successor is created. Prior proposal history is unnecessary state; successor creation acknowledgement belongs to recoverable process storage.",
+        "commands": [
+          {
+            "name": "ApproveProgramRollover",
+            "identity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "RolloverId:Uuid",
+              "Version:long",
+              "Decision:string",
+              "Rationale:string",
+              "ExpectedRevision:long"
+            ]
+          },
+          {
+            "name": "ProposeProgramRollover",
+            "identity": "RolloverId",
+            "fields": [
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "RolloverId:Uuid",
+              "Content:ProgramRolloverContent"
+            ]
+          }
+        ],
+        "events": [
+          {
+            "event": "ProgramNextPeriodCreated"
+          },
+          {
+            "event": "ProgramRolloverApproved"
+          },
+          {
+            "event": "ProgramRolloverDecisionRecorded"
+          },
+          {
+            "event": "ProgramRolloverProposed"
+          },
+          {
+            "event": "ProgramRolloverRevised"
+          }
+        ],
+        "flows": []
+      }
+    ]
+  },
+  "questions": {
+    "engagement_boundary": {
+      "type": "choice",
+      "instructions": "Which is the soundest owner boundary for EngagementManagementAcknowledgement?",
+      "criteria": {
+        "separate_decision": "Keep an independently identified personal acknowledgement because it has its own author, immutable evidence and lifecycle, bound to an exact engagement revision and complete service history.",
+        "absorb_into_engagement": "Store the acknowledgement on ServiceEngagementIndependence because it is part of that owner’s own versioned state and cannot change independently.",
+        "process_only": "Treat it as private process progress rather than a durable business decision.",
+        "insufficient": "The supplied facts do not establish its independent authority or lifecycle."
+      }
+    },
+    "engagement_evidence": {
+      "type": "noul",
+      "instructions": "Is there enough source-backed evidence here to justify a separate acknowledgement owner rather than an event on ServiceEngagementIndependence?",
+      "criteria": {
+        "true": "The acknowledgement has independent personal authority, identity, immutable content or lifecycle that the service owner should not own.",
+        "false": "The acknowledgement is only a subordinate fact of the service decision and no independent lifecycle is established."
+      }
+    },
+    "finding_boundary": {
+      "type": "choice",
+      "instructions": "Which boundary best preserves finding closure invariants and independent corrective-action lifecycle?",
+      "criteria": {
+        "selected_split": "Keep one FindingAggregate per finding; CorrectiveAction has its own lifecycle, and closure coordinates exact child proofs through a durable process.",
+        "combined_root": "Put corrective-action histories in the finding root because closure needs to validate them atomically.",
+        "split_finding_further": "Split finding closure admission/status into another business owner.",
+        "insufficient": "The supplied facts do not establish bounded history, atomicity, or closure recovery."
+      }
+    },
+    "finding_evidence": {
+      "type": "noul",
+      "instructions": "Can finding closure be made safe without putting independently changing corrective-action histories in the finding aggregate?",
+      "criteria": {
+        "true": "Exact admission/fence and child terminal proofs with recoverable process coordination preserve closure under races and restart.",
+        "false": "Closure needs an atomic state unavailable across the separate owners, and the proposed coordination cannot preserve it."
+      }
+    },
+    "rollover_boundary": {
+      "type": "choice",
+      "instructions": "Which split of ProgramRollover business decisions and execution is best supported?",
+      "criteria": {
+        "proposal_owner_private_execution": "ProgramRollover owns the exact proposal and independent approval; private durable process storage owns execution claim/progress and source-bound successor acknowledgements.",
+        "all_in_business_aggregate": "The same business aggregate should own proposal, approval and execution progress/acknowledgements.",
+        "process_only": "There is no enduring business decision; all rollover state is private process state.",
+        "insufficient": "The supplied facts do not establish the approval/execution concurrency boundary."
+      }
+    },
+    "rollover_evidence": {
+      "type": "noul",
+      "instructions": "Does the supplied rationale require a durable execution process separate from the business proposal and approval owner?",
+      "criteria": {
+        "true": "Execution must pin an approved version while creating independent successors and recover exact progress without keeping unnecessary proposal history as process state.",
+        "false": "There is no cross-owner or restartable execution requiring process state separate from the business decision."
+      }
+    },
+    "unresolved_boundary": {
+      "type": "noul",
+      "instructions": "Do these three selected definitions leave a known aggregate/process boundary assumption unresolved or internally contradictory?",
+      "criteria": {
+        "true": "At least one owner has an unclear business-versus-process classification, independent lifecycle, atomic invariant, or recovery boundary.",
+        "false": "Each selected boundary is internally consistent and the described alternatives are ruled out by explicit facts."
+      }
+    }
+  }
+}

@@ -1,0 +1,9 @@
+using Cntryl.Portia;
+using Bdgrz.Compliance.Features.PolicyDistribution.Queries;
+namespace Bdgrz.Compliance.Features.Evidence.Models;
+
+/// <summary>Retained lineage and current approval availability; it never authorizes disclosure.</summary>
+public sealed record EvidenceRedactionView(Uuid TenantId, Uuid RedactionId, long Revision,
+    IReadOnlyList<EvidenceRedactionPreparationView> Preparations,
+    IReadOnlyList<EvidenceRedactionApprovalView> Approvals,
+    string OriginalState, string DerivedState, bool ApprovalCurrent);

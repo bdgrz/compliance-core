@@ -1,0 +1,27 @@
+using Cntryl.Portia;
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.NativeOperations.Contracts;
+using Bdgrz.Compliance.Features.NativeOperations.Models;
+using Bdgrz.Compliance.Features.Proofs.Models;
+using Bdgrz.Compliance.Features.UserIdentities.Commands;
+namespace Bdgrz.Compliance.Features.UserIdentities.Events;
+
+/// <summary>
+///     Consumes an email proof challenge for one old and one replacement identity and freezes the exact candidate.
+///     It is the native acceptance of CompleteIdentityRecovery; the proofs are retained as non-bearer provenance.
+/// </summary>
+[Discriminator("bdgrz.identity-recovery.challenge-claimed", 1)]
+public sealed record IdentityRecoveryChallengeClaimed(
+    Uuid UserId,
+    string EmailAddress,
+    Uuid ChallengeId,
+    Uuid OldIdentityId,
+    Uuid ReplacementIdentityId,
+    OperationProvenance Operation,
+    ActorReference OriginalActor,
+    ImmutableContentRef VerifiedEmailProof,
+    ImmutableContentRef VerifiedReplacementProof,
+    DateTimeOffset AcceptedAt,
+    ImmutableContentRef Intent,
+    ImmutableContentRef? FirstResponse,
+    ImmutableContentRef? OperationResult) : DomainEvent, INativeOperationFact;

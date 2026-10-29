@@ -1,0 +1,11 @@
+using Cntryl.Portia;
+using Bdgrz.Compliance.Features.AccessControl.Contracts;
+using Bdgrz.Compliance.Features.Programs.Contracts;
+namespace Bdgrz.Compliance.Features.Controls.Commands;
+
+[Discriminator("bdgrz.control.draft.discard", 2)]
+public sealed record DiscardControlDraft(Uuid CommandId, Uuid TenantId, Uuid ProgramId, Uuid ControlId,
+    long ExpectedRevision, string Rationale) : IRequest, IProgramScopedRequest, IClientManagementMutationRequest, IIdentifiedRequest, ICallable
+{
+    Uuid IIdentifiedRequest.RequestId => CommandId;
+}

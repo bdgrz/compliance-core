@@ -1,0 +1,19 @@
+using Cntryl.Portia;
+using Bdgrz.Compliance.Features.NativeOperations.Models;
+using Bdgrz.Compliance.Features.Proofs.Models;
+using Bdgrz.Compliance.Features.Tenants.Contracts;
+namespace Bdgrz.Compliance.Features.Tenants.Events;
+
+[Discriminator("bdgrz.platform.operator.granted", 1)]
+public sealed record PlatformOperatorGranted(Uuid CommandId, ulong ExpectedRevision,
+    Uuid ActorUserId, Uuid SubjectUserId, ActorAttribution Actor, DateTimeOffset OccurredAt,
+    string Reason, string? ActorDisplay = null) : DomainEvent, IPlatformOperatorFact
+{
+    public OperationProvenance Operation { get; init; } = default!;
+    public ImmutableContentRef? FirstResponse { get; init; }
+    public ImmutableContentRef? OperationResult { get; init; }
+    public ImmutableContentRef Authority { get; init; } = default!;
+    public ImmutableContentRef Change { get; init; } = default!;
+    public ulong Revision { get; init; }
+    public int ActiveCount { get; init; }
+}

@@ -1,0 +1,20 @@
+using Cntryl.Portia;
+using Bdgrz.Compliance.Features.AccessControl.Contracts;
+using Bdgrz.Compliance.Features.AccessControl.Events;
+using Bdgrz.Compliance.Features.AuditPopulations.Models;
+using Bdgrz.Compliance.Features.Programs.Contracts;
+namespace Bdgrz.Compliance.Features.AuditPopulations.Commands;
+
+/// <summary>Amends a frozen population with a new source snapshot and complete changed-row content.</summary>
+[Discriminator("bdgrz.audit-populations.amend-audit-population", 3)]
+public sealed record AmendAuditPopulation(Uuid CommandId,
+    Uuid TenantId,
+    Uuid ProgramId,
+    Uuid PopulationId,
+    long ExpectedRevision,
+    string AmendmentReason,
+    AuditPopulationSourceSnapshotContent SourceSnapshot,
+    IReadOnlyList<AuditPopulationRowContent> ChangedRows) : IRequest, IProgramScopedRequest, IClientManagementMutationRequest, ICallable, IIdentifiedRequest
+{
+    Uuid IIdentifiedRequest.RequestId => CommandId;
+}

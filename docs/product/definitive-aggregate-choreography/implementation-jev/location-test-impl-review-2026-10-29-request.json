@@ -1,0 +1,65 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "owner": "Location",
+    "rule": "One location record decides atomically its revision sequence and its single pending change. Creation needs an empty identity (no generation yet). A revision needs the record at the exact expected revision. At most one change is pending. Apply and cancel close only the exact pending root operation. Cancel fences a late apply. Active-name uniqueness and kind immutability are decided elsewhere.",
+    "code_behavior": {
+      "create_after_cancelled_creation": "A creation whose pending change was canceled leaves generation 1 and revision 0. A later creation on the same location id is refused with Conflict (identity already exists). A revision on it is refused NotFound because revision is 0. So the canceled creation id cannot be used again; the caller must use a different location id.",
+      "revision_event_payload": "LocationRevisionRecorded carries TenantId and LocationId fields, while the stream address already carries tenant and location id. The reducer checks TenantId equals the owner tenant and LocationId equals the stream id. The approved final event catalog lists this event with those fields.",
+      "test_scenario_fence": "Test: location recorded at revision 1; revise accepted at generation 2; cancel; late apply of the canceled root; then new revise accepted at revision 1 as generation 3. Expected: late apply refused with Conflict and no fact; the new accept succeeds and is pending at generation 3.",
+      "test_scenario_stale": "Test: location at revision 2; revise accepted with expected revision 1. Expected: refused, no fact, no pending change, revision stays 2."
+    }
+  },
+  "questions": {
+    "fence_test_asserts_invariant": {
+      "type": "noul",
+      "instructions": "The test in `state.code_behavior.test_scenario_fence` proves that canceling a pending change fences a late apply of that change and that the next change is a new generation.",
+      "criteria": {
+        "true": "The scenario refuses the late apply without a new fact and accepts the next change with a higher generation.",
+        "false": "The scenario can pass even if a late apply were accepted or the generation did not advance."
+      }
+    },
+    "stale_test_asserts_invariant": {
+      "type": "noul",
+      "instructions": "The test in `state.code_behavior.test_scenario_stale` proves that a revision is accepted only at the exact current revision.",
+      "criteria": {
+        "true": "A stale expected revision is refused, nothing is appended, and the record state is unchanged.",
+        "false": "The scenario could pass while a stale revision is accepted."
+      }
+    },
+    "canceled_creation_identity": {
+      "type": "choice",
+      "instructions": "For `state.code_behavior.create_after_cancelled_creation`, what should the Location owner do when a creation is retried on a location id whose first creation was canceled before any revision was applied?",
+      "criteria": {
+        "keep_identity_burned": "The canceled creation id stays occupied; the caller must use a different location id, because a different id is a different record.",
+        "allow_new_creation": "A canceled creation never created the record, so a new creation on the same id with a new generation should be accepted.",
+        "needs_source_resolution": "The rule text does not decide this and a product owner must decide."
+      }
+    },
+    "canceled_creation_premise": {
+      "type": "noul",
+      "instructions": "The rule in `state.rule` says creation needs an empty identity, and the code treats an identity with a canceled creation as not empty.",
+      "criteria": {
+        "true": "A canceled, never-applied creation still leaves the identity non-empty under the stated rule.",
+        "false": "Under the stated rule an identity with no applied revision is still empty."
+      }
+    },
+    "payload_repeats_identity": {
+      "type": "choice",
+      "instructions": "For `state.code_behavior.revision_event_payload`, what should the aggregate stage do about TenantId and LocationId repeated in the LocationRevisionRecorded payload?",
+      "criteria": {
+        "keep_as_cataloged": "Keep them; the approved final event catalog lists the event with these fields and this stage must not change it.",
+        "remove_from_payload": "Remove them from the payload because the stream address carries tenant and location id.",
+        "needs_source_resolution": "The catalog and code disagree or the rule is silent and the catalog owner must resolve it."
+      }
+    },
+    "payload_premise": {
+      "type": "noul",
+      "instructions": "The `TenantId` and `LocationId` fields in the revision payload repeat what the stream address already carries.",
+      "criteria": {
+        "true": "Both values are fully determined by the stream identity of the owner.",
+        "false": "At least one value carries information the stream identity does not."
+      }
+    }
+  }
+}

@@ -1,0 +1,268 @@
+using System.Globalization;
+using System.Security.Claims;
+using Bdgrz.Compliance.Tests.Testing;
+using Cntryl.Portia;
+using Bdgrz.Compliance.Features.AccessControl.Contracts;
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.AccessControl.Services;
+using Bdgrz.Compliance.Features.Tenants.Contracts;
+using Bdgrz.Compliance.Tests.Features.Applications.Tests;
+using Bdgrz.Compliance.Tests.Features.AuditPackages.Tests;
+using Bdgrz.Compliance.Tests.Features.Changes.Tests;
+using Bdgrz.Compliance.Tests.Features.ControlMappings.Tests;
+using Bdgrz.Compliance.Tests.Features.Examinations.Tests;
+using Bdgrz.Compliance.Tests.Features.Incidents.Tests;
+using Bdgrz.Compliance.Tests.Features.MethodologyTemplates.Tests;
+using Bdgrz.Compliance.Tests.Features.Operations.Tests;
+using Bdgrz.Compliance.Tests.Features.Policies.Tests;
+using Bdgrz.Compliance.Tests.Features.PolicyDistribution.Tests;
+using Bdgrz.Compliance.Tests.Features.Programs.Tests;
+using Bdgrz.Compliance.Tests.Features.Readiness.Tests;
+using Bdgrz.Compliance.Tests.Features.Retention.Tests;
+using Bdgrz.Compliance.Tests.Features.Risks.Tests;
+using Bdgrz.Compliance.Tests.Features.SystemDescription.Tests;
+using Bdgrz.Compliance.Tests.Features.Tenants.Tests;
+using Bdgrz.Compliance.Tests.Features.Work.Tests;
+using Bdgrz.Compliance.Tests.Features.Workforce.Tests;
+using Bdgrz.Compliance.Features.AccessControl.Aggregates;
+using Bdgrz.Compliance.Features.AccessControl.Authorizers;
+using Bdgrz.Compliance.Features.AccessControl.Commands;
+using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
+using Bdgrz.Compliance.Features.Tenants.Authorizers;
+using Bdgrz.Compliance.Features.Tenants.Commands;
+using Bdgrz.Compliance.Features.Tenants.Queries;
+namespace Bdgrz.Compliance.Tests.Features.AccessControl.Tests;
+
+public sealed class RbacManagementAuthorizerTests
+{
+    static readonly Uuid TenantId = Uuid.Parse("11f455d2-fb10-4f28-a157-23e18e706e70", CultureInfo.InvariantCulture);
+    static readonly Uuid UserId = Uuid.Parse("0862062f-97e9-45de-a312-0f884c48180d", CultureInfo.InvariantCulture);
+
+    [Fact]
+    public async Task ShouldAllowSystemActorGivenMissingMemberPermission()
+    {
+        // Arrange
+        var authorizer = new RbacManagementAuthorizer(new RecordingPermissionAuthorizer(false), new ActiveTenant(), new FixedMembershipDirectory(true));
+        var request = new DefineTeam(TenantId, Uuid.CreateVersion4(), "Reviewers");
+        var context = new RequestContext<IRbacManagementRequest>(request, RequestActor.System);
+
+        // Act
+        var result = await authorizer.AuthorizeAsync(context, CancellationToken.None);
+
+        // Assert
+        Assert.True(result.IsSuccess);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task ShouldRejectSystemActorGivenAccessGrantMutation(bool revoke)
+    {
+        // Arrange
+        var authorizer = new RbacManagementAuthorizer(new RecordingPermissionAuthorizer(true),
+            new ActiveTenant(), new FixedMembershipDirectory(true));
+        IRbacManagementRequest request = revoke
+            ? new RevokeAccessGrant(TenantId, Uuid.CreateVersion4())
+            : new GrantAccess(TenantId, Uuid.CreateVersion4(), new AccessGrantProposal(
+                new AccessGrantPrincipal(AccessGrantPrincipalKind.Member,
+                    RbacIds.Member(TenantId, UserId)),
+                BuiltInRbac.TenantAdministrationRoleId(TenantId),
+                new AccessGrantScope(AccessGrantScopeKind.Organization, TenantId),
+                new AccessGrantSource("manual", "test"), DateTimeOffset.UtcNow, null));
+        var context = new RequestContext<IRbacManagementRequest>(request, RequestActor.System);
+
+        // Act
+        var result = await authorizer.AuthorizeAsync(context, CancellationToken.None);
+
+        // Assert
+        Assert.Equal(RequestErrorKind.Forbidden, Assert.IsType<RequestError>(result.Error).Kind);
+    }
+
+    [Fact]
+    public async Task ShouldRejectActorGivenMissingBdgrzIdentity()
+    {
+        // Arrange
+        var authorizer = new RbacManagementAuthorizer(new RecordingPermissionAuthorizer(true), new ActiveTenant(), new FixedMembershipDirectory(true));
+        var request = new DefineTeam(TenantId, Uuid.CreateVersion4(), "Reviewers");
+        var context = new RequestContext<IRbacManagementRequest>(
+            request,
+            new ClaimsPrincipal(new ClaimsIdentity(
+                [new Claim("iss", "https://issuer.example/"), new Claim("sub", "provider-subject")], "oidc")));
+
+        // Act
+        var result = await authorizer.AuthorizeAsync(context, CancellationToken.None);
+
+        // Assert
+        Assert.False(result.IsSuccess);
+        Assert.Equal(RequestErrorKind.Unauthorized, result.Error.Kind);
+    }
+
+    [Fact]
+    public async Task ShouldAllowActorGivenTenantRbacManagePermission()
+    {
+        // Arrange
+        var permissions = new RecordingPermissionAuthorizer(true);
+        var authorizer = new RbacManagementAuthorizer(permissions, new ActiveTenant(), new FixedMembershipDirectory(true));
+        var request = new DefineTeam(TenantId, Uuid.CreateVersion4(), "Reviewers");
+        var context = new RequestContext<IRbacManagementRequest>(request, BdgrzActor());
+
+        // Act
+        var result = await authorizer.AuthorizeAsync(context, CancellationToken.None);
+
+        // Assert
+        Assert.True(result.IsSuccess);
+        Assert.Equal(RbacIds.Member(TenantId, UserId), Assert.Single(permissions.MemberIds));
+        Assert.Equal(RbacPermissions.TenantRbacManage, Assert.Single(permissions.Permissions));
+    }
+
+    [Fact]
+    public async Task ShouldRejectActorGivenMissingTenantRbacManagePermission()
+    {
+        // Arrange
+        var authorizer = new RbacManagementAuthorizer(new RecordingPermissionAuthorizer(false), new ActiveTenant(), new FixedMembershipDirectory(true));
+        var request = new DefineTeam(TenantId, Uuid.CreateVersion4(), "Reviewers");
+        var context = new RequestContext<IRbacManagementRequest>(request, BdgrzActor());
+
+        // Act
+        var result = await authorizer.AuthorizeAsync(context, CancellationToken.None);
+
+        // Assert
+        Assert.False(result.IsSuccess);
+        Assert.Equal(RequestErrorKind.Forbidden, result.Error.Kind);
+    }
+
+    [Fact]
+    public async Task ShouldRequireTenantRbacManageGivenGuestInvitation()
+    {
+        // Arrange
+        var permissions = new RecordingPermissionAuthorizer(false);
+        var authorizer = new RbacManagementAuthorizer(permissions, new ActiveTenant(),
+            new FixedMembershipDirectory(true));
+        var request = new InviteGuestConsultant(Uuid.CreateVersion4(), TenantId, "guest@example.com",
+            [Uuid.CreateVersion4()], new DateOnly(2026, 11, 30));
+        var context = new RequestContext<IRbacManagementRequest>(request, BdgrzActor());
+
+        // Act
+        var result = await authorizer.AuthorizeAsync(context, CancellationToken.None);
+
+        // Assert
+        Assert.Equal(RequestErrorKind.Forbidden, Assert.IsType<RequestError>(result.Error).Kind);
+        Assert.Equal(RbacPermissions.TenantRbacManage, Assert.Single(permissions.Permissions));
+    }
+
+    [Fact]
+    public async Task ShouldDenyFirmStaffGivenHistoricalRbacManageGrant()
+    {
+        // Arrange
+        var permissions = new RecordingPermissionAuthorizer(true);
+        var authorizer = new RbacManagementAuthorizer(permissions, new ActiveTenant(),
+            new FixedMembershipDirectory(true, "firm_staff"));
+        var context = new RequestContext<IRbacManagementRequest>(
+            new DefineTeam(TenantId, Uuid.CreateVersion4(), "Reviewers"), BdgrzActor());
+
+        // Act
+        var result = await authorizer.AuthorizeAsync(context, CancellationToken.None);
+
+        // Assert
+        Assert.False(result.IsSuccess);
+        Assert.Equal(RequestErrorKind.Forbidden, result.Error.Kind);
+        Assert.Empty(permissions.Permissions);
+    }
+
+    [Fact]
+    public async Task ShouldDenySuspendedActorGivenHistoricalRbacManageGrant()
+    {
+        // Arrange
+        var permissions = new RecordingPermissionAuthorizer(true);
+        var authorizer = new RbacManagementAuthorizer(permissions, new ActiveTenant(),
+            new FixedMembershipDirectory(true, isSuspended: true));
+        var context = new RequestContext<IRbacManagementRequest>(
+            new DefineTeam(TenantId, Uuid.CreateVersion4(), "Reviewers"), BdgrzActor());
+
+        // Act
+        var result = await authorizer.AuthorizeAsync(context, CancellationToken.None);
+
+        // Assert
+        Assert.False(result.IsSuccess);
+        Assert.Equal(RequestErrorKind.NotFound, result.Error.Kind);
+        Assert.Empty(permissions.Permissions);
+    }
+
+    [Fact]
+    public async Task ShouldAllowMemberListingGivenTenantAdministratorWithoutPlatformAuthority()
+    {
+        // Arrange
+        var authorizer = new ListTenantMembersAuthorizer(new FixedOperator(false),
+            new RecordingPermissionAuthorizer(true), new ActiveTenant(), new FixedMembershipDirectory(true));
+        var context = new RequestContext<ListTenantMembers>(new ListTenantMembers(TenantId), BdgrzActor());
+
+        // Act
+        var result = await authorizer.AuthorizeAsync(context, CancellationToken.None);
+
+        // Assert
+        Assert.True(result.IsSuccess);
+    }
+
+    [Theory]
+    [InlineData(false, false, false, "client_personnel", false, RequestErrorKind.NotFound)]
+    [InlineData(false, true, false, "client_personnel", false, RequestErrorKind.Forbidden)]
+    [InlineData(false, true, true, "firm_staff", false, RequestErrorKind.Forbidden)]
+    [InlineData(false, true, true, "client_personnel", true, RequestErrorKind.NotFound)]
+    public async Task ShouldRejectMemberListingGivenIneligibleTenantActor(bool isOperator, bool member,
+        bool permission, string affiliation, bool suspended, RequestErrorKind expected)
+    {
+        // Arrange
+        var authorizer = new ListTenantMembersAuthorizer(new FixedOperator(isOperator),
+            new RecordingPermissionAuthorizer(permission), new ActiveTenant(),
+            new FixedMembershipDirectory(member, affiliation, suspended));
+        var context = new RequestContext<ListTenantMembers>(new ListTenantMembers(TenantId), BdgrzActor());
+
+        // Act
+        var result = await authorizer.AuthorizeAsync(context, CancellationToken.None);
+
+        // Assert
+        Assert.Equal(expected, Assert.IsType<RequestError>(result.Error).Kind);
+    }
+
+    [Fact]
+    public async Task ShouldAllowMemberListingGivenCurrentPlatformOperatorWithoutTenantMembership()
+    {
+        // Arrange
+        var permissions = new RecordingPermissionAuthorizer(false);
+        var authorizer = new ListTenantMembersAuthorizer(new FixedOperator(true), permissions,
+            new ActiveTenant(), new FixedMembershipDirectory(false));
+        var context = new RequestContext<ListTenantMembers>(new ListTenantMembers(TenantId), BdgrzActor());
+
+        // Act
+        var result = await authorizer.AuthorizeAsync(context, CancellationToken.None);
+
+        // Assert
+        Assert.True(result.IsSuccess);
+        Assert.Empty(permissions.Permissions);
+    }
+
+    sealed class FixedOperator(bool allowed) : IPlatformOperatorAccess
+    {
+        public ValueTask<bool> IsOperatorAsync(Uuid userId, CancellationToken ct = default) =>
+            ValueTask.FromResult(allowed);
+    }
+
+    static ClaimsPrincipal BdgrzActor() => new(new ClaimsIdentity(
+        [new Claim("iss", "bdgrz"), new Claim("sub", UserId.ToString())], "BdgrzSession"));
+
+    [Fact]
+    public async Task ShouldHideTenantGivenNonmemberActor()
+    {
+        // Arrange
+        var authorizer = new RbacManagementAuthorizer(new RecordingPermissionAuthorizer(true), new ActiveTenant(), new FixedMembershipDirectory(false));
+        var context = new RequestContext<IRbacManagementRequest>(
+            new DefineTeam(TenantId, Uuid.CreateVersion4(), "Reviewers"), BdgrzActor());
+
+        // Act
+        var result = await authorizer.AuthorizeAsync(context, CancellationToken.None);
+
+        // Assert
+        Assert.False(result.IsSuccess);
+        Assert.Equal(RequestErrorKind.NotFound, result.Error.Kind);
+    }
+}

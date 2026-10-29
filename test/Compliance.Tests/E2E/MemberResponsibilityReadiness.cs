@@ -1,11 +1,17 @@
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
-using Bdgrz.Compliance.Features.Boundaries;
-using Bdgrz.Compliance.Features.Responsibilities;
 using Cntryl.Portia;
 using Microsoft.Extensions.DependencyInjection;
-
+using Bdgrz.Compliance.Features.Responsibilities.Contracts;
+using Bdgrz.Compliance.Features.Responsibilities.Services;
+using Bdgrz.Compliance.Tests.Features.AccessControl.Tests;
+using Bdgrz.Compliance.Tests.Features.AdvisorCollaboration.Tests;
+using Bdgrz.Compliance.Tests.Features.AuditPackages.Tests;
+using Bdgrz.Compliance.Tests.Features.Examinations.Tests;
+using Bdgrz.Compliance.Features.AccessControl.Aggregates;
+using Bdgrz.Compliance.Features.Responsibilities.Models;
+using Bdgrz.Compliance.Features.Boundaries.Readers;
 namespace Bdgrz.Compliance.Tests.E2E;
 
 static class MemberResponsibilityReadiness

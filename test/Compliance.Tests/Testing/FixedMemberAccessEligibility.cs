@@ -1,6 +1,6 @@
-using Bdgrz.Compliance.Features.AccessControl;
 using Cntryl.Portia;
-
+using Bdgrz.Compliance.Features.AccessControl.Contracts;
+using Bdgrz.Compliance.Tests.Features.AccessControl.Tests;
 namespace Bdgrz.Compliance.Tests.Testing;
 
 sealed class FixedMemberAccessEligibility(bool eligible) : IMemberAccessEligibility

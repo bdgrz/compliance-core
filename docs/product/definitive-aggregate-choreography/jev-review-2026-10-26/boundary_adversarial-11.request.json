@@ -1,0 +1,737 @@
+{
+  "model": "jev-1.14.0",
+  "state": {
+    "review": "Adversarial review of the selected definitive business/authority owner boundary. Treat the supplied row as a proposal; do not infer omitted policy.",
+    "pass": "boundary_adversarial",
+    "owners": [
+      {
+        "owner": "PopulationSnapshot",
+        "classification": "immutable_business_artifact_or_decision",
+        "declaredIdentity": "Tenant / population-snapshots / context.RequestId; retry compares exact content/lineage/actor; chunk keys deterministic; physical expected position. Portia appends against the hydrated physical stream position; a logical revision does not create another physical boundary.",
+        "selectedIdentity": "Tenant / population-snapshots / SnapshotId, with exact immutable root/amendment lineage and canonical population identity. Storage chunk identities remain deterministic storage values, separate from the business snapshot.",
+        "invariant": "Freeze exactly one canonical immutable population identity, optionally a manifest over ordered immutable chunk identities; amendments have separate roots.",
+        "boundaryDecision": "retain",
+        "boundaryRationale": "Rows may live outside root because immutable hashes/manifests bind exact order/count; root commit makes snapshot visible only after chunks exist. Current implementation has retry-based recovery, not a recovery reactor.",
+        "commands": [],
+        "events": [
+          {
+            "event": "PopulationSnapshotFrozen"
+          }
+        ],
+        "choreography": []
+      },
+      {
+        "owner": "PracticeIndependenceCommitment",
+        "classification": "business_identity_or_uniqueness_authority",
+        "declaredIdentity": "tenant / (subjectKind, subjectId)",
+        "selectedIdentity": "tenant / (subjectKind, subjectId)",
+        "invariant": "Permanent practice binding for subjectKind=staff or canonical_user; acquire both user and staff subjects in canonical stream-key order. No release/revoke command exists.",
+        "boundaryDecision": "selected_split",
+        "mustPreserve": "Never reactivate a permanent independence commitment from reevaluation; acceptance binds exact service, draft, acknowledgement and ratified-rule proofs.",
+        "technicalStateToSeparate": [],
+        "commands": [],
+        "events": [
+          {
+            "event": "PracticeIndependenceCommitted",
+            "discriminator": "bdgrz.practice-independence-commitment.practice-independence-committed",
+            "version": 1
+          },
+          {
+            "event": "PracticeIndependenceReservationSettled",
+            "discriminator": "bdgrz.practice-independence-commitment.practice-independence-reservation-settled",
+            "version": 1
+          },
+          {
+            "event": "PracticeIndependenceReserved",
+            "discriminator": "bdgrz.practice-independence-commitment.practice-independence-reserved",
+            "version": 1
+          }
+        ],
+        "choreography": [
+          {
+            "reactor": "EngagementPracticeCommitmentReactor",
+            "sourceOwner": "ServiceEngagementIndependence",
+            "targetOwner": "PracticeIndependenceCommitment",
+            "command": "CommitPracticeIndependence"
+          },
+          {
+            "reactor": "EngagementPracticeReservationReactor",
+            "sourceOwner": "ServiceEngagementIndependence",
+            "targetOwner": "PracticeIndependenceCommitment",
+            "command": "ReservePracticeIndependence"
+          },
+          {
+            "reactor": "EngagementPracticeReservationSettlementReactor",
+            "sourceOwner": "ServiceEngagementIndependence",
+            "targetOwner": "PracticeIndependenceCommitment",
+            "command": "SettlePracticeIndependenceReservation"
+          }
+        ]
+      },
+      {
+        "owner": "ProfessionalAssertionIdentityClaim",
+        "classification": "business_identity_or_uniqueness_authority",
+        "declaredIdentity": "platform / assertionId",
+        "selectedIdentity": "platform / assertionId",
+        "invariant": "Permanent binding of signed assertion identity to digest, designation, canonical user and duty scope; claim identity cannot be recycled.",
+        "boundaryDecision": "selected_split",
+        "mustPreserve": "Exact predecessor, monotonically increasing authority revision, stable signed subject, valid staff source proof.",
+        "technicalStateToSeparate": [],
+        "commands": [],
+        "events": [
+          {
+            "event": "ProfessionalAssertionIdentityClaimed",
+            "discriminator": "bdgrz.professional-assertion-identity-claim.professional-assertion-identity-claimed",
+            "version": 1
+          }
+        ],
+        "choreography": [
+          {
+            "reactor": "ProfessionalAssertionClaimReactor",
+            "sourceOwner": "FirmProfessionalDutyDesignation",
+            "targetOwner": "ProfessionalAssertionIdentityClaim",
+            "command": "ClaimProfessionalAssertionIdentity"
+          },
+          {
+            "reactor": "ProfessionalDesignationApplicationReactor",
+            "sourceOwner": "ProfessionalAssertionIdentityClaim",
+            "targetOwner": "FirmProfessionalDutyDesignation",
+            "command": "ApplyProfessionalDutyChange"
+          }
+        ]
+      },
+      {
+        "owner": "ProgramReadiness",
+        "classification": "business_governor",
+        "declaredIdentity": "tenant / programId",
+        "selectedIdentity": "tenant / programId",
+        "invariant": "Compact latest-assessment pointer, decision admission/seal generation, latest management decision and permanent approved Type I entry pointer. Serialize latest-assessment adoption with decision append; keep full assessment/decision content in immutable manifests. Run admission precedes child computation and reserves exactly one pending latest-adoption generation.",
+        "boundaryDecision": "selected_split",
+        "mustPreserve": "No projected latest assessment or gap list can authorize entry; all exceptions/required plans acknowledged.",
+        "technicalStateToSeparate": [],
+        "commands": [
+          {
+            "command": "DecideReadiness",
+            "logicalIdentity": {
+              "field": "CommandId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "one immutable authored operation"
+            },
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "AssessmentId:Uuid",
+              "ExpectedRevision:long",
+              "Outcome:string",
+              "Rationale:string",
+              "SeparationOfDutiesWaiverId:Uuid?"
+            ]
+          },
+          {
+            "command": "DecideTypeIEntry",
+            "logicalIdentity": {
+              "field": "CommandId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "one immutable authored operation"
+            },
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "AssessmentId:Uuid",
+              "ExpectedRevision:long",
+              "Outcome:string",
+              "Rationale:string",
+              "AcknowledgedGapIds:IReadOnlyList<Uuid>?",
+              "SeparationOfDutiesWaiverId:Uuid?"
+            ]
+          },
+          {
+            "command": "RunReadinessAssessment",
+            "logicalIdentity": {
+              "field": "AssessmentId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "exact immutable creation retry"
+            },
+            "fields": [
+              "AssessmentId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "ExpectedProgramRevision:long",
+              "AsOf:DateTimeOffset?"
+            ]
+          },
+          {
+            "command": "AbortReadinessDecision",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "OperationId:Uuid",
+              "Target:EventStreamAddress",
+              "Generation:long",
+              "ExpectedRevision:long",
+              "FailureProof:ImmutableContentRef"
+            ]
+          }
+        ],
+        "events": [
+          {
+            "event": "ReadinessAssessmentAdopted",
+            "discriminator": "bdgrz.program-readiness.readiness-assessment-adopted",
+            "version": 1
+          },
+          {
+            "event": "ReadinessAssessmentRequested",
+            "discriminator": "bdgrz.program-readiness.readiness-assessment-requested",
+            "version": 1
+          },
+          {
+            "event": "ReadinessDecisionAccepted",
+            "discriminator": "bdgrz.program-readiness.readiness-decision-accepted",
+            "version": 1
+          },
+          {
+            "event": "ReadinessDecisionCanceled",
+            "discriminator": "bdgrz.program-readiness.readiness-decision-canceled",
+            "version": 1
+          },
+          {
+            "event": "ReadinessDecisionRecorded",
+            "discriminator": "bdgrz.readiness.decision.recorded",
+            "version": 1
+          },
+          {
+            "event": "TypeIEntryDecisionAccepted",
+            "discriminator": "bdgrz.program-readiness.type-i-entry-decision-accepted",
+            "version": 1
+          },
+          {
+            "event": "TypeIEntryDecisionRecorded",
+            "discriminator": "bdgrz.readiness.type_i_entry.decided",
+            "version": 1
+          }
+        ],
+        "choreography": [
+          {
+            "reactor": "ReadinessAssessmentAdoptionReactor",
+            "sourceOwner": "ReadinessAssessment",
+            "targetOwner": "ProgramReadiness",
+            "command": "AdoptReadinessAssessment"
+          },
+          {
+            "reactor": "ReadinessDecisionReadinessGapPlanAuthorizationReactor",
+            "sourceOwner": "ProgramReadiness",
+            "targetOwner": "ReadinessGapPlan",
+            "command": "AuthorizeReadinessGapPlanReadinessDecisionUse"
+          },
+          {
+            "reactor": "ReadinessDecisionReadinessGapPlanSettlementReactor",
+            "sourceOwner": "ProgramReadiness",
+            "targetOwner": "ReadinessGapPlan",
+            "command": "SettleReadinessGapPlanReadinessDecisionUse"
+          },
+          {
+            "reactor": "ReadinessDecisionCompletionReactor",
+            "sourceOwner": "ProgramReadiness",
+            "targetOwner": "ProgramReadiness",
+            "command": "CompleteReadinessDecision"
+          },
+          {
+            "reactor": "TypeIEntryDecisionCompletionReactor",
+            "sourceOwner": "ProgramReadiness",
+            "targetOwner": "ProgramReadiness",
+            "command": "CompleteTypeIEntryDecision"
+          },
+          {
+            "reactor": "ReadinessAssessmentComputationReactor",
+            "sourceOwner": "ProgramReadiness",
+            "targetOwner": "ReadinessAssessment",
+            "command": "ComputeReadinessAssessment"
+          }
+        ]
+      },
+      {
+        "owner": "ProgramRollover",
+        "classification": "business_aggregate",
+        "declaredIdentity": "Tenant / program-rollovers / rolloverId; proposal content compare; approval per version no-op; revision command checks before comparison; exact successor receipt compares timestamp. Portia appends against the hydrated physical stream position; a logical revision does not create another physical boundary.",
+        "selectedIdentity": "Tenant / program-rollovers / RolloverId, with exact source program/version and successor proof. RolloverId identifies creation; selected mutations use CommandId.",
+        "invariant": "One exact carry-forward proposal version requires independent approval and an atomic execution claim before successor writes; the claim pins that version against revision, and exact successor completion is recorded only in recoverable private process state.",
+        "boundaryDecision": "process",
+        "boundaryRationale": "ProgramRollover owns proposal, independent approval, and one atomic version-pinning execution claim/fence because the claim closes the revise-versus-execute race. Recoverable private ProgramRolloverExecutionProcess owns progress and verified successor receipts. A person authors the complete successor TypeIIPlan under its independent owner lifecycle. Prior proposal history and successor acknowledgements are not business aggregate state.",
+        "commands": [
+          {
+            "command": "ApproveProgramRollover",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "RolloverId:Uuid",
+              "Version:long",
+              "Decision:string",
+              "Rationale:string",
+              "ExpectedRevision:long"
+            ]
+          },
+          {
+            "command": "ProposeProgramRollover",
+            "logicalIdentity": "RolloverId",
+            "fields": [
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "RolloverId:Uuid",
+              "Content:ProgramRolloverContent"
+            ]
+          },
+          {
+            "command": "ClaimProgramRolloverExecution",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "RolloverId:Uuid",
+              "ExpectedRevision:long",
+              "ApprovedVersion:long",
+              "ApprovedContentSha256:string"
+            ]
+          }
+        ],
+        "events": [
+          {
+            "event": "ProgramRolloverApproved"
+          },
+          {
+            "event": "ProgramRolloverDecisionRecorded"
+          },
+          {
+            "event": "ProgramRolloverProposed"
+          },
+          {
+            "event": "ProgramRolloverRevised"
+          },
+          {
+            "event": "ProgramRolloverExecutionClaimed"
+          }
+        ],
+        "choreography": []
+      },
+      {
+        "owner": "Provider",
+        "classification": "business_aggregate",
+        "declaredIdentity": "providerId",
+        "selectedIdentity": "providerId",
+        "invariant": "One provider content, version and retirement lifecycle.",
+        "boundaryDecision": "selected_split",
+        "mustPreserve": "Exact creation identity and expected provider revision; active normalized name unique within tenant.",
+        "technicalStateToSeparate": [],
+        "commands": [
+          {
+            "command": "RecordProvider",
+            "logicalIdentity": {
+              "field": "ProviderId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "exact immutable creation retry"
+            },
+            "fields": [
+              "ProviderId:Uuid",
+              "TenantId:Uuid",
+              "Content:ProviderContent"
+            ]
+          },
+          {
+            "command": "ReviseProvider",
+            "logicalIdentity": {
+              "field": "CommandId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "one immutable authored operation"
+            },
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProviderId:Uuid",
+              "ExpectedRevision:long",
+              "Content:ProviderContent"
+            ]
+          },
+          {
+            "command": "CancelProviderChange",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "RecordId:Uuid",
+              "ChangeOperationId:Uuid",
+              "ExpectedRevision:long",
+              "DefiniteFailureProof:ImmutableContentRef"
+            ]
+          }
+        ],
+        "events": [
+          {
+            "event": "ProviderChangeAccepted",
+            "discriminator": "bdgrz.provider.provider-change-accepted",
+            "version": 1
+          },
+          {
+            "event": "ProviderChangeCanceled",
+            "discriminator": "bdgrz.provider.provider-change-canceled",
+            "version": 1
+          },
+          {
+            "event": "ProviderRecorded",
+            "discriminator": "bdgrz.provider.recorded",
+            "version": 1
+          },
+          {
+            "event": "ProviderRevised",
+            "discriminator": "bdgrz.provider.revised",
+            "version": 1
+          }
+        ],
+        "choreography": [
+          {
+            "reactor": "ProviderNameClaimReactor",
+            "sourceOwner": "Provider",
+            "targetOwner": "ProviderNameClaim",
+            "command": "ClaimProviderName"
+          },
+          {
+            "reactor": "ProviderChangeApplicationReactor",
+            "sourceOwner": "ProviderNameClaim",
+            "targetOwner": "Provider",
+            "command": "ApplyProviderChange"
+          },
+          {
+            "reactor": "ProviderOldNameReleaseReactor",
+            "sourceOwner": "Provider",
+            "targetOwner": "ProviderNameClaim",
+            "command": "ReleaseProviderName"
+          }
+        ]
+      },
+      {
+        "owner": "ProviderAssuranceGap",
+        "classification": "business_aggregate",
+        "declaredIdentity": "(tenantId, providerId, gapId)",
+        "selectedIdentity": "(tenantId, providerId, gapId)",
+        "invariant": "One current assurance gap with exact source-version and closure lineage.",
+        "boundaryDecision": "selected_split",
+        "mustPreserve": "Risk adoption cannot close a gap or occur after closure; each review binds same provider/current report.",
+        "technicalStateToSeparate": [],
+        "commands": [
+          {
+            "command": "CloseProviderCoverageGap",
+            "logicalIdentity": {
+              "field": "CommandId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "one immutable authored operation"
+            },
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProviderId:Uuid",
+              "GapId:Uuid",
+              "ExpectedRevision:long",
+              "Content:ProviderCoverageGapClosureContent"
+            ]
+          },
+          {
+            "command": "LinkProviderCoverageGapRiskAcceptance",
+            "logicalIdentity": {
+              "field": "CommandId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "one immutable authored operation"
+            },
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "ProviderId:Uuid",
+              "GapId:Uuid",
+              "ExpectedGapRevision:long",
+              "RiskId:Uuid",
+              "AcceptanceId:Uuid"
+            ]
+          },
+          {
+            "command": "RecordProviderCoverageGap",
+            "logicalIdentity": {
+              "field": "GapId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "exact immutable creation retry"
+            },
+            "fields": [
+              "GapId:Uuid",
+              "TenantId:Uuid",
+              "ProviderId:Uuid",
+              "Content:ProviderCoverageGapContent"
+            ]
+          }
+        ],
+        "events": [
+          {
+            "event": "ProviderCoverageGapClosed",
+            "discriminator": "bdgrz.provider.coverage_gap.closed",
+            "version": 1
+          },
+          {
+            "event": "ProviderCoverageGapRecorded",
+            "discriminator": "bdgrz.provider.coverage_gap.recorded",
+            "version": 1
+          },
+          {
+            "event": "ProviderCoverageGapRiskAcceptanceAdmitted",
+            "discriminator": "bdgrz.provider-assurance-gap.provider-coverage-gap-risk-acceptance-admitted",
+            "version": 1
+          }
+        ],
+        "choreography": [
+          {
+            "reactor": "ProviderRiskAcceptanceLinkReactor",
+            "sourceOwner": "ProviderAssuranceGap",
+            "targetOwner": "ProviderRiskAcceptance",
+            "command": "MaterializeProviderRiskAcceptanceLink"
+          }
+        ]
+      },
+      {
+        "owner": "ProviderAssuranceReport",
+        "classification": "business_aggregate",
+        "declaredIdentity": "(tenantId, providerId, reportId)",
+        "selectedIdentity": "(tenantId, providerId, reportId)",
+        "invariant": "Evidence report for one provider and exact provider revision.",
+        "boundaryDecision": "selected_split",
+        "mustPreserve": "Risk adoption cannot close a gap or occur after closure; each review binds same provider/current report.",
+        "technicalStateToSeparate": [],
+        "commands": [
+          {
+            "command": "RecordAssuranceReport",
+            "logicalIdentity": {
+              "field": "ReportId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "exact immutable creation retry"
+            },
+            "fields": [
+              "ReportId:Uuid",
+              "TenantId:Uuid",
+              "ProviderId:Uuid",
+              "Content:AssuranceReportContent"
+            ]
+          },
+          {
+            "command": "ReviseAssuranceReport",
+            "logicalIdentity": {
+              "field": "CommandId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "one immutable authored operation"
+            },
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProviderId:Uuid",
+              "ReportId:Uuid",
+              "ExpectedRevision:long",
+              "Content:AssuranceReportContent"
+            ]
+          }
+        ],
+        "events": [
+          {
+            "event": "AssuranceReportRecorded",
+            "discriminator": "bdgrz.provider.assurance_report.recorded",
+            "version": 1
+          },
+          {
+            "event": "AssuranceReportRevised",
+            "discriminator": "bdgrz.provider.assurance_report.revised",
+            "version": 1
+          },
+          {
+            "event": "ProviderAssuranceReportProviderReviewUseAuthorized",
+            "discriminator": "bdgrz.provider-assurance-report.provider-assurance-report-provider-review-use-authorized",
+            "version": 1
+          },
+          {
+            "event": "ProviderAssuranceReportProviderReviewUseSettled",
+            "discriminator": "bdgrz.provider-assurance-report.provider-assurance-report-provider-review-use-settled",
+            "version": 1
+          }
+        ],
+        "choreography": [
+          {
+            "reactor": "ProviderReviewProviderAssuranceReportAuthorizationReactor",
+            "sourceOwner": "ProviderAssuranceReview",
+            "targetOwner": "ProviderAssuranceReport",
+            "command": "AuthorizeProviderAssuranceReportProviderReviewUse"
+          },
+          {
+            "reactor": "ProviderReviewProviderAssuranceReportSettlementReactor",
+            "sourceOwner": "ProviderAssuranceReview",
+            "targetOwner": "ProviderAssuranceReport",
+            "command": "SettleProviderAssuranceReportProviderReviewUse"
+          }
+        ]
+      }
+    ]
+  },
+  "questions": {
+    "item_0": {
+      "type": "choice",
+      "instructions": "What is the strongest review conclusion for the proposed boundary of PopulationSnapshot?",
+      "criteria": {
+        "selected_boundary_supported": "No concrete alternative preserves a stated invariant better; the selected boundary has clear inclusion and exclusion reasoning.",
+        "boundary_should_change": "A specific omitted or combined owner is required by a stated invariant, identity, lifecycle, contention, or recovery rule.",
+        "evidence_insufficient": "Identity, source authority, lifecycle, contention, or concurrency evidence is missing or contradictory."
+      }
+    },
+    "item_0_evidence": {
+      "type": "noul",
+      "instructions": "Does this row provide enough explicit evidence to settle PopulationSnapshot's boundary without adding an unstated business policy?",
+      "criteria": {
+        "true": "Identity, invariant, lifecycle and exclusions are explicit enough to decide.",
+        "false": "A material boundary assumption is missing, contradictory or unsupported."
+      }
+    },
+    "item_1": {
+      "type": "choice",
+      "instructions": "What is the strongest review conclusion for the proposed boundary of PracticeIndependenceCommitment?",
+      "criteria": {
+        "selected_boundary_supported": "No concrete alternative preserves a stated invariant better; the selected boundary has clear inclusion and exclusion reasoning.",
+        "boundary_should_change": "A specific omitted or combined owner is required by a stated invariant, identity, lifecycle, contention, or recovery rule.",
+        "evidence_insufficient": "Identity, source authority, lifecycle, contention, or concurrency evidence is missing or contradictory."
+      }
+    },
+    "item_1_evidence": {
+      "type": "noul",
+      "instructions": "Does this row provide enough explicit evidence to settle PracticeIndependenceCommitment's boundary without adding an unstated business policy?",
+      "criteria": {
+        "true": "Identity, invariant, lifecycle and exclusions are explicit enough to decide.",
+        "false": "A material boundary assumption is missing, contradictory or unsupported."
+      }
+    },
+    "item_2": {
+      "type": "choice",
+      "instructions": "What is the strongest review conclusion for the proposed boundary of ProfessionalAssertionIdentityClaim?",
+      "criteria": {
+        "selected_boundary_supported": "No concrete alternative preserves a stated invariant better; the selected boundary has clear inclusion and exclusion reasoning.",
+        "boundary_should_change": "A specific omitted or combined owner is required by a stated invariant, identity, lifecycle, contention, or recovery rule.",
+        "evidence_insufficient": "Identity, source authority, lifecycle, contention, or concurrency evidence is missing or contradictory."
+      }
+    },
+    "item_2_evidence": {
+      "type": "noul",
+      "instructions": "Does this row provide enough explicit evidence to settle ProfessionalAssertionIdentityClaim's boundary without adding an unstated business policy?",
+      "criteria": {
+        "true": "Identity, invariant, lifecycle and exclusions are explicit enough to decide.",
+        "false": "A material boundary assumption is missing, contradictory or unsupported."
+      }
+    },
+    "item_3": {
+      "type": "choice",
+      "instructions": "What is the strongest review conclusion for the proposed boundary of ProgramReadiness?",
+      "criteria": {
+        "selected_boundary_supported": "No concrete alternative preserves a stated invariant better; the selected boundary has clear inclusion and exclusion reasoning.",
+        "boundary_should_change": "A specific omitted or combined owner is required by a stated invariant, identity, lifecycle, contention, or recovery rule.",
+        "evidence_insufficient": "Identity, source authority, lifecycle, contention, or concurrency evidence is missing or contradictory."
+      }
+    },
+    "item_3_evidence": {
+      "type": "noul",
+      "instructions": "Does this row provide enough explicit evidence to settle ProgramReadiness's boundary without adding an unstated business policy?",
+      "criteria": {
+        "true": "Identity, invariant, lifecycle and exclusions are explicit enough to decide.",
+        "false": "A material boundary assumption is missing, contradictory or unsupported."
+      }
+    },
+    "item_4": {
+      "type": "choice",
+      "instructions": "What is the strongest review conclusion for the proposed boundary of ProgramRollover?",
+      "criteria": {
+        "selected_boundary_supported": "No concrete alternative preserves a stated invariant better; the selected boundary has clear inclusion and exclusion reasoning.",
+        "boundary_should_change": "A specific omitted or combined owner is required by a stated invariant, identity, lifecycle, contention, or recovery rule.",
+        "evidence_insufficient": "Identity, source authority, lifecycle, contention, or concurrency evidence is missing or contradictory."
+      }
+    },
+    "item_4_evidence": {
+      "type": "noul",
+      "instructions": "Does this row provide enough explicit evidence to settle ProgramRollover's boundary without adding an unstated business policy?",
+      "criteria": {
+        "true": "Identity, invariant, lifecycle and exclusions are explicit enough to decide.",
+        "false": "A material boundary assumption is missing, contradictory or unsupported."
+      }
+    },
+    "item_5": {
+      "type": "choice",
+      "instructions": "What is the strongest review conclusion for the proposed boundary of Provider?",
+      "criteria": {
+        "selected_boundary_supported": "No concrete alternative preserves a stated invariant better; the selected boundary has clear inclusion and exclusion reasoning.",
+        "boundary_should_change": "A specific omitted or combined owner is required by a stated invariant, identity, lifecycle, contention, or recovery rule.",
+        "evidence_insufficient": "Identity, source authority, lifecycle, contention, or concurrency evidence is missing or contradictory."
+      }
+    },
+    "item_5_evidence": {
+      "type": "noul",
+      "instructions": "Does this row provide enough explicit evidence to settle Provider's boundary without adding an unstated business policy?",
+      "criteria": {
+        "true": "Identity, invariant, lifecycle and exclusions are explicit enough to decide.",
+        "false": "A material boundary assumption is missing, contradictory or unsupported."
+      }
+    },
+    "item_6": {
+      "type": "choice",
+      "instructions": "What is the strongest review conclusion for the proposed boundary of ProviderAssuranceGap?",
+      "criteria": {
+        "selected_boundary_supported": "No concrete alternative preserves a stated invariant better; the selected boundary has clear inclusion and exclusion reasoning.",
+        "boundary_should_change": "A specific omitted or combined owner is required by a stated invariant, identity, lifecycle, contention, or recovery rule.",
+        "evidence_insufficient": "Identity, source authority, lifecycle, contention, or concurrency evidence is missing or contradictory."
+      }
+    },
+    "item_6_evidence": {
+      "type": "noul",
+      "instructions": "Does this row provide enough explicit evidence to settle ProviderAssuranceGap's boundary without adding an unstated business policy?",
+      "criteria": {
+        "true": "Identity, invariant, lifecycle and exclusions are explicit enough to decide.",
+        "false": "A material boundary assumption is missing, contradictory or unsupported."
+      }
+    },
+    "item_7": {
+      "type": "choice",
+      "instructions": "What is the strongest review conclusion for the proposed boundary of ProviderAssuranceReport?",
+      "criteria": {
+        "selected_boundary_supported": "No concrete alternative preserves a stated invariant better; the selected boundary has clear inclusion and exclusion reasoning.",
+        "boundary_should_change": "A specific omitted or combined owner is required by a stated invariant, identity, lifecycle, contention, or recovery rule.",
+        "evidence_insufficient": "Identity, source authority, lifecycle, contention, or concurrency evidence is missing or contradictory."
+      }
+    },
+    "item_7_evidence": {
+      "type": "noul",
+      "instructions": "Does this row provide enough explicit evidence to settle ProviderAssuranceReport's boundary without adding an unstated business policy?",
+      "criteria": {
+        "true": "Identity, invariant, lifecycle and exclusions are explicit enough to decide.",
+        "false": "A material boundary assumption is missing, contradictory or unsupported."
+      }
+    }
+  }
+}

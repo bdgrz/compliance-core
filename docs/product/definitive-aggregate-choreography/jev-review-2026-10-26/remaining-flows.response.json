@@ -1,0 +1,46 @@
+{
+  "httpStatus": 200,
+  "response": {
+    "model": "jev-1.14.0",
+    "answers": {
+      "t004": {
+        "type": "choice",
+        "choice": "coherent",
+        "confidence": 0.37,
+        "probabilities": {
+          "coherent": 0.58,
+          "defect": 0.33,
+          "insufficient": 0.09
+        }
+      },
+      "t098": {
+        "type": "choice",
+        "choice": "coherent",
+        "confidence": 0.91,
+        "probabilities": {
+          "coherent": 0.94,
+          "defect": 0.04,
+          "insufficient": 0.02
+        }
+      },
+      "s014": {
+        "type": "choice",
+        "choice": "correct",
+        "confidence": 0.77,
+        "probabilities": {
+          "correct": 0.85,
+          "defect": 0.06,
+          "insufficient": 0.09
+        }
+      },
+      "evidence": {
+        "type": "noul",
+        "noul": 0.2
+      }
+    },
+    "usage": {
+      "input_tokens": 1333,
+      "output_tokens": 156
+    }
+  }
+}

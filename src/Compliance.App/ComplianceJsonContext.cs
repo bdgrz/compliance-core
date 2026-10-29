@@ -1,14 +1,25 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using Bdgrz.Compliance.Features.Applications;
-using Bdgrz.Compliance.Features.Evidence;
-using Bdgrz.Compliance.Features.Readiness;
-using Bdgrz.Compliance.Features.Responsibilities;
-using Bdgrz.Compliance.Features.Workforce;
-using Bdgrz.Compliance.Features.SystemDescription;
 using Cntryl.Portia;
 using Microsoft.AspNetCore.Mvc;
-
+using Bdgrz.Compliance.Features.Authentication;
+using Bdgrz.Compliance.Features.Work;
+using Bdgrz.Compliance.Features.Workforce;
+using Bdgrz.Compliance.Features.AccessControl.Commands;
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.AccessControl.Queries;
+using Bdgrz.Compliance.Features.Applications.Commands;
+using Bdgrz.Compliance.Features.Applications.Models;
+using Bdgrz.Compliance.Features.Applications.Queries;
+using Bdgrz.Compliance.Features.Criteria.Models;
+using Bdgrz.Compliance.Features.Evidence.Models;
+using Bdgrz.Compliance.Features.Readiness.Models;
+using Bdgrz.Compliance.Features.Responsibilities.Commands;
+using Bdgrz.Compliance.Features.Responsibilities.Models;
+using Bdgrz.Compliance.Features.Responsibilities.Queries;
+using Bdgrz.Compliance.Features.SystemDescription.Models;
+using Bdgrz.Compliance.Features.Tenants.Models;
+using Bdgrz.Compliance.Features.Workforce.Models;
 namespace Bdgrz.Compliance;
 
 [PortiaJsonContext]
@@ -70,7 +81,7 @@ namespace Bdgrz.Compliance;
 [JsonSerializable(typeof(BrowserSession))]
 [JsonSerializable(typeof(ProblemDetails))]
 [JsonSerializable(typeof(PersonalContactDetails))]
-[JsonSerializable(typeof(Bdgrz.Compliance.Features.Criteria.CriteriaTextOverlayContent))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Criteria.Models.CriteriaTextOverlayContent))]
 [JsonSerializable(typeof(EvidenceArtifactContent))]
 [JsonSerializable(typeof(EvidenceCapture))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.Work.WorkDigestRetryHttpBody))]
@@ -78,4 +89,7 @@ namespace Bdgrz.Compliance;
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.Work.WorkAssignmentHttp.AssignBody))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.Work.WorkAssignmentHttp.DelegateBody))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.Work.WorkAssignmentHttp.EscalateBody))]
+[JsonSerializable(typeof(PersonHttp.RecordBody))]
+[JsonSerializable(typeof(PersonHttp.ReviseBody))]
+[JsonSerializable(typeof(PersonHttp.CorrelateBody))]
 sealed partial class ComplianceJsonContext : JsonSerializerContext;

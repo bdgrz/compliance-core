@@ -62,7 +62,7 @@ scoped. Native publish checks trimming and architecture-specific runtime
 behavior during release qualification.
 
 ```console
-dotnet restore Compliance.slnx --locked-mode
+dotnet restore Compliance.slnx
 dotnet format whitespace Compliance.slnx --verify-no-changes --no-restore
 dotnet build Compliance.slnx --configuration Release --no-restore
 dotnet test Compliance.slnx --configuration Release --no-restore --filter "Category!=BrokerIntegration&Category!=WebIntegration"
@@ -74,7 +74,7 @@ Client unit/build checks run in their owning repositories. A default-off feature
 flag preserves unfinished behavior without changing authority or proving the
 complete user outcome.
 
-Dependency lock files are part of the change. Keep the tree formatted and warning-free; CI treats analyzer warnings as errors.
+Keep the tree formatted and warning-free; CI treats analyzer warnings as errors.
 
 Tests use `Should<Outcome>Given<State>` names, with `When<Action>` when it clarifies the case. Block-bodied tests mark their Arrange, Act, and Assert phases. The Cntryl.Conventions analyzers enforce these rules as build errors.
 

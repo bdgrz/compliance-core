@@ -1,0 +1,206 @@
+{
+  "model": "jev-1.14.0",
+  "state": {
+    "review": "Re-evaluate selected choreography rows using only their material source/target facts and proof rules. A dispatcher is not proof of target commitment. Do not require child-stage proofs where the selected row has no intermediate stage; judge the row kind and its actual conditions.",
+    "pass": "neutral_flow_precision",
+    "ownerFacts": [
+      {
+        "owner": "PolicyDistributionCampaign",
+        "classification": "business_aggregate",
+        "identity": "campaignId",
+        "invariant": "Immutable policy/material version and frozen audience plus closure generation.",
+        "mustPreserve": "Every result binds the accepted campaign version/hash and included participant; after close, no result accepted."
+      },
+      {
+        "owner": "PolicyCampaignParticipant",
+        "classification": "business_aggregate",
+        "identity": "(campaignId, personId)",
+        "invariant": "Independent acknowledgement, completion, exception and delivery status.",
+        "mustPreserve": "Every result binds the accepted campaign version/hash and included participant; after close, no result accepted."
+      },
+      {
+        "owner": "AuditPackageManifest",
+        "classification": "business_aggregate",
+        "identity": "packageId",
+        "invariant": "Manifest identity, selected immutable content version and delivery gate.",
+        "mustPreserve": "No current aggregate should retain all build attempts or delivery history as command state."
+      },
+      {
+        "owner": "AuditPackageDelivery",
+        "classification": "business_aggregate",
+        "identity": "tenant / (packageId, manifestVersion, deliveryId)",
+        "invariant": "One delivery authorization and terminal delivery for exact recipient/version.",
+        "mustPreserve": "No current aggregate should retain all build attempts or delivery history as command state."
+      },
+      {
+        "owner": "ServiceEngagementIndependence",
+        "classification": "business_aggregate",
+        "identity": "tenant / engagementId",
+        "invariant": "One engagement lifecycle, proposed and actual staff assignments, current content revision and accepted epoch bindings. Engagement revision and service epoch live in state; historical epoch streams cannot compete independently.",
+        "mustPreserve": "Never reactivate a permanent independence commitment from reevaluation; acceptance binds exact service, draft, acknowledgement and ratified-rule proofs."
+      },
+      {
+        "owner": "FirmProfessionalDutyDesignation",
+        "classification": "business_aggregate",
+        "identity": "platform / (canonicalUserId, duty, nullable tenantScope)",
+        "invariant": "One active signed duty designation and monotonic signed authority revision per exact subject/duty/scope; retain continuity proof. The platform scope is explicit and is not an empty tenant UUID.",
+        "mustPreserve": "Exact predecessor, monotonically increasing authority revision, stable signed subject, valid staff source proof."
+      }
+    ],
+    "orderedPhysicalPlans": [],
+    "flows": [
+      {
+        "id": "T076",
+        "kind": "reaction_or_regular_process_stage",
+        "sourceOwner": "PolicyDistributionCampaign",
+        "targetOwner": "PolicyCampaignParticipant",
+        "targetAuthorityKind": "business_aggregate",
+        "physicalRootEvents": [
+          "PolicyParticipantResultAdmitted"
+        ],
+        "originalAdmissionKinds": [
+          "AdvisorFeedbackAdmitted",
+          "AuditorResponseAdmitted",
+          "AuditorCommentAdmitted",
+          "CorrectiveActionAdmitted",
+          "AuditorSampleSelectionAdmitted",
+          "ProviderCoverageGapRiskAcceptanceAdmitted",
+          "PolicyParticipantResultAdmitted"
+        ],
+        "logicalPrerequisiteFacts": [
+          "PolicyParticipantResultAdmitted"
+        ],
+        "receiverCommand": "ApplyPolicyParticipantResult",
+        "emittedSemanticFacts": [
+          "PolicyAcknowledgementRecorded",
+          "TrainingCompletionRecorded",
+          "CampaignWaiverApproved"
+        ],
+        "processes": [
+          "IndependentChildMaterialization"
+        ],
+        "proofGate": "Exact admitted open generation and material hash/version/text; native acknowledgement/completion/waiver is one typed variant.",
+        "requiredTypedStageProofSets": [],
+        "pinnedSourceRequirements": "Every exact source owner/event/content revision and complete immutable manifest required by intendedProofGate remains mandatory; no absent optional source is fabricated.",
+        "recoveryContract": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
+        "effectIdentity": {}
+      },
+      {
+        "id": "T081",
+        "kind": "reaction_or_regular_process_stage",
+        "sourceOwner": "AuditPackageManifest",
+        "targetOwner": "AuditPackageDelivery",
+        "targetAuthorityKind": "business_aggregate",
+        "physicalRootEvents": [
+          "AuditPackageDeliveryAdmitted"
+        ],
+        "originalAdmissionKinds": [
+          "AuditPackageDeliveryAdmitted"
+        ],
+        "logicalPrerequisiteFacts": [
+          "AuditPackageDeliveryAdmitted"
+        ],
+        "receiverCommand": "MaterializeRecordedAuditPackageDelivery",
+        "emittedSemanticFacts": [
+          "AuditPackageDelivered"
+        ],
+        "processes": [
+          "AuditPackageDeliveryRecordingProcess"
+        ],
+        "proofGate": "Verify exact parent personal delivery-recording admission, original actor/authored handoff time/reference and frozen manifest/archive/approval/validation. Materialize this accepted historical record even after a new package version; never send externally.",
+        "requiredTypedStageProofSets": [],
+        "pinnedSourceRequirements": "Every exact source owner/event/content revision and complete immutable manifest required by intendedProofGate remains mandatory; no absent optional source is fabricated.",
+        "recoveryContract": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
+        "effectIdentity": {}
+      },
+      {
+        "id": "T091",
+        "kind": "reaction_or_regular_process_stage",
+        "sourceOwner": "ServiceEngagementIndependence",
+        "targetOwner": "FirmProfessionalDutyDesignation",
+        "targetAuthorityKind": "business_aggregate",
+        "physicalRootEvents": [
+          "ServiceEngagementAcceptanceRequested",
+          "ServiceEngagementStaffAssignmentRequested",
+          "EngagementPersonalDecisionAdmitted"
+        ],
+        "originalAdmissionKinds": [
+          "ServiceEngagementAcceptanceRequested",
+          "ServiceEngagementStaffAssignmentRequested",
+          "EngagementPersonalDecisionAdmitted"
+        ],
+        "logicalPrerequisiteFacts": [
+          "ServiceEngagementAcceptanceRequested",
+          "ServiceEngagementStaffAssignmentRequested",
+          "EngagementPersonalDecisionAdmitted"
+        ],
+        "receiverCommand": "AuthorizeFirmProfessionalDutyDesignationEngagementUse",
+        "emittedSemanticFacts": [
+          "FirmProfessionalDutyDesignationEngagementUseAuthorized"
+        ],
+        "processes": [
+          "EngagementAcceptanceProcess",
+          "EngagementPersonalDecisionProcess"
+        ],
+        "proofGate": "Match exact frozen current eligibility/rule/ratification fact under this owner guard. Status/revocation/version changes conflict while granted; hold through irreversible engagement authorization. Deny stale/expired/future/wrong-subject scope.  Use events do not advance public ResourceRevision; the exact content-event identity and metadata owner version remain separate. For this source event, fan out only requirements of kind partner_evaluation; management acknowledgement does not fabricate firm-partner authority.",
+        "requiredTypedStageProofSets": [],
+        "pinnedSourceRequirements": "Every exact source owner/event/content revision and complete immutable manifest required by intendedProofGate remains mandatory; no absent optional source is fabricated.",
+        "recoveryContract": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
+        "effectIdentity": {}
+      }
+    ]
+  },
+  "questions": {
+    "flow_0": {
+      "type": "choice",
+      "instructions": "Is selected flow T076 logically coherent across the named source and target owners, given its exact proof gate and terminal rules?",
+      "criteria": {
+        "coherent": "The flow preserves the source owner decision, delegates to the target owner, and uses exact admission/proof/terminal rules suited to the row kind.",
+        "concrete_defect": "A specific owner is bypassed, causal ordering is wrong, an invariant is lost, or a required proof/fence/recovery rule is missing.",
+        "insufficient_evidence": "The row and source/target invariant facts do not establish enough to decide."
+      }
+    },
+    "evidence_0": {
+      "type": "noul",
+      "instructions": "Does selected flow T076 name the material causal facts and applicable proof/recovery requirements for its own flow kind?",
+      "criteria": {
+        "true": "The row states the source/target relation, the applicable identity and typed fact proofs, important conditional branches, and terminal or recovery behavior.",
+        "false": "A material source/target authority, typed proof, conditional branch, terminal fence, or recovery rule is not represented."
+      }
+    },
+    "flow_1": {
+      "type": "choice",
+      "instructions": "Is selected flow T081 logically coherent across the named source and target owners, given its exact proof gate and terminal rules?",
+      "criteria": {
+        "coherent": "The flow preserves the source owner decision, delegates to the target owner, and uses exact admission/proof/terminal rules suited to the row kind.",
+        "concrete_defect": "A specific owner is bypassed, causal ordering is wrong, an invariant is lost, or a required proof/fence/recovery rule is missing.",
+        "insufficient_evidence": "The row and source/target invariant facts do not establish enough to decide."
+      }
+    },
+    "evidence_1": {
+      "type": "noul",
+      "instructions": "Does selected flow T081 name the material causal facts and applicable proof/recovery requirements for its own flow kind?",
+      "criteria": {
+        "true": "The row states the source/target relation, the applicable identity and typed fact proofs, important conditional branches, and terminal or recovery behavior.",
+        "false": "A material source/target authority, typed proof, conditional branch, terminal fence, or recovery rule is not represented."
+      }
+    },
+    "flow_2": {
+      "type": "choice",
+      "instructions": "Is selected flow T091 logically coherent across the named source and target owners, given its exact proof gate and terminal rules?",
+      "criteria": {
+        "coherent": "The flow preserves the source owner decision, delegates to the target owner, and uses exact admission/proof/terminal rules suited to the row kind.",
+        "concrete_defect": "A specific owner is bypassed, causal ordering is wrong, an invariant is lost, or a required proof/fence/recovery rule is missing.",
+        "insufficient_evidence": "The row and source/target invariant facts do not establish enough to decide."
+      }
+    },
+    "evidence_2": {
+      "type": "noul",
+      "instructions": "Does selected flow T091 name the material causal facts and applicable proof/recovery requirements for its own flow kind?",
+      "criteria": {
+        "true": "The row states the source/target relation, the applicable identity and typed fact proofs, important conditional branches, and terminal or recovery behavior.",
+        "false": "A material source/target authority, typed proof, conditional branch, terminal fence, or recovery rule is not represented."
+      }
+    }
+  }
+}

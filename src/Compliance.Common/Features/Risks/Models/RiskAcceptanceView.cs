@@ -1,0 +1,15 @@
+using Cntryl.Portia;
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.AttestRecords.Commands;
+using Bdgrz.Compliance.Features.Workforce.Models;
+namespace Bdgrz.Compliance.Features.Risks.Models;
+
+/// <summary>A personal, time-bounded acceptance; status is evaluated when read.</summary>
+public sealed record RiskAcceptanceView(Uuid AcceptanceId, Uuid ResidualAssessmentId,
+    int ResidualScore, int? AppetiteThreshold, Uuid ApproverMemberId, ActorReference Approver,
+    string ApproverAuthority, string Rationale, DateTimeOffset AcceptedAt,
+    DateTimeOffset ExpiresAt, string Status = "active")
+{
+    /// <summary>The approved waiver that let the risk owner accept their own risk, if any.</summary>
+    public Uuid? SeparationOfDutiesWaiverId { get; init; }
+}

@@ -1,0 +1,32 @@
+using System.Text.Json.Serialization;
+using Cntryl.Portia;
+using Bdgrz.Compliance.Features.Proofs.Models;
+namespace Bdgrz.Compliance.Features.Examinations.Models;
+
+/// <summary>Immutable Type I baseline manifest and attributable amendment lineage.</summary>
+public sealed record TypeIBaselineView(
+    Uuid TenantId,
+    Uuid ProgramId,
+    Uuid ExaminationEngagementId,
+    Uuid TypeIBaselineId,
+    string Status,
+    long Revision,
+    IReadOnlyList<TypeIBaselineSourceReference> Sources,
+    IReadOnlyList<string> ScopeDifferences,
+    string CanonicalManifest,
+    string ContentSha256,
+    DateTimeOffset UpdatedAt,
+    Uuid ActorMemberId,
+    string ActorDisplay,
+    string ConfirmationRationale,
+    Uuid? AmendsBaselineId,
+    string? AmendmentReason,
+    IReadOnlyList<Uuid> ChangedRecordIds,
+    IReadOnlyList<Uuid> AffectedPackageMaterialIds,
+    int AmendmentDepth)
+{
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public ImmutableContentRef? SourceContentManifest { get; init; }
+
+    public IReadOnlyList<TypeIBaselineSourceCoverage> SourceCoverage { get; init; } = [];
+}

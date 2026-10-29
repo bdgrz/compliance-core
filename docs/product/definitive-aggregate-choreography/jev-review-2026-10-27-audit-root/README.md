@@ -1,0 +1,9 @@
+# Audit population root admission review
+
+The existing AuditPopulation owner keeps one definition and collection lifecycle. Define is identified by DefinitionId; Generate is identified by the UUIDv5 of DefinitionId and the exact GenerationKey. Each operation binds its authored input and actor and preserves its original Unit response. The population owner retains its existing local decision boundary. The actual Type II close fact is verified and pinned in immutable source proof; independent period changes remain owned by TypeIIPeriod.
+
+New `AuditPopulationDefinedV4` and `AuditPopulationGeneratedV4` facts carry the selected command, source proof, operation provenance and original result references. The existing V3 facts retain their occupied discriminators and remain readable. Define verifies its exact frozen close source; Generate verifies its exact predecessor and retained close. Both use the existing Portia native admission and OCC retry path. No export or scheduling behavior is claimed by this slice.
+
+Jev 1.14.0 returned 0.87 for the existing Defined name and 0.73 for Generated as a name for collection intent. These are advisory judgments, not correctness evidence. The existing catalog names and discriminator names were retained; Generated continues to mean collection intent, not completed collection. The exact request and response are in this directory.
+
+The original clock-advance tests were red for both commands. The focused `DefineAuditPopulationHandlerTests` selection passed 34 tests, including exact retry, changed input and actor, simultaneous identical calls, V3 replay, V4 serializer round trips and unavailable/corrupt source proofs. The simultaneous-call test is controlled in-process evidence, not provider or crash qualification. The retained close is source-verified; cross-owner concurrency and durable provider/restart behavior require separate qualification. Export and weekly scheduling remain incomplete.

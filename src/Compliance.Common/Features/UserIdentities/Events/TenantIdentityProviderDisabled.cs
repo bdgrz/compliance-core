@@ -1,0 +1,20 @@
+using Cntryl.Portia;
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.NativeOperations.Contracts;
+using Bdgrz.Compliance.Features.NativeOperations.Models;
+using Bdgrz.Compliance.Features.Proofs.Models;
+using Bdgrz.Compliance.Features.UserIdentities.Commands;
+namespace Bdgrz.Compliance.Features.UserIdentities.Events;
+
+/// <summary>The native acceptance of <see cref="DisableTenantIdentityProvider" />; a disabled connection stays terminal.</summary>
+[Discriminator("bdgrz.useridentities.tenant-identity-provider-disabled", 2)]
+public sealed record TenantIdentityProviderDisabled(
+    Uuid TenantId,
+    Uuid ProviderConnectionId,
+    string Rationale,
+    Uuid ActorMemberId,
+    string ActorDisplay,
+    DateTimeOffset DisabledAt,
+    OperationProvenance Operation,
+    ImmutableContentRef? FirstResponse,
+    ImmutableContentRef? OperationResult) : DomainEvent, INativeOperationFact;

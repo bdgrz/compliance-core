@@ -1,0 +1,198 @@
+using Cntryl.Portia;
+using Bdgrz.Compliance.Features.AccessControl.Readers;
+using Bdgrz.Compliance.Features.AccessControl.Rules;
+using Bdgrz.Compliance.Features.AccessControl.Services;
+using Bdgrz.Compliance.Features.AdvisorCollaboration.Processes;
+using Bdgrz.Compliance.Features.Applications.Models;
+using Bdgrz.Compliance.Features.AuditPackages.Rules;
+using Bdgrz.Compliance.Features.AuditPopulations.Models;
+using Bdgrz.Compliance.Features.AuditorRequests.Models;
+using Bdgrz.Compliance.Features.AuditorRequests.Processes;
+using Bdgrz.Compliance.Features.ControlMappings.History;
+using Bdgrz.Compliance.Features.Controls.Contracts;
+using Bdgrz.Compliance.Features.Evidence.Models;
+using Bdgrz.Compliance.Features.Incidents.Rules;
+using Bdgrz.Compliance.Features.NamedRecords.Models;
+using Bdgrz.Compliance.Features.NamedRecords.Processes;
+using Bdgrz.Compliance.Features.NativeOperations.History;
+using Bdgrz.Compliance.Features.Operations.History;
+using Bdgrz.Compliance.Features.Operations.Models;
+using Bdgrz.Compliance.Features.Processes.Processes;
+using Bdgrz.Compliance.Features.Programs.Readers;
+using Bdgrz.Compliance.Features.Providers.History;
+using Bdgrz.Compliance.Features.Providers.Models;
+using Bdgrz.Compliance.Features.Providers.Rules;
+using Bdgrz.Compliance.Features.Readiness.Models;
+using Bdgrz.Compliance.Features.Readiness.Rules;
+using Bdgrz.Compliance.Features.Remediation.Processes;
+using Bdgrz.Compliance.Features.Remediation.Rules;
+using Bdgrz.Compliance.Features.Retention.Models;
+using Bdgrz.Compliance.Features.Risks.Models;
+using Bdgrz.Compliance.Features.SourceFacts.Models;
+using Bdgrz.Compliance.Features.SourceFacts.Rules;
+using Bdgrz.Compliance.Features.SystemDescription.Projections;
+using Bdgrz.Compliance.Features.Tenants.Models;
+using Bdgrz.Compliance.Features.Tenants.Processes;
+using Bdgrz.Compliance.Features.UserIdentities.Models;
+using Bdgrz.Compliance.Features.Work.Models;
+using Bdgrz.Compliance.Features.AccessControl.Aggregates;
+using Bdgrz.Compliance.Features.Examinations.Aggregates;
+using Bdgrz.Compliance.Features.Exports.Commands;
+using Bdgrz.Compliance.Features.Retention.Commands;
+using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
+using Bdgrz.Compliance.Features.Work.Commands;
+namespace Bdgrz.Compliance.Features.AccessControl.Models;
+
+/// <summary>
+///     The M0-D26 strict independence wall between advisory and attest work for one client, as in-code
+///     rules that engagement assignment, record authorizers, and engagement acceptance apply.
+/// </summary>
+public static class IndependenceCompartments
+{
+    public const string PersonExclusivityRuleId = "m0_d26_person_exclusivity";
+
+    const int MaximumDateOnlyMonthOffset = 120_000;
+
+    /// <summary>
+    ///     One person may never hold both an advisory and an attest assignment for the same client.
+    ///     Match either their account or staff record across the full supplied history; retain a stable
+    ///     historical conflict citation for the assignment boundary to explain the refusal.
+    /// </summary>
+    public static IndependenceDecision CanAssign(IEnumerable<EngagementAssignment> clientAssignments,
+        EngagementAssignment candidate)
+    {
+        ArgumentNullException.ThrowIfNull(clientAssignments);
+        ArgumentNullException.ThrowIfNull(candidate);
+        if (candidate.ClientTenantId == Uuid.Empty || candidate.EngagementId == Uuid.Empty ||
+            candidate.FirmStaffMemberId == Uuid.Empty || candidate.UserId == Uuid.Empty ||
+            !Enum.IsDefined(candidate.Practice))
+            return new IndependenceDecision(IndependenceDecisionCode.AssignmentInvalid);
+
+        var assignmentHistory = clientAssignments.ToArray();
+        if (assignmentHistory.Any(assignment => assignment is null || assignment.ClientTenantId == Uuid.Empty))
+            return new IndependenceDecision(IndependenceDecisionCode.AssignmentInvalid);
+        var clientHistory = assignmentHistory.Where(assignment =>
+            assignment.ClientTenantId == candidate.ClientTenantId).ToArray();
+        if (clientHistory.Any(assignment => assignment.EngagementId == Uuid.Empty ||
+                assignment.FirmStaffMemberId == Uuid.Empty || assignment.UserId == Uuid.Empty ||
+                !Enum.IsDefined(assignment.Practice)))
+            return new IndependenceDecision(IndependenceDecisionCode.AssignmentInvalid);
+        var conflictingAssignment = clientHistory.Where(existing =>
+                (existing.FirmStaffMemberId == candidate.FirmStaffMemberId || existing.UserId == candidate.UserId) &&
+                existing.Practice != candidate.Practice)
+            .OrderBy(existing => existing.EngagementId.ToString(), StringComparer.Ordinal)
+            .ThenBy(existing => existing.FirmStaffMemberId.ToString(), StringComparer.Ordinal)
+            .ThenBy(existing => existing.UserId.ToString(), StringComparer.Ordinal)
+            .FirstOrDefault();
+        return conflictingAssignment is not null
+            ? new IndependenceDecision(IndependenceDecisionCode.PersonPracticeConflict,
+                ruleId: PersonExclusivityRuleId, conflictingAssignment: conflictingAssignment)
+            : IndependenceDecision.Allow;
+    }
+
+    /// <summary>
+    ///     Returns whether the wall blocks the actor from a client's record compartment: attest assignees
+    ///     cannot read that client's advisory working notes, and advisory assignees cannot read
+    ///     that client's attest-internal discussions. This is a deny rule layered on the ordinary
+    ///     grant, never a grant: an actor it does not block still needs a membership or advisory
+    ///     assignment that permits the read.
+    /// </summary>
+    public static bool IsBlockedByWall(Uuid clientTenantId, IEnumerable<EngagementAssignment> actorAssignments,
+        RecordCompartment compartment)
+    {
+        ArgumentNullException.ThrowIfNull(actorAssignments);
+        var blockedPractice = compartment switch
+        {
+            RecordCompartment.AdvisoryWorkingNotes => EngagementPractice.Attest,
+            RecordCompartment.AttestInternal => EngagementPractice.Advisory,
+            _ => (EngagementPractice?)null,
+        };
+        return blockedPractice is { } practice && actorAssignments.Any(assignment =>
+            assignment.ClientTenantId == clientTenantId &&
+            assignment.Practice == practice);
+    }
+
+    /// <summary>
+    ///     An attest engagement cannot be accepted for a client that received control design,
+    ///     implementation, or operation from the firm within the rule-set look-back, including
+    ///     ongoing work. A conditionally compatible service in the same window requires a recorded
+    ///     partner evaluation.
+    /// </summary>
+    public static IndependenceDecision CanAcceptAttestEngagement(Uuid clientTenantId,
+        IndependenceRuleSet ruleSet, IEnumerable<NonattestServiceRecord> serviceHistory,
+        DateOnly examinationPeriodStart, bool partnerEvaluationRecorded)
+    {
+        ArgumentNullException.ThrowIfNull(ruleSet);
+        ArgumentNullException.ThrowIfNull(serviceHistory);
+        if (clientTenantId == Uuid.Empty || examinationPeriodStart == DateOnly.MinValue)
+            return new IndependenceDecision(IndependenceDecisionCode.EvaluationInputInvalid);
+        if (!ruleSet.IsValid)
+            return new IndependenceDecision(IndependenceDecisionCode.RuleSetInvalid);
+        if (ruleSet.LookBackMonths > MaximumDateOnlyMonthOffset)
+            return new IndependenceDecision(IndependenceDecisionCode.RuleSetInvalid);
+
+        var history = serviceHistory.ToArray();
+        if (history.Any(service => service is null || service.ClientTenantId == Uuid.Empty))
+            return new IndependenceDecision(IndependenceDecisionCode.ServiceHistoryInvalid);
+        var clientHistory = history.Where(service => service.ClientTenantId == clientTenantId).ToArray();
+        if (clientHistory.Any(service => service.ServiceEngagementId == Uuid.Empty ||
+                string.IsNullOrWhiteSpace(service.ServiceType) ||
+                service.StartedOn == DateOnly.MinValue ||
+                service.EndedOn is { } endedOn && endedOn < service.StartedOn ||
+                service.FirmStaffMemberIds is null || service.FirmStaffMemberIds.Count == 0 ||
+                service.FirmStaffMemberIds.Contains(Uuid.Empty) ||
+                service.FirmStaffMemberIds.Distinct().Count() != service.FirmStaffMemberIds.Count))
+            return new IndependenceDecision(IndependenceDecisionCode.ServiceHistoryInvalid, ruleSet.Version,
+                partnerEvaluationRecorded, examinationPeriodStart, ruleSet.LookBackMonths);
+
+        DateOnly windowStart;
+        try
+        {
+            windowStart = examinationPeriodStart.AddMonths(-ruleSet.LookBackMonths);
+        }
+        catch (ArgumentOutOfRangeException)
+        {
+            return new IndependenceDecision(IndependenceDecisionCode.EvaluationInputInvalid);
+        }
+        var recent = clientHistory
+            .Where(record => record.StartedOn <= examinationPeriodStart)
+            .Where(record => record.EndedOn is null || record.EndedOn.Value >= windowStart)
+            .ToArray();
+
+        var assessments = new List<IndependenceServiceAssessment>(recent.Length);
+        var hasUnclassifiedService = false;
+        var hasImpairingService = false;
+        var hasConditionalService = false;
+        foreach (var service in recent)
+        {
+            if (!ruleSet.TryGetClassification(service.ServiceType, service.InvolvedManagementFunctions,
+                    out var classification))
+            {
+                assessments.Add(new IndependenceServiceAssessment(service, null));
+                hasUnclassifiedService = true;
+                continue;
+            }
+
+            assessments.Add(new IndependenceServiceAssessment(service, classification));
+            hasImpairingService |= classification == IndependenceServiceClassification.Impairing;
+            hasConditionalService |= classification == IndependenceServiceClassification.ConditionallyCompatible;
+        }
+
+        var outcome = hasUnclassifiedService
+            ? (IndependenceEvaluationOutcome?)null
+            : hasImpairingService
+                ? IndependenceEvaluationOutcome.Impaired
+                : hasConditionalService
+                    ? IndependenceEvaluationOutcome.ConditionallyCompatible
+                    : IndependenceEvaluationOutcome.Compatible;
+        var code = hasUnclassifiedService
+            ? IndependenceDecisionCode.ServiceNotClassified
+            : hasImpairingService
+                ? IndependenceDecisionCode.RecentImpairingService
+                : hasConditionalService && !partnerEvaluationRecorded
+                    ? IndependenceDecisionCode.PartnerEvaluationRequired
+                    : IndependenceDecisionCode.Allowed;
+        return new IndependenceDecision(code, ruleSet.Version, partnerEvaluationRecorded,
+            examinationPeriodStart, ruleSet.LookBackMonths, outcome, assessments);
+    }
+}

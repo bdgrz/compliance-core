@@ -1,0 +1,20 @@
+{
+  "httpStatus": 200,
+  "response": {
+    "model": "jev-1.14.0",
+    "answers": {
+      "asserts_invariant": {
+        "type": "noul",
+        "noul": 0.94
+      },
+      "keep_together": {
+        "type": "noul",
+        "noul": 0.86
+      }
+    },
+    "usage": {
+      "input_tokens": 542,
+      "output_tokens": 43
+    }
+  }
+}

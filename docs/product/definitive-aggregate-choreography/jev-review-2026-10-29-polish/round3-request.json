@@ -1,0 +1,147 @@
+{
+ "model": "jev-latest",
+ "state": {
+  "campaign_owner": {
+   "owner": "PolicyDistributionCampaign",
+   "identity": "Tenant-scoped campaignId; `CampaignId` on `LaunchPolicyCampaign` is the caller-supplied immutable creation identity (exact immutable creation retry) so an exact retry resolves the original result and a different id is a different record; later mutations use CommandId bound to this identity and the expected revision.",
+   "invariant": "Immutable policy/material version and frozen audience plus closure generation. The campaign admits every participant result against its frozen audience, so its stream grows with the audience for the campaign's bounded life; this is accepted (Jev keep_per_child_admission 1.00) and must not be reduced to a projection check",
+   "launch_command_fields": [
+    "CampaignId",
+    "TenantId",
+    "ProgramId",
+    "PolicyId",
+    "PolicyVersion",
+    "RosterSnapshotId",
+    "DueOn",
+    "Instructions"
+   ]
+  },
+  "access_review_campaign": {
+   "identity": "Tenant-scoped campaignId; `CampaignId` on `LaunchAccessReviewCampaign` is the caller-supplied immutable creation identity (exact immutable creation retry) so an exact retry resolves the original result and a different id is a different record; later mutations use CommandId bound to this identity and the expected revision.",
+   "invariant": "Frozen campaign snapshot, generation, and compact completion gate."
+  },
+  "legal_hold": {
+   "identity": "Tenant-scoped holdId; `HoldId` on `PlaceArtifactLegalHold` is the caller-supplied immutable creation identity (exact immutable creation retry) so an exact retry resolves the original result and a different id is a different record; later mutations use CommandId bound to this identity and the expected revision.",
+   "invariant": "One legal hold lifecycle and one exact release after placement."
+  },
+  "name_claim_pattern": "Location, Provider, OperationalProcess and (planned) Application each have a tenant + normalized-name claim owner that serialises uniqueness; a caller-generated record id remains the record identity.",
+  "gap_rules": {
+   "D04-02": "An imported named owner matches a workforce person only by exact normalized email; a name-only or ambiguous match remains an unresolved_owner reference that a person must resolve.",
+   "D09-09": "Commitments and controls are linked many-to-many through versioned commitment-control links."
+  },
+  "readiness_owners": {
+   "ReadinessAssessment": "One immutable assessment source/rule revision and findings.",
+   "ProgramReadiness": "Compact latest-assessment pointer, decision admission/seal generation, latest management decision and permanent approved Type I entry pointer. Serialize latest-assessment adoption with decision append; keep full assessment/decision content in immutable manifests. Run admission precedes child computation and reserves exactly one pending latest-adoption generation.",
+   "ReadinessGapPlan": "One stable gap action/owner/date plan and independent annotations; admission/seal generation fences changes during a readiness decision.",
+   "Person": "One recorded workforce person has immutable creation identity, revisioned contact content and at most one current platform membership correlation."
+  },
+  "commitment_owners": {
+   "CommitmentDraft": "One tenant/program/kind/identifier has immutable identity/source creation, revisioned authored content, exact verified-source accepted review and independent approval that publishes strictly later effective versions; retired commitment remains terminal.",
+   "ControlDraft": "Only the exact current draft or retirement can be independently reviewed then activated, and accepted successor/retirement changes one control version line without overlapping effective intervals. Responsibilities cannot create unwaived conflicts with decisions already made on the exact revision.",
+   "RiskTreatmentAssertion": "One pending/accepted assertion line per risk/control."
+  },
+  "d26_04_rule": "A client whose only nonattest service was a readiness assessment is conditionally_compatible, and acceptance requires a recorded partner evaluation.",
+  "d26_source_excerpt": [
+   "Status: accepted, 2026-09-22. Decision owner: Jeff Repanich (product owner).\nCloses [M0-D26 #124](https://github.com/bdgrz/compliance/issues/124). The\ncompartment mechanism is part of the authorization model in ADR 0002 (M0-A04).\nThe firm's quality-management partner ratifies the initial rule-set content in\n[#343](https://github.com/bdgrz/compliance/issues/343).",
+   "1. **Person exclusivity.** No person may hold both an `Advisor` and an `Attest`\n   assignment for the same client organization, at the same time or ever.\n   The check covers the person's full assignment history for that client.\n2. **Compartments.** Attest assignees cannot read advisory working-note\n   records (`AdvisorFeedback`, `AdvisorHandoff` content, and advisory notes).\n   Advisors cannot read attest-side request discussions marked `attest_internal`.\n   Shared management records are visible to both, subject to normal grants.\n3. **Look-back guard.** An attest `ServiceEngagement` cannot be accepted for a\n   client that received any service classified `impairing` in the active\n   `Independ",
+   "| Nonattest service | Classification |\n| --- | --- |\n| Readiness assessment | `conditionally_compatible` |\n| Control design | `impairing`, within the 12-month look-back |\n| Control implementation | `impairing`, within the 12-month look-back |\n| Operating controls on the client's behalf | `impairing`, within the 12-month look-back |\n| vCISO | `impairing`, within the 12-month look-back |"
+  ],
+  "independence_owners": {
+   "ClientServiceIndependence": "Complete immutable nonattest-service history manifest, current service epoch and acceptance admission barrier. A changed service set advances epoch and makes old acceptance ineligible immediately through authoritative composed reads. Acceptance admission refuses an attest engagement when the firm provided any service classified impairing under the active ratified rule set within the 12 months before the examination period starts (M0-D26 D26-03; Jev 0.62, moderate)",
+   "ClientIndependenceDecision": "One immutable client independence preview and exact rule/service-epoch proofs; it never grants production acceptance. The evaluation records the rule-set version, every nonattest service considered, the result (compatible, conditionally_compatible or impaired), the partner evaluation reference when conditional, and the management acknowledgement reference (M0-D26 D26-06; Jev 0.55, moderate)",
+   "ServiceEngagementIndependence": "One engagement lifecycle, proposed and actual staff assignments, current content revision and accepted epoch bindings. Engagement revision and service epoch live in state; historical epoch streams cannot compete independently. An impaired independence evaluation result blocks acceptance of the attest engagement with no override (M0-D26 D26-07; Jev 0.81)",
+   "PartnerIndependenceDecision": "One personal partner evaluation bound to exact engagement revision, complete service epoch and ratified-rule digest."
+  },
+  "d16_15_rule": "When a client offboards, active holds block disposition of held artifacts; everything else follows the retention schedule after the ClientExport is delivered.",
+  "retention_owners": {
+   "ArtifactDisposition": "Only an approved exact source with elapsed retention/no active holds or reliance may start execution; one outstanding attempt; disposed result is terminal and yields tombstone.",
+   "ArtifactEngagementHold": "One preservation hold cannot release before one year after its exact report issuance; report identity and release decision are immutable. Release also requires the attributed decision that the engagement record package was delivered into the attest team's audit software; until that delivery fact exists the hold blocks disposition and offboarding cannot complete (M0-D27 D27-05)",
+   "ArtifactLegalHold": "One legal hold lifecycle and one exact release after placement.",
+   "ClientExport": "Final export delivery requires archive counts matching frozen included/withheld inventory and a successful exact-manifest delivery for each required attest package."
+  }
+ },
+ "questions": {
+  "campaign_duplicate_risk": {
+   "type": "noul",
+   "instructions": "A second LaunchPolicyCampaign with a fresh CampaignId but the same TenantId, ProgramId, PolicyId, PolicyVersion and RosterSnapshotId as an open campaign would create a duplicate campaign that the business would consider an error.",
+   "criteria": {
+    "true": "Two open campaigns for the same policy version and audience double the participants' obligations and the catalog needs a rule that refuses or deduplicates the second launch.",
+    "false": "A second campaign for the same policy version is a legitimate business choice (for example a re-run after closure) and the caller id is the correct identity."
+   }
+  },
+  "campaign_dedup_design": {
+   "type": "choice",
+   "instructions": "If duplicate open campaigns must be prevented for `campaign_owner`, which design fits the catalog?",
+   "criteria": {
+    "active_campaign_claim_owner": "A tenant + program + policy-version claim owner (like `name_claim_pattern`) that holds at most one open campaign per policy version and is released on closure.",
+    "deterministic_campaign_id": "Derive CampaignId deterministically from tenant, program, policy version and roster snapshot so a duplicate launch resolves to the same stream.",
+    "policy_owner_tracks_open_campaign": "The Policy owner records the open campaign for each version and refuses a second launch.",
+    "no_rule_needed": "Duplicate open campaigns are acceptable."
+   }
+  },
+  "access_review_campaign_duplicate_risk": {
+   "type": "noul",
+   "instructions": "Two open access review campaigns for the same system instance and population snapshot are a business error that needs an owner rule.",
+   "criteria": {
+    "true": "Overlapping campaigns over the same frozen population create conflicting reviewer decisions and a rule must refuse the second launch while one is open.",
+    "false": "Overlapping campaigns are allowed and only reporting needs to distinguish them."
+   }
+  },
+  "legal_hold_duplicate_risk": {
+   "type": "noul",
+   "instructions": "Two active legal holds on the same artifact for the same matter, created under different caller HoldIds, are a business error that needs an owner rule.",
+   "criteria": {
+    "true": "A duplicate hold hides which release actually frees the artifact and the catalog needs a per-artifact-and-matter uniqueness rule.",
+    "false": "Multiple holds on one artifact are legitimate (different matters) and release of each is independent, so no rule is needed."
+   }
+  },
+  "gap_d04_02_owner": {
+   "type": "choice",
+   "instructions": "Which design decides `gap_rules.D04-02` (imported owner matches a workforce person only by exact normalized email; otherwise an unresolved_owner reference that a person must resolve)?",
+   "criteria": {
+    "readiness_assessment_import": "The import that records a ReadinessAssessment decides the match at import time and records unresolved references inside the immutable assessment; a later resolution is a ReadinessGapPlan annotation.",
+    "new_owner_resolution": "A new owner (ImportedOwnerResolution keyed by tenant and import reference) records the exact-email match or the attributed manual resolution once.",
+    "person_owner": "The Person owner decides it when a membership correlation is recorded.",
+    "projection": "It is a read-time lookup with no write rule."
+   }
+  },
+  "gap_d09_09_owner": {
+   "type": "choice",
+   "instructions": "Which design decides `gap_rules.D09-09` (commitments and controls are linked many-to-many through versioned commitment-control links)?",
+   "criteria": {
+    "new_link_owner": "A new CommitmentControlLink owner keyed by tenant, commitment and control (like RiskTreatmentAssertion for risk and control) with a proposed/accepted/retired version line.",
+    "commitment_owner": "CommitmentDraft owns the list of linked control versions as part of its revisioned content.",
+    "control_owner": "ControlDraft owns the list of commitment versions it supports.",
+    "projection": "The links are derived from boundary or evaluation content and need no owner."
+   }
+  },
+  "d26_04_owner": {
+   "type": "choice",
+   "instructions": "Given `d26_04_rule` and `d26_source_excerpt`, which owner in `independence_owners` must refuse the acceptance when the partner evaluation is missing?",
+   "criteria": {
+    "ClientServiceIndependence": "Complete immutable nonattest-service history manifest, current service epoch and acceptance admission barrier. A changed service set advances epoch and makes old acceptance ineligible immediately through authoritative composed reads. Acceptance admission refuses an attest engagement when the firm provided any service classified impairing under the active ratified rule set within the 12 months before the examination period starts (M0-D26 D26-03; Jev 0.62, moderate)",
+    "ClientIndependenceDecision": "One immutable client independence preview and exact rule/service-epoch proofs; it never grants production acceptance. The evaluation records the rule-set version, every nonattest service considered, the result (compatible, conditionally_compatible or impaired), the partner evaluation reference when conditional, and the management acknowledgement reference (M0-D26 D26-06; Jev 0.55, moderate)",
+    "ServiceEngagementIndependence": "One engagement lifecycle, proposed and actual staff assignments, current content revision and accepted epoch bindings. Engagement revision and service epoch live in state; historical epoch streams cannot compete independently. An impaired independence evaluation result blocks acceptance of the attest engagement with no override (M0-D26 D26-07; Jev 0.81)",
+    "PartnerIndependenceDecision": "One personal partner evaluation bound to exact engagement revision, complete service epoch and ratified-rule digest."
+   }
+  },
+  "d26_04_two_step": {
+   "type": "noul",
+   "instructions": "The rule in `d26_04_rule` is naturally two decisions: one owner classifies the client as conditionally_compatible, and the engagement owner refuses acceptance until a partner evaluation referencing that classification exists.",
+   "criteria": {
+    "true": "The classification and the acceptance gate are made by different owners at different times, so two owners each enforce one half.",
+    "false": "One owner can decide both at the same write."
+   }
+  },
+  "d16_15_owner": {
+   "type": "choice",
+   "instructions": "Which owner in `retention_owners` decides `d16_15_rule` at write time?",
+   "criteria": {
+    "ArtifactDisposition": "Only an approved exact source with elapsed retention/no active holds or reliance may start execution; one outstanding attempt; disposed result is terminal and yields tombstone.",
+    "ArtifactEngagementHold": "One preservation hold cannot release before one year after its exact report issuance; report identity and release decision are immutable. Release also requires the attributed decision that the engagement record package was delivered into the attest team's audit software; until that delivery fact exists the hold blocks disposition and offboarding cannot complete (M0-D27 D27-05)",
+    "ArtifactLegalHold": "One legal hold lifecycle and one exact release after placement.",
+    "ClientExport": "Final export delivery requires archive counts matching frozen included/withheld inventory and a successful exact-manifest delivery for each required attest package."
+   }
+  }
+ }
+}

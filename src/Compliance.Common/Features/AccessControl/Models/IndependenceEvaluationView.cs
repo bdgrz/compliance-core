@@ -1,0 +1,10 @@
+using Cntryl.Portia;
+using Bdgrz.Compliance.Features.Retention.Commands;
+namespace Bdgrz.Compliance.Features.AccessControl.Models;
+
+/// <summary>A retained preview, never a production engagement acceptance or personal sign-off.</summary>
+public sealed record IndependenceEvaluationView(Uuid EvaluationId, Uuid ClientTenantId,
+    long RuleSetVersion, IndependenceRuleVersionView EvaluatedRules, DateOnly ExaminationPeriodStart, string DecisionCode, string? Outcome,
+    IReadOnlyList<NonattestServiceView> CompleteServiceHistory,
+    IReadOnlyList<Uuid> ConsideredServiceRecordIds, ActorReference Actor, DateTimeOffset RecordedAt,
+    bool ProductionAcceptanceBlocked);

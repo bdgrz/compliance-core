@@ -1,0 +1,13 @@
+using Cntryl.Portia;
+using Bdgrz.Compliance.Features.PolicyDistribution.Queries;
+using Bdgrz.Compliance.Features.Processes.Models;
+using Bdgrz.Compliance.Features.Retention.Models;
+namespace Bdgrz.Compliance.Features.AccessReviews.Models;
+
+/// <summary>
+///     The items a bulk decision would record and the items it cannot. A bulk decision must name
+///     exactly the eligible items and present <c>PreviewToken</c>.
+/// </summary>
+public sealed record BulkAccessDecisionPreview(Uuid CampaignId, long Revision, string Decision,
+    IReadOnlyList<AccessReviewItemView> Eligible, IReadOnlyList<BulkAccessDecisionRejection> Rejected,
+    string PreviewToken);

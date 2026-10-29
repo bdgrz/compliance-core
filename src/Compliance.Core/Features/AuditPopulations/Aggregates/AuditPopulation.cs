@@ -1,0 +1,151 @@
+using Bdgrz.Compliance.Hosting.Persistence;
+using Cntryl.Portia;
+using Bdgrz.Compliance.Features.AccessControl.Contracts;
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.AccessReviews.Contracts;
+using Bdgrz.Compliance.Features.Applications.Models;
+using Bdgrz.Compliance.Features.AuditPackages.Rules;
+using Bdgrz.Compliance.Features.AuditPopulations.Contracts;
+using Bdgrz.Compliance.Features.AuditPopulations.History;
+using Bdgrz.Compliance.Features.AuditPopulations.Models;
+using Bdgrz.Compliance.Features.AuditPopulations.Services;
+using Bdgrz.Compliance.Features.AuditorRequests.Models;
+using Bdgrz.Compliance.Features.Content.Services;
+using Bdgrz.Compliance.Features.Evaluations.Rules;
+using Bdgrz.Compliance.Features.Evidence.Models;
+using Bdgrz.Compliance.Features.NamedRecords.Contracts;
+using Bdgrz.Compliance.Features.NamedRecords.Processes;
+using Bdgrz.Compliance.Features.NativeOperations.History;
+using Bdgrz.Compliance.Features.NativeOperations.Models;
+using Bdgrz.Compliance.Features.NativeOperations.Services;
+using Bdgrz.Compliance.Features.Operations.History;
+using Bdgrz.Compliance.Features.Processes.Processes;
+using Bdgrz.Compliance.Features.Programs.Readers;
+using Bdgrz.Compliance.Features.Providers.History;
+using Bdgrz.Compliance.Features.SourceFacts.Models;
+using Bdgrz.Compliance.Features.SourceFacts.Rules;
+using Bdgrz.Compliance.Features.TechnologyInventory.Models;
+using Bdgrz.Compliance.Features.Tenants.Processes;
+using Bdgrz.Compliance.Features.UserIdentities.Models;
+using Bdgrz.Compliance.Features.UserIdentities.Processes;
+using Bdgrz.Compliance.Features.AuditPopulations.Events;
+using Bdgrz.Compliance.Features.Proofs.Models;
+namespace Bdgrz.Compliance.Features.AuditPopulations.Aggregates;
+
+/// <summary>Current bounded authority and one selected receipt; complete reconciliation lives outside this command owner.</summary>
+public sealed class AuditPopulation : Aggregate
+{
+    readonly Uuid _tenantId;
+    readonly Uuid _programId;
+    bool _emitting;
+    public AuditPopulation(Uuid tenantId, Uuid programId, Uuid populationId, Uuid selectedCommandId = default)
+        : base(populationId, new EventStreamAddress(tenantId.ToString(), "audit-populations", populationId.ToString()))
+    {
+        _tenantId = tenantId;
+        _programId = programId;
+        Acceptance = new NativeAcceptance(selectedCommandId);
+        On<AuditPopulationDefined>(fact => ObserveLegacy(fact, fact.State));
+        On<AuditPopulationDefinitionRevised>(fact => ObserveLegacy(fact, fact.State));
+        On<AuditPopulationGenerated>(fact => ObserveLegacy(fact, fact.State));
+        On<AuditPopulationFactRecorded>(fact => ObserveLegacy(fact, fact.State));
+        On<AuditPopulationRowClassified>(fact => ObserveLegacy(fact, fact.State));
+        On<AuditPopulationReconciled>(fact => ObserveLegacy(fact, fact.State));
+        On<AuditPopulationAmended>(fact => ObserveLegacy(fact, fact.State));
+        On<AuditPopulationFrozen>(fact => ObserveLegacy(fact, fact.State));
+        On<AuditPopulationExportGenerated>(fact => ObserveLegacy(fact, fact.State));
+        On<AuditPopulationDefinedV3>(ObserveCurrent);
+        On<AuditPopulationDefinedV4>(ObserveCurrent);
+        On<AuditPopulationDefinitionRevisedV2>(ObserveCurrent);
+        On<AuditPopulationGeneratedV3>(ObserveCurrent);
+        On<AuditPopulationGeneratedV4>(ObserveCurrent);
+        On<AuditPopulationFactRecordedV3>(ObserveCurrent);
+        On<AuditPopulationRowClassifiedV3>(ObserveCurrent);
+        On<AuditPopulationReconciledV3>(ObserveCurrent);
+        On<AuditPopulationAmendedV3>(ObserveCurrent);
+        On<AuditPopulationFrozenV3>(ObserveCurrent);
+        On<AuditPopulationExportGeneratedV3>(ObserveCurrent);
+    }
+    public Uuid TenantId => _tenantId;
+    public Uuid ProgramId => _programId;
+    public long Revision => Header?.Revision ?? 0;
+    public AuditPopulationHeader? Header { get; private set; }
+    public ImmutableContentRef? CurrentContent { get; private set; }
+    internal NativeAcceptance Acceptance { get; }
+    internal AuditPopulationReplayCut ReplayCut { get; } = new();
+
+    internal Result AppendGeneration(AuditPopulationHeader header, ImmutableContentRef body,
+        ImmutableContentRef command, ImmutableContentRef sources,
+        Bdgrz.Compliance.Features.NativeOperations.Models.OperationProvenance operation,
+        ImmutableContentRef first, ImmutableContentRef result, AuditPopulationPreparedCut cut) =>
+        Append(new AuditPopulationGeneratedV4(_tenantId, _programId, Id, header, body, command,
+            sources, operation, first, result), cut);
+
+    internal Result AppendDefinition(AuditPopulationHeader header, ImmutableContentRef body,
+        ImmutableContentRef command, ImmutableContentRef sources,
+        Bdgrz.Compliance.Features.NativeOperations.Models.OperationProvenance operation,
+        ImmutableContentRef first, ImmutableContentRef result, AuditPopulationPreparedCut cut) =>
+        Append(new AuditPopulationDefinedV4(_tenantId, _programId, Id, header, body, command,
+            sources, operation, first, result), cut);
+
+    internal Result Append(DomainEvent fact, AuditPopulationPreparedCut cut)
+    {
+        var verified = ReplayCut.Require(this);
+        if (!verified.IsSuccess)
+            return verified;
+        if (cut != AuditPopulationPreparedCut.Of(this) || fact is not IAuditPopulationStateFact current ||
+            current.CurrentContent.Schema != AuditPopulationContent.StateSchema ||
+            current.Header.Revision != Revision + 1 || DomainEventPayload.Size(fact) > DomainEventPayload.MaximumBytes)
+            return Result.Failure(new RequestError(RequestErrorKind.Conflict,
+                "The population append requires the exact finalized current content and target cut.", true));
+        if (fact is IAuditPopulationNativeFact native && (native.Operation is null ||
+            native.Operation.AuthoredIntentSha256 is not { Length: 64 } ||
+            native.Operation.LogicalId != Acceptance.SelectedLogicalId || Acceptance.SelectedFact is not null ||
+            !NativeOwnerHistory.IsOwnRoot(this, native.Operation, AuditPopulationContent.CommandKind(fact),
+                fact is AuditPopulationRowClassifiedV3 or AuditPopulationGeneratedV4 or AuditPopulationDefinedV4 ? null : (ulong)Revision) ||
+            native.FirstResponse is null || native.OperationResult?.Schema != "mutation-result-content.v1"))
+            return Result.Failure(new RequestError(RequestErrorKind.Conflict,
+                "The population decision requires its exact selected native operation and original Unit result."));
+        _emitting = true;
+        try
+        { RaiseEvent(fact); }
+        finally { _emitting = false; }
+        return Result.Success;
+    }
+
+    void ObserveLegacy(DomainEvent fact, AuditPopulationView state)
+    {
+        if (state is null)
+            throw new ImmutableContentIntegrityException("The occupied population fact has no complete original state.");
+        ObserveHeader(AuditPopulationContent.Header(state));
+        CurrentContent = null;
+    }
+    void ObserveCurrent<T>(T fact) where T : DomainEvent, IAuditPopulationStateFact
+    {
+        if (fact.TenantId != _tenantId || fact.ProgramId != _programId || fact.SubjectId != Id ||
+            fact.CurrentContent is null || fact.CurrentContent.Schema != AuditPopulationContent.StateSchema)
+            throw new ImmutableContentIntegrityException("The population fact differs from its exact owner or content schema.");
+        ObserveHeader(fact.Header);
+        CurrentContent = fact.CurrentContent;
+        if (fact is IAuditPopulationNativeFact native)
+        {
+            if (native.Operation is null || native.Operation.AuthoredIntentSha256 is not { Length: 64 } ||
+                native.Operation.LogicalId == Acceptance.SelectedLogicalId && Acceptance.SelectedFact is not null)
+                throw new ImmutableContentIntegrityException("The selected population operation repeats or omits its complete provenance.");
+            Acceptance.Observe(fact);
+        }
+    }
+    void ObserveHeader(AuditPopulationHeader header)
+    {
+        if (header is null || header.TenantId != _tenantId || header.ProgramId != _programId || header.PopulationId != Id ||
+            header.Revision != Revision + 1 || header.DefinitionId == Uuid.Empty || header.PeriodId == Uuid.Empty ||
+            header.ExaminationId == Uuid.Empty || header.CloseSnapshotId == Uuid.Empty || header.CloseSnapshotSha256 is not { Length: 64 } ||
+            header.ActorMemberId == Uuid.Empty || string.IsNullOrWhiteSpace(header.ActorDisplay) || header.UpdatedAt == default)
+            throw new ImmutableContentIntegrityException("The bounded population authority has another identity, chronology or revision.");
+        Header = header;
+    }
+    protected override void Apply(DomainEvent ev)
+    {
+        base.Apply(ev);
+        ReplayCut.Observe(ev, _emitting);
+    }
+}

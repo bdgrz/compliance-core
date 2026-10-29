@@ -1,0 +1,78 @@
+using Cntryl.Fitz.Extensions;
+using Cntryl.Portia;
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.AccessReviews.Services;
+using Bdgrz.Compliance.Features.Applications.Models;
+using Bdgrz.Compliance.Features.Applications.Services;
+using Bdgrz.Compliance.Features.AuditPackages.Models;
+using Bdgrz.Compliance.Features.AuditPackages.Rules;
+using Bdgrz.Compliance.Features.AuditorRequests.Models;
+using Bdgrz.Compliance.Features.Evidence.Models;
+using Bdgrz.Compliance.Features.Evidence.Rules;
+using Bdgrz.Compliance.Features.NamedRecords.Processes;
+using Bdgrz.Compliance.Features.NativeOperations.Models;
+using Bdgrz.Compliance.Features.Operations.Rules;
+using Bdgrz.Compliance.Features.Processes.Processes;
+using Bdgrz.Compliance.Features.Programs.Readers;
+using Bdgrz.Compliance.Features.Providers.History;
+using Bdgrz.Compliance.Features.SourceFacts.Models;
+using Bdgrz.Compliance.Features.SourceFacts.Rules;
+using Bdgrz.Compliance.Features.Tenants.Processes;
+using Bdgrz.Compliance.Features.UserIdentities.Models;
+using Bdgrz.Compliance.Features.UserIdentities.Processes;
+using Bdgrz.Compliance.Features.UserIdentities.Services;
+using Bdgrz.Compliance.Features.Work.Models;
+using Bdgrz.Compliance.Features.AccessReviews.Models;
+using Bdgrz.Compliance.Features.AccessReviews.Projections;
+using Bdgrz.Compliance.Features.AccessReviews.Queries;
+using Bdgrz.Compliance.Features.AccessReviews.Readers;
+using Bdgrz.Compliance.Features.Applications.Readers;
+namespace Bdgrz.Compliance.Features.AccessReviews.Handlers;
+
+/// <summary>Lists from the Fitz population directory once it has reached the source.</summary>
+public sealed class ListAccessPopulationsHandler(IAccessPopulationDirectoryReader directory,
+    IDomainEventReader events, IApplicationDirectoryReader applications,
+    RestrictedApplicationVisibility visibility)
+    : IRequestHandler<ListAccessPopulations, Page<AccessPopulationSummaryView>>
+{
+    public async ValueTask<Result<Page<AccessPopulationSummaryView>>> HandleAsync(
+        IRequestContext<ListAccessPopulations> context, CancellationToken ct)
+    {
+        var request = context.Request;
+        if (request.Limit is < 1 or > 200)
+            return AccessReviewOutcome.Failure<Page<AccessPopulationSummaryView>>(
+                RequestErrorKind.Validation, "The population list limit must be between 1 and 200.");
+        var instance = await applications.GetInstanceAsync(request.TenantId,
+            request.SystemInstanceId, ct).ConfigureAwait(false);
+        var userId = UserIdentityClaims.TryGetBdgrzSubject(context.Actor, out var subject)
+            ? subject
+            : Uuid.Empty;
+        if (instance is null || !await visibility.CanReadSystemInstanceAsync(request.TenantId,
+                userId, instance.ApplicationId, request.SystemInstanceId, ct)
+            .ConfigureAwait(false))
+            return AccessReviewOutcome.Failure<Page<AccessPopulationSummaryView>>(
+                RequestErrorKind.NotFound, "The populations were not found.");
+        var checkpoint = await directory.LoadCheckpointAsync(request.TenantId, ct).ConfigureAwait(false);
+        if (!await AccessReviewOutcome.IsCaughtUpAsync(events,
+                AccessReviewDirectorySchema.PopulationPattern(request.TenantId), checkpoint, ct)
+                .ConfigureAwait(false))
+            return AccessReviewOutcome.Failure<Page<AccessPopulationSummaryView>>(
+                RequestErrorKind.Conflict, "The population directory has not reached the source.", true);
+        Page<AccessPopulationSummaryView> page;
+        try
+        {
+            page = await directory.ListAsync(request.TenantId, request.SystemInstanceId,
+                request.Limit ?? 50, request.Cursor, ct).ConfigureAwait(false);
+        }
+        catch (KvDirectoryQueryException)
+        {
+            return AccessReviewOutcome.Failure<Page<AccessPopulationSummaryView>>(
+                RequestErrorKind.Validation, "The population cursor is invalid.");
+        }
+        return page.Items.Any(item => item.TenantId != request.TenantId ||
+                                      item.SystemInstanceId != request.SystemInstanceId)
+            ? AccessReviewOutcome.Failure<Page<AccessPopulationSummaryView>>(
+                RequestErrorKind.NotFound, "The populations were not found.")
+            : Result<Page<AccessPopulationSummaryView>>.Success(page);
+    }
+}

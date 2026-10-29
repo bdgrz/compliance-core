@@ -1,0 +1,770 @@
+using System.Net;
+using System.Net.Http.Json;
+using System.Text.Json.Serialization;
+using Cntryl.Portia;
+using Cntryl.Portia.Testing;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Hosting;
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.AccessControl.Rules;
+using Bdgrz.Compliance.Features.Applications.Models;
+using Bdgrz.Compliance.Features.AuditPackages.Models;
+using Bdgrz.Compliance.Features.AuditPackages.Rules;
+using Bdgrz.Compliance.Features.AuditPopulations.Models;
+using Bdgrz.Compliance.Features.AuditorRequests.Models;
+using Bdgrz.Compliance.Features.AuditorRequests.Processes;
+using Bdgrz.Compliance.Features.Boundaries.Rules;
+using Bdgrz.Compliance.Features.ControlMappings.History;
+using Bdgrz.Compliance.Features.Controls.Contracts;
+using Bdgrz.Compliance.Features.Evaluations.Rules;
+using Bdgrz.Compliance.Features.Evidence.Models;
+using Bdgrz.Compliance.Features.Evidence.Rules;
+using Bdgrz.Compliance.Features.Incidents.Rules;
+using Bdgrz.Compliance.Features.NamedRecords.Contracts;
+using Bdgrz.Compliance.Features.NamedRecords.Models;
+using Bdgrz.Compliance.Features.NamedRecords.Processes;
+using Bdgrz.Compliance.Features.NativeOperations.History;
+using Bdgrz.Compliance.Features.Operations.History;
+using Bdgrz.Compliance.Features.Operations.Models;
+using Bdgrz.Compliance.Features.Operations.Rules;
+using Bdgrz.Compliance.Features.Processes.Processes;
+using Bdgrz.Compliance.Features.Programs.Readers;
+using Bdgrz.Compliance.Features.Providers.History;
+using Bdgrz.Compliance.Features.Providers.Rules;
+using Bdgrz.Compliance.Features.Readiness.Models;
+using Bdgrz.Compliance.Features.Readiness.Rules;
+using Bdgrz.Compliance.Features.Remediation.Processes;
+using Bdgrz.Compliance.Features.Remediation.Rules;
+using Bdgrz.Compliance.Features.Responsibilities.Models;
+using Bdgrz.Compliance.Features.Responsibilities.Rules;
+using Bdgrz.Compliance.Features.Retention.Models;
+using Bdgrz.Compliance.Features.Risks.Models;
+using Bdgrz.Compliance.Features.SourceFacts.Models;
+using Bdgrz.Compliance.Features.SourceFacts.Rules;
+using Bdgrz.Compliance.Features.SystemDescription.Projections;
+using Bdgrz.Compliance.Features.TechnologyInventory.Models;
+using Bdgrz.Compliance.Features.Tenants.Models;
+using Bdgrz.Compliance.Features.Tenants.Processes;
+using Bdgrz.Compliance.Features.UserIdentities.Models;
+using Bdgrz.Compliance.Features.Work.Models;
+using Bdgrz.Compliance.Tests.Features.AccessReviews.Tests;
+using Bdgrz.Compliance.Tests.Features.Applications.Tests;
+using Bdgrz.Compliance.Tests.Features.AuditPackages.Tests;
+using Bdgrz.Compliance.Tests.Features.AuditPopulations.Tests;
+using Bdgrz.Compliance.Tests.Features.AuditorRequests.Tests;
+using Bdgrz.Compliance.Tests.Features.Boundaries.Tests;
+using Bdgrz.Compliance.Tests.Features.Changes.Tests;
+using Bdgrz.Compliance.Tests.Features.Commitments.Tests;
+using Bdgrz.Compliance.Tests.Features.ControlMappings.Tests;
+using Bdgrz.Compliance.Tests.Features.Controls.Tests;
+using Bdgrz.Compliance.Tests.Features.Criteria.Tests;
+using Bdgrz.Compliance.Tests.Features.Evaluations.Tests;
+using Bdgrz.Compliance.Tests.Features.Evidence.Tests;
+using Bdgrz.Compliance.Tests.Features.Examinations.Tests;
+using Bdgrz.Compliance.Tests.Features.Exports.Tests;
+using Bdgrz.Compliance.Tests.Features.Incidents.Tests;
+using Bdgrz.Compliance.Tests.Features.MethodologyTemplates.Tests;
+using Bdgrz.Compliance.Tests.Features.NativeOperations.Tests;
+using Bdgrz.Compliance.Tests.Features.Operations.Tests;
+using Bdgrz.Compliance.Tests.Features.Policies.Tests;
+using Bdgrz.Compliance.Tests.Features.PolicyDistribution.Tests;
+using Bdgrz.Compliance.Tests.Features.Programs.Tests;
+using Bdgrz.Compliance.Tests.Features.Providers.Tests;
+using Bdgrz.Compliance.Tests.Features.Readiness.Tests;
+using Bdgrz.Compliance.Tests.Features.Remediation.Tests;
+using Bdgrz.Compliance.Tests.Features.Retention.Tests;
+using Bdgrz.Compliance.Tests.Features.Risks.Tests;
+using Bdgrz.Compliance.Tests.Features.Snapshots.Tests;
+using Bdgrz.Compliance.Tests.Features.SourceFacts.Tests;
+using Bdgrz.Compliance.Tests.Features.SourceUse.Tests;
+using Bdgrz.Compliance.Tests.Features.SystemDescription.Tests;
+using Bdgrz.Compliance.Tests.Features.TechnologyInventory.Tests;
+using Bdgrz.Compliance.Tests.Features.Tenants.Tests;
+using Bdgrz.Compliance.Tests.Features.UserIdentities.Tests;
+using Bdgrz.Compliance.Tests.Features.Work.Tests;
+using Bdgrz.Compliance.Tests.Features.Workforce.Tests;
+using Bdgrz.Compliance.Features.AccessControl.Aggregates;
+using Bdgrz.Compliance.Features.AccessControl.Authorizers;
+using Bdgrz.Compliance.Features.Exports.Commands;
+using Bdgrz.Compliance.Features.Incidents.Commands;
+using Bdgrz.Compliance.Features.Retention.Commands;
+using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
+using Bdgrz.Compliance.Features.Tenants.Authorizers;
+using Bdgrz.Compliance.Features.UserIdentities.Aggregates;
+using Bdgrz.Compliance.Features.Work.Commands;
+using Bdgrz.Compliance.Tests;
+namespace Bdgrz.Compliance.Tests.Features.AccessControl.Tests;
+
+/// <summary>
+///     Exercises the RBAC domain's (Team + Role) MCP surface through a real Streamable HTTP client
+///     — this is what no test could verify before Portia 0.4's Mcp.Testing package: that the
+///     declared tools are actually reachable, and that a call genuinely dispatches through the
+///     same authorization pipeline as direct HTTP, not just that host startup didn't throw.
+///     <see cref="McpToolListExpectations.ExpectExactly" /> is exact-match only, so this list must
+///     be updated whenever a Program.cs <c>AddMcpTool</c> registration changes — that coupling is
+///     deliberate: it forces a visible review of the registered surface instead of registration
+///     drift going unnoticed.
+/// </summary>
+[Trait("Category", "WebIntegration")]
+public sealed class RbacMcpScenarioTests
+{
+    [Fact]
+    public async Task ShouldListToolsAndDenyCallGivenUnprivilegedMcpActor()
+    {
+        // Arrange
+        await using var factory = CreateFactory();
+        using var client = factory.CreateClient();
+
+        // Act
+        using var login = await client.PostAsJsonAsync(
+            "/api/v1/developer-user-sessions",
+            new RegistrationDocument("mcp-caller@example.com"),
+            CancellationToken.None);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, login.StatusCode);
+
+        await using var scenario = await McpScenario.ConnectAsync(client, new Uri(client.BaseAddress!, "/mcp"));
+
+        _ = await scenario.ListTools().ExpectExactly(
+            "bdgrz.boundary.create",
+            "bdgrz.boundary.draft.revise",
+            "bdgrz.boundary.draft.discard",
+            "bdgrz.boundary.successor.propose",
+            "bdgrz.boundary.get",
+            "bdgrz.boundary.program.list",
+            "bdgrz.boundary.version.get",
+            "bdgrz.boundary.version.effective.get",
+            "bdgrz.boundary.versions.list",
+            "bdgrz.boundary.decision.get",
+            "bdgrz.boundary.decisions.list",
+            "bdgrz.boundary.impact.preview",
+            "bdgrz.client-service.create",
+            "bdgrz.client-service.revise",
+            "bdgrz.client-service.retire",
+            "bdgrz.client-service.get",
+            "bdgrz.client-service.list",
+            "bdgrz.client-service.program.list",
+            "bdgrz.client-service.revisions.list",
+            "bdgrz.client-service.revision.get",
+            "bdgrz.application.declare",
+            "bdgrz.application.revise",
+            "bdgrz.application.get",
+            "bdgrz.application.list",
+            "bdgrz.application.revision.get",
+            "bdgrz.application.revision.list",
+            "bdgrz.application.relationship.record",
+            "bdgrz.application.relationship.remove",
+            "bdgrz.application.relationships.list",
+            "bdgrz.application.boundary_references.list",
+            "bdgrz.application.change.preview",
+            "bdgrz.application.retire",
+            "bdgrz.system_instance.retire",
+            "bdgrz.system_instance.access_review_scope.get",
+            "bdgrz.application.access_review_scopes.list",
+            "bdgrz.application_import.stage",
+            "bdgrz.application_import.get",
+            "bdgrz.application_import.rows.list",
+            "bdgrz.application_import.preview",
+            "bdgrz.application_import.missing.preview",
+            "bdgrz.application_import.omission.get",
+            "bdgrz.application_import.omission.preview",
+            "bdgrz.artifact_retention.get",
+            "bdgrz.artifact_retention.legal_holds.list",
+            "bdgrz.application_import.retention.get",
+            "bdgrz.application_import.progress",
+            "bdgrz.application_import.rejected_report",
+            "bdgrz.system_instance.declare",
+            "bdgrz.system_instance.get",
+            "bdgrz.system_instance.list",
+            "bdgrz.system_instance.boundary_references.list",
+            "bdgrz.program.create",
+            "bdgrz.criteria.editions.list",
+            "bdgrz.criteria.edition.get",
+            "bdgrz.criteria.entries.export",
+            "bdgrz.criteria.entries.list",
+            "bdgrz.criteria.entry.get",
+            "bdgrz.criteria.overlay.set",
+            "bdgrz.program.criteria.select",
+            "bdgrz.program.revise",
+            "bdgrz.program.get",
+            "bdgrz.program.list",
+            "bdgrz.program.revisions.list",
+            "bdgrz.program.revision.get",
+            "bdgrz.program.setup-work.get",
+            "bdgrz.control.draft.create",
+            "bdgrz.control.draft.revise",
+            "bdgrz.control.draft.discard",
+            "bdgrz.control.draft.get",
+            "bdgrz.control.draft.list",
+            "bdgrz.control.draft.revision.get",
+            "bdgrz.control.draft.revisions.list",
+            "bdgrz.control.version.get",
+            "bdgrz.control.version.current.get",
+            "bdgrz.control.version.effective.get",
+            "bdgrz.control.versions.list",
+            "bdgrz.control.decision.get",
+            "bdgrz.control.decisions.list",
+            "bdgrz.control_mapping.get",
+            "bdgrz.control_mappings.list",
+            "bdgrz.control_mappings.coverage.list",
+            "bdgrz.control.successor.propose",
+            "bdgrz.control.retirement.propose",
+            "bdgrz.control.impact.preview",
+            "bdgrz.criterion_applicability.get",
+            "bdgrz.criterion_applicability.list",
+            "bdgrz.commitment.draft.create",
+            "bdgrz.commitment.draft.revise",
+            "bdgrz.commitment.draft.get",
+            "bdgrz.commitment.draft.list",
+            "bdgrz.commitment.draft.revision.get",
+            "bdgrz.commitment.draft.revision.list",
+            "bdgrz.commitment.impact.preview",
+            "bdgrz.commitment.version.get",
+            "bdgrz.commitment.version.effective.get",
+            "bdgrz.commitment.version.list",
+            "bdgrz.commitment.decision.list",
+            "bdgrz.policy.draft.create",
+            "bdgrz.policy.draft.revise",
+            "bdgrz.policy.successor.propose",
+            "bdgrz.policy.draft.discard",
+            "bdgrz.policy.retirement.propose",
+            "bdgrz.policy.get",
+            "bdgrz.policies.list",
+            "bdgrz.policy.version.get",
+            "bdgrz.policy.version.effective.get",
+            "bdgrz.policy.versions.list",
+            "bdgrz.policy.decisions.list",
+            "bdgrz.policy.impact.preview",
+            "bdgrz.training_requirement.define",
+            "bdgrz.training_requirement.revise",
+            "bdgrz.training_requirement.get",
+            "bdgrz.training_requirements.list",
+            "bdgrz.policy_campaign.launch",
+            "bdgrz.training_campaign.launch",
+            "bdgrz.campaign.audience.reconcile",
+            "bdgrz.training_completion.record",
+            "bdgrz.campaign.close",
+            "bdgrz.campaign.get",
+            "bdgrz.campaigns.list",
+            "bdgrz.campaign.participants.list",
+            "bdgrz.campaign.amendments.list",
+            "bdgrz.risk.draft.create",
+            "bdgrz.risk.draft.revise",
+            "bdgrz.risk.draft.get",
+            "bdgrz.risk.draft.list",
+            "bdgrz.risk.draft.revision.get",
+            "bdgrz.risk.draft.revisions.list",
+            "bdgrz.risk.method.get",
+            "bdgrz.risk.method.version.get",
+            "bdgrz.risk.evaluation.get",
+            "bdgrz.risk.evaluation.history.list",
+            "bdgrz.risk.governance.get",
+            "bdgrz.snapshot.program_scope.freeze",
+            "bdgrz.snapshot.program_scope.amend",
+            "bdgrz.snapshot.get",
+            "bdgrz.snapshot.program_scope.verify",
+            "bdgrz.snapshot.program_scope.manifest_regenerate",
+            "bdgrz.snapshot.program.list",
+            "bdgrz.snapshot.workforce_roster.freeze",
+            "bdgrz.snapshot.workforce_roster.amend",
+            "bdgrz.snapshot.workforce_roster.get",
+            "bdgrz.snapshot.workforce_roster.as_of",
+            "bdgrz.snapshot.workforce_roster.list",
+            "bdgrz.snapshot.workforce_roster.manifest_regenerate",
+            "bdgrz.readiness.annotations.list",
+            "bdgrz.readiness.assessment.get",
+            "bdgrz.readiness.assessments.list",
+            "bdgrz.readiness.gaps.list",
+            "bdgrz.readiness.type_i_entry.list",
+            "bdgrz.control.operating_plan.propose",
+            "bdgrz.control.operating_plan.preview",
+            "bdgrz.control.operating_plan.get",
+            "bdgrz.control.operating_blockers.list",
+            "bdgrz.control.work.mine",
+            "bdgrz.control.occurrence.get",
+            "bdgrz.control.occurrences.list",
+            "bdgrz.control.evaluation.start",
+            "bdgrz.control.evaluation.step.record",
+            "bdgrz.control.evaluation.deviation.dispose",
+            "bdgrz.control.evaluation.get",
+            "bdgrz.control.evaluation.plan.define",
+            "bdgrz.control.evaluation.plan.version.get",
+            "bdgrz.control.evaluation.plan.versions.list",
+            "bdgrz.control.evaluations.list",
+            "bdgrz.finding.raise",
+            "bdgrz.evidence.artifact.metadata.get",
+            "bdgrz.evidence.redaction.get",
+            "bdgrz.evidence.redaction.prepare",
+            "bdgrz.evidence.request.cancel",
+            "bdgrz.evidence.request.get",
+            "bdgrz.evidence.request.open",
+            "bdgrz.evidence.requests.list",
+            "bdgrz.finding.get",
+            "bdgrz.findings.list",
+            "bdgrz.firm-staff.assignable.list",
+            "bdgrz.firm-staff.list",
+            "bdgrz.firm-staff.register",
+            "bdgrz.firm-staff.status.set",
+            "bdgrz.independence.client-rules.get",
+            "bdgrz.independence.evaluate",
+            "bdgrz.independence.history.get",
+            "bdgrz.independence.rules.list",
+            "bdgrz.independence.rules.revise",
+            "bdgrz.independence.service.record",
+            "bdgrz.access_population.open",
+            "bdgrz.access_population.facts.record",
+            "bdgrz.access_population.preview",
+            "bdgrz.access_population.get",
+            "bdgrz.access_population.list",
+            "bdgrz.access_review.coverage.get",
+            "bdgrz.access_population.principal.classify",
+            "bdgrz.access_population.principals.list",
+            "bdgrz.access_population.variance.get",
+            "bdgrz.access_expectation.propose",
+            "bdgrz.access_expectation.list",
+            "bdgrz.access_review.campaign.launch",
+            "bdgrz.access_review.campaign.get",
+            "bdgrz.access_review.campaign.list",
+            "bdgrz.access_review.decision.bulk_preview",
+            "bdgrz.access_review.remediation.change.record",
+            "bdgrz.access_review.remediation.verify",
+            "bdgrz.access_review.responsibility.reassign",
+            "bdgrz.work.list",
+            "bdgrz.work.get",
+            "bdgrz.work.claim",
+            "bdgrz.work.assign",
+            "bdgrz.work.delegate",
+            "bdgrz.work.escalate",
+            "bdgrz.work.reminders.list",
+            "bdgrz.work.digest.get",
+            "bdgrz.work.digest_preference.get",
+            "bdgrz.work.digest_preference.set",
+            "bdgrz.member.access.get",
+            "bdgrz.member.responsibilities.list",
+            "bdgrz.rbac.team.define",
+            "bdgrz.rbac.team.delete",
+            "bdgrz.rbac.team.get",
+            "bdgrz.rbac.team.list",
+            "bdgrz.rbac.team-member.assign",
+            "bdgrz.rbac.team-member.remove",
+            "bdgrz.rbac.team-member.list",
+            "bdgrz.rbac.role.define",
+            "bdgrz.rbac.role.delete",
+            "bdgrz.rbac.role.get",
+            "bdgrz.rbac.role.list",
+            "bdgrz.rbac.role-permission.assign",
+            "bdgrz.rbac.role-permission.remove",
+            "bdgrz.rbac.role-permission.list",
+            "bdgrz.rbac.team-role.assign",
+            "bdgrz.rbac.team-role.list", "bdgrz.rbac.team-role.remove",
+            "bdgrz.rbac.role-team.list",
+            "bdgrz.access-grant.issue",
+            "bdgrz.access-grant.revoke",
+            "bdgrz.access-grant.list",
+            "bdgrz.responsibilities.conflicts.preview",
+            "bdgrz.responsibilities.list",
+            "bdgrz.tenant-membership.list-mine",
+            "bdgrz.tenant.register",
+            "bdgrz.tenant.suspend",
+            "bdgrz.tenant.reactivate",
+            "bdgrz.tenant-member.invite",
+            "bdgrz.organization-member.invite",
+            "bdgrz.tenant-invitation.list",
+            "bdgrz.tenant.get",
+            "bdgrz.tenant.offboard",
+            "bdgrz.tenant.provisioning_status.get",
+            "bdgrz.provider.get",
+            "bdgrz.provider.record",
+            "bdgrz.provider.revision.get",
+            "bdgrz.provider.revisions.list",
+            "bdgrz.providers.list",
+            "bdgrz.provider.revise",
+            "bdgrz.provider.assurance_report.record",
+            "bdgrz.provider.assurance_report.revise",
+            "bdgrz.provider.assurance_reports.list",
+            "bdgrz.provider.reviews.list",
+            "bdgrz.provider.assurance_coverage.get",
+            "bdgrz.provider.change.preview",
+            "bdgrz.provider.coverage_gap.get",
+            "bdgrz.provider.coverage_gap.record",
+            "bdgrz.provider.coverage_gaps.list",
+            "bdgrz.inventory.component.record",
+            "bdgrz.inventory.component.revise",
+            "bdgrz.inventory.asset.boundary_references.list",
+            "bdgrz.inventory.component.boundary_references.list",
+            "bdgrz.inventory.component.get",
+            "bdgrz.inventory.component.list",
+            "bdgrz.inventory.component.revision.list",
+            "bdgrz.inventory.information_asset.record",
+            "bdgrz.inventory.information_asset.revise",
+            "bdgrz.inventory.information_asset.get",
+            "bdgrz.inventory.information_asset.list",
+            "bdgrz.inventory.information_asset.revision.list",
+            "bdgrz.inventory.location.get",
+            "bdgrz.inventory.location.list",
+            "bdgrz.inventory.location.record",
+            "bdgrz.inventory.location.revise",
+            "bdgrz.inventory.location.revision.list",
+            "bdgrz.inventory.operational_process.get",
+            "bdgrz.inventory.operational_process.list",
+            "bdgrz.inventory.operational_process.record",
+            "bdgrz.inventory.operational_process.revise",
+            "bdgrz.inventory.operational_process.revision.list",
+            "bdgrz.inventory.information_asset.change.preview",
+            "bdgrz.inventory.data_flow.record",
+            "bdgrz.inventory.data_flow.revise",
+            "bdgrz.inventory.data_flow.get",
+            "bdgrz.inventory.data_flow.list",
+            "bdgrz.inventory.data_flow.revision.list",
+            "bdgrz.platform.operator.grant",
+            "bdgrz.platform.operator.list",
+            "bdgrz.platform.operator.revoke",
+            "bdgrz.platform.tenant.list",
+            "bdgrz.service-engagement.acceptance-history.get",
+            "bdgrz.service-engagement.acceptance.get",
+            "bdgrz.service-engagement.amend",
+            "bdgrz.service-engagement.close",
+            "bdgrz.service-engagement.create",
+            "bdgrz.service-engagement.get",
+            "bdgrz.service-engagement.history.get",
+            "bdgrz.service-engagement.list",
+            "bdgrz.service-engagement.management-acknowledgements.get",
+            "bdgrz.service-engagement.staff.propose",
+            "bdgrz.service-engagement.staff.withdraw",
+            "bdgrz.tenant-member.list",
+            "bdgrz.tenant.member.get",
+            "bdgrz.tenant.member.reinstate",
+            "bdgrz.tenant.member.suspend",
+            "bdgrz.tenant.change-slug",
+            "bdgrz.tenant-slug.resolve-mine",
+            "bdgrz.workforce.person.record",
+            "bdgrz.workforce.person.revise", "bdgrz.workforce.work-relationship.get", "bdgrz.workforce.work-relationship.list", "bdgrz.workforce.work-relationship.record", "bdgrz.workforce.work-relationship.revise",
+            "bdgrz.workforce.person.get",
+            "bdgrz.workforce.person.list",
+            "bdgrz.workforce.observation.list",
+            "bdgrz.workforce.person.correlate-membership",
+            "bdgrz.workforce.reconciliation.list",
+            "bdgrz.workforce.source.record",
+            "bdgrz.workforce.source.get",
+            "bdgrz.workforce.source.list",
+            "bdgrz.workforce.source.preview",
+            "bdgrz.workforce.service-identity.record",
+            "bdgrz.workforce.service-identity.revise",
+            "bdgrz.workforce.service-identity.get",
+            "bdgrz.workforce.service-identity.list",
+            "bdgrz.application_import.omission.get",
+            "bdgrz.application_import.omission.preview",
+            "bdgrz.control.evaluation.plan.define",
+            "bdgrz.control.evaluation.plan.version.get",
+            "bdgrz.control.evaluation.plan.versions.list",
+            "bdgrz.evidence.artifact.metadata.get",
+            "bdgrz.evidence.redaction.get",
+            "bdgrz.evidence.redaction.prepare",
+            "bdgrz.firm-staff.assignable.list",
+            "bdgrz.firm-staff.list",
+            "bdgrz.firm-staff.register",
+            "bdgrz.firm-staff.status.set",
+            "bdgrz.independence.client-rules.get",
+            "bdgrz.independence.evaluate",
+            "bdgrz.independence.history.get",
+            "bdgrz.independence.rules.list",
+            "bdgrz.independence.rules.revise",
+            "bdgrz.independence.service.record",
+            "bdgrz.provider.coverage_gap.get",
+            "bdgrz.provider.coverage_gap.record",
+            "bdgrz.provider.coverage_gaps.list",
+            "bdgrz.service-engagement.acceptance-history.get",
+            "bdgrz.service-engagement.acceptance.get",
+            "bdgrz.service-engagement.actual-staff.revoke",
+            "bdgrz.service-engagement.amend",
+            "bdgrz.service-engagement.close",
+            "bdgrz.service-engagement.create",
+            "bdgrz.service-engagement.get",
+            "bdgrz.service-engagement.history.get",
+            "bdgrz.service-engagement.list",
+            "bdgrz.service-engagement.management-acknowledgements.get",
+            "bdgrz.service-engagement.staff.propose",
+            "bdgrz.service-engagement.staff.withdraw",
+            "bdgrz.tenant.offboard",
+            "bdgrz.advisor-collaboration.get-advisor-request",
+            "bdgrz.advisor-collaboration.get-shared-source",
+            "bdgrz.advisor-collaboration.list-advisor-feedback",
+            "bdgrz.advisor-collaboration.list-advisor-requests",
+            "bdgrz.advisor-collaboration.preview-advisor-handoff",
+            "bdgrz.application.relationship.list",
+            "bdgrz.application.relationship.remove-governed",
+            "bdgrz.examinations.amend-type-i-baseline",
+            "bdgrz.examinations.create-examination-engagement",
+            "bdgrz.examinations.freeze-type-i-baseline",
+            "bdgrz.examinations.get-examination-engagement",
+            "bdgrz.examinations.get-type-i-baseline",
+            "bdgrz.examinations.preview-type-i-baseline",
+            "bdgrz.examinations.revise-examination-engagement",
+            "bdgrz.tenant.guest-consultant.invite",
+            "bdgrz.work.digest.dispatch.status.get");
+        var tools = await scenario.ListTools();
+        Assert.True(Assert.Single(tools, tool =>
+            tool.Name == "bdgrz.access_review.responsibility.reassign").Idempotent);
+        Assert.True(Assert.Single(tools, tool => tool.Name == "bdgrz.workforce.source.get").ReadOnly);
+        Assert.True(Assert.Single(tools, tool => tool.Name == "bdgrz.workforce.source.list").ReadOnly);
+        Assert.True(Assert.Single(tools, tool => tool.Name == "bdgrz.workforce.source.preview").ReadOnly);
+        Assert.True(Assert.Single(tools, tool => tool.Name == "bdgrz.workforce.source.record").Idempotent);
+        Assert.DoesNotContain(tools, tool => tool.Name == "bdgrz.workforce.observation.resolve");
+        Assert.DoesNotContain(tools, tool => tool.Name == "bdgrz.workforce.source.reconcile");
+        Assert.True(Assert.Single(tools, tool =>
+            tool.Name == "bdgrz.application.revision.get").ReadOnly);
+        Assert.True(Assert.Single(tools, tool =>
+            tool.Name == "bdgrz.application.revision.list").ReadOnly);
+        Assert.True(Assert.Single(tools, tool =>
+            tool.Name == "bdgrz.application.boundary_references.list").ReadOnly);
+        Assert.True(Assert.Single(tools, tool =>
+            tool.Name == "bdgrz.application.change.preview").ReadOnly);
+        Assert.True(Assert.Single(tools, tool =>
+            tool.Name == "bdgrz.application.retire").Idempotent);
+        Assert.True(Assert.Single(tools, tool =>
+            tool.Name == "bdgrz.system_instance.retire").Idempotent);
+        Assert.True(Assert.Single(tools, tool =>
+            tool.Name == "bdgrz.system_instance.access_review_scope.get").ReadOnly);
+        Assert.DoesNotContain(tools, tool =>
+            tool.Name == "bdgrz.system_instance.access_review_scope.decide");
+        Assert.True(Assert.Single(tools, tool =>
+            tool.Name == "bdgrz.application_import.stage").Idempotent);
+        Assert.True(Assert.Single(tools, tool =>
+            tool.Name == "bdgrz.application_import.get").ReadOnly);
+        Assert.True(Assert.Single(tools, tool =>
+            tool.Name == "bdgrz.application_import.rows.list").ReadOnly);
+        Assert.True(Assert.Single(tools, tool =>
+            tool.Name == "bdgrz.application_import.preview").ReadOnly);
+        Assert.True(Assert.Single(tools, tool =>
+            tool.Name == "bdgrz.application_import.missing.preview").ReadOnly);
+        Assert.True(Assert.Single(tools, tool =>
+            tool.Name == "bdgrz.application_import.progress").ReadOnly);
+        foreach (var name in new[] { "bdgrz.artifact_retention.get", "bdgrz.artifact_retention.legal_holds.list", "bdgrz.application_import.retention.get" })
+            Assert.True(Assert.Single(tools, tool => tool.Name == name).ReadOnly);
+        Assert.DoesNotContain(tools, tool => tool.Name is "bdgrz.artifact_retention.basis.record" or
+            "bdgrz.artifact_retention.legal_hold.place" or "bdgrz.artifact_retention.legal_hold.release");
+        Assert.True(Assert.Single(tools, tool =>
+            tool.Name == "bdgrz.application_import.rejected_report").ReadOnly);
+        Assert.DoesNotContain(tools, tool => tool.Name is
+            "bdgrz.application_import.accept" or "bdgrz.application_import.cancel" or
+            "bdgrz.application_import.execute" or "bdgrz.application_import.apply_effect");
+        Assert.True(Assert.Single(tools, tool =>
+            tool.Name == "bdgrz.responsibilities.conflicts.preview").ReadOnly);
+        Assert.True(Assert.Single(tools, tool =>
+            tool.Name == "bdgrz.access-grant.issue").Idempotent);
+        var revokeGrant = Assert.Single(tools, tool => tool.Name == "bdgrz.access-grant.revoke");
+        Assert.True(revokeGrant.Destructive);
+        Assert.True(Assert.Single(tools, tool => tool.Name == "bdgrz.access-grant.list").ReadOnly);
+        Assert.True(Assert.Single(tools, tool =>
+            tool.Name == "bdgrz.responsibilities.list").ReadOnly);
+        Assert.True(Assert.Single(tools, tool =>
+            tool.Name == "bdgrz.member.responsibilities.list").ReadOnly);
+        Assert.True(Assert.Single(tools, tool =>
+            tool.Name == "bdgrz.tenant.member.get").ReadOnly);
+        Assert.True(Assert.Single(tools, tool =>
+            tool.Name == "bdgrz.tenant.member.reinstate").Idempotent);
+        Assert.True(Assert.Single(tools, tool =>
+            tool.Name == "bdgrz.tenant.member.suspend").Destructive);
+        foreach (var name in new[]
+                 {
+                     "bdgrz.control.draft.get", "bdgrz.control.draft.list",
+                     "bdgrz.control.draft.revision.get", "bdgrz.control.draft.revisions.list",
+                     "bdgrz.control.version.get", "bdgrz.control.version.current.get",
+                     "bdgrz.control.version.effective.get", "bdgrz.control.versions.list",
+                     "bdgrz.control.decision.get", "bdgrz.control.decisions.list",
+                     "bdgrz.control_mapping.get", "bdgrz.control_mappings.list",
+                     "bdgrz.control_mappings.coverage.list",
+                     "bdgrz.control.impact.preview", "bdgrz.criterion_applicability.get",
+                     "bdgrz.criterion_applicability.list",
+                 })
+            Assert.True(Assert.Single(tools, tool => tool.Name == name).ReadOnly);
+        Assert.Null(Assert.Single(tools, tool =>
+            tool.Name == "bdgrz.control.draft.create").ReadOnly);
+        Assert.True(Assert.Single(tools, tool =>
+            tool.Name == "bdgrz.control.draft.revise").Idempotent);
+        var discardControlDraft = Assert.Single(tools, tool =>
+            tool.Name == "bdgrz.control.draft.discard");
+        Assert.True(discardControlDraft.Destructive);
+        Assert.NotEqual(true, discardControlDraft.ReadOnly);
+        Assert.DoesNotContain(tools, tool => tool.Name is "bdgrz.control.review" or
+            "bdgrz.control.approve" or "bdgrz.control.retire" or
+            "bdgrz.control.proposal.withdraw" or "bdgrz.control.owner_person.designate" or
+            "bdgrz.criterion_applicability.propose_not_applicable" or
+            "bdgrz.criterion_applicability.review" or
+            "bdgrz.criterion_applicability.withdraw_not_applicable");
+        foreach (var name in new[]
+                 {
+                     "bdgrz.commitment.draft.get", "bdgrz.commitment.draft.list",
+                     "bdgrz.commitment.draft.revision.get", "bdgrz.commitment.draft.revision.list",
+                     "bdgrz.commitment.impact.preview", "bdgrz.commitment.version.get",
+                     "bdgrz.commitment.version.effective.get", "bdgrz.commitment.version.list",
+                     "bdgrz.commitment.decision.list",
+                 })
+            Assert.True(Assert.Single(tools, tool => tool.Name == name).ReadOnly);
+        Assert.DoesNotContain(tools, tool => tool.Name is "bdgrz.commitment.draft.review" or
+            "bdgrz.commitment.draft.approve");
+        Assert.DoesNotContain(tools, tool => tool.Name == "bdgrz.commitment.draft.review");
+        foreach (var name in new[]
+                 {
+                     "bdgrz.policy.get",
+                     "bdgrz.policies.list",
+                     "bdgrz.policy.version.get",
+                     "bdgrz.policy.version.effective.get",
+                     "bdgrz.policy.versions.list",
+                     "bdgrz.policy.decisions.list",
+                     "bdgrz.policy.impact.preview",
+                     "bdgrz.training_requirement.get",
+                     "bdgrz.training_requirements.list",
+                     "bdgrz.campaign.get",
+                     "bdgrz.campaigns.list",
+                     "bdgrz.campaign.participants.list",
+                     "bdgrz.campaign.amendments.list",
+                 })
+            Assert.True(Assert.Single(tools, tool => tool.Name == name).ReadOnly);
+        Assert.True(Assert.Single(tools, tool => tool.Name == "bdgrz.policy.draft.discard")
+            .Destructive);
+        foreach (var personal in new[]
+                 {
+                     "bdgrz.policy.review", "bdgrz.policy.approve",
+                     "bdgrz.policy.periodic_review.confirm", "bdgrz.policy.retire",
+                     "bdgrz.policy.acknowledge", "bdgrz.campaign.waiver.approve",
+                 })
+            Assert.DoesNotContain(tools, tool => tool.Name == personal);
+        Assert.NotEqual(true, Assert.Single(tools, tool =>
+            tool.Name == "bdgrz.commitment.draft.create").ReadOnly);
+        Assert.NotEqual(true, Assert.Single(tools, tool =>
+            tool.Name == "bdgrz.commitment.draft.revise").ReadOnly);
+        foreach (var name in new[]
+                 {
+                     "bdgrz.risk.draft.get", "bdgrz.risk.draft.list",
+                     "bdgrz.risk.draft.revision.get", "bdgrz.risk.draft.revisions.list",
+                     "bdgrz.risk.method.get", "bdgrz.risk.method.version.get",
+                     "bdgrz.risk.evaluation.get", "bdgrz.risk.evaluation.history.list",
+                     "bdgrz.risk.governance.get",
+                 })
+            Assert.True(Assert.Single(tools, tool => tool.Name == name).ReadOnly);
+        Assert.Null(Assert.Single(tools, tool =>
+            tool.Name == "bdgrz.risk.draft.create").ReadOnly);
+        foreach (var personalOrWrite in new[]
+                 {
+                     "bdgrz.risk.method.publish", "bdgrz.risk.assessment.record",
+                     "bdgrz.risk.treatment.choose", "bdgrz.risk.accept",
+                     "bdgrz.risk.owner.assign", "bdgrz.risk.control_treatment.propose",
+                     "bdgrz.risk.control_treatment.review", "bdgrz.risk.control_treatment.retire",
+                     "bdgrz.risk.reassessment.raise",
+                 })
+            Assert.DoesNotContain(tools, tool => tool.Name == personalOrWrite);
+        Assert.True(Assert.Single(tools, tool =>
+            tool.Name == "bdgrz.risk.draft.revise").Idempotent);
+        Assert.True(Assert.Single(tools, tool =>
+            tool.Name == "bdgrz.system_instance.boundary_references.list").ReadOnly);
+        foreach (var name in new[]
+                 {
+                     "bdgrz.criteria.editions.list", "bdgrz.criteria.edition.get",
+                     "bdgrz.criteria.entries.list", "bdgrz.criteria.entry.get",
+                 })
+            Assert.True(Assert.Single(tools, tool => tool.Name == name).ReadOnly);
+        var selectCriteria = Assert.Single(tools, tool =>
+            tool.Name == "bdgrz.program.criteria.select");
+        Assert.True(selectCriteria.Idempotent);
+        Assert.NotEqual(true, selectCriteria.ReadOnly);
+        Assert.True(Assert.Single(tools, tool =>
+            tool.Name == "bdgrz.snapshot.program_scope.manifest_regenerate").ReadOnly);
+        foreach (var personal in new[]
+                 {
+                     "bdgrz.access_population.accept", "bdgrz.access_population.exception.record",
+                     "bdgrz.access_expectation.approve", "bdgrz.access_expectation.exception.record",
+                     "bdgrz.access_review.decision.record", "bdgrz.access_review.decision.bulk_record",
+                     "bdgrz.access_review.remediation.exception.record",
+                     "bdgrz.access_review.campaign.complete",
+                 })
+            Assert.DoesNotContain(tools, tool => tool.Name == personal);
+        foreach (var name in new[]
+                 {
+                     "bdgrz.access_population.preview", "bdgrz.access_population.get",
+                     "bdgrz.access_population.list", "bdgrz.access_review.coverage.get",
+                     "bdgrz.access_population.principals.list", "bdgrz.access_population.variance.get",
+                     "bdgrz.access_expectation.list", "bdgrz.access_review.campaign.get",
+                     "bdgrz.access_review.campaign.list", "bdgrz.access_review.decision.bulk_preview",
+                 })
+            Assert.True(Assert.Single(tools, tool => tool.Name == name).ReadOnly);
+
+        var registration = new Dictionary<string, object?>
+        {
+            ["name"] = "MCP organization",
+            ["slug"] = $"mcp-tenant-{Guid.NewGuid():N}"[..24],
+        };
+        _ = await scenario.When("bdgrz.tenant.register", registration).ExpectSuccess();
+
+        // No permission grant exists for this actor, so a call must fail the same way a direct
+        // HTTP request would: TenantAccessAuthorizer denies before the handler ever runs.
+        _ = await scenario.When(
+                "bdgrz.rbac.team.list",
+                new Dictionary<string, object?> { ["tenant_id"] = Uuid.CreateVersion4().ToString() })
+            .ExpectFailure();
+        _ = await scenario.When("bdgrz.application.boundary_references.list",
+                new Dictionary<string, object?>
+                {
+                    ["tenant_id"] = Uuid.CreateVersion4().ToString(),
+                    ["application_id"] = Uuid.CreateVersion4().ToString(),
+                }).ExpectFailure();
+        _ = await scenario.When("bdgrz.application.change.preview",
+                new Dictionary<string, object?>
+                {
+                    ["tenant_id"] = Uuid.CreateVersion4().ToString(),
+                    ["application_id"] = Uuid.CreateVersion4().ToString(),
+                    ["expected_application_revision"] = 1,
+                    ["change_kind"] = "retire",
+                }).ExpectFailure();
+        _ = await scenario.When("bdgrz.system_instance.boundary_references.list",
+                new Dictionary<string, object?>
+                {
+                    ["tenant_id"] = Uuid.CreateVersion4().ToString(),
+                    ["application_id"] = Uuid.CreateVersion4().ToString(),
+                    ["system_instance_id"] = Uuid.CreateVersion4().ToString(),
+                }).ExpectFailure();
+    }
+
+    static WebApplicationFactory<Program> CreateFactory() =>
+        new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
+        {
+            builder.UseEnvironment("Development");
+            builder.UseSetting("BDGRZ_DEVELOPER_AUTH", "true");
+            builder.UseSetting("Fitz:Endpoint", "ws://127.0.0.1:4090/ws");
+            builder.UseSetting("Fitz:ApplicationName", "compliance-mcp-tests");
+            builder.ConfigureServices(services =>
+            {
+                var brokerHostedServices = services
+                    .Where(descriptor =>
+                        descriptor.ServiceType == typeof(IHostedService) &&
+                        descriptor.ImplementationType?.Name != "ComplianceReadinessLifecycle")
+                    .ToArray();
+                foreach (var descriptor in brokerHostedServices)
+                {
+                    services.Remove(descriptor);
+                }
+
+                services.RemoveAll<IEventStore>();
+                services.AddSingleton<IEventStore, InMemoryEventStore>();
+                services.RemoveAll<IPermissionAuthorizer>();
+                services.AddSingleton<IPermissionAuthorizer, DenyAllPermissionAuthorizer>();
+            });
+        });
+
+    sealed record RegistrationDocument(
+        [property: JsonPropertyName("email_address")] string EmailAddress);
+
+    sealed class DenyAllPermissionAuthorizer : IPermissionAuthorizer
+    {
+        public ValueTask<bool> IsAllowedAsync(
+            Uuid tenantId,
+            Uuid userId,
+            Uuid memberId,
+            string permission,
+            CancellationToken ct = default) => ValueTask.FromResult(false);
+    }
+}

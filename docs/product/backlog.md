@@ -4836,6 +4836,26 @@ Requirements:
 - Preserve provider identifiers, source boundaries, capture and observation
   times, pagination or continuation state, raw snapshot identity, normalized
   facts, tombstones or missing records, and collection result.
+- Treat provider callbacks and status lookups as observations that can be
+  incomplete, delayed, duplicated, reordered, or unfamiliar. Define freshness
+  and reconciliation behavior; expose missing transitions, unknown states,
+  partner-side manual work, and incomplete coverage so they cannot appear
+  complete. Provide an attributable refresh or reconciliation path where the
+  source supports it.
+- Before enabling partner-side writes, document how an ambiguous outcome is
+  recovered when the request may have succeeded but its response was lost.
+  Require an idempotency mechanism, a reliable outcome lookup, or visible
+  operator recovery before retrying; a blind retry must not duplicate an
+  external side effect.
+- Record the verified, versioned source contract and differences between test
+  and production, including authentication and callback verification, stable
+  identifiers, status transitions, validation and product rules, limits,
+  retry behavior, and representative test outcomes. Keep unconfirmed behavior
+  explicit and include any unavailable production-test coverage in launch
+  readiness.
+- Identify partner-managed customer or operator communications and manual
+  partner steps, their expected timing, and the local status or follow-up when
+  those steps are delayed or cannot be observed.
 - Preview new, changed, missing, duplicate, ambiguous, and rejected records and
   require an attributable reconciliation decision before changing governed inventory.
 - Require ordinary evidence, population, or inventory review before automated
@@ -4869,7 +4889,10 @@ Acceptance criteria:
 - Successful collections enter the same inventory, population, evidence, reconciliation, and review workflows as equivalent manual submissions.
 - The complete user-operated workflow remains usable when the connector runtime is unavailable, disabled, or has never been deployed.
 - Permission denial, rate limiting, partial results, stale data, and provider removal are visible and cannot appear complete.
+- Missing, late, duplicate, out-of-order, and unknown partner signals are detectable and have a documented reconciliation path; partner-side manual steps and communications that affect progress are visible with ownership and expected timing.
 - Repeated collection does not create duplicate evidence for the same source snapshot.
+- Any partner-side write can be safely resumed after an ambiguous timeout or lost response through idempotency, a reliable lookup, or explicit operator recovery; retrying cannot silently duplicate the side effect.
+- The verified source contract, test/prod differences, and unconfirmed behavior are recorded before launch, with representative cases exercised in available test environments and unavailable production verification stated.
 - Missing source records require explicit tombstone or reconciliation treatment and cannot silently delete, merge, retire, or de-scope governed records.
 - Each current inventory or population view explains its source coverage, last complete observation, outstanding conflicts, and accountable owner.
 - Users never see provider credential material after configuration.

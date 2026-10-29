@@ -1,0 +1,22 @@
+using Cntryl.Portia;
+using Bdgrz.Compliance.Features.AccessControl.Contracts;
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.AttestRecords.Commands;
+using Bdgrz.Compliance.Features.Criteria.Models;
+using Bdgrz.Compliance.Features.Evidence.Models;
+using Bdgrz.Compliance.Features.Programs.Contracts;
+namespace Bdgrz.Compliance.Features.Criteria.Commands;
+
+/// <summary>
+///     Creates or revises one tenant-supplied licensed criteria entry. <paramref name="CommandId" /> is the logical
+///     operation identity, so an exact retry returns the original registration; <paramref name="ExpectedRevision" />
+///     is the overlay's own revision and is 0 for the first set.
+/// </summary>
+[Discriminator("bdgrz.criteria.overlay.set", 2)]
+public sealed record SetCriteriaTextOverlay(Uuid CommandId, Uuid TenantId, Uuid EditionId, string Identifier,
+    long ExpectedRevision, CriteriaTextOverlayContent Content)
+    : IRequest<CriteriaTextOverlayRegistration>, IProgramManagementRequest, IClientManagementMutationRequest,
+        IIdentifiedRequest, ICallable
+{
+    Uuid IIdentifiedRequest.RequestId => CommandId;
+}

@@ -1,0 +1,27 @@
+using Cntryl.Portia;
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.AuditPackages.Rules;
+using Bdgrz.Compliance.Features.Controls.Models;
+using Bdgrz.Compliance.Features.Controls.Services;
+using Bdgrz.Compliance.Features.NativeOperations.Models;
+using Bdgrz.Compliance.Features.Processes.Processes;
+using Bdgrz.Compliance.Features.SourceFacts.Models;
+using Bdgrz.Compliance.Features.Tenants.Processes;
+using Bdgrz.Compliance.Features.Controls.Commands;
+namespace Bdgrz.Compliance.Features.Controls.Handlers;
+
+public sealed class DiscardControlDraftHandler(ControlOperations operations, ControlDraftDiscardReleaseGate releaseGate)
+    : IRequestHandler<DiscardControlDraft>
+{
+    public ValueTask<Result> HandleAsync(IRequestContext<DiscardControlDraft> context, CancellationToken ct)
+    {
+        var request = context.Request;
+        return operations.ExecuteUnitAsync(context, request.TenantId, request.ProgramId, request.ControlId,
+            request.CommandId, nameof(DiscardControlDraft), request.ExpectedRevision,
+            (snapshot, actor, at, token) => ValueTask.FromResult(releaseGate.IsEnabled ? Result.Success
+                : Result.Failure(new RequestError(RequestErrorKind.Conflict,
+                    "Control draft discard is unavailable until all active event readers are upgraded."))),
+            (rules, actor, at) => ControlOperations.Outcome(rules.Discard(request.ProgramId, request.ExpectedRevision,
+                request.Rationale, actor.MemberId, actor.Display, at)), null, null, ct);
+    }
+}

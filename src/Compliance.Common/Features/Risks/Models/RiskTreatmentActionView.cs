@@ -1,0 +1,30 @@
+using Cntryl.Portia;
+using Bdgrz.Compliance.Features.AccessControl.Commands;
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.Evidence.Models;
+using Bdgrz.Compliance.Features.NamedRecords.Contracts;
+using Bdgrz.Compliance.Features.PolicyDistribution.Queries;
+using Bdgrz.Compliance.Features.Work.Commands;
+using Bdgrz.Compliance.Features.Workforce.Models;
+namespace Bdgrz.Compliance.Features.Risks.Models;
+
+/// <summary>
+///     Accountable work that carries out a risk's treatment: what state it should reach, by when,
+///     who is accountable, and what evidence will show it. <c>Status</c> is <c>open</c>,
+///     <c>completion_submitted</c>, <c>completed</c>, or <c>cancelled</c>; only an independently
+///     accepted completion whose evidence requests are fulfilled makes the action
+///     <c>completed</c>. <c>Overdue</c> is evaluated at read time.
+/// </summary>
+public sealed record RiskTreatmentActionView(Uuid ActionId, Uuid RiskId, string Title,
+    string TargetState, string ExpectedEvidence, DateOnly DueOn, Uuid AccountableMemberId,
+    IReadOnlyList<Uuid> EvidenceRequestIds, string Status, bool Overdue,
+    ActorReference CreatedBy, DateTimeOffset CreatedAt,
+    IReadOnlyList<RiskTreatmentActionCompletionView> Completions)
+{
+    /// <summary>The revision of the action owner; the expected revision of the next write on the action.</summary>
+    public long Revision { get; init; }
+
+    public string? CancellationRationale { get; init; }
+    public ActorReference? CancelledBy { get; init; }
+    public DateTimeOffset? CancelledAt { get; init; }
+}

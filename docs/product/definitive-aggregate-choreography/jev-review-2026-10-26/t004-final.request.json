@@ -1,0 +1,127 @@
+{
+  "model": "jev-1.14.0",
+  "state": {
+    "flow": {
+      "id": "T004",
+      "kind": "reaction_or_regular_process_stage",
+      "status": "SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED",
+      "sourceOwner": "ServiceEngagementIndependence",
+      "logicalPrerequisiteFacts": [
+        "ServiceEngagementAcceptanceRequested",
+        "ServiceEngagementStaffAssignmentRequested"
+      ],
+      "logicalPrerequisiteRule": "selected applicable typed variant/set; see required proof contract",
+      "physicalRootEvents": [
+        "ServiceEngagementAcceptanceRequested",
+        "ServiceEngagementStaffAssignmentRequested"
+      ],
+      "originalAdmissionKinds": [
+        "ServiceEngagementAcceptanceRequested",
+        "ServiceEngagementStaffAssignmentRequested"
+      ],
+      "receiverCommand": "AcquireEngagementServiceEpoch",
+      "targetOwner": "ClientServiceIndependence",
+      "targetAuthorityKind": "business_aggregate",
+      "emittedSemanticFacts": [
+        "EngagementServiceEpochAuthorized"
+      ],
+      "emittedEventContracts": [],
+      "currentRegisteredRootTypes": [
+        "EngagementAcceptanceReactor"
+      ],
+      "plannedRootRole": null,
+      "processes": [
+        "EngagementAcceptanceProcess"
+      ],
+      "requiredProofContract": {
+        "canonicalCarrier": "original admitted root reference + required independently verified typed stage/terminal proof sets",
+        "admissionReferenceFactKinds": [
+          "ServiceEngagementAcceptanceRequested",
+          "ServiceEngagementStaffAssignmentRequested"
+        ],
+        "admissionReferenceRole": "original business admission/first-owner fact, distinct from subscription trigger and intermediate/terminal prerequisites",
+        "verification": {
+          "admission": "AdmissionReference is a locator only. Resolve and independently verify actual typed admitted fact, exact owner/tenant/program, saved metadata and physical/hydrated cut, original root/episode/actor/intent and immutable content.",
+          "stageAndTerminal": "Materialize each required typed stage/terminal proof from actual committed facts and full required immutable selections; prove complete grant/fence/provisional/child sets, not counts/checkpoints. Guard sets are not weakened by carrier choice.",
+          "earlyReplay": "If native receipt binding does not cover a supplied/interpreted command term, bind that term through the required actual typed proof/body before early replay. Exact receipt cannot bypass proof manifest or source tuple guards.",
+          "resultAndRecovery": "Current public authorization precedes replay. Original result/receipt and unknown-append recovery stay exact; requested cancellation propagates. Unavailable proof/content remains transient; corruption/changed intent is permanent; no inferred absence/release.",
+          "implementationStatus": "Installed pointer/handler/process presence is not proof of conformance. Field/wire migration and required behavioral tests remain separately verifiable implementation work."
+        },
+        "requiredTypedStageProofSets": [
+          {
+            "factKinds": [
+              "ServiceEngagementAcceptanceRequested",
+              "ServiceEngagementStaffAssignmentRequested"
+            ],
+            "role": "exact original first-owner admission selected by operation kind; one applicable variant, not both",
+            "quantifier": "exactly_one_selected_variant",
+            "condition": "acceptance_or_staff_assignment",
+            "requiredVerification": "Resolve actual saved source-owner fact, exact engagement/tenant, original root/episode/personal actor/frozen intent and complete immutable manifest; pin complete service epoch and exact latest service fact EventId/revision before authorize or commit."
+          }
+        ],
+        "pinnedSourceRequirements": "Every exact source owner/event/content revision and complete immutable manifest required by intendedProofGate remains mandatory; no absent optional source is fabricated.",
+        "proofGate": "Exactly one actual applicable acceptance/staff-assignment root and its complete frozen service manifest. On the client service owner, verify current epoch equals pinned revision and current latest service EventId equals the exact frozen source fact, then atomically hold that epoch through acceptance/assignment completion or fenced abort. Any service advance before hold rejects; later service writes are blocked until settlement.",
+        "requiredLogicalPrerequisiteProofs": "Exactly one applicable typed request variant is independently resolved as actual committed source fact; never require both. Exact immutable root and full source manifest determine the epoch; current client service owner independently checks latest event ID/revision and atomically grants the hold."
+      },
+      "effectIdentity": {
+        "decisionId": "EFFECT_IDENTITIES",
+        "existingOccupiedV1": "Preserve exact source-event UUID namespace, current EffectIdentity UTF8 delimiter bytes, process/receiver text, each frozen target selector and exact episode. Retain root-derived IDs when adding required proofs; no source-event substitution or silent selector rewrite.",
+        "newAlgorithmPolicy": "Any new length-prefixed algorithm is explicitly versioned and uses injective field encoding with explicit process/effect/target/episode domains and compatibility/fencing. It never changes occupied v1 IDs.",
+        "implementationQualification": "Selected policy only; individual new algorithm/wire implementation must prove exact vectors and domain/compatibility fences before emission.",
+        "newArtifactAlgorithm": {
+          "version": "effect-identity-v2",
+          "namespace": "actual committed EvidenceArtifactDownloadRequested.Metadata.EventId",
+          "fieldsInOrder": [
+            "effectKind (canonical receiver command kind)",
+            "canonical target EventStreamAddress",
+            "episode (exact selected value, initial when absent)"
+          ],
+          "bytes": "UTF8(effect-identity:v2) followed by each field UTF8 bytes prefixed by its unsigned32-bit big-endian byte length; UUIDv5 over these exact name bytes and the actual source EventId namespace.",
+          "rule": "Use only for this new unoccupied process identity domain; occupied v1 algorithms/target-key selections remain unchanged. Implementation must provide fixed byte/UUID vectors before activation."
+        }
+      },
+      "recoveryContract": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
+      "implementationConformance": "NOT_ASSERTED; source evidence only",
+      "sourceOwners": [
+        "ServiceEngagementIndependence"
+      ],
+      "canonicalTargetOwner": "ClientServiceIndependence"
+    },
+    "source": [
+      "EngagementAcceptanceVerifier.LoadAsync resolves the source reference against actual authoritative ServiceEngagementIndependence owner operation and requires exact expected fact EventId/aggregate version plus matching immutable intent/root/engagement/actor/manifest.",
+      "EngagementUseVerifier routes only acceptance/staff assignment to EngagementAcceptanceVerifier. It resolves exactly one actual applicable request variant and its complete service-use manifest.",
+      "AcquireEngagementServiceEpochHandler loads ClientServiceIndependence and pins requirement.ResourceRevision plus exact ContentEvent.EventId to current owner.Epoch and LatestService.Metadata.EventId; mismatch rejects.",
+      "ClientServiceIndependence.AuthorizeEngagementEpoch atomically invokes source-use reservation append guard and writes EngagementServiceEpochAuthorized at current epoch; later service writes are blocked while use held.",
+      "Process authorizes only after all canonical frozen source uses are acquired and complete grant set proven; permanent practice commitments never released; temporary holds settle only after target acceptance/rejection terminal."
+    ],
+    "boundary": "Review only the logical T004 acquire stage; do not conflate it with later process authorization or commitment stages."
+  },
+  "questions": {
+    "flow": {
+      "type": "choice",
+      "instructions": "Given this full typed source and race behavior, is T004 a defect, coherent, or unresolved?",
+      "criteria": {
+        "coherent": "Actual applicable root and frozen manifest are verified; current epoch/latest source fact are checked and the target owner atomically holds them before process commit.",
+        "defect": "A specific stale-source race, authority bypass or wrong ordering remains.",
+        "unresolved": "A material source or requirement remains unproved."
+      }
+    },
+    "proof": {
+      "type": "noul",
+      "instructions": "Does T004 identify the exact source variant and actual current-epoch fence needed for this acquire effect?",
+      "criteria": {
+        "true": "Exactly one applicable root, complete immutable source manifest, current epoch and latest actual source EventId are bound.",
+        "false": "One of those is missing."
+      }
+    },
+    "counterfactual": {
+      "type": "choice",
+      "instructions": "If a service record commits after the business request is admitted but before T004 runs, what is required?",
+      "criteria": {
+        "reject_before_grant": "Acquire observes an advanced epoch/latest service EventId and refuses, causing process abort/fencing before irreversible authorization.",
+        "grant_old_epoch": "It can grant the old frozen epoch despite a later source service.",
+        "depends": "Insufficient."
+      }
+    }
+  }
+}

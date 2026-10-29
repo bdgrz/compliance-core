@@ -1,0 +1,24 @@
+using Cntryl.Portia;
+using Bdgrz.Compliance.Features.NamedRecords.Contracts;
+using Bdgrz.Compliance.Features.AccessControl.Events;
+using Bdgrz.Compliance.Features.AccessReviews.Contracts;
+using Bdgrz.Compliance.Features.AccessReviews.Models;
+using Bdgrz.Compliance.Features.NativeOperations.Models;
+using Bdgrz.Compliance.Features.Processes.Models;
+using Bdgrz.Compliance.Features.Proofs.Models;
+using Bdgrz.Compliance.Features.Retention.Models;
+namespace Bdgrz.Compliance.Features.AccessReviews.Commands;
+
+/// <summary>
+///     Publishes every provisional decision of the batch as one fact. <paramref name="ItemDecisionProofs" /> is the
+///     complete set of <see cref="BulkItemDecisionProof" /> (exact item event and position); the receiver verifies
+///     each against the item streams and refuses a partial or changed set.
+/// </summary>
+[Discriminator("bdgrz.access-review-decision-batch.publish", 1)]
+public sealed record PublishAccessReviewDecisionBatch(Uuid CommandId, NativeFactReference Source,
+    EventStreamAddress Target, Uuid OperationId, long Generation, long? ExpectedRevision,
+    ImmutableContentRef Intent, Uuid DecisionBatchId, ImmutableContentRef ItemDecisionProofs)
+    : IRequest<ReceiverOutcome>, IAccessReviewReceiver, IIdentifiedRequest
+{
+    Uuid IIdentifiedRequest.RequestId => CommandId;
+}

@@ -1,0 +1,871 @@
+{
+  "model": "jev-1.14.0",
+  "state": {
+    "review": "Adversarial review of the selected definitive business/authority owner boundary. Treat the supplied row as a proposal; do not infer omitted policy.",
+    "pass": "boundary_adversarial",
+    "owners": [
+      {
+        "owner": "OperationalProcess",
+        "classification": "business_aggregate",
+        "declaredIdentity": "processId",
+        "selectedIdentity": "processId",
+        "invariant": "Independent governed operational process lifecycle.",
+        "boundaryDecision": "selected_split",
+        "mustPreserve": "Process content/version is checked against exact prior revision; inactive names may be reused only when policy permits.",
+        "technicalStateToSeparate": [
+          "name-claim execution retry/cursor metadata"
+        ],
+        "commands": [
+          {
+            "command": "RecordOperationalProcess",
+            "logicalIdentity": {
+              "field": "OperationalProcessId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "exact immutable creation retry"
+            },
+            "fields": [
+              "OperationalProcessId:Uuid",
+              "TenantId:Uuid",
+              "Name:string",
+              "Purpose:string",
+              "OwnerPersonId:Uuid",
+              "Inputs:string?",
+              "Outputs:string?"
+            ]
+          },
+          {
+            "command": "ReviseOperationalProcess",
+            "logicalIdentity": {
+              "field": "CommandId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "one immutable authored operation"
+            },
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "OperationalProcessId:Uuid",
+              "ExpectedRevision:long",
+              "Name:string",
+              "Purpose:string",
+              "OwnerPersonId:Uuid",
+              "Lifecycle:string",
+              "Inputs:string?",
+              "Outputs:string?"
+            ]
+          },
+          {
+            "command": "CancelOperationalProcessChange",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "RecordId:Uuid",
+              "ChangeOperationId:Uuid",
+              "ExpectedRevision:long",
+              "DefiniteFailureProof:ImmutableContentRef"
+            ]
+          }
+        ],
+        "events": [
+          {
+            "event": "OperationalProcessChangeAccepted",
+            "discriminator": "bdgrz.operational-process.operational-process-change-accepted",
+            "version": 1
+          },
+          {
+            "event": "OperationalProcessChangeCanceled",
+            "discriminator": "bdgrz.operational-process.operational-process-change-canceled",
+            "version": 1
+          },
+          {
+            "event": "OperationalProcessRevisionRecorded",
+            "discriminator": "bdgrz.inventory.operational_process.revision_recorded",
+            "version": 1
+          }
+        ],
+        "choreography": [
+          {
+            "reactor": "OperationalProcessNameClaimReactor",
+            "sourceOwner": "OperationalProcess",
+            "targetOwner": "OperationalProcessNameClaim",
+            "command": "ClaimOperationalProcessName"
+          },
+          {
+            "reactor": "OperationalProcessChangeApplicationReactor",
+            "sourceOwner": "OperationalProcessNameClaim",
+            "targetOwner": "OperationalProcess",
+            "command": "ApplyOperationalProcessChange"
+          },
+          {
+            "reactor": "OperationalProcessOldNameReleaseReactor",
+            "sourceOwner": "OperationalProcess",
+            "targetOwner": "OperationalProcessNameClaim",
+            "command": "ReleaseOperationalProcessName"
+          }
+        ]
+      },
+      {
+        "owner": "OperationalProcessNameClaim",
+        "classification": "business_identity_or_uniqueness_authority",
+        "declaredIdentity": "(tenantId, normalizedName)",
+        "selectedIdentity": "(tenantId, normalizedName)",
+        "invariant": "Authoritative active normalized-name uniqueness.",
+        "boundaryDecision": "selected_split",
+        "mustPreserve": "Process content/version is checked against exact prior revision; inactive names may be reused only when policy permits.",
+        "technicalStateToSeparate": [
+          "name-claim execution retry/cursor metadata"
+        ],
+        "commands": [],
+        "events": [
+          {
+            "event": "OperationalProcessNameClaimed",
+            "discriminator": "bdgrz.operational-process-name-claim.operational-process-name-claimed",
+            "version": 1
+          },
+          {
+            "event": "OperationalProcessNameReleased",
+            "discriminator": "bdgrz.operational-process-name-claim.operational-process-name-released",
+            "version": 1
+          }
+        ],
+        "choreography": [
+          {
+            "reactor": "OperationalProcessNameClaimReactor",
+            "sourceOwner": "OperationalProcess",
+            "targetOwner": "OperationalProcessNameClaim",
+            "command": "ClaimOperationalProcessName"
+          },
+          {
+            "reactor": "OperationalProcessChangeApplicationReactor",
+            "sourceOwner": "OperationalProcessNameClaim",
+            "targetOwner": "OperationalProcess",
+            "command": "ApplyOperationalProcessChange"
+          },
+          {
+            "reactor": "OperationalProcessOldNameReleaseReactor",
+            "sourceOwner": "OperationalProcess",
+            "targetOwner": "OperationalProcessNameClaim",
+            "command": "ReleaseOperationalProcessName"
+          }
+        ]
+      },
+      {
+        "owner": "PartnerIndependenceDecision",
+        "classification": "immutable_business_artifact_or_decision",
+        "declaredIdentity": "tenant / evaluationId",
+        "selectedIdentity": "tenant / evaluationId",
+        "invariant": "One personal partner evaluation bound to exact engagement revision, complete service epoch and ratified-rule digest.",
+        "boundaryDecision": "selected_split",
+        "mustPreserve": "Never reactivate a permanent independence commitment from reevaluation; acceptance binds exact service, draft, acknowledgement and ratified-rule proofs.",
+        "technicalStateToSeparate": [],
+        "commands": [],
+        "events": [
+          {
+            "event": "PartnerIndependenceEvaluationRecorded",
+            "discriminator": "bdgrz.service-engagement.partner-evaluation.recorded",
+            "version": 1
+          }
+        ],
+        "choreography": [
+          {
+            "reactor": "PartnerIndependenceDecisionMaterializationReactor",
+            "sourceOwner": "ServiceEngagementIndependence",
+            "targetOwner": "PartnerIndependenceDecision",
+            "command": "MaterializePartnerIndependenceDecision"
+          }
+        ]
+      },
+      {
+        "owner": "Person",
+        "classification": "business_aggregate",
+        "declaredIdentity": "Create uses context.RequestId as personId; initial normalized intent retry safe. Revisions/correlation use expectedRevision but exact successful revision retry becomes stale.",
+        "selectedIdentity": "Tenant + caller PersonId; PersonId is exact immutable creation logical identity. Revise/correlation use caller CommandId and person revision.",
+        "invariant": "One recorded workforce person has immutable creation identity, revisioned contact content and at most one current platform membership correlation.",
+        "boundaryDecision": "retain",
+        "boundaryRationale": "Fields/correlation at a revision must be coherent; another person and roster do not need same stream. This is primarily governed record consistency rather than a cross-member invariant.",
+        "commands": [
+          {
+            "command": "CorrelatePersonMembership",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "PersonId:Uuid",
+              "ExpectedRevision:long",
+              "UserId:Uuid?"
+            ]
+          },
+          {
+            "command": "RecordPerson",
+            "logicalIdentity": "PersonId",
+            "fields": [
+              "PersonId:Uuid",
+              "TenantId:Uuid",
+              "DisplayName:string",
+              "WorkEmail:string?",
+              "PersonalContact:PersonalContactDetails?"
+            ]
+          },
+          {
+            "command": "RevisePerson",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "PersonId:Uuid",
+              "ExpectedRevision:long",
+              "DisplayName:string",
+              "WorkEmail:string?",
+              "PersonalContact:PersonalContactDetails?"
+            ]
+          }
+        ],
+        "events": [
+          {
+            "event": "PersonMembershipCorrelated"
+          },
+          {
+            "event": "PersonRecorded"
+          },
+          {
+            "event": "PersonRevised"
+          }
+        ],
+        "choreography": []
+      },
+      {
+        "owner": "PlatformOperatorRoster",
+        "classification": "business_governor",
+        "declaredIdentity": "Fixed platform roster ID; expected physical position serializes last-operator decisions. Seed idempotent; grant/revoke uses current set only and does not identify old operation.",
+        "selectedIdentity": "Existing fixed platform roster ID bc279ad5-e9ae-5033-a174-4d1350ce2b07. The complete current UserId/AssignmentId episode set is one authority; selected RosterId must match the fixed roster and mutations use CommandId.",
+        "invariant": "One atomic platform roster decision binds every exact active operator identity and assignment episode, current acting-operator eligibility, and the last-operator prohibition. Keep all current identities in verified immutable authority with native OCC; no count-only substitute, membership cap, or separate PlatformOperatorGrant root.",
+        "boundaryDecision": "retain",
+        "boundaryRationale": "Splitting active operator grants without authoritative count/hold can allow simultaneous last removals or revoked actor grants. Current collection is justified by this rule.",
+        "commands": [
+          {
+            "command": "GrantPlatformOperator",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "UserId:Uuid",
+              "Reason:string",
+              "CommandId:Uuid",
+              "ExpectedRevision:ulong"
+            ]
+          },
+          {
+            "command": "RevokePlatformOperator",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "UserId:Uuid",
+              "Reason:string",
+              "CommandId:Uuid",
+              "ExpectedRevision:ulong",
+              "AssignmentId:Uuid"
+            ]
+          },
+          {
+            "command": "SeedPlatformOperatorRoster",
+            "logicalIdentity": "RosterId",
+            "fields": [
+              "RosterId:Uuid",
+              "UserIds:Uuid[]"
+            ]
+          }
+        ],
+        "events": [
+          {
+            "event": "PlatformOperatorGranted"
+          },
+          {
+            "event": "PlatformOperatorRevoked"
+          },
+          {
+            "event": "PlatformOperatorRosterSeeded"
+          }
+        ],
+        "choreography": []
+      },
+      {
+        "owner": "Policy",
+        "classification": "business_aggregate",
+        "declaredIdentity": "tenant/policies/policyId derived from tenant+program+normalized identifier; Create binds stable createRequestId+initial content. Mutations use logical Revision/currentVersion; Review and periodic review do not dedup decision identities, so same retry can append again.",
+        "selectedIdentity": "Tenant / policies / PolicyId; supplied PolicyId must equal the unchanged tenant/program/normalized-identifier UUIDv5. Selected mutations use CommandId and exact policy/content/version/review bindings.",
+        "invariant": "A policy has one pending revision/retirement; immutable approved version intervals form one successor line, activation needs the latest accepted independent review and independent approval, and retired/approved content cannot be edited.",
+        "boundaryDecision": "narrow",
+        "boundaryRationale": "Draft authors, accepted review and approval must stay atomic to avoid approving changed or self-reviewed terms. Old immutable versions and full decisions need not be active command state; preserve current predecessor plus exact decision target, and project history.",
+        "commands": [
+          {
+            "command": "ApprovePolicy",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "PolicyId:Uuid",
+              "ExpectedRevision:long",
+              "AcceptedReviewDecisionId:Uuid",
+              "EffectiveFrom:DateOnly",
+              "Major:bool",
+              "Rationale:string",
+              "ImpactDigest:string?",
+              "SeparationOfDutiesWaiverId:Uuid?"
+            ]
+          },
+          {
+            "command": "ApprovePolicyRetirement",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "PolicyId:Uuid",
+              "ExpectedRevision:long",
+              "AcceptedReviewDecisionId:Uuid",
+              "Rationale:string",
+              "SeparationOfDutiesWaiverId:Uuid?"
+            ]
+          },
+          {
+            "command": "ConfirmPolicyReview",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "PolicyId:Uuid",
+              "ExpectedVersion:long",
+              "Rationale:string"
+            ]
+          },
+          {
+            "command": "CreatePolicyDraft",
+            "logicalIdentity": "PolicyId",
+            "fields": [
+              "PolicyId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "Identifier:string",
+              "Content:PolicyContent"
+            ]
+          },
+          {
+            "command": "DiscardPolicyDraft",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "PolicyId:Uuid",
+              "ExpectedRevision:long",
+              "Rationale:string"
+            ]
+          },
+          {
+            "command": "ProposePolicyRetirement",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "PolicyId:Uuid",
+              "ExpectedVersion:long",
+              "EffectiveUntil:DateOnly",
+              "Rationale:string"
+            ]
+          },
+          {
+            "command": "ProposePolicySuccessor",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "PolicyId:Uuid",
+              "ExpectedVersion:long",
+              "Content:PolicyContent"
+            ]
+          },
+          {
+            "command": "ReviewPolicyDraft",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "PolicyId:Uuid",
+              "ExpectedRevision:long",
+              "Outcome:string",
+              "Rationale:string",
+              "SeparationOfDutiesWaiverId:Uuid?"
+            ]
+          },
+          {
+            "command": "RevisePolicyDraft",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "PolicyId:Uuid",
+              "ExpectedRevision:long",
+              "Content:PolicyContent"
+            ]
+          }
+        ],
+        "events": [
+          {
+            "event": "PolicyApproved"
+          },
+          {
+            "event": "PolicyDraftCreated"
+          },
+          {
+            "event": "PolicyDraftDiscarded"
+          },
+          {
+            "event": "PolicyDraftRevised"
+          },
+          {
+            "event": "PolicyPeriodicReviewConfirmed"
+          },
+          {
+            "event": "PolicyRetired"
+          },
+          {
+            "event": "PolicyRetirementProposed"
+          },
+          {
+            "event": "PolicyReviewed"
+          }
+        ],
+        "choreography": []
+      },
+      {
+        "owner": "PolicyCampaignParticipant",
+        "classification": "business_aggregate",
+        "declaredIdentity": "(campaignId, personId)",
+        "selectedIdentity": "(campaignId, personId)",
+        "invariant": "Independent acknowledgement, completion, exception and delivery status.",
+        "boundaryDecision": "selected_split",
+        "mustPreserve": "Every result binds the accepted campaign version/hash and included participant; after close, no result accepted.",
+        "technicalStateToSeparate": [],
+        "commands": [],
+        "events": [
+          {
+            "event": "CampaignWaiverApproved",
+            "discriminator": "bdgrz.policy_campaign.waiver.approved",
+            "version": 1
+          },
+          {
+            "event": "PolicyAcknowledgementRecorded",
+            "discriminator": "bdgrz.policy.acknowledgement.recorded",
+            "version": 1
+          },
+          {
+            "event": "PolicyCampaignParticipantCampaignClosureUseAuthorized",
+            "discriminator": "bdgrz.policy-campaign-participant.policy-campaign-participant-campaign-closure-use-authorized",
+            "version": 1
+          },
+          {
+            "event": "PolicyCampaignParticipantCampaignClosureUseSettled",
+            "discriminator": "bdgrz.policy-campaign-participant.policy-campaign-participant-campaign-closure-use-settled",
+            "version": 1
+          },
+          {
+            "event": "TrainingCompletionRecorded",
+            "discriminator": "bdgrz.training_completion.recorded",
+            "version": 1
+          }
+        ],
+        "choreography": [
+          {
+            "reactor": "CampaignClosurePolicyCampaignParticipantAuthorizationReactor",
+            "sourceOwner": "PolicyDistributionCampaign",
+            "targetOwner": "PolicyCampaignParticipant",
+            "command": "AuthorizePolicyCampaignParticipantCampaignClosureUse"
+          },
+          {
+            "reactor": "CampaignClosurePolicyCampaignParticipantSettlementReactor",
+            "sourceOwner": "PolicyDistributionCampaign",
+            "targetOwner": "PolicyCampaignParticipant",
+            "command": "SettlePolicyCampaignParticipantCampaignClosureUse"
+          },
+          {
+            "reactor": "PolicyParticipantResultReactor",
+            "sourceOwner": "PolicyDistributionCampaign",
+            "targetOwner": "PolicyCampaignParticipant",
+            "command": "ApplyPolicyParticipantResult"
+          }
+        ]
+      },
+      {
+        "owner": "PolicyDistributionCampaign",
+        "classification": "business_aggregate",
+        "declaredIdentity": "campaignId",
+        "selectedIdentity": "campaignId",
+        "invariant": "Immutable policy/material version and frozen audience plus closure generation.",
+        "boundaryDecision": "selected_split",
+        "mustPreserve": "Every result binds the accepted campaign version/hash and included participant; after close, no result accepted.",
+        "technicalStateToSeparate": [],
+        "commands": [
+          {
+            "command": "AcknowledgePolicy",
+            "logicalIdentity": {
+              "field": "CommandId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "one immutable authored operation"
+            },
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "CampaignId:Uuid",
+              "PersonId:Uuid",
+              "PolicyVersion:long",
+              "ContentSha256:string",
+              "AcknowledgementText:string",
+              "ExpectedCampaignRevision:long"
+            ]
+          },
+          {
+            "command": "ApproveCampaignWaiver",
+            "logicalIdentity": {
+              "field": "CommandId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "one immutable authored operation"
+            },
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "CampaignId:Uuid",
+              "PersonId:Uuid",
+              "Reason:string",
+              "ExpiresOn:DateOnly",
+              "ExpectedCampaignRevision:long"
+            ]
+          },
+          {
+            "command": "CloseCampaign",
+            "logicalIdentity": {
+              "field": "CommandId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "one immutable authored operation"
+            },
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "CampaignId:Uuid",
+              "Rationale:string",
+              "ExpectedRevision:long"
+            ]
+          },
+          {
+            "command": "LaunchPolicyCampaign",
+            "logicalIdentity": {
+              "field": "CampaignId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "exact immutable creation retry"
+            },
+            "fields": [
+              "CampaignId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "PolicyId:Uuid",
+              "PolicyVersion:long",
+              "RosterSnapshotId:Uuid",
+              "DueOn:DateOnly",
+              "Instructions:string?"
+            ]
+          },
+          {
+            "command": "LaunchTrainingCampaign",
+            "logicalIdentity": {
+              "field": "CampaignId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "exact immutable creation retry"
+            },
+            "fields": [
+              "CampaignId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "RequirementId:Uuid",
+              "RequirementVersion:long",
+              "RosterSnapshotId:Uuid",
+              "DueOn:DateOnly",
+              "Instructions:string?"
+            ]
+          },
+          {
+            "command": "ReconcileCampaignAudience",
+            "logicalIdentity": {
+              "field": "CommandId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "one immutable authored operation"
+            },
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "CampaignId:Uuid",
+              "RosterSnapshotId:Uuid",
+              "ExpectedRevision:long"
+            ]
+          },
+          {
+            "command": "RecordTrainingCompletion",
+            "logicalIdentity": {
+              "field": "CommandId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "one immutable authored operation"
+            },
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "CampaignId:Uuid",
+              "PersonId:Uuid",
+              "RequirementVersion:long",
+              "CompletedOn:DateOnly",
+              "Source:string",
+              "EvidenceReference:string",
+              "ExpectedCampaignRevision:long"
+            ]
+          },
+          {
+            "command": "AbortPolicyCampaignClosure",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "OperationId:Uuid",
+              "Target:EventStreamAddress",
+              "Generation:long",
+              "ExpectedRevision:long",
+              "FailureProof:ImmutableContentRef"
+            ]
+          }
+        ],
+        "events": [
+          {
+            "event": "PolicyCampaignAudienceAmended",
+            "discriminator": "bdgrz.policy_campaign.audience.amended",
+            "version": 1
+          },
+          {
+            "event": "PolicyCampaignAudienceFrozen",
+            "discriminator": "bdgrz.policy_campaign.audience.frozen",
+            "version": 1
+          },
+          {
+            "event": "PolicyCampaignClosed",
+            "discriminator": "bdgrz.policy_campaign.closed",
+            "version": 1
+          },
+          {
+            "event": "PolicyCampaignClosureAccepted",
+            "discriminator": "bdgrz.policy-distribution-campaign.policy-campaign-closure-accepted",
+            "version": 1
+          },
+          {
+            "event": "PolicyCampaignClosureCanceled",
+            "discriminator": "bdgrz.policy-distribution-campaign.policy-campaign-closure-canceled",
+            "version": 1
+          },
+          {
+            "event": "PolicyCampaignLaunched",
+            "discriminator": "bdgrz.policy_campaign.launched",
+            "version": 1
+          },
+          {
+            "event": "PolicyParticipantResultAdmitted",
+            "discriminator": "bdgrz.policy-distribution-campaign.policy-participant-result-admitted",
+            "version": 1
+          }
+        ],
+        "choreography": [
+          {
+            "reactor": "CampaignClosureReactor",
+            "sourceOwner": "PolicyDistributionCampaign",
+            "targetOwner": "PolicyDistributionCampaign",
+            "command": "CompletePolicyCampaignClosure"
+          },
+          {
+            "reactor": "CampaignClosurePolicyCampaignParticipantAuthorizationReactor",
+            "sourceOwner": "PolicyDistributionCampaign",
+            "targetOwner": "PolicyCampaignParticipant",
+            "command": "AuthorizePolicyCampaignParticipantCampaignClosureUse"
+          },
+          {
+            "reactor": "CampaignClosurePolicyCampaignParticipantSettlementReactor",
+            "sourceOwner": "PolicyDistributionCampaign",
+            "targetOwner": "PolicyCampaignParticipant",
+            "command": "SettlePolicyCampaignParticipantCampaignClosureUse"
+          },
+          {
+            "reactor": "PolicyParticipantResultReactor",
+            "sourceOwner": "PolicyDistributionCampaign",
+            "targetOwner": "PolicyCampaignParticipant",
+            "command": "ApplyPolicyParticipantResult"
+          }
+        ]
+      }
+    ]
+  },
+  "questions": {
+    "item_0": {
+      "type": "choice",
+      "instructions": "What is the strongest review conclusion for the proposed boundary of OperationalProcess?",
+      "criteria": {
+        "selected_boundary_supported": "No concrete alternative preserves a stated invariant better; the selected boundary has clear inclusion and exclusion reasoning.",
+        "boundary_should_change": "A specific omitted or combined owner is required by a stated invariant, identity, lifecycle, contention, or recovery rule.",
+        "evidence_insufficient": "Identity, source authority, lifecycle, contention, or concurrency evidence is missing or contradictory."
+      }
+    },
+    "item_0_evidence": {
+      "type": "noul",
+      "instructions": "Does this row provide enough explicit evidence to settle OperationalProcess's boundary without adding an unstated business policy?",
+      "criteria": {
+        "true": "Identity, invariant, lifecycle and exclusions are explicit enough to decide.",
+        "false": "A material boundary assumption is missing, contradictory or unsupported."
+      }
+    },
+    "item_1": {
+      "type": "choice",
+      "instructions": "What is the strongest review conclusion for the proposed boundary of OperationalProcessNameClaim?",
+      "criteria": {
+        "selected_boundary_supported": "No concrete alternative preserves a stated invariant better; the selected boundary has clear inclusion and exclusion reasoning.",
+        "boundary_should_change": "A specific omitted or combined owner is required by a stated invariant, identity, lifecycle, contention, or recovery rule.",
+        "evidence_insufficient": "Identity, source authority, lifecycle, contention, or concurrency evidence is missing or contradictory."
+      }
+    },
+    "item_1_evidence": {
+      "type": "noul",
+      "instructions": "Does this row provide enough explicit evidence to settle OperationalProcessNameClaim's boundary without adding an unstated business policy?",
+      "criteria": {
+        "true": "Identity, invariant, lifecycle and exclusions are explicit enough to decide.",
+        "false": "A material boundary assumption is missing, contradictory or unsupported."
+      }
+    },
+    "item_2": {
+      "type": "choice",
+      "instructions": "What is the strongest review conclusion for the proposed boundary of PartnerIndependenceDecision?",
+      "criteria": {
+        "selected_boundary_supported": "No concrete alternative preserves a stated invariant better; the selected boundary has clear inclusion and exclusion reasoning.",
+        "boundary_should_change": "A specific omitted or combined owner is required by a stated invariant, identity, lifecycle, contention, or recovery rule.",
+        "evidence_insufficient": "Identity, source authority, lifecycle, contention, or concurrency evidence is missing or contradictory."
+      }
+    },
+    "item_2_evidence": {
+      "type": "noul",
+      "instructions": "Does this row provide enough explicit evidence to settle PartnerIndependenceDecision's boundary without adding an unstated business policy?",
+      "criteria": {
+        "true": "Identity, invariant, lifecycle and exclusions are explicit enough to decide.",
+        "false": "A material boundary assumption is missing, contradictory or unsupported."
+      }
+    },
+    "item_3": {
+      "type": "choice",
+      "instructions": "What is the strongest review conclusion for the proposed boundary of Person?",
+      "criteria": {
+        "selected_boundary_supported": "No concrete alternative preserves a stated invariant better; the selected boundary has clear inclusion and exclusion reasoning.",
+        "boundary_should_change": "A specific omitted or combined owner is required by a stated invariant, identity, lifecycle, contention, or recovery rule.",
+        "evidence_insufficient": "Identity, source authority, lifecycle, contention, or concurrency evidence is missing or contradictory."
+      }
+    },
+    "item_3_evidence": {
+      "type": "noul",
+      "instructions": "Does this row provide enough explicit evidence to settle Person's boundary without adding an unstated business policy?",
+      "criteria": {
+        "true": "Identity, invariant, lifecycle and exclusions are explicit enough to decide.",
+        "false": "A material boundary assumption is missing, contradictory or unsupported."
+      }
+    },
+    "item_4": {
+      "type": "choice",
+      "instructions": "What is the strongest review conclusion for the proposed boundary of PlatformOperatorRoster?",
+      "criteria": {
+        "selected_boundary_supported": "No concrete alternative preserves a stated invariant better; the selected boundary has clear inclusion and exclusion reasoning.",
+        "boundary_should_change": "A specific omitted or combined owner is required by a stated invariant, identity, lifecycle, contention, or recovery rule.",
+        "evidence_insufficient": "Identity, source authority, lifecycle, contention, or concurrency evidence is missing or contradictory."
+      }
+    },
+    "item_4_evidence": {
+      "type": "noul",
+      "instructions": "Does this row provide enough explicit evidence to settle PlatformOperatorRoster's boundary without adding an unstated business policy?",
+      "criteria": {
+        "true": "Identity, invariant, lifecycle and exclusions are explicit enough to decide.",
+        "false": "A material boundary assumption is missing, contradictory or unsupported."
+      }
+    },
+    "item_5": {
+      "type": "choice",
+      "instructions": "What is the strongest review conclusion for the proposed boundary of Policy?",
+      "criteria": {
+        "selected_boundary_supported": "No concrete alternative preserves a stated invariant better; the selected boundary has clear inclusion and exclusion reasoning.",
+        "boundary_should_change": "A specific omitted or combined owner is required by a stated invariant, identity, lifecycle, contention, or recovery rule.",
+        "evidence_insufficient": "Identity, source authority, lifecycle, contention, or concurrency evidence is missing or contradictory."
+      }
+    },
+    "item_5_evidence": {
+      "type": "noul",
+      "instructions": "Does this row provide enough explicit evidence to settle Policy's boundary without adding an unstated business policy?",
+      "criteria": {
+        "true": "Identity, invariant, lifecycle and exclusions are explicit enough to decide.",
+        "false": "A material boundary assumption is missing, contradictory or unsupported."
+      }
+    },
+    "item_6": {
+      "type": "choice",
+      "instructions": "What is the strongest review conclusion for the proposed boundary of PolicyCampaignParticipant?",
+      "criteria": {
+        "selected_boundary_supported": "No concrete alternative preserves a stated invariant better; the selected boundary has clear inclusion and exclusion reasoning.",
+        "boundary_should_change": "A specific omitted or combined owner is required by a stated invariant, identity, lifecycle, contention, or recovery rule.",
+        "evidence_insufficient": "Identity, source authority, lifecycle, contention, or concurrency evidence is missing or contradictory."
+      }
+    },
+    "item_6_evidence": {
+      "type": "noul",
+      "instructions": "Does this row provide enough explicit evidence to settle PolicyCampaignParticipant's boundary without adding an unstated business policy?",
+      "criteria": {
+        "true": "Identity, invariant, lifecycle and exclusions are explicit enough to decide.",
+        "false": "A material boundary assumption is missing, contradictory or unsupported."
+      }
+    },
+    "item_7": {
+      "type": "choice",
+      "instructions": "What is the strongest review conclusion for the proposed boundary of PolicyDistributionCampaign?",
+      "criteria": {
+        "selected_boundary_supported": "No concrete alternative preserves a stated invariant better; the selected boundary has clear inclusion and exclusion reasoning.",
+        "boundary_should_change": "A specific omitted or combined owner is required by a stated invariant, identity, lifecycle, contention, or recovery rule.",
+        "evidence_insufficient": "Identity, source authority, lifecycle, contention, or concurrency evidence is missing or contradictory."
+      }
+    },
+    "item_7_evidence": {
+      "type": "noul",
+      "instructions": "Does this row provide enough explicit evidence to settle PolicyDistributionCampaign's boundary without adding an unstated business policy?",
+      "criteria": {
+        "true": "Identity, invariant, lifecycle and exclusions are explicit enough to decide.",
+        "false": "A material boundary assumption is missing, contradictory or unsupported."
+      }
+    }
+  }
+}

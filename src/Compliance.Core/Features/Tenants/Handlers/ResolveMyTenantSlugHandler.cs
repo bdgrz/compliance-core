@@ -1,0 +1,69 @@
+using Cntryl.Portia;
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.Applications.Models;
+using Bdgrz.Compliance.Features.AuditPackages.Models;
+using Bdgrz.Compliance.Features.AuditPackages.Rules;
+using Bdgrz.Compliance.Features.Boundaries.Rules;
+using Bdgrz.Compliance.Features.Commitments.Rules;
+using Bdgrz.Compliance.Features.Controls.Rules;
+using Bdgrz.Compliance.Features.Evaluations.Rules;
+using Bdgrz.Compliance.Features.Evidence.Models;
+using Bdgrz.Compliance.Features.Evidence.Rules;
+using Bdgrz.Compliance.Features.Incidents.Rules;
+using Bdgrz.Compliance.Features.NamedRecords.Contracts;
+using Bdgrz.Compliance.Features.NamedRecords.Models;
+using Bdgrz.Compliance.Features.NamedRecords.Processes;
+using Bdgrz.Compliance.Features.Operations.Models;
+using Bdgrz.Compliance.Features.Operations.Rules;
+using Bdgrz.Compliance.Features.Processes.Processes;
+using Bdgrz.Compliance.Features.Programs.Readers;
+using Bdgrz.Compliance.Features.Providers.Models;
+using Bdgrz.Compliance.Features.Providers.Rules;
+using Bdgrz.Compliance.Features.SourceFacts.Models;
+using Bdgrz.Compliance.Features.SourceFacts.Rules;
+using Bdgrz.Compliance.Features.Tenants.Processes;
+using Bdgrz.Compliance.Features.Tenants.Services;
+using Bdgrz.Compliance.Features.UserIdentities.Services;
+using Bdgrz.Compliance.Features.AccessControl.Aggregates;
+using Bdgrz.Compliance.Features.Tenants.Aggregates;
+using Bdgrz.Compliance.Features.Tenants.Authorizers;
+using Bdgrz.Compliance.Features.Tenants.Commands;
+using Bdgrz.Compliance.Features.Tenants.Models;
+using Bdgrz.Compliance.Features.Tenants.Readers;
+namespace Bdgrz.Compliance.Features.Tenants.Handlers;
+
+public sealed class ResolveMyTenantSlugHandler(IAggregateReader reader,
+    ITenantMembershipDirectoryReader memberships, TimeProvider? clock = null)
+    : IRequestHandler<ResolveMyTenantSlug, TenantSlugResolution>
+{
+    public async ValueTask<Result<TenantSlugResolution>> HandleAsync(
+        IRequestContext<ResolveMyTenantSlug> context, CancellationToken ct)
+    {
+        if (!TenantSlugs.TryNormalize(context.Request.Slug, out var slug))
+            return NotFound();
+        var actorId = UserIdentityClaims.TryGetBdgrzSubject(context.Actor, out var userId)
+            ? userId
+            : throw new InvalidOperationException("ResolveMyTenantSlugAuthorizer must reject this actor.");
+        var reservation = await reader.HydrateAsync(new TenantSlug(slug), ct).ConfigureAwait(false);
+        if (reservation.OwningTenantId is not { } tenantId ||
+            !await memberships.IsMemberAsync(tenantId.ToString(), actorId, ct).ConfigureAwait(false))
+            return NotFound();
+
+        var tenant = await reader.HydrateAsync(new Tenant(tenantId), ct).ConfigureAwait(false);
+        if (!tenant.IsActive || tenant.CurrentSlug is not { } currentSlug)
+            return NotFound();
+        // Read member source state after tenant metadata so a suspension that commits during
+        // resolution still blocks disclosure of the current slug or redirect relationship.
+        var member = await reader.HydrateAsync(new Member(tenantId, actorId), ct)
+            .ConfigureAwait(false);
+        var asOfDate = DateOnly.FromDateTime((clock ?? TimeProvider.System).GetUtcNow().UtcDateTime);
+        if (!member.IsAccessEligibleOn(asOfDate))
+            return NotFound();
+        return Result<TenantSlugResolution>.Success(
+            new TenantSlugResolution(tenantId, currentSlug, currentSlug != slug));
+    }
+
+    static Result<TenantSlugResolution> NotFound() =>
+        Result<TenantSlugResolution>.Failure(new RequestError(RequestErrorKind.NotFound,
+            "The organization was not found."));
+}

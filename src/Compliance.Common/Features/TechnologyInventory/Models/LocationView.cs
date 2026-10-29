@@ -1,0 +1,9 @@
+using Cntryl.Portia;
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.Evidence.Models;
+namespace Bdgrz.Compliance.Features.TechnologyInventory.Models;
+
+/// <summary>A location revision as recorded in the governed tenant inventory.</summary>
+public sealed record LocationView(Uuid TenantId, Uuid LocationId, long Revision,
+    LocationContent Content, string SourceKind, ActorReference LastChangedBy,
+    DateTimeOffset LastChangedAt);

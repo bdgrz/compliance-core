@@ -1,0 +1,337 @@
+{
+  "model": "jev-1.14.0",
+  "state": {
+    "review": "Adversarial review of selected causal cross-owner choreography. A reactor or command dispatch is not proof of target commitment. Treat missing proof as a gap.",
+    "pass": "flow_adversarial",
+    "flows": [
+      {
+        "id": "T030",
+        "kind": "reaction_or_regular_process_stage",
+        "sourceOwner": "OperationalProcess",
+        "targetOwner": "OperationalProcessNameClaim",
+        "targetAuthorityKind": "business_aggregate",
+        "physicalRootEvents": [
+          "OperationalProcessChangeAccepted"
+        ],
+        "logicalPrerequisiteFacts": [
+          "OperationalProcessRevisionRecorded",
+          "OperationalProcessChangeCanceled"
+        ],
+        "logicalPrerequisiteRule": "selected applicable typed variant/set; see required proof contract",
+        "receiverCommand": "ReleaseOperationalProcessName",
+        "emittedSemanticFacts": [
+          "OperationalProcessNameReleased"
+        ],
+        "processes": [
+          "OperationalProcessNameChangeProcess"
+        ],
+        "proofGate": "Release only matching old generation after exact record fact proves old name inactive; same-name/current claim is terminal no-op. A canceled target is already receiver-fenced; release its pending new claim only with that exact fence.",
+        "requiredTypedStageProofSets": [
+          {
+            "factKinds": [
+              "OperationalProcessRevisionRecorded",
+              "OperationalProcessChangeCanceled"
+            ],
+            "role": "matching applied/canceled generation proof",
+            "quantifier": "exactly_one_selected_variant",
+            "condition": "always",
+            "requiredVerification": "Resolve actual saved owner/source fact and full metadata/cut, verify typed payload/immutable content and exact admission/root/target/generation/actor/intent binding. Pointer, checkpoint and stage order alone are not authority."
+          }
+        ],
+        "requiredLogicalPrerequisiteProofs": "Every applicable logical prerequisite is independently verified as an actual typed saved fact (or actual technical proof where explicitly technical); a terminal proof may establish an earlier stage only through a verified native chain that includes that required typed stage. Stage order/checkpoint alone never substitutes.",
+        "pinnedSourceRequirements": "Every exact source owner/event/content revision and complete immutable manifest required by intendedProofGate remains mandatory; no absent optional source is fabricated.",
+        "verification": {
+          "admission": "AdmissionReference is a locator only. Resolve and independently verify actual typed admitted fact, exact owner/tenant/program, saved metadata and physical/hydrated cut, original root/episode/actor/intent and immutable content.",
+          "stageAndTerminal": "Materialize each required typed stage/terminal proof from actual committed facts and full required immutable selections; prove complete grant/fence/provisional/child sets, not counts/checkpoints. Guard sets are not weakened by carrier choice.",
+          "earlyReplay": "If native receipt binding does not cover a supplied/interpreted command term, bind that term through the required actual typed proof/body before early replay. Exact receipt cannot bypass proof manifest or source tuple guards.",
+          "resultAndRecovery": "Current public authorization precedes replay. Original result/receipt and unknown-append recovery stay exact; requested cancellation propagates. Unavailable proof/content remains transient; corruption/changed intent is permanent; no inferred absence/release.",
+          "implementationStatus": "Installed pointer/handler/process presence is not proof of conformance. Field/wire migration and required behavioral tests remain separately verifiable implementation work."
+        },
+        "recoveryContract": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
+        "implementationConformance": "NOT_ASSERTED; source evidence only"
+      },
+      {
+        "id": "T031",
+        "kind": "reaction_or_regular_process_stage",
+        "sourceOwner": "AuditPackageManifest",
+        "targetOwner": "AuditPackageBuildProcess",
+        "targetAuthorityKind": "technical_process_and_verified_output_store",
+        "physicalRootEvents": [
+          "AuditPackageBuildRequested"
+        ],
+        "logicalPrerequisiteFacts": [
+          "AuditPackageBuildRequested"
+        ],
+        "logicalPrerequisiteRule": "selected applicable typed variant/set; see required proof contract",
+        "receiverCommand": "StartAuditPackageBuild",
+        "emittedSemanticFacts": [],
+        "processes": [
+          "AuditPackageBuildProcess"
+        ],
+        "proofGate": "Initialize durable process from exact request; immutable output verified before callback; attempts externalized.",
+        "requiredTypedStageProofSets": [],
+        "requiredLogicalPrerequisiteProofs": "Every applicable logical prerequisite is independently verified as an actual typed saved fact (or actual technical proof where explicitly technical); a terminal proof may establish an earlier stage only through a verified native chain that includes that required typed stage. Stage order/checkpoint alone never substitutes.",
+        "pinnedSourceRequirements": "Every exact source owner/event/content revision and complete immutable manifest required by intendedProofGate remains mandatory; no absent optional source is fabricated.",
+        "verification": {
+          "admission": "AdmissionReference is a locator only. Resolve and independently verify actual typed admitted fact, exact owner/tenant/program, saved metadata and physical/hydrated cut, original root/episode/actor/intent and immutable content.",
+          "stageAndTerminal": "Materialize each required typed stage/terminal proof from actual committed facts and full required immutable selections; prove complete grant/fence/provisional/child sets, not counts/checkpoints. Guard sets are not weakened by carrier choice.",
+          "earlyReplay": "If native receipt binding does not cover a supplied/interpreted command term, bind that term through the required actual typed proof/body before early replay. Exact receipt cannot bypass proof manifest or source tuple guards.",
+          "resultAndRecovery": "Current public authorization precedes replay. Original result/receipt and unknown-append recovery stay exact; requested cancellation propagates. Unavailable proof/content remains transient; corruption/changed intent is permanent; no inferred absence/release.",
+          "implementationStatus": "Installed pointer/handler/process presence is not proof of conformance. Field/wire migration and required behavioral tests remain separately verifiable implementation work."
+        },
+        "recoveryContract": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
+        "implementationConformance": "NOT_ASSERTED; source evidence only"
+      },
+      {
+        "id": "T032",
+        "kind": "reaction_or_regular_process_stage",
+        "sourceOwner": "AuditPackageBuildProcess",
+        "targetOwner": "AuditPackageManifest",
+        "targetAuthorityKind": "business_aggregate",
+        "physicalRootEvents": [
+          "AuditPackageBuildRequested"
+        ],
+        "logicalPrerequisiteFacts": [
+          "process:verified_build_output"
+        ],
+        "logicalPrerequisiteRule": "selected applicable typed variant/set; see required proof contract",
+        "receiverCommand": "RecordAuditPackageBuildResult",
+        "emittedSemanticFacts": [
+          "AuditPackageBuilt"
+        ],
+        "processes": [
+          "AuditPackageBuildProcess"
+        ],
+        "proofGate": "Trusted immutable successful archive proof for exact build request; failure remains process state.",
+        "requiredTypedStageProofSets": [],
+        "requiredLogicalPrerequisiteProofs": "Every applicable logical prerequisite is independently verified as an actual typed saved fact (or actual technical proof where explicitly technical); a terminal proof may establish an earlier stage only through a verified native chain that includes that required typed stage. Stage order/checkpoint alone never substitutes.",
+        "pinnedSourceRequirements": "Every exact source owner/event/content revision and complete immutable manifest required by intendedProofGate remains mandatory; no absent optional source is fabricated.",
+        "verification": {
+          "admission": "AdmissionReference is a locator only. Resolve and independently verify actual typed admitted fact, exact owner/tenant/program, saved metadata and physical/hydrated cut, original root/episode/actor/intent and immutable content.",
+          "stageAndTerminal": "Materialize each required typed stage/terminal proof from actual committed facts and full required immutable selections; prove complete grant/fence/provisional/child sets, not counts/checkpoints. Guard sets are not weakened by carrier choice.",
+          "earlyReplay": "If native receipt binding does not cover a supplied/interpreted command term, bind that term through the required actual typed proof/body before early replay. Exact receipt cannot bypass proof manifest or source tuple guards.",
+          "resultAndRecovery": "Current public authorization precedes replay. Original result/receipt and unknown-append recovery stay exact; requested cancellation propagates. Unavailable proof/content remains transient; corruption/changed intent is permanent; no inferred absence/release.",
+          "implementationStatus": "Installed pointer/handler/process presence is not proof of conformance. Field/wire migration and required behavioral tests remain separately verifiable implementation work."
+        },
+        "recoveryContract": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
+        "implementationConformance": "NOT_ASSERTED; source evidence only"
+      },
+      {
+        "id": "T033",
+        "kind": "reaction_or_regular_process_stage",
+        "sourceOwner": "AuditorRequest",
+        "targetOwner": "AuditorResponse",
+        "targetAuthorityKind": "business_aggregate",
+        "physicalRootEvents": [
+          "AuditorResponseAdmitted"
+        ],
+        "logicalPrerequisiteFacts": [
+          "AuditorResponseAdmitted"
+        ],
+        "logicalPrerequisiteRule": "selected applicable typed variant/set; see required proof contract",
+        "receiverCommand": "MaterializeAuditorResponse",
+        "emittedSemanticFacts": [
+          "AuditResponseDraftCreated"
+        ],
+        "processes": [
+          "IndependentChildMaterialization"
+        ],
+        "proofGate": "Complete admitted initial draft and request generation; later request closure cannot discard admitted work.",
+        "requiredTypedStageProofSets": [],
+        "requiredLogicalPrerequisiteProofs": "Every applicable logical prerequisite is independently verified as an actual typed saved fact (or actual technical proof where explicitly technical); a terminal proof may establish an earlier stage only through a verified native chain that includes that required typed stage. Stage order/checkpoint alone never substitutes.",
+        "pinnedSourceRequirements": "Every exact source owner/event/content revision and complete immutable manifest required by intendedProofGate remains mandatory; no absent optional source is fabricated.",
+        "verification": {
+          "admission": "AdmissionReference is a locator only. Resolve and independently verify actual typed admitted fact, exact owner/tenant/program, saved metadata and physical/hydrated cut, original root/episode/actor/intent and immutable content.",
+          "stageAndTerminal": "Materialize each required typed stage/terminal proof from actual committed facts and full required immutable selections; prove complete grant/fence/provisional/child sets, not counts/checkpoints. Guard sets are not weakened by carrier choice.",
+          "earlyReplay": "If native receipt binding does not cover a supplied/interpreted command term, bind that term through the required actual typed proof/body before early replay. Exact receipt cannot bypass proof manifest or source tuple guards.",
+          "resultAndRecovery": "Current public authorization precedes replay. Original result/receipt and unknown-append recovery stay exact; requested cancellation propagates. Unavailable proof/content remains transient; corruption/changed intent is permanent; no inferred absence/release.",
+          "implementationStatus": "Installed pointer/handler/process presence is not proof of conformance. Field/wire migration and required behavioral tests remain separately verifiable implementation work."
+        },
+        "recoveryContract": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
+        "implementationConformance": "NOT_ASSERTED; source evidence only"
+      },
+      {
+        "id": "T034",
+        "kind": "reaction_or_regular_process_stage",
+        "sourceOwner": "AuditorRequest",
+        "targetOwner": "AuditorFeedbackThread",
+        "targetAuthorityKind": "business_aggregate",
+        "physicalRootEvents": [
+          "AuditorCommentAdmitted"
+        ],
+        "logicalPrerequisiteFacts": [
+          "AuditorCommentAdmitted"
+        ],
+        "logicalPrerequisiteRule": "selected applicable typed variant/set; see required proof contract",
+        "receiverCommand": "MaterializeAuditorComment",
+        "emittedSemanticFacts": [
+          "AuditorRequestCommentRecorded"
+        ],
+        "processes": [
+          "IndependentChildMaterialization"
+        ],
+        "proofGate": "Exact body/compartment/actor admitted while parent open; later close cannot discard accepted comment.",
+        "requiredTypedStageProofSets": [],
+        "requiredLogicalPrerequisiteProofs": "Every applicable logical prerequisite is independently verified as an actual typed saved fact (or actual technical proof where explicitly technical); a terminal proof may establish an earlier stage only through a verified native chain that includes that required typed stage. Stage order/checkpoint alone never substitutes.",
+        "pinnedSourceRequirements": "Every exact source owner/event/content revision and complete immutable manifest required by intendedProofGate remains mandatory; no absent optional source is fabricated.",
+        "verification": {
+          "admission": "AdmissionReference is a locator only. Resolve and independently verify actual typed admitted fact, exact owner/tenant/program, saved metadata and physical/hydrated cut, original root/episode/actor/intent and immutable content.",
+          "stageAndTerminal": "Materialize each required typed stage/terminal proof from actual committed facts and full required immutable selections; prove complete grant/fence/provisional/child sets, not counts/checkpoints. Guard sets are not weakened by carrier choice.",
+          "earlyReplay": "If native receipt binding does not cover a supplied/interpreted command term, bind that term through the required actual typed proof/body before early replay. Exact receipt cannot bypass proof manifest or source tuple guards.",
+          "resultAndRecovery": "Current public authorization precedes replay. Original result/receipt and unknown-append recovery stay exact; requested cancellation propagates. Unavailable proof/content remains transient; corruption/changed intent is permanent; no inferred absence/release.",
+          "implementationStatus": "Installed pointer/handler/process presence is not proof of conformance. Field/wire migration and required behavioral tests remain separately verifiable implementation work."
+        },
+        "recoveryContract": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
+        "implementationConformance": "NOT_ASSERTED; source evidence only"
+      },
+      {
+        "id": "T035",
+        "kind": "reaction_or_regular_process_stage",
+        "sourceOwner": "AuditorRequest",
+        "targetOwner": "AuditorRequest",
+        "targetAuthorityKind": "business_aggregate",
+        "physicalRootEvents": [
+          "AuditorRequestResolutionAccepted"
+        ],
+        "logicalPrerequisiteFacts": [
+          "AuditorRequestResolutionAccepted"
+        ],
+        "logicalPrerequisiteRule": "selected applicable typed variant/set; see required proof contract",
+        "receiverCommand": "CompleteAuditorRequestResolution",
+        "emittedSemanticFacts": [
+          "AuditorRequestResolved"
+        ],
+        "processes": [
+          "AuditorRequestResolutionProcess"
+        ],
+        "proofGate": "Nonempty exact complete response set; every accepted external disposition/version under read holds; admission sealed.",
+        "requiredTypedStageProofSets": [
+          {
+            "factKinds": [
+              "AuditorResponseRequestResolutionUseAuthorized"
+            ],
+            "role": "all exact frozen response grants",
+            "quantifier": "all_required_manifest_entries",
+            "condition": "always",
+            "requiredVerification": "Resolve actual saved owner/source fact and full metadata/cut, verify typed payload/immutable content and exact admission/root/target/generation/actor/intent binding. Pointer, checkpoint and stage order alone are not authority."
+          }
+        ],
+        "requiredLogicalPrerequisiteProofs": "Every applicable logical prerequisite is independently verified as an actual typed saved fact (or actual technical proof where explicitly technical); a terminal proof may establish an earlier stage only through a verified native chain that includes that required typed stage. Stage order/checkpoint alone never substitutes.",
+        "pinnedSourceRequirements": "Every exact source owner/event/content revision and complete immutable manifest required by intendedProofGate remains mandatory; no absent optional source is fabricated.",
+        "verification": {
+          "admission": "AdmissionReference is a locator only. Resolve and independently verify actual typed admitted fact, exact owner/tenant/program, saved metadata and physical/hydrated cut, original root/episode/actor/intent and immutable content.",
+          "stageAndTerminal": "Materialize each required typed stage/terminal proof from actual committed facts and full required immutable selections; prove complete grant/fence/provisional/child sets, not counts/checkpoints. Guard sets are not weakened by carrier choice.",
+          "earlyReplay": "If native receipt binding does not cover a supplied/interpreted command term, bind that term through the required actual typed proof/body before early replay. Exact receipt cannot bypass proof manifest or source tuple guards.",
+          "resultAndRecovery": "Current public authorization precedes replay. Original result/receipt and unknown-append recovery stay exact; requested cancellation propagates. Unavailable proof/content remains transient; corruption/changed intent is permanent; no inferred absence/release.",
+          "implementationStatus": "Installed pointer/handler/process presence is not proof of conformance. Field/wire migration and required behavioral tests remain separately verifiable implementation work."
+        },
+        "recoveryContract": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
+        "implementationConformance": "NOT_ASSERTED; source evidence only"
+      }
+    ]
+  },
+  "questions": {
+    "item_0": {
+      "type": "choice",
+      "instructions": "Find the strongest architectural objection to cross-owner flow T030.",
+      "criteria": {
+        "flow_is_logical": "The stated source fact, target command, proof requirements, terminal outcome and recovery/fencing rules form a coherent authorized sequence.",
+        "flow_boundary_or_order_defect": "The flow bypasses an owner decision, has an unjustified edge/order, or lets dispatch/pointer/checkpoint/count stand in for target authority.",
+        "proof_or_recovery_gap": "The flow lacks a required identity, source, intermediate/terminal proof, cancellation fence, retry, restart, or lost-ack rule."
+      }
+    },
+    "item_0_evidence": {
+      "type": "noul",
+      "instructions": "Is the supplied row enough to judge the business authority and safety of flow T030?",
+      "criteria": {
+        "true": "The row identifies source authority, target authority, exact causal proof and applicable failure/recovery behavior.",
+        "false": "A material authority, proof, failure, or recovery detail is absent from the supplied row."
+      }
+    },
+    "item_1": {
+      "type": "choice",
+      "instructions": "Find the strongest architectural objection to cross-owner flow T031.",
+      "criteria": {
+        "flow_is_logical": "The stated source fact, target command, proof requirements, terminal outcome and recovery/fencing rules form a coherent authorized sequence.",
+        "flow_boundary_or_order_defect": "The flow bypasses an owner decision, has an unjustified edge/order, or lets dispatch/pointer/checkpoint/count stand in for target authority.",
+        "proof_or_recovery_gap": "The flow lacks a required identity, source, intermediate/terminal proof, cancellation fence, retry, restart, or lost-ack rule."
+      }
+    },
+    "item_1_evidence": {
+      "type": "noul",
+      "instructions": "Is the supplied row enough to judge the business authority and safety of flow T031?",
+      "criteria": {
+        "true": "The row identifies source authority, target authority, exact causal proof and applicable failure/recovery behavior.",
+        "false": "A material authority, proof, failure, or recovery detail is absent from the supplied row."
+      }
+    },
+    "item_2": {
+      "type": "choice",
+      "instructions": "Find the strongest architectural objection to cross-owner flow T032.",
+      "criteria": {
+        "flow_is_logical": "The stated source fact, target command, proof requirements, terminal outcome and recovery/fencing rules form a coherent authorized sequence.",
+        "flow_boundary_or_order_defect": "The flow bypasses an owner decision, has an unjustified edge/order, or lets dispatch/pointer/checkpoint/count stand in for target authority.",
+        "proof_or_recovery_gap": "The flow lacks a required identity, source, intermediate/terminal proof, cancellation fence, retry, restart, or lost-ack rule."
+      }
+    },
+    "item_2_evidence": {
+      "type": "noul",
+      "instructions": "Is the supplied row enough to judge the business authority and safety of flow T032?",
+      "criteria": {
+        "true": "The row identifies source authority, target authority, exact causal proof and applicable failure/recovery behavior.",
+        "false": "A material authority, proof, failure, or recovery detail is absent from the supplied row."
+      }
+    },
+    "item_3": {
+      "type": "choice",
+      "instructions": "Find the strongest architectural objection to cross-owner flow T033.",
+      "criteria": {
+        "flow_is_logical": "The stated source fact, target command, proof requirements, terminal outcome and recovery/fencing rules form a coherent authorized sequence.",
+        "flow_boundary_or_order_defect": "The flow bypasses an owner decision, has an unjustified edge/order, or lets dispatch/pointer/checkpoint/count stand in for target authority.",
+        "proof_or_recovery_gap": "The flow lacks a required identity, source, intermediate/terminal proof, cancellation fence, retry, restart, or lost-ack rule."
+      }
+    },
+    "item_3_evidence": {
+      "type": "noul",
+      "instructions": "Is the supplied row enough to judge the business authority and safety of flow T033?",
+      "criteria": {
+        "true": "The row identifies source authority, target authority, exact causal proof and applicable failure/recovery behavior.",
+        "false": "A material authority, proof, failure, or recovery detail is absent from the supplied row."
+      }
+    },
+    "item_4": {
+      "type": "choice",
+      "instructions": "Find the strongest architectural objection to cross-owner flow T034.",
+      "criteria": {
+        "flow_is_logical": "The stated source fact, target command, proof requirements, terminal outcome and recovery/fencing rules form a coherent authorized sequence.",
+        "flow_boundary_or_order_defect": "The flow bypasses an owner decision, has an unjustified edge/order, or lets dispatch/pointer/checkpoint/count stand in for target authority.",
+        "proof_or_recovery_gap": "The flow lacks a required identity, source, intermediate/terminal proof, cancellation fence, retry, restart, or lost-ack rule."
+      }
+    },
+    "item_4_evidence": {
+      "type": "noul",
+      "instructions": "Is the supplied row enough to judge the business authority and safety of flow T034?",
+      "criteria": {
+        "true": "The row identifies source authority, target authority, exact causal proof and applicable failure/recovery behavior.",
+        "false": "A material authority, proof, failure, or recovery detail is absent from the supplied row."
+      }
+    },
+    "item_5": {
+      "type": "choice",
+      "instructions": "Find the strongest architectural objection to cross-owner flow T035.",
+      "criteria": {
+        "flow_is_logical": "The stated source fact, target command, proof requirements, terminal outcome and recovery/fencing rules form a coherent authorized sequence.",
+        "flow_boundary_or_order_defect": "The flow bypasses an owner decision, has an unjustified edge/order, or lets dispatch/pointer/checkpoint/count stand in for target authority.",
+        "proof_or_recovery_gap": "The flow lacks a required identity, source, intermediate/terminal proof, cancellation fence, retry, restart, or lost-ack rule."
+      }
+    },
+    "item_5_evidence": {
+      "type": "noul",
+      "instructions": "Is the supplied row enough to judge the business authority and safety of flow T035?",
+      "criteria": {
+        "true": "The row identifies source authority, target authority, exact causal proof and applicable failure/recovery behavior.",
+        "false": "A material authority, proof, failure, or recovery detail is absent from the supplied row."
+      }
+    }
+  }
+}

@@ -1,5 +1,0 @@
-using Bdgrz.Compliance.Features.Proofs;
-
-namespace Bdgrz.Compliance.Features.Boundaries;
-
-public sealed record FrozenBoundaryMutation(BoundaryAuthorityHeader Header, ImmutableContentRef Change, ImmutableContentRef Authority);

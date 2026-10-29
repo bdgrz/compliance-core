@@ -1,0 +1,23 @@
+using Cntryl.Portia;
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.AccessControl.Processes;
+using Bdgrz.Compliance.Features.AuditorRequests.Processes;
+using Bdgrz.Compliance.Features.Content.Contracts;
+using Bdgrz.Compliance.Features.Processes.Processes;
+using Bdgrz.Compliance.Features.Programs.Readers;
+using Bdgrz.Compliance.Features.Readiness.Models;
+using Bdgrz.Compliance.Features.AccessControl.Commands;
+using Bdgrz.Compliance.Features.AccessControl.Events;
+using Bdgrz.Compliance.Features.Examinations.Aggregates;
+namespace Bdgrz.Compliance.Features.AccessControl.Reactors;
+
+/// <summary>Starts the transition when the withdrawal removes an administrators-team assignment (ApplyAdministratorAssignmentWithdrawal).</summary>
+public sealed partial class AdministratorAssignmentWithdrawalReactor(IProjectionCheckpointStore checkpoints, ProcessRootReaction process,
+    IImmutableContentStore content)
+    : Reactor(checkpoints, EventStreamPattern.ForTenant("rbac-manager-guard"), "AdministratorAssignmentWithdrawalV1"),
+      IReactorHandler<TenantManagerWithdrawalAccepted>
+{
+    public ValueTask HandleAsync(IReactorContext<TenantManagerWithdrawalAccepted> context, CancellationToken ct) =>
+        AdministratorTransitionReactions.StartAsync(process, content, context, context.Trigger,
+            static kind => kind == AdministratorTransitionKind.RemoveAdministratorsAssignment, "AdministratorAssignmentWithdrawalReactor", ct);
+}

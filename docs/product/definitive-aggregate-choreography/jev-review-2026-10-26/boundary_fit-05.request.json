@@ -1,0 +1,989 @@
+{
+  "model": "jev-1.14.0",
+  "state": {
+    "review": "Adversarial review of the selected definitive business/authority owner boundary. Treat the supplied row as a proposal; do not infer omitted policy.",
+    "pass": "boundary_fit",
+    "owners": [
+      {
+        "owner": "CommitmentDraft",
+        "classification": "business_aggregate",
+        "declaredIdentity": "UUIDv5 tenant+program+normalizedKind/identifier; explicit createRequestId retained and compares complete initial normalized terms. Revision expected; review/approval DecisionId=RequestId but review lacks retry comparison. Retirement compares generated timestamp so handler retry fails. Physical append OCC.",
+        "selectedIdentity": "Tenant + ProgramId + normalized kind/identifier retain the existing deterministic UUIDv5 owner algorithm. Supplied DraftId must equal that existing identity; later selected commands use CommandId and the exact draft/version/review bindings.",
+        "invariant": "One tenant/program/kind/identifier has immutable identity/source creation, revisioned authored content, exact verified-source accepted review and independent approval that publishes strictly later effective versions; retired commitment remains terminal.",
+        "boundaryDecision": "narrow",
+        "boundaryRationale": "Current pending authors, accepted review and current-revision responsibility conflicts must remain atomically coherent. Past effective version list/history query and old scope sets can leave current command state. Provider/service owners can be checked at admission using values.",
+        "commands": [
+          {
+            "command": "ApproveCommitmentDraft",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "DraftId:Uuid",
+              "ExpectedRevision:long",
+              "AcceptedReviewDecisionId:Uuid",
+              "EffectiveFrom:DateOnly",
+              "Rationale:string",
+              "ImpactDigest:string",
+              "SeparationOfDutiesWaiverId:Uuid?"
+            ]
+          },
+          {
+            "command": "CreateCommitmentDraft",
+            "logicalIdentity": "DraftId",
+            "fields": [
+              "DraftId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "ServiceId:Uuid",
+              "Kind:string",
+              "Identifier:string",
+              "Statement:string",
+              "Context:string",
+              "SourceReference:string",
+              "ProviderId:Uuid?"
+            ]
+          },
+          {
+            "command": "RetireCommitment",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "CommitmentId:Uuid",
+              "ExpectedRevision:long",
+              "EffectiveOn:DateOnly",
+              "Rationale:string"
+            ]
+          },
+          {
+            "command": "ReviewCommitmentDraft",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "DraftId:Uuid",
+              "ExpectedRevision:long",
+              "Outcome:string",
+              "Rationale:string",
+              "OwnerReference:string?",
+              "Applicability:string?",
+              "Interpretation:string?",
+              "InterpretationNote:string?",
+              "SourceVerifiedReference:string?",
+              "SourceEvidence:string?",
+              "SeparationOfDutiesWaiverId:Uuid?"
+            ]
+          },
+          {
+            "command": "ReviseCommitmentDraft",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "DraftId:Uuid",
+              "ExpectedRevision:long",
+              "Statement:string",
+              "Context:string",
+              "SourceReference:string"
+            ]
+          }
+        ],
+        "events": [
+          {
+            "event": "CommitmentApproved"
+          },
+          {
+            "event": "CommitmentDraftCreated"
+          },
+          {
+            "event": "CommitmentDraftRevised"
+          },
+          {
+            "event": "CommitmentRetired"
+          },
+          {
+            "event": "CommitmentReviewed"
+          },
+          {
+            "event": "ResponsibilityAssigned"
+          },
+          {
+            "event": "ResponsibilityRevoked"
+          }
+        ],
+        "choreography": []
+      },
+      {
+        "owner": "ComplianceIncident",
+        "classification": "business_aggregate",
+        "declaredIdentity": "Per incident id is a valid stable creation identity. SameInitial/revision/assessment helpers compare server RecordedAt; fresh handler clock makes an exact client retry conflict or append. No selected RequestId guard.",
+        "selectedIdentity": "Tenant / compliance-incidents / IncidentId, with immutable ProgramId. IncidentId is the selected immutable creation identity; later selected commands use CommandId and the exact incident/version/proof bindings.",
+        "invariant": "One incident version may be assessed once; current-version independent description decision and required follow-up eligibility gate advancement; incident resolution requires every admitted follow-up work item completed.",
+        "boundaryDecision": "narrow",
+        "boundaryRationale": "Keep current version, assessment and eligibility/independence gate atomic. Historical versions/decisions are immutable histories; do not split current gate simply by entity nouns. Required work selection can be sealed exact-version content with authority proofs.",
+        "commands": [
+          {
+            "command": "AssessComplianceIncident",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "IncidentId:Uuid",
+              "ExpectedRevision:long",
+              "Content:ComplianceIncidentImpactAssessmentContent"
+            ]
+          },
+          {
+            "command": "RecordComplianceIncident",
+            "logicalIdentity": "IncidentId",
+            "fields": [
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "IncidentId:Uuid",
+              "Content:ComplianceIncidentContent"
+            ]
+          },
+          {
+            "command": "RecordComplianceIncidentResolution",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "IncidentId:Uuid",
+              "ExpectedRevision:long",
+              "Content:ComplianceIncidentResolutionContent"
+            ]
+          },
+          {
+            "command": "RecordComplianceIncidentSystemDescriptionDecision",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "IncidentId:Uuid",
+              "ContentVersion:int",
+              "SystemDescriptionId:Uuid",
+              "SystemDescriptionVersionId:Uuid",
+              "DecisionId:Uuid",
+              "AssessmentSha256:string"
+            ]
+          },
+          {
+            "command": "ReviseComplianceIncident",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "IncidentId:Uuid",
+              "ExpectedRevision:long",
+              "Content:ComplianceIncidentContent",
+              "ChangeReason:string"
+            ]
+          }
+        ],
+        "events": [
+          {
+            "event": "ComplianceIncidentImpactAssessed"
+          },
+          {
+            "event": "ComplianceIncidentRecorded"
+          },
+          {
+            "event": "ComplianceIncidentRevised"
+          },
+          {
+            "event": "ComplianceIncidentSystemDescriptionDecisionRecorded"
+          },
+          {
+            "event": "IncidentResolutionRecorded"
+          }
+        ],
+        "choreography": []
+      },
+      {
+        "owner": "ComplianceProgram",
+        "classification": "business_aggregate",
+        "declaredIdentity": "Tenant / programs / programId, creation uses context.RequestId; original create content remembered; revision for mutations; criteria selection has narrow latest retry special case. Portia appends against the hydrated physical stream position; a logical revision does not create another physical boundary.",
+        "selectedIdentity": "Tenant + caller ProgramId; creation uses that identity and later mutations use caller CommandId.",
+        "invariant": "Program target dates must form a coherent chronological plan; one program identity has immutable creation intent. Criteria selection separately chooses current edition.",
+        "boundaryDecision": "narrow",
+        "boundaryRationale": "Remove historical criteria-selection collection from command state while preserving authoritative as-of selection proofs. Keep coherent program date plan together. A separate current criteria-selection owner is a possible targeted split, not yet a required new aggregate. Splitting individual plan dates would lose chronological validation. Dropping criteria history without replacing authoritative temporal lookup would lose exact baseline/readiness source semantics. A stale projection cannot substitute for the contributor current-source check. Splitting current edition from program plan causes no observed write-rule loss, but also needs no invented new business lifecycle.",
+        "commands": [
+          {
+            "command": "CreateProgram",
+            "logicalIdentity": "ProgramId",
+            "fields": [
+              "ProgramId:Uuid",
+              "TenantId:Uuid",
+              "Name:string",
+              "Plan:ProgramPlan"
+            ]
+          },
+          {
+            "command": "ReviseProgram",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "ExpectedRevision:long",
+              "Name:string",
+              "Plan:ProgramPlan"
+            ]
+          },
+          {
+            "command": "SelectProgramCriteriaEdition",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "ExpectedRevision:long",
+              "EditionId:Uuid"
+            ]
+          }
+        ],
+        "events": [
+          {
+            "event": "ProgramCreated"
+          },
+          {
+            "event": "ProgramCriteriaEditionSelected"
+          },
+          {
+            "event": "ProgramRevised"
+          }
+        ],
+        "choreography": []
+      },
+      {
+        "owner": "ControlCriterionMapping",
+        "classification": "business_aggregate",
+        "declaredIdentity": "(programId, controlId, editionId, criterionId)",
+        "selectedIdentity": "(programId, controlId, editionId, criterionId)",
+        "invariant": "One mapping tuple proposal and immutable approved successor line.",
+        "boundaryDecision": "selected_split",
+        "mustPreserve": "Independent review approves exact pending proposal and supersedes only its predecessor.",
+        "technicalStateToSeparate": [],
+        "commands": [
+          {
+            "command": "ProposeControlCriterionMapping",
+            "logicalIdentity": {
+              "field": "MappingId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "exact immutable creation retry"
+            },
+            "fields": [
+              "MappingId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "ControlId:Uuid",
+              "ControlVersionId:Uuid",
+              "EditionId:Uuid",
+              "CriterionIdentifier:string",
+              "ExpectedRevision:long",
+              "Rationale:string",
+              "ApplicabilityExplanation:string"
+            ]
+          },
+          {
+            "command": "RetireControlCriterionMapping",
+            "logicalIdentity": {
+              "field": "CommandId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "one immutable authored operation"
+            },
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "MappingId:Uuid",
+              "ExpectedRevision:long",
+              "Rationale:string"
+            ]
+          },
+          {
+            "command": "ReviewControlCriterionMapping",
+            "logicalIdentity": {
+              "field": "CommandId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "one immutable authored operation"
+            },
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "MappingId:Uuid",
+              "ExpectedRevision:long",
+              "Outcome:string",
+              "Rationale:string",
+              "SeparationOfDutiesWaiverId:Uuid?"
+            ]
+          }
+        ],
+        "events": [
+          {
+            "event": "ControlCriterionMappingProposed",
+            "discriminator": "bdgrz.control_mapping.proposed",
+            "version": 1
+          },
+          {
+            "event": "ControlCriterionMappingRetired",
+            "discriminator": "bdgrz.control_mapping.retired",
+            "version": 1
+          },
+          {
+            "event": "ControlCriterionMappingReviewed",
+            "discriminator": "bdgrz.control_mapping.reviewed",
+            "version": 1
+          }
+        ],
+        "choreography": []
+      },
+      {
+        "owner": "ControlDraft",
+        "classification": "business_aggregate",
+        "declaredIdentity": "tenant/controls/controlId; controlId derives tenant+program+normalized identifier. Create stores creation requestId+initial content and distinguishes changed intent. Later Review/Approve/Retire/periodic commands do not generally retain request intent; content revision differs from physical stream revision.",
+        "selectedIdentity": "Tenant / controls / ControlId; supplied ControlId must equal the existing tenant/program/normalized-identifier UUIDv5. Later selected commands use CommandId and the exact control/version/review bindings.",
+        "invariant": "Only the exact current draft or retirement can be independently reviewed then activated, and accepted successor/retirement changes one control version line without overlapping effective intervals. Responsibilities cannot create unwaived conflicts with decisions already made on the exact revision.",
+        "boundaryDecision": "narrow",
+        "boundaryRationale": "Splitting draft review/approval from the current target or conflicting responsibilities would break the exact accepted review and historical SoD invariant. Keep that narrow decision context atomic; approved versions, old scopes, and full decision/retirement histories can be read-side records.",
+        "commands": [
+          {
+            "command": "ApproveControl",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "ControlId:Uuid",
+              "ExpectedRevision:long",
+              "AcceptedReviewDecisionId:Uuid",
+              "EffectiveFrom:DateOnly",
+              "Rationale:string",
+              "SeparationOfDutiesWaiverId:Uuid?",
+              "ImpactDigest:string?"
+            ]
+          },
+          {
+            "command": "CreateControlDraft",
+            "logicalIdentity": "ControlId",
+            "fields": [
+              "ControlId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "Identifier:string",
+              "Content:ControlDraftContent"
+            ]
+          },
+          {
+            "command": "DesignateControlOwnerPerson",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "ControlId:Uuid",
+              "ExpectedRevision:long",
+              "PersonId:Uuid?",
+              "Rationale:string"
+            ]
+          },
+          {
+            "command": "DiscardControlDraft",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "ControlId:Uuid",
+              "ExpectedRevision:long",
+              "Rationale:string"
+            ]
+          },
+          {
+            "command": "ProposeControlRetirement",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "ControlId:Uuid",
+              "ExpectedApprovedVersionId:Uuid",
+              "EffectiveUntil:DateOnly",
+              "Rationale:string",
+              "ExpectedRevision:long"
+            ]
+          },
+          {
+            "command": "ProposeControlSuccessor",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "ControlId:Uuid",
+              "ExpectedApprovedVersionId:Uuid",
+              "Content:ControlDraftContent",
+              "ExpectedRevision:long"
+            ]
+          },
+          {
+            "command": "RetireControl",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "ControlId:Uuid",
+              "ExpectedRevision:long",
+              "AcceptedReviewDecisionId:Uuid",
+              "ImpactDigest:string",
+              "Rationale:string",
+              "SeparationOfDutiesWaiverId:Uuid?"
+            ]
+          },
+          {
+            "command": "ReviewControl",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "ControlId:Uuid",
+              "ExpectedRevision:long",
+              "Outcome:string",
+              "Rationale:string",
+              "SeparationOfDutiesWaiverId:Uuid?"
+            ]
+          },
+          {
+            "command": "ReviseControlDraft",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "ControlId:Uuid",
+              "ExpectedRevision:long",
+              "Content:ControlDraftContent"
+            ]
+          },
+          {
+            "command": "WithdrawControlProposal",
+            "logicalIdentity": "CommandId",
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "ControlId:Uuid",
+              "ExpectedRevision:long",
+              "Rationale:string"
+            ]
+          }
+        ],
+        "events": [
+          {
+            "event": "ControlApproved"
+          },
+          {
+            "event": "ControlDraftCreated"
+          },
+          {
+            "event": "ControlDraftDiscarded"
+          },
+          {
+            "event": "ControlDraftRevised"
+          },
+          {
+            "event": "ControlOwnerPersonDesignated"
+          },
+          {
+            "event": "ControlProposalWithdrawn"
+          },
+          {
+            "event": "ControlRetired"
+          },
+          {
+            "event": "ControlRetirementProposed"
+          },
+          {
+            "event": "ControlReviewed"
+          },
+          {
+            "event": "ControlSuccessorProposed"
+          },
+          {
+            "event": "ResponsibilityAssigned"
+          },
+          {
+            "event": "ResponsibilityRevoked"
+          }
+        ],
+        "choreography": []
+      },
+      {
+        "owner": "ControlEvaluation",
+        "classification": "business_aggregate",
+        "declaredIdentity": "tenant / evaluationId",
+        "selectedIdentity": "tenant / evaluationId",
+        "invariant": "One evaluation including steps, conclusions, review and deviation dispositions. A retest is a new evaluationId using this same type and an immutable predecessor evaluation/version proof.",
+        "boundaryDecision": "selected_split",
+        "mustPreserve": "Material deviation source proof, immutable procedure version, reviewer independence, and explicit minor-deviation disposition.",
+        "technicalStateToSeparate": [],
+        "commands": [
+          {
+            "command": "DisposeControlEvaluationDeviation",
+            "logicalIdentity": {
+              "field": "CommandId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "one immutable authored operation"
+            },
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "ControlId:Uuid",
+              "EvaluationId:Uuid",
+              "DeviationId:Uuid",
+              "ExpectedRevision:long",
+              "Disposition:string",
+              "Rationale:string",
+              "WaiverId:Uuid?"
+            ]
+          },
+          {
+            "command": "RecordControlEvaluationStep",
+            "logicalIdentity": {
+              "field": "CommandId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "one immutable authored operation"
+            },
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "ControlId:Uuid",
+              "EvaluationId:Uuid",
+              "StepId:Uuid",
+              "ExpectedRevision:long",
+              "Result:string",
+              "Rationale:string",
+              "InspectedItems:IReadOnlyList<EvaluationInspectedItem>",
+              "DeviationClassification:string?",
+              "DeviationDescription:string?"
+            ]
+          },
+          {
+            "command": "ReviewControlEvaluation",
+            "logicalIdentity": {
+              "field": "CommandId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "one immutable authored operation"
+            },
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "ControlId:Uuid",
+              "EvaluationId:Uuid",
+              "ExpectedRevision:long",
+              "Decision:string",
+              "Rationale:string",
+              "SeparationOfDutiesWaiverId:Uuid?"
+            ]
+          },
+          {
+            "command": "StartControlEvaluation",
+            "logicalIdentity": {
+              "field": "EvaluationId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "exact immutable creation retry"
+            },
+            "fields": [
+              "EvaluationId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "ControlId:Uuid",
+              "PlanVersionId:Uuid",
+              "RetestOfEvaluationId:Uuid?"
+            ]
+          },
+          {
+            "command": "SubmitControlEvaluation",
+            "logicalIdentity": {
+              "field": "CommandId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "one immutable authored operation"
+            },
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "ControlId:Uuid",
+              "EvaluationId:Uuid",
+              "ExpectedRevision:long",
+              "Conclusions:IReadOnlyList<EvaluationAssertionConclusion>"
+            ]
+          }
+        ],
+        "events": [
+          {
+            "event": "ControlEvaluationDeviationDisposed",
+            "discriminator": "bdgrz.control.evaluation.deviation_disposed",
+            "version": 1
+          },
+          {
+            "event": "ControlEvaluationReviewed",
+            "discriminator": "bdgrz.control.evaluation.reviewed",
+            "version": 1
+          },
+          {
+            "event": "ControlEvaluationStarted",
+            "discriminator": "bdgrz.control.evaluation.started",
+            "version": 1
+          },
+          {
+            "event": "ControlEvaluationStepRecorded",
+            "discriminator": "bdgrz.control.evaluation.step_recorded",
+            "version": 1
+          },
+          {
+            "event": "ControlEvaluationSubmitted",
+            "discriminator": "bdgrz.control.evaluation.submitted",
+            "version": 1
+          }
+        ],
+        "choreography": []
+      },
+      {
+        "owner": "ControlEvaluationPlan",
+        "classification": "business_aggregate",
+        "declaredIdentity": "tenant/control-evaluation-plans/controlId; stable planVersionId passed from request; Define compares complete procedure/author/current version data on identity reuse and checks expectedVersion.",
+        "selectedIdentity": "Tenant / control-evaluation-plans / ControlId, with immutable ProgramId. PlanVersionId identifies the selected immutable definition operation and its complete procedure/author/source intent.",
+        "invariant": "A plan version has a stable identity and immutable procedure; only a successor to the current plan version can be appended and exact duplicate identity must have the same content.",
+        "boundaryDecision": "narrow",
+        "boundaryRationale": "The procedure steps belong together: validation and eventual evaluation operate over one exact ordered procedure snapshot. Old immutable plan versions do not need to stay in active command state; keep current version/identity admission while history is a projection.",
+        "commands": [
+          {
+            "command": "DefineControlEvaluationPlan",
+            "logicalIdentity": "PlanVersionId",
+            "fields": [
+              "PlanVersionId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "ControlId:Uuid",
+              "ControlVersionId:Uuid",
+              "ExpectedVersion:long",
+              "Objective:string",
+              "Steps:IReadOnlyList<EvaluationProcedureStep>?",
+              "TesterIndependenceRequired:bool"
+            ]
+          }
+        ],
+        "events": [
+          {
+            "event": "ControlEvaluationPlanVersionDefined"
+          }
+        ],
+        "choreography": []
+      },
+      {
+        "owner": "ControlOccurrence",
+        "classification": "business_aggregate",
+        "declaredIdentity": "(tenantId, programId, controlId, businessWindow)",
+        "selectedIdentity": "(tenantId, programId, controlId, businessWindow)",
+        "invariant": "One planned/attested/corrected/reviewed occurrence for a control performance window.",
+        "boundaryDecision": "selected_split",
+        "mustPreserve": "Occurrence facts bind exact frozen plan and evidence requirements; one business window has one identity across all generators.",
+        "technicalStateToSeparate": [],
+        "commands": [
+          {
+            "command": "AttestControlOccurrence",
+            "logicalIdentity": {
+              "field": "CommandId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "one immutable authored operation"
+            },
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "ControlId:Uuid",
+              "OccurrenceId:Uuid",
+              "ExpectedRevision:long",
+              "Result:string",
+              "PerformedAt:DateTimeOffset",
+              "CoveredFrom:DateOnly?",
+              "CoveredUntil:DateOnly?",
+              "Notes:string?",
+              "Rationale:string?",
+              "Evidence:IReadOnlyList<EvidenceReference>",
+              "PerformedByPersonId:Uuid?"
+            ]
+          },
+          {
+            "command": "CorrectControlAttestation",
+            "logicalIdentity": {
+              "field": "CommandId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "one immutable authored operation"
+            },
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "ControlId:Uuid",
+              "OccurrenceId:Uuid",
+              "ExpectedRevision:long",
+              "Result:string",
+              "PerformedAt:DateTimeOffset",
+              "CoveredFrom:DateOnly?",
+              "CoveredUntil:DateOnly?",
+              "Notes:string?",
+              "Rationale:string?",
+              "Evidence:IReadOnlyList<EvidenceReference>",
+              "CorrectionReason:string",
+              "PerformedByPersonId:Uuid?"
+            ]
+          },
+          {
+            "command": "OpenControlOccurrence",
+            "logicalIdentity": {
+              "field": "CommandId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "one immutable authored operation"
+            },
+            "fields": [
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "ControlId:Uuid",
+              "Trigger:string",
+              "OccurredOn:DateOnly",
+              "ExpectedRevision:long",
+              "CommandId:Uuid",
+              "BusinessWindow:ControlBusinessWindow"
+            ]
+          },
+          {
+            "command": "ReviewControlOccurrence",
+            "logicalIdentity": {
+              "field": "CommandId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "one immutable authored operation"
+            },
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "ControlId:Uuid",
+              "OccurrenceId:Uuid",
+              "ExpectedRevision:long",
+              "AttestationId:Uuid",
+              "Outcome:string",
+              "Rationale:string",
+              "RequestedActions:IReadOnlyList<string>?",
+              "SeparationOfDutiesWaiverId:Uuid?"
+            ]
+          }
+        ],
+        "events": [
+          {
+            "event": "ControlOccurrenceAttested",
+            "discriminator": "bdgrz.control.occurrence.attested",
+            "version": 1
+          },
+          {
+            "event": "ControlOccurrenceOpened",
+            "discriminator": "bdgrz.control.occurrence.opened",
+            "version": 1
+          },
+          {
+            "event": "ControlOccurrenceReviewed",
+            "discriminator": "bdgrz.control.occurrence.reviewed",
+            "version": 1
+          }
+        ],
+        "choreography": [
+          {
+            "reactor": "ControlOccurrenceMaterializationReactor",
+            "sourceOwner": "TypeIIPeriod",
+            "targetOwner": "ControlOccurrence",
+            "command": "MaterializeControlOccurrence"
+          }
+        ]
+      }
+    ]
+  },
+  "questions": {
+    "item_0": {
+      "type": "choice",
+      "instructions": "Does the selected boundary for CommitmentDraft fit its identity, atomic invariant, command decisions, event facts, and independent lifecycle?",
+      "criteria": {
+        "selected_boundary_supported": "The selected owner matches the stable business decision and atomic conflict set; independently governed facts are separated.",
+        "boundary_should_change": "A concrete split or merge is required to preserve an explicit invariant or independent lifecycle.",
+        "evidence_insufficient": "Identity, source authority, lifecycle, contention, or concurrency evidence is missing or contradictory."
+      }
+    },
+    "item_0_evidence": {
+      "type": "noul",
+      "instructions": "Does this row provide enough explicit evidence to settle CommitmentDraft's boundary without adding an unstated business policy?",
+      "criteria": {
+        "true": "Identity, invariant, lifecycle and exclusions are explicit enough to decide.",
+        "false": "A material boundary assumption is missing, contradictory or unsupported."
+      }
+    },
+    "item_1": {
+      "type": "choice",
+      "instructions": "Does the selected boundary for ComplianceIncident fit its identity, atomic invariant, command decisions, event facts, and independent lifecycle?",
+      "criteria": {
+        "selected_boundary_supported": "The selected owner matches the stable business decision and atomic conflict set; independently governed facts are separated.",
+        "boundary_should_change": "A concrete split or merge is required to preserve an explicit invariant or independent lifecycle.",
+        "evidence_insufficient": "Identity, source authority, lifecycle, contention, or concurrency evidence is missing or contradictory."
+      }
+    },
+    "item_1_evidence": {
+      "type": "noul",
+      "instructions": "Does this row provide enough explicit evidence to settle ComplianceIncident's boundary without adding an unstated business policy?",
+      "criteria": {
+        "true": "Identity, invariant, lifecycle and exclusions are explicit enough to decide.",
+        "false": "A material boundary assumption is missing, contradictory or unsupported."
+      }
+    },
+    "item_2": {
+      "type": "choice",
+      "instructions": "Does the selected boundary for ComplianceProgram fit its identity, atomic invariant, command decisions, event facts, and independent lifecycle?",
+      "criteria": {
+        "selected_boundary_supported": "The selected owner matches the stable business decision and atomic conflict set; independently governed facts are separated.",
+        "boundary_should_change": "A concrete split or merge is required to preserve an explicit invariant or independent lifecycle.",
+        "evidence_insufficient": "Identity, source authority, lifecycle, contention, or concurrency evidence is missing or contradictory."
+      }
+    },
+    "item_2_evidence": {
+      "type": "noul",
+      "instructions": "Does this row provide enough explicit evidence to settle ComplianceProgram's boundary without adding an unstated business policy?",
+      "criteria": {
+        "true": "Identity, invariant, lifecycle and exclusions are explicit enough to decide.",
+        "false": "A material boundary assumption is missing, contradictory or unsupported."
+      }
+    },
+    "item_3": {
+      "type": "choice",
+      "instructions": "Does the selected boundary for ControlCriterionMapping fit its identity, atomic invariant, command decisions, event facts, and independent lifecycle?",
+      "criteria": {
+        "selected_boundary_supported": "The selected owner matches the stable business decision and atomic conflict set; independently governed facts are separated.",
+        "boundary_should_change": "A concrete split or merge is required to preserve an explicit invariant or independent lifecycle.",
+        "evidence_insufficient": "Identity, source authority, lifecycle, contention, or concurrency evidence is missing or contradictory."
+      }
+    },
+    "item_3_evidence": {
+      "type": "noul",
+      "instructions": "Does this row provide enough explicit evidence to settle ControlCriterionMapping's boundary without adding an unstated business policy?",
+      "criteria": {
+        "true": "Identity, invariant, lifecycle and exclusions are explicit enough to decide.",
+        "false": "A material boundary assumption is missing, contradictory or unsupported."
+      }
+    },
+    "item_4": {
+      "type": "choice",
+      "instructions": "Does the selected boundary for ControlDraft fit its identity, atomic invariant, command decisions, event facts, and independent lifecycle?",
+      "criteria": {
+        "selected_boundary_supported": "The selected owner matches the stable business decision and atomic conflict set; independently governed facts are separated.",
+        "boundary_should_change": "A concrete split or merge is required to preserve an explicit invariant or independent lifecycle.",
+        "evidence_insufficient": "Identity, source authority, lifecycle, contention, or concurrency evidence is missing or contradictory."
+      }
+    },
+    "item_4_evidence": {
+      "type": "noul",
+      "instructions": "Does this row provide enough explicit evidence to settle ControlDraft's boundary without adding an unstated business policy?",
+      "criteria": {
+        "true": "Identity, invariant, lifecycle and exclusions are explicit enough to decide.",
+        "false": "A material boundary assumption is missing, contradictory or unsupported."
+      }
+    },
+    "item_5": {
+      "type": "choice",
+      "instructions": "Does the selected boundary for ControlEvaluation fit its identity, atomic invariant, command decisions, event facts, and independent lifecycle?",
+      "criteria": {
+        "selected_boundary_supported": "The selected owner matches the stable business decision and atomic conflict set; independently governed facts are separated.",
+        "boundary_should_change": "A concrete split or merge is required to preserve an explicit invariant or independent lifecycle.",
+        "evidence_insufficient": "Identity, source authority, lifecycle, contention, or concurrency evidence is missing or contradictory."
+      }
+    },
+    "item_5_evidence": {
+      "type": "noul",
+      "instructions": "Does this row provide enough explicit evidence to settle ControlEvaluation's boundary without adding an unstated business policy?",
+      "criteria": {
+        "true": "Identity, invariant, lifecycle and exclusions are explicit enough to decide.",
+        "false": "A material boundary assumption is missing, contradictory or unsupported."
+      }
+    },
+    "item_6": {
+      "type": "choice",
+      "instructions": "Does the selected boundary for ControlEvaluationPlan fit its identity, atomic invariant, command decisions, event facts, and independent lifecycle?",
+      "criteria": {
+        "selected_boundary_supported": "The selected owner matches the stable business decision and atomic conflict set; independently governed facts are separated.",
+        "boundary_should_change": "A concrete split or merge is required to preserve an explicit invariant or independent lifecycle.",
+        "evidence_insufficient": "Identity, source authority, lifecycle, contention, or concurrency evidence is missing or contradictory."
+      }
+    },
+    "item_6_evidence": {
+      "type": "noul",
+      "instructions": "Does this row provide enough explicit evidence to settle ControlEvaluationPlan's boundary without adding an unstated business policy?",
+      "criteria": {
+        "true": "Identity, invariant, lifecycle and exclusions are explicit enough to decide.",
+        "false": "A material boundary assumption is missing, contradictory or unsupported."
+      }
+    },
+    "item_7": {
+      "type": "choice",
+      "instructions": "Does the selected boundary for ControlOccurrence fit its identity, atomic invariant, command decisions, event facts, and independent lifecycle?",
+      "criteria": {
+        "selected_boundary_supported": "The selected owner matches the stable business decision and atomic conflict set; independently governed facts are separated.",
+        "boundary_should_change": "A concrete split or merge is required to preserve an explicit invariant or independent lifecycle.",
+        "evidence_insufficient": "Identity, source authority, lifecycle, contention, or concurrency evidence is missing or contradictory."
+      }
+    },
+    "item_7_evidence": {
+      "type": "noul",
+      "instructions": "Does this row provide enough explicit evidence to settle ControlOccurrence's boundary without adding an unstated business policy?",
+      "criteria": {
+        "true": "Identity, invariant, lifecycle and exclusions are explicit enough to decide.",
+        "false": "A material boundary assumption is missing, contradictory or unsupported."
+      }
+    }
+  }
+}

@@ -1,0 +1,11 @@
+using Cntryl.Portia;
+using Bdgrz.Compliance.Features.Evidence.Models;
+namespace Bdgrz.Compliance.Features.Controls.Models;
+
+/// <summary>
+///     A workforce person owning one exact control revision, with the member the person is
+///     correlated with, if any. A designation records the snapshot; activation passes the person's
+///     current, roster-verified correlation.
+/// </summary>
+public sealed record ControlPersonOwner(Uuid PersonId, Uuid? CorrelatedMemberId,
+    Uuid DesignationId = default);

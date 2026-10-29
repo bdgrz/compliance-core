@@ -6719,7 +6719,10 @@
       "projectionSource": null,
       "adoptedDecisionIds": [],
       "rawNameDisposition": "superseded_vocabulary_or_decision",
-      "adoptedOwnerMappingStatus": "resolved_for_intended_event_name_and_authority"
+      "adoptedOwnerMappingStatus": "resolved_for_intended_event_name_and_authority",
+      "selectedTargetDisposition": "retired_from_business_owner_process_receipt_only",
+      "selectedTargetOwner": null,
+      "targetStatus": "NOT_SELECTED_AS_A_DOMAIN_EVENT"
     },
     {
       "event": "NonattestServiceRecorded",
@@ -7918,24 +7921,21 @@
     {
       "event": "ProgramNextPeriodCreated",
       "canonicalSemanticKey": "event:ProgramNextPeriodCreated",
-      "emissionKind": "business",
-      "owners": [
-        "ProgramRollover"
-      ],
-      "ownerSelection": "one exact canonical authority owner",
+      "emissionKind": "none",
+      "owners": [],
+      "ownerSelection": "no future emitted event with this raw name",
       "historicalDecoderOwners": [
         "ProgramRollover"
       ],
-      "canonicalReplacementEvents": [
-        "ProgramNextPeriodCreated"
-      ],
-      "canonicalReplacementOwners": [
-        "ProgramRollover"
-      ],
+      "canonicalReplacementEvents": [],
+      "canonicalReplacementOwners": [],
       "projectionSource": null,
       "adoptedDecisionIds": [],
-      "rawNameDisposition": "intended_business",
-      "adoptedOwnerMappingStatus": "resolved_for_intended_event_name_and_authority"
+      "rawNameDisposition": "retired_business_event_process_receipt_only",
+      "adoptedOwnerMappingStatus": "resolved_for_intended_event_name_and_authority",
+      "selectedTargetDisposition": "retired_from_business_owner_process_receipt_only",
+      "selectedTargetOwner": null,
+      "targetStatus": "NOT_SELECTED_AS_A_DOMAIN_EVENT"
     },
     {
       "event": "ProgramRevised",
@@ -12040,6 +12040,26 @@
       "adoptedDecisionIds": [],
       "rawNameDisposition": "intended_business",
       "adoptedOwnerMappingStatus": "resolved_for_intended_event_name_and_authority"
+    },
+    {
+      "event": "ProgramRolloverExecutionClaimed",
+      "canonicalSemanticKey": "event:ProgramRolloverExecutionClaimed",
+      "emissionKind": "business",
+      "owners": [
+        "ProgramRollover"
+      ],
+      "ownerSelection": "one exact canonical authority owner",
+      "historicalDecoderOwners": [],
+      "canonicalReplacementEvents": [],
+      "canonicalReplacementOwners": [],
+      "projectionSource": null,
+      "adoptedDecisionIds": [
+        "PROGRAM_ROLLOVER_EXECUTION"
+      ],
+      "adoptedOwnerMappingStatus": "resolved_for_selected_target_definition",
+      "selectedTargetDisposition": "new_business_event_atomic_execution_fence",
+      "selectedTargetOwner": "ProgramRollover",
+      "targetStatus": "SELECTED_TARGET_NO_IMPLEMENTATION_AUTHORIZED"
     }
   ],
   "canonicalOwnerMapBinding": {

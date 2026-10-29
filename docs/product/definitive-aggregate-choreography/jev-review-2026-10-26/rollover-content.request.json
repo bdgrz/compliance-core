@@ -1,0 +1,67 @@
+{
+  "model": "jev-1.14.0",
+  "state": {
+    "rollover": {
+      "fields": [
+        "SourcePeriodId",
+        "SourceExaminationId",
+        "SourceCloseSnapshotId/hash",
+        "AuditOutcomeId/hash",
+        "NextPeriodStart/End",
+        "NextPeriodId",
+        "NextTypeIIPlanId",
+        "Records(record type, source id/version/hash, disposition, optional successor id, rationale)",
+        "Commitments(id, description, owner, due date, source engagement/record/version/hash)",
+        "ComparisonMeasures",
+        "ProposalRationale"
+      ]
+    },
+    "successorPlan": {
+      "fields": [
+        "ExaminationId",
+        "SourceSnapshotId/hash",
+        "SystemDescriptionVersionId",
+        "PeriodStart/End",
+        "AuditFirm",
+        "TrustServiceCategories",
+        "TypeIBaselineId",
+        "TypeIOutcomeId",
+        "CarryForwardInputs",
+        "Controls",
+        "CarriedForwardGaps",
+        "AcknowledgedGaps",
+        "RequiredChanges"
+      ]
+    },
+    "sourceRule": "TypeIIPlan proposal validates exact frozen Type I baseline, outcome, system description, approved controls/owners, every current finding, all carry-forward sources. ProgramRolloverContent is not a complete TypeIIPlanContent and lacks source Type I baseline IDs, system description, controls and complete plan content."
+  },
+  "questions": {
+    "choice": {
+      "type": "choice",
+      "instructions": "How should ProgramRolloverExecutionProcess handle the fact that approved rollover content is not sufficient to deterministically construct a valid TypeIIPlanContent?",
+      "criteria": {
+        "explicit_human_authored_successor_plan": "After exact rollover execution claim, require an authorized actor to submit a complete TypeIIPlanContent that passes TypeIIPlan owner source validation. Freeze exact content in private process state, require every rollover disposition/commitment to have an explicit mapped or intentionally excluded outcome, then preserve independent plan review and executive approval. Do not invent derived values.",
+        "add_complete_plan_to_rollover": "Expand rollover proposal itself to include every exact TypeIIPlanContent field and make it the source authority for the next plan.",
+        "automatic_mapping": "Derive the missing source snapshot, system description, controls and findings from rollover records using implicit defaults.",
+        "business_policy_required": "Available facts do not establish which completion approach is intended."
+      }
+    },
+    "mapping": {
+      "type": "noul",
+      "instructions": "Does a complete source-backed deterministic mapping currently exist from ProgramRolloverContent into TypeIIPlanContent?",
+      "criteria": {
+        "true": "Every target field and carry-forward identity/disposition can be derived uniquely from approved source content.",
+        "false": "The target has material fields/sources that are not supplied or uniquely derivable."
+      }
+    },
+    "noomission": {
+      "type": "choice",
+      "instructions": "What is the safe rule for rollover records and commitments when preparing the successor plan?",
+      "criteria": {
+        "exhaustive_mapping": "Every approved item must be explicitly mapped to an exact plan input, carried finding/gap, acknowledgement or required change, or be explicitly dispositioned as intentionally not represented; reject omissions and hash the complete mapping.",
+        "best_effort": "Carry matching records and ignore nonmatching categories.",
+        "policy_needed": "No rule is inferable."
+      }
+    }
+  }
+}

@@ -1,0 +1,798 @@
+using Bdgrz.Compliance.Tests.Testing;
+using Cntryl.Fitz.Extensions;
+using Cntryl.Fitz;
+using Cntryl.Portia;
+using Cntryl.Fitz.Testing;
+using Cntryl.Portia.Testing;
+using Microsoft.Extensions.DependencyInjection;
+using Bdgrz.Compliance.Features.AccessControl.Processes;
+using Bdgrz.Compliance.Features.AccessControl.Rules;
+using Bdgrz.Compliance.Features.AccessControl.Services;
+using Bdgrz.Compliance.Features.Applications.Models;
+using Bdgrz.Compliance.Features.AuditPackages.Rules;
+using Bdgrz.Compliance.Features.AuditPopulations.Models;
+using Bdgrz.Compliance.Features.AuditorRequests.Processes;
+using Bdgrz.Compliance.Features.ControlMappings.History;
+using Bdgrz.Compliance.Features.Controls.Contracts;
+using Bdgrz.Compliance.Features.Controls.Rules;
+using Bdgrz.Compliance.Features.Controls.Services;
+using Bdgrz.Compliance.Features.Evidence.Models;
+using Bdgrz.Compliance.Features.Incidents.Rules;
+using Bdgrz.Compliance.Features.Independence.Contracts;
+using Bdgrz.Compliance.Features.Independence.Services;
+using Bdgrz.Compliance.Features.NativeOperations.History;
+using Bdgrz.Compliance.Features.NativeOperations.Models;
+using Bdgrz.Compliance.Features.Operations.History;
+using Bdgrz.Compliance.Features.Operations.Models;
+using Bdgrz.Compliance.Features.Operations.Services;
+using Bdgrz.Compliance.Features.Processes.Processes;
+using Bdgrz.Compliance.Features.Programs.Readers;
+using Bdgrz.Compliance.Features.Providers.Rules;
+using Bdgrz.Compliance.Features.Readiness.Rules;
+using Bdgrz.Compliance.Features.Remediation.Processes;
+using Bdgrz.Compliance.Features.Remediation.Rules;
+using Bdgrz.Compliance.Features.Responsibilities.Models;
+using Bdgrz.Compliance.Features.Retention.Models;
+using Bdgrz.Compliance.Features.Risks.Models;
+using Bdgrz.Compliance.Features.Risks.Processes;
+using Bdgrz.Compliance.Features.Risks.Rules;
+using Bdgrz.Compliance.Features.Risks.Services;
+using Bdgrz.Compliance.Features.SourceFacts.Contracts;
+using Bdgrz.Compliance.Features.SourceFacts.Models;
+using Bdgrz.Compliance.Features.SystemDescription.Projections;
+using Bdgrz.Compliance.Features.TechnologyInventory.Models;
+using Bdgrz.Compliance.Features.Tenants.Models;
+using Bdgrz.Compliance.Features.Tenants.Processes;
+using Bdgrz.Compliance.Features.Versioning.Models;
+using Bdgrz.Compliance.Features.Work.Models;
+using Bdgrz.Compliance.Features.Work.Services;
+using Bdgrz.Compliance.Features.Workforce.Rules;
+using Bdgrz.Compliance.Tests.Features.AccessControl.Tests;
+using Bdgrz.Compliance.Tests.Features.AccessReviews.Tests;
+using Bdgrz.Compliance.Tests.Features.AdvisorCollaboration.Tests;
+using Bdgrz.Compliance.Tests.Features.Applications.Tests;
+using Bdgrz.Compliance.Tests.Features.AuditPackages.Tests;
+using Bdgrz.Compliance.Tests.Features.AuditPopulations.Tests;
+using Bdgrz.Compliance.Tests.Features.AuditorRequests.Tests;
+using Bdgrz.Compliance.Tests.Features.Boundaries.Tests;
+using Bdgrz.Compliance.Tests.Features.Changes.Tests;
+using Bdgrz.Compliance.Tests.Features.Commitments.Tests;
+using Bdgrz.Compliance.Tests.Features.ControlMappings.Tests;
+using Bdgrz.Compliance.Tests.Features.Controls.Tests;
+using Bdgrz.Compliance.Tests.Features.Criteria.Tests;
+using Bdgrz.Compliance.Tests.Features.Evaluations.Tests;
+using Bdgrz.Compliance.Tests.Features.Evidence.Tests;
+using Bdgrz.Compliance.Tests.Features.Examinations.Tests;
+using Bdgrz.Compliance.Tests.Features.Exports.Tests;
+using Bdgrz.Compliance.Tests.Features.Incidents.Tests;
+using Bdgrz.Compliance.Tests.Features.Independence.Tests;
+using Bdgrz.Compliance.Tests.Features.MethodologyTemplates.Tests;
+using Bdgrz.Compliance.Tests.Features.NamedRecords.Tests;
+using Bdgrz.Compliance.Tests.Features.NativeOperations.Tests;
+using Bdgrz.Compliance.Tests.Features.Operations.Tests;
+using Bdgrz.Compliance.Tests.Features.Policies.Tests;
+using Bdgrz.Compliance.Tests.Features.PolicyDistribution.Tests;
+using Bdgrz.Compliance.Tests.Features.Processes.Tests;
+using Bdgrz.Compliance.Tests.Features.Programs.Tests;
+using Bdgrz.Compliance.Tests.Features.Providers.Tests;
+using Bdgrz.Compliance.Tests.Features.Readiness.Tests;
+using Bdgrz.Compliance.Tests.Features.Remediation.Tests;
+using Bdgrz.Compliance.Tests.Features.Retention.Tests;
+using Bdgrz.Compliance.Tests.Features.Snapshots.Tests;
+using Bdgrz.Compliance.Tests.Features.SourceFacts.Tests;
+using Bdgrz.Compliance.Tests.Features.SourceUse.Tests;
+using Bdgrz.Compliance.Tests.Features.SystemDescription.Tests;
+using Bdgrz.Compliance.Tests.Features.TechnologyInventory.Tests;
+using Bdgrz.Compliance.Tests.Features.Tenants.Tests;
+using Bdgrz.Compliance.Tests.Features.UserIdentities.Tests;
+using Bdgrz.Compliance.Tests.Features.Work.Tests;
+using Bdgrz.Compliance.Tests.Features.Workforce.Tests;
+using Bdgrz.Compliance.Features.AccessControl.Aggregates;
+using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.Controls.Aggregates;
+using Bdgrz.Compliance.Features.Controls.Models;
+using Bdgrz.Compliance.Features.Evidence.Aggregates;
+using Bdgrz.Compliance.Features.Evidence.Authorizers;
+using Bdgrz.Compliance.Features.Evidence.Commands;
+using Bdgrz.Compliance.Features.Evidence.Handlers;
+using Bdgrz.Compliance.Features.Exports.Commands;
+using Bdgrz.Compliance.Features.Providers.Aggregates;
+using Bdgrz.Compliance.Features.Providers.Projections;
+using Bdgrz.Compliance.Features.Responsibilities.Commands;
+using Bdgrz.Compliance.Features.Retention.Commands;
+using Bdgrz.Compliance.Features.Risks.Aggregates;
+using Bdgrz.Compliance.Features.Risks.Authorizers;
+using Bdgrz.Compliance.Features.Risks.Commands;
+using Bdgrz.Compliance.Features.Risks.Handlers;
+using Bdgrz.Compliance.Features.Risks.Queries;
+using Bdgrz.Compliance.Features.Risks.Readers;
+using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
+using Bdgrz.Compliance.Features.Tenants.Authorizers;
+using Bdgrz.Compliance.Features.Work.Commands;
+using Bdgrz.Compliance.Features.Work.Handlers;
+using Bdgrz.Compliance.Features.Work.Queries;
+using Bdgrz.Compliance.Features.Work.Readers;
+using Bdgrz.Compliance.Tests;
+namespace Bdgrz.Compliance.Tests.Features.Risks.Tests;
+
+public sealed class RiskGovernanceHandlerTests
+{
+    [Fact]
+    public async Task ShouldRecordResidualUnderMitigateGivenIndependentlyAcceptedControlTreatment()
+    {
+        // Arrange
+        var fixture = await Fixture.CreateAsync("mitigate");
+        await fixture.Scenario(fixture.AssessorUserId)
+            .When(fixture.Residual(2))
+            .ExpectFailure(RequestErrorKind.Conflict);
+        var proposed = await fixture.Scenario(fixture.AssessorUserId)
+            .When(new ProposeRiskControlTreatment(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId,
+                fixture.RiskId, 0, fixture.ControlId, fixture.ControlVersionId,
+                "Quarterly access review lowers likelihood."))
+            .ExpectSuccess();
+        await PersonalRiskSignoffTransportTests.HttpAsync(fixture.Provider, fixture.AssessorUserId, fixture.ReviewTreatment(proposed.Value.TreatmentId, "accept"), RequestErrorKind.Forbidden);
+
+        // Act
+        await PersonalRiskSignoffTransportTests.HttpAsync(fixture.Provider, fixture.ApproverUserId, fixture.ReviewTreatment(proposed.Value.TreatmentId, "accept"));
+        var residual = await fixture.Scenario(fixture.AssessorUserId)
+            .When(fixture.Residual(2))
+            .ExpectSuccess();
+
+        // Assert
+        Assert.Equal(4, residual.Value.Score);
+        var governance = await fixture.GovernanceAsync();
+        var treatment = Assert.Single(governance.ControlTreatments);
+        Assert.Equal("accepted", treatment.Status);
+        Assert.Equal(fixture.ControlVersionId, treatment.ControlVersionId);
+        Assert.Equal(0, governance.Revision);
+        var line = await ProgramManagementServices.HydrateAsync(fixture.Provider,
+            new RiskTreatmentAssertion(fixture.TenantId, fixture.ProgramId, fixture.RiskId, fixture.ControlId));
+        Assert.Equal(2, line.Revision);
+    }
+
+    [Fact]
+    public async Task ShouldRejectTreatmentGivenControlVersionNotCurrentOrRiskNotMitigated()
+    {
+        // Arrange
+        var fixture = await Fixture.CreateAsync("accept");
+
+        await fixture.Scenario(fixture.AssessorUserId)
+            // Act
+            .When(new ProposeRiskControlTreatment(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId,
+                fixture.RiskId, 0, fixture.ControlId, Uuid.CreateVersion4(), "Wrong version."))
+            // Assert
+            .ExpectFailure(RequestErrorKind.Conflict);
+        await fixture.Scenario(fixture.AssessorUserId)
+            .When(new ProposeRiskControlTreatment(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId,
+                fixture.RiskId, 0, fixture.ControlId, fixture.ControlVersionId, "Not mitigate."))
+            .ExpectFailure(RequestErrorKind.Conflict);
+        await fixture.Scenario(fixture.AssessorUserId)
+            .When(new ProposeRiskControlTreatment(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId,
+                Uuid.CreateVersion4(), 0, fixture.ControlId, fixture.ControlVersionId, "None."))
+            .ExpectFailure(RequestErrorKind.NotFound);
+        Assert.Empty((await fixture.GovernanceAsync()).ControlTreatments);
+    }
+
+    [Fact]
+    public async Task ShouldDenyOwnerAcceptanceGivenCorrelatedPersonOwnerWithoutWaiver()
+    {
+        // Arrange
+        var fixture = await Fixture.CreateAsync("accept");
+        var personId = await fixture.SeedPersonAsync(fixture.ApproverUserId);
+        await fixture.Scenario(fixture.AssessorUserId)
+            .When(new AssignRiskOwner(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId, fixture.RiskId, 0,
+                personId, "Owns the provider relationship."))
+            .ExpectSuccess();
+        var residual = await fixture.Scenario(fixture.AssessorUserId)
+            .When(fixture.Residual(2))
+            .ExpectSuccess();
+        var waiverId = await fixture.SeedWaiverAsync(residual.Value.AssessmentId, 3);
+
+        // Act
+        await fixture.AcceptHttpAsync(fixture.Accept(residual.Value.AssessmentId, null), fixture.ApproverUserId, RequestErrorKind.Forbidden);
+        var accepted = await fixture.AcceptHttpAsync(fixture.Accept(residual.Value.AssessmentId, waiverId), fixture.ApproverUserId);
+
+        // Assert
+        Assert.Equal(waiverId, accepted.Value.SeparationOfDutiesWaiverId);
+        var owner = (await fixture.GovernanceAsync()).Owner!;
+        Assert.Equal(personId, owner.PersonId);
+        Assert.Equal(RbacIds.Member(fixture.TenantId, fixture.ApproverUserId),
+            owner.CorrelatedMemberId);
+    }
+
+    [Fact]
+    public async Task ShouldRaiseTriggersOnlyForAffectedRisksGivenSystemReaction()
+    {
+        // Arrange
+        var fixture = await Fixture.CreateAsync("accept");
+        var source = Uuid.CreateVersion4().ToString();
+        var raise = new RaiseRiskReassessmentTriggers(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId,
+            "boundary_changed", source, DateTimeOffset.UtcNow, null, fixture.RiskId);
+        await fixture.Scenario(fixture.AssessorUserId)
+            .When(raise)
+            .ExpectFailure(RequestErrorKind.Forbidden);
+
+        // Act
+        await RequestScenario.For(fixture.Provider).GivenActor(RequestActor.System)
+            .When(raise).ExpectSuccess();
+        await RequestScenario.For(fixture.Provider).GivenActor(RequestActor.System)
+            .When(raise).ExpectSuccess();
+        await RequestScenario.For(fixture.Provider).GivenActor(RequestActor.System)
+            .When(new RaiseRiskReassessmentTriggers(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId,
+                "method_changed", fixture.MethodVersionId.ToString(), DateTimeOffset.UtcNow,
+                fixture.MethodVersionId, fixture.RiskId))
+            .ExpectSuccess();
+
+        // Assert
+        var trigger = Assert.Single((await fixture.GovernanceAsync()).ReassessmentTriggers);
+        Assert.Equal("boundary_changed", trigger.TriggerKind);
+        Assert.Equal(source, trigger.SourceReference);
+        Assert.Equal("open", trigger.Status);
+    }
+
+    [Fact]
+    public async Task ShouldCompleteActionOnlyAfterIndependentReviewGivenFulfilledEvidence()
+    {
+        // Arrange
+        var fixture = await Fixture.CreateAsync("mitigate");
+        var worker = await fixture.SeedMemberAsync();
+        var requestId = await fixture.SeedEvidenceAsync(fulfilled: false, worker);
+        var added = await fixture.Scenario(fixture.AssessorUserId)
+            .When(fixture.AddAction(worker, [requestId], 0)).ExpectSuccess();
+        var early = fixture.Submit(added.Value.ActionId, 1, [requestId]);
+        await PersonalRiskSignoffTransportTests.HttpAsync(fixture.Provider, fixture.AssessorUserId, early, RequestErrorKind.Conflict);
+        await fixture.FulfilEvidenceAsync(requestId);
+
+        // Act
+        var submitted = await PersonalRiskSignoffTransportTests.HttpAsync(fixture.Provider, fixture.AssessorUserId, early);
+        var pending = await fixture.GovernanceAsync();
+        await PersonalRiskSignoffTransportTests.HttpAsync(fixture.Provider, fixture.AssessorUserId, fixture.ReviewAction(added.Value.ActionId, 2, "accept"), RequestErrorKind.Forbidden);
+        await PersonalRiskSignoffTransportTests.HttpAsync(fixture.Provider, worker.UserId, fixture.ReviewAction(added.Value.ActionId, 2, "accept"), RequestErrorKind.Forbidden);
+        var unassignedReviewer = Uuid.CreateVersion4();
+        await PersonalRiskSignoffTransportTests.HttpAsync(fixture.Provider, unassignedReviewer, fixture.ReviewAction(added.Value.ActionId, 2, "accept"), RequestErrorKind.Forbidden);
+        await PersonalRiskSignoffTransportTests.HttpAsync(fixture.Provider, fixture.ApproverUserId, fixture.ReviewAction(added.Value.ActionId, 2, "accept"), RequestErrorKind.Forbidden);
+        await fixture.AssignReviewAsync(submitted.Value.SubmissionId);
+        await PersonalRiskSignoffTransportTests.HttpAsync(fixture.Provider, fixture.ApproverUserId, fixture.ReviewAction(added.Value.ActionId, 2, "accept"));
+        var done = await fixture.GovernanceAsync();
+
+        // Assert
+        Assert.Equal("in_progress", pending.TreatmentActionStatus);
+        Assert.Equal("completion_submitted", Assert.Single(pending.TreatmentActions).Status);
+        Assert.Equal(submitted.Value.SubmissionId,
+            Assert.Single(Assert.Single(done.TreatmentActions).Completions).SubmissionId);
+        Assert.Equal("completed", done.TreatmentActionStatus);
+        Assert.Equal(0, done.Revision);
+        Assert.Equal(4, (await fixture.ActionAsync(added.Value.ActionId)).Revision);
+    }
+
+    [Fact]
+    public async Task ShouldReviseOpenActionGivenActiveAccountableMemberAndProgramEvidence()
+    {
+        // Arrange
+        var fixture = await Fixture.CreateAsync("mitigate");
+        var originalOwner = await fixture.SeedMemberAsync();
+        var revisedOwner = await fixture.SeedMemberAsync();
+        var evidenceId = await fixture.SeedEvidenceAsync(fulfilled: false, revisedOwner);
+        var added = await fixture.Scenario(fixture.AssessorUserId)
+            .When(fixture.AddAction(originalOwner, [], 0)).ExpectSuccess();
+        var revise = new ReviseRiskTreatmentAction(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId,
+            fixture.RiskId, added.Value.ActionId, 1, "Enforce phishing-resistant MFA",
+            "Every administrator uses a hardware key.",
+            "Identity provider policy export.", DateOnly.FromDateTime(DateTime.UtcNow).AddDays(30),
+            revisedOwner.MemberId, [evidenceId]);
+
+        // Act
+        await fixture.Scenario(fixture.AssessorUserId).When(revise).ExpectSuccess();
+        var governance = await fixture.GovernanceAsync();
+
+        // Assert
+        var action = Assert.Single(governance.TreatmentActions);
+        Assert.Equal("Enforce phishing-resistant MFA", action.Title);
+        Assert.Equal("Every administrator uses a hardware key.", action.TargetState);
+        Assert.Equal("Identity provider policy export.", action.ExpectedEvidence);
+        Assert.Equal(revisedOwner.MemberId, action.AccountableMemberId);
+        Assert.Equal([evidenceId], action.EvidenceRequestIds);
+        Assert.Equal("open", action.Status);
+        Assert.Equal(0, governance.Revision);
+        Assert.Equal(2, (await fixture.ActionAsync(added.Value.ActionId)).Revision);
+    }
+
+    [Fact]
+    public async Task ShouldRejectTreatmentActionEditGivenForeignEvidenceOrInactiveAccountableMember()
+    {
+        // Arrange
+        var fixture = await Fixture.CreateAsync("mitigate");
+        var other = await Fixture.CreateAsync("mitigate");
+        var owner = await fixture.SeedMemberAsync();
+        var otherOwner = await other.SeedMemberAsync();
+        var foreignEvidenceId = await other.SeedEvidenceAsync(fulfilled: false, otherOwner);
+        var added = await fixture.Scenario(fixture.AssessorUserId)
+            .When(fixture.AddAction(owner, [], 0)).ExpectSuccess();
+        var foreignEvidenceEdit = new ReviseRiskTreatmentAction(Uuid.CreateVersion4(), fixture.TenantId,
+            fixture.ProgramId, fixture.RiskId, added.Value.ActionId, 1, "Updated action",
+            "Updated state", "Updated evidence", DateOnly.FromDateTime(DateTime.UtcNow)
+                .AddDays(30), owner.MemberId, [foreignEvidenceId]);
+        var inactiveMemberEdit = new ReviseRiskTreatmentAction(Uuid.CreateVersion4(), fixture.TenantId,
+            fixture.ProgramId, fixture.RiskId, added.Value.ActionId, 1, "Updated action",
+            "Updated state", "Updated evidence", DateOnly.FromDateTime(DateTime.UtcNow)
+                .AddDays(30), Uuid.CreateVersion4());
+
+        // Act
+        await fixture.Scenario(fixture.AssessorUserId).When(foreignEvidenceEdit)
+            .ExpectFailure(RequestErrorKind.Validation);
+        await fixture.Scenario(fixture.AssessorUserId).When(inactiveMemberEdit)
+            .ExpectFailure(RequestErrorKind.Validation);
+        var governance = await fixture.GovernanceAsync();
+
+        // Assert
+        var action = Assert.Single(governance.TreatmentActions);
+        Assert.Equal("Enforce MFA", action.Title);
+        Assert.Equal(owner.MemberId, action.AccountableMemberId);
+        Assert.Equal(0, governance.Revision);
+        Assert.Equal(1, (await fixture.ActionAsync(added.Value.ActionId)).Revision);
+    }
+
+    [Fact]
+    public async Task ShouldForbidTreatmentActionWritesGivenActorWithoutProgramManage()
+    {
+        // Arrange
+        var fixture = await Fixture.CreateAsync("mitigate", allowed: false);
+        var worker = await fixture.SeedMemberAsync();
+        var add = fixture.AddAction(worker, [], 0);
+
+        // Act
+        await fixture.Scenario(fixture.AssessorUserId).When(add)
+            .ExpectFailure(RequestErrorKind.Forbidden);
+        await PersonalRiskSignoffTransportTests.HttpAsync(fixture.Provider, fixture.AssessorUserId, fixture.Submit(Uuid.CreateVersion4(), 1, [Uuid.CreateVersion4()]), RequestErrorKind.Forbidden);
+        await fixture.Scenario(fixture.AssessorUserId)
+            .When(new ReviseRiskTreatmentAction(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId,
+                fixture.RiskId, Uuid.CreateVersion4(), 0, "Updated action", "Updated state",
+                "Updated evidence", DateOnly.FromDateTime(DateTime.UtcNow).AddDays(30),
+                Uuid.CreateVersion4()))
+            .ExpectFailure(RequestErrorKind.Forbidden);
+        await PersonalRiskSignoffTransportTests.HttpAsync(fixture.Provider, fixture.ApproverUserId, fixture.ReviewAction(Uuid.CreateVersion4(), 1, "accept"), RequestErrorKind.Forbidden);
+
+        // Assert
+        Assert.False((await fixture.ActionAsync(add.ActionId)).IsAdded);
+    }
+
+    [Fact]
+    public async Task ShouldRejectActionGivenOtherTenantEvidenceInactiveMemberOrUnchosenTreatment()
+    {
+        // Arrange
+        var fixture = await Fixture.CreateAsync("mitigate");
+        var other = await Fixture.CreateAsync("mitigate");
+        var worker = await fixture.SeedMemberAsync();
+        var otherWorker = await other.SeedMemberAsync();
+        var foreignEvidence = await other.SeedEvidenceAsync(fulfilled: true, otherWorker);
+        var accepted = await Fixture.CreateAsync("accept");
+        var acceptedWorker = await accepted.SeedMemberAsync();
+
+        // Act
+        await fixture.Scenario(fixture.AssessorUserId)
+            .When(fixture.AddAction(worker, [foreignEvidence], 0))
+            .ExpectFailure(RequestErrorKind.Validation);
+        await fixture.Scenario(fixture.AssessorUserId)
+            .When(fixture.AddAction(new Worker(Uuid.CreateVersion4(), Uuid.CreateVersion4()), [],
+                0)).ExpectFailure(RequestErrorKind.Validation);
+        await accepted.Scenario(accepted.AssessorUserId)
+            .When(accepted.AddAction(acceptedWorker, [], 0))
+            .ExpectFailure(RequestErrorKind.Conflict);
+
+        // Assert
+        Assert.Empty((await fixture.GovernanceAsync()).TreatmentActions);
+        Assert.Empty((await accepted.GovernanceAsync()).TreatmentActions);
+    }
+
+    [Fact]
+    public async Task ShouldReplayActionAndSubmissionGivenSameRequestIds()
+    {
+        // Arrange
+        var fixture = await Fixture.CreateAsync("mitigate");
+        var worker = await fixture.SeedMemberAsync();
+        var evidenceId = await fixture.SeedEvidenceAsync(fulfilled: true, worker);
+        var addId = Uuid.CreateVersion4();
+        var add = fixture.AddAction(worker, [evidenceId], 0) with { ActionId = addId };
+
+        // Act
+        var first = await fixture.ReplayScenario(fixture.AssessorUserId, add, addId)
+            .ExpectSuccess();
+        var second = await fixture.ReplayScenario(fixture.AssessorUserId, add, addId)
+            .ExpectSuccess();
+        var submitId = Uuid.CreateVersion4();
+        var submit = fixture.Submit(addId, 1, [evidenceId]) with { CommandId = submitId };
+        await fixture.ReplaySubmitHttpAsync(submit, submitId);
+        await fixture.ReplaySubmitHttpAsync(submit, submitId);
+        await fixture.ReplayScenario(fixture.AssessorUserId, add with { Title = "Changed" },
+            addId).ExpectFailure(RequestErrorKind.Conflict);
+
+        // Assert
+        Assert.Equal(first.Value, second.Value);
+        var governance = await fixture.GovernanceAsync();
+        Assert.Equal(0, governance.Revision);
+        Assert.Equal(2, (await fixture.ActionAsync(addId)).Revision);
+        Assert.Single(Assert.Single(governance.TreatmentActions).Completions);
+    }
+
+    [Theory]
+    [InlineData("accept")]
+    [InlineData("reject")]
+    public async Task ShouldReviewAndRemoveQueueWorkGivenReviewerAssignedThroughActualQueue(
+        string outcome)
+    {
+        // Arrange
+        var fixture = await Fixture.CreateAsync("mitigate");
+        var worker = await fixture.SeedMemberAsync();
+        var evidenceId = await fixture.SeedEvidenceAsync(fulfilled: true, worker);
+        var added = await fixture.Scenario(fixture.AssessorUserId)
+            .When(fixture.AddAction(worker, [evidenceId], 0)).ExpectSuccess();
+        var submitted = await PersonalRiskSignoffTransportTests.HttpAsync(fixture.Provider, fixture.AssessorUserId, fixture.Submit(added.Value.ActionId, 1, [evidenceId]));
+        var item = await fixture.AssignReviewAsync(submitted.Value.SubmissionId);
+
+        // Act
+        await PersonalRiskSignoffTransportTests.HttpAsync(fixture.Provider, fixture.ApproverUserId, fixture.ReviewAction(added.Value.ActionId, 2, outcome));
+        var after = await fixture.Scenario(fixture.ApproverUserId).When(new ListWork(
+            fixture.TenantId, fixture.ProgramId, "mine")).ExpectSuccess();
+        var governance = await fixture.GovernanceAsync();
+
+        // Assert
+        Assert.Equal(submitted.Value.SubmissionId, item.SourceId);
+        Assert.Equal(RbacIds.Member(fixture.TenantId, fixture.ApproverUserId), item.AssigneeMemberId);
+        Assert.Empty(after.Value.Items);
+        Assert.Equal(0, after.Value.Counts.Total);
+        Assert.Equal(outcome, Assert.Single(Assert.Single(governance.TreatmentActions).Completions).ReviewOutcome);
+    }
+
+    [Fact]
+    public async Task ShouldDenyPreviousReviewerGivenActualQueueReassignment()
+    {
+        // Arrange
+        var fixture = await Fixture.CreateAsync("mitigate");
+        var worker = await fixture.SeedMemberAsync();
+        var replacement = await fixture.SeedMemberAsync();
+        var evidenceId = await fixture.SeedEvidenceAsync(fulfilled: true, worker);
+        var added = await fixture.Scenario(fixture.AssessorUserId)
+            .When(fixture.AddAction(worker, [evidenceId], 0)).ExpectSuccess();
+        var submitted = await PersonalRiskSignoffTransportTests.HttpAsync(fixture.Provider, fixture.AssessorUserId, fixture.Submit(added.Value.ActionId, 1, [evidenceId]));
+        var first = await fixture.AssignReviewAsync(submitted.Value.SubmissionId);
+        var reassigned = await fixture.AssignReviewAsync(submitted.Value.SubmissionId,
+            replacement.UserId);
+
+        // Act
+        await PersonalRiskSignoffTransportTests.HttpAsync(fixture.Provider, fixture.ApproverUserId, fixture.ReviewAction(added.Value.ActionId, 2, "accept"), RequestErrorKind.Forbidden);
+        await PersonalRiskSignoffTransportTests.HttpAsync(fixture.Provider, replacement.UserId, fixture.ReviewAction(added.Value.ActionId, 2, "accept"));
+
+        // Assert
+        Assert.Equal(first.WorkItemId, reassigned.WorkItemId);
+        Assert.Equal(first.AssignmentRevision + 1, reassigned.AssignmentRevision);
+        Assert.Equal(replacement.MemberId, reassigned.AssigneeMemberId);
+        Assert.Equal("completed", (await fixture.GovernanceAsync()).TreatmentActionStatus);
+    }
+
+    [Fact]
+    public async Task ShouldRequireNewQueueAssignmentGivenRejectedCompletionResubmitted()
+    {
+        // Arrange
+        var fixture = await Fixture.CreateAsync("mitigate");
+        var worker = await fixture.SeedMemberAsync();
+        var evidenceId = await fixture.SeedEvidenceAsync(fulfilled: true, worker);
+        var added = await fixture.Scenario(fixture.AssessorUserId)
+            .When(fixture.AddAction(worker, [evidenceId], 0)).ExpectSuccess();
+        var first = await PersonalRiskSignoffTransportTests.HttpAsync(fixture.Provider, fixture.AssessorUserId, fixture.Submit(added.Value.ActionId, 1, [evidenceId]));
+        var firstItem = await fixture.AssignReviewAsync(first.Value.SubmissionId);
+        await PersonalRiskSignoffTransportTests.HttpAsync(fixture.Provider, fixture.ApproverUserId, fixture.ReviewAction(added.Value.ActionId, 2, "reject"));
+        var second = await PersonalRiskSignoffTransportTests.HttpAsync(fixture.Provider, fixture.AssessorUserId, fixture.Submit(added.Value.ActionId, 4, [evidenceId]));
+
+        // Act
+        await PersonalRiskSignoffTransportTests.HttpAsync(fixture.Provider, fixture.ApproverUserId, fixture.ReviewAction(added.Value.ActionId, 5, "accept"), RequestErrorKind.Forbidden);
+        var secondItem = await fixture.AssignReviewAsync(second.Value.SubmissionId);
+        await PersonalRiskSignoffTransportTests.HttpAsync(fixture.Provider, fixture.ApproverUserId, fixture.ReviewAction(added.Value.ActionId, 4, "accept"), RequestErrorKind.Conflict);
+        await PersonalRiskSignoffTransportTests.HttpAsync(fixture.Provider, fixture.ApproverUserId, fixture.ReviewAction(added.Value.ActionId, 5, "accept"));
+
+        // Assert
+        Assert.NotEqual(first.Value.SubmissionId, second.Value.SubmissionId);
+        Assert.NotEqual(firstItem.WorkItemId, secondItem.WorkItemId);
+        Assert.Equal(1, secondItem.AssignmentRevision);
+        Assert.Equal(2, Assert.Single((await fixture.GovernanceAsync()).TreatmentActions).Completions.Count);
+    }
+
+    internal sealed record Worker(Uuid UserId, Uuid MemberId);
+
+    internal sealed class Fixture
+    {
+        public required ServiceProvider Provider { get; init; }
+        public Uuid TenantId { get; } = Uuid.CreateVersion4();
+        public Uuid ProgramId { get; } = Uuid.CreateVersion4();
+        public Uuid AssessorUserId { get; } = Uuid.CreateVersion4();
+        public Uuid ApproverUserId { get; } = Uuid.CreateVersion4();
+        public Uuid RiskId => RiskDraft.IdFor(TenantId, ProgramId, "R-01");
+        public Uuid ControlId => ControlDraft.IdFor(TenantId, ProgramId, "AC-RISK");
+        public Uuid ControlVersionId => ControlVersionIds.Initial(ControlId);
+        public Uuid MethodVersionId { get; private set; }
+
+        public static async Task<Fixture> CreateAsync(string treatment, bool allowed = true)
+        {
+            var directory = new SingleRiskDirectory();
+            var client = new InMemoryKvClient();
+            var provider = ProgramManagementServices.Build(
+                new RecordingPermissionAuthorizer(allowed),
+                portia => portia.AddRequestHandler<RecordRiskAssessmentHandler>()
+                    .AddRequestHandler<AcceptRiskHandler>()
+                    .AddRequestHandler<AssignRiskOwnerHandler>()
+                    .AddRequestHandler<ProposeRiskControlTreatmentHandler>()
+                    .AddRequestHandler<ReviewRiskControlTreatmentHandler>()
+                    .AddRequestHandler<RetireRiskControlTreatmentHandler>()
+                    .AddRequestHandler<GetRiskGovernanceHandler>()
+                    .AddRequestHandler<AddRiskTreatmentActionHandler>()
+                    .AddRequestHandler<ReviseRiskTreatmentActionHandler>()
+                    .AddRequestHandler<SubmitRiskTreatmentActionCompletionHandler>()
+                    .AddRequestHandler<ReviewRiskTreatmentActionCompletionHandler>()
+                    .AddRequestHandler<CompleteRiskTreatmentActionReviewHandler>()
+                    .AddRequestHandler<AbortRiskTreatmentActionReviewHandler>()
+                    .AddRequestAuthorizer<RiskActionReceiverAuthorizer>()
+                    .AddRequestHandler<AuthorizeEvidenceRequestActionCompletionUseHandler>()
+                    .AddRequestHandler<SettleEvidenceRequestActionCompletionUseHandler>()
+                    .AddRequestAuthorizer<EvidenceRequestReceiverAuthorizer>()
+                    .AddRequestHandler<OpenEvidenceRequestHandler>()
+                    .AddRequestHandler<FulfilEvidenceRequestHandler>()
+                    .AddRequestHandler<ListWorkHandler>()
+                    .AddRequestHandler<GetWorkItemHandler>()
+                    .AddRequestHandler<AssignWorkItemHandler>()
+                    .AddRequestHandler<RaiseRiskReassessmentTriggersHandler>()
+                    .AddRequestAuthorizer<RiskReassessmentReactionAuthorizer>(),
+                services =>
+                {
+                    services.AddScoped<ControlActivationSource>()
+                        .AddScoped<RiskDraftListReadConsistency>()
+                        .AddScoped<OperatingAuthority>()
+                        .AddScoped<WorkQueueReader>()
+                        .AddScoped<WorkQueueReadConsistency>()
+                        .AddSingleton<IDomainEventReader>(provider =>
+                            (IDomainEventReader)provider.GetRequiredService<IEventStore>())
+                        .AddSingleton<IRiskDraftDirectoryReader>(directory);
+                    services.AddSingleton<IKvClient>(client);
+                    services.AddSingleton<IProcessRecordStore>(new FitzKvProcessRecordStore(client));
+                    services.AddSingleton(RiskActionCompletionReviewProcess.Definition());
+                    services.AddSingleton<ProcessCatalog>();
+                    services.AddScoped<ProcessDriver>();
+                    services.AddScoped<RiskActionReviewVerifier>();
+                    services.AddScoped<RiskActionReviewFences>();
+                    services.AddSingleton<ISourceFactResolver>(provider =>
+                        new EventStoreSourceFactResolver(provider.GetRequiredService<IDomainEventReader>()));
+                    services.AddScoped<ISeparationOfDutiesWaiverProofResolver, SeparationOfDutiesWaiverProofResolver>();
+                });
+            var fixture = new Fixture { Provider = provider };
+            directory.Fixture = fixture;
+            foreach (var userId in new[] { fixture.AssessorUserId, fixture.ApproverUserId })
+                await ProgramManagementServices.SeedAsync(provider, new Member(fixture.TenantId, userId),
+                    member => member.Register());
+            var now = DateTimeOffset.UtcNow;
+            var assessor = RbacIds.Member(fixture.TenantId, fixture.AssessorUserId);
+            await ProgramManagementServices.SeedAsync(provider,
+                new RiskDraftRules(fixture.TenantId, fixture.RiskId), risk => risk.Create(
+                    fixture.ProgramId, Uuid.CreateVersion4(), "R-01", new RiskDraftContent(
+                        "Provider outage", "The provider is unavailable", "Requests fail",
+                        null), assessor, "Assessor", now));
+            var method = new RiskMethodRules(fixture.TenantId, fixture.ProgramId);
+            await ProgramManagementServices.SeedAsync(provider, method, item => Command(
+                item.Publish(fixture.ProgramId, 0, RiskMethodTests.Scale(),
+                    RiskMethodTests.Scale(), 12, ActorReference.ForMember(assessor, "Lead"),
+                    now)));
+            var methodVersion = (await ProgramManagementServices.HydrateAsync(provider,
+                new RiskMethodRules(fixture.TenantId, fixture.ProgramId))).Current!;
+            fixture.MethodVersionId = methodVersion.MethodVersionId;
+            await ProgramManagementServices.SeedAsync(provider,
+                new RiskEvaluationRules(fixture.TenantId, fixture.RiskId), evaluation =>
+                {
+                    Assert.Null(evaluation.RecordAssessment(fixture.ProgramId, 0,
+                        Uuid.CreateVersion4(), methodVersion, "inherent", 4, 4, "Severe",
+                        assessor, "Assessor", now));
+                    return Command(evaluation.ChooseTreatment(fixture.ProgramId, 1, treatment,
+                        "Chosen.", assessor, "Assessor", now));
+                });
+            var owner = Uuid.CreateVersion4();
+            var reviewId = Uuid.CreateVersion4();
+            await ProgramManagementServices.SeedAsync(provider,
+                new ControlRules(fixture.TenantId, fixture.ControlId), control =>
+                {
+                    Assert.True(control.Create(fixture.ProgramId, Uuid.CreateVersion4(),
+                        "AC-RISK", new ControlDraftContent("Access review", "Review access",
+                            "Management reviews access", "Quarterly review.", ["Record"]),
+                        assessor, "Assessor", now).IsSuccess);
+                    Assert.Null(control.AssignResponsibility(new ResponsibilityScope("control",
+                            fixture.ControlId, fixture.ControlVersionId, 1),
+                        Uuid.CreateVersion4(), owner, ResponsibilityType.ControlOwner, assessor,
+                        "Assessor", now, now.AddMinutes(-1), null, []));
+                    Assert.Null(control.Review(fixture.ProgramId, 1, reviewId, "accept", "Ok",
+                        Uuid.CreateVersion4(), "Reviewer", now));
+                    return Command(control.Approve(fixture.ProgramId, 1, Uuid.CreateVersion4(),
+                        reviewId, new DateOnly(2026, 10, 1), "Ready",
+                        new HashSet<Uuid> { owner }, Uuid.CreateVersion4(), "Approver", now));
+                });
+            return fixture;
+        }
+
+        public async Task<Result<RiskAcceptanceView>> AcceptHttpAsync(AcceptRisk request, Uuid userId,
+            RequestErrorKind? expectedFailure = null)
+        {
+            await using var scope = Provider.CreateAsyncScope();
+            var result = await scope.ServiceProvider.GetRequiredService<IRequestBus>().DispatchAsync(request,
+                new RequestDispatchContext(ProgramManagementServices.Actor(userId),
+                    new HttpInvocation("POST", "/synthetic/risk-acceptance", "/synthetic/risk-acceptance", "synthetic")),
+                CancellationToken.None);
+            if (expectedFailure is { } error)
+                Assert.Equal(error, result.Error?.Kind);
+            else
+                Assert.True(result.IsSuccess, result.Error?.Message);
+            return result;
+        }
+
+        public async Task<Result<RiskTreatmentActionCompletionRegistration>> ReplaySubmitHttpAsync(
+            SubmitRiskTreatmentActionCompletion request, Uuid requestId)
+        {
+            await using var scope = Provider.CreateAsyncScope();
+            var result = await scope.ServiceProvider.GetRequiredService<IRequestBus>().DispatchAsync(request,
+                new RequestDispatchContext(ProgramManagementServices.Actor(AssessorUserId),
+                    new HttpInvocation("POST", "/synthetic/risk/signoff", "/synthetic/risk/signoff", "synthetic"),
+                    new RequestMetadata(requestId, requestId, null)), CancellationToken.None);
+            Assert.True(result.IsSuccess, result.Error?.Message);
+            return result;
+        }
+
+        public RequestScenario Scenario(Uuid userId) => RequestScenario.For(Provider)
+            .GivenActor(ProgramManagementServices.Actor(userId));
+
+        public RequestExpectations<TOut> ReplayScenario<TOut>(Uuid userId, IRequest<TOut> request,
+            Uuid requestId) => RequestScenario.For(Provider)
+            .GivenActor(ProgramManagementServices.Actor(userId))
+            .GivenMetadata(new RequestMetadata(requestId, requestId, null))
+            .When(request).ExpectAuthorized().ExpectHandled();
+
+        public async Task<WorkQueueItemView> AssignReviewAsync(Uuid submissionId, Uuid? userId = null)
+        {
+            var queue = await Scenario(AssessorUserId).When(new ListWork(TenantId, ProgramId, "all"))
+                .ExpectSuccess();
+            var item = Assert.Single(queue.Value.Items, candidate => candidate.Kind ==
+                WorkSource.RiskTreatmentActionReview && candidate.SourceId == submissionId);
+            var assigned = await Scenario(AssessorUserId).When(new AssignWorkItem(Uuid.CreateVersion4(), TenantId,
+                ProgramId, item.WorkItemId, item.AssignmentRevision,
+                RbacIds.Member(TenantId, userId ?? ApproverUserId), "Independent completion review."))
+                .ExpectSuccess();
+            return assigned.Value.Item;
+        }
+
+        public AddRiskTreatmentAction AddAction(Worker worker, IReadOnlyList<Uuid> evidence,
+            long revision) => new(Uuid.CreateVersion4(), TenantId, ProgramId, RiskId, revision, "Enforce MFA",
+            "MFA is required for every administrator.", "Identity provider policy export.",
+            DateOnly.FromDateTime(DateTime.UtcNow).AddDays(30), worker.MemberId, evidence);
+
+        public SubmitRiskTreatmentActionCompletion Submit(Uuid actionId, long revision,
+            IReadOnlyList<Uuid> evidence) => new(Uuid.CreateVersion4(), TenantId, ProgramId, RiskId, actionId, revision,
+            "MFA enforced on all administrators.", evidence);
+
+        public ReviewRiskTreatmentActionCompletion ReviewAction(Uuid actionId, long revision,
+            string outcome) => new(Uuid.CreateVersion4(), TenantId, ProgramId, RiskId, actionId, revision, outcome,
+            "Evidence matches the target state.");
+
+        public async Task<Worker> SeedMemberAsync()
+        {
+            var userId = Uuid.CreateVersion4();
+            await ProgramManagementServices.SeedAsync(Provider, new Member(TenantId, userId),
+                member => member.Register());
+            return new Worker(userId, RbacIds.Member(TenantId, userId));
+        }
+
+        public async Task<Uuid> SeedEvidenceAsync(bool fulfilled, Worker owner)
+        {
+            var request = new OpenEvidenceRequest(Uuid.CreateVersion4(), TenantId, ProgramId, "MFA export",
+                "Export the policy.", owner.MemberId, DateOnly.FromDateTime(DateTime.UtcNow).AddDays(7));
+            await Scenario(AssessorUserId).When(request).ExpectSuccess();
+            if (fulfilled)
+                await FulfilEvidenceAsync(request.EvidenceRequestId);
+            return request.EvidenceRequestId;
+        }
+
+        public async Task FulfilEvidenceAsync(Uuid requestId)
+        {
+            var artifactId = Uuid.CreateVersion4();
+            var now = DateTimeOffset.UtcNow;
+            var actor = ActorReference.ForMember(RbacIds.Member(TenantId, AssessorUserId), "Assessor");
+            await ProgramManagementServices.SeedAsync<EvidenceArtifact, EvidenceArtifactRegistration>(Provider,
+                new EvidenceArtifact(TenantId, artifactId), artifact => artifact.Register(
+                    new EvidenceArtifactContent("MFA export", null, "document", "manual", now,
+                        DateOnly.FromDateTime(now.UtcDateTime), DateOnly.FromDateTime(now.UtcDateTime), "internal"),
+                    new string('a', 64), 1, actor, now));
+            await ProgramManagementServices.SeedAsync(Provider, new EvidenceArtifact(TenantId, artifactId),
+                artifact => Command(artifact.RecordInspection(EvidenceInspectionOutcome.Clean, now)));
+            await Scenario(AssessorUserId).When(new FulfilEvidenceRequest(Uuid.CreateVersion4(), TenantId, ProgramId,
+                requestId, 1, artifactId)).ExpectSuccess();
+        }
+
+        public Task<RiskTreatmentAction> ActionAsync(Uuid actionId) => ProgramManagementServices.HydrateAsync(Provider,
+            new RiskTreatmentAction(TenantId, ProgramId, RiskId, actionId));
+
+        public RecordRiskAssessment Residual(long revision) => new(Uuid.CreateVersion4(), TenantId, ProgramId, RiskId,
+            revision, 1, "residual", 2, 2, "After treatment.");
+
+        public ReviewRiskControlTreatment ReviewTreatment(Uuid treatmentId, string outcome) =>
+            new(Uuid.CreateVersion4(), TenantId, ProgramId, RiskId, treatmentId, 1, outcome, "Independently reviewed.");
+
+        public AcceptRisk Accept(Uuid residualId, Uuid? waiverId) => new(Uuid.CreateVersion4(), TenantId, ProgramId,
+            RiskId, 3, residualId, "executive", DateTimeOffset.UtcNow.AddMonths(6),
+            "Accepted within tolerance.", waiverId);
+
+        public async Task<RiskGovernanceView> GovernanceAsync()
+        {
+            var result = await Scenario(AssessorUserId)
+                .When(new GetRiskGovernance(TenantId, ProgramId, RiskId)).ExpectSuccess();
+            return result.Value;
+        }
+
+        public async Task<Uuid> SeedPersonAsync(Uuid correlatedUserId)
+        {
+            var personId = Uuid.CreateVersion4();
+            var admin = ActorReference.ForMember(Uuid.CreateVersion4(), "Admin");
+            await ProgramManagementServices.SeedAsync(Provider, new PersonRules(TenantId, personId),
+                person => person.Record("Provider owner", null, admin, DateTimeOffset.UtcNow));
+            await ProgramManagementServices.SeedAsync(Provider, new PersonRules(TenantId, personId),
+                person => Command(person.CorrelateMembership(1, correlatedUserId, admin,
+                    DateTimeOffset.UtcNow)));
+            return personId;
+        }
+
+        public async Task<Uuid> SeedWaiverAsync(Uuid residualId, long revision)
+        {
+            var waiverId = Uuid.CreateVersion4();
+            var now = DateTimeOffset.UtcNow;
+            await ProgramManagementServices.SeedAsync(Provider,
+                new SeparationOfDutiesWaiver(TenantId, waiverId), waiver =>
+                {
+                    Assert.Null(waiver.Record(new SeparationOfDutiesWaiverScope("risk", RiskId,
+                            residualId, revision, "approve"),
+                        RbacIds.Member(TenantId, ApproverUserId), Uuid.CreateVersion4(),
+                        "Admin", "Sole executive owns the provider relationship.",
+                        now.AddMinutes(-5), now.AddDays(1)));
+                    return Command(waiver.Approve(Uuid.CreateVersion4(), "Other admin",
+                        now.AddMinutes(-1)));
+                });
+            return waiverId;
+        }
+    }
+
+    static Result Command(CommandFailure? failure) => failure is null
+        ? Result.Success
+        : Result.Failure(new RequestError(RequestErrorKind.Conflict, failure.Message!));
+
+    sealed class SingleRiskDirectory : IRiskDraftDirectoryReader
+    {
+        public Fixture? Fixture { get; set; }
+
+        public async ValueTask<ProjectionCheckpoint> LoadCheckpointAsync(Uuid tenantId,
+            CancellationToken ct = default)
+        {
+            var cursor = EventCursor.Start;
+            await foreach (var record in Fixture!.Provider.GetRequiredService<IDomainEventReader>()
+                               .ReadAsync(EventStreamPattern.ForPattern(tenantId.ToString(),
+                                   "risks"), EventCursor.Start, ct))
+                cursor = record.NextCursor;
+            return new ProjectionCheckpoint(cursor);
+        }
+
+        public ValueTask<RiskDraftView?> GetAsync(Uuid tenantId, Uuid riskId,
+            CancellationToken ct = default) => ValueTask.FromResult<RiskDraftView?>(null);
+
+        public ValueTask<Page<RiskDraftView>> ListProgramAsync(Uuid tenantId, Uuid programId,
+            int limit, string? cursor, CancellationToken ct = default) =>
+            ValueTask.FromResult(new Page<RiskDraftView>(
+            [
+                new RiskDraftView(tenantId, programId, Fixture!.RiskId, "R-01", 1,
+                    "draft_unassessed", "unresolved",
+                    new RiskDraftContent("Provider outage", "Unavailable", "Fails", null),
+                    Uuid.CreateVersion4(), "Assessor", DateTimeOffset.UtcNow),
+            ], null));
+
+        public ValueTask<RiskDraftRevisionView?> GetRevisionAsync(Uuid tenantId, Uuid riskId,
+            long revision, CancellationToken ct = default) =>
+            ValueTask.FromResult<RiskDraftRevisionView?>(null);
+    }
+}

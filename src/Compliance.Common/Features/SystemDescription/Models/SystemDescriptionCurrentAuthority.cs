@@ -1,0 +1,13 @@
+using Cntryl.Portia;
+using Bdgrz.Compliance.Features.AccessControl.Contracts;
+using Bdgrz.Compliance.Features.Proofs.Models;
+using Bdgrz.Compliance.Features.Retention.Models;
+namespace Bdgrz.Compliance.Features.SystemDescription.Models;
+
+/// <summary>Immutable current decision authority and history commitments, without historical narrative or decision bodies.</summary>
+public sealed record SystemDescriptionCurrentAuthority(ImmutableContentRef CurrentVersionContent,
+    IReadOnlyList<SystemDescriptionVersionToken> Versions, IReadOnlyList<string> ReviewHashes,
+    IReadOnlyList<string> ApprovalHashes, IReadOnlyList<string> NoChangeDecisionHashes, IReadOnlyList<string> BindingHashes,
+    Uuid? LatestApprovedVersionId, IReadOnlyList<SystemDescriptionReviewView> CurrentReviews,
+    SystemDescriptionApprovalView? CurrentApproval, IReadOnlyList<SystemDescriptionNoChangeDecisionView> CurrentNoChangeDecisions,
+    IReadOnlyList<SystemDescriptionBindingView> CurrentBindings);

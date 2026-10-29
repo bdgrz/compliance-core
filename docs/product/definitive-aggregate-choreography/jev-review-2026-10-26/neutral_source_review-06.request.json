@@ -1,0 +1,284 @@
+{
+  "model": "jev-1.14.0",
+  "state": {
+    "review": "Review these selected domain boundaries against the included source records. Do not treat a catalog label as evidence by itself; do not invent policy.",
+    "pass": "neutral_source_review",
+    "owners": [
+      {
+        "owner": "ProviderNameClaim",
+        "classification": "business_identity_or_uniqueness_authority",
+        "businessAggregate": true,
+        "identity": "(tenantId, normalizedGovernedName)",
+        "invariant": "Authoritative unique active name reservation.",
+        "boundary": "selected_split",
+        "mustPreserve": "Exact creation identity and expected provider revision; active normalized name unique within tenant.",
+        "technicalStateToSeparate": [],
+        "sources": [
+          {
+            "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
+            "jsonPointer": "/splitOwners/20/targetOwners/1",
+            "evidence": "{\"proposedAggregate\":\"ProviderNameClaim\",\"identity\":\"(tenantId, normalizedGovernedName)\",\"owns\":\"Authoritative unique active name reservation.\",\"events\":\"Rehome the relevant existing business facts from the current owner; preserve fact meaning and source lineage.\",\"existingDomainEvents\":[],\"newDomainEvents\":[\"ProviderNameClaimed\",\"ProviderNameReleased\"],\"technicalProcessState\":[],\"commands\":[]}"
+          }
+        ],
+        "adoptedDecisions": [],
+        "commands": [],
+        "events": [
+          {
+            "event": "ProviderNameClaimed",
+            "discriminator": "bdgrz.provider-name-claim.provider-name-claimed",
+            "version": 1
+          },
+          {
+            "event": "ProviderNameReleased",
+            "discriminator": "bdgrz.provider-name-claim.provider-name-released",
+            "version": 1
+          }
+        ],
+        "relatedFlows": [
+          {
+            "reactor": "ProviderNameClaimReactor",
+            "sourceOwner": "Provider",
+            "targetOwner": "ProviderNameClaim",
+            "command": "ClaimProviderName",
+            "source": {
+              "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
+              "jsonPointer": "/reactors/22",
+              "line": 1884,
+              "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
+            }
+          },
+          {
+            "reactor": "ProviderChangeApplicationReactor",
+            "sourceOwner": "ProviderNameClaim",
+            "targetOwner": "Provider",
+            "command": "ApplyProviderChange",
+            "source": {
+              "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
+              "jsonPointer": "/reactors/23",
+              "line": 1971,
+              "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
+            }
+          },
+          {
+            "reactor": "ProviderOldNameReleaseReactor",
+            "sourceOwner": "Provider",
+            "targetOwner": "ProviderNameClaim",
+            "command": "ReleaseProviderName",
+            "source": {
+              "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
+              "jsonPointer": "/reactors/24",
+              "line": 2049,
+              "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
+            }
+          }
+        ]
+      },
+      {
+        "owner": "ReadinessAssessment",
+        "classification": "business_aggregate",
+        "businessAggregate": true,
+        "identity": "assessmentId",
+        "invariant": "One immutable assessment source/rule revision and findings.",
+        "boundary": "selected_split",
+        "mustPreserve": "No projected latest assessment or gap list can authorize entry; all exceptions/required plans acknowledged.",
+        "technicalStateToSeparate": [],
+        "sources": [
+          {
+            "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
+            "jsonPointer": "/splitOwners/21/targetOwners/0",
+            "evidence": "{\"proposedAggregate\":\"ReadinessAssessment\",\"identity\":\"assessmentId\",\"owns\":\"One immutable assessment source/rule revision and findings.\",\"events\":\"Rehome the relevant existing business facts from the current owner; preserve fact meaning and source lineage.\",\"existingDomainEvents\":[\"ReadinessAssessmentRecorded\"],\"newDomainEvents\":[],\"technicalProcessState\":[],\"commands\":[]}"
+          }
+        ],
+        "adoptedDecisions": [],
+        "commands": [],
+        "events": [
+          {
+            "event": "ReadinessAssessmentRecorded",
+            "discriminator": "bdgrz.readiness.assessment.recorded",
+            "version": 1
+          }
+        ],
+        "relatedFlows": [
+          {
+            "reactor": "ReadinessAssessmentAdoptionReactor",
+            "sourceOwner": "ReadinessAssessment",
+            "targetOwner": "ProgramReadiness",
+            "command": "AdoptReadinessAssessment",
+            "source": {
+              "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
+              "jsonPointer": "/reactors/39",
+              "line": 3295,
+              "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
+            }
+          },
+          {
+            "reactor": "ReadinessAssessmentComputationReactor",
+            "sourceOwner": "ProgramReadiness",
+            "targetOwner": "ReadinessAssessment",
+            "command": "ComputeReadinessAssessment",
+            "source": {
+              "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
+              "jsonPointer": "/reactors/87",
+              "line": 7480,
+              "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
+            }
+          }
+        ]
+      },
+      {
+        "owner": "TenantInvitationMailboxClaim",
+        "classification": "business_identity_or_uniqueness_authority",
+        "businessAggregate": true,
+        "identity": "tenant / normalizedEmail",
+        "invariant": "At most one pending invitation per mailbox. InvitationId and generation live in state and every release compares both; generation is never part of the stream key.",
+        "boundary": "selected_split",
+        "mustPreserve": "Retry same invitation ID with exact terms returns original acceptance; changed terms conflict. New invitation generation is independent. Delivery retries preserve exact token and accepted at-least-once policy.",
+        "technicalStateToSeparate": [],
+        "sources": [
+          {
+            "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
+            "jsonPointer": "/splitOwners/28/targetOwners/1",
+            "evidence": "{\"proposedAggregate\":\"TenantInvitationMailboxClaim\",\"identity\":\"tenant / normalizedEmail\",\"owns\":\"At most one pending invitation per mailbox. InvitationId and generation live in state and every release compares both; generation is never part of the stream key.\",\"events\":\"Rehome the relevant existing business facts from the current owner; preserve fact meaning and source lineage.\",\"existingDomainEvents\":[],\"newDomainEvents\":[\"TenantInvitationMailboxClaimed\",\"TenantInvitationMailboxReleased\"],\"technicalProcessState\":[],\"commands\":[]}"
+          }
+        ],
+        "adoptedDecisions": [],
+        "commands": [],
+        "events": [],
+        "relatedFlows": []
+      },
+      {
+        "owner": "TrainingRequirement",
+        "classification": "business_aggregate",
+        "businessAggregate": true,
+        "identity": "(tenantId, programId, normalizedRequirementId)",
+        "invariant": "One normalized training requirement creation and version line.",
+        "boundary": "selected_split",
+        "mustPreserve": "Original creation identity remains recognizable after revisions; each revision uses expected version and valid audience/source.",
+        "technicalStateToSeparate": [],
+        "sources": [
+          {
+            "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
+            "jsonPointer": "/splitOwners/18/targetOwners/0",
+            "evidence": "{\"proposedAggregate\":\"TrainingRequirement\",\"identity\":\"(tenantId, programId, normalizedRequirementId)\",\"owns\":\"One normalized training requirement creation and version line.\",\"events\":\"Rehome the relevant existing business facts from the current owner; preserve fact meaning and source lineage.\",\"existingDomainEvents\":[\"TrainingRequirementDefined\"],\"newDomainEvents\":[],\"technicalProcessState\":[],\"commands\":[\"DefineTrainingRequirement\",\"ReviseTrainingRequirement\"]}"
+          }
+        ],
+        "adoptedDecisions": [],
+        "commands": [
+          {
+            "name": "DefineTrainingRequirement",
+            "identity": {
+              "field": "RequirementId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "exact immutable creation retry"
+            },
+            "fields": [
+              "RequirementId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "Identifier:string",
+              "Content:TrainingRequirementContent"
+            ]
+          },
+          {
+            "name": "ReviseTrainingRequirement",
+            "identity": {
+              "field": "CommandId",
+              "type": "Uuid",
+              "required": true,
+              "origin": "client",
+              "rule": "one immutable authored operation"
+            },
+            "fields": [
+              "CommandId:Uuid",
+              "TenantId:Uuid",
+              "ProgramId:Uuid",
+              "RequirementId:Uuid",
+              "ExpectedVersion:long",
+              "Content:TrainingRequirementContent"
+            ]
+          }
+        ],
+        "events": [
+          {
+            "event": "TrainingRequirementDefined",
+            "discriminator": "bdgrz.training_requirement.defined",
+            "version": 1
+          }
+        ],
+        "relatedFlows": []
+      }
+    ]
+  },
+  "questions": {
+    "item_0": {
+      "type": "choice",
+      "instructions": "Which owner boundary best preserves ProviderNameClaim's explicit invariant and lifecycle?",
+      "criteria": {
+        "selected_boundary_supported": "The selected owner is the correct business decision boundary and any technical process or independent child lifecycle is separated.",
+        "boundary_change_required": "A specific alternative boundary is required by an explicit invariant, identity, concurrency, lifecycle, or recovery fact in the supplied sources.",
+        "source_gap": "The available source records are contradictory or fail to establish the material boundary rule."
+      }
+    },
+    "evidence_0": {
+      "type": "noul",
+      "instructions": "Do the source records establish ProviderNameClaim's identity, atomic invariant, and lifecycle well enough to settle its boundary?",
+      "criteria": {
+        "true": "The exact owner invariant and why plausible split or merge alternatives fail are source-backed.",
+        "false": "A required identity, lifecycle, concurrency, or source-authority rule is missing or contradictory."
+      }
+    },
+    "item_1": {
+      "type": "choice",
+      "instructions": "Which owner boundary best preserves ReadinessAssessment's explicit invariant and lifecycle?",
+      "criteria": {
+        "selected_boundary_supported": "The selected owner is the correct business decision boundary and any technical process or independent child lifecycle is separated.",
+        "boundary_change_required": "A specific alternative boundary is required by an explicit invariant, identity, concurrency, lifecycle, or recovery fact in the supplied sources.",
+        "source_gap": "The available source records are contradictory or fail to establish the material boundary rule."
+      }
+    },
+    "evidence_1": {
+      "type": "noul",
+      "instructions": "Do the source records establish ReadinessAssessment's identity, atomic invariant, and lifecycle well enough to settle its boundary?",
+      "criteria": {
+        "true": "The exact owner invariant and why plausible split or merge alternatives fail are source-backed.",
+        "false": "A required identity, lifecycle, concurrency, or source-authority rule is missing or contradictory."
+      }
+    },
+    "item_2": {
+      "type": "choice",
+      "instructions": "Which owner boundary best preserves TenantInvitationMailboxClaim's explicit invariant and lifecycle?",
+      "criteria": {
+        "selected_boundary_supported": "The selected owner is the correct business decision boundary and any technical process or independent child lifecycle is separated.",
+        "boundary_change_required": "A specific alternative boundary is required by an explicit invariant, identity, concurrency, lifecycle, or recovery fact in the supplied sources.",
+        "source_gap": "The available source records are contradictory or fail to establish the material boundary rule."
+      }
+    },
+    "evidence_2": {
+      "type": "noul",
+      "instructions": "Do the source records establish TenantInvitationMailboxClaim's identity, atomic invariant, and lifecycle well enough to settle its boundary?",
+      "criteria": {
+        "true": "The exact owner invariant and why plausible split or merge alternatives fail are source-backed.",
+        "false": "A required identity, lifecycle, concurrency, or source-authority rule is missing or contradictory."
+      }
+    },
+    "item_3": {
+      "type": "choice",
+      "instructions": "Which owner boundary best preserves TrainingRequirement's explicit invariant and lifecycle?",
+      "criteria": {
+        "selected_boundary_supported": "The selected owner is the correct business decision boundary and any technical process or independent child lifecycle is separated.",
+        "boundary_change_required": "A specific alternative boundary is required by an explicit invariant, identity, concurrency, lifecycle, or recovery fact in the supplied sources.",
+        "source_gap": "The available source records are contradictory or fail to establish the material boundary rule."
+      }
+    },
+    "evidence_3": {
+      "type": "noul",
+      "instructions": "Do the source records establish TrainingRequirement's identity, atomic invariant, and lifecycle well enough to settle its boundary?",
+      "criteria": {
+        "true": "The exact owner invariant and why plausible split or merge alternatives fail are source-backed.",
+        "false": "A required identity, lifecycle, concurrency, or source-authority rule is missing or contradictory."
+      }
+    }
+  }
+}

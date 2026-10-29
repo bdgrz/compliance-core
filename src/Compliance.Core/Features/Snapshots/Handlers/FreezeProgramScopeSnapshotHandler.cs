@@ -1,0 +1,18 @@
+using Cntryl.Portia;
+using Bdgrz.Compliance.Features.Snapshots.Projections;
+using Bdgrz.Compliance.Features.Snapshots.Commands;
+using Bdgrz.Compliance.Features.Snapshots.Models;
+namespace Bdgrz.Compliance.Features.Snapshots.Handlers;
+
+public sealed class FreezeProgramScopeSnapshotHandler(ScopeSnapshotFreezer freezer)
+    : IRequestHandler<FreezeProgramScopeSnapshot, SnapshotRegistration>
+{
+    public ValueTask<Result<SnapshotRegistration>> HandleAsync(
+        IRequestContext<FreezeProgramScopeSnapshot> context, CancellationToken ct)
+    {
+        var request = context.Request;
+        return freezer.FreezeAsync(context, request.TenantId, request.ProgramId,
+            request.ExpectedProgramRevision, request.BoundaryId,
+            request.ApprovedBoundaryVersionId, null, null, ct);
+    }
+}

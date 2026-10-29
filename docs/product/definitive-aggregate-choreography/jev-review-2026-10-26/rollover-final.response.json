@@ -1,0 +1,52 @@
+{
+  "httpStatus": 200,
+  "response": {
+    "model": "jev-1.14.0",
+    "answers": {
+      "boundary": {
+        "type": "choice",
+        "choice": "coherent",
+        "confidence": 0.29,
+        "probabilities": {
+          "coherent": 0.47,
+          "incomplete": 0.47,
+          "over_split": 0.02,
+          "insufficient": 0.04
+        }
+      },
+      "race": {
+        "type": "noul",
+        "noul": 0.57
+      },
+      "process": {
+        "type": "choice",
+        "choice": "coherent",
+        "confidence": 0.21,
+        "probabilities": {
+          "coherent": 0.41,
+          "missing": 0.33,
+          "wrong_order": 0.2,
+          "insufficient": 0.06
+        }
+      },
+      "terminal": {
+        "type": "noul",
+        "noul": 0.26
+      },
+      "legacy": {
+        "type": "choice",
+        "choice": "process_receipt_only",
+        "confidence": 0.92,
+        "probabilities": {
+          "process_receipt_only": 0.95,
+          "aggregate_event": 0.04,
+          "insufficient": 0.01
+        }
+      }
+    },
+    "usage": {
+      "input_tokens": 1004,
+      "output_tokens": 182
+    }
+  }
+}

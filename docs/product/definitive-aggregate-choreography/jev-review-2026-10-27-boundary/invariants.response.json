@@ -1,0 +1,28 @@
+{
+  "httpStatus": 200,
+  "response": {
+    "model": "jev-1.14.0",
+    "answers": {
+      "latest_review": {
+        "type": "noul",
+        "noul": 0.9
+      },
+      "retroactive_conflict": {
+        "type": "noul",
+        "noul": 0.89
+      },
+      "scope_reset": {
+        "type": "noul",
+        "noul": 0.93
+      },
+      "test_support": {
+        "type": "noul",
+        "noul": 0.93
+      }
+    },
+    "usage": {
+      "input_tokens": 21660,
+      "output_tokens": 76
+    }
+  }
+}

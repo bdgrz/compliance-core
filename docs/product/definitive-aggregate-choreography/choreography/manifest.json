@@ -7,22 +7,35 @@
     "sha256": "e5810cb6d1f27431b49aedddf01082d73ab157f76d744114b16c0103310cad05"
   },
   "counts": {
-    "reactionOrRegularStages": 161,
+    "reactionOrRegularStages": 162,
     "abortBindings": 22,
     "artifactPersonalAdmission": 1,
     "artifactScopedRead": 1,
-    "totalArchitectureRows": 185,
+    "totalArchitectureRows": 186,
     "existingPhysicalReactors": 65,
     "plannedArtifactRootStarters": 1,
     "existingProcessDefinitions": 28,
-    "plannedArtifactDefinitions": 1
+    "plannedArtifactDefinitions": 1,
+    "plannedProgramRolloverRootStarters": 1,
+    "plannedProgramRolloverDefinitions": 1,
+    "architectureRows": 186,
+    "regularReactionOrStageEdges": 162,
+    "canonicalEmittedSemanticEvents": 492,
+    "businessSemanticEvents": 480,
+    "plannedReactors": 2,
+    "intendedPhysicalReactors": 67,
+    "plannedProcessDefinitions": 2,
+    "intendedProcessDefinitions": 30,
+    "rawEventNamesReconciled": 559,
+    "nonEmittedCompatibilityOrExcludedNames": 67,
+    "selectedSchemaNames": 295
   },
   "pendingOwnerOrProtocolDecisions": [],
   "files": [
     {
       "path": "README.md",
-      "sha256": "8739e176100397cd03f2052eed4bf1426706994dfa4ad44adc2c5de1db8b2306",
-      "bytes": 4755
+      "sha256": "6cc58c042673ef7b543ca302656c17ece077383db113c7d931d910b149550deb",
+      "bytes": 5854
     },
     {
       "path": "abort-bindings.json",
@@ -31,8 +44,8 @@
     },
     {
       "path": "adopted-decisions.json",
-      "sha256": "8fdaec764a3554f2ea470aba66f2ce0945a424adbeba7505684314655d62216f",
-      "bytes": 13811
+      "sha256": "a66b07145e4248528058a3faa2e89b8dd525dd2f63a52f1c2049f0f7664b5b28",
+      "bytes": 15288
     },
     {
       "path": "artifact-download-selected.json",
@@ -51,33 +64,33 @@
     },
     {
       "path": "intended-choreography.json",
-      "sha256": "669da0798acde213d8b6959ed29ae86f5acfe7b0a8e0bab7b3a0391eeff1240e",
-      "bytes": 1028552
+      "sha256": "b128b8d8a15415725aac8b9bbf0c94790da4ecdf6145f747654f5560ca0590ba",
+      "bytes": 1037531
     },
     {
       "path": "physical-plan.json",
-      "sha256": "97fa1c3382aa2142367f29b7ae23605764b844925251de849eeaaefe824a2f5a",
-      "bytes": 85752
+      "sha256": "ac85e3d7c7f522445f597df50afee908dc1cb57cfb060d3245b8ecce0952a99e",
+      "bytes": 94199
     },
     {
       "path": "selected-decisions.json",
-      "sha256": "ce5d3db40ba017cc99c88de3cb69c643a52fc4b83587a4df2e241ae84d3de8f4",
-      "bytes": 7295
+      "sha256": "668ea4227f3f7a348312559b3ff2a591ed1cf644d5c985d3f891a439473222f2",
+      "bytes": 8797
     },
     {
       "path": "selected-graph.json",
-      "sha256": "201ff70882094d5f9a1c0981337e586d59efd1e53be0da432eabf3d08a713a1b",
-      "bytes": 1019689
+      "sha256": "880d09c166dc090999d1310312b713a847e8a81fce000d0abb42f7d839b2ddf4",
+      "bytes": 1029135
     },
     {
       "path": "supplemental-choreography.json",
-      "sha256": "798ae0a64939d6a2569ce53520a722eca450b974fa0feef11b716665aa0ab8e6",
-      "bytes": 219719
+      "sha256": "5059e43b789f94490a1961de9600a86266d1e7866d62bed511d09c5ec882d8dd",
+      "bytes": 229131
     },
     {
       "path": "validation.json",
-      "sha256": "72de42fea0e050daca81ec38d342d53884ab3240bce562ee241b0508018fbbd6",
-      "bytes": 736
+      "sha256": "cadf98ed9a7c2efe9d164891fa28f5228cfb9fef0e016ddcebf94ac4c60d5208",
+      "bytes": 788
     }
   ]
 }

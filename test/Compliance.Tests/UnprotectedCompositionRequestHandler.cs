@@ -1,5 +1,4 @@
 using Cntryl.Portia;
-
 namespace Bdgrz.Compliance.Tests;
 
 sealed class UnprotectedCompositionRequestHandler : IRequestHandler<UnprotectedCompositionRequest>

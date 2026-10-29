@@ -1,0 +1,31 @@
+{
+  "httpStatus": 200,
+  "response": {
+    "model": "jev-1.14.0",
+    "answers": {
+      "boundary": {
+        "type": "choice",
+        "choice": "aggregate_execution_claim_then_private_process",
+        "confidence": 1,
+        "probabilities": {
+          "aggregate_execution_claim_then_private_process": 1,
+          "private_process_claim_only": 0,
+          "approval_is_final_no_revision": 0,
+          "product_rule_unresolved": 0
+        }
+      },
+      "noul": {
+        "type": "noul",
+        "noul": 0.07
+      },
+      "coverage": {
+        "type": "noul",
+        "noul": 0.05
+      }
+    },
+    "usage": {
+      "input_tokens": 858,
+      "output_tokens": 101
+    }
+  }
+}

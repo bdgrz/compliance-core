@@ -1,8 +1,8 @@
 {
   "scope": "SELECTED intended choreography after root/Jev adoption. Documentation only; implementation remains halted.",
   "counts": {
-    "selectedLogicalEdges": 120,
-    "selectedProcesses": 29,
+    "selectedLogicalEdges": 121,
+    "selectedProcesses": 30,
     "existingPhysicalReactorTypesForSelectedEdges": 45,
     "otherExistingPhysicalReactorTypes": 20,
     "allExistingRegisteredPhysicalReactorTypes": 65,
@@ -10,19 +10,21 @@
     "supplementalExistingReactorEdges": 38,
     "nestedExistingStageEdgesOmittedFromTarget": 3,
     "existingBusinessOrTechnicalRows": 155,
-    "regularReactionAndProcessRows": 161,
+    "regularReactionAndProcessRows": 162,
     "processAbortBindings": 22,
-    "allRowsIncludingProcessAbortBindings": 183,
+    "allRowsIncludingProcessAbortBindings": 184,
     "sourceAdmissionDeclarationsSeparatelyIndexed": 30,
-    "plannedAdditionalProcessCount": 1,
+    "plannedAdditionalProcessCount": 2,
     "selectedUnimplementedArtifactReceiverEdges": 6,
     "selectedPublicArtifactAdmissionRows": 1,
     "selectedScopedArtifactReadRows": 1,
-    "allSelectedArchitectureRows": 185,
+    "allSelectedArchitectureRows": 186,
     "existingPhysicalRegistrations": 65,
     "plannedAdditionalArtifactRootStarters": 1,
     "existingProcessDefinitions": 28,
-    "plannedAdditionalArtifactProcessDefinitions": 1
+    "plannedAdditionalArtifactProcessDefinitions": 1,
+    "plannedAdditionalProgramRolloverRootStarters": 1,
+    "plannedAdditionalProgramRolloverProcessDefinitions": 1
   },
   "rules": [
     "Logical prerequisite event is distinct from physical subscription trigger, original admission locator and required stage/terminal proof.",
@@ -13826,6 +13828,124 @@
         "implementationQualification": "Selected policy only; individual new algorithm/wire implementation must prove exact vectors and domain/compatibility fences before emission."
       },
       "implementationEvidenceFile": "../source-contract-contradictions.json"
+    },
+    {
+      "id": "R000",
+      "status": "SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED",
+      "logicalPrerequisiteOwner": "ProgramRollover",
+      "logicalPrerequisiteEvents": [
+        "ProgramRolloverApproved"
+      ],
+      "receiverCommand": "StartProgramRolloverExecutionProcess",
+      "targetOwner": "ProgramRolloverExecutionProcess",
+      "emittedBusinessEvents": [],
+      "logicalStageLabel": "ProgramRolloverExecutionClaimedReactor",
+      "processes": [
+        "ProgramRolloverExecutionProcess"
+      ],
+      "physicalProcessDefinitionTypes": [
+        "ProgramRolloverExecutionProcess"
+      ],
+      "registeredRootReactorTypes": [],
+      "registeredProcessRootEvents": [
+        "ProgramRolloverExecutionClaimed"
+      ],
+      "physicalTriggerEvents": [
+        "ProgramRolloverExecutionClaimed"
+      ],
+      "actualSourceBinding": "Actual approved rollover fact plus atomic exact-version execution claim; plan and period terminal facts remain independently observed from their owners.",
+      "intendedProofGate": "Verify actual approved rollover fact and atomic claim pinning version/content hash/approval actor-role-time. Rollover content pins NextExaminationId, NextTypeIIPlanId, NextPeriodId and dates. Observe actual Type I entry approval; actual human-created successor examination; exact frozen Type I baseline, auditor outcome and approved/bound system-description version; human-authored source-validated TypeIIPlan; exhaustive carry-forward mapping; independent review and executive approval. Then submit exact period start. Pending admission is not completion; require actual started chain with immutable opening intent, native root/result, exact source and target facts/hashes, period/range and calendar authorization ID/generation.",
+      "commandIdRule": "Use an explicitly versioned injective length-prefixed encoding for this new domain; preserve any occupied IDs unchanged; fixed vectors required before activation.",
+      "principal": "trusted internal process command scoped to verified source tenant and receiver kind; plan author/reviewer/approver remain personal actors",
+      "recoveryContract": "Persist before starter checkpoint; retry deterministic exact identities; observe human decisions only through actual typed facts; after lost append reload and verify actual facts. Missing dependencies retry; invalid/mismatched proofs quarantine. Rejection/failure never implies success or release; accepted remains pending, started is complete.",
+      "http": false,
+      "mcp": false,
+      "effectKind": "start_program_rollover_execution_process",
+      "processOnly": true,
+      "evidenceRow": "jev-review-2026-10-26/rollover-r000.response.json",
+      "logicalTargetOwner": "ProgramRolloverExecutionProcess",
+      "targetOwnerKind": "private_recoverable_process",
+      "actualTargetBindings": [
+        "ProcessRecordStore"
+      ],
+      "currentEmittedFactOwners": {},
+      "sourceContractReconciliation": "new selected target; no existing implementation asserted",
+      "implementationConformance": "UNIMPLEMENTED_REQUIRED_TARGET",
+      "decisionBasis": {
+        "decisionIds": [
+          "PROGRAM_ROLLOVER_EXECUTION"
+        ]
+      },
+      "selectedProofContract": {
+        "proofGate": "Verify actual approved rollover fact and atomic claim pinning version/content hash/approval actor-role-time. Rollover content pins NextExaminationId, NextTypeIIPlanId, NextPeriodId and dates. Observe actual Type I entry approval; actual human-created successor examination; exact frozen Type I baseline, auditor outcome and approved/bound system-description version; human-authored source-validated TypeIIPlan; exhaustive carry-forward mapping; independent review and executive approval. Then submit exact period start. Pending admission is not completion; require actual started chain with immutable opening intent, native root/result, exact source and target facts/hashes, period/range and calendar authorization ID/generation.",
+        "mappingManifest": "Each rollover record and commitment maps exactly once to a TypeIIPlan destination or justified nonrepresentation consistent with approved disposition; exact source/version/hash, complete frozen manifest/hash; reject omissions, duplicates, mismatch and unsupported conversion.",
+        "requiredTypedStageProofSets": [
+          {
+            "factKinds": [
+              "ProgramRolloverApproved",
+              "ProgramRolloverExecutionClaimed"
+            ],
+            "role": "exact rollover version and approval tuple pinned before successor work",
+            "quantifier": "exactly_one_each",
+            "condition": "always",
+            "requiredVerification": "same tenant/program/rollover, version/content hash and approver identity/role/time; claim content binds NextExaminationId, NextTypeIIPlanId, NextPeriodId and dates."
+          },
+          {
+            "factKinds": [
+              "TypeIEntryDecisionRecorded",
+              "ExaminationEngagementOpened"
+            ],
+            "role": "authorized successor Type I examination",
+            "quantifier": "exactly_one_each",
+            "condition": "always",
+            "requiredVerification": "actual current approved/approved_with_exceptions readiness decision; actual examination event same tenant/program and exact NextExaminationId, with approved next dates."
+          },
+          {
+            "factKinds": [
+              "TypeIBaselineFrozen",
+              "AuditOutcomeRecorded",
+              "SystemDescriptionApproved",
+              "SystemDescriptionBound"
+            ],
+            "role": "complete Type I prerequisite source chain",
+            "quantifier": "exactly_one_each",
+            "condition": "always",
+            "requiredVerification": "same NextExaminationId; frozen baseline ID/hash and complete manifest; recorded auditor Type I outcome bound to exact baseline/hash; approved description version exists in baseline and is actually bound for same examination, type_i_baseline purpose and baseline ID."
+          },
+          {
+            "factKinds": [
+              "TypeIIPlanProposed",
+              "TypeIIPlanReviewed",
+              "TypeIIPlanApproved"
+            ],
+            "role": "complete human-authored successor plan and independent governance",
+            "quantifier": "one_current_exact_version_each (revisions may add earlier proposals)",
+            "condition": "always",
+            "requiredVerification": "same NextTypeIIPlanId and NextExaminationId; current version hash; baseline/outcome/description source IDs and hashes exact; dates match rollover; complete exhaustive carry-forward mapping; reviewer and executive approver distinct from proposer and each other; actual facts."
+          },
+          {
+            "factKinds": [
+              "TypeIIPeriodOpeningAccepted"
+            ],
+            "role": "successor opening admission",
+            "quantifier": "exactly_one",
+            "condition": "always",
+            "requiredVerification": "exact NextPeriodId, NextTypeIIPlanId, NextExaminationId and dates; immutable intent and original 202; pending only."
+          },
+          {
+            "factKinds": [
+              "ObservationPeriodStarted"
+            ],
+            "role": "successor period terminal",
+            "quantifier": "exactly_one",
+            "condition": "always",
+            "requiredVerification": "actual native chain to accepted opening; exact period stream/range and plan ID/version/hash; operation root/result and calendar authorization ID/generation."
+          }
+        ],
+        "recoveryContract": "Persist before starter checkpoint; retry deterministic exact identities; observe human decisions only through actual typed facts; after lost append reload and verify actual facts. Missing dependencies retry; invalid/mismatched proofs quarantine. Rejection/failure never implies success or release; accepted remains pending, started is complete. A changes_requested plan version loops through an exact revised version and new complete mapping; a rejected plan terminates as failed. Missing Type I prerequisites wait/retry under their exact owners; the process never fabricates a baseline, outcome, description or examination. A changes_requested plan loops to human revision/remapping; explicit reject is terminal failed. An opening rejection is never started.",
+        "implementationStatus": "New target; no implementation authorized.",
+        "crossOwnerCorrelation": "Private process record is rooted in actual ProgramRolloverExecutionClaimed. It verifies every fact on the owner-specific tenant/program/examination/baseline/plan/period stream named by the pinned content. The next plan and period commands repeat exact NextExaminationId/NextTypeIIPlanId/NextPeriodId; mismatched owner identities cannot advance."
+      }
     }
   ],
   "physicalReactorTypesForSelectedEdges": [
