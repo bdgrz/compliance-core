@@ -376,6 +376,47 @@ public sealed class PolicyNativeContentTests
         Assert.Empty(await source.FactsAsync(tenant, authored));
     }
 
+    [Fact]
+    public async Task ShouldRefuseCreationAndHideDiscardedPolicyGivenPreparationOfCommandsAgainstOccupiedIdentity()
+    {
+        // Arrange
+        await using var source = new PolicySourceFixture();
+        var tenant = Uuid.CreateVersion4();
+        var program = Uuid.CreateVersion4();
+        var author = Uuid.CreateVersion4();
+        var id = Policy.IdFor(tenant, program, "NATIVE-PREPARE");
+        var unopened = await source.Reader.HydrateAsync(new Policy(tenant, id));
+        var rules = new PolicyRules(tenant, id);
+        Assert.True(rules.Create(program, id, "NATIVE-PREPARE", Content("Prepared"),
+            ActorReference.ForMember(author, "Author"), author, source.Clock.Now).IsSuccess);
+        await source.SeedAsync(rules);
+        var open = await source.Reader.HydrateAsync(new Policy(tenant, id));
+        rules = await source.Policies.RulesAsync(tenant, program, id);
+        Assert.Null(rules.Discard(program, 1, "Never used", ActorReference.ForMember(author, "Author"), source.Clock.Now));
+        await source.SeedAsync(rules);
+        var discarded = await source.Reader.HydrateAsync(new Policy(tenant, id));
+
+        // Act
+        var createOnUnopened = unopened.Prepare(program, true);
+        var reviseOnUnopened = unopened.Prepare(program, false);
+        var createOnOpen = open.Prepare(program, true);
+        var reviseOnOpen = open.Prepare(program, false);
+        var reviseOnOpenInOtherProgram = open.Prepare(Uuid.CreateVersion4(), false);
+        var createOnDiscarded = discarded.Prepare(program, true);
+        var reviseOnDiscarded = discarded.Prepare(program, false);
+
+        // Assert
+        Assert.True(createOnUnopened.IsSuccess);
+        Assert.Equal(RequestErrorKind.NotFound, reviseOnUnopened.Error!.Kind);
+        Assert.Equal(RequestErrorKind.Conflict, createOnOpen.Error!.Kind);
+        Assert.True(reviseOnOpen.IsSuccess);
+        Assert.Equal(RequestErrorKind.NotFound, reviseOnOpenInOtherProgram.Error!.Kind);
+        Assert.Equal(RequestErrorKind.Conflict, createOnDiscarded.Error!.Kind);
+        Assert.Equal(RequestErrorKind.NotFound, reviseOnDiscarded.Error!.Kind);
+        Assert.False(discarded.IsVisible);
+        Assert.Equal(2, discarded.NativeSequence);
+    }
+
     static PolicyContent Content(string title) => new(title, "Govern access", PolicyAudience.CoreSecurity,
         null, 12, "Policy body", null, "Security owner", []);
 
