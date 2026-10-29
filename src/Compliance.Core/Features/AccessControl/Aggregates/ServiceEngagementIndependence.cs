@@ -132,7 +132,8 @@ public sealed class ServiceEngagementIndependence : Aggregate
         {
             Acceptance.Observe(change);
             var creating = change.Intent == CreateKind;
-            if (change.TenantId != _tenantId || change.Operation.Owner != Stream ||
+            if (change.TenantId != _tenantId ||
+                !NativeOwnerHistory.IsOwnRoot(this, change.Operation, change.Intent, _revision) ||
                 change.OperationId != change.Operation.LogicalId ||
                 change.Operation.LogicalId != change.Operation.RootOperationId ||
                 change.Operation.CommandKind != change.Intent || change.Revision != _revision + 1 ||
@@ -339,6 +340,9 @@ public sealed class ServiceEngagementIndependence : Aggregate
     /// <summary>Checks the lifecycle guards of a command without raising anything.</summary>
     public Result PrepareChange(string kind, long expectedRevision)
     {
+        if (kind is not (CreateKind or AmendKind or ProposeKind or WithdrawKind or CloseKind))
+            return Result.Failure(new RequestError(RequestErrorKind.Validation,
+                "The engagement lifecycle change kind is not supported."));
         if (kind == CreateKind)
         {
             if (Exists)
@@ -370,20 +374,24 @@ public sealed class ServiceEngagementIndependence : Aggregate
     public Result Change(string kind, OperationProvenance operation, ImmutableContentRef change,
         ImmutableContentRef firstResponse, ImmutableContentRef operationResult)
     {
+        ArgumentNullException.ThrowIfNull(operation);
         var cut = ReplayCut.Require(this, Acceptance, operation);
         if (!cut.IsSuccess)
             return cut;
-        ArgumentNullException.ThrowIfNull(operation);
         ArgumentNullException.ThrowIfNull(change);
         ArgumentNullException.ThrowIfNull(firstResponse);
         ArgumentNullException.ThrowIfNull(operationResult);
         if (operation.Owner != Stream || operation.CommandKind != kind ||
+            (kind == CreateKind && operation.LogicalId != EngagementId) ||
             operation.LogicalId != operation.RootOperationId || operation.OriginalExpectedRevision is not { } expected)
             return Result.Failure(new RequestError(RequestErrorKind.Validation,
                 "An engagement change is the logical operation of its own command on its own engagement."));
         var prepared = PrepareChange(kind, (long)expected);
         if (!prepared.IsSuccess)
             return prepared;
+        if (!NativeOwnerHistory.IsOwnRoot(this, operation, kind, _revision))
+            return Result.Failure(new RequestError(RequestErrorKind.Validation,
+                "An engagement change requires its own complete root operation provenance."));
         RaiseEvent(new ServiceEngagementMutationRecorded(_tenantId, operation.LogicalId, kind, change, operation,
             _revision + 1, firstResponse, operationResult));
         return Result.Success;

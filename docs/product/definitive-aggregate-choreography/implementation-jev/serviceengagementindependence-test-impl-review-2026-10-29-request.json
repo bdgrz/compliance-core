@@ -1,0 +1,66 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "catalog": "Selected ServiceEngagementIndependence owner: tenant/engagementId, lifecycle and current content revision; admission pins current revision. CreateServiceEngagement uses EngagementId as immutable creation identity. Catalog assigns AssignmentIndependenceReevaluated and ServiceIndependenceReevaluated to this owner. Target event contracts externalize reevaluation content, use OperationProvenance and logical revision, and remove former shared-ledger ExpectedSequence.",
+    "assignment": "Product assignment-independence-reevaluation.md requires a retained denial-only receipt causally bound to assignment removal or engagement closure, never refreshing authority. Current AssignmentIndependenceReevaluated is a declared legacy event with TenantId, ExpectedSequence, inline Reevaluation; no source references beyond serialization and event definition, and ServiceEngagementIndependence neither raises nor folds it.",
+    "service": "Product source-independence-reevaluation.md requires a retained service-change assessment that never refreshes acceptance. Current ServiceIndependenceReevaluated is a declared legacy event with TenantId, ExpectedSequence, inline Reevaluation; no source references beyond serialization and event definition, and ServiceEngagementIndependence neither raises nor folds it. Authoritative source epoch still blocks stale acceptance separately.",
+    "guards": "Create lifecycle must use engagementId as logical and root operation. Only lifecycle kinds Create, Amend, Propose, Withdraw, Close are recognized. New direct tests assert wrong creation logical ID and unknown kind return validation and append no events.",
+    "event": "ServiceEngagementMutationRecorded carries TenantId and Operation.Owner; the stream is tenant/engagementId. Operation.Owner repeats the stream address and is shared native-operation provenance."
+  },
+  "questions": {
+    "assignment_disposition": {
+      "type": "choice",
+      "instructions": "Given the catalog and assignment receipt evidence, how should the missing AssignmentIndependenceReevaluated behavior be treated?",
+      "options": [
+        "implement_target_receipt",
+        "remove_from_catalog",
+        "needs_source_resolution"
+      ],
+      "criteria": {
+        "implement_target_receipt": "Retain the source-backed business receipt and implement the selected owner and versioned event contract.",
+        "remove_from_catalog": "The receipt has no remaining business purpose.",
+        "needs_source_resolution": "The source evidence is insufficient to decide."
+      }
+    },
+    "assignment_premise": {
+      "type": "noul",
+      "instructions": "Does the described assignment reassessment receipt record a business outcome rather than merely a private worker attempt?"
+    },
+    "service_disposition": {
+      "type": "choice",
+      "instructions": "Given the catalog and service receipt evidence, how should the missing ServiceIndependenceReevaluated behavior be treated?",
+      "options": [
+        "implement_target_receipt",
+        "remove_from_catalog",
+        "needs_source_resolution"
+      ],
+      "criteria": {
+        "implement_target_receipt": "Retain the source-backed business receipt and implement the selected owner and versioned event contract.",
+        "remove_from_catalog": "The receipt has no remaining business purpose.",
+        "needs_source_resolution": "The source evidence is insufficient to decide."
+      }
+    },
+    "service_premise": {
+      "type": "noul",
+      "instructions": "Does the described service reassessment receipt record a business outcome rather than merely a private worker attempt?"
+    },
+    "creation_guard": {
+      "type": "noul",
+      "instructions": "Does refusing a different logical creation ID without an event enforce the selected engagementId creation identity?"
+    },
+    "owner_envelope": {
+      "type": "choice",
+      "instructions": "Given the native ServiceEngagementMutationRecorded event repeats stream identity in TenantId and Operation.Owner, what is the appropriate contract disposition?",
+      "options": [
+        "keep_shared_protocol",
+        "versioned_change",
+        "needs_source_resolution"
+      ],
+      "criteria": {
+        "keep_shared_protocol": "The shared native provenance and tenant fields are required by current readers.",
+        "versioned_change": "A future version removes redundant fields after reader compatibility is addressed.",
+        "needs_source_resolution": "The provided evidence does not establish reader requirements."
+      }
+    }
+  }
+}
