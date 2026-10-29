@@ -1,0 +1,48 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "owner": "AccessPopulation",
+    "rule": "A population is an immutable accepted definition for one exact system-instance revision and source. Facts are replaced only while it is a draft, each replacement with an expected revision; acceptance freezes the facts exactly once. Accepted populations are immutable; stale revisions are refused with a conflict and append nothing.",
+    "code_behavior": "Accept on an opened draft with no recorded facts is refused as Validation and appends nothing. Accept with empty snapshot id, empty calculation id, blank content hash or blank attestation is refused as Validation and appends nothing. Open with empty application id, empty system instance id or blank source is refused as Validation and appends nothing. After acceptance, Record and Accept return Conflict and append nothing.",
+    "test_freeze": "Open, Record(expected 1), Accept(expected 2) succeed (revision 3). Then Record(expected 3) and Accept(expected 3) both return Conflict; pending events stay 3 and status is accepted.",
+    "test_replay_competing": "A population is replayed from opened+facts history (revision 2). Record(expected 1) returns Conflict mentioning the revision; Record(expected 2) succeeds as revision 3; only one new event is pending.",
+    "catalog": "The catalog adopted the wire declared in code for AccessPopulationOpened, FactsRecorded and Accepted (2026-10-29 reconciliation, discriminator version 2). No event is added, removed or renamed; the payloads carry tenant and population ids that repeat the stream identity."
+  },
+  "questions": {
+    "freeze_asserts": {
+      "type": "noul",
+      "instructions": "Does state.test_freeze prove that an accepted population cannot have facts replaced or be accepted again, and that nothing is appended by the refused commands?",
+      "criteria": {
+        "true": "The scenario proves both refusals and that no further event is appended.",
+        "false": "The scenario could pass while a replacement or second acceptance is accepted."
+      }
+    },
+    "competing_asserts": {
+      "type": "noul",
+      "instructions": "Does state.test_replay_competing prove that a replacement based on an outdated revision is refused after replay while a current-revision replacement is accepted without duplicating history?",
+      "criteria": {
+        "true": "The scenario proves the stale replacement is refused and the current one is appended once.",
+        "false": "The scenario could pass while a stale replacement is accepted or history is duplicated."
+      }
+    },
+    "empty_accept": {
+      "type": "choice",
+      "instructions": "Given state.rule and state.code_behavior, is refusing acceptance of a draft that has no recorded facts consistent with the rule?",
+      "criteria": {
+        "consistent": "Refusing protects the rule that acceptance freezes recorded observed facts.",
+        "inconsistent": "The rule requires accepting a draft without facts.",
+        "needs_source_resolution": "Unclear from the given facts."
+      }
+    },
+    "catalog_gap": {
+      "type": "choice",
+      "instructions": "Given state.catalog, is there an event-model discrepancy needing action in the aggregate or its events?",
+      "criteria": {
+        "no_discrepancy": "Event names and payloads agree with the adopted code wire; nothing needs action in the aggregate.",
+        "add_to_model": "Code has an owner-decision event the catalog lacks.",
+        "remove": "Code has an event the catalog does not want.",
+        "needs_source_resolution": "Unclear from the given facts."
+      }
+    }
+  }
+}
