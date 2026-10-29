@@ -32,6 +32,7 @@ using Bdgrz.Compliance.Features.Programs.Readers;
 using Bdgrz.Compliance.Features.Providers.History;
 using Bdgrz.Compliance.Features.Providers.Models;
 using Bdgrz.Compliance.Features.Providers.Rules;
+using Bdgrz.Compliance.Features.Providers.Services;
 using Bdgrz.Compliance.Features.Readiness.Models;
 using Bdgrz.Compliance.Features.Remediation.Rules;
 using Bdgrz.Compliance.Features.Risks.Models;
@@ -51,6 +52,7 @@ using Bdgrz.Compliance.Features.Examinations.Aggregates;
 using Bdgrz.Compliance.Features.MethodologyTemplates.Events;
 using Bdgrz.Compliance.Features.Proofs.Models;
 using Bdgrz.Compliance.Features.Providers.Events;
+using Bdgrz.Compliance.Features.Providers.Commands;
 namespace Bdgrz.Compliance.Features.Providers.Aggregates;
 
 /// <summary>
@@ -171,7 +173,13 @@ public sealed class ProviderAssuranceGap : Aggregate
         ImmutableContentRef operationResult)
     {
         ArgumentNullException.ThrowIfNull(operation);
-        if (operation.LogicalId != _gapId || operation.Owner != Stream || providerRevision < 1)
+        if (_tenantId == Uuid.Empty || _providerId == Uuid.Empty || _gapId == Uuid.Empty ||
+            operation.LogicalId != _gapId || providerRevision < 1 ||
+            !ValidRoot(operation, nameof(RecordProviderCoverageGap), "initial", null) ||
+            actor != operation.Actor || recordedAt != operation.AcceptedAt ||
+            !ProviderGapHistory.Reference(content, ProviderAssuranceContent.GapRecordedSchema) ||
+            !ProviderGapHistory.Reference(firstResponse, FirstResponses.Schema) ||
+            !ProviderGapHistory.Reference(operationResult, ProviderAssuranceContent.GapRegistrationSchema))
             return Result.Failure(new RequestError(RequestErrorKind.Validation,
                 "A provider coverage gap is the logical operation of its own gap owner and requires a provider revision."));
         var prepared = PrepareRecord();
@@ -215,7 +223,12 @@ public sealed class ProviderAssuranceGap : Aggregate
         DateTimeOffset closedAt, ImmutableContentRef firstResponse, ImmutableContentRef operationResult)
     {
         ArgumentNullException.ThrowIfNull(operation);
-        if (operation.LogicalId == Uuid.Empty || operation.Owner != Stream)
+        if (expectedRevision < 0 ||
+            !ValidRoot(operation, nameof(CloseProviderCoverageGap), "current", (ulong)expectedRevision) ||
+            actor != operation.Actor || closedAt != operation.AcceptedAt ||
+            !ProviderGapHistory.Reference(content, ProviderAssuranceContent.GapClosedSchema) ||
+            !ProviderGapHistory.Reference(firstResponse, FirstResponses.Schema) ||
+            !ProviderGapHistory.Reference(operationResult, ProviderAssuranceContent.GapRegistrationSchema))
             return Result.Failure(new RequestError(RequestErrorKind.Validation,
                 "A gap closure requires its own logical operation."));
         var prepared = PrepareClose(expectedRevision, recorded, closure);
@@ -232,6 +245,9 @@ public sealed class ProviderAssuranceGap : Aggregate
     /// <summary>Checks the link admission guards without raising anything.</summary>
     public Result PrepareAdmitLink(long expectedRevision, Uuid riskId, Uuid acceptanceId)
     {
+        if (riskId == Uuid.Empty || acceptanceId == Uuid.Empty)
+            return Result.Failure(new RequestError(RequestErrorKind.Validation,
+                "A link admission requires nonempty risk and acceptance identities."));
         if (_recorded is null)
             return Result.Failure(new RequestError(RequestErrorKind.NotFound, "The provider coverage gap was not found."));
         if (expectedRevision != _revision)
@@ -259,8 +275,11 @@ public sealed class ProviderAssuranceGap : Aggregate
         ArgumentNullException.ThrowIfNull(operation);
         ArgumentNullException.ThrowIfNull(intent);
         ArgumentNullException.ThrowIfNull(firstResponse);
-        if (operation.LogicalId == Uuid.Empty || operation.Owner != Stream ||
-            operation.Episode != PairEpisode(riskId, acceptanceId))
+        if (expectedRevision < 0 || riskId == Uuid.Empty || acceptanceId == Uuid.Empty ||
+            !ValidRoot(operation, nameof(LinkProviderCoverageGapRiskAcceptance), PairEpisode(riskId, acceptanceId),
+                (ulong)expectedRevision) ||
+            !ProviderGapHistory.Reference(intent, ProviderRiskLinkIntent.Schema) ||
+            !ProviderGapHistory.Reference(firstResponse, FirstResponses.Schema))
             return Result.Failure(new RequestError(RequestErrorKind.Validation,
                 "A link admission is the logical operation of its own gap owner, bound to its pair."));
         var prepared = PrepareAdmitLink(expectedRevision, riskId, acceptanceId);
@@ -274,6 +293,16 @@ public sealed class ProviderAssuranceGap : Aggregate
             firstResponse, null));
         return Result.Success;
     }
+
+    bool ValidRoot(OperationProvenance operation, string kind, string episode, ulong? expectedRevision) =>
+        operation.LogicalId != Uuid.Empty && operation.RootOperationId == operation.LogicalId &&
+        operation.CausationEventId is null && operation.CommandKind == kind && operation.Owner == Stream &&
+        operation.AffectedOwner == Stream && operation.ExpectedRevisionOwner == Stream &&
+        (operation.FirstOwner ?? operation.Owner) == Stream && operation.Episode == episode &&
+        operation.OriginalExpectedRevision == expectedRevision && operation.Actor is { } actor &&
+        !string.IsNullOrWhiteSpace(actor.Kind) && !string.IsNullOrWhiteSpace(actor.Id) &&
+        !string.IsNullOrWhiteSpace(actor.Display) && operation.AcceptedAt != default &&
+        operation.AuthoredIntentSha256 is { Length: 64 } sha && sha.All(Uri.IsHexDigit);
 
     protected override void Apply(DomainEvent ev)
     {
