@@ -1,0 +1,50 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "owner": "ControlOperatingPlan",
+    "invariant": "One independently approved, non-overlapping plan version line for a control. Stream identity is (tenantId, programId, controlId). At most one proposal is pending; an approval names exactly the pending plan version.",
+    "retry_rule": "Catalog: an exact retry (same logical id and authored intent) returns the original result; the same id with changed intent is refused. The command handler framework compares the candidate binding with the accepted fact (NativeAcceptance.Decide) before the aggregate method runs and returns the original result on exact retry.",
+    "code_behavior": {
+      "propose_approve_guard": "If the aggregate method is nevertheless called with an operation whose logical id is already accepted on the hydrated line, it returns Conflict and raises no event (previously the fold threw). Empty plan version id on Propose returns Validation with no event (previously raised then threw).",
+      "event_payload": "ControlOperatingPlanProposed and ControlOperatingPlanApproved payloads carry TenantId, ProgramId and ControlId, which repeat the stream key, plus Revision, plan refs and operation provenance. The approved catalog lists the events with this baseline payload and no event change.",
+      "tests": "Tests propose then approve on one owner; stale revision, wrong or missing pending version, second proposal while pending, foreign-stream operation and reused logical id are each refused with no new fact; valid history replays to the same pending version and revision and refuses a stale expected revision; Decide returns Replayed for the original proposal binding after later facts and Conflict for changed intent."
+    }
+  },
+  "questions": {
+    "reused_id_outcome": {
+      "type": "choice",
+      "instructions": "For `state.code_behavior.propose_approve_guard`, given `state.retry_rule`, is returning Conflict with no event the consistent behavior of the aggregate method?",
+      "criteria": {
+        "conflict_no_event": "Refuse with Conflict and append nothing; exact retry is resolved earlier by acceptance.",
+        "success_no_event": "Return success without appending, as the aggregate itself must acknowledge exact retries.",
+        "append_again": "Append another fact.",
+        "needs_source_resolution": "Only the owner can decide."
+      }
+    },
+    "payload_identity_dup": {
+      "type": "choice",
+      "instructions": "For `state.code_behavior.event_payload`, the policy is that payloads carry only business facts not already carried by stream identity or metadata. What is the right disposition?",
+      "criteria": {
+        "remove_from_payload": "Remove the repeated ids from the event payload via an event-catalog change.",
+        "keep_baseline_for_now": "Keep the baseline payload; the catalog approves it unchanged, so any removal belongs to a later event-contract stage.",
+        "needs_source_resolution": "Only the owner can decide."
+      }
+    },
+    "payload_premise": {
+      "type": "noul",
+      "instructions": "The event payload repeats the stream key ids (tenant, program, control) as described in `state.code_behavior.event_payload`.",
+      "criteria": {
+        "true": "It repeats them.",
+        "false": "It does not."
+      }
+    },
+    "tests_assert_invariant": {
+      "type": "noul",
+      "instructions": "The tests in `state.code_behavior.tests` assert the invariant in `state.invariant` (at most one pending proposal, approval names the pending version, stale and reused inputs append nothing).",
+      "criteria": {
+        "true": "They assert the invariant.",
+        "false": "They do not."
+      }
+    }
+  }
+}
