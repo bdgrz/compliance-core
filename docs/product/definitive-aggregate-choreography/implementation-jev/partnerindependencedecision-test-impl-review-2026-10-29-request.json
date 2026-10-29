@@ -1,0 +1,16 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "catalog": "PartnerIndependenceDecision holds one personal evaluation bound to an exact engagement revision, service epoch and ratified-rule digest. Its selected materialization receiver command is MaterializePartnerIndependenceDecision, but its effectKind is claim_professional_assertion_identity.",
+    "implementation": "The receiver verifies an authorized engagement source fact and constructs a child operation with the engagement as first owner. The decision owner is tenant/evaluationId, materializes one fact, and checks child root, cause, target and first owner tenant/area. It does not read the frozen intent or verify the actual source event. PartnerIndependenceEvaluationRecorded contains OperationId equal to evaluationId in the stream resource, Revision, operation provenance and immutable content references. The selected catalog event is the same recorded fact.",
+    "test": "Owner tests check invalid identity and routing refusal without a fact, valid replay retaining content and refusal of another materialization. An added test supplies an engagement-area first owner whose resource is not an engagement UUID."
+  },
+  "questions": {
+    "effect_premise": {"type": "noul", "instructions": "Does claim_professional_assertion_identity describe a different action from materializing a partner independence decision?"},
+    "effect_disposition": {"type": "choice", "instructions": "How should the catalog effectKind for MaterializePartnerIndependenceDecision be handled?", "criteria": {"correct_effect_kind": "Change the shared catalog to name the partner decision materialization effect.", "keep_assertion_claim": "The assertion claim label correctly describes this receiver.", "needs_source_resolution": "Source evidence cannot determine a correct effect."}},
+    "payload_premise": {"type": "noul", "instructions": "Does PartnerIndependenceEvaluationRecorded.OperationId duplicate its evaluation stream resource?"},
+    "payload_disposition": {"type": "choice", "instructions": "How should the repeated evaluation OperationId in an existing partner decision event be treated?", "criteria": {"version_event_change": "Plan a versioned event change and migrate readers from the payload identity to the stream.", "retain_business_identity": "Keep the field as necessary decision identity despite stream duplication.", "needs_source_resolution": "Consumer and migration evidence is insufficient for an event change."}},
+    "source_identity": {"type": "noul", "instructions": "Can a first-owner resource that is not a UUID identify a ServiceEngagementIndependence stream whose key is an engagement UUID?"},
+    "tests": {"type": "noul", "instructions": "Do the described owner tests check that another materialization is refused without adding a fact?"}
+  }
+}
