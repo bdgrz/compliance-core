@@ -16,6 +16,7 @@ using Bdgrz.Compliance.Features.Kernel.Services;
 using Bdgrz.Compliance.Features.NamedRecords.Contracts;
 using Bdgrz.Compliance.Features.NamedRecords.Models;
 using Bdgrz.Compliance.Features.NamedRecords.Processes;
+using Bdgrz.Compliance.Features.NamedRecords.Services;
 using Bdgrz.Compliance.Features.NativeOperations.History;
 using Bdgrz.Compliance.Features.Operations.History;
 using Bdgrz.Compliance.Features.Operations.Models;
@@ -70,8 +71,14 @@ public sealed class LocationNameClaim : NameClaim
     }
 
     /// <summary>The claim stream of a normalized name.</summary>
-    public static EventStreamAddress AddressOf(Uuid tenantId, string nameKind, string normalizedName) =>
-        new(tenantId.ToString(), Area, AggregateIdentity.Create(OwnerType, tenantId, nameKind, normalizedName).ToString());
+    public static EventStreamAddress AddressOf(Uuid tenantId, string nameKind, string normalizedName)
+    {
+        ArgumentNullException.ThrowIfNull(nameKind);
+        ArgumentException.ThrowIfNullOrEmpty(normalizedName);
+        if (!string.Equals(normalizedName, NameNormalization.Normalize(normalizedName), StringComparison.Ordinal))
+            throw new ArgumentException("A location name claim is addressed by the normalized name.", nameof(normalizedName));
+        return new(tenantId.ToString(), Area, AggregateIdentity.Create(OwnerType, tenantId, nameKind, normalizedName).ToString());
+    }
 
     /// <inheritdoc />
     public override Result Claim(OperationProvenance operation, EventStreamAddress holder, long expectedRevision,

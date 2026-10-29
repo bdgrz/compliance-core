@@ -1,0 +1,51 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "rule": "LocationNameClaim: one normalized active location name per kind and tenant is held by at most one location stream at a time, tagged with the generation that last pinned it. A holder may re-pin at an equal or later generation; a different location is refused (taken); the same holder at an earlier generation is refused (superseded); a release only takes effect for the exact holder and generation, so a delayed release cannot free a name a later change pinned. Refusals append no fact. Exact retry of a committed operation is acknowledged by acceptance without a new fact; changed intent for the same logical operation conflicts.",
+    "code": "Claim/Release refuse a holder that is not a location stream of the same tenant (Validation) and an operation owned by another stream (Validation). AddressOf throws ArgumentException when the name is empty or not equal to its normalized (trimmed upper-case) form, so hq and HQ cannot address two claim streams.",
+    "tests": "Tests: second location claiming a held name -> Conflict, no new fact; same holder generation 1 after generation 2 -> Conflict, holder stays generation 2; release at generation 1 after re-pin to 2 -> Conflict, holder kept; release of a free name -> Conflict, no fact; exact release then another location claims -> success; replay of claim+claim restores generation 2; replay of claim+release restores free; exact retry of the claim operation after a later release -> Replayed; same logical id with different intent hash -> Conflict."
+  },
+  "questions": {
+    "tests_cover_invariant": {
+      "type": "noul",
+      "instructions": "Do the listed tests together exercise the stated invariant: single holder, taken refusal, superseded refusal, exact-generation release, replay and retry?",
+      "criteria": {
+        "true": "Taken, superseded, delayed release, free release, replay, retry and changed intent are all exercised.",
+        "false": "Important parts of the rule are untested."
+      }
+    },
+    "delayed_release": {
+      "type": "noul",
+      "instructions": "A release at generation 1 after the same holder re-pinned at generation 2 is refused with a Conflict and no fact. Is this consistent with the rule?",
+      "criteria": {
+        "true": "Consistent: only the exact holder and generation may release.",
+        "false": "Inconsistent with the rule."
+      }
+    },
+    "retry_after_release": {
+      "type": "noul",
+      "instructions": "An exact retry of a committed claim operation, issued after a later release fact, is acknowledged as Replayed rather than re-claiming the name. Is this consistent with the rule on exact retry?",
+      "criteria": {
+        "true": "Consistent: a committed operation is acknowledged without a new fact.",
+        "false": "Inconsistent: it must be re-evaluated against the current state."
+      }
+    },
+    "address_guard": {
+      "type": "choice",
+      "instructions": "The code adds an AddressOf guard that refuses non-normalized names, which the rule text does not state explicitly but which the identity (normalized name) implies. What disposition fits?",
+      "criteria": {
+        "keep_guard": "Keep the guard in the aggregate; it protects the identity the model defines and needs no model change.",
+        "remove_guard": "Remove the guard; the model does not state it and callers already normalize.",
+        "needs_source_resolution": "The model is silent and an owner decision is needed before the guard stays."
+      }
+    },
+    "address_premise": {
+      "type": "noul",
+      "instructions": "Premise: the catalog identity of LocationNameClaim is (tenantId, locationKind, normalizedName), so a non-normalized name is not a valid identity input, and the guard only rejects invalid input.",
+      "criteria": {
+        "true": "The guard only rejects values outside the identity definition.",
+        "false": "The guard changes accepted behavior beyond the model."
+      }
+    }
+  }
+}

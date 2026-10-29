@@ -1,0 +1,38 @@
+{
+  "httpStatus": 200,
+  "response": {
+    "model": "jev-1.14.0",
+    "answers": {
+      "tests_cover_invariant": {
+        "type": "noul",
+        "noul": 0.94
+      },
+      "delayed_release": {
+        "type": "noul",
+        "noul": 0.97
+      },
+      "retry_after_release": {
+        "type": "noul",
+        "noul": 0.84
+      },
+      "address_guard": {
+        "type": "choice",
+        "choice": "keep_guard",
+        "confidence": 0.91,
+        "probabilities": {
+          "keep_guard": 0.94,
+          "remove_guard": 0.01,
+          "needs_source_resolution": 0.05
+        }
+      },
+      "address_premise": {
+        "type": "noul",
+        "noul": 0.46
+      }
+    },
+    "usage": {
+      "input_tokens": 1077,
+      "output_tokens": 120
+    }
+  }
+}
