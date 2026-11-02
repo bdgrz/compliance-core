@@ -109,7 +109,10 @@ public sealed class CriteriaTextOverlay : Aggregate
     {
         ArgumentNullException.ThrowIfNull(operation);
         ArgumentNullException.ThrowIfNull(overlayContent);
-        if (operation.Owner != Stream || operation.OriginalExpectedRevision is not { } expected)
+        ArgumentNullException.ThrowIfNull(firstResponse);
+        ArgumentNullException.ThrowIfNull(operationResult);
+        if (operation.OriginalExpectedRevision is not { } expected ||
+            !NativeOwnerHistory.IsOwnRoot(this, operation, nameof(SetCriteriaTextOverlay), expected))
             return Result.Failure(new RequestError(RequestErrorKind.Validation,
                 "An overlay revision is a root operation of its own overlay with an expected revision."));
         var prepared = PrepareSet((long)expected);

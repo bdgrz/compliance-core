@@ -1,0 +1,31 @@
+{
+  "model": "jev-1.14.0",
+  "answers": {
+    "second_asserts": {
+      "type": "noul",
+      "noul": 0.88
+    },
+    "acceptance_asserts": {
+      "type": "noul",
+      "noul": 0.93
+    },
+    "payload_dup": {
+      "type": "choice",
+      "choice": "keep_as_is",
+      "confidence": 0.73,
+      "probabilities": {
+        "keep_as_is": 0.82,
+        "remove_redundant": 0.16,
+        "needs_source_resolution": 0.02
+      }
+    },
+    "premise_dup": {
+      "type": "noul",
+      "noul": 0.92
+    }
+  },
+  "usage": {
+    "input_tokens": 924,
+    "output_tokens": 106
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "rule": "Removal from the effective administrator set must leave another active tenant administrator. A withdrawal (suspend, deprovision, administrators-team removal) of the last available administrator is refused with a conflict and appends no guard fact.",
+    "scenario": "Two available administrators A and B. A deprovisions B and the withdrawal is accepted (pending, B no longer available). B then tries to deprovision A. The guard refuses with the shared last-administrator conflict; the guard stream has the same fact count as before; available count is 1.",
+    "decision": "Keep TenantManagerGuard as one tenant singleton deciding withdrawals and episode admission together."
+  },
+  "questions": {
+    "asserts_invariant": {
+      "type": "noul",
+      "instructions": "Does the described scenario's outcome demonstrate the stated invariant for deprovisioning?",
+      "criteria": {
+        "true": "The refusal of the last available administrator's deprovisioning with no new fact shows the invariant.",
+        "false": "The scenario does not exercise the invariant."
+      }
+    },
+    "keep_together": {
+      "type": "noul",
+      "instructions": "Is keeping pending withdrawals and available contributors under one guard consistent with the rule?",
+      "criteria": {
+        "true": "Two concurrent withdrawals must be decided against the same state to preserve one active administrator.",
+        "false": "The rule can be enforced by independently governed owners."
+      }
+    }
+  }
+}

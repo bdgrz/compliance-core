@@ -1,0 +1,33 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "owner": "AuditPackageManifest",
+    "catalog_rule": "Manifest identity, selected immutable content version and delivery gate. The selected manifest version lists every included file's path, hash, size and source record version; a delivery gate is refused if any entry lacks these values.",
+    "code_behavior": {
+      "owner": "The owner admits delivery only with a prepared proof that matches the exact manifest cut, built archive and approval facts. Entry completeness (path, hash, size) is validated when the manifest content is built by the content/rules layer, before the immutable content ref is accepted; the owner holds only content refs and does not inspect entries.",
+      "write_guard": "PrepareWrite refuses with NotFound for a wrong program, Conflict for a stale expected revision, Conflict when the named version is not the current version, Conflict when the version is frozen by delivery admission. PrepareCreate refuses Validation for an empty program id and Conflict for an existing package."
+    },
+    "new_tests": "Stream identity equal across different selected commands/versions; PrepareCreate(empty program) is Validation and owner not created; PrepareCreate on a seeded package is Conflict; on a seeded package PrepareWrite with revision-1 is Conflict, foreign program NotFound, current version+1 Conflict, exact current succeeds."
+  },
+  "questions": {
+    "entry_completeness_placement": {
+      "type": "choice",
+      "instructions": "For `state.catalog_rule` and `state.code_behavior.owner`, where should entry completeness be enforced for the aggregate stage?",
+      "criteria": {
+        "content_layer_ok": "Enforcing it when the immutable manifest content is built, with the owner gating delivery on an exact-cut proof, satisfies the rule; no owner change needed.",
+        "owner_must_inspect": "The owner itself must inspect entries at delivery admission.",
+        "needs_source_resolution": "Only the owner can decide."
+      }
+    },
+    "placement_premise": {
+      "type": "noul",
+      "instructions": "The owner in `state.code_behavior.owner` does not inspect entries, and that placement still enforces `state.catalog_rule`'s delivery gate.",
+      "criteria": {"true": "The placement enforces the rule.", "false": "It does not."}
+    },
+    "tests_assert_invariant": {
+      "type": "noul",
+      "instructions": "The tests in `state.new_tests` assert refusal outcomes of `state.code_behavior.write_guard` that protect manifest identity and the selected version.",
+      "criteria": {"true": "They assert the guard behavior.", "false": "They do not."}
+    }
+  }
+}

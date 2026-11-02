@@ -1,0 +1,59 @@
+{
+  "httpStatus": 200,
+  "response": {
+    "model": "jev-1.14.0",
+    "answers": {
+      "invalid_test_asserts": {
+        "type": "noul",
+        "noul": 0.9
+      },
+      "recorder_retry": {
+        "type": "choice",
+        "choice": "conflict",
+        "confidence": 1,
+        "probabilities": {
+          "conflict": 1,
+          "no_op_success": 0,
+          "new_fact": 0,
+          "needs_source_resolution": 0
+        }
+      },
+      "equivalent_retry_test": {
+        "type": "noul",
+        "noul": 0.96
+      },
+      "trimming_discrepancy": {
+        "type": "choice",
+        "choice": "keep_normalization",
+        "confidence": 0.79,
+        "probabilities": {
+          "keep_normalization": 0.86,
+          "retain_exact": 0.02,
+          "needs_source_resolution": 0.12
+        }
+      },
+      "trimming_premise": {
+        "type": "noul",
+        "noul": 0.95
+      },
+      "artifact_discrepancy": {
+        "type": "choice",
+        "choice": "keep_nullable_pair",
+        "confidence": 0.66,
+        "probabilities": {
+          "keep_nullable_pair": 0.77,
+          "require_artifact": 0.18,
+          "needs_source_resolution": 0.05
+        }
+      },
+      "artifact_premise": {
+        "type": "noul",
+        "noul": 0.72
+      }
+    },
+    "usage": {
+      "input_tokens": 1363,
+      "output_tokens": 237
+    }
+  }
+}

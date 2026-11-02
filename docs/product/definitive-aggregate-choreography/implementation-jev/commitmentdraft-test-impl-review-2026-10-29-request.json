@@ -1,0 +1,56 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "owner": "CommitmentDraft",
+    "rule": "One tenant/program/kind/identifier has immutable identity/source creation, revisioned authored content, exact verified-source accepted review and independent approval publishing strictly later effective versions; retired is terminal. CommandId binds one immutable authored intent to the owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused. Expected revision is a concurrency precondition, not a new identity.",
+    "test_revise_retry": "Draft created (revision 1). Revise command C at expected revision 1 succeeds (revision 2). A different revise at expected revision 2 succeeds (revision 3). Then C is resent identically: returns success with no new event (3 events, revision 3). C resent with a different statement: refused with Conflict, still 3 events.",
+    "test_stale_blank": "On a created draft at revision 1, a revise at expected revision 7 and a revise with a blank statement both fail; the stream still has one event and revision stays 1.",
+    "test_competing_append": "An owner at native sequence 1 has a fully valid prepared Review fact. Append with prepared sequence 0 and Append with a physical position one too high are each refused as transient Conflict and leave native sequence 1. The Append with the correct prepared sequence and position succeeds (sequence 2, exactly one raised event). A second Append of the same fact with the same stale prepared sequence is refused as Conflict and the sequence stays 2 with one raised event.",
+    "test_prepare": "Prepare on a missing draft: create allowed; change returns NotFound. On an existing draft: create again returns Conflict; change for another program returns NotFound; change for the same program is allowed. (Retired draft conflict is covered by other tests.)",
+    "catalog_decides_D09": "Catalog D09-01/03/04 say a draft carries a typed source citation, owner Person and Trust Services categories, and approval records the boundary version id. Current events carry statement, context and a free-text SourceReference string, no owner Person, categories or boundary version id. Catalog status is IMPLEMENTATION_HALTED and the aggregate lists these as handler/schema-stage items."
+  },
+  "questions": {
+    "revise_retry_consistent": {
+      "type": "noul",
+      "instructions": "Is state.test_revise_retry consistent with state.rule and does it prove an exact retry after later revisions is acknowledged without a new fact while a changed intent is refused?",
+      "criteria": {
+        "true": "Exact retry returns the original success with no new event and changed intent is a conflict, regardless of the later revisions.",
+        "false": "The retry should fail because the expected revision is now stale, or the test cannot show no new fact."
+      }
+    },
+    "stale_blank_asserts": {
+      "type": "noul",
+      "instructions": "Does state.test_stale_blank prove that a stale revision and an invalid body each append nothing?",
+      "criteria": {
+        "true": "Both refused and the event count and revision are unchanged, so an accepted invalid revise would fail the test.",
+        "false": "The test could pass while an invalid revise appended a fact."
+      }
+    },
+    "competing_append_asserts": {
+      "type": "noul",
+      "instructions": "Does state.test_competing_append prove that stale or competing appends add no fact and that the valid append adds exactly one?",
+      "criteria": {
+        "true": "Stale sequence, stale position and replay of the same prepared fact are refused without state change, and the valid append raises exactly one event.",
+        "false": "The test could pass while a stale or duplicate append raised an event."
+      }
+    },
+    "prepare_matrix": {
+      "type": "noul",
+      "instructions": "Is state.test_prepare consistent with a lifecycle gate that refuses only missing or conflicting targets?",
+      "criteria": {
+        "true": "Outcomes match: missing target NotFound, duplicate create Conflict, other program NotFound, matching change allowed.",
+        "false": "Some outcome contradicts the lifecycle gate."
+      }
+    },
+    "d09_disposition": {
+      "type": "choice",
+      "instructions": "Given state.catalog_decides_D09 and the scope of aggregate-stage work, what is the correct disposition of the missing typed citation, owner Person, categories and boundary version id on the events?",
+      "criteria": {
+        "event_fields_later_stage": "Record as a later event-schema/handler-stage catalog item; do not change aggregate code now.",
+        "change_aggregate_now": "Invent the fields in aggregate code and tests now.",
+        "remove_from_catalog": "The catalog decisions are wrong and should be dropped.",
+        "needs_source_resolution": "The model does not say which stage owns it."
+      }
+    }
+  }
+}

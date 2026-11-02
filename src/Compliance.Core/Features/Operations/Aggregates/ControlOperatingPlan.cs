@@ -124,6 +124,12 @@ public sealed class ControlOperatingPlan : Aggregate
         if (operation.Owner != Stream || operation.OriginalExpectedRevision is not { } expected)
             return Result.Failure(new RequestError(RequestErrorKind.Validation,
                 "A proposal is a root operation of its own plan line with an expected revision."));
+        if (operation.LogicalId == Uuid.Empty)
+            return Result.Failure(new RequestError(RequestErrorKind.Validation,
+                "A proposal names its plan version."));
+        if (AlreadyAccepted(operation))
+            return Result.Failure(new RequestError(RequestErrorKind.Conflict,
+                "This operation was already accepted on this control's plan line."));
         var prepared = PrepareProposal((long)expected);
         if (!prepared.IsSuccess)
             return prepared;
@@ -152,6 +158,9 @@ public sealed class ControlOperatingPlan : Aggregate
         if (operation.Owner != Stream || operation.OriginalExpectedRevision is not { } expected)
             return Result.Failure(new RequestError(RequestErrorKind.Validation,
                 "An approval is a root operation of its own plan line with an expected revision."));
+        if (AlreadyAccepted(operation))
+            return Result.Failure(new RequestError(RequestErrorKind.Conflict,
+                "This operation was already accepted on this control's plan line."));
         var prepared = PrepareApproval((long)expected, planVersionId);
         if (!prepared.IsSuccess)
             return prepared;
@@ -186,6 +195,9 @@ public sealed class ControlOperatingPlan : Aggregate
         _pending = null;
         _latest = ev;
     }
+
+    bool AlreadyAccepted(OperationProvenance operation) =>
+        Acceptance.SelectedFact is not null && operation.LogicalId == Acceptance.SelectedLogicalId;
 
     Result Stale() => Result.Failure(VersionedRecordRules.StaleRevision("control operating plan", _revision)
         .ToRequestError());
