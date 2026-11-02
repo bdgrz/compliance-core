@@ -1,0 +1,101 @@
+{
+  "owner": "WeeklyWorkDigest",
+  "events": [
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:WeeklyWorkDigestDeliveryRecorded",
+        "event": "WeeklyWorkDigestDeliveryRecorded",
+        "emissionKind": "technical",
+        "owners": [
+          "WeeklyWorkDigest"
+        ],
+        "ownerSelection": "exact declared technical/storage owner",
+        "selected295": false,
+        "targetConcreteType": "WeeklyWorkDigestDeliveryRecorded",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.work.weekly-digest.delivery-recorded",
+          "version": 2
+        },
+        "wireQualification": "Wire matches the declared record in src/Compliance.Common/Features/Work/Events/WeeklyWorkDigestDeliveryRecorded.cs at 60029b8f.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "retained_current_schema_native_qualification_required",
+        "sourceStatus": "declared",
+        "meaning": "Records the durable outcome of one exact weekly digest delivery attempt.",
+        "meaningSource": "record summary in src/Compliance.Common/Features/Work/Events/WeeklyWorkDigestDeliveryRecorded.cs"
+      },
+      "schema": null
+    },
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:WeeklyWorkDigestDeliveryRequested",
+        "event": "WeeklyWorkDigestDeliveryRequested",
+        "emissionKind": "technical",
+        "owners": [
+          "WeeklyWorkDigest"
+        ],
+        "ownerSelection": "exact declared technical/storage owner",
+        "selected295": false,
+        "targetConcreteType": "WeeklyWorkDigestDeliveryRequested",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.work.weekly-digest.delivery-requested",
+          "version": 2
+        },
+        "wireQualification": "Wire matches the declared record in src/Compliance.Common/Features/Work/Events/WeeklyWorkDigestDeliveryRequested.cs at 60029b8f.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "retained_current_schema_native_qualification_required",
+        "sourceStatus": "declared",
+        "meaning": "Records one deterministic email delivery attempt for a scheduled weekly digest.",
+        "meaningSource": "record summary in src/Compliance.Common/Features/Work/Events/WeeklyWorkDigestDeliveryRequested.cs"
+      },
+      "schema": null
+    },
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:WeeklyWorkDigestDeliverySuppressed",
+        "event": "WeeklyWorkDigestDeliverySuppressed",
+        "emissionKind": "technical",
+        "owners": [
+          "WeeklyWorkDigest"
+        ],
+        "ownerSelection": "exact declared technical/storage owner",
+        "selected295": false,
+        "targetConcreteType": "WeeklyWorkDigestDeliverySuppressed",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.work.weekly-digest.delivery-suppressed",
+          "version": 2
+        },
+        "wireQualification": "Wire matches the declared record in src/Compliance.Common/Features/Work/Events/WeeklyWorkDigestDeliverySuppressed.cs at 60029b8f.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "retained_current_schema_native_qualification_required",
+        "sourceStatus": "declared",
+        "meaning": "Records why a scheduled digest was suppressed before an email attempt began.",
+        "meaningSource": "record summary in src/Compliance.Common/Features/Work/Events/WeeklyWorkDigestDeliverySuppressed.cs"
+      },
+      "schema": null
+    },
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:WeeklyWorkDigestScheduled",
+        "event": "WeeklyWorkDigestScheduled",
+        "emissionKind": "technical",
+        "owners": [
+          "WeeklyWorkDigest"
+        ],
+        "ownerSelection": "exact declared technical/storage owner",
+        "selected295": false,
+        "targetConcreteType": "WeeklyWorkDigestScheduled",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.work.weekly-digest.scheduled",
+          "version": 1
+        },
+        "wireQualification": "Wire matches the declared record in src/Compliance.Common/Features/Work/Events/WeeklyWorkDigestScheduled.cs at 60029b8f.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "retained_current_schema_native_qualification_required",
+        "sourceStatus": "declared",
+        "meaning": "Schedules one member's stable weekly digest identity for delivery processing.",
+        "meaningSource": "record summary in src/Compliance.Common/Features/Work/Events/WeeklyWorkDigestScheduled.cs"
+      },
+      "schema": null
+    }
+  ]
+}

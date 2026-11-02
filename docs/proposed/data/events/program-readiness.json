@@ -1,0 +1,1544 @@
+{
+  "owner": "ProgramReadiness",
+  "events": [
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:ReadinessAssessmentAdopted",
+        "event": "ReadinessAssessmentAdopted",
+        "emissionKind": "business",
+        "owners": [
+          "ProgramReadiness"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": true,
+        "targetConcreteType": "ReadinessAssessmentAdopted",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.program-readiness.readiness-assessment-adopted",
+          "version": 1
+        },
+        "wireQualification": "Wire matches the declared record in src/Compliance.Common/Features/Readiness/Events/ReadinessAssessmentAdopted.cs at 60029b8f.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "selected_complete_schema",
+        "sourceStatus": "declared",
+        "meaning": "The exact computed assessment became the latest of the program. Generation is the pending adoption generation the run reserved; Operation.RootOperationId is the assessment identity. SourceProofs holds the request and recorded-assessment proofs, and OperationResult the original registration with the program revision after this adoption.",
+        "meaningSource": "record summary in src/Compliance.Common/Features/Readiness/Events/ReadinessAssessmentAdopted.cs"
+      },
+      "schema": {
+        "event": "ReadinessAssessmentAdopted",
+        "discriminator": "bdgrz.program-readiness.readiness-assessment-adopted",
+        "discriminatorVersion": 1,
+        "owner": "ProgramReadiness",
+        "existingContract": null,
+        "status": "selected target schema; implementation pending",
+        "reason": "typed reactor receiver accepted business fact",
+        "fields": [
+          {
+            "name": "Owner",
+            "type": "EventStreamAddress",
+            "required": true
+          },
+          {
+            "name": "Revision",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "Generation",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "Intent",
+            "type": "ImmutableContentRef",
+            "required": true
+          },
+          {
+            "name": "SourceProofs",
+            "type": "ImmutableContentRef?",
+            "required": true
+          },
+          {
+            "name": "Operation",
+            "type": "OperationProvenance",
+            "required": true
+          },
+          {
+            "name": "FirstResponse",
+            "type": "ImmutableContentRef?",
+            "required": true
+          },
+          {
+            "name": "OperationResult",
+            "type": "ImmutableContentRef?",
+            "required": true
+          }
+        ],
+        "contentSchemas": [
+          {
+            "field": "Intent",
+            "schema": "readiness-run-intent.v1",
+            "recordType": "ReadinessRunIntent",
+            "fields": [
+              {
+                "name": "Header",
+                "type": "DurableIntentHeader",
+                "required": true
+              },
+              {
+                "name": "ProgramId",
+                "type": "Uuid",
+                "required": true
+              },
+              {
+                "name": "AssessmentId",
+                "type": "Uuid",
+                "required": true
+              },
+              {
+                "name": "ExpectedProgramRevision",
+                "type": "ulong",
+                "required": true
+              },
+              {
+                "name": "AdoptionGeneration",
+                "type": "ulong",
+                "required": true
+              },
+              {
+                "name": "RuleVersion",
+                "type": "string",
+                "required": true
+              },
+              {
+                "name": "AsOf",
+                "type": "DateTimeOffset",
+                "required": true
+              },
+              {
+                "name": "Inputs",
+                "type": "ImmutableContentRef",
+                "required": true,
+                "contentSchema": "ReadinessInputSnapshot"
+              },
+              {
+                "name": "RunnerMemberId",
+                "type": "Uuid",
+                "required": true
+              }
+            ],
+            "rule": "ProgramReadiness admits one pending latest adoption before computation. Freeze omitted AsOf once. Compute using only Inputs and matching RuleVersion. Successful computation is pending until exact program adoption; old latest cannot be decided while this admission is pending.",
+            "variants": [
+              {
+                "recordType": "ReadinessRunIntent",
+                "schema": "readiness-run-intent.v1",
+                "fields": [
+                  {
+                    "name": "Header",
+                    "type": "DurableIntentHeader",
+                    "required": true
+                  },
+                  {
+                    "name": "ProgramId",
+                    "type": "Uuid",
+                    "required": true
+                  },
+                  {
+                    "name": "AssessmentId",
+                    "type": "Uuid",
+                    "required": true
+                  },
+                  {
+                    "name": "ExpectedProgramRevision",
+                    "type": "ulong",
+                    "required": true
+                  },
+                  {
+                    "name": "AdoptionGeneration",
+                    "type": "ulong",
+                    "required": true
+                  },
+                  {
+                    "name": "RuleVersion",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "AsOf",
+                    "type": "DateTimeOffset",
+                    "required": true
+                  },
+                  {
+                    "name": "Inputs",
+                    "type": "ImmutableContentRef",
+                    "required": true,
+                    "contentSchema": "ReadinessInputSnapshot"
+                  },
+                  {
+                    "name": "RunnerMemberId",
+                    "type": "Uuid",
+                    "required": true
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "changes": [],
+        "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
+        "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
+        "resolvedIntentSchema": "ReadinessRunIntent",
+        "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
+      }
+    },
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:ReadinessAssessmentRequested",
+        "event": "ReadinessAssessmentRequested",
+        "emissionKind": "business",
+        "owners": [
+          "ProgramReadiness"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": true,
+        "targetConcreteType": "ReadinessAssessmentRequested",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.program-readiness.readiness-assessment-requested",
+          "version": 1
+        },
+        "wireQualification": "Wire matches the declared record in src/Compliance.Common/Features/Readiness/Events/ReadinessAssessmentRequested.cs at 60029b8f.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "selected_complete_schema",
+        "sourceStatus": "declared",
+        "meaning": "The root native acceptance of a readiness run. It reserves the one pending latest-adoption generation Generation and references the frozen ReadinessRunIntent with its complete input snapshot; the assessment is only the latest once ReadinessAssessmentAdopted follows.",
+        "meaningSource": "record summary in src/Compliance.Common/Features/Readiness/Events/ReadinessAssessmentRequested.cs"
+      },
+      "schema": {
+        "event": "ReadinessAssessmentRequested",
+        "discriminator": "bdgrz.program-readiness.readiness-assessment-requested",
+        "discriminatorVersion": 1,
+        "owner": "ProgramReadiness",
+        "existingContract": null,
+        "status": "selected target schema; implementation pending",
+        "reason": "source command accepted result",
+        "fields": [
+          {
+            "name": "Owner",
+            "type": "EventStreamAddress",
+            "required": true
+          },
+          {
+            "name": "Revision",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "Generation",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "Intent",
+            "type": "ImmutableContentRef",
+            "required": true
+          },
+          {
+            "name": "SourceProofs",
+            "type": "ImmutableContentRef?",
+            "required": true
+          },
+          {
+            "name": "Operation",
+            "type": "OperationProvenance",
+            "required": true
+          },
+          {
+            "name": "FirstResponse",
+            "type": "ImmutableContentRef?",
+            "required": true
+          },
+          {
+            "name": "OperationResult",
+            "type": "ImmutableContentRef?",
+            "required": true
+          }
+        ],
+        "contentSchemas": [
+          {
+            "field": "Intent",
+            "schema": "readiness-run-intent.v1",
+            "recordType": "ReadinessRunIntent",
+            "fields": [
+              {
+                "name": "Header",
+                "type": "DurableIntentHeader",
+                "required": true
+              },
+              {
+                "name": "ProgramId",
+                "type": "Uuid",
+                "required": true
+              },
+              {
+                "name": "AssessmentId",
+                "type": "Uuid",
+                "required": true
+              },
+              {
+                "name": "ExpectedProgramRevision",
+                "type": "ulong",
+                "required": true
+              },
+              {
+                "name": "AdoptionGeneration",
+                "type": "ulong",
+                "required": true
+              },
+              {
+                "name": "RuleVersion",
+                "type": "string",
+                "required": true
+              },
+              {
+                "name": "AsOf",
+                "type": "DateTimeOffset",
+                "required": true
+              },
+              {
+                "name": "Inputs",
+                "type": "ImmutableContentRef",
+                "required": true,
+                "contentSchema": "ReadinessInputSnapshot"
+              },
+              {
+                "name": "RunnerMemberId",
+                "type": "Uuid",
+                "required": true
+              }
+            ],
+            "rule": "ProgramReadiness admits one pending latest adoption before computation. Freeze omitted AsOf once. Compute using only Inputs and matching RuleVersion. Successful computation is pending until exact program adoption; old latest cannot be decided while this admission is pending.",
+            "variants": [
+              {
+                "recordType": "ReadinessRunIntent",
+                "schema": "readiness-run-intent.v1",
+                "fields": [
+                  {
+                    "name": "Header",
+                    "type": "DurableIntentHeader",
+                    "required": true
+                  },
+                  {
+                    "name": "ProgramId",
+                    "type": "Uuid",
+                    "required": true
+                  },
+                  {
+                    "name": "AssessmentId",
+                    "type": "Uuid",
+                    "required": true
+                  },
+                  {
+                    "name": "ExpectedProgramRevision",
+                    "type": "ulong",
+                    "required": true
+                  },
+                  {
+                    "name": "AdoptionGeneration",
+                    "type": "ulong",
+                    "required": true
+                  },
+                  {
+                    "name": "RuleVersion",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "AsOf",
+                    "type": "DateTimeOffset",
+                    "required": true
+                  },
+                  {
+                    "name": "Inputs",
+                    "type": "ImmutableContentRef",
+                    "required": true,
+                    "contentSchema": "ReadinessInputSnapshot"
+                  },
+                  {
+                    "name": "RunnerMemberId",
+                    "type": "Uuid",
+                    "required": true
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "changes": [],
+        "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
+        "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
+        "resolvedIntentSchema": "ReadinessRunIntent",
+        "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
+      }
+    },
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:ReadinessDecisionAccepted",
+        "event": "ReadinessDecisionAccepted",
+        "emissionKind": "business",
+        "owners": [
+          "ProgramReadiness"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": true,
+        "targetConcreteType": "ReadinessDecisionAccepted",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.program-readiness.readiness-decision-accepted",
+          "version": 1
+        },
+        "wireQualification": "Wire matches the declared record in src/Compliance.Common/Features/Readiness/Events/ReadinessDecisionAccepted.cs at 60029b8f.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "selected_complete_schema",
+        "sourceStatus": "declared",
+        "meaning": "A management readiness decision for a program was accepted, sealing the latest adoption generation and the gap plans it relies on.",
+        "meaningSource": "authored 2026-10-29 from src/Compliance.Common/Features/Readiness/Events/ReadinessDecisionAccepted.cs"
+      },
+      "schema": {
+        "event": "ReadinessDecisionAccepted",
+        "discriminator": "bdgrz.program-readiness.readiness-decision-accepted",
+        "discriminatorVersion": 1,
+        "owner": "ProgramReadiness",
+        "existingContract": null,
+        "status": "selected target schema; implementation pending",
+        "reason": "source command accepted result",
+        "fields": [
+          {
+            "name": "Owner",
+            "type": "EventStreamAddress",
+            "required": true
+          },
+          {
+            "name": "Revision",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "Generation",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "Intent",
+            "type": "ImmutableContentRef",
+            "required": true
+          },
+          {
+            "name": "SourceProofs",
+            "type": "ImmutableContentRef?",
+            "required": true
+          },
+          {
+            "name": "Operation",
+            "type": "OperationProvenance",
+            "required": true
+          },
+          {
+            "name": "FirstResponse",
+            "type": "ImmutableContentRef?",
+            "required": true
+          },
+          {
+            "name": "OperationResult",
+            "type": "ImmutableContentRef?",
+            "required": true
+          }
+        ],
+        "contentSchemas": [
+          {
+            "field": "Intent",
+            "schema": "readiness-decision-intent.v1",
+            "recordType": "ReadinessDecisionIntent",
+            "fields": [
+              {
+                "name": "Header",
+                "type": "DurableIntentHeader",
+                "required": true
+              },
+              {
+                "name": "ProgramId",
+                "type": "Uuid",
+                "required": true
+              },
+              {
+                "name": "AssessmentId",
+                "type": "Uuid",
+                "required": true
+              },
+              {
+                "name": "AssessmentProof",
+                "type": "SourceFactLocator",
+                "required": true
+              },
+              {
+                "name": "DecisionKind",
+                "type": "ReadinessDecisionKind",
+                "required": true
+              },
+              {
+                "name": "Outcome",
+                "type": "string",
+                "required": true
+              },
+              {
+                "name": "Rationale",
+                "type": "string",
+                "required": true
+              },
+              {
+                "name": "RuleVersion",
+                "type": "string",
+                "required": true
+              },
+              {
+                "name": "GapSelection",
+                "type": "ImmutableSelectionManifest",
+                "required": true,
+                "contentSchema": "ReadinessGapView"
+              },
+              {
+                "name": "AcknowledgedGapIds",
+                "type": "ImmutableSelectionManifest",
+                "required": true,
+                "contentSchema": "Uuid"
+              },
+              {
+                "name": "RequiredPlanUses",
+                "type": "ImmutableSelectionManifest",
+                "required": true,
+                "contentSchema": "SourceUseRequirement"
+              },
+              {
+                "name": "WaiverProof",
+                "type": "ImmutableContentRef?",
+                "required": true
+              }
+            ],
+            "rule": "Seal latest adoption and gap-edit admission. Drain older admitted gap edits before grants; if any frozen expected plan changed, fence/abort this decision rather than pick newer input. Require all current rules/plan/independence checks at the decision instant. One approved entry slot per program.",
+            "variants": [
+              {
+                "recordType": "ReadinessDecisionIntent",
+                "schema": "readiness-decision-intent.v1",
+                "fields": [
+                  {
+                    "name": "Header",
+                    "type": "DurableIntentHeader",
+                    "required": true
+                  },
+                  {
+                    "name": "ProgramId",
+                    "type": "Uuid",
+                    "required": true
+                  },
+                  {
+                    "name": "AssessmentId",
+                    "type": "Uuid",
+                    "required": true
+                  },
+                  {
+                    "name": "AssessmentProof",
+                    "type": "SourceFactLocator",
+                    "required": true
+                  },
+                  {
+                    "name": "DecisionKind",
+                    "type": "ReadinessDecisionKind",
+                    "required": true
+                  },
+                  {
+                    "name": "Outcome",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "Rationale",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "RuleVersion",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "GapSelection",
+                    "type": "ImmutableSelectionManifest",
+                    "required": true,
+                    "contentSchema": "ReadinessGapView"
+                  },
+                  {
+                    "name": "AcknowledgedGapIds",
+                    "type": "ImmutableSelectionManifest",
+                    "required": true,
+                    "contentSchema": "Uuid"
+                  },
+                  {
+                    "name": "RequiredPlanUses",
+                    "type": "ImmutableSelectionManifest",
+                    "required": true,
+                    "contentSchema": "SourceUseRequirement"
+                  },
+                  {
+                    "name": "WaiverProof",
+                    "type": "ImmutableContentRef?",
+                    "required": true
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "changes": [],
+        "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
+        "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
+        "resolvedIntentSchema": "ReadinessDecisionIntent",
+        "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
+      }
+    },
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:ReadinessDecisionCanceled",
+        "event": "ReadinessDecisionCanceled",
+        "emissionKind": "business",
+        "owners": [
+          "ProgramReadiness"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": true,
+        "targetConcreteType": "ReadinessDecisionCanceled",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.program-readiness.readiness-decision-canceled",
+          "version": 1
+        },
+        "wireQualification": "Wire matches the declared record in src/Compliance.Common/Features/Readiness/Events/ReadinessDecisionCanceled.cs at 60029b8f.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "selected_complete_schema",
+        "sourceStatus": "declared",
+        "meaning": "A pending decision ended before it was recorded. The fact is the local receiver fence: a delayed completion sees it and does nothing, and only then are the gap plan uses settled. SourceProofs is the failure proof.",
+        "meaningSource": "record summary in src/Compliance.Common/Features/Readiness/Events/ReadinessDecisionCanceled.cs"
+      },
+      "schema": {
+        "event": "ReadinessDecisionCanceled",
+        "discriminator": "bdgrz.program-readiness.readiness-decision-canceled",
+        "discriminatorVersion": 1,
+        "owner": "ProgramReadiness",
+        "existingContract": null,
+        "status": "selected target schema; implementation pending",
+        "reason": "source admission contract",
+        "fields": [
+          {
+            "name": "Owner",
+            "type": "EventStreamAddress",
+            "required": true
+          },
+          {
+            "name": "Revision",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "Generation",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "Intent",
+            "type": "ImmutableContentRef",
+            "required": true
+          },
+          {
+            "name": "SourceProofs",
+            "type": "ImmutableContentRef?",
+            "required": true
+          },
+          {
+            "name": "Operation",
+            "type": "OperationProvenance",
+            "required": true
+          },
+          {
+            "name": "FirstResponse",
+            "type": "ImmutableContentRef?",
+            "required": true
+          },
+          {
+            "name": "OperationResult",
+            "type": "ImmutableContentRef?",
+            "required": true
+          }
+        ],
+        "contentSchemas": [
+          {
+            "field": "Intent",
+            "schema": "readiness-decision-intent.v1",
+            "recordType": "ReadinessDecisionIntent",
+            "fields": [
+              {
+                "name": "Header",
+                "type": "DurableIntentHeader",
+                "required": true
+              },
+              {
+                "name": "ProgramId",
+                "type": "Uuid",
+                "required": true
+              },
+              {
+                "name": "AssessmentId",
+                "type": "Uuid",
+                "required": true
+              },
+              {
+                "name": "AssessmentProof",
+                "type": "SourceFactLocator",
+                "required": true
+              },
+              {
+                "name": "DecisionKind",
+                "type": "ReadinessDecisionKind",
+                "required": true
+              },
+              {
+                "name": "Outcome",
+                "type": "string",
+                "required": true
+              },
+              {
+                "name": "Rationale",
+                "type": "string",
+                "required": true
+              },
+              {
+                "name": "RuleVersion",
+                "type": "string",
+                "required": true
+              },
+              {
+                "name": "GapSelection",
+                "type": "ImmutableSelectionManifest",
+                "required": true,
+                "contentSchema": "ReadinessGapView"
+              },
+              {
+                "name": "AcknowledgedGapIds",
+                "type": "ImmutableSelectionManifest",
+                "required": true,
+                "contentSchema": "Uuid"
+              },
+              {
+                "name": "RequiredPlanUses",
+                "type": "ImmutableSelectionManifest",
+                "required": true,
+                "contentSchema": "SourceUseRequirement"
+              },
+              {
+                "name": "WaiverProof",
+                "type": "ImmutableContentRef?",
+                "required": true
+              }
+            ],
+            "rule": "Seal latest adoption and gap-edit admission. Drain older admitted gap edits before grants; if any frozen expected plan changed, fence/abort this decision rather than pick newer input. Require all current rules/plan/independence checks at the decision instant. One approved entry slot per program.",
+            "variants": [
+              {
+                "recordType": "ReadinessDecisionIntent",
+                "schema": "readiness-decision-intent.v1",
+                "fields": [
+                  {
+                    "name": "Header",
+                    "type": "DurableIntentHeader",
+                    "required": true
+                  },
+                  {
+                    "name": "ProgramId",
+                    "type": "Uuid",
+                    "required": true
+                  },
+                  {
+                    "name": "AssessmentId",
+                    "type": "Uuid",
+                    "required": true
+                  },
+                  {
+                    "name": "AssessmentProof",
+                    "type": "SourceFactLocator",
+                    "required": true
+                  },
+                  {
+                    "name": "DecisionKind",
+                    "type": "ReadinessDecisionKind",
+                    "required": true
+                  },
+                  {
+                    "name": "Outcome",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "Rationale",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "RuleVersion",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "GapSelection",
+                    "type": "ImmutableSelectionManifest",
+                    "required": true,
+                    "contentSchema": "ReadinessGapView"
+                  },
+                  {
+                    "name": "AcknowledgedGapIds",
+                    "type": "ImmutableSelectionManifest",
+                    "required": true,
+                    "contentSchema": "Uuid"
+                  },
+                  {
+                    "name": "RequiredPlanUses",
+                    "type": "ImmutableSelectionManifest",
+                    "required": true,
+                    "contentSchema": "SourceUseRequirement"
+                  },
+                  {
+                    "name": "WaiverProof",
+                    "type": "ImmutableContentRef?",
+                    "required": true
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "changes": [],
+        "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
+        "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
+        "resolvedIntentSchema": "ReadinessDecisionIntent",
+        "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
+      }
+    },
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:ReadinessDecisionRecorded",
+        "event": "ReadinessDecisionRecorded",
+        "emissionKind": "business",
+        "owners": [
+          "ProgramReadiness"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": true,
+        "targetConcreteType": "ReadinessDecisionRecorded",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.readiness.decision.recorded",
+          "version": 1
+        },
+        "wireQualification": "Wire matches the declared record in src/Compliance.Common/Features/Readiness/Events/ReadinessDecisionRecorded.cs at 60029b8f.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "selected_complete_schema",
+        "sourceStatus": "declared",
+        "meaning": "The management readiness decision was recorded once every gap plan was held. DecisionContent is the complete ReadinessDecisionView, DecisionProofs the complete manifest of the held gap plan proofs, and OperationResult the original typed result of the decision command.",
+        "meaningSource": "record summary in src/Compliance.Common/Features/Readiness/Events/ReadinessDecisionRecorded.cs"
+      },
+      "schema": {
+        "event": "ReadinessDecisionRecorded",
+        "discriminator": "bdgrz.readiness.decision.recorded",
+        "discriminatorVersion": 1,
+        "owner": "ProgramReadiness",
+        "existingContract": "src/Compliance.Common/Features/Readiness/ReadinessDecisionRecorded.cs",
+        "status": "selected target schema; implementation pending",
+        "reason": "typed reactor receiver accepted business fact",
+        "fields": [
+          {
+            "name": "TenantId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "ProgramId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "Revision",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "DecisionContent",
+            "type": "ImmutableContentRef",
+            "required": true
+          },
+          {
+            "name": "Operation",
+            "type": "OperationProvenance",
+            "required": true
+          },
+          {
+            "name": "AssessmentId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "DecisionId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "DecisionProofs",
+            "type": "ImmutableContentRef",
+            "required": true
+          },
+          {
+            "name": "Intent",
+            "type": "ImmutableContentRef",
+            "required": true
+          },
+          {
+            "name": "FirstResponse",
+            "type": "ImmutableContentRef?",
+            "required": true
+          },
+          {
+            "name": "OperationResult",
+            "type": "ImmutableContentRef?",
+            "required": true
+          }
+        ],
+        "contentSchemas": [
+          {
+            "field": "DecisionContent",
+            "schema": "ReadinessDecisionRecorded.DecisionContent.v1",
+            "contentType": "ReadinessDecisionView",
+            "rule": "Complete original typed structured value, including nested collections, written/verified before this event. No cumulative parent view or mutable latest pointer."
+          },
+          {
+            "field": "Intent",
+            "schema": "readiness-decision-intent.v1",
+            "recordType": "ReadinessDecisionIntent",
+            "fields": [
+              {
+                "name": "Header",
+                "type": "DurableIntentHeader",
+                "required": true
+              },
+              {
+                "name": "ProgramId",
+                "type": "Uuid",
+                "required": true
+              },
+              {
+                "name": "AssessmentId",
+                "type": "Uuid",
+                "required": true
+              },
+              {
+                "name": "AssessmentProof",
+                "type": "SourceFactLocator",
+                "required": true
+              },
+              {
+                "name": "DecisionKind",
+                "type": "ReadinessDecisionKind",
+                "required": true
+              },
+              {
+                "name": "Outcome",
+                "type": "string",
+                "required": true
+              },
+              {
+                "name": "Rationale",
+                "type": "string",
+                "required": true
+              },
+              {
+                "name": "RuleVersion",
+                "type": "string",
+                "required": true
+              },
+              {
+                "name": "GapSelection",
+                "type": "ImmutableSelectionManifest",
+                "required": true,
+                "contentSchema": "ReadinessGapView"
+              },
+              {
+                "name": "AcknowledgedGapIds",
+                "type": "ImmutableSelectionManifest",
+                "required": true,
+                "contentSchema": "Uuid"
+              },
+              {
+                "name": "RequiredPlanUses",
+                "type": "ImmutableSelectionManifest",
+                "required": true,
+                "contentSchema": "SourceUseRequirement"
+              },
+              {
+                "name": "WaiverProof",
+                "type": "ImmutableContentRef?",
+                "required": true
+              }
+            ],
+            "rule": "Seal latest adoption and gap-edit admission. Drain older admitted gap edits before grants; if any frozen expected plan changed, fence/abort this decision rather than pick newer input. Require all current rules/plan/independence checks at the decision instant. One approved entry slot per program.",
+            "variants": [
+              {
+                "recordType": "ReadinessDecisionIntent",
+                "schema": "readiness-decision-intent.v1",
+                "fields": [
+                  {
+                    "name": "Header",
+                    "type": "DurableIntentHeader",
+                    "required": true
+                  },
+                  {
+                    "name": "ProgramId",
+                    "type": "Uuid",
+                    "required": true
+                  },
+                  {
+                    "name": "AssessmentId",
+                    "type": "Uuid",
+                    "required": true
+                  },
+                  {
+                    "name": "AssessmentProof",
+                    "type": "SourceFactLocator",
+                    "required": true
+                  },
+                  {
+                    "name": "DecisionKind",
+                    "type": "ReadinessDecisionKind",
+                    "required": true
+                  },
+                  {
+                    "name": "Outcome",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "Rationale",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "RuleVersion",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "GapSelection",
+                    "type": "ImmutableSelectionManifest",
+                    "required": true,
+                    "contentSchema": "ReadinessGapView"
+                  },
+                  {
+                    "name": "AcknowledgedGapIds",
+                    "type": "ImmutableSelectionManifest",
+                    "required": true,
+                    "contentSchema": "Uuid"
+                  },
+                  {
+                    "name": "RequiredPlanUses",
+                    "type": "ImmutableSelectionManifest",
+                    "required": true,
+                    "contentSchema": "SourceUseRequirement"
+                  },
+                  {
+                    "name": "WaiverProof",
+                    "type": "ImmutableContentRef?",
+                    "required": true
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "changes": [
+          "Externalize structured ReadinessDecisionView including nested collections; a former item cap cannot become an event-size rejection for valid larger content."
+        ],
+        "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
+        "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
+        "resolvedIntentSchema": "ReadinessDecisionIntent",
+        "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
+      }
+    },
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:TypeIEntryDecisionAccepted",
+        "event": "TypeIEntryDecisionAccepted",
+        "emissionKind": "business",
+        "owners": [
+          "ProgramReadiness"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": true,
+        "targetConcreteType": "TypeIEntryDecisionAccepted",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.program-readiness.type-i-entry-decision-accepted",
+          "version": 1
+        },
+        "wireQualification": "Wire matches the declared record in src/Compliance.Common/Features/Readiness/Events/TypeIEntryDecisionAccepted.cs at 60029b8f.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "selected_complete_schema",
+        "sourceStatus": "declared",
+        "meaning": "A decision to enter a Type I examination was accepted for a program, sealing the latest adoption generation and the gap plans it relies on.",
+        "meaningSource": "authored 2026-10-29 from src/Compliance.Common/Features/Readiness/Events/TypeIEntryDecisionAccepted.cs"
+      },
+      "schema": {
+        "event": "TypeIEntryDecisionAccepted",
+        "discriminator": "bdgrz.program-readiness.type-i-entry-decision-accepted",
+        "discriminatorVersion": 1,
+        "owner": "ProgramReadiness",
+        "existingContract": null,
+        "status": "selected target schema; implementation pending",
+        "reason": "source command accepted result",
+        "fields": [
+          {
+            "name": "Owner",
+            "type": "EventStreamAddress",
+            "required": true
+          },
+          {
+            "name": "Revision",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "Generation",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "Intent",
+            "type": "ImmutableContentRef",
+            "required": true
+          },
+          {
+            "name": "SourceProofs",
+            "type": "ImmutableContentRef?",
+            "required": true
+          },
+          {
+            "name": "Operation",
+            "type": "OperationProvenance",
+            "required": true
+          },
+          {
+            "name": "FirstResponse",
+            "type": "ImmutableContentRef?",
+            "required": true
+          },
+          {
+            "name": "OperationResult",
+            "type": "ImmutableContentRef?",
+            "required": true
+          }
+        ],
+        "contentSchemas": [
+          {
+            "field": "Intent",
+            "schema": "readiness-decision-intent.v1",
+            "recordType": "ReadinessDecisionIntent",
+            "fields": [
+              {
+                "name": "Header",
+                "type": "DurableIntentHeader",
+                "required": true
+              },
+              {
+                "name": "ProgramId",
+                "type": "Uuid",
+                "required": true
+              },
+              {
+                "name": "AssessmentId",
+                "type": "Uuid",
+                "required": true
+              },
+              {
+                "name": "AssessmentProof",
+                "type": "SourceFactLocator",
+                "required": true
+              },
+              {
+                "name": "DecisionKind",
+                "type": "ReadinessDecisionKind",
+                "required": true
+              },
+              {
+                "name": "Outcome",
+                "type": "string",
+                "required": true
+              },
+              {
+                "name": "Rationale",
+                "type": "string",
+                "required": true
+              },
+              {
+                "name": "RuleVersion",
+                "type": "string",
+                "required": true
+              },
+              {
+                "name": "GapSelection",
+                "type": "ImmutableSelectionManifest",
+                "required": true,
+                "contentSchema": "ReadinessGapView"
+              },
+              {
+                "name": "AcknowledgedGapIds",
+                "type": "ImmutableSelectionManifest",
+                "required": true,
+                "contentSchema": "Uuid"
+              },
+              {
+                "name": "RequiredPlanUses",
+                "type": "ImmutableSelectionManifest",
+                "required": true,
+                "contentSchema": "SourceUseRequirement"
+              },
+              {
+                "name": "WaiverProof",
+                "type": "ImmutableContentRef?",
+                "required": true
+              }
+            ],
+            "rule": "Seal latest adoption and gap-edit admission. Drain older admitted gap edits before grants; if any frozen expected plan changed, fence/abort this decision rather than pick newer input. Require all current rules/plan/independence checks at the decision instant. One approved entry slot per program.",
+            "variants": [
+              {
+                "recordType": "ReadinessDecisionIntent",
+                "schema": "readiness-decision-intent.v1",
+                "fields": [
+                  {
+                    "name": "Header",
+                    "type": "DurableIntentHeader",
+                    "required": true
+                  },
+                  {
+                    "name": "ProgramId",
+                    "type": "Uuid",
+                    "required": true
+                  },
+                  {
+                    "name": "AssessmentId",
+                    "type": "Uuid",
+                    "required": true
+                  },
+                  {
+                    "name": "AssessmentProof",
+                    "type": "SourceFactLocator",
+                    "required": true
+                  },
+                  {
+                    "name": "DecisionKind",
+                    "type": "ReadinessDecisionKind",
+                    "required": true
+                  },
+                  {
+                    "name": "Outcome",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "Rationale",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "RuleVersion",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "GapSelection",
+                    "type": "ImmutableSelectionManifest",
+                    "required": true,
+                    "contentSchema": "ReadinessGapView"
+                  },
+                  {
+                    "name": "AcknowledgedGapIds",
+                    "type": "ImmutableSelectionManifest",
+                    "required": true,
+                    "contentSchema": "Uuid"
+                  },
+                  {
+                    "name": "RequiredPlanUses",
+                    "type": "ImmutableSelectionManifest",
+                    "required": true,
+                    "contentSchema": "SourceUseRequirement"
+                  },
+                  {
+                    "name": "WaiverProof",
+                    "type": "ImmutableContentRef?",
+                    "required": true
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "changes": [],
+        "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
+        "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
+        "resolvedIntentSchema": "ReadinessDecisionIntent",
+        "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
+      }
+    },
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:TypeIEntryDecisionRecorded",
+        "event": "TypeIEntryDecisionRecorded",
+        "emissionKind": "business",
+        "owners": [
+          "ProgramReadiness"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": true,
+        "targetConcreteType": "TypeIEntryDecisionRecorded",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.readiness.type_i_entry.decided",
+          "version": 1
+        },
+        "wireQualification": "Wire matches the declared record in src/Compliance.Common/Features/Readiness/Events/TypeIEntryDecisionRecorded.cs at 60029b8f.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "selected_complete_schema",
+        "sourceStatus": "declared",
+        "meaning": "The Type I entry decision was recorded once every gap plan was held. DecisionContent is the complete TypeIEntryDecisionView with its frozen unresolved items, DecisionProofs the complete manifest of the held gap plan proofs, and OperationResult the original typed result of the command.",
+        "meaningSource": "record summary in src/Compliance.Common/Features/Readiness/Events/TypeIEntryDecisionRecorded.cs"
+      },
+      "schema": {
+        "event": "TypeIEntryDecisionRecorded",
+        "discriminator": "bdgrz.readiness.type_i_entry.decided",
+        "discriminatorVersion": 1,
+        "owner": "ProgramReadiness",
+        "existingContract": "src/Compliance.Common/Features/Readiness/TypeIEntryDecisionRecorded.cs",
+        "status": "selected target schema; implementation pending",
+        "reason": "typed reactor receiver accepted business fact",
+        "fields": [
+          {
+            "name": "TenantId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "ProgramId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "Revision",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "DecisionContent",
+            "type": "ImmutableContentRef",
+            "required": true
+          },
+          {
+            "name": "Operation",
+            "type": "OperationProvenance",
+            "required": true
+          },
+          {
+            "name": "AssessmentId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "DecisionId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "DecisionProofs",
+            "type": "ImmutableContentRef",
+            "required": true
+          },
+          {
+            "name": "Intent",
+            "type": "ImmutableContentRef",
+            "required": true
+          },
+          {
+            "name": "FirstResponse",
+            "type": "ImmutableContentRef?",
+            "required": true
+          },
+          {
+            "name": "OperationResult",
+            "type": "ImmutableContentRef?",
+            "required": true
+          }
+        ],
+        "contentSchemas": [
+          {
+            "field": "DecisionContent",
+            "schema": "TypeIEntryDecisionRecorded.DecisionContent.v1",
+            "contentType": "TypeIEntryDecisionView",
+            "rule": "Complete original typed structured value, including nested collections, written/verified before this event. No cumulative parent view or mutable latest pointer."
+          },
+          {
+            "field": "Intent",
+            "schema": "readiness-decision-intent.v1",
+            "recordType": "ReadinessDecisionIntent",
+            "fields": [
+              {
+                "name": "Header",
+                "type": "DurableIntentHeader",
+                "required": true
+              },
+              {
+                "name": "ProgramId",
+                "type": "Uuid",
+                "required": true
+              },
+              {
+                "name": "AssessmentId",
+                "type": "Uuid",
+                "required": true
+              },
+              {
+                "name": "AssessmentProof",
+                "type": "SourceFactLocator",
+                "required": true
+              },
+              {
+                "name": "DecisionKind",
+                "type": "ReadinessDecisionKind",
+                "required": true
+              },
+              {
+                "name": "Outcome",
+                "type": "string",
+                "required": true
+              },
+              {
+                "name": "Rationale",
+                "type": "string",
+                "required": true
+              },
+              {
+                "name": "RuleVersion",
+                "type": "string",
+                "required": true
+              },
+              {
+                "name": "GapSelection",
+                "type": "ImmutableSelectionManifest",
+                "required": true,
+                "contentSchema": "ReadinessGapView"
+              },
+              {
+                "name": "AcknowledgedGapIds",
+                "type": "ImmutableSelectionManifest",
+                "required": true,
+                "contentSchema": "Uuid"
+              },
+              {
+                "name": "RequiredPlanUses",
+                "type": "ImmutableSelectionManifest",
+                "required": true,
+                "contentSchema": "SourceUseRequirement"
+              },
+              {
+                "name": "WaiverProof",
+                "type": "ImmutableContentRef?",
+                "required": true
+              }
+            ],
+            "rule": "Seal latest adoption and gap-edit admission. Drain older admitted gap edits before grants; if any frozen expected plan changed, fence/abort this decision rather than pick newer input. Require all current rules/plan/independence checks at the decision instant. One approved entry slot per program.",
+            "variants": [
+              {
+                "recordType": "ReadinessDecisionIntent",
+                "schema": "readiness-decision-intent.v1",
+                "fields": [
+                  {
+                    "name": "Header",
+                    "type": "DurableIntentHeader",
+                    "required": true
+                  },
+                  {
+                    "name": "ProgramId",
+                    "type": "Uuid",
+                    "required": true
+                  },
+                  {
+                    "name": "AssessmentId",
+                    "type": "Uuid",
+                    "required": true
+                  },
+                  {
+                    "name": "AssessmentProof",
+                    "type": "SourceFactLocator",
+                    "required": true
+                  },
+                  {
+                    "name": "DecisionKind",
+                    "type": "ReadinessDecisionKind",
+                    "required": true
+                  },
+                  {
+                    "name": "Outcome",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "Rationale",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "RuleVersion",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "GapSelection",
+                    "type": "ImmutableSelectionManifest",
+                    "required": true,
+                    "contentSchema": "ReadinessGapView"
+                  },
+                  {
+                    "name": "AcknowledgedGapIds",
+                    "type": "ImmutableSelectionManifest",
+                    "required": true,
+                    "contentSchema": "Uuid"
+                  },
+                  {
+                    "name": "RequiredPlanUses",
+                    "type": "ImmutableSelectionManifest",
+                    "required": true,
+                    "contentSchema": "SourceUseRequirement"
+                  },
+                  {
+                    "name": "WaiverProof",
+                    "type": "ImmutableContentRef?",
+                    "required": true
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "changes": [
+          "Externalize structured TypeIEntryDecisionView including nested collections; a former item cap cannot become an event-size rejection for valid larger content."
+        ],
+        "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
+        "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
+        "resolvedIntentSchema": "ReadinessDecisionIntent",
+        "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
+      }
+    }
+  ]
+}

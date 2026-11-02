@@ -1,0 +1,297 @@
+{
+  "owner": "ControlDraft",
+  "events": [
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:ControlApproved",
+        "event": "ControlApproved",
+        "emissionKind": "business",
+        "owners": [
+          "ControlDraft"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": false,
+        "targetConcreteType": "ControlApproved",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.control.approved",
+          "version": 2
+        },
+        "wireQualification": "Wire matches the declared record in src/Compliance.Common/Features/Controls/Events/ControlApproved.cs at 60029b8f.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "retained_current_schema_native_qualification_required",
+        "sourceStatus": "declared",
+        "meaning": "Activates an immutable control version from one exact reviewed draft revision.",
+        "meaningSource": "record summary in src/Compliance.Common/Features/Controls/Events/ControlApproved.cs"
+      },
+      "schema": null
+    },
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:ControlDraftCreated",
+        "event": "ControlDraftCreated",
+        "emissionKind": "business",
+        "owners": [
+          "ControlDraft"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": false,
+        "targetConcreteType": "ControlDraftCreated",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.control.draft.created",
+          "version": 2
+        },
+        "wireQualification": "Wire matches the declared record in src/Compliance.Common/Features/Controls/Events/ControlDraftCreated.cs at 60029b8f.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "retained_current_schema_native_qualification_required",
+        "sourceStatus": "declared",
+        "meaning": "A control draft was created in a program with its identifier and authored content by a named member, awaiting review.",
+        "meaningSource": "authored 2026-10-29 from src/Compliance.Common/Features/Controls/Events/ControlDraftCreated.cs"
+      },
+      "schema": null
+    },
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:ControlDraftDiscarded",
+        "event": "ControlDraftDiscarded",
+        "emissionKind": "business",
+        "owners": [
+          "ControlDraft"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": false,
+        "targetConcreteType": "ControlDraftDiscarded",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.control.draft.discarded",
+          "version": 2
+        },
+        "wireQualification": "Wire matches the declared record in src/Compliance.Common/Features/Controls/Events/ControlDraftDiscarded.cs at 60029b8f.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "retained_current_schema_native_qualification_required",
+        "sourceStatus": "declared",
+        "meaning": "A control draft was discarded with a stated rationale by a named member, ending it without approval.",
+        "meaningSource": "authored 2026-10-29 from src/Compliance.Common/Features/Controls/Events/ControlDraftDiscarded.cs"
+      },
+      "schema": null
+    },
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:ControlDraftRevised",
+        "event": "ControlDraftRevised",
+        "emissionKind": "business",
+        "owners": [
+          "ControlDraft"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": false,
+        "targetConcreteType": "ControlDraftRevised",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.control.draft.revised",
+          "version": 2
+        },
+        "wireQualification": "Wire matches the declared record in src/Compliance.Common/Features/Controls/Events/ControlDraftRevised.cs at 60029b8f.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "retained_current_schema_native_qualification_required",
+        "sourceStatus": "declared",
+        "meaning": "A control draft's authored content was revised by a named member, producing the draft's next revision for review.",
+        "meaningSource": "authored 2026-10-29 from src/Compliance.Common/Features/Controls/Events/ControlDraftRevised.cs"
+      },
+      "schema": null
+    },
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:ControlOwnerPersonDesignated",
+        "event": "ControlOwnerPersonDesignated",
+        "emissionKind": "business",
+        "owners": [
+          "ControlDraft"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": false,
+        "targetConcreteType": "ControlOwnerPersonDesignated",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.control.owner_person.designated",
+          "version": 2
+        },
+        "wireQualification": "Wire matches the declared record in src/Compliance.Common/Features/Controls/Events/ControlOwnerPersonDesignated.cs at 60029b8f.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "retained_current_schema_native_qualification_required",
+        "sourceStatus": "declared",
+        "meaning": "Designates, or clears with a null PersonId, the governed workforce person who owns one exact pending control revision. The person need not sign in. The signed-in recording actor is kept separate, and CorrelatedMemberId is snapshotted only to apply owner-based separation of duties; it never grants access.",
+        "meaningSource": "record summary in src/Compliance.Common/Features/Controls/Events/ControlOwnerPersonDesignated.cs"
+      },
+      "schema": null
+    },
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:ControlProposalWithdrawn",
+        "event": "ControlProposalWithdrawn",
+        "emissionKind": "business",
+        "owners": [
+          "ControlDraft"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": false,
+        "targetConcreteType": "ControlProposalWithdrawn",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.control.proposal.withdrawn",
+          "version": 2
+        },
+        "wireQualification": "Wire matches the declared record in src/Compliance.Common/Features/Controls/Events/ControlProposalWithdrawn.cs at 60029b8f.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "retained_current_schema_native_qualification_required",
+        "sourceStatus": "declared",
+        "meaning": "Withdraws a pending successor draft or retirement proposal at its exact revision. The current approved version stays effective; the ControlDraftRevised raised in the same commit restores its content on a new revision so stale decisions cannot apply.",
+        "meaningSource": "record summary in src/Compliance.Common/Features/Controls/Events/ControlProposalWithdrawn.cs"
+      },
+      "schema": null
+    },
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:ControlRetired",
+        "event": "ControlRetired",
+        "emissionKind": "business",
+        "owners": [
+          "ControlDraft"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": false,
+        "targetConcreteType": "ControlRetired",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.control.retired",
+          "version": 2
+        },
+        "wireQualification": "Wire matches the declared record in src/Compliance.Common/Features/Controls/Events/ControlRetired.cs at 60029b8f.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "retained_current_schema_native_qualification_required",
+        "sourceStatus": "declared",
+        "meaning": "Ends future use of one exact approved control version. Prior versions, decisions, and relationships are retained and stay readable.",
+        "meaningSource": "record summary in src/Compliance.Common/Features/Controls/Events/ControlRetired.cs"
+      },
+      "schema": null
+    },
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:ControlRetirementProposed",
+        "event": "ControlRetirementProposed",
+        "emissionKind": "business",
+        "owners": [
+          "ControlDraft"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": false,
+        "targetConcreteType": "ControlRetirementProposed",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.control.retirement.proposed",
+          "version": 2
+        },
+        "wireQualification": "Wire matches the declared record in src/Compliance.Common/Features/Controls/Events/ControlRetirementProposed.cs at 60029b8f.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "retained_current_schema_native_qualification_required",
+        "sourceStatus": "declared",
+        "meaning": "Proposes ending future use of one exact approved control version.",
+        "meaningSource": "record summary in src/Compliance.Common/Features/Controls/Events/ControlRetirementProposed.cs"
+      },
+      "schema": null
+    },
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:ControlReviewed",
+        "event": "ControlReviewed",
+        "emissionKind": "business",
+        "owners": [
+          "ControlDraft"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": false,
+        "targetConcreteType": "ControlReviewed",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.control.reviewed",
+          "version": 2
+        },
+        "wireQualification": "Wire matches the declared record in src/Compliance.Common/Features/Controls/Events/ControlReviewed.cs at 60029b8f.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "retained_current_schema_native_qualification_required",
+        "sourceStatus": "declared",
+        "meaning": "A control version was reviewed with a decision outcome and rationale by a named reviewer, recorded against the exact draft revision reviewed.",
+        "meaningSource": "authored 2026-10-29 from src/Compliance.Common/Features/Controls/Events/ControlReviewed.cs"
+      },
+      "schema": null
+    },
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:ControlSuccessorProposed",
+        "event": "ControlSuccessorProposed",
+        "emissionKind": "business",
+        "owners": [
+          "ControlDraft"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": false,
+        "targetConcreteType": "ControlSuccessorProposed",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.control.successor.proposed",
+          "version": 2
+        },
+        "wireQualification": "Wire matches the declared record in src/Compliance.Common/Features/Controls/Events/ControlSuccessorProposed.cs at 60029b8f.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "retained_current_schema_native_qualification_required",
+        "sourceStatus": "declared",
+        "meaning": "A successor version line was opened for a control from one exact approved predecessor version by a named member, with the successor's content to be authored separately.",
+        "meaningSource": "authored 2026-10-29 from src/Compliance.Common/Features/Controls/Events/ControlSuccessorProposed.cs"
+      },
+      "schema": null
+    },
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:ResponsibilityAssigned",
+        "event": "ResponsibilityAssigned",
+        "emissionKind": "business",
+        "owners": [
+          "ControlDraft",
+          "CommitmentDraft",
+          "SystemBoundary"
+        ],
+        "ownerSelection": "ResponsibilityScope.RecordType/RecordId + exact owner authority header selects one of three listed scope owners",
+        "selected295": false,
+        "targetConcreteType": "ResponsibilityAssigned",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.responsibility.assigned",
+          "version": 1
+        },
+        "wireQualification": "Wire matches the declared record in src/Compliance.Common/Features/Responsibilities/Events/ResponsibilityAssigned.cs at 60029b8f.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "retained_current_schema_native_qualification_required",
+        "sourceStatus": "declared",
+        "meaning": "A member was assigned a responsibility type over a scoped record for an effective period by a named assigner, together with any separation-of-duties waivers that allowed it.",
+        "meaningSource": "authored 2026-10-29 from src/Compliance.Common/Features/Responsibilities/Events/ResponsibilityAssigned.cs"
+      },
+      "schema": null
+    },
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:ResponsibilityRevoked",
+        "event": "ResponsibilityRevoked",
+        "emissionKind": "business",
+        "owners": [
+          "ControlDraft",
+          "CommitmentDraft",
+          "SystemBoundary"
+        ],
+        "ownerSelection": "ResponsibilityScope.RecordType/RecordId + exact owner authority header selects one of three listed scope owners",
+        "selected295": false,
+        "targetConcreteType": "ResponsibilityRevoked",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.responsibility.revoked",
+          "version": 1
+        },
+        "wireQualification": "Wire matches the declared record in src/Compliance.Common/Features/Responsibilities/Events/ResponsibilityRevoked.cs at 60029b8f.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "retained_current_schema_native_qualification_required",
+        "sourceStatus": "declared",
+        "meaning": "A member's responsibility assignment over a scoped record was revoked with a stated reason by a named member, removing the authority it granted.",
+        "meaningSource": "authored 2026-10-29 from src/Compliance.Common/Features/Responsibilities/Events/ResponsibilityRevoked.cs"
+      },
+      "schema": null
+    }
+  ]
+}

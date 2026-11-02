@@ -1,0 +1,914 @@
+{
+  "owner": "DeclaredApplication",
+  "origin": "selected_split_target",
+  "baselineOwners": [
+    "DeclaredApplication"
+  ],
+  "declaredIdentity": "applicationId",
+  "invariant": "Application creation, metadata revision, retirement and import admission generation. Name and alias uniqueness is decided by ApplicationNameClaim, which the application must hold before using a name; a merge retires this application with a merged_into reference to the survivor (M0-D05 D05-10)",
+  "boundaryDecision": "selected_split",
+  "mustPreserve": "Retirement requires an approved successor for exact app revision; import holds block incompatible local change.",
+  "sources": [
+    {
+      "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
+      "jsonPointer": "/splitOwners/8/targetOwners/0",
+      "line": 937,
+      "sha256": "d349d94b7c43f4d82020ecf36bdacf1aff98bc6498e14993582f1c3164b21f19"
+    }
+  ],
+  "baselineSourcePath": "src/Compliance.Core/Features/Applications/DeclaredApplication.cs",
+  "baselineEvents": [
+    "ApplicationDeclared",
+    "ApplicationImportEffectPending",
+    "ApplicationRetired",
+    "ApplicationRevised"
+  ],
+  "preliminaryNewEvents": [],
+  "technicalStateToSeparate": [],
+  "classification": "business_aggregate",
+  "businessAggregate": true,
+  "implementationStatus": "SEPARATE_VERIFICATION_REQUIRED_IMPLEMENTATION_HALTED",
+  "identityReadingRule": "selectedIdentitySummary and exact selectedCommandContracts define intended identity. baselineIdentityObservation/declaredIdentity retain older source observations only, including old replay defects; they are not target behavior or authorization to change an occupied key.",
+  "selectedCommandContracts": [
+    {
+      "command": "ApplyApplicationImportEffect",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "source_event_effect",
+        "rule": "UUIDv5(source eventId, length-prefixed effectKind + canonical target stream + source lifecycle episode); external process callback source is the immutable accepted business source event plus exact effect key, never attemptId."
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Source",
+          "type": "SourceFactProof<ApplicationImportExecutionAuthorized>",
+          "required": true
+        },
+        {
+          "name": "Target",
+          "type": "EventStreamAddress",
+          "required": true
+        },
+        {
+          "name": "OperationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Generation",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long?",
+          "required": true
+        },
+        {
+          "name": "Intent",
+          "type": "ImmutableContentRef",
+          "required": true,
+          "contentSchema": "ImportTargetGroupIntent"
+        },
+        {
+          "name": "BatchId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ApplicationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "RowGroup",
+          "type": "ImmutableContentRef",
+          "required": true,
+          "contentSchema": "ImportTargetGroupIntent"
+        }
+      ],
+      "responseContract": {
+        "mode": "internal",
+        "responseType": "Unit",
+        "firstHttpStatus": null,
+        "terminalResultType": "Unit"
+      },
+      "http": [],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
+        "jsonPointer": "/commands/13",
+        "line": 1534,
+        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
+      },
+      "reactor": "ImportTargetApplicationReactor",
+      "sourceOwner": "ApplicationImportBatch",
+      "sourceEvents": [
+        "ApplicationImportExecutionAuthorized"
+      ],
+      "guard": "One canonical target group, one preflighted native append batch and one frozen initial application revision. Include a native row effect for every frozen row, preserve original row order and existing create_new/link_existing/retire semantics. Prepare local candidate state only; publication decides visibility. Never recheck the original baseline as though it were a new revision per row.",
+      "eventsEmitted": [
+        "ApplicationImportEffectPending"
+      ],
+      "effectKind": "apply_application_import_effect",
+      "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
+      "kind": "receiver"
+    },
+    {
+      "command": "DeclareApplication",
+      "logicalIdentity": {
+        "field": "ApplicationId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "caller-supplied immutable creation identity: an exact retry with the same id and authored intent returns the original result; the same id with changed intent is refused; a different id is a different record"
+      },
+      "fields": [
+        {
+          "name": "ApplicationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Name",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "Purpose",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "OwnerReference",
+          "type": "string?",
+          "required": false
+        },
+        {
+          "name": "Classification",
+          "type": "string?",
+          "required": false
+        },
+        {
+          "name": "SystemOwnerPersonId",
+          "type": "Uuid?",
+          "required": false
+        },
+        {
+          "name": "AccessOwnerPersonId",
+          "type": "Uuid?",
+          "required": false
+        },
+        {
+          "name": "IsRestricted",
+          "type": "bool",
+          "required": false
+        },
+        {
+          "name": "ApplicationKind",
+          "type": "string?",
+          "required": false
+        },
+        {
+          "name": "Criticality",
+          "type": "string?",
+          "required": false
+        }
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "ApplicationRegistration",
+        "firstHttpStatus": 200,
+        "terminalResultType": "ApplicationRegistration"
+      },
+      "http": [
+        {
+          "method": "PUT",
+          "path": "/api/v1/tenants/{tenant_id}/applications/{application_id}",
+          "policy": "ComplianceAuthorizationPolicies.ApiUser"
+        }
+      ],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
+        "jsonPointer": "/commands/48",
+        "line": 5715,
+        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
+      },
+      "kind": "http"
+    },
+    {
+      "command": "RetireApplication",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ApplicationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "EffectiveAt",
+          "type": "DateTimeOffset",
+          "required": true
+        },
+        {
+          "name": "Reason",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "MergedIntoApplicationId",
+          "type": "Uuid?",
+          "required": false
+        }
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "Unit",
+        "firstHttpStatus": 200,
+        "terminalResultType": "Unit"
+      },
+      "http": [
+        {
+          "method": "PUT",
+          "path": "/api/v1/tenants/{tenant_id}/applications/{application_id}/retirements/{command_id}",
+          "policy": "ComplianceAuthorizationPolicies.ApiUser"
+        }
+      ],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
+        "jsonPointer": "/commands/124",
+        "line": 14304,
+        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
+      },
+      "kind": "http"
+    },
+    {
+      "command": "ReviseApplication",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ApplicationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "Name",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "Purpose",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "OwnerReference",
+          "type": "string?",
+          "required": true
+        },
+        {
+          "name": "Classification",
+          "type": "string?",
+          "required": false
+        },
+        {
+          "name": "SystemOwnerPersonId",
+          "type": "Uuid?",
+          "required": false
+        },
+        {
+          "name": "AccessOwnerPersonId",
+          "type": "Uuid?",
+          "required": false
+        },
+        {
+          "name": "IsRestricted",
+          "type": "bool?",
+          "required": false
+        },
+        {
+          "name": "ApplicationKind",
+          "type": "string?",
+          "required": false
+        },
+        {
+          "name": "Criticality",
+          "type": "string?",
+          "required": false
+        },
+        {
+          "name": "ClassificationIntent",
+          "type": "ApplicationRevisionField",
+          "required": false,
+          "wire": "adapter_presence_only",
+          "canonicalIntentRequired": true
+        },
+        {
+          "name": "SystemOwnerIntent",
+          "type": "ApplicationRevisionField",
+          "required": false,
+          "wire": "adapter_presence_only",
+          "canonicalIntentRequired": true
+        },
+        {
+          "name": "AccessOwnerIntent",
+          "type": "ApplicationRevisionField",
+          "required": false,
+          "wire": "adapter_presence_only",
+          "canonicalIntentRequired": true
+        }
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "Unit",
+        "firstHttpStatus": 200,
+        "terminalResultType": "Unit"
+      },
+      "http": [
+        {
+          "method": "PUT",
+          "path": "/api/v1/tenants/{tenant_id}/applications/revise-application/{command_id}",
+          "policy": "ApiUser + existing request-scope authorizers"
+        }
+      ],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
+        "jsonPointer": "/commands/136",
+        "line": 15765,
+        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
+      },
+      "kind": "http"
+    },
+    {
+      "command": "ReserveApplicationImportTarget",
+      "kind": "receiver",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "reactor",
+        "rule": "deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Source",
+          "type": "SourceFactProof<ApplicationImportExecutionAuthorized>",
+          "required": true
+        },
+        {
+          "name": "Target",
+          "type": "EventStreamAddress",
+          "required": true
+        },
+        {
+          "name": "OperationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Generation",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long?",
+          "required": true
+        },
+        {
+          "name": "Intent",
+          "type": "ImmutableContentRef",
+          "required": true,
+          "contentSchema": "ImportTargetGroupIntent"
+        },
+        {
+          "name": "BatchId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ApplicationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "GroupedRows",
+          "type": "ImmutableContentRef",
+          "required": true
+        }
+      ],
+      "reactor": "ImportTargetReservationReactor",
+      "sourceOwner": "ApplicationImportBatch",
+      "sourceEvents": [
+        "ApplicationImportExecutionAuthorized"
+      ],
+      "guard": "Canonical stream-key order, grouped full row intent and frozen native target revision; no upgrades.",
+      "eventsEmitted": [
+        "ApplicationImportTargetAuthorized"
+      ],
+      "effectKind": "reserve_application_import_target",
+      "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
+      "handler": "ReserveApplicationImportTargetHandler",
+      "http": [],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
+        "recorded": "2026-10-29"
+      }
+    },
+    {
+      "command": "FenceApplicationImportTarget",
+      "kind": "receiver",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "reactor",
+        "rule": "deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Source",
+          "type": "SourceFactProof<ApplicationImportCancellationAccepted>",
+          "required": true
+        },
+        {
+          "name": "Target",
+          "type": "EventStreamAddress",
+          "required": true
+        },
+        {
+          "name": "OperationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Generation",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long?",
+          "required": true
+        },
+        {
+          "name": "Intent",
+          "type": "ImmutableContentRef",
+          "required": true,
+          "contentSchema": "ImportTargetGroupIntent"
+        },
+        {
+          "name": "BatchId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ApplicationId",
+          "type": "Uuid",
+          "required": true
+        }
+      ],
+      "reactor": "ImportCancellationFenceReactor",
+      "sourceOwner": "ApplicationImportBatch",
+      "sourceEvents": [
+        "ApplicationImportCancellationAccepted"
+      ],
+      "guard": "Record target fence even if target hold not yet acquired; block every delayed operation of that batch generation.",
+      "eventsEmitted": [
+        "ApplicationImportEffectCanceled"
+      ],
+      "effectKind": "fence_application_import_target",
+      "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
+      "handler": "FenceApplicationImportTargetHandler",
+      "http": [],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
+        "recorded": "2026-10-29"
+      }
+    },
+    {
+      "command": "ReleaseApplicationImportTarget",
+      "kind": "receiver",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "reactor",
+        "rule": "deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Source",
+          "type": "ReleaseApplicationImportTargetSourceProof",
+          "required": true
+        },
+        {
+          "name": "Target",
+          "type": "EventStreamAddress",
+          "required": true
+        },
+        {
+          "name": "OperationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Generation",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long?",
+          "required": true
+        },
+        {
+          "name": "Intent",
+          "type": "ImmutableContentRef",
+          "required": true,
+          "contentSchema": "ImportTargetGroupIntent"
+        },
+        {
+          "name": "BatchId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ApplicationId",
+          "type": "Uuid",
+          "required": true
+        }
+      ],
+      "reactor": "ImportTargetReleaseReactor",
+      "sourceOwner": "ApplicationImportBatch",
+      "sourceEvents": [
+        "ApplicationImportCommitted",
+        "ApplicationImportCanceled",
+        "ApplicationImportFailed"
+      ],
+      "guard": "Match full publication or receiving cancellation fence; retain native effect/publication lineage.",
+      "eventsEmitted": [
+        "ApplicationImportTargetSettled"
+      ],
+      "effectKind": "release_application_import_target",
+      "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
+      "handler": "ReleaseApplicationImportTargetHandler",
+      "http": [],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
+        "recorded": "2026-10-29"
+      }
+    },
+    {
+      "command": "ApplyApplicationNameChange",
+      "kind": "receiver",
+      "status": "PLANNED",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "reactor",
+        "rule": "deterministic receiver identity derived from the admitted root fact, episode and generation: exact redelivery resolves the original result, a changed admission is a new identity"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "required": true
+        },
+        {
+          "name": "Source",
+          "required": true
+        },
+        {
+          "name": "Target",
+          "required": true
+        },
+        {
+          "name": "OperationId",
+          "required": true
+        },
+        {
+          "name": "Generation",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "required": true
+        },
+        {
+          "name": "Intent",
+          "required": true
+        },
+        {
+          "name": "ApplicationId",
+          "required": true
+        }
+      ],
+      "http": [],
+      "source": {
+        "path": "docs/product/definitive-aggregate-choreography/choreography.json",
+        "recorded": "2026-10-29"
+      }
+    }
+  ],
+  "eventAuthority": "selected_final_event_catalog",
+  "events": [
+    {
+      "event": "ApplicationDeclared",
+      "discriminator": "bdgrz.application.declared",
+      "discriminatorVersion": 1,
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
+        "jsonPointer": "/events/40",
+        "line": 4518,
+        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
+      }
+    },
+    {
+      "event": "ApplicationImportEffectCanceled",
+      "discriminator": "bdgrz.declared-application.application-import-effect-canceled",
+      "discriminatorVersion": 1,
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
+        "jsonPointer": "/events/44",
+        "line": 5356,
+        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
+      }
+    },
+    {
+      "event": "ApplicationImportEffectPending",
+      "discriminator": "bdgrz.application_import.effect_pending",
+      "discriminatorVersion": 1,
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
+        "jsonPointer": "/events/45",
+        "line": 5502,
+        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
+      }
+    },
+    {
+      "event": "ApplicationImportTargetAuthorized",
+      "discriminator": "bdgrz.declared-application.application-import-target-authorized",
+      "discriminatorVersion": 1,
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
+        "jsonPointer": "/events/54",
+        "line": 6921,
+        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
+      }
+    },
+    {
+      "event": "ApplicationImportTargetSettled",
+      "discriminator": "bdgrz.declared-application.application-import-target-settled",
+      "discriminatorVersion": 1,
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
+        "jsonPointer": "/events/55",
+        "line": 7067,
+        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
+      }
+    },
+    {
+      "event": "ApplicationRetired",
+      "discriminator": "bdgrz.application.retired",
+      "discriminatorVersion": 1,
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
+        "jsonPointer": "/events/59",
+        "line": 7451,
+        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
+      }
+    },
+    {
+      "event": "ApplicationRevised",
+      "discriminator": "bdgrz.application.revised",
+      "discriminatorVersion": 1,
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
+        "jsonPointer": "/events/60",
+        "line": 7532,
+        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
+      }
+    }
+  ],
+  "choreography": [
+    {
+      "reactor": "ImportTargetReservationReactor",
+      "sourceOwner": "ApplicationImportBatch",
+      "targetOwner": "DeclaredApplication",
+      "command": "ReserveApplicationImportTarget",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
+        "jsonPointer": "/reactors/15",
+        "line": 1296,
+        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
+      }
+    },
+    {
+      "reactor": "ImportTargetApplicationReactor",
+      "sourceOwner": "ApplicationImportBatch",
+      "targetOwner": "DeclaredApplication",
+      "command": "ApplyApplicationImportEffect",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
+        "jsonPointer": "/reactors/16",
+        "line": 1383,
+        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
+      }
+    },
+    {
+      "reactor": "ImportCancellationFenceReactor",
+      "sourceOwner": "ApplicationImportBatch",
+      "targetOwner": "DeclaredApplication",
+      "command": "FenceApplicationImportTarget",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
+        "jsonPointer": "/reactors/18",
+        "line": 1553,
+        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
+      }
+    },
+    {
+      "reactor": "ImportTargetReleaseReactor",
+      "sourceOwner": "ApplicationImportBatch",
+      "targetOwner": "DeclaredApplication",
+      "command": "ReleaseApplicationImportTarget",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
+        "jsonPointer": "/reactors/21",
+        "line": 1798,
+        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
+      }
+    }
+  ],
+  "status": "SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED",
+  "baselineIdentityObservation": "applicationId",
+  "identityContractRule": "Existing published owner identity/IdFor remains stable. Required typed creation/operation identity and tenant/program/source scope come from the selected signature/protocol references; no context.RequestId minting fallback or guessed new stream key.",
+  "adoptedArchitectureDecisions": [],
+  "selectedIdentitySummary": "Tenant-scoped applicationId; `ApplicationId` on `DeclareApplication` is the caller-supplied immutable creation identity (exact immutable creation retry) so an exact retry resolves the original result and a different id is a different record; later mutations use CommandId bound to this identity and the expected revision.",
+  "baselineIdentityObservationOnly": true,
+  "selectedLogicalIdentityBindings": [
+    {
+      "command": "ApplyApplicationImportEffect",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "source_event_effect",
+        "rule": "UUIDv5(source eventId, length-prefixed effectKind + canonical target stream + source lifecycle episode); external process callback source is the immutable accepted business source event plus exact effect key, never attemptId."
+      },
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
+        "jsonPointer": "/commands/13",
+        "line": 1534,
+        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
+      }
+    },
+    {
+      "command": "DeclareApplication",
+      "logicalIdentity": {
+        "field": "ApplicationId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "exact immutable creation retry"
+      },
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
+        "jsonPointer": "/commands/48",
+        "line": 5715,
+        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
+      }
+    },
+    {
+      "command": "RetireApplication",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "one immutable authored operation"
+      },
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
+        "jsonPointer": "/commands/124",
+        "line": 14304,
+        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
+      }
+    },
+    {
+      "command": "ReviseApplication",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "one immutable authored operation"
+      },
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
+        "jsonPointer": "/commands/136",
+        "line": 15765,
+        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
+      }
+    }
+  ],
+  "selectedReplayRule": "Current required authorization precedes replay; exact authorized retries resolve the original accepted result using the selected logical identity and immutable actor/intent/source binding. Fresh mutable feasibility, clock selection and body preparation cannot replace that original result. Expected revision is concurrency precondition, not a new identity.",
+  "invariantRevisions": [
+    {
+      "date": "2026-10-29",
+      "added": "Name and alias uniqueness is decided by ApplicationNameClaim, which the application must hold before using a name; a merge retires this application with a merged_into reference to the survivor (M0-D05 D05-10)"
+    }
+  ],
+  "identityRevisions": [
+    {
+      "date": "2026-10-29",
+      "previous": "applicationId"
+    }
+  ],
+  "productRules": [
+    {
+      "id": "D05-02",
+      "doc": "m0-d05-application-inventory.md",
+      "rule": "Every active application has a governed name, application kind, lifecycle, criticality, a system owner, and an access owner, and both owners are workforce Person references who need not be platform members."
+    },
+    {
+      "id": "D05-11",
+      "doc": "m0-d05-application-inventory.md",
+      "rule": "Retiring an application is effective-dated, requires a reason, and never deletes history or any snapshot reference to it."
+    }
+  ],
+  "decides": "Refuses an active application without a governed name, application kind, lifecycle, and criticality, or without a system owner and an access owner, both workforce Person references that need not be platform members. Retirement is effective-dated and requires a reason; it never deletes history or any snapshot reference to the application.",
+  "decidesCovers": [
+    "D05-02",
+    "D05-11"
+  ],
+  "decidesAuthored": "2026-10-29"
+}

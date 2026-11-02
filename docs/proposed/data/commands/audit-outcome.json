@@ -1,0 +1,92 @@
+{
+  "owner": "AuditOutcome",
+  "selectedContracts": [
+    {
+      "command": "RecordExaminationOutcome",
+      "logicalIdentity": {
+        "field": "OutcomeId",
+        "type": "Uuid",
+        "required": true,
+        "rule": "caller-supplied immutable creation identity: an exact retry with the same id and authored intent returns the original result; the same id with changed intent is refused; a different id is a different record"
+      },
+      "fields": [
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ProgramId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExaminationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "OutcomeId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "PackageId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "PackageVersion",
+          "type": "int",
+          "required": true
+        },
+        {
+          "name": "OutcomeCode",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "OutcomeSummary",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "IssuedReportReference",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "ReportArtifactId",
+          "type": "Uuid?",
+          "required": true
+        },
+        {
+          "name": "IssuedOn",
+          "type": "DateOnly",
+          "required": true
+        }
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "Unit",
+        "firstHttpStatus": 200,
+        "terminalResultType": "Unit"
+      },
+      "http": [
+        {
+          "method": "PUT",
+          "path": "/api/v1/tenants/{tenant_id}/programs/{program_id}/examinations/{examination_id}/outcomes/{outcome_id}",
+          "authorizationPolicy": "ComplianceAuthorizationPolicies.ApiUser"
+        }
+      ],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
+        "jsonPointer": "/contracts/117",
+        "line": 8740,
+        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
+      },
+      "kind": "http"
+    }
+  ],
+  "sourceContractEvidence": []
+}

@@ -1,0 +1,53 @@
+{
+  "owner": "TenantInvitationMailboxClaim",
+  "events": [
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:TenantInvitationMailboxClaimed",
+        "event": "TenantInvitationMailboxClaimed",
+        "emissionKind": "business",
+        "owners": [
+          "TenantInvitationMailboxClaim"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": false,
+        "targetConcreteType": "TenantInvitationMailboxClaimed",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.tenant-invitation-mailbox.claimed",
+          "version": 1
+        },
+        "wireQualification": "Wire matches the declared record in src/Compliance.Common/Features/Tenants/Events/TenantInvitationMailboxClaimed.cs at 60029b8f.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "current_native_schema_missing_from_selected295",
+        "sourceStatus": "declared",
+        "meaning": "One invitation holds the tenant mailbox as its single pending invitation. The generation increases with every claim and is state, never part of the stream key.",
+        "meaningSource": "record summary in src/Compliance.Common/Features/Tenants/Events/TenantInvitationMailboxClaimed.cs"
+      },
+      "schema": null
+    },
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:TenantInvitationMailboxReleased",
+        "event": "TenantInvitationMailboxReleased",
+        "emissionKind": "business",
+        "owners": [
+          "TenantInvitationMailboxClaim"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": false,
+        "targetConcreteType": "TenantInvitationMailboxReleased",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.tenant-invitation-mailbox.released",
+          "version": 1
+        },
+        "wireQualification": "Wire matches the declared record in src/Compliance.Common/Features/Tenants/Events/TenantInvitationMailboxReleased.cs at 60029b8f.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "current_native_schema_missing_from_selected295",
+        "sourceStatus": "declared",
+        "meaning": "The invitation that held the mailbox in Generation no longer does, which lets a later invitation claim it. A release names the exact invitation and generation it ends.",
+        "meaningSource": "record summary in src/Compliance.Common/Features/Tenants/Events/TenantInvitationMailboxReleased.cs"
+      },
+      "schema": null
+    }
+  ]
+}

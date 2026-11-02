@@ -1,0 +1,17 @@
+{
+  "process": "ClientIndependencePreviewProcess",
+  "rootSourceEvents": [
+    "ClientIndependenceEvaluationAdmitted"
+  ],
+  "ordered": false,
+  "stages": [
+    {
+      "stage": "materialize",
+      "receivers": [
+        "MaterializeClientIndependencePreview"
+      ],
+      "rule": null
+    }
+  ],
+  "abort": []
+}

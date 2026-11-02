@@ -1,0 +1,319 @@
+{
+  "owner": "EvidenceArtifact",
+  "selectedContracts": [
+    {
+      "command": "CaptureEvidenceArtifact",
+      "logicalIdentity": {
+        "field": "ArtifactId",
+        "type": "Uuid",
+        "required": true,
+        "rule": "caller-supplied immutable creation identity: an exact retry with the same id and authored intent returns the original result; the same id with changed intent is refused; a different id is a different record"
+      },
+      "fields": [
+        {
+          "name": "ArtifactId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Content",
+          "type": "byte[]",
+          "required": true
+        },
+        {
+          "name": "Metadata",
+          "type": "EvidenceArtifactContent",
+          "required": true
+        }
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "EvidenceCapture",
+        "firstHttpStatus": 200,
+        "terminalResultType": "EvidenceCapture"
+      },
+      "http": [],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
+        "jsonPointer": "/contracts/31",
+        "line": 2525,
+        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
+      },
+      "kind": "creation"
+    },
+    {
+      "command": "IssueArtifactDownload",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "rule": "CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ArtifactId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Purpose",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "ExpectedArtifactRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "ProgramId",
+          "type": "Uuid?",
+          "required": false,
+          "wire": "optional_json"
+        },
+        {
+          "name": "AdvisorHandoffId",
+          "type": "Uuid?",
+          "required": false,
+          "wire": "optional_json"
+        },
+        {
+          "name": "SelectedSource",
+          "type": "AdvisorRecordVersion?",
+          "required": false,
+          "wire": "optional_json"
+        }
+      ],
+      "responseContract": {
+        "mode": "async_fixed_ack",
+        "responseType": "OperationAcceptedResponse",
+        "firstHttpStatus": 202,
+        "terminalResultType": "EvidenceArtifactDownloadLink"
+      },
+      "http": [
+        {
+          "method": "PUT",
+          "path": "/api/v1/tenants/{tenant_id}/evidence-artifacts/{artifact_id}/downloads/{command_id}",
+          "authorizationPolicy": "ComplianceAuthorizationPolicies.ApiUser"
+        }
+      ],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
+        "jsonPointer": "/contracts/82",
+        "line": 6088,
+        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
+      },
+      "kind": "http"
+    },
+    {
+      "command": "RecordEvidenceArtifactInspection",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "rule": "CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ArtifactId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Outcome",
+          "type": "EvidenceInspectionOutcome",
+          "required": true
+        },
+        {
+          "name": "InspectedAt",
+          "type": "DateTimeOffset",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true,
+          "addedBySelectedTarget": "2026-10-29"
+        }
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "Unit",
+        "firstHttpStatus": 200,
+        "terminalResultType": "Unit"
+      },
+      "http": [],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
+        "jsonPointer": "/contracts/116",
+        "line": 8675,
+        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
+      },
+      "kind": "command",
+      "concurrencyGuard": {
+        "rule": "require_expected_revision",
+        "basis": "jev_atomic_questions",
+        "jev": {
+          "mutates_existing": 0.84,
+          "absorbing": 0.18,
+          "process_reply": 0.32
+        },
+        "date": "2026-10-29"
+      }
+    },
+    {
+      "command": "ReleaseEvidenceArtifactQuarantine",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "rule": "CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ArtifactId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "Rationale",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "Unit",
+        "firstHttpStatus": 200,
+        "terminalResultType": "Unit"
+      },
+      "http": [
+        {
+          "method": "PUT",
+          "path": "/api/v1/tenants/{tenant_id}/evidence-artifacts/{artifact_id}/quarantine-releases/{command_id}",
+          "authorizationPolicy": "ComplianceAuthorizationPolicies.ApiUser"
+        }
+      ],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
+        "jsonPointer": "/contracts/144",
+        "line": 10805,
+        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
+      },
+      "kind": "http"
+    },
+    {
+      "command": "SettleArtifactDownloadAvailabilityUse",
+      "kind": "receiver",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "reactor",
+        "rule": "deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Source",
+          "type": "SettleArtifactDownloadAvailabilityUseSourceProof",
+          "required": true
+        },
+        {
+          "name": "Target",
+          "type": "EventStreamAddress",
+          "required": true
+        },
+        {
+          "name": "OperationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Generation",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long?",
+          "required": true
+        },
+        {
+          "name": "Intent",
+          "type": "ImmutableContentRef",
+          "required": true,
+          "contentSchema": "SourceUseAuthorizationIntent"
+        },
+        {
+          "name": "ArtifactId",
+          "type": "Uuid",
+          "required": true
+        }
+      ],
+      "reactor": "SettleArtifactDownloadAvailabilityUseReactor",
+      "sourceOwner": "ArtifactDownloadGrant",
+      "sourceEvents": [
+        "EvidenceArtifactDownloadIssued",
+        "ArtifactDownloadGrantCanceled"
+      ],
+      "guard": "Exact native issued grant or receiving cancellation fence. Settle only matching operation/purpose; no URL in queue or source proof. An absent-before-grant settlement prevents delayed acquisition.",
+      "eventsEmitted": [
+        "ArtifactDownloadAvailabilityUseSettled"
+      ],
+      "effectKind": "claim_professional_assertion_identity",
+      "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
+      "handler": "SettleArtifactDownloadAvailabilityUseHandler",
+      "http": [],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
+        "recorded": "2026-10-29"
+      }
+    }
+  ],
+  "sourceContractEvidence": []
+}

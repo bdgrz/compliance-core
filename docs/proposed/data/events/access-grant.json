@@ -1,0 +1,53 @@
+{
+  "owner": "AccessGrant",
+  "events": [
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:AccessGrantIssued",
+        "event": "AccessGrantIssued",
+        "emissionKind": "business",
+        "owners": [
+          "AccessGrant"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": false,
+        "targetConcreteType": "AccessGrantIssued",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.access-grant.issued",
+          "version": 1
+        },
+        "wireQualification": "Wire matches the declared record in src/Compliance.Common/Features/AccessControl/Events/AccessGrantIssued.cs at 60029b8f.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "retained_current_schema_native_qualification_required",
+        "sourceStatus": "declared",
+        "meaning": "A role grant was issued to a principal for a scope, with its source and effective period, optionally tied to the membership episode that gave rise to it.",
+        "meaningSource": "authored 2026-10-29 from src/Compliance.Common/Features/AccessControl/Events/AccessGrantIssued.cs"
+      },
+      "schema": null
+    },
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:AccessGrantRevoked",
+        "event": "AccessGrantRevoked",
+        "emissionKind": "business",
+        "owners": [
+          "AccessGrant"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": false,
+        "targetConcreteType": "AccessGrantRevoked",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.access-grant.revoked",
+          "version": 1
+        },
+        "wireQualification": "Wire matches the declared record in src/Compliance.Common/Features/AccessControl/Events/AccessGrantRevoked.cs at 60029b8f.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "retained_current_schema_native_qualification_required",
+        "sourceStatus": "declared",
+        "meaning": "An issued access grant was revoked by a named actor at a recorded time, ending the access it conferred.",
+        "meaningSource": "authored 2026-10-29 from src/Compliance.Common/Features/AccessControl/Events/AccessGrantRevoked.cs"
+      },
+      "schema": null
+    }
+  ]
+}

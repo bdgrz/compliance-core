@@ -1,0 +1,28 @@
+{
+  "generatedOn": "2026-11-02",
+  "provenance": "Mechanical rendering from selected repository sources; no new domain rules were inferred.",
+  "counts": {
+    "businessOwners": 131,
+    "technicalResponsibilities": 14,
+    "selectedCommandContracts": 507,
+    "canonicalEvents": 501,
+    "targetEventSchemas": 295,
+    "choreographyRows": 196,
+    "registeredRootTypes": 65,
+    "processDefinitions": 30,
+    "architectureDecisions": 35,
+    "productRulesNotYetInSource": 77
+  },
+  "sourceHashes": {
+    "docs/product/definitive-aggregate-choreography/aggregates.json": "1ab11fc8ced22a39553b45a7a03dea52b775dedc424d12a07b09621f98c9ff38",
+    "docs/product/definitive-aggregate-choreography/events.json": "e72c1d99b2669fb1831b27753f6060d7adc450d3ddce7f9e89ca6f21f947c9d7",
+    "docs/product/definitive-aggregate-choreography/choreography.json": "1d7b88012bd5cdface588b921a87274e6bb61c09c0e2fbd09020725ef42b839a",
+    "docs/product/definitive-aggregate-choreography/decisions.json": "d5010ef346a2abe64d4e1ca2f2358370d0aaf22bbac49d3a0f596f5aad093616",
+    "docs/product/definitive-aggregate-choreography/event-reconciliation.json": "d09685f74b2829d9e7261b01b3befe4a9b0625384ec22fe2a16bf93b3672ab94",
+    "docs/product/definitive-aggregate-choreography/choreography/physical-plan.json": "ac85e3d7c7f522445f597df50afee908dc1cb57cfb060d3245b8ecce0952a99e",
+    "docs/product/definitive-aggregate-choreography/choreography/manifest.json": "9da34253b1389158677b19d54fc705249a1c0c601f5ad6c2bf373a187b940106",
+    "docs/product/audits/2026-10-23/target-command-contracts.json": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd",
+    "docs/product/audits/2026-10-23/target-event-contracts.json": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f",
+    "docs/product/audits/2026-10-23/operation-query-contracts.json": "907d15364da071c2082fe967af71c462d44290242fda3f810edfb1de998f5d0c"
+  }
+}

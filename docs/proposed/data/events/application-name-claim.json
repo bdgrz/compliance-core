@@ -1,0 +1,49 @@
+{
+  "owner": "ApplicationNameClaim",
+  "events": [
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:ApplicationNameClaimed",
+        "event": "ApplicationNameClaimed",
+        "emissionKind": "business",
+        "owners": [
+          "ApplicationNameClaim"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "targetConcreteType": "ApplicationNameClaimed",
+        "adoptedTargetWire": null,
+        "wireQualification": "Planned; no declared record yet. Discriminator to follow the inventory name-claim convention when implemented.",
+        "adoptedDecisionIds": [
+          "OWNER_ApplicationNameClaim"
+        ],
+        "schemaStatus": "planned_schema",
+        "sourceStatus": "planned_no_source_type",
+        "meaning": "A normalized application name or alias was claimed for one declared application in the tenant; no other active application may hold it.",
+        "meaningSource": "authored 2026-10-29"
+      },
+      "schema": null
+    },
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:ApplicationNameReleased",
+        "event": "ApplicationNameReleased",
+        "emissionKind": "business",
+        "owners": [
+          "ApplicationNameClaim"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "targetConcreteType": "ApplicationNameReleased",
+        "adoptedTargetWire": null,
+        "wireQualification": "Planned; no declared record yet. Discriminator to follow the inventory name-claim convention when implemented.",
+        "adoptedDecisionIds": [
+          "OWNER_ApplicationNameClaim"
+        ],
+        "schemaStatus": "planned_schema",
+        "sourceStatus": "planned_no_source_type",
+        "meaning": "A previously claimed application name or alias was released because the holder was retired, renamed, or merged into another application.",
+        "meaningSource": "authored 2026-10-29"
+      },
+      "schema": null
+    }
+  ]
+}

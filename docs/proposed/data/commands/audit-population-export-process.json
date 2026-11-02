@@ -1,0 +1,112 @@
+{
+  "owner": "AuditPopulationExportProcess",
+  "selectedContracts": [],
+  "sourceContractEvidence": [
+    {
+      "command": "GenerateAuditPopulationExport",
+      "status": "target_contract",
+      "sourceContract": "src/Compliance.Common/Features/AuditPopulations/GenerateAuditPopulationExport.cs",
+      "sourceHandlers": [
+        {
+          "name": "GenerateAuditPopulationExportHandler",
+          "source": "src/Compliance.Core/Features/AuditPopulations/GenerateAuditPopulationExportHandler.cs",
+          "registered": true
+        }
+      ],
+      "handler": "GenerateAuditPopulationExportHandler",
+      "sourceRoots": [
+        "ArtifactRetention"
+      ],
+      "owner": "AuditPopulationExportProcess",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "one immutable authored operation"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ProgramId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "PopulationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Version",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "Format",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "ExportKey",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "http": [],
+      "mcp": false,
+      "entryPoint": "technical_process_request",
+      "authorizerSources": [
+        "src/Compliance.Core/Features/AccessControl/ClientManagementMutationAuthorizer.cs",
+        "src/Compliance.Core/Features/Programs/ProgramManagementAuthorizer.cs"
+      ],
+      "events": [],
+      "protocols": [
+        "Retention basis and authoritative legal-hold barrier"
+      ],
+      "guardOrder": [
+        "bind_required_ids",
+        "authenticate_authorize",
+        "canonicalize_authored_intent",
+        "resolve_native_operation_facts",
+        "compare_owner_episode_actor_kind_intent_original_revision",
+        "validate_new_owner_revision_and_source_permits",
+        "append_complete_concrete_attributed_batch"
+      ],
+      "policyPreservation": "All current source handler/aggregate validation rules and source test expectations apply, except the explicit contractChanges and boundary protocol. Lifetime caps and technical attempt events are removed with their structural replacement.",
+      "contractChanges": [
+        "Add required CommandId."
+      ],
+      "existingTests": [
+        "test/Compliance.Tests/Features/AuditPopulations/GenerateAuditPopulationExportHandlerTests.cs"
+      ],
+      "requiredTests": [
+        "ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange",
+        "ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision",
+        "ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity",
+        "ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof",
+        "ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome"
+      ],
+      "responseContract": {
+        "mode": "internal",
+        "responseType": "AuditPopulationExportReceipt",
+        "firstHttpStatus": null,
+        "terminalResultType": "AuditPopulationExportReceipt"
+      },
+      "expectedRevisionScope": {
+        "field": null,
+        "owner": "AuditPopulationExportProcess",
+        "counter": "No primary caller ResourceRevision. Enforce required authored source/epoch/version tokens, immutable creation identity or trusted proof/generation as declared; append uses physical OCC."
+      }
+    }
+  ]
+}

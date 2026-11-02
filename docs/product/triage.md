@@ -9,7 +9,7 @@ the historical story set, not the current amount of open work.
 
 This review prevents the backlog from becoming a catalog of plausible features. A story may describe a sensible capability and still be the wrong thing to build now.
 
-The [shared domain model](domain-model.md) and each story's domain slice and
+The [shared domain model](../proposed/domain-model.md) and each story's domain slice and
 implementation subtasks are delivery gates, not separate backlog features.
 They ensure that platform access, responsibilities, controls, evidence,
 reviews, readiness, and engagement snapshots form one process rather than
@@ -86,7 +86,7 @@ Confirmed at this point:
   hosted SaaS charges a base fee plus optional add-ons;
 - the backlog must express business objectives, requirements, and acceptance criteria as API-to-UI user stories.
 
-Accepted [product decisions](product-brief.md#product-decisions) supply the
+Accepted [product decisions](../proposed/scope.md#product-decisions) supply the
 governing defaults for detailed workflows. Customer-specific facts, numerical
 targets, and professional ratification remain with their named follow-up
 issues; they do not reopen every M0 decision or block unrelated manual work.

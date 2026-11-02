@@ -1,0 +1,24 @@
+{
+  "process": "ReadinessRunProcess",
+  "rootSourceEvents": [
+    "ReadinessAssessmentRequested"
+  ],
+  "ordered": true,
+  "stages": [
+    {
+      "stage": "compute",
+      "receivers": [
+        "ComputeReadinessAssessment"
+      ],
+      "rule": "Pure child computation from the frozen snapshot."
+    },
+    {
+      "stage": "adopt",
+      "receivers": [
+        "AdoptReadinessAssessment"
+      ],
+      "rule": "Exact pending adoption generation."
+    }
+  ],
+  "abort": []
+}

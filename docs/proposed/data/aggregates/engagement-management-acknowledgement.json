@@ -1,0 +1,207 @@
+{
+  "owner": "EngagementManagementAcknowledgement",
+  "origin": "selected_split_target",
+  "baselineOwners": [
+    "IndependenceLedger"
+  ],
+  "declaredIdentity": "tenant / acknowledgementId",
+  "invariant": "One personal management acknowledgement bound to exact engagement revision and complete service history.",
+  "boundaryDecision": "selected_split",
+  "mustPreserve": "Never reactivate a permanent independence commitment from reevaluation; acceptance binds exact service, draft, acknowledgement and ratified-rule proofs.",
+  "sources": [
+    {
+      "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
+      "jsonPointer": "/splitOwners/2/targetOwners/5",
+      "line": 258,
+      "sha256": "d349d94b7c43f4d82020ecf36bdacf1aff98bc6498e14993582f1c3164b21f19"
+    }
+  ],
+  "baselineSourcePath": "src/Compliance.Core/Features/AccessControl/IndependenceLedger.cs",
+  "baselineEvents": [
+    "EngagementManagementAcknowledged"
+  ],
+  "preliminaryNewEvents": [],
+  "technicalStateToSeparate": [],
+  "classification": "immutable_business_artifact_or_decision",
+  "businessAggregate": true,
+  "implementationStatus": "SEPARATE_VERIFICATION_REQUIRED_IMPLEMENTATION_HALTED",
+  "identityReadingRule": "selectedIdentitySummary and exact selectedCommandContracts define intended identity. baselineIdentityObservation/declaredIdentity retain older source observations only, including old replay defects; they are not target behavior or authorization to change an occupied key.",
+  "selectedCommandContracts": [
+    {
+      "command": "MaterializeEngagementManagementAcknowledgement",
+      "kind": "receiver",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "internal",
+        "rule": "deterministic receiver identity derived from the admitted root fact, episode and generation: exact redelivery resolves the original result, a changed admission is a new identity"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "required": true
+        },
+        {
+          "name": "Source",
+          "required": true
+        },
+        {
+          "name": "Target",
+          "required": true
+        },
+        {
+          "name": "OperationId",
+          "required": true
+        },
+        {
+          "name": "Generation",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "required": true
+        },
+        {
+          "name": "Intent",
+          "required": true
+        },
+        {
+          "name": "AcknowledgementId",
+          "required": true
+        },
+        {
+          "name": "SourceUseProofs",
+          "required": true
+        }
+      ],
+      "http": [],
+      "source": {
+        "path": "src/Compliance.Core/Features/AccessControl/Handlers/MaterializeEngagementManagementAcknowledgementHandler.cs",
+        "recorded": "2026-10-29"
+      },
+      "reactor": "ManagementAcknowledgementMaterializationReactor",
+      "sourceOwner": "ServiceEngagementIndependence",
+      "sourceEvents": [
+        "EngagementPersonalDecisionAuthorized"
+      ],
+      "guard": "Only personal kind management_acknowledgement, exact draft/current service snapshot and original personal actor. Source engagement remains pinned until this fact.",
+      "eventsEmitted": [
+        "EngagementManagementAcknowledged"
+      ],
+      "effectKind": "claim_professional_assertion_identity",
+      "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine."
+    },
+    {
+      "command": "AcknowledgeEngagementManagement",
+      "logicalIdentity": {
+        "field": "AcknowledgementId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "caller-supplied immutable creation identity: an exact retry with the same id and authored intent returns the original result; the same id with changed intent is refused; a different id is a different record"
+      },
+      "fields": [
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "EngagementId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "AcknowledgementId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectedEngagementRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "CompleteServiceRecordIds",
+          "type": "IReadOnlyList<Uuid>",
+          "required": true
+        },
+        {
+          "name": "Statement",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "ExpectedServiceEpoch",
+          "type": "long",
+          "required": true
+        }
+      ],
+      "responseContract": {
+        "mode": "async_fixed_ack",
+        "responseType": "OperationAcceptedResponse",
+        "firstHttpStatus": 202,
+        "terminalResultType": "EngagementManagementAcknowledgementView"
+      },
+      "http": [
+        {
+          "method": "PUT",
+          "path": "/api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/management-acknowledgements/{acknowledgement_id}",
+          "policy": "ComplianceAuthorizationPolicies.ApiUser"
+        }
+      ],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
+        "jsonPointer": "/commands/4",
+        "line": 422,
+        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
+      },
+      "attributionNote": "Creates the acknowledgement record; the engagement owner only consumes it (T110) (2026-10-29)",
+      "kind": "http"
+    }
+  ],
+  "eventAuthority": "selected_final_event_catalog",
+  "events": [
+    {
+      "event": "EngagementManagementAcknowledged",
+      "discriminator": "bdgrz.service-engagement.management-acknowledged",
+      "discriminatorVersion": 1,
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
+        "jsonPointer": "/events/129",
+        "line": 15480,
+        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
+      }
+    }
+  ],
+  "choreography": [
+    {
+      "reactor": "ManagementAcknowledgementMaterializationReactor",
+      "sourceOwner": "ServiceEngagementIndependence",
+      "targetOwner": "EngagementManagementAcknowledgement",
+      "command": "MaterializeEngagementManagementAcknowledgement",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
+        "jsonPointer": "/reactors/108",
+        "line": 9324,
+        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
+      }
+    }
+  ],
+  "status": "SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED",
+  "baselineIdentityObservation": "tenant / acknowledgementId",
+  "identityContractRule": "Existing published owner identity/IdFor remains stable. Required typed creation/operation identity and tenant/program/source scope come from the selected signature/protocol references; no context.RequestId minting fallback or guessed new stream key.",
+  "adoptedArchitectureDecisions": [],
+  "selectedIdentitySummary": "Tenant-scoped tenant / acknowledgementId; the identity is established by the admitting owner or reactor named in the choreography, never by a caller request key; mutations bind CommandId to this exact identity.",
+  "baselineIdentityObservationOnly": true,
+  "selectedLogicalIdentityBindings": [],
+  "selectedReplayRule": "Current required authorization precedes replay; exact authorized retries resolve the original accepted result using the selected logical identity and immutable actor/intent/source binding. Fresh mutable feasibility, clock selection and body preparation cannot replace that original result. Expected revision is concurrency precondition, not a new identity.",
+  "identityRevisions": [
+    {
+      "date": "2026-10-29",
+      "previous": "tenant / acknowledgementId"
+    }
+  ],
+  "commandNote": "Process also dispatches AuthorizeEngagementPersonalDecision and SettleEngagementPersonalDecision, but those mutate ServiceEngagementIndependence, not this owner."
+}

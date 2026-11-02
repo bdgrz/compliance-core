@@ -1,0 +1,183 @@
+{
+  "owner": "ArtifactLegalHold",
+  "events": [
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:ArtifactLegalHoldPlaced",
+        "event": "ArtifactLegalHoldPlaced",
+        "emissionKind": "business",
+        "owners": [
+          "ArtifactLegalHold"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": true,
+        "targetConcreteType": "ArtifactLegalHoldPlaced",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.artifact_retention.legal_hold_placed",
+          "version": 1
+        },
+        "wireQualification": "Wire matches the declared record in src/Compliance.Common/Features/Retention/Events/ArtifactLegalHoldPlaced.cs at 60029b8f.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "selected_complete_schema",
+        "sourceStatus": "declared",
+        "meaning": "A legal hold was placed on a retained artifact source with a stated reason by a named actor, blocking its disposal until the hold is released.",
+        "meaningSource": "authored 2026-10-29 from src/Compliance.Common/Features/Retention/Events/ArtifactLegalHoldPlaced.cs"
+      },
+      "schema": {
+        "event": "ArtifactLegalHoldPlaced",
+        "discriminator": "bdgrz.artifact_retention.legal_hold_placed",
+        "discriminatorVersion": 1,
+        "owner": "ArtifactLegalHold",
+        "existingContract": "src/Compliance.Common/Features/Retention/ArtifactLegalHoldPlaced.cs",
+        "status": "selected target schema; implementation pending",
+        "reason": "source command accepted result",
+        "fields": [
+          {
+            "name": "Source",
+            "type": "ArtifactRetentionSource",
+            "required": true
+          },
+          {
+            "name": "Revision",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "SourcePosition",
+            "type": "ulong",
+            "required": true
+          },
+          {
+            "name": "HoldId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "Reason",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "RecordedBy",
+            "type": "Bdgrz.Compliance.Features.AccessControl.ActorReference",
+            "required": true
+          },
+          {
+            "name": "RecordedAt",
+            "type": "DateTimeOffset",
+            "required": true
+          },
+          {
+            "name": "Operation",
+            "type": "OperationProvenance",
+            "required": true
+          },
+          {
+            "name": "FirstResponse",
+            "type": "ImmutableContentRef?",
+            "required": true
+          },
+          {
+            "name": "OperationResult",
+            "type": "ImmutableContentRef?",
+            "required": true
+          }
+        ],
+        "contentSchemas": [],
+        "changes": [],
+        "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
+        "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
+        "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
+      }
+    },
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:ArtifactLegalHoldReleased",
+        "event": "ArtifactLegalHoldReleased",
+        "emissionKind": "business",
+        "owners": [
+          "ArtifactLegalHold"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": true,
+        "targetConcreteType": "ArtifactLegalHoldReleased",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.artifact_retention.legal_hold_released",
+          "version": 1
+        },
+        "wireQualification": "Wire matches the declared record in src/Compliance.Common/Features/Retention/Events/ArtifactLegalHoldReleased.cs at 60029b8f.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "selected_complete_schema",
+        "sourceStatus": "declared",
+        "meaning": "A previously placed legal hold on a retained artifact source was released with a stated reason, allowing the artifact to be disposed once its retention period ends.",
+        "meaningSource": "authored 2026-10-29 from src/Compliance.Common/Features/Retention/Events/ArtifactLegalHoldReleased.cs"
+      },
+      "schema": {
+        "event": "ArtifactLegalHoldReleased",
+        "discriminator": "bdgrz.artifact_retention.legal_hold_released",
+        "discriminatorVersion": 1,
+        "owner": "ArtifactLegalHold",
+        "existingContract": "src/Compliance.Common/Features/Retention/ArtifactLegalHoldReleased.cs",
+        "status": "selected target schema; implementation pending",
+        "reason": "source command accepted result",
+        "fields": [
+          {
+            "name": "Source",
+            "type": "ArtifactRetentionSource",
+            "required": true
+          },
+          {
+            "name": "Revision",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "SourcePosition",
+            "type": "ulong",
+            "required": true
+          },
+          {
+            "name": "HoldId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "Reason",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "RecordedBy",
+            "type": "Bdgrz.Compliance.Features.AccessControl.ActorReference",
+            "required": true
+          },
+          {
+            "name": "RecordedAt",
+            "type": "DateTimeOffset",
+            "required": true
+          },
+          {
+            "name": "Operation",
+            "type": "OperationProvenance",
+            "required": true
+          },
+          {
+            "name": "FirstResponse",
+            "type": "ImmutableContentRef?",
+            "required": true
+          },
+          {
+            "name": "OperationResult",
+            "type": "ImmutableContentRef?",
+            "required": true
+          }
+        ],
+        "contentSchemas": [],
+        "changes": [],
+        "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
+        "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
+        "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
+      }
+    }
+  ]
+}

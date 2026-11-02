@@ -1,0 +1,496 @@
+{
+  "owner": "AdvisorFeedbackThread",
+  "events": [
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:AdvisorFeedbackCorrected",
+        "event": "AdvisorFeedbackCorrected",
+        "emissionKind": "business",
+        "owners": [
+          "AdvisorFeedbackThread"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": true,
+        "targetConcreteType": "AdvisorFeedbackCorrected",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.advisor-feedback.corrected",
+          "version": 2
+        },
+        "wireQualification": "Adopted wire is the occupied discriminator declared in src/Compliance.Common/Features/AdvisorCollaboration/Events/AdvisorFeedbackCorrected.cs at 60029b8f (2026-10-29 reconciliation). The earlier selected wire is retained as supersededSelectedWire for provenance only.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "selected_complete_schema",
+        "sourceStatus": "declared",
+        "supersededSelectedWire": {
+          "discriminator": "bdgrz.advisor-feedback.corrected",
+          "version": 1
+        },
+        "meaning": "A linked correction was appended to a feedback thread; the original contribution is preserved.",
+        "meaningSource": "record summary in src/Compliance.Common/Features/AdvisorCollaboration/Events/AdvisorFeedbackCorrected.cs"
+      },
+      "schema": {
+        "event": "AdvisorFeedbackCorrected",
+        "discriminator": "bdgrz.advisor-feedback.corrected",
+        "discriminatorVersion": 1,
+        "owner": "AdvisorFeedbackThread",
+        "existingContract": "src/Compliance.Common/Features/AdvisorCollaboration/AdvisorFeedbackCorrected.cs",
+        "status": "selected target schema; implementation pending",
+        "reason": "source command accepted result",
+        "fields": [
+          {
+            "name": "TenantId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "ProgramId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "HandoffId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "FeedbackId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "CorrectionId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "CorrectedBody",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "CorrectionReason",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "CorrectedBy",
+            "type": "ActorReference",
+            "required": true
+          },
+          {
+            "name": "CorrectedAt",
+            "type": "DateTimeOffset",
+            "required": true
+          },
+          {
+            "name": "Operation",
+            "type": "OperationProvenance",
+            "required": true
+          },
+          {
+            "name": "FirstResponse",
+            "type": "ImmutableContentRef?",
+            "required": true
+          },
+          {
+            "name": "OperationResult",
+            "type": "ImmutableContentRef?",
+            "required": true
+          }
+        ],
+        "contentSchemas": [],
+        "changes": [],
+        "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
+        "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
+        "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
+      }
+    },
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:AdvisorFeedbackRecorded",
+        "event": "AdvisorFeedbackRecorded",
+        "emissionKind": "business",
+        "owners": [
+          "AdvisorFeedbackThread"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": true,
+        "targetConcreteType": "AdvisorFeedbackRecorded",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.advisor-feedback.recorded",
+          "version": 2
+        },
+        "wireQualification": "Adopted wire is the occupied discriminator declared in src/Compliance.Common/Features/AdvisorCollaboration/Events/AdvisorFeedbackRecorded.cs at 60029b8f (2026-10-29 reconciliation). The earlier selected wire is retained as supersededSelectedWire for provenance only.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "selected_complete_schema",
+        "sourceStatus": "declared",
+        "supersededSelectedWire": {
+          "discriminator": "bdgrz.advisor-feedback.recorded",
+          "version": 1
+        },
+        "meaning": "The feedback thread was materialized from an admitted contribution, at thread revision one. Intent repeats the admission intent the handoff accepted; the author and instant are the original actor and the admission instant.",
+        "meaningSource": "record summary in src/Compliance.Common/Features/AdvisorCollaboration/Events/AdvisorFeedbackRecorded.cs"
+      },
+      "schema": {
+        "event": "AdvisorFeedbackRecorded",
+        "discriminator": "bdgrz.advisor-feedback.recorded",
+        "discriminatorVersion": 1,
+        "owner": "AdvisorFeedbackThread",
+        "existingContract": "src/Compliance.Common/Features/AdvisorCollaboration/AdvisorFeedbackRecorded.cs",
+        "status": "selected target schema; implementation pending",
+        "reason": "typed reactor receiver accepted business fact",
+        "fields": [
+          {
+            "name": "TenantId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "ProgramId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "HandoffId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "FeedbackId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "RecordId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "RecordVersionId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "Kind",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "Body",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "Author",
+            "type": "ActorReference",
+            "required": true
+          },
+          {
+            "name": "CreatedAt",
+            "type": "DateTimeOffset",
+            "required": true
+          },
+          {
+            "name": "Operation",
+            "type": "OperationProvenance",
+            "required": true
+          },
+          {
+            "name": "Intent",
+            "type": "ImmutableContentRef",
+            "required": true
+          },
+          {
+            "name": "FirstResponse",
+            "type": "ImmutableContentRef?",
+            "required": true
+          },
+          {
+            "name": "OperationResult",
+            "type": "ImmutableContentRef?",
+            "required": true
+          }
+        ],
+        "contentSchemas": [
+          {
+            "field": "Intent",
+            "schema": "child-admission-intent.v1",
+            "recordType": "ChildAdmissionIntent",
+            "fields": [
+              {
+                "name": "Header",
+                "type": "DurableIntentHeader",
+                "required": true
+              },
+              {
+                "name": "ParentId",
+                "type": "Uuid",
+                "required": true
+              },
+              {
+                "name": "ParentGeneration",
+                "type": "ulong",
+                "required": true
+              },
+              {
+                "name": "ChildKind",
+                "type": "AdmittedChildKind",
+                "required": true
+              },
+              {
+                "name": "ChildId",
+                "type": "Uuid",
+                "required": true
+              },
+              {
+                "name": "CanonicalAuthoredContent",
+                "type": "ImmutableContentRef",
+                "required": true
+              },
+              {
+                "name": "SelectedSourceProofs",
+                "type": "ImmutableSelectionManifest",
+                "required": true
+              },
+              {
+                "name": "ParentAdmissionRevision",
+                "type": "ulong",
+                "required": true
+              }
+            ],
+            "rule": "Concrete child payload schemas are the corresponding normalized Common requests: advisor feedback, auditor response/comment, corrective action, policy acknowledgement/training/waiver. Preserve all authored fields and original actor; child reducer never loads live parent. No later close/revoke discards admitted work.",
+            "variants": [
+              {
+                "recordType": "ChildAdmissionIntent",
+                "schema": "child-admission-intent.v1",
+                "fields": [
+                  {
+                    "name": "Header",
+                    "type": "DurableIntentHeader",
+                    "required": true
+                  },
+                  {
+                    "name": "ParentId",
+                    "type": "Uuid",
+                    "required": true
+                  },
+                  {
+                    "name": "ParentGeneration",
+                    "type": "ulong",
+                    "required": true
+                  },
+                  {
+                    "name": "ChildKind",
+                    "type": "AdmittedChildKind",
+                    "required": true
+                  },
+                  {
+                    "name": "ChildId",
+                    "type": "Uuid",
+                    "required": true
+                  },
+                  {
+                    "name": "CanonicalAuthoredContent",
+                    "type": "ImmutableContentRef",
+                    "required": true
+                  },
+                  {
+                    "name": "SelectedSourceProofs",
+                    "type": "ImmutableSelectionManifest",
+                    "required": true
+                  },
+                  {
+                    "name": "ParentAdmissionRevision",
+                    "type": "ulong",
+                    "required": true
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "changes": [],
+        "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
+        "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
+        "resolvedIntentSchema": "ChildAdmissionIntent",
+        "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
+      }
+    },
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:AdvisorFeedbackResolved",
+        "event": "AdvisorFeedbackResolved",
+        "emissionKind": "business",
+        "owners": [
+          "AdvisorFeedbackThread"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": true,
+        "targetConcreteType": "AdvisorFeedbackResolved",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.advisor-feedback.resolved",
+          "version": 1
+        },
+        "wireQualification": "Wire matches the declared record in src/Compliance.Common/Features/AdvisorCollaboration/Events/AdvisorFeedbackResolved.cs at 60029b8f.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "selected_complete_schema",
+        "sourceStatus": "declared",
+        "meaning": "The client resolved a feedback thread.",
+        "meaningSource": "record summary in src/Compliance.Common/Features/AdvisorCollaboration/Events/AdvisorFeedbackResolved.cs"
+      },
+      "schema": {
+        "event": "AdvisorFeedbackResolved",
+        "discriminator": "bdgrz.advisor-feedback.resolved",
+        "discriminatorVersion": 1,
+        "owner": "AdvisorFeedbackThread",
+        "existingContract": "src/Compliance.Common/Features/AdvisorCollaboration/AdvisorFeedbackResolved.cs",
+        "status": "selected target schema; implementation pending",
+        "reason": "source command accepted result",
+        "fields": [
+          {
+            "name": "TenantId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "ProgramId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "HandoffId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "FeedbackId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "ResolvedBy",
+            "type": "ActorReference",
+            "required": true
+          },
+          {
+            "name": "ResolvedAt",
+            "type": "DateTimeOffset",
+            "required": true
+          },
+          {
+            "name": "Operation",
+            "type": "OperationProvenance",
+            "required": true
+          },
+          {
+            "name": "FirstResponse",
+            "type": "ImmutableContentRef?",
+            "required": true
+          },
+          {
+            "name": "OperationResult",
+            "type": "ImmutableContentRef?",
+            "required": true
+          }
+        ],
+        "contentSchemas": [],
+        "changes": [],
+        "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
+        "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
+        "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
+      }
+    },
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:AdvisorFeedbackResponded",
+        "event": "AdvisorFeedbackResponded",
+        "emissionKind": "business",
+        "owners": [
+          "AdvisorFeedbackThread"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": true,
+        "targetConcreteType": "AdvisorFeedbackResponded",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.advisor-feedback.responded",
+          "version": 2
+        },
+        "wireQualification": "Adopted wire is the occupied discriminator declared in src/Compliance.Common/Features/AdvisorCollaboration/Events/AdvisorFeedbackResponded.cs at 60029b8f (2026-10-29 reconciliation). The earlier selected wire is retained as supersededSelectedWire for provenance only.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "selected_complete_schema",
+        "sourceStatus": "declared",
+        "supersededSelectedWire": {
+          "discriminator": "bdgrz.advisor-feedback.responded",
+          "version": 1
+        },
+        "meaning": "The client responded on a feedback thread.",
+        "meaningSource": "record summary in src/Compliance.Common/Features/AdvisorCollaboration/Events/AdvisorFeedbackResponded.cs"
+      },
+      "schema": {
+        "event": "AdvisorFeedbackResponded",
+        "discriminator": "bdgrz.advisor-feedback.responded",
+        "discriminatorVersion": 1,
+        "owner": "AdvisorFeedbackThread",
+        "existingContract": "src/Compliance.Common/Features/AdvisorCollaboration/AdvisorFeedbackResponded.cs",
+        "status": "selected target schema; implementation pending",
+        "reason": "source command accepted result",
+        "fields": [
+          {
+            "name": "TenantId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "ProgramId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "HandoffId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "FeedbackId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "Response",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "RespondedBy",
+            "type": "ActorReference",
+            "required": true
+          },
+          {
+            "name": "RespondedAt",
+            "type": "DateTimeOffset",
+            "required": true
+          },
+          {
+            "name": "Operation",
+            "type": "OperationProvenance",
+            "required": true
+          },
+          {
+            "name": "FirstResponse",
+            "type": "ImmutableContentRef?",
+            "required": true
+          },
+          {
+            "name": "OperationResult",
+            "type": "ImmutableContentRef?",
+            "required": true
+          }
+        ],
+        "contentSchemas": [],
+        "changes": [],
+        "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
+        "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
+        "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
+      }
+    }
+  ]
+}

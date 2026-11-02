@@ -1,0 +1,341 @@
+{
+  "owner": "Tenant",
+  "events": [
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:TenantActivated",
+        "event": "TenantActivatedV2",
+        "emissionKind": "business",
+        "owners": [
+          "Tenant"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": false,
+        "targetConcreteType": "TenantActivatedV2",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.tenant.activated",
+          "version": 2
+        },
+        "wireQualification": "Wire matches the declared record in src/Compliance.Common/Features/Tenants/Events/TenantActivatedV2.cs at 60029b8f.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "retained_current_schema_native_qualification_required",
+        "sourceStatus": "declared",
+        "meaning": "A native activation decision bound to the exact authored administrator, email and command identity.",
+        "meaningSource": "record summary in src/Compliance.Common/Features/Tenants/Events/TenantActivatedV2.cs"
+      },
+      "schema": null
+    },
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:TenantOffboardingCompleted",
+        "event": "TenantOffboardingCompleted",
+        "emissionKind": "business",
+        "owners": [
+          "Tenant"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": false,
+        "targetConcreteType": "TenantOffboardingCompleted",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.tenants.tenant-offboarding-completed",
+          "version": 1
+        },
+        "wireQualification": "Wire matches the declared record in src/Compliance.Common/Features/Tenants/Events/TenantOffboardingCompleted.cs at 60029b8f.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "retained_current_schema_native_qualification_required",
+        "sourceStatus": "declared",
+        "meaning": "Records the TenantOffboardingCompleted domain fact for one tenant-owned subject revision.",
+        "meaningSource": "record summary in src/Compliance.Common/Features/Tenants/Events/TenantOffboardingCompleted.cs"
+      },
+      "schema": null
+    },
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:TenantOffboardingStarted",
+        "event": "TenantOffboardingStartedV2",
+        "emissionKind": "business",
+        "owners": [
+          "Tenant"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": false,
+        "targetConcreteType": "TenantOffboardingStartedV2",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.tenant.offboarding.started",
+          "version": 2
+        },
+        "wireQualification": "Wire matches the declared record in src/Compliance.Common/Features/Tenants/Events/TenantOffboardingStartedV2.cs at 60029b8f.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "retained_current_schema_native_qualification_required",
+        "sourceStatus": "declared",
+        "meaning": "A platform operator started offboarding the tenant with a stated reason, beginning the wind-down of the tenant's service.",
+        "meaningSource": "authored 2026-10-29 from src/Compliance.Common/Features/Tenants/Events/TenantOffboardingStartedV2.cs"
+      },
+      "schema": null
+    },
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:TenantReactivated",
+        "event": "TenantReactivatedV2",
+        "emissionKind": "business",
+        "owners": [
+          "Tenant"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": false,
+        "targetConcreteType": "TenantReactivatedV2",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.tenant.reactivated",
+          "version": 2
+        },
+        "wireQualification": "Wire matches the declared record in src/Compliance.Common/Features/Tenants/Events/TenantReactivatedV2.cs at 60029b8f.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "retained_current_schema_native_qualification_required",
+        "sourceStatus": "declared",
+        "meaning": "A platform operator reactivated a suspended tenant with a stated reason, restoring its service.",
+        "meaningSource": "authored 2026-10-29 from src/Compliance.Common/Features/Tenants/Events/TenantReactivatedV2.cs"
+      },
+      "schema": null
+    },
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:TenantRegistered",
+        "event": "TenantRegistered",
+        "emissionKind": "business",
+        "owners": [
+          "Tenant"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": false,
+        "targetConcreteType": "TenantRegistered",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.tenant.registered",
+          "version": 1
+        },
+        "wireQualification": "Wire matches the declared record in src/Compliance.Common/Features/Tenants/Events/TenantRegistered.cs at 60029b8f.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "retained_current_schema_native_qualification_required",
+        "sourceStatus": "declared",
+        "meaning": "A tenant was registered with an owner user, name and slug, optionally naming its first administrator and whether activation is required.",
+        "meaningSource": "authored 2026-10-29 from src/Compliance.Common/Features/Tenants/Events/TenantRegistered.cs"
+      },
+      "schema": null
+    },
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:TenantSlugChangeRejected",
+        "event": "TenantSlugChangeRejected",
+        "emissionKind": "business",
+        "owners": [
+          "Tenant"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": false,
+        "targetConcreteType": "TenantSlugChangeRejected",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.tenant-slug.change-rejected",
+          "version": 1
+        },
+        "wireQualification": "Wire matches the declared record in src/Compliance.Common/Features/Tenants/Events/TenantSlugChangeRejected.cs at 60029b8f.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "retained_current_schema_native_qualification_required",
+        "sourceStatus": "declared",
+        "meaning": "A requested slug change ended because the slug owner refused the new slug.",
+        "meaningSource": "record summary in src/Compliance.Common/Features/Tenants/Events/TenantSlugChangeRejected.cs"
+      },
+      "schema": null
+    },
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:TenantSlugChangeRequested",
+        "event": "TenantSlugChangeRequested",
+        "emissionKind": "business",
+        "owners": [
+          "Tenant"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": false,
+        "targetConcreteType": "TenantSlugChangeRequested",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.tenant-slug.change-requested",
+          "version": 1
+        },
+        "wireQualification": "Wire matches the declared record in src/Compliance.Common/Features/Tenants/Events/TenantSlugChangeRequested.cs at 60029b8f.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "retained_current_schema_native_qualification_required",
+        "sourceStatus": "declared",
+        "meaning": "An active tenant requested changing its slug from the old to a new value; the change stays pending until completed and blocks a second slug change.",
+        "meaningSource": "authored 2026-10-29 from src/Compliance.Common/Features/Tenants/Events/TenantSlugChangeRequested.cs"
+      },
+      "schema": null
+    },
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:TenantSlugChanged",
+        "event": "TenantSlugChanged",
+        "emissionKind": "business",
+        "owners": [
+          "Tenant"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": false,
+        "targetConcreteType": "TenantSlugChanged",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.tenant-slug.changed",
+          "version": 1
+        },
+        "wireQualification": "Wire matches the declared record in src/Compliance.Common/Features/Tenants/Events/TenantSlugChanged.cs at 60029b8f.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "retained_current_schema_native_qualification_required",
+        "sourceStatus": "declared",
+        "meaning": "A tenant adopted the slug its slug owner registered. The fact is the native acceptance of the confirming receiver.",
+        "meaningSource": "record summary in src/Compliance.Common/Features/Tenants/Events/TenantSlugChanged.cs"
+      },
+      "schema": null
+    },
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:TenantSlugConfirmed",
+        "event": "TenantSlugConfirmed",
+        "emissionKind": "business",
+        "owners": [
+          "Tenant"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": false,
+        "targetConcreteType": "TenantSlugConfirmed",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.tenant-slug.confirmed",
+          "version": 1
+        },
+        "wireQualification": "Wire matches the declared record in src/Compliance.Common/Features/Tenants/Events/TenantSlugConfirmed.cs at 60029b8f.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "retained_current_schema_native_qualification_required",
+        "sourceStatus": "declared",
+        "meaning": "The slug owner registered the tenant's first slug and the tenant confirmed it.",
+        "meaningSource": "record summary in src/Compliance.Common/Features/Tenants/Events/TenantSlugConfirmed.cs"
+      },
+      "schema": null
+    },
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:TenantSlugRejected",
+        "event": "TenantSlugRejected",
+        "emissionKind": "business",
+        "owners": [
+          "Tenant"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": false,
+        "targetConcreteType": "TenantSlugRejected",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.tenant-slug.rejected",
+          "version": 1
+        },
+        "wireQualification": "Wire matches the declared record in src/Compliance.Common/Features/Tenants/Events/TenantSlugRejected.cs at 60029b8f.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "retained_current_schema_native_qualification_required",
+        "sourceStatus": "declared",
+        "meaning": "The slug owner refused the tenant's first slug.",
+        "meaningSource": "record summary in src/Compliance.Common/Features/Tenants/Events/TenantSlugRejected.cs"
+      },
+      "schema": null
+    },
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:TenantSlugSurrenderConfirmed",
+        "event": "TenantSlugSurrenderConfirmed",
+        "emissionKind": "business",
+        "owners": [
+          "Tenant"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": false,
+        "targetConcreteType": "TenantSlugSurrenderConfirmed",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.tenant-slug-surrender.confirmed",
+          "version": 1
+        },
+        "wireQualification": "Wire matches the declared record in src/Compliance.Common/Features/Tenants/Events/TenantSlugSurrenderConfirmed.cs at 60029b8f.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "retained_current_schema_native_qualification_required",
+        "sourceStatus": "declared",
+        "meaning": "The slug owner released the slug the tenant was surrendering.",
+        "meaningSource": "record summary in src/Compliance.Common/Features/Tenants/Events/TenantSlugSurrenderConfirmed.cs"
+      },
+      "schema": null
+    },
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:TenantSlugSurrenderFailed",
+        "event": "TenantSlugSurrenderFailed",
+        "emissionKind": "business",
+        "owners": [
+          "Tenant"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": false,
+        "targetConcreteType": "TenantSlugSurrenderFailed",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.tenant-slug-surrender.failed",
+          "version": 1
+        },
+        "wireQualification": "Wire matches the declared record in src/Compliance.Common/Features/Tenants/Events/TenantSlugSurrenderFailed.cs at 60029b8f.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "retained_current_schema_native_qualification_required",
+        "sourceStatus": "declared",
+        "meaning": "The slug owner refused the tenant's surrender, so the tenant keeps the slug.",
+        "meaningSource": "record summary in src/Compliance.Common/Features/Tenants/Events/TenantSlugSurrenderFailed.cs"
+      },
+      "schema": null
+    },
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:TenantSlugSurrenderRequested",
+        "event": "TenantSlugSurrenderRequested",
+        "emissionKind": "business",
+        "owners": [
+          "Tenant"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": false,
+        "targetConcreteType": "TenantSlugSurrenderRequested",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.tenant-slug.surrender-requested",
+          "version": 1
+        },
+        "wireQualification": "Wire matches the declared record in src/Compliance.Common/Features/Tenants/Events/TenantSlugSurrenderRequested.cs at 60029b8f.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "retained_current_schema_native_qualification_required",
+        "sourceStatus": "declared",
+        "meaning": "A tenant started surrendering its confirmed slug.",
+        "meaningSource": "record summary in src/Compliance.Common/Features/Tenants/Events/TenantSlugSurrenderRequested.cs"
+      },
+      "schema": null
+    },
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:TenantSuspended",
+        "event": "TenantSuspendedV2",
+        "emissionKind": "business",
+        "owners": [
+          "Tenant"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": false,
+        "targetConcreteType": "TenantSuspendedV2",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.tenant.suspended",
+          "version": 2
+        },
+        "wireQualification": "Wire matches the declared record in src/Compliance.Common/Features/Tenants/Events/TenantSuspendedV2.cs at 60029b8f.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "retained_current_schema_native_qualification_required",
+        "sourceStatus": "declared",
+        "meaning": "A platform operator suspended an active tenant with a stated reason, blocking its service until it is reactivated.",
+        "meaningSource": "authored 2026-10-29 from src/Compliance.Common/Features/Tenants/Events/TenantSuspendedV2.cs"
+      },
+      "schema": null
+    }
+  ]
+}

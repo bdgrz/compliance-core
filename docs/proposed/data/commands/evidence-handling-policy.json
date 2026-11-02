@@ -1,0 +1,214 @@
+{
+  "owner": "EvidenceHandlingPolicy",
+  "selectedContracts": [
+    {
+      "command": "AssignArtifactHandlingPolicy",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "rule": "CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ArtifactId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "HandlingClass",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "PolicyVersion",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "Rationale",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "Unit",
+        "firstHttpStatus": 200,
+        "terminalResultType": "Unit"
+      },
+      "http": [],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
+        "jsonPointer": "/contracts/25",
+        "line": 2005,
+        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
+      },
+      "kind": "command"
+    },
+    {
+      "command": "AuthorizeArtifactHandlingDownloadUse",
+      "kind": "receiver",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "reactor",
+        "rule": "deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Source",
+          "type": "SourceFactProof<EvidenceArtifactDownloadRequested>",
+          "required": true
+        },
+        {
+          "name": "Target",
+          "type": "EventStreamAddress",
+          "required": true
+        },
+        {
+          "name": "OperationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Generation",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long?",
+          "required": true
+        },
+        {
+          "name": "Intent",
+          "type": "ImmutableContentRef",
+          "required": true,
+          "contentSchema": "SourceUseAuthorizationIntent"
+        },
+        {
+          "name": "ArtifactId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "PolicyVersion",
+          "type": "long",
+          "required": true
+        }
+      ],
+      "reactor": "ArtifactHandlingDownloadUseReactor",
+      "sourceOwner": "EvidenceArtifact",
+      "sourceEvents": [
+        "EvidenceArtifactDownloadRequested"
+      ],
+      "guard": "Exact current handling/content-bound policy; caller type/role and source access match admitted request. Conflicting reassignment waits until native grant or cancellation.",
+      "eventsEmitted": [
+        "ArtifactHandlingDownloadUseAuthorized"
+      ],
+      "effectKind": "claim_professional_assertion_identity",
+      "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
+      "handler": "AuthorizeArtifactHandlingDownloadUseHandler",
+      "http": [],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
+        "recorded": "2026-10-29"
+      }
+    },
+    {
+      "command": "SettleArtifactHandlingDownloadUse",
+      "kind": "receiver",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "reactor",
+        "rule": "deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Source",
+          "type": "SettleArtifactHandlingDownloadUseSourceProof",
+          "required": true
+        },
+        {
+          "name": "Target",
+          "type": "EventStreamAddress",
+          "required": true
+        },
+        {
+          "name": "OperationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Generation",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long?",
+          "required": true
+        },
+        {
+          "name": "Intent",
+          "type": "ImmutableContentRef",
+          "required": true,
+          "contentSchema": "SourceUseAuthorizationIntent"
+        },
+        {
+          "name": "ArtifactId",
+          "type": "Uuid",
+          "required": true
+        }
+      ],
+      "reactor": "SettleArtifactHandlingDownloadUseReactor",
+      "sourceOwner": "ArtifactDownloadGrant",
+      "sourceEvents": [
+        "EvidenceArtifactDownloadIssued",
+        "ArtifactDownloadGrantCanceled"
+      ],
+      "guard": "Exact native issued grant or receiving cancellation fence. Settle only matching operation/purpose; no URL in queue or source proof. An absent-before-grant settlement prevents delayed acquisition.",
+      "eventsEmitted": [
+        "ArtifactHandlingDownloadUseSettled"
+      ],
+      "effectKind": "claim_professional_assertion_identity",
+      "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
+      "handler": "SettleArtifactHandlingDownloadUseHandler",
+      "http": [],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
+        "recorded": "2026-10-29"
+      }
+    }
+  ],
+  "sourceContractEvidence": []
+}

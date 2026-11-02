@@ -1,0 +1,181 @@
+{
+  "owner": "CriteriaTextOverlay",
+  "selectedContracts": [
+    {
+      "command": "SetCriteriaTextOverlay",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "EditionId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Identifier",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "Content",
+          "type": "CriteriaTextOverlayContent",
+          "required": true
+        }
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "CriteriaTextOverlayRegistration",
+        "firstHttpStatus": 200,
+        "terminalResultType": "CriteriaTextOverlayRegistration"
+      },
+      "http": [
+        {
+          "method": "PUT",
+          "path": "/api/v1/tenants/{tenant_id}/criteria-editions/{edition_id}/overlays/set-criteria-text-overlay/{command_id}",
+          "policy": "ApiUser + existing request-scope authorizers"
+        }
+      ],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
+        "jsonPointer": "/commands/151",
+        "line": 17583,
+        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
+      },
+      "kind": "http"
+    }
+  ],
+  "sourceContractEvidence": [
+    {
+      "command": "SetCriteriaTextOverlay",
+      "status": "target_contract",
+      "sourceContract": "src/Compliance.Common/Features/Criteria/SetCriteriaTextOverlay.cs",
+      "sourceHandlers": [
+        {
+          "name": "SetCriteriaTextOverlayHandler",
+          "source": "src/Compliance.Core/Features/Criteria/SetCriteriaTextOverlayHandler.cs",
+          "registered": true
+        }
+      ],
+      "handler": "SetCriteriaTextOverlayHandler",
+      "sourceRoots": [
+        "CriteriaTextOverlayLedger"
+      ],
+      "owner": "CriteriaTextOverlay",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "one immutable authored operation"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "EditionId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Identifier",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "Content",
+          "type": "CriteriaTextOverlayContent",
+          "required": true
+        }
+      ],
+      "http": [
+        {
+          "method": "PUT",
+          "path": "/api/v1/tenants/{tenant_id}/criteria-editions/{edition_id}/overlays/set-criteria-text-overlay/{command_id}",
+          "policy": "ApiUser + existing request-scope authorizers"
+        }
+      ],
+      "mcp": true,
+      "entryPoint": "authorized_http_and_mcp",
+      "authorizerSources": [
+        "src/Compliance.Core/Features/AccessControl/ClientManagementMutationAuthorizer.cs",
+        "src/Compliance.Core/Features/Programs/ProgramManagementAuthorizer.cs"
+      ],
+      "events": [
+        "CriteriaTextOverlayEntryRevised"
+      ],
+      "protocols": [
+        "Per-criterion overlay revision"
+      ],
+      "guardOrder": [
+        "bind_required_ids",
+        "authenticate_authorize",
+        "canonicalize_authored_intent",
+        "resolve_native_operation_facts",
+        "compare_owner_episode_actor_kind_intent_original_revision",
+        "validate_new_owner_revision_and_source_permits",
+        "append_complete_concrete_attributed_batch"
+      ],
+      "policyPreservation": "All current source handler/aggregate validation rules and source test expectations apply, except the explicit contractChanges and boundary protocol. Lifetime caps and technical attempt events are removed with their structural replacement.",
+      "contractChanges": [
+        "Add required CommandId."
+      ],
+      "existingTests": [
+        "test/Compliance.Tests/Features/AccessControl/AttestProgramManagementWriteWallTests.cs",
+        "test/Compliance.Tests/Features/Criteria/CriteriaTextOverlayAuthorizationTests.cs",
+        "test/Compliance.Tests/Features/Criteria/SetCriteriaTextOverlayHandlerTests.cs"
+      ],
+      "requiredTests": [
+        "ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange",
+        "ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision",
+        "ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity",
+        "ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof",
+        "ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome"
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "CriteriaTextOverlayRegistration",
+        "firstHttpStatus": 200,
+        "terminalResultType": "CriteriaTextOverlayRegistration"
+      },
+      "expectedRevisionScope": {
+        "field": "ExpectedRevision",
+        "owner": "CriteriaTextOverlay",
+        "counter": "logical ResourceRevision of this owner",
+        "nullableInternalRule": null
+      }
+    }
+  ]
+}

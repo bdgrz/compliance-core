@@ -1,0 +1,27 @@
+{
+  "owner": "ImportedOwnerResolution",
+  "events": [
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:ImportedOwnerResolutionRecorded",
+        "event": "ImportedOwnerResolutionRecorded",
+        "emissionKind": "business",
+        "owners": [
+          "ImportedOwnerResolution"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "targetConcreteType": "ImportedOwnerResolutionRecorded",
+        "adoptedTargetWire": null,
+        "wireQualification": "Planned; no declared record yet.",
+        "adoptedDecisionIds": [
+          "OWNER_ImportedOwnerResolution"
+        ],
+        "schemaStatus": "planned_schema",
+        "sourceStatus": "planned_no_source_type",
+        "meaning": "An imported owner reference was bound to a workforce person by exact email match at import or by one attributed manual resolution; unresolved references stay unresolved until then.",
+        "meaningSource": "authored 2026-10-29"
+      },
+      "schema": null
+    }
+  ]
+}

@@ -1,0 +1,141 @@
+{
+  "owner": "TypeIIObservationCalendar",
+  "selectedContracts": [
+    {
+      "command": "AcquireTypeIIPeriodRange",
+      "kind": "receiver",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "internal",
+        "rule": "deterministic receiver identity derived from the admitted root fact, episode and generation: exact redelivery resolves the original result, a changed admission is a new identity"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "required": true
+        },
+        {
+          "name": "Source",
+          "required": true
+        },
+        {
+          "name": "Target",
+          "required": true
+        },
+        {
+          "name": "OperationId",
+          "required": true
+        },
+        {
+          "name": "Generation",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "required": true
+        },
+        {
+          "name": "Intent",
+          "required": true
+        },
+        {
+          "name": "PeriodId",
+          "required": true
+        },
+        {
+          "name": "OldRange",
+          "required": true
+        },
+        {
+          "name": "NewRange",
+          "required": true
+        }
+      ],
+      "http": [],
+      "source": {
+        "path": "src/Compliance.Core/Features/Operations/Processes/TypeIIRangeReceivers.cs:77",
+        "recorded": "2026-10-29"
+      },
+      "reactor": "TypeIIPeriodRangeReactor",
+      "sourceOwner": "TypeIIPeriod",
+      "sourceEvents": [
+        "TypeIIPeriodOpeningAccepted",
+        "TypeIIPeriodAmendmentAccepted"
+      ],
+      "guard": "Accepted exact intent before calendar acquisition; hold both old/new ranges until applied; same program guard prevents overlap.",
+      "eventsEmitted": [
+        "TypeIIPeriodRangeAuthorized"
+      ],
+      "effectKind": "acquire_type_i_i_period_range",
+      "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine."
+    },
+    {
+      "command": "SettleTypeIIPeriodRange",
+      "kind": "reactor",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "internal",
+        "rule": "deterministic receiver identity derived from the admitted root fact, episode and generation: exact redelivery resolves the original result, a changed admission is a new identity"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "required": true
+        },
+        {
+          "name": "Source",
+          "required": true
+        },
+        {
+          "name": "Target",
+          "required": true
+        },
+        {
+          "name": "OperationId",
+          "required": true
+        },
+        {
+          "name": "Generation",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "required": true
+        },
+        {
+          "name": "Intent",
+          "required": true
+        },
+        {
+          "name": "PeriodId",
+          "required": true
+        }
+      ],
+      "http": [],
+      "source": {
+        "path": "src/Compliance.Core/Features/Operations/Reactors/TypeIIRangeReleaseReactor.cs:86; Operations/Processes/TypeIIRangeProcess.cs settle stage",
+        "recorded": "2026-10-29"
+      },
+      "reactor": "TypeIIPeriodRangeReleaseReactor",
+      "sourceOwner": "TypeIIPeriod",
+      "sourceEvents": [
+        "ObservationPeriodStarted",
+        "ObservationPeriodAmended",
+        "ObservationPeriodCloseFrozen",
+        "TypeIIPeriodAmendmentCanceled",
+        "TypeIIPeriodOpeningRejected"
+      ],
+      "guard": "Exact applied/close-frozen/cancellation-fence proof; release old or closed range only, never an unrelated/new reservation.",
+      "eventsEmitted": [
+        "TypeIIPeriodRangeSettled"
+      ],
+      "effectKind": "settle_type_i_i_period_range",
+      "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine."
+    }
+  ],
+  "sourceContractEvidence": []
+}

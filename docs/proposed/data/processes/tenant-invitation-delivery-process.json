@@ -1,0 +1,25 @@
+{
+  "process": "TenantInvitationDeliveryProcess",
+  "rootSourceEvents": [
+    "TenantMemberInvited"
+  ],
+  "ordered": true,
+  "stages": [
+    {
+      "stage": "send",
+      "receivers": [
+        "SendTenantInvitation"
+      ],
+      "rule": "One immutable payload and one attempt identity; a resumed unknown result sends the same attempt."
+    },
+    {
+      "stage": "record",
+      "receivers": [
+        "RecordTenantInvitationDeliverySent",
+        "RecordTenantInvitationDeliveryFailed"
+      ],
+      "rule": "Exactly one outcome receiver, selected by the result the attempt stored."
+    }
+  ],
+  "abort": []
+}

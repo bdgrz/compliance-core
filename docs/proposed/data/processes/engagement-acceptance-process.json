@@ -1,0 +1,60 @@
+{
+  "process": "EngagementAcceptanceProcess",
+  "rootSourceEvents": [
+    "ServiceEngagementAcceptanceRequested",
+    "ServiceEngagementStaffAssignmentRequested"
+  ],
+  "ordered": true,
+  "stages": [
+    {
+      "stage": "acquire",
+      "receivers": [
+        "AcquireEngagementServiceEpoch",
+        "AuthorizeFirmStaffRecordEngagementUse",
+        "AuthorizeFirmProfessionalDutyDesignationEngagementUse",
+        "AuthorizeIndependenceRuleCatalogEngagementUse",
+        "AuthorizeIndependenceRuleRatificationCatalogEngagementUse",
+        "ReservePracticeIndependence"
+      ],
+      "rule": "One process acquires every key from the frozen manifest in canonical unsigned UTF8 stream-key order, in final mode, with no upgrades. The receiver list is not an acquisition order; the manifest is."
+    },
+    {
+      "stage": "authorize",
+      "receivers": [
+        "AuthorizeEngagementPracticeCommitments"
+      ],
+      "rule": "Irreversible commit point; requires the complete exact grant set."
+    },
+    {
+      "stage": "commit",
+      "receivers": [
+        "CommitPracticeIndependence"
+      ],
+      "rule": "Permanent walls; survive every later outcome."
+    },
+    {
+      "stage": "complete",
+      "receivers": [
+        "CompleteServiceEngagementAcceptance",
+        "CompleteServiceEngagementStaffAssignment"
+      ],
+      "rule": null
+    },
+    {
+      "stage": "settle",
+      "receivers": [
+        "ReleaseEngagementServiceEpoch",
+        "SettleFirmStaffRecordEngagementUse",
+        "SettleFirmProfessionalDutyDesignationEngagementUse",
+        "SettleIndependenceRuleCatalogEngagementUse",
+        "SettleIndependenceRuleRatificationCatalogEngagementUse",
+        "SettlePracticeIndependenceReservation"
+      ],
+      "rule": "Temporary grants only; permanent commitments remain."
+    }
+  ],
+  "abort": [
+    "RejectServiceEngagementAcceptance",
+    "RejectServiceEngagementStaffAssignment"
+  ]
+}

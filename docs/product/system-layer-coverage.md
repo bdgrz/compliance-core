@@ -12,11 +12,11 @@ released.
 
 | Layer | Coded types | Inventory |
 | --- | ---: | --- |
-| Request/command contracts | 238 source contracts | [Existing commands](component-inventory.md#existing-commands) and [command list](command-list.md) |
-| Query contracts | 272 (216 existing + 56 backfilled contracts) | [Existing queries](component-inventory.md#existing-queries) and [required query/view-model backfill](query-and-view-model-list.md) |
-| Domain events | 404 declared source types; 403 accepted facts and 1 explicitly excluded migration event | [Existing events](component-inventory.md#existing-events) and [source declaration reconciliation](domain-event-list.md#source-declaration-reconciliation) |
+| Request/command contracts | 238 source contracts | [Existing commands](component-inventory.md#existing-commands) and [command list](../proposed/commands/product-scope.md) |
+| Query contracts | 272 (216 existing + 56 backfilled contracts) | [Existing queries](component-inventory.md#existing-queries) and [required query/view-model backfill](../proposed/read-models.md) |
+| Domain events | 404 declared source types; 403 accepted facts and 1 explicitly excluded migration event | [Existing events](component-inventory.md#existing-events) and [source declaration reconciliation](../proposed/events/product-scope.md#source-declaration-reconciliation) |
 | Aggregates | 99 source aggregate types | [Existing aggregates](component-inventory.md#existing-aggregates) |
-| Models, views, and supporting contracts | 569 (436 existing + 59 response/receipt views + 74 aggregate payload/support models) | [Existing models](component-inventory.md#existing-models-and-supporting-contracts) and [required query/view-model backfill](query-and-view-model-list.md) |
+| Models, views, and supporting contracts | 569 (436 existing + 59 response/receipt views + 74 aggregate payload/support models) | [Existing models](component-inventory.md#existing-models-and-supporting-contracts) and [required query/view-model backfill](../proposed/read-models.md) |
 | Core handler coverage | 114 complete, 3 partial, and 8 missing of 125 active commands | [Handler coverage checklist](handler-coverage-checklist.md) |
 | Reactors | 33 source types | [Existing reactors](component-inventory.md#existing-reactors); critical-flow coverage remains open |
 | Projectors | 78 source types | [Existing projectors](component-inventory.md#existing-projectors); query-to-projector coverage remains open |
@@ -34,7 +34,7 @@ source references, not a claim that each event invariant has behavioral proof.
 
 ## Remaining source types
 
-The former broad proposal list mixed required work with hypotheses and unresolved policy scope. It is superseded as an implementation plan by the pruned, story-linked [system command list](command-list.md). Five evidence command contracts are present per file: `CaptureEvidenceArtifact`, `RecordEvidenceArtifactInspection`, `IssueArtifactDownload`, `LinkEvidenceSupport`, and `ReleaseEvidenceArtifactQuarantine`, each under `src/Compliance.Common/Features/Evidence/`. All five now have Core handlers; download, support-link and quarantine-release decisions also persist aggregate facts. Development hosts expose bounded personal HTTP upload; production hosts keep it unavailable until production storage is qualified. Scanner-provider qualification, supported content types, download delivery and remaining transport or worker integration stay open in the command and handler checklists. The 130-command plan contains 5 commands explicitly deferred by M0-D04/EN-05; the [handler coverage checklist](handler-coverage-checklist.md) tracks active implementation separately from those deferred imports.
+The former broad proposal list mixed required work with hypotheses and unresolved policy scope. It is superseded as an implementation plan by the pruned, story-linked [system command list](../proposed/commands/product-scope.md). Five evidence command contracts are present per file: `CaptureEvidenceArtifact`, `RecordEvidenceArtifactInspection`, `IssueArtifactDownload`, `LinkEvidenceSupport`, and `ReleaseEvidenceArtifactQuarantine`, each under `src/Compliance.Common/Features/Evidence/`. All five now have Core handlers; download, support-link and quarantine-release decisions also persist aggregate facts. Development hosts expose bounded personal HTTP upload; production hosts keep it unavailable until production storage is qualified. Scanner-provider qualification, supported content types, download delivery and remaining transport or worker integration stay open in the command and handler checklists. The 130-command plan contains 5 commands explicitly deferred by M0-D04/EN-05; the [handler coverage checklist](handler-coverage-checklist.md) tracks active implementation separately from those deferred imports.
 
 The pruned plan retains 130 feature-backed command requirements, each mapped to a typed command contract; actual-staff revocation reuses its already wired contract and handler. Five readiness-material import commands are explicitly deferred, leaving 125 active handler requirements. Excluded P2 hypotheses, unsettled BO scope, and unvalidated Privacy scope are not counted as required product commands.
 
@@ -42,7 +42,7 @@ The domain-event inventory reconciles all 404 declared source types: 403 accepte
 
 ## Vertical-slice closure gaps
 
-The query audit found 44 of 272 tracked query contracts without a Core handler or typed HTTP registration. Their contracts and response-view files exist; each still needs an authorized read path and a read model or aggregate source selected by its owning feature. The [query inventory](query-and-view-model-list.md#current-handler-and-http-gaps) names every affected query. Significant-change and incident reads now use tenant-partitioned projections with paged program indexes and restricted-record filtering.
+The query audit found 44 of 272 tracked query contracts without a Core handler or typed HTTP registration. Their contracts and response-view files exist; each still needs an authorized read path and a read model or aggregate source selected by its owning feature. The [query inventory](../proposed/read-models.md#current-handler-and-http-gaps) names every affected query. Significant-change and incident reads now use tenant-partitioned projections with paged program indexes and restricted-record filtering.
 
 The accepted command plan has 125 active handler requirements: 114 complete, 3 partial, and 8 missing. Five additional readiness-import commands stay deferred by M0-D04/EN-05. Do not treat worker callbacks or scheduler commands as public HTTP routes simply because a command contract exists.
 

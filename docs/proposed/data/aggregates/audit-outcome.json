@@ -1,0 +1,207 @@
+{
+  "owner": "AuditOutcome",
+  "origin": "retained_baseline",
+  "baselineOwners": [
+    "AuditOutcome"
+  ],
+  "declaredIdentity": "Tenant / audit-outcomes / outcomeId; program checked; same normalized content plus canonical recorder no-ops despite later server time; one creation append. Portia appends against the hydrated physical stream position; a logical revision does not create another physical boundary.",
+  "invariant": "One auditor-supplied report conclusion is immutable for its outcome identity and exact delivered package/snapshot provenance.",
+  "boundaryDecision": "retain",
+  "boundaryRationale": "Nothing within the single accepted record can be independently mutated; the report artifact already has its own lifecycle.",
+  "sources": [
+    {
+      "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
+      "jsonPointer": "/aggregates/11",
+      "line": 7667,
+      "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
+    }
+  ],
+  "baselineSourcePath": "src/Compliance.Core/Features/Examinations/AuditOutcome.cs",
+  "baselineEvents": [
+    "AuditOutcomeRecorded"
+  ],
+  "classification": "business_aggregate",
+  "businessAggregate": true,
+  "implementationStatus": "SEPARATE_VERIFICATION_REQUIRED_IMPLEMENTATION_HALTED",
+  "identityReadingRule": "selectedIdentitySummary and exact selectedCommandContracts define intended identity. baselineIdentityObservation/declaredIdentity retain older source observations only, including old replay defects; they are not target behavior or authorization to change an occupied key.",
+  "selectedCommandContracts": [
+    {
+      "command": "RecordExaminationOutcome",
+      "logicalIdentity": {
+        "field": "OutcomeId",
+        "type": "Uuid",
+        "required": true,
+        "rule": "caller-supplied immutable creation identity: an exact retry with the same id and authored intent returns the original result; the same id with changed intent is refused; a different id is a different record"
+      },
+      "fields": [
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ProgramId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExaminationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "OutcomeId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "PackageId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "PackageVersion",
+          "type": "int",
+          "required": true
+        },
+        {
+          "name": "OutcomeCode",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "OutcomeSummary",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "IssuedReportReference",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "ReportArtifactId",
+          "type": "Uuid?",
+          "required": true
+        },
+        {
+          "name": "IssuedOn",
+          "type": "DateOnly",
+          "required": true
+        }
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "Unit",
+        "firstHttpStatus": 200,
+        "terminalResultType": "Unit"
+      },
+      "http": [
+        {
+          "method": "PUT",
+          "path": "/api/v1/tenants/{tenant_id}/programs/{program_id}/examinations/{examination_id}/outcomes/{outcome_id}",
+          "authorizationPolicy": "ComplianceAuthorizationPolicies.ApiUser"
+        }
+      ],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
+        "jsonPointer": "/contracts/117",
+        "line": 8740,
+        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
+      },
+      "kind": "http"
+    }
+  ],
+  "eventAuthority": "retained_baseline_business_facts_requires_schema_reconciliation",
+  "events": [
+    {
+      "event": "AuditOutcomeRecorded",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
+        "jsonPointer": "/aggregates/11",
+        "line": 7667,
+        "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
+      },
+      "baselineContract": {
+        "event": "AuditOutcomeRecorded",
+        "emitters": [
+          "src/Compliance.Core/Features/Examinations/AuditOutcome.cs"
+        ],
+        "eventDisposition": "aggregate_fact",
+        "emitterOwnership": "aggregate or partial source",
+        "typedFields": [
+          {
+            "name": "TenantId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "SubjectId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "Revision",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "ActorMemberId",
+            "type": "Uuid?",
+            "required": true
+          },
+          {
+            "name": "State",
+            "type": "AuditOutcomeView",
+            "required": true
+          },
+          {
+            "name": "OccurredAt",
+            "type": "DateTimeOffset",
+            "required": true
+          }
+        ],
+        "eventContract": "src/Compliance.Common/Features/Examinations/AuditOutcomeRecorded.cs"
+      }
+    }
+  ],
+  "choreography": [],
+  "status": "SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED",
+  "baselineIdentityObservation": "Tenant / audit-outcomes / outcomeId; program checked; same normalized content plus canonical recorder no-ops despite later server time; one creation append. Portia appends against the hydrated physical stream position; a logical revision does not create another physical boundary.",
+  "identityContractRule": "Existing published owner identity/IdFor remains stable. Required typed creation/operation identity and tenant/program/source scope come from the selected signature/protocol references; no context.RequestId minting fallback or guessed new stream key.",
+  "adoptedArchitectureDecisions": [],
+  "selectedIdentityClarification": "Tenant / audit-outcomes / OutcomeId, with immutable ProgramId, delivered package and snapshot provenance. OutcomeId is the selected immutable creation identity.",
+  "selectedIdentitySummary": "Tenant / audit-outcomes / OutcomeId, with immutable ProgramId, delivered package and snapshot provenance. OutcomeId is the selected immutable creation identity.",
+  "baselineIdentityObservationOnly": true,
+  "selectedLogicalIdentityBindings": [
+    {
+      "command": "RecordExaminationOutcome",
+      "logicalIdentity": "OutcomeId",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
+        "jsonPointer": "/contracts/117",
+        "line": 8740,
+        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
+      }
+    }
+  ],
+  "selectedReplayRule": "Current required authorization precedes replay; exact authorized retries resolve the original accepted result using the selected logical identity and immutable actor/intent/source binding. Fresh mutable feasibility, clock selection and body preparation cannot replace that original result. Expected revision is concurrency precondition, not a new identity.",
+  "productRules": [
+    {
+      "id": "D27-01",
+      "doc": "m0-d27-attest-scope.md",
+      "rule": "The platform holds no attest workpaper, test conclusion, or report draft; it may retain only an issued report and the auditor-authored outcome as received, and never authors or recalculates the auditor's opinion."
+    },
+    {
+      "id": "D27-02",
+      "doc": "m0-d27-attest-scope.md",
+      "rule": "Management's evaluations and sign-offs remain separate from the auditor-authored outcome received."
+    }
+  ],
+  "decides": "Only an issued report and the auditor-authored outcome exactly as received are retained; the platform stores no attest workpaper, test conclusion or report draft and never authors, edits or recalculates the auditor's opinion. Management evaluations and sign-offs stay separate records and are never merged into the outcome.",
+  "decidesCovers": [
+    "D27-01",
+    "D27-02"
+  ],
+  "decidesAuthored": "2026-10-29"
+}

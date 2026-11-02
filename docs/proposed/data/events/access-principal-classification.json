@@ -1,0 +1,92 @@
+{
+  "owner": "AccessPrincipalClassification",
+  "events": [
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:AccessPrincipalClassified",
+        "event": "AccessPrincipalClassified",
+        "emissionKind": "business",
+        "owners": [
+          "AccessPrincipalClassification"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": true,
+        "targetConcreteType": "AccessPrincipalClassified",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.access_population.principal_classified",
+          "version": 2
+        },
+        "wireQualification": "Adopted wire is the occupied discriminator declared in src/Compliance.Common/Features/AccessReviews/Events/AccessPrincipalClassified.cs at 60029b8f (2026-10-29 reconciliation). The earlier selected wire is retained as supersededSelectedWire for provenance only.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "selected_complete_schema",
+        "sourceStatus": "declared",
+        "supersededSelectedWire": {
+          "discriminator": "bdgrz.access_population.principal_classified",
+          "version": 1
+        },
+        "meaning": "An explicit classification decision for one exact accepted principal; earlier decisions remain in history. The decision number is the position of this fact in the principal's own stream. DecisionContent is the complete AccessPrincipalClassificationView.",
+        "meaningSource": "record summary in src/Compliance.Common/Features/AccessReviews/Events/AccessPrincipalClassified.cs"
+      },
+      "schema": {
+        "event": "AccessPrincipalClassified",
+        "discriminator": "bdgrz.access_population.principal_classified",
+        "discriminatorVersion": 1,
+        "owner": "AccessPrincipalClassification",
+        "existingContract": "src/Compliance.Common/Features/AccessReviews/AccessPrincipalClassified.cs",
+        "status": "selected target schema; implementation pending",
+        "reason": "source command accepted result",
+        "fields": [
+          {
+            "name": "TenantId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "PopulationId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "ProviderSubjectId",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "DecisionContent",
+            "type": "ImmutableContentRef",
+            "required": true
+          },
+          {
+            "name": "Operation",
+            "type": "OperationProvenance",
+            "required": true
+          },
+          {
+            "name": "FirstResponse",
+            "type": "ImmutableContentRef?",
+            "required": true
+          },
+          {
+            "name": "OperationResult",
+            "type": "ImmutableContentRef?",
+            "required": true
+          }
+        ],
+        "contentSchemas": [
+          {
+            "field": "DecisionContent",
+            "schema": "AccessPrincipalClassified.DecisionContent.v1",
+            "contentType": "AccessPrincipalClassificationView",
+            "rule": "Complete original typed structured value, including nested collections, written/verified before this event. No cumulative parent view or mutable latest pointer."
+          }
+        ],
+        "changes": [
+          "Externalize structured AccessPrincipalClassificationView including nested collections; a former item cap cannot become an event-size rejection for valid larger content."
+        ],
+        "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
+        "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
+        "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
+      }
+    }
+  ]
+}

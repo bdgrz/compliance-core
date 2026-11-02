@@ -1,0 +1,354 @@
+{
+  "owner": "AccessPopulation",
+  "origin": "selected_split_target",
+  "baselineOwners": [
+    "AccessPopulation"
+  ],
+  "declaredIdentity": "populationId",
+  "invariant": "Immutable accepted population definition, exact system instance and source revision.",
+  "boundaryDecision": "selected_split",
+  "mustPreserve": "Classification requires exact accepted population proof and contiguous per-principal decision sequence.",
+  "sources": [
+    {
+      "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
+      "jsonPointer": "/splitOwners/3/targetOwners/0",
+      "line": 371,
+      "sha256": "d349d94b7c43f4d82020ecf36bdacf1aff98bc6498e14993582f1c3164b21f19"
+    }
+  ],
+  "baselineSourcePath": "src/Compliance.Core/Features/AccessReviews/AccessPopulation.cs",
+  "baselineEvents": [
+    "AccessPopulationOpened",
+    "AccessPopulationFactsRecorded",
+    "AccessPopulationAccepted"
+  ],
+  "preliminaryNewEvents": [],
+  "technicalStateToSeparate": [],
+  "classification": "business_aggregate",
+  "businessAggregate": true,
+  "implementationStatus": "SEPARATE_VERIFICATION_REQUIRED_IMPLEMENTATION_HALTED",
+  "identityReadingRule": "selectedIdentitySummary and exact selectedCommandContracts define intended identity. baselineIdentityObservation/declaredIdentity retain older source observations only, including old replay defects; they are not target behavior or authorization to change an occupied key.",
+  "selectedCommandContracts": [
+    {
+      "command": "AcceptAccessPopulation",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "PopulationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "Attestation",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "AccessPopulationAcceptance",
+        "firstHttpStatus": 200,
+        "terminalResultType": "AccessPopulationAcceptance"
+      },
+      "http": [
+        {
+          "method": "PUT",
+          "path": "/api/v1/tenants/{tenant_id}/access-populations/{population_id}/acceptance/{command_id}",
+          "policy": "ComplianceAuthorizationPolicies.ApiUser"
+        }
+      ],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
+        "jsonPointer": "/commands/0",
+        "line": 8,
+        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
+      },
+      "kind": "http"
+    },
+    {
+      "command": "OpenAccessPopulation",
+      "logicalIdentity": {
+        "field": "PopulationId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "deterministic receiver identity derived from the admitted root fact, episode and generation: exact redelivery resolves the original result, a changed admission is a new identity"
+      },
+      "fields": [
+        {
+          "name": "PopulationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ApplicationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "SystemInstanceId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectedSystemInstanceRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "ObservedAt",
+          "type": "DateTimeOffset",
+          "required": true
+        },
+        {
+          "name": "Source",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "AccessPopulationRegistration",
+        "firstHttpStatus": 200,
+        "terminalResultType": "AccessPopulationRegistration"
+      },
+      "http": [
+        {
+          "method": "PUT",
+          "path": "/api/v1/tenants/{tenant_id}/access-populations/{population_id}",
+          "policy": "ComplianceAuthorizationPolicies.ApiUser"
+        }
+      ],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
+        "jsonPointer": "/commands/71",
+        "line": 8216,
+        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
+      },
+      "kind": "http"
+    },
+    {
+      "command": "RecordAccessPopulationFacts",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "PopulationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "Principals",
+          "type": "IReadOnlyList<AccessPrincipalFact>",
+          "required": true
+        },
+        {
+          "name": "Entitlements",
+          "type": "IReadOnlyList<AccessEntitlementFact>",
+          "required": true
+        },
+        {
+          "name": "GroupMembers",
+          "type": "IReadOnlyList<AccessGroupMemberFact>",
+          "required": true
+        },
+        {
+          "name": "Assignments",
+          "type": "IReadOnlyList<AccessAssignmentFact>",
+          "required": true
+        }
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "AccessPopulationRegistration",
+        "firstHttpStatus": 200,
+        "terminalResultType": "AccessPopulationRegistration"
+      },
+      "http": [
+        {
+          "method": "PUT",
+          "path": "/api/v1/tenants/{tenant_id}/access-populations/record-access-population-facts/{command_id}",
+          "policy": "ApiUser + existing request-scope authorizers"
+        }
+      ],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
+        "jsonPointer": "/commands/89",
+        "line": 10406,
+        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
+      },
+      "kind": "http"
+    }
+  ],
+  "eventAuthority": "selected_final_event_catalog",
+  "events": [
+    {
+      "event": "AccessPopulationAccepted",
+      "discriminator": "bdgrz.access_population.accepted",
+      "discriminatorVersion": 1,
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
+        "jsonPointer": "/events/4",
+        "line": 381,
+        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
+      }
+    },
+    {
+      "event": "AccessPopulationFactsRecorded",
+      "discriminator": "bdgrz.access_population.facts_recorded",
+      "discriminatorVersion": 1,
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
+        "jsonPointer": "/events/6",
+        "line": 517,
+        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
+      }
+    },
+    {
+      "event": "AccessPopulationOpened",
+      "discriminator": "bdgrz.access_population.opened",
+      "discriminatorVersion": 1,
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
+        "jsonPointer": "/events/7",
+        "line": 587,
+        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
+      }
+    }
+  ],
+  "choreography": [],
+  "status": "SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED",
+  "baselineIdentityObservation": "populationId",
+  "identityContractRule": "Existing published owner identity/IdFor remains stable. Required typed creation/operation identity and tenant/program/source scope come from the selected signature/protocol references; no context.RequestId minting fallback or guessed new stream key.",
+  "adoptedArchitectureDecisions": [],
+  "selectedIdentitySummary": "Tenant-scoped populationId; `PopulationId` on `OpenAccessPopulation` is the caller-supplied immutable creation identity (exact immutable creation retry) so an exact retry resolves the original result and a different id is a different record; later mutations use CommandId bound to this identity and the expected revision.",
+  "baselineIdentityObservationOnly": true,
+  "selectedLogicalIdentityBindings": [
+    {
+      "command": "AcceptAccessPopulation",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "one immutable authored operation"
+      },
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
+        "jsonPointer": "/commands/0",
+        "line": 8,
+        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
+      }
+    },
+    {
+      "command": "OpenAccessPopulation",
+      "logicalIdentity": {
+        "field": "PopulationId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "exact immutable creation retry"
+      },
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
+        "jsonPointer": "/commands/71",
+        "line": 8216,
+        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
+      }
+    },
+    {
+      "command": "RecordAccessPopulationFacts",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "one immutable authored operation"
+      },
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
+        "jsonPointer": "/commands/89",
+        "line": 10406,
+        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
+      }
+    }
+  ],
+  "selectedReplayRule": "Current required authorization precedes replay; exact authorized retries resolve the original accepted result using the selected logical identity and immutable actor/intent/source binding. Fresh mutable feasibility, clock selection and body preparation cannot replace that original result. Expected revision is concurrency precondition, not a new identity.",
+  "identityRevisions": [
+    {
+      "date": "2026-10-29",
+      "previous": "populationId"
+    }
+  ],
+  "productRules": [
+    {
+      "id": "D07-03",
+      "doc": "m0-d07-access-review-population.md",
+      "rule": "Inherited access is never stored as an AccessAssignment; an assignment records only what the source asserts is granted directly to that principal within a snapshot."
+    },
+    {
+      "id": "D07-04",
+      "doc": "m0-d07-access-review-population.md",
+      "rule": "An AccessPopulationSnapshot records the exact system instance version, observation time, source (manual attestation until imports exist), and content hash, and is immutable once accepted."
+    },
+    {
+      "id": "D07-05",
+      "doc": "m0-d07-access-review-population.md",
+      "rule": "An account's provider subject identifier is unique per system instance."
+    }
+  ],
+  "decides": "An accepted population stores only directly asserted assignments as observed, never inherited or effective access; effective access is a derived, versioned calculation per snapshot and is never written as a source fact. Acceptance records the exact system-instance revision, observation time, source (manual attestation until imports exist) and content hash, after which the snapshot is immutable. A provider subject identifier appears at most once per population for a system instance.",
+  "decidesCovers": [
+    "D07-01",
+    "D07-03",
+    "D07-04",
+    "D07-05"
+  ],
+  "decidesAuthored": "2026-10-29"
+}

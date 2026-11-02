@@ -1,6 +1,6 @@
 # Handler coverage checklist
 
-Derived from every command in [the feature-backed command plan](command-list.md): accepted P0/P1 requirements and M0 decisions. Query-only workflows and excluded hypotheses stay out. “Test reference” is a static symbol search; it does not claim behavior is validated. Existing handler behavior still needs focused TDD review.
+Derived from every command in [the feature-backed command plan](../proposed/commands/product-scope.md): accepted P0/P1 requirements and M0 decisions. Query-only workflows and excluded hypotheses stay out. “Test reference” is a static symbol search; it does not claim behavior is validated. Existing handler behavior still needs focused TDD review.
 
 Handler status `partial` means the command has a registered handler for only part of its accepted feature scope and remains unfinished.
 

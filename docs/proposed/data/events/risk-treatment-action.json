@@ -1,0 +1,992 @@
+{
+  "owner": "RiskTreatmentAction",
+  "events": [
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:RiskTreatmentActionAdded",
+        "event": "RiskTreatmentActionAdded",
+        "emissionKind": "business",
+        "owners": [
+          "RiskTreatmentAction"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": true,
+        "targetConcreteType": "RiskTreatmentActionAdded",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.risk.treatment_action.added",
+          "version": 2
+        },
+        "wireQualification": "Adopted wire is the occupied discriminator declared in src/Compliance.Common/Features/Risks/Events/RiskTreatmentActionAdded.cs at 60029b8f (2026-10-29 reconciliation). The earlier selected wire is retained as supersededSelectedWire for provenance only.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "selected_complete_schema",
+        "sourceStatus": "declared",
+        "supersededSelectedWire": {
+          "discriminator": "bdgrz.risk.treatment_action.added",
+          "version": 1
+        },
+        "meaning": "Accountable treatment work was added to the risk. ActionContent is the complete open RiskTreatmentActionView; the logical id of the operation is the action id and the revision is one.",
+        "meaningSource": "record summary in src/Compliance.Common/Features/Risks/Events/RiskTreatmentActionAdded.cs"
+      },
+      "schema": {
+        "event": "RiskTreatmentActionAdded",
+        "discriminator": "bdgrz.risk.treatment_action.added",
+        "discriminatorVersion": 1,
+        "owner": "RiskTreatmentAction",
+        "existingContract": "src/Compliance.Common/Features/Risks/RiskTreatmentActionAdded.cs",
+        "status": "selected target schema; implementation pending",
+        "reason": "source command accepted result",
+        "fields": [
+          {
+            "name": "TenantId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "ProgramId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "RiskId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "Revision",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "ActionContent",
+            "type": "ImmutableContentRef",
+            "required": true
+          },
+          {
+            "name": "Operation",
+            "type": "OperationProvenance",
+            "required": true
+          },
+          {
+            "name": "FirstResponse",
+            "type": "ImmutableContentRef?",
+            "required": true
+          },
+          {
+            "name": "OperationResult",
+            "type": "ImmutableContentRef?",
+            "required": true
+          }
+        ],
+        "contentSchemas": [
+          {
+            "field": "ActionContent",
+            "schema": "RiskTreatmentActionAdded.ActionContent.v1",
+            "contentType": "RiskTreatmentActionView",
+            "rule": "Complete original typed structured value, including nested collections, written/verified before this event. No cumulative parent view or mutable latest pointer."
+          }
+        ],
+        "changes": [
+          "Externalize structured RiskTreatmentActionView including nested collections; a former item cap cannot become an event-size rejection for valid larger content."
+        ],
+        "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
+        "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
+        "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
+      }
+    },
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:RiskTreatmentActionCancelled",
+        "event": "RiskTreatmentActionCancelled",
+        "emissionKind": "business",
+        "owners": [
+          "RiskTreatmentAction"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": true,
+        "targetConcreteType": "RiskTreatmentActionCancelled",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.risk.treatment_action.cancelled",
+          "version": 2
+        },
+        "wireQualification": "Adopted wire is the occupied discriminator declared in src/Compliance.Common/Features/Risks/Events/RiskTreatmentActionCancelled.cs at 60029b8f (2026-10-29 reconciliation). The earlier selected wire is retained as supersededSelectedWire for provenance only.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "selected_complete_schema",
+        "sourceStatus": "declared",
+        "supersededSelectedWire": {
+          "discriminator": "bdgrz.risk.treatment_action.cancelled",
+          "version": 1
+        },
+        "meaning": "Unfinished treatment work was canceled while its history is retained.",
+        "meaningSource": "record summary in src/Compliance.Common/Features/Risks/Events/RiskTreatmentActionCancelled.cs"
+      },
+      "schema": {
+        "event": "RiskTreatmentActionCancelled",
+        "discriminator": "bdgrz.risk.treatment_action.cancelled",
+        "discriminatorVersion": 1,
+        "owner": "RiskTreatmentAction",
+        "existingContract": "src/Compliance.Common/Features/Risks/RiskTreatmentActionCancelled.cs",
+        "status": "selected target schema; implementation pending",
+        "reason": "source command accepted result",
+        "fields": [
+          {
+            "name": "TenantId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "ProgramId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "RiskId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "Revision",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "ActionId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "CancellationId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "Rationale",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "CancelledBy",
+            "type": "ActorReference",
+            "required": true
+          },
+          {
+            "name": "CancelledAt",
+            "type": "DateTimeOffset",
+            "required": true
+          },
+          {
+            "name": "Operation",
+            "type": "OperationProvenance",
+            "required": true
+          },
+          {
+            "name": "FirstResponse",
+            "type": "ImmutableContentRef?",
+            "required": true
+          },
+          {
+            "name": "OperationResult",
+            "type": "ImmutableContentRef?",
+            "required": true
+          }
+        ],
+        "contentSchemas": [],
+        "changes": [],
+        "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
+        "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
+        "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
+      }
+    },
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:RiskTreatmentActionCompletionReviewAccepted",
+        "event": "RiskTreatmentActionCompletionReviewAccepted",
+        "emissionKind": "business",
+        "owners": [
+          "RiskTreatmentAction"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": true,
+        "targetConcreteType": "RiskTreatmentActionCompletionReviewAccepted",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.risk-treatment-action.risk-treatment-action-completion-review-accepted",
+          "version": 1
+        },
+        "wireQualification": "Wire matches the declared record in src/Compliance.Common/Features/Risks/Events/RiskTreatmentActionCompletionReviewAccepted.cs at 60029b8f.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "selected_complete_schema",
+        "sourceStatus": "declared",
+        "meaning": "The root native acceptance of a completion review. It seals the exact submission for Generation, which is the submission ordinal of the action, and references the frozen RiskActionCompletionReviewIntent; the action only completes or reopens once RiskTreatmentActionCompletionReviewed follows.",
+        "meaningSource": "record summary in src/Compliance.Common/Features/Risks/Events/RiskTreatmentActionCompletionReviewAccepted.cs"
+      },
+      "schema": {
+        "event": "RiskTreatmentActionCompletionReviewAccepted",
+        "discriminator": "bdgrz.risk-treatment-action.risk-treatment-action-completion-review-accepted",
+        "discriminatorVersion": 1,
+        "owner": "RiskTreatmentAction",
+        "existingContract": null,
+        "status": "selected target schema; implementation pending",
+        "reason": "source command accepted result",
+        "fields": [
+          {
+            "name": "Owner",
+            "type": "EventStreamAddress",
+            "required": true
+          },
+          {
+            "name": "Revision",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "Generation",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "Intent",
+            "type": "ImmutableContentRef",
+            "required": true
+          },
+          {
+            "name": "SourceProofs",
+            "type": "ImmutableContentRef?",
+            "required": true
+          },
+          {
+            "name": "Operation",
+            "type": "OperationProvenance",
+            "required": true
+          },
+          {
+            "name": "FirstResponse",
+            "type": "ImmutableContentRef?",
+            "required": true
+          },
+          {
+            "name": "OperationResult",
+            "type": "ImmutableContentRef?",
+            "required": true
+          }
+        ],
+        "contentSchemas": [
+          {
+            "field": "Intent",
+            "schema": "risk-action-completion-review-intent.v1",
+            "recordType": "RiskActionCompletionReviewIntent",
+            "fields": [
+              {
+                "name": "Header",
+                "type": "DurableIntentHeader",
+                "required": true
+              },
+              {
+                "name": "ActionId",
+                "type": "Uuid",
+                "required": true
+              },
+              {
+                "name": "SubmissionId",
+                "type": "Uuid",
+                "required": true
+              },
+              {
+                "name": "AuthoredReview",
+                "type": "ImmutableContentRef",
+                "required": true,
+                "contentSchema": "ReviewRiskTreatmentActionCompletion"
+              },
+              {
+                "name": "CompletionEvidence",
+                "type": "ImmutableSelectionManifest",
+                "required": true,
+                "contentSchema": "SourceFactLocator"
+              },
+              {
+                "name": "RequiredSourceUses",
+                "type": "ImmutableSelectionManifest",
+                "required": true,
+                "contentSchema": "SourceUseRequirement"
+              }
+            ],
+            "rule": "Freeze exact submitted completion and independent reviewer/waiver/decision. All current fulfilled evidence uses remain held through accepted native review or local cancellation. New submission needs a new operation identity.",
+            "variants": [
+              {
+                "recordType": "RiskActionCompletionReviewIntent",
+                "schema": "risk-action-completion-review-intent.v1",
+                "fields": [
+                  {
+                    "name": "Header",
+                    "type": "DurableIntentHeader",
+                    "required": true
+                  },
+                  {
+                    "name": "ActionId",
+                    "type": "Uuid",
+                    "required": true
+                  },
+                  {
+                    "name": "SubmissionId",
+                    "type": "Uuid",
+                    "required": true
+                  },
+                  {
+                    "name": "AuthoredReview",
+                    "type": "ImmutableContentRef",
+                    "required": true,
+                    "contentSchema": "ReviewRiskTreatmentActionCompletion"
+                  },
+                  {
+                    "name": "CompletionEvidence",
+                    "type": "ImmutableSelectionManifest",
+                    "required": true,
+                    "contentSchema": "SourceFactLocator"
+                  },
+                  {
+                    "name": "RequiredSourceUses",
+                    "type": "ImmutableSelectionManifest",
+                    "required": true,
+                    "contentSchema": "SourceUseRequirement"
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "changes": [],
+        "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
+        "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
+        "resolvedIntentSchema": "RiskActionCompletionReviewIntent",
+        "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
+      }
+    },
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:RiskTreatmentActionCompletionReviewCanceled",
+        "event": "RiskTreatmentActionCompletionReviewCanceled",
+        "emissionKind": "business",
+        "owners": [
+          "RiskTreatmentAction"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": true,
+        "targetConcreteType": "RiskTreatmentActionCompletionReviewCanceled",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.risk-treatment-action.risk-treatment-action-completion-review-canceled",
+          "version": 1
+        },
+        "wireQualification": "Wire matches the declared record in src/Compliance.Common/Features/Risks/Events/RiskTreatmentActionCompletionReviewCanceled.cs at 60029b8f.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "selected_complete_schema",
+        "sourceStatus": "declared",
+        "meaning": "A pending completion review ended before it recorded its decision. The fact is the local receiver fence: a delayed CompleteRiskTreatmentActionReview sees it and does nothing, and only then are the evidence uses settled. SourceProofs is the failure proof.",
+        "meaningSource": "record summary in src/Compliance.Common/Features/Risks/Events/RiskTreatmentActionCompletionReviewCanceled.cs"
+      },
+      "schema": {
+        "event": "RiskTreatmentActionCompletionReviewCanceled",
+        "discriminator": "bdgrz.risk-treatment-action.risk-treatment-action-completion-review-canceled",
+        "discriminatorVersion": 1,
+        "owner": "RiskTreatmentAction",
+        "existingContract": null,
+        "status": "selected target schema; implementation pending",
+        "reason": "source admission contract",
+        "fields": [
+          {
+            "name": "Owner",
+            "type": "EventStreamAddress",
+            "required": true
+          },
+          {
+            "name": "Revision",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "Generation",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "Intent",
+            "type": "ImmutableContentRef",
+            "required": true
+          },
+          {
+            "name": "SourceProofs",
+            "type": "ImmutableContentRef?",
+            "required": true
+          },
+          {
+            "name": "Operation",
+            "type": "OperationProvenance",
+            "required": true
+          },
+          {
+            "name": "FirstResponse",
+            "type": "ImmutableContentRef?",
+            "required": true
+          },
+          {
+            "name": "OperationResult",
+            "type": "ImmutableContentRef?",
+            "required": true
+          }
+        ],
+        "contentSchemas": [
+          {
+            "field": "Intent",
+            "schema": "risk-action-completion-review-intent.v1",
+            "recordType": "RiskActionCompletionReviewIntent",
+            "fields": [
+              {
+                "name": "Header",
+                "type": "DurableIntentHeader",
+                "required": true
+              },
+              {
+                "name": "ActionId",
+                "type": "Uuid",
+                "required": true
+              },
+              {
+                "name": "SubmissionId",
+                "type": "Uuid",
+                "required": true
+              },
+              {
+                "name": "AuthoredReview",
+                "type": "ImmutableContentRef",
+                "required": true,
+                "contentSchema": "ReviewRiskTreatmentActionCompletion"
+              },
+              {
+                "name": "CompletionEvidence",
+                "type": "ImmutableSelectionManifest",
+                "required": true,
+                "contentSchema": "SourceFactLocator"
+              },
+              {
+                "name": "RequiredSourceUses",
+                "type": "ImmutableSelectionManifest",
+                "required": true,
+                "contentSchema": "SourceUseRequirement"
+              }
+            ],
+            "rule": "Freeze exact submitted completion and independent reviewer/waiver/decision. All current fulfilled evidence uses remain held through accepted native review or local cancellation. New submission needs a new operation identity.",
+            "variants": [
+              {
+                "recordType": "RiskActionCompletionReviewIntent",
+                "schema": "risk-action-completion-review-intent.v1",
+                "fields": [
+                  {
+                    "name": "Header",
+                    "type": "DurableIntentHeader",
+                    "required": true
+                  },
+                  {
+                    "name": "ActionId",
+                    "type": "Uuid",
+                    "required": true
+                  },
+                  {
+                    "name": "SubmissionId",
+                    "type": "Uuid",
+                    "required": true
+                  },
+                  {
+                    "name": "AuthoredReview",
+                    "type": "ImmutableContentRef",
+                    "required": true,
+                    "contentSchema": "ReviewRiskTreatmentActionCompletion"
+                  },
+                  {
+                    "name": "CompletionEvidence",
+                    "type": "ImmutableSelectionManifest",
+                    "required": true,
+                    "contentSchema": "SourceFactLocator"
+                  },
+                  {
+                    "name": "RequiredSourceUses",
+                    "type": "ImmutableSelectionManifest",
+                    "required": true,
+                    "contentSchema": "SourceUseRequirement"
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "changes": [],
+        "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
+        "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
+        "resolvedIntentSchema": "RiskActionCompletionReviewIntent",
+        "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
+      }
+    },
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:RiskTreatmentActionCompletionReviewed",
+        "event": "RiskTreatmentActionCompletionReviewed",
+        "emissionKind": "business",
+        "owners": [
+          "RiskTreatmentAction"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": true,
+        "targetConcreteType": "RiskTreatmentActionCompletionReviewed",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.risk.treatment_action.completion_reviewed",
+          "version": 2
+        },
+        "wireQualification": "Adopted wire is the occupied discriminator declared in src/Compliance.Common/Features/Risks/Events/RiskTreatmentActionCompletionReviewed.cs at 60029b8f (2026-10-29 reconciliation). The earlier selected wire is retained as supersededSelectedWire for provenance only.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "selected_complete_schema",
+        "sourceStatus": "declared",
+        "supersededSelectedWire": {
+          "discriminator": "bdgrz.risk.treatment_action.completion_reviewed",
+          "version": 1
+        },
+        "meaning": "The decision of a completion review, appended by RiskActionCompletionReviewProcess once every cited evidence request is held. Intent is the frozen RiskActionCompletionReviewIntent.",
+        "meaningSource": "record summary in src/Compliance.Common/Features/Risks/Events/RiskTreatmentActionCompletionReviewed.cs"
+      },
+      "schema": {
+        "event": "RiskTreatmentActionCompletionReviewed",
+        "discriminator": "bdgrz.risk.treatment_action.completion_reviewed",
+        "discriminatorVersion": 1,
+        "owner": "RiskTreatmentAction",
+        "existingContract": "src/Compliance.Common/Features/Risks/RiskTreatmentActionCompletionReviewed.cs",
+        "status": "selected target schema; implementation pending",
+        "reason": "typed reactor receiver accepted business fact",
+        "fields": [
+          {
+            "name": "TenantId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "ProgramId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "RiskId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "Revision",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "ActionId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "DecisionId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "Outcome",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "Rationale",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "Reviewer",
+            "type": "ActorReference",
+            "required": true
+          },
+          {
+            "name": "ReviewedAt",
+            "type": "DateTimeOffset",
+            "required": true
+          },
+          {
+            "name": "SeparationOfDutiesWaiverId",
+            "type": "Uuid?",
+            "required": true
+          },
+          {
+            "name": "Operation",
+            "type": "OperationProvenance",
+            "required": true
+          },
+          {
+            "name": "Intent",
+            "type": "ImmutableContentRef",
+            "required": true
+          },
+          {
+            "name": "FirstResponse",
+            "type": "ImmutableContentRef?",
+            "required": true
+          },
+          {
+            "name": "OperationResult",
+            "type": "ImmutableContentRef?",
+            "required": true
+          }
+        ],
+        "contentSchemas": [
+          {
+            "field": "Intent",
+            "schema": "risk-action-completion-review-intent.v1",
+            "recordType": "RiskActionCompletionReviewIntent",
+            "fields": [
+              {
+                "name": "Header",
+                "type": "DurableIntentHeader",
+                "required": true
+              },
+              {
+                "name": "ActionId",
+                "type": "Uuid",
+                "required": true
+              },
+              {
+                "name": "SubmissionId",
+                "type": "Uuid",
+                "required": true
+              },
+              {
+                "name": "AuthoredReview",
+                "type": "ImmutableContentRef",
+                "required": true,
+                "contentSchema": "ReviewRiskTreatmentActionCompletion"
+              },
+              {
+                "name": "CompletionEvidence",
+                "type": "ImmutableSelectionManifest",
+                "required": true,
+                "contentSchema": "SourceFactLocator"
+              },
+              {
+                "name": "RequiredSourceUses",
+                "type": "ImmutableSelectionManifest",
+                "required": true,
+                "contentSchema": "SourceUseRequirement"
+              }
+            ],
+            "rule": "Freeze exact submitted completion and independent reviewer/waiver/decision. All current fulfilled evidence uses remain held through accepted native review or local cancellation. New submission needs a new operation identity.",
+            "variants": [
+              {
+                "recordType": "RiskActionCompletionReviewIntent",
+                "schema": "risk-action-completion-review-intent.v1",
+                "fields": [
+                  {
+                    "name": "Header",
+                    "type": "DurableIntentHeader",
+                    "required": true
+                  },
+                  {
+                    "name": "ActionId",
+                    "type": "Uuid",
+                    "required": true
+                  },
+                  {
+                    "name": "SubmissionId",
+                    "type": "Uuid",
+                    "required": true
+                  },
+                  {
+                    "name": "AuthoredReview",
+                    "type": "ImmutableContentRef",
+                    "required": true,
+                    "contentSchema": "ReviewRiskTreatmentActionCompletion"
+                  },
+                  {
+                    "name": "CompletionEvidence",
+                    "type": "ImmutableSelectionManifest",
+                    "required": true,
+                    "contentSchema": "SourceFactLocator"
+                  },
+                  {
+                    "name": "RequiredSourceUses",
+                    "type": "ImmutableSelectionManifest",
+                    "required": true,
+                    "contentSchema": "SourceUseRequirement"
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "changes": [],
+        "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
+        "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
+        "resolvedIntentSchema": "RiskActionCompletionReviewIntent",
+        "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
+      }
+    },
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:RiskTreatmentActionCompletionSubmitted",
+        "event": "RiskTreatmentActionCompletionSubmitted",
+        "emissionKind": "business",
+        "owners": [
+          "RiskTreatmentAction"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": true,
+        "targetConcreteType": "RiskTreatmentActionCompletionSubmitted",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.risk.treatment_action.completion_submitted",
+          "version": 2
+        },
+        "wireQualification": "Adopted wire is the occupied discriminator declared in src/Compliance.Common/Features/Risks/Events/RiskTreatmentActionCompletionSubmitted.cs at 60029b8f (2026-10-29 reconciliation). The earlier selected wire is retained as supersededSelectedWire for provenance only.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "selected_complete_schema",
+        "sourceStatus": "declared",
+        "supersededSelectedWire": {
+          "discriminator": "bdgrz.risk.treatment_action.completion_submitted",
+          "version": 1
+        },
+        "meaning": "Treatment work was reported done. EvidenceRequestIdsManifest is the complete ordered list of the fulfilled evidence requests the submission rests on; the logical id of the operation is the submission id.",
+        "meaningSource": "record summary in src/Compliance.Common/Features/Risks/Events/RiskTreatmentActionCompletionSubmitted.cs"
+      },
+      "schema": {
+        "event": "RiskTreatmentActionCompletionSubmitted",
+        "discriminator": "bdgrz.risk.treatment_action.completion_submitted",
+        "discriminatorVersion": 1,
+        "owner": "RiskTreatmentAction",
+        "existingContract": "src/Compliance.Common/Features/Risks/RiskTreatmentActionCompletionSubmitted.cs",
+        "status": "selected target schema; implementation pending",
+        "reason": "source command accepted result",
+        "fields": [
+          {
+            "name": "TenantId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "ProgramId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "RiskId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "Revision",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "ActionId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "SubmissionId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "Summary",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "EvidenceRequestIdsManifest",
+            "type": "ImmutableContentRef",
+            "required": true
+          },
+          {
+            "name": "SubmitterMemberId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "SubmittedBy",
+            "type": "ActorReference",
+            "required": true
+          },
+          {
+            "name": "SubmittedAt",
+            "type": "DateTimeOffset",
+            "required": true
+          },
+          {
+            "name": "Operation",
+            "type": "OperationProvenance",
+            "required": true
+          },
+          {
+            "name": "FirstResponse",
+            "type": "ImmutableContentRef?",
+            "required": true
+          },
+          {
+            "name": "OperationResult",
+            "type": "ImmutableContentRef?",
+            "required": true
+          }
+        ],
+        "contentSchemas": [
+          {
+            "field": "EvidenceRequestIdsManifest",
+            "schema": "RiskTreatmentActionCompletionSubmitted.EvidenceRequestIdsManifest.v1",
+            "contentType": "IReadOnlyList<Uuid>",
+            "rule": "Full exact original collection with complete count and digest; readers verify content before use."
+          }
+        ],
+        "changes": [
+          "Externalize complete IReadOnlyList<Uuid> to verified immutable content; preserve all items/order/identity, no truncation."
+        ],
+        "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
+        "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
+        "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
+      }
+    },
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:RiskTreatmentActionRevised",
+        "event": "RiskTreatmentActionRevised",
+        "emissionKind": "business",
+        "owners": [
+          "RiskTreatmentAction"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": true,
+        "targetConcreteType": "RiskTreatmentActionRevised",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.risk.treatment_action.revised",
+          "version": 2
+        },
+        "wireQualification": "Adopted wire is the occupied discriminator declared in src/Compliance.Common/Features/Risks/Events/RiskTreatmentActionRevised.cs at 60029b8f (2026-10-29 reconciliation). The earlier selected wire is retained as supersededSelectedWire for provenance only.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "selected_complete_schema",
+        "sourceStatus": "declared",
+        "supersededSelectedWire": {
+          "discriminator": "bdgrz.risk.treatment_action.revised",
+          "version": 1
+        },
+        "meaning": "Open treatment work was revised. EvidenceRequestIdsManifest is the complete ordered list of cited evidence request ids.",
+        "meaningSource": "record summary in src/Compliance.Common/Features/Risks/Events/RiskTreatmentActionRevised.cs"
+      },
+      "schema": {
+        "event": "RiskTreatmentActionRevised",
+        "discriminator": "bdgrz.risk.treatment_action.revised",
+        "discriminatorVersion": 1,
+        "owner": "RiskTreatmentAction",
+        "existingContract": "src/Compliance.Common/Features/Risks/RiskTreatmentActionRevised.cs",
+        "status": "selected target schema; implementation pending",
+        "reason": "source command accepted result",
+        "fields": [
+          {
+            "name": "TenantId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "ProgramId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "RiskId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "Revision",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "ActionId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "RequestId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "ExpectedRevision",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "Title",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "TargetState",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "ExpectedEvidence",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "DueOn",
+            "type": "DateOnly",
+            "required": true
+          },
+          {
+            "name": "AccountableMemberId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "EvidenceRequestIdsManifest",
+            "type": "ImmutableContentRef",
+            "required": true
+          },
+          {
+            "name": "RevisedBy",
+            "type": "ActorReference",
+            "required": true
+          },
+          {
+            "name": "RevisedAt",
+            "type": "DateTimeOffset",
+            "required": true
+          },
+          {
+            "name": "Operation",
+            "type": "OperationProvenance",
+            "required": true
+          },
+          {
+            "name": "FirstResponse",
+            "type": "ImmutableContentRef?",
+            "required": true
+          },
+          {
+            "name": "OperationResult",
+            "type": "ImmutableContentRef?",
+            "required": true
+          }
+        ],
+        "contentSchemas": [
+          {
+            "field": "EvidenceRequestIdsManifest",
+            "schema": "RiskTreatmentActionRevised.EvidenceRequestIdsManifest.v1",
+            "contentType": "IReadOnlyList<Uuid>",
+            "rule": "Full exact original collection with complete count and digest; readers verify content before use."
+          }
+        ],
+        "changes": [
+          "Externalize complete IReadOnlyList<Uuid> to verified immutable content; preserve all items/order/identity, no truncation."
+        ],
+        "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
+        "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
+        "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
+      }
+    }
+  ]
+}

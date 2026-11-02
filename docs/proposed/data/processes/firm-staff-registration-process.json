@@ -1,0 +1,26 @@
+{
+  "process": "FirmStaffRegistrationProcess",
+  "rootSourceEvents": [
+    "FirmStaffRegistrationAccepted"
+  ],
+  "ordered": true,
+  "stages": [
+    {
+      "stage": "claim",
+      "receivers": [
+        "ClaimFirmStaffIdentity"
+      ],
+      "rule": "Permanent canonical-user claim."
+    },
+    {
+      "stage": "complete",
+      "receivers": [
+        "CompleteFirmStaffRegistration"
+      ],
+      "rule": null
+    }
+  ],
+  "abort": [
+    "RejectFirmStaffRegistration"
+  ]
+}

@@ -1,0 +1,734 @@
+{
+  "owner": "Member",
+  "events": [
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:MemberDeprovisionCleanupCompleted",
+        "event": "MemberDeprovisionCleanupCompleted",
+        "emissionKind": "business",
+        "owners": [
+          "Member"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": false,
+        "targetConcreteType": "MemberDeprovisionCleanupCompleted",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.rbac.member.deprovision_cleanup_completed",
+          "version": 2
+        },
+        "wireQualification": "Wire matches the declared record in src/Compliance.Common/Features/AccessControl/Events/MemberDeprovisionCleanupCompleted.cs at 60029b8f.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "retained_current_schema_native_qualification_required",
+        "sourceStatus": "declared",
+        "meaning": "Cleanup of a deprovisioned member's access authority for one membership episode was completed against the original termination proof.",
+        "meaningSource": "authored 2026-10-29 from src/Compliance.Common/Features/AccessControl/Events/MemberDeprovisionCleanupCompleted.cs"
+      },
+      "schema": null
+    },
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:MemberDeprovisioned",
+        "event": "MemberDeprovisioned",
+        "emissionKind": "business",
+        "owners": [
+          "Member"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": true,
+        "targetConcreteType": "MemberDeprovisioned",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.rbac.member.deprovisioned",
+          "version": 2
+        },
+        "wireQualification": "Adopted wire is the occupied discriminator declared in src/Compliance.Common/Features/AccessControl/Events/MemberDeprovisioned.cs at 60029b8f (2026-10-29 reconciliation). The earlier selected wire is retained as supersededSelectedWire for provenance only.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "selected_complete_schema",
+        "sourceStatus": "declared",
+        "supersededSelectedWire": {
+          "discriminator": "bdgrz.rbac.member.deprovisioned",
+          "version": 1
+        },
+        "meaning": "A member's membership episode was ended by deprovisioning, with a stated reason by a named actor, removing the member's access to the tenant.",
+        "meaningSource": "authored 2026-10-29 from src/Compliance.Common/Features/AccessControl/Events/MemberDeprovisioned.cs"
+      },
+      "schema": {
+        "event": "MemberDeprovisioned",
+        "discriminator": "bdgrz.rbac.member.deprovisioned",
+        "discriminatorVersion": 1,
+        "owner": "Member",
+        "existingContract": "src/Compliance.Common/Features/AccessControl/MemberDeprovisioned.cs",
+        "status": "selected target schema; implementation pending",
+        "reason": "typed reactor receiver accepted business fact",
+        "fields": [
+          {
+            "name": "TenantId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "MemberId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "UserId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "DeprovisionedByMemberId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "DeprovisionedByDisplay",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "DeprovisionedAt",
+            "type": "DateTimeOffset",
+            "required": true
+          },
+          {
+            "name": "Reason",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "MembershipEpisodeId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "Operation",
+            "type": "OperationProvenance",
+            "required": true
+          },
+          {
+            "name": "Intent",
+            "type": "ImmutableContentRef",
+            "required": true
+          },
+          {
+            "name": "FirstResponse",
+            "type": "ImmutableContentRef?",
+            "required": true
+          },
+          {
+            "name": "OperationResult",
+            "type": "ImmutableContentRef?",
+            "required": true
+          }
+        ],
+        "contentSchemas": [
+          {
+            "field": "Intent",
+            "schema": "administrator-transition-intent.v1",
+            "recordType": "AdministratorTransitionIntent",
+            "fields": [
+              {
+                "name": "Header",
+                "type": "DurableIntentHeader",
+                "required": true
+              },
+              {
+                "name": "MemberId",
+                "type": "Uuid",
+                "required": true
+              },
+              {
+                "name": "MemberEpisodeId",
+                "type": "Uuid",
+                "required": true
+              },
+              {
+                "name": "MemberRevision",
+                "type": "ulong",
+                "required": true
+              },
+              {
+                "name": "AssignmentId",
+                "type": "Uuid?",
+                "required": true
+              },
+              {
+                "name": "AssignmentGeneration",
+                "type": "ulong?",
+                "required": true
+              },
+              {
+                "name": "ExpectedAssignmentRevision",
+                "type": "ulong?",
+                "required": true
+              },
+              {
+                "name": "TransitionKind",
+                "type": "AdministratorTransitionKind",
+                "required": true
+              },
+              {
+                "name": "Reason",
+                "type": "string?",
+                "required": true
+              },
+              {
+                "name": "GuardGeneration",
+                "type": "ulong",
+                "required": true
+              },
+              {
+                "name": "EligibilityRequirements",
+                "type": "ImmutableSelectionManifest",
+                "required": true,
+                "contentSchema": "SourceUseRequirement"
+              }
+            ],
+            "rule": "Member source revision and guard generation are distinct. Freeze administrators-team scope and exact transition branch; TransitionKind includes register_administrators_assignment for a first contribution and the neutral kinds for source mutations that change no availability. Withdraw availability before source mutation; restore source after unfinished withdrawals drain, then restore guard only if all current eligibility and remaining reason checks pass.",
+            "variants": [
+              {
+                "recordType": "AdministratorTransitionIntent",
+                "schema": "administrator-transition-intent.v1",
+                "fields": [
+                  {
+                    "name": "Header",
+                    "type": "DurableIntentHeader",
+                    "required": true
+                  },
+                  {
+                    "name": "MemberId",
+                    "type": "Uuid",
+                    "required": true
+                  },
+                  {
+                    "name": "MemberEpisodeId",
+                    "type": "Uuid",
+                    "required": true
+                  },
+                  {
+                    "name": "MemberRevision",
+                    "type": "ulong",
+                    "required": true
+                  },
+                  {
+                    "name": "AssignmentId",
+                    "type": "Uuid?",
+                    "required": true
+                  },
+                  {
+                    "name": "AssignmentGeneration",
+                    "type": "ulong?",
+                    "required": true
+                  },
+                  {
+                    "name": "ExpectedAssignmentRevision",
+                    "type": "ulong?",
+                    "required": true
+                  },
+                  {
+                    "name": "TransitionKind",
+                    "type": "AdministratorTransitionKind",
+                    "required": true
+                  },
+                  {
+                    "name": "Reason",
+                    "type": "string?",
+                    "required": true
+                  },
+                  {
+                    "name": "GuardGeneration",
+                    "type": "ulong",
+                    "required": true
+                  },
+                  {
+                    "name": "EligibilityRequirements",
+                    "type": "ImmutableSelectionManifest",
+                    "required": true,
+                    "contentSchema": "SourceUseRequirement"
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "changes": [],
+        "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
+        "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
+        "resolvedIntentSchema": "AdministratorTransitionIntent",
+        "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
+      }
+    },
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:MemberRegistered",
+        "event": "MemberRegistered",
+        "emissionKind": "business",
+        "owners": [
+          "Member"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": false,
+        "targetConcreteType": "MemberRegistered",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.rbac.member.registered",
+          "version": 1
+        },
+        "wireQualification": "Wire matches the declared record in src/Compliance.Common/Features/AccessControl/Events/MemberRegistered.cs at 60029b8f.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "retained_current_schema_native_qualification_required",
+        "sourceStatus": "declared",
+        "meaning": "A member was registered. The registration's logical CommandId is the membership episode id, and the fact is the native acceptance of that logical operation on the member stream.",
+        "meaningSource": "record summary in src/Compliance.Common/Features/AccessControl/Events/MemberRegistered.cs"
+      },
+      "schema": null
+    },
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:MemberReinstated",
+        "event": "MemberReinstated",
+        "emissionKind": "business",
+        "owners": [
+          "Member"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": true,
+        "targetConcreteType": "MemberReinstated",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.rbac.member.reinstated",
+          "version": 1
+        },
+        "wireQualification": "Wire matches the declared record in src/Compliance.Common/Features/AccessControl/Events/MemberReinstated.cs at 60029b8f.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "selected_complete_schema",
+        "sourceStatus": "declared",
+        "meaning": "A suspended member was reinstated with their affiliation by a named actor, restoring their access to the tenant.",
+        "meaningSource": "authored 2026-10-29 from src/Compliance.Common/Features/AccessControl/Events/MemberReinstated.cs"
+      },
+      "schema": {
+        "event": "MemberReinstated",
+        "discriminator": "bdgrz.rbac.member.reinstated",
+        "discriminatorVersion": 1,
+        "owner": "Member",
+        "existingContract": "src/Compliance.Common/Features/AccessControl/MemberReinstated.cs",
+        "status": "selected target schema; implementation pending",
+        "reason": "typed reactor receiver accepted business fact",
+        "fields": [
+          {
+            "name": "TenantId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "MemberId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "UserId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "Affiliation",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "ReinstatedByMemberId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "ReinstatedByDisplay",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "ReinstatedAt",
+            "type": "DateTimeOffset",
+            "required": true
+          },
+          {
+            "name": "Operation",
+            "type": "OperationProvenance",
+            "required": true
+          },
+          {
+            "name": "Intent",
+            "type": "ImmutableContentRef",
+            "required": true
+          },
+          {
+            "name": "FirstResponse",
+            "type": "ImmutableContentRef?",
+            "required": true
+          },
+          {
+            "name": "OperationResult",
+            "type": "ImmutableContentRef?",
+            "required": true
+          }
+        ],
+        "contentSchemas": [
+          {
+            "field": "Intent",
+            "schema": "administrator-transition-intent.v1",
+            "recordType": "AdministratorTransitionIntent",
+            "fields": [
+              {
+                "name": "Header",
+                "type": "DurableIntentHeader",
+                "required": true
+              },
+              {
+                "name": "MemberId",
+                "type": "Uuid",
+                "required": true
+              },
+              {
+                "name": "MemberEpisodeId",
+                "type": "Uuid",
+                "required": true
+              },
+              {
+                "name": "MemberRevision",
+                "type": "ulong",
+                "required": true
+              },
+              {
+                "name": "AssignmentId",
+                "type": "Uuid?",
+                "required": true
+              },
+              {
+                "name": "AssignmentGeneration",
+                "type": "ulong?",
+                "required": true
+              },
+              {
+                "name": "ExpectedAssignmentRevision",
+                "type": "ulong?",
+                "required": true
+              },
+              {
+                "name": "TransitionKind",
+                "type": "AdministratorTransitionKind",
+                "required": true
+              },
+              {
+                "name": "Reason",
+                "type": "string?",
+                "required": true
+              },
+              {
+                "name": "GuardGeneration",
+                "type": "ulong",
+                "required": true
+              },
+              {
+                "name": "EligibilityRequirements",
+                "type": "ImmutableSelectionManifest",
+                "required": true,
+                "contentSchema": "SourceUseRequirement"
+              }
+            ],
+            "rule": "Member source revision and guard generation are distinct. Freeze administrators-team scope and exact transition branch; TransitionKind includes register_administrators_assignment for a first contribution and the neutral kinds for source mutations that change no availability. Withdraw availability before source mutation; restore source after unfinished withdrawals drain, then restore guard only if all current eligibility and remaining reason checks pass.",
+            "variants": [
+              {
+                "recordType": "AdministratorTransitionIntent",
+                "schema": "administrator-transition-intent.v1",
+                "fields": [
+                  {
+                    "name": "Header",
+                    "type": "DurableIntentHeader",
+                    "required": true
+                  },
+                  {
+                    "name": "MemberId",
+                    "type": "Uuid",
+                    "required": true
+                  },
+                  {
+                    "name": "MemberEpisodeId",
+                    "type": "Uuid",
+                    "required": true
+                  },
+                  {
+                    "name": "MemberRevision",
+                    "type": "ulong",
+                    "required": true
+                  },
+                  {
+                    "name": "AssignmentId",
+                    "type": "Uuid?",
+                    "required": true
+                  },
+                  {
+                    "name": "AssignmentGeneration",
+                    "type": "ulong?",
+                    "required": true
+                  },
+                  {
+                    "name": "ExpectedAssignmentRevision",
+                    "type": "ulong?",
+                    "required": true
+                  },
+                  {
+                    "name": "TransitionKind",
+                    "type": "AdministratorTransitionKind",
+                    "required": true
+                  },
+                  {
+                    "name": "Reason",
+                    "type": "string?",
+                    "required": true
+                  },
+                  {
+                    "name": "GuardGeneration",
+                    "type": "ulong",
+                    "required": true
+                  },
+                  {
+                    "name": "EligibilityRequirements",
+                    "type": "ImmutableSelectionManifest",
+                    "required": true,
+                    "contentSchema": "SourceUseRequirement"
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "changes": [],
+        "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
+        "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
+        "resolvedIntentSchema": "AdministratorTransitionIntent",
+        "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
+      }
+    },
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:MemberSuspended",
+        "event": "MemberSuspended",
+        "emissionKind": "business",
+        "owners": [
+          "Member"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": true,
+        "targetConcreteType": "MemberSuspended",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.rbac.member.suspended",
+          "version": 1
+        },
+        "wireQualification": "Wire matches the declared record in src/Compliance.Common/Features/AccessControl/Events/MemberSuspended.cs at 60029b8f.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "selected_complete_schema",
+        "sourceStatus": "declared",
+        "meaning": "A member was suspended with a stated reason by a named actor, blocking their access until reinstated.",
+        "meaningSource": "authored 2026-10-29 from src/Compliance.Common/Features/AccessControl/Events/MemberSuspended.cs"
+      },
+      "schema": {
+        "event": "MemberSuspended",
+        "discriminator": "bdgrz.rbac.member.suspended",
+        "discriminatorVersion": 1,
+        "owner": "Member",
+        "existingContract": "src/Compliance.Common/Features/AccessControl/MemberSuspended.cs",
+        "status": "selected target schema; implementation pending",
+        "reason": "typed reactor receiver accepted business fact",
+        "fields": [
+          {
+            "name": "TenantId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "MemberId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "UserId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "SuspendedByMemberId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "SuspendedByDisplay",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "SuspendedAt",
+            "type": "DateTimeOffset",
+            "required": true
+          },
+          {
+            "name": "Reason",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "Operation",
+            "type": "OperationProvenance",
+            "required": true
+          },
+          {
+            "name": "Intent",
+            "type": "ImmutableContentRef",
+            "required": true
+          },
+          {
+            "name": "FirstResponse",
+            "type": "ImmutableContentRef?",
+            "required": true
+          },
+          {
+            "name": "OperationResult",
+            "type": "ImmutableContentRef?",
+            "required": true
+          }
+        ],
+        "contentSchemas": [
+          {
+            "field": "Intent",
+            "schema": "administrator-transition-intent.v1",
+            "recordType": "AdministratorTransitionIntent",
+            "fields": [
+              {
+                "name": "Header",
+                "type": "DurableIntentHeader",
+                "required": true
+              },
+              {
+                "name": "MemberId",
+                "type": "Uuid",
+                "required": true
+              },
+              {
+                "name": "MemberEpisodeId",
+                "type": "Uuid",
+                "required": true
+              },
+              {
+                "name": "MemberRevision",
+                "type": "ulong",
+                "required": true
+              },
+              {
+                "name": "AssignmentId",
+                "type": "Uuid?",
+                "required": true
+              },
+              {
+                "name": "AssignmentGeneration",
+                "type": "ulong?",
+                "required": true
+              },
+              {
+                "name": "ExpectedAssignmentRevision",
+                "type": "ulong?",
+                "required": true
+              },
+              {
+                "name": "TransitionKind",
+                "type": "AdministratorTransitionKind",
+                "required": true
+              },
+              {
+                "name": "Reason",
+                "type": "string?",
+                "required": true
+              },
+              {
+                "name": "GuardGeneration",
+                "type": "ulong",
+                "required": true
+              },
+              {
+                "name": "EligibilityRequirements",
+                "type": "ImmutableSelectionManifest",
+                "required": true,
+                "contentSchema": "SourceUseRequirement"
+              }
+            ],
+            "rule": "Member source revision and guard generation are distinct. Freeze administrators-team scope and exact transition branch; TransitionKind includes register_administrators_assignment for a first contribution and the neutral kinds for source mutations that change no availability. Withdraw availability before source mutation; restore source after unfinished withdrawals drain, then restore guard only if all current eligibility and remaining reason checks pass.",
+            "variants": [
+              {
+                "recordType": "AdministratorTransitionIntent",
+                "schema": "administrator-transition-intent.v1",
+                "fields": [
+                  {
+                    "name": "Header",
+                    "type": "DurableIntentHeader",
+                    "required": true
+                  },
+                  {
+                    "name": "MemberId",
+                    "type": "Uuid",
+                    "required": true
+                  },
+                  {
+                    "name": "MemberEpisodeId",
+                    "type": "Uuid",
+                    "required": true
+                  },
+                  {
+                    "name": "MemberRevision",
+                    "type": "ulong",
+                    "required": true
+                  },
+                  {
+                    "name": "AssignmentId",
+                    "type": "Uuid?",
+                    "required": true
+                  },
+                  {
+                    "name": "AssignmentGeneration",
+                    "type": "ulong?",
+                    "required": true
+                  },
+                  {
+                    "name": "ExpectedAssignmentRevision",
+                    "type": "ulong?",
+                    "required": true
+                  },
+                  {
+                    "name": "TransitionKind",
+                    "type": "AdministratorTransitionKind",
+                    "required": true
+                  },
+                  {
+                    "name": "Reason",
+                    "type": "string?",
+                    "required": true
+                  },
+                  {
+                    "name": "GuardGeneration",
+                    "type": "ulong",
+                    "required": true
+                  },
+                  {
+                    "name": "EligibilityRequirements",
+                    "type": "ImmutableSelectionManifest",
+                    "required": true,
+                    "contentSchema": "SourceUseRequirement"
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "changes": [],
+        "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
+        "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
+        "resolvedIntentSchema": "AdministratorTransitionIntent",
+        "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
+      }
+    }
+  ]
+}

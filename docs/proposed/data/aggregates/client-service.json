@@ -1,0 +1,450 @@
+{
+  "owner": "ClientService",
+  "origin": "retained_baseline",
+  "baselineOwners": [
+    "ClientService"
+  ],
+  "declaredIdentity": "Tenant / client-services / serviceId, Create handler uses context.RequestId; initial content preserved across edits; revision/retirement checked before replay comparisons on mutators. Portia appends against the hydrated physical stream position; a logical revision does not create another physical boundary.",
+  "invariant": "Once retired a service cannot be revised, and its program identity cannot be rebound; create identity is immutable.",
+  "boundaryDecision": "retain",
+  "boundaryRationale": "No independent child lifecycle is retained. Lifecycle and changes to this service belong together.",
+  "sources": [
+    {
+      "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
+      "jsonPointer": "/aggregates/16",
+      "line": 12726,
+      "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
+    }
+  ],
+  "baselineSourcePath": "src/Compliance.Core/Features/Programs/ClientService.cs",
+  "baselineEvents": [
+    "ClientServiceCreated",
+    "ClientServiceRetired",
+    "ClientServiceRevised"
+  ],
+  "classification": "business_aggregate",
+  "businessAggregate": true,
+  "implementationStatus": "SEPARATE_VERIFICATION_REQUIRED_IMPLEMENTATION_HALTED",
+  "identityReadingRule": "selectedIdentitySummary and exact selectedCommandContracts define intended identity. baselineIdentityObservation/declaredIdentity retain older source observations only, including old replay defects; they are not target behavior or authorization to change an occupied key.",
+  "selectedCommandContracts": [
+    {
+      "command": "CreateClientService",
+      "logicalIdentity": {
+        "field": "ServiceId",
+        "type": "Uuid",
+        "required": true,
+        "rule": "caller-supplied immutable creation identity: an exact retry with the same id and authored intent returns the original result; the same id with changed intent is refused; a different id is a different record"
+      },
+      "fields": [
+        {
+          "name": "ServiceId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ProgramId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Name",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "Purpose",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "OwnerReference",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "ClientServiceRegistration",
+        "firstHttpStatus": 200,
+        "terminalResultType": "ClientServiceRegistration"
+      },
+      "http": [
+        {
+          "method": "PUT",
+          "path": "/api/v1/tenants/{tenant_id}/programs/{program_id}/client-services/{service_id}",
+          "authorizationPolicy": "ComplianceAuthorizationPolicies.ApiUser"
+        }
+      ],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
+        "jsonPointer": "/contracts/48",
+        "line": 3590,
+        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
+      },
+      "kind": "http"
+    },
+    {
+      "command": "RetireClientService",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "rule": "CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ServiceId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "Rationale",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "Unit",
+        "firstHttpStatus": 200,
+        "terminalResultType": "Unit"
+      },
+      "http": [
+        {
+          "method": "PUT",
+          "path": "/api/v1/tenants/{tenant_id}/client-services/{service_id}/retirements/{command_id}",
+          "authorizationPolicy": "ComplianceAuthorizationPolicies.ApiUser"
+        }
+      ],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
+        "jsonPointer": "/contracts/154",
+        "line": 11385,
+        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
+      },
+      "kind": "http"
+    },
+    {
+      "command": "ReviseClientService",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "rule": "CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ServiceId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "Name",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "Purpose",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "OwnerReference",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "Unit",
+        "firstHttpStatus": 200,
+        "terminalResultType": "Unit"
+      },
+      "http": [],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
+        "jsonPointer": "/contracts/168",
+        "line": 12518,
+        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
+      },
+      "kind": "command"
+    }
+  ],
+  "eventAuthority": "retained_baseline_business_facts_requires_schema_reconciliation",
+  "events": [
+    {
+      "event": "ClientServiceCreated",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
+        "jsonPointer": "/aggregates/16",
+        "line": 12726,
+        "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
+      },
+      "baselineContract": {
+        "event": "ClientServiceCreated",
+        "emitters": [
+          "src/Compliance.Core/Features/Programs/ClientService.cs"
+        ],
+        "eventDisposition": "aggregate_fact",
+        "emitterOwnership": "aggregate or partial source",
+        "typedFields": [
+          {
+            "name": "TenantId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "ServiceId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "Name",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "Purpose",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "OwnerReference",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "ActorMemberId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "ActorDisplay",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "ChangedAt",
+            "type": "DateTimeOffset",
+            "required": true
+          },
+          {
+            "name": "ProgramId",
+            "type": "Uuid",
+            "required": false
+          }
+        ],
+        "eventContract": "src/Compliance.Common/Features/Programs/ClientServiceCreated.cs"
+      }
+    },
+    {
+      "event": "ClientServiceRetired",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
+        "jsonPointer": "/aggregates/16",
+        "line": 12726,
+        "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
+      },
+      "baselineContract": {
+        "event": "ClientServiceRetired",
+        "emitters": [
+          "src/Compliance.Core/Features/Programs/ClientService.cs"
+        ],
+        "eventDisposition": "aggregate_fact",
+        "emitterOwnership": "aggregate or partial source",
+        "typedFields": [
+          {
+            "name": "TenantId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "ServiceId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "Revision",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "Rationale",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "ActorMemberId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "ActorDisplay",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "ChangedAt",
+            "type": "DateTimeOffset",
+            "required": true
+          }
+        ],
+        "eventContract": "src/Compliance.Common/Features/Programs/ClientServiceRetired.cs"
+      }
+    },
+    {
+      "event": "ClientServiceRevised",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
+        "jsonPointer": "/aggregates/16",
+        "line": 12726,
+        "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
+      },
+      "baselineContract": {
+        "event": "ClientServiceRevised",
+        "emitters": [
+          "src/Compliance.Core/Features/Programs/ClientService.cs"
+        ],
+        "eventDisposition": "aggregate_fact",
+        "emitterOwnership": "aggregate or partial source",
+        "typedFields": [
+          {
+            "name": "TenantId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "ServiceId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "Revision",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "Name",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "Purpose",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "OwnerReference",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "ActorMemberId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "ActorDisplay",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "ChangedAt",
+            "type": "DateTimeOffset",
+            "required": true
+          }
+        ],
+        "eventContract": "src/Compliance.Common/Features/Programs/ClientServiceRevised.cs"
+      }
+    }
+  ],
+  "choreography": [],
+  "status": "SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED",
+  "baselineIdentityObservation": "Tenant / client-services / serviceId, Create handler uses context.RequestId; initial content preserved across edits; revision/retirement checked before replay comparisons on mutators. Portia appends against the hydrated physical stream position; a logical revision does not create another physical boundary.",
+  "identityContractRule": "Existing published owner identity/IdFor remains stable. Required typed creation/operation identity and tenant/program/source scope come from the selected signature/protocol references; no context.RequestId minting fallback or guessed new stream key.",
+  "adoptedArchitectureDecisions": [],
+  "selectedIdentityClarification": "Tenant + caller ServiceId; creation uses that identity and mutations use caller CommandId.",
+  "selectedIdentitySummary": "Tenant + caller ServiceId; creation uses that identity and mutations use caller CommandId.",
+  "baselineIdentityObservationOnly": true,
+  "selectedLogicalIdentityBindings": [
+    {
+      "command": "CreateClientService",
+      "logicalIdentity": "ServiceId",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
+        "jsonPointer": "/contracts/48",
+        "line": 3590,
+        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
+      }
+    },
+    {
+      "command": "RetireClientService",
+      "logicalIdentity": "CommandId",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
+        "jsonPointer": "/contracts/154",
+        "line": 11385,
+        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
+      }
+    },
+    {
+      "command": "ReviseClientService",
+      "logicalIdentity": "CommandId",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
+        "jsonPointer": "/contracts/168",
+        "line": 12518,
+        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
+      }
+    }
+  ],
+  "selectedReplayRule": "Current required authorization precedes replay; exact authorized retries resolve the original accepted result using the selected logical identity and immutable actor/intent/source binding. Fresh mutable feasibility, clock selection and body preparation cannot replace that original result. Expected revision is concurrency precondition, not a new identity.",
+  "productRules": [
+    {
+      "id": "D22-04",
+      "doc": "m0-d22-canonical-ownership.md",
+      "rule": "ClientService is owned by program and scope, distinct from an application and from a firm ServiceEngagement; each new service belongs to a program, and a boundary draft may cite only active services owned by that same program."
+    }
+  ],
+  "decides": "Each new service must belong to a program and be distinct from applications and firm ServiceEngagements; a boundary draft may cite only active services owned by the same program. Legacy services without a program stay readable but are refused as governed scope references.",
+  "decidesCovers": [
+    "D22-04",
+    "D22-05"
+  ],
+  "decidesAuthored": "2026-10-29"
+}

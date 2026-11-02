@@ -1,0 +1,1340 @@
+{
+  "owner": "Policy",
+  "origin": "retained_baseline",
+  "baselineOwners": [
+    "Policy"
+  ],
+  "declaredIdentity": "tenant/policies/policyId derived from tenant+program+normalized identifier; Create binds stable createRequestId+initial content. Mutations use logical Revision/currentVersion; Review and periodic review do not dedup decision identities, so same retry can append again.",
+  "invariant": "A policy has one pending revision/retirement; immutable approved version intervals form one successor line, activation needs the latest accepted independent review and independent approval, and retired/approved content cannot be edited.",
+  "boundaryDecision": "narrow",
+  "boundaryRationale": "Draft authors, accepted review and approval must stay atomic to avoid approving changed or self-reviewed terms. Old immutable versions and full decisions need not be active command state; preserve current predecessor plus exact decision target, and project history.",
+  "sources": [
+    {
+      "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
+      "jsonPointer": "/aggregates/58",
+      "line": 36653,
+      "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
+    }
+  ],
+  "baselineSourcePath": "src/Compliance.Core/Features/Policies/Policy.cs",
+  "baselineEvents": [
+    "PolicyApproved",
+    "PolicyDraftCreated",
+    "PolicyDraftDiscarded",
+    "PolicyDraftRevised",
+    "PolicyPeriodicReviewConfirmed",
+    "PolicyRetired",
+    "PolicyRetirementProposed",
+    "PolicyReviewed"
+  ],
+  "classification": "business_aggregate",
+  "businessAggregate": true,
+  "implementationStatus": "SEPARATE_VERIFICATION_REQUIRED_IMPLEMENTATION_HALTED",
+  "identityReadingRule": "selectedIdentitySummary and exact selectedCommandContracts define intended identity. baselineIdentityObservation/declaredIdentity retain older source observations only, including old replay defects; they are not target behavior or authorization to change an occupied key.",
+  "selectedCommandContracts": [
+    {
+      "command": "ApprovePolicy",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "rule": "CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ProgramId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "PolicyId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "AcceptedReviewDecisionId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "EffectiveFrom",
+          "type": "DateOnly",
+          "required": true
+        },
+        {
+          "name": "Major",
+          "type": "bool",
+          "required": true
+        },
+        {
+          "name": "Rationale",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "ImpactDigest",
+          "type": "string?",
+          "required": false
+        },
+        {
+          "name": "SeparationOfDutiesWaiverId",
+          "type": "Uuid?",
+          "required": false
+        }
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "PolicyVersionView",
+        "firstHttpStatus": 200,
+        "terminalResultType": "PolicyVersionView"
+      },
+      "http": [
+        {
+          "method": "PUT",
+          "path": "/api/v1/tenants/{tenant_id}/programs/{program_id}/policies/{policy_id}/approvals/{command_id}",
+          "authorizationPolicy": "ComplianceAuthorizationPolicies.ApiUser"
+        }
+      ],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
+        "jsonPointer": "/contracts/17",
+        "line": 1355,
+        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
+      },
+      "kind": "http"
+    },
+    {
+      "command": "ApprovePolicyRetirement",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "rule": "CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ProgramId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "PolicyId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "AcceptedReviewDecisionId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Rationale",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "SeparationOfDutiesWaiverId",
+          "type": "Uuid?",
+          "required": false
+        }
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "PolicyDecisionView",
+        "firstHttpStatus": 200,
+        "terminalResultType": "PolicyDecisionView"
+      },
+      "http": [
+        {
+          "method": "PUT",
+          "path": "/api/v1/tenants/{tenant_id}/programs/{program_id}/policies/{policy_id}/retirements/{command_id}",
+          "authorizationPolicy": "ComplianceAuthorizationPolicies.ApiUser"
+        }
+      ],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
+        "jsonPointer": "/contracts/18",
+        "line": 1458,
+        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
+      },
+      "kind": "http"
+    },
+    {
+      "command": "ConfirmPolicyReview",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "rule": "CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ProgramId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "PolicyId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectedVersion",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "Rationale",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "PolicyDecisionView",
+        "firstHttpStatus": 200,
+        "terminalResultType": "PolicyDecisionView"
+      },
+      "http": [
+        {
+          "method": "PUT",
+          "path": "/api/v1/tenants/{tenant_id}/programs/{program_id}/policies/{policy_id}/periodic-reviews/{command_id}",
+          "authorizationPolicy": "ComplianceAuthorizationPolicies.ApiUser"
+        }
+      ],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
+        "jsonPointer": "/contracts/41",
+        "line": 3246,
+        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
+      },
+      "kind": "http"
+    },
+    {
+      "command": "CreatePolicyDraft",
+      "logicalIdentity": {
+        "field": "PolicyId",
+        "type": "Uuid",
+        "required": true,
+        "rule": "caller-supplied immutable creation identity: an exact retry with the same id and authored intent returns the original result; the same id with changed intent is refused; a different id is a different record"
+      },
+      "fields": [
+        {
+          "name": "PolicyId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ProgramId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Identifier",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "Content",
+          "type": "PolicyContent",
+          "required": true
+        }
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "PolicyRegistration",
+        "firstHttpStatus": 200,
+        "terminalResultType": "PolicyRegistration"
+      },
+      "http": [
+        {
+          "method": "PUT",
+          "path": "/api/v1/tenants/{tenant_id}/programs/{program_id}/policies/{policy_id}",
+          "authorizationPolicy": "ComplianceAuthorizationPolicies.ApiUser"
+        }
+      ],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
+        "jsonPointer": "/contracts/53",
+        "line": 3976,
+        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
+      },
+      "kind": "http"
+    },
+    {
+      "command": "DiscardPolicyDraft",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "rule": "CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ProgramId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "PolicyId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "Rationale",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "Unit",
+        "firstHttpStatus": 200,
+        "terminalResultType": "Unit"
+      },
+      "http": [
+        {
+          "method": "PUT",
+          "path": "/api/v1/tenants/{tenant_id}/programs/{program_id}/policies/{policy_id}/draft/discards/{command_id}",
+          "authorizationPolicy": "ComplianceAuthorizationPolicies.ApiUser"
+        }
+      ],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
+        "jsonPointer": "/contracts/70",
+        "line": 5269,
+        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
+      },
+      "kind": "http"
+    },
+    {
+      "command": "ProposePolicyRetirement",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "rule": "CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ProgramId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "PolicyId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectedVersion",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "EffectiveUntil",
+          "type": "DateOnly",
+          "required": true
+        },
+        {
+          "name": "Rationale",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "PolicyRegistration",
+        "firstHttpStatus": 200,
+        "terminalResultType": "PolicyRegistration"
+      },
+      "http": [
+        {
+          "method": "PUT",
+          "path": "/api/v1/tenants/{tenant_id}/programs/{program_id}/policies/{policy_id}/retirement-proposals/{command_id}",
+          "authorizationPolicy": "ComplianceAuthorizationPolicies.ApiUser"
+        }
+      ],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
+        "jsonPointer": "/contracts/94",
+        "line": 6977,
+        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
+      },
+      "kind": "http"
+    },
+    {
+      "command": "ProposePolicySuccessor",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "rule": "CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ProgramId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "PolicyId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectedVersion",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "Content",
+          "type": "PolicyContent",
+          "required": true
+        }
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "PolicyRegistration",
+        "firstHttpStatus": 200,
+        "terminalResultType": "PolicyRegistration"
+      },
+      "http": [
+        {
+          "method": "PUT",
+          "path": "/api/v1/tenants/{tenant_id}/programs/{program_id}/policies/{policy_id}/successors/{command_id}",
+          "authorizationPolicy": "ComplianceAuthorizationPolicies.ApiUser"
+        }
+      ],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
+        "jsonPointer": "/contracts/95",
+        "line": 7056,
+        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
+      },
+      "kind": "http"
+    },
+    {
+      "command": "ReviewPolicyDraft",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "rule": "CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ProgramId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "PolicyId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "Outcome",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "Rationale",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "SeparationOfDutiesWaiverId",
+          "type": "Uuid?",
+          "required": false
+        }
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "PolicyDecisionView",
+        "firstHttpStatus": 200,
+        "terminalResultType": "PolicyDecisionView"
+      },
+      "http": [
+        {
+          "method": "PUT",
+          "path": "/api/v1/tenants/{tenant_id}/programs/{program_id}/policies/{policy_id}/reviews/{command_id}",
+          "authorizationPolicy": "ComplianceAuthorizationPolicies.ApiUser"
+        }
+      ],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
+        "jsonPointer": "/contracts/163",
+        "line": 12134,
+        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
+      },
+      "kind": "http"
+    },
+    {
+      "command": "RevisePolicyDraft",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "rule": "CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ProgramId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "PolicyId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "Content",
+          "type": "PolicyContent",
+          "required": true
+        }
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "PolicyRegistration",
+        "firstHttpStatus": 200,
+        "terminalResultType": "PolicyRegistration"
+      },
+      "http": [],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
+        "jsonPointer": "/contracts/178",
+        "line": 13322,
+        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
+      },
+      "kind": "command"
+    }
+  ],
+  "eventAuthority": "retained_baseline_business_facts_requires_schema_reconciliation",
+  "events": [
+    {
+      "event": "PolicyApproved",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
+        "jsonPointer": "/aggregates/58",
+        "line": 36653,
+        "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
+      },
+      "baselineContract": {
+        "event": "PolicyApproved",
+        "emitters": [
+          "src/Compliance.Core/Features/Policies/Policy.cs"
+        ],
+        "eventDisposition": "aggregate_fact",
+        "emitterOwnership": "aggregate or partial source",
+        "typedFields": [
+          {
+            "name": "TenantId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "ProgramId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "PolicyId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "Revision",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "Version",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "Major",
+            "type": "bool",
+            "required": true
+          },
+          {
+            "name": "DecisionId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "AcceptedReviewDecisionId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "ContentSha256",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "EffectiveFrom",
+            "type": "DateOnly",
+            "required": true
+          },
+          {
+            "name": "PredecessorVersion",
+            "type": "long?",
+            "required": true
+          },
+          {
+            "name": "ImpactDigest",
+            "type": "string?",
+            "required": true
+          },
+          {
+            "name": "Rationale",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "Actor",
+            "type": "ActorReference",
+            "required": true
+          },
+          {
+            "name": "ActorMemberId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "DecidedAt",
+            "type": "DateTimeOffset",
+            "required": true
+          },
+          {
+            "name": "SeparationOfDutiesWaiverId",
+            "type": "Uuid?",
+            "required": true
+          }
+        ],
+        "eventContract": "src/Compliance.Common/Features/Policies/PolicyApproved.cs"
+      }
+    },
+    {
+      "event": "PolicyDraftCreated",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
+        "jsonPointer": "/aggregates/58",
+        "line": 36653,
+        "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
+      },
+      "baselineContract": {
+        "event": "PolicyDraftCreated",
+        "emitters": [
+          "src/Compliance.Core/Features/Policies/Policy.cs"
+        ],
+        "eventDisposition": "aggregate_fact",
+        "emitterOwnership": "aggregate or partial source",
+        "typedFields": [
+          {
+            "name": "TenantId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "ProgramId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "PolicyId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "CreateRequestId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "Identifier",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "Content",
+            "type": "PolicyContent",
+            "required": true
+          },
+          {
+            "name": "ContentSha256",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "Actor",
+            "type": "ActorReference",
+            "required": true
+          },
+          {
+            "name": "ActorMemberId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "ChangedAt",
+            "type": "DateTimeOffset",
+            "required": true
+          }
+        ],
+        "eventContract": "src/Compliance.Common/Features/Policies/PolicyDraftCreated.cs"
+      }
+    },
+    {
+      "event": "PolicyDraftDiscarded",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
+        "jsonPointer": "/aggregates/58",
+        "line": 36653,
+        "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
+      },
+      "baselineContract": {
+        "event": "PolicyDraftDiscarded",
+        "emitters": [
+          "src/Compliance.Core/Features/Policies/Policy.cs"
+        ],
+        "eventDisposition": "aggregate_fact",
+        "emitterOwnership": "aggregate or partial source",
+        "typedFields": [
+          {
+            "name": "TenantId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "ProgramId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "PolicyId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "Revision",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "Rationale",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "Actor",
+            "type": "ActorReference",
+            "required": true
+          },
+          {
+            "name": "DiscardedAt",
+            "type": "DateTimeOffset",
+            "required": true
+          }
+        ],
+        "eventContract": "src/Compliance.Common/Features/Policies/PolicyDraftDiscarded.cs"
+      }
+    },
+    {
+      "event": "PolicyDraftRevised",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
+        "jsonPointer": "/aggregates/58",
+        "line": 36653,
+        "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
+      },
+      "baselineContract": {
+        "event": "PolicyDraftRevised",
+        "emitters": [
+          "src/Compliance.Core/Features/Policies/Policy.cs"
+        ],
+        "eventDisposition": "aggregate_fact",
+        "emitterOwnership": "aggregate or partial source",
+        "typedFields": [
+          {
+            "name": "TenantId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "ProgramId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "PolicyId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "Revision",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "Content",
+            "type": "PolicyContent",
+            "required": true
+          },
+          {
+            "name": "ContentSha256",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "PredecessorVersion",
+            "type": "long?",
+            "required": true
+          },
+          {
+            "name": "Actor",
+            "type": "ActorReference",
+            "required": true
+          },
+          {
+            "name": "ActorMemberId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "ChangedAt",
+            "type": "DateTimeOffset",
+            "required": true
+          }
+        ],
+        "eventContract": "src/Compliance.Common/Features/Policies/PolicyDraftRevised.cs"
+      }
+    },
+    {
+      "event": "PolicyPeriodicReviewConfirmed",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
+        "jsonPointer": "/aggregates/58",
+        "line": 36653,
+        "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
+      },
+      "baselineContract": {
+        "event": "PolicyPeriodicReviewConfirmed",
+        "emitters": [
+          "src/Compliance.Core/Features/Policies/Policy.cs"
+        ],
+        "eventDisposition": "aggregate_fact",
+        "emitterOwnership": "aggregate or partial source",
+        "typedFields": [
+          {
+            "name": "TenantId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "ProgramId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "PolicyId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "Version",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "DecisionId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "ReviewedOn",
+            "type": "DateOnly",
+            "required": true
+          },
+          {
+            "name": "Rationale",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "Actor",
+            "type": "ActorReference",
+            "required": true
+          },
+          {
+            "name": "ActorMemberId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "DecidedAt",
+            "type": "DateTimeOffset",
+            "required": true
+          }
+        ],
+        "eventContract": "src/Compliance.Common/Features/Policies/PolicyPeriodicReviewConfirmed.cs"
+      }
+    },
+    {
+      "event": "PolicyRetired",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
+        "jsonPointer": "/aggregates/58",
+        "line": 36653,
+        "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
+      },
+      "baselineContract": {
+        "event": "PolicyRetired",
+        "emitters": [
+          "src/Compliance.Core/Features/Policies/Policy.cs"
+        ],
+        "eventDisposition": "aggregate_fact",
+        "emitterOwnership": "aggregate or partial source",
+        "typedFields": [
+          {
+            "name": "TenantId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "ProgramId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "PolicyId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "Revision",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "Version",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "DecisionId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "AcceptedReviewDecisionId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "EffectiveUntil",
+            "type": "DateOnly",
+            "required": true
+          },
+          {
+            "name": "Rationale",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "Actor",
+            "type": "ActorReference",
+            "required": true
+          },
+          {
+            "name": "ActorMemberId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "DecidedAt",
+            "type": "DateTimeOffset",
+            "required": true
+          },
+          {
+            "name": "SeparationOfDutiesWaiverId",
+            "type": "Uuid?",
+            "required": true
+          }
+        ],
+        "eventContract": "src/Compliance.Common/Features/Policies/PolicyRetired.cs"
+      }
+    },
+    {
+      "event": "PolicyRetirementProposed",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
+        "jsonPointer": "/aggregates/58",
+        "line": 36653,
+        "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
+      },
+      "baselineContract": {
+        "event": "PolicyRetirementProposed",
+        "emitters": [
+          "src/Compliance.Core/Features/Policies/Policy.cs"
+        ],
+        "eventDisposition": "aggregate_fact",
+        "emitterOwnership": "aggregate or partial source",
+        "typedFields": [
+          {
+            "name": "TenantId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "ProgramId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "PolicyId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "Revision",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "Version",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "EffectiveUntil",
+            "type": "DateOnly",
+            "required": true
+          },
+          {
+            "name": "Rationale",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "Actor",
+            "type": "ActorReference",
+            "required": true
+          },
+          {
+            "name": "ActorMemberId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "ProposedAt",
+            "type": "DateTimeOffset",
+            "required": true
+          }
+        ],
+        "eventContract": "src/Compliance.Common/Features/Policies/PolicyRetirementProposed.cs"
+      }
+    },
+    {
+      "event": "PolicyReviewed",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
+        "jsonPointer": "/aggregates/58",
+        "line": 36653,
+        "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
+      },
+      "baselineContract": {
+        "event": "PolicyReviewed",
+        "emitters": [
+          "src/Compliance.Core/Features/Policies/Policy.cs"
+        ],
+        "eventDisposition": "aggregate_fact",
+        "emitterOwnership": "aggregate or partial source",
+        "typedFields": [
+          {
+            "name": "TenantId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "ProgramId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "PolicyId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "Revision",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "DecisionId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "Outcome",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "Rationale",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "Actor",
+            "type": "ActorReference",
+            "required": true
+          },
+          {
+            "name": "ActorMemberId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "DecidedAt",
+            "type": "DateTimeOffset",
+            "required": true
+          },
+          {
+            "name": "SeparationOfDutiesWaiverId",
+            "type": "Uuid?",
+            "required": true
+          }
+        ],
+        "eventContract": "src/Compliance.Common/Features/Policies/PolicyReviewed.cs"
+      }
+    }
+  ],
+  "choreography": [],
+  "status": "SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED",
+  "baselineIdentityObservation": "tenant/policies/policyId derived from tenant+program+normalized identifier; Create binds stable createRequestId+initial content. Mutations use logical Revision/currentVersion; Review and periodic review do not dedup decision identities, so same retry can append again.",
+  "identityContractRule": "Existing published owner identity/IdFor remains stable. Required typed creation/operation identity and tenant/program/source scope come from the selected signature/protocol references; no context.RequestId minting fallback or guessed new stream key.",
+  "adoptedArchitectureDecisions": [],
+  "selectedIdentityClarification": "Tenant / policies / PolicyId; supplied PolicyId must equal the unchanged tenant/program/normalized-identifier UUIDv5. Selected mutations use CommandId and exact policy/content/version/review bindings.",
+  "selectedIdentitySummary": "Tenant / policies / PolicyId; supplied PolicyId must equal the unchanged tenant/program/normalized-identifier UUIDv5. Selected mutations use CommandId and exact policy/content/version/review bindings.",
+  "baselineIdentityObservationOnly": true,
+  "selectedLogicalIdentityBindings": [
+    {
+      "command": "ApprovePolicy",
+      "logicalIdentity": "CommandId",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
+        "jsonPointer": "/contracts/17",
+        "line": 1355,
+        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
+      }
+    },
+    {
+      "command": "ApprovePolicyRetirement",
+      "logicalIdentity": "CommandId",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
+        "jsonPointer": "/contracts/18",
+        "line": 1458,
+        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
+      }
+    },
+    {
+      "command": "ConfirmPolicyReview",
+      "logicalIdentity": "CommandId",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
+        "jsonPointer": "/contracts/41",
+        "line": 3246,
+        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
+      }
+    },
+    {
+      "command": "CreatePolicyDraft",
+      "logicalIdentity": "PolicyId",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
+        "jsonPointer": "/contracts/53",
+        "line": 3976,
+        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
+      }
+    },
+    {
+      "command": "DiscardPolicyDraft",
+      "logicalIdentity": "CommandId",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
+        "jsonPointer": "/contracts/70",
+        "line": 5269,
+        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
+      }
+    },
+    {
+      "command": "ProposePolicyRetirement",
+      "logicalIdentity": "CommandId",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
+        "jsonPointer": "/contracts/94",
+        "line": 6977,
+        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
+      }
+    },
+    {
+      "command": "ProposePolicySuccessor",
+      "logicalIdentity": "CommandId",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
+        "jsonPointer": "/contracts/95",
+        "line": 7056,
+        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
+      }
+    },
+    {
+      "command": "ReviewPolicyDraft",
+      "logicalIdentity": "CommandId",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
+        "jsonPointer": "/contracts/163",
+        "line": 12134,
+        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
+      }
+    },
+    {
+      "command": "RevisePolicyDraft",
+      "logicalIdentity": "CommandId",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
+        "jsonPointer": "/contracts/178",
+        "line": 13322,
+        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
+      }
+    }
+  ],
+  "selectedReplayRule": "Current required authorization precedes replay; exact authorized retries resolve the original accepted result using the selected logical identity and immutable actor/intent/source binding. Fresh mutable feasibility, clock selection and body preparation cannot replace that original result. Expected revision is concurrency precondition, not a new identity.",
+  "productRules": [
+    {
+      "id": "D12-02",
+      "doc": "m0-d12-policy-acknowledgement-training.md",
+      "rule": "Each approved policy version carries exactly one audience kind (core_security or role_targeted); a role_targeted policy version names a non-empty list of roster teams."
+    }
+  ],
+  "decides": "Each approved version carries exactly one audience kind (core_security or role_targeted); a role_targeted version names a non-empty list of roster teams.",
+  "decidesCovers": [
+    "D12-02"
+  ],
+  "decidesAuthored": "2026-10-29"
+}

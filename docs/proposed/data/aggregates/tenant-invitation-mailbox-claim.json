@@ -1,0 +1,210 @@
+{
+  "owner": "TenantInvitationMailboxClaim",
+  "origin": "selected_split_target",
+  "baselineOwners": [
+    "TenantInvitation"
+  ],
+  "declaredIdentity": "tenant / normalizedEmail",
+  "invariant": "At most one pending invitation per mailbox. InvitationId and generation live in state and every release compares both; generation is never part of the stream key.",
+  "boundaryDecision": "selected_split",
+  "mustPreserve": "Retry same invitation ID with exact terms returns original acceptance; changed terms conflict. New invitation generation is independent. Delivery retries preserve exact token and accepted at-least-once policy.",
+  "sources": [
+    {
+      "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
+      "jsonPointer": "/splitOwners/28/targetOwners/1",
+      "line": 2999,
+      "sha256": "d349d94b7c43f4d82020ecf36bdacf1aff98bc6498e14993582f1c3164b21f19"
+    }
+  ],
+  "baselineSourcePath": "src/Compliance.Core/Features/Tenants/TenantInvitation.cs",
+  "baselineEvents": [],
+  "preliminaryNewEvents": [
+    "TenantInvitationMailboxClaimed",
+    "TenantInvitationMailboxReleased"
+  ],
+  "technicalStateToSeparate": [],
+  "classification": "business_identity_or_uniqueness_authority",
+  "businessAggregate": true,
+  "implementationStatus": "SEPARATE_VERIFICATION_REQUIRED_IMPLEMENTATION_HALTED",
+  "identityReadingRule": "selectedIdentitySummary and exact selectedCommandContracts define intended identity. baselineIdentityObservation/declaredIdentity retain older source observations only, including old replay defects; they are not target behavior or authorization to change an occupied key.",
+  "selectedCommandContracts": [
+    {
+      "command": "InviteTenantMember",
+      "kind": "http",
+      "logicalIdentity": {
+        "field": "InvitationId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "caller-supplied immutable creation identity: an exact retry with the same id and authored intent returns the original result; the same id with changed intent is refused; a different id is a different record"
+      },
+      "fields": [
+        {
+          "name": "InvitationId",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "required": true
+        },
+        {
+          "name": "EmailAddress",
+          "required": true
+        },
+        {
+          "name": "Affiliation",
+          "required": true
+        },
+        {
+          "name": "Administrator",
+          "required": true
+        }
+      ],
+      "http": [
+        {
+          "route": "PUT /api/v1/tenants/{tenant_id}/invitations/{invitation_id}"
+        }
+      ],
+      "source": {
+        "path": "src/Compliance.Core/Features/Tenants/Handlers/InviteTenantMemberHandler.cs -> Tenants/Services/TenantInvitationAdmission.cs:95 (mailboxes.AcquireAsync)",
+        "recorded": "2026-10-29"
+      }
+    },
+    {
+      "command": "InviteOrganizationMember",
+      "kind": "http",
+      "logicalIdentity": {
+        "field": "InvitationId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "caller-supplied immutable creation identity: an exact retry with the same id and authored intent returns the original result; the same id with changed intent is refused; a different id is a different record"
+      },
+      "fields": [
+        {
+          "name": "InvitationId",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "required": true
+        },
+        {
+          "name": "EmailAddress",
+          "required": true
+        },
+        {
+          "name": "BuiltInRole",
+          "required": true
+        }
+      ],
+      "http": [
+        {
+          "route": "PUT /api/v1/tenants/{tenant_id}/member-invitations/{invitation_id}"
+        }
+      ],
+      "source": {
+        "path": "src/Compliance.Core/Features/Tenants/Handlers/InviteOrganizationMemberHandler.cs",
+        "recorded": "2026-10-29"
+      }
+    },
+    {
+      "command": "InviteGuestConsultant",
+      "kind": "http",
+      "logicalIdentity": {
+        "field": "InvitationId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "caller-supplied immutable creation identity: an exact retry with the same id and authored intent returns the original result; the same id with changed intent is refused; a different id is a different record"
+      },
+      "fields": [
+        {
+          "name": "InvitationId",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "required": true
+        },
+        {
+          "name": "EmailAddress",
+          "required": true
+        },
+        {
+          "name": "ProgramIds",
+          "required": true
+        },
+        {
+          "name": "ExpiresOn",
+          "required": true
+        }
+      ],
+      "http": [
+        {
+          "route": "PUT /api/v1/tenants/{tenant_id}/guest-invitations/{invitation_id}"
+        }
+      ],
+      "source": {
+        "path": "src/Compliance.Core/Features/Tenants/Handlers/InviteGuestConsultantHandler.cs",
+        "recorded": "2026-10-29"
+      }
+    },
+    {
+      "command": "AcceptTenantInvitation",
+      "kind": "http",
+      "logicalIdentity": {
+        "field": "TenantInvitationIds.AcceptanceOf(InvitationId)",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "caller-supplied immutable creation identity: an exact retry with the same id and authored intent returns the original result; the same id with changed intent is refused; a different id is a different record"
+      },
+      "fields": [
+        {
+          "name": "InvitationId",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "required": true
+        },
+        {
+          "name": "EmailAddress",
+          "required": true
+        },
+        {
+          "name": "Token",
+          "required": true
+        }
+      ],
+      "http": [
+        {
+          "route": "PUT /api/v1/tenants/{tenant_id}/invitations/{invitation_id}/acceptance"
+        }
+      ],
+      "source": {
+        "path": "src/Compliance.Core/Features/Tenants/Handlers/AcceptTenantInvitationHandler.cs:118 (mailboxes.ReleaseAsync)",
+        "recorded": "2026-10-29"
+      }
+    }
+  ],
+  "eventAuthority": "retained_baseline_business_facts_requires_schema_reconciliation",
+  "events": [],
+  "choreography": [],
+  "status": "SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED",
+  "baselineIdentityObservation": "tenant / normalizedEmail",
+  "identityContractRule": "Existing published owner identity/IdFor remains stable. Required typed creation/operation identity and tenant/program/source scope come from the selected signature/protocol references; no context.RequestId minting fallback or guessed new stream key.",
+  "adoptedArchitectureDecisions": [],
+  "selectedIdentitySummary": "Tenant-scoped tenant / normalizedEmail; `TenantInvitationIds.AcceptanceOf(InvitationId)` on `AcceptTenantInvitation` is the caller-supplied immutable creation identity (recorded from source 2026-10-29) so an exact retry resolves the original result and a different id is a different record; later mutations use CommandId bound to this identity and the expected revision.",
+  "baselineIdentityObservationOnly": true,
+  "selectedLogicalIdentityBindings": [],
+  "selectedReplayRule": "Current required authorization precedes replay; exact authorized retries resolve the original accepted result using the selected logical identity and immutable actor/intent/source binding. Fresh mutable feasibility, clock selection and body preparation cannot replace that original result. Expected revision is concurrency precondition, not a new identity.",
+  "identityRevisions": [
+    {
+      "date": "2026-10-29",
+      "previous": "tenant / normalizedEmail"
+    }
+  ],
+  "commandNote": "No standalone command. The mailbox owner is claimed inline (TenantInvitationMailboxes.AcquireAsync, supersedes an unusable holder) by the three invite handlers before the invitation fact, and released inline (ReleaseAsync with exact holder+generation, else no-op) by AcceptTenantInvitation. Treat as service-called side effects of those commands, not independent commands."
+}

@@ -1,0 +1,125 @@
+{
+  "owner": "MethodologyTemplate",
+  "events": [
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:MethodologyTemplateCreated",
+        "event": "MethodologyTemplateCreated",
+        "emissionKind": "business",
+        "owners": [
+          "MethodologyTemplate"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": false,
+        "targetConcreteType": "MethodologyTemplateCreated",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.methodologytemplates.methodology-template-created",
+          "version": 3
+        },
+        "wireQualification": "Wire matches the declared record in src/Compliance.Common/Features/MethodologyTemplates/Events/MethodologyTemplateCreated.cs at 60029b8f.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "retained_current_schema_native_qualification_required",
+        "sourceStatus": "declared",
+        "meaning": "A methodology template was created with its first authored version by a named author, awaiting review and publication.",
+        "meaningSource": "authored 2026-10-29 from src/Compliance.Common/Features/MethodologyTemplates/Events/MethodologyTemplateCreated.cs"
+      },
+      "schema": null
+    },
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:MethodologyTemplateDraftReviewed",
+        "event": "MethodologyTemplateDraftReviewed",
+        "emissionKind": "business",
+        "owners": [
+          "MethodologyTemplate"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": false,
+        "targetConcreteType": "MethodologyTemplateDraftReviewed",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.methodologytemplates.methodology-template-draft-reviewed",
+          "version": 3
+        },
+        "wireQualification": "Wire matches the declared record in src/Compliance.Common/Features/MethodologyTemplates/Events/MethodologyTemplateDraftReviewed.cs at 60029b8f.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "retained_current_schema_native_qualification_required",
+        "sourceStatus": "declared",
+        "meaning": "A compact native MethodologyTemplateDraftReviewed delta; authored bodies and historical versions are immutable content.",
+        "meaningSource": "record summary in src/Compliance.Common/Features/MethodologyTemplates/Events/MethodologyTemplateDraftReviewed.cs"
+      },
+      "schema": null
+    },
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:MethodologyTemplateDraftRevised",
+        "event": "MethodologyTemplateDraftRevised",
+        "emissionKind": "business",
+        "owners": [
+          "MethodologyTemplate"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": false,
+        "targetConcreteType": "MethodologyTemplateDraftRevised",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.methodologytemplates.methodology-template-draft-revised",
+          "version": 3
+        },
+        "wireQualification": "Wire matches the declared record in src/Compliance.Common/Features/MethodologyTemplates/Events/MethodologyTemplateDraftRevised.cs at 60029b8f.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "retained_current_schema_native_qualification_required",
+        "sourceStatus": "declared",
+        "meaning": "A compact native MethodologyTemplateDraftRevised delta; authored bodies and historical versions are immutable content.",
+        "meaningSource": "record summary in src/Compliance.Common/Features/MethodologyTemplates/Events/MethodologyTemplateDraftRevised.cs"
+      },
+      "schema": null
+    },
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:MethodologyTemplateRetired",
+        "event": "MethodologyTemplateRetired",
+        "emissionKind": "business",
+        "owners": [
+          "MethodologyTemplate"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": false,
+        "targetConcreteType": "MethodologyTemplateRetired",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.methodologytemplates.methodology-template-retired",
+          "version": 3
+        },
+        "wireQualification": "Wire matches the declared record in src/Compliance.Common/Features/MethodologyTemplates/Events/MethodologyTemplateRetired.cs at 60029b8f.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "retained_current_schema_native_qualification_required",
+        "sourceStatus": "declared",
+        "meaning": "An active published methodology template was retired by a named member, ending its availability while its historical versions remain.",
+        "meaningSource": "authored 2026-10-29 from src/Compliance.Common/Features/MethodologyTemplates/Events/MethodologyTemplateRetired.cs"
+      },
+      "schema": null
+    },
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:MethodologyTemplateVersionPublished",
+        "event": "MethodologyTemplateVersionPublished",
+        "emissionKind": "business",
+        "owners": [
+          "MethodologyTemplate"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": false,
+        "targetConcreteType": "MethodologyTemplateVersionPublished",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.methodologytemplates.methodology-template-version-published",
+          "version": 3
+        },
+        "wireQualification": "Wire matches the declared record in src/Compliance.Common/Features/MethodologyTemplates/Events/MethodologyTemplateVersionPublished.cs at 60029b8f.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "retained_current_schema_native_qualification_required",
+        "sourceStatus": "declared",
+        "meaning": "A compact native MethodologyTemplateVersionPublished delta; authored bodies and historical versions are immutable content.",
+        "meaningSource": "record summary in src/Compliance.Common/Features/MethodologyTemplates/Events/MethodologyTemplateVersionPublished.cs"
+      },
+      "schema": null
+    }
+  ]
+}

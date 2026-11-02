@@ -1,0 +1,503 @@
+{
+  "owner": "IdentityRecovery",
+  "origin": "selected_owner_extension",
+  "baselineOwners": [],
+  "declaredIdentity": "platform / challengeId",
+  "invariant": "Immutable both-proof-verified candidate and preparation; complete protection proofs precede accepted exact swap. Preparation can reject/fence; accepted swap completes forward. Exact account, old/replacement identities and actor/proof provenance retained without bearer tokens.",
+  "sources": [
+    {
+      "path": "docs/product/audits/2026-10-23/target-owner-extensions.json",
+      "jsonPointer": "/owners/0",
+      "line": 4,
+      "sha256": "c0101f0c92d259872199b98a0dc32e6315b49f55c61b8085d62647b28cde4ef5"
+    }
+  ],
+  "baselineEvents": [
+    "IdentityRecoveryPrepared",
+    "IdentityRecoveryPreparationRejected",
+    "IdentityRecoveryAccepted",
+    "IdentityRecoveryCompleted"
+  ],
+  "boundaryDecision": "business",
+  "classification": "business_aggregate",
+  "businessAggregate": true,
+  "implementationStatus": "SEPARATE_VERIFICATION_REQUIRED_IMPLEMENTATION_HALTED",
+  "identityReadingRule": "selectedIdentitySummary and exact selectedCommandContracts define intended identity. baselineIdentityObservation/declaredIdentity retain older source observations only, including old replay defects; they are not target behavior or authorization to change an occupied key.",
+  "selectedCommandContracts": [
+    {
+      "command": "RejectIdentityRecoveryPreparation",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "rule": "CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ChallengeId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Generation",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "ConflictProof",
+          "type": "ImmutableContentRef",
+          "required": true
+        }
+      ],
+      "responseContract": null,
+      "http": null,
+      "source": {
+        "path": "docs/product/audits/2026-10-23/source-admission-contracts.json",
+        "jsonPointer": "/contracts/27",
+        "line": 1655,
+        "sha256": "f1d549ed0879c816cb26e86879f8fa658dab0a8acbf7c591e4d4aed40483f8ae"
+      },
+      "kind": "command"
+    },
+    {
+      "command": "CompleteAcceptedIdentityRecovery",
+      "kind": "receiver",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "reactor",
+        "rule": "deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Source",
+          "type": "SourceFactProof<IdentityRecoveryAccepted>",
+          "required": true
+        },
+        {
+          "name": "Target",
+          "type": "EventStreamAddress",
+          "required": true
+        },
+        {
+          "name": "OperationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Generation",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long?",
+          "required": true
+        },
+        {
+          "name": "Intent",
+          "type": "ImmutableContentRef",
+          "required": true,
+          "contentSchema": "IdentityRecoveryIntent"
+        },
+        {
+          "name": "ChallengeId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "AccountId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ReplacementRegistrationProof",
+          "type": "SourceFactProof<UserIdentityRegistered>",
+          "required": true
+        },
+        {
+          "name": "OldRevocationProof",
+          "type": "SourceFactProof<UserIdentityRevoked>",
+          "required": true
+        }
+      ],
+      "reactor": "IdentityRecoveryCompletionReactor",
+      "sourceOwner": "IdentityRecovery",
+      "sourceEvents": [
+        "IdentityRecoveryAccepted"
+      ],
+      "guard": "Exact accepted swap, same-account registration and old revocation to this replacement, including prior same-target revocation. Later challenges cannot overwrite operation; no new prerequisite event is required to resume.",
+      "eventsEmitted": [
+        "IdentityRecoveryCompleted"
+      ],
+      "effectKind": "complete_accepted_identity_recovery",
+      "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
+      "handler": "CompleteAcceptedIdentityRecoveryHandler",
+      "http": [],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
+        "recorded": "2026-10-29"
+      }
+    },
+    {
+      "command": "MaterializeIdentityRecoveryPreparation",
+      "kind": "receiver",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "reactor",
+        "rule": "deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Source",
+          "type": "SourceFactProof<IdentityRecoveryChallengeClaimed>",
+          "required": true
+        },
+        {
+          "name": "Target",
+          "type": "EventStreamAddress",
+          "required": true
+        },
+        {
+          "name": "OperationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Generation",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long?",
+          "required": true
+        },
+        {
+          "name": "Intent",
+          "type": "ImmutableContentRef",
+          "required": true,
+          "contentSchema": "IdentityRecoveryIntent"
+        },
+        {
+          "name": "ChallengeId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "AccountId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "OldIdentityId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ReplacementIdentityId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "VerifiedProofProvenance",
+          "type": "ImmutableContentRef",
+          "required": true
+        }
+      ],
+      "reactor": "IdentityRecoveryAcceptanceReactor",
+      "sourceOwner": "EmailAddress",
+      "sourceEvents": [
+        "IdentityRecoveryChallengeClaimed"
+      ],
+      "guard": "Freeze the exact both-proof-verified candidate from email challenge claim. This is preparation, not an accepted swap. Later challenges cannot alter it.",
+      "eventsEmitted": [
+        "IdentityRecoveryPrepared"
+      ],
+      "effectKind": "materialize_accepted_identity_recovery",
+      "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
+      "handler": "MaterializeIdentityRecoveryPreparationHandler",
+      "http": [],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
+        "recorded": "2026-10-29"
+      }
+    },
+    {
+      "command": "AcceptProtectedIdentityRecovery",
+      "kind": "receiver",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "reactor",
+        "rule": "deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Source",
+          "type": "SourceFactProof<IdentityRecoveryPrepared>",
+          "required": true
+        },
+        {
+          "name": "Target",
+          "type": "EventStreamAddress",
+          "required": true
+        },
+        {
+          "name": "OperationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Generation",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long?",
+          "required": true
+        },
+        {
+          "name": "Intent",
+          "type": "ImmutableContentRef",
+          "required": true,
+          "contentSchema": "IdentityRecoveryIntent"
+        },
+        {
+          "name": "ChallengeId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ProtectionProofs",
+          "type": "ImmutableContentRef",
+          "required": true
+        }
+      ],
+      "reactor": "ProtectedIdentityRecoveryAcceptanceReactor",
+      "sourceOwner": "IdentityRecovery",
+      "sourceEvents": [
+        "IdentityRecoveryPrepared"
+      ],
+      "guard": "Both exact source identity slots protected and association/revocation predicates valid; append immutable accepted swap only now. Later steps cannot reject/cancel it; forward completion is guaranteed by receiving protections.",
+      "eventsEmitted": [
+        "IdentityRecoveryAccepted"
+      ],
+      "effectKind": "claim_professional_assertion_identity",
+      "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
+      "handler": "AcceptProtectedIdentityRecoveryHandler",
+      "http": [],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
+        "recorded": "2026-10-29"
+      }
+    }
+  ],
+  "eventAuthority": "selected_final_event_catalog",
+  "events": [
+    {
+      "event": "IdentityRecoveryAccepted",
+      "discriminator": "bdgrz.identity-recovery.identity-recovery-accepted",
+      "discriminatorVersion": 1,
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
+        "jsonPointer": "/events/163",
+        "line": 20475,
+        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
+      }
+    },
+    {
+      "event": "IdentityRecoveryCompleted",
+      "discriminator": "bdgrz.identity-recovery.identity-recovery-completed",
+      "discriminatorVersion": 1,
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
+        "jsonPointer": "/events/167",
+        "line": 21128,
+        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
+      }
+    },
+    {
+      "event": "IdentityRecoveryPreparationRejected",
+      "discriminator": "bdgrz.identity-recovery.identity-recovery-preparation-rejected",
+      "discriminatorVersion": 1,
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
+        "jsonPointer": "/events/168",
+        "line": 21317,
+        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
+      }
+    },
+    {
+      "event": "IdentityRecoveryPrepared",
+      "discriminator": "bdgrz.identity-recovery.identity-recovery-prepared",
+      "discriminatorVersion": 1,
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
+        "jsonPointer": "/events/169",
+        "line": 21506,
+        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
+      }
+    }
+  ],
+  "choreography": [
+    {
+      "reactor": "IdentityRecoveryContinuationReactor",
+      "sourceOwner": "IdentityRecovery",
+      "targetOwner": "UserIdentity",
+      "command": "ProtectRecoveryIdentity",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
+        "jsonPointer": "/reactors/41",
+        "line": 3479,
+        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
+      }
+    },
+    {
+      "reactor": "IdentityRecoveryReplacementReactor",
+      "sourceOwner": "IdentityRecovery",
+      "targetOwner": "UserIdentity",
+      "command": "RegisterRecoveredIdentity",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
+        "jsonPointer": "/reactors/42",
+        "line": 3581,
+        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
+      }
+    },
+    {
+      "reactor": "IdentityRecoveryOldRevocationReactor",
+      "sourceOwner": "IdentityRecovery",
+      "targetOwner": "UserIdentity",
+      "command": "RevokeRecoveredOldIdentity",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
+        "jsonPointer": "/reactors/43",
+        "line": 3673,
+        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
+      }
+    },
+    {
+      "reactor": "IdentityRecoveryCompletionReactor",
+      "sourceOwner": "IdentityRecovery",
+      "targetOwner": "IdentityRecovery",
+      "command": "CompleteAcceptedIdentityRecovery",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
+        "jsonPointer": "/reactors/44",
+        "line": 3765,
+        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
+      }
+    },
+    {
+      "reactor": "IdentityRecoveryCompletionNoticeReactor",
+      "sourceOwner": "IdentityRecovery",
+      "targetOwner": "IdentityRecoveryNoticeProcess",
+      "command": "SendIdentityRecoveryNotice",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
+        "jsonPointer": "/reactors/45",
+        "line": 3857,
+        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
+      }
+    },
+    {
+      "reactor": "IdentityRecoveryAcceptanceReactor",
+      "sourceOwner": "EmailAddress",
+      "targetOwner": "IdentityRecovery",
+      "command": "MaterializeIdentityRecoveryPreparation",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
+        "jsonPointer": "/reactors/56",
+        "line": 4798,
+        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
+      }
+    },
+    {
+      "reactor": "IdentityRecoveryProtectionReleaseReactor",
+      "sourceOwner": "IdentityRecovery",
+      "targetOwner": "UserIdentity",
+      "command": "SettleRecoveryIdentityProtection",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
+        "jsonPointer": "/reactors/57",
+        "line": 4895,
+        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
+      }
+    },
+    {
+      "reactor": "IdentityRecoveryEmailCompletionReactor",
+      "sourceOwner": "IdentityRecovery",
+      "targetOwner": "EmailAddress",
+      "command": "CompleteEmailRecoveryChallenge",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
+        "jsonPointer": "/reactors/58",
+        "line": 4979,
+        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
+      }
+    },
+    {
+      "reactor": "ProtectedIdentityRecoveryAcceptanceReactor",
+      "sourceOwner": "IdentityRecovery",
+      "targetOwner": "IdentityRecovery",
+      "command": "AcceptProtectedIdentityRecovery",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
+        "jsonPointer": "/reactors/97",
+        "line": 8416,
+        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
+      }
+    }
+  ],
+  "status": "SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED",
+  "baselineIdentityObservation": "platform / challengeId",
+  "identityContractRule": "Existing published owner identity/IdFor remains stable. Required typed creation/operation identity and tenant/program/source scope come from the selected signature/protocol references; no context.RequestId minting fallback or guessed new stream key.",
+  "adoptedArchitectureDecisions": [],
+  "selectedIdentitySummary": "Tenant-scoped platform / challengeId; the identity is established by the admitting owner or reactor named in the choreography, never by a caller request key; mutations bind CommandId to this exact identity.",
+  "baselineIdentityObservationOnly": true,
+  "selectedLogicalIdentityBindings": [
+    {
+      "command": "RejectIdentityRecoveryPreparation",
+      "logicalIdentity": "CommandId",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/source-admission-contracts.json",
+        "jsonPointer": "/contracts/27",
+        "line": 1655,
+        "sha256": "f1d549ed0879c816cb26e86879f8fa658dab0a8acbf7c591e4d4aed40483f8ae"
+      }
+    }
+  ],
+  "selectedReplayRule": "Current required authorization precedes replay; exact authorized retries resolve the original accepted result using the selected logical identity and immutable actor/intent/source binding. Fresh mutable feasibility, clock selection and body preparation cannot replace that original result. Expected revision is concurrency precondition, not a new identity.",
+  "identityRevisions": [
+    {
+      "date": "2026-10-29",
+      "previous": "platform / challengeId"
+    }
+  ]
+}

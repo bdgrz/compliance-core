@@ -1,0 +1,77 @@
+{
+  "owner": "DeclaredSystemInstance",
+  "events": [
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:SystemInstanceRegistered",
+        "event": "SystemInstanceRegistered",
+        "emissionKind": "business",
+        "owners": [
+          "DeclaredSystemInstance"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": false,
+        "targetConcreteType": "SystemInstanceRegistered",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.system_instance.registered",
+          "version": 1
+        },
+        "wireQualification": "Wire matches the declared record in src/Compliance.Common/Features/Applications/Events/SystemInstanceRegistered.cs at 60029b8f.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "retained_current_schema_native_qualification_required",
+        "sourceStatus": "declared",
+        "meaning": "A system instance of an application was registered with its name, kind and access boundary reference by a named member, as its first revision.",
+        "meaningSource": "authored 2026-10-29 from src/Compliance.Common/Features/Applications/Events/SystemInstanceRegistered.cs"
+      },
+      "schema": null
+    },
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:SystemInstanceRetired",
+        "event": "SystemInstanceRetired",
+        "emissionKind": "business",
+        "owners": [
+          "DeclaredSystemInstance"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": false,
+        "targetConcreteType": "SystemInstanceRetired",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.system_instance.retired",
+          "version": 1
+        },
+        "wireQualification": "Wire matches the declared record in src/Compliance.Common/Features/Applications/Events/SystemInstanceRetired.cs at 60029b8f.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "retained_current_schema_native_qualification_required",
+        "sourceStatus": "declared",
+        "meaning": "An effective-dated instance retirement. Scope decisions and history remain.",
+        "meaningSource": "record summary in src/Compliance.Common/Features/Applications/Events/SystemInstanceRetired.cs"
+      },
+      "schema": null
+    },
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:SystemInstanceRevised",
+        "event": "SystemInstanceRevised",
+        "emissionKind": "business",
+        "owners": [
+          "DeclaredSystemInstance"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": false,
+        "targetConcreteType": "SystemInstanceRevised",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.applications.system-instance-revised",
+          "version": 1
+        },
+        "wireQualification": "Wire matches the declared record in src/Compliance.Common/Features/Applications/Events/SystemInstanceRevised.cs at 60029b8f.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "retained_current_schema_native_qualification_required",
+        "sourceStatus": "declared",
+        "meaning": "Records the SystemInstanceRevised domain fact for one tenant-owned subject revision.",
+        "meaningSource": "record summary in src/Compliance.Common/Features/Applications/Events/SystemInstanceRevised.cs"
+      },
+      "schema": null
+    }
+  ]
+}

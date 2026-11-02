@@ -3,8 +3,8 @@
 Status: historical product-owner baseline, 2026-09-13, with dated design-review
 addenda. Reconciled with accepted product direction on 2026-10-04. Historical
 counts and findings explain how the story set arose; they do not report live
-delivery, open issues, or current queue positions. The [product brief](product-brief.md),
-[accepted decisions](product-brief.md#product-decisions), and
+delivery, open issues, or current queue positions. The [product brief](../proposed/scope.md),
+[accepted decisions](../proposed/scope.md#product-decisions), and
 [business operations scope](business-operations.md) govern current direction;
 GitHub issues and the project govern delivery state.
 
@@ -281,7 +281,7 @@ The original billing exclusion is superseded by the commercial direction
 confirmed on 2026-10-04: self-hosting is free, while hosted SaaS is billed per
 organization through a fixed base fee plus optional add-ons for integrations,
 services, and additional automations. Organization billing may be administered
-by the organization or its authorized MSP. See the [commercial model](product-brief.md#commercial-model)
+by the organization or its authorized MSP. See the [commercial model](../proposed/scope.md#commercial-model)
 and [BO-02/BO-03](business-operations.md) for hosted billing and add-on
 objectives, acceptance, and remaining policies. Commercial delivery timing is
 selected in owning GitHub issues; it is not implied by a historical story count.
@@ -334,7 +334,7 @@ created rather than a present request to reopen them.
 | Half of the P0 stories embedded unresolved validation, so none could meet the definition of ready | Added **M0 - Design and discovery** with 24 product discovery items; each story's validation subtask now incorporates the decision from its M0 item |
 | The domain model depends on persistence, snapshot, artifact, authorization, projection, and import behavior that has no recorded architecture | Added six M0 architecture-decision issues (M0-A01 through M0-A06) |
 | Shared primitives had no owner or were owned by a story sequenced after its consumers | Added six approved enablers (EN-01 through EN-06) in R1 |
-| Several concepts had two owners or none, and assurance vocabulary overlapped | Created M0-D22 and M0-D23; their accepted ownership and vocabulary now govern the [domain model](domain-model.md#ownership-decisions) |
+| Several concepts had two owners or none, and assurance vocabulary overlapped | Created M0-D22 and M0-D23; their accepted ownership and vocabulary now govern the [domain model](../proposed/domain-model.md#ownership-decisions) |
 | Every story required accessible UI, but no accessibility target or supported-browser policy was tracked | Added the global M0-D24 readiness gate for every delivery story and first delivery slice |
 | The largest P0 stories bundled several independently valuable outcomes, and the P0 sequence contained dependency cycles | Divided seven stories into 29 outcome slices and replaced the sequence with a dependency-ordered one in [triage.md](triage.md#recommended-p0-delivery-sequence) |
 

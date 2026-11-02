@@ -1,0 +1,29 @@
+{
+  "owner": "ImmutableSnapshot",
+  "events": [
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:SnapshotFrozen",
+        "event": "SnapshotFrozen",
+        "emissionKind": "business",
+        "owners": [
+          "ImmutableSnapshot"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": false,
+        "targetConcreteType": "SnapshotFrozen",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.snapshot.frozen",
+          "version": 1
+        },
+        "wireQualification": "Wire matches the declared record in src/Compliance.Common/Features/Snapshots/Events/SnapshotFrozen.cs at 60029b8f.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "retained_current_schema_native_qualification_required",
+        "sourceStatus": "declared",
+        "meaning": "A program snapshot of a stated kind was frozen with its complete source manifest and content hash, optionally amending an earlier snapshot, and can no longer change.",
+        "meaningSource": "authored 2026-10-29 from src/Compliance.Common/Features/Snapshots/Events/SnapshotFrozen.cs"
+      },
+      "schema": null
+    }
+  ]
+}

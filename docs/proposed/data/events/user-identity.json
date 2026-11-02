@@ -1,0 +1,893 @@
+{
+  "owner": "UserIdentity",
+  "events": [
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:RecoveryIdentityProtected",
+        "event": "RecoveryIdentityProtected",
+        "emissionKind": "reservation",
+        "owners": [
+          "UserIdentity"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": true,
+        "targetConcreteType": "RecoveryIdentityProtected",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.user-identity.recovery-identity-protected",
+          "version": 1
+        },
+        "wireQualification": "Wire matches the declared record in src/Compliance.Common/Features/UserIdentities/Events/RecoveryIdentityProtected.cs at 60029b8f.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "selected_complete_schema",
+        "sourceStatus": "declared",
+        "emissionKindNote": "Owner-held reservation or its settlement: authoritative for the owner invariant (the reducer must refuse conflicting commands while held) but not a business decision in its own right. Adopted 2026-10-29 (decision EV-D06).",
+        "meaning": "A provider identity was protected for one recovery challenge; until that protection is settled, no other account can associate the same provider identity.",
+        "meaningSource": "authored 2026-10-29 from src/Compliance.Common/Features/UserIdentities/Events/RecoveryIdentityProtected.cs"
+      },
+      "schema": {
+        "event": "RecoveryIdentityProtected",
+        "discriminator": "bdgrz.user-identity.recovery-identity-protected",
+        "discriminatorVersion": 1,
+        "owner": "UserIdentity",
+        "existingContract": null,
+        "status": "selected target schema; implementation pending",
+        "reason": "typed reactor receiver accepted business fact",
+        "fields": [
+          {
+            "name": "Owner",
+            "type": "EventStreamAddress",
+            "required": true
+          },
+          {
+            "name": "Revision",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "Generation",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "Intent",
+            "type": "ImmutableContentRef",
+            "required": true
+          },
+          {
+            "name": "SourceProofs",
+            "type": "ImmutableContentRef?",
+            "required": true
+          },
+          {
+            "name": "Operation",
+            "type": "OperationProvenance",
+            "required": true
+          },
+          {
+            "name": "FirstResponse",
+            "type": "ImmutableContentRef?",
+            "required": true
+          },
+          {
+            "name": "OperationResult",
+            "type": "ImmutableContentRef?",
+            "required": true
+          }
+        ],
+        "contentSchemas": [
+          {
+            "field": "Intent",
+            "schema": "identity-recovery-intent.v1",
+            "recordType": "IdentityRecoveryIntent",
+            "fields": [
+              {
+                "name": "Header",
+                "type": "DurableIntentHeader",
+                "required": true
+              },
+              {
+                "name": "ChallengeId",
+                "type": "Uuid",
+                "required": true
+              },
+              {
+                "name": "AccountId",
+                "type": "Uuid",
+                "required": true
+              },
+              {
+                "name": "OldIdentityId",
+                "type": "Uuid",
+                "required": true
+              },
+              {
+                "name": "ReplacementIdentityId",
+                "type": "Uuid",
+                "required": true
+              },
+              {
+                "name": "OldProvider",
+                "type": "string",
+                "required": true
+              },
+              {
+                "name": "OldSubject",
+                "type": "string",
+                "required": true
+              },
+              {
+                "name": "ReplacementProvider",
+                "type": "string",
+                "required": true
+              },
+              {
+                "name": "ReplacementSubject",
+                "type": "string",
+                "required": true
+              },
+              {
+                "name": "EmailProofProvenance",
+                "type": "ImmutableContentRef",
+                "required": true
+              },
+              {
+                "name": "ReplacementProofProvenance",
+                "type": "ImmutableContentRef",
+                "required": true
+              }
+            ],
+            "rule": "Both proofs verified before email claim/preparation, with only non-bearer provenance. Immutable candidate keyed by challenge. Protect old and replacement associations before IdentityRecoveryAccepted. Before acceptance, definite conflict rejects and fences; afterward register/verify replacement, revoke old, complete forward without caller confirmation. Later challenges cannot rewrite this intent.",
+            "variants": [
+              {
+                "recordType": "IdentityRecoveryIntent",
+                "schema": "identity-recovery-intent.v1",
+                "fields": [
+                  {
+                    "name": "Header",
+                    "type": "DurableIntentHeader",
+                    "required": true
+                  },
+                  {
+                    "name": "ChallengeId",
+                    "type": "Uuid",
+                    "required": true
+                  },
+                  {
+                    "name": "AccountId",
+                    "type": "Uuid",
+                    "required": true
+                  },
+                  {
+                    "name": "OldIdentityId",
+                    "type": "Uuid",
+                    "required": true
+                  },
+                  {
+                    "name": "ReplacementIdentityId",
+                    "type": "Uuid",
+                    "required": true
+                  },
+                  {
+                    "name": "OldProvider",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "OldSubject",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "ReplacementProvider",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "ReplacementSubject",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "EmailProofProvenance",
+                    "type": "ImmutableContentRef",
+                    "required": true
+                  },
+                  {
+                    "name": "ReplacementProofProvenance",
+                    "type": "ImmutableContentRef",
+                    "required": true
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "changes": [],
+        "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
+        "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
+        "resolvedIntentSchema": "IdentityRecoveryIntent",
+        "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
+      }
+    },
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:RecoveryIdentityProtectionSettled",
+        "event": "RecoveryIdentityProtectionSettled",
+        "emissionKind": "reservation",
+        "owners": [
+          "UserIdentity"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": true,
+        "targetConcreteType": "RecoveryIdentityProtectionSettled",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.user-identity.recovery-identity-protection-settled",
+          "version": 1
+        },
+        "wireQualification": "Wire matches the declared record in src/Compliance.Common/Features/UserIdentities/Events/RecoveryIdentityProtectionSettled.cs at 60029b8f.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "selected_complete_schema",
+        "sourceStatus": "declared",
+        "emissionKindNote": "Owner-held reservation or its settlement: authoritative for the owner invariant (the reducer must refuse conflicting commands while held) but not a business decision in its own right. Adopted 2026-10-29 (decision EV-D06).",
+        "meaning": "The protection of one slot for one recovery challenge is settled. A slot that was never protected is settled too, which fences a delayed protection for the same challenge.",
+        "meaningSource": "record summary in src/Compliance.Common/Features/UserIdentities/Events/RecoveryIdentityProtectionSettled.cs"
+      },
+      "schema": {
+        "event": "RecoveryIdentityProtectionSettled",
+        "discriminator": "bdgrz.user-identity.recovery-identity-protection-settled",
+        "discriminatorVersion": 1,
+        "owner": "UserIdentity",
+        "existingContract": null,
+        "status": "selected target schema; implementation pending",
+        "reason": "typed reactor receiver accepted business fact",
+        "fields": [
+          {
+            "name": "Owner",
+            "type": "EventStreamAddress",
+            "required": true
+          },
+          {
+            "name": "Revision",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "Generation",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "Intent",
+            "type": "ImmutableContentRef",
+            "required": true
+          },
+          {
+            "name": "SourceProofs",
+            "type": "ImmutableContentRef?",
+            "required": true
+          },
+          {
+            "name": "Operation",
+            "type": "OperationProvenance",
+            "required": true
+          },
+          {
+            "name": "FirstResponse",
+            "type": "ImmutableContentRef?",
+            "required": true
+          },
+          {
+            "name": "OperationResult",
+            "type": "ImmutableContentRef?",
+            "required": true
+          }
+        ],
+        "contentSchemas": [
+          {
+            "field": "Intent",
+            "schema": "identity-recovery-intent.v1",
+            "recordType": "IdentityRecoveryIntent",
+            "fields": [
+              {
+                "name": "Header",
+                "type": "DurableIntentHeader",
+                "required": true
+              },
+              {
+                "name": "ChallengeId",
+                "type": "Uuid",
+                "required": true
+              },
+              {
+                "name": "AccountId",
+                "type": "Uuid",
+                "required": true
+              },
+              {
+                "name": "OldIdentityId",
+                "type": "Uuid",
+                "required": true
+              },
+              {
+                "name": "ReplacementIdentityId",
+                "type": "Uuid",
+                "required": true
+              },
+              {
+                "name": "OldProvider",
+                "type": "string",
+                "required": true
+              },
+              {
+                "name": "OldSubject",
+                "type": "string",
+                "required": true
+              },
+              {
+                "name": "ReplacementProvider",
+                "type": "string",
+                "required": true
+              },
+              {
+                "name": "ReplacementSubject",
+                "type": "string",
+                "required": true
+              },
+              {
+                "name": "EmailProofProvenance",
+                "type": "ImmutableContentRef",
+                "required": true
+              },
+              {
+                "name": "ReplacementProofProvenance",
+                "type": "ImmutableContentRef",
+                "required": true
+              }
+            ],
+            "rule": "Both proofs verified before email claim/preparation, with only non-bearer provenance. Immutable candidate keyed by challenge. Protect old and replacement associations before IdentityRecoveryAccepted. Before acceptance, definite conflict rejects and fences; afterward register/verify replacement, revoke old, complete forward without caller confirmation. Later challenges cannot rewrite this intent.",
+            "variants": [
+              {
+                "recordType": "IdentityRecoveryIntent",
+                "schema": "identity-recovery-intent.v1",
+                "fields": [
+                  {
+                    "name": "Header",
+                    "type": "DurableIntentHeader",
+                    "required": true
+                  },
+                  {
+                    "name": "ChallengeId",
+                    "type": "Uuid",
+                    "required": true
+                  },
+                  {
+                    "name": "AccountId",
+                    "type": "Uuid",
+                    "required": true
+                  },
+                  {
+                    "name": "OldIdentityId",
+                    "type": "Uuid",
+                    "required": true
+                  },
+                  {
+                    "name": "ReplacementIdentityId",
+                    "type": "Uuid",
+                    "required": true
+                  },
+                  {
+                    "name": "OldProvider",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "OldSubject",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "ReplacementProvider",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "ReplacementSubject",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "EmailProofProvenance",
+                    "type": "ImmutableContentRef",
+                    "required": true
+                  },
+                  {
+                    "name": "ReplacementProofProvenance",
+                    "type": "ImmutableContentRef",
+                    "required": true
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "changes": [],
+        "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
+        "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
+        "resolvedIntentSchema": "IdentityRecoveryIntent",
+        "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
+      }
+    },
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:UserIdentityAuthenticated",
+        "event": "UserIdentityAuthenticated",
+        "emissionKind": "audit",
+        "owners": [
+          "UserIdentity"
+        ],
+        "ownerSelection": "UserIdentity AuditEvent emits to independent physical audit session stream; no aggregate reducer/history increment",
+        "selected295": false,
+        "targetConcreteType": "UserIdentityAuthenticated",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.user-identity.authenticated",
+          "version": 1
+        },
+        "wireQualification": "Wire matches the declared record in src/Compliance.Common/Features/UserIdentities/Events/UserIdentityAuthenticated.cs at 60029b8f.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "excluded_business_schema_not_required",
+        "sourceStatus": "declared",
+        "meaning": "Audits successful authentication through a registered provider identity.",
+        "meaningSource": "record summary in src/Compliance.Common/Features/UserIdentities/Events/UserIdentityAuthenticated.cs"
+      },
+      "schema": null
+    },
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:UserIdentityProfileObserved",
+        "event": "UserIdentityProfileObserved",
+        "emissionKind": "audit",
+        "owners": [
+          "UserIdentity"
+        ],
+        "ownerSelection": "UserIdentity AuditEvent emits to independent physical audit session stream; no aggregate reducer/history increment",
+        "selected295": false,
+        "targetConcreteType": "UserIdentityProfileObserved",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.user-identity.profile-observed",
+          "version": 2
+        },
+        "wireQualification": "Wire matches the declared record in src/Compliance.Common/Features/UserIdentities/Events/UserIdentityProfileObserved.cs at 60029b8f.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "excluded_business_schema_not_required",
+        "sourceStatus": "declared",
+        "meaning": "Audited provider display text admitted at the proven identity revision; never identity or authority.",
+        "meaningSource": "record summary in src/Compliance.Common/Features/UserIdentities/Events/UserIdentityProfileObserved.cs"
+      },
+      "schema": null
+    },
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:UserIdentityRegistered",
+        "event": "UserIdentityRegistered",
+        "emissionKind": "business",
+        "owners": [
+          "UserIdentity"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": true,
+        "targetConcreteType": "UserIdentityRegistered",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.user-identity.registered",
+          "version": 1
+        },
+        "wireQualification": "Wire matches the declared record in src/Compliance.Common/Features/UserIdentities/Events/UserIdentityRegistered.cs at 60029b8f.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "selected_complete_schema",
+        "sourceStatus": "declared",
+        "meaning": "Records the provider-neutral identity linked to a platform user. A registration caused by an identity recovery names the recovery challenge and carries the receiver's operation provenance and frozen intent.",
+        "meaningSource": "record summary in src/Compliance.Common/Features/UserIdentities/Events/UserIdentityRegistered.cs"
+      },
+      "schema": {
+        "event": "UserIdentityRegistered",
+        "discriminator": "bdgrz.user-identity.registered",
+        "discriminatorVersion": 1,
+        "owner": "UserIdentity",
+        "existingContract": "src/Compliance.Common/Features/UserIdentities/UserIdentityRegistered.cs",
+        "status": "selected target schema; implementation pending",
+        "reason": "typed reactor receiver accepted business fact",
+        "fields": [
+          {
+            "name": "UserId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "Provider",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "Identifier",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "EmailAddress",
+            "type": "string?",
+            "required": true
+          },
+          {
+            "name": "Operation",
+            "type": "OperationProvenance",
+            "required": true
+          },
+          {
+            "name": "RecoveryChallengeId",
+            "type": "Uuid?",
+            "required": true
+          },
+          {
+            "name": "Intent",
+            "type": "ImmutableContentRef",
+            "required": true
+          },
+          {
+            "name": "FirstResponse",
+            "type": "ImmutableContentRef?",
+            "required": true
+          },
+          {
+            "name": "OperationResult",
+            "type": "ImmutableContentRef?",
+            "required": true
+          }
+        ],
+        "contentSchemas": [
+          {
+            "field": "Intent",
+            "schema": "identity-recovery-intent.v1",
+            "recordType": "IdentityRecoveryIntent",
+            "fields": [
+              {
+                "name": "Header",
+                "type": "DurableIntentHeader",
+                "required": true
+              },
+              {
+                "name": "ChallengeId",
+                "type": "Uuid",
+                "required": true
+              },
+              {
+                "name": "AccountId",
+                "type": "Uuid",
+                "required": true
+              },
+              {
+                "name": "OldIdentityId",
+                "type": "Uuid",
+                "required": true
+              },
+              {
+                "name": "ReplacementIdentityId",
+                "type": "Uuid",
+                "required": true
+              },
+              {
+                "name": "OldProvider",
+                "type": "string",
+                "required": true
+              },
+              {
+                "name": "OldSubject",
+                "type": "string",
+                "required": true
+              },
+              {
+                "name": "ReplacementProvider",
+                "type": "string",
+                "required": true
+              },
+              {
+                "name": "ReplacementSubject",
+                "type": "string",
+                "required": true
+              },
+              {
+                "name": "EmailProofProvenance",
+                "type": "ImmutableContentRef",
+                "required": true
+              },
+              {
+                "name": "ReplacementProofProvenance",
+                "type": "ImmutableContentRef",
+                "required": true
+              }
+            ],
+            "rule": "Both proofs verified before email claim/preparation, with only non-bearer provenance. Immutable candidate keyed by challenge. Protect old and replacement associations before IdentityRecoveryAccepted. Before acceptance, definite conflict rejects and fences; afterward register/verify replacement, revoke old, complete forward without caller confirmation. Later challenges cannot rewrite this intent.",
+            "variants": [
+              {
+                "recordType": "IdentityRecoveryIntent",
+                "schema": "identity-recovery-intent.v1",
+                "fields": [
+                  {
+                    "name": "Header",
+                    "type": "DurableIntentHeader",
+                    "required": true
+                  },
+                  {
+                    "name": "ChallengeId",
+                    "type": "Uuid",
+                    "required": true
+                  },
+                  {
+                    "name": "AccountId",
+                    "type": "Uuid",
+                    "required": true
+                  },
+                  {
+                    "name": "OldIdentityId",
+                    "type": "Uuid",
+                    "required": true
+                  },
+                  {
+                    "name": "ReplacementIdentityId",
+                    "type": "Uuid",
+                    "required": true
+                  },
+                  {
+                    "name": "OldProvider",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "OldSubject",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "ReplacementProvider",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "ReplacementSubject",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "EmailProofProvenance",
+                    "type": "ImmutableContentRef",
+                    "required": true
+                  },
+                  {
+                    "name": "ReplacementProofProvenance",
+                    "type": "ImmutableContentRef",
+                    "required": true
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "changes": [],
+        "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
+        "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
+        "resolvedIntentSchema": "IdentityRecoveryIntent",
+        "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
+      }
+    },
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:UserIdentityRevoked",
+        "event": "UserIdentityRevoked",
+        "emissionKind": "business",
+        "owners": [
+          "UserIdentity"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": true,
+        "targetConcreteType": "UserIdentityRevoked",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.user-identity.revoked",
+          "version": 1
+        },
+        "wireQualification": "Wire matches the declared record in src/Compliance.Common/Features/UserIdentities/Events/UserIdentityRevoked.cs at 60029b8f.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "selected_complete_schema",
+        "sourceStatus": "declared",
+        "meaning": "Records replacement of a provider identity while preserving its platform user. A revocation caused by an identity recovery names the recovery challenge and carries the receiver's provenance and frozen intent.",
+        "meaningSource": "record summary in src/Compliance.Common/Features/UserIdentities/Events/UserIdentityRevoked.cs"
+      },
+      "schema": {
+        "event": "UserIdentityRevoked",
+        "discriminator": "bdgrz.user-identity.revoked",
+        "discriminatorVersion": 1,
+        "owner": "UserIdentity",
+        "existingContract": "src/Compliance.Common/Features/UserIdentities/UserIdentityRevoked.cs",
+        "status": "selected target schema; implementation pending",
+        "reason": "typed reactor receiver accepted business fact",
+        "fields": [
+          {
+            "name": "UserIdentityId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "UserId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "ReplacementIdentityId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "RevokedAt",
+            "type": "DateTimeOffset",
+            "required": true
+          },
+          {
+            "name": "Operation",
+            "type": "OperationProvenance",
+            "required": true
+          },
+          {
+            "name": "RecoveryChallengeId",
+            "type": "Uuid?",
+            "required": true
+          },
+          {
+            "name": "Intent",
+            "type": "ImmutableContentRef",
+            "required": true
+          },
+          {
+            "name": "FirstResponse",
+            "type": "ImmutableContentRef?",
+            "required": true
+          },
+          {
+            "name": "OperationResult",
+            "type": "ImmutableContentRef?",
+            "required": true
+          }
+        ],
+        "contentSchemas": [
+          {
+            "field": "Intent",
+            "schema": "identity-recovery-intent.v1",
+            "recordType": "IdentityRecoveryIntent",
+            "fields": [
+              {
+                "name": "Header",
+                "type": "DurableIntentHeader",
+                "required": true
+              },
+              {
+                "name": "ChallengeId",
+                "type": "Uuid",
+                "required": true
+              },
+              {
+                "name": "AccountId",
+                "type": "Uuid",
+                "required": true
+              },
+              {
+                "name": "OldIdentityId",
+                "type": "Uuid",
+                "required": true
+              },
+              {
+                "name": "ReplacementIdentityId",
+                "type": "Uuid",
+                "required": true
+              },
+              {
+                "name": "OldProvider",
+                "type": "string",
+                "required": true
+              },
+              {
+                "name": "OldSubject",
+                "type": "string",
+                "required": true
+              },
+              {
+                "name": "ReplacementProvider",
+                "type": "string",
+                "required": true
+              },
+              {
+                "name": "ReplacementSubject",
+                "type": "string",
+                "required": true
+              },
+              {
+                "name": "EmailProofProvenance",
+                "type": "ImmutableContentRef",
+                "required": true
+              },
+              {
+                "name": "ReplacementProofProvenance",
+                "type": "ImmutableContentRef",
+                "required": true
+              }
+            ],
+            "rule": "Both proofs verified before email claim/preparation, with only non-bearer provenance. Immutable candidate keyed by challenge. Protect old and replacement associations before IdentityRecoveryAccepted. Before acceptance, definite conflict rejects and fences; afterward register/verify replacement, revoke old, complete forward without caller confirmation. Later challenges cannot rewrite this intent.",
+            "variants": [
+              {
+                "recordType": "IdentityRecoveryIntent",
+                "schema": "identity-recovery-intent.v1",
+                "fields": [
+                  {
+                    "name": "Header",
+                    "type": "DurableIntentHeader",
+                    "required": true
+                  },
+                  {
+                    "name": "ChallengeId",
+                    "type": "Uuid",
+                    "required": true
+                  },
+                  {
+                    "name": "AccountId",
+                    "type": "Uuid",
+                    "required": true
+                  },
+                  {
+                    "name": "OldIdentityId",
+                    "type": "Uuid",
+                    "required": true
+                  },
+                  {
+                    "name": "ReplacementIdentityId",
+                    "type": "Uuid",
+                    "required": true
+                  },
+                  {
+                    "name": "OldProvider",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "OldSubject",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "ReplacementProvider",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "ReplacementSubject",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "EmailProofProvenance",
+                    "type": "ImmutableContentRef",
+                    "required": true
+                  },
+                  {
+                    "name": "ReplacementProofProvenance",
+                    "type": "ImmutableContentRef",
+                    "required": true
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "changes": [],
+        "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
+        "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
+        "resolvedIntentSchema": "IdentityRecoveryIntent",
+        "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
+      }
+    }
+  ]
+}

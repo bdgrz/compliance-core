@@ -1,0 +1,101 @@
+{
+  "owner": "TypeIIPlan",
+  "events": [
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:TypeIIPlanApproved",
+        "event": "TypeIIPlanApproved",
+        "emissionKind": "business",
+        "owners": [
+          "TypeIIPlan"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": false,
+        "targetConcreteType": "TypeIIPlanApproved",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.examinations.type-i-i-plan-approved",
+          "version": 2
+        },
+        "wireQualification": "Wire matches the declared record in src/Compliance.Common/Features/Examinations/Events/TypeIIPlanApproved.cs at 60029b8f.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "retained_current_schema_native_qualification_required",
+        "sourceStatus": "declared",
+        "meaning": "Records independent executive approval of the reviewed Type II plan version.",
+        "meaningSource": "record summary in src/Compliance.Common/Features/Examinations/Events/TypeIIPlanApproved.cs"
+      },
+      "schema": null
+    },
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:TypeIIPlanProposed",
+        "event": "TypeIIPlanProposed",
+        "emissionKind": "business",
+        "owners": [
+          "TypeIIPlan"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": false,
+        "targetConcreteType": "TypeIIPlanProposed",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.examinations.type-i-i-plan-proposed",
+          "version": 2
+        },
+        "wireQualification": "Wire matches the declared record in src/Compliance.Common/Features/Examinations/Events/TypeIIPlanProposed.cs at 60029b8f.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "retained_current_schema_native_qualification_required",
+        "sourceStatus": "declared",
+        "meaning": "Creates a versioned Type II operating plan with exact source and control bindings.",
+        "meaningSource": "record summary in src/Compliance.Common/Features/Examinations/Events/TypeIIPlanProposed.cs"
+      },
+      "schema": null
+    },
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:TypeIIPlanReviewed",
+        "event": "TypeIIPlanReviewed",
+        "emissionKind": "business",
+        "owners": [
+          "TypeIIPlan"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": false,
+        "targetConcreteType": "TypeIIPlanReviewed",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.examinations.type-i-i-plan-reviewed",
+          "version": 1
+        },
+        "wireQualification": "Wire matches the declared record in src/Compliance.Common/Features/Examinations/Events/TypeIIPlanReviewed.cs at 60029b8f.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "retained_current_schema_native_qualification_required",
+        "sourceStatus": "declared",
+        "meaning": "Records the independent review of the current Type II plan version.",
+        "meaningSource": "record summary in src/Compliance.Common/Features/Examinations/Events/TypeIIPlanReviewed.cs"
+      },
+      "schema": null
+    },
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:TypeIIPlanRevised",
+        "event": "TypeIIPlanRevised",
+        "emissionKind": "business",
+        "owners": [
+          "TypeIIPlan"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": false,
+        "targetConcreteType": "TypeIIPlanRevised",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.examinations.type-i-i-plan-revised",
+          "version": 1
+        },
+        "wireQualification": "Wire matches the declared record in src/Compliance.Common/Features/Examinations/Events/TypeIIPlanRevised.cs at 60029b8f.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "retained_current_schema_native_qualification_required",
+        "sourceStatus": "declared",
+        "meaning": "Appends a revised immutable Type II plan after a review requests changes.",
+        "meaningSource": "record summary in src/Compliance.Common/Features/Examinations/Events/TypeIIPlanRevised.cs"
+      },
+      "schema": null
+    }
+  ]
+}

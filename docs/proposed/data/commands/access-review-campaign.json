@@ -1,0 +1,1280 @@
+{
+  "owner": "AccessReviewCampaign",
+  "selectedContracts": [
+    {
+      "command": "CompleteAccessReviewCampaign",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "CampaignId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "Attestation",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "responseContract": {
+        "mode": "async_fixed_ack",
+        "responseType": "OperationAcceptedResponse",
+        "firstHttpStatus": 202,
+        "terminalResultType": "AccessReviewCampaignCompletionView"
+      },
+      "http": [
+        {
+          "method": "PUT",
+          "path": "/api/v1/tenants/{tenant_id}/access-review-campaigns/{campaign_id}/completion/{command_id}",
+          "policy": "ComplianceAuthorizationPolicies.ApiUser"
+        }
+      ],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
+        "jsonPointer": "/commands/36",
+        "line": 4277,
+        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
+      },
+      "kind": "http"
+    },
+    {
+      "command": "LaunchAccessReviewCampaign",
+      "logicalIdentity": {
+        "field": "CampaignId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "caller-supplied immutable creation identity: an exact retry with the same id and authored intent returns the original result; the same id with changed intent is refused; a different id is a different record"
+      },
+      "fields": [
+        {
+          "name": "CampaignId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Name",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "Instructions",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "Deadline",
+          "type": "DateTimeOffset",
+          "required": true
+        },
+        {
+          "name": "Assignments",
+          "type": "IReadOnlyList<AccessReviewAssignment>",
+          "required": true
+        },
+        {
+          "name": "ProgramId",
+          "type": "Uuid?",
+          "required": false
+        },
+        {
+          "name": "RemediationOwnerMemberId",
+          "type": "Uuid?",
+          "required": false
+        }
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "AccessReviewCampaignRegistration",
+        "firstHttpStatus": 200,
+        "terminalResultType": "AccessReviewCampaignRegistration"
+      },
+      "http": [
+        {
+          "method": "PUT",
+          "path": "/api/v1/tenants/{tenant_id}/access-review-campaigns/{campaign_id}",
+          "policy": "ComplianceAuthorizationPolicies.ApiUser"
+        }
+      ],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
+        "jsonPointer": "/commands/64",
+        "line": 7506,
+        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
+      },
+      "kind": "http"
+    },
+    {
+      "command": "RecordBulkAccessDecision",
+      "logicalIdentity": {
+        "field": "DecisionBatchId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "caller-supplied immutable creation identity: an exact retry with the same id and authored intent returns the original result; the same id with changed intent is refused; a different id is a different record"
+      },
+      "fields": [
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "CampaignId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ItemIds",
+          "type": "IReadOnlyList<Uuid>",
+          "required": true
+        },
+        {
+          "name": "Decision",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "Rationale",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "PreviewToken",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "ExpectedCampaignRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "DecisionBatchId",
+          "type": "Uuid",
+          "required": true
+        }
+      ],
+      "responseContract": {
+        "mode": "async_fixed_ack",
+        "responseType": "OperationAcceptedResponse",
+        "firstHttpStatus": 202,
+        "terminalResultType": "BulkAccessDecisionResult"
+      },
+      "http": [
+        {
+          "method": "PUT",
+          "path": "/api/v1/tenants/{tenant_id}/access-review-campaigns/{campaign_id}/bulk-decisions/{decision_batch_id}",
+          "policy": "ComplianceAuthorizationPolicies.ApiUser"
+        }
+      ],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
+        "jsonPointer": "/commands/100",
+        "line": 11639,
+        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
+      },
+      "kind": "http"
+    },
+    {
+      "command": "AbortAccessReviewCampaignCompletion",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "rule": "abort receiver identity bound to the exact admitted operation and generation: exact redelivery resolves the original rejected result; an abort after a terminal outcome is a no-op"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "OperationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Target",
+          "type": "EventStreamAddress",
+          "required": true
+        },
+        {
+          "name": "Generation",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "FailureProof",
+          "type": "ImmutableContentRef",
+          "required": true
+        }
+      ],
+      "responseContract": null,
+      "http": null,
+      "source": {
+        "path": "docs/product/audits/2026-10-23/source-admission-contracts.json",
+        "jsonPointer": "/contracts/14",
+        "line": 901,
+        "sha256": "f1d549ed0879c816cb26e86879f8fa658dab0a8acbf7c591e4d4aed40483f8ae"
+      },
+      "kind": "abort"
+    },
+    {
+      "command": "CompleteAccessReviewCampaignClosure",
+      "kind": "receiver",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "reactor",
+        "rule": "deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Source",
+          "type": "SourceFactProof<AccessReviewCampaignCompletionAccepted>",
+          "required": true
+        },
+        {
+          "name": "Target",
+          "type": "EventStreamAddress",
+          "required": true
+        },
+        {
+          "name": "OperationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Generation",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long?",
+          "required": true
+        },
+        {
+          "name": "Intent",
+          "type": "ImmutableContentRef",
+          "required": true,
+          "contentSchema": "ClosureIntent"
+        },
+        {
+          "name": "CampaignId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ItemProofs",
+          "type": "ImmutableContentRef",
+          "required": true
+        }
+      ],
+      "reactor": "AccessReviewCampaignCompletionReactor",
+      "sourceOwner": "AccessReviewCampaign",
+      "sourceEvents": [
+        "AccessReviewCampaignCompletionAccepted"
+      ],
+      "guard": "All expected items materialized, exact current decision/remediation proof set under completion holds.",
+      "eventsEmitted": [
+        "AccessReviewCampaignCompleted"
+      ],
+      "effectKind": "complete_access_review_campaign_closure",
+      "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
+      "handler": "CompleteAccessReviewCampaignClosureHandler",
+      "http": [],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
+        "recorded": "2026-10-29"
+      }
+    }
+  ],
+  "sourceContractEvidence": [
+    {
+      "command": "CompleteAccessReviewCampaign",
+      "status": "target_contract",
+      "sourceContract": "src/Compliance.Common/Features/AccessReviews/CompleteAccessReviewCampaign.cs",
+      "sourceHandlers": [
+        {
+          "name": "CompleteAccessReviewCampaignHandler",
+          "source": "src/Compliance.Core/Features/AccessReviews/CompleteAccessReviewCampaignHandler.cs",
+          "registered": true
+        }
+      ],
+      "handler": "CompleteAccessReviewCampaignHandler",
+      "sourceRoots": [
+        "AccessReviewCampaign"
+      ],
+      "owner": "AccessReviewCampaign",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "one immutable authored operation"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "CampaignId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "Attestation",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "http": [
+        {
+          "method": "PUT",
+          "path": "/api/v1/tenants/{tenant_id}/access-review-campaigns/{campaign_id}/completion/{command_id}",
+          "policy": "ComplianceAuthorizationPolicies.ApiUser"
+        }
+      ],
+      "mcp": false,
+      "entryPoint": "personal_http",
+      "authorizerSources": [
+        "src/Compliance.Core/Features/AccessReviews/AccessReviewAuthorizer.cs"
+      ],
+      "events": [
+        "AccessReviewCampaignCompletionAccepted"
+      ],
+      "protocols": [
+        "Campaign item and atomic bulk decision"
+      ],
+      "guardOrder": [
+        "bind_required_ids",
+        "authenticate_authorize",
+        "canonicalize_authored_intent",
+        "resolve_native_operation_facts",
+        "compare_owner_episode_actor_kind_intent_original_revision",
+        "validate_new_owner_revision_and_source_permits",
+        "append_complete_concrete_attributed_batch"
+      ],
+      "policyPreservation": "All current source handler/aggregate validation rules and source test expectations apply, except the explicit contractChanges and boundary protocol. Lifetime caps and technical attempt events are removed with their structural replacement.",
+      "contractChanges": [
+        "Add required CommandId."
+      ],
+      "existingTests": [
+        "test/Compliance.Tests/Features/AccessReviews/AccessRemediationTests.cs",
+        "test/Compliance.Tests/Features/AccessReviews/PersonalAccessReviewTransportTests.cs",
+        "test/Compliance.Tests/Features/AccessReviews/RestrictedAccessReviewCampaignReadTests.cs"
+      ],
+      "requiredTests": [
+        "ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange",
+        "ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision",
+        "ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity",
+        "ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof",
+        "ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome"
+      ],
+      "responseContract": {
+        "mode": "async_fixed_ack",
+        "responseType": "OperationAcceptedResponse",
+        "firstHttpStatus": 202,
+        "terminalResultType": "AccessReviewCampaignCompletionView"
+      },
+      "expectedRevisionScope": {
+        "field": "ExpectedRevision",
+        "owner": "AccessReviewCampaign",
+        "counter": "logical ResourceRevision of this owner",
+        "nullableInternalRule": null
+      }
+    },
+    {
+      "command": "ExemptAccessRemediation",
+      "status": "target_contract",
+      "sourceContract": "src/Compliance.Common/Features/AccessReviews/ExemptAccessRemediation.cs",
+      "sourceHandlers": [
+        {
+          "name": "ExemptAccessRemediationHandler",
+          "source": "src/Compliance.Core/Features/AccessReviews/ExemptAccessRemediationHandler.cs",
+          "registered": true
+        }
+      ],
+      "handler": "ExemptAccessRemediationHandler",
+      "sourceRoots": [
+        "AccessReviewCampaign"
+      ],
+      "owner": "AccessReviewItem",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "one immutable authored operation"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "CampaignId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ItemId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "Rationale",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "ExpiresAt",
+          "type": "DateTimeOffset?",
+          "required": false
+        }
+      ],
+      "http": [
+        {
+          "method": "PUT",
+          "path": "/api/v1/tenants/{tenant_id}/access-review-campaigns/{campaign_id}/items/{item_id}/remediation-exceptions/{command_id}",
+          "policy": "ComplianceAuthorizationPolicies.ApiUser"
+        }
+      ],
+      "mcp": false,
+      "entryPoint": "personal_http",
+      "authorizerSources": [
+        "src/Compliance.Core/Features/AccessReviews/AccessReviewAuthorizer.cs"
+      ],
+      "events": [
+        "AccessRemediationExceptionRecorded"
+      ],
+      "protocols": [
+        "Campaign item and atomic bulk decision"
+      ],
+      "guardOrder": [
+        "bind_required_ids",
+        "authenticate_authorize",
+        "canonicalize_authored_intent",
+        "resolve_native_operation_facts",
+        "compare_owner_episode_actor_kind_intent_original_revision",
+        "validate_new_owner_revision_and_source_permits",
+        "append_complete_concrete_attributed_batch"
+      ],
+      "policyPreservation": "All current source handler/aggregate validation rules and source test expectations apply, except the explicit contractChanges and boundary protocol. Lifetime caps and technical attempt events are removed with their structural replacement.",
+      "contractChanges": [
+        "Add required CommandId."
+      ],
+      "existingTests": [
+        "test/Compliance.Tests/Features/AccessReviews/AccessRemediationTests.cs",
+        "test/Compliance.Tests/Features/AccessReviews/PersonalAccessReviewTransportTests.cs",
+        "test/Compliance.Tests/Features/Work/FitzAccessReviewCampaignWorkItemDirectoryTests.cs"
+      ],
+      "requiredTests": [
+        "ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange",
+        "ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision",
+        "ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity",
+        "ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof",
+        "ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome"
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "AccessRemediationExceptionView",
+        "firstHttpStatus": 200,
+        "terminalResultType": "AccessRemediationExceptionView"
+      },
+      "expectedRevisionScope": {
+        "field": "ExpectedRevision",
+        "owner": "AccessReviewItem",
+        "counter": "logical ResourceRevision of this owner",
+        "nullableInternalRule": null
+      }
+    },
+    {
+      "command": "LaunchAccessReviewCampaign",
+      "status": "target_contract",
+      "sourceContract": "src/Compliance.Common/Features/AccessReviews/LaunchAccessReviewCampaign.cs",
+      "sourceHandlers": [
+        {
+          "name": "LaunchAccessReviewCampaignHandler",
+          "source": "src/Compliance.Core/Features/AccessReviews/LaunchAccessReviewCampaignHandler.cs",
+          "registered": true
+        }
+      ],
+      "handler": "LaunchAccessReviewCampaignHandler",
+      "sourceRoots": [
+        "AccessReviewCampaign"
+      ],
+      "owner": "AccessReviewCampaign",
+      "logicalIdentity": {
+        "field": "CampaignId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "exact immutable creation retry"
+      },
+      "fields": [
+        {
+          "name": "CampaignId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Name",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "Instructions",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "Deadline",
+          "type": "DateTimeOffset",
+          "required": true
+        },
+        {
+          "name": "Assignments",
+          "type": "IReadOnlyList<AccessReviewAssignment>",
+          "required": true
+        },
+        {
+          "name": "ProgramId",
+          "type": "Uuid?",
+          "required": false
+        },
+        {
+          "name": "RemediationOwnerMemberId",
+          "type": "Uuid?",
+          "required": false
+        }
+      ],
+      "http": [
+        {
+          "method": "PUT",
+          "path": "/api/v1/tenants/{tenant_id}/access-review-campaigns/{campaign_id}",
+          "policy": "ComplianceAuthorizationPolicies.ApiUser"
+        }
+      ],
+      "mcp": true,
+      "entryPoint": "authorized_http_and_mcp",
+      "authorizerSources": [
+        "src/Compliance.Core/Features/AccessReviews/AccessReviewAuthorizer.cs"
+      ],
+      "events": [
+        "AccessReviewCampaignLaunched"
+      ],
+      "protocols": [
+        "Campaign item and atomic bulk decision"
+      ],
+      "guardOrder": [
+        "bind_required_ids",
+        "authenticate_authorize",
+        "canonicalize_authored_intent",
+        "resolve_native_operation_facts",
+        "compare_owner_episode_actor_kind_intent_original_revision",
+        "validate_new_owner_revision_and_source_permits",
+        "append_complete_concrete_attributed_batch"
+      ],
+      "policyPreservation": "All current source handler/aggregate validation rules and source test expectations apply, except the explicit contractChanges and boundary protocol. Lifetime caps and technical attempt events are removed with their structural replacement.",
+      "contractChanges": [
+        "Add required CampaignId."
+      ],
+      "existingTests": [
+        "test/Compliance.Tests/Features/AccessReviews/AccessReviewFixture.cs",
+        "test/Compliance.Tests/Features/AccessReviews/AccessReviewInfrastructureTests.cs",
+        "test/Compliance.Tests/Features/AccessReviews/AccessReviewCampaignTests.cs"
+      ],
+      "requiredTests": [
+        "ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange",
+        "ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision",
+        "ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity",
+        "ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof",
+        "ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome"
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "AccessReviewCampaignRegistration",
+        "firstHttpStatus": 200,
+        "terminalResultType": "AccessReviewCampaignRegistration"
+      },
+      "expectedRevisionScope": {
+        "field": null,
+        "owner": "AccessReviewCampaign",
+        "counter": "No primary caller ResourceRevision. Enforce required authored source/epoch/version tokens, immutable creation identity or trusted proof/generation as declared; append uses physical OCC."
+      }
+    },
+    {
+      "command": "ReassignAccessReviewResponsibility",
+      "status": "target_contract",
+      "sourceContract": "src/Compliance.Common/Features/AccessReviews/ReassignAccessReviewResponsibility.cs",
+      "sourceHandlers": [
+        {
+          "name": "ReassignAccessReviewResponsibilityHandler",
+          "source": "src/Compliance.Core/Features/AccessReviews/ReassignAccessReviewResponsibilityHandler.cs",
+          "registered": true
+        }
+      ],
+      "handler": "ReassignAccessReviewResponsibilityHandler",
+      "sourceRoots": [
+        "AccessReviewCampaign"
+      ],
+      "owner": "AccessReviewItem",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "one immutable authored operation"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "CampaignId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ItemId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Responsibility",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "AssignedMemberId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Reason",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "DelegationReason",
+          "type": "string?",
+          "required": false
+        }
+      ],
+      "http": [
+        {
+          "method": "PUT",
+          "path": "/api/v1/tenants/{tenant_id}/access-review-campaigns/{campaign_id}/items/{item_id}/responsibility-reassignments/{command_id}",
+          "policy": "ComplianceAuthorizationPolicies.ApiUser"
+        }
+      ],
+      "mcp": true,
+      "entryPoint": "authorized_http_and_mcp",
+      "authorizerSources": [
+        "src/Compliance.Core/Features/AccessReviews/AccessReviewAuthorizer.cs"
+      ],
+      "events": [
+        "AccessReviewResponsibilityReassigned"
+      ],
+      "protocols": [
+        "Campaign item and atomic bulk decision"
+      ],
+      "guardOrder": [
+        "bind_required_ids",
+        "authenticate_authorize",
+        "canonicalize_authored_intent",
+        "resolve_native_operation_facts",
+        "compare_owner_episode_actor_kind_intent_original_revision",
+        "validate_new_owner_revision_and_source_permits",
+        "append_complete_concrete_attributed_batch"
+      ],
+      "policyPreservation": "All current source handler/aggregate validation rules and source test expectations apply, except the explicit contractChanges and boundary protocol. Lifetime caps and technical attempt events are removed with their structural replacement.",
+      "contractChanges": [
+        "Add required CommandId."
+      ],
+      "existingTests": [
+        "test/Compliance.Tests/Features/AccessReviews/AccessReviewCampaignTests.cs",
+        "test/Compliance.Tests/Features/Work/FitzAccessReviewCampaignWorkItemDirectoryTests.cs"
+      ],
+      "requiredTests": [
+        "ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange",
+        "ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision",
+        "ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity",
+        "ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof",
+        "ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome"
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "AccessReviewResponsibilityReassignmentView",
+        "firstHttpStatus": 200,
+        "terminalResultType": "AccessReviewResponsibilityReassignmentView"
+      },
+      "expectedRevisionScope": {
+        "field": "ExpectedRevision",
+        "owner": "AccessReviewItem",
+        "counter": "logical ResourceRevision of this owner",
+        "nullableInternalRule": null
+      }
+    },
+    {
+      "command": "RecordAccessDecision",
+      "status": "target_contract",
+      "sourceContract": "src/Compliance.Common/Features/AccessReviews/RecordAccessDecision.cs",
+      "sourceHandlers": [
+        {
+          "name": "RecordAccessDecisionHandler",
+          "source": "src/Compliance.Core/Features/AccessReviews/RecordAccessDecisionHandler.cs",
+          "registered": true
+        }
+      ],
+      "handler": "RecordAccessDecisionHandler",
+      "sourceRoots": [
+        "AccessReviewCampaign"
+      ],
+      "owner": "AccessReviewItem",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "one immutable authored operation"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "CampaignId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ItemId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "Decision",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "Rationale",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "SeparationOfDutiesWaiverId",
+          "type": "Uuid?",
+          "required": false
+        }
+      ],
+      "http": [
+        {
+          "method": "PUT",
+          "path": "/api/v1/tenants/{tenant_id}/access-review-campaigns/{campaign_id}/items/{item_id}/decisions/{command_id}",
+          "policy": "ComplianceAuthorizationPolicies.ApiUser"
+        }
+      ],
+      "mcp": false,
+      "entryPoint": "personal_http",
+      "authorizerSources": [
+        "src/Compliance.Core/Features/AccessReviews/AccessReviewAuthorizer.cs"
+      ],
+      "events": [
+        "AccessDecisionsRecorded"
+      ],
+      "protocols": [
+        "Campaign item and atomic bulk decision"
+      ],
+      "guardOrder": [
+        "bind_required_ids",
+        "authenticate_authorize",
+        "canonicalize_authored_intent",
+        "resolve_native_operation_facts",
+        "compare_owner_episode_actor_kind_intent_original_revision",
+        "validate_new_owner_revision_and_source_permits",
+        "append_complete_concrete_attributed_batch"
+      ],
+      "policyPreservation": "All current source handler/aggregate validation rules and source test expectations apply, except the explicit contractChanges and boundary protocol. Lifetime caps and technical attempt events are removed with their structural replacement.",
+      "contractChanges": [
+        "Add required CommandId."
+      ],
+      "existingTests": [
+        "test/Compliance.Tests/Features/AccessReviews/AccessRemediationTests.cs",
+        "test/Compliance.Tests/Features/AccessReviews/PersonalAccessReviewTransportTests.cs",
+        "test/Compliance.Tests/Features/AccessReviews/RestrictedAccessReviewCampaignReadTests.cs",
+        "test/Compliance.Tests/Features/AccessReviews/AttestAccessReviewWriteWallTests.cs",
+        "test/Compliance.Tests/Features/AccessReviews/AccessReviewCampaignTests.cs",
+        "test/Compliance.Tests/Features/Work/FitzAccessReviewCampaignWorkItemDirectoryTests.cs",
+        "test/Compliance.Tests/Features/Work/WorkSourceCompositionTests.cs"
+      ],
+      "requiredTests": [
+        "ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange",
+        "ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision",
+        "ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity",
+        "ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof",
+        "ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome"
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "AccessDecisionView",
+        "firstHttpStatus": 200,
+        "terminalResultType": "AccessDecisionView"
+      },
+      "expectedRevisionScope": {
+        "field": "ExpectedRevision",
+        "owner": "AccessReviewItem",
+        "counter": "logical ResourceRevision of this owner",
+        "nullableInternalRule": null
+      }
+    },
+    {
+      "command": "RecordAccessRemediationChange",
+      "status": "target_contract",
+      "sourceContract": "src/Compliance.Common/Features/AccessReviews/RecordAccessRemediationChange.cs",
+      "sourceHandlers": [
+        {
+          "name": "RecordAccessRemediationChangeHandler",
+          "source": "src/Compliance.Core/Features/AccessReviews/RecordAccessRemediationChangeHandler.cs",
+          "registered": true
+        }
+      ],
+      "handler": "RecordAccessRemediationChangeHandler",
+      "sourceRoots": [
+        "AccessReviewCampaign"
+      ],
+      "owner": "AccessReviewItem",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "one immutable authored operation"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "CampaignId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ItemId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "Reference",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "Description",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "ChangedAt",
+          "type": "DateTimeOffset",
+          "required": true
+        }
+      ],
+      "http": [
+        {
+          "method": "PUT",
+          "path": "/api/v1/tenants/{tenant_id}/access-review-campaigns/{campaign_id}/items/{item_id}/remediation-changes/{command_id}",
+          "policy": "ComplianceAuthorizationPolicies.ApiUser"
+        }
+      ],
+      "mcp": true,
+      "entryPoint": "authorized_http_and_mcp",
+      "authorizerSources": [
+        "src/Compliance.Core/Features/AccessReviews/AccessReviewAuthorizer.cs"
+      ],
+      "events": [
+        "AccessRemediationChangeRecorded"
+      ],
+      "protocols": [
+        "Campaign item and atomic bulk decision"
+      ],
+      "guardOrder": [
+        "bind_required_ids",
+        "authenticate_authorize",
+        "canonicalize_authored_intent",
+        "resolve_native_operation_facts",
+        "compare_owner_episode_actor_kind_intent_original_revision",
+        "validate_new_owner_revision_and_source_permits",
+        "append_complete_concrete_attributed_batch"
+      ],
+      "policyPreservation": "All current source handler/aggregate validation rules and source test expectations apply, except the explicit contractChanges and boundary protocol. Lifetime caps and technical attempt events are removed with their structural replacement.",
+      "contractChanges": [
+        "Add required CommandId."
+      ],
+      "existingTests": [
+        "test/Compliance.Tests/Features/AccessReviews/AccessRemediationTests.cs",
+        "test/Compliance.Tests/Features/AccessReviews/AccessReviewCampaignTests.cs",
+        "test/Compliance.Tests/Features/Work/FitzAccessReviewCampaignWorkItemDirectoryTests.cs",
+        "test/Compliance.Tests/Features/Work/WorkSourceCompositionTests.cs"
+      ],
+      "requiredTests": [
+        "ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange",
+        "ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision",
+        "ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity",
+        "ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof",
+        "ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome"
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "AccessRemediationChangeView",
+        "firstHttpStatus": 200,
+        "terminalResultType": "AccessRemediationChangeView"
+      },
+      "expectedRevisionScope": {
+        "field": "ExpectedRevision",
+        "owner": "AccessReviewItem",
+        "counter": "logical ResourceRevision of this owner",
+        "nullableInternalRule": null
+      }
+    },
+    {
+      "command": "RecordBulkAccessDecision",
+      "status": "target_contract",
+      "sourceContract": "src/Compliance.Common/Features/AccessReviews/RecordBulkAccessDecision.cs",
+      "sourceHandlers": [
+        {
+          "name": "RecordBulkAccessDecisionHandler",
+          "source": "src/Compliance.Core/Features/AccessReviews/RecordBulkAccessDecisionHandler.cs",
+          "registered": true
+        }
+      ],
+      "handler": "RecordBulkAccessDecisionHandler",
+      "sourceRoots": [
+        "AccessReviewCampaign"
+      ],
+      "owner": "AccessReviewCampaign",
+      "logicalIdentity": {
+        "field": "DecisionBatchId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "one immutable authored operation"
+      },
+      "fields": [
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "CampaignId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ItemIds",
+          "type": "IReadOnlyList<Uuid>",
+          "required": true
+        },
+        {
+          "name": "Decision",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "Rationale",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "PreviewToken",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "ExpectedCampaignRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "DecisionBatchId",
+          "type": "Uuid",
+          "required": true
+        }
+      ],
+      "http": [
+        {
+          "method": "PUT",
+          "path": "/api/v1/tenants/{tenant_id}/access-review-campaigns/{campaign_id}/bulk-decisions/{decision_batch_id}",
+          "policy": "ComplianceAuthorizationPolicies.ApiUser"
+        }
+      ],
+      "mcp": false,
+      "entryPoint": "personal_http",
+      "authorizerSources": [
+        "src/Compliance.Core/Features/AccessReviews/AccessReviewAuthorizer.cs"
+      ],
+      "events": [
+        "AccessReviewDecisionBatchAdmitted"
+      ],
+      "protocols": [
+        "Campaign item and atomic bulk decision"
+      ],
+      "guardOrder": [
+        "bind_required_ids",
+        "authenticate_authorize",
+        "canonicalize_authored_intent",
+        "resolve_native_operation_facts",
+        "compare_owner_episode_actor_kind_intent_original_revision",
+        "validate_new_owner_revision_and_source_permits",
+        "append_complete_concrete_attributed_batch"
+      ],
+      "policyPreservation": "All current source handler/aggregate validation rules and source test expectations apply, except the explicit contractChanges and boundary protocol. Lifetime caps and technical attempt events are removed with their structural replacement.",
+      "contractChanges": [
+        "Add required DecisionBatchId.",
+        "Add required owner-local ExpectedCampaignRevision; business Version remains an exact content version, not owner OCC.",
+        "Admit complete batch intent on the campaign before child creation, so completion observes every admitted bulk operation. Preview binds exact selected item heads; child batch starts at revision zero."
+      ],
+      "existingTests": [
+        "test/Compliance.Tests/Features/AccessReviews/PersonalAccessReviewTransportTests.cs",
+        "test/Compliance.Tests/Features/AccessReviews/AttestAccessReviewWriteWallTests.cs",
+        "test/Compliance.Tests/Features/AccessReviews/AccessReviewCampaignTests.cs"
+      ],
+      "requiredTests": [
+        "ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange",
+        "ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision",
+        "ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity",
+        "ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof",
+        "ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome"
+      ],
+      "expectedRevisionScope": {
+        "field": "ExpectedCampaignRevision",
+        "owner": "AccessReviewCampaign",
+        "meaning": "revision of the public first-admission owner; never a new child owner revision"
+      },
+      "responseContract": {
+        "mode": "async_fixed_ack",
+        "responseType": "OperationAcceptedResponse",
+        "firstHttpStatus": 202,
+        "terminalResultType": "BulkAccessDecisionResult"
+      }
+    },
+    {
+      "command": "VerifyAccessRemediation",
+      "status": "target_contract",
+      "sourceContract": "src/Compliance.Common/Features/AccessReviews/VerifyAccessRemediation.cs",
+      "sourceHandlers": [
+        {
+          "name": "VerifyAccessRemediationHandler",
+          "source": "src/Compliance.Core/Features/AccessReviews/VerifyAccessRemediationHandler.cs",
+          "registered": true
+        }
+      ],
+      "handler": "VerifyAccessRemediationHandler",
+      "sourceRoots": [
+        "AccessReviewCampaign"
+      ],
+      "owner": "AccessReviewItem",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "one immutable authored operation"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "CampaignId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ItemId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "PopulationId",
+          "type": "Uuid",
+          "required": true
+        }
+      ],
+      "http": [
+        {
+          "method": "PUT",
+          "path": "/api/v1/tenants/{tenant_id}/access-review-campaigns/{campaign_id}/items/{item_id}/remediation-verifications/{command_id}",
+          "policy": "ComplianceAuthorizationPolicies.ApiUser"
+        }
+      ],
+      "mcp": true,
+      "entryPoint": "authorized_http_and_mcp",
+      "authorizerSources": [
+        "src/Compliance.Core/Features/AccessReviews/AccessReviewAuthorizer.cs"
+      ],
+      "events": [
+        "AccessRemediationVerified"
+      ],
+      "protocols": [
+        "Campaign item and atomic bulk decision"
+      ],
+      "guardOrder": [
+        "bind_required_ids",
+        "authenticate_authorize",
+        "canonicalize_authored_intent",
+        "resolve_native_operation_facts",
+        "compare_owner_episode_actor_kind_intent_original_revision",
+        "validate_new_owner_revision_and_source_permits",
+        "append_complete_concrete_attributed_batch"
+      ],
+      "policyPreservation": "All current source handler/aggregate validation rules and source test expectations apply, except the explicit contractChanges and boundary protocol. Lifetime caps and technical attempt events are removed with their structural replacement.",
+      "contractChanges": [
+        "Add required CommandId."
+      ],
+      "existingTests": [
+        "test/Compliance.Tests/Features/AccessReviews/AccessRemediationTests.cs",
+        "test/Compliance.Tests/Features/Work/FitzAccessReviewCampaignWorkItemDirectoryTests.cs"
+      ],
+      "requiredTests": [
+        "ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange",
+        "ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision",
+        "ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity",
+        "ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof",
+        "ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome"
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "AccessRemediationVerificationView",
+        "firstHttpStatus": 200,
+        "terminalResultType": "AccessRemediationVerificationView"
+      },
+      "expectedRevisionScope": {
+        "field": "ExpectedRevision",
+        "owner": "AccessReviewItem",
+        "counter": "logical ResourceRevision of this owner",
+        "nullableInternalRule": null
+      }
+    }
+  ]
+}

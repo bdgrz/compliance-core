@@ -1,0 +1,202 @@
+{
+  "owner": "ProgramRollover",
+  "selectedContracts": [
+    {
+      "command": "ApproveProgramRollover",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "rule": "CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ProgramId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "RolloverId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Version",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "Decision",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "Rationale",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true
+        }
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "Unit",
+        "firstHttpStatus": 200,
+        "terminalResultType": "Unit"
+      },
+      "http": [
+        {
+          "method": "PUT",
+          "path": "/api/v1/tenants/{tenant_id}/programs/{program_id}/rollovers/{rollover_id}/decisions/{command_id}",
+          "authorizationPolicy": "ComplianceAuthorizationPolicies.ApiUser"
+        }
+      ],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
+        "jsonPointer": "/contracts/19",
+        "line": 1545,
+        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
+      },
+      "kind": "http"
+    },
+    {
+      "command": "ProposeProgramRollover",
+      "logicalIdentity": {
+        "field": "RolloverId",
+        "type": "Uuid",
+        "required": true,
+        "rule": "caller-supplied immutable creation identity: an exact retry with the same id and authored intent returns the original result; the same id with changed intent is refused; a different id is a different record"
+      },
+      "fields": [
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ProgramId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "RolloverId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Content",
+          "type": "ProgramRolloverContent",
+          "required": true,
+          "nestedFields": [
+            "SourcePeriodId:Uuid",
+            "SourceExaminationId:Uuid",
+            "SourceCloseSnapshotId:Uuid",
+            "SourceCloseSnapshotSha256:string",
+            "AuditOutcomeId:Uuid",
+            "AuditOutcomeContentSha256:string",
+            "NextPeriodStart:DateOnly",
+            "NextPeriodEnd:DateOnly",
+            "NextExaminationId:Uuid",
+            "NextPeriodId:Uuid",
+            "NextTypeIIPlanId:Uuid",
+            "Records:IReadOnlyList<ProgramRolloverRecordContent>",
+            "Commitments:IReadOnlyList<ProgramRolloverCommitmentContent>",
+            "ComparisonMeasures:IReadOnlyList<string>",
+            "ProposalRationale:string"
+          ]
+        }
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "Unit",
+        "firstHttpStatus": 200,
+        "terminalResultType": "Unit"
+      },
+      "http": [
+        {
+          "method": "PUT",
+          "path": "/api/v1/tenants/{tenant_id}/programs/{program_id}/rollovers/{rollover_id}/proposals",
+          "authorizationPolicy": "ComplianceAuthorizationPolicies.ApiUser"
+        }
+      ],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
+        "jsonPointer": "/contracts/96",
+        "line": 7132,
+        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
+      },
+      "semanticRule": "NextExaminationId is a required, nonempty successor identity, distinct from SourceExaminationId, frozen in the exact version and approval hash together with next period/plan IDs and dates.",
+      "kind": "http"
+    },
+    {
+      "command": "ClaimProgramRolloverExecution",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "rule": "CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ProgramId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "RolloverId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "ApprovedVersion",
+          "type": "int",
+          "required": true
+        },
+        {
+          "name": "ApprovedContentSha256",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "Unit",
+        "firstHttpStatus": 200,
+        "terminalResultType": "Unit"
+      },
+      "http": [],
+      "targetStatus": "SELECTED_TARGET_ONLY_NO_ROUTE_AUTHORIZED",
+      "semanticRule": "Internal process command; no public route. Atomically require status approved, exact ExpectedRevision, exact current ApprovedVersion/content SHA256 and latest actual ProgramRolloverApproved fact. Derive and copy immutable approval actor/role/time into ProgramRolloverExecutionClaimView; store CommandId and ClaimedAt; transition status to execution_claimed in one append. Exact retry only same command+tuple; reject all later revisions/rejections/claims. Event actor attribution retains the approving member; process identity is separately recorded in private process state.",
+      "kind": "command"
+    }
+  ],
+  "sourceContractEvidence": []
+}

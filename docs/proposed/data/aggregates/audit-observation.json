@@ -1,0 +1,467 @@
+{
+  "owner": "AuditObservation",
+  "origin": "retained_baseline",
+  "baselineOwners": [
+    "AuditObservation"
+  ],
+  "declaredIdentity": "Tenant / audit-observations / observationId; program checked inside stream; mutation requires exact nonempty command selector; replay retains only selected command fact and compares intent before revision. Portia appends against the hydrated physical stream position; a logical revision does not create another physical boundary.",
+  "invariant": "Received auditor source corrections preserve examination/snapshot and exact source lineage; response/link commands must name current source version, and each selected command identity has immutable intent.",
+  "boundaryDecision": "retain",
+  "boundaryRationale": "A correction racing a response/link would lose the current-source-version gate if moved without source-owner admission authorization. Retaining these current facts is defensible; independent response/link ownership is a close alternative if historical version proofs suffice.",
+  "sources": [
+    {
+      "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
+      "jsonPointer": "/aggregates/10",
+      "line": 7406,
+      "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
+    }
+  ],
+  "baselineSourcePath": "src/Compliance.Core/Features/Examinations/AuditObservation.cs",
+  "baselineEvents": [
+    "AuditObservationCorrected",
+    "AuditObservationFindingLinked",
+    "AuditObservationManagementResponseRecorded",
+    "AuditObservationRecorded"
+  ],
+  "classification": "business_aggregate",
+  "businessAggregate": true,
+  "implementationStatus": "SEPARATE_VERIFICATION_REQUIRED_IMPLEMENTATION_HALTED",
+  "identityReadingRule": "selectedIdentitySummary and exact selectedCommandContracts define intended identity. baselineIdentityObservation/declaredIdentity retain older source observations only, including old replay defects; they are not target behavior or authorization to change an occupied key.",
+  "selectedCommandContracts": [
+    {
+      "command": "RecordAuditObservation",
+      "kind": "creation",
+      "status": "PLANNED",
+      "logicalIdentity": {
+        "field": "ObservationId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "caller-supplied immutable creation identity: an exact retry with the same id and authored intent returns the original result; the same id with changed intent is refused; a different id is a different record"
+      },
+      "fields": [
+        {
+          "name": "ObservationId",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "required": true
+        },
+        {
+          "name": "ProgramId",
+          "required": true
+        },
+        {
+          "name": "ExaminationId",
+          "required": true
+        },
+        {
+          "name": "Content",
+          "required": true
+        }
+      ],
+      "http": [],
+      "source": {
+        "path": "src/Compliance.Core/Features/Examinations/Aggregates/AuditObservation.cs",
+        "method": "Record",
+        "recorded": "2026-10-29"
+      }
+    },
+    {
+      "command": "CorrectAuditObservation",
+      "kind": "command",
+      "status": "PLANNED",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "required": true
+        },
+        {
+          "name": "ObservationId",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "required": true
+        },
+        {
+          "name": "PreviousSourceVersion",
+          "required": true
+        },
+        {
+          "name": "Content",
+          "required": true
+        },
+        {
+          "name": "Reason",
+          "required": true
+        }
+      ],
+      "http": [],
+      "source": {
+        "path": "src/Compliance.Core/Features/Examinations/Aggregates/AuditObservation.cs",
+        "method": "Correct",
+        "recorded": "2026-10-29"
+      }
+    },
+    {
+      "command": "RecordAuditObservationManagementResponse",
+      "kind": "command",
+      "status": "PLANNED",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "required": true
+        },
+        {
+          "name": "ObservationId",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "required": true
+        },
+        {
+          "name": "SourceVersion",
+          "required": true
+        },
+        {
+          "name": "Text",
+          "required": true
+        }
+      ],
+      "http": [],
+      "source": {
+        "path": "src/Compliance.Core/Features/Examinations/Aggregates/AuditObservation.cs",
+        "method": "RecordManagementResponse",
+        "recorded": "2026-10-29"
+      }
+    },
+    {
+      "command": "LinkAuditObservationFinding",
+      "kind": "command",
+      "status": "PLANNED",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "required": true
+        },
+        {
+          "name": "ObservationId",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "required": true
+        },
+        {
+          "name": "Finding",
+          "required": true
+        }
+      ],
+      "http": [],
+      "source": {
+        "path": "src/Compliance.Core/Features/Examinations/Aggregates/AuditObservation.cs",
+        "method": "LinkFinding",
+        "recorded": "2026-10-29"
+      }
+    }
+  ],
+  "eventAuthority": "retained_baseline_business_facts_requires_schema_reconciliation",
+  "events": [
+    {
+      "event": "AuditObservationCorrected",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
+        "jsonPointer": "/aggregates/10",
+        "line": 7406,
+        "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
+      },
+      "baselineContract": {
+        "event": "AuditObservationCorrected",
+        "emitters": [
+          "src/Compliance.Core/Features/Examinations/AuditObservation.cs"
+        ],
+        "eventDisposition": "aggregate_fact",
+        "emitterOwnership": "aggregate or partial source",
+        "typedFields": [
+          {
+            "name": "TenantId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "SubjectId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "Revision",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "ActorMemberId",
+            "type": "Uuid?",
+            "required": true
+          },
+          {
+            "name": "ProgramId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "PreviousSourceVersion",
+            "type": "int",
+            "required": true
+          },
+          {
+            "name": "Received",
+            "type": "AuditObservationReceivedVersion",
+            "required": true
+          },
+          {
+            "name": "Reason",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "OccurredAt",
+            "type": "DateTimeOffset",
+            "required": true
+          }
+        ],
+        "eventContract": "src/Compliance.Common/Features/Examinations/AuditObservationCorrected.cs"
+      }
+    },
+    {
+      "event": "AuditObservationFindingLinked",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
+        "jsonPointer": "/aggregates/10",
+        "line": 7406,
+        "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
+      },
+      "baselineContract": {
+        "event": "AuditObservationFindingLinked",
+        "emitters": [
+          "src/Compliance.Core/Features/Examinations/AuditObservation.cs"
+        ],
+        "eventDisposition": "aggregate_fact",
+        "emitterOwnership": "aggregate or partial source",
+        "typedFields": [
+          {
+            "name": "TenantId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "SubjectId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "Revision",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "ActorMemberId",
+            "type": "Uuid?",
+            "required": true
+          },
+          {
+            "name": "ProgramId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "Link",
+            "type": "AuditObservationFindingLinkView",
+            "required": true
+          },
+          {
+            "name": "OccurredAt",
+            "type": "DateTimeOffset",
+            "required": true
+          }
+        ],
+        "eventContract": "src/Compliance.Common/Features/Examinations/AuditObservationFindingLinked.cs"
+      }
+    },
+    {
+      "event": "AuditObservationManagementResponseRecorded",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
+        "jsonPointer": "/aggregates/10",
+        "line": 7406,
+        "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
+      },
+      "baselineContract": {
+        "event": "AuditObservationManagementResponseRecorded",
+        "emitters": [
+          "src/Compliance.Core/Features/Examinations/AuditObservation.cs"
+        ],
+        "eventDisposition": "aggregate_fact",
+        "emitterOwnership": "aggregate or partial source",
+        "typedFields": [
+          {
+            "name": "TenantId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "SubjectId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "Revision",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "ActorMemberId",
+            "type": "Uuid?",
+            "required": true
+          },
+          {
+            "name": "ProgramId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "Response",
+            "type": "AuditObservationManagementResponseView",
+            "required": true
+          },
+          {
+            "name": "OccurredAt",
+            "type": "DateTimeOffset",
+            "required": true
+          }
+        ],
+        "eventContract": "src/Compliance.Common/Features/Examinations/AuditObservationManagementResponseRecorded.cs"
+      }
+    },
+    {
+      "event": "AuditObservationRecorded",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
+        "jsonPointer": "/aggregates/10",
+        "line": 7406,
+        "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
+      },
+      "baselineContract": {
+        "event": "AuditObservationRecorded",
+        "emitters": [
+          "src/Compliance.Core/Features/Examinations/AuditObservation.cs"
+        ],
+        "eventDisposition": "aggregate_fact",
+        "emitterOwnership": "aggregate or partial source",
+        "typedFields": [
+          {
+            "name": "TenantId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "SubjectId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "Revision",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "ActorMemberId",
+            "type": "Uuid?",
+            "required": true
+          },
+          {
+            "name": "ProgramId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "Received",
+            "type": "AuditObservationReceivedVersion",
+            "required": true
+          },
+          {
+            "name": "OccurredAt",
+            "type": "DateTimeOffset",
+            "required": true
+          }
+        ],
+        "eventContract": "src/Compliance.Common/Features/Examinations/AuditObservationRecorded.cs"
+      }
+    }
+  ],
+  "choreography": [],
+  "status": "SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED",
+  "baselineIdentityObservation": "Tenant / audit-observations / observationId; program checked inside stream; mutation requires exact nonempty command selector; replay retains only selected command fact and compares intent before revision. Portia appends against the hydrated physical stream position; a logical revision does not create another physical boundary.",
+  "identityContractRule": "Existing published owner identity/IdFor remains stable. Required typed creation/operation identity and tenant/program/source scope come from the selected signature/protocol references; no context.RequestId minting fallback or guessed new stream key.",
+  "adoptedArchitectureDecisions": [],
+  "selectedIdentityClarification": "Tenant / audit-observations / ObservationId, with immutable ProgramId and examination/source lineage; the exact selected command selector addresses a mutation.",
+  "selectedIdentitySummary": "Tenant / audit-observations / ObservationId, with immutable ProgramId and examination/source lineage; the exact selected command selector addresses a mutation.",
+  "baselineIdentityObservationOnly": true,
+  "selectedLogicalIdentityBindings": [],
+  "selectedReplayRule": "Current required authorization precedes replay; exact authorized retries resolve the original accepted result using the selected logical identity and immutable actor/intent/source binding. Fresh mutable feasibility, clock selection and body preparation cannot replace that original result. Expected revision is concurrency precondition, not a new identity.",
+  "commandNote": "Planned 2026-10-29 from the aggregate methods Record, Correct, Respond and LinkFinding; no handlers or routes exist yet (October 23 audit lists them under issue 301).",
+  "productRules": [
+    {
+      "id": "D04-04",
+      "doc": "m0-d04-readiness-material.md",
+      "rule": "Consultant-authored imported content keeps imported_from provenance (source file, row, stated author text) and is never attributed to a platform actor who did not act; the accepting member is the actor of the acceptance decision only."
+    },
+    {
+      "id": "D27-03",
+      "doc": "m0-d27-attest-scope.md",
+      "rule": "Auditor-identified exceptions are recorded as AuditTestException preserving the auditor's wording as received."
+    }
+  ],
+  "decides": "Each imported row keeps its original source identifier as provenance separate from the observation id; a missing source identifier is recorded as source_identifier_absent and never synthesized from row order. Consultant-authored content keeps imported_from provenance (source file, row, stated author text) and is never attributed to a platform actor, with the accepting member recorded as actor of the acceptance only. Auditor-identified exceptions keep the auditor's wording exactly as received.",
+  "decidesCovers": [
+    "D04-01",
+    "D04-04",
+    "D27-03"
+  ],
+  "decidesAuthored": "2026-10-29"
+}

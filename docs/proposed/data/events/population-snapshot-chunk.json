@@ -1,0 +1,29 @@
+{
+  "owner": "PopulationSnapshotChunk",
+  "events": [
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:PopulationSnapshotChunkStored",
+        "event": "PopulationSnapshotChunkStored",
+        "emissionKind": "technical",
+        "owners": [
+          "PopulationSnapshotChunk"
+        ],
+        "ownerSelection": "exact declared technical/storage owner",
+        "selected295": false,
+        "targetConcreteType": "PopulationSnapshotChunkStored",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.snapshot.population.chunk_stored",
+          "version": 1
+        },
+        "wireQualification": "Wire matches the declared record in src/Compliance.Common/Features/Snapshots/Events/PopulationSnapshotChunkStored.cs at 60029b8f.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "retained_current_schema_native_qualification_required",
+        "sourceStatus": "declared",
+        "meaning": "One ordered storage chunk of a population snapshot's rows. Chunks are written before the snapshot's frozen manifest, so an interrupted freeze leaves no visible snapshot. ChunkSha256 is the population digest of this chunk's rows alone.",
+        "meaningSource": "record summary in src/Compliance.Common/Features/Snapshots/Events/PopulationSnapshotChunkStored.cs"
+      },
+      "schema": null
+    }
+  ]
+}

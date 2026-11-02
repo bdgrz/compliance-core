@@ -1,0 +1,125 @@
+{
+  "owner": "ComplianceIncident",
+  "events": [
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:ComplianceIncidentImpactAssessed",
+        "event": "ComplianceIncidentImpactAssessed",
+        "emissionKind": "business",
+        "owners": [
+          "ComplianceIncident"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": false,
+        "targetConcreteType": "ComplianceIncidentImpactAssessed",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.incidents.compliance-incident-impact-assessed",
+          "version": 3
+        },
+        "wireQualification": "Wire matches the declared record in src/Compliance.Common/Features/Incidents/Events/ComplianceIncidentImpactAssessed.cs at 60029b8f.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "retained_current_schema_native_qualification_required",
+        "sourceStatus": "declared",
+        "meaning": "The impact of a compliance incident was assessed by a named member, becoming the incident's current assessment.",
+        "meaningSource": "authored 2026-10-29 from src/Compliance.Common/Features/Incidents/Events/ComplianceIncidentImpactAssessed.cs"
+      },
+      "schema": null
+    },
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:ComplianceIncidentRecorded",
+        "event": "ComplianceIncidentRecorded",
+        "emissionKind": "business",
+        "owners": [
+          "ComplianceIncident"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": false,
+        "targetConcreteType": "ComplianceIncidentRecorded",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.incidents.compliance-incident-recorded",
+          "version": 3
+        },
+        "wireQualification": "Wire matches the declared record in src/Compliance.Common/Features/Incidents/Events/ComplianceIncidentRecorded.cs at 60029b8f.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "retained_current_schema_native_qualification_required",
+        "sourceStatus": "declared",
+        "meaning": "A compliance incident was recorded for a program by a named member as the incident's first revision.",
+        "meaningSource": "authored 2026-10-29 from src/Compliance.Common/Features/Incidents/Events/ComplianceIncidentRecorded.cs"
+      },
+      "schema": null
+    },
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:ComplianceIncidentRevised",
+        "event": "ComplianceIncidentRevised",
+        "emissionKind": "business",
+        "owners": [
+          "ComplianceIncident"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": false,
+        "targetConcreteType": "ComplianceIncidentRevised",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.incidents.compliance-incident-revised",
+          "version": 3
+        },
+        "wireQualification": "Wire matches the declared record in src/Compliance.Common/Features/Incidents/Events/ComplianceIncidentRevised.cs at 60029b8f.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "retained_current_schema_native_qualification_required",
+        "sourceStatus": "declared",
+        "meaning": "A recorded compliance incident was revised by a named member, changing its content at the next revision.",
+        "meaningSource": "authored 2026-10-29 from src/Compliance.Common/Features/Incidents/Events/ComplianceIncidentRevised.cs"
+      },
+      "schema": null
+    },
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:ComplianceIncidentSystemDescriptionDecisionRecorded",
+        "event": "ComplianceIncidentSystemDescriptionDecisionRecorded",
+        "emissionKind": "business",
+        "owners": [
+          "ComplianceIncident"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": false,
+        "targetConcreteType": "ComplianceIncidentSystemDescriptionDecisionRecorded",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.incidents.compliance-incident-system-description-decision-recorded",
+          "version": 3
+        },
+        "wireQualification": "Wire matches the declared record in src/Compliance.Common/Features/Incidents/Events/ComplianceIncidentSystemDescriptionDecisionRecorded.cs at 60029b8f.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "retained_current_schema_native_qualification_required",
+        "sourceStatus": "declared",
+        "meaning": "A decision was recorded on whether a compliance incident requires a change to the system description, made by a named member.",
+        "meaningSource": "authored 2026-10-29 from src/Compliance.Common/Features/Incidents/Events/ComplianceIncidentSystemDescriptionDecisionRecorded.cs"
+      },
+      "schema": null
+    },
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:IncidentResolutionRecorded",
+        "event": "IncidentResolutionRecorded",
+        "emissionKind": "business",
+        "owners": [
+          "ComplianceIncident"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": false,
+        "targetConcreteType": "IncidentResolutionRecorded",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.incidents.incident-resolution-recorded",
+          "version": 3
+        },
+        "wireQualification": "Wire matches the declared record in src/Compliance.Common/Features/Incidents/Events/IncidentResolutionRecorded.cs at 60029b8f.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "retained_current_schema_native_qualification_required",
+        "sourceStatus": "declared",
+        "meaning": "The resolution of a compliance incident was recorded by a named member, closing the incident.",
+        "meaningSource": "authored 2026-10-29 from src/Compliance.Common/Features/Incidents/Events/IncidentResolutionRecorded.cs"
+      },
+      "schema": null
+    }
+  ]
+}

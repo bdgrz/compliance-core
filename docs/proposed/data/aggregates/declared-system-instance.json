@@ -1,0 +1,526 @@
+{
+  "owner": "DeclaredSystemInstance",
+  "origin": "retained_baseline",
+  "baselineOwners": [
+    "DeclaredSystemInstance"
+  ],
+  "declaredIdentity": "Per instance minted/business id; declaration compares current fields, retirement rejects already-retired retry, revision commands have no selected logical request lookup.",
+  "invariant": "One system instance has one immutable application parent and registered identity; metadata revisions and terminal retirement follow its own expected revision.",
+  "boundaryDecision": "retain",
+  "boundaryRationale": "Separating independent instances is already safe. Immutable parent binding and retirement gate belong with this instance, rather than parent roster state.",
+  "sources": [
+    {
+      "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
+      "jsonPointer": "/aggregates/29",
+      "line": 23391,
+      "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
+    }
+  ],
+  "baselineSourcePath": "src/Compliance.Core/Features/Applications/DeclaredSystemInstance.cs",
+  "baselineEvents": [
+    "SystemInstanceRegistered",
+    "SystemInstanceRetired",
+    "SystemInstanceRevised"
+  ],
+  "classification": "business_aggregate",
+  "businessAggregate": true,
+  "implementationStatus": "SEPARATE_VERIFICATION_REQUIRED_IMPLEMENTATION_HALTED",
+  "identityReadingRule": "selectedIdentitySummary and exact selectedCommandContracts define intended identity. baselineIdentityObservation/declaredIdentity retain older source observations only, including old replay defects; they are not target behavior or authorization to change an occupied key.",
+  "selectedCommandContracts": [
+    {
+      "command": "DeclareSystemInstance",
+      "logicalIdentity": {
+        "field": "SystemInstanceId",
+        "type": "Uuid",
+        "required": true,
+        "rule": "caller-supplied immutable creation identity: an exact retry with the same id and authored intent returns the original result; the same id with changed intent is refused; a different id is a different record"
+      },
+      "fields": [
+        {
+          "name": "SystemInstanceId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ApplicationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectedApplicationRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "Name",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "Kind",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "AccessBoundaryReference",
+          "type": "string?",
+          "required": false
+        },
+        {
+          "name": "SourceIdentifier",
+          "type": "string?",
+          "required": false
+        }
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "SystemInstanceRegistration",
+        "firstHttpStatus": 200,
+        "terminalResultType": "SystemInstanceRegistration"
+      },
+      "http": [
+        {
+          "method": "PUT",
+          "path": "/api/v1/tenants/{tenant_id}/applications/{application_id}/system-instances/{system_instance_id}",
+          "authorizationPolicy": "ComplianceAuthorizationPolicies.ApiUser"
+        }
+      ],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
+        "jsonPointer": "/contracts/57",
+        "line": 4314,
+        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
+      },
+      "kind": "http"
+    },
+    {
+      "command": "RetireSystemInstance",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "rule": "CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ApplicationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "SystemInstanceId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "EffectiveAt",
+          "type": "DateTimeOffset",
+          "required": true
+        },
+        {
+          "name": "Reason",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "Unit",
+        "firstHttpStatus": 200,
+        "terminalResultType": "Unit"
+      },
+      "http": [
+        {
+          "method": "PUT",
+          "path": "/api/v1/tenants/{tenant_id}/applications/{application_id}/system-instances/{system_instance_id}/retirements/{command_id}",
+          "authorizationPolicy": "ComplianceAuthorizationPolicies.ApiUser"
+        }
+      ],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
+        "jsonPointer": "/contracts/158",
+        "line": 11690,
+        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
+      },
+      "kind": "http"
+    },
+    {
+      "command": "ReviseSystemInstance",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "rule": "CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ApplicationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "SystemInstanceId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "Name",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "SourceIdentifier",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "AccessBoundary",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "Rationale",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "Unit",
+        "firstHttpStatus": 200,
+        "terminalResultType": "Unit"
+      },
+      "http": [],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
+        "jsonPointer": "/contracts/183",
+        "line": 13734,
+        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
+      },
+      "kind": "command"
+    }
+  ],
+  "eventAuthority": "retained_baseline_business_facts_requires_schema_reconciliation",
+  "events": [
+    {
+      "event": "SystemInstanceRegistered",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
+        "jsonPointer": "/aggregates/29",
+        "line": 23391,
+        "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
+      },
+      "baselineContract": {
+        "event": "SystemInstanceRegistered",
+        "emitters": [
+          "src/Compliance.Core/Features/Applications/DeclaredSystemInstance.cs"
+        ],
+        "eventDisposition": "aggregate_fact",
+        "emitterOwnership": "aggregate or partial source",
+        "typedFields": [
+          {
+            "name": "TenantId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "ApplicationId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "SystemInstanceId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "Revision",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "Name",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "Kind",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "AccessBoundaryReference",
+            "type": "string?",
+            "required": true
+          },
+          {
+            "name": "SourceIdentifier",
+            "type": "string?",
+            "required": true
+          },
+          {
+            "name": "ActorMemberId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "ActorDisplay",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "ChangedAt",
+            "type": "DateTimeOffset",
+            "required": true
+          }
+        ],
+        "eventContract": "src/Compliance.Common/Features/Applications/SystemInstanceRegistered.cs"
+      }
+    },
+    {
+      "event": "SystemInstanceRetired",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
+        "jsonPointer": "/aggregates/29",
+        "line": 23391,
+        "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
+      },
+      "baselineContract": {
+        "event": "SystemInstanceRetired",
+        "emitters": [
+          "src/Compliance.Core/Features/Applications/DeclaredSystemInstance.cs"
+        ],
+        "eventDisposition": "aggregate_fact",
+        "emitterOwnership": "aggregate or partial source",
+        "typedFields": [
+          {
+            "name": "TenantId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "ApplicationId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "SystemInstanceId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "Revision",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "EffectiveAt",
+            "type": "DateTimeOffset",
+            "required": true
+          },
+          {
+            "name": "Reason",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "ActorMemberId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "ActorDisplay",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "ChangedAt",
+            "type": "DateTimeOffset",
+            "required": true
+          }
+        ],
+        "eventContract": "src/Compliance.Common/Features/Applications/SystemInstanceRetired.cs"
+      }
+    },
+    {
+      "event": "SystemInstanceRevised",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
+        "jsonPointer": "/aggregates/29",
+        "line": 23391,
+        "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
+      },
+      "baselineContract": {
+        "event": "SystemInstanceRevised",
+        "emitters": [
+          "src/Compliance.Core/Features/Applications/DeclaredSystemInstance.cs"
+        ],
+        "eventDisposition": "aggregate_fact",
+        "emitterOwnership": "aggregate or partial source",
+        "typedFields": [
+          {
+            "name": "TenantId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "ApplicationId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "SystemInstanceId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "Revision",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "Name",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "Kind",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "AccessBoundaryReference",
+            "type": "string?",
+            "required": true
+          },
+          {
+            "name": "SourceIdentifier",
+            "type": "string?",
+            "required": true
+          },
+          {
+            "name": "Rationale",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "ActorMemberId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "ActorDisplay",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "ChangedAt",
+            "type": "DateTimeOffset",
+            "required": true
+          }
+        ],
+        "eventContract": "src/Compliance.Common/Features/Applications/SystemInstanceRevised.cs"
+      }
+    }
+  ],
+  "choreography": [],
+  "status": "SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED",
+  "baselineIdentityObservation": "Per instance minted/business id; declaration compares current fields, retirement rejects already-retired retry, revision commands have no selected logical request lookup.",
+  "identityContractRule": "Existing published owner identity/IdFor remains stable. Required typed creation/operation identity and tenant/program/source scope come from the selected signature/protocol references; no context.RequestId minting fallback or guessed new stream key.",
+  "adoptedArchitectureDecisions": [],
+  "selectedIdentityClarification": "Tenant + caller SystemInstanceId with immutable owning application/program scope.",
+  "selectedIdentitySummary": "Tenant + caller SystemInstanceId with immutable owning application/program scope.",
+  "baselineIdentityObservationOnly": true,
+  "selectedLogicalIdentityBindings": [
+    {
+      "command": "DeclareSystemInstance",
+      "logicalIdentity": "SystemInstanceId",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
+        "jsonPointer": "/contracts/57",
+        "line": 4314,
+        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
+      }
+    },
+    {
+      "command": "RetireSystemInstance",
+      "logicalIdentity": "CommandId",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
+        "jsonPointer": "/contracts/158",
+        "line": 11690,
+        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
+      }
+    },
+    {
+      "command": "ReviseSystemInstance",
+      "logicalIdentity": "CommandId",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
+        "jsonPointer": "/contracts/183",
+        "line": 13734,
+        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
+      }
+    }
+  ],
+  "selectedReplayRule": "Current required authorization precedes replay; exact authorized retries resolve the original accepted result using the selected logical identity and immutable actor/intent/source binding. Fresh mutable feasibility, clock selection and body preparation cannot replace that original result. Expected revision is concurrency precondition, not a new identity.",
+  "productRules": [
+    {
+      "id": "D05-04",
+      "doc": "m0-d05-application-inventory.md",
+      "rule": "A SystemInstance's instance_kind is one of cloud_account, source_code_organization, identity_provider_tenant, saas_tenant, environment, or other; the other kind requires a description, and platform is required for every kind except environment and other."
+    },
+    {
+      "id": "D05-05",
+      "doc": "m0-d05-application-inventory.md",
+      "rule": "An active SystemInstance's provider identifier is unique per tenant for the combination of instance kind, platform, and provider identifier, so same-named instances of different kinds or platforms do not collide."
+    },
+    {
+      "id": "D22-01",
+      "doc": "m0-d22-canonical-ownership.md",
+      "rule": "Application and SystemInstance are owned solely by application inventory; access review campaigns reference an exact system instance, and a campaign's review inclusion neither creates nor owns the instance (ReviewedSystem is a legacy name, not a second entity)."
+    }
+  ],
+  "decides": "Instance kind must be one of cloud_account, source_code_organization, identity_provider_tenant, saas_tenant, environment, or other; other requires a description, and platform is required for every kind except environment and other. An active instance's provider identifier is unique per tenant across (kind, platform, provider identifier), so same-named instances of different kinds or platforms do not collide. Access campaigns reference an exact instance and never create or own it.",
+  "decidesCovers": [
+    "D05-04",
+    "D05-05",
+    "D22-01"
+  ],
+  "decidesAuthored": "2026-10-29"
+}

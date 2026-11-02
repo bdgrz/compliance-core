@@ -1,0 +1,227 @@
+{
+  "owner": "ControlEvaluationPlan",
+  "origin": "retained_baseline",
+  "baselineOwners": [
+    "ControlEvaluationPlan"
+  ],
+  "declaredIdentity": "tenant/control-evaluation-plans/controlId; stable planVersionId passed from request; Define compares complete procedure/author/current version data on identity reuse and checks expectedVersion.",
+  "invariant": "A plan version has a stable identity and immutable procedure; only a successor to the current plan version can be appended and exact duplicate identity must have the same content.",
+  "boundaryDecision": "narrow",
+  "boundaryRationale": "The procedure steps belong together: validation and eventual evaluation operate over one exact ordered procedure snapshot. Old immutable plan versions do not need to stay in active command state; keep current version/identity admission while history is a projection.",
+  "sources": [
+    {
+      "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
+      "jsonPointer": "/aggregates/23",
+      "line": 19358,
+      "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
+    }
+  ],
+  "baselineSourcePath": "src/Compliance.Core/Features/Evaluations/ControlEvaluationPlan.cs",
+  "baselineEvents": [
+    "ControlEvaluationPlanVersionDefined"
+  ],
+  "classification": "business_aggregate",
+  "businessAggregate": true,
+  "implementationStatus": "SEPARATE_VERIFICATION_REQUIRED_IMPLEMENTATION_HALTED",
+  "identityReadingRule": "selectedIdentitySummary and exact selectedCommandContracts define intended identity. baselineIdentityObservation/declaredIdentity retain older source observations only, including old replay defects; they are not target behavior or authorization to change an occupied key.",
+  "selectedCommandContracts": [
+    {
+      "command": "DefineControlEvaluationPlan",
+      "logicalIdentity": {
+        "field": "PlanVersionId",
+        "type": "Uuid",
+        "required": true,
+        "rule": "caller-supplied immutable creation identity: an exact retry with the same id and authored intent returns the original result; the same id with changed intent is refused; a different id is a different record"
+      },
+      "fields": [
+        {
+          "name": "PlanVersionId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ProgramId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ControlId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ControlVersionId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectedVersion",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "Objective",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "Steps",
+          "type": "IReadOnlyList<EvaluationProcedureStep>?",
+          "required": true
+        },
+        {
+          "name": "TesterIndependenceRequired",
+          "type": "bool",
+          "required": true
+        }
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "ControlEvaluationPlanVersionView",
+        "firstHttpStatus": 200,
+        "terminalResultType": "ControlEvaluationPlanVersionView"
+      },
+      "http": [
+        {
+          "method": "PUT",
+          "path": "/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/evaluation-plan/versions/{plan_version_id}",
+          "authorizationPolicy": "ComplianceAuthorizationPolicies.ApiUser"
+        }
+      ],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
+        "jsonPointer": "/contracts/59",
+        "line": 4471,
+        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
+      },
+      "kind": "http"
+    }
+  ],
+  "eventAuthority": "retained_baseline_business_facts_requires_schema_reconciliation",
+  "events": [
+    {
+      "event": "ControlEvaluationPlanVersionDefined",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
+        "jsonPointer": "/aggregates/23",
+        "line": 19358,
+        "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
+      },
+      "baselineContract": {
+        "event": "ControlEvaluationPlanVersionDefined",
+        "emitters": [
+          "src/Compliance.Core/Features/Evaluations/ControlEvaluationPlan.cs"
+        ],
+        "eventDisposition": "aggregate_fact",
+        "emitterOwnership": "aggregate or partial source",
+        "typedFields": [
+          {
+            "name": "TenantId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "ProgramId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "ControlId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "ControlVersionId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "PlanVersionId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "Version",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "Objective",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "Steps",
+            "type": "IReadOnlyList<EvaluationProcedureStep>",
+            "required": true
+          },
+          {
+            "name": "TesterIndependenceRequired",
+            "type": "bool",
+            "required": true
+          },
+          {
+            "name": "AuthoredByMemberId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "Author",
+            "type": "ActorReference",
+            "required": true
+          },
+          {
+            "name": "DefinedAt",
+            "type": "DateTimeOffset",
+            "required": true
+          }
+        ],
+        "eventContract": "src/Compliance.Common/Features/Evaluations/ControlEvaluationPlanVersionDefined.cs"
+      }
+    }
+  ],
+  "choreography": [],
+  "status": "SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED",
+  "baselineIdentityObservation": "tenant/control-evaluation-plans/controlId; stable planVersionId passed from request; Define compares complete procedure/author/current version data on identity reuse and checks expectedVersion.",
+  "identityContractRule": "Existing published owner identity/IdFor remains stable. Required typed creation/operation identity and tenant/program/source scope come from the selected signature/protocol references; no context.RequestId minting fallback or guessed new stream key.",
+  "adoptedArchitectureDecisions": [],
+  "selectedIdentityClarification": "Tenant / control-evaluation-plans / ControlId, with immutable ProgramId. PlanVersionId identifies the selected immutable definition operation and its complete procedure/author/source intent.",
+  "selectedIdentitySummary": "Tenant / control-evaluation-plans / ControlId, with immutable ProgramId. PlanVersionId identifies the selected immutable definition operation and its complete procedure/author/source intent.",
+  "baselineIdentityObservationOnly": true,
+  "selectedLogicalIdentityBindings": [
+    {
+      "command": "DefineControlEvaluationPlan",
+      "logicalIdentity": "PlanVersionId",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
+        "jsonPointer": "/contracts/59",
+        "line": 4471,
+        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
+      }
+    }
+  ],
+  "selectedReplayRule": "Current required authorization precedes replay; exact authorized retries resolve the original accepted result using the selected logical identity and immutable actor/intent/source binding. Fresh mutable feasibility, clock selection and body preparation cannot replace that original result. Expected revision is concurrency precondition, not a new identity.",
+  "productRules": [
+    {
+      "id": "D13-01",
+      "doc": "m0-d13-control-evaluation.md",
+      "rule": "A ControlEvaluationPlan version names the exact approved control version it evaluates, and each procedure step keeps its exact inspected record version or artifact content reference so starting an evaluation never resolves to newer versions."
+    },
+    {
+      "id": "D13-03",
+      "doc": "m0-d13-control-evaluation.md",
+      "rule": "A control evaluation plan version is frozen when evaluation starts; a changed plan is a new version and never rewrites results already recorded."
+    }
+  ],
+  "decides": "A plan version names the exact approved control version it evaluates, and each procedure step pins its exact inspected record version or artifact content reference. A version is frozen once an evaluation starts and a change appends a successor version without rewriting results already recorded.",
+  "decidesCovers": [
+    "D13-01",
+    "D13-03"
+  ],
+  "decidesAuthored": "2026-10-29"
+}

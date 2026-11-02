@@ -1,0 +1,101 @@
+{
+  "owner": "ExaminationEngagement",
+  "events": [
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:ExaminationEngagementOpened",
+        "event": "ExaminationEngagementOpened",
+        "emissionKind": "business",
+        "owners": [
+          "ExaminationEngagement"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": false,
+        "targetConcreteType": "ExaminationEngagementOpened",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.examinations.examination-engagement-opened",
+          "version": 2
+        },
+        "wireQualification": "Wire matches the declared record in src/Compliance.Common/Features/Examinations/Events/ExaminationEngagementOpened.cs at 60029b8f.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "retained_current_schema_native_qualification_required",
+        "sourceStatus": "declared",
+        "meaning": "An examination engagement was opened for a program with its engagement type, system boundary and optional Type I baseline, as the engagement's first revision.",
+        "meaningSource": "authored 2026-10-29 from src/Compliance.Common/Features/Examinations/Events/ExaminationEngagementOpened.cs"
+      },
+      "schema": null
+    },
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:ExaminationEngagementRevised",
+        "event": "ExaminationEngagementRevised",
+        "emissionKind": "business",
+        "owners": [
+          "ExaminationEngagement"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": false,
+        "targetConcreteType": "ExaminationEngagementRevised",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.examinations.examination-engagement-revised",
+          "version": 2
+        },
+        "wireQualification": "Wire matches the declared record in src/Compliance.Common/Features/Examinations/Events/ExaminationEngagementRevised.cs at 60029b8f.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "retained_current_schema_native_qualification_required",
+        "sourceStatus": "declared",
+        "meaning": "An examination engagement's terms were revised by a named member, recorded as the engagement's next revision.",
+        "meaningSource": "authored 2026-10-29 from src/Compliance.Common/Features/Examinations/Events/ExaminationEngagementRevised.cs"
+      },
+      "schema": null
+    },
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:TypeIBaselineAmended",
+        "event": "TypeIBaselineAmended",
+        "emissionKind": "business",
+        "owners": [
+          "ExaminationEngagement"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": false,
+        "targetConcreteType": "TypeIBaselineAmended",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.examinations.type-i-baseline-amended",
+          "version": 2
+        },
+        "wireQualification": "Wire matches the declared record in src/Compliance.Common/Features/Examinations/Events/TypeIBaselineAmended.cs at 60029b8f.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "retained_current_schema_native_qualification_required",
+        "sourceStatus": "declared",
+        "meaning": "The frozen Type I baseline of an examination engagement was amended by a named member, recorded as a new baseline revision.",
+        "meaningSource": "authored 2026-10-29 from src/Compliance.Common/Features/Examinations/Events/TypeIBaselineAmended.cs"
+      },
+      "schema": null
+    },
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:TypeIBaselineFrozen",
+        "event": "TypeIBaselineFrozen",
+        "emissionKind": "business",
+        "owners": [
+          "ExaminationEngagement"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": false,
+        "targetConcreteType": "TypeIBaselineFrozen",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.examinations.type-i-baseline-frozen",
+          "version": 2
+        },
+        "wireQualification": "Wire matches the declared record in src/Compliance.Common/Features/Examinations/Events/TypeIBaselineFrozen.cs at 60029b8f.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "retained_current_schema_native_qualification_required",
+        "sourceStatus": "declared",
+        "meaning": "The Type I baseline of an examination engagement was frozen at its current boundary, fixing the point-in-time position the engagement is measured against.",
+        "meaningSource": "authored 2026-10-29 from src/Compliance.Common/Features/Examinations/Events/TypeIBaselineFrozen.cs"
+      },
+      "schema": null
+    }
+  ]
+}

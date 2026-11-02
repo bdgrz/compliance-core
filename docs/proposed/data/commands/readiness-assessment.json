@@ -1,0 +1,71 @@
+{
+  "owner": "ReadinessAssessment",
+  "selectedContracts": [
+    {
+      "command": "ComputeReadinessAssessment",
+      "kind": "receiver",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "internal",
+        "rule": "deterministic receiver identity derived from the admitted root fact, episode and generation: exact redelivery resolves the original result, a changed admission is a new identity"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "required": true
+        },
+        {
+          "name": "Source",
+          "required": true
+        },
+        {
+          "name": "Target",
+          "required": true
+        },
+        {
+          "name": "OperationId",
+          "required": true
+        },
+        {
+          "name": "Generation",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "required": true
+        },
+        {
+          "name": "Intent",
+          "required": true
+        },
+        {
+          "name": "ProgramId",
+          "required": true
+        },
+        {
+          "name": "AssessmentId",
+          "required": true
+        }
+      ],
+      "http": [],
+      "source": {
+        "path": "src/Compliance.Core/Features/Readiness/Processes/ReadinessRunProcess.cs",
+        "recorded": "2026-10-29"
+      },
+      "reactor": "ReadinessAssessmentComputationReactor",
+      "sourceOwner": "ProgramReadiness",
+      "sourceEvents": [
+        "ReadinessAssessmentRequested"
+      ],
+      "guard": "Evaluate only frozen ReadinessRunIntent input content with its exact supported rule version; missing business facts already represented explicitly in that snapshot. No live source reads during replay or rerun.",
+      "eventsEmitted": [
+        "ReadinessAssessmentRecorded"
+      ],
+      "effectKind": "compute_readiness_assessment",
+      "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine."
+    }
+  ],
+  "sourceContractEvidence": []
+}

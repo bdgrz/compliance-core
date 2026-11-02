@@ -1,0 +1,685 @@
+{
+  "owner": "AccessPopulation",
+  "selectedContracts": [
+    {
+      "command": "AcceptAccessPopulation",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "PopulationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "Attestation",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "AccessPopulationAcceptance",
+        "firstHttpStatus": 200,
+        "terminalResultType": "AccessPopulationAcceptance"
+      },
+      "http": [
+        {
+          "method": "PUT",
+          "path": "/api/v1/tenants/{tenant_id}/access-populations/{population_id}/acceptance/{command_id}",
+          "policy": "ComplianceAuthorizationPolicies.ApiUser"
+        }
+      ],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
+        "jsonPointer": "/commands/0",
+        "line": 8,
+        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
+      },
+      "kind": "http"
+    },
+    {
+      "command": "OpenAccessPopulation",
+      "logicalIdentity": {
+        "field": "PopulationId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "deterministic receiver identity derived from the admitted root fact, episode and generation: exact redelivery resolves the original result, a changed admission is a new identity"
+      },
+      "fields": [
+        {
+          "name": "PopulationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ApplicationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "SystemInstanceId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectedSystemInstanceRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "ObservedAt",
+          "type": "DateTimeOffset",
+          "required": true
+        },
+        {
+          "name": "Source",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "AccessPopulationRegistration",
+        "firstHttpStatus": 200,
+        "terminalResultType": "AccessPopulationRegistration"
+      },
+      "http": [
+        {
+          "method": "PUT",
+          "path": "/api/v1/tenants/{tenant_id}/access-populations/{population_id}",
+          "policy": "ComplianceAuthorizationPolicies.ApiUser"
+        }
+      ],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
+        "jsonPointer": "/commands/71",
+        "line": 8216,
+        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
+      },
+      "kind": "http"
+    },
+    {
+      "command": "RecordAccessPopulationFacts",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "PopulationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "Principals",
+          "type": "IReadOnlyList<AccessPrincipalFact>",
+          "required": true
+        },
+        {
+          "name": "Entitlements",
+          "type": "IReadOnlyList<AccessEntitlementFact>",
+          "required": true
+        },
+        {
+          "name": "GroupMembers",
+          "type": "IReadOnlyList<AccessGroupMemberFact>",
+          "required": true
+        },
+        {
+          "name": "Assignments",
+          "type": "IReadOnlyList<AccessAssignmentFact>",
+          "required": true
+        }
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "AccessPopulationRegistration",
+        "firstHttpStatus": 200,
+        "terminalResultType": "AccessPopulationRegistration"
+      },
+      "http": [
+        {
+          "method": "PUT",
+          "path": "/api/v1/tenants/{tenant_id}/access-populations/record-access-population-facts/{command_id}",
+          "policy": "ApiUser + existing request-scope authorizers"
+        }
+      ],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
+        "jsonPointer": "/commands/89",
+        "line": 10406,
+        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
+      },
+      "kind": "http"
+    }
+  ],
+  "sourceContractEvidence": [
+    {
+      "command": "AcceptAccessPopulation",
+      "status": "target_contract",
+      "sourceContract": "src/Compliance.Common/Features/AccessReviews/AcceptAccessPopulation.cs",
+      "sourceHandlers": [
+        {
+          "name": "AcceptAccessPopulationHandler",
+          "source": "src/Compliance.Core/Features/AccessReviews/AcceptAccessPopulationHandler.cs",
+          "registered": true
+        }
+      ],
+      "handler": "AcceptAccessPopulationHandler",
+      "sourceRoots": [
+        "AccessPopulation"
+      ],
+      "owner": "AccessPopulation",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "one immutable authored operation"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "PopulationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "Attestation",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "http": [
+        {
+          "method": "PUT",
+          "path": "/api/v1/tenants/{tenant_id}/access-populations/{population_id}/acceptance/{command_id}",
+          "policy": "ComplianceAuthorizationPolicies.ApiUser"
+        }
+      ],
+      "mcp": false,
+      "entryPoint": "personal_http",
+      "authorizerSources": [
+        "src/Compliance.Core/Features/AccessReviews/AccessReviewAuthorizer.cs"
+      ],
+      "events": [
+        "AccessPopulationAccepted"
+      ],
+      "protocols": [
+        "Population acceptance and principal classification"
+      ],
+      "guardOrder": [
+        "bind_required_ids",
+        "authenticate_authorize",
+        "canonicalize_authored_intent",
+        "resolve_native_operation_facts",
+        "compare_owner_episode_actor_kind_intent_original_revision",
+        "validate_new_owner_revision_and_source_permits",
+        "append_complete_concrete_attributed_batch"
+      ],
+      "policyPreservation": "All current source handler/aggregate validation rules and source test expectations apply, except the explicit contractChanges and boundary protocol. Lifetime caps and technical attempt events are removed with their structural replacement.",
+      "contractChanges": [
+        "Add required CommandId."
+      ],
+      "existingTests": [
+        "test/Compliance.Tests/Features/AccessReviews/RestrictedAccessPopulationReadTests.cs",
+        "test/Compliance.Tests/Features/AccessReviews/PersonalAccessReviewTransportTests.cs",
+        "test/Compliance.Tests/Features/AccessReviews/AccessPopulationHandlerTests.cs",
+        "test/Compliance.Tests/Features/AccessReviews/AccessReviewFixture.cs"
+      ],
+      "requiredTests": [
+        "ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange",
+        "ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision",
+        "ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity",
+        "ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof",
+        "ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome"
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "AccessPopulationAcceptance",
+        "firstHttpStatus": 200,
+        "terminalResultType": "AccessPopulationAcceptance"
+      },
+      "expectedRevisionScope": {
+        "field": "ExpectedRevision",
+        "owner": "AccessPopulation",
+        "counter": "logical ResourceRevision of this owner",
+        "nullableInternalRule": null
+      }
+    },
+    {
+      "command": "ClassifyAccessPrincipal",
+      "status": "target_contract",
+      "sourceContract": "src/Compliance.Common/Features/AccessReviews/ClassifyAccessPrincipal.cs",
+      "sourceHandlers": [
+        {
+          "name": "ClassifyAccessPrincipalHandler",
+          "source": "src/Compliance.Core/Features/AccessReviews/ClassifyAccessPrincipalHandler.cs",
+          "registered": true
+        }
+      ],
+      "handler": "ClassifyAccessPrincipalHandler",
+      "sourceRoots": [
+        "AccessPopulation"
+      ],
+      "owner": "AccessPrincipalClassification",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "one immutable authored operation"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "PopulationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ProviderSubjectId",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "Classification",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "Rationale",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "PersonId",
+          "type": "Uuid?",
+          "required": false
+        },
+        {
+          "name": "ServiceIdentityId",
+          "type": "Uuid?",
+          "required": false
+        },
+        {
+          "name": "AccountableOwnerPersonId",
+          "type": "Uuid?",
+          "required": false
+        },
+        {
+          "name": "SharedJustification",
+          "type": "string?",
+          "required": false
+        }
+      ],
+      "http": [
+        {
+          "method": "PUT",
+          "path": "/api/v1/tenants/{tenant_id}/access-populations/{population_id}/classifications/{command_id}",
+          "policy": "ComplianceAuthorizationPolicies.ApiUser"
+        }
+      ],
+      "mcp": true,
+      "entryPoint": "authorized_http_and_mcp",
+      "authorizerSources": [
+        "src/Compliance.Core/Features/AccessReviews/AccessReviewAuthorizer.cs"
+      ],
+      "events": [
+        "AccessPrincipalClassified"
+      ],
+      "protocols": [
+        "Population acceptance and principal classification"
+      ],
+      "guardOrder": [
+        "bind_required_ids",
+        "authenticate_authorize",
+        "canonicalize_authored_intent",
+        "resolve_native_operation_facts",
+        "compare_owner_episode_actor_kind_intent_original_revision",
+        "validate_new_owner_revision_and_source_permits",
+        "append_complete_concrete_attributed_batch"
+      ],
+      "policyPreservation": "All current source handler/aggregate validation rules and source test expectations apply, except the explicit contractChanges and boundary protocol. Lifetime caps and technical attempt events are removed with their structural replacement.",
+      "contractChanges": [
+        "Add required CommandId.",
+        "Rename ExpectedClassificationCount to ExpectedRevision and compare the new target owner revision."
+      ],
+      "existingTests": [
+        "test/Compliance.Tests/Features/AccessReviews/AccessReviewFixture.cs",
+        "test/Compliance.Tests/Features/AccessReviews/AccessClassificationAndVarianceTests.cs"
+      ],
+      "requiredTests": [
+        "ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange",
+        "ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision",
+        "ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity",
+        "ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof",
+        "ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome"
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "AccessPrincipalClassificationView",
+        "firstHttpStatus": 200,
+        "terminalResultType": "AccessPrincipalClassificationView"
+      },
+      "expectedRevisionScope": {
+        "field": "ExpectedRevision",
+        "owner": "AccessPrincipalClassification",
+        "counter": "logical ResourceRevision of this owner",
+        "nullableInternalRule": null
+      }
+    },
+    {
+      "command": "OpenAccessPopulation",
+      "status": "target_contract",
+      "sourceContract": "src/Compliance.Common/Features/AccessReviews/OpenAccessPopulation.cs",
+      "sourceHandlers": [
+        {
+          "name": "OpenAccessPopulationHandler",
+          "source": "src/Compliance.Core/Features/AccessReviews/OpenAccessPopulationHandler.cs",
+          "registered": true
+        }
+      ],
+      "handler": "OpenAccessPopulationHandler",
+      "sourceRoots": [
+        "AccessPopulation"
+      ],
+      "owner": "AccessPopulation",
+      "logicalIdentity": {
+        "field": "PopulationId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "exact immutable creation retry"
+      },
+      "fields": [
+        {
+          "name": "PopulationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ApplicationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "SystemInstanceId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectedSystemInstanceRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "ObservedAt",
+          "type": "DateTimeOffset",
+          "required": true
+        },
+        {
+          "name": "Source",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "http": [
+        {
+          "method": "PUT",
+          "path": "/api/v1/tenants/{tenant_id}/access-populations/{population_id}",
+          "policy": "ComplianceAuthorizationPolicies.ApiUser"
+        }
+      ],
+      "mcp": true,
+      "entryPoint": "authorized_http_and_mcp",
+      "authorizerSources": [
+        "src/Compliance.Core/Features/AccessReviews/AccessReviewAuthorizer.cs"
+      ],
+      "events": [
+        "AccessPopulationOpened"
+      ],
+      "protocols": [
+        "Population acceptance and principal classification"
+      ],
+      "guardOrder": [
+        "bind_required_ids",
+        "authenticate_authorize",
+        "canonicalize_authored_intent",
+        "resolve_native_operation_facts",
+        "compare_owner_episode_actor_kind_intent_original_revision",
+        "validate_new_owner_revision_and_source_permits",
+        "append_complete_concrete_attributed_batch"
+      ],
+      "policyPreservation": "All current source handler/aggregate validation rules and source test expectations apply, except the explicit contractChanges and boundary protocol. Lifetime caps and technical attempt events are removed with their structural replacement.",
+      "contractChanges": [
+        "Add required PopulationId."
+      ],
+      "existingTests": [
+        "test/Compliance.Tests/Features/AccessReviews/PersonalAccessReviewTransportTests.cs",
+        "test/Compliance.Tests/Features/AccessReviews/AccessPopulationHandlerTests.cs",
+        "test/Compliance.Tests/Features/AccessReviews/AccessReviewFixture.cs",
+        "test/Compliance.Tests/Features/AccessReviews/AttestAccessReviewWriteWallTests.cs",
+        "test/Compliance.Tests/Features/AccessReviews/AccessClassificationAndVarianceTests.cs"
+      ],
+      "requiredTests": [
+        "ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange",
+        "ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision",
+        "ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity",
+        "ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof",
+        "ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome"
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "AccessPopulationRegistration",
+        "firstHttpStatus": 200,
+        "terminalResultType": "AccessPopulationRegistration"
+      },
+      "expectedRevisionScope": {
+        "field": null,
+        "owner": "AccessPopulation",
+        "counter": "No primary caller ResourceRevision. Enforce required authored source/epoch/version tokens, immutable creation identity or trusted proof/generation as declared; append uses physical OCC."
+      }
+    },
+    {
+      "command": "RecordAccessPopulationFacts",
+      "status": "target_contract",
+      "sourceContract": "src/Compliance.Common/Features/AccessReviews/RecordAccessPopulationFacts.cs",
+      "sourceHandlers": [
+        {
+          "name": "RecordAccessPopulationFactsHandler",
+          "source": "src/Compliance.Core/Features/AccessReviews/RecordAccessPopulationFactsHandler.cs",
+          "registered": true
+        }
+      ],
+      "handler": "RecordAccessPopulationFactsHandler",
+      "sourceRoots": [
+        "AccessPopulation"
+      ],
+      "owner": "AccessPopulation",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "one immutable authored operation"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "PopulationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "Principals",
+          "type": "IReadOnlyList<AccessPrincipalFact>",
+          "required": true
+        },
+        {
+          "name": "Entitlements",
+          "type": "IReadOnlyList<AccessEntitlementFact>",
+          "required": true
+        },
+        {
+          "name": "GroupMembers",
+          "type": "IReadOnlyList<AccessGroupMemberFact>",
+          "required": true
+        },
+        {
+          "name": "Assignments",
+          "type": "IReadOnlyList<AccessAssignmentFact>",
+          "required": true
+        }
+      ],
+      "http": [
+        {
+          "method": "PUT",
+          "path": "/api/v1/tenants/{tenant_id}/access-populations/record-access-population-facts/{command_id}",
+          "policy": "ApiUser + existing request-scope authorizers"
+        }
+      ],
+      "mcp": true,
+      "entryPoint": "authorized_http_and_mcp",
+      "authorizerSources": [
+        "src/Compliance.Core/Features/AccessReviews/AccessReviewAuthorizer.cs"
+      ],
+      "events": [
+        "AccessPopulationFactsRecorded"
+      ],
+      "protocols": [
+        "Population acceptance and principal classification"
+      ],
+      "guardOrder": [
+        "bind_required_ids",
+        "authenticate_authorize",
+        "canonicalize_authored_intent",
+        "resolve_native_operation_facts",
+        "compare_owner_episode_actor_kind_intent_original_revision",
+        "validate_new_owner_revision_and_source_permits",
+        "append_complete_concrete_attributed_batch"
+      ],
+      "policyPreservation": "All current source handler/aggregate validation rules and source test expectations apply, except the explicit contractChanges and boundary protocol. Lifetime caps and technical attempt events are removed with their structural replacement.",
+      "contractChanges": [
+        "Add required CommandId."
+      ],
+      "existingTests": [
+        "test/Compliance.Tests/Features/AccessReviews/RestrictedAccessPopulationReadTests.cs",
+        "test/Compliance.Tests/Features/AccessReviews/PersonalAccessReviewTransportTests.cs",
+        "test/Compliance.Tests/Features/AccessReviews/AccessPopulationHandlerTests.cs",
+        "test/Compliance.Tests/Features/AccessReviews/AccessReviewFixture.cs"
+      ],
+      "requiredTests": [
+        "ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange",
+        "ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision",
+        "ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity",
+        "ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof",
+        "ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome"
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "AccessPopulationRegistration",
+        "firstHttpStatus": 200,
+        "terminalResultType": "AccessPopulationRegistration"
+      },
+      "expectedRevisionScope": {
+        "field": "ExpectedRevision",
+        "owner": "AccessPopulation",
+        "counter": "logical ResourceRevision of this owner",
+        "nullableInternalRule": null
+      }
+    }
+  ]
+}

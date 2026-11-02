@@ -1,0 +1,460 @@
+{
+  "owner": "AdvisorFeedbackThread",
+  "origin": "selected_split_target",
+  "baselineOwners": [
+    "AdvisorHandoff"
+  ],
+  "declaredIdentity": "(handoffId, feedbackId)",
+  "invariant": "Immutable contribution with its correction/response lifecycle.",
+  "boundaryDecision": "selected_split",
+  "mustPreserve": "Feedback records exact selected source version and admitted generation; later selection makes it historical.",
+  "sources": [
+    {
+      "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
+      "jsonPointer": "/splitOwners/6/targetOwners/1",
+      "line": 714,
+      "sha256": "d349d94b7c43f4d82020ecf36bdacf1aff98bc6498e14993582f1c3164b21f19"
+    }
+  ],
+  "baselineSourcePath": "src/Compliance.Core/Features/AdvisorCollaboration/AdvisorHandoff.cs",
+  "baselineEvents": [
+    "AdvisorFeedbackCorrected",
+    "AdvisorFeedbackRecorded",
+    "AdvisorFeedbackResolved",
+    "AdvisorFeedbackResponded"
+  ],
+  "preliminaryNewEvents": [],
+  "technicalStateToSeparate": [],
+  "classification": "business_aggregate",
+  "businessAggregate": true,
+  "implementationStatus": "SEPARATE_VERIFICATION_REQUIRED_IMPLEMENTATION_HALTED",
+  "identityReadingRule": "selectedIdentitySummary and exact selectedCommandContracts define intended identity. baselineIdentityObservation/declaredIdentity retain older source observations only, including old replay defects; they are not target behavior or authorization to change an occupied key.",
+  "selectedCommandContracts": [
+    {
+      "command": "CorrectAdvisorFeedback",
+      "logicalIdentity": {
+        "field": "CorrectionId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "caller-supplied immutable creation identity: an exact retry with the same id and authored intent returns the original result; the same id with changed intent is refused; a different id is a different record"
+      },
+      "fields": [
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ProgramId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "HandoffId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "FeedbackId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "CorrectionId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "CorrectedBody",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "CorrectionReason",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true
+        }
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "Unit",
+        "firstHttpStatus": 200,
+        "terminalResultType": "Unit"
+      },
+      "http": [
+        {
+          "method": "PUT",
+          "path": "/api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs/{handoff_id}/feedback/{feedback_id}/corrections/{correction_id}",
+          "policy": "ComplianceAuthorizationPolicies.ApiUser"
+        }
+      ],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
+        "jsonPointer": "/commands/38",
+        "line": 4509,
+        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
+      },
+      "kind": "http"
+    },
+    {
+      "command": "ResolveAdvisorFeedback",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ProgramId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "HandoffId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "FeedbackId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true
+        }
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "Unit",
+        "firstHttpStatus": 200,
+        "terminalResultType": "Unit"
+      },
+      "http": [
+        {
+          "method": "PUT",
+          "path": "/api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs/{handoff_id}/feedback/{feedback_id}/resolutions/{command_id}",
+          "policy": "ComplianceAuthorizationPolicies.ApiUser"
+        }
+      ],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
+        "jsonPointer": "/commands/121",
+        "line": 13958,
+        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
+      },
+      "kind": "http"
+    },
+    {
+      "command": "RespondToAdvisorFeedback",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ProgramId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "HandoffId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "FeedbackId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Response",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true
+        }
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "Unit",
+        "firstHttpStatus": 200,
+        "terminalResultType": "Unit"
+      },
+      "http": [
+        {
+          "method": "PUT",
+          "path": "/api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs/{handoff_id}/feedback/{feedback_id}/responses/{command_id}",
+          "policy": "ComplianceAuthorizationPolicies.ApiUser"
+        }
+      ],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
+        "jsonPointer": "/commands/123",
+        "line": 14188,
+        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
+      },
+      "kind": "http"
+    },
+    {
+      "command": "MaterializeAdvisorFeedback",
+      "kind": "receiver",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "reactor",
+        "rule": "deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Source",
+          "type": "SourceFactProof<AdvisorFeedbackAdmitted>",
+          "required": true
+        },
+        {
+          "name": "Target",
+          "type": "EventStreamAddress",
+          "required": true
+        },
+        {
+          "name": "OperationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Generation",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long?",
+          "required": true
+        },
+        {
+          "name": "Intent",
+          "type": "ImmutableContentRef",
+          "required": true,
+          "contentSchema": "ChildAdmissionIntent"
+        },
+        {
+          "name": "HandoffId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "FeedbackId",
+          "type": "Uuid",
+          "required": true
+        }
+      ],
+      "reactor": "AdvisorFeedbackMaterializationReactor",
+      "sourceOwner": "AdvisorHandoff",
+      "sourceEvents": [
+        "AdvisorFeedbackAdmitted"
+      ],
+      "guard": "Exact full admitted intent, selected record/version and original actor; materialize after revocation too.",
+      "eventsEmitted": [
+        "AdvisorFeedbackRecorded"
+      ],
+      "effectKind": "materialize_advisor_feedback",
+      "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
+      "handler": "MaterializeAdvisorFeedbackHandler",
+      "http": [],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
+        "recorded": "2026-10-29"
+      }
+    }
+  ],
+  "eventAuthority": "selected_final_event_catalog",
+  "events": [
+    {
+      "event": "AdvisorFeedbackCorrected",
+      "discriminator": "bdgrz.advisor-feedback.corrected",
+      "discriminatorVersion": 1,
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
+        "jsonPointer": "/events/31",
+        "line": 3773,
+        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
+      }
+    },
+    {
+      "event": "AdvisorFeedbackRecorded",
+      "discriminator": "bdgrz.advisor-feedback.recorded",
+      "discriminatorVersion": 1,
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
+        "jsonPointer": "/events/32",
+        "line": 3849,
+        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
+      }
+    },
+    {
+      "event": "AdvisorFeedbackResolved",
+      "discriminator": "bdgrz.advisor-feedback.resolved",
+      "discriminatorVersion": 1,
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
+        "jsonPointer": "/events/33",
+        "line": 4033,
+        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
+      }
+    },
+    {
+      "event": "AdvisorFeedbackResponded",
+      "discriminator": "bdgrz.advisor-feedback.responded",
+      "discriminatorVersion": 1,
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
+        "jsonPointer": "/events/34",
+        "line": 4094,
+        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
+      }
+    }
+  ],
+  "choreography": [
+    {
+      "reactor": "AdvisorFeedbackMaterializationReactor",
+      "sourceOwner": "AdvisorHandoff",
+      "targetOwner": "AdvisorFeedbackThread",
+      "command": "MaterializeAdvisorFeedback",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
+        "jsonPointer": "/reactors/13",
+        "line": 1127,
+        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
+      }
+    }
+  ],
+  "status": "SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED",
+  "baselineIdentityObservation": "(handoffId, feedbackId)",
+  "identityContractRule": "Existing published owner identity/IdFor remains stable. Required typed creation/operation identity and tenant/program/source scope come from the selected signature/protocol references; no context.RequestId minting fallback or guessed new stream key.",
+  "adoptedArchitectureDecisions": [],
+  "selectedIdentitySummary": "Tenant-scoped (handoffId, feedbackId); the thread is opened by AdvisorFeedbackAdmitted on the handoff; `CorrectionId` identifies each correction operation; mutations bind CommandId to this exact identity.",
+  "baselineIdentityObservationOnly": true,
+  "selectedLogicalIdentityBindings": [
+    {
+      "command": "CorrectAdvisorFeedback",
+      "logicalIdentity": {
+        "field": "CorrectionId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "one immutable authored operation"
+      },
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
+        "jsonPointer": "/commands/38",
+        "line": 4509,
+        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
+      }
+    },
+    {
+      "command": "ResolveAdvisorFeedback",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "one immutable authored operation"
+      },
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
+        "jsonPointer": "/commands/121",
+        "line": 13958,
+        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
+      }
+    },
+    {
+      "command": "RespondToAdvisorFeedback",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "one immutable authored operation"
+      },
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
+        "jsonPointer": "/commands/123",
+        "line": 14188,
+        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
+      }
+    }
+  ],
+  "selectedReplayRule": "Current required authorization precedes replay; exact authorized retries resolve the original accepted result using the selected logical identity and immutable actor/intent/source binding. Fresh mutable feasibility, clock selection and body preparation cannot replace that original result. Expected revision is concurrency precondition, not a new identity.",
+  "identityRevisions": [
+    {
+      "date": "2026-10-29",
+      "previous": "(handoffId, feedbackId)"
+    }
+  ],
+  "productRules": [
+    {
+      "id": "D14-08",
+      "doc": "m0-d14-advisor-collaboration.md",
+      "rule": "AdvisorFeedback is of kind comment, change_request, or validated and records author, time, target record version, and kind."
+    },
+    {
+      "id": "D14-09",
+      "doc": "m0-d14-advisor-collaboration.md",
+      "rule": "A validated feedback is an attributed review of an exact record version; it never changes the record's approval state and never satisfies a separation-of-duties or approval requirement."
+    },
+    {
+      "id": "D14-11",
+      "doc": "m0-d14-advisor-collaboration.md",
+      "rule": "Advisor feedback is immutable once posted; a correction is a new entry linking back, and revocation removes future access but never past attribution."
+    }
+  ],
+  "decides": "Feedback is of kind comment, change_request or validated and records author, time, target record version and kind at admission; a posted entry is never edited, a correction is a new entry linking back to the original, and revoking access never rewrites past attribution. Validated feedback is attributed to an exact record version, never changes that record's approval state, and never satisfies a separation-of-duties, approval or independent-review requirement.",
+  "decidesCovers": [
+    "D13-12",
+    "D14-08",
+    "D14-09",
+    "D14-11"
+  ],
+  "decidesAuthored": "2026-10-29"
+}

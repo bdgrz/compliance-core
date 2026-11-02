@@ -1,0 +1,193 @@
+{
+  "owner": "ArtifactRetentionBasis",
+  "events": [
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:ArtifactRetentionBasisRecorded",
+        "event": "ArtifactRetentionBasisRecorded",
+        "emissionKind": "business",
+        "owners": [
+          "ArtifactRetentionBasis"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": true,
+        "targetConcreteType": "ArtifactRetentionBasisRecorded",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.artifact_retention.basis_recorded",
+          "version": 1
+        },
+        "wireQualification": "Wire matches the declared record in src/Compliance.Common/Features/Retention/Events/ArtifactRetentionBasisRecorded.cs at 60029b8f.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "selected_complete_schema",
+        "sourceStatus": "declared",
+        "meaning": "The retention basis for an artifact source was recorded: its policy, covered period, and the date it must be retained through, seven years after the period ends.",
+        "meaningSource": "authored 2026-10-29 from src/Compliance.Common/Features/Retention/Events/ArtifactRetentionBasisRecorded.cs"
+      },
+      "schema": {
+        "event": "ArtifactRetentionBasisRecorded",
+        "discriminator": "bdgrz.artifact_retention.basis_recorded",
+        "discriminatorVersion": 1,
+        "owner": "ArtifactRetentionBasis",
+        "existingContract": "src/Compliance.Common/Features/Retention/ArtifactRetentionBasisRecorded.cs",
+        "status": "selected target schema; implementation pending",
+        "reason": "source command accepted result",
+        "fields": [
+          {
+            "name": "Source",
+            "type": "ArtifactRetentionSource",
+            "required": true
+          },
+          {
+            "name": "Revision",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "SourcePosition",
+            "type": "ulong",
+            "required": true
+          },
+          {
+            "name": "Policy",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "PeriodStart",
+            "type": "DateOnly",
+            "required": true
+          },
+          {
+            "name": "PeriodEnd",
+            "type": "DateOnly",
+            "required": true
+          },
+          {
+            "name": "RetainsThrough",
+            "type": "DateOnly",
+            "required": true
+          },
+          {
+            "name": "BasisKind",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "Reason",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "RecordedBy",
+            "type": "Bdgrz.Compliance.Features.AccessControl.ActorReference",
+            "required": true
+          },
+          {
+            "name": "RecordedAt",
+            "type": "DateTimeOffset",
+            "required": true
+          },
+          {
+            "name": "Operation",
+            "type": "OperationProvenance",
+            "required": true
+          },
+          {
+            "name": "FirstResponse",
+            "type": "ImmutableContentRef?",
+            "required": true
+          },
+          {
+            "name": "OperationResult",
+            "type": "ImmutableContentRef?",
+            "required": true
+          }
+        ],
+        "contentSchemas": [],
+        "changes": [],
+        "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
+        "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
+        "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
+      }
+    },
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:ArtifactRetentionBound",
+        "event": "ArtifactRetentionBound",
+        "emissionKind": "business",
+        "owners": [
+          "ArtifactRetentionBasis"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": true,
+        "targetConcreteType": "ArtifactRetentionBound",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.artifact_retention.bound",
+          "version": 1
+        },
+        "wireQualification": "Wire matches the declared record in src/Compliance.Common/Features/Retention/Events/ArtifactRetentionBound.cs at 60029b8f.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "selected_complete_schema",
+        "sourceStatus": "declared",
+        "meaning": "A retention binding was recorded for an artifact source under the earlier combined retention record, kept only as history; current retention decisions are recorded as separate basis and hold facts.",
+        "meaningSource": "authored 2026-10-29 from src/Compliance.Common/Features/Retention/Events/ArtifactRetentionBound.cs"
+      },
+      "schema": {
+        "event": "ArtifactRetentionBound",
+        "discriminator": "bdgrz.artifact_retention.bound",
+        "discriminatorVersion": 1,
+        "owner": "ArtifactRetentionBasis",
+        "existingContract": "src/Compliance.Common/Features/Retention/ArtifactRetentionBound.cs",
+        "status": "selected target schema; implementation pending",
+        "reason": "existing native business fact, rehomed with its invariant",
+        "fields": [
+          {
+            "name": "Source",
+            "type": "ArtifactRetentionSource",
+            "required": true
+          },
+          {
+            "name": "Revision",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "SourcePosition",
+            "type": "ulong",
+            "required": true
+          },
+          {
+            "name": "RecordedBy",
+            "type": "Bdgrz.Compliance.Features.AccessControl.ActorReference",
+            "required": true
+          },
+          {
+            "name": "RecordedAt",
+            "type": "DateTimeOffset",
+            "required": true
+          },
+          {
+            "name": "Operation",
+            "type": "OperationProvenance",
+            "required": true
+          },
+          {
+            "name": "FirstResponse",
+            "type": "ImmutableContentRef?",
+            "required": true
+          },
+          {
+            "name": "OperationResult",
+            "type": "ImmutableContentRef?",
+            "required": true
+          }
+        ],
+        "contentSchemas": [],
+        "changes": [],
+        "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
+        "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
+        "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
+      }
+    }
+  ]
+}

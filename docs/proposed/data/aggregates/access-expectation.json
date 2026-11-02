@@ -1,0 +1,385 @@
+{
+  "owner": "AccessExpectation",
+  "origin": "selected_split_target",
+  "baselineOwners": [
+    "AccessReviewSystemLedger"
+  ],
+  "declaredIdentity": "(systemInstanceId, expectationId)",
+  "invariant": "One exact system-instance expectation lineage owns predecessor/successor competition, independent approval and same-line exceptions. Different lines may coexist, including different policies on one system. No cross-line exclusion governor or ban is implied; a future ban requires a separately reviewed precise predicate.",
+  "boundaryDecision": "selected_split",
+  "mustPreserve": "Independent proposer/reviewer or exact waiver; exception references approved expectation and future expiry.",
+  "sources": [
+    {
+      "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
+      "jsonPointer": "/splitOwners/5/targetOwners/0",
+      "line": 593,
+      "sha256": "d349d94b7c43f4d82020ecf36bdacf1aff98bc6498e14993582f1c3164b21f19"
+    },
+    {
+      "path": "[Placeholder: source artifact was recorded outside this repository]",
+      "jsonPointer": "/decisions/3",
+      "sha256": "8fdaec764a3554f2ea470aba66f2ce0945a424adbeba7505684314655d62216f",
+      "decisionId": "OWNER_AccessExpectationScopeGuard",
+      "choice": "line_authority_explicit_scope_override",
+      "rationale": "Required exclusion is predecessor/successor competition within the same expectation lineage. Different lines may coexist, including different policies on one system. Explicitly supersede the older unspecified cross-line governor; adding a future cross-line ban is a separately reviewed product/design change with a precise predicate.",
+      "authority": "Explicit current architecture adjudication under user-directed Jev review; supersedes cited contradictory earlier candidate/locked labels only as stated. Documentation decision, not implementation or deployment qualification."
+    }
+  ],
+  "baselineSourcePath": "src/Compliance.Core/Features/AccessReviews/AccessReviewSystemLedger.cs",
+  "baselineEvents": [
+    "AccessExpectationApproved",
+    "AccessExpectationExceptionRecorded",
+    "AccessExpectationProposed"
+  ],
+  "preliminaryNewEvents": [],
+  "technicalStateToSeparate": [],
+  "classification": "business_aggregate",
+  "businessAggregate": true,
+  "implementationStatus": "SEPARATE_VERIFICATION_REQUIRED_IMPLEMENTATION_HALTED",
+  "identityReadingRule": "selectedIdentitySummary and exact selectedCommandContracts define intended identity. baselineIdentityObservation/declaredIdentity retain older source observations only, including old replay defects; they are not target behavior or authorization to change an occupied key.",
+  "selectedCommandContracts": [
+    {
+      "command": "ApproveAccessExpectation",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "SystemInstanceId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "SeparationOfDutiesWaiverId",
+          "type": "Uuid?",
+          "required": false
+        }
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "AccessExpectationView",
+        "firstHttpStatus": 200,
+        "terminalResultType": "AccessExpectationView"
+      },
+      "http": [
+        {
+          "method": "PUT",
+          "path": "/api/v1/tenants/{tenant_id}/system-instances/{system_instance_id}/access-expectations/{expectation_id}/approval/{command_id}",
+          "policy": "ComplianceAuthorizationPolicies.ApiUser"
+        }
+      ],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
+        "jsonPointer": "/commands/14",
+        "line": 1666,
+        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
+      },
+      "kind": "http"
+    },
+    {
+      "command": "ExemptAccessExpectation",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "SystemInstanceId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "ProviderSubjectId",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "Rationale",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "ExpiresAt",
+          "type": "DateTimeOffset",
+          "required": true
+        },
+        {
+          "name": "ProviderEntitlementId",
+          "type": "string?",
+          "required": false
+        }
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "AccessExpectationExceptionView",
+        "firstHttpStatus": 200,
+        "terminalResultType": "AccessExpectationExceptionView"
+      },
+      "http": [
+        {
+          "method": "PUT",
+          "path": "/api/v1/tenants/{tenant_id}/system-instances/{system_instance_id}/access-expectations/{expectation_id}/exceptions/{command_id}",
+          "policy": "ComplianceAuthorizationPolicies.ApiUser"
+        }
+      ],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
+        "jsonPointer": "/commands/54",
+        "line": 6409,
+        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
+      },
+      "kind": "http"
+    },
+    {
+      "command": "ProposeAccessExpectation",
+      "logicalIdentity": {
+        "field": "ExpectationId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "caller-supplied immutable creation identity: an exact retry with the same id and authored intent returns the original result; the same id with changed intent is refused; a different id is a different record"
+      },
+      "fields": [
+        {
+          "name": "ExpectationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ApplicationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "SystemInstanceId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "RuleKind",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "Parameters",
+          "type": "AccessExpectationParameters",
+          "required": true
+        },
+        {
+          "name": "Rationale",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "EffectiveFrom",
+          "type": "DateTimeOffset",
+          "required": true
+        },
+        {
+          "name": "EffectiveUntil",
+          "type": "DateTimeOffset?",
+          "required": false
+        },
+        {
+          "name": "SupersedesExpectationId",
+          "type": "Uuid?",
+          "required": false
+        }
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "AccessExpectationView",
+        "firstHttpStatus": 200,
+        "terminalResultType": "AccessExpectationView"
+      },
+      "http": [
+        {
+          "method": "PUT",
+          "path": "/api/v1/tenants/{tenant_id}/applications/{application_id}/system-instances/{system_instance_id}/access-expectations/{expectation_id}",
+          "policy": "ComplianceAuthorizationPolicies.ApiUser"
+        }
+      ],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
+        "jsonPointer": "/commands/76",
+        "line": 8816,
+        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
+      },
+      "kind": "http"
+    }
+  ],
+  "eventAuthority": "selected_final_event_catalog",
+  "events": [
+    {
+      "event": "AccessExpectationApproved",
+      "discriminator": "bdgrz.access_expectation.approved",
+      "discriminatorVersion": 1,
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
+        "jsonPointer": "/events/1",
+        "line": 190,
+        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
+      }
+    },
+    {
+      "event": "AccessExpectationExceptionRecorded",
+      "discriminator": "bdgrz.access_expectation.exception_recorded",
+      "discriminatorVersion": 1,
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
+        "jsonPointer": "/events/2",
+        "line": 256,
+        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
+      }
+    },
+    {
+      "event": "AccessExpectationProposed",
+      "discriminator": "bdgrz.access_expectation.proposed",
+      "discriminatorVersion": 1,
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
+        "jsonPointer": "/events/3",
+        "line": 316,
+        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
+      }
+    }
+  ],
+  "choreography": [],
+  "status": "SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED",
+  "baselineIdentityObservation": "(systemInstanceId, expectationId)",
+  "identityContractRule": "Existing published owner identity/IdFor remains stable. Required typed creation/operation identity and tenant/program/source scope come from the selected signature/protocol references; no context.RequestId minting fallback or guessed new stream key.",
+  "adoptedArchitectureDecisions": [
+    {
+      "path": "[Placeholder: source artifact was recorded outside this repository]",
+      "jsonPointer": "/decisions/3",
+      "sha256": "8fdaec764a3554f2ea470aba66f2ce0945a424adbeba7505684314655d62216f",
+      "decisionId": "OWNER_AccessExpectationScopeGuard",
+      "choice": "line_authority_explicit_scope_override",
+      "rationale": "Required exclusion is predecessor/successor competition within the same expectation lineage. Different lines may coexist, including different policies on one system. Explicitly supersede the older unspecified cross-line governor; adding a future cross-line ban is a separately reviewed product/design change with a precise predicate.",
+      "authority": "Explicit current architecture adjudication under user-directed Jev review; supersedes cited contradictory earlier candidate/locked labels only as stated. Documentation decision, not implementation or deployment qualification."
+    }
+  ],
+  "selectedIdentityClarification": "Tenant realm and immutable system-instance binding plus root expectation-line identity. The first proposal roots the line; every successor shares the exact approved predecessor line conflict key. Existing physical identity is preserved.",
+  "selectedIdentitySummary": "Tenant realm and immutable system-instance binding plus root expectation-line identity. The first proposal roots the line; every successor shares the exact approved predecessor line conflict key. Existing physical identity is preserved.",
+  "baselineIdentityObservationOnly": true,
+  "selectedLogicalIdentityBindings": [
+    {
+      "command": "ApproveAccessExpectation",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "one immutable authored operation"
+      },
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
+        "jsonPointer": "/commands/14",
+        "line": 1666,
+        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
+      }
+    },
+    {
+      "command": "ExemptAccessExpectation",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "one immutable authored operation"
+      },
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
+        "jsonPointer": "/commands/54",
+        "line": 6409,
+        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
+      }
+    },
+    {
+      "command": "ProposeAccessExpectation",
+      "logicalIdentity": {
+        "field": "ExpectationId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "exact immutable creation retry"
+      },
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
+        "jsonPointer": "/commands/76",
+        "line": 8816,
+        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
+      }
+    }
+  ],
+  "selectedReplayRule": "Current required authorization precedes replay; exact authorized retries resolve the original accepted result using the selected logical identity and immutable actor/intent/source binding. Fresh mutable feasibility, clock selection and body preparation cannot replace that original result. Expected revision is concurrency precondition, not a new identity.",
+  "productRules": [
+    {
+      "id": "D07-08",
+      "doc": "m0-d07-access-review-population.md",
+      "rule": "An access expectation is scoped to a system instance, has a rule kind (forbidden_principal_kind, privileged_entitlement, or requires_expiry) with parameters and an approver, and is versioned."
+    }
+  ],
+  "decides": "An expectation is scoped to one system instance and carries one rule kind: forbidden_principal_kind (names only a principal kind), privileged_entitlement or requires_expiry, with parameters validated per kind, a named approver, and a monotonically increasing version on its line. Any other rule kind is refused.",
+  "decidesCovers": [
+    "D07-08"
+  ],
+  "decidesAuthored": "2026-10-29"
+}

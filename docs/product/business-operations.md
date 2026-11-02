@@ -40,7 +40,7 @@ professional engagement or eligibility to perform attest work.
 
 BO is a product scope grouping in the [backlog](backlog.md), not a newly created
 GitHub milestone or an instruction to interrupt the current delivery queue.
-The stories support objectives O8 and O9 in the [product brief](product-brief.md).
+The stories support objectives O8 and O9 in the [product brief](../proposed/scope.md).
 Current implementation status and scheduling belong to GitHub issues and the
 product journey project.
 
@@ -159,7 +159,7 @@ targets in #340.
 
 ## Related product contracts
 
-- [Product brief](product-brief.md): business thesis and objectives O1–O9.
+- [Product brief](../proposed/scope.md): business thesis and objectives O1–O9.
 - [M0-D03](decisions/m0-d03-roles-and-separation-of-duties.md): client roles,
   responsibility, and separation of duties.
 - [M0-D25](decisions/m0-d25-client-tenancy.md): tenant, membership, operator,

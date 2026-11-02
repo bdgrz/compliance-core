@@ -1,0 +1,29 @@
+{
+  "owner": "ExaminationSignOff",
+  "events": [
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:ExaminationSignedOff",
+        "event": "ExaminationSignedOff",
+        "emissionKind": "business",
+        "owners": [
+          "ExaminationSignOff"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": false,
+        "targetConcreteType": "ExaminationSignedOff",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.examinations.examination-signed-off",
+          "version": 2
+        },
+        "wireQualification": "Wire matches the declared record in src/Compliance.Common/Features/Examinations/Events/ExaminationSignedOff.cs at 60029b8f.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "retained_current_schema_native_qualification_required",
+        "sourceStatus": "declared",
+        "meaning": "Records management's immutable review of the exact examination inputs and outcomes.",
+        "meaningSource": "record summary in src/Compliance.Common/Features/Examinations/Events/ExaminationSignedOff.cs"
+      },
+      "schema": null
+    }
+  ]
+}

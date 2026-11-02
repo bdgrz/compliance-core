@@ -1,0 +1,17 @@
+{
+  "process": "ControlOccurrenceFanOut",
+  "rootSourceEvents": [
+    "DueControlOccurrencesGenerated"
+  ],
+  "ordered": false,
+  "stages": [
+    {
+      "stage": "materialize",
+      "receivers": [
+        "MaterializeControlOccurrence"
+      ],
+      "rule": "One receiver per selected window; canonical OccurrenceId dedupes generators."
+    }
+  ],
+  "abort": []
+}

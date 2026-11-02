@@ -1,0 +1,277 @@
+{
+  "owner": "AccessExpectation",
+  "events": [
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:AccessExpectationApproved",
+        "event": "AccessExpectationApproved",
+        "emissionKind": "business",
+        "owners": [
+          "AccessExpectation"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": true,
+        "targetConcreteType": "AccessExpectationApproved",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.access_expectation.approved",
+          "version": 2
+        },
+        "wireQualification": "Adopted wire is the occupied discriminator declared in src/Compliance.Common/Features/AccessReviews/Events/AccessExpectationApproved.cs at 60029b8f (2026-10-29 reconciliation). The earlier selected wire is retained as supersededSelectedWire for provenance only.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "selected_complete_schema",
+        "sourceStatus": "declared",
+        "supersededSelectedWire": {
+          "discriminator": "bdgrz.access_expectation.approved",
+          "version": 1
+        },
+        "meaning": "A proposed expectation was approved.",
+        "meaningSource": "record summary in src/Compliance.Common/Features/AccessReviews/Events/AccessExpectationApproved.cs"
+      },
+      "schema": {
+        "event": "AccessExpectationApproved",
+        "discriminator": "bdgrz.access_expectation.approved",
+        "discriminatorVersion": 1,
+        "owner": "AccessExpectation",
+        "existingContract": "src/Compliance.Common/Features/AccessReviews/AccessExpectationApproved.cs",
+        "status": "selected target schema; implementation pending",
+        "reason": "source command accepted result",
+        "fields": [
+          {
+            "name": "TenantId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "SystemInstanceId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "Revision",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "ExpectationId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "ApprovedBy",
+            "type": "ActorReference",
+            "required": true
+          },
+          {
+            "name": "ApprovedAt",
+            "type": "DateTimeOffset",
+            "required": true
+          },
+          {
+            "name": "SeparationOfDutiesWaiverId",
+            "type": "Uuid?",
+            "required": true
+          },
+          {
+            "name": "Operation",
+            "type": "OperationProvenance",
+            "required": true
+          },
+          {
+            "name": "FirstResponse",
+            "type": "ImmutableContentRef?",
+            "required": true
+          },
+          {
+            "name": "OperationResult",
+            "type": "ImmutableContentRef?",
+            "required": true
+          }
+        ],
+        "contentSchemas": [],
+        "changes": [],
+        "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
+        "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
+        "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
+      }
+    },
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:AccessExpectationExceptionRecorded",
+        "event": "AccessExpectationExceptionRecorded",
+        "emissionKind": "business",
+        "owners": [
+          "AccessExpectation"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": true,
+        "targetConcreteType": "AccessExpectationExceptionRecorded",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.access_expectation.exception_recorded",
+          "version": 2
+        },
+        "wireQualification": "Adopted wire is the occupied discriminator declared in src/Compliance.Common/Features/AccessReviews/Events/AccessExpectationExceptionRecorded.cs at 60029b8f (2026-10-29 reconciliation). The earlier selected wire is retained as supersededSelectedWire for provenance only.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "selected_complete_schema",
+        "sourceStatus": "declared",
+        "supersededSelectedWire": {
+          "discriminator": "bdgrz.access_expectation.exception_recorded",
+          "version": 1
+        },
+        "meaning": "An expiring exception to an approved expectation was approved. The logical id of Operation is the command id, which is also the exception id; the complete AccessExpectationExceptionView is verified immutable content.",
+        "meaningSource": "record summary in src/Compliance.Common/Features/AccessReviews/Events/AccessExpectationExceptionRecorded.cs"
+      },
+      "schema": {
+        "event": "AccessExpectationExceptionRecorded",
+        "discriminator": "bdgrz.access_expectation.exception_recorded",
+        "discriminatorVersion": 1,
+        "owner": "AccessExpectation",
+        "existingContract": "src/Compliance.Common/Features/AccessReviews/AccessExpectationExceptionRecorded.cs",
+        "status": "selected target schema; implementation pending",
+        "reason": "source command accepted result",
+        "fields": [
+          {
+            "name": "TenantId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "SystemInstanceId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "Revision",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "ExceptionContent",
+            "type": "ImmutableContentRef",
+            "required": true
+          },
+          {
+            "name": "Operation",
+            "type": "OperationProvenance",
+            "required": true
+          },
+          {
+            "name": "FirstResponse",
+            "type": "ImmutableContentRef?",
+            "required": true
+          },
+          {
+            "name": "OperationResult",
+            "type": "ImmutableContentRef?",
+            "required": true
+          }
+        ],
+        "contentSchemas": [
+          {
+            "field": "ExceptionContent",
+            "schema": "AccessExpectationExceptionRecorded.ExceptionContent.v1",
+            "contentType": "AccessExpectationExceptionView",
+            "rule": "Complete original typed structured value, including nested collections, written/verified before this event. No cumulative parent view or mutable latest pointer."
+          }
+        ],
+        "changes": [
+          "Externalize structured AccessExpectationExceptionView including nested collections; a former item cap cannot become an event-size rejection for valid larger content."
+        ],
+        "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
+        "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
+        "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
+      }
+    },
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:AccessExpectationProposed",
+        "event": "AccessExpectationProposed",
+        "emissionKind": "business",
+        "owners": [
+          "AccessExpectation"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": true,
+        "targetConcreteType": "AccessExpectationProposed",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.access_expectation.proposed",
+          "version": 2
+        },
+        "wireQualification": "Adopted wire is the occupied discriminator declared in src/Compliance.Common/Features/AccessReviews/Events/AccessExpectationProposed.cs at 60029b8f (2026-10-29 reconciliation). The earlier selected wire is retained as supersededSelectedWire for provenance only.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "selected_complete_schema",
+        "sourceStatus": "declared",
+        "supersededSelectedWire": {
+          "discriminator": "bdgrz.access_expectation.proposed",
+          "version": 1
+        },
+        "meaning": "An expectation version was proposed on its expectation line. The logical id of Operation is the expectation id; the complete AccessExpectationView is verified immutable content.",
+        "meaningSource": "record summary in src/Compliance.Common/Features/AccessReviews/Events/AccessExpectationProposed.cs"
+      },
+      "schema": {
+        "event": "AccessExpectationProposed",
+        "discriminator": "bdgrz.access_expectation.proposed",
+        "discriminatorVersion": 1,
+        "owner": "AccessExpectation",
+        "existingContract": "src/Compliance.Common/Features/AccessReviews/AccessExpectationProposed.cs",
+        "status": "selected target schema; implementation pending",
+        "reason": "source command accepted result",
+        "fields": [
+          {
+            "name": "TenantId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "SystemInstanceId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "Revision",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "ProposerMemberId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "ExpectationContent",
+            "type": "ImmutableContentRef",
+            "required": true
+          },
+          {
+            "name": "Operation",
+            "type": "OperationProvenance",
+            "required": true
+          },
+          {
+            "name": "FirstResponse",
+            "type": "ImmutableContentRef?",
+            "required": true
+          },
+          {
+            "name": "OperationResult",
+            "type": "ImmutableContentRef?",
+            "required": true
+          }
+        ],
+        "contentSchemas": [
+          {
+            "field": "ExpectationContent",
+            "schema": "AccessExpectationProposed.ExpectationContent.v1",
+            "contentType": "AccessExpectationView",
+            "rule": "Complete original typed structured value, including nested collections, written/verified before this event. No cumulative parent view or mutable latest pointer."
+          }
+        ],
+        "changes": [
+          "Externalize structured AccessExpectationView including nested collections; a former item cap cannot become an event-size rejection for valid larger content."
+        ],
+        "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
+        "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
+        "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
+      }
+    }
+  ]
+}

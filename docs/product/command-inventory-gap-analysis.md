@@ -8,7 +8,7 @@ Baseline: local backend commit `1f9bb3c9b9ae3459f3ca563a4355c5b6a6187689`, inspe
 - **1 transport adapter**, listed separately to avoid double-counting its underlying business command.
 - **6 additional internal mutation entry points**, plus browser logout, are listed separately. They are not six additional complete public workflows.
 - **25 gap areas**, covering accepted manual workflows, incomplete existing commands, unresolved policies and optional collection. Every EN/R1/R2/T1/T2/T3/F1/BO story has a reconciliation row.
-- The earlier broad candidate inventory is not the implementation plan. It mixed required P0/P1 workflow actions with P2 hypotheses, policy-gated ideas, and internal operations. Use the pruned, requirement-linked [system command list](command-list.md) as the required command plan; the remaining names in this gap analysis are not automatically required. See [system layer coverage](system-layer-coverage.md) for source inventory counts.
+- The earlier broad candidate inventory is not the implementation plan. It mixed required P0/P1 workflow actions with P2 hypotheses, policy-gated ideas, and internal operations. Use the pruned, requirement-linked [system command list](../proposed/commands/product-scope.md) as the required command plan; the remaining names in this gap analysis are not automatically required. See [system layer coverage](system-layer-coverage.md) for source inventory counts.
 
 ## Scope and evidence
 

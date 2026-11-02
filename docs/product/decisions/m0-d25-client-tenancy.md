@@ -3,7 +3,7 @@
 Status: accepted product decision, 2026-09-22. Decision owner: Jeff Repanich,
 product owner. It closes [M0-D25 #123](https://github.com/bdgrz/compliance/issues/123).
 The account and organization management model was clarified by the product owner
-on 2026-10-04; the [business overview](../product-brief.md#organization-management-model)
+on 2026-10-04; the [business overview](../../proposed/scope.md#organization-management-model)
 records the direction alongside organization-level SaaS billing.
 The technical realization belongs to ADR 0001 (tenancy and operator
 provisioning), ADR 0002 (authorization and tenant isolation, M0-A04), and the

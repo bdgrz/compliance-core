@@ -2,7 +2,7 @@
 
 Status: product-owner scope baseline. The live milestones, delivery queue, and issue acceptance are maintained in GitHub; see [delivery cycle](delivery-cycle.md).
 
-This backlog carries a small compliance team through SOC 2 readiness, a Type I examination, a Type II observation period, and a Type II examination. It implements the product direction in [product-brief.md](product-brief.md).
+This backlog carries a small compliance team through SOC 2 readiness, a Type I examination, a Type II observation period, and a Type II examination. It implements the product direction in [product-brief.md](../proposed/scope.md).
 
 The platform is also tenant-ready for a small SOC 2 firm that provides advisory and attest services to many client organizations. Each client organization is a tenant; the tenancy foundations are P0 in M0 and R1, and firm operations are planned in F1.
 
@@ -17,7 +17,7 @@ claiming implementation, GitHub scheduling, or a new SOC 2 milestone.
 
 ## Objective alignment
 
-The [product objectives](product-brief.md#product-objectives) explain why each
+The [product objectives](../proposed/scope.md#product-objectives) explain why each
 capability exists. The stories below define who benefits and the evidence that
 proves the outcome; GitHub supplies delivery status.
 
@@ -34,7 +34,7 @@ proves the outcome; GitHub supplies delivery status.
 | O9 — Free self-hosting and organization-level hosted value | Proposed BO-02 and BO-03; the complete manually operated base remains available without optional add-ons. |
 
 The shared language, identity boundaries, record relationships, and
-cross-story invariants are defined in [domain-model.md](domain-model.md). That
+cross-story invariants are defined in [domain-model.md](../proposed/domain-model.md). That
 model is part of every issue created from this backlog.
 
 The canonical vocabulary and standards mappings are defined in
@@ -150,7 +150,7 @@ rights is excluded from the model and implementation.
 A story is ready when its user, business objective, domain slice, terms, rules,
 authorization, examples, acceptance criteria, dependencies, and explicit
 exclusions are understood well enough to implement without inventing product
-policy. Every domain term must agree with [domain-model.md](domain-model.md), and
+policy. Every domain term must agree with [domain-model.md](../proposed/domain-model.md), and
 any unresolved product decision that affects the story must be resolved or
 explicitly excluded. Concretely, every M0 discovery or architecture issue that
 blocks the story is resolved and incorporated into the story, and every enabler
@@ -1560,7 +1560,7 @@ Implementation subtasks:
 - Focused unit tests cover program creation, authorization, revision history, and setup-work projection rules.
 
 Public references: No external normative source for this workflow; product
-decision in [product objectives](product-brief.md#product-objectives).
+decision in [product objectives](../proposed/scope.md#product-objectives).
 Canonical entity semantics and any reused public material remain governed by
 the [approved source register](source-reference-policy.md).
 
@@ -1620,7 +1620,7 @@ The [frontend child](https://github.com/bdgrz/compliance/issues/178) depends on
 both backend slices.
 
 Public references: No external normative source for this workflow; product
-decision in [M0-D22](decisions/m0-d22-canonical-ownership.md), and the [product objectives](product-brief.md#product-objectives).
+decision in [M0-D22](decisions/m0-d22-canonical-ownership.md), and the [product objectives](../proposed/scope.md#product-objectives).
 Canonical entity semantics and any reused public material remain governed by
 the [approved source register](source-reference-policy.md).
 
@@ -1680,7 +1680,7 @@ Implementation subtasks:
 
 Public references: No external normative source for this workflow; product
 decision in [M0-D02](decisions/m0-d02-criteria-content.md),
-[M0-D01](decisions/m0-d01-program-targets.md), and the [product objectives](product-brief.md#product-objectives).
+[M0-D01](decisions/m0-d01-program-targets.md), and the [product objectives](../proposed/scope.md#product-objectives).
 Canonical entity semantics and any reused public material remain governed by
 the [approved source register](source-reference-policy.md).
 
@@ -1742,7 +1742,7 @@ Delivery slices: this story is delivered through the following outcome slices, t
 
 Public references: No external normative source for this workflow; product
 decision in [M0-D25](decisions/m0-d25-client-tenancy.md),
-[M0-D03](decisions/m0-d03-roles-and-separation-of-duties.md), and the [product objectives](product-brief.md#product-objectives).
+[M0-D03](decisions/m0-d03-roles-and-separation-of-duties.md), and the [product objectives](../proposed/scope.md#product-objectives).
 Canonical entity semantics and any reused public material remain governed by
 the [approved source register](source-reference-policy.md).
 
@@ -1887,7 +1887,7 @@ Implementation subtasks:
 - Focused unit tests in the owning repository cover lifecycle transitions, identifier conflicts, template provenance, forbidden actions, historical relationships, and accessible failure recovery.
 
 Public references: No external normative source for this workflow; product
-decision in [M0-D22](decisions/m0-d22-canonical-ownership.md), and the [product objectives](product-brief.md#product-objectives).
+decision in [M0-D22](decisions/m0-d22-canonical-ownership.md), and the [product objectives](../proposed/scope.md#product-objectives).
 Canonical entity semantics and any reused public material remain governed by
 the [approved source register](source-reference-policy.md).
 
@@ -1931,7 +1931,7 @@ Implementation subtasks:
 - Focused unit tests in the owning repository cover duplicate resistance, not-applicable approval, forbidden review, edition changes, coverage reconciliation, and historical preservation.
 
 Public references: No external normative source for this workflow; product
-decision in [product objectives](product-brief.md#product-objectives).
+decision in [product objectives](../proposed/scope.md#product-objectives).
 Canonical entity semantics and any reused public material remain governed by
 the [approved source register](source-reference-policy.md).
 
@@ -2005,7 +2005,7 @@ Implementation subtasks:
 
 Public references: No external normative source for this workflow; product
 decision in [M0-D10](decisions/m0-d10-risk-method.md),
-[M0-D22](decisions/m0-d22-canonical-ownership.md), and the [product objectives](product-brief.md#product-objectives).
+[M0-D22](decisions/m0-d22-canonical-ownership.md), and the [product objectives](../proposed/scope.md#product-objectives).
 Canonical entity semantics and any reused public material remain governed by
 the [approved source register](source-reference-policy.md).
 
@@ -2060,7 +2060,7 @@ Implementation subtasks:
 - Focused unit tests in the owning repository cover stale, missing, draft, rejected, unresolved, corrected, and unauthorized cases plus historical assessment reproducibility.
 
 Public references: No external normative source for this workflow; product
-decision in [product objectives](product-brief.md#product-objectives).
+decision in [product objectives](../proposed/scope.md#product-objectives).
 Canonical entity semantics and any reused public material remain governed by
 the [approved source register](source-reference-policy.md).
 
@@ -2124,7 +2124,7 @@ Implementation subtasks:
 Delivery slices: this story is delivered through the following outcome slices, tracked as GitHub sub-issues. The parent's requirements, domain slice, and definition of done apply to every slice, and the parent is complete only when all slices are done.
 
 Public references: No external normative source for this workflow; product
-decision in [M0-D04](decisions/m0-d04-readiness-material.md), and the [product objectives](product-brief.md#product-objectives).
+decision in [M0-D04](decisions/m0-d04-readiness-material.md), and the [product objectives](../proposed/scope.md#product-objectives).
 Canonical entity semantics and any reused public material remain governed by
 the [approved source register](source-reference-policy.md).
 
@@ -2271,7 +2271,7 @@ Delivery slices: this story is delivered through the following outcome slices, t
 
 Public references: No external normative source for this workflow; product
 decision in [M0-D22](decisions/m0-d22-canonical-ownership.md),
-[M0-D05](decisions/m0-d05-application-inventory.md), and the [product objectives](product-brief.md#product-objectives).
+[M0-D05](decisions/m0-d05-application-inventory.md), and the [product objectives](../proposed/scope.md#product-objectives).
 Canonical entity semantics and any reused public material remain governed by
 the [approved source register](source-reference-policy.md).
 
@@ -2409,7 +2409,7 @@ Delivery slices: this story is delivered through the following outcome slices, t
 
 Public references: No external normative source for this workflow; product
 decision in [M0-D22](decisions/m0-d22-canonical-ownership.md),
-[M0-D06](decisions/m0-d06-workforce-source.md), and the [product objectives](product-brief.md#product-objectives).
+[M0-D06](decisions/m0-d06-workforce-source.md), and the [product objectives](../proposed/scope.md#product-objectives).
 Canonical entity semantics and any reused public material remain governed by
 the [approved source register](source-reference-policy.md).
 
@@ -2535,7 +2535,7 @@ Implementation subtasks:
 
 Public references: No external normative source for this workflow; product
 decision in [M0-D22](decisions/m0-d22-canonical-ownership.md),
-[M0-D08](decisions/m0-d08-technology-inventory.md), and the [product objectives](product-brief.md#product-objectives).
+[M0-D08](decisions/m0-d08-technology-inventory.md), and the [product objectives](../proposed/scope.md#product-objectives).
 Canonical entity semantics and any reused public material remain governed by
 the [approved source register](source-reference-policy.md).
 
@@ -2600,7 +2600,7 @@ Implementation subtasks:
 - Focused unit tests in the owning repository cover conflicting sources, expired and unmapped records, forbidden approval, concurrent revision, impact preview, historical retrieval, and package stability.
 
 Public references: No external normative source for this workflow; product
-decision in [M0-D09](decisions/m0-d09-commitments.md), and the [product objectives](product-brief.md#product-objectives).
+decision in [M0-D09](decisions/m0-d09-commitments.md), and the [product objectives](../proposed/scope.md#product-objectives).
 Canonical entity semantics and any reused public material remain governed by
 the [approved source register](source-reference-policy.md).
 
@@ -2670,7 +2670,7 @@ Implementation subtasks:
 - Focused unit tests in the owning repository cover stale and partial assurance, uncovered periods, missing CSOCs, restricted content, change impact, denied acceptance, reassessment history, and readiness reconciliation.
 
 Public references: No external normative source for this workflow; product
-decision in [M0-D11](decisions/m0-d11-vendors.md), and the [product objectives](product-brief.md#product-objectives).
+decision in [M0-D11](decisions/m0-d11-vendors.md), and the [product objectives](../proposed/scope.md#product-objectives).
 Canonical entity semantics and any reused public material remain governed by
 the [approved source register](source-reference-policy.md).
 
@@ -2750,7 +2750,7 @@ Implementation subtasks:
 - Focused unit tests in the owning repository cover cross-tenant isolation across APIs, client caches, search, counts, and notifications, plus suspension, bootstrap failure, denied operator actions.
 
 Public references: No external normative source for this workflow; product
-decision in [M0-D25](decisions/m0-d25-client-tenancy.md), and the [product objectives](product-brief.md#product-objectives).
+decision in [M0-D25](decisions/m0-d25-client-tenancy.md), and the [product objectives](../proposed/scope.md#product-objectives).
 Canonical entity semantics and any reused public material remain governed by
 the [approved source register](source-reference-policy.md).
 
@@ -3093,7 +3093,7 @@ Implementation subtasks:
 - Focused unit tests in the owning repository cover reassignment, team membership change, deprovisioning, schedule revision, retirement, conflicts, history, and denied behavior.
 
 Public references: No external normative source for this workflow; product
-decision in [M0-D03](decisions/m0-d03-roles-and-separation-of-duties.md), and the [product objectives](product-brief.md#product-objectives).
+decision in [M0-D03](decisions/m0-d03-roles-and-separation-of-duties.md), and the [product objectives](../proposed/scope.md#product-objectives).
 Canonical entity semantics and any reused public material remain governed by
 the [approved source register](source-reference-policy.md).
 
@@ -3154,7 +3154,7 @@ Implementation subtasks:
 - Focused unit tests in the owning repository cover exact-version approval, overdue review, concurrent edits, rejected documents, historical retrieval, forbidden actions, and downstream readiness effects.
 
 Public references: No external normative source for this workflow; product
-decision in [product objectives](product-brief.md#product-objectives).
+decision in [product objectives](../proposed/scope.md#product-objectives).
 Canonical entity semantics and any reused public material remain governed by
 the [approved source register](source-reference-policy.md).
 
@@ -3199,7 +3199,7 @@ Implementation subtasks:
 - Focused unit tests in the owning repository cover duplicate, oversized, interrupted, unauthorized, stale, outside-period, corrected, and reused evidence behavior plus package retrievability.
 
 Public references: No external normative source for this workflow; product
-decision in [product objectives](product-brief.md#product-objectives).
+decision in [product objectives](../proposed/scope.md#product-objectives).
 Canonical entity semantics and any reused public material remain governed by
 the [approved source register](source-reference-policy.md).
 
@@ -3247,7 +3247,7 @@ Implementation subtasks:
 - Focused unit tests in the owning repository cover exact control and evidence versions, self-action restrictions, concurrent submission, correction history, population reconciliation, and denied behavior.
 
 Public references: No external normative source for this workflow; product
-decision in [M0-D03](decisions/m0-d03-roles-and-separation-of-duties.md), and the [product objectives](product-brief.md#product-objectives).
+decision in [M0-D03](decisions/m0-d03-roles-and-separation-of-duties.md), and the [product objectives](../proposed/scope.md#product-objectives).
 Canonical entity semantics and any reused public material remain governed by
 the [approved source register](source-reference-policy.md).
 
@@ -3325,7 +3325,7 @@ Delivery slices: this story is delivered through the following outcome slices, t
 
 Public references: No external normative source for this workflow; product
 decision in [M0-D13](decisions/m0-d13-control-evaluation.md),
-[M0-D03](decisions/m0-d03-roles-and-separation-of-duties.md), and the [product objectives](product-brief.md#product-objectives).
+[M0-D03](decisions/m0-d03-roles-and-separation-of-duties.md), and the [product objectives](../proposed/scope.md#product-objectives).
 Canonical entity semantics and any reused public material remain governed by
 the [approved source register](source-reference-policy.md).
 
@@ -3512,7 +3512,7 @@ Public references: No external normative source for this workflow; product
 decision in [M0-D22](decisions/m0-d22-canonical-ownership.md),
 [M0-D07](decisions/m0-d07-access-review-population.md),
 [M0-D05](decisions/m0-d05-application-inventory.md),
-[M0-D06](decisions/m0-d06-workforce-source.md), and the [product objectives](product-brief.md#product-objectives).
+[M0-D06](decisions/m0-d06-workforce-source.md), and the [product objectives](../proposed/scope.md#product-objectives).
 Canonical entity semantics and any reused public material remain governed by
 the [approved source register](source-reference-policy.md).
 
@@ -3640,7 +3640,7 @@ Implementation subtasks:
 - Focused unit tests in the owning repository cover expired exceptions, missing closure evidence, source-text protection, reassignment, unauthorized approval, reopening, history, and downstream status reconciliation.
 
 Public references: No external normative source for this workflow; product
-decision in [product objectives](product-brief.md#product-objectives).
+decision in [product objectives](../proposed/scope.md#product-objectives).
 Canonical entity semantics and any reused public material remain governed by
 the [approved source register](source-reference-policy.md).
 
@@ -3704,7 +3704,7 @@ Implementation subtasks:
 - Connect feedback to owning records, requests, work queues, gaps, review, and readiness; prove least privilege, repeated handoffs, exact versions, failures, and history end to end.
 
 Public references: No external normative source for this workflow; product
-decision in [M0-D14](decisions/m0-d14-advisor-collaboration.md), and the [product objectives](product-brief.md#product-objectives).
+decision in [M0-D14](decisions/m0-d14-advisor-collaboration.md), and the [product objectives](../proposed/scope.md#product-objectives).
 Canonical entity semantics and any reused public material remain governed by
 the [approved source register](source-reference-policy.md).
 
@@ -3758,7 +3758,7 @@ Implementation subtasks:
 - Focused unit tests in the owning repository cover incomplete and stale inputs, unresolved acknowledgements, separation of duties, concurrent changes, denied approval, immutable history, and transition effects.
 
 Public references: No external normative source for this workflow; product
-decision in [product objectives](product-brief.md#product-objectives).
+decision in [product objectives](../proposed/scope.md#product-objectives).
 Canonical entity semantics and any reused public material remain governed by
 the [approved source register](source-reference-policy.md).
 
@@ -3833,7 +3833,7 @@ Implementation subtasks:
 
 Public references: No external normative source for this workflow; product
 decision in [M0-D12](decisions/m0-d12-policy-acknowledgement-training.md),
-[M0-D06](decisions/m0-d06-workforce-source.md), and the [product objectives](product-brief.md#product-objectives).
+[M0-D06](decisions/m0-d06-workforce-source.md), and the [product objectives](../proposed/scope.md#product-objectives).
 Canonical entity semantics and any reused public material remain governed by
 the [approved source register](source-reference-policy.md).
 
@@ -3905,7 +3905,7 @@ Implementation subtasks:
 Delivery slices: this story is delivered through the following outcome slices, tracked as GitHub sub-issues. The parent's requirements, domain slice, and definition of done apply to every slice, and the parent is complete only when all slices are done.
 
 Public references: No external normative source for this workflow; product
-decision in [M0-D15](decisions/m0-d15-work-queue.md), and the [product objectives](product-brief.md#product-objectives).
+decision in [M0-D15](decisions/m0-d15-work-queue.md), and the [product objectives](../proposed/scope.md#product-objectives).
 Canonical entity semantics and any reused public material remain governed by
 the [approved source register](source-reference-policy.md).
 
@@ -4021,7 +4021,7 @@ Implementation subtasks:
 - Focused unit tests in the owning repository cover malicious or invalid content, restricted metadata, stale policy, active holds, redaction errors, partial disposition, downloaded-copy warnings, denied sharing, package validation, and historical traceability.
 
 Public references: No external normative source for this workflow; product
-decision in [M0-D16](decisions/m0-d16-evidence-handling.md), and the [product objectives](product-brief.md#product-objectives).
+decision in [M0-D16](decisions/m0-d16-evidence-handling.md), and the [product objectives](../proposed/scope.md#product-objectives).
 Canonical entity semantics and any reused public material remain governed by
 the [approved source register](source-reference-policy.md).
 
@@ -4078,7 +4078,7 @@ Implementation subtasks:
 - Focused unit tests in the owning repository cover incomplete previews, concurrent source changes, denied confirmation, amendments, package impact, historical stability.
 
 Public references: No external normative source for this workflow; product
-decision in [product objectives](product-brief.md#product-objectives).
+decision in [product objectives](../proposed/scope.md#product-objectives).
 Canonical entity semantics and any reused public material remain governed by
 the [approved source register](source-reference-policy.md).
 
@@ -4137,7 +4137,7 @@ Implementation subtasks:
 - Focused unit tests in the owning repository cover incomplete and contradictory sections, source-version changes, significant period changes, forbidden approval, concurrent edits, exact-version comments, export failure, and delivered-package stability.
 
 Public references: No external normative source for this workflow; product
-decision in [M0-D17](decisions/m0-d17-audit-deliverables.md), and the [product objectives](product-brief.md#product-objectives).
+decision in [M0-D17](decisions/m0-d17-audit-deliverables.md), and the [product objectives](../proposed/scope.md#product-objectives).
 Canonical entity semantics and any reused public material remain governed by
 the [approved source register](source-reference-policy.md).
 
@@ -4191,7 +4191,7 @@ Implementation subtasks:
 
 Public references: No external normative source for this workflow; product
 decision in [M0-D17](decisions/m0-d17-audit-deliverables.md),
-[M0-D27](decisions/m0-d27-attest-scope.md), and the [product objectives](product-brief.md#product-objectives).
+[M0-D27](decisions/m0-d27-attest-scope.md), and the [product objectives](../proposed/scope.md#product-objectives).
 Canonical entity semantics and any reused public material remain governed by
 the [approved source register](source-reference-policy.md).
 
@@ -4244,7 +4244,7 @@ Implementation subtasks:
 
 Public references: No external normative source for this workflow; product
 decision in [M0-D17](decisions/m0-d17-audit-deliverables.md),
-[M0-D27](decisions/m0-d27-attest-scope.md), and the [product objectives](product-brief.md#product-objectives).
+[M0-D27](decisions/m0-d27-attest-scope.md), and the [product objectives](../proposed/scope.md#product-objectives).
 Canonical entity semantics and any reused public material remain governed by
 the [approved source register](source-reference-policy.md).
 
@@ -4313,7 +4313,7 @@ Implementation subtasks:
 - Focused unit tests in the owning repository cover missing, stale, rejected, unauthorized, inconsistent tables, interrupted, retried, and partially generated cases; equivalent regeneration; least privilege; attribution distinctions; amendments; and exact retrieval.
 
 Public references: No external normative source for this workflow; product
-decision in [M0-D17](decisions/m0-d17-audit-deliverables.md), and the [product objectives](product-brief.md#product-objectives).
+decision in [M0-D17](decisions/m0-d17-audit-deliverables.md), and the [product objectives](../proposed/scope.md#product-objectives).
 Canonical entity semantics and any reused public material remain governed by
 the [approved source register](source-reference-policy.md).
 
@@ -4357,7 +4357,7 @@ Implementation subtasks:
 - Focused unit tests in the owning repository cover immutable source wording, denied edits and closure, missing evidence, reopen history, baseline traceability, and Type II plan continuity.
 
 Public references: No external normative source for this workflow; product
-decision in [product objectives](product-brief.md#product-objectives).
+decision in [product objectives](../proposed/scope.md#product-objectives).
 Canonical entity semantics and any reused public material remain governed by
 the [approved source register](source-reference-policy.md).
 
@@ -4412,7 +4412,7 @@ Implementation subtasks:
 - Focused unit tests in the owning repository cover changed assertion inputs, hidden exceptions, wrong or missing signers, external-source protection, inconsistent plans, missing ownership or cadence, denied approval, outcome-source distinction, open-remediation continuity, and immutable Type I history.
 
 Public references: No external normative source for this workflow; product
-decision in [M0-D17](decisions/m0-d17-audit-deliverables.md), and the [product objectives](product-brief.md#product-objectives).
+decision in [M0-D17](decisions/m0-d17-audit-deliverables.md), and the [product objectives](../proposed/scope.md#product-objectives).
 Canonical entity semantics and any reused public material remain governed by
 the [approved source register](source-reference-policy.md).
 
@@ -4469,7 +4469,7 @@ Implementation subtasks:
 - Focused unit tests in the owning repository cover overlaps, missing ownership or cadence, unresolved acknowledgement, denied start, later changes, historical occurrences.
 
 Public references: No external normative source for this workflow; product
-decision in [product objectives](product-brief.md#product-objectives).
+decision in [product objectives](../proposed/scope.md#product-objectives).
 Canonical entity semantics and any reused public material remain governed by
 the [approved source register](source-reference-policy.md).
 
@@ -4530,7 +4530,7 @@ Implementation subtasks:
 - Focused unit tests in the owning repository cover duplicate prevention across retries and restarts, time boundaries, schedule edits, team and owner changes, historical separation, failed generation.
 
 Public references: No external normative source for this workflow; product
-decision in [M0-D19](decisions/m0-d19-periodic-reviews.md), and the [product objectives](product-brief.md#product-objectives).
+decision in [M0-D19](decisions/m0-d19-periodic-reviews.md), and the [product objectives](../proposed/scope.md#product-objectives).
 Canonical entity semantics and any reused public material remain governed by
 the [approved source register](source-reference-policy.md).
 
@@ -4575,7 +4575,7 @@ Implementation subtasks:
 - Focused unit tests in the owning repository cover every terminal state, outside-period and reused evidence, corrections, review priority, denied access, exact totals, and immutable history.
 
 Public references: No external normative source for this workflow; product
-decision in [product objectives](product-brief.md#product-objectives).
+decision in [product objectives](../proposed/scope.md#product-objectives).
 Canonical entity semantics and any reused public material remain governed by
 the [approved source register](source-reference-policy.md).
 
@@ -4621,7 +4621,7 @@ Implementation subtasks:
 - Focused unit tests in the owning repository cover counts and filters against underlying records, per-member and team visibility, unassigned work, status transitions, forecast changes, denied drill-down, and calculation failures.
 
 Public references: No external normative source for this workflow; product
-decision in [product objectives](product-brief.md#product-objectives).
+decision in [product objectives](../proposed/scope.md#product-objectives).
 Canonical entity semantics and any reused public material remain governed by
 the [approved source register](source-reference-policy.md).
 
@@ -4680,7 +4680,7 @@ Implementation subtasks:
 - Focused unit tests in the owning repository cover added, removed, changed, missing, prohibited, expired, and ambiguous grants; provider identifier continuity; human and NHI ownership changes; missing system snapshots; prior-history isolation; unverified remediation; and exact period contribution.
 
 Public references: No external normative source for this workflow; product
-decision in [product objectives](product-brief.md#product-objectives).
+decision in [product objectives](../proposed/scope.md#product-objectives).
 Canonical entity semantics and any reused public material remain governed by
 the [approved source register](source-reference-policy.md).
 
@@ -4735,7 +4735,7 @@ Implementation subtasks:
 - Focused unit tests in the owning repository cover due, overdue, skipped, changed, denied, corrected, and exception-backed reviews across each subject type and reconcile them to period status.
 
 Public references: No external normative source for this workflow; product
-decision in [M0-D19](decisions/m0-d19-periodic-reviews.md), and the [product objectives](product-brief.md#product-objectives).
+decision in [M0-D19](decisions/m0-d19-periodic-reviews.md), and the [product objectives](../proposed/scope.md#product-objectives).
 Canonical entity semantics and any reused public material remain governed by
 the [approved source register](source-reference-policy.md).
 
@@ -4800,7 +4800,7 @@ Implementation subtasks:
 
 Public references: No external normative source for this workflow; product
 decision in [M0-D22](decisions/m0-d22-canonical-ownership.md),
-[M0-D21](decisions/m0-d21-significant-change.md), and the [product objectives](product-brief.md#product-objectives).
+[M0-D21](decisions/m0-d21-significant-change.md), and the [product objectives](../proposed/scope.md#product-objectives).
 Canonical entity semantics and any reused public material remain governed by
 the [approved source register](source-reference-policy.md).
 
@@ -4919,7 +4919,7 @@ all slices are done.
 
 Public references: No external normative source for this workflow; product
 decision in [M0-D20](decisions/m0-d20-integration-sources.md),
-[M0-D24](decisions/m0-d24-accessibility-and-browsers.md), and the [product objectives](product-brief.md#product-objectives).
+[M0-D24](decisions/m0-d24-accessibility-and-browsers.md), and the [product objectives](../proposed/scope.md#product-objectives).
 Canonical entity semantics and any reused public material remain governed by
 the [approved source register](source-reference-policy.md).
 
@@ -5021,7 +5021,7 @@ Implementation subtasks:
 - Focused unit tests in the owning repository cover incomplete and changed source data, denied approval, deferral, action tracking, later corrections, immutable review history, and period-package inclusion.
 
 Public references: No external normative source for this workflow; product
-decision in [M0-D19](decisions/m0-d19-periodic-reviews.md), and the [product objectives](product-brief.md#product-objectives).
+decision in [M0-D19](decisions/m0-d19-periodic-reviews.md), and the [product objectives](../proposed/scope.md#product-objectives).
 Canonical entity semantics and any reused public material remain governed by
 the [approved source register](source-reference-policy.md).
 
@@ -5078,7 +5078,7 @@ Implementation subtasks:
 - Focused unit tests in the owning repository cover missing and duplicate populations, concurrent changes, unresolved acknowledgements, denied approval, partial freeze failure, amendments, later source changes.
 
 Public references: No external normative source for this workflow; product
-decision in [product objectives](product-brief.md#product-objectives).
+decision in [product objectives](../proposed/scope.md#product-objectives).
 Canonical entity semantics and any reused public material remain governed by
 the [approved source register](source-reference-policy.md).
 
@@ -5149,7 +5149,7 @@ Implementation subtasks:
 - Focused unit tests in the owning repository cover source and pagination gaps, changed definitions, every row classification, exact totals, restricted fields and evidence, export failure, source amendments, sample binding, and historical stability.
 
 Public references: No external normative source for this workflow; product
-decision in [M0-D17](decisions/m0-d17-audit-deliverables.md), and the [product objectives](product-brief.md#product-objectives).
+decision in [M0-D17](decisions/m0-d17-audit-deliverables.md), and the [product objectives](../proposed/scope.md#product-objectives).
 Canonical entity semantics and any reused public material remain governed by
 the [approved source register](source-reference-policy.md).
 
@@ -5202,7 +5202,7 @@ Implementation subtasks:
 
 Public references: No external normative source for this workflow; product
 decision in [M0-D17](decisions/m0-d17-audit-deliverables.md),
-[M0-D27](decisions/m0-d27-attest-scope.md), and the [product objectives](product-brief.md#product-objectives).
+[M0-D27](decisions/m0-d27-attest-scope.md), and the [product objectives](../proposed/scope.md#product-objectives).
 Canonical entity semantics and any reused public material remain governed by
 the [approved source register](source-reference-policy.md).
 
@@ -5248,7 +5248,7 @@ Implementation subtasks:
 - Focused unit tests in the owning repository cover source-text protection, frozen-record references, denied closure, missing evidence, risk-versus-remediation distinctions, reopen history, package accuracy, and next-period continuity.
 
 Public references: No external normative source for this workflow; product
-decision in [product objectives](product-brief.md#product-objectives).
+decision in [product objectives](../proposed/scope.md#product-objectives).
 Canonical entity semantics and any reused public material remain governed by
 the [approved source register](source-reference-policy.md).
 
@@ -5310,7 +5310,7 @@ Implementation subtasks:
 - Focused unit tests in the owning repository cover completeness, period applicability, table reconciliation, attribution distinctions, restricted content, partial and interrupted generation, retry, equivalent regeneration, least privilege, amendments, and exact retained retrieval.
 
 Public references: No external normative source for this workflow; product
-decision in [M0-D17](decisions/m0-d17-audit-deliverables.md), and the [product objectives](product-brief.md#product-objectives).
+decision in [M0-D17](decisions/m0-d17-audit-deliverables.md), and the [product objectives](../proposed/scope.md#product-objectives).
 Canonical entity semantics and any reused public material remain governed by
 the [approved source register](source-reference-policy.md).
 
@@ -5367,7 +5367,7 @@ Implementation subtasks:
 - Focused unit tests in the owning repository cover changed assertion inputs, hidden or unresolved item prevention, wrong or missing signers, denied approval, external-source protection, source attribution, concurrent amendment, immutable sign-off, final commitments, and downstream rollover.
 
 Public references: No external normative source for this workflow; product
-decision in [M0-D17](decisions/m0-d17-audit-deliverables.md), and the [product objectives](product-brief.md#product-objectives).
+decision in [M0-D17](decisions/m0-d17-audit-deliverables.md), and the [product objectives](../proposed/scope.md#product-objectives).
 Canonical entity semantics and any reused public material remain governed by
 the [approved source register](source-reference-policy.md).
 
@@ -5413,7 +5413,7 @@ Implementation subtasks:
 - Focused unit tests in the owning repository cover carried, changed, retired, unresolved, and ineligible records; duplicate occurrence prevention; denied approval; partial failure and retry; exact trends; and completed-record immutability.
 
 Public references: No external normative source for this workflow; product
-decision in [product objectives](product-brief.md#product-objectives).
+decision in [product objectives](../proposed/scope.md#product-objectives).
 Canonical entity semantics and any reused public material remain governed by
 the [approved source register](source-reference-policy.md).
 
@@ -5491,7 +5491,7 @@ Public references: No external normative source for this workflow; product
 decision in [M0-D25](decisions/m0-d25-client-tenancy.md),
 [M0-D27](decisions/m0-d27-attest-scope.md),
 [M0-D17](decisions/m0-d17-audit-deliverables.md),
-[M0-D16](decisions/m0-d16-evidence-handling.md), and the [product objectives](product-brief.md#product-objectives).
+[M0-D16](decisions/m0-d16-evidence-handling.md), and the [product objectives](../proposed/scope.md#product-objectives).
 Canonical entity semantics and any reused public material remain governed by
 the [approved source register](source-reference-policy.md).
 
@@ -5532,7 +5532,7 @@ Implementation subtasks:
 - Focused unit tests in the owning repository cover per-staff visibility, revocation, reconciliation to client views, stale calculations, and cross-tenant isolation.
 
 Public references: No external normative source for this workflow; product
-decision in [M0-D25](decisions/m0-d25-client-tenancy.md), and the [product objectives](product-brief.md#product-objectives).
+decision in [M0-D25](decisions/m0-d25-client-tenancy.md), and the [product objectives](../proposed/scope.md#product-objectives).
 Canonical entity semantics and any reused public material remain governed by
 the [approved source register](source-reference-policy.md).
 
@@ -5572,7 +5572,7 @@ Implementation subtasks:
 - Focused unit tests in the owning repository cover independence blocks, reconciliation, and restricted visibility.
 
 Public references: No external normative source for this workflow; product
-decision in [product objectives](product-brief.md#product-objectives).
+decision in [product objectives](../proposed/scope.md#product-objectives).
 Canonical entity semantics and any reused public material remain governed by
 the [approved source register](source-reference-policy.md).
 
@@ -5615,7 +5615,7 @@ Implementation subtasks:
 
 Public references: No external normative source for this workflow; product
 decision in [M0-D02](decisions/m0-d02-criteria-content.md),
-[M0-D25](decisions/m0-d25-client-tenancy.md), and the [product objectives](product-brief.md#product-objectives).
+[M0-D25](decisions/m0-d25-client-tenancy.md), and the [product objectives](../proposed/scope.md#product-objectives).
 Canonical entity semantics and any reused public material remain governed by
 the [approved source register](source-reference-policy.md).
 
@@ -5656,7 +5656,7 @@ Implementation subtasks:
 - Focused unit tests in the owning repository cover revocation, reconciliation, restricted work, and cross-tenant isolation.
 
 Public references: No external normative source for this workflow; product
-decision in [product objectives](product-brief.md#product-objectives).
+decision in [product objectives](../proposed/scope.md#product-objectives).
 Canonical entity semantics and any reused public material remain governed by
 the [approved source register](source-reference-policy.md).
 
@@ -5702,7 +5702,7 @@ Implementation subtasks:
 - Focused unit tests in the owning repository cover wrong-tenant sign-in denial, disabled connections, identity replacement, secret non-disclosure.
 
 Public references: No external normative source for this workflow; product
-decision in [product objectives](product-brief.md#product-objectives).
+decision in [product objectives](../proposed/scope.md#product-objectives).
 Canonical entity semantics and any reused public material remain governed by
 the [approved source register](source-reference-policy.md).
 
@@ -5759,7 +5759,7 @@ Implementation subtasks:
 Public references: No external normative source for this workflow; product
 decision in [M0-D26](decisions/m0-d26-independence.md),
 [M0-D27](decisions/m0-d27-attest-scope.md),
-[M0-D25](decisions/m0-d25-client-tenancy.md), and the [product objectives](product-brief.md#product-objectives).
+[M0-D25](decisions/m0-d25-client-tenancy.md), and the [product objectives](../proposed/scope.md#product-objectives).
 Canonical entity semantics and any reused public material remain governed by
 the [approved source register](source-reference-policy.md).
 
@@ -5816,7 +5816,7 @@ Implementation subtasks:
 - Focused unit tests in the owning repository cover blocked acceptance and assignment, compartment isolation, attest-staff write denial, rule-set changes, re-evaluation, and history.
 
 Public references: No external normative source for this workflow; product
-decision in [M0-D26](decisions/m0-d26-independence.md), and the [product objectives](product-brief.md#product-objectives).
+decision in [M0-D26](decisions/m0-d26-independence.md), and the [product objectives](../proposed/scope.md#product-objectives).
 Canonical entity semantics and any reused public material remain governed by
 the [approved source register](source-reference-policy.md).
 
@@ -5957,7 +5957,7 @@ provider obligations before scheduling a paid SaaS delivery slice. Document the
 manual administration path and any required hosted commercial service explicitly.
 
 Public references: No external normative source; product decision recorded in
-the [commercial model](product-brief.md#commercial-model) and
+the [commercial model](../proposed/scope.md#commercial-model) and
 [business operations](business-operations.md).
 
 ### BO-03 Select and manage organization add-ons
@@ -6014,7 +6014,7 @@ activation/termination, data-access, and financial policies in
 and its complete manual path must be proven before that enhancement is sold.
 
 Public references: No external normative source; product decision recorded in
-the [commercial model](product-brief.md#commercial-model),
+the [commercial model](../proposed/scope.md#commercial-model),
 [M0-D20](decisions/m0-d20-integration-sources.md), and
 [business operations](business-operations.md).
 

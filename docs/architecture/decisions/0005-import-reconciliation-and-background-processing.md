@@ -245,6 +245,6 @@ The first-consumer wire contract is
 ## Public references
 
 No external normative source; original product decision. The relevant internal
-model is [domain-model.md](../../product/domain-model.md), and source
+model is [domain-model.md](../../proposed/domain-model.md), and source
 eligibility follows
 [source-reference-policy.md](../../product/source-reference-policy.md).

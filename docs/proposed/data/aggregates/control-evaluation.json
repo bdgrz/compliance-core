@@ -1,0 +1,628 @@
+{
+  "owner": "ControlEvaluation",
+  "origin": "selected_split_target",
+  "baselineOwners": [
+    "ControlEvaluationLedger"
+  ],
+  "declaredIdentity": "tenant / evaluationId",
+  "invariant": "One evaluation including steps, conclusions, review and deviation dispositions. A retest is a new evaluationId using this same type and an immutable predecessor evaluation/version proof.",
+  "boundaryDecision": "selected_split",
+  "mustPreserve": "Material deviation source proof, immutable procedure version, reviewer independence, and explicit minor-deviation disposition.",
+  "sources": [
+    {
+      "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
+      "jsonPointer": "/splitOwners/14/targetOwners/0",
+      "line": 1594,
+      "sha256": "d349d94b7c43f4d82020ecf36bdacf1aff98bc6498e14993582f1c3164b21f19"
+    }
+  ],
+  "baselineSourcePath": "src/Compliance.Core/Features/Evaluations/ControlEvaluationLedger.cs",
+  "baselineEvents": [
+    "ControlEvaluationDeviationDisposed",
+    "ControlEvaluationReviewed",
+    "ControlEvaluationStarted",
+    "ControlEvaluationStepRecorded",
+    "ControlEvaluationSubmitted"
+  ],
+  "preliminaryNewEvents": [],
+  "technicalStateToSeparate": [],
+  "classification": "business_aggregate",
+  "businessAggregate": true,
+  "implementationStatus": "SEPARATE_VERIFICATION_REQUIRED_IMPLEMENTATION_HALTED",
+  "identityReadingRule": "selectedIdentitySummary and exact selectedCommandContracts define intended identity. baselineIdentityObservation/declaredIdentity retain older source observations only, including old replay defects; they are not target behavior or authorization to change an occupied key.",
+  "selectedCommandContracts": [
+    {
+      "command": "DisposeControlEvaluationDeviation",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ProgramId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ControlId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "EvaluationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "DeviationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "Disposition",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "Rationale",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "WaiverId",
+          "type": "Uuid?",
+          "required": false
+        }
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "ControlEvaluationView",
+        "firstHttpStatus": 200,
+        "terminalResultType": "ControlEvaluationView"
+      },
+      "http": [
+        {
+          "method": "PUT",
+          "path": "/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/evaluations/{evaluation_id}/deviations/{deviation_id}/dispositions/{command_id}",
+          "policy": "ComplianceAuthorizationPolicies.ApiUser"
+        }
+      ],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
+        "jsonPointer": "/commands/51",
+        "line": 6085,
+        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
+      },
+      "kind": "http"
+    },
+    {
+      "command": "RecordControlEvaluationStep",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ProgramId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ControlId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "EvaluationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "StepId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "Result",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "Rationale",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "InspectedItems",
+          "type": "IReadOnlyList<EvaluationInspectedItem>",
+          "required": true
+        },
+        {
+          "name": "DeviationClassification",
+          "type": "string?",
+          "required": false
+        },
+        {
+          "name": "DeviationDescription",
+          "type": "string?",
+          "required": false
+        }
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "ControlEvaluationView",
+        "firstHttpStatus": 200,
+        "terminalResultType": "ControlEvaluationView"
+      },
+      "http": [
+        {
+          "method": "PUT",
+          "path": "/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/evaluations/{evaluation_id}/steps/{step_id}/results/{command_id}",
+          "policy": "ComplianceAuthorizationPolicies.ApiUser"
+        }
+      ],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
+        "jsonPointer": "/commands/101",
+        "line": 11761,
+        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
+      },
+      "kind": "http"
+    },
+    {
+      "command": "ReviewControlEvaluation",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ProgramId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ControlId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "EvaluationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "Decision",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "Rationale",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "SeparationOfDutiesWaiverId",
+          "type": "Uuid?",
+          "required": false
+        }
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "ControlEvaluationView",
+        "firstHttpStatus": 200,
+        "terminalResultType": "ControlEvaluationView"
+      },
+      "http": [
+        {
+          "method": "PUT",
+          "path": "/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/evaluations/{evaluation_id}/reviews/{command_id}",
+          "policy": "ComplianceAuthorizationPolicies.ApiUser"
+        }
+      ],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
+        "jsonPointer": "/commands/129",
+        "line": 14890,
+        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
+      },
+      "kind": "http"
+    },
+    {
+      "command": "StartControlEvaluation",
+      "logicalIdentity": {
+        "field": "EvaluationId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "caller-supplied immutable creation identity: an exact retry with the same id and authored intent returns the original result; the same id with changed intent is refused; a different id is a different record"
+      },
+      "fields": [
+        {
+          "name": "EvaluationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ProgramId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ControlId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "PlanVersionId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "RetestOfEvaluationId",
+          "type": "Uuid?",
+          "required": false
+        }
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "ControlEvaluationView",
+        "firstHttpStatus": 200,
+        "terminalResultType": "ControlEvaluationView"
+      },
+      "http": [
+        {
+          "method": "PUT",
+          "path": "/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/evaluations/{evaluation_id}",
+          "policy": "ComplianceAuthorizationPolicies.ApiUser"
+        }
+      ],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
+        "jsonPointer": "/commands/153",
+        "line": 17800,
+        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
+      },
+      "kind": "http"
+    },
+    {
+      "command": "SubmitControlEvaluation",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ProgramId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ControlId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "EvaluationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "Conclusions",
+          "type": "IReadOnlyList<EvaluationAssertionConclusion>",
+          "required": true
+        }
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "ControlEvaluationView",
+        "firstHttpStatus": 200,
+        "terminalResultType": "ControlEvaluationView"
+      },
+      "http": [
+        {
+          "method": "PUT",
+          "path": "/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/evaluations/{evaluation_id}/submissions/{command_id}",
+          "policy": "ComplianceAuthorizationPolicies.ApiUser"
+        }
+      ],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
+        "jsonPointer": "/commands/155",
+        "line": 18036,
+        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
+      },
+      "kind": "http"
+    }
+  ],
+  "eventAuthority": "selected_final_event_catalog",
+  "events": [
+    {
+      "event": "ControlEvaluationDeviationDisposed",
+      "discriminator": "bdgrz.control.evaluation.deviation_disposed",
+      "discriminatorVersion": 1,
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
+        "jsonPointer": "/events/108",
+        "line": 13339,
+        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
+      }
+    },
+    {
+      "event": "ControlEvaluationReviewed",
+      "discriminator": "bdgrz.control.evaluation.reviewed",
+      "discriminatorVersion": 1,
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
+        "jsonPointer": "/events/109",
+        "line": 13415,
+        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
+      }
+    },
+    {
+      "event": "ControlEvaluationStarted",
+      "discriminator": "bdgrz.control.evaluation.started",
+      "discriminatorVersion": 1,
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
+        "jsonPointer": "/events/110",
+        "line": 13485,
+        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
+      }
+    },
+    {
+      "event": "ControlEvaluationStepRecorded",
+      "discriminator": "bdgrz.control.evaluation.step_recorded",
+      "discriminatorVersion": 1,
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
+        "jsonPointer": "/events/111",
+        "line": 13592,
+        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
+      }
+    },
+    {
+      "event": "ControlEvaluationSubmitted",
+      "discriminator": "bdgrz.control.evaluation.submitted",
+      "discriminatorVersion": 1,
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
+        "jsonPointer": "/events/112",
+        "line": 13679,
+        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
+      }
+    }
+  ],
+  "choreography": [],
+  "status": "SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED",
+  "baselineIdentityObservation": "tenant / evaluationId",
+  "identityContractRule": "Existing published owner identity/IdFor remains stable. Required typed creation/operation identity and tenant/program/source scope come from the selected signature/protocol references; no context.RequestId minting fallback or guessed new stream key.",
+  "adoptedArchitectureDecisions": [],
+  "selectedIdentitySummary": "Tenant-scoped tenant / evaluationId; `EvaluationId` on `StartControlEvaluation` is the caller-supplied immutable creation identity (exact immutable creation retry) so an exact retry resolves the original result and a different id is a different record; later mutations use CommandId bound to this identity and the expected revision.",
+  "baselineIdentityObservationOnly": true,
+  "selectedLogicalIdentityBindings": [
+    {
+      "command": "DisposeControlEvaluationDeviation",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "one immutable authored operation"
+      },
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
+        "jsonPointer": "/commands/51",
+        "line": 6085,
+        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
+      }
+    },
+    {
+      "command": "RecordControlEvaluationStep",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "one immutable authored operation"
+      },
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
+        "jsonPointer": "/commands/101",
+        "line": 11761,
+        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
+      }
+    },
+    {
+      "command": "ReviewControlEvaluation",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "one immutable authored operation"
+      },
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
+        "jsonPointer": "/commands/129",
+        "line": 14890,
+        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
+      }
+    },
+    {
+      "command": "StartControlEvaluation",
+      "logicalIdentity": {
+        "field": "EvaluationId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "exact immutable creation retry"
+      },
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
+        "jsonPointer": "/commands/153",
+        "line": 17800,
+        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
+      }
+    },
+    {
+      "command": "SubmitControlEvaluation",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "one immutable authored operation"
+      },
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
+        "jsonPointer": "/commands/155",
+        "line": 18036,
+        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
+      }
+    }
+  ],
+  "selectedReplayRule": "Current required authorization precedes replay; exact authorized retries resolve the original accepted result using the selected logical identity and immutable actor/intent/source binding. Fresh mutable feasibility, clock selection and body preparation cannot replace that original result. Expected revision is concurrency precondition, not a new identity.",
+  "identityRevisions": [
+    {
+      "date": "2026-10-29",
+      "previous": "tenant / evaluationId"
+    }
+  ],
+  "productRules": [
+    {
+      "id": "D13-02",
+      "doc": "m0-d13-control-evaluation.md",
+      "rule": "Each procedure step records an assertion (design, implementation, evidence_sufficiency), a method (inquiry, inspection, observation, reperformance), typed inspected items, and an expected condition."
+    },
+    {
+      "id": "D13-04",
+      "doc": "m0-d13-control-evaluation.md",
+      "rule": "Each step result is met, not_met, or not_tested with a rationale, and per-assertion and overall results are effective, effective_with_exceptions, ineffective, or not_tested."
+    },
+    {
+      "id": "D13-05",
+      "doc": "m0-d13-control-evaluation.md",
+      "rule": "An overall effective result requires every step of every assertion to be met."
+    },
+    {
+      "id": "D13-06",
+      "doc": "m0-d13-control-evaluation.md",
+      "rule": "A not_met step creates a ControlEvaluationDeviation that the evaluator classifies as minor or material."
+    },
+    {
+      "id": "D13-08",
+      "doc": "m0-d13-control-evaluation.md",
+      "rule": "A minor deviation needs a recorded disposition of corrected or accepted_with_waiver, and the overall result is at best effective_with_exceptions."
+    },
+    {
+      "id": "D13-09",
+      "doc": "m0-d13-control-evaluation.md",
+      "rule": "A deviation never closes merely because a later evaluation passed; closure requires an explicit retest link."
+    },
+    {
+      "id": "D13-12",
+      "doc": "m0-d13-control-evaluation.md",
+      "rule": "Advisor validated feedback on an evaluation is additive and never counts as the independent review."
+    },
+    {
+      "id": "D13-07",
+      "doc": "m0-d13-control-evaluation.md",
+      "rule": "A material deviation creates or links a Finding with a corrective action and requires a retest, which is a new evaluation of the same plan version or a successor that explicitly links to the deviation."
+    },
+    {
+      "id": "D23-02",
+      "doc": "m0-d23-assurance-vocabulary.md",
+      "rule": "A material ControlEvaluationDeviation creates or links to a Finding; the deviation retains the procedure, exact inputs, tester, and original result."
+    }
+  ],
+  "decides": "Each step records an assertion (design, implementation, evidence_sufficiency), a method (inquiry, inspection, observation, reperformance), typed inspected items and an expected condition. A step result is met, not_met or not_tested with a rationale; per-assertion and overall results are effective, effective_with_exceptions, ineffective or not_tested, and overall effective requires every step of every assertion met. A not_met step requires a deviation classified minor or material: a material deviation makes the result ineffective, creates or links a Finding with a corrective action and requires a retest (a new evaluation naming the deviation); a minor deviation needs a disposition of corrected or accepted_with_waiver and the result is at best effective_with_exceptions. A deviation never closes because a later evaluation passed; closure requires an explicit retest link, and the deviation keeps its procedure, exact inputs, tester and original result.",
+  "decidesCovers": [
+    "D13-02",
+    "D13-04",
+    "D13-05",
+    "D13-06",
+    "D13-07",
+    "D13-08",
+    "D13-09",
+    "D23-02"
+  ],
+  "decidesAuthored": "2026-10-29"
+}

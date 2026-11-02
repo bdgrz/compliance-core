@@ -1,0 +1,36 @@
+{
+  "process": "ArtifactDownloadProcess",
+  "rootSourceEvents": [
+    "EvidenceArtifactDownloadRequested"
+  ],
+  "ordered": true,
+  "stages": [
+    {
+      "stage": "acquire",
+      "receivers": [
+        "AuthorizeAdvisorArtifactDownloadUse",
+        "AuthorizeArtifactHandlingDownloadUse"
+      ],
+      "rule": "Canonical order; the handoff use exists only when a handoff is selected."
+    },
+    {
+      "stage": "issue",
+      "receivers": [
+        "IssueProtectedArtifactDownloadGrant"
+      ],
+      "rule": "Encrypted result verified before the native fact."
+    },
+    {
+      "stage": "settle",
+      "receivers": [
+        "SettleAdvisorArtifactDownloadUse",
+        "SettleArtifactHandlingDownloadUse",
+        "SettleArtifactDownloadAvailabilityUse"
+      ],
+      "rule": null
+    }
+  ],
+  "abort": [
+    "CancelProtectedArtifactDownloadGrant"
+  ]
+}

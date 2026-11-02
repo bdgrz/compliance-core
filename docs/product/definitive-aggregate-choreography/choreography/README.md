@@ -36,6 +36,6 @@ Occupied v1 receiver UUID bytes and each process target/episode selector are fro
 
 Names, owners, semantic facts and causal/proof rules are selected. Native field/wire migrations, missing runtime pieces, conformance tests and activation remain implementation work; this packet makes no runtime, merge or deployment claim.
 
-The rollover execution sequence and proof gates are specified once in [the choreography catalog](../choreography.md).
+The rollover execution sequence and proof gates are specified once in [the choreography catalog](../../../proposed/reactors/README.md).
 
-The conditional tenant bootstrap dependency decision is specified once in [required choreography](../choreography.md).
+The conditional tenant bootstrap dependency decision is specified once in [required choreography](../../../proposed/reactors/README.md).

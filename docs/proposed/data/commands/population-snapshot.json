@@ -1,0 +1,57 @@
+{
+  "owner": "PopulationSnapshot",
+  "selectedContracts": [
+    {
+      "command": "FreezePopulationSnapshot",
+      "kind": "receiver",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "reactor",
+        "rule": "deterministic receiver identity derived from the admitting owner fact, episode and generation; exact redelivery resolves the original result"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "required": true
+        },
+        {
+          "name": "Source",
+          "required": true
+        },
+        {
+          "name": "Target",
+          "required": true
+        },
+        {
+          "name": "OperationId",
+          "required": true
+        },
+        {
+          "name": "Generation",
+          "required": true
+        },
+        {
+          "name": "SnapshotId",
+          "required": true
+        },
+        {
+          "name": "CanonicalPopulationId",
+          "required": true
+        },
+        {
+          "name": "ManifestContent",
+          "required": true
+        }
+      ],
+      "http": [],
+      "status": "PLANNED",
+      "source": {
+        "path": "docs/product/definitive-aggregate-choreography/decisions.json",
+        "recorded": "2026-10-29"
+      }
+    }
+  ],
+  "sourceContractEvidence": []
+}

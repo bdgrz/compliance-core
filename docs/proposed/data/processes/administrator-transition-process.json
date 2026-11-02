@@ -1,0 +1,32 @@
+{
+  "process": "AdministratorTransitionProcess",
+  "rootSourceEvents": [
+    "TenantManagerWithdrawalAccepted",
+    "TenantManagerRestorationAccepted",
+    "TenantManagerSourceMutationAdmitted"
+  ],
+  "ordered": true,
+  "stages": [
+    {
+      "stage": "apply",
+      "receivers": [
+        "ApplyMemberWithdrawal",
+        "ApplyAdministratorAssignmentWithdrawal",
+        "ApplyMemberRestoration",
+        "ApplyAdministratorAssignmentRestoration",
+        "ApplyNeutralMemberSourceMutation",
+        "ApplyNeutralAdministratorAssignmentMutation"
+      ],
+      "rule": "Exactly one receiver per guard fact, selected by TransitionKind; the guard fact is always first."
+    },
+    {
+      "stage": "complete",
+      "receivers": [
+        "CompleteAdministratorWithdrawal",
+        "CompleteAdministratorRestoration"
+      ],
+      "rule": "Neutral mutations have no completion fact."
+    }
+  ],
+  "abort": []
+}

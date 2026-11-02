@@ -1,0 +1,1093 @@
+{
+  "owner": "CommitmentDraft",
+  "origin": "retained_baseline",
+  "baselineOwners": [
+    "CommitmentDraft"
+  ],
+  "declaredIdentity": "UUIDv5 tenant+program+normalizedKind/identifier; explicit createRequestId retained and compares complete initial normalized terms. Revision expected; review/approval DecisionId=RequestId but review lacks retry comparison. Retirement compares generated timestamp so handler retry fails. Physical append OCC.",
+  "invariant": "One tenant/program/kind/identifier has immutable identity/source creation, revisioned authored content, exact verified-source accepted review and independent approval that publishes strictly later effective versions; retired commitment remains terminal.",
+  "boundaryDecision": "narrow",
+  "boundaryRationale": "Current pending authors, accepted review and current-revision responsibility conflicts must remain atomically coherent. Past effective version list/history query and old scope sets can leave current command state. Provider/service owners can be checked at admission using values.",
+  "sources": [
+    {
+      "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
+      "jsonPointer": "/aggregates/17",
+      "line": 13194,
+      "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
+    }
+  ],
+  "baselineSourcePath": "src/Compliance.Core/Features/Commitments/CommitmentDraft.cs",
+  "baselineEvents": [
+    "CommitmentApproved",
+    "CommitmentDraftCreated",
+    "CommitmentDraftRevised",
+    "CommitmentRetired",
+    "CommitmentReviewed",
+    "ResponsibilityAssigned",
+    "ResponsibilityRevoked"
+  ],
+  "classification": "business_aggregate",
+  "businessAggregate": true,
+  "implementationStatus": "SEPARATE_VERIFICATION_REQUIRED_IMPLEMENTATION_HALTED",
+  "identityReadingRule": "selectedIdentitySummary and exact selectedCommandContracts define intended identity. baselineIdentityObservation/declaredIdentity retain older source observations only, including old replay defects; they are not target behavior or authorization to change an occupied key.",
+  "selectedCommandContracts": [
+    {
+      "command": "ApproveCommitmentDraft",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "rule": "CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ProgramId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "DraftId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "AcceptedReviewDecisionId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "EffectiveFrom",
+          "type": "DateOnly",
+          "required": true
+        },
+        {
+          "name": "Rationale",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "ImpactDigest",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "SeparationOfDutiesWaiverId",
+          "type": "Uuid?",
+          "required": false
+        }
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "Unit",
+        "firstHttpStatus": 200,
+        "terminalResultType": "Unit"
+      },
+      "http": [
+        {
+          "method": "PUT",
+          "path": "/api/v1/tenants/{tenant_id}/programs/{program_id}/commitment-drafts/{draft_id}/approvals/{command_id}",
+          "authorizationPolicy": "ComplianceAuthorizationPolicies.ApiUser"
+        }
+      ],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
+        "jsonPointer": "/contracts/12",
+        "line": 941,
+        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
+      },
+      "kind": "http"
+    },
+    {
+      "command": "CreateCommitmentDraft",
+      "logicalIdentity": {
+        "field": "DraftId",
+        "type": "Uuid",
+        "required": true,
+        "rule": "caller-supplied immutable creation identity: an exact retry with the same id and authored intent returns the original result; the same id with changed intent is refused; a different id is a different record"
+      },
+      "fields": [
+        {
+          "name": "DraftId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ProgramId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ServiceId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Kind",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "Identifier",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "Statement",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "Context",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "SourceReference",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "ProviderId",
+          "type": "Uuid?",
+          "required": false
+        }
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "CommitmentDraftRegistration",
+        "firstHttpStatus": 200,
+        "terminalResultType": "CommitmentDraftRegistration"
+      },
+      "http": [
+        {
+          "method": "PUT",
+          "path": "/api/v1/tenants/{tenant_id}/programs/{program_id}/commitment-drafts/{draft_id}",
+          "authorizationPolicy": "ComplianceAuthorizationPolicies.ApiUser"
+        }
+      ],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
+        "jsonPointer": "/contracts/49",
+        "line": 3666,
+        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
+      },
+      "kind": "http"
+    },
+    {
+      "command": "RetireCommitment",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "rule": "CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ProgramId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "CommitmentId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "EffectiveOn",
+          "type": "DateOnly",
+          "required": true
+        },
+        {
+          "name": "Rationale",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "Unit",
+        "firstHttpStatus": 200,
+        "terminalResultType": "Unit"
+      },
+      "http": [],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
+        "jsonPointer": "/contracts/155",
+        "line": 11455,
+        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
+      },
+      "kind": "command"
+    },
+    {
+      "command": "ReviewCommitmentDraft",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "rule": "CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ProgramId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "DraftId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "Outcome",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "Rationale",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "OwnerReference",
+          "type": "string?",
+          "required": false
+        },
+        {
+          "name": "Applicability",
+          "type": "string?",
+          "required": false
+        },
+        {
+          "name": "Interpretation",
+          "type": "string?",
+          "required": false
+        },
+        {
+          "name": "InterpretationNote",
+          "type": "string?",
+          "required": false
+        },
+        {
+          "name": "SourceVerifiedReference",
+          "type": "string?",
+          "required": false
+        },
+        {
+          "name": "SourceEvidence",
+          "type": "string?",
+          "required": false
+        },
+        {
+          "name": "SeparationOfDutiesWaiverId",
+          "type": "Uuid?",
+          "required": false
+        }
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "Unit",
+        "firstHttpStatus": 200,
+        "terminalResultType": "Unit"
+      },
+      "http": [
+        {
+          "method": "PUT",
+          "path": "/api/v1/tenants/{tenant_id}/programs/{program_id}/commitment-drafts/{draft_id}/reviews/{command_id}",
+          "authorizationPolicy": "ComplianceAuthorizationPolicies.ApiUser"
+        }
+      ],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
+        "jsonPointer": "/contracts/160",
+        "line": 11860,
+        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
+      },
+      "kind": "http"
+    },
+    {
+      "command": "ReviseCommitmentDraft",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "rule": "CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ProgramId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "DraftId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "Statement",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "Context",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "SourceReference",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "Unit",
+        "firstHttpStatus": 200,
+        "terminalResultType": "Unit"
+      },
+      "http": [],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
+        "jsonPointer": "/contracts/169",
+        "line": 12592,
+        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
+      },
+      "kind": "command"
+    }
+  ],
+  "eventAuthority": "retained_baseline_business_facts_requires_schema_reconciliation",
+  "events": [
+    {
+      "event": "CommitmentApproved",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
+        "jsonPointer": "/aggregates/17",
+        "line": 13194,
+        "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
+      },
+      "baselineContract": {
+        "event": "CommitmentApproved",
+        "emitters": [
+          "src/Compliance.Core/Features/Commitments/CommitmentDraft.cs"
+        ],
+        "eventDisposition": "aggregate_fact",
+        "emitterOwnership": "aggregate or partial source",
+        "typedFields": [
+          {
+            "name": "TenantId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "ProgramId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "DraftId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "Revision",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "DecisionId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "AcceptedReviewDecisionId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "Version",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "EffectiveFrom",
+            "type": "DateOnly",
+            "required": true
+          },
+          {
+            "name": "ImpactDigest",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "Rationale",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "ActorMemberId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "ActorDisplay",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "DecidedAt",
+            "type": "DateTimeOffset",
+            "required": true
+          },
+          {
+            "name": "SeparationOfDutiesWaiverId",
+            "type": "Uuid?",
+            "required": false
+          }
+        ],
+        "eventContract": "src/Compliance.Common/Features/Commitments/CommitmentApproved.cs"
+      }
+    },
+    {
+      "event": "CommitmentDraftCreated",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
+        "jsonPointer": "/aggregates/17",
+        "line": 13194,
+        "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
+      },
+      "baselineContract": {
+        "event": "CommitmentDraftCreated",
+        "emitters": [
+          "src/Compliance.Core/Features/Commitments/CommitmentDraft.cs"
+        ],
+        "eventDisposition": "aggregate_fact",
+        "emitterOwnership": "aggregate or partial source",
+        "typedFields": [
+          {
+            "name": "TenantId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "ProgramId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "DraftId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "CreateRequestId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "ServiceId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "Kind",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "Identifier",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "Statement",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "Context",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "SourceReference",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "ActorMemberId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "ActorDisplay",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "ChangedAt",
+            "type": "DateTimeOffset",
+            "required": true
+          }
+        ],
+        "eventContract": "src/Compliance.Common/Features/Commitments/CommitmentDraftCreated.cs"
+      }
+    },
+    {
+      "event": "CommitmentDraftRevised",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
+        "jsonPointer": "/aggregates/17",
+        "line": 13194,
+        "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
+      },
+      "baselineContract": {
+        "event": "CommitmentDraftRevised",
+        "emitters": [
+          "src/Compliance.Core/Features/Commitments/CommitmentDraft.cs"
+        ],
+        "eventDisposition": "aggregate_fact",
+        "emitterOwnership": "aggregate or partial source",
+        "typedFields": [
+          {
+            "name": "TenantId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "ProgramId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "DraftId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "Revision",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "Statement",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "Context",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "SourceReference",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "ActorMemberId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "ActorDisplay",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "ChangedAt",
+            "type": "DateTimeOffset",
+            "required": true
+          }
+        ],
+        "eventContract": "src/Compliance.Common/Features/Commitments/CommitmentDraftRevised.cs"
+      }
+    },
+    {
+      "event": "CommitmentRetired",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
+        "jsonPointer": "/aggregates/17",
+        "line": 13194,
+        "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
+      },
+      "baselineContract": {
+        "event": "CommitmentRetired",
+        "emitters": [
+          "src/Compliance.Core/Features/Commitments/CommitmentDraft.cs"
+        ],
+        "eventDisposition": "aggregate_fact",
+        "emitterOwnership": "aggregate or partial source",
+        "typedFields": [
+          {
+            "name": "TenantId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "ProgramId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "SubjectId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "Revision",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "ActorMemberId",
+            "type": "Uuid?",
+            "required": true
+          },
+          {
+            "name": "ActorDisplay",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "EffectiveOn",
+            "type": "DateOnly",
+            "required": true
+          },
+          {
+            "name": "Rationale",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "OccurredAt",
+            "type": "DateTimeOffset",
+            "required": true
+          }
+        ],
+        "eventContract": "src/Compliance.Common/Features/Commitments/CommitmentRetired.cs"
+      }
+    },
+    {
+      "event": "CommitmentReviewed",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
+        "jsonPointer": "/aggregates/17",
+        "line": 13194,
+        "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
+      },
+      "baselineContract": {
+        "event": "CommitmentReviewed",
+        "emitters": [
+          "src/Compliance.Core/Features/Commitments/CommitmentDraft.cs"
+        ],
+        "eventDisposition": "aggregate_fact",
+        "emitterOwnership": "aggregate or partial source",
+        "typedFields": [
+          {
+            "name": "TenantId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "ProgramId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "DraftId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "Revision",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "DecisionId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "Outcome",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "OwnerReference",
+            "type": "string?",
+            "required": true
+          },
+          {
+            "name": "Applicability",
+            "type": "string?",
+            "required": true
+          },
+          {
+            "name": "Interpretation",
+            "type": "string?",
+            "required": true
+          },
+          {
+            "name": "InterpretationNote",
+            "type": "string?",
+            "required": true
+          },
+          {
+            "name": "Rationale",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "Version",
+            "type": "long?",
+            "required": true
+          },
+          {
+            "name": "EffectiveFrom",
+            "type": "DateOnly?",
+            "required": true
+          },
+          {
+            "name": "ImpactDigest",
+            "type": "string?",
+            "required": true
+          },
+          {
+            "name": "ActorMemberId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "ActorDisplay",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "DecidedAt",
+            "type": "DateTimeOffset",
+            "required": true
+          },
+          {
+            "name": "SeparationOfDutiesWaiverId",
+            "type": "Uuid?",
+            "required": false
+          },
+          {
+            "name": "SourceVerification",
+            "type": "string?",
+            "required": false
+          },
+          {
+            "name": "SourceVerifiedReference",
+            "type": "string?",
+            "required": false
+          },
+          {
+            "name": "SourceEvidence",
+            "type": "string?",
+            "required": false
+          }
+        ],
+        "eventContract": "src/Compliance.Common/Features/Commitments/CommitmentReviewed.cs"
+      }
+    },
+    {
+      "event": "ResponsibilityAssigned",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
+        "jsonPointer": "/aggregates/17",
+        "line": 13194,
+        "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
+      },
+      "baselineContract": {
+        "event": "ResponsibilityAssigned",
+        "emitters": [
+          "src/Compliance.Core/Features/Responsibilities/Models/ResponsibilitySet.cs"
+        ],
+        "eventDisposition": "aggregate_fact",
+        "emitterOwnership": "shared scoped helper executed within the owner stream",
+        "typedFields": [
+          {
+            "name": "TenantId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "AssignmentId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "MemberId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "Type",
+            "type": "ResponsibilityType",
+            "required": true
+          },
+          {
+            "name": "Scope",
+            "type": "ResponsibilityScope",
+            "required": true
+          },
+          {
+            "name": "AssignedAt",
+            "type": "DateTimeOffset",
+            "required": true
+          },
+          {
+            "name": "AssignedByMemberId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "EffectiveFrom",
+            "type": "DateTimeOffset",
+            "required": true
+          },
+          {
+            "name": "EffectiveUntil",
+            "type": "DateTimeOffset?",
+            "required": true
+          },
+          {
+            "name": "SeparationOfDutiesWaiverIds",
+            "type": "IReadOnlyList<Uuid>",
+            "required": true
+          },
+          {
+            "name": "AssignedByDisplay",
+            "type": "string",
+            "required": true
+          }
+        ],
+        "eventContract": "src/Compliance.Common/Features/Responsibilities/ResponsibilityAssigned.cs"
+      }
+    },
+    {
+      "event": "ResponsibilityRevoked",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
+        "jsonPointer": "/aggregates/17",
+        "line": 13194,
+        "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
+      },
+      "baselineContract": {
+        "event": "ResponsibilityRevoked",
+        "emitters": [
+          "src/Compliance.Core/Features/Responsibilities/Models/ResponsibilitySet.cs"
+        ],
+        "eventDisposition": "aggregate_fact",
+        "emitterOwnership": "shared scoped helper executed within the owner stream",
+        "typedFields": [
+          {
+            "name": "TenantId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "AssignmentId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "Scope",
+            "type": "ResponsibilityScope",
+            "required": true
+          },
+          {
+            "name": "RevokedByMemberId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "RevokedAt",
+            "type": "DateTimeOffset",
+            "required": true
+          },
+          {
+            "name": "Reason",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "RevokedByDisplay",
+            "type": "string",
+            "required": true
+          }
+        ],
+        "eventContract": "src/Compliance.Common/Features/Responsibilities/ResponsibilityRevoked.cs"
+      }
+    }
+  ],
+  "choreography": [],
+  "status": "SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED",
+  "baselineIdentityObservation": "UUIDv5 tenant+program+normalizedKind/identifier; explicit createRequestId retained and compares complete initial normalized terms. Revision expected; review/approval DecisionId=RequestId but review lacks retry comparison. Retirement compares generated timestamp so handler retry fails. Physical append OCC.",
+  "identityContractRule": "Existing published owner identity/IdFor remains stable. Required typed creation/operation identity and tenant/program/source scope come from the selected signature/protocol references; no context.RequestId minting fallback or guessed new stream key.",
+  "adoptedArchitectureDecisions": [],
+  "selectedIdentityClarification": "Tenant + ProgramId + normalized kind/identifier retain the existing deterministic UUIDv5 owner algorithm. Supplied DraftId must equal that existing identity; later selected commands use CommandId and the exact draft/version/review bindings.",
+  "selectedIdentitySummary": "Tenant + ProgramId + normalized kind/identifier retain the existing deterministic UUIDv5 owner algorithm. Supplied DraftId must equal that existing identity; later selected commands use CommandId and the exact draft/version/review bindings.",
+  "baselineIdentityObservationOnly": true,
+  "selectedLogicalIdentityBindings": [
+    {
+      "command": "ApproveCommitmentDraft",
+      "logicalIdentity": "CommandId",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
+        "jsonPointer": "/contracts/12",
+        "line": 941,
+        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
+      }
+    },
+    {
+      "command": "CreateCommitmentDraft",
+      "logicalIdentity": "DraftId",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
+        "jsonPointer": "/contracts/49",
+        "line": 3666,
+        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
+      }
+    },
+    {
+      "command": "RetireCommitment",
+      "logicalIdentity": "CommandId",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
+        "jsonPointer": "/contracts/155",
+        "line": 11455,
+        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
+      }
+    },
+    {
+      "command": "ReviewCommitmentDraft",
+      "logicalIdentity": "CommandId",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
+        "jsonPointer": "/contracts/160",
+        "line": 11860,
+        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
+      }
+    },
+    {
+      "command": "ReviseCommitmentDraft",
+      "logicalIdentity": "CommandId",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
+        "jsonPointer": "/contracts/169",
+        "line": 12592,
+        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
+      }
+    }
+  ],
+  "selectedReplayRule": "Current required authorization precedes replay; exact authorized retries resolve the original accepted result using the selected logical identity and immutable actor/intent/source binding. Fresh mutable feasibility, clock selection and body preparation cannot replace that original result. Expected revision is concurrency precondition, not a new identity.",
+  "productRules": [
+    {
+      "id": "D09-01",
+      "doc": "m0-d09-commitments.md",
+      "rule": "Each commitment is one of four kinds (service_commitment, system_requirement, user_entity_responsibility, subservice_responsibility) and carries an identifier, statement, service reference, source citation, owner Person, applicable Trust Services categories, and lifecycle status of draft, approved, or retired."
+    },
+    {
+      "id": "D09-02",
+      "doc": "m0-d09-commitments.md",
+      "rule": "A commitment identifier is unique per tenant, program, and commitment kind."
+    },
+    {
+      "id": "D09-03",
+      "doc": "m0-d09-commitments.md",
+      "rule": "A commitment's source citation is a typed reference (artifact kind, title, version or date, section locator, optional governed artifact id), not pasted contract text."
+    },
+    {
+      "id": "D09-04",
+      "doc": "m0-d09-commitments.md",
+      "rule": "A commitment's categories are validated against the program's current approved boundary version when the commitment is created, revised, or approved, and the approval records that boundary version id."
+    },
+    {
+      "id": "D09-06",
+      "doc": "m0-d09-commitments.md",
+      "rule": "A commitment must be approved by a management approver, an Org Admin or Compliance Lead designated as the program's management approver; the approval is attributed, versioned, references the exact commitment version and boundary version, and self-approval of one's own draft requires a separation-of-duties exception."
+    },
+    {
+      "id": "D09-07",
+      "doc": "m0-d09-commitments.md",
+      "rule": "A subservice_responsibility commitment requires a provider reference to the Provider that performs it."
+    }
+  ],
+  "decides": "A draft is one of service_commitment, system_requirement, user_entity_responsibility or subservice_responsibility and carries an identifier, statement, governed service, typed source citation (artifact kind, title, version or date, section locator, optional artifact id; no pasted contract text), owner Person and applicable Trust Services categories; a provider reference is required for subservice_responsibility and refused for other kinds. Categories are validated against the program's current approved boundary version on create, revise and approve, and approval records that boundary version id. Approval is by a management approver (an Org Admin or Compliance Lead designated for the program), attributed and tied to the exact commitment and boundary version; self-approval of one's own draft needs a separation-of-duties exception.",
+  "decidesCovers": [
+    "D09-01",
+    "D09-03",
+    "D09-04",
+    "D09-06",
+    "D09-07"
+  ],
+  "decidesAuthored": "2026-10-29"
+}

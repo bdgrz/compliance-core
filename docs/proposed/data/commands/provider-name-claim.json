@@ -1,0 +1,142 @@
+{
+  "owner": "ProviderNameClaim",
+  "selectedContracts": [
+    {
+      "command": "ClaimProviderName",
+      "kind": "receiver",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "internal",
+        "rule": "deterministic receiver identity derived from the admitted root fact, episode and generation: exact redelivery resolves the original result, a changed admission is a new identity"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "required": true
+        },
+        {
+          "name": "Source",
+          "required": true
+        },
+        {
+          "name": "Target",
+          "required": true
+        },
+        {
+          "name": "OperationId",
+          "required": true
+        },
+        {
+          "name": "Generation",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "required": true
+        },
+        {
+          "name": "Intent",
+          "required": true
+        },
+        {
+          "name": "RecordId",
+          "required": true
+        },
+        {
+          "name": "NormalizedName",
+          "required": true
+        },
+        {
+          "name": "NameKind",
+          "required": true
+        }
+      ],
+      "http": [],
+      "source": {
+        "path": "src/Compliance.Core/Features/Providers/Handlers/ClaimProviderNameHandler.cs",
+        "recorded": "2026-10-29"
+      },
+      "reactor": "ProviderNameClaimReactor",
+      "sourceOwner": "Provider",
+      "sourceEvents": [
+        "ProviderChangeAccepted"
+      ],
+      "guard": "Use existing normalization/active/kind policy; new and old claims acquired canonically. Permanent unique active binding until exact record change/fence. ",
+      "eventsEmitted": [
+        "ProviderNameClaimed"
+      ],
+      "effectKind": "claim_provider_name",
+      "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine."
+    },
+    {
+      "command": "ReleaseProviderName",
+      "kind": "receiver",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "internal",
+        "rule": "deterministic receiver identity derived from the admitted root fact, episode and generation: exact redelivery resolves the original result, a changed admission is a new identity"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "required": true
+        },
+        {
+          "name": "Source",
+          "required": true
+        },
+        {
+          "name": "Target",
+          "required": true
+        },
+        {
+          "name": "OperationId",
+          "required": true
+        },
+        {
+          "name": "Generation",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "required": true
+        },
+        {
+          "name": "Intent",
+          "required": true
+        },
+        {
+          "name": "RecordId",
+          "required": true
+        },
+        {
+          "name": "NormalizedName",
+          "required": true
+        }
+      ],
+      "http": [],
+      "source": {
+        "path": "src/Compliance.Core/Features/Providers/Handlers/ReleaseProviderNameHandler.cs",
+        "recorded": "2026-10-29"
+      },
+      "reactor": "ProviderOldNameReleaseReactor",
+      "sourceOwner": "Provider",
+      "sourceEvents": [
+        "ProviderRecorded",
+        "ProviderRevised",
+        "ProviderChangeCanceled"
+      ],
+      "guard": "Release only matching old generation after exact record fact proves old name inactive; same-name/current claim is terminal no-op. A canceled target is already receiver-fenced; release its pending new claim only with that exact fence.",
+      "eventsEmitted": [
+        "ProviderNameReleased"
+      ],
+      "effectKind": "release_provider_name",
+      "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine."
+    }
+  ],
+  "sourceContractEvidence": []
+}

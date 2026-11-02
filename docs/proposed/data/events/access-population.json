@@ -1,0 +1,313 @@
+{
+  "owner": "AccessPopulation",
+  "events": [
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:AccessPopulationAccepted",
+        "event": "AccessPopulationAccepted",
+        "emissionKind": "business",
+        "owners": [
+          "AccessPopulation"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": true,
+        "targetConcreteType": "AccessPopulationAccepted",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.access_population.accepted",
+          "version": 2
+        },
+        "wireQualification": "Adopted wire is the occupied discriminator declared in src/Compliance.Common/Features/AccessReviews/Events/AccessPopulationAccepted.cs at 60029b8f (2026-10-29 reconciliation). The earlier selected wire is retained as supersededSelectedWire for provenance only.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "selected_complete_schema",
+        "sourceStatus": "declared",
+        "supersededSelectedWire": {
+          "discriminator": "bdgrz.access_population.accepted",
+          "version": 1
+        },
+        "meaning": "A population was attested and frozen as an immutable snapshot of its raw facts.",
+        "meaningSource": "record summary in src/Compliance.Common/Features/AccessReviews/Events/AccessPopulationAccepted.cs"
+      },
+      "schema": {
+        "event": "AccessPopulationAccepted",
+        "discriminator": "bdgrz.access_population.accepted",
+        "discriminatorVersion": 1,
+        "owner": "AccessPopulation",
+        "existingContract": "src/Compliance.Common/Features/AccessReviews/AccessPopulationAccepted.cs",
+        "status": "selected target schema; implementation pending",
+        "reason": "source command accepted result",
+        "fields": [
+          {
+            "name": "TenantId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "PopulationId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "Revision",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "SnapshotId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "ContentSha256",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "CalculationId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "Attestation",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "AcceptedBy",
+            "type": "ActorReference",
+            "required": true
+          },
+          {
+            "name": "AcceptedAt",
+            "type": "DateTimeOffset",
+            "required": true
+          },
+          {
+            "name": "Operation",
+            "type": "OperationProvenance",
+            "required": true
+          },
+          {
+            "name": "FirstResponse",
+            "type": "ImmutableContentRef?",
+            "required": true
+          },
+          {
+            "name": "OperationResult",
+            "type": "ImmutableContentRef?",
+            "required": true
+          }
+        ],
+        "contentSchemas": [],
+        "changes": [],
+        "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
+        "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
+        "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
+      }
+    },
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:AccessPopulationFactsRecorded",
+        "event": "AccessPopulationFactsRecorded",
+        "emissionKind": "business",
+        "owners": [
+          "AccessPopulation"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": true,
+        "targetConcreteType": "AccessPopulationFactsRecorded",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.access_population.facts_recorded",
+          "version": 2
+        },
+        "wireQualification": "Adopted wire is the occupied discriminator declared in src/Compliance.Common/Features/AccessReviews/Events/AccessPopulationFactsRecorded.cs at 60029b8f (2026-10-29 reconciliation). The earlier selected wire is retained as supersededSelectedWire for provenance only.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "selected_complete_schema",
+        "sourceStatus": "declared",
+        "supersededSelectedWire": {
+          "discriminator": "bdgrz.access_population.facts_recorded",
+          "version": 1
+        },
+        "meaning": "A draft's complete observed facts were replaced. FactsContent is the complete AccessPopulationFacts as verified immutable content, so no list can be truncated by an event size.",
+        "meaningSource": "record summary in src/Compliance.Common/Features/AccessReviews/Events/AccessPopulationFactsRecorded.cs"
+      },
+      "schema": {
+        "event": "AccessPopulationFactsRecorded",
+        "discriminator": "bdgrz.access_population.facts_recorded",
+        "discriminatorVersion": 1,
+        "owner": "AccessPopulation",
+        "existingContract": "src/Compliance.Common/Features/AccessReviews/AccessPopulationFactsRecorded.cs",
+        "status": "selected target schema; implementation pending",
+        "reason": "source command accepted result",
+        "fields": [
+          {
+            "name": "TenantId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "PopulationId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "Revision",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "FactsContent",
+            "type": "ImmutableContentRef",
+            "required": true
+          },
+          {
+            "name": "RecordedBy",
+            "type": "ActorReference",
+            "required": true
+          },
+          {
+            "name": "RecordedAt",
+            "type": "DateTimeOffset",
+            "required": true
+          },
+          {
+            "name": "Operation",
+            "type": "OperationProvenance",
+            "required": true
+          },
+          {
+            "name": "FirstResponse",
+            "type": "ImmutableContentRef?",
+            "required": true
+          },
+          {
+            "name": "OperationResult",
+            "type": "ImmutableContentRef?",
+            "required": true
+          }
+        ],
+        "contentSchemas": [
+          {
+            "field": "FactsContent",
+            "schema": "AccessPopulationFactsRecorded.FactsContent.v1",
+            "contentType": "AccessPopulationFacts",
+            "rule": "Complete original typed structured value, including nested collections, written/verified before this event. No cumulative parent view or mutable latest pointer."
+          }
+        ],
+        "changes": [
+          "Externalize structured AccessPopulationFacts including nested collections; a former item cap cannot become an event-size rejection for valid larger content."
+        ],
+        "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
+        "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
+        "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
+      }
+    },
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:AccessPopulationOpened",
+        "event": "AccessPopulationOpened",
+        "emissionKind": "business",
+        "owners": [
+          "AccessPopulation"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": true,
+        "targetConcreteType": "AccessPopulationOpened",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.access_population.opened",
+          "version": 2
+        },
+        "wireQualification": "Adopted wire is the occupied discriminator declared in src/Compliance.Common/Features/AccessReviews/Events/AccessPopulationOpened.cs at 60029b8f (2026-10-29 reconciliation). The earlier selected wire is retained as supersededSelectedWire for provenance only.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "selected_complete_schema",
+        "sourceStatus": "declared",
+        "supersededSelectedWire": {
+          "discriminator": "bdgrz.access_population.opened",
+          "version": 1
+        },
+        "meaning": "A population draft was opened for one exact system-instance revision. It is the root native fact of the population's opening operation; the logical id of Operation is the population id.",
+        "meaningSource": "record summary in src/Compliance.Common/Features/AccessReviews/Events/AccessPopulationOpened.cs"
+      },
+      "schema": {
+        "event": "AccessPopulationOpened",
+        "discriminator": "bdgrz.access_population.opened",
+        "discriminatorVersion": 1,
+        "owner": "AccessPopulation",
+        "existingContract": "src/Compliance.Common/Features/AccessReviews/AccessPopulationOpened.cs",
+        "status": "selected target schema; implementation pending",
+        "reason": "source command accepted result",
+        "fields": [
+          {
+            "name": "TenantId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "PopulationId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "ApplicationId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "SystemInstanceId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "SystemInstanceRevision",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "ObservedAt",
+            "type": "DateTimeOffset",
+            "required": true
+          },
+          {
+            "name": "SourceKind",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "Source",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "OpenedBy",
+            "type": "ActorReference",
+            "required": true
+          },
+          {
+            "name": "OpenedAt",
+            "type": "DateTimeOffset",
+            "required": true
+          },
+          {
+            "name": "Operation",
+            "type": "OperationProvenance",
+            "required": true
+          },
+          {
+            "name": "FirstResponse",
+            "type": "ImmutableContentRef?",
+            "required": true
+          },
+          {
+            "name": "OperationResult",
+            "type": "ImmutableContentRef?",
+            "required": true
+          }
+        ],
+        "contentSchemas": [],
+        "changes": [],
+        "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
+        "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
+        "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
+      }
+    }
+  ]
+}
