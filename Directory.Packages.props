@@ -7,7 +7,7 @@
     <PackageVersion Include="Cntryl.Conventions.Testing.Analyzers" Version="1.0.1" />
     <PackageVersion Include="Cntryl.Conventions.Testing.CodeFixes" Version="1.0.1" />
     <PackageVersion Include="Cntryl.Fitz.Extensions" Version="3.0.0" />
-    <PackageVersion Include="Cntryl.Fitz.Testing" Version="2.0.0" />
+    <PackageVersion Include="Cntryl.Fitz.Testing" Version="3.0.0" />
     <PackageVersion Include="Cntryl.LexKey" Version="0.1.2" />
     <PackageVersion Include="Cntryl.Portia.Abstractions" Version="0.9.1" />
     <PackageVersion Include="Cntryl.Portia.Analyzers" Version="0.9.1" />
