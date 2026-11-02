@@ -1,0 +1,31 @@
+{
+  "model": "jev-1.14.0",
+  "answers": {
+    "registration_root_guard": {
+      "type": "noul",
+      "noul": 0.47
+    },
+    "terminal_test_isolates_guard": {
+      "type": "noul",
+      "noul": 0.04
+    },
+    "owner_payload_disposition": {
+      "type": "choice",
+      "choice": "keep_shared_envelope",
+      "confidence": 0.92,
+      "probabilities": {
+        "keep_shared_envelope": 0.95,
+        "change_versioned_contract": 0.02,
+        "needs_source_resolution": 0.03
+      }
+    },
+    "owner_payload_premise": {
+      "type": "noul",
+      "noul": 0.91
+    }
+  },
+  "usage": {
+    "input_tokens": 785,
+    "output_tokens": 117
+  }
+}

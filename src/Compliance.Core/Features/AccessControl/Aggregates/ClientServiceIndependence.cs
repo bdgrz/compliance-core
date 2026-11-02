@@ -55,6 +55,7 @@ using Bdgrz.Compliance.Features.Tenants.Processes;
 using Bdgrz.Compliance.Features.UserIdentities.Models;
 using Bdgrz.Compliance.Features.Work.Models;
 using Bdgrz.Compliance.Features.AccessControl.Events;
+using Bdgrz.Compliance.Features.AccessControl.Commands;
 using Bdgrz.Compliance.Features.AttestRecords.Commands;
 using Bdgrz.Compliance.Features.Examinations.Aggregates;
 using Bdgrz.Compliance.Features.Exports.Commands;
@@ -197,8 +198,9 @@ public sealed class ClientServiceIndependence : Aggregate, ISourceUseOwner
         ArgumentNullException.ThrowIfNull(serviceContent);
         ArgumentNullException.ThrowIfNull(firstResponse);
         ArgumentNullException.ThrowIfNull(operationResult);
-        if (operation.Owner != Stream || operation.LogicalId != operation.RootOperationId ||
-            operation.OriginalExpectedRevision is not { } expected)
+        if (_tenantId == Uuid.Empty || operation.OriginalExpectedRevision is not { } expected ||
+            string.IsNullOrEmpty(operation.AuthoredIntentSha256) ||
+            !NativeOwnerHistory.IsOwnRoot(this, operation, nameof(RecordNonattestService), expected))
             return Result.Failure(new RequestError(RequestErrorKind.Validation,
                 "A service is the logical operation of its own record on its client's owner."));
         var prepared = PrepareService(operation.LogicalId, (long)expected);
@@ -234,8 +236,9 @@ public sealed class ClientServiceIndependence : Aggregate, ISourceUseOwner
         ArgumentNullException.ThrowIfNull(operation);
         ArgumentNullException.ThrowIfNull(intent);
         ArgumentNullException.ThrowIfNull(firstResponse);
-        if (operation.Owner != Stream || operation.LogicalId != operation.RootOperationId ||
-            operation.OriginalExpectedRevision is not { } expected)
+        if (_tenantId == Uuid.Empty || operation.OriginalExpectedRevision is not { } expected ||
+            string.IsNullOrEmpty(operation.AuthoredIntentSha256) ||
+            !NativeOwnerHistory.IsOwnRoot(this, operation, nameof(EvaluateClientIndependence), expected))
             return Result.Failure(new RequestError(RequestErrorKind.Validation,
                 "An evaluation is the logical operation of its own preview on its client's owner."));
         var prepared = PrepareEvaluation(operation.LogicalId, (long)expected);

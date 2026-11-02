@@ -30,6 +30,7 @@ using Bdgrz.Compliance.Features.Tenants.Processes;
 using Bdgrz.Compliance.Features.UserIdentities.Models;
 using Bdgrz.Compliance.Features.Work.Models;
 using Bdgrz.Compliance.Features.AccessControl.Events;
+using Bdgrz.Compliance.Features.AccessControl.Commands;
 using Bdgrz.Compliance.Features.AttestRecords.Commands;
 using Bdgrz.Compliance.Features.Proofs.Models;
 namespace Bdgrz.Compliance.Features.AccessControl.Aggregates;
@@ -82,9 +83,14 @@ public sealed class FirmStaffIdentityClaim : Aggregate
     {
         ArgumentNullException.ThrowIfNull(operation);
         ArgumentNullException.ThrowIfNull(intent);
-        if (operation.Owner != Stream)
+        if (UserId == Uuid.Empty || operation.LogicalId == Uuid.Empty || operation.Owner != Stream ||
+            operation.RootOperationId == Uuid.Empty || operation.Actor is null ||
+            operation.Actor.Kind != "platform_operator" || operation.CommandKind != nameof(ClaimFirmStaffIdentity) ||
+            operation.CausationEventId is null || operation.FirstOwner != new FirmStaffRecord(operation.RootOperationId).Stream ||
+            operation.AffectedOwner != Stream || operation.ExpectedRevisionOwner != Stream ||
+            operation.OriginalExpectedRevision != 0)
             return Result.Failure(new RequestError(RequestErrorKind.Validation,
-                "A claim is recorded on its own canonical user stream."));
+                "A claim requires a canonical user and the exact registration child provenance."));
         if (_claimed is not null)
             return Result.Failure(new RequestError(RequestErrorKind.Conflict,
                 "The canonical user is permanently claimed.", false));

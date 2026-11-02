@@ -129,6 +129,7 @@ public sealed class IndependenceRuleRatificationCatalog : Aggregate, ISourceUseO
         if (fact.Header is not { } header || fact.Operation is not { } operation ||
             header.Sequence != Sequence + 1 || header.RuleVersion <= (Header?.RuleVersion ?? 0) || header.RatificationId == Uuid.Empty || header.RatificationId == Header?.RatificationId ||
             fact.NativeSequence != NativeSequence + 1 || operation.LogicalId == Uuid.Empty || operation.RootOperationId != operation.LogicalId ||
+            operation.CausationEventId is not null ||
             operation.CommandKind != nameof(RatifyIndependenceRuleVersion) || operation.Owner != Stream || operation.FirstOwner != Stream || operation.AffectedOwner != Stream ||
             operation.ExpectedRevisionOwner != Stream || operation.Episode != Id.ToString() || operation.OriginalExpectedRevision != unchecked((ulong)Sequence) ||
             !IndependenceCatalogContent.Digest(operation.AuthoredIntentSha256) || operation.Actor != header.Actor || operation.AcceptedAt != header.RecordedAt ||
