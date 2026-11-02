@@ -13,6 +13,7 @@ Unknown or conflicting details use `[Placeholder: ...]`. Complete selected per-o
 - [Provider and external-source seams](partner-seam.md) records governed provider facts, the manual-first connector boundary, and placeholders for future partner contracts.
 - [Architecture notes](architecture-overview.md), [boundary notes](aggregate-boundary-notes.md), and [product-rule traceability](product-rule-traceability.md).
 - [Read models](read-models.md), [decisions](decisions-log.md), and [open details](open-gaps.md).
+- [Jev naming review](naming-review.md) records an advisory first pass over aggregate, responsibility, command, and event names.
 - [Source map](sources.md).
 
 ## Inventory
