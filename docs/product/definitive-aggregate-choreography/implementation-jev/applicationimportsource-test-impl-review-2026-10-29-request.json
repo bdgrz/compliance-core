@@ -1,0 +1,47 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "owner": "ApplicationImportSource",
+    "rule": "Invariant: at most one batch holds the source; admission requires the batch to be unseen (neither holding nor fenced); each batch settles at most once; only an admitted batch can settle as published; a batch settled (canceled) before admission leaves a fence so a later claim is refused. Refusals append nothing.",
+    "test_competing": "Source replayed with an admission by batch A. Claim by selected batch B returns Conflict (transient), owner still reports A as holder, B has no slot, and no event is pending.",
+    "test_fence": "Source replayed with a canceled settlement of batch A that was never admitted (fence). Claim by A returns Conflict and a second Settle of A returns Conflict; A slot is a fence, no holder, revision 1, no event pending.",
+    "test_invalid_settle": "Fresh source, batch A selected. Settle published of never-admitted A, undefined disposition, wrong command kind, and unselected batch each return Conflict; no event pending and revision stays 0.",
+    "catalog": "Catalog preliminaryNewEvents lists only ApplicationImportSourceAdmissionRecorded, but the same catalog entry lists command ReleaseApplicationImportSource emitting ApplicationImportSourceSettled and an event record for ApplicationImportSourceSettled with discriminator version 1. Code declares both events and appends Settled on release."
+  },
+  "questions": {
+    "competing_asserts": {
+      "type": "noul",
+      "instructions": "Does state.test_competing prove a second batch cannot be admitted while another holds the source and that nothing is appended?",
+      "criteria": {
+        "true": "Refusal, unchanged holder and no pending event prove the single-holder rule.",
+        "false": "The scenario could pass while a second holder would be admitted or a fact appended."
+      }
+    },
+    "fence_asserts": {
+      "type": "noul",
+      "instructions": "Does state.test_fence prove a batch settled before admission cannot later claim or settle again?",
+      "criteria": {
+        "true": "Both refusals with fence state unchanged and no pending event prove the fence.",
+        "false": "The scenario could pass while a fenced batch is admitted or settled twice."
+      }
+    },
+    "invalid_settle_asserts": {
+      "type": "noul",
+      "instructions": "Does state.test_invalid_settle prove invalid settlements of a never-admitted batch append nothing, including that a never-admitted batch cannot publish?",
+      "criteria": {
+        "true": "Each refusal with zero pending events and unchanged revision proves nothing is appended.",
+        "false": "The scenario could pass while an invalid settlement appended a fact."
+      }
+    },
+    "catalog_gap": {
+      "type": "choice",
+      "instructions": "Given state.catalog, is there an event-model discrepancy needing action?",
+      "criteria": {
+        "no_discrepancy": "The Settled event is fully registered through the release command and event record; the preliminary list omission is bookkeeping only.",
+        "add_to_model": "ApplicationImportSourceSettled must be added to the catalog as a new event.",
+        "remove": "ApplicationImportSourceSettled should be removed from code.",
+        "needs_source_resolution": "Sources conflict and need resolution before deciding."
+      }
+    }
+  }
+}

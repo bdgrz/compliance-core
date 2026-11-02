@@ -3,6 +3,8 @@ using Bdgrz.Compliance.Features.AccessControl.Models;
 using Bdgrz.Compliance.Features.AccessControl.Processes;
 using Bdgrz.Compliance.Features.AccessControl.Rules;
 using Bdgrz.Compliance.Features.AdvisorCollaboration.History;
+using Bdgrz.Compliance.Features.AdvisorCollaboration.Models;
+using Bdgrz.Compliance.Features.AdvisorCollaboration.Rules;
 using Bdgrz.Compliance.Features.Applications.Models;
 using Bdgrz.Compliance.Features.AuditPackages.Rules;
 using Bdgrz.Compliance.Features.AuditorRequests.Models;
@@ -153,6 +155,15 @@ public sealed class AdvisorFeedbackThread : Aggregate
         if (operation.Owner != Stream)
             return Result.Failure(new RequestError(RequestErrorKind.Validation,
                 "A materialization is recorded on the thread's own stream."));
+        if (authored.TenantId != _tenantId || authored.ProgramId != _programId || authored.HandoffId != _handoffId ||
+            authored.FeedbackId != _feedbackId)
+            return Result.Failure(new RequestError(RequestErrorKind.Validation,
+                "The admitted contribution belongs to another feedback thread."));
+        var source = authored.SelectedSource ?? new AdvisorRecordVersion(authored.RecordId, authored.RecordVersionId);
+        if (!AdvisorHandoffRules.FeedbackKinds.Contains(authored.Kind) || authored.RecordId == Uuid.Empty ||
+            !source.HasValidIdentity || authored.SelectedSource is { IsSupported: false })
+            return Result.Failure(new RequestError(RequestErrorKind.Validation,
+                "Feedback is a comment, change request or validation of an exact record version."));
         var append = _cut.Require(this, Acceptance, operation);
         if (!append.IsSuccess)
             return append;
@@ -170,6 +181,9 @@ public sealed class AdvisorFeedbackThread : Aggregate
         ImmutableContentRef firstResponse, ImmutableContentRef operationResult)
     {
         ArgumentNullException.ThrowIfNull(operation);
+        if (correctionId == Uuid.Empty || operation.LogicalId != correctionId)
+            return Result.Failure(new RequestError(RequestErrorKind.Validation,
+                "A correction is identified by its own correction id."));
         var prepared = PrepareOwn(operation, PrepareWrite);
         if (!prepared.IsSuccess)
             return prepared;

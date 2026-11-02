@@ -1,0 +1,58 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "owner": "ArtifactDisclosure",
+    "rule": "One disclosure binds immutable artifact content, handling-policy revision, recipient and purpose; delivery requires that approved identity and revocation is final. Disclosure is admitted only for an artifact in available state, and every disclosure records recipient, purpose and handling-policy revision. Catalog selected replay rule: exact authorized retries resolve the original accepted result; fresh mutable feasibility cannot replace it.",
+    "code_behavior": {
+      "approve_retry": "Approve called again with the identical artifact identity, recipient, purpose, rationale, actor and timestamp returns Success with no new event, even after the disclosure was delivered or revoked and even if the artifact is now quarantined or its handling policy changed. A changed recipient or artifact content returns Conflict.",
+      "revoke_fence_test": "Test: approve, revoke (expected revision 1), then Deliver with a valid available source and expected revision 2. Expected: Conflict, status stays revoked, no delivery, exactly two pending events (approve, revoke). A second revoke with a different rationale is also Conflict.",
+      "payload_identity": "Approved, Delivered and Revoked events each carry TenantId, SubjectId (the disclosure id), Revision, ActorMemberId, OccurredAt and a full ArtifactDisclosureView snapshot that itself repeats TenantId and DisclosureId. The catalog marks the event authority 'retained baseline business facts, requires schema reconciliation'.",
+      "approve_command_fields": "The catalog lists ArtifactRevision and ExpectedRevision on the approve command. The aggregate Approve takes neither: the source snapshot position pins content, and creation is guarded by stream absence."
+    }
+  },
+  "questions": {
+    "approve_retry_outcome": {
+      "type": "choice",
+      "instructions": "For `state.code_behavior.approve_retry`, what should an exact approve retry return after later facts or source drift?",
+      "criteria": {
+        "success_no_event": "Return success with no event; the original accepted approval is resolved.",
+        "revalidate_and_refuse": "Revalidate the current source and refuse if the artifact is no longer available.",
+        "needs_source_resolution": "The rule text does not decide this."
+      }
+    },
+    "approve_retry_premise": {
+      "type": "noul",
+      "instructions": "The catalog rule in `state.rule` says exact authorized retries resolve the original accepted result and fresh mutable feasibility cannot replace it.",
+      "criteria": {
+        "true": "The rule text says a retry resolves the original result regardless of fresh source state.",
+        "false": "The rule text does not say this."
+      }
+    },
+    "revoke_fence_test_asserts_invariant": {
+      "type": "noul",
+      "instructions": "The test in `state.code_behavior.revoke_fence_test` proves that revocation is final and a revoked disclosure can never be delivered.",
+      "criteria": {
+        "true": "The scenario refuses the delivery with no new fact and leaves the disclosure revoked.",
+        "false": "The scenario could pass even if delivery were accepted after revocation."
+      }
+    },
+    "payload_repeats_identity": {
+      "type": "choice",
+      "instructions": "For `state.code_behavior.payload_identity`, what should this aggregate stage do about the repeated tenant and disclosure identity in the event payload?",
+      "criteria": {
+        "keep_as_cataloged": "Keep the payload; the approved catalog retains these events and marks reconciliation as a shared-schema item outside this stage.",
+        "remove_from_payload": "Remove the repeated identity fields in this stage.",
+        "needs_source_resolution": "The catalog and code disagree or the rule is silent."
+      }
+    },
+    "approve_command_fields_disposition": {
+      "type": "choice",
+      "instructions": "For `state.code_behavior.approve_command_fields`, what should be done about ArtifactRevision and ExpectedRevision that the catalog lists on approve but the aggregate does not take?",
+      "criteria": {
+        "handler_stage_mapping": "Leave the aggregate; the handler maps the command fields because source position pins content and stream absence guards creation.",
+        "add_to_aggregate": "Add both parameters to the aggregate Approve method.",
+        "needs_source_resolution": "The catalog owner must resolve it."
+      }
+    }
+  }
+}

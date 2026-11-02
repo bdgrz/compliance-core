@@ -127,6 +127,10 @@ public sealed class ArtifactDisposition : Aggregate
             retry.RequestedBy == requestedBy && retry.RequestedAt == requestedAt &&
             SameEligibility(current, eligibility))
             return Result.Success;
+        if (expectedRevision < Revision && current.Attempts.Any(attempt =>
+                attempt.RequestedBy == requestedBy && attempt.RequestedAt == requestedAt &&
+                attempt.SourcePosition == eligibility.Position))
+            return Result.Success;
         if (expectedRevision != Revision)
             return StaleRevision();
         if (current.Status is not ("approved" or "failed"))
@@ -165,12 +169,14 @@ public sealed class ArtifactDisposition : Aggregate
             return Invalid("A disposition result requires an attributed executor and completion time.");
         outcome = (outcome ?? string.Empty).Trim().ToLowerInvariant();
         failureCode = string.IsNullOrWhiteSpace(failureCode) ? null : failureCode.Trim();
-        if (current.Attempts.Count > 0 &&
-            current.Attempts[^1] is { Status: "failed" or "disposed" } prior &&
-            prior.Outcome == outcome && prior.FailureCode == failureCode &&
-            prior.CompletedBy == completedBy && prior.CompletedAt == completedAt &&
-            expectedRevision <= Revision)
-            return Result.Success;
+        for (var index = 0; index < current.Attempts.Count; index++)
+        {
+            if (current.Attempts[index] is { Status: "failed" or "disposed" } prior &&
+                prior.Outcome == outcome && prior.FailureCode == failureCode &&
+                prior.CompletedBy == completedBy && prior.CompletedAt == completedAt &&
+                (index == current.Attempts.Count - 1 ? expectedRevision <= Revision : expectedRevision < Revision))
+                return Result.Success;
+        }
         if (expectedRevision != Revision)
             return StaleRevision();
         if (current.Status != "executing" || current.Attempts.Count == 0 || current.Attempts[^1] is not

@@ -66,17 +66,17 @@ This ordering covers 129 business/authority owners in 112 groups, using 79 disti
 | 43 | `TemplateApplication` | P1 ([F1-04](https://github.com/bdgrz/compliance-core/issues/131)) | — | Done (focused aggregate scope, 2026-10-29) |
 | 44 | `AccessPopulationException` | No direct story mapping | — | Partial: Catalog owner: set aggregates.json discriminatorVersion for AccessPopulationExceptionRecor |
 | 45 | `AccessPrincipalClassification` | No direct story mapping | — | Done (focused aggregate scope, 2026-10-29) |
-| 46 | `AdvisorFeedbackThread` | No direct story mapping | 33: `AdvisorHandoff` | Source present; verify |
-| 47 | `ApplicationImportBatch` | No direct story mapping | — | Source present; verify |
-| 48 | `ApplicationImportSource` | No direct story mapping | 47: `ApplicationImportBatch` | Source present; verify |
+| 46 | `AdvisorFeedbackThread` | No direct story mapping | 33: `AdvisorHandoff` | Partial: Open product decision: may corrections or responses follow a resolution (currently allowed |
+| 47 | `ApplicationImportBatch` | No direct story mapping | — | Done (focused aggregate scope, 2026-10-29) |
+| 48 | `ApplicationImportSource` | No direct story mapping | 47: `ApplicationImportBatch` | Done (focused aggregate scope, 2026-10-29) |
 | 49 | `ApplicationNameClaim` | No direct story mapping | 68: `DeclaredApplication` | Planned 2026-10-29; implement with DeclaredApplication name flow |
-| 49 | `ApplicationRelationship` | No direct story mapping | — | Source present; verify |
-| 50 | `ArtifactDisclosure` | No direct story mapping | — | Source present; verify |
-| 51 | `ArtifactDisposition` | No direct story mapping | — | Source present; verify |
-| 52 | `ArtifactEngagementHold` | No direct story mapping | — | Source present; verify |
-| 53 | `ArtifactLegalHold` | No direct story mapping | — | Source present; verify |
-| 54 | `ArtifactRetentionBasis` | No direct story mapping | — | Source present; verify |
-| 55 | `AuditObservation` | No direct story mapping | — | Source present; verify |
+| 49 | `ApplicationRelationship` | No direct story mapping | — | Done (focused aggregate scope, 2026-10-29) |
+| 50 | `ArtifactDisclosure` | No direct story mapping | — | Done (focused aggregate scope, 2026-10-29) |
+| 51 | `ArtifactDisposition` | No direct story mapping | — | Done (focused aggregate scope, 2026-10-29) |
+| 52 | `ArtifactEngagementHold` | No direct story mapping | — | Partial: Add a hold-stream delivery event, for example EngagementPackageDelivered with engagement i |
+| 53 | `ArtifactLegalHold` | No direct story mapping | — | Partial: Build and run the tests: dotnet test --filter FullyQualifiedName~ArtifactLegalHold/FullyQu |
+| 54 | `ArtifactRetentionBasis` | No direct story mapping | — | Done (focused aggregate scope, 2026-10-29) |
+| 55 | `AuditObservation` | No direct story mapping | — | Done (focused aggregate scope, 2026-10-29) |
 | 56 | `AuditOutcome` | No direct story mapping | — | Source present; verify |
 | 57 | `AuditPackageManifest` | No direct story mapping | — | Source present; verify |
 | 58 | `AuditPackageDelivery` | No direct story mapping | 57: `AuditPackageManifest` | Source present; verify |
