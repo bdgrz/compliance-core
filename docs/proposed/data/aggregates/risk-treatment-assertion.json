@@ -1,0 +1,361 @@
+{
+  "owner": "RiskTreatmentAssertion",
+  "origin": "selected_split_target",
+  "baselineOwners": [
+    "RiskGovernanceLedger"
+  ],
+  "declaredIdentity": "(riskId, controlId)",
+  "invariant": "One pending/accepted assertion line per risk/control.",
+  "boundaryDecision": "selected_split",
+  "mustPreserve": "Assessment belongs to RiskEvaluation; risk governance consumes exact risk/source proofs, no live aggregate authority.",
+  "sources": [
+    {
+      "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
+      "jsonPointer": "/splitOwners/24/targetOwners/1",
+      "line": 2577,
+      "sha256": "d349d94b7c43f4d82020ecf36bdacf1aff98bc6498e14993582f1c3164b21f19"
+    }
+  ],
+  "baselineSourcePath": "src/Compliance.Core/Features/Risks/RiskGovernanceLedger.cs",
+  "baselineEvents": [
+    "RiskControlTreatmentProposed",
+    "RiskControlTreatmentRetired",
+    "RiskControlTreatmentReviewed"
+  ],
+  "preliminaryNewEvents": [],
+  "technicalStateToSeparate": [],
+  "classification": "business_aggregate",
+  "businessAggregate": true,
+  "implementationStatus": "SEPARATE_VERIFICATION_REQUIRED_IMPLEMENTATION_HALTED",
+  "identityReadingRule": "selectedIdentitySummary and exact selectedCommandContracts define intended identity. baselineIdentityObservation/declaredIdentity retain older source observations only, including old replay defects; they are not target behavior or authorization to change an occupied key.",
+  "selectedCommandContracts": [
+    {
+      "command": "ProposeRiskControlTreatment",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ProgramId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "RiskId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "ControlId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ControlVersionId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Rationale",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "RiskControlTreatmentRegistration",
+        "firstHttpStatus": 200,
+        "terminalResultType": "RiskControlTreatmentRegistration"
+      },
+      "http": [
+        {
+          "method": "PUT",
+          "path": "/api/v1/tenants/{tenant_id}/programs/{program_id}/risks/{risk_id}/control-treatments/{command_id}",
+          "policy": "ComplianceAuthorizationPolicies.ApiUser"
+        }
+      ],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
+        "jsonPointer": "/commands/80",
+        "line": 9346,
+        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
+      },
+      "kind": "http"
+    },
+    {
+      "command": "RetireRiskControlTreatment",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ProgramId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "RiskId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TreatmentId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "Rationale",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "Unit",
+        "firstHttpStatus": 200,
+        "terminalResultType": "Unit"
+      },
+      "http": [
+        {
+          "method": "PUT",
+          "path": "/api/v1/tenants/{tenant_id}/programs/{program_id}/risks/{risk_id}/control-treatments/{treatment_id}/retirements/{command_id}",
+          "policy": "ComplianceAuthorizationPolicies.ApiUser"
+        }
+      ],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
+        "jsonPointer": "/commands/126",
+        "line": 14529,
+        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
+      },
+      "kind": "http"
+    },
+    {
+      "command": "ReviewRiskControlTreatment",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ProgramId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "RiskId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TreatmentId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "Outcome",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "Rationale",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "SeparationOfDutiesWaiverId",
+          "type": "Uuid?",
+          "required": false
+        }
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "Unit",
+        "firstHttpStatus": 200,
+        "terminalResultType": "Unit"
+      },
+      "http": [
+        {
+          "method": "PUT",
+          "path": "/api/v1/tenants/{tenant_id}/programs/{program_id}/risks/{risk_id}/control-treatments/{treatment_id}/reviews/{command_id}",
+          "policy": "ComplianceAuthorizationPolicies.ApiUser"
+        }
+      ],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
+        "jsonPointer": "/commands/132",
+        "line": 15276,
+        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
+      },
+      "kind": "http"
+    }
+  ],
+  "eventAuthority": "selected_final_event_catalog",
+  "events": [
+    {
+      "event": "RiskControlTreatmentProposed",
+      "discriminator": "bdgrz.risk.control_treatment.proposed",
+      "discriminatorVersion": 1,
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
+        "jsonPointer": "/events/235",
+        "line": 32085,
+        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
+      }
+    },
+    {
+      "event": "RiskControlTreatmentRetired",
+      "discriminator": "bdgrz.risk.control_treatment.retired",
+      "discriminatorVersion": 1,
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
+        "jsonPointer": "/events/236",
+        "line": 32155,
+        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
+      }
+    },
+    {
+      "event": "RiskControlTreatmentReviewed",
+      "discriminator": "bdgrz.risk.control_treatment.reviewed",
+      "discriminatorVersion": 1,
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
+        "jsonPointer": "/events/237",
+        "line": 32226,
+        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
+      }
+    }
+  ],
+  "choreography": [],
+  "status": "SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED",
+  "baselineIdentityObservation": "(riskId, controlId)",
+  "identityContractRule": "Existing published owner identity/IdFor remains stable. Required typed creation/operation identity and tenant/program/source scope come from the selected signature/protocol references; no context.RequestId minting fallback or guessed new stream key.",
+  "adoptedArchitectureDecisions": [],
+  "selectedIdentitySummary": "Tenant-scoped (riskId, controlId); the identity is established by the admitting owner or reactor named in the choreography, never by a caller request key; mutations bind CommandId to this exact identity.",
+  "baselineIdentityObservationOnly": true,
+  "selectedLogicalIdentityBindings": [
+    {
+      "command": "ProposeRiskControlTreatment",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "one immutable authored operation"
+      },
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
+        "jsonPointer": "/commands/80",
+        "line": 9346,
+        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
+      }
+    },
+    {
+      "command": "RetireRiskControlTreatment",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "one immutable authored operation"
+      },
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
+        "jsonPointer": "/commands/126",
+        "line": 14529,
+        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
+      }
+    },
+    {
+      "command": "ReviewRiskControlTreatment",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "one immutable authored operation"
+      },
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
+        "jsonPointer": "/commands/132",
+        "line": 15276,
+        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
+      }
+    }
+  ],
+  "selectedReplayRule": "Current required authorization precedes replay; exact authorized retries resolve the original accepted result using the selected logical identity and immutable actor/intent/source binding. Fresh mutable feasibility, clock selection and body preparation cannot replace that original result. Expected revision is concurrency precondition, not a new identity.",
+  "identityRevisions": [
+    {
+      "date": "2026-10-29",
+      "previous": "(riskId, controlId)"
+    }
+  ],
+  "productRules": [
+    {
+      "id": "D22-08",
+      "doc": "m0-d22-canonical-ownership.md",
+      "rule": "The control-to-risk relationship is a versioned assertion owned by risk treatment that a specific control version treats a specific risk, with rationale and review; a control does not silently acquire risk coverage."
+    }
+  ],
+  "decides": "The assertion that a specific control version treats a specific risk is proposed with a rationale, accepted or rejected by a review, and retired only by naming the exact accepted treatment, so a control never silently acquires coverage; a line holds one pending proposal and never reuses a treatment id.",
+  "decidesCovers": [
+    "D22-08"
+  ],
+  "decidesAuthored": "2026-10-29"
+}

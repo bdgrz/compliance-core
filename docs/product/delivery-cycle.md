@@ -5,7 +5,7 @@ Status: adopted 2026-09-28; execution policy reconciled 2026-10-11.
 and linked issues hold current sprint scope, dependencies and acceptance.
 [Legacy Project 1](https://github.com/orgs/bdgrz/projects/1) preserves the broader
 backlog and its acceptance; it is not the active execution queue. The
-[product brief](product-brief.md) and [triage](triage.md) retain product direction
+[product brief](../proposed/scope.md) and [triage](triage.md) retain product direction
 and dependency rationale. [Sprint planning](sprint-planning.md) defines the
 current commitments, forecasts and measurement baseline.
 

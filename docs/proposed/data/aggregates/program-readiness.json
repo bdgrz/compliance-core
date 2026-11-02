@@ -1,0 +1,765 @@
+{
+  "owner": "ProgramReadiness",
+  "origin": "selected_split_target",
+  "baselineOwners": [
+    "ReadinessLedger"
+  ],
+  "declaredIdentity": "tenant / programId",
+  "invariant": "Compact latest-assessment pointer, decision admission/seal generation, latest management decision and permanent approved Type I entry pointer. Serialize latest-assessment adoption with decision append; keep full assessment/decision content in immutable manifests. Run admission precedes child computation and reserves exactly one pending latest-adoption generation.",
+  "boundaryDecision": "selected_split",
+  "mustPreserve": "No projected latest assessment or gap list can authorize entry; all exceptions/required plans acknowledged.",
+  "sources": [
+    {
+      "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
+      "jsonPointer": "/splitOwners/21/targetOwners/2",
+      "line": 2251,
+      "sha256": "d349d94b7c43f4d82020ecf36bdacf1aff98bc6498e14993582f1c3164b21f19"
+    }
+  ],
+  "baselineSourcePath": "src/Compliance.Core/Features/Readiness/ReadinessLedger.cs",
+  "baselineEvents": [
+    "ReadinessDecisionRecorded",
+    "TypeIEntryDecisionRecorded"
+  ],
+  "preliminaryNewEvents": [],
+  "technicalStateToSeparate": [],
+  "classification": "business_governor",
+  "businessAggregate": true,
+  "implementationStatus": "SEPARATE_VERIFICATION_REQUIRED_IMPLEMENTATION_HALTED",
+  "identityReadingRule": "selectedIdentitySummary and exact selectedCommandContracts define intended identity. baselineIdentityObservation/declaredIdentity retain older source observations only, including old replay defects; they are not target behavior or authorization to change an occupied key.",
+  "selectedCommandContracts": [
+    {
+      "command": "DecideReadiness",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ProgramId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "AssessmentId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "Outcome",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "Rationale",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "SeparationOfDutiesWaiverId",
+          "type": "Uuid?",
+          "required": false
+        }
+      ],
+      "responseContract": {
+        "mode": "async_fixed_ack",
+        "responseType": "OperationAcceptedResponse",
+        "firstHttpStatus": 202,
+        "terminalResultType": "ReadinessDecisionView"
+      },
+      "http": [
+        {
+          "method": "PUT",
+          "path": "/api/v1/tenants/{tenant_id}/programs/{program_id}/readiness/assessments/{assessment_id}/decision/{command_id}",
+          "policy": "ComplianceAuthorizationPolicies.ApiUser"
+        }
+      ],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
+        "jsonPointer": "/commands/46",
+        "line": 5466,
+        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
+      },
+      "kind": "http"
+    },
+    {
+      "command": "DecideTypeIEntry",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ProgramId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "AssessmentId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "Outcome",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "Rationale",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "AcknowledgedGapIds",
+          "type": "IReadOnlyList<Uuid>?",
+          "required": false
+        },
+        {
+          "name": "SeparationOfDutiesWaiverId",
+          "type": "Uuid?",
+          "required": false
+        }
+      ],
+      "responseContract": {
+        "mode": "async_fixed_ack",
+        "responseType": "OperationAcceptedResponse",
+        "firstHttpStatus": 202,
+        "terminalResultType": "TypeIEntryDecisionView"
+      },
+      "http": [
+        {
+          "method": "PUT",
+          "path": "/api/v1/tenants/{tenant_id}/programs/{program_id}/readiness/assessments/{assessment_id}/type-i-entry-decision/{command_id}",
+          "policy": "ComplianceAuthorizationPolicies.ApiUser"
+        }
+      ],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
+        "jsonPointer": "/commands/47",
+        "line": 5587,
+        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
+      },
+      "kind": "http"
+    },
+    {
+      "command": "RunReadinessAssessment",
+      "logicalIdentity": {
+        "field": "AssessmentId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "caller-supplied immutable creation identity: an exact retry with the same id and authored intent returns the original result; the same id with changed intent is refused; a different id is a different record"
+      },
+      "fields": [
+        {
+          "name": "AssessmentId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ProgramId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectedProgramRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "AsOf",
+          "type": "DateTimeOffset?",
+          "required": false
+        }
+      ],
+      "responseContract": {
+        "mode": "async_fixed_ack",
+        "responseType": "OperationAcceptedResponse",
+        "firstHttpStatus": 202,
+        "terminalResultType": "ReadinessAssessmentRegistration"
+      },
+      "http": [
+        {
+          "method": "PUT",
+          "path": "/api/v1/tenants/{tenant_id}/programs/{program_id}/readiness/assessments/{assessment_id}",
+          "policy": "ComplianceAuthorizationPolicies.ApiUser"
+        }
+      ],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
+        "jsonPointer": "/commands/150",
+        "line": 17477,
+        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
+      },
+      "kind": "http"
+    },
+    {
+      "command": "AbortReadinessDecision",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "rule": "abort receiver identity bound to the exact admitted operation and generation: exact redelivery resolves the original rejected result; an abort after a terminal outcome is a no-op"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "OperationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Target",
+          "type": "EventStreamAddress",
+          "required": true
+        },
+        {
+          "name": "Generation",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "FailureProof",
+          "type": "ImmutableContentRef",
+          "required": true
+        }
+      ],
+      "responseContract": null,
+      "http": null,
+      "source": {
+        "path": "docs/product/audits/2026-10-23/source-admission-contracts.json",
+        "jsonPointer": "/contracts/17",
+        "line": 1075,
+        "sha256": "f1d549ed0879c816cb26e86879f8fa658dab0a8acbf7c591e4d4aed40483f8ae"
+      },
+      "kind": "abort"
+    },
+    {
+      "command": "AdoptReadinessAssessment",
+      "kind": "receiver",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "reactor",
+        "rule": "deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Source",
+          "type": "SourceFactProof<ReadinessAssessmentRecorded>",
+          "required": true
+        },
+        {
+          "name": "Target",
+          "type": "EventStreamAddress",
+          "required": true
+        },
+        {
+          "name": "OperationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Generation",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long?",
+          "required": true
+        },
+        {
+          "name": "Intent",
+          "type": "ImmutableContentRef",
+          "required": true,
+          "contentSchema": "ReadinessRunIntent"
+        },
+        {
+          "name": "ProgramId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "AssessmentId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "AdmissionGeneration",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "RequestProof",
+          "type": "SourceFactProof<ReadinessAssessmentRequested>",
+          "required": true
+        }
+      ],
+      "reactor": "ReadinessAssessmentAdoptionReactor",
+      "sourceOwner": "ReadinessAssessment",
+      "sourceEvents": [
+        "ReadinessAssessmentRecorded"
+      ],
+      "guard": "Match exact pending program admission generation, AssessmentId, as-of/input digest/rules and immutable computation result. Do not compare the pre-admission revision against the already advanced program. No adoption over another pending/newer generation.",
+      "eventsEmitted": [
+        "ReadinessAssessmentAdopted"
+      ],
+      "effectKind": "adopt_readiness_assessment",
+      "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
+      "handler": "AdoptReadinessAssessmentHandler",
+      "http": [],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
+        "recorded": "2026-10-29"
+      }
+    },
+    {
+      "command": "CompleteReadinessDecision",
+      "kind": "receiver",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "reactor",
+        "rule": "deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Source",
+          "type": "SourceFactProof<ReadinessDecisionAccepted>",
+          "required": true
+        },
+        {
+          "name": "Target",
+          "type": "EventStreamAddress",
+          "required": true
+        },
+        {
+          "name": "OperationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Generation",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long?",
+          "required": true
+        },
+        {
+          "name": "Intent",
+          "type": "ImmutableContentRef",
+          "required": true,
+          "contentSchema": "ReadinessDecisionIntent"
+        },
+        {
+          "name": "AssessmentId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "PlanProofs",
+          "type": "ImmutableContentRef",
+          "required": true
+        }
+      ],
+      "reactor": "ReadinessDecisionCompletionReactor",
+      "sourceOwner": "ProgramReadiness",
+      "sourceEvents": [
+        "ReadinessDecisionAccepted"
+      ],
+      "guard": "Latest assessment adoption sealed; all gap plans exact and held; preserve admitted personal decision and independent actor.",
+      "eventsEmitted": [
+        "ReadinessDecisionRecorded"
+      ],
+      "effectKind": "complete_readiness_decision",
+      "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
+      "handler": "CompleteReadinessDecisionHandler",
+      "http": [],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
+        "recorded": "2026-10-29"
+      }
+    },
+    {
+      "command": "CompleteTypeIEntryDecision",
+      "kind": "receiver",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "reactor",
+        "rule": "deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Source",
+          "type": "SourceFactProof<TypeIEntryDecisionAccepted>",
+          "required": true
+        },
+        {
+          "name": "Target",
+          "type": "EventStreamAddress",
+          "required": true
+        },
+        {
+          "name": "OperationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Generation",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long?",
+          "required": true
+        },
+        {
+          "name": "Intent",
+          "type": "ImmutableContentRef",
+          "required": true,
+          "contentSchema": "ReadinessDecisionIntent"
+        },
+        {
+          "name": "AssessmentId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "PlanProofs",
+          "type": "ImmutableContentRef",
+          "required": true
+        }
+      ],
+      "reactor": "TypeIEntryDecisionCompletionReactor",
+      "sourceOwner": "ProgramReadiness",
+      "sourceEvents": [
+        "TypeIEntryDecisionAccepted"
+      ],
+      "guard": "Complete exact gap/exception acknowledgement set, proceed prerequisite and single approved-entry slot still reserved.",
+      "eventsEmitted": [
+        "TypeIEntryDecisionRecorded"
+      ],
+      "effectKind": "complete_type_i_entry_decision",
+      "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
+      "handler": "CompleteTypeIEntryDecisionHandler",
+      "http": [],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
+        "recorded": "2026-10-29"
+      }
+    }
+  ],
+  "eventAuthority": "selected_final_event_catalog",
+  "events": [
+    {
+      "event": "ReadinessAssessmentAdopted",
+      "discriminator": "bdgrz.program-readiness.readiness-assessment-adopted",
+      "discriminatorVersion": 1,
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
+        "jsonPointer": "/events/223",
+        "line": 30132,
+        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
+      }
+    },
+    {
+      "event": "ReadinessAssessmentRequested",
+      "discriminator": "bdgrz.program-readiness.readiness-assessment-requested",
+      "discriminatorVersion": 1,
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
+        "jsonPointer": "/events/225",
+        "line": 30536,
+        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
+      }
+    },
+    {
+      "event": "ReadinessDecisionAccepted",
+      "discriminator": "bdgrz.program-readiness.readiness-decision-accepted",
+      "discriminatorVersion": 1,
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
+        "jsonPointer": "/events/226",
+        "line": 30702,
+        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
+      }
+    },
+    {
+      "event": "ReadinessDecisionCanceled",
+      "discriminator": "bdgrz.program-readiness.readiness-decision-canceled",
+      "discriminatorVersion": 1,
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
+        "jsonPointer": "/events/227",
+        "line": 30902,
+        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
+      }
+    },
+    {
+      "event": "ReadinessDecisionRecorded",
+      "discriminator": "bdgrz.readiness.decision.recorded",
+      "discriminatorVersion": 1,
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
+        "jsonPointer": "/events/228",
+        "line": 31102,
+        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
+      }
+    },
+    {
+      "event": "TypeIEntryDecisionAccepted",
+      "discriminator": "bdgrz.program-readiness.type-i-entry-decision-accepted",
+      "discriminatorVersion": 1,
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
+        "jsonPointer": "/events/277",
+        "line": 37544,
+        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
+      }
+    },
+    {
+      "event": "TypeIEntryDecisionRecorded",
+      "discriminator": "bdgrz.readiness.type_i_entry.decided",
+      "discriminatorVersion": 1,
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
+        "jsonPointer": "/events/278",
+        "line": 37744,
+        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
+      }
+    }
+  ],
+  "choreography": [
+    {
+      "reactor": "ReadinessAssessmentAdoptionReactor",
+      "sourceOwner": "ReadinessAssessment",
+      "targetOwner": "ProgramReadiness",
+      "command": "AdoptReadinessAssessment",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
+        "jsonPointer": "/reactors/39",
+        "line": 3295,
+        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
+      }
+    },
+    {
+      "reactor": "ReadinessDecisionReadinessGapPlanAuthorizationReactor",
+      "sourceOwner": "ProgramReadiness",
+      "targetOwner": "ReadinessGapPlan",
+      "command": "AuthorizeReadinessGapPlanReadinessDecisionUse",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
+        "jsonPointer": "/reactors/65",
+        "line": 5584,
+        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
+      }
+    },
+    {
+      "reactor": "ReadinessDecisionReadinessGapPlanSettlementReactor",
+      "sourceOwner": "ProgramReadiness",
+      "targetOwner": "ReadinessGapPlan",
+      "command": "SettleReadinessGapPlanReadinessDecisionUse",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
+        "jsonPointer": "/reactors/66",
+        "line": 5673,
+        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
+      }
+    },
+    {
+      "reactor": "ReadinessDecisionCompletionReactor",
+      "sourceOwner": "ProgramReadiness",
+      "targetOwner": "ProgramReadiness",
+      "command": "CompleteReadinessDecision",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
+        "jsonPointer": "/reactors/74",
+        "line": 6374,
+        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
+      }
+    },
+    {
+      "reactor": "TypeIEntryDecisionCompletionReactor",
+      "sourceOwner": "ProgramReadiness",
+      "targetOwner": "ProgramReadiness",
+      "command": "CompleteTypeIEntryDecision",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
+        "jsonPointer": "/reactors/75",
+        "line": 6456,
+        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
+      }
+    },
+    {
+      "reactor": "ReadinessAssessmentComputationReactor",
+      "sourceOwner": "ProgramReadiness",
+      "targetOwner": "ReadinessAssessment",
+      "command": "ComputeReadinessAssessment",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
+        "jsonPointer": "/reactors/87",
+        "line": 7480,
+        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
+      }
+    }
+  ],
+  "status": "SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED",
+  "baselineIdentityObservation": "tenant / programId",
+  "identityContractRule": "Existing published owner identity/IdFor remains stable. Required typed creation/operation identity and tenant/program/source scope come from the selected signature/protocol references; no context.RequestId minting fallback or guessed new stream key.",
+  "adoptedArchitectureDecisions": [],
+  "selectedIdentitySummary": "Tenant-scoped tenant / programId: one stream per tenant/program; there is no creation key, the first readiness run opens it, and `AssessmentId` identifies each run while CommandId identifies each decision.",
+  "baselineIdentityObservationOnly": true,
+  "selectedLogicalIdentityBindings": [
+    {
+      "command": "DecideReadiness",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "one immutable authored operation"
+      },
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
+        "jsonPointer": "/commands/46",
+        "line": 5466,
+        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
+      }
+    },
+    {
+      "command": "DecideTypeIEntry",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "one immutable authored operation"
+      },
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
+        "jsonPointer": "/commands/47",
+        "line": 5587,
+        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
+      }
+    },
+    {
+      "command": "RunReadinessAssessment",
+      "logicalIdentity": {
+        "field": "AssessmentId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "exact immutable creation retry"
+      },
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
+        "jsonPointer": "/commands/150",
+        "line": 17477,
+        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
+      }
+    },
+    {
+      "command": "AbortReadinessDecision",
+      "logicalIdentity": "CommandId",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/source-admission-contracts.json",
+        "jsonPointer": "/contracts/17",
+        "line": 1075,
+        "sha256": "f1d549ed0879c816cb26e86879f8fa658dab0a8acbf7c591e4d4aed40483f8ae"
+      }
+    }
+  ],
+  "selectedReplayRule": "Current required authorization precedes replay; exact authorized retries resolve the original accepted result using the selected logical identity and immutable actor/intent/source binding. Fresh mutable feasibility, clock selection and body preparation cannot replace that original result. Expected revision is concurrency precondition, not a new identity.",
+  "identityRevisions": [
+    {
+      "date": "2026-10-29",
+      "previous": "tenant / programId"
+    }
+  ],
+  "productRules": [
+    {
+      "id": "D23-10",
+      "doc": "m0-d23-assurance-vocabulary.md",
+      "rule": "A ReadinessSnapshot is an immutable freeze of one reproducible readiness assessment calculation plus management's Type I entry decision, and does not redefine readiness rules; monitoring measures cannot silently change a readiness verdict."
+    }
+  ],
+  "decides": "A readiness snapshot is an immutable freeze of exactly one reproducible assessment plus management's Type I entry decision; the owner never recomputes or redefines readiness rules, and monitoring measures cannot change an adopted verdict.",
+  "decidesCovers": [
+    "D23-10"
+  ],
+  "decidesAuthored": "2026-10-29"
+}

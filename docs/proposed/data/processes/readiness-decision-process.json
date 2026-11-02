@@ -1,0 +1,35 @@
+{
+  "process": "ReadinessDecisionProcess",
+  "rootSourceEvents": [
+    "ReadinessDecisionAccepted",
+    "TypeIEntryDecisionAccepted"
+  ],
+  "ordered": true,
+  "stages": [
+    {
+      "stage": "acquire",
+      "receivers": [
+        "AuthorizeReadinessGapPlanReadinessDecisionUse"
+      ],
+      "rule": null
+    },
+    {
+      "stage": "complete",
+      "receivers": [
+        "CompleteReadinessDecision",
+        "CompleteTypeIEntryDecision"
+      ],
+      "rule": "One of the two, by decision kind."
+    },
+    {
+      "stage": "settle",
+      "receivers": [
+        "SettleReadinessGapPlanReadinessDecisionUse"
+      ],
+      "rule": null
+    }
+  ],
+  "abort": [
+    "AbortReadinessDecision"
+  ]
+}

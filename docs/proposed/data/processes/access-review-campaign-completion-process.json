@@ -1,0 +1,33 @@
+{
+  "process": "AccessReviewCampaignCompletionProcess",
+  "rootSourceEvents": [
+    "AccessReviewCampaignCompletionAccepted"
+  ],
+  "ordered": true,
+  "stages": [
+    {
+      "stage": "acquire",
+      "receivers": [
+        "AuthorizeAccessReviewItemCampaignCompletionUse"
+      ],
+      "rule": "Canonical order over the drained item set."
+    },
+    {
+      "stage": "complete",
+      "receivers": [
+        "CompleteAccessReviewCampaignClosure"
+      ],
+      "rule": null
+    },
+    {
+      "stage": "settle",
+      "receivers": [
+        "SettleAccessReviewItemCampaignCompletionUse"
+      ],
+      "rule": "Installs the parent-generation closure fence."
+    }
+  ],
+  "abort": [
+    "AbortAccessReviewCampaignCompletion"
+  ]
+}

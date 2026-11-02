@@ -1,0 +1,33 @@
+{
+  "process": "OperationalProcessNameChangeProcess",
+  "rootSourceEvents": [
+    "OperationalProcessChangeAccepted"
+  ],
+  "ordered": true,
+  "stages": [
+    {
+      "stage": "claim",
+      "receivers": [
+        "ClaimOperationalProcessName"
+      ],
+      "rule": null
+    },
+    {
+      "stage": "apply",
+      "receivers": [
+        "ApplyOperationalProcessChange"
+      ],
+      "rule": null
+    },
+    {
+      "stage": "release",
+      "receivers": [
+        "ReleaseOperationalProcessName"
+      ],
+      "rule": null
+    }
+  ],
+  "abort": [
+    "CancelOperationalProcessChange"
+  ]
+}

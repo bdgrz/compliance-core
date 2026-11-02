@@ -1,0 +1,330 @@
+{
+  "owner": "RiskDraft",
+  "origin": "retained_baseline",
+  "baselineOwners": [
+    "RiskDraft"
+  ],
+  "declaredIdentity": "tenant/risks/riskId derived tenant+program+normalized identifier; createRequestId+initial content exact match; Revise only expected content revision with no request intent receipt.",
+  "invariant": "Normalized identifier has one creation identity/content within tenant/program and narrative updates require current revision. No additional risk-governance decision is made by this class.",
+  "boundaryDecision": "retain",
+  "boundaryRationale": "Retain independent authored risk identity/lifecycle and normalized identifier admission. No source establishes atomic narrative-assessment freshness requiring a merge. If a future domain rule introduces that coupling, reassess the narrow owner; repair current retry behavior now.",
+  "sources": [
+    {
+      "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
+      "jsonPointer": "/aggregates/68",
+      "line": 43103,
+      "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
+    }
+  ],
+  "baselineSourcePath": "src/Compliance.Core/Features/Risks/RiskDraft.cs",
+  "baselineEvents": [
+    "RiskDraftCreated",
+    "RiskDraftRevised"
+  ],
+  "classification": "business_aggregate",
+  "businessAggregate": true,
+  "implementationStatus": "SEPARATE_VERIFICATION_REQUIRED_IMPLEMENTATION_HALTED",
+  "identityReadingRule": "selectedIdentitySummary and exact selectedCommandContracts define intended identity. baselineIdentityObservation/declaredIdentity retain older source observations only, including old replay defects; they are not target behavior or authorization to change an occupied key.",
+  "selectedCommandContracts": [
+    {
+      "command": "CreateRiskDraft",
+      "logicalIdentity": {
+        "field": "RiskId",
+        "type": "Uuid",
+        "required": true,
+        "rule": "caller-supplied immutable creation identity: an exact retry with the same id and authored intent returns the original result; the same id with changed intent is refused; a different id is a different record"
+      },
+      "fields": [
+        {
+          "name": "RiskId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ProgramId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Identifier",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "Title",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "Scenario",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "PotentialEffect",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "SourceNote",
+          "type": "string?",
+          "required": false
+        }
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "RiskRegistration",
+        "firstHttpStatus": 200,
+        "terminalResultType": "RiskRegistration"
+      },
+      "http": [
+        {
+          "method": "PUT",
+          "path": "/api/v1/tenants/{tenant_id}/programs/{program_id}/risks/{risk_id}",
+          "authorizationPolicy": "ComplianceAuthorizationPolicies.ApiUser"
+        }
+      ],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
+        "jsonPointer": "/contracts/55",
+        "line": 4120,
+        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
+      },
+      "kind": "http"
+    },
+    {
+      "command": "ReviseRiskDraft",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "rule": "CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ProgramId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "RiskId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "Title",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "Scenario",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "PotentialEffect",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "SourceNote",
+          "type": "string?",
+          "required": false
+        }
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "Unit",
+        "firstHttpStatus": 200,
+        "terminalResultType": "Unit"
+      },
+      "http": [],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
+        "jsonPointer": "/contracts/180",
+        "line": 13462,
+        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
+      },
+      "kind": "command"
+    }
+  ],
+  "eventAuthority": "retained_baseline_business_facts_requires_schema_reconciliation",
+  "events": [
+    {
+      "event": "RiskDraftCreated",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
+        "jsonPointer": "/aggregates/68",
+        "line": 43103,
+        "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
+      },
+      "baselineContract": {
+        "event": "RiskDraftCreated",
+        "emitters": [
+          "src/Compliance.Core/Features/Risks/RiskDraft.cs"
+        ],
+        "eventDisposition": "aggregate_fact",
+        "emitterOwnership": "aggregate or partial source",
+        "typedFields": [
+          {
+            "name": "TenantId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "ProgramId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "RiskId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "CreateRequestId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "Identifier",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "Content",
+            "type": "RiskDraftContent",
+            "required": true
+          },
+          {
+            "name": "ActorMemberId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "ActorDisplay",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "ChangedAt",
+            "type": "DateTimeOffset",
+            "required": true
+          }
+        ],
+        "eventContract": "src/Compliance.Common/Features/Risks/RiskDraftCreated.cs"
+      }
+    },
+    {
+      "event": "RiskDraftRevised",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
+        "jsonPointer": "/aggregates/68",
+        "line": 43103,
+        "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
+      },
+      "baselineContract": {
+        "event": "RiskDraftRevised",
+        "emitters": [
+          "src/Compliance.Core/Features/Risks/RiskDraft.cs"
+        ],
+        "eventDisposition": "aggregate_fact",
+        "emitterOwnership": "aggregate or partial source",
+        "typedFields": [
+          {
+            "name": "TenantId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "ProgramId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "RiskId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "Revision",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "Content",
+            "type": "RiskDraftContent",
+            "required": true
+          },
+          {
+            "name": "ActorMemberId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "ActorDisplay",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "ChangedAt",
+            "type": "DateTimeOffset",
+            "required": true
+          }
+        ],
+        "eventContract": "src/Compliance.Common/Features/Risks/RiskDraftRevised.cs"
+      }
+    }
+  ],
+  "choreography": [],
+  "status": "SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED",
+  "baselineIdentityObservation": "tenant/risks/riskId derived tenant+program+normalized identifier; createRequestId+initial content exact match; Revise only expected content revision with no request intent receipt.",
+  "identityContractRule": "Existing published owner identity/IdFor remains stable. Required typed creation/operation identity and tenant/program/source scope come from the selected signature/protocol references; no context.RequestId minting fallback or guessed new stream key.",
+  "adoptedArchitectureDecisions": [],
+  "selectedIdentityClarification": "Tenant / risks / RiskId; supplied RiskId must equal the unchanged tenant/program/normalized-identifier UUIDv5. Selected mutations use CommandId and exact authored-content revision.",
+  "selectedIdentitySummary": "Tenant / risks / RiskId; supplied RiskId must equal the unchanged tenant/program/normalized-identifier UUIDv5. Selected mutations use CommandId and exact authored-content revision.",
+  "baselineIdentityObservationOnly": true,
+  "selectedLogicalIdentityBindings": [
+    {
+      "command": "CreateRiskDraft",
+      "logicalIdentity": "RiskId",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
+        "jsonPointer": "/contracts/55",
+        "line": 4120,
+        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
+      }
+    },
+    {
+      "command": "ReviseRiskDraft",
+      "logicalIdentity": "CommandId",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
+        "jsonPointer": "/contracts/180",
+        "line": 13462,
+        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
+      }
+    }
+  ],
+  "selectedReplayRule": "Current required authorization precedes replay; exact authorized retries resolve the original accepted result using the selected logical identity and immutable actor/intent/source binding. Fresh mutable feasibility, clock selection and body preparation cannot replace that original result. Expected revision is concurrency precondition, not a new identity."
+}

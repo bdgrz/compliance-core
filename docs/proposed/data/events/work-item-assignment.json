@@ -1,0 +1,77 @@
+{
+  "owner": "WorkItemAssignment",
+  "events": [
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:WorkAssignmentLegacyHistoryImported",
+        "event": "WorkAssignmentLegacyHistoryImported",
+        "emissionKind": "migration_import",
+        "owners": [
+          "WorkItemAssignment"
+        ],
+        "ownerSelection": "exact verified legacy import onto the per-item owner; fenced old ledger has no new writer",
+        "selected295": false,
+        "targetConcreteType": "WorkAssignmentLegacyHistoryImported",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.work.assignment-history-imported",
+          "version": 2
+        },
+        "wireQualification": "Wire matches the declared record in src/Compliance.Common/Features/Work/Events/WorkAssignmentLegacyHistoryImported.cs at 60029b8f.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "excluded_business_schema_not_required",
+        "sourceStatus": "declared",
+        "meaning": "An existing read-only program ledger prefix was sealed into immutable per-item history before its first native write.",
+        "meaningSource": "record summary in src/Compliance.Common/Features/Work/Events/WorkAssignmentLegacyHistoryImported.cs"
+      },
+      "schema": null
+    },
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:WorkItemAssignmentEscalated",
+        "event": "WorkItemAssignmentEscalated",
+        "emissionKind": "business",
+        "owners": [
+          "WorkItemAssignment"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": false,
+        "targetConcreteType": "WorkItemAssignmentEscalated",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.work.escalated",
+          "version": 2
+        },
+        "wireQualification": "Wire matches the declared record in src/Compliance.Common/Features/Work/Events/WorkItemAssignmentEscalated.cs at 60029b8f.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "retained_current_schema_native_qualification_required",
+        "sourceStatus": "declared",
+        "meaning": "A work item's accountability was escalated, recording its current assignee and that it is escalated, as the next revision of its assignment.",
+        "meaningSource": "authored 2026-10-29 from src/Compliance.Common/Features/Work/Events/WorkItemAssignmentEscalated.cs"
+      },
+      "schema": null
+    },
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:WorkItemAssignmentRecorded",
+        "event": "WorkItemAssignmentRecorded",
+        "emissionKind": "business",
+        "owners": [
+          "WorkItemAssignment"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": false,
+        "targetConcreteType": "WorkItemAssignmentRecorded",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.work.assigned",
+          "version": 2
+        },
+        "wireQualification": "Wire matches the declared record in src/Compliance.Common/Features/Work/Events/WorkItemAssignmentRecorded.cs at 60029b8f.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "retained_current_schema_native_qualification_required",
+        "sourceStatus": "declared",
+        "meaning": "A work item was assigned to a member, or left unassigned, recorded as the next revision of its assignment without escalation.",
+        "meaningSource": "authored 2026-10-29 from src/Compliance.Common/Features/Work/Events/WorkItemAssignmentRecorded.cs"
+      },
+      "schema": null
+    }
+  ]
+}

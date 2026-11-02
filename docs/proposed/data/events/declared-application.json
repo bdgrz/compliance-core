@@ -1,0 +1,1075 @@
+{
+  "owner": "DeclaredApplication",
+  "events": [
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:ApplicationDeclared",
+        "event": "ApplicationDeclared",
+        "emissionKind": "business",
+        "owners": [
+          "DeclaredApplication"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": true,
+        "targetConcreteType": "ApplicationDeclared",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.application.declared",
+          "version": 1
+        },
+        "wireQualification": "Wire matches the declared record in src/Compliance.Common/Features/Applications/Events/ApplicationDeclared.cs at 60029b8f.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "selected_complete_schema",
+        "sourceStatus": "declared",
+        "meaning": "An application was declared for the tenant with its name, purpose and owner reference by a named member, as the application's first revision.",
+        "meaningSource": "authored 2026-10-29 from src/Compliance.Common/Features/Applications/Events/ApplicationDeclared.cs"
+      },
+      "schema": {
+        "event": "ApplicationDeclared",
+        "discriminator": "bdgrz.application.declared",
+        "discriminatorVersion": 1,
+        "owner": "DeclaredApplication",
+        "existingContract": "src/Compliance.Common/Features/Applications/ApplicationDeclared.cs",
+        "status": "selected target schema; implementation pending",
+        "reason": "source command accepted result",
+        "fields": [
+          {
+            "name": "TenantId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "ApplicationId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "Name",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "Purpose",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "OwnerReference",
+            "type": "string?",
+            "required": true
+          },
+          {
+            "name": "ActorMemberId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "ActorDisplay",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "ChangedAt",
+            "type": "DateTimeOffset",
+            "required": true
+          },
+          {
+            "name": "Classification",
+            "type": "string?",
+            "required": false
+          },
+          {
+            "name": "SystemOwnerPersonId",
+            "type": "Uuid?",
+            "required": false
+          },
+          {
+            "name": "AccessOwnerPersonId",
+            "type": "Uuid?",
+            "required": false
+          },
+          {
+            "name": "IsRestricted",
+            "type": "bool",
+            "required": false
+          },
+          {
+            "name": "ApplicationKind",
+            "type": "string?",
+            "required": false
+          },
+          {
+            "name": "Criticality",
+            "type": "string?",
+            "required": false
+          },
+          {
+            "name": "Operation",
+            "type": "OperationProvenance",
+            "required": true
+          },
+          {
+            "name": "FirstResponse",
+            "type": "ImmutableContentRef?",
+            "required": true
+          },
+          {
+            "name": "OperationResult",
+            "type": "ImmutableContentRef?",
+            "required": true
+          }
+        ],
+        "contentSchemas": [],
+        "changes": [],
+        "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
+        "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
+        "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
+      }
+    },
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:ApplicationImportEffectCanceled",
+        "event": "ApplicationImportEffectCanceled",
+        "emissionKind": "business",
+        "owners": [
+          "DeclaredApplication"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": true,
+        "targetConcreteType": "ApplicationImportEffectCanceled",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.declared_application.import_effect_canceled",
+          "version": 1
+        },
+        "wireQualification": "Adopted wire is the occupied discriminator declared in src/Compliance.Common/Features/Applications/Events/ApplicationImportEffectCanceled.cs at 60029b8f (2026-10-29 reconciliation). The earlier selected wire is retained as supersededSelectedWire for provenance only.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "selected_complete_schema",
+        "sourceStatus": "declared",
+        "supersededSelectedWire": {
+          "discriminator": "bdgrz.declared-application.application-import-effect-canceled",
+          "version": 1
+        },
+        "meaning": "An import batch was fenced on its target application after cancellation, even if it never held the application, so any delayed reservation or application of that batch is refused.",
+        "meaningSource": "authored 2026-10-29 from src/Compliance.Common/Features/Applications/Events/ApplicationImportEffectCanceled.cs"
+      },
+      "schema": {
+        "event": "ApplicationImportEffectCanceled",
+        "discriminator": "bdgrz.declared-application.application-import-effect-canceled",
+        "discriminatorVersion": 1,
+        "owner": "DeclaredApplication",
+        "existingContract": null,
+        "status": "selected target schema; implementation pending",
+        "reason": "typed reactor receiver accepted business fact",
+        "fields": [
+          {
+            "name": "Owner",
+            "type": "EventStreamAddress",
+            "required": true
+          },
+          {
+            "name": "Revision",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "Generation",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "Intent",
+            "type": "ImmutableContentRef",
+            "required": true
+          },
+          {
+            "name": "SourceProofs",
+            "type": "ImmutableContentRef?",
+            "required": true
+          },
+          {
+            "name": "Operation",
+            "type": "OperationProvenance",
+            "required": true
+          },
+          {
+            "name": "FirstResponse",
+            "type": "ImmutableContentRef?",
+            "required": true
+          },
+          {
+            "name": "OperationResult",
+            "type": "ImmutableContentRef?",
+            "required": true
+          }
+        ],
+        "contentSchemas": [
+          {
+            "field": "Intent",
+            "schema": "import-target-group-intent.v1",
+            "recordType": "ImportTargetGroupIntent",
+            "fields": [
+              {
+                "name": "BatchId",
+                "type": "Uuid",
+                "required": true
+              },
+              {
+                "name": "ApplicationId",
+                "type": "Uuid",
+                "required": true
+              },
+              {
+                "name": "InitialApplicationRevision",
+                "type": "ulong",
+                "required": true
+              },
+              {
+                "name": "Rows",
+                "type": "ImmutableSelectionManifest",
+                "required": true,
+                "contentSchema": "ApplicationImportPlannedRow"
+              },
+              {
+                "name": "CandidateContent",
+                "type": "ImmutableContentRef",
+                "required": true
+              },
+              {
+                "name": "CandidateContentRevision",
+                "type": "ulong",
+                "required": true
+              },
+              {
+                "name": "RequiredRetirementProofs",
+                "type": "ImmutableSelectionManifest",
+                "required": true
+              }
+            ],
+            "rule": "One exclusive hold and one native append batch per target group. Preserve existing create_new/link_existing/retire semantics: one create; links do not overwrite authored application metadata; retirement changes active state once. Validate every row against the frozen group baseline and full existing source-claim rules. Apply original row order; no per-row lock upgrade or repeated baseline compare after earlier append.",
+            "variants": [
+              {
+                "recordType": "ImportTargetGroupIntent",
+                "schema": "import-target-group-intent.v1",
+                "fields": [
+                  {
+                    "name": "BatchId",
+                    "type": "Uuid",
+                    "required": true
+                  },
+                  {
+                    "name": "ApplicationId",
+                    "type": "Uuid",
+                    "required": true
+                  },
+                  {
+                    "name": "InitialApplicationRevision",
+                    "type": "ulong",
+                    "required": true
+                  },
+                  {
+                    "name": "Rows",
+                    "type": "ImmutableSelectionManifest",
+                    "required": true,
+                    "contentSchema": "ApplicationImportPlannedRow"
+                  },
+                  {
+                    "name": "CandidateContent",
+                    "type": "ImmutableContentRef",
+                    "required": true
+                  },
+                  {
+                    "name": "CandidateContentRevision",
+                    "type": "ulong",
+                    "required": true
+                  },
+                  {
+                    "name": "RequiredRetirementProofs",
+                    "type": "ImmutableSelectionManifest",
+                    "required": true
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "changes": [],
+        "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
+        "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
+        "resolvedIntentSchema": "ImportTargetGroupIntent",
+        "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
+      }
+    },
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:ApplicationImportEffectPending",
+        "event": "ApplicationImportEffectPending",
+        "emissionKind": "reservation",
+        "owners": [
+          "DeclaredApplication"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": true,
+        "targetConcreteType": "ApplicationImportEffectPending",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.application_import.effect_pending",
+          "version": 2
+        },
+        "wireQualification": "Adopted wire is the occupied discriminator declared in src/Compliance.Common/Features/Applications/Events/ApplicationImportEffectPending.cs at 60029b8f (2026-10-29 reconciliation). The earlier selected wire is retained as supersededSelectedWire for provenance only.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "selected_complete_schema",
+        "sourceStatus": "declared",
+        "supersededSelectedWire": {
+          "discriminator": "bdgrz.application_import.effect_pending",
+          "version": 1
+        },
+        "emissionKindNote": "Owner-held reservation or its settlement: authoritative for the owner invariant (the reducer must refuse conflicting commands while held) but not a business decision in its own right. Adopted 2026-10-29 (decision EV-D06).",
+        "meaning": "One frozen import row's change to an application was provisionally applied while the batch holds the application, pending the batch's final settlement; it is not yet a published revision.",
+        "meaningSource": "authored 2026-10-29 from src/Compliance.Common/Features/Applications/Events/ApplicationImportEffectPending.cs"
+      },
+      "schema": {
+        "event": "ApplicationImportEffectPending",
+        "discriminator": "bdgrz.application_import.effect_pending",
+        "discriminatorVersion": 1,
+        "owner": "DeclaredApplication",
+        "existingContract": "src/Compliance.Common/Features/Applications/ApplicationImportEffectPending.cs",
+        "status": "selected target schema; implementation pending",
+        "reason": "typed reactor receiver accepted business fact",
+        "fields": [
+          {
+            "name": "TenantId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "ApplicationId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "PlanRevision",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "PlanSha256",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "FrozenPlan",
+            "type": "ImmutableContentRef",
+            "required": true,
+            "contentSchema": "ImportFrozenPlanIntent"
+          },
+          {
+            "name": "Row",
+            "type": "ApplicationImportPlannedRow",
+            "required": true
+          },
+          {
+            "name": "RecordedAt",
+            "type": "DateTimeOffset",
+            "required": true
+          },
+          {
+            "name": "Operation",
+            "type": "OperationProvenance",
+            "required": true
+          },
+          {
+            "name": "Intent",
+            "type": "ImmutableContentRef",
+            "required": true
+          },
+          {
+            "name": "FirstResponse",
+            "type": "ImmutableContentRef?",
+            "required": true
+          },
+          {
+            "name": "OperationResult",
+            "type": "ImmutableContentRef?",
+            "required": true
+          }
+        ],
+        "contentSchemas": [
+          {
+            "field": "Intent",
+            "schema": "import-target-group-intent.v1",
+            "recordType": "ImportTargetGroupIntent",
+            "fields": [
+              {
+                "name": "BatchId",
+                "type": "Uuid",
+                "required": true
+              },
+              {
+                "name": "ApplicationId",
+                "type": "Uuid",
+                "required": true
+              },
+              {
+                "name": "InitialApplicationRevision",
+                "type": "ulong",
+                "required": true
+              },
+              {
+                "name": "Rows",
+                "type": "ImmutableSelectionManifest",
+                "required": true,
+                "contentSchema": "ApplicationImportPlannedRow"
+              },
+              {
+                "name": "CandidateContent",
+                "type": "ImmutableContentRef",
+                "required": true
+              },
+              {
+                "name": "CandidateContentRevision",
+                "type": "ulong",
+                "required": true
+              },
+              {
+                "name": "RequiredRetirementProofs",
+                "type": "ImmutableSelectionManifest",
+                "required": true
+              }
+            ],
+            "rule": "One exclusive hold and one native append batch per target group. Preserve existing create_new/link_existing/retire semantics: one create; links do not overwrite authored application metadata; retirement changes active state once. Validate every row against the frozen group baseline and full existing source-claim rules. Apply original row order; no per-row lock upgrade or repeated baseline compare after earlier append.",
+            "variants": [
+              {
+                "recordType": "ImportTargetGroupIntent",
+                "schema": "import-target-group-intent.v1",
+                "fields": [
+                  {
+                    "name": "BatchId",
+                    "type": "Uuid",
+                    "required": true
+                  },
+                  {
+                    "name": "ApplicationId",
+                    "type": "Uuid",
+                    "required": true
+                  },
+                  {
+                    "name": "InitialApplicationRevision",
+                    "type": "ulong",
+                    "required": true
+                  },
+                  {
+                    "name": "Rows",
+                    "type": "ImmutableSelectionManifest",
+                    "required": true,
+                    "contentSchema": "ApplicationImportPlannedRow"
+                  },
+                  {
+                    "name": "CandidateContent",
+                    "type": "ImmutableContentRef",
+                    "required": true
+                  },
+                  {
+                    "name": "CandidateContentRevision",
+                    "type": "ulong",
+                    "required": true
+                  },
+                  {
+                    "name": "RequiredRetirementProofs",
+                    "type": "ImmutableSelectionManifest",
+                    "required": true
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "changes": [
+          "Replace the removed ApplicationImportPlanStarted payload with FrozenPlan, a verified reference to the sealed ImportFrozenPlanIntent; PlanSha256 remains the digest of that complete intent."
+        ],
+        "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
+        "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
+        "resolvedIntentSchema": "ImportTargetGroupIntent",
+        "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
+      }
+    },
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:ApplicationImportTargetAuthorized",
+        "event": "ApplicationImportTargetAuthorized",
+        "emissionKind": "reservation",
+        "owners": [
+          "DeclaredApplication"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": true,
+        "targetConcreteType": "ApplicationImportTargetAuthorized",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.declared_application.import_target_authorized",
+          "version": 1
+        },
+        "wireQualification": "Adopted wire is the occupied discriminator declared in src/Compliance.Common/Features/Applications/Events/ApplicationImportTargetAuthorized.cs at 60029b8f (2026-10-29 reconciliation). The earlier selected wire is retained as supersededSelectedWire for provenance only.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "selected_complete_schema",
+        "sourceStatus": "declared",
+        "supersededSelectedWire": {
+          "discriminator": "bdgrz.declared-application.application-import-target-authorized",
+          "version": 1
+        },
+        "emissionKindNote": "Owner-held reservation or its settlement: authoritative for the owner invariant (the reducer must refuse conflicting commands while held) but not a business decision in its own right. Adopted 2026-10-29 (decision EV-D06).",
+        "meaning": "The target application grants the exclusive hold of one batch group. Revision is the published content revision at the hold, which a hold never advances; the group's frozen baseline and candidate revisions are carried so the hold rebuilds from the ordered stream alone.",
+        "meaningSource": "record summary in src/Compliance.Common/Features/Applications/Events/ApplicationImportTargetAuthorized.cs"
+      },
+      "schema": {
+        "event": "ApplicationImportTargetAuthorized",
+        "discriminator": "bdgrz.declared-application.application-import-target-authorized",
+        "discriminatorVersion": 1,
+        "owner": "DeclaredApplication",
+        "existingContract": null,
+        "status": "selected target schema; implementation pending",
+        "reason": "typed reactor receiver accepted business fact",
+        "fields": [
+          {
+            "name": "Owner",
+            "type": "EventStreamAddress",
+            "required": true
+          },
+          {
+            "name": "Revision",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "Generation",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "Intent",
+            "type": "ImmutableContentRef",
+            "required": true
+          },
+          {
+            "name": "SourceProofs",
+            "type": "ImmutableContentRef?",
+            "required": true
+          },
+          {
+            "name": "Operation",
+            "type": "OperationProvenance",
+            "required": true
+          },
+          {
+            "name": "FirstResponse",
+            "type": "ImmutableContentRef?",
+            "required": true
+          },
+          {
+            "name": "OperationResult",
+            "type": "ImmutableContentRef?",
+            "required": true
+          }
+        ],
+        "contentSchemas": [
+          {
+            "field": "Intent",
+            "schema": "import-target-group-intent.v1",
+            "recordType": "ImportTargetGroupIntent",
+            "fields": [
+              {
+                "name": "BatchId",
+                "type": "Uuid",
+                "required": true
+              },
+              {
+                "name": "ApplicationId",
+                "type": "Uuid",
+                "required": true
+              },
+              {
+                "name": "InitialApplicationRevision",
+                "type": "ulong",
+                "required": true
+              },
+              {
+                "name": "Rows",
+                "type": "ImmutableSelectionManifest",
+                "required": true,
+                "contentSchema": "ApplicationImportPlannedRow"
+              },
+              {
+                "name": "CandidateContent",
+                "type": "ImmutableContentRef",
+                "required": true
+              },
+              {
+                "name": "CandidateContentRevision",
+                "type": "ulong",
+                "required": true
+              },
+              {
+                "name": "RequiredRetirementProofs",
+                "type": "ImmutableSelectionManifest",
+                "required": true
+              }
+            ],
+            "rule": "One exclusive hold and one native append batch per target group. Preserve existing create_new/link_existing/retire semantics: one create; links do not overwrite authored application metadata; retirement changes active state once. Validate every row against the frozen group baseline and full existing source-claim rules. Apply original row order; no per-row lock upgrade or repeated baseline compare after earlier append.",
+            "variants": [
+              {
+                "recordType": "ImportTargetGroupIntent",
+                "schema": "import-target-group-intent.v1",
+                "fields": [
+                  {
+                    "name": "BatchId",
+                    "type": "Uuid",
+                    "required": true
+                  },
+                  {
+                    "name": "ApplicationId",
+                    "type": "Uuid",
+                    "required": true
+                  },
+                  {
+                    "name": "InitialApplicationRevision",
+                    "type": "ulong",
+                    "required": true
+                  },
+                  {
+                    "name": "Rows",
+                    "type": "ImmutableSelectionManifest",
+                    "required": true,
+                    "contentSchema": "ApplicationImportPlannedRow"
+                  },
+                  {
+                    "name": "CandidateContent",
+                    "type": "ImmutableContentRef",
+                    "required": true
+                  },
+                  {
+                    "name": "CandidateContentRevision",
+                    "type": "ulong",
+                    "required": true
+                  },
+                  {
+                    "name": "RequiredRetirementProofs",
+                    "type": "ImmutableSelectionManifest",
+                    "required": true
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "changes": [],
+        "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
+        "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
+        "resolvedIntentSchema": "ImportTargetGroupIntent",
+        "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
+      }
+    },
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:ApplicationImportTargetSettled",
+        "event": "ApplicationImportTargetSettled",
+        "emissionKind": "reservation",
+        "owners": [
+          "DeclaredApplication"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": true,
+        "targetConcreteType": "ApplicationImportTargetSettled",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.declared_application.import_target_settled",
+          "version": 1
+        },
+        "wireQualification": "Adopted wire is the occupied discriminator declared in src/Compliance.Common/Features/Applications/Events/ApplicationImportTargetSettled.cs at 60029b8f (2026-10-29 reconciliation). The earlier selected wire is retained as supersededSelectedWire for provenance only.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "selected_complete_schema",
+        "sourceStatus": "declared",
+        "supersededSelectedWire": {
+          "discriminator": "bdgrz.declared-application.application-import-target-settled",
+          "version": 1
+        },
+        "emissionKindNote": "Owner-held reservation or its settlement: authoritative for the owner invariant (the reducer must refuse conflicting commands while held) but not a business decision in its own right. Adopted 2026-10-29 (decision EV-D06).",
+        "meaning": "The target hold ends with the batch's exact terminal fact. A published disposition promotes the frozen candidate to the application's content without a second revision increment; a canceled or failed disposition discards it. Revision is the published content revision after the settlement.",
+        "meaningSource": "record summary in src/Compliance.Common/Features/Applications/Events/ApplicationImportTargetSettled.cs"
+      },
+      "schema": {
+        "event": "ApplicationImportTargetSettled",
+        "discriminator": "bdgrz.declared-application.application-import-target-settled",
+        "discriminatorVersion": 1,
+        "owner": "DeclaredApplication",
+        "existingContract": null,
+        "status": "selected target schema; implementation pending",
+        "reason": "typed reactor receiver accepted business fact",
+        "fields": [
+          {
+            "name": "Owner",
+            "type": "EventStreamAddress",
+            "required": true
+          },
+          {
+            "name": "Revision",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "Generation",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "Intent",
+            "type": "ImmutableContentRef",
+            "required": true
+          },
+          {
+            "name": "SourceProofs",
+            "type": "ImmutableContentRef?",
+            "required": true
+          },
+          {
+            "name": "Operation",
+            "type": "OperationProvenance",
+            "required": true
+          },
+          {
+            "name": "FirstResponse",
+            "type": "ImmutableContentRef?",
+            "required": true
+          },
+          {
+            "name": "OperationResult",
+            "type": "ImmutableContentRef?",
+            "required": true
+          }
+        ],
+        "contentSchemas": [
+          {
+            "field": "Intent",
+            "schema": "import-target-group-intent.v1",
+            "recordType": "ImportTargetGroupIntent",
+            "fields": [
+              {
+                "name": "BatchId",
+                "type": "Uuid",
+                "required": true
+              },
+              {
+                "name": "ApplicationId",
+                "type": "Uuid",
+                "required": true
+              },
+              {
+                "name": "InitialApplicationRevision",
+                "type": "ulong",
+                "required": true
+              },
+              {
+                "name": "Rows",
+                "type": "ImmutableSelectionManifest",
+                "required": true,
+                "contentSchema": "ApplicationImportPlannedRow"
+              },
+              {
+                "name": "CandidateContent",
+                "type": "ImmutableContentRef",
+                "required": true
+              },
+              {
+                "name": "CandidateContentRevision",
+                "type": "ulong",
+                "required": true
+              },
+              {
+                "name": "RequiredRetirementProofs",
+                "type": "ImmutableSelectionManifest",
+                "required": true
+              }
+            ],
+            "rule": "One exclusive hold and one native append batch per target group. Preserve existing create_new/link_existing/retire semantics: one create; links do not overwrite authored application metadata; retirement changes active state once. Validate every row against the frozen group baseline and full existing source-claim rules. Apply original row order; no per-row lock upgrade or repeated baseline compare after earlier append.",
+            "variants": [
+              {
+                "recordType": "ImportTargetGroupIntent",
+                "schema": "import-target-group-intent.v1",
+                "fields": [
+                  {
+                    "name": "BatchId",
+                    "type": "Uuid",
+                    "required": true
+                  },
+                  {
+                    "name": "ApplicationId",
+                    "type": "Uuid",
+                    "required": true
+                  },
+                  {
+                    "name": "InitialApplicationRevision",
+                    "type": "ulong",
+                    "required": true
+                  },
+                  {
+                    "name": "Rows",
+                    "type": "ImmutableSelectionManifest",
+                    "required": true,
+                    "contentSchema": "ApplicationImportPlannedRow"
+                  },
+                  {
+                    "name": "CandidateContent",
+                    "type": "ImmutableContentRef",
+                    "required": true
+                  },
+                  {
+                    "name": "CandidateContentRevision",
+                    "type": "ulong",
+                    "required": true
+                  },
+                  {
+                    "name": "RequiredRetirementProofs",
+                    "type": "ImmutableSelectionManifest",
+                    "required": true
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "changes": [],
+        "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
+        "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
+        "resolvedIntentSchema": "ImportTargetGroupIntent",
+        "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
+      }
+    },
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:ApplicationRetired",
+        "event": "ApplicationRetired",
+        "emissionKind": "business",
+        "owners": [
+          "DeclaredApplication"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": true,
+        "targetConcreteType": "ApplicationRetired",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.application.retired",
+          "version": 1
+        },
+        "wireQualification": "Wire matches the declared record in src/Compliance.Common/Features/Applications/Events/ApplicationRetired.cs at 60029b8f.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "selected_complete_schema",
+        "sourceStatus": "declared",
+        "meaning": "An application was retired effective on a stated date with a reason, optionally merged into a successor application; its history, instances and snapshot references remain.",
+        "meaningSource": "authored 2026-10-29 from src/Compliance.Common/Features/Applications/Events/ApplicationRetired.cs"
+      },
+      "schema": {
+        "event": "ApplicationRetired",
+        "discriminator": "bdgrz.application.retired",
+        "discriminatorVersion": 1,
+        "owner": "DeclaredApplication",
+        "existingContract": "src/Compliance.Common/Features/Applications/ApplicationRetired.cs",
+        "status": "selected target schema; implementation pending",
+        "reason": "source command accepted result",
+        "fields": [
+          {
+            "name": "TenantId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "ApplicationId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "Revision",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "EffectiveAt",
+            "type": "DateTimeOffset",
+            "required": true
+          },
+          {
+            "name": "Reason",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "MergedIntoApplicationId",
+            "type": "Uuid?",
+            "required": true
+          },
+          {
+            "name": "ActorMemberId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "ActorDisplay",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "ChangedAt",
+            "type": "DateTimeOffset",
+            "required": true
+          },
+          {
+            "name": "MergedIntoApplicationRevision",
+            "type": "long?",
+            "required": false
+          },
+          {
+            "name": "Operation",
+            "type": "OperationProvenance",
+            "required": true
+          },
+          {
+            "name": "FirstResponse",
+            "type": "ImmutableContentRef?",
+            "required": true
+          },
+          {
+            "name": "OperationResult",
+            "type": "ImmutableContentRef?",
+            "required": true
+          }
+        ],
+        "contentSchemas": [],
+        "changes": [],
+        "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
+        "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
+        "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
+      }
+    },
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:ApplicationRevised",
+        "event": "ApplicationRevised",
+        "emissionKind": "business",
+        "owners": [
+          "DeclaredApplication"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": true,
+        "targetConcreteType": "ApplicationRevised",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.application.revised",
+          "version": 1
+        },
+        "wireQualification": "Wire matches the declared record in src/Compliance.Common/Features/Applications/Events/ApplicationRevised.cs at 60029b8f.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "selected_complete_schema",
+        "sourceStatus": "declared",
+        "meaning": "A declared application's name, purpose or owner reference was revised by a named member, recorded as the application's next revision.",
+        "meaningSource": "authored 2026-10-29 from src/Compliance.Common/Features/Applications/Events/ApplicationRevised.cs"
+      },
+      "schema": {
+        "event": "ApplicationRevised",
+        "discriminator": "bdgrz.application.revised",
+        "discriminatorVersion": 1,
+        "owner": "DeclaredApplication",
+        "existingContract": "src/Compliance.Common/Features/Applications/ApplicationRevised.cs",
+        "status": "selected target schema; implementation pending",
+        "reason": "source command accepted result",
+        "fields": [
+          {
+            "name": "TenantId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "ApplicationId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "Revision",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "Name",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "Purpose",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "OwnerReference",
+            "type": "string?",
+            "required": true
+          },
+          {
+            "name": "ActorMemberId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "ActorDisplay",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "ChangedAt",
+            "type": "DateTimeOffset",
+            "required": true
+          },
+          {
+            "name": "Classification",
+            "type": "string?",
+            "required": false
+          },
+          {
+            "name": "SystemOwnerPersonId",
+            "type": "Uuid?",
+            "required": false
+          },
+          {
+            "name": "AccessOwnerPersonId",
+            "type": "Uuid?",
+            "required": false
+          },
+          {
+            "name": "IsRestricted",
+            "type": "bool",
+            "required": false
+          },
+          {
+            "name": "ApplicationKind",
+            "type": "string?",
+            "required": false
+          },
+          {
+            "name": "Criticality",
+            "type": "string?",
+            "required": false
+          },
+          {
+            "name": "Operation",
+            "type": "OperationProvenance",
+            "required": true
+          },
+          {
+            "name": "FirstResponse",
+            "type": "ImmutableContentRef?",
+            "required": true
+          },
+          {
+            "name": "OperationResult",
+            "type": "ImmutableContentRef?",
+            "required": true
+          }
+        ],
+        "contentSchemas": [],
+        "changes": [],
+        "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
+        "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
+        "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
+      }
+    }
+  ]
+}

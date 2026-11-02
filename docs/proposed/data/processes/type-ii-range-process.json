@@ -1,0 +1,36 @@
+{
+  "process": "TypeIIRangeProcess",
+  "rootSourceEvents": [
+    "TypeIIPeriodOpeningAccepted",
+    "TypeIIPeriodAmendmentAccepted"
+  ],
+  "ordered": true,
+  "stages": [
+    {
+      "stage": "acquire",
+      "receivers": [
+        "AcquireTypeIIPeriodRange"
+      ],
+      "rule": "Old and new range held until applied."
+    },
+    {
+      "stage": "apply",
+      "receivers": [
+        "ApplyTypeIIPeriodRange"
+      ],
+      "rule": null
+    },
+    {
+      "stage": "settle",
+      "receivers": [
+        "SettleTypeIIPeriodRange"
+      ],
+      "rule": null
+    }
+  ],
+  "abort": [
+    "RejectTypeIIPeriodOpening",
+    "RejectTypeIIPeriodAmendment",
+    "CancelTypeIIPeriodAmendment"
+  ]
+}

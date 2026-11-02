@@ -1,0 +1,171 @@
+{
+  "owner": "ExaminationSignOff",
+  "origin": "retained_baseline",
+  "baselineOwners": [
+    "ExaminationSignOff"
+  ],
+  "declaredIdentity": "Tenant / examination-signoffs / signOffId; first accepted content immutable; same initial content/actor/role/time retry; handler reuses retained SignedOffAt. Portia appends against the hydrated physical stream position; a logical revision does not create another physical boundary.",
+  "invariant": "One final personal management decision binds exact package/assertion/letter/outcome and acknowledges exactly every unresolved material item.",
+  "boundaryDecision": "retain",
+  "boundaryRationale": "Known exceptions and acknowledgements form one accepted decision capsule; splitting them would permit signing a different set. Referenced source lifecycles stay independent.",
+  "sources": [
+    {
+      "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
+      "jsonPointer": "/aggregates/37",
+      "line": 27192,
+      "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
+    }
+  ],
+  "baselineSourcePath": "src/Compliance.Core/Features/Examinations/ExaminationSignOff.cs",
+  "baselineEvents": [
+    "ExaminationSignedOff"
+  ],
+  "classification": "business_aggregate",
+  "businessAggregate": true,
+  "implementationStatus": "SEPARATE_VERIFICATION_REQUIRED_IMPLEMENTATION_HALTED",
+  "identityReadingRule": "selectedIdentitySummary and exact selectedCommandContracts define intended identity. baselineIdentityObservation/declaredIdentity retain older source observations only, including old replay defects; they are not target behavior or authorization to change an occupied key.",
+  "selectedCommandContracts": [
+    {
+      "command": "RecordManagementExaminationReview",
+      "logicalIdentity": {
+        "field": "SignOffId",
+        "type": "Uuid",
+        "required": true,
+        "rule": "caller-supplied immutable creation identity: an exact retry with the same id and authored intent returns the original result; the same id with changed intent is refused; a different id is a different record"
+      },
+      "fields": [
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ProgramId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExaminationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "SignOffId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Content",
+          "type": "ExaminationSignOffContent",
+          "required": true
+        }
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "Unit",
+        "firstHttpStatus": 200,
+        "terminalResultType": "Unit"
+      },
+      "http": [
+        {
+          "method": "PUT",
+          "path": "/api/v1/tenants/{tenant_id}/programs/{program_id}/examinations/{examination_id}/management-reviews/{sign_off_id}",
+          "authorizationPolicy": "ComplianceAuthorizationPolicies.ApiUser"
+        }
+      ],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
+        "jsonPointer": "/contracts/120",
+        "line": 8989,
+        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
+      },
+      "kind": "http"
+    }
+  ],
+  "eventAuthority": "retained_baseline_business_facts_requires_schema_reconciliation",
+  "events": [
+    {
+      "event": "ExaminationSignedOff",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
+        "jsonPointer": "/aggregates/37",
+        "line": 27192,
+        "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
+      },
+      "baselineContract": {
+        "event": "ExaminationSignedOff",
+        "emitters": [
+          "src/Compliance.Core/Features/Examinations/ExaminationSignOff.cs"
+        ],
+        "eventDisposition": "aggregate_fact",
+        "emitterOwnership": "aggregate or partial source",
+        "typedFields": [
+          {
+            "name": "TenantId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "SubjectId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "Revision",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "ActorMemberId",
+            "type": "Uuid?",
+            "required": true
+          },
+          {
+            "name": "State",
+            "type": "ExaminationSignOffView",
+            "required": true
+          },
+          {
+            "name": "OccurredAt",
+            "type": "DateTimeOffset",
+            "required": true
+          }
+        ],
+        "eventContract": "src/Compliance.Common/Features/Examinations/ExaminationSignedOff.cs"
+      }
+    }
+  ],
+  "choreography": [],
+  "status": "SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED",
+  "baselineIdentityObservation": "Tenant / examination-signoffs / signOffId; first accepted content immutable; same initial content/actor/role/time retry; handler reuses retained SignedOffAt. Portia appends against the hydrated physical stream position; a logical revision does not create another physical boundary.",
+  "identityContractRule": "Existing published owner identity/IdFor remains stable. Required typed creation/operation identity and tenant/program/source scope come from the selected signature/protocol references; no context.RequestId minting fallback or guessed new stream key.",
+  "adoptedArchitectureDecisions": [],
+  "selectedIdentityClarification": "Tenant / examination-signoffs / SignOffId, with exact examination, package/snapshot, signer and role binding. SignOffId is the selected immutable creation identity.",
+  "selectedIdentitySummary": "Tenant / examination-signoffs / SignOffId, with exact examination, package/snapshot, signer and role binding. SignOffId is the selected immutable creation identity.",
+  "baselineIdentityObservationOnly": true,
+  "selectedLogicalIdentityBindings": [
+    {
+      "command": "RecordManagementExaminationReview",
+      "logicalIdentity": "SignOffId",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
+        "jsonPointer": "/contracts/120",
+        "line": 8989,
+        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
+      }
+    }
+  ],
+  "selectedReplayRule": "Current required authorization precedes replay; exact authorized retries resolve the original accepted result using the selected logical identity and immutable actor/intent/source binding. Fresh mutable feasibility, clock selection and body preparation cannot replace that original result. Expected revision is concurrency precondition, not a new identity.",
+  "productRules": [
+    {
+      "id": "D17-07",
+      "doc": "m0-d17-audit-deliverables.md",
+      "rule": "Package sign-off sequence is fixed: the package is validated, then the assertion is signed, then the representation letter is signed, then the outcome is recorded."
+    }
+  ],
+  "decides": "Refuses out-of-order package sign-off: the package must be validated first, then the assertion signed, then the representation letter signed, and only then is the outcome recorded.",
+  "decidesCovers": [
+    "D17-07"
+  ],
+  "decidesAuthored": "2026-10-29"
+}

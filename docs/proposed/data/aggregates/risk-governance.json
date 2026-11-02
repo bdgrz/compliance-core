@@ -1,0 +1,304 @@
+{
+  "owner": "RiskGovernance",
+  "origin": "selected_split_target",
+  "baselineOwners": [
+    "RiskGovernanceLedger"
+  ],
+  "declaredIdentity": "riskId",
+  "invariant": "One risk’s governance and reassessment obligations.",
+  "boundaryDecision": "selected_split",
+  "mustPreserve": "Assessment belongs to RiskEvaluation; risk governance consumes exact risk/source proofs, no live aggregate authority.",
+  "sources": [
+    {
+      "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
+      "jsonPointer": "/splitOwners/24/targetOwners/0",
+      "line": 2561,
+      "sha256": "d349d94b7c43f4d82020ecf36bdacf1aff98bc6498e14993582f1c3164b21f19"
+    }
+  ],
+  "baselineSourcePath": "src/Compliance.Core/Features/Risks/RiskGovernanceLedger.cs",
+  "baselineEvents": [
+    "RiskOwnerAssigned",
+    "RiskReassessmentTriggered"
+  ],
+  "preliminaryNewEvents": [],
+  "technicalStateToSeparate": [],
+  "classification": "business_aggregate",
+  "businessAggregate": true,
+  "implementationStatus": "SEPARATE_VERIFICATION_REQUIRED_IMPLEMENTATION_HALTED",
+  "identityReadingRule": "selectedIdentitySummary and exact selectedCommandContracts define intended identity. baselineIdentityObservation/declaredIdentity retain older source observations only, including old replay defects; they are not target behavior or authorization to change an occupied key.",
+  "selectedCommandContracts": [
+    {
+      "command": "AssignRiskOwner",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ProgramId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "RiskId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "PersonId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Rationale",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "Unit",
+        "firstHttpStatus": 200,
+        "terminalResultType": "Unit"
+      },
+      "http": [
+        {
+          "method": "PUT",
+          "path": "/api/v1/tenants/{tenant_id}/programs/{program_id}/risks/{risk_id}/assign-risk-owner/{command_id}",
+          "policy": "ApiUser + existing request-scope authorizers"
+        }
+      ],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
+        "jsonPointer": "/commands/22",
+        "line": 2633,
+        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
+      },
+      "kind": "http"
+    },
+    {
+      "command": "RaiseRiskReassessmentTriggers",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "source_event_effect",
+        "rule": "CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ProgramId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TriggerKind",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "SourceReference",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "RaisedAt",
+          "type": "DateTimeOffset",
+          "required": true
+        },
+        {
+          "name": "MethodVersionId",
+          "type": "Uuid?",
+          "required": true
+        },
+        {
+          "name": "RiskId",
+          "type": "Uuid",
+          "required": true
+        }
+      ],
+      "responseContract": {
+        "mode": "internal",
+        "responseType": "Unit",
+        "firstHttpStatus": null,
+        "terminalResultType": "Unit"
+      },
+      "http": [],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
+        "jsonPointer": "/commands/85",
+        "line": 9934,
+        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
+      },
+      "kind": "command",
+      "concurrencyGuard": {
+        "rule": "creation_key_only",
+        "jev": 0.81,
+        "date": "2026-10-29"
+      }
+    },
+    {
+      "command": "RecordRiskReassessmentObligation",
+      "kind": "receiver",
+      "status": "PLANNED",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "reactor",
+        "rule": "deterministic receiver identity derived from the admitted root fact, episode and generation: exact redelivery resolves the original result, a changed admission is a new identity"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "required": true
+        },
+        {
+          "name": "Source",
+          "required": true
+        },
+        {
+          "name": "Target",
+          "required": true
+        },
+        {
+          "name": "OperationId",
+          "required": true
+        },
+        {
+          "name": "Generation",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "required": true
+        },
+        {
+          "name": "RiskId",
+          "required": true
+        },
+        {
+          "name": "EvaluationRevision",
+          "required": true
+        },
+        {
+          "name": "Reason",
+          "required": true
+        }
+      ],
+      "http": [],
+      "source": {
+        "path": "docs/product/definitive-aggregate-choreography/choreography.json",
+        "recorded": "2026-10-29"
+      }
+    }
+  ],
+  "eventAuthority": "selected_final_event_catalog",
+  "events": [
+    {
+      "event": "RiskOwnerAssigned",
+      "discriminator": "bdgrz.risk.owner.assigned",
+      "discriminatorVersion": 1,
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
+        "jsonPointer": "/events/238",
+        "line": 32312,
+        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
+      }
+    },
+    {
+      "event": "RiskReassessmentTriggered",
+      "discriminator": "bdgrz.risk.reassessment.triggered",
+      "discriminatorVersion": 1,
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
+        "jsonPointer": "/events/239",
+        "line": 32377,
+        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
+      }
+    }
+  ],
+  "choreography": [],
+  "status": "SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED",
+  "baselineIdentityObservation": "riskId",
+  "identityContractRule": "Existing published owner identity/IdFor remains stable. Required typed creation/operation identity and tenant/program/source scope come from the selected signature/protocol references; no context.RequestId minting fallback or guessed new stream key.",
+  "adoptedArchitectureDecisions": [],
+  "selectedIdentitySummary": "Tenant-scoped riskId; the identity is established by the admitting owner or reactor named in the choreography, never by a caller request key; mutations bind CommandId to this exact identity.",
+  "baselineIdentityObservationOnly": true,
+  "selectedLogicalIdentityBindings": [
+    {
+      "command": "AssignRiskOwner",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "one immutable authored operation"
+      },
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
+        "jsonPointer": "/commands/22",
+        "line": 2633,
+        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
+      }
+    },
+    {
+      "command": "RaiseRiskReassessmentTriggers",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "source_event_effect",
+        "rule": "one immutable authored operation"
+      },
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
+        "jsonPointer": "/commands/85",
+        "line": 9934,
+        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
+      }
+    }
+  ],
+  "selectedReplayRule": "Current required authorization precedes replay; exact authorized retries resolve the original accepted result using the selected logical identity and immutable actor/intent/source binding. Fresh mutable feasibility, clock selection and body preparation cannot replace that original result. Expected revision is concurrency precondition, not a new identity.",
+  "identityRevisions": [
+    {
+      "date": "2026-10-29",
+      "previous": "riskId"
+    }
+  ],
+  "productRules": [],
+  "decides": "A reassessment trigger is one of significant change, incident, boundary change, new material vendor or expired acceptance, and a risk with no full reassessment for 12 months is flagged due again.",
+  "decidesCovers": [
+    "D10-09"
+  ],
+  "decidesAuthored": "2026-10-29"
+}

@@ -1,0 +1,608 @@
+{
+  "owner": "AccessExpectation",
+  "selectedContracts": [
+    {
+      "command": "ApproveAccessExpectation",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "SystemInstanceId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "SeparationOfDutiesWaiverId",
+          "type": "Uuid?",
+          "required": false
+        }
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "AccessExpectationView",
+        "firstHttpStatus": 200,
+        "terminalResultType": "AccessExpectationView"
+      },
+      "http": [
+        {
+          "method": "PUT",
+          "path": "/api/v1/tenants/{tenant_id}/system-instances/{system_instance_id}/access-expectations/{expectation_id}/approval/{command_id}",
+          "policy": "ComplianceAuthorizationPolicies.ApiUser"
+        }
+      ],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
+        "jsonPointer": "/commands/14",
+        "line": 1666,
+        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
+      },
+      "kind": "http"
+    },
+    {
+      "command": "ExemptAccessExpectation",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "SystemInstanceId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "ProviderSubjectId",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "Rationale",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "ExpiresAt",
+          "type": "DateTimeOffset",
+          "required": true
+        },
+        {
+          "name": "ProviderEntitlementId",
+          "type": "string?",
+          "required": false
+        }
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "AccessExpectationExceptionView",
+        "firstHttpStatus": 200,
+        "terminalResultType": "AccessExpectationExceptionView"
+      },
+      "http": [
+        {
+          "method": "PUT",
+          "path": "/api/v1/tenants/{tenant_id}/system-instances/{system_instance_id}/access-expectations/{expectation_id}/exceptions/{command_id}",
+          "policy": "ComplianceAuthorizationPolicies.ApiUser"
+        }
+      ],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
+        "jsonPointer": "/commands/54",
+        "line": 6409,
+        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
+      },
+      "kind": "http"
+    },
+    {
+      "command": "ProposeAccessExpectation",
+      "logicalIdentity": {
+        "field": "ExpectationId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "caller-supplied immutable creation identity: an exact retry with the same id and authored intent returns the original result; the same id with changed intent is refused; a different id is a different record"
+      },
+      "fields": [
+        {
+          "name": "ExpectationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ApplicationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "SystemInstanceId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "RuleKind",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "Parameters",
+          "type": "AccessExpectationParameters",
+          "required": true
+        },
+        {
+          "name": "Rationale",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "EffectiveFrom",
+          "type": "DateTimeOffset",
+          "required": true
+        },
+        {
+          "name": "EffectiveUntil",
+          "type": "DateTimeOffset?",
+          "required": false
+        },
+        {
+          "name": "SupersedesExpectationId",
+          "type": "Uuid?",
+          "required": false
+        }
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "AccessExpectationView",
+        "firstHttpStatus": 200,
+        "terminalResultType": "AccessExpectationView"
+      },
+      "http": [
+        {
+          "method": "PUT",
+          "path": "/api/v1/tenants/{tenant_id}/applications/{application_id}/system-instances/{system_instance_id}/access-expectations/{expectation_id}",
+          "policy": "ComplianceAuthorizationPolicies.ApiUser"
+        }
+      ],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
+        "jsonPointer": "/commands/76",
+        "line": 8816,
+        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
+      },
+      "kind": "http"
+    }
+  ],
+  "sourceContractEvidence": [
+    {
+      "command": "ApproveAccessExpectation",
+      "status": "target_contract",
+      "sourceContract": "src/Compliance.Common/Features/AccessReviews/ApproveAccessExpectation.cs",
+      "sourceHandlers": [
+        {
+          "name": "ApproveAccessExpectationHandler",
+          "source": "src/Compliance.Core/Features/AccessReviews/ApproveAccessExpectationHandler.cs",
+          "registered": true
+        }
+      ],
+      "handler": "ApproveAccessExpectationHandler",
+      "sourceRoots": [
+        "AccessReviewSystemLedger"
+      ],
+      "owner": "AccessExpectation",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "one immutable authored operation"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "SystemInstanceId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "SeparationOfDutiesWaiverId",
+          "type": "Uuid?",
+          "required": false
+        }
+      ],
+      "http": [
+        {
+          "method": "PUT",
+          "path": "/api/v1/tenants/{tenant_id}/system-instances/{system_instance_id}/access-expectations/{expectation_id}/approval/{command_id}",
+          "policy": "ComplianceAuthorizationPolicies.ApiUser"
+        }
+      ],
+      "mcp": false,
+      "entryPoint": "personal_http",
+      "authorizerSources": [
+        "src/Compliance.Core/Features/AccessReviews/AccessReviewAuthorizer.cs"
+      ],
+      "events": [
+        "AccessExpectationApproved"
+      ],
+      "protocols": [
+        "Expectation succession and population exceptions"
+      ],
+      "guardOrder": [
+        "bind_required_ids",
+        "authenticate_authorize",
+        "canonicalize_authored_intent",
+        "resolve_native_operation_facts",
+        "compare_owner_episode_actor_kind_intent_original_revision",
+        "validate_new_owner_revision_and_source_permits",
+        "append_complete_concrete_attributed_batch"
+      ],
+      "policyPreservation": "All current source handler/aggregate validation rules and source test expectations apply, except the explicit contractChanges and boundary protocol. Lifetime caps and technical attempt events are removed with their structural replacement.",
+      "contractChanges": [
+        "Add required CommandId.",
+        "Rename ExpectedLedgerRevision to ExpectedRevision and compare the new target owner revision."
+      ],
+      "existingTests": [
+        "test/Compliance.Tests/Features/AccessReviews/PersonalAccessReviewTransportTests.cs",
+        "test/Compliance.Tests/Features/AccessReviews/AccessReviewFixture.cs",
+        "test/Compliance.Tests/Features/AccessReviews/AccessClassificationAndVarianceTests.cs"
+      ],
+      "requiredTests": [
+        "ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange",
+        "ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision",
+        "ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity",
+        "ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof",
+        "ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome"
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "AccessExpectationView",
+        "firstHttpStatus": 200,
+        "terminalResultType": "AccessExpectationView"
+      },
+      "expectedRevisionScope": {
+        "field": "ExpectedRevision",
+        "owner": "AccessExpectation",
+        "counter": "logical ResourceRevision of this owner",
+        "nullableInternalRule": null
+      }
+    },
+    {
+      "command": "ExemptAccessExpectation",
+      "status": "target_contract",
+      "sourceContract": "src/Compliance.Common/Features/AccessReviews/ExemptAccessExpectation.cs",
+      "sourceHandlers": [
+        {
+          "name": "ExemptAccessExpectationHandler",
+          "source": "src/Compliance.Core/Features/AccessReviews/ExemptAccessExpectationHandler.cs",
+          "registered": true
+        }
+      ],
+      "handler": "ExemptAccessExpectationHandler",
+      "sourceRoots": [
+        "AccessReviewSystemLedger"
+      ],
+      "owner": "AccessExpectation",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "one immutable authored operation"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "SystemInstanceId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "ProviderSubjectId",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "Rationale",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "ExpiresAt",
+          "type": "DateTimeOffset",
+          "required": true
+        },
+        {
+          "name": "ProviderEntitlementId",
+          "type": "string?",
+          "required": false
+        }
+      ],
+      "http": [
+        {
+          "method": "PUT",
+          "path": "/api/v1/tenants/{tenant_id}/system-instances/{system_instance_id}/access-expectations/{expectation_id}/exceptions/{command_id}",
+          "policy": "ComplianceAuthorizationPolicies.ApiUser"
+        }
+      ],
+      "mcp": false,
+      "entryPoint": "personal_http",
+      "authorizerSources": [
+        "src/Compliance.Core/Features/AccessReviews/AccessReviewAuthorizer.cs"
+      ],
+      "events": [
+        "AccessExpectationExceptionRecorded"
+      ],
+      "protocols": [
+        "Expectation succession and population exceptions"
+      ],
+      "guardOrder": [
+        "bind_required_ids",
+        "authenticate_authorize",
+        "canonicalize_authored_intent",
+        "resolve_native_operation_facts",
+        "compare_owner_episode_actor_kind_intent_original_revision",
+        "validate_new_owner_revision_and_source_permits",
+        "append_complete_concrete_attributed_batch"
+      ],
+      "policyPreservation": "All current source handler/aggregate validation rules and source test expectations apply, except the explicit contractChanges and boundary protocol. Lifetime caps and technical attempt events are removed with their structural replacement.",
+      "contractChanges": [
+        "Add required CommandId.",
+        "Rename ExpectedLedgerRevision to ExpectedRevision and compare the new target owner revision."
+      ],
+      "existingTests": [
+        "test/Compliance.Tests/Features/AccessReviews/PersonalAccessReviewTransportTests.cs",
+        "test/Compliance.Tests/Features/AccessReviews/AccessClassificationAndVarianceTests.cs"
+      ],
+      "requiredTests": [
+        "ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange",
+        "ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision",
+        "ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity",
+        "ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof",
+        "ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome"
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "AccessExpectationExceptionView",
+        "firstHttpStatus": 200,
+        "terminalResultType": "AccessExpectationExceptionView"
+      },
+      "expectedRevisionScope": {
+        "field": "ExpectedRevision",
+        "owner": "AccessExpectation",
+        "counter": "logical ResourceRevision of this owner",
+        "nullableInternalRule": null
+      }
+    },
+    {
+      "command": "ProposeAccessExpectation",
+      "status": "target_contract",
+      "sourceContract": "src/Compliance.Common/Features/AccessReviews/ProposeAccessExpectation.cs",
+      "sourceHandlers": [
+        {
+          "name": "ProposeAccessExpectationHandler",
+          "source": "src/Compliance.Core/Features/AccessReviews/ProposeAccessExpectationHandler.cs",
+          "registered": true
+        }
+      ],
+      "handler": "ProposeAccessExpectationHandler",
+      "sourceRoots": [
+        "AccessReviewSystemLedger"
+      ],
+      "owner": "AccessExpectation",
+      "logicalIdentity": {
+        "field": "ExpectationId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "exact immutable creation retry"
+      },
+      "fields": [
+        {
+          "name": "ExpectationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ApplicationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "SystemInstanceId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "RuleKind",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "Parameters",
+          "type": "AccessExpectationParameters",
+          "required": true
+        },
+        {
+          "name": "Rationale",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "EffectiveFrom",
+          "type": "DateTimeOffset",
+          "required": true
+        },
+        {
+          "name": "EffectiveUntil",
+          "type": "DateTimeOffset?",
+          "required": false
+        },
+        {
+          "name": "SupersedesExpectationId",
+          "type": "Uuid?",
+          "required": false
+        }
+      ],
+      "http": [
+        {
+          "method": "PUT",
+          "path": "/api/v1/tenants/{tenant_id}/applications/{application_id}/system-instances/{system_instance_id}/access-expectations/{expectation_id}",
+          "policy": "ComplianceAuthorizationPolicies.ApiUser"
+        }
+      ],
+      "mcp": true,
+      "entryPoint": "authorized_http_and_mcp",
+      "authorizerSources": [
+        "src/Compliance.Core/Features/AccessReviews/AccessReviewAuthorizer.cs"
+      ],
+      "events": [
+        "AccessExpectationProposed"
+      ],
+      "protocols": [
+        "Expectation succession and population exceptions"
+      ],
+      "guardOrder": [
+        "bind_required_ids",
+        "authenticate_authorize",
+        "canonicalize_authored_intent",
+        "resolve_native_operation_facts",
+        "compare_owner_episode_actor_kind_intent_original_revision",
+        "validate_new_owner_revision_and_source_permits",
+        "append_complete_concrete_attributed_batch"
+      ],
+      "policyPreservation": "All current source handler/aggregate validation rules and source test expectations apply, except the explicit contractChanges and boundary protocol. Lifetime caps and technical attempt events are removed with their structural replacement.",
+      "contractChanges": [
+        "Add required ExpectationId.",
+        "Rename ExpectedLedgerRevision to ExpectedRevision and compare the new target owner revision."
+      ],
+      "existingTests": [
+        "test/Compliance.Tests/Features/AccessReviews/PersonalAccessReviewTransportTests.cs",
+        "test/Compliance.Tests/Features/AccessReviews/AccessReviewFixture.cs",
+        "test/Compliance.Tests/Features/AccessReviews/AccessClassificationAndVarianceTests.cs"
+      ],
+      "requiredTests": [
+        "ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange",
+        "ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision",
+        "ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity",
+        "ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof",
+        "ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome"
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "AccessExpectationView",
+        "firstHttpStatus": 200,
+        "terminalResultType": "AccessExpectationView"
+      },
+      "expectedRevisionScope": {
+        "field": "ExpectedRevision",
+        "owner": "AccessExpectation",
+        "counter": "logical ResourceRevision of this owner",
+        "nullableInternalRule": null
+      }
+    }
+  ]
+}

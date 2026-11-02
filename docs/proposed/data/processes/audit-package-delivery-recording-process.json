@@ -1,0 +1,17 @@
+{
+  "process": "AuditPackageDeliveryRecordingProcess",
+  "rootSourceEvents": [
+    "AuditPackageDeliveryAdmitted"
+  ],
+  "ordered": false,
+  "stages": [
+    {
+      "stage": "materialize",
+      "receivers": [
+        "MaterializeRecordedAuditPackageDelivery"
+      ],
+      "rule": null
+    }
+  ],
+  "abort": []
+}

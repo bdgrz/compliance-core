@@ -1,0 +1,616 @@
+{
+  "owner": "FirmProfessionalDutyDesignation",
+  "selectedContracts": [
+    {
+      "command": "RecordFirmProfessionalDutyDesignation",
+      "logicalIdentity": {
+        "field": "AssertionId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "one immutable signed authority assertion; verified AssertionId must match the signed assertion"
+      },
+      "fields": [
+        {
+          "name": "AssertionId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "DesignationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "SignedAssertion",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true
+        }
+      ],
+      "responseContract": {
+        "mode": "async_fixed_ack",
+        "responseType": "OperationAcceptedResponse",
+        "firstHttpStatus": 202,
+        "terminalResultType": "FirmProfessionalDutyDesignationView"
+      },
+      "http": [
+        {
+          "method": "PUT",
+          "path": "/api/v1/platform/firm-professional-duties/{designation_id}/assertions/{assertion_id}",
+          "policy": "existing platform firm-duty authorizer + signed assertion verifier"
+        }
+      ],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
+        "jsonPointer": "/commands/103",
+        "line": 12043,
+        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
+      },
+      "kind": "http"
+    },
+    {
+      "command": "RevokeFirmProfessionalDutyDesignation",
+      "logicalIdentity": {
+        "field": "AssertionId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "one immutable signed authority assertion; verified AssertionId must match the signed assertion"
+      },
+      "fields": [
+        {
+          "name": "AssertionId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "DesignationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "SignedAssertion",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true
+        }
+      ],
+      "responseContract": {
+        "mode": "async_fixed_ack",
+        "responseType": "OperationAcceptedResponse",
+        "firstHttpStatus": 202,
+        "terminalResultType": "FirmProfessionalDutyDesignationView"
+      },
+      "http": [
+        {
+          "method": "PUT",
+          "path": "/api/v1/platform/firm-professional-duties/{designation_id}/assertion-revocations/{assertion_id}",
+          "policy": "existing platform firm-duty authorizer + signed assertion verifier"
+        }
+      ],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
+        "jsonPointer": "/commands/148",
+        "line": 17265,
+        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
+      },
+      "kind": "http"
+    },
+    {
+      "command": "RejectProfessionalDutyChange",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "rule": "abort receiver identity bound to the exact admitted operation and generation: exact redelivery resolves the original rejected result; an abort after a terminal outcome is a no-op"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "OperationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Target",
+          "type": "EventStreamAddress",
+          "required": true
+        },
+        {
+          "name": "Generation",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "FailureProof",
+          "type": "ImmutableContentRef",
+          "required": true
+        }
+      ],
+      "responseContract": null,
+      "http": null,
+      "source": {
+        "path": "docs/product/audits/2026-10-23/source-admission-contracts.json",
+        "jsonPointer": "/contracts/24",
+        "line": 1481,
+        "sha256": "f1d549ed0879c816cb26e86879f8fa658dab0a8acbf7c591e4d4aed40483f8ae"
+      },
+      "kind": "abort"
+    },
+    {
+      "command": "ApplyProfessionalDutyChange",
+      "kind": "receiver",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "reactor",
+        "rule": "deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Source",
+          "type": "SourceFactProof<ProfessionalAssertionIdentityClaimed>",
+          "required": true
+        },
+        {
+          "name": "Target",
+          "type": "EventStreamAddress",
+          "required": true
+        },
+        {
+          "name": "OperationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Generation",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long?",
+          "required": true
+        },
+        {
+          "name": "Intent",
+          "type": "ImmutableContentRef",
+          "required": true,
+          "contentSchema": "ProfessionalDutyChangeIntent"
+        },
+        {
+          "name": "DesignationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "AssertionId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "StaffEligibilityUse",
+          "type": "SourceFactProof<FirmStaffProfessionalDutyUseAuthorized>?",
+          "required": true
+        }
+      ],
+      "reactor": "ProfessionalDesignationApplicationReactor",
+      "sourceOwner": "ProfessionalAssertionIdentityClaim",
+      "sourceEvents": [
+        "ProfessionalAssertionIdentityClaimed"
+      ],
+      "guard": "Match accepted change and monotonic predecessor signed authority revision. For recording, require exact granted active canonical staff proof bound to this change and held through FirmProfessionalDutyDesignationRecorded. Revocation does not require active staff. A local rejection fence forbids delayed apply; signed validity uses the frozen declared decision instant.",
+      "eventsEmitted": [
+        "FirmProfessionalDutyDesignationRecorded",
+        "FirmProfessionalDutyDesignationRevoked"
+      ],
+      "effectKind": "apply_professional_duty_change",
+      "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
+      "handler": "ApplyProfessionalDutyChangeHandler",
+      "http": [],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
+        "recorded": "2026-10-29"
+      }
+    },
+    {
+      "command": "AuthorizeFirmProfessionalDutyDesignationEngagementUse",
+      "kind": "receiver",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "reactor",
+        "rule": "deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Source",
+          "type": "AuthorizeFirmProfessionalDutyDesignationEngagementUseSourceProof",
+          "required": true
+        },
+        {
+          "name": "Target",
+          "type": "EventStreamAddress",
+          "required": true
+        },
+        {
+          "name": "OperationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Generation",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long?",
+          "required": true
+        },
+        {
+          "name": "Intent",
+          "type": "ImmutableContentRef",
+          "required": true,
+          "contentSchema": "SourceUseAuthorizationIntent"
+        },
+        {
+          "name": "SourceOwnerId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "SourceContentEventId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectedContentRevision",
+          "type": "ulong",
+          "required": true
+        },
+        {
+          "name": "EngagementId",
+          "type": "Uuid",
+          "required": true
+        }
+      ],
+      "reactor": "EngagementFirmProfessionalDutyDesignationUseReactor",
+      "sourceOwner": "ServiceEngagementIndependence",
+      "sourceEvents": [
+        "ServiceEngagementAcceptanceRequested",
+        "ServiceEngagementStaffAssignmentRequested",
+        "EngagementPersonalDecisionAdmitted"
+      ],
+      "guard": "Match exact frozen current eligibility/rule/ratification fact under this owner guard. Status/revocation/version changes conflict while granted; hold through irreversible engagement authorization. Deny stale/expired/future/wrong-subject scope.  Use events do not advance public ResourceRevision; the exact content-event identity and metadata owner version remain separate. For this source event, fan out only requirements of kind partner_evaluation; management acknowledgement does not fabricate firm-partner authority.",
+      "eventsEmitted": [
+        "FirmProfessionalDutyDesignationEngagementUseAuthorized"
+      ],
+      "effectKind": "authorize_firm_professional_duty_designation_engagement_use",
+      "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
+      "handler": "AuthorizeFirmProfessionalDutyDesignationEngagementUseHandler",
+      "http": [],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
+        "recorded": "2026-10-29"
+      }
+    },
+    {
+      "command": "SettleFirmProfessionalDutyDesignationEngagementUse",
+      "kind": "receiver",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "reactor",
+        "rule": "deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Source",
+          "type": "SettleFirmProfessionalDutyDesignationEngagementUseSourceProof",
+          "required": true
+        },
+        {
+          "name": "Target",
+          "type": "EventStreamAddress",
+          "required": true
+        },
+        {
+          "name": "OperationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Generation",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long?",
+          "required": true
+        },
+        {
+          "name": "Intent",
+          "type": "ImmutableContentRef",
+          "required": true,
+          "contentSchema": "SourceUseAuthorizationIntent"
+        },
+        {
+          "name": "SourceOwnerId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "EngagementId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Disposition",
+          "type": "SourceUseSettlementDisposition",
+          "required": true
+        }
+      ],
+      "reactor": "EngagementFirmProfessionalDutyDesignationUseSettlementReactor",
+      "sourceOwner": "ServiceEngagementIndependence",
+      "sourceEvents": [
+        "EngagementPracticeCommitmentsAuthorized",
+        "ServiceEngagementAcceptanceRejected",
+        "ServiceEngagementStaffAssignmentRejected",
+        "EngagementPersonalDecisionAuthorized",
+        "EngagementPersonalDecisionCanceled"
+      ],
+      "guard": "Release only exact matching use after immutable irreversible authorization or pre-authorization rejection fence. Terminal settlement also fences delayed grant; source may change after irreversible decision, immediately invalidating old eligibility in authoritative composed reads. Derive Disposition from the proven terminal source: parent_closed installs its generation closure fence, canceled clears only this use after parent fence, irreversible_decision releases the pinned source after historical decision. Never clear a use into an unrestricted writable child after parent closure.",
+      "eventsEmitted": [
+        "FirmProfessionalDutyDesignationEngagementUseSettled"
+      ],
+      "effectKind": "settle_firm_professional_duty_designation_engagement_use",
+      "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
+      "handler": "SettleFirmProfessionalDutyDesignationEngagementUseHandler",
+      "http": [],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
+        "recorded": "2026-10-29"
+      }
+    }
+  ],
+  "sourceContractEvidence": [
+    {
+      "command": "RecordFirmProfessionalDutyDesignation",
+      "status": "target_contract",
+      "sourceContract": "src/Compliance.Common/Features/AccessControl/RecordFirmProfessionalDutyDesignation.cs",
+      "sourceHandlers": [
+        {
+          "name": "RecordFirmProfessionalDutyDesignationHandler",
+          "source": "src/Compliance.Core/Features/AccessControl/RecordFirmProfessionalDutyDesignationHandler.cs",
+          "registered": true
+        }
+      ],
+      "handler": "RecordFirmProfessionalDutyDesignationHandler",
+      "sourceRoots": [
+        "FirmProfessionalDutyCatalog"
+      ],
+      "owner": "FirmProfessionalDutyDesignation",
+      "logicalIdentity": {
+        "field": "AssertionId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "one immutable signed authority assertion; verified AssertionId must match the signed assertion"
+      },
+      "fields": [
+        {
+          "name": "AssertionId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "DesignationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "SignedAssertion",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true
+        }
+      ],
+      "http": [
+        {
+          "method": "PUT",
+          "path": "/api/v1/platform/firm-professional-duties/{designation_id}/assertions/{assertion_id}",
+          "policy": "existing platform firm-duty authorizer + signed assertion verifier"
+        }
+      ],
+      "mcp": false,
+      "entryPoint": "authorized_http",
+      "authorizerSources": [
+        "src/Compliance.Core/Features/AccessControl/ProfessionalDutyAdministrationAuthorizer.cs"
+      ],
+      "events": [
+        "ProfessionalDutyChangeAccepted"
+      ],
+      "protocols": [
+        "Signed assertion claims and duty-scope designation"
+      ],
+      "guardOrder": [
+        "bind_required_ids",
+        "authenticate_authorize",
+        "canonicalize_authored_intent",
+        "resolve_native_operation_facts",
+        "compare_owner_episode_actor_kind_intent_original_revision",
+        "validate_new_owner_revision_and_source_permits",
+        "append_complete_concrete_attributed_batch"
+      ],
+      "policyPreservation": "All current source handler/aggregate validation rules and source test expectations apply, except the explicit contractChanges and boundary protocol. Lifetime caps and technical attempt events are removed with their structural replacement.",
+      "contractChanges": [
+        "Rename ExpectedSequence to ExpectedRevision and compare the new target owner revision.",
+        "AssertionId is required and must equal the verified signed assertion identity; DesignationId cannot identify repeated refresh/revocation assertions."
+      ],
+      "existingTests": [
+        "test/Compliance.Tests/Features/AccessControl/ProfessionalDutyGovernanceCompositionTests.cs"
+      ],
+      "requiredTests": [
+        "ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange",
+        "ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision",
+        "ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity",
+        "ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof",
+        "ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome"
+      ],
+      "responseContract": {
+        "mode": "async_fixed_ack",
+        "responseType": "OperationAcceptedResponse",
+        "firstHttpStatus": 202,
+        "terminalResultType": "FirmProfessionalDutyDesignationView"
+      },
+      "expectedRevisionScope": {
+        "field": "ExpectedRevision",
+        "owner": "FirmProfessionalDutyDesignation",
+        "counter": "logical ResourceRevision of this owner",
+        "nullableInternalRule": null
+      }
+    },
+    {
+      "command": "RevokeFirmProfessionalDutyDesignation",
+      "status": "target_contract",
+      "sourceContract": "src/Compliance.Common/Features/AccessControl/RevokeFirmProfessionalDutyDesignation.cs",
+      "sourceHandlers": [
+        {
+          "name": "RevokeFirmProfessionalDutyDesignationHandler",
+          "source": "src/Compliance.Core/Features/AccessControl/RevokeFirmProfessionalDutyDesignationHandler.cs",
+          "registered": true
+        }
+      ],
+      "handler": "RevokeFirmProfessionalDutyDesignationHandler",
+      "sourceRoots": [
+        "FirmProfessionalDutyCatalog"
+      ],
+      "owner": "FirmProfessionalDutyDesignation",
+      "logicalIdentity": {
+        "field": "AssertionId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "one immutable signed authority assertion; verified AssertionId must match the signed assertion"
+      },
+      "fields": [
+        {
+          "name": "AssertionId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "DesignationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "SignedAssertion",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true
+        }
+      ],
+      "http": [
+        {
+          "method": "PUT",
+          "path": "/api/v1/platform/firm-professional-duties/{designation_id}/assertion-revocations/{assertion_id}",
+          "policy": "existing platform firm-duty authorizer + signed assertion verifier"
+        }
+      ],
+      "mcp": false,
+      "entryPoint": "authorized_http",
+      "authorizerSources": [
+        "src/Compliance.Core/Features/AccessControl/ProfessionalDutyAdministrationAuthorizer.cs"
+      ],
+      "events": [
+        "ProfessionalDutyChangeAccepted"
+      ],
+      "protocols": [
+        "Signed assertion claims and duty-scope designation"
+      ],
+      "guardOrder": [
+        "bind_required_ids",
+        "authenticate_authorize",
+        "canonicalize_authored_intent",
+        "resolve_native_operation_facts",
+        "compare_owner_episode_actor_kind_intent_original_revision",
+        "validate_new_owner_revision_and_source_permits",
+        "append_complete_concrete_attributed_batch"
+      ],
+      "policyPreservation": "All current source handler/aggregate validation rules and source test expectations apply, except the explicit contractChanges and boundary protocol. Lifetime caps and technical attempt events are removed with their structural replacement.",
+      "contractChanges": [
+        "Rename ExpectedSequence to ExpectedRevision and compare the new target owner revision.",
+        "AssertionId is required and must equal the verified signed assertion identity; DesignationId cannot identify repeated refresh/revocation assertions."
+      ],
+      "existingTests": [
+        "test/Compliance.Tests/Features/AccessControl/ProfessionalDutyGovernanceCompositionTests.cs"
+      ],
+      "requiredTests": [
+        "ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange",
+        "ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision",
+        "ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity",
+        "ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof",
+        "ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome"
+      ],
+      "responseContract": {
+        "mode": "async_fixed_ack",
+        "responseType": "OperationAcceptedResponse",
+        "firstHttpStatus": 202,
+        "terminalResultType": "FirmProfessionalDutyDesignationView"
+      },
+      "expectedRevisionScope": {
+        "field": "ExpectedRevision",
+        "owner": "FirmProfessionalDutyDesignation",
+        "counter": "logical ResourceRevision of this owner",
+        "nullableInternalRule": null
+      }
+    }
+  ]
+}

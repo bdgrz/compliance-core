@@ -1,0 +1,70 @@
+{
+  "process": "BulkAccessDecisionProcess",
+  "rootSourceEvents": [
+    "AccessReviewDecisionBatchAdmitted"
+  ],
+  "ordered": true,
+  "stages": [
+    {
+      "stage": "materialize",
+      "receivers": [
+        "MaterializeAccessReviewDecisionBatch"
+      ],
+      "rule": null
+    },
+    {
+      "stage": "reserve",
+      "receivers": [
+        "ReserveAccessReviewItemDecision"
+      ],
+      "rule": "All selected items in canonical order before any apply."
+    },
+    {
+      "stage": "apply",
+      "receivers": [
+        "ApplyAccessReviewItemDecision"
+      ],
+      "rule": "All items; provisional and hidden."
+    },
+    {
+      "stage": "publish",
+      "receivers": [
+        "PublishAccessReviewDecisionBatch"
+      ],
+      "rule": "One publication fact."
+    },
+    {
+      "stage": "settle",
+      "receivers": [
+        "SettleAccessReviewItemDecision"
+      ],
+      "rule": null
+    }
+  ],
+  "abort": [
+    "CancelAccessReviewDecisionBatch"
+  ],
+  "abortStages": [
+    {
+      "stage": "fence",
+      "receivers": [
+        "FenceAccessReviewItemDecision"
+      ],
+      "rule": "Every item, including not-yet-acquired holds."
+    },
+    {
+      "stage": "complete",
+      "receivers": [
+        "CompleteAccessReviewDecisionBatchCancellation"
+      ],
+      "rule": null
+    },
+    {
+      "stage": "settle",
+      "receivers": [
+        "SettleAccessReviewItemDecision"
+      ],
+      "rule": null
+    }
+  ]
+}

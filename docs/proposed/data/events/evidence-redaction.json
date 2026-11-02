@@ -1,0 +1,53 @@
+{
+  "owner": "EvidenceRedaction",
+  "events": [
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:EvidenceRedactionApproved",
+        "event": "EvidenceRedactionApprovedV2",
+        "emissionKind": "business",
+        "owners": [
+          "EvidenceRedaction"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": false,
+        "targetConcreteType": "EvidenceRedactionApprovedV2",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.evidence.redaction.approved",
+          "version": 2
+        },
+        "wireQualification": "Wire matches the declared record in src/Compliance.Common/Features/Evidence/Events/EvidenceRedactionApprovedV2.cs at 60029b8f.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "retained_current_schema_native_qualification_required",
+        "sourceStatus": "declared",
+        "meaning": "Native personal approval of an exact preparation and observed available derivative.",
+        "meaningSource": "record summary in src/Compliance.Common/Features/Evidence/Events/EvidenceRedactionApprovedV2.cs"
+      },
+      "schema": null
+    },
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:EvidenceRedactionPrepared",
+        "event": "EvidenceRedactionPreparedV2",
+        "emissionKind": "business",
+        "owners": [
+          "EvidenceRedaction"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": false,
+        "targetConcreteType": "EvidenceRedactionPreparedV2",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.evidence.redaction.prepared",
+          "version": 2
+        },
+        "wireQualification": "Wire matches the declared record in src/Compliance.Common/Features/Evidence/Events/EvidenceRedactionPreparedV2.cs at 60029b8f.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "retained_current_schema_native_qualification_required",
+        "sourceStatus": "declared",
+        "meaning": "Native preparation with exact source qualification and frozen original result; occupied inline v1 remains legacy.",
+        "meaningSource": "record summary in src/Compliance.Common/Features/Evidence/Events/EvidenceRedactionPreparedV2.cs"
+      },
+      "schema": null
+    }
+  ]
+}

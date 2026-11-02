@@ -1,0 +1,168 @@
+# MethodologyTemplate events
+
+Canonical events: **5**. Complete canonical event and available schema records: [owner event JSON](../data/events/methodology-template.json).
+
+| Event | Kind | Adopted discriminator | Version | Schema fields | Meaning |
+| --- | --- | --- | --- | --- | --- |
+| MethodologyTemplateCreated | business | bdgrz.methodologytemplates.methodology-template-created | 3 | [Placeholder: schema absent] | A methodology template was created with its first authored version by a named author, awaiting review and publication. |
+| MethodologyTemplateDraftReviewed | business | bdgrz.methodologytemplates.methodology-template-draft-reviewed | 3 | [Placeholder: schema absent] | A compact native MethodologyTemplateDraftReviewed delta; authored bodies and historical versions are immutable content. |
+| MethodologyTemplateDraftRevised | business | bdgrz.methodologytemplates.methodology-template-draft-revised | 3 | [Placeholder: schema absent] | A compact native MethodologyTemplateDraftRevised delta; authored bodies and historical versions are immutable content. |
+| MethodologyTemplateRetired | business | bdgrz.methodologytemplates.methodology-template-retired | 3 | [Placeholder: schema absent] | An active published methodology template was retired by a named member, ending its availability while its historical versions remain. |
+| MethodologyTemplateVersionPublished | business | bdgrz.methodologytemplates.methodology-template-version-published | 3 | [Placeholder: schema absent] | A compact native MethodologyTemplateVersionPublished delta; authored bodies and historical versions are immutable content. |
+
+## Event details
+
+### MethodologyTemplateCreated
+
+| Canonical event detail | Value |
+| --- | --- |
+| Canonical semantic key | event:MethodologyTemplateCreated |
+| Owner selection | one exact canonical authority owner |
+| Target concrete type | MethodologyTemplateCreated |
+| Adopted wire | `{"discriminator":"bdgrz.methodologytemplates.methodology-template-created","version":3}` |
+| Wire qualification | Wire matches the declared record in src/Compliance.Common/Features/MethodologyTemplates/Events/MethodologyTemplateCreated.cs at 60029b8f. |
+| Schema status | retained_current_schema_native_qualification_required |
+| Source status | declared |
+| Adopted decision IDs | None listed |
+| Superseded selected wire | [Placeholder: value not recorded] |
+| Meaning | A methodology template was created with its first authored version by a named author, awaiting review and publication. |
+| Meaning source | authored 2026-10-29 from src/Compliance.Common/Features/MethodologyTemplates/Events/MethodologyTemplateCreated.cs |
+
+#### Schema
+
+[Placeholder: no selected payload schema matches this canonical event.]
+
+[Placeholder: selected top-level schema fields are not recorded.]
+
+[Placeholder: no nested content schemas are recorded.]
+
+[Placeholder: no resolved intent schema is recorded.]
+
+#### Choreography references
+
+[Placeholder: no selected choreography row names this event as root, prerequisite, or emitted fact.]
+
+### MethodologyTemplateDraftReviewed
+
+| Canonical event detail | Value |
+| --- | --- |
+| Canonical semantic key | event:MethodologyTemplateDraftReviewed |
+| Owner selection | one exact canonical authority owner |
+| Target concrete type | MethodologyTemplateDraftReviewed |
+| Adopted wire | `{"discriminator":"bdgrz.methodologytemplates.methodology-template-draft-reviewed","version":3}` |
+| Wire qualification | Wire matches the declared record in src/Compliance.Common/Features/MethodologyTemplates/Events/MethodologyTemplateDraftReviewed.cs at 60029b8f. |
+| Schema status | retained_current_schema_native_qualification_required |
+| Source status | declared |
+| Adopted decision IDs | None listed |
+| Superseded selected wire | [Placeholder: value not recorded] |
+| Meaning | A compact native MethodologyTemplateDraftReviewed delta; authored bodies and historical versions are immutable content. |
+| Meaning source | record summary in src/Compliance.Common/Features/MethodologyTemplates/Events/MethodologyTemplateDraftReviewed.cs |
+
+#### Schema
+
+[Placeholder: no selected payload schema matches this canonical event.]
+
+[Placeholder: selected top-level schema fields are not recorded.]
+
+[Placeholder: no nested content schemas are recorded.]
+
+[Placeholder: no resolved intent schema is recorded.]
+
+#### Choreography references
+
+[Placeholder: no selected choreography row names this event as root, prerequisite, or emitted fact.]
+
+### MethodologyTemplateDraftRevised
+
+| Canonical event detail | Value |
+| --- | --- |
+| Canonical semantic key | event:MethodologyTemplateDraftRevised |
+| Owner selection | one exact canonical authority owner |
+| Target concrete type | MethodologyTemplateDraftRevised |
+| Adopted wire | `{"discriminator":"bdgrz.methodologytemplates.methodology-template-draft-revised","version":3}` |
+| Wire qualification | Wire matches the declared record in src/Compliance.Common/Features/MethodologyTemplates/Events/MethodologyTemplateDraftRevised.cs at 60029b8f. |
+| Schema status | retained_current_schema_native_qualification_required |
+| Source status | declared |
+| Adopted decision IDs | None listed |
+| Superseded selected wire | [Placeholder: value not recorded] |
+| Meaning | A compact native MethodologyTemplateDraftRevised delta; authored bodies and historical versions are immutable content. |
+| Meaning source | record summary in src/Compliance.Common/Features/MethodologyTemplates/Events/MethodologyTemplateDraftRevised.cs |
+
+#### Schema
+
+[Placeholder: no selected payload schema matches this canonical event.]
+
+[Placeholder: selected top-level schema fields are not recorded.]
+
+[Placeholder: no nested content schemas are recorded.]
+
+[Placeholder: no resolved intent schema is recorded.]
+
+#### Choreography references
+
+[Placeholder: no selected choreography row names this event as root, prerequisite, or emitted fact.]
+
+### MethodologyTemplateRetired
+
+| Canonical event detail | Value |
+| --- | --- |
+| Canonical semantic key | event:MethodologyTemplateRetired |
+| Owner selection | one exact canonical authority owner |
+| Target concrete type | MethodologyTemplateRetired |
+| Adopted wire | `{"discriminator":"bdgrz.methodologytemplates.methodology-template-retired","version":3}` |
+| Wire qualification | Wire matches the declared record in src/Compliance.Common/Features/MethodologyTemplates/Events/MethodologyTemplateRetired.cs at 60029b8f. |
+| Schema status | retained_current_schema_native_qualification_required |
+| Source status | declared |
+| Adopted decision IDs | None listed |
+| Superseded selected wire | [Placeholder: value not recorded] |
+| Meaning | An active published methodology template was retired by a named member, ending its availability while its historical versions remain. |
+| Meaning source | authored 2026-10-29 from src/Compliance.Common/Features/MethodologyTemplates/Events/MethodologyTemplateRetired.cs |
+
+#### Schema
+
+[Placeholder: no selected payload schema matches this canonical event.]
+
+[Placeholder: selected top-level schema fields are not recorded.]
+
+[Placeholder: no nested content schemas are recorded.]
+
+[Placeholder: no resolved intent schema is recorded.]
+
+#### Choreography references
+
+[Placeholder: no selected choreography row names this event as root, prerequisite, or emitted fact.]
+
+### MethodologyTemplateVersionPublished
+
+| Canonical event detail | Value |
+| --- | --- |
+| Canonical semantic key | event:MethodologyTemplateVersionPublished |
+| Owner selection | one exact canonical authority owner |
+| Target concrete type | MethodologyTemplateVersionPublished |
+| Adopted wire | `{"discriminator":"bdgrz.methodologytemplates.methodology-template-version-published","version":3}` |
+| Wire qualification | Wire matches the declared record in src/Compliance.Common/Features/MethodologyTemplates/Events/MethodologyTemplateVersionPublished.cs at 60029b8f. |
+| Schema status | retained_current_schema_native_qualification_required |
+| Source status | declared |
+| Adopted decision IDs | None listed |
+| Superseded selected wire | [Placeholder: value not recorded] |
+| Meaning | A compact native MethodologyTemplateVersionPublished delta; authored bodies and historical versions are immutable content. |
+| Meaning source | record summary in src/Compliance.Common/Features/MethodologyTemplates/Events/MethodologyTemplateVersionPublished.cs |
+
+#### Schema
+
+[Placeholder: no selected payload schema matches this canonical event.]
+
+[Placeholder: selected top-level schema fields are not recorded.]
+
+[Placeholder: no nested content schemas are recorded.]
+
+[Placeholder: no resolved intent schema is recorded.]
+
+#### Choreography references
+
+[Placeholder: no selected choreography row names this event as root, prerequisite, or emitted fact.]
+
+
+
+
+[Placeholder: consumers and lifecycle ordering are not fully captured by the event inventory.]

@@ -1,0 +1,68 @@
+# AccessReviewCampaign
+
+- Classification: `business_governor`
+- Source area: `AccessReviews` (derived from source path; not a bounded-context ruling).
+- Business aggregate: `true`
+- Selected status: `SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED`
+
+## Identity and invariant
+
+**Selected identity:** Tenant-scoped campaignId; `CampaignId` on `LaunchAccessReviewCampaign` is the caller-supplied immutable creation identity (exact immutable creation retry) so an exact retry resolves the original result and a different id is a different record; later mutations use CommandId bound to this identity and the expected revision.
+
+**Invariant:** Frozen campaign snapshot, generation, and compact completion gate.
+
+**Additional decision rule:** [Placeholder: no owner-specific decision rule is recorded.]
+
+**Must preserve:** Keep reviewer and remediation owner distinct per item unless exact waiver; no stale projected summary may satisfy completion.
+
+**Replay:** Current required authorization precedes replay; exact authorized retries resolve the original accepted result using the selected logical identity and immutable actor/intent/source binding. Fresh mutable feasibility, clock selection and body preparation cannot replace that original result. Expected revision is concurrency precondition, not a new identity.
+
+**Lifecycle:** [Placeholder: a consolidated lifecycle sequence is not present in the selected owner record.]
+
+## Commands
+
+| Command | Kind | Identity field |
+| --- | --- | --- |
+| [CompleteAccessReviewCampaign](../commands/access-review-campaign.md#completeaccessreviewcampaign) | http | CommandId |
+| [LaunchAccessReviewCampaign](../commands/access-review-campaign.md#launchaccessreviewcampaign) | http | CampaignId |
+| [RecordBulkAccessDecision](../commands/access-review-campaign.md#recordbulkaccessdecision) | http | DecisionBatchId |
+| [AbortAccessReviewCampaignCompletion](../commands/access-review-campaign.md#abortaccessreviewcampaigncompletion) | abort | CommandId |
+| [CompleteAccessReviewCampaignClosure](../commands/access-review-campaign.md#completeaccessreviewcampaignclosure) | receiver | CommandId |
+
+## Events
+
+| Event | Discriminator | Version |
+| --- | --- | --- |
+| [AccessReviewCampaignCompleted](../events/access-review-campaign.md#accessreviewcampaigncompleted) | bdgrz.access_review.campaign.completed | 2 |
+| [AccessReviewCampaignCompletionAccepted](../events/access-review-campaign.md#accessreviewcampaigncompletionaccepted) | bdgrz.access-review-campaign.access-review-campaign-completion-accepted | 1 |
+| [AccessReviewCampaignCompletionCanceled](../events/access-review-campaign.md#accessreviewcampaigncompletioncanceled) | bdgrz.access-review-campaign.access-review-campaign-completion-canceled | 1 |
+| [AccessReviewCampaignLaunched](../events/access-review-campaign.md#accessreviewcampaignlaunched) | bdgrz.access_review.campaign.launched | 2 |
+| [AccessReviewDecisionBatchAdmitted](../events/access-review-campaign.md#accessreviewdecisionbatchadmitted) | bdgrz.access-review-campaign.access-review-decision-batch-admitted | 1 |
+
+## Cross-owner flows
+
+| Row | Kind | Source owner | Target owner | Command |
+| --- | --- | --- | --- | --- |
+| [T008](../reactors/access-review-launch-fan-out-reactor.md#t008) | reaction_or_regular_process_stage | AccessReviewCampaign | AccessReviewItem | MaterializeAccessReviewItem |
+| [T059](../reactors/access-review-completion-reactor.md#t059) | reaction_or_regular_process_stage | AccessReviewCampaign | AccessReviewItem | AuthorizeAccessReviewItemCampaignCompletionUse |
+| [T060](../reactors/access-review-completion-reactor.md#t060) | reaction_or_regular_process_stage | AccessReviewCampaign | AccessReviewItem | SettleAccessReviewItemCampaignCompletionUse |
+| [T073](../reactors/access-review-completion-reactor.md#t073) | reaction_or_regular_process_stage | AccessReviewCampaign | AccessReviewCampaign | CompleteAccessReviewCampaignClosure |
+| [T086](../reactors/access-review-bulk-admission-reactor.md#t086) | reaction_or_regular_process_stage | AccessReviewCampaign | AccessReviewDecisionBatch | MaterializeAccessReviewDecisionBatch |
+| [A005](../reactors/unassigned-architecture-rows.md#a005) | process_abort_binding | AccessReviewCampaign | AccessReviewDecisionBatch | CancelAccessReviewDecisionBatch |
+| [A006](../reactors/unassigned-architecture-rows.md#a006) | process_abort_binding | AccessReviewCampaign | AccessReviewCampaign | AbortAccessReviewCampaignCompletion |
+
+## Product rules
+
+[Placeholder: product-rule traceability is not recorded for this owner.]
+
+## Adopted architecture decisions
+
+[Placeholder: no adopted architecture-decision reference is recorded.]
+
+## Evidence and complete record
+
+- Baseline source: [Placeholder: source file is not present in this checkout]
+- Aggregate review: [access-review-campaign-review-2026-10-29.md](../../product/definitive-aggregate-choreography/access-review-campaign-review-2026-10-29.md)
+- Full selected record: [JSON](../data/aggregates/access-review-campaign.json)
+
+> Target definition is separate from runtime qualification. Implementation status recorded by the source: `SEPARATE_VERIFICATION_REQUIRED_IMPLEMENTATION_HALTED`.

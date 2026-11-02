@@ -1,0 +1,451 @@
+{
+  "owner": "TenantIdentityProvider",
+  "origin": "retained_baseline",
+  "baselineOwners": [
+    "TenantIdentityProvider"
+  ],
+  "declaredIdentity": "Tenant+providerConnectionId; expectedRevision. TestKey/pending retry and result intent checks exist; Configure after revisions and older rotation retries not uniformly recognized.",
+  "invariant": "Connection enables only with successful test of current credential epoch; rotation invalidates pending/old result; disabled connection stays terminal.",
+  "boundaryDecision": "narrow",
+  "boundaryRationale": "Credential epoch and activation decision must remain authoritative together. Test attempt lifecycle/history can be separate via explicit admission/epoch proof.",
+  "sources": [
+    {
+      "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
+      "jsonPointer": "/aggregates/86",
+      "line": 53842,
+      "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
+    }
+  ],
+  "baselineSourcePath": "src/Compliance.Core/Features/UserIdentities/TenantIdentityProvider.cs",
+  "baselineEvents": [
+    "TenantIdentityProviderConfigured",
+    "TenantIdentityProviderCredentialsRotated",
+    "TenantIdentityProviderDisabled",
+    "TenantIdentityProviderTestRequested",
+    "TenantIdentityProviderTested"
+  ],
+  "classification": "business_aggregate",
+  "businessAggregate": true,
+  "implementationStatus": "SEPARATE_VERIFICATION_REQUIRED_IMPLEMENTATION_HALTED",
+  "identityReadingRule": "selectedIdentitySummary and exact selectedCommandContracts define intended identity. baselineIdentityObservation/declaredIdentity retain older source observations only, including old replay defects; they are not target behavior or authorization to change an occupied key.",
+  "selectedCommandContracts": [
+    {
+      "command": "ConfigureTenantIdentityProvider",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "rule": "CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ProviderConnectionId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Issuer",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "ClientId",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "EncryptedCredentialReference",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "AllowedAudiences",
+          "type": "IReadOnlyList<string>",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true
+        }
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "Unit",
+        "firstHttpStatus": 200,
+        "terminalResultType": "Unit"
+      },
+      "http": [
+        {
+          "method": "PUT",
+          "path": "/api/v1/tenants/{tenant_id}/identity-providers/{provider_connection_id}/{command_id}",
+          "authorizationPolicy": "ComplianceAuthorizationPolicies.ApiUser"
+        }
+      ],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
+        "jsonPointer": "/contracts/40",
+        "line": 3158,
+        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
+      },
+      "kind": "http"
+    },
+    {
+      "command": "DisableTenantIdentityProvider",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "rule": "CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ProviderConnectionId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "Rationale",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "Unit",
+        "firstHttpStatus": 200,
+        "terminalResultType": "Unit"
+      },
+      "http": [
+        {
+          "method": "PUT",
+          "path": "/api/v1/tenants/{tenant_id}/identity-providers/{provider_connection_id}/disable/{command_id}",
+          "authorizationPolicy": "ComplianceAuthorizationPolicies.ApiUser"
+        }
+      ],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
+        "jsonPointer": "/contracts/67",
+        "line": 5045,
+        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
+      },
+      "kind": "http"
+    },
+    {
+      "command": "RecordTenantIdentityProviderTestResult",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "rule": "CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ProviderConnectionId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "TestRequestEventId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Result",
+          "type": "TenantIdentityProviderTestResultContent",
+          "required": true
+        },
+        {
+          "name": "CompletedAt",
+          "type": "DateTimeOffset",
+          "required": true
+        }
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "Unit",
+        "firstHttpStatus": 200,
+        "terminalResultType": "Unit"
+      },
+      "http": [],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
+        "jsonPointer": "/contracts/132",
+        "line": 9955,
+        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
+      },
+      "kind": "command"
+    },
+    {
+      "command": "RotateTenantIdentityProviderCredentials",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "rule": "CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ProviderConnectionId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "EncryptedCredentialReference",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "RotationReference",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true
+        }
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "Unit",
+        "firstHttpStatus": 200,
+        "terminalResultType": "Unit"
+      },
+      "http": [
+        {
+          "method": "PUT",
+          "path": "/api/v1/tenants/{tenant_id}/identity-providers/{provider_connection_id}/credential-rotations/{command_id}",
+          "authorizationPolicy": "ComplianceAuthorizationPolicies.ApiUser"
+        }
+      ],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
+        "jsonPointer": "/contracts/190",
+        "line": 14298,
+        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
+      },
+      "kind": "http"
+    },
+    {
+      "command": "TestTenantIdentityProvider",
+      "logicalIdentity": {
+        "field": "TestKey",
+        "type": "Uuid",
+        "required": true,
+        "rule": "caller-supplied immutable creation identity: an exact retry with the same id and authored intent returns the original result; the same id with changed intent is refused; a different id is a different record"
+      },
+      "fields": [
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ProviderConnectionId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "TestKey",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "Unit",
+        "firstHttpStatus": 200,
+        "terminalResultType": "Unit"
+      },
+      "http": [
+        {
+          "method": "PUT",
+          "path": "/api/v1/tenants/{tenant_id}/identity-providers/{provider_connection_id}/tests/{test_key}",
+          "authorizationPolicy": "ComplianceAuthorizationPolicies.ApiUser"
+        }
+      ],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
+        "jsonPointer": "/contracts/199",
+        "line": 14910,
+        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
+      },
+      "kind": "http"
+    }
+  ],
+  "eventAuthority": "selected_final_event_catalog",
+  "events": [
+    {
+      "event": "TenantIdentityProviderConfigured",
+      "discriminator": "bdgrz.useridentities.tenant-identity-provider-configured",
+      "discriminatorVersion": 2,
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
+        "jsonPointer": "/events/290",
+        "line": 39477,
+        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
+      }
+    },
+    {
+      "event": "TenantIdentityProviderCredentialsRotated",
+      "discriminator": "bdgrz.useridentities.tenant-identity-provider-credentials-rotated",
+      "discriminatorVersion": 2,
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
+        "jsonPointer": "/events/291",
+        "line": 39553,
+        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
+      }
+    },
+    {
+      "event": "TenantIdentityProviderTestRequested",
+      "discriminator": "bdgrz.user-identities.tenant-identity-provider-test-requested",
+      "discriminatorVersion": 1,
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
+        "jsonPointer": "/events/292",
+        "line": 39624,
+        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
+      }
+    },
+    {
+      "event": "TenantIdentityProviderTested",
+      "discriminator": "bdgrz.useridentities.tenant-identity-provider-tested",
+      "discriminatorVersion": 3,
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
+        "jsonPointer": "/events/293",
+        "line": 39690,
+        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
+      }
+    },
+    {
+      "event": "TenantIdentityProviderDisabled",
+      "discriminator": "bdgrz.useridentities.tenant-identity-provider-disabled",
+      "discriminatorVersion": 2,
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
+        "jsonPointer": "/events/294",
+        "line": 39756,
+        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
+      }
+    }
+  ],
+  "choreography": [],
+  "status": "SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED",
+  "baselineIdentityObservation": "Tenant+providerConnectionId; expectedRevision. TestKey/pending retry and result intent checks exist; Configure after revisions and older rotation retries not uniformly recognized.",
+  "identityContractRule": "Existing published owner identity/IdFor remains stable. Required typed creation/operation identity and tenant/program/source scope come from the selected signature/protocol references; no context.RequestId minting fallback or guessed new stream key.",
+  "adoptedArchitectureDecisions": [],
+  "selectedIdentityClarification": "Tenant + ProviderConnectionId with immutable tenant binding. Selected CommandId and TestKey bind exact configuration, test, key and rotation episodes.",
+  "selectedIdentitySummary": "Tenant + ProviderConnectionId with immutable tenant binding. Selected CommandId and TestKey bind exact configuration, test, key and rotation episodes.",
+  "baselineIdentityObservationOnly": true,
+  "selectedLogicalIdentityBindings": [
+    {
+      "command": "ConfigureTenantIdentityProvider",
+      "logicalIdentity": "CommandId",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
+        "jsonPointer": "/contracts/40",
+        "line": 3158,
+        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
+      }
+    },
+    {
+      "command": "DisableTenantIdentityProvider",
+      "logicalIdentity": "CommandId",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
+        "jsonPointer": "/contracts/67",
+        "line": 5045,
+        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
+      }
+    },
+    {
+      "command": "RecordTenantIdentityProviderTestResult",
+      "logicalIdentity": "CommandId",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
+        "jsonPointer": "/contracts/132",
+        "line": 9955,
+        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
+      }
+    },
+    {
+      "command": "RotateTenantIdentityProviderCredentials",
+      "logicalIdentity": "CommandId",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
+        "jsonPointer": "/contracts/190",
+        "line": 14298,
+        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
+      }
+    },
+    {
+      "command": "TestTenantIdentityProvider",
+      "logicalIdentity": "TestKey",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
+        "jsonPointer": "/contracts/199",
+        "line": 14910,
+        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
+      }
+    }
+  ],
+  "selectedReplayRule": "Current required authorization precedes replay; exact authorized retries resolve the original accepted result using the selected logical identity and immutable actor/intent/source binding. Fresh mutable feasibility, clock selection and body preparation cannot replace that original result. Expected revision is concurrency precondition, not a new identity."
+}

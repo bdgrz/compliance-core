@@ -1,0 +1,604 @@
+{
+  "owner": "TypeIIPeriod",
+  "selectedContracts": [
+    {
+      "command": "AmendTypeIIPeriodClose",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "rule": "CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ProgramId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "PeriodId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "CloseSnapshotId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "AmendmentReason",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "Unit",
+        "firstHttpStatus": 200,
+        "terminalResultType": "Unit"
+      },
+      "http": [],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
+        "jsonPointer": "/contracts/6",
+        "line": 501,
+        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
+      },
+      "kind": "command"
+    },
+    {
+      "command": "ApproveTypeIIPeriodClose",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "rule": "CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ProgramId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "PeriodId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "Rationale",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "AcknowledgedMaterialItemIds",
+          "type": "IReadOnlyList<Uuid>",
+          "required": true
+        }
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "Unit",
+        "firstHttpStatus": 200,
+        "terminalResultType": "Unit"
+      },
+      "http": [
+        {
+          "method": "PUT",
+          "path": "/api/v1/tenants/{tenant_id}/programs/{program_id}/observation-periods/{period_id}/close-approvals/{command_id}",
+          "authorizationPolicy": "ComplianceAuthorizationPolicies.ApiUser"
+        }
+      ],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
+        "jsonPointer": "/contracts/22",
+        "line": 1774,
+        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
+      },
+      "kind": "http"
+    },
+    {
+      "command": "FreezeTypeIIPeriodClose",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "rule": "CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ProgramId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "PeriodId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "CloseSnapshotId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true
+        }
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "Unit",
+        "firstHttpStatus": 200,
+        "terminalResultType": "Unit"
+      },
+      "http": [
+        {
+          "method": "PUT",
+          "path": "/api/v1/tenants/{tenant_id}/programs/{program_id}/observation-periods/{period_id}/close-snapshots/{close_snapshot_id}/freezes/{command_id}",
+          "authorizationPolicy": "ComplianceAuthorizationPolicies.ApiUser"
+        }
+      ],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
+        "jsonPointer": "/contracts/76",
+        "line": 5709,
+        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
+      },
+      "kind": "http"
+    },
+    {
+      "command": "GenerateDueControlOccurrences",
+      "logicalIdentity": {
+        "field": "GenerationKey",
+        "type": "Uuid",
+        "required": true,
+        "rule": "caller-supplied immutable creation identity: an exact retry with the same id and authored intent returns the original result; the same id with changed intent is refused; a different id is a different record"
+      },
+      "fields": [
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ProgramId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "PeriodId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ThroughDate",
+          "type": "DateOnly",
+          "required": true
+        },
+        {
+          "name": "GenerationKey",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "Unit",
+        "firstHttpStatus": 200,
+        "terminalResultType": "Unit"
+      },
+      "http": [],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
+        "jsonPointer": "/contracts/79",
+        "line": 5907,
+        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
+      },
+      "kind": "creation"
+    },
+    {
+      "command": "StartTypeIIObservationPeriod",
+      "logicalIdentity": {
+        "field": "PeriodId",
+        "type": "Uuid",
+        "required": true,
+        "rule": "caller-supplied immutable creation identity: an exact retry with the same id and authored intent returns the original result; the same id with changed intent is refused; a different id is a different record"
+      },
+      "fields": [
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ProgramId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "PeriodId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExaminationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "PlanId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "PeriodStart",
+          "type": "DateOnly",
+          "required": true
+        },
+        {
+          "name": "PeriodEnd",
+          "type": "DateOnly",
+          "required": true
+        }
+      ],
+      "responseContract": {
+        "mode": "async_fixed_ack",
+        "responseType": "OperationAcceptedResponse",
+        "firstHttpStatus": 202,
+        "terminalResultType": "Unit"
+      },
+      "http": {
+        "method": "PUT",
+        "path": "/api/v1/tenants/{tenant_id}/programs/{program_id}/type-ii-periods/{period_id}"
+      },
+      "source": {
+        "path": "docs/product/audits/2026-10-23/source-admission-contracts.json",
+        "jsonPointer": "/contracts/2",
+        "line": 106,
+        "sha256": "f1d549ed0879c816cb26e86879f8fa658dab0a8acbf7c591e4d4aed40483f8ae"
+      },
+      "kind": "http"
+    },
+    {
+      "command": "AmendTypeIIObservationPeriod",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "rule": "CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ProgramId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "PeriodId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "PeriodStart",
+          "type": "DateOnly?",
+          "required": true
+        },
+        {
+          "name": "PeriodEnd",
+          "type": "DateOnly?",
+          "required": true
+        },
+        {
+          "name": "AmendmentReason",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "responseContract": {
+        "mode": "async_fixed_ack",
+        "responseType": "OperationAcceptedResponse",
+        "firstHttpStatus": 202,
+        "terminalResultType": "Unit"
+      },
+      "http": {
+        "method": "PUT",
+        "path": "/api/v1/tenants/{tenant_id}/programs/{program_id}/type-ii-periods/{period_id}/amendments/{command_id}"
+      },
+      "source": {
+        "path": "docs/product/audits/2026-10-23/source-admission-contracts.json",
+        "jsonPointer": "/contracts/3",
+        "line": 177,
+        "sha256": "f1d549ed0879c816cb26e86879f8fa658dab0a8acbf7c591e4d4aed40483f8ae"
+      },
+      "kind": "http"
+    },
+    {
+      "command": "CancelTypeIIPeriodAmendment",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "rule": "CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ProgramId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "PeriodId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "AmendmentId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "Reason",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "responseContract": null,
+      "http": {
+        "method": "PUT",
+        "path": "/api/v1/tenants/{tenant_id}/programs/{program_id}/type-ii-periods/{period_id}/amendments/{amendment_id}/cancellations/{command_id}"
+      },
+      "source": {
+        "path": "docs/product/audits/2026-10-23/source-admission-contracts.json",
+        "jsonPointer": "/contracts/4",
+        "line": 254,
+        "sha256": "f1d549ed0879c816cb26e86879f8fa658dab0a8acbf7c591e4d4aed40483f8ae"
+      },
+      "kind": "http"
+    },
+    {
+      "command": "RejectTypeIIPeriodOpening",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "rule": "abort receiver identity bound to the exact admitted operation and generation: exact redelivery resolves the original rejected result; an abort after a terminal outcome is a no-op"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "OperationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Target",
+          "type": "EventStreamAddress",
+          "required": true
+        },
+        {
+          "name": "Generation",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "FailureProof",
+          "type": "ImmutableContentRef",
+          "required": true
+        }
+      ],
+      "responseContract": null,
+      "http": null,
+      "source": {
+        "path": "docs/product/audits/2026-10-23/source-admission-contracts.json",
+        "jsonPointer": "/contracts/21",
+        "line": 1307,
+        "sha256": "f1d549ed0879c816cb26e86879f8fa658dab0a8acbf7c591e4d4aed40483f8ae"
+      },
+      "kind": "abort"
+    },
+    {
+      "command": "RejectTypeIIPeriodAmendment",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "rule": "abort receiver identity bound to the exact admitted operation and generation: exact redelivery resolves the original rejected result; an abort after a terminal outcome is a no-op"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "OperationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Target",
+          "type": "EventStreamAddress",
+          "required": true
+        },
+        {
+          "name": "Generation",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "FailureProof",
+          "type": "ImmutableContentRef",
+          "required": true
+        }
+      ],
+      "responseContract": null,
+      "http": null,
+      "source": {
+        "path": "docs/product/audits/2026-10-23/source-admission-contracts.json",
+        "jsonPointer": "/contracts/22",
+        "line": 1365,
+        "sha256": "f1d549ed0879c816cb26e86879f8fa658dab0a8acbf7c591e4d4aed40483f8ae"
+      },
+      "kind": "abort"
+    },
+    {
+      "command": "ApplyTypeIIPeriodRange",
+      "kind": "receiver",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "reactor",
+        "rule": "deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Source",
+          "type": "SourceFactProof<TypeIIPeriodRangeAuthorized>",
+          "required": true
+        },
+        {
+          "name": "Target",
+          "type": "EventStreamAddress",
+          "required": true
+        },
+        {
+          "name": "OperationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Generation",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long?",
+          "required": true
+        },
+        {
+          "name": "Intent",
+          "type": "ImmutableContentRef",
+          "required": true,
+          "contentSchema": "TypeIIRangeIntent"
+        },
+        {
+          "name": "PeriodId",
+          "type": "Uuid",
+          "required": true
+        }
+      ],
+      "reactor": "TypeIIPeriodRangeApplicationReactor",
+      "sourceOwner": "TypeIIObservationCalendar",
+      "sourceEvents": [
+        "TypeIIPeriodRangeAuthorized"
+      ],
+      "guard": "Exact accepted intent, calendar permit and generation; receiving cancellation fence wins over delayed apply.",
+      "eventsEmitted": [
+        "ObservationPeriodStarted",
+        "ObservationPeriodAmended"
+      ],
+      "effectKind": "apply_type_i_i_period_range",
+      "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
+      "handler": "ApplyTypeIIPeriodRangeHandler",
+      "http": [],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
+        "recorded": "2026-10-29"
+      }
+    }
+  ],
+  "sourceContractEvidence": []
+}

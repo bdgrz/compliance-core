@@ -1,0 +1,544 @@
+{
+  "owner": "WorkItemAssignment",
+  "origin": "retained_baseline",
+  "baselineOwners": [
+    "WorkItemAssignment"
+  ],
+  "declaredIdentity": "tenant/work-item-assignments/v5(programId,workItemId); expectedRevision protects per-item mutation and physical append. AssignTo/Escalate receive no request identity, so exact successful replay is stale/conflict; history import only empty target.",
+  "invariant": "One source-derived work item has current assignee/escalation revision; escalation is accepted at most once, assignment commands require expected revision. Source eligibility and completion belong to producing workflow.",
+  "boundaryDecision": "narrow",
+  "boundaryRationale": "Per-item boundary is correct; different items/programs already isolate streams. Keep current assignee/escalated and required assignment action guards; move full history to projection and legacy import to process storage while preserving attribution.",
+  "sources": [
+    {
+      "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
+      "jsonPointer": "/aggregates/99",
+      "line": 59696,
+      "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
+    }
+  ],
+  "baselineSourcePath": "src/Compliance.Core/Features/Work/WorkItemAssignment.cs",
+  "baselineEvents": [
+    "WorkItemAssigned",
+    "WorkItemAssignmentHistoryImported",
+    "WorkItemEscalated"
+  ],
+  "classification": "business_aggregate",
+  "businessAggregate": true,
+  "implementationStatus": "SEPARATE_VERIFICATION_REQUIRED_IMPLEMENTATION_HALTED",
+  "identityReadingRule": "selectedIdentitySummary and exact selectedCommandContracts define intended identity. baselineIdentityObservation/declaredIdentity retain older source observations only, including old replay defects; they are not target behavior or authorization to change an occupied key.",
+  "selectedCommandContracts": [
+    {
+      "command": "AssignWorkItem",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "rule": "CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ProgramId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "WorkItemId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "AssigneeMemberId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Reason",
+          "type": "string?",
+          "required": false
+        }
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "WorkItemDetailView",
+        "firstHttpStatus": 200,
+        "terminalResultType": "WorkItemDetailView"
+      },
+      "http": [
+        {
+          "method": "PUT",
+          "path": "/api/v1/tenants/{tenant_id}/programs/{program_id}/work/{work_item_id}/assignments/{command_id}",
+          "authorizationPolicy": "ComplianceAuthorizationPolicies.ApiUser"
+        }
+      ],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
+        "jsonPointer": "/contracts/29",
+        "line": 2351,
+        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
+      },
+      "kind": "http"
+    },
+    {
+      "command": "ClaimWorkItem",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "rule": "CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ProgramId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "WorkItemId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true
+        }
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "WorkItemDetailView",
+        "firstHttpStatus": 200,
+        "terminalResultType": "WorkItemDetailView"
+      },
+      "http": [
+        {
+          "method": "PUT",
+          "path": "/api/v1/tenants/{tenant_id}/programs/{program_id}/work/{work_item_id}/claims/{command_id}",
+          "authorizationPolicy": "ComplianceAuthorizationPolicies.ApiUser"
+        }
+      ],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
+        "jsonPointer": "/contracts/34",
+        "line": 2728,
+        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
+      },
+      "kind": "http"
+    },
+    {
+      "command": "DelegateWorkItem",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "rule": "CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ProgramId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "WorkItemId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "AssigneeMemberId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Reason",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "WorkItemDetailView",
+        "firstHttpStatus": 200,
+        "terminalResultType": "WorkItemDetailView"
+      },
+      "http": [
+        {
+          "method": "PUT",
+          "path": "/api/v1/tenants/{tenant_id}/programs/{program_id}/work/{work_item_id}/delegations/{command_id}",
+          "authorizationPolicy": "ComplianceAuthorizationPolicies.ApiUser"
+        }
+      ],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
+        "jsonPointer": "/contracts/62",
+        "line": 4688,
+        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
+      },
+      "kind": "http"
+    },
+    {
+      "command": "EscalateWorkItem",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "rule": "CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ProgramId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "WorkItemId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "Reason",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "WorkItemDetailView",
+        "firstHttpStatus": 200,
+        "terminalResultType": "WorkItemDetailView"
+      },
+      "http": [
+        {
+          "method": "PUT",
+          "path": "/api/v1/tenants/{tenant_id}/programs/{program_id}/work/{work_item_id}/escalations/{command_id}",
+          "authorizationPolicy": "ComplianceAuthorizationPolicies.ApiUser"
+        }
+      ],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
+        "jsonPointer": "/contracts/71",
+        "line": 5344,
+        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
+      },
+      "kind": "http"
+    }
+  ],
+  "eventAuthority": "retained_baseline_business_facts_requires_schema_reconciliation",
+  "events": [
+    {
+      "event": "WorkItemAssigned",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
+        "jsonPointer": "/aggregates/99",
+        "line": 59696,
+        "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
+      },
+      "baselineContract": {
+        "event": "WorkItemAssigned",
+        "emitters": [
+          "src/Compliance.Core/Features/Work/WorkItemAssignment.cs"
+        ],
+        "eventDisposition": "aggregate_fact",
+        "emitterOwnership": "aggregate or partial source",
+        "typedFields": [
+          {
+            "name": "TenantId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "ProgramId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "WorkItemId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "Revision",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "Action",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "AssigneeMemberId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "PreviousAssigneeMemberId",
+            "type": "Uuid?",
+            "required": true
+          },
+          {
+            "name": "Reason",
+            "type": "string?",
+            "required": true
+          },
+          {
+            "name": "AssignedBy",
+            "type": "ActorReference",
+            "required": true
+          },
+          {
+            "name": "AssignedAt",
+            "type": "DateTimeOffset",
+            "required": true
+          }
+        ],
+        "eventContract": "src/Compliance.Common/Features/Work/WorkItemAssigned.cs"
+      }
+    },
+    {
+      "event": "WorkItemAssignmentHistoryImported",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
+        "jsonPointer": "/aggregates/99",
+        "line": 59696,
+        "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
+      },
+      "baselineContract": {
+        "event": "WorkItemAssignmentHistoryImported",
+        "emitters": [
+          "src/Compliance.Core/Features/Work/WorkItemAssignment.cs"
+        ],
+        "eventDisposition": "aggregate_fact",
+        "emitterOwnership": "aggregate or partial source",
+        "typedFields": [
+          {
+            "name": "TenantId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "ProgramId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "WorkItemId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "Revision",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "AssigneeMemberId",
+            "type": "Uuid?",
+            "required": true
+          },
+          {
+            "name": "Escalated",
+            "type": "bool",
+            "required": true
+          },
+          {
+            "name": "History",
+            "type": "IReadOnlyList<WorkAssignmentEntryView>",
+            "required": true
+          }
+        ],
+        "eventContract": "src/Compliance.Common/Features/Work/WorkItemAssignmentHistoryImported.cs"
+      }
+    },
+    {
+      "event": "WorkItemEscalated",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
+        "jsonPointer": "/aggregates/99",
+        "line": 59696,
+        "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
+      },
+      "baselineContract": {
+        "event": "WorkItemEscalated",
+        "emitters": [
+          "src/Compliance.Core/Features/Work/WorkItemAssignment.cs"
+        ],
+        "eventDisposition": "aggregate_fact",
+        "emitterOwnership": "aggregate or partial source",
+        "typedFields": [
+          {
+            "name": "TenantId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "ProgramId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "WorkItemId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "Revision",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "Reason",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "EscalatedBy",
+            "type": "ActorReference",
+            "required": true
+          },
+          {
+            "name": "EscalatedAt",
+            "type": "DateTimeOffset",
+            "required": true
+          }
+        ],
+        "eventContract": "src/Compliance.Common/Features/Work/WorkItemEscalated.cs"
+      }
+    }
+  ],
+  "choreography": [],
+  "status": "SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED",
+  "baselineIdentityObservation": "tenant/work-item-assignments/v5(programId,workItemId); expectedRevision protects per-item mutation and physical append. AssignTo/Escalate receive no request identity, so exact successful replay is stale/conflict; history import only empty target.",
+  "identityContractRule": "Existing published owner identity/IdFor remains stable. Required typed creation/operation identity and tenant/program/source scope come from the selected signature/protocol references; no context.RequestId minting fallback or guessed new stream key.",
+  "adoptedArchitectureDecisions": [],
+  "selectedIdentityClarification": "Tenant / work-item-assignments / existing UUIDv5 of ProgramId and WorkItemId. Selected CommandId binds original actor, exact source work identity and assignment episode; imported ledger history is read-only provenance.",
+  "selectedIdentitySummary": "Tenant / work-item-assignments / existing UUIDv5 of ProgramId and WorkItemId. Selected CommandId binds original actor, exact source work identity and assignment episode; imported ledger history is read-only provenance.",
+  "baselineIdentityObservationOnly": true,
+  "selectedLogicalIdentityBindings": [
+    {
+      "command": "AssignWorkItem",
+      "logicalIdentity": "CommandId",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
+        "jsonPointer": "/contracts/29",
+        "line": 2351,
+        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
+      }
+    },
+    {
+      "command": "ClaimWorkItem",
+      "logicalIdentity": "CommandId",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
+        "jsonPointer": "/contracts/34",
+        "line": 2728,
+        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
+      }
+    },
+    {
+      "command": "DelegateWorkItem",
+      "logicalIdentity": "CommandId",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
+        "jsonPointer": "/contracts/62",
+        "line": 4688,
+        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
+      }
+    },
+    {
+      "command": "EscalateWorkItem",
+      "logicalIdentity": "CommandId",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
+        "jsonPointer": "/contracts/71",
+        "line": 5344,
+        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
+      }
+    }
+  ],
+  "selectedReplayRule": "Current required authorization precedes replay; exact authorized retries resolve the original accepted result using the selected logical identity and immutable actor/intent/source binding. Fresh mutable feasibility, clock selection and body preparation cannot replace that original result. Expected revision is concurrency precondition, not a new identity.",
+  "productRules": [
+    {
+      "id": "D15-05",
+      "doc": "m0-d15-work-queue.md",
+      "rule": "The identity of a finding-closure work item includes the exact finding revision; revising or reopening a finding creates a new work identity, and an assignment made against an earlier revision cannot authorize or assign the new round."
+    },
+    {
+      "id": "D15-09",
+      "doc": "m0-d15-work-queue.md",
+      "rule": "An unassigned team work item may be claimed only by a member of that team holding the role the source workflow requires; assign and reassign are limited to a Compliance Lead or Org Admin; delegate is limited to the current assignee and only to someone eligible under the source workflow; escalate may be done by any assignee or by the system."
+    },
+    {
+      "id": "D15-10",
+      "doc": "m0-d15-work-queue.md",
+      "rule": "Every work-item assignment action is attributed and checked against separation-of-duties rules; an item cannot be assigned to a person the source workflow would reject."
+    },
+    {
+      "id": "D15-11",
+      "doc": "m0-d15-work-queue.md",
+      "rule": "A work item that is 7 days overdue escalates automatically to the Compliance Lead, recorded as a system-actor escalation; escalation adds visibility only and does not reassign the item."
+    }
+  ],
+  "decides": "Assignment is attributed and refuses a person the source workflow would reject (separation of duties), an unassigned team item is claimed only by a team member holding the source-required role, assign and reassign are limited to Compliance Lead or Org Admin, delegate to the current assignee and only to someone eligible, and escalate by any assignee or the system. The identity of a finding-closure item includes the exact finding revision, so an assignment against an earlier revision cannot authorize the new round, and a system escalation after 7 days overdue targets the Compliance Lead and adds visibility without reassigning.",
+  "decidesCovers": [
+    "D15-05",
+    "D15-09",
+    "D15-10",
+    "D15-11"
+  ],
+  "decidesAuthored": "2026-10-29"
+}

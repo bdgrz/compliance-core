@@ -1,0 +1,144 @@
+{
+  "owner": "AccessPopulationException",
+  "origin": "selected_split_target",
+  "baselineOwners": [
+    "AccessReviewSystemLedger"
+  ],
+  "declaredIdentity": "(systemInstanceId, exceptionId)",
+  "invariant": "One expiring exception or missing-population exception decision.",
+  "boundaryDecision": "selected_split",
+  "mustPreserve": "Independent proposer/reviewer or exact waiver; exception references approved expectation and future expiry.",
+  "sources": [
+    {
+      "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
+      "jsonPointer": "/splitOwners/5/targetOwners/1",
+      "line": 611,
+      "sha256": "d349d94b7c43f4d82020ecf36bdacf1aff98bc6498e14993582f1c3164b21f19"
+    }
+  ],
+  "baselineSourcePath": "src/Compliance.Core/Features/AccessReviews/AccessReviewSystemLedger.cs",
+  "baselineEvents": [
+    "AccessPopulationExceptionRecorded"
+  ],
+  "preliminaryNewEvents": [],
+  "technicalStateToSeparate": [],
+  "classification": "business_aggregate",
+  "businessAggregate": true,
+  "implementationStatus": "SEPARATE_VERIFICATION_REQUIRED_IMPLEMENTATION_HALTED",
+  "identityReadingRule": "selectedIdentitySummary and exact selectedCommandContracts define intended identity. baselineIdentityObservation/declaredIdentity retain older source observations only, including old replay defects; they are not target behavior or authorization to change an occupied key.",
+  "selectedCommandContracts": [
+    {
+      "command": "ExemptMissingAccessPopulation",
+      "logicalIdentity": {
+        "field": "ExceptionId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "caller-supplied immutable creation identity: an exact retry with the same id and authored intent returns the original result; the same id with changed intent is refused; a different id is a different record"
+      },
+      "fields": [
+        {
+          "name": "ExceptionId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ApplicationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "SystemInstanceId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "Reason",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "ExpiresAt",
+          "type": "DateTimeOffset",
+          "required": true
+        }
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "AccessPopulationExceptionView",
+        "firstHttpStatus": 200,
+        "terminalResultType": "AccessPopulationExceptionView"
+      },
+      "http": [
+        {
+          "method": "PUT",
+          "path": "/api/v1/tenants/{tenant_id}/applications/{application_id}/system-instances/{system_instance_id}/access-population-exceptions/{exception_id}",
+          "policy": "ComplianceAuthorizationPolicies.ApiUser"
+        }
+      ],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
+        "jsonPointer": "/commands/56",
+        "line": 6651,
+        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
+      },
+      "kind": "http"
+    }
+  ],
+  "eventAuthority": "selected_final_event_catalog",
+  "events": [
+    {
+      "event": "AccessPopulationExceptionRecorded",
+      "discriminator": "bdgrz.access_population.exception_recorded",
+      "discriminatorVersion": 1,
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
+        "jsonPointer": "/events/5",
+        "line": 457,
+        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
+      }
+    }
+  ],
+  "choreography": [],
+  "status": "SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED",
+  "baselineIdentityObservation": "(systemInstanceId, exceptionId)",
+  "identityContractRule": "Existing published owner identity/IdFor remains stable. Required typed creation/operation identity and tenant/program/source scope come from the selected signature/protocol references; no context.RequestId minting fallback or guessed new stream key.",
+  "adoptedArchitectureDecisions": [],
+  "selectedIdentitySummary": "Tenant-scoped (systemInstanceId, exceptionId); `ExceptionId` on `ExemptMissingAccessPopulation` is the caller-supplied immutable creation identity (exact immutable creation retry) so an exact retry resolves the original result and a different id is a different record; later mutations use CommandId bound to this identity and the expected revision.",
+  "baselineIdentityObservationOnly": true,
+  "selectedLogicalIdentityBindings": [
+    {
+      "command": "ExemptMissingAccessPopulation",
+      "logicalIdentity": {
+        "field": "ExceptionId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "exact immutable creation retry"
+      },
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
+        "jsonPointer": "/commands/56",
+        "line": 6651,
+        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
+      }
+    }
+  ],
+  "selectedReplayRule": "Current required authorization precedes replay; exact authorized retries resolve the original accepted result using the selected logical identity and immutable actor/intent/source binding. Fresh mutable feasibility, clock selection and body preparation cannot replace that original result. Expected revision is concurrency precondition, not a new identity.",
+  "identityRevisions": [
+    {
+      "date": "2026-10-29",
+      "previous": "(systemInstanceId, exceptionId)"
+    }
+  ]
+}

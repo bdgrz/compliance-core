@@ -1,0 +1,53 @@
+{
+  "owner": "WorkforceSourceObservation",
+  "events": [
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:WorkforceSourceObserved",
+        "event": "WorkforceSourceObserved",
+        "emissionKind": "business",
+        "owners": [
+          "WorkforceSourceObservation"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": false,
+        "targetConcreteType": "WorkforceSourceObserved",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.workforce.source.observed",
+          "version": 1
+        },
+        "wireQualification": "Wire matches the declared record in src/Compliance.Common/Features/Workforce/Events/WorkforceSourceObserved.cs at 60029b8f.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "retained_current_schema_native_qualification_required",
+        "sourceStatus": "declared",
+        "meaning": "An HRIS, identity provider or provider system's record revision was observed against a target person, work relationship or service identity, capturing the source facts seen at that time.",
+        "meaningSource": "authored 2026-10-29 from src/Compliance.Common/Features/Workforce/Events/WorkforceSourceObserved.cs"
+      },
+      "schema": null
+    },
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:WorkforceSourceReconciled",
+        "event": "WorkforceSourceReconciled",
+        "emissionKind": "business",
+        "owners": [
+          "WorkforceSourceObservation"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": false,
+        "targetConcreteType": "WorkforceSourceReconciled",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.workforce.source.reconciled",
+          "version": 1
+        },
+        "wireQualification": "Wire matches the declared record in src/Compliance.Common/Features/Workforce/Events/WorkforceSourceReconciled.cs at 60029b8f.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "retained_current_schema_native_qualification_required",
+        "sourceStatus": "declared",
+        "meaning": "A workforce source observation was reconciled by a named decision to accept or dismiss it with a note, settling any conflict with the canonical workforce record.",
+        "meaningSource": "authored 2026-10-29 from src/Compliance.Common/Features/Workforce/Events/WorkforceSourceReconciled.cs"
+      },
+      "schema": null
+    }
+  ]
+}

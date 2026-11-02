@@ -1,0 +1,72 @@
+{
+  "owner": "WorkforceObservationResolution",
+  "selectedContracts": [
+    {
+      "command": "ResolveWorkforceObservation",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "rule": "CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ObservationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Resolution",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "Note",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true,
+          "addedBySelectedTarget": "2026-10-29"
+        }
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "Unit",
+        "firstHttpStatus": 200,
+        "terminalResultType": "Unit"
+      },
+      "http": [],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
+        "jsonPointer": "/contracts/153",
+        "line": 11319,
+        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
+      },
+      "kind": "command",
+      "concurrencyGuard": {
+        "rule": "require_expected_revision",
+        "basis": "default under the optimistic-concurrency principle (Jev unsettled)",
+        "jev": {
+          "mutates_existing": 0.53,
+          "absorbing": 0.46,
+          "process_reply": 0.3
+        },
+        "date": "2026-10-29"
+      }
+    }
+  ],
+  "sourceContractEvidence": []
+}

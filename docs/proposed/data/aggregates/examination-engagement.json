@@ -1,0 +1,556 @@
+{
+  "owner": "ExaminationEngagement",
+  "origin": "retained_baseline",
+  "baselineOwners": [
+    "ExaminationEngagement"
+  ],
+  "declaredIdentity": "Tenant / examinations / engagementId; baselineId and amendmentId supplied; original freeze and historical amendment retries compared by baselineId; Revise checks expected revision first. Portia appends against the hydrated physical stream position; a logical revision does not create another physical boundary.",
+  "invariant": "Freeze locks Type I setup to exact approved boundary and complete source coverage; amendments preserve prior baseline and enumerate changed sources.",
+  "boundaryDecision": "narrow",
+  "boundaryRationale": "Setup/freeze must commit one chosen baseline authorization atomically. Immutable baseline snapshots and history can be separately stored after preparing digest/content; current pointer/lock remains with engagement.",
+  "sources": [
+    {
+      "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
+      "jsonPointer": "/aggregates/36",
+      "line": 26584,
+      "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
+    }
+  ],
+  "baselineSourcePath": "src/Compliance.Core/Features/Examinations/ExaminationEngagement.cs",
+  "baselineEvents": [
+    "ExaminationEngagementOpened",
+    "ExaminationEngagementRevised",
+    "TypeIBaselineAmended",
+    "TypeIBaselineFrozen"
+  ],
+  "classification": "business_aggregate",
+  "businessAggregate": true,
+  "implementationStatus": "SEPARATE_VERIFICATION_REQUIRED_IMPLEMENTATION_HALTED",
+  "identityReadingRule": "selectedIdentitySummary and exact selectedCommandContracts define intended identity. baselineIdentityObservation/declaredIdentity retain older source observations only, including old replay defects; they are not target behavior or authorization to change an occupied key.",
+  "selectedCommandContracts": [
+    {
+      "command": "AmendTypeIBaseline",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "rule": "CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ProgramId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExaminationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "BaselineId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "Reason",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "ChangedRecordIds",
+          "type": "IReadOnlyList<Uuid>",
+          "required": true
+        },
+        {
+          "name": "ExpectedPreviewSha256",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "AffectedPackageMaterialIds",
+          "type": "IReadOnlyList<Uuid>",
+          "required": true
+        }
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "Unit",
+        "firstHttpStatus": 200,
+        "terminalResultType": "Unit"
+      },
+      "http": [
+        {
+          "method": "PUT",
+          "path": "/api/v1/tenants/{tenant_id}/programs/{program_id}/examinations/{examination_id}/type-i-baselines/{baseline_id}/amendments/{command_id}",
+          "authorizationPolicy": "ComplianceAuthorizationPolicies.ApiUser"
+        }
+      ],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
+        "jsonPointer": "/contracts/5",
+        "line": 404,
+        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
+      },
+      "kind": "http"
+    },
+    {
+      "command": "CreateExaminationEngagement",
+      "logicalIdentity": {
+        "field": "ExaminationId",
+        "type": "Uuid",
+        "required": true,
+        "rule": "caller-supplied immutable creation identity: an exact retry with the same id and authored intent returns the original result; the same id with changed intent is refused; a different id is a different record"
+      },
+      "fields": [
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ProgramId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExaminationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "EngagementType",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "AuditFirm",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "PeriodStart",
+          "type": "DateOnly",
+          "required": true
+        },
+        {
+          "name": "PeriodEnd",
+          "type": "DateOnly?",
+          "required": true
+        },
+        {
+          "name": "TrustServicesCategories",
+          "type": "IReadOnlyList<string>",
+          "required": true
+        },
+        {
+          "name": "BoundaryId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ManagementContactMemberIds",
+          "type": "IReadOnlyList<Uuid>?",
+          "required": false
+        }
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "Unit",
+        "firstHttpStatus": 200,
+        "terminalResultType": "Unit"
+      },
+      "http": [],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
+        "jsonPointer": "/contracts/51",
+        "line": 3835,
+        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
+      },
+      "kind": "creation"
+    },
+    {
+      "command": "FreezeTypeIBaseline",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "rule": "CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ProgramId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExaminationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "BaselineId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "ConfirmationRationale",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "ExpectedPreviewSha256",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "Unit",
+        "firstHttpStatus": 200,
+        "terminalResultType": "Unit"
+      },
+      "http": [
+        {
+          "method": "PUT",
+          "path": "/api/v1/tenants/{tenant_id}/programs/{program_id}/examinations/{examination_id}/type-i-baselines/{baseline_id}/freeze/{command_id}",
+          "authorizationPolicy": "ComplianceAuthorizationPolicies.ApiUser"
+        }
+      ],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
+        "jsonPointer": "/contracts/75",
+        "line": 5622,
+        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
+      },
+      "kind": "http"
+    },
+    {
+      "command": "ReviseExaminationEngagement",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "rule": "CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ProgramId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExaminationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "AuditFirm",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "PeriodStart",
+          "type": "DateOnly",
+          "required": true
+        },
+        {
+          "name": "PeriodEnd",
+          "type": "DateOnly?",
+          "required": true
+        },
+        {
+          "name": "TrustServicesCategories",
+          "type": "IReadOnlyList<string>",
+          "required": true
+        },
+        {
+          "name": "ManagementContactMemberIds",
+          "type": "IReadOnlyList<Uuid>?",
+          "required": false
+        }
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "Unit",
+        "firstHttpStatus": 200,
+        "terminalResultType": "Unit"
+      },
+      "http": [],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
+        "jsonPointer": "/contracts/173",
+        "line": 12942,
+        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
+      },
+      "kind": "command"
+    }
+  ],
+  "eventAuthority": "retained_baseline_business_facts_requires_schema_reconciliation",
+  "events": [
+    {
+      "event": "ExaminationEngagementOpened",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
+        "jsonPointer": "/aggregates/36",
+        "line": 26584,
+        "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
+      },
+      "baselineContract": {
+        "event": "ExaminationEngagementOpened",
+        "emitters": [
+          "src/Compliance.Core/Features/Examinations/ExaminationEngagement.cs"
+        ],
+        "eventDisposition": "aggregate_fact",
+        "emitterOwnership": "aggregate or partial source",
+        "typedFields": [
+          {
+            "name": "TenantId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "Engagement",
+            "type": "ExaminationEngagementView",
+            "required": true
+          },
+          {
+            "name": "OccurredAt",
+            "type": "DateTimeOffset",
+            "required": true
+          }
+        ],
+        "eventContract": "src/Compliance.Common/Features/Examinations/ExaminationEngagementOpened.cs"
+      }
+    },
+    {
+      "event": "ExaminationEngagementRevised",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
+        "jsonPointer": "/aggregates/36",
+        "line": 26584,
+        "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
+      },
+      "baselineContract": {
+        "event": "ExaminationEngagementRevised",
+        "emitters": [
+          "src/Compliance.Core/Features/Examinations/ExaminationEngagement.cs"
+        ],
+        "eventDisposition": "aggregate_fact",
+        "emitterOwnership": "aggregate or partial source",
+        "typedFields": [
+          {
+            "name": "TenantId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "Engagement",
+            "type": "ExaminationEngagementView",
+            "required": true
+          },
+          {
+            "name": "OccurredAt",
+            "type": "DateTimeOffset",
+            "required": true
+          }
+        ],
+        "eventContract": "src/Compliance.Common/Features/Examinations/ExaminationEngagementRevised.cs"
+      }
+    },
+    {
+      "event": "TypeIBaselineAmended",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
+        "jsonPointer": "/aggregates/36",
+        "line": 26584,
+        "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
+      },
+      "baselineContract": {
+        "event": "TypeIBaselineAmended",
+        "emitters": [
+          "src/Compliance.Core/Features/Examinations/ExaminationEngagement.cs"
+        ],
+        "eventDisposition": "aggregate_fact",
+        "emitterOwnership": "aggregate or partial source",
+        "typedFields": [
+          {
+            "name": "TenantId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "Engagement",
+            "type": "ExaminationEngagementView",
+            "required": true
+          },
+          {
+            "name": "Baseline",
+            "type": "TypeIBaselineView",
+            "required": true
+          },
+          {
+            "name": "OccurredAt",
+            "type": "DateTimeOffset",
+            "required": true
+          }
+        ],
+        "eventContract": "src/Compliance.Common/Features/Examinations/TypeIBaselineAmended.cs"
+      }
+    },
+    {
+      "event": "TypeIBaselineFrozen",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
+        "jsonPointer": "/aggregates/36",
+        "line": 26584,
+        "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
+      },
+      "baselineContract": {
+        "event": "TypeIBaselineFrozen",
+        "emitters": [
+          "src/Compliance.Core/Features/Examinations/ExaminationEngagement.cs"
+        ],
+        "eventDisposition": "aggregate_fact",
+        "emitterOwnership": "aggregate or partial source",
+        "typedFields": [
+          {
+            "name": "TenantId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "Engagement",
+            "type": "ExaminationEngagementView",
+            "required": true
+          },
+          {
+            "name": "Baseline",
+            "type": "TypeIBaselineView",
+            "required": true
+          },
+          {
+            "name": "OccurredAt",
+            "type": "DateTimeOffset",
+            "required": true
+          }
+        ],
+        "eventContract": "src/Compliance.Common/Features/Examinations/TypeIBaselineFrozen.cs"
+      }
+    }
+  ],
+  "choreography": [],
+  "status": "SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED",
+  "baselineIdentityObservation": "Tenant / examinations / engagementId; baselineId and amendmentId supplied; original freeze and historical amendment retries compared by baselineId; Revise checks expected revision first. Portia appends against the hydrated physical stream position; a logical revision does not create another physical boundary.",
+  "identityContractRule": "Existing published owner identity/IdFor remains stable. Required typed creation/operation identity and tenant/program/source scope come from the selected signature/protocol references; no context.RequestId minting fallback or guessed new stream key.",
+  "adoptedArchitectureDecisions": [],
+  "selectedIdentityClarification": "Tenant / examinations / ExaminationId, with immutable ProgramId and exact baseline/amendment identities. ExaminationId identifies creation; selected mutations use CommandId and exact source-version bindings.",
+  "selectedIdentitySummary": "Tenant / examinations / ExaminationId, with immutable ProgramId and exact baseline/amendment identities. ExaminationId identifies creation; selected mutations use CommandId and exact source-version bindings.",
+  "baselineIdentityObservationOnly": true,
+  "selectedLogicalIdentityBindings": [
+    {
+      "command": "AmendTypeIBaseline",
+      "logicalIdentity": "CommandId",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
+        "jsonPointer": "/contracts/5",
+        "line": 404,
+        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
+      }
+    },
+    {
+      "command": "CreateExaminationEngagement",
+      "logicalIdentity": "ExaminationId",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
+        "jsonPointer": "/contracts/51",
+        "line": 3835,
+        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
+      }
+    },
+    {
+      "command": "FreezeTypeIBaseline",
+      "logicalIdentity": "CommandId",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
+        "jsonPointer": "/contracts/75",
+        "line": 5622,
+        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
+      }
+    },
+    {
+      "command": "ReviseExaminationEngagement",
+      "logicalIdentity": "CommandId",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
+        "jsonPointer": "/contracts/173",
+        "line": 12942,
+        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
+      }
+    }
+  ],
+  "selectedReplayRule": "Current required authorization precedes replay; exact authorized retries resolve the original accepted result using the selected logical identity and immutable actor/intent/source binding. Fresh mutable feasibility, clock selection and body preparation cannot replace that original result. Expected revision is concurrency precondition, not a new identity.",
+  "productRules": [
+    {
+      "id": "D01-03",
+      "doc": "m0-d01-program-targets.md",
+      "rule": "An auditor-confirmed engagement date is a distinct attributed value that requires an evidence reference and an attributable engagement-owned decision or auditor communication; it is never represented as a status flag on a target date."
+    },
+    {
+      "id": "D01-11",
+      "doc": "m0-d01-program-targets.md",
+      "rule": "A missing audit firm, date, or service is recorded as unknown, never as a placeholder value."
+    }
+  ],
+  "decides": "An auditor-confirmed engagement date is a distinct attributed value requiring an evidence reference and an engagement-owned decision or auditor communication, never a status flag on a target date. A missing audit firm, date, or service is recorded as unknown, never as a placeholder value.",
+  "decidesCovers": [
+    "D01-03",
+    "D01-11"
+  ],
+  "decidesAuthored": "2026-10-29"
+}

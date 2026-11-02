@@ -1,0 +1,53 @@
+{
+  "owner": "SeparationOfDutiesWaiver",
+  "events": [
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:SeparationOfDutiesWaiverApproved",
+        "event": "SeparationOfDutiesWaiverApproved",
+        "emissionKind": "business",
+        "owners": [
+          "SeparationOfDutiesWaiver"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": false,
+        "targetConcreteType": "SeparationOfDutiesWaiverApproved",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.sod-waiver.approved",
+          "version": 1
+        },
+        "wireQualification": "Wire matches the declared record in src/Compliance.Common/Features/AccessControl/Events/SeparationOfDutiesWaiverApproved.cs at 60029b8f.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "retained_current_schema_native_qualification_required",
+        "sourceStatus": "declared",
+        "meaning": "A separation-of-duties waiver was approved by an Org Admin other than its beneficiary within its approval window, allowing the beneficiary to act in the waived scope.",
+        "meaningSource": "authored 2026-10-29 from src/Compliance.Common/Features/AccessControl/Events/SeparationOfDutiesWaiverApproved.cs"
+      },
+      "schema": null
+    },
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:SeparationOfDutiesWaiverRecorded",
+        "event": "SeparationOfDutiesWaiverRecorded",
+        "emissionKind": "business",
+        "owners": [
+          "SeparationOfDutiesWaiver"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": false,
+        "targetConcreteType": "SeparationOfDutiesWaiverRecorded",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.sod-waiver.recorded",
+          "version": 1
+        },
+        "wireQualification": "Wire matches the declared record in src/Compliance.Common/Features/AccessControl/Events/SeparationOfDutiesWaiverRecorded.cs at 60029b8f.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "retained_current_schema_native_qualification_required",
+        "sourceStatus": "declared",
+        "meaning": "A separation-of-duties waiver was requested for a scoped record, naming its beneficiary, requester, rationale and expiry, and awaits approval by a different Org Admin.",
+        "meaningSource": "authored 2026-10-29 from src/Compliance.Common/Features/AccessControl/Events/SeparationOfDutiesWaiverRecorded.cs"
+      },
+      "schema": null
+    }
+  ]
+}

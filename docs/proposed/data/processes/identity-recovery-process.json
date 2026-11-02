@@ -1,0 +1,63 @@
+{
+  "process": "IdentityRecoveryProcess",
+  "rootSourceEvents": [
+    "IdentityRecoveryChallengeClaimed"
+  ],
+  "ordered": true,
+  "stages": [
+    {
+      "stage": "prepare",
+      "receivers": [
+        "MaterializeIdentityRecoveryPreparation"
+      ],
+      "rule": null
+    },
+    {
+      "stage": "protect",
+      "receivers": [
+        "ProtectRecoveryIdentity"
+      ],
+      "rule": "Old and replacement slots in canonical key order."
+    },
+    {
+      "stage": "accept",
+      "receivers": [
+        "AcceptProtectedIdentityRecovery"
+      ],
+      "rule": "Irreversible; no cancellation afterwards."
+    },
+    {
+      "stage": "register",
+      "receivers": [
+        "RegisterRecoveredIdentity"
+      ],
+      "rule": null
+    },
+    {
+      "stage": "revoke",
+      "receivers": [
+        "RevokeRecoveredOldIdentity"
+      ],
+      "rule": "Only with authoritative replacement proof."
+    },
+    {
+      "stage": "complete",
+      "receivers": [
+        "CompleteAcceptedIdentityRecovery"
+      ],
+      "rule": null
+    },
+    {
+      "stage": "settle",
+      "receivers": [
+        "SettleRecoveryIdentityProtection",
+        "CompleteEmailRecoveryChallenge",
+        "SendIdentityRecoveryNotice"
+      ],
+      "rule": "Independent; the notice cannot hold completion hostage."
+    }
+  ],
+  "abort": [
+    "RejectIdentityRecoveryPreparation"
+  ]
+}

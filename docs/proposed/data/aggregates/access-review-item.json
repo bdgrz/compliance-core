@@ -1,0 +1,1272 @@
+{
+  "owner": "AccessReviewItem",
+  "origin": "selected_split_target",
+  "baselineOwners": [
+    "AccessReviewCampaign"
+  ],
+  "declaredIdentity": "(campaignId, itemId)",
+  "invariant": "One reviewer decision, reassignment, remediation verification, exception and history for one frozen item. A privileged entitlement item accepts only an individual named reviewer decision; bulk or delegated decisions are refused for privileged access (M0-D07 D07-09; source AccessReviewRules.cs)",
+  "boundaryDecision": "selected_split",
+  "mustPreserve": "Keep reviewer and remediation owner distinct per item unless exact waiver; no stale projected summary may satisfy completion.",
+  "sources": [
+    {
+      "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
+      "jsonPointer": "/splitOwners/4/targetOwners/1",
+      "line": 484,
+      "sha256": "d349d94b7c43f4d82020ecf36bdacf1aff98bc6498e14993582f1c3164b21f19"
+    }
+  ],
+  "baselineSourcePath": "src/Compliance.Core/Features/AccessReviews/AccessReviewCampaign.cs",
+  "baselineEvents": [
+    "AccessDecisionsRecorded",
+    "AccessRemediationChangeRecorded",
+    "AccessRemediationExceptionRecorded",
+    "AccessRemediationVerified",
+    "AccessReviewResponsibilityReassigned"
+  ],
+  "preliminaryNewEvents": [],
+  "technicalStateToSeparate": [],
+  "classification": "business_aggregate",
+  "businessAggregate": true,
+  "implementationStatus": "SEPARATE_VERIFICATION_REQUIRED_IMPLEMENTATION_HALTED",
+  "identityReadingRule": "selectedIdentitySummary and exact selectedCommandContracts define intended identity. baselineIdentityObservation/declaredIdentity retain older source observations only, including old replay defects; they are not target behavior or authorization to change an occupied key.",
+  "selectedCommandContracts": [
+    {
+      "command": "ExemptAccessRemediation",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "CampaignId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ItemId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "Rationale",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "ExpiresAt",
+          "type": "DateTimeOffset?",
+          "required": false
+        }
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "AccessRemediationExceptionView",
+        "firstHttpStatus": 200,
+        "terminalResultType": "AccessRemediationExceptionView"
+      },
+      "http": [
+        {
+          "method": "PUT",
+          "path": "/api/v1/tenants/{tenant_id}/access-review-campaigns/{campaign_id}/items/{item_id}/remediation-exceptions/{command_id}",
+          "policy": "ComplianceAuthorizationPolicies.ApiUser"
+        }
+      ],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
+        "jsonPointer": "/commands/55",
+        "line": 6535,
+        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
+      },
+      "kind": "http"
+    },
+    {
+      "command": "ReassignAccessReviewResponsibility",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "CampaignId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ItemId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Responsibility",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "AssignedMemberId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Reason",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "DelegationReason",
+          "type": "string?",
+          "required": false
+        }
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "AccessReviewResponsibilityReassignmentView",
+        "firstHttpStatus": 200,
+        "terminalResultType": "AccessReviewResponsibilityReassignmentView"
+      },
+      "http": [
+        {
+          "method": "PUT",
+          "path": "/api/v1/tenants/{tenant_id}/access-review-campaigns/{campaign_id}/items/{item_id}/responsibility-reassignments/{command_id}",
+          "policy": "ComplianceAuthorizationPolicies.ApiUser"
+        }
+      ],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
+        "jsonPointer": "/commands/86",
+        "line": 10047,
+        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
+      },
+      "kind": "http"
+    },
+    {
+      "command": "RecordAccessDecision",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "CampaignId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ItemId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "Decision",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "Rationale",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "SeparationOfDutiesWaiverId",
+          "type": "Uuid?",
+          "required": false
+        }
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "AccessDecisionView",
+        "firstHttpStatus": 200,
+        "terminalResultType": "AccessDecisionView"
+      },
+      "http": [
+        {
+          "method": "PUT",
+          "path": "/api/v1/tenants/{tenant_id}/access-review-campaigns/{campaign_id}/items/{item_id}/decisions/{command_id}",
+          "policy": "ComplianceAuthorizationPolicies.ApiUser"
+        }
+      ],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
+        "jsonPointer": "/commands/88",
+        "line": 10281,
+        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
+      },
+      "kind": "http"
+    },
+    {
+      "command": "RecordAccessRemediationChange",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "CampaignId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ItemId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "Reference",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "Description",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "ChangedAt",
+          "type": "DateTimeOffset",
+          "required": true
+        }
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "AccessRemediationChangeView",
+        "firstHttpStatus": 200,
+        "terminalResultType": "AccessRemediationChangeView"
+      },
+      "http": [
+        {
+          "method": "PUT",
+          "path": "/api/v1/tenants/{tenant_id}/access-review-campaigns/{campaign_id}/items/{item_id}/remediation-changes/{command_id}",
+          "policy": "ComplianceAuthorizationPolicies.ApiUser"
+        }
+      ],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
+        "jsonPointer": "/commands/90",
+        "line": 10528,
+        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
+      },
+      "kind": "http"
+    },
+    {
+      "command": "VerifyAccessRemediation",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "CampaignId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ItemId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "PopulationId",
+          "type": "Uuid",
+          "required": true
+        }
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "AccessRemediationVerificationView",
+        "firstHttpStatus": 200,
+        "terminalResultType": "AccessRemediationVerificationView"
+      },
+      "http": [
+        {
+          "method": "PUT",
+          "path": "/api/v1/tenants/{tenant_id}/access-review-campaigns/{campaign_id}/items/{item_id}/remediation-verifications/{command_id}",
+          "policy": "ComplianceAuthorizationPolicies.ApiUser"
+        }
+      ],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
+        "jsonPointer": "/commands/158",
+        "line": 18392,
+        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
+      },
+      "kind": "http"
+    },
+    {
+      "command": "MaterializeAccessReviewItem",
+      "kind": "receiver",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "reactor",
+        "rule": "deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Source",
+          "type": "SourceFactProof<AccessReviewCampaignLaunched>",
+          "required": true
+        },
+        {
+          "name": "Target",
+          "type": "EventStreamAddress",
+          "required": true
+        },
+        {
+          "name": "OperationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Generation",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long?",
+          "required": true
+        },
+        {
+          "name": "Intent",
+          "type": "ImmutableContentRef",
+          "required": true,
+          "contentSchema": "AccessReviewItemCreationIntent"
+        },
+        {
+          "name": "CampaignId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ItemId",
+          "type": "Uuid",
+          "required": true
+        }
+      ],
+      "reactor": "AccessReviewItemMaterializationReactor",
+      "sourceOwner": "AccessReviewCampaign",
+      "sourceEvents": [
+        "AccessReviewCampaignLaunched"
+      ],
+      "guard": "Source complete launch manifest includes this exact item and personal responsibility.",
+      "eventsEmitted": [
+        "AccessReviewItemOpened"
+      ],
+      "effectKind": "materialize_access_review_item",
+      "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
+      "handler": "MaterializeAccessReviewItemHandler",
+      "http": [],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
+        "recorded": "2026-10-29"
+      }
+    },
+    {
+      "command": "ReserveAccessReviewItemDecision",
+      "kind": "receiver",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "reactor",
+        "rule": "deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Source",
+          "type": "SourceFactProof<AccessReviewDecisionBatchAccepted>",
+          "required": true
+        },
+        {
+          "name": "Target",
+          "type": "EventStreamAddress",
+          "required": true
+        },
+        {
+          "name": "OperationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Generation",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long?",
+          "required": true
+        },
+        {
+          "name": "Intent",
+          "type": "ImmutableContentRef",
+          "required": true,
+          "contentSchema": "BulkAccessDecisionIntent"
+        },
+        {
+          "name": "CampaignId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ItemId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "DecisionBatchId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "SourceRevision",
+          "type": "ulong",
+          "required": true
+        }
+      ],
+      "reactor": "AccessReviewBulkReservationReactor",
+      "sourceOwner": "AccessReviewDecisionBatch",
+      "sourceEvents": [
+        "AccessReviewDecisionBatchAccepted"
+      ],
+      "guard": "Complete exact preview and current revision/reviewer; acquire every selected item canonically.",
+      "eventsEmitted": [
+        "AccessReviewItemDecisionAuthorized"
+      ],
+      "effectKind": "reserve_access_review_item_decision",
+      "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
+      "handler": "ReserveAccessReviewItemDecisionHandler",
+      "http": [],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
+        "recorded": "2026-10-29"
+      }
+    },
+    {
+      "command": "ApplyAccessReviewItemDecision",
+      "kind": "receiver",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "reactor",
+        "rule": "deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Source",
+          "type": "SourceFactProof<AccessReviewDecisionBatchAccepted>",
+          "required": true
+        },
+        {
+          "name": "Target",
+          "type": "EventStreamAddress",
+          "required": true
+        },
+        {
+          "name": "OperationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Generation",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long?",
+          "required": true
+        },
+        {
+          "name": "Intent",
+          "type": "ImmutableContentRef",
+          "required": true,
+          "contentSchema": "BulkAccessDecisionIntent"
+        },
+        {
+          "name": "CampaignId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ItemId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "DecisionBatchId",
+          "type": "Uuid",
+          "required": true
+        }
+      ],
+      "reactor": "AccessReviewBulkApplicationReactor",
+      "sourceOwner": "AccessReviewDecisionBatch",
+      "sourceEvents": [
+        "AccessReviewDecisionBatchAccepted"
+      ],
+      "guard": "Apply only after complete hold proof manifest; provisional decision is not externally visible.",
+      "eventsEmitted": [
+        "AccessDecisionsRecorded"
+      ],
+      "effectKind": "apply_access_review_item_decision",
+      "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
+      "handler": "ApplyAccessReviewItemDecisionHandler",
+      "http": [],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
+        "recorded": "2026-10-29"
+      }
+    },
+    {
+      "command": "FenceAccessReviewItemDecision",
+      "kind": "receiver",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "reactor",
+        "rule": "deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Source",
+          "type": "SourceFactProof<AccessReviewDecisionBatchCancellationAccepted>",
+          "required": true
+        },
+        {
+          "name": "Target",
+          "type": "EventStreamAddress",
+          "required": true
+        },
+        {
+          "name": "OperationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Generation",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long?",
+          "required": true
+        },
+        {
+          "name": "Intent",
+          "type": "ImmutableContentRef",
+          "required": true,
+          "contentSchema": "BulkAccessDecisionIntent"
+        },
+        {
+          "name": "DecisionBatchId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ItemId",
+          "type": "Uuid",
+          "required": true
+        }
+      ],
+      "reactor": "AccessReviewBulkCancellationReactor",
+      "sourceOwner": "AccessReviewDecisionBatch",
+      "sourceEvents": [
+        "AccessReviewDecisionBatchCancellationAccepted"
+      ],
+      "guard": "Fence delayed applies before releasing any item hold; published decisions recover forward.",
+      "eventsEmitted": [
+        "AccessReviewItemDecisionCanceled"
+      ],
+      "effectKind": "fence_access_review_item_decision",
+      "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
+      "handler": "FenceAccessReviewItemDecisionHandler",
+      "http": [],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
+        "recorded": "2026-10-29"
+      }
+    },
+    {
+      "command": "AuthorizeAccessReviewItemCampaignCompletionUse",
+      "kind": "receiver",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "reactor",
+        "rule": "deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Source",
+          "type": "SourceFactProof<AccessReviewCampaignCompletionAccepted>",
+          "required": true
+        },
+        {
+          "name": "Target",
+          "type": "EventStreamAddress",
+          "required": true
+        },
+        {
+          "name": "OperationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Generation",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long?",
+          "required": true
+        },
+        {
+          "name": "Intent",
+          "type": "ImmutableContentRef",
+          "required": true,
+          "contentSchema": "SourceUseAuthorizationIntent"
+        },
+        {
+          "name": "SourceOwnerId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "SourceRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "ReceivingOwnerId",
+          "type": "Uuid",
+          "required": true
+        }
+      ],
+      "reactor": "CampaignCompletionAccessReviewItemAuthorizationReactor",
+      "sourceOwner": "AccessReviewCampaign",
+      "sourceEvents": [
+        "AccessReviewCampaignCompletionAccepted"
+      ],
+      "guard": "Exact parent admitted intent and complete source selection; current source revision/required immutable facts; active use prevents conflicting source writes through parent decision append. Use events do not advance public ResourceRevision; the exact content-event identity and metadata owner version remain separate.",
+      "eventsEmitted": [
+        "AccessReviewItemCampaignCompletionUseAuthorized"
+      ],
+      "effectKind": "authorize_access_review_item_campaign_completion_use",
+      "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
+      "handler": "AuthorizeAccessReviewItemCampaignCompletionUseHandler",
+      "http": [],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
+        "recorded": "2026-10-29"
+      }
+    },
+    {
+      "command": "SettleAccessReviewItemCampaignCompletionUse",
+      "kind": "receiver",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "reactor",
+        "rule": "deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Source",
+          "type": "SettleAccessReviewItemCampaignCompletionUseSourceProof",
+          "required": true
+        },
+        {
+          "name": "Target",
+          "type": "EventStreamAddress",
+          "required": true
+        },
+        {
+          "name": "OperationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Generation",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long?",
+          "required": true
+        },
+        {
+          "name": "Intent",
+          "type": "ImmutableContentRef",
+          "required": true,
+          "contentSchema": "SourceUseAuthorizationIntent"
+        },
+        {
+          "name": "SourceOwnerId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ReceivingOwnerId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Disposition",
+          "type": "SourceUseSettlementDisposition",
+          "required": true
+        }
+      ],
+      "reactor": "CampaignCompletionAccessReviewItemSettlementReactor",
+      "sourceOwner": "AccessReviewCampaign",
+      "sourceEvents": [
+        "AccessReviewCampaignCompleted",
+        "AccessReviewCampaignCompletionCanceled"
+      ],
+      "guard": "Exact terminal parent decision or receiver-fenced cancellation proof; settle only the matching operation/generation, never release because of time/missing read. A canceled parent fences local completion; record terminal source-use settlement even when acquire has not yet arrived, so delayed acquisition cannot recreate authority. Derive Disposition from the proven terminal source: parent_closed installs its generation closure fence, canceled clears only this use after parent fence, irreversible_decision releases the pinned source after historical decision. Never clear a use into an unrestricted writable child after parent closure.",
+      "eventsEmitted": [
+        "AccessReviewItemCampaignCompletionUseSettled"
+      ],
+      "effectKind": "settle_access_review_item_campaign_completion_use",
+      "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
+      "handler": "SettleAccessReviewItemCampaignCompletionUseHandler",
+      "http": [],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
+        "recorded": "2026-10-29"
+      }
+    },
+    {
+      "command": "SettleAccessReviewItemDecision",
+      "kind": "receiver",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "reactor",
+        "rule": "deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Source",
+          "type": "SettleAccessReviewItemDecisionSourceProof",
+          "required": true
+        },
+        {
+          "name": "Target",
+          "type": "EventStreamAddress",
+          "required": true
+        },
+        {
+          "name": "OperationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Generation",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long?",
+          "required": true
+        },
+        {
+          "name": "Intent",
+          "type": "ImmutableContentRef",
+          "required": true,
+          "contentSchema": "BulkAccessDecisionIntent"
+        },
+        {
+          "name": "DecisionBatchId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ItemId",
+          "type": "Uuid",
+          "required": true
+        }
+      ],
+      "reactor": "AccessReviewBulkSettlementReactor",
+      "sourceOwner": "AccessReviewDecisionBatch",
+      "sourceEvents": [
+        "AccessReviewDecisionBatchPublished",
+        "AccessReviewDecisionBatchCanceled"
+      ],
+      "guard": "Exact published decision or local canceled/fence proof; clear only matching batch authorization.",
+      "eventsEmitted": [
+        "AccessReviewItemDecisionSettled"
+      ],
+      "effectKind": "settle_access_review_item_decision",
+      "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
+      "handler": "SettleAccessReviewItemDecisionHandler",
+      "http": [],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
+        "recorded": "2026-10-29"
+      }
+    }
+  ],
+  "eventAuthority": "selected_final_event_catalog",
+  "events": [
+    {
+      "event": "AccessDecisionsRecorded",
+      "discriminator": "bdgrz.access_review.decisions.recorded",
+      "discriminatorVersion": 1,
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
+        "jsonPointer": "/events/0",
+        "line": 6,
+        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
+      }
+    },
+    {
+      "event": "AccessRemediationChangeRecorded",
+      "discriminator": "bdgrz.access_review.remediation.change_recorded",
+      "discriminatorVersion": 1,
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
+        "jsonPointer": "/events/9",
+        "line": 728,
+        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
+      }
+    },
+    {
+      "event": "AccessRemediationExceptionRecorded",
+      "discriminator": "bdgrz.access_review.remediation.exception_recorded",
+      "discriminatorVersion": 1,
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
+        "jsonPointer": "/events/10",
+        "line": 793,
+        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
+      }
+    },
+    {
+      "event": "AccessRemediationVerified",
+      "discriminator": "bdgrz.access_review.remediation.verified",
+      "discriminatorVersion": 1,
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
+        "jsonPointer": "/events/11",
+        "line": 858,
+        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
+      }
+    },
+    {
+      "event": "AccessReviewItemCampaignCompletionUseAuthorized",
+      "discriminator": "bdgrz.access-review-item.access-review-item-campaign-completion-use-authorized",
+      "discriminatorVersion": 1,
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
+        "jsonPointer": "/events/21",
+        "line": 2351,
+        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
+      }
+    },
+    {
+      "event": "AccessReviewItemCampaignCompletionUseSettled",
+      "discriminator": "bdgrz.access-review-item.access-review-item-campaign-completion-use-settled",
+      "discriminatorVersion": 1,
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
+        "jsonPointer": "/events/22",
+        "line": 2487,
+        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
+      }
+    },
+    {
+      "event": "AccessReviewItemDecisionAuthorized",
+      "discriminator": "bdgrz.access-review-item.access-review-item-decision-authorized",
+      "discriminatorVersion": 1,
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
+        "jsonPointer": "/events/23",
+        "line": 2623,
+        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
+      }
+    },
+    {
+      "event": "AccessReviewItemDecisionCanceled",
+      "discriminator": "bdgrz.access-review-item.access-review-item-decision-canceled",
+      "discriminatorVersion": 1,
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
+        "jsonPointer": "/events/24",
+        "line": 2789,
+        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
+      }
+    },
+    {
+      "event": "AccessReviewItemDecisionSettled",
+      "discriminator": "bdgrz.access-review-item.access-review-item-decision-settled",
+      "discriminatorVersion": 1,
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
+        "jsonPointer": "/events/25",
+        "line": 2955,
+        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
+      }
+    },
+    {
+      "event": "AccessReviewItemOpened",
+      "discriminator": "bdgrz.access-review-item.access-review-item-opened",
+      "discriminatorVersion": 1,
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
+        "jsonPointer": "/events/26",
+        "line": 3121,
+        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
+      }
+    },
+    {
+      "event": "AccessReviewResponsibilityReassigned",
+      "discriminator": "bdgrz.access_review.responsibility.reassigned",
+      "discriminatorVersion": 1,
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
+        "jsonPointer": "/events/27",
+        "line": 3287,
+        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
+      }
+    }
+  ],
+  "choreography": [
+    {
+      "reactor": "AccessReviewItemMaterializationReactor",
+      "sourceOwner": "AccessReviewCampaign",
+      "targetOwner": "AccessReviewItem",
+      "command": "MaterializeAccessReviewItem",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
+        "jsonPointer": "/reactors/8",
+        "line": 702,
+        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
+      }
+    },
+    {
+      "reactor": "AccessReviewBulkReservationReactor",
+      "sourceOwner": "AccessReviewDecisionBatch",
+      "targetOwner": "AccessReviewItem",
+      "command": "ReserveAccessReviewItemDecision",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
+        "jsonPointer": "/reactors/9",
+        "line": 784,
+        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
+      }
+    },
+    {
+      "reactor": "AccessReviewBulkApplicationReactor",
+      "sourceOwner": "AccessReviewDecisionBatch",
+      "targetOwner": "AccessReviewItem",
+      "command": "ApplyAccessReviewItemDecision",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
+        "jsonPointer": "/reactors/10",
+        "line": 876,
+        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
+      }
+    },
+    {
+      "reactor": "AccessReviewBulkCancellationReactor",
+      "sourceOwner": "AccessReviewDecisionBatch",
+      "targetOwner": "AccessReviewItem",
+      "command": "FenceAccessReviewItemDecision",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
+        "jsonPointer": "/reactors/12",
+        "line": 1045,
+        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
+      }
+    },
+    {
+      "reactor": "CampaignCompletionAccessReviewItemAuthorizationReactor",
+      "sourceOwner": "AccessReviewCampaign",
+      "targetOwner": "AccessReviewItem",
+      "command": "AuthorizeAccessReviewItemCampaignCompletionUse",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
+        "jsonPointer": "/reactors/59",
+        "line": 5056,
+        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
+      }
+    },
+    {
+      "reactor": "CampaignCompletionAccessReviewItemSettlementReactor",
+      "sourceOwner": "AccessReviewCampaign",
+      "targetOwner": "AccessReviewItem",
+      "command": "SettleAccessReviewItemCampaignCompletionUse",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
+        "jsonPointer": "/reactors/60",
+        "line": 5143,
+        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
+      }
+    },
+    {
+      "reactor": "AccessReviewBulkSettlementReactor",
+      "sourceOwner": "AccessReviewDecisionBatch",
+      "targetOwner": "AccessReviewItem",
+      "command": "SettleAccessReviewItemDecision",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
+        "jsonPointer": "/reactors/80",
+        "line": 6873,
+        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
+      }
+    }
+  ],
+  "status": "SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED",
+  "baselineIdentityObservation": "(campaignId, itemId)",
+  "identityContractRule": "Existing published owner identity/IdFor remains stable. Required typed creation/operation identity and tenant/program/source scope come from the selected signature/protocol references; no context.RequestId minting fallback or guessed new stream key.",
+  "adoptedArchitectureDecisions": [],
+  "selectedIdentitySummary": "Tenant-scoped (campaignId, itemId); the identity is established by the admitting owner or reactor named in the choreography, never by a caller request key; mutations bind CommandId to this exact identity.",
+  "baselineIdentityObservationOnly": true,
+  "selectedLogicalIdentityBindings": [
+    {
+      "command": "ExemptAccessRemediation",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "one immutable authored operation"
+      },
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
+        "jsonPointer": "/commands/55",
+        "line": 6535,
+        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
+      }
+    },
+    {
+      "command": "ReassignAccessReviewResponsibility",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "one immutable authored operation"
+      },
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
+        "jsonPointer": "/commands/86",
+        "line": 10047,
+        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
+      }
+    },
+    {
+      "command": "RecordAccessDecision",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "one immutable authored operation"
+      },
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
+        "jsonPointer": "/commands/88",
+        "line": 10281,
+        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
+      }
+    },
+    {
+      "command": "RecordAccessRemediationChange",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "one immutable authored operation"
+      },
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
+        "jsonPointer": "/commands/90",
+        "line": 10528,
+        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
+      }
+    },
+    {
+      "command": "VerifyAccessRemediation",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "one immutable authored operation"
+      },
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
+        "jsonPointer": "/commands/158",
+        "line": 18392,
+        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
+      }
+    }
+  ],
+  "selectedReplayRule": "Current required authorization precedes replay; exact authorized retries resolve the original accepted result using the selected logical identity and immutable actor/intent/source binding. Fresh mutable feasibility, clock selection and body preparation cannot replace that original result. Expected revision is concurrency precondition, not a new identity.",
+  "invariantRevisions": [
+    {
+      "date": "2026-10-29",
+      "added": "A privileged entitlement item accepts only an individual named reviewer decision; bulk or delegated decisions are refused for privileged access (M0-D07 D07-09; source AccessReviewRules.cs)"
+    }
+  ],
+  "identityRevisions": [
+    {
+      "date": "2026-10-29",
+      "previous": "(campaignId, itemId)"
+    }
+  ],
+  "productRules": [
+    {
+      "id": "D07-09",
+      "doc": "m0-d07-access-review-population.md",
+      "rule": "Privileged entitlements require named reviewer approval in each review campaign."
+    },
+    {
+      "id": "D07-11",
+      "doc": "m0-d07-access-review-population.md",
+      "rule": "Access remediation is complete only when a later population snapshot shows the entitlement removed or changed; a ticket alone is not verification."
+    }
+  ],
+  "decides": "Remediation is verified complete only against a later accepted population snapshot that shows the entitlement removed or changed; a ticket or assertion alone is refused as verification.",
+  "decidesCovers": [
+    "D07-11"
+  ],
+  "decidesAuthored": "2026-10-29"
+}

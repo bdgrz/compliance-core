@@ -1,0 +1,1024 @@
+{
+  "owner": "ControlEvaluation",
+  "selectedContracts": [
+    {
+      "command": "DisposeControlEvaluationDeviation",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ProgramId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ControlId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "EvaluationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "DeviationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "Disposition",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "Rationale",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "WaiverId",
+          "type": "Uuid?",
+          "required": false
+        }
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "ControlEvaluationView",
+        "firstHttpStatus": 200,
+        "terminalResultType": "ControlEvaluationView"
+      },
+      "http": [
+        {
+          "method": "PUT",
+          "path": "/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/evaluations/{evaluation_id}/deviations/{deviation_id}/dispositions/{command_id}",
+          "policy": "ComplianceAuthorizationPolicies.ApiUser"
+        }
+      ],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
+        "jsonPointer": "/commands/51",
+        "line": 6085,
+        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
+      },
+      "kind": "http"
+    },
+    {
+      "command": "RecordControlEvaluationStep",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ProgramId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ControlId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "EvaluationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "StepId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "Result",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "Rationale",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "InspectedItems",
+          "type": "IReadOnlyList<EvaluationInspectedItem>",
+          "required": true
+        },
+        {
+          "name": "DeviationClassification",
+          "type": "string?",
+          "required": false
+        },
+        {
+          "name": "DeviationDescription",
+          "type": "string?",
+          "required": false
+        }
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "ControlEvaluationView",
+        "firstHttpStatus": 200,
+        "terminalResultType": "ControlEvaluationView"
+      },
+      "http": [
+        {
+          "method": "PUT",
+          "path": "/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/evaluations/{evaluation_id}/steps/{step_id}/results/{command_id}",
+          "policy": "ComplianceAuthorizationPolicies.ApiUser"
+        }
+      ],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
+        "jsonPointer": "/commands/101",
+        "line": 11761,
+        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
+      },
+      "kind": "http"
+    },
+    {
+      "command": "ReviewControlEvaluation",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ProgramId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ControlId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "EvaluationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "Decision",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "Rationale",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "SeparationOfDutiesWaiverId",
+          "type": "Uuid?",
+          "required": false
+        }
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "ControlEvaluationView",
+        "firstHttpStatus": 200,
+        "terminalResultType": "ControlEvaluationView"
+      },
+      "http": [
+        {
+          "method": "PUT",
+          "path": "/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/evaluations/{evaluation_id}/reviews/{command_id}",
+          "policy": "ComplianceAuthorizationPolicies.ApiUser"
+        }
+      ],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
+        "jsonPointer": "/commands/129",
+        "line": 14890,
+        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
+      },
+      "kind": "http"
+    },
+    {
+      "command": "StartControlEvaluation",
+      "logicalIdentity": {
+        "field": "EvaluationId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "caller-supplied immutable creation identity: an exact retry with the same id and authored intent returns the original result; the same id with changed intent is refused; a different id is a different record"
+      },
+      "fields": [
+        {
+          "name": "EvaluationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ProgramId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ControlId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "PlanVersionId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "RetestOfEvaluationId",
+          "type": "Uuid?",
+          "required": false
+        }
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "ControlEvaluationView",
+        "firstHttpStatus": 200,
+        "terminalResultType": "ControlEvaluationView"
+      },
+      "http": [
+        {
+          "method": "PUT",
+          "path": "/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/evaluations/{evaluation_id}",
+          "policy": "ComplianceAuthorizationPolicies.ApiUser"
+        }
+      ],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
+        "jsonPointer": "/commands/153",
+        "line": 17800,
+        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
+      },
+      "kind": "http"
+    },
+    {
+      "command": "SubmitControlEvaluation",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ProgramId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ControlId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "EvaluationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "Conclusions",
+          "type": "IReadOnlyList<EvaluationAssertionConclusion>",
+          "required": true
+        }
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "ControlEvaluationView",
+        "firstHttpStatus": 200,
+        "terminalResultType": "ControlEvaluationView"
+      },
+      "http": [
+        {
+          "method": "PUT",
+          "path": "/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/evaluations/{evaluation_id}/submissions/{command_id}",
+          "policy": "ComplianceAuthorizationPolicies.ApiUser"
+        }
+      ],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
+        "jsonPointer": "/commands/155",
+        "line": 18036,
+        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
+      },
+      "kind": "http"
+    }
+  ],
+  "sourceContractEvidence": [
+    {
+      "command": "DisposeControlEvaluationDeviation",
+      "status": "target_contract",
+      "sourceContract": "src/Compliance.Common/Features/Evaluations/DisposeControlEvaluationDeviation.cs",
+      "sourceHandlers": [
+        {
+          "name": "DisposeControlEvaluationDeviationHandler",
+          "source": "src/Compliance.Core/Features/Evaluations/DisposeControlEvaluationDeviationHandler.cs",
+          "registered": true
+        }
+      ],
+      "handler": "DisposeControlEvaluationDeviationHandler",
+      "sourceRoots": [
+        "ControlEvaluationLedger"
+      ],
+      "owner": "ControlEvaluation",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "one immutable authored operation"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ProgramId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ControlId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "EvaluationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "DeviationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "Disposition",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "Rationale",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "WaiverId",
+          "type": "Uuid?",
+          "required": false
+        }
+      ],
+      "http": [
+        {
+          "method": "PUT",
+          "path": "/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/evaluations/{evaluation_id}/deviations/{deviation_id}/dispositions/{command_id}",
+          "policy": "ComplianceAuthorizationPolicies.ApiUser"
+        }
+      ],
+      "mcp": true,
+      "entryPoint": "authorized_http_and_mcp",
+      "authorizerSources": [
+        "src/Compliance.Core/Features/AccessControl/ClientManagementMutationAuthorizer.cs",
+        "src/Compliance.Core/Features/Programs/ProgramManagementAuthorizer.cs"
+      ],
+      "events": [
+        "ControlEvaluationDeviationDisposed"
+      ],
+      "protocols": [
+        "Independent evaluation and retest"
+      ],
+      "guardOrder": [
+        "bind_required_ids",
+        "authenticate_authorize",
+        "canonicalize_authored_intent",
+        "resolve_native_operation_facts",
+        "compare_owner_episode_actor_kind_intent_original_revision",
+        "validate_new_owner_revision_and_source_permits",
+        "append_complete_concrete_attributed_batch"
+      ],
+      "policyPreservation": "All current source handler/aggregate validation rules and source test expectations apply, except the explicit contractChanges and boundary protocol. Lifetime caps and technical attempt events are removed with their structural replacement.",
+      "contractChanges": [
+        "Add required CommandId."
+      ],
+      "existingTests": [
+        "test/Compliance.Tests/Features/Evaluations/ControlEvaluationTests.cs"
+      ],
+      "requiredTests": [
+        "ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange",
+        "ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision",
+        "ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity",
+        "ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof",
+        "ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome"
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "ControlEvaluationView",
+        "firstHttpStatus": 200,
+        "terminalResultType": "ControlEvaluationView"
+      },
+      "expectedRevisionScope": {
+        "field": "ExpectedRevision",
+        "owner": "ControlEvaluation",
+        "counter": "logical ResourceRevision of this owner",
+        "nullableInternalRule": null
+      }
+    },
+    {
+      "command": "RecordControlEvaluationStep",
+      "status": "target_contract",
+      "sourceContract": "src/Compliance.Common/Features/Evaluations/RecordControlEvaluationStep.cs",
+      "sourceHandlers": [
+        {
+          "name": "RecordControlEvaluationStepHandler",
+          "source": "src/Compliance.Core/Features/Evaluations/RecordControlEvaluationStepHandler.cs",
+          "registered": true
+        }
+      ],
+      "handler": "RecordControlEvaluationStepHandler",
+      "sourceRoots": [
+        "ControlEvaluationLedger"
+      ],
+      "owner": "ControlEvaluation",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "one immutable authored operation"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ProgramId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ControlId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "EvaluationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "StepId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "Result",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "Rationale",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "InspectedItems",
+          "type": "IReadOnlyList<EvaluationInspectedItem>",
+          "required": true
+        },
+        {
+          "name": "DeviationClassification",
+          "type": "string?",
+          "required": false
+        },
+        {
+          "name": "DeviationDescription",
+          "type": "string?",
+          "required": false
+        }
+      ],
+      "http": [
+        {
+          "method": "PUT",
+          "path": "/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/evaluations/{evaluation_id}/steps/{step_id}/results/{command_id}",
+          "policy": "ComplianceAuthorizationPolicies.ApiUser"
+        }
+      ],
+      "mcp": true,
+      "entryPoint": "authorized_http_and_mcp",
+      "authorizerSources": [
+        "src/Compliance.Core/Features/AccessControl/ClientManagementMutationAuthorizer.cs",
+        "src/Compliance.Core/Features/Programs/ProgramManagementAuthorizer.cs"
+      ],
+      "events": [
+        "ControlEvaluationStepRecorded"
+      ],
+      "protocols": [
+        "Independent evaluation and retest"
+      ],
+      "guardOrder": [
+        "bind_required_ids",
+        "authenticate_authorize",
+        "canonicalize_authored_intent",
+        "resolve_native_operation_facts",
+        "compare_owner_episode_actor_kind_intent_original_revision",
+        "validate_new_owner_revision_and_source_permits",
+        "append_complete_concrete_attributed_batch"
+      ],
+      "policyPreservation": "All current source handler/aggregate validation rules and source test expectations apply, except the explicit contractChanges and boundary protocol. Lifetime caps and technical attempt events are removed with their structural replacement.",
+      "contractChanges": [
+        "Add required CommandId."
+      ],
+      "existingTests": [
+        "test/Compliance.Tests/Features/Evaluations/ControlEvaluationTests.cs",
+        "test/Compliance.Tests/Features/Evaluations/EvaluationDeviationFindingTests.cs",
+        "test/Compliance.Tests/Features/Work/ControlEvaluationWorkTests.cs",
+        "test/Compliance.Tests/Features/Work/WorkSourceCompositionTests.cs",
+        "test/Compliance.Tests/Features/Work/ReviewerWorkAuthorityTests.cs"
+      ],
+      "requiredTests": [
+        "ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange",
+        "ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision",
+        "ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity",
+        "ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof",
+        "ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome"
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "ControlEvaluationView",
+        "firstHttpStatus": 200,
+        "terminalResultType": "ControlEvaluationView"
+      },
+      "expectedRevisionScope": {
+        "field": "ExpectedRevision",
+        "owner": "ControlEvaluation",
+        "counter": "logical ResourceRevision of this owner",
+        "nullableInternalRule": null
+      }
+    },
+    {
+      "command": "ReviewControlEvaluation",
+      "status": "target_contract",
+      "sourceContract": "src/Compliance.Common/Features/Evaluations/ReviewControlEvaluation.cs",
+      "sourceHandlers": [
+        {
+          "name": "ReviewControlEvaluationHandler",
+          "source": "src/Compliance.Core/Features/Evaluations/ReviewControlEvaluationHandler.cs",
+          "registered": true
+        }
+      ],
+      "handler": "ReviewControlEvaluationHandler",
+      "sourceRoots": [
+        "ControlEvaluationLedger"
+      ],
+      "owner": "ControlEvaluation",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "one immutable authored operation"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ProgramId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ControlId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "EvaluationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "Decision",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "Rationale",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "SeparationOfDutiesWaiverId",
+          "type": "Uuid?",
+          "required": false
+        }
+      ],
+      "http": [
+        {
+          "method": "PUT",
+          "path": "/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/evaluations/{evaluation_id}/reviews/{command_id}",
+          "policy": "ComplianceAuthorizationPolicies.ApiUser"
+        }
+      ],
+      "mcp": false,
+      "entryPoint": "personal_http",
+      "authorizerSources": [
+        "src/Compliance.Core/Features/AccessControl/ClientManagementMutationAuthorizer.cs",
+        "src/Compliance.Core/Features/Programs/ProgramManagementAuthorizer.cs"
+      ],
+      "events": [
+        "ControlEvaluationReviewed"
+      ],
+      "protocols": [
+        "Independent evaluation and retest"
+      ],
+      "guardOrder": [
+        "bind_required_ids",
+        "authenticate_authorize",
+        "canonicalize_authored_intent",
+        "resolve_native_operation_facts",
+        "compare_owner_episode_actor_kind_intent_original_revision",
+        "validate_new_owner_revision_and_source_permits",
+        "append_complete_concrete_attributed_batch"
+      ],
+      "policyPreservation": "All current source handler/aggregate validation rules and source test expectations apply, except the explicit contractChanges and boundary protocol. Lifetime caps and technical attempt events are removed with their structural replacement.",
+      "contractChanges": [
+        "Add required CommandId."
+      ],
+      "existingTests": [
+        "test/Compliance.Tests/Features/Evaluations/ControlEvaluationTests.cs",
+        "test/Compliance.Tests/Features/Operations/OperationsFixture.cs",
+        "test/Compliance.Tests/Features/Work/ControlEvaluationWorkTests.cs",
+        "test/Compliance.Tests/Features/Work/ReviewerWorkAuthorityTests.cs"
+      ],
+      "requiredTests": [
+        "ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange",
+        "ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision",
+        "ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity",
+        "ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof",
+        "ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome"
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "ControlEvaluationView",
+        "firstHttpStatus": 200,
+        "terminalResultType": "ControlEvaluationView"
+      },
+      "expectedRevisionScope": {
+        "field": "ExpectedRevision",
+        "owner": "ControlEvaluation",
+        "counter": "logical ResourceRevision of this owner",
+        "nullableInternalRule": null
+      }
+    },
+    {
+      "command": "StartControlEvaluation",
+      "status": "target_contract",
+      "sourceContract": "src/Compliance.Common/Features/Evaluations/StartControlEvaluation.cs",
+      "sourceHandlers": [
+        {
+          "name": "StartControlEvaluationHandler",
+          "source": "src/Compliance.Core/Features/Evaluations/StartControlEvaluationHandler.cs",
+          "registered": true
+        }
+      ],
+      "handler": "StartControlEvaluationHandler",
+      "sourceRoots": [
+        "ControlEvaluationLedger"
+      ],
+      "owner": "ControlEvaluation",
+      "logicalIdentity": {
+        "field": "EvaluationId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "exact immutable creation retry"
+      },
+      "fields": [
+        {
+          "name": "EvaluationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ProgramId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ControlId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "PlanVersionId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "RetestOfEvaluationId",
+          "type": "Uuid?",
+          "required": false
+        }
+      ],
+      "http": [
+        {
+          "method": "PUT",
+          "path": "/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/evaluations/{evaluation_id}",
+          "policy": "ComplianceAuthorizationPolicies.ApiUser"
+        }
+      ],
+      "mcp": true,
+      "entryPoint": "authorized_http_and_mcp",
+      "authorizerSources": [
+        "src/Compliance.Core/Features/AccessControl/ClientManagementMutationAuthorizer.cs",
+        "src/Compliance.Core/Features/Programs/ProgramManagementAuthorizer.cs"
+      ],
+      "events": [
+        "ControlEvaluationStarted"
+      ],
+      "protocols": [
+        "Independent evaluation and retest"
+      ],
+      "guardOrder": [
+        "bind_required_ids",
+        "authenticate_authorize",
+        "canonicalize_authored_intent",
+        "resolve_native_operation_facts",
+        "compare_owner_episode_actor_kind_intent_original_revision",
+        "validate_new_owner_revision_and_source_permits",
+        "append_complete_concrete_attributed_batch"
+      ],
+      "policyPreservation": "All current source handler/aggregate validation rules and source test expectations apply, except the explicit contractChanges and boundary protocol. Lifetime caps and technical attempt events are removed with their structural replacement.",
+      "contractChanges": [
+        "Add required EvaluationId."
+      ],
+      "existingTests": [
+        "test/Compliance.Tests/Features/Evaluations/ControlEvaluationTests.cs",
+        "test/Compliance.Tests/Features/Evaluations/ControlEvaluationPlanHandlerTests.cs",
+        "test/Compliance.Tests/Features/Evaluations/EvaluationDeviationFindingTests.cs",
+        "test/Compliance.Tests/Features/AccessControl/AttestManagementWriteWallTests.cs",
+        "test/Compliance.Tests/Features/Work/ControlEvaluationWorkTests.cs",
+        "test/Compliance.Tests/Features/Work/WorkSourceCompositionTests.cs",
+        "test/Compliance.Tests/Features/Work/ReviewerWorkAuthorityTests.cs"
+      ],
+      "requiredTests": [
+        "ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange",
+        "ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision",
+        "ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity",
+        "ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof",
+        "ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome"
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "ControlEvaluationView",
+        "firstHttpStatus": 200,
+        "terminalResultType": "ControlEvaluationView"
+      },
+      "expectedRevisionScope": {
+        "field": null,
+        "owner": "ControlEvaluation",
+        "counter": "No primary caller ResourceRevision. Enforce required authored source/epoch/version tokens, immutable creation identity or trusted proof/generation as declared; append uses physical OCC."
+      }
+    },
+    {
+      "command": "SubmitControlEvaluation",
+      "status": "target_contract",
+      "sourceContract": "src/Compliance.Common/Features/Evaluations/SubmitControlEvaluation.cs",
+      "sourceHandlers": [
+        {
+          "name": "SubmitControlEvaluationHandler",
+          "source": "src/Compliance.Core/Features/Evaluations/SubmitControlEvaluationHandler.cs",
+          "registered": true
+        }
+      ],
+      "handler": "SubmitControlEvaluationHandler",
+      "sourceRoots": [
+        "ControlEvaluationLedger"
+      ],
+      "owner": "ControlEvaluation",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "one immutable authored operation"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ProgramId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ControlId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "EvaluationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "Conclusions",
+          "type": "IReadOnlyList<EvaluationAssertionConclusion>",
+          "required": true
+        }
+      ],
+      "http": [
+        {
+          "method": "PUT",
+          "path": "/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/evaluations/{evaluation_id}/submissions/{command_id}",
+          "policy": "ComplianceAuthorizationPolicies.ApiUser"
+        }
+      ],
+      "mcp": false,
+      "entryPoint": "personal_http",
+      "authorizerSources": [
+        "src/Compliance.Core/Features/AccessControl/ClientManagementMutationAuthorizer.cs",
+        "src/Compliance.Core/Features/Programs/ProgramManagementAuthorizer.cs"
+      ],
+      "events": [
+        "ControlEvaluationSubmitted"
+      ],
+      "protocols": [
+        "Independent evaluation and retest"
+      ],
+      "guardOrder": [
+        "bind_required_ids",
+        "authenticate_authorize",
+        "canonicalize_authored_intent",
+        "resolve_native_operation_facts",
+        "compare_owner_episode_actor_kind_intent_original_revision",
+        "validate_new_owner_revision_and_source_permits",
+        "append_complete_concrete_attributed_batch"
+      ],
+      "policyPreservation": "All current source handler/aggregate validation rules and source test expectations apply, except the explicit contractChanges and boundary protocol. Lifetime caps and technical attempt events are removed with their structural replacement.",
+      "contractChanges": [
+        "Add required CommandId."
+      ],
+      "existingTests": [
+        "test/Compliance.Tests/Features/Evaluations/ControlEvaluationTests.cs",
+        "test/Compliance.Tests/Features/Evaluations/EvaluationDeviationFindingTests.cs",
+        "test/Compliance.Tests/Features/Operations/OperationsFixture.cs",
+        "test/Compliance.Tests/Features/Work/ControlEvaluationWorkTests.cs",
+        "test/Compliance.Tests/Features/Work/WorkSourceCompositionTests.cs",
+        "test/Compliance.Tests/Features/Work/ReviewerWorkAuthorityTests.cs"
+      ],
+      "requiredTests": [
+        "ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange",
+        "ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision",
+        "ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity",
+        "ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof",
+        "ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome"
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "ControlEvaluationView",
+        "firstHttpStatus": 200,
+        "terminalResultType": "ControlEvaluationView"
+      },
+      "expectedRevisionScope": {
+        "field": "ExpectedRevision",
+        "owner": "ControlEvaluation",
+        "counter": "logical ResourceRevision of this owner",
+        "nullableInternalRule": null
+      }
+    }
+  ]
+}

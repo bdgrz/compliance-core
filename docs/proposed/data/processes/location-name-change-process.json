@@ -1,0 +1,33 @@
+{
+  "process": "LocationNameChangeProcess",
+  "rootSourceEvents": [
+    "LocationChangeAccepted"
+  ],
+  "ordered": true,
+  "stages": [
+    {
+      "stage": "claim",
+      "receivers": [
+        "ClaimLocationName"
+      ],
+      "rule": null
+    },
+    {
+      "stage": "apply",
+      "receivers": [
+        "ApplyLocationChange"
+      ],
+      "rule": null
+    },
+    {
+      "stage": "release",
+      "receivers": [
+        "ReleaseLocationName"
+      ],
+      "rule": null
+    }
+  ],
+  "abort": [
+    "CancelLocationChange"
+  ]
+}

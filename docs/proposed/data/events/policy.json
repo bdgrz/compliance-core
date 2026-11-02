@@ -1,0 +1,197 @@
+{
+  "owner": "Policy",
+  "events": [
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:PolicyApproved",
+        "event": "PolicyApproved",
+        "emissionKind": "business",
+        "owners": [
+          "Policy"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": false,
+        "targetConcreteType": "PolicyApproved",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.policy.approved",
+          "version": 2
+        },
+        "wireQualification": "Wire matches the declared record in src/Compliance.Common/Features/Policies/Events/PolicyApproved.cs at 60029b8f.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "retained_current_schema_native_qualification_required",
+        "sourceStatus": "declared",
+        "meaning": "Activates the exact reviewed draft revision as an immutable version identified by ContentSha256. A major version requires every audience to re-acknowledge.",
+        "meaningSource": "record summary in src/Compliance.Common/Features/Policies/Events/PolicyApproved.cs"
+      },
+      "schema": null
+    },
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:PolicyDraftCreated",
+        "event": "PolicyDraftCreated",
+        "emissionKind": "business",
+        "owners": [
+          "Policy"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": false,
+        "targetConcreteType": "PolicyDraftCreated",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.policy.draft.created",
+          "version": 2
+        },
+        "wireQualification": "Wire matches the declared record in src/Compliance.Common/Features/Policies/Events/PolicyDraftCreated.cs at 60029b8f.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "retained_current_schema_native_qualification_required",
+        "sourceStatus": "declared",
+        "meaning": "A policy draft was created for a program with its identifier and authored content by a named member, awaiting review.",
+        "meaningSource": "authored 2026-10-29 from src/Compliance.Common/Features/Policies/Events/PolicyDraftCreated.cs"
+      },
+      "schema": null
+    },
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:PolicyDraftDiscarded",
+        "event": "PolicyDraftDiscarded",
+        "emissionKind": "business",
+        "owners": [
+          "Policy"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": false,
+        "targetConcreteType": "PolicyDraftDiscarded",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.policy.draft.discarded",
+          "version": 2
+        },
+        "wireQualification": "Wire matches the declared record in src/Compliance.Common/Features/Policies/Events/PolicyDraftDiscarded.cs at 60029b8f.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "retained_current_schema_native_qualification_required",
+        "sourceStatus": "declared",
+        "meaning": "A policy draft was discarded with a stated rationale by a named actor, ending it without approval.",
+        "meaningSource": "authored 2026-10-29 from src/Compliance.Common/Features/Policies/Events/PolicyDraftDiscarded.cs"
+      },
+      "schema": null
+    },
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:PolicyDraftRevised",
+        "event": "PolicyDraftRevised",
+        "emissionKind": "business",
+        "owners": [
+          "Policy"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": false,
+        "targetConcreteType": "PolicyDraftRevised",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.policy.draft.revised",
+          "version": 2
+        },
+        "wireQualification": "Wire matches the declared record in src/Compliance.Common/Features/Policies/Events/PolicyDraftRevised.cs at 60029b8f.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "retained_current_schema_native_qualification_required",
+        "sourceStatus": "declared",
+        "meaning": "A new draft revision. PredecessorVersion is set when the revision opens a successor draft from that approved version.",
+        "meaningSource": "record summary in src/Compliance.Common/Features/Policies/Events/PolicyDraftRevised.cs"
+      },
+      "schema": null
+    },
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:PolicyPeriodicReviewConfirmed",
+        "event": "PolicyPeriodicReviewConfirmed",
+        "emissionKind": "business",
+        "owners": [
+          "Policy"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": false,
+        "targetConcreteType": "PolicyPeriodicReviewConfirmed",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.policy.periodic_review.confirmed",
+          "version": 2
+        },
+        "wireQualification": "Wire matches the declared record in src/Compliance.Common/Features/Policies/Events/PolicyPeriodicReviewConfirmed.cs at 60029b8f.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "retained_current_schema_native_qualification_required",
+        "sourceStatus": "declared",
+        "meaning": "A periodic review that confirmed the current version without changing it.",
+        "meaningSource": "record summary in src/Compliance.Common/Features/Policies/Events/PolicyPeriodicReviewConfirmed.cs"
+      },
+      "schema": null
+    },
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:PolicyRetired",
+        "event": "PolicyRetired",
+        "emissionKind": "business",
+        "owners": [
+          "Policy"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": false,
+        "targetConcreteType": "PolicyRetired",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.policy.retired",
+          "version": 2
+        },
+        "wireQualification": "Wire matches the declared record in src/Compliance.Common/Features/Policies/Events/PolicyRetired.cs at 60029b8f.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "retained_current_schema_native_qualification_required",
+        "sourceStatus": "declared",
+        "meaning": "An approved policy version was retired effective until a stated date, on the strength of an accepted retirement review and a stated rationale.",
+        "meaningSource": "authored 2026-10-29 from src/Compliance.Common/Features/Policies/Events/PolicyRetired.cs"
+      },
+      "schema": null
+    },
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:PolicyRetirementProposed",
+        "event": "PolicyRetirementProposed",
+        "emissionKind": "business",
+        "owners": [
+          "Policy"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": false,
+        "targetConcreteType": "PolicyRetirementProposed",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.policy.retirement.proposed",
+          "version": 2
+        },
+        "wireQualification": "Wire matches the declared record in src/Compliance.Common/Features/Policies/Events/PolicyRetirementProposed.cs at 60029b8f.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "retained_current_schema_native_qualification_required",
+        "sourceStatus": "declared",
+        "meaning": "Retirement of a policy version effective until a stated date was proposed with a rationale by a named member, awaiting review.",
+        "meaningSource": "authored 2026-10-29 from src/Compliance.Common/Features/Policies/Events/PolicyRetirementProposed.cs"
+      },
+      "schema": null
+    },
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:PolicyReviewed",
+        "event": "PolicyReviewed",
+        "emissionKind": "business",
+        "owners": [
+          "Policy"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": false,
+        "targetConcreteType": "PolicyReviewed",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.policy.reviewed",
+          "version": 2
+        },
+        "wireQualification": "Wire matches the declared record in src/Compliance.Common/Features/Policies/Events/PolicyReviewed.cs at 60029b8f.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "retained_current_schema_native_qualification_required",
+        "sourceStatus": "declared",
+        "meaning": "A policy draft revision was reviewed with a decision outcome and rationale by a named reviewer.",
+        "meaningSource": "authored 2026-10-29 from src/Compliance.Common/Features/Policies/Events/PolicyReviewed.cs"
+      },
+      "schema": null
+    }
+  ]
+}

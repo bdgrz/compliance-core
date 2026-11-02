@@ -1,0 +1,660 @@
+{
+  "owner": "ComplianceIncident",
+  "origin": "retained_baseline",
+  "baselineOwners": [
+    "ComplianceIncident"
+  ],
+  "declaredIdentity": "Per incident id is a valid stable creation identity. SameInitial/revision/assessment helpers compare server RecordedAt; fresh handler clock makes an exact client retry conflict or append. No selected RequestId guard.",
+  "invariant": "One incident version may be assessed once; current-version independent description decision and required follow-up eligibility gate advancement; incident resolution requires every admitted follow-up work item completed.",
+  "boundaryDecision": "narrow",
+  "boundaryRationale": "Keep current version, assessment and eligibility/independence gate atomic. Historical versions/decisions are immutable histories; do not split current gate simply by entity nouns. Required work selection can be sealed exact-version content with authority proofs.",
+  "sources": [
+    {
+      "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
+      "jsonPointer": "/aggregates/18",
+      "line": 14573,
+      "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
+    }
+  ],
+  "baselineSourcePath": "src/Compliance.Core/Features/Incidents/ComplianceIncident.cs",
+  "baselineEvents": [
+    "ComplianceIncidentImpactAssessed",
+    "ComplianceIncidentRecorded",
+    "ComplianceIncidentRevised",
+    "ComplianceIncidentSystemDescriptionDecisionRecorded",
+    "IncidentResolutionRecorded"
+  ],
+  "classification": "business_aggregate",
+  "businessAggregate": true,
+  "implementationStatus": "SEPARATE_VERIFICATION_REQUIRED_IMPLEMENTATION_HALTED",
+  "identityReadingRule": "selectedIdentitySummary and exact selectedCommandContracts define intended identity. baselineIdentityObservation/declaredIdentity retain older source observations only, including old replay defects; they are not target behavior or authorization to change an occupied key.",
+  "selectedCommandContracts": [
+    {
+      "command": "AssessComplianceIncident",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "rule": "CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ProgramId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "IncidentId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "Content",
+          "type": "ComplianceIncidentImpactAssessmentContent",
+          "required": true
+        }
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "Unit",
+        "firstHttpStatus": 200,
+        "terminalResultType": "Unit"
+      },
+      "http": [],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
+        "jsonPointer": "/contracts/23",
+        "line": 1856,
+        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
+      },
+      "kind": "command"
+    },
+    {
+      "command": "RecordComplianceIncident",
+      "logicalIdentity": {
+        "field": "IncidentId",
+        "type": "Uuid",
+        "required": true,
+        "rule": "caller-supplied immutable creation identity: an exact retry with the same id and authored intent returns the original result; the same id with changed intent is refused; a different id is a different record"
+      },
+      "fields": [
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ProgramId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "IncidentId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Content",
+          "type": "ComplianceIncidentContent",
+          "required": true
+        }
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "Unit",
+        "firstHttpStatus": 200,
+        "terminalResultType": "Unit"
+      },
+      "http": [],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
+        "jsonPointer": "/contracts/111",
+        "line": 8271,
+        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
+      },
+      "kind": "creation"
+    },
+    {
+      "command": "RecordComplianceIncidentResolution",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "rule": "CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ProgramId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "IncidentId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "Content",
+          "type": "ComplianceIncidentResolutionContent",
+          "required": true
+        }
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "Unit",
+        "firstHttpStatus": 200,
+        "terminalResultType": "Unit"
+      },
+      "http": [],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
+        "jsonPointer": "/contracts/112",
+        "line": 8329,
+        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
+      },
+      "kind": "command"
+    },
+    {
+      "command": "RecordComplianceIncidentSystemDescriptionDecision",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "rule": "CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ProgramId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "IncidentId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ContentVersion",
+          "type": "int",
+          "required": true
+        },
+        {
+          "name": "SystemDescriptionId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "SystemDescriptionVersionId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "DecisionId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "AssessmentSha256",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true,
+          "addedBySelectedTarget": "2026-10-29"
+        }
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "Unit",
+        "firstHttpStatus": 200,
+        "terminalResultType": "Unit"
+      },
+      "http": [],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
+        "jsonPointer": "/contracts/113",
+        "line": 8401,
+        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
+      },
+      "kind": "command",
+      "concurrencyGuard": {
+        "rule": "require_expected_revision",
+        "basis": "default under the optimistic-concurrency principle (Jev unsettled)",
+        "jev": {
+          "mutates_existing": 0.6,
+          "absorbing": 0.19,
+          "process_reply": 0.15
+        },
+        "date": "2026-10-29"
+      }
+    },
+    {
+      "command": "ReviseComplianceIncident",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "rule": "CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ProgramId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "IncidentId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "Content",
+          "type": "ComplianceIncidentContent",
+          "required": true
+        },
+        {
+          "name": "ChangeReason",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "Unit",
+        "firstHttpStatus": 200,
+        "terminalResultType": "Unit"
+      },
+      "http": [],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
+        "jsonPointer": "/contracts/170",
+        "line": 12671,
+        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
+      },
+      "kind": "command"
+    }
+  ],
+  "eventAuthority": "retained_baseline_business_facts_requires_schema_reconciliation",
+  "events": [
+    {
+      "event": "ComplianceIncidentImpactAssessed",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
+        "jsonPointer": "/aggregates/18",
+        "line": 14573,
+        "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
+      },
+      "baselineContract": {
+        "event": "ComplianceIncidentImpactAssessed",
+        "emitters": [
+          "src/Compliance.Core/Features/Incidents/ComplianceIncident.cs"
+        ],
+        "eventDisposition": "aggregate_fact",
+        "emitterOwnership": "aggregate or partial source",
+        "typedFields": [
+          {
+            "name": "TenantId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "SubjectId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "Revision",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "ActorMemberId",
+            "type": "Uuid?",
+            "required": true
+          },
+          {
+            "name": "State",
+            "type": "ComplianceIncidentView",
+            "required": true
+          },
+          {
+            "name": "OccurredAt",
+            "type": "DateTimeOffset",
+            "required": true
+          }
+        ],
+        "eventContract": "src/Compliance.Common/Features/Incidents/ComplianceIncidentImpactAssessed.cs"
+      }
+    },
+    {
+      "event": "ComplianceIncidentRecorded",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
+        "jsonPointer": "/aggregates/18",
+        "line": 14573,
+        "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
+      },
+      "baselineContract": {
+        "event": "ComplianceIncidentRecorded",
+        "emitters": [
+          "src/Compliance.Core/Features/Incidents/ComplianceIncident.cs"
+        ],
+        "eventDisposition": "aggregate_fact",
+        "emitterOwnership": "aggregate or partial source",
+        "typedFields": [
+          {
+            "name": "TenantId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "SubjectId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "Revision",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "ActorMemberId",
+            "type": "Uuid?",
+            "required": true
+          },
+          {
+            "name": "State",
+            "type": "ComplianceIncidentView",
+            "required": true
+          },
+          {
+            "name": "OccurredAt",
+            "type": "DateTimeOffset",
+            "required": true
+          }
+        ],
+        "eventContract": "src/Compliance.Common/Features/Incidents/ComplianceIncidentRecorded.cs"
+      }
+    },
+    {
+      "event": "ComplianceIncidentRevised",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
+        "jsonPointer": "/aggregates/18",
+        "line": 14573,
+        "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
+      },
+      "baselineContract": {
+        "event": "ComplianceIncidentRevised",
+        "emitters": [
+          "src/Compliance.Core/Features/Incidents/ComplianceIncident.cs"
+        ],
+        "eventDisposition": "aggregate_fact",
+        "emitterOwnership": "aggregate or partial source",
+        "typedFields": [
+          {
+            "name": "TenantId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "SubjectId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "Revision",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "ActorMemberId",
+            "type": "Uuid?",
+            "required": true
+          },
+          {
+            "name": "State",
+            "type": "ComplianceIncidentView",
+            "required": true
+          },
+          {
+            "name": "OccurredAt",
+            "type": "DateTimeOffset",
+            "required": true
+          }
+        ],
+        "eventContract": "src/Compliance.Common/Features/Incidents/ComplianceIncidentRevised.cs"
+      }
+    },
+    {
+      "event": "ComplianceIncidentSystemDescriptionDecisionRecorded",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
+        "jsonPointer": "/aggregates/18",
+        "line": 14573,
+        "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
+      },
+      "baselineContract": {
+        "event": "ComplianceIncidentSystemDescriptionDecisionRecorded",
+        "emitters": [
+          "src/Compliance.Core/Features/Incidents/ComplianceIncident.cs"
+        ],
+        "eventDisposition": "aggregate_fact",
+        "emitterOwnership": "aggregate or partial source",
+        "typedFields": [
+          {
+            "name": "TenantId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "SubjectId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "Revision",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "ActorMemberId",
+            "type": "Uuid?",
+            "required": true
+          },
+          {
+            "name": "State",
+            "type": "ComplianceIncidentView",
+            "required": true
+          },
+          {
+            "name": "OccurredAt",
+            "type": "DateTimeOffset",
+            "required": true
+          }
+        ],
+        "eventContract": "src/Compliance.Common/Features/Incidents/ComplianceIncidentSystemDescriptionDecisionRecorded.cs"
+      }
+    },
+    {
+      "event": "IncidentResolutionRecorded",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
+        "jsonPointer": "/aggregates/18",
+        "line": 14573,
+        "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
+      },
+      "baselineContract": {
+        "event": "IncidentResolutionRecorded",
+        "emitters": [
+          "src/Compliance.Core/Features/Incidents/ComplianceIncident.cs"
+        ],
+        "eventDisposition": "aggregate_fact",
+        "emitterOwnership": "aggregate or partial source",
+        "typedFields": [
+          {
+            "name": "TenantId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "SubjectId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "Revision",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "ActorMemberId",
+            "type": "Uuid?",
+            "required": true
+          },
+          {
+            "name": "State",
+            "type": "ComplianceIncidentView",
+            "required": true
+          },
+          {
+            "name": "OccurredAt",
+            "type": "DateTimeOffset",
+            "required": true
+          }
+        ],
+        "eventContract": "src/Compliance.Common/Features/Incidents/IncidentResolutionRecorded.cs"
+      }
+    }
+  ],
+  "choreography": [],
+  "status": "SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED",
+  "baselineIdentityObservation": "Per incident id is a valid stable creation identity. SameInitial/revision/assessment helpers compare server RecordedAt; fresh handler clock makes an exact client retry conflict or append. No selected RequestId guard.",
+  "identityContractRule": "Existing published owner identity/IdFor remains stable. Required typed creation/operation identity and tenant/program/source scope come from the selected signature/protocol references; no context.RequestId minting fallback or guessed new stream key.",
+  "adoptedArchitectureDecisions": [],
+  "selectedIdentityClarification": "Tenant / compliance-incidents / IncidentId, with immutable ProgramId. IncidentId is the selected immutable creation identity; later selected commands use CommandId and the exact incident/version/proof bindings.",
+  "selectedIdentitySummary": "Tenant / compliance-incidents / IncidentId, with immutable ProgramId. IncidentId is the selected immutable creation identity; later selected commands use CommandId and the exact incident/version/proof bindings.",
+  "baselineIdentityObservationOnly": true,
+  "selectedLogicalIdentityBindings": [
+    {
+      "command": "AssessComplianceIncident",
+      "logicalIdentity": "CommandId",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
+        "jsonPointer": "/contracts/23",
+        "line": 1856,
+        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
+      }
+    },
+    {
+      "command": "RecordComplianceIncident",
+      "logicalIdentity": "IncidentId",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
+        "jsonPointer": "/contracts/111",
+        "line": 8271,
+        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
+      }
+    },
+    {
+      "command": "RecordComplianceIncidentResolution",
+      "logicalIdentity": "CommandId",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
+        "jsonPointer": "/contracts/112",
+        "line": 8329,
+        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
+      }
+    },
+    {
+      "command": "RecordComplianceIncidentSystemDescriptionDecision",
+      "logicalIdentity": "CommandId",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
+        "jsonPointer": "/contracts/113",
+        "line": 8401,
+        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
+      }
+    },
+    {
+      "command": "ReviseComplianceIncident",
+      "logicalIdentity": "CommandId",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
+        "jsonPointer": "/contracts/170",
+        "line": 12671,
+        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
+      }
+    }
+  ],
+  "selectedReplayRule": "Current required authorization precedes replay; exact authorized retries resolve the original accepted result using the selected logical identity and immutable actor/intent/source binding. Fresh mutable feasibility, clock selection and body preparation cannot replace that original result. Expected revision is concurrency precondition, not a new identity.",
+  "productRules": [
+    {
+      "id": "D21-04",
+      "doc": "m0-d21-significant-change.md",
+      "rule": "A ComplianceIncident carries detected_at, resolved_at, and boolean customer_data_affected and availability_sla_affected; it may link to an earlier externally sourced IncidentReference, and linking does not rewrite earlier risk history or weaken the IncidentReference's required source identity, occurrence time, summary, and provenance."
+    }
+  ],
+  "decides": "An incident carries detected_at, resolved_at and boolean customer_data_affected and availability_sla_affected; the recorded time cannot precede detected_at and a revision cannot change detected_at. It may link to an earlier externally sourced IncidentReference; linking never rewrites earlier risk history and the reference keeps its source identity, occurrence time, summary and provenance.",
+  "decidesCovers": [
+    "D21-04"
+  ],
+  "decidesAuthored": "2026-10-29"
+}

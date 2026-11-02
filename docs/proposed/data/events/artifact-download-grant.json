@@ -1,0 +1,484 @@
+{
+  "owner": "ArtifactDownloadGrant",
+  "events": [
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:ArtifactDownloadGrantCanceled",
+        "event": "ArtifactDownloadGrantCanceled",
+        "emissionKind": "business",
+        "owners": [
+          "ArtifactDownloadGrant"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": true,
+        "targetConcreteType": "ArtifactDownloadGrantCanceled",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.artifact-download-grant.artifact-download-grant-canceled",
+          "version": 1
+        },
+        "wireQualification": "Wire matches the declared record in src/Compliance.Common/Features/Evidence/Events/ArtifactDownloadGrantCanceled.cs at 60029b8f.",
+        "adoptedDecisionIds": [
+          "ARTIFACT_DOWNLOAD"
+        ],
+        "schemaStatus": "selected_complete_schema",
+        "sourceStatus": "declared",
+        "meaning": "An artifact download grant was canceled before its source use was settled, so the grant can never be issued or used to download the artifact.",
+        "meaningSource": "authored 2026-10-29 from src/Compliance.Common/Features/Evidence/Events/ArtifactDownloadGrantCanceled.cs"
+      },
+      "schema": {
+        "event": "ArtifactDownloadGrantCanceled",
+        "discriminator": "bdgrz.artifact-download-grant.artifact-download-grant-canceled",
+        "discriminatorVersion": 1,
+        "owner": "ArtifactDownloadGrant",
+        "existingContract": null,
+        "status": "selected target schema; implementation pending",
+        "reason": "source admission contract",
+        "fields": [
+          {
+            "name": "Owner",
+            "type": "EventStreamAddress",
+            "required": true
+          },
+          {
+            "name": "Revision",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "Generation",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "Intent",
+            "type": "ImmutableContentRef",
+            "required": true
+          },
+          {
+            "name": "SourceProofs",
+            "type": "ImmutableContentRef?",
+            "required": true
+          },
+          {
+            "name": "Operation",
+            "type": "OperationProvenance",
+            "required": true
+          },
+          {
+            "name": "GrantId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "FirstResponse",
+            "type": "ImmutableContentRef?",
+            "required": true
+          },
+          {
+            "name": "OperationResult",
+            "type": "ImmutableContentRef?",
+            "required": true
+          }
+        ],
+        "contentSchemas": [
+          {
+            "field": "Intent",
+            "schema": "evidence-download-intent.v1",
+            "recordType": "EvidenceDownloadIntent",
+            "fields": [
+              {
+                "name": "Header",
+                "type": "DurableIntentHeader",
+                "required": true
+              },
+              {
+                "name": "GrantId",
+                "type": "Uuid",
+                "required": true
+              },
+              {
+                "name": "ArtifactId",
+                "type": "Uuid",
+                "required": true
+              },
+              {
+                "name": "ContentSha256",
+                "type": "string",
+                "required": true
+              },
+              {
+                "name": "ContentLength",
+                "type": "long",
+                "required": true
+              },
+              {
+                "name": "ArtifactRevision",
+                "type": "ulong",
+                "required": true
+              },
+              {
+                "name": "Purpose",
+                "type": "string",
+                "required": true
+              },
+              {
+                "name": "ProgramId",
+                "type": "Uuid?",
+                "required": true
+              },
+              {
+                "name": "AdvisorHandoffId",
+                "type": "Uuid?",
+                "required": true
+              },
+              {
+                "name": "SelectedSource",
+                "type": "AdvisorRecordVersion?",
+                "required": true
+              },
+              {
+                "name": "RequiredSourceUses",
+                "type": "ImmutableSelectionManifest",
+                "required": true
+              },
+              {
+                "name": "MaxDeliveryLifetime",
+                "type": "TimeSpan",
+                "required": true
+              }
+            ],
+            "rule": "GrantId equals root CommandId. Admit/pin available inspected artifact, then acquire complete optional handoff and explicit handling-policy uses. No fabricated use for an absent optional source; default immutable policy version is frozen. Original ticket lives only in protected result content.",
+            "variants": [
+              {
+                "recordType": "EvidenceDownloadIntent",
+                "schema": "evidence-download-intent.v1",
+                "fields": [
+                  {
+                    "name": "Header",
+                    "type": "DurableIntentHeader",
+                    "required": true
+                  },
+                  {
+                    "name": "GrantId",
+                    "type": "Uuid",
+                    "required": true
+                  },
+                  {
+                    "name": "ArtifactId",
+                    "type": "Uuid",
+                    "required": true
+                  },
+                  {
+                    "name": "ContentSha256",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "ContentLength",
+                    "type": "long",
+                    "required": true
+                  },
+                  {
+                    "name": "ArtifactRevision",
+                    "type": "ulong",
+                    "required": true
+                  },
+                  {
+                    "name": "Purpose",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "ProgramId",
+                    "type": "Uuid?",
+                    "required": true
+                  },
+                  {
+                    "name": "AdvisorHandoffId",
+                    "type": "Uuid?",
+                    "required": true
+                  },
+                  {
+                    "name": "SelectedSource",
+                    "type": "AdvisorRecordVersion?",
+                    "required": true
+                  },
+                  {
+                    "name": "RequiredSourceUses",
+                    "type": "ImmutableSelectionManifest",
+                    "required": true
+                  },
+                  {
+                    "name": "MaxDeliveryLifetime",
+                    "type": "TimeSpan",
+                    "required": true
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "changes": [],
+        "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
+        "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
+        "resolvedIntentSchema": "EvidenceDownloadIntent",
+        "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
+      }
+    },
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:EvidenceArtifactDownloadIssued",
+        "event": "EvidenceArtifactDownloadIssued",
+        "emissionKind": "business",
+        "owners": [
+          "ArtifactDownloadGrant"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": true,
+        "targetConcreteType": "EvidenceArtifactDownloadIssuedV2",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.evidence.evidence-artifact-download-issued",
+          "version": 2
+        },
+        "wireQualification": "Adopted wire is the occupied discriminator declared in src/Compliance.Common/Features/Evidence/Events/EvidenceArtifactDownloadIssuedV2.cs at 60029b8f (2026-10-29 reconciliation). The earlier selected wire is retained as supersededSelectedWire for provenance only.",
+        "adoptedDecisionIds": [
+          "ARTIFACT_DOWNLOAD"
+        ],
+        "schemaStatus": "selected_native_schema_with_adopted_explicit_wire_v2_owner_migration",
+        "sourceStatus": "declared",
+        "supersededSelectedWire": {
+          "discriminator": "bdgrz.evidence.evidence-artifact-download-issued",
+          "version": 2,
+          "concreteType": "EvidenceArtifactDownloadIssuedV2",
+          "owner": "ArtifactDownloadGrant"
+        },
+        "meaning": "Records the receiving grant for one protected evidence artifact download.",
+        "meaningSource": "record summary in src/Compliance.Common/Features/Evidence/Events/EvidenceArtifactDownloadIssuedV2.cs"
+      },
+      "schema": {
+        "event": "EvidenceArtifactDownloadIssued",
+        "discriminator": "bdgrz.evidence.evidence-artifact-download-issued",
+        "discriminatorVersion": 1,
+        "owner": "ArtifactDownloadGrant",
+        "existingContract": "src/Compliance.Common/Features/Evidence/EvidenceArtifactDownloadIssued.cs",
+        "status": "selected target schema; implementation pending",
+        "reason": "typed reactor receiver accepted business fact",
+        "fields": [
+          {
+            "name": "TenantId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "ArtifactId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "Revision",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "RequestId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "ContentSha256",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "ContentLength",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "Purpose",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "IssuedBy",
+            "type": "ActorReference",
+            "required": true
+          },
+          {
+            "name": "IssuedAt",
+            "type": "DateTimeOffset",
+            "required": true
+          },
+          {
+            "name": "Operation",
+            "type": "OperationProvenance",
+            "required": true
+          },
+          {
+            "name": "Intent",
+            "type": "ImmutableContentRef",
+            "required": true
+          },
+          {
+            "name": "GrantId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "FirstResponse",
+            "type": "ImmutableContentRef?",
+            "required": true
+          },
+          {
+            "name": "OperationResult",
+            "type": "ImmutableContentRef?",
+            "required": true
+          }
+        ],
+        "contentSchemas": [
+          {
+            "field": "Intent",
+            "schema": "evidence-download-intent.v1",
+            "recordType": "EvidenceDownloadIntent",
+            "fields": [
+              {
+                "name": "Header",
+                "type": "DurableIntentHeader",
+                "required": true
+              },
+              {
+                "name": "GrantId",
+                "type": "Uuid",
+                "required": true
+              },
+              {
+                "name": "ArtifactId",
+                "type": "Uuid",
+                "required": true
+              },
+              {
+                "name": "ContentSha256",
+                "type": "string",
+                "required": true
+              },
+              {
+                "name": "ContentLength",
+                "type": "long",
+                "required": true
+              },
+              {
+                "name": "ArtifactRevision",
+                "type": "ulong",
+                "required": true
+              },
+              {
+                "name": "Purpose",
+                "type": "string",
+                "required": true
+              },
+              {
+                "name": "ProgramId",
+                "type": "Uuid?",
+                "required": true
+              },
+              {
+                "name": "AdvisorHandoffId",
+                "type": "Uuid?",
+                "required": true
+              },
+              {
+                "name": "SelectedSource",
+                "type": "AdvisorRecordVersion?",
+                "required": true
+              },
+              {
+                "name": "RequiredSourceUses",
+                "type": "ImmutableSelectionManifest",
+                "required": true
+              },
+              {
+                "name": "MaxDeliveryLifetime",
+                "type": "TimeSpan",
+                "required": true
+              }
+            ],
+            "rule": "GrantId equals root CommandId. Admit/pin available inspected artifact, then acquire complete optional handoff and explicit handling-policy uses. No fabricated use for an absent optional source; default immutable policy version is frozen. Original ticket lives only in protected result content.",
+            "variants": [
+              {
+                "recordType": "EvidenceDownloadIntent",
+                "schema": "evidence-download-intent.v1",
+                "fields": [
+                  {
+                    "name": "Header",
+                    "type": "DurableIntentHeader",
+                    "required": true
+                  },
+                  {
+                    "name": "GrantId",
+                    "type": "Uuid",
+                    "required": true
+                  },
+                  {
+                    "name": "ArtifactId",
+                    "type": "Uuid",
+                    "required": true
+                  },
+                  {
+                    "name": "ContentSha256",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "ContentLength",
+                    "type": "long",
+                    "required": true
+                  },
+                  {
+                    "name": "ArtifactRevision",
+                    "type": "ulong",
+                    "required": true
+                  },
+                  {
+                    "name": "Purpose",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "ProgramId",
+                    "type": "Uuid?",
+                    "required": true
+                  },
+                  {
+                    "name": "AdvisorHandoffId",
+                    "type": "Uuid?",
+                    "required": true
+                  },
+                  {
+                    "name": "SelectedSource",
+                    "type": "AdvisorRecordVersion?",
+                    "required": true
+                  },
+                  {
+                    "name": "RequiredSourceUses",
+                    "type": "ImmutableSelectionManifest",
+                    "required": true
+                  },
+                  {
+                    "name": "MaxDeliveryLifetime",
+                    "type": "TimeSpan",
+                    "required": true
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "changes": [],
+        "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
+        "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
+        "resolvedIntentSchema": "EvidenceDownloadIntent",
+        "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
+      }
+    }
+  ]
+}

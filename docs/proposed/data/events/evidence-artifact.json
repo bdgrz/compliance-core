@@ -1,0 +1,456 @@
+{
+  "owner": "EvidenceArtifact",
+  "events": [
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:ArtifactDownloadAvailabilityUseSettled",
+        "event": "ArtifactDownloadAvailabilityUseSettled",
+        "emissionKind": "reservation",
+        "owners": [
+          "EvidenceArtifact"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": true,
+        "targetConcreteType": "ArtifactDownloadAvailabilityUseSettled",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.evidence-artifact.artifact-download-availability-use-settled",
+          "version": 1
+        },
+        "wireQualification": "Exact current/selected wire shape remains subject to documented final-schema reconciliation; semantic owner/name is fixed.",
+        "adoptedDecisionIds": [
+          "ARTIFACT_DOWNLOAD"
+        ],
+        "schemaStatus": "selected_complete_schema",
+        "sourceStatus": "planned_no_source_type",
+        "emissionKindNote": "Owner-held reservation or its settlement: authoritative for the owner invariant (the reducer must refuse conflicting commands while held) but not a business decision in its own right. Adopted 2026-10-29 (decision EV-D06).",
+        "meaning": null
+      },
+      "schema": {
+        "event": "ArtifactDownloadAvailabilityUseSettled",
+        "discriminator": "bdgrz.evidence-artifact.artifact-download-availability-use-settled",
+        "discriminatorVersion": 1,
+        "owner": "EvidenceArtifact",
+        "existingContract": null,
+        "status": "selected target schema; implementation pending",
+        "reason": "typed reactor receiver accepted business fact",
+        "fields": [
+          {
+            "name": "Owner",
+            "type": "EventStreamAddress",
+            "required": true
+          },
+          {
+            "name": "Revision",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "Generation",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "Intent",
+            "type": "ImmutableContentRef",
+            "required": true
+          },
+          {
+            "name": "SourceProofs",
+            "type": "ImmutableContentRef?",
+            "required": true
+          },
+          {
+            "name": "Operation",
+            "type": "OperationProvenance",
+            "required": true
+          },
+          {
+            "name": "FirstResponse",
+            "type": "ImmutableContentRef?",
+            "required": true
+          },
+          {
+            "name": "OperationResult",
+            "type": "ImmutableContentRef?",
+            "required": true
+          }
+        ],
+        "contentSchemas": [
+          {
+            "field": "Intent",
+            "schema": "source-use-authorization-intent.v1",
+            "recordType": "SourceUseAuthorizationIntent",
+            "fields": [
+              {
+                "name": "Header",
+                "type": "DurableIntentHeader",
+                "required": true
+              },
+              {
+                "name": "ParentIntent",
+                "type": "ImmutableContentRef",
+                "required": true,
+                "contentSchema": "Exact named workflow intent referenced by the proven source acceptance"
+              },
+              {
+                "name": "Reservation",
+                "type": "ReservationKey",
+                "required": true
+              },
+              {
+                "name": "Requirement",
+                "type": "SourceUseRequirement",
+                "required": true
+              },
+              {
+                "name": "Grant",
+                "type": "ReservationGrant?",
+                "required": true
+              },
+              {
+                "name": "Disposition",
+                "type": "SourceUseSettlementDisposition?",
+                "required": true
+              }
+            ],
+            "rule": "A use fact points to the immutable original workflow intent plus this exact source-specific requirement/token. No arbitrary command snapshot serves as policy proof. Terminal settlement before grant fences the same key; neither lease expiry nor missing read releases it.",
+            "variants": [
+              {
+                "recordType": "SourceUseAuthorizationIntent",
+                "schema": "source-use-authorization-intent.v1",
+                "fields": [
+                  {
+                    "name": "Header",
+                    "type": "DurableIntentHeader",
+                    "required": true
+                  },
+                  {
+                    "name": "ParentIntent",
+                    "type": "ImmutableContentRef",
+                    "required": true,
+                    "contentSchema": "Exact named workflow intent referenced by the proven source acceptance"
+                  },
+                  {
+                    "name": "Reservation",
+                    "type": "ReservationKey",
+                    "required": true
+                  },
+                  {
+                    "name": "Requirement",
+                    "type": "SourceUseRequirement",
+                    "required": true
+                  },
+                  {
+                    "name": "Grant",
+                    "type": "ReservationGrant?",
+                    "required": true
+                  },
+                  {
+                    "name": "Disposition",
+                    "type": "SourceUseSettlementDisposition?",
+                    "required": true
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "changes": [],
+        "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
+        "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
+        "resolvedIntentSchema": "SourceUseAuthorizationIntent",
+        "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
+      }
+    },
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:EvidenceArtifactDownloadRequested",
+        "event": "EvidenceArtifactDownloadRequested",
+        "emissionKind": "business",
+        "owners": [
+          "EvidenceArtifact"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": true,
+        "targetConcreteType": "EvidenceArtifactDownloadRequested",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.evidence-artifact.evidence-artifact-download-requested",
+          "version": 1
+        },
+        "wireQualification": "Exact current/selected wire shape remains subject to documented final-schema reconciliation; semantic owner/name is fixed.",
+        "adoptedDecisionIds": [
+          "ARTIFACT_DOWNLOAD"
+        ],
+        "schemaStatus": "selected_complete_schema",
+        "sourceStatus": "planned_no_source_type",
+        "meaning": null
+      },
+      "schema": {
+        "event": "EvidenceArtifactDownloadRequested",
+        "discriminator": "bdgrz.evidence-artifact.evidence-artifact-download-requested",
+        "discriminatorVersion": 1,
+        "owner": "EvidenceArtifact",
+        "existingContract": null,
+        "status": "selected target schema; implementation pending",
+        "reason": "source command accepted result",
+        "fields": [
+          {
+            "name": "Owner",
+            "type": "EventStreamAddress",
+            "required": true
+          },
+          {
+            "name": "Revision",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "Generation",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "Intent",
+            "type": "ImmutableContentRef",
+            "required": true
+          },
+          {
+            "name": "SourceProofs",
+            "type": "ImmutableContentRef?",
+            "required": true
+          },
+          {
+            "name": "Operation",
+            "type": "OperationProvenance",
+            "required": true
+          },
+          {
+            "name": "FirstResponse",
+            "type": "ImmutableContentRef?",
+            "required": true
+          },
+          {
+            "name": "OperationResult",
+            "type": "ImmutableContentRef?",
+            "required": true
+          }
+        ],
+        "contentSchemas": [
+          {
+            "field": "Intent",
+            "schema": "evidence-download-intent.v1",
+            "recordType": "EvidenceDownloadIntent",
+            "fields": [
+              {
+                "name": "Header",
+                "type": "DurableIntentHeader",
+                "required": true
+              },
+              {
+                "name": "GrantId",
+                "type": "Uuid",
+                "required": true
+              },
+              {
+                "name": "ArtifactId",
+                "type": "Uuid",
+                "required": true
+              },
+              {
+                "name": "ContentSha256",
+                "type": "string",
+                "required": true
+              },
+              {
+                "name": "ContentLength",
+                "type": "long",
+                "required": true
+              },
+              {
+                "name": "ArtifactRevision",
+                "type": "ulong",
+                "required": true
+              },
+              {
+                "name": "Purpose",
+                "type": "string",
+                "required": true
+              },
+              {
+                "name": "ProgramId",
+                "type": "Uuid?",
+                "required": true
+              },
+              {
+                "name": "AdvisorHandoffId",
+                "type": "Uuid?",
+                "required": true
+              },
+              {
+                "name": "SelectedSource",
+                "type": "AdvisorRecordVersion?",
+                "required": true
+              },
+              {
+                "name": "RequiredSourceUses",
+                "type": "ImmutableSelectionManifest",
+                "required": true
+              },
+              {
+                "name": "MaxDeliveryLifetime",
+                "type": "TimeSpan",
+                "required": true
+              }
+            ],
+            "rule": "GrantId equals root CommandId. Admit/pin available inspected artifact, then acquire complete optional handoff and explicit handling-policy uses. No fabricated use for an absent optional source; default immutable policy version is frozen. Original ticket lives only in protected result content.",
+            "variants": [
+              {
+                "recordType": "EvidenceDownloadIntent",
+                "schema": "evidence-download-intent.v1",
+                "fields": [
+                  {
+                    "name": "Header",
+                    "type": "DurableIntentHeader",
+                    "required": true
+                  },
+                  {
+                    "name": "GrantId",
+                    "type": "Uuid",
+                    "required": true
+                  },
+                  {
+                    "name": "ArtifactId",
+                    "type": "Uuid",
+                    "required": true
+                  },
+                  {
+                    "name": "ContentSha256",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "ContentLength",
+                    "type": "long",
+                    "required": true
+                  },
+                  {
+                    "name": "ArtifactRevision",
+                    "type": "ulong",
+                    "required": true
+                  },
+                  {
+                    "name": "Purpose",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "ProgramId",
+                    "type": "Uuid?",
+                    "required": true
+                  },
+                  {
+                    "name": "AdvisorHandoffId",
+                    "type": "Uuid?",
+                    "required": true
+                  },
+                  {
+                    "name": "SelectedSource",
+                    "type": "AdvisorRecordVersion?",
+                    "required": true
+                  },
+                  {
+                    "name": "RequiredSourceUses",
+                    "type": "ImmutableSelectionManifest",
+                    "required": true
+                  },
+                  {
+                    "name": "MaxDeliveryLifetime",
+                    "type": "TimeSpan",
+                    "required": true
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "changes": [],
+        "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
+        "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
+        "resolvedIntentSchema": "EvidenceDownloadIntent",
+        "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
+      }
+    },
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:EvidenceArtifactInspected",
+        "event": "EvidenceArtifactInspected",
+        "emissionKind": "business",
+        "owners": [
+          "EvidenceArtifact"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": false,
+        "targetConcreteType": "EvidenceArtifactInspected",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.evidence.artifact.inspected",
+          "version": 1
+        },
+        "wireQualification": "Wire matches the declared record in src/Compliance.Common/Features/Evidence/Events/EvidenceArtifactInspected.cs at 60029b8f.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "retained_current_schema_native_qualification_required",
+        "sourceStatus": "declared",
+        "meaning": "Records the inspection result that moves an artifact out of pending inspection.",
+        "meaningSource": "record summary in src/Compliance.Common/Features/Evidence/Events/EvidenceArtifactInspected.cs"
+      },
+      "schema": null
+    },
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:EvidenceArtifactQuarantineReleased",
+        "event": "EvidenceArtifactQuarantineReleased",
+        "emissionKind": "business",
+        "owners": [
+          "EvidenceArtifact"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": false,
+        "targetConcreteType": "EvidenceArtifactQuarantineReleased",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.evidence.artifact.quarantine_released",
+          "version": 1
+        },
+        "wireQualification": "Wire matches the declared record in src/Compliance.Common/Features/Evidence/Events/EvidenceArtifactQuarantineReleased.cs at 60029b8f.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "retained_current_schema_native_qualification_required",
+        "sourceStatus": "declared",
+        "meaning": "A quarantined evidence artifact was released after a clean rescan, with a rationale and the deciding actor recording that the malware detection was a false positive.",
+        "meaningSource": "authored 2026-10-29 from src/Compliance.Common/Features/Evidence/Events/EvidenceArtifactQuarantineReleased.cs"
+      },
+      "schema": null
+    },
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:EvidenceArtifactRegistered",
+        "event": "EvidenceArtifactRegistered",
+        "emissionKind": "business",
+        "owners": [
+          "EvidenceArtifact"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": false,
+        "targetConcreteType": "EvidenceArtifactRegistered",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.evidence.artifact.registered",
+          "version": 1
+        },
+        "wireQualification": "Wire matches the declared record in src/Compliance.Common/Features/Evidence/Events/EvidenceArtifactRegistered.cs at 60029b8f.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "retained_current_schema_native_qualification_required",
+        "sourceStatus": "declared",
+        "meaning": "Registers uploaded content as evidence awaiting inspection; the content is not yet available.",
+        "meaningSource": "record summary in src/Compliance.Common/Features/Evidence/Events/EvidenceArtifactRegistered.cs"
+      },
+      "schema": null
+    }
+  ]
+}

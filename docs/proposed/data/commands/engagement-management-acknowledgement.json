@@ -1,0 +1,139 @@
+{
+  "owner": "EngagementManagementAcknowledgement",
+  "selectedContracts": [
+    {
+      "command": "MaterializeEngagementManagementAcknowledgement",
+      "kind": "receiver",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "internal",
+        "rule": "deterministic receiver identity derived from the admitted root fact, episode and generation: exact redelivery resolves the original result, a changed admission is a new identity"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "required": true
+        },
+        {
+          "name": "Source",
+          "required": true
+        },
+        {
+          "name": "Target",
+          "required": true
+        },
+        {
+          "name": "OperationId",
+          "required": true
+        },
+        {
+          "name": "Generation",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "required": true
+        },
+        {
+          "name": "Intent",
+          "required": true
+        },
+        {
+          "name": "AcknowledgementId",
+          "required": true
+        },
+        {
+          "name": "SourceUseProofs",
+          "required": true
+        }
+      ],
+      "http": [],
+      "source": {
+        "path": "src/Compliance.Core/Features/AccessControl/Handlers/MaterializeEngagementManagementAcknowledgementHandler.cs",
+        "recorded": "2026-10-29"
+      },
+      "reactor": "ManagementAcknowledgementMaterializationReactor",
+      "sourceOwner": "ServiceEngagementIndependence",
+      "sourceEvents": [
+        "EngagementPersonalDecisionAuthorized"
+      ],
+      "guard": "Only personal kind management_acknowledgement, exact draft/current service snapshot and original personal actor. Source engagement remains pinned until this fact.",
+      "eventsEmitted": [
+        "EngagementManagementAcknowledged"
+      ],
+      "effectKind": "claim_professional_assertion_identity",
+      "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine."
+    },
+    {
+      "command": "AcknowledgeEngagementManagement",
+      "logicalIdentity": {
+        "field": "AcknowledgementId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "caller-supplied immutable creation identity: an exact retry with the same id and authored intent returns the original result; the same id with changed intent is refused; a different id is a different record"
+      },
+      "fields": [
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "EngagementId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "AcknowledgementId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectedEngagementRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "CompleteServiceRecordIds",
+          "type": "IReadOnlyList<Uuid>",
+          "required": true
+        },
+        {
+          "name": "Statement",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "ExpectedServiceEpoch",
+          "type": "long",
+          "required": true
+        }
+      ],
+      "responseContract": {
+        "mode": "async_fixed_ack",
+        "responseType": "OperationAcceptedResponse",
+        "firstHttpStatus": 202,
+        "terminalResultType": "EngagementManagementAcknowledgementView"
+      },
+      "http": [
+        {
+          "method": "PUT",
+          "path": "/api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/management-acknowledgements/{acknowledgement_id}",
+          "policy": "ComplianceAuthorizationPolicies.ApiUser"
+        }
+      ],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
+        "jsonPointer": "/commands/4",
+        "line": 422,
+        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
+      },
+      "attributionNote": "Creates the acknowledgement record; the engagement owner only consumes it (T110) (2026-10-29)",
+      "kind": "http"
+    }
+  ],
+  "sourceContractEvidence": []
+}

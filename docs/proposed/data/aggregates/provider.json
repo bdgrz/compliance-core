@@ -1,0 +1,425 @@
+{
+  "owner": "Provider",
+  "origin": "selected_split_target",
+  "baselineOwners": [
+    "ProviderRegister"
+  ],
+  "declaredIdentity": "providerId",
+  "invariant": "One provider content, version and retirement lifecycle. Retirement is a distinct terminal fact (planned ProviderRetired), not a value inside a revision",
+  "boundaryDecision": "selected_split",
+  "mustPreserve": "Exact creation identity and expected provider revision; active normalized name unique within tenant.",
+  "sources": [
+    {
+      "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
+      "jsonPointer": "/splitOwners/20/targetOwners/0",
+      "line": 2145,
+      "sha256": "d349d94b7c43f4d82020ecf36bdacf1aff98bc6498e14993582f1c3164b21f19"
+    }
+  ],
+  "baselineSourcePath": "src/Compliance.Core/Features/Providers/ProviderRegister.cs",
+  "baselineEvents": [
+    "ProviderRecorded",
+    "ProviderRevised"
+  ],
+  "preliminaryNewEvents": [
+    "ProviderRetired"
+  ],
+  "technicalStateToSeparate": [],
+  "classification": "business_aggregate",
+  "businessAggregate": true,
+  "implementationStatus": "SEPARATE_VERIFICATION_REQUIRED_IMPLEMENTATION_HALTED",
+  "identityReadingRule": "selectedIdentitySummary and exact selectedCommandContracts define intended identity. baselineIdentityObservation/declaredIdentity retain older source observations only, including old replay defects; they are not target behavior or authorization to change an occupied key.",
+  "selectedCommandContracts": [
+    {
+      "command": "RecordProvider",
+      "logicalIdentity": {
+        "field": "ProviderId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "caller-supplied immutable creation identity: an exact retry with the same id and authored intent returns the original result; the same id with changed intent is refused; a different id is a different record"
+      },
+      "fields": [
+        {
+          "name": "ProviderId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Content",
+          "type": "ProviderContent",
+          "required": true
+        }
+      ],
+      "responseContract": {
+        "mode": "async_fixed_ack",
+        "responseType": "OperationAcceptedResponse",
+        "firstHttpStatus": 202,
+        "terminalResultType": "ProviderRegistration"
+      },
+      "http": [
+        {
+          "method": "PUT",
+          "path": "/api/v1/tenants/{tenant_id}/providers/{provider_id}",
+          "policy": "ComplianceAuthorizationPolicies.ApiUser"
+        }
+      ],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
+        "jsonPointer": "/commands/108",
+        "line": 12584,
+        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
+      },
+      "kind": "http"
+    },
+    {
+      "command": "ReviseProvider",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ProviderId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "Content",
+          "type": "ProviderContent",
+          "required": true
+        }
+      ],
+      "responseContract": {
+        "mode": "async_fixed_ack",
+        "responseType": "OperationAcceptedResponse",
+        "firstHttpStatus": 202,
+        "terminalResultType": "ProviderRegistration"
+      },
+      "http": [
+        {
+          "method": "PUT",
+          "path": "/api/v1/tenants/{tenant_id}/providers/revise-provider/{command_id}",
+          "policy": "ApiUser + existing request-scope authorizers"
+        }
+      ],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
+        "jsonPointer": "/commands/143",
+        "line": 16680,
+        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
+      },
+      "kind": "http"
+    },
+    {
+      "command": "CancelProviderChange",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "rule": "abort receiver identity bound to the exact admitted operation and generation: exact redelivery resolves the original rejected result; an abort after a terminal outcome is a no-op"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "RecordId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ChangeOperationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "DefiniteFailureProof",
+          "type": "ImmutableContentRef",
+          "required": true
+        }
+      ],
+      "responseContract": null,
+      "http": null,
+      "source": {
+        "path": "docs/product/audits/2026-10-23/source-admission-contracts.json",
+        "jsonPointer": "/contracts/11",
+        "line": 727,
+        "sha256": "f1d549ed0879c816cb26e86879f8fa658dab0a8acbf7c591e4d4aed40483f8ae"
+      },
+      "kind": "abort"
+    },
+    {
+      "command": "ApplyProviderChange",
+      "kind": "receiver",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "reactor",
+        "rule": "deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Source",
+          "type": "SourceFactProof<ProviderNameClaimed>",
+          "required": true
+        },
+        {
+          "name": "Target",
+          "type": "EventStreamAddress",
+          "required": true
+        },
+        {
+          "name": "OperationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Generation",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long?",
+          "required": true
+        },
+        {
+          "name": "Intent",
+          "type": "ImmutableContentRef",
+          "required": true,
+          "contentSchema": "RecordNameChangeIntent"
+        },
+        {
+          "name": "RecordId",
+          "type": "Uuid",
+          "required": true
+        }
+      ],
+      "reactor": "ProviderChangeApplicationReactor",
+      "sourceOwner": "ProviderNameClaim",
+      "sourceEvents": [
+        "ProviderNameClaimed"
+      ],
+      "guard": "Exact accepted authored content and name claim; no incompatible import/name hold; owner-local revision.",
+      "eventsEmitted": [
+        "ProviderRecorded",
+        "ProviderRevised"
+      ],
+      "effectKind": "apply_provider_change",
+      "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
+      "handler": "ApplyProviderChangeHandler",
+      "http": [],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
+        "recorded": "2026-10-29"
+      }
+    }
+  ],
+  "eventAuthority": "selected_final_event_catalog",
+  "events": [
+    {
+      "event": "ProviderChangeAccepted",
+      "discriminator": "bdgrz.provider.provider-change-accepted",
+      "discriminatorVersion": 1,
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
+        "jsonPointer": "/events/210",
+        "line": 28039,
+        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
+      }
+    },
+    {
+      "event": "ProviderChangeCanceled",
+      "discriminator": "bdgrz.provider.provider-change-canceled",
+      "discriminatorVersion": 1,
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
+        "jsonPointer": "/events/211",
+        "line": 28203,
+        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
+      }
+    },
+    {
+      "event": "ProviderRecorded",
+      "discriminator": "bdgrz.provider.recorded",
+      "discriminatorVersion": 1,
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
+        "jsonPointer": "/events/218",
+        "line": 29281,
+        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
+      }
+    },
+    {
+      "event": "ProviderRevised",
+      "discriminator": "bdgrz.provider.revised",
+      "discriminatorVersion": 1,
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
+        "jsonPointer": "/events/222",
+        "line": 29945,
+        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
+      }
+    }
+  ],
+  "choreography": [
+    {
+      "reactor": "ProviderNameClaimReactor",
+      "sourceOwner": "Provider",
+      "targetOwner": "ProviderNameClaim",
+      "command": "ClaimProviderName",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
+        "jsonPointer": "/reactors/22",
+        "line": 1884,
+        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
+      }
+    },
+    {
+      "reactor": "ProviderChangeApplicationReactor",
+      "sourceOwner": "ProviderNameClaim",
+      "targetOwner": "Provider",
+      "command": "ApplyProviderChange",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
+        "jsonPointer": "/reactors/23",
+        "line": 1971,
+        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
+      }
+    },
+    {
+      "reactor": "ProviderOldNameReleaseReactor",
+      "sourceOwner": "Provider",
+      "targetOwner": "ProviderNameClaim",
+      "command": "ReleaseProviderName",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
+        "jsonPointer": "/reactors/24",
+        "line": 2049,
+        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
+      }
+    }
+  ],
+  "status": "SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED",
+  "baselineIdentityObservation": "providerId",
+  "identityContractRule": "Existing published owner identity/IdFor remains stable. Required typed creation/operation identity and tenant/program/source scope come from the selected signature/protocol references; no context.RequestId minting fallback or guessed new stream key.",
+  "adoptedArchitectureDecisions": [],
+  "selectedIdentitySummary": "Tenant-scoped providerId; `ProviderId` on `RecordProvider` is the caller-supplied immutable creation identity (exact immutable creation retry) so an exact retry resolves the original result and a different id is a different record; later mutations use CommandId bound to this identity and the expected revision.",
+  "baselineIdentityObservationOnly": true,
+  "selectedLogicalIdentityBindings": [
+    {
+      "command": "RecordProvider",
+      "logicalIdentity": {
+        "field": "ProviderId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "exact immutable creation retry"
+      },
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
+        "jsonPointer": "/commands/108",
+        "line": 12584,
+        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
+      }
+    },
+    {
+      "command": "ReviseProvider",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "one immutable authored operation"
+      },
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
+        "jsonPointer": "/commands/143",
+        "line": 16680,
+        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
+      }
+    },
+    {
+      "command": "CancelProviderChange",
+      "logicalIdentity": "CommandId",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/source-admission-contracts.json",
+        "jsonPointer": "/contracts/11",
+        "line": 727,
+        "sha256": "f1d549ed0879c816cb26e86879f8fa658dab0a8acbf7c591e4d4aed40483f8ae"
+      }
+    }
+  ],
+  "selectedReplayRule": "Current required authorization precedes replay; exact authorized retries resolve the original accepted result using the selected logical identity and immutable actor/intent/source binding. Fresh mutable feasibility, clock selection and body preparation cannot replace that original result. Expected revision is concurrency precondition, not a new identity.",
+  "invariantRevisions": [
+    {
+      "date": "2026-10-29",
+      "added": "Retirement is a distinct terminal fact (planned ProviderRetired), not a value inside a revision"
+    }
+  ],
+  "identityRevisions": [
+    {
+      "date": "2026-10-29",
+      "previous": "providerId"
+    }
+  ],
+  "productRules": [
+    {
+      "id": "D11-01",
+      "doc": "m0-d11-vendors.md",
+      "rule": "A provider is material when it stores or processes customer data or is on the critical path for an in-scope service; spend is irrelevant, and the provider records materiality, its basis (customer_data and/or critical_path), and a rationale."
+    },
+    {
+      "id": "D11-06",
+      "doc": "m0-d11-vendors.md",
+      "rule": "A subservice provider must declare a boundary treatment of carve_out or inclusive; the default is carve_out and inclusive requires an explicit reasoned exception."
+    }
+  ],
+  "decides": "Materiality is recorded with a basis drawn only from customer_data and/or critical_path (stores or processes customer data, or is on the critical path for an in-scope service) and a rationale; spend is never a basis.",
+  "decidesCovers": [
+    "D11-01"
+  ],
+  "decidesAuthored": "2026-10-29"
+}

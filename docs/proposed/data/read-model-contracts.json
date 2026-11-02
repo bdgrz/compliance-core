@@ -1,0 +1,50 @@
+{
+  "queries": [
+    {
+      "query": "GetOperationStatus",
+      "fields": {
+        "TenantId": "Uuid",
+        "OperationId": "Uuid"
+      },
+      "http": "GET /api/v1/tenants/{tenant_id}/operations/{operation_id}",
+      "handler": "GetOperationStatusHandler",
+      "response": "OperationStatusResponse"
+    },
+    {
+      "query": "GetPlatformOperationStatus",
+      "fields": {
+        "OperationId": "Uuid"
+      },
+      "http": "GET /api/v1/platform/operations/{operation_id}",
+      "handler": "GetPlatformOperationStatusHandler",
+      "response": "OperationStatusResponse"
+    },
+    {
+      "query": "GetOperationResult",
+      "fields": {
+        "TenantId": "Uuid",
+        "OperationId": "Uuid"
+      },
+      "http": "GET /api/v1/tenants/{tenant_id}/operations/{operation_id}/result",
+      "handler": "GetOperationResultHandler",
+      "response": "exact typed terminal Common result; 202 original acknowledgment while pending; terminal conflict/error follows stored status"
+    },
+    {
+      "query": "GetPlatformOperationResult",
+      "fields": {
+        "OperationId": "Uuid"
+      },
+      "http": "GET /api/v1/platform/operations/{operation_id}/result",
+      "handler": "GetPlatformOperationResultHandler",
+      "response": "same static typed result registry and status rules"
+    }
+  ],
+  "authorizationOrder": [
+    "Authenticate before any binding read; validate tenant membership, platform policy or self-service identity family.",
+    "Load only internal routing scope/first locator from the authoritative binding index. This is an authorization input, not intent/result disclosure.",
+    "Apply current concrete owner/command access policy before loading original authored intent, response or decrypting protected result. Wrong scope and missing binding are externally indistinguishable where existing visibility policy uses NotFound.",
+    "For creation before member bootstrap, allow only authenticated original tenant creator. Platform realm identity recovery permits its authenticated frozen replacement provider identity or proven recovered account; it does not require platform-operator privilege.",
+    "For protected artifact download result, require the original personal actor and current artifact/handoff/source disclosure authorization before decrypting; an operation UUID is not a capability."
+  ],
+  "routingScope": "Server-created OperationAccessScope: realm, policy-key from static command allowlist, tenant/program/owner identities, original actor, recovery replacement identity when applicable, and minimal typed visibility selectors (including advisor SelectedSource). Never index original secrets/result bytes as routing scope."
+}

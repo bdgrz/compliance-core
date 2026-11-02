@@ -1,0 +1,239 @@
+{
+  "owner": "LocationNameClaim",
+  "origin": "selected_split_target",
+  "baselineOwners": [
+    "LocationRegister"
+  ],
+  "declaredIdentity": "(tenantId, locationKind, normalizedName)",
+  "invariant": "Authoritative active-name uniqueness claim.",
+  "boundaryDecision": "selected_split",
+  "mustPreserve": "Kind is immutable; only active same-kind names are unique.",
+  "sources": [
+    {
+      "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
+      "jsonPointer": "/splitOwners/26/targetOwners/1",
+      "line": 2849,
+      "sha256": "d349d94b7c43f4d82020ecf36bdacf1aff98bc6498e14993582f1c3164b21f19"
+    }
+  ],
+  "baselineSourcePath": "src/Compliance.Core/Features/TechnologyInventory/LocationRegister.cs",
+  "baselineEvents": [],
+  "preliminaryNewEvents": [
+    "LocationNameClaimed",
+    "LocationNameReleased"
+  ],
+  "technicalStateToSeparate": [],
+  "classification": "business_identity_or_uniqueness_authority",
+  "businessAggregate": true,
+  "implementationStatus": "SEPARATE_VERIFICATION_REQUIRED_IMPLEMENTATION_HALTED",
+  "identityReadingRule": "selectedIdentitySummary and exact selectedCommandContracts define intended identity. baselineIdentityObservation/declaredIdentity retain older source observations only, including old replay defects; they are not target behavior or authorization to change an occupied key.",
+  "selectedCommandContracts": [
+    {
+      "command": "ClaimLocationName",
+      "kind": "receiver",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "internal",
+        "rule": "deterministic receiver identity derived from the admitted root fact, episode and generation: exact redelivery resolves the original result, a changed admission is a new identity"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "required": true
+        },
+        {
+          "name": "Source",
+          "required": true
+        },
+        {
+          "name": "Target",
+          "required": true
+        },
+        {
+          "name": "OperationId",
+          "required": true
+        },
+        {
+          "name": "Generation",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "required": true
+        },
+        {
+          "name": "Intent",
+          "required": true
+        },
+        {
+          "name": "RecordId",
+          "required": true
+        },
+        {
+          "name": "NormalizedName",
+          "required": true
+        },
+        {
+          "name": "NameKind",
+          "required": true
+        }
+      ],
+      "http": [],
+      "source": {
+        "path": "src/Compliance.Core/Features/TechnologyInventory/Handlers/ClaimLocationNameHandler.cs",
+        "recorded": "2026-10-29"
+      },
+      "reactor": "LocationNameClaimReactor",
+      "sourceOwner": "Location",
+      "sourceEvents": [
+        "LocationChangeAccepted"
+      ],
+      "guard": "Use existing normalization/active/kind policy; new and old claims acquired canonically. Permanent unique active binding until exact record change/fence. ",
+      "eventsEmitted": [
+        "LocationNameClaimed"
+      ],
+      "effectKind": "claim_location_name",
+      "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine."
+    },
+    {
+      "command": "ReleaseLocationName",
+      "kind": "receiver",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "internal",
+        "rule": "deterministic receiver identity derived from the admitted root fact, episode and generation: exact redelivery resolves the original result, a changed admission is a new identity"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "required": true
+        },
+        {
+          "name": "Source",
+          "required": true
+        },
+        {
+          "name": "Target",
+          "required": true
+        },
+        {
+          "name": "OperationId",
+          "required": true
+        },
+        {
+          "name": "Generation",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "required": true
+        },
+        {
+          "name": "Intent",
+          "required": true
+        },
+        {
+          "name": "RecordId",
+          "required": true
+        },
+        {
+          "name": "NormalizedName",
+          "required": true
+        }
+      ],
+      "http": [],
+      "source": {
+        "path": "src/Compliance.Core/Features/TechnologyInventory/Handlers/ReleaseLocationNameHandler.cs",
+        "recorded": "2026-10-29"
+      },
+      "reactor": "LocationOldNameReleaseReactor",
+      "sourceOwner": "Location",
+      "sourceEvents": [
+        "LocationRevisionRecorded",
+        "LocationChangeCanceled"
+      ],
+      "guard": "Release only matching old generation after exact record fact proves old name inactive; same-name/current claim is terminal no-op. A canceled target is already receiver-fenced; release its pending new claim only with that exact fence.",
+      "eventsEmitted": [
+        "LocationNameReleased"
+      ],
+      "effectKind": "release_location_name",
+      "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine."
+    }
+  ],
+  "eventAuthority": "selected_final_event_catalog",
+  "events": [
+    {
+      "event": "LocationNameClaimed",
+      "discriminator": "bdgrz.location-name-claim.location-name-claimed",
+      "discriminatorVersion": 1,
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
+        "jsonPointer": "/events/176",
+        "line": 22567,
+        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
+      }
+    },
+    {
+      "event": "LocationNameReleased",
+      "discriminator": "bdgrz.location-name-claim.location-name-released",
+      "discriminatorVersion": 1,
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
+        "jsonPointer": "/events/177",
+        "line": 22731,
+        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
+      }
+    }
+  ],
+  "choreography": [
+    {
+      "reactor": "LocationNameClaimReactor",
+      "sourceOwner": "Location",
+      "targetOwner": "LocationNameClaim",
+      "command": "ClaimLocationName",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
+        "jsonPointer": "/reactors/25",
+        "line": 2135,
+        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
+      }
+    },
+    {
+      "reactor": "LocationChangeApplicationReactor",
+      "sourceOwner": "LocationNameClaim",
+      "targetOwner": "Location",
+      "command": "ApplyLocationChange",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
+        "jsonPointer": "/reactors/26",
+        "line": 2222,
+        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
+      }
+    },
+    {
+      "reactor": "LocationOldNameReleaseReactor",
+      "sourceOwner": "Location",
+      "targetOwner": "LocationNameClaim",
+      "command": "ReleaseLocationName",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
+        "jsonPointer": "/reactors/27",
+        "line": 2299,
+        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
+      }
+    }
+  ],
+  "status": "SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED",
+  "baselineIdentityObservation": "(tenantId, locationKind, normalizedName)",
+  "identityContractRule": "Existing published owner identity/IdFor remains stable. Required typed creation/operation identity and tenant/program/source scope come from the selected signature/protocol references; no context.RequestId minting fallback or guessed new stream key.",
+  "adoptedArchitectureDecisions": [],
+  "selectedIdentitySummary": "(tenantId, locationKind, normalizedName)",
+  "baselineIdentityObservationOnly": true,
+  "selectedLogicalIdentityBindings": [],
+  "selectedReplayRule": "Current required authorization precedes replay; exact authorized retries resolve the original accepted result using the selected logical identity and immutable actor/intent/source binding. Fresh mutable feasibility, clock selection and body preparation cannot replace that original result. Expected revision is concurrency precondition, not a new identity.",
+  "commandNote": "Source field is SourceFactProof<LocationChangeAccepted> (Release uses ReleaseLocationNameSourceProof). Implements INamedRecordReceiver; no HTTP command."
+}

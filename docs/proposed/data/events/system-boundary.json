@@ -1,0 +1,201 @@
+{
+  "owner": "SystemBoundary",
+  "events": [
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:BoundaryApproved",
+        "event": "BoundaryApproved",
+        "emissionKind": "business",
+        "owners": [
+          "SystemBoundary"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": false,
+        "targetConcreteType": "BoundaryApproved",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.boundary.approved",
+          "version": 2
+        },
+        "wireQualification": "Wire matches the declared record in src/Compliance.Common/Features/Boundaries/Events/BoundaryApproved.cs at 60029b8f.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "retained_current_schema_native_qualification_required",
+        "sourceStatus": "declared",
+        "meaning": "A system boundary draft version was approved as the boundary effective from a stated date, on the strength of an accepted review and by a named approver.",
+        "meaningSource": "authored 2026-10-29 from src/Compliance.Common/Features/Boundaries/Events/BoundaryApproved.cs"
+      },
+      "schema": null
+    },
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:BoundaryDraftCreated",
+        "event": "BoundaryDraftCreated",
+        "emissionKind": "business",
+        "owners": [
+          "SystemBoundary"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": false,
+        "targetConcreteType": "BoundaryDraftCreated",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.boundary.draft.created",
+          "version": 2
+        },
+        "wireQualification": "Wire matches the declared record in src/Compliance.Common/Features/Boundaries/Events/BoundaryDraftCreated.cs at 60029b8f.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "retained_current_schema_native_qualification_required",
+        "sourceStatus": "declared",
+        "meaning": "A system boundary draft was created for a program with its authored content by a named author, awaiting review.",
+        "meaningSource": "authored 2026-10-29 from src/Compliance.Common/Features/Boundaries/Events/BoundaryDraftCreated.cs"
+      },
+      "schema": null
+    },
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:BoundaryDraftDiscarded",
+        "event": "BoundaryDraftDiscarded",
+        "emissionKind": "business",
+        "owners": [
+          "SystemBoundary"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": false,
+        "targetConcreteType": "BoundaryDraftDiscarded",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.boundary.draft.discarded",
+          "version": 2
+        },
+        "wireQualification": "Wire matches the declared record in src/Compliance.Common/Features/Boundaries/Events/BoundaryDraftDiscarded.cs at 60029b8f.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "retained_current_schema_native_qualification_required",
+        "sourceStatus": "declared",
+        "meaning": "A system boundary draft version was discarded by a named member, ending it without approval.",
+        "meaningSource": "authored 2026-10-29 from src/Compliance.Common/Features/Boundaries/Events/BoundaryDraftDiscarded.cs"
+      },
+      "schema": null
+    },
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:BoundaryDraftRevised",
+        "event": "BoundaryDraftRevised",
+        "emissionKind": "business",
+        "owners": [
+          "SystemBoundary"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": false,
+        "targetConcreteType": "BoundaryDraftRevised",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.boundary.draft.revised",
+          "version": 2
+        },
+        "wireQualification": "Wire matches the declared record in src/Compliance.Common/Features/Boundaries/Events/BoundaryDraftRevised.cs at 60029b8f.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "retained_current_schema_native_qualification_required",
+        "sourceStatus": "declared",
+        "meaning": "A system boundary draft version's content was revised by a named author, producing its next draft revision for review.",
+        "meaningSource": "authored 2026-10-29 from src/Compliance.Common/Features/Boundaries/Events/BoundaryDraftRevised.cs"
+      },
+      "schema": null
+    },
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:BoundaryReviewed",
+        "event": "BoundaryReviewed",
+        "emissionKind": "business",
+        "owners": [
+          "SystemBoundary"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": false,
+        "targetConcreteType": "BoundaryReviewed",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.boundary.reviewed",
+          "version": 2
+        },
+        "wireQualification": "Wire matches the declared record in src/Compliance.Common/Features/Boundaries/Events/BoundaryReviewed.cs at 60029b8f.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "retained_current_schema_native_qualification_required",
+        "sourceStatus": "declared",
+        "meaning": "A system boundary draft revision was reviewed with a decision outcome by a named reviewer, optionally under a separation-of-duties waiver.",
+        "meaningSource": "authored 2026-10-29 from src/Compliance.Common/Features/Boundaries/Events/BoundaryReviewed.cs"
+      },
+      "schema": null
+    },
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:BoundarySuccessorProposed",
+        "event": "BoundarySuccessorProposed",
+        "emissionKind": "business",
+        "owners": [
+          "SystemBoundary"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": false,
+        "targetConcreteType": "BoundarySuccessorProposed",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.boundary.successor.proposed",
+          "version": 2
+        },
+        "wireQualification": "Wire matches the declared record in src/Compliance.Common/Features/Boundaries/Events/BoundarySuccessorProposed.cs at 60029b8f.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "retained_current_schema_native_qualification_required",
+        "sourceStatus": "declared",
+        "meaning": "A successor draft version of a system boundary was proposed from one exact approved predecessor version, with new content by a named author.",
+        "meaningSource": "authored 2026-10-29 from src/Compliance.Common/Features/Boundaries/Events/BoundarySuccessorProposed.cs"
+      },
+      "schema": null
+    },
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:ResponsibilityAssigned",
+        "event": "ResponsibilityAssigned",
+        "emissionKind": "business",
+        "owners": [
+          "ControlDraft",
+          "CommitmentDraft",
+          "SystemBoundary"
+        ],
+        "ownerSelection": "ResponsibilityScope.RecordType/RecordId + exact owner authority header selects one of three listed scope owners",
+        "selected295": false,
+        "targetConcreteType": "ResponsibilityAssigned",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.responsibility.assigned",
+          "version": 1
+        },
+        "wireQualification": "Wire matches the declared record in src/Compliance.Common/Features/Responsibilities/Events/ResponsibilityAssigned.cs at 60029b8f.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "retained_current_schema_native_qualification_required",
+        "sourceStatus": "declared",
+        "meaning": "A member was assigned a responsibility type over a scoped record for an effective period by a named assigner, together with any separation-of-duties waivers that allowed it.",
+        "meaningSource": "authored 2026-10-29 from src/Compliance.Common/Features/Responsibilities/Events/ResponsibilityAssigned.cs"
+      },
+      "schema": null
+    },
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:ResponsibilityRevoked",
+        "event": "ResponsibilityRevoked",
+        "emissionKind": "business",
+        "owners": [
+          "ControlDraft",
+          "CommitmentDraft",
+          "SystemBoundary"
+        ],
+        "ownerSelection": "ResponsibilityScope.RecordType/RecordId + exact owner authority header selects one of three listed scope owners",
+        "selected295": false,
+        "targetConcreteType": "ResponsibilityRevoked",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.responsibility.revoked",
+          "version": 1
+        },
+        "wireQualification": "Wire matches the declared record in src/Compliance.Common/Features/Responsibilities/Events/ResponsibilityRevoked.cs at 60029b8f.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "retained_current_schema_native_qualification_required",
+        "sourceStatus": "declared",
+        "meaning": "A member's responsibility assignment over a scoped record was revoked with a stated reason by a named member, removing the authority it granted.",
+        "meaningSource": "authored 2026-10-29 from src/Compliance.Common/Features/Responsibilities/Events/ResponsibilityRevoked.cs"
+      },
+      "schema": null
+    }
+  ]
+}

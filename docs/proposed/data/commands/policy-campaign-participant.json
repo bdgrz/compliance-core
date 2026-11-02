@@ -1,0 +1,462 @@
+{
+  "owner": "PolicyCampaignParticipant",
+  "selectedContracts": [
+    {
+      "command": "AcknowledgePolicy",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ProgramId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "CampaignId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "PersonId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "PolicyVersion",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "ContentSha256",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "AcknowledgementText",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "ExpectedCampaignRevision",
+          "type": "long",
+          "required": true
+        }
+      ],
+      "responseContract": {
+        "mode": "async_fixed_ack",
+        "responseType": "OperationAcceptedResponse",
+        "firstHttpStatus": 202,
+        "terminalResultType": "CampaignAcknowledgementView"
+      },
+      "http": [
+        {
+          "method": "PUT",
+          "path": "/api/v1/tenants/{tenant_id}/programs/{program_id}/campaigns/{campaign_id}/acknowledgements/{command_id}",
+          "policy": "ComplianceAuthorizationPolicies.ApiUser"
+        }
+      ],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
+        "jsonPointer": "/commands/5",
+        "line": 546,
+        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
+      },
+      "attributionNote": "Moved from PolicyDistributionCampaign on 2026-10-29: PolicyDistributionCampaign is the admission owner: it freezes the complete result as PolicyParticipantResultAdmitted at ExpectedCampaignRevision (via PolicyParticipantAdmission) with a fixed 202; it is not the owner of the participant fact. The root fact starts IndependentChildMaterialization, which sends ApplyPolicyParticipantResult to PolicyCampaignParticipant (events PolicyAcknowledgementRecorded / TrainingCompletionRecorded / CampaignWaiverApproved).  (source src/Compliance.Core/Features/PolicyDistribution/Handlers/AcknowledgePolicyHandler.cs; Handlers/ApplyPolicyParticipantResultHandler.cs)",
+      "kind": "http"
+    },
+    {
+      "command": "ApproveCampaignWaiver",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ProgramId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "CampaignId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "PersonId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Reason",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "ExpiresOn",
+          "type": "DateOnly",
+          "required": true
+        },
+        {
+          "name": "ExpectedCampaignRevision",
+          "type": "long",
+          "required": true
+        }
+      ],
+      "responseContract": {
+        "mode": "async_fixed_ack",
+        "responseType": "OperationAcceptedResponse",
+        "firstHttpStatus": 202,
+        "terminalResultType": "CampaignWaiverView"
+      },
+      "http": [
+        {
+          "method": "PUT",
+          "path": "/api/v1/tenants/{tenant_id}/programs/{program_id}/campaigns/{campaign_id}/waivers/{command_id}",
+          "policy": "ComplianceAuthorizationPolicies.ApiUser"
+        }
+      ],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
+        "jsonPointer": "/commands/18",
+        "line": 2148,
+        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
+      },
+      "attributionNote": "Moved from PolicyDistributionCampaign on 2026-10-29: PolicyDistributionCampaign is the admission owner: it freezes the complete result as PolicyParticipantResultAdmitted at ExpectedCampaignRevision (via PolicyParticipantAdmission) with a fixed 202; it is not the owner of the participant fact. The root fact starts IndependentChildMaterialization, which sends ApplyPolicyParticipantResult to PolicyCampaignParticipant (events PolicyAcknowledgementRecorded / TrainingCompletionRecorded / CampaignWaiverApproved).  (source src/Compliance.Core/Features/PolicyDistribution/Handlers/ApproveCampaignWaiverHandler.cs; Handlers/ApplyPolicyParticipantResultHandler.cs)",
+      "kind": "http"
+    },
+    {
+      "command": "RecordTrainingCompletion",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "deterministic receiver identity derived from the admitted root fact, episode and generation: exact redelivery resolves the original result, a changed admission is a new identity"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ProgramId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "CampaignId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "PersonId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "RequirementVersion",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "CompletedOn",
+          "type": "DateOnly",
+          "required": true
+        },
+        {
+          "name": "Source",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "EvidenceReference",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "ExpectedCampaignRevision",
+          "type": "long",
+          "required": true
+        }
+      ],
+      "responseContract": {
+        "mode": "async_fixed_ack",
+        "responseType": "OperationAcceptedResponse",
+        "firstHttpStatus": 202,
+        "terminalResultType": "CampaignCompletionView"
+      },
+      "http": [
+        {
+          "method": "PUT",
+          "path": "/api/v1/tenants/{tenant_id}/programs/{program_id}/campaigns/{campaign_id}/completions/{command_id}",
+          "policy": "ComplianceAuthorizationPolicies.ApiUser"
+        }
+      ],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
+        "jsonPointer": "/commands/113",
+        "line": 13137,
+        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
+      },
+      "attributionNote": "Moved from PolicyDistributionCampaign on 2026-10-29: PolicyDistributionCampaign is the admission owner: it freezes the complete result as PolicyParticipantResultAdmitted at ExpectedCampaignRevision (via PolicyParticipantAdmission) with a fixed 202; it is not the owner of the participant fact. The root fact starts IndependentChildMaterialization, which sends ApplyPolicyParticipantResult to PolicyCampaignParticipant (events PolicyAcknowledgementRecorded / TrainingCompletionRecorded / CampaignWaiverApproved).  (source src/Compliance.Core/Features/PolicyDistribution/Handlers/RecordTrainingCompletionHandler.cs; Handlers/ApplyPolicyParticipantResultHandler.cs)",
+      "kind": "http"
+    },
+    {
+      "command": "ApplyPolicyParticipantResult",
+      "kind": "receiver",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "internal",
+        "rule": "deterministic receiver identity derived from the admitted root fact, episode and generation: exact redelivery resolves the original result, a changed admission is a new identity"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "required": true
+        },
+        {
+          "name": "Source",
+          "required": true
+        },
+        {
+          "name": "Target",
+          "required": true
+        },
+        {
+          "name": "OperationId",
+          "required": true
+        },
+        {
+          "name": "Generation",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "required": true
+        },
+        {
+          "name": "Intent",
+          "required": true
+        },
+        {
+          "name": "CampaignId",
+          "required": true
+        },
+        {
+          "name": "PersonId",
+          "required": true
+        },
+        {
+          "name": "ResultKind",
+          "required": true
+        }
+      ],
+      "http": [],
+      "source": {
+        "path": "src/Compliance.Core/Features/PolicyDistribution/Handlers/ApplyPolicyParticipantResultHandler.cs",
+        "recorded": "2026-10-29"
+      },
+      "reactor": "PolicyParticipantResultReactor",
+      "sourceOwner": "PolicyDistributionCampaign",
+      "sourceEvents": [
+        "PolicyParticipantResultAdmitted"
+      ],
+      "guard": "Exact admitted open generation and material hash/version/text; native acknowledgement/completion/waiver is one typed variant.",
+      "eventsEmitted": [
+        "PolicyAcknowledgementRecorded",
+        "TrainingCompletionRecorded",
+        "CampaignWaiverApproved"
+      ],
+      "effectKind": "apply_policy_participant_result",
+      "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine."
+    },
+    {
+      "command": "AuthorizePolicyCampaignParticipantCampaignClosureUse",
+      "kind": "receiver",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "internal",
+        "rule": "deterministic receiver identity derived from the admitted root fact, episode and generation: exact redelivery resolves the original result, a changed admission is a new identity"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "required": true
+        },
+        {
+          "name": "Source",
+          "required": true
+        },
+        {
+          "name": "Target",
+          "required": true
+        },
+        {
+          "name": "OperationId",
+          "required": true
+        },
+        {
+          "name": "Generation",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "required": true
+        },
+        {
+          "name": "Intent",
+          "required": true
+        },
+        {
+          "name": "SourceOwnerId",
+          "required": true
+        },
+        {
+          "name": "SourceContentEventId",
+          "required": true
+        },
+        {
+          "name": "SourceRevision",
+          "required": true
+        },
+        {
+          "name": "ReceivingOwnerId",
+          "required": true
+        },
+        {
+          "name": "PersonId",
+          "required": true
+        }
+      ],
+      "http": [],
+      "source": {
+        "path": "src/Compliance.Core/Features/PolicyDistribution/Handlers/AuthorizePolicyCampaignParticipantCampaignClosureUseHandler.cs",
+        "recorded": "2026-10-29"
+      },
+      "reactor": "CampaignClosurePolicyCampaignParticipantAuthorizationReactor",
+      "sourceOwner": "PolicyDistributionCampaign",
+      "sourceEvents": [
+        "PolicyCampaignClosureAccepted"
+      ],
+      "guard": "Exact parent admitted intent and complete source selection; current source revision/required immutable facts; active use prevents conflicting source writes through parent decision append. Use events do not advance public ResourceRevision; the exact content-event identity and metadata owner version remain separate.",
+      "eventsEmitted": [
+        "PolicyCampaignParticipantCampaignClosureUseAuthorized"
+      ],
+      "effectKind": "authorize_policy_campaign_participant_campaign_closure_use",
+      "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine."
+    },
+    {
+      "command": "SettlePolicyCampaignParticipantCampaignClosureUse",
+      "kind": "receiver",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "internal",
+        "rule": "deterministic receiver identity derived from the admitted root fact, episode and generation: exact redelivery resolves the original result, a changed admission is a new identity"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "required": true
+        },
+        {
+          "name": "Source",
+          "required": true
+        },
+        {
+          "name": "Target",
+          "required": true
+        },
+        {
+          "name": "OperationId",
+          "required": true
+        },
+        {
+          "name": "Generation",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "required": true
+        },
+        {
+          "name": "Intent",
+          "required": true
+        },
+        {
+          "name": "SourceOwnerId",
+          "required": true
+        },
+        {
+          "name": "ReceivingOwnerId",
+          "required": true
+        },
+        {
+          "name": "PersonId",
+          "required": true
+        },
+        {
+          "name": "Disposition",
+          "required": true
+        }
+      ],
+      "http": [],
+      "source": {
+        "path": "src/Compliance.Core/Features/PolicyDistribution/Handlers/SettlePolicyCampaignParticipantCampaignClosureUseHandler.cs",
+        "recorded": "2026-10-29"
+      },
+      "reactor": "CampaignClosurePolicyCampaignParticipantSettlementReactor",
+      "sourceOwner": "PolicyDistributionCampaign",
+      "sourceEvents": [
+        "PolicyCampaignClosed",
+        "PolicyCampaignClosureCanceled"
+      ],
+      "guard": "Exact terminal parent decision or receiver-fenced cancellation proof; settle only the matching operation/generation, never release because of time/missing read. A canceled parent fences local completion; record terminal source-use settlement even when acquire has not yet arrived, so delayed acquisition cannot recreate authority. Derive Disposition from the proven terminal source: parent_closed installs its generation closure fence, canceled clears only this use after parent fence, irreversible_decision releases the pinned source after historical decision. Never clear a use into an unrestricted writable child after parent closure.",
+      "eventsEmitted": [
+        "PolicyCampaignParticipantCampaignClosureUseSettled"
+      ],
+      "effectKind": "settle_policy_campaign_participant_campaign_closure_use",
+      "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine."
+    }
+  ],
+  "sourceContractEvidence": []
+}

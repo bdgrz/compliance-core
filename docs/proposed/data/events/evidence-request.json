@@ -1,0 +1,619 @@
+{
+  "owner": "EvidenceRequest",
+  "events": [
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:EvidenceRequestActionCompletionUseAuthorized",
+        "event": "EvidenceRequestActionCompletionUseAuthorized",
+        "emissionKind": "reservation",
+        "owners": [
+          "EvidenceRequest"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": true,
+        "targetConcreteType": "EvidenceRequestActionCompletionUseAuthorized",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.evidence-request.evidence-request-action-completion-use-authorized",
+          "version": 1
+        },
+        "wireQualification": "Wire matches the declared record in src/Compliance.Common/Features/Evidence/Events/EvidenceRequestActionCompletionUseAuthorized.cs at 60029b8f.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "selected_complete_schema",
+        "sourceStatus": "declared",
+        "emissionKindNote": "Owner-held reservation or its settlement: authoritative for the owner invariant (the reducer must refuse conflicting commands while held) but not a business decision in its own right. Adopted 2026-10-29 (decision EV-D06).",
+        "meaning": "A fulfilled evidence request is held for a risk action completion review. The use does not advance the public request revision: Revision is the held revision, and Generation is the action's submission generation the review seals.",
+        "meaningSource": "record summary in src/Compliance.Common/Features/Evidence/Events/EvidenceRequestActionCompletionUseAuthorized.cs"
+      },
+      "schema": {
+        "event": "EvidenceRequestActionCompletionUseAuthorized",
+        "discriminator": "bdgrz.evidence-request.evidence-request-action-completion-use-authorized",
+        "discriminatorVersion": 1,
+        "owner": "EvidenceRequest",
+        "existingContract": null,
+        "status": "selected target schema; implementation pending",
+        "reason": "typed reactor receiver accepted business fact",
+        "fields": [
+          {
+            "name": "Owner",
+            "type": "EventStreamAddress",
+            "required": true
+          },
+          {
+            "name": "Revision",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "Generation",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "Intent",
+            "type": "ImmutableContentRef",
+            "required": true
+          },
+          {
+            "name": "SourceProofs",
+            "type": "ImmutableContentRef?",
+            "required": true
+          },
+          {
+            "name": "Operation",
+            "type": "OperationProvenance",
+            "required": true
+          },
+          {
+            "name": "FirstResponse",
+            "type": "ImmutableContentRef?",
+            "required": true
+          },
+          {
+            "name": "OperationResult",
+            "type": "ImmutableContentRef?",
+            "required": true
+          }
+        ],
+        "contentSchemas": [
+          {
+            "field": "Intent",
+            "schema": "source-use-authorization-intent.v1",
+            "recordType": "SourceUseAuthorizationIntent",
+            "fields": [
+              {
+                "name": "Header",
+                "type": "DurableIntentHeader",
+                "required": true
+              },
+              {
+                "name": "ParentIntent",
+                "type": "ImmutableContentRef",
+                "required": true,
+                "contentSchema": "Exact named workflow intent referenced by the proven source acceptance"
+              },
+              {
+                "name": "Reservation",
+                "type": "ReservationKey",
+                "required": true
+              },
+              {
+                "name": "Requirement",
+                "type": "SourceUseRequirement",
+                "required": true
+              },
+              {
+                "name": "Grant",
+                "type": "ReservationGrant?",
+                "required": true
+              },
+              {
+                "name": "Disposition",
+                "type": "SourceUseSettlementDisposition?",
+                "required": true
+              }
+            ],
+            "rule": "A use fact points to the immutable original workflow intent plus this exact source-specific requirement/token. No arbitrary command snapshot serves as policy proof. Terminal settlement before grant fences the same key; neither lease expiry nor missing read releases it.",
+            "variants": [
+              {
+                "recordType": "SourceUseAuthorizationIntent",
+                "schema": "source-use-authorization-intent.v1",
+                "fields": [
+                  {
+                    "name": "Header",
+                    "type": "DurableIntentHeader",
+                    "required": true
+                  },
+                  {
+                    "name": "ParentIntent",
+                    "type": "ImmutableContentRef",
+                    "required": true,
+                    "contentSchema": "Exact named workflow intent referenced by the proven source acceptance"
+                  },
+                  {
+                    "name": "Reservation",
+                    "type": "ReservationKey",
+                    "required": true
+                  },
+                  {
+                    "name": "Requirement",
+                    "type": "SourceUseRequirement",
+                    "required": true
+                  },
+                  {
+                    "name": "Grant",
+                    "type": "ReservationGrant?",
+                    "required": true
+                  },
+                  {
+                    "name": "Disposition",
+                    "type": "SourceUseSettlementDisposition?",
+                    "required": true
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "changes": [],
+        "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
+        "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
+        "resolvedIntentSchema": "SourceUseAuthorizationIntent",
+        "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
+      }
+    },
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:EvidenceRequestActionCompletionUseSettled",
+        "event": "EvidenceRequestActionCompletionUseSettled",
+        "emissionKind": "reservation",
+        "owners": [
+          "EvidenceRequest"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": true,
+        "targetConcreteType": "EvidenceRequestActionCompletionUseSettled",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.evidence-request.evidence-request-action-completion-use-settled",
+          "version": 1
+        },
+        "wireQualification": "Wire matches the declared record in src/Compliance.Common/Features/Evidence/Events/EvidenceRequestActionCompletionUseSettled.cs at 60029b8f.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "selected_complete_schema",
+        "sourceStatus": "declared",
+        "emissionKindNote": "Owner-held reservation or its settlement: authoritative for the owner invariant (the reducer must refuse conflicting commands while held) but not a business decision in its own right. Adopted 2026-10-29 (decision EV-D06).",
+        "meaning": "A risk action completion review use of an evidence request ended. The settlement intent records whether the review reached its irreversible decision or was canceled; a settlement before any grant fences the key.",
+        "meaningSource": "record summary in src/Compliance.Common/Features/Evidence/Events/EvidenceRequestActionCompletionUseSettled.cs"
+      },
+      "schema": {
+        "event": "EvidenceRequestActionCompletionUseSettled",
+        "discriminator": "bdgrz.evidence-request.evidence-request-action-completion-use-settled",
+        "discriminatorVersion": 1,
+        "owner": "EvidenceRequest",
+        "existingContract": null,
+        "status": "selected target schema; implementation pending",
+        "reason": "typed reactor receiver accepted business fact",
+        "fields": [
+          {
+            "name": "Owner",
+            "type": "EventStreamAddress",
+            "required": true
+          },
+          {
+            "name": "Revision",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "Generation",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "Intent",
+            "type": "ImmutableContentRef",
+            "required": true
+          },
+          {
+            "name": "SourceProofs",
+            "type": "ImmutableContentRef?",
+            "required": true
+          },
+          {
+            "name": "Operation",
+            "type": "OperationProvenance",
+            "required": true
+          },
+          {
+            "name": "FirstResponse",
+            "type": "ImmutableContentRef?",
+            "required": true
+          },
+          {
+            "name": "OperationResult",
+            "type": "ImmutableContentRef?",
+            "required": true
+          }
+        ],
+        "contentSchemas": [
+          {
+            "field": "Intent",
+            "schema": "source-use-authorization-intent.v1",
+            "recordType": "SourceUseAuthorizationIntent",
+            "fields": [
+              {
+                "name": "Header",
+                "type": "DurableIntentHeader",
+                "required": true
+              },
+              {
+                "name": "ParentIntent",
+                "type": "ImmutableContentRef",
+                "required": true,
+                "contentSchema": "Exact named workflow intent referenced by the proven source acceptance"
+              },
+              {
+                "name": "Reservation",
+                "type": "ReservationKey",
+                "required": true
+              },
+              {
+                "name": "Requirement",
+                "type": "SourceUseRequirement",
+                "required": true
+              },
+              {
+                "name": "Grant",
+                "type": "ReservationGrant?",
+                "required": true
+              },
+              {
+                "name": "Disposition",
+                "type": "SourceUseSettlementDisposition?",
+                "required": true
+              }
+            ],
+            "rule": "A use fact points to the immutable original workflow intent plus this exact source-specific requirement/token. No arbitrary command snapshot serves as policy proof. Terminal settlement before grant fences the same key; neither lease expiry nor missing read releases it.",
+            "variants": [
+              {
+                "recordType": "SourceUseAuthorizationIntent",
+                "schema": "source-use-authorization-intent.v1",
+                "fields": [
+                  {
+                    "name": "Header",
+                    "type": "DurableIntentHeader",
+                    "required": true
+                  },
+                  {
+                    "name": "ParentIntent",
+                    "type": "ImmutableContentRef",
+                    "required": true,
+                    "contentSchema": "Exact named workflow intent referenced by the proven source acceptance"
+                  },
+                  {
+                    "name": "Reservation",
+                    "type": "ReservationKey",
+                    "required": true
+                  },
+                  {
+                    "name": "Requirement",
+                    "type": "SourceUseRequirement",
+                    "required": true
+                  },
+                  {
+                    "name": "Grant",
+                    "type": "ReservationGrant?",
+                    "required": true
+                  },
+                  {
+                    "name": "Disposition",
+                    "type": "SourceUseSettlementDisposition?",
+                    "required": true
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "changes": [],
+        "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
+        "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
+        "resolvedIntentSchema": "SourceUseAuthorizationIntent",
+        "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
+      }
+    },
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:EvidenceRequestCancelled",
+        "event": "EvidenceRequestCancelled",
+        "emissionKind": "business",
+        "owners": [
+          "EvidenceRequest"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": true,
+        "targetConcreteType": "EvidenceRequestCancelled",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.evidence.request.cancelled",
+          "version": 2
+        },
+        "wireQualification": "Adopted wire is the occupied discriminator declared in src/Compliance.Common/Features/Evidence/Events/EvidenceRequestCancelled.cs at 60029b8f (2026-10-29 reconciliation). The earlier selected wire is retained as supersededSelectedWire for provenance only.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "selected_complete_schema",
+        "sourceStatus": "declared",
+        "supersededSelectedWire": {
+          "discriminator": "bdgrz.evidence.request.cancelled",
+          "version": 1
+        },
+        "meaning": "Cancels an open request with an attributed rationale; cancellation is final.",
+        "meaningSource": "record summary in src/Compliance.Common/Features/Evidence/Events/EvidenceRequestCancelled.cs"
+      },
+      "schema": {
+        "event": "EvidenceRequestCancelled",
+        "discriminator": "bdgrz.evidence.request.cancelled",
+        "discriminatorVersion": 1,
+        "owner": "EvidenceRequest",
+        "existingContract": "src/Compliance.Common/Features/Evidence/EvidenceRequestCancelled.cs",
+        "status": "selected target schema; implementation pending",
+        "reason": "source command accepted result",
+        "fields": [
+          {
+            "name": "TenantId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "ProgramId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "EvidenceRequestId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "Revision",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "Rationale",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "CancelledBy",
+            "type": "ActorReference",
+            "required": true
+          },
+          {
+            "name": "CancelledAt",
+            "type": "DateTimeOffset",
+            "required": true
+          },
+          {
+            "name": "Operation",
+            "type": "OperationProvenance",
+            "required": true
+          },
+          {
+            "name": "FirstResponse",
+            "type": "ImmutableContentRef?",
+            "required": true
+          },
+          {
+            "name": "OperationResult",
+            "type": "ImmutableContentRef?",
+            "required": true
+          }
+        ],
+        "contentSchemas": [],
+        "changes": [],
+        "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
+        "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
+        "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
+      }
+    },
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:EvidenceRequestFulfilled",
+        "event": "EvidenceRequestFulfilled",
+        "emissionKind": "business",
+        "owners": [
+          "EvidenceRequest"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": true,
+        "targetConcreteType": "EvidenceRequestFulfilled",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.evidence.request.fulfilled",
+          "version": 2
+        },
+        "wireQualification": "Adopted wire is the occupied discriminator declared in src/Compliance.Common/Features/Evidence/Events/EvidenceRequestFulfilled.cs at 60029b8f (2026-10-29 reconciliation). The earlier selected wire is retained as supersededSelectedWire for provenance only.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "selected_complete_schema",
+        "sourceStatus": "declared",
+        "supersededSelectedWire": {
+          "discriminator": "bdgrz.evidence.request.fulfilled",
+          "version": 1
+        },
+        "meaning": "Fulfils a request by linking the evidence artifact that answers it; fulfilment is final.",
+        "meaningSource": "record summary in src/Compliance.Common/Features/Evidence/Events/EvidenceRequestFulfilled.cs"
+      },
+      "schema": {
+        "event": "EvidenceRequestFulfilled",
+        "discriminator": "bdgrz.evidence.request.fulfilled",
+        "discriminatorVersion": 1,
+        "owner": "EvidenceRequest",
+        "existingContract": "src/Compliance.Common/Features/Evidence/EvidenceRequestFulfilled.cs",
+        "status": "selected target schema; implementation pending",
+        "reason": "source command accepted result",
+        "fields": [
+          {
+            "name": "TenantId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "ProgramId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "EvidenceRequestId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "Revision",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "ArtifactId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "FulfilledBy",
+            "type": "ActorReference",
+            "required": true
+          },
+          {
+            "name": "FulfilledAt",
+            "type": "DateTimeOffset",
+            "required": true
+          },
+          {
+            "name": "Operation",
+            "type": "OperationProvenance",
+            "required": true
+          },
+          {
+            "name": "FirstResponse",
+            "type": "ImmutableContentRef?",
+            "required": true
+          },
+          {
+            "name": "OperationResult",
+            "type": "ImmutableContentRef?",
+            "required": true
+          }
+        ],
+        "contentSchemas": [],
+        "changes": [],
+        "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
+        "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
+        "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
+      }
+    },
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:EvidenceRequestOpened",
+        "event": "EvidenceRequestOpened",
+        "emissionKind": "business",
+        "owners": [
+          "EvidenceRequest"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": true,
+        "targetConcreteType": "EvidenceRequestOpened",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.evidence.request.opened",
+          "version": 2
+        },
+        "wireQualification": "Adopted wire is the occupied discriminator declared in src/Compliance.Common/Features/Evidence/Events/EvidenceRequestOpened.cs at 60029b8f (2026-10-29 reconciliation). The earlier selected wire is retained as supersededSelectedWire for provenance only.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "selected_complete_schema",
+        "sourceStatus": "declared",
+        "supersededSelectedWire": {
+          "discriminator": "bdgrz.evidence.request.opened",
+          "version": 1
+        },
+        "meaning": "Opens a request for one piece of evidence, owned by a member and due on a date. It is the native acceptance of OpenEvidenceRequest and the request's revision one.",
+        "meaningSource": "record summary in src/Compliance.Common/Features/Evidence/Events/EvidenceRequestOpened.cs"
+      },
+      "schema": {
+        "event": "EvidenceRequestOpened",
+        "discriminator": "bdgrz.evidence.request.opened",
+        "discriminatorVersion": 1,
+        "owner": "EvidenceRequest",
+        "existingContract": "src/Compliance.Common/Features/Evidence/EvidenceRequestOpened.cs",
+        "status": "selected target schema; implementation pending",
+        "reason": "source command accepted result",
+        "fields": [
+          {
+            "name": "TenantId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "ProgramId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "EvidenceRequestId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "Title",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "Instructions",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "OwnerMemberId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "DueOn",
+            "type": "DateOnly",
+            "required": true
+          },
+          {
+            "name": "ControlId",
+            "type": "Uuid?",
+            "required": true
+          },
+          {
+            "name": "RequestedBy",
+            "type": "ActorReference",
+            "required": true
+          },
+          {
+            "name": "OpenedAt",
+            "type": "DateTimeOffset",
+            "required": true
+          },
+          {
+            "name": "Operation",
+            "type": "OperationProvenance",
+            "required": true
+          },
+          {
+            "name": "FirstResponse",
+            "type": "ImmutableContentRef?",
+            "required": true
+          },
+          {
+            "name": "OperationResult",
+            "type": "ImmutableContentRef?",
+            "required": true
+          }
+        ],
+        "contentSchemas": [],
+        "changes": [],
+        "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
+        "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
+        "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
+      }
+    }
+  ]
+}

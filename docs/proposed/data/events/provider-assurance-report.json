@@ -1,0 +1,536 @@
+{
+  "owner": "ProviderAssuranceReport",
+  "events": [
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:AssuranceReportRecorded",
+        "event": "AssuranceReportRecorded",
+        "emissionKind": "business",
+        "owners": [
+          "ProviderAssuranceReport"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": true,
+        "targetConcreteType": "AssuranceReportRecorded",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.provider.assurance_report.recorded",
+          "version": 1
+        },
+        "wireQualification": "Wire matches the declared record in src/Compliance.Common/Features/Providers/Events/AssuranceReportRecorded.cs at 60029b8f.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "selected_complete_schema",
+        "sourceStatus": "declared",
+        "meaning": "An assurance report was recorded as the first revision of its own owner. The complete AssuranceReportContent is immutable content; RequestId is the report id, the logical identity of the creation.",
+        "meaningSource": "record summary in src/Compliance.Common/Features/Providers/Events/AssuranceReportRecorded.cs"
+      },
+      "schema": {
+        "event": "AssuranceReportRecorded",
+        "discriminator": "bdgrz.provider.assurance_report.recorded",
+        "discriminatorVersion": 1,
+        "owner": "ProviderAssuranceReport",
+        "existingContract": "src/Compliance.Common/Features/Providers/AssuranceReportRecorded.cs",
+        "status": "selected target schema; implementation pending",
+        "reason": "source command accepted result",
+        "fields": [
+          {
+            "name": "TenantId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "ReportId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "ProviderId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "RequestId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "ContentContent",
+            "type": "ImmutableContentRef",
+            "required": true
+          },
+          {
+            "name": "ProviderRevision",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "Actor",
+            "type": "ActorReference",
+            "required": true
+          },
+          {
+            "name": "RecordedAt",
+            "type": "DateTimeOffset",
+            "required": true
+          },
+          {
+            "name": "Operation",
+            "type": "OperationProvenance",
+            "required": true
+          },
+          {
+            "name": "FirstResponse",
+            "type": "ImmutableContentRef?",
+            "required": true
+          },
+          {
+            "name": "OperationResult",
+            "type": "ImmutableContentRef?",
+            "required": true
+          }
+        ],
+        "contentSchemas": [
+          {
+            "field": "ContentContent",
+            "schema": "AssuranceReportRecorded.ContentContent.v1",
+            "contentType": "AssuranceReportContent",
+            "rule": "Complete original typed structured value, including nested collections, written/verified before this event. No cumulative parent view or mutable latest pointer."
+          }
+        ],
+        "changes": [
+          "Externalize structured AssuranceReportContent including nested collections; a former item cap cannot become an event-size rejection for valid larger content."
+        ],
+        "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
+        "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
+        "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
+      }
+    },
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:AssuranceReportRevised",
+        "event": "AssuranceReportRevised",
+        "emissionKind": "business",
+        "owners": [
+          "ProviderAssuranceReport"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": true,
+        "targetConcreteType": "AssuranceReportRevised",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.provider.assurance_report.revised",
+          "version": 1
+        },
+        "wireQualification": "Wire matches the declared record in src/Compliance.Common/Features/Providers/Events/AssuranceReportRevised.cs at 60029b8f.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "selected_complete_schema",
+        "sourceStatus": "declared",
+        "meaning": "An assurance report was revised at the expected revision of its own owner; the provider cannot change. The complete revised AssuranceReportContent is immutable content and RequestId is the command id of the revision.",
+        "meaningSource": "record summary in src/Compliance.Common/Features/Providers/Events/AssuranceReportRevised.cs"
+      },
+      "schema": {
+        "event": "AssuranceReportRevised",
+        "discriminator": "bdgrz.provider.assurance_report.revised",
+        "discriminatorVersion": 1,
+        "owner": "ProviderAssuranceReport",
+        "existingContract": "src/Compliance.Common/Features/Providers/AssuranceReportRevised.cs",
+        "status": "selected target schema; implementation pending",
+        "reason": "source command accepted result",
+        "fields": [
+          {
+            "name": "TenantId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "ReportId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "ProviderId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "RequestId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "Revision",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "ContentContent",
+            "type": "ImmutableContentRef",
+            "required": true
+          },
+          {
+            "name": "ProviderRevision",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "Actor",
+            "type": "ActorReference",
+            "required": true
+          },
+          {
+            "name": "RecordedAt",
+            "type": "DateTimeOffset",
+            "required": true
+          },
+          {
+            "name": "Operation",
+            "type": "OperationProvenance",
+            "required": true
+          },
+          {
+            "name": "FirstResponse",
+            "type": "ImmutableContentRef?",
+            "required": true
+          },
+          {
+            "name": "OperationResult",
+            "type": "ImmutableContentRef?",
+            "required": true
+          }
+        ],
+        "contentSchemas": [
+          {
+            "field": "ContentContent",
+            "schema": "AssuranceReportRevised.ContentContent.v1",
+            "contentType": "AssuranceReportContent",
+            "rule": "Complete original typed structured value, including nested collections, written/verified before this event. No cumulative parent view or mutable latest pointer."
+          }
+        ],
+        "changes": [
+          "Externalize structured AssuranceReportContent including nested collections; a former item cap cannot become an event-size rejection for valid larger content."
+        ],
+        "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
+        "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
+        "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
+      }
+    },
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:ProviderAssuranceReportProviderReviewUseAuthorized",
+        "event": "ProviderAssuranceReportProviderReviewUseAuthorized",
+        "emissionKind": "reservation",
+        "owners": [
+          "ProviderAssuranceReport"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": true,
+        "targetConcreteType": "ProviderAssuranceReportProviderReviewUseAuthorized",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.provider-assurance-report.provider-assurance-report-provider-review-use-authorized",
+          "version": 1
+        },
+        "wireQualification": "Wire matches the declared record in src/Compliance.Common/Features/Providers/Events/ProviderAssuranceReportProviderReviewUseAuthorized.cs at 60029b8f.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "selected_complete_schema",
+        "sourceStatus": "declared",
+        "emissionKindNote": "Owner-held reservation or its settlement: authoritative for the owner invariant (the reducer must refuse conflicting commands while held) but not a business decision in its own right. Adopted 2026-10-29 (decision EV-D06).",
+        "meaning": "The exact assurance report revision is held for one provider review. The use does not advance the public report revision; Revision is the held revision and the report refuses revision while held.",
+        "meaningSource": "record summary in src/Compliance.Common/Features/Providers/Events/ProviderAssuranceReportProviderReviewUseAuthorized.cs"
+      },
+      "schema": {
+        "event": "ProviderAssuranceReportProviderReviewUseAuthorized",
+        "discriminator": "bdgrz.provider-assurance-report.provider-assurance-report-provider-review-use-authorized",
+        "discriminatorVersion": 1,
+        "owner": "ProviderAssuranceReport",
+        "existingContract": null,
+        "status": "selected target schema; implementation pending",
+        "reason": "typed reactor receiver accepted business fact",
+        "fields": [
+          {
+            "name": "Owner",
+            "type": "EventStreamAddress",
+            "required": true
+          },
+          {
+            "name": "Revision",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "Generation",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "Intent",
+            "type": "ImmutableContentRef",
+            "required": true
+          },
+          {
+            "name": "SourceProofs",
+            "type": "ImmutableContentRef?",
+            "required": true
+          },
+          {
+            "name": "Operation",
+            "type": "OperationProvenance",
+            "required": true
+          },
+          {
+            "name": "FirstResponse",
+            "type": "ImmutableContentRef?",
+            "required": true
+          },
+          {
+            "name": "OperationResult",
+            "type": "ImmutableContentRef?",
+            "required": true
+          }
+        ],
+        "contentSchemas": [
+          {
+            "field": "Intent",
+            "schema": "source-use-authorization-intent.v1",
+            "recordType": "SourceUseAuthorizationIntent",
+            "fields": [
+              {
+                "name": "Header",
+                "type": "DurableIntentHeader",
+                "required": true
+              },
+              {
+                "name": "ParentIntent",
+                "type": "ImmutableContentRef",
+                "required": true,
+                "contentSchema": "Exact named workflow intent referenced by the proven source acceptance"
+              },
+              {
+                "name": "Reservation",
+                "type": "ReservationKey",
+                "required": true
+              },
+              {
+                "name": "Requirement",
+                "type": "SourceUseRequirement",
+                "required": true
+              },
+              {
+                "name": "Grant",
+                "type": "ReservationGrant?",
+                "required": true
+              },
+              {
+                "name": "Disposition",
+                "type": "SourceUseSettlementDisposition?",
+                "required": true
+              }
+            ],
+            "rule": "A use fact points to the immutable original workflow intent plus this exact source-specific requirement/token. No arbitrary command snapshot serves as policy proof. Terminal settlement before grant fences the same key; neither lease expiry nor missing read releases it.",
+            "variants": [
+              {
+                "recordType": "SourceUseAuthorizationIntent",
+                "schema": "source-use-authorization-intent.v1",
+                "fields": [
+                  {
+                    "name": "Header",
+                    "type": "DurableIntentHeader",
+                    "required": true
+                  },
+                  {
+                    "name": "ParentIntent",
+                    "type": "ImmutableContentRef",
+                    "required": true,
+                    "contentSchema": "Exact named workflow intent referenced by the proven source acceptance"
+                  },
+                  {
+                    "name": "Reservation",
+                    "type": "ReservationKey",
+                    "required": true
+                  },
+                  {
+                    "name": "Requirement",
+                    "type": "SourceUseRequirement",
+                    "required": true
+                  },
+                  {
+                    "name": "Grant",
+                    "type": "ReservationGrant?",
+                    "required": true
+                  },
+                  {
+                    "name": "Disposition",
+                    "type": "SourceUseSettlementDisposition?",
+                    "required": true
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "changes": [],
+        "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
+        "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
+        "resolvedIntentSchema": "SourceUseAuthorizationIntent",
+        "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
+      }
+    },
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:ProviderAssuranceReportProviderReviewUseSettled",
+        "event": "ProviderAssuranceReportProviderReviewUseSettled",
+        "emissionKind": "reservation",
+        "owners": [
+          "ProviderAssuranceReport"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": true,
+        "targetConcreteType": "ProviderAssuranceReportProviderReviewUseSettled",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.provider-assurance-report.provider-assurance-report-provider-review-use-settled",
+          "version": 1
+        },
+        "wireQualification": "Wire matches the declared record in src/Compliance.Common/Features/Providers/Events/ProviderAssuranceReportProviderReviewUseSettled.cs at 60029b8f.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "selected_complete_schema",
+        "sourceStatus": "declared",
+        "emissionKindNote": "Owner-held reservation or its settlement: authoritative for the owner invariant (the reducer must refuse conflicting commands while held) but not a business decision in its own right. Adopted 2026-10-29 (decision EV-D06).",
+        "meaning": "The held report use ended after the recorded review or after the cancellation fence. With no earlier grant it fences the key so a delayed acquisition cannot recreate the hold.",
+        "meaningSource": "record summary in src/Compliance.Common/Features/Providers/Events/ProviderAssuranceReportProviderReviewUseSettled.cs"
+      },
+      "schema": {
+        "event": "ProviderAssuranceReportProviderReviewUseSettled",
+        "discriminator": "bdgrz.provider-assurance-report.provider-assurance-report-provider-review-use-settled",
+        "discriminatorVersion": 1,
+        "owner": "ProviderAssuranceReport",
+        "existingContract": null,
+        "status": "selected target schema; implementation pending",
+        "reason": "typed reactor receiver accepted business fact",
+        "fields": [
+          {
+            "name": "Owner",
+            "type": "EventStreamAddress",
+            "required": true
+          },
+          {
+            "name": "Revision",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "Generation",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "Intent",
+            "type": "ImmutableContentRef",
+            "required": true
+          },
+          {
+            "name": "SourceProofs",
+            "type": "ImmutableContentRef?",
+            "required": true
+          },
+          {
+            "name": "Operation",
+            "type": "OperationProvenance",
+            "required": true
+          },
+          {
+            "name": "FirstResponse",
+            "type": "ImmutableContentRef?",
+            "required": true
+          },
+          {
+            "name": "OperationResult",
+            "type": "ImmutableContentRef?",
+            "required": true
+          }
+        ],
+        "contentSchemas": [
+          {
+            "field": "Intent",
+            "schema": "source-use-authorization-intent.v1",
+            "recordType": "SourceUseAuthorizationIntent",
+            "fields": [
+              {
+                "name": "Header",
+                "type": "DurableIntentHeader",
+                "required": true
+              },
+              {
+                "name": "ParentIntent",
+                "type": "ImmutableContentRef",
+                "required": true,
+                "contentSchema": "Exact named workflow intent referenced by the proven source acceptance"
+              },
+              {
+                "name": "Reservation",
+                "type": "ReservationKey",
+                "required": true
+              },
+              {
+                "name": "Requirement",
+                "type": "SourceUseRequirement",
+                "required": true
+              },
+              {
+                "name": "Grant",
+                "type": "ReservationGrant?",
+                "required": true
+              },
+              {
+                "name": "Disposition",
+                "type": "SourceUseSettlementDisposition?",
+                "required": true
+              }
+            ],
+            "rule": "A use fact points to the immutable original workflow intent plus this exact source-specific requirement/token. No arbitrary command snapshot serves as policy proof. Terminal settlement before grant fences the same key; neither lease expiry nor missing read releases it.",
+            "variants": [
+              {
+                "recordType": "SourceUseAuthorizationIntent",
+                "schema": "source-use-authorization-intent.v1",
+                "fields": [
+                  {
+                    "name": "Header",
+                    "type": "DurableIntentHeader",
+                    "required": true
+                  },
+                  {
+                    "name": "ParentIntent",
+                    "type": "ImmutableContentRef",
+                    "required": true,
+                    "contentSchema": "Exact named workflow intent referenced by the proven source acceptance"
+                  },
+                  {
+                    "name": "Reservation",
+                    "type": "ReservationKey",
+                    "required": true
+                  },
+                  {
+                    "name": "Requirement",
+                    "type": "SourceUseRequirement",
+                    "required": true
+                  },
+                  {
+                    "name": "Grant",
+                    "type": "ReservationGrant?",
+                    "required": true
+                  },
+                  {
+                    "name": "Disposition",
+                    "type": "SourceUseSettlementDisposition?",
+                    "required": true
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "changes": [],
+        "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
+        "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
+        "resolvedIntentSchema": "SourceUseAuthorizationIntent",
+        "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
+      }
+    }
+  ]
+}

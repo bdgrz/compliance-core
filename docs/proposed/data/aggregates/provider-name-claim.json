@@ -1,0 +1,246 @@
+{
+  "owner": "ProviderNameClaim",
+  "origin": "selected_split_target",
+  "baselineOwners": [
+    "ProviderRegister"
+  ],
+  "declaredIdentity": "(tenantId, normalizedGovernedName)",
+  "invariant": "Authoritative unique active name reservation.",
+  "boundaryDecision": "selected_split",
+  "mustPreserve": "Exact creation identity and expected provider revision; active normalized name unique within tenant.",
+  "sources": [
+    {
+      "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
+      "jsonPointer": "/splitOwners/20/targetOwners/1",
+      "line": 2161,
+      "sha256": "d349d94b7c43f4d82020ecf36bdacf1aff98bc6498e14993582f1c3164b21f19"
+    }
+  ],
+  "baselineSourcePath": "src/Compliance.Core/Features/Providers/ProviderRegister.cs",
+  "baselineEvents": [],
+  "preliminaryNewEvents": [
+    "ProviderNameClaimed",
+    "ProviderNameReleased"
+  ],
+  "technicalStateToSeparate": [],
+  "classification": "business_identity_or_uniqueness_authority",
+  "businessAggregate": true,
+  "implementationStatus": "SEPARATE_VERIFICATION_REQUIRED_IMPLEMENTATION_HALTED",
+  "identityReadingRule": "selectedIdentitySummary and exact selectedCommandContracts define intended identity. baselineIdentityObservation/declaredIdentity retain older source observations only, including old replay defects; they are not target behavior or authorization to change an occupied key.",
+  "selectedCommandContracts": [
+    {
+      "command": "ClaimProviderName",
+      "kind": "receiver",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "internal",
+        "rule": "deterministic receiver identity derived from the admitted root fact, episode and generation: exact redelivery resolves the original result, a changed admission is a new identity"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "required": true
+        },
+        {
+          "name": "Source",
+          "required": true
+        },
+        {
+          "name": "Target",
+          "required": true
+        },
+        {
+          "name": "OperationId",
+          "required": true
+        },
+        {
+          "name": "Generation",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "required": true
+        },
+        {
+          "name": "Intent",
+          "required": true
+        },
+        {
+          "name": "RecordId",
+          "required": true
+        },
+        {
+          "name": "NormalizedName",
+          "required": true
+        },
+        {
+          "name": "NameKind",
+          "required": true
+        }
+      ],
+      "http": [],
+      "source": {
+        "path": "src/Compliance.Core/Features/Providers/Handlers/ClaimProviderNameHandler.cs",
+        "recorded": "2026-10-29"
+      },
+      "reactor": "ProviderNameClaimReactor",
+      "sourceOwner": "Provider",
+      "sourceEvents": [
+        "ProviderChangeAccepted"
+      ],
+      "guard": "Use existing normalization/active/kind policy; new and old claims acquired canonically. Permanent unique active binding until exact record change/fence. ",
+      "eventsEmitted": [
+        "ProviderNameClaimed"
+      ],
+      "effectKind": "claim_provider_name",
+      "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine."
+    },
+    {
+      "command": "ReleaseProviderName",
+      "kind": "receiver",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "internal",
+        "rule": "deterministic receiver identity derived from the admitted root fact, episode and generation: exact redelivery resolves the original result, a changed admission is a new identity"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "required": true
+        },
+        {
+          "name": "Source",
+          "required": true
+        },
+        {
+          "name": "Target",
+          "required": true
+        },
+        {
+          "name": "OperationId",
+          "required": true
+        },
+        {
+          "name": "Generation",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "required": true
+        },
+        {
+          "name": "Intent",
+          "required": true
+        },
+        {
+          "name": "RecordId",
+          "required": true
+        },
+        {
+          "name": "NormalizedName",
+          "required": true
+        }
+      ],
+      "http": [],
+      "source": {
+        "path": "src/Compliance.Core/Features/Providers/Handlers/ReleaseProviderNameHandler.cs",
+        "recorded": "2026-10-29"
+      },
+      "reactor": "ProviderOldNameReleaseReactor",
+      "sourceOwner": "Provider",
+      "sourceEvents": [
+        "ProviderRecorded",
+        "ProviderRevised",
+        "ProviderChangeCanceled"
+      ],
+      "guard": "Release only matching old generation after exact record fact proves old name inactive; same-name/current claim is terminal no-op. A canceled target is already receiver-fenced; release its pending new claim only with that exact fence.",
+      "eventsEmitted": [
+        "ProviderNameReleased"
+      ],
+      "effectKind": "release_provider_name",
+      "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine."
+    }
+  ],
+  "eventAuthority": "selected_final_event_catalog",
+  "events": [
+    {
+      "event": "ProviderNameClaimed",
+      "discriminator": "bdgrz.provider-name-claim.provider-name-claimed",
+      "discriminatorVersion": 1,
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
+        "jsonPointer": "/events/216",
+        "line": 28953,
+        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
+      }
+    },
+    {
+      "event": "ProviderNameReleased",
+      "discriminator": "bdgrz.provider-name-claim.provider-name-released",
+      "discriminatorVersion": 1,
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
+        "jsonPointer": "/events/217",
+        "line": 29117,
+        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
+      }
+    }
+  ],
+  "choreography": [
+    {
+      "reactor": "ProviderNameClaimReactor",
+      "sourceOwner": "Provider",
+      "targetOwner": "ProviderNameClaim",
+      "command": "ClaimProviderName",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
+        "jsonPointer": "/reactors/22",
+        "line": 1884,
+        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
+      }
+    },
+    {
+      "reactor": "ProviderChangeApplicationReactor",
+      "sourceOwner": "ProviderNameClaim",
+      "targetOwner": "Provider",
+      "command": "ApplyProviderChange",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
+        "jsonPointer": "/reactors/23",
+        "line": 1971,
+        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
+      }
+    },
+    {
+      "reactor": "ProviderOldNameReleaseReactor",
+      "sourceOwner": "Provider",
+      "targetOwner": "ProviderNameClaim",
+      "command": "ReleaseProviderName",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
+        "jsonPointer": "/reactors/24",
+        "line": 2049,
+        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
+      }
+    }
+  ],
+  "status": "SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED",
+  "baselineIdentityObservation": "(tenantId, normalizedGovernedName)",
+  "identityContractRule": "Existing published owner identity/IdFor remains stable. Required typed creation/operation identity and tenant/program/source scope come from the selected signature/protocol references; no context.RequestId minting fallback or guessed new stream key.",
+  "adoptedArchitectureDecisions": [],
+  "selectedIdentitySummary": "Tenant-scoped (tenantId, normalizedGovernedName); the identity is established by the admitting owner or reactor named in the choreography, never by a caller request key; mutations bind CommandId to this exact identity.",
+  "baselineIdentityObservationOnly": true,
+  "selectedLogicalIdentityBindings": [],
+  "selectedReplayRule": "Current required authorization precedes replay; exact authorized retries resolve the original accepted result using the selected logical identity and immutable actor/intent/source binding. Fresh mutable feasibility, clock selection and body preparation cannot replace that original result. Expected revision is concurrency precondition, not a new identity.",
+  "identityRevisions": [
+    {
+      "date": "2026-10-29",
+      "previous": "(tenantId, normalizedGovernedName)"
+    }
+  ],
+  "commandNote": "Source is SourceFactProof<ProviderChangeAccepted>. INamedRecordReceiver; no HTTP command."
+}

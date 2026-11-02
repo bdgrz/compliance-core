@@ -1,0 +1,1034 @@
+{
+  "owner": "ControlOccurrence",
+  "selectedContracts": [
+    {
+      "command": "AttestControlOccurrence",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ProgramId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ControlId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "OccurrenceId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "Result",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "PerformedAt",
+          "type": "DateTimeOffset",
+          "required": true
+        },
+        {
+          "name": "CoveredFrom",
+          "type": "DateOnly?",
+          "required": true
+        },
+        {
+          "name": "CoveredUntil",
+          "type": "DateOnly?",
+          "required": true
+        },
+        {
+          "name": "Notes",
+          "type": "string?",
+          "required": true
+        },
+        {
+          "name": "Rationale",
+          "type": "string?",
+          "required": true
+        },
+        {
+          "name": "Evidence",
+          "type": "IReadOnlyList<EvidenceReference>",
+          "required": true
+        },
+        {
+          "name": "PerformedByPersonId",
+          "type": "Uuid?",
+          "required": false
+        }
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "ControlOccurrenceView",
+        "firstHttpStatus": 200,
+        "terminalResultType": "ControlOccurrenceView"
+      },
+      "http": [
+        {
+          "method": "PUT",
+          "path": "/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/occurrences/{occurrence_id}/attestations/{command_id}",
+          "policy": "ComplianceAuthorizationPolicies.ApiUser"
+        }
+      ],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
+        "jsonPointer": "/commands/24",
+        "line": 2859,
+        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
+      },
+      "kind": "http"
+    },
+    {
+      "command": "CorrectControlAttestation",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ProgramId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ControlId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "OccurrenceId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "Result",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "PerformedAt",
+          "type": "DateTimeOffset",
+          "required": true
+        },
+        {
+          "name": "CoveredFrom",
+          "type": "DateOnly?",
+          "required": true
+        },
+        {
+          "name": "CoveredUntil",
+          "type": "DateOnly?",
+          "required": true
+        },
+        {
+          "name": "Notes",
+          "type": "string?",
+          "required": true
+        },
+        {
+          "name": "Rationale",
+          "type": "string?",
+          "required": true
+        },
+        {
+          "name": "Evidence",
+          "type": "IReadOnlyList<EvidenceReference>",
+          "required": true
+        },
+        {
+          "name": "CorrectionReason",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "PerformedByPersonId",
+          "type": "Uuid?",
+          "required": false
+        }
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "ControlOccurrenceView",
+        "firstHttpStatus": 200,
+        "terminalResultType": "ControlOccurrenceView"
+      },
+      "http": [
+        {
+          "method": "PUT",
+          "path": "/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/occurrences/{occurrence_id}/corrections/{command_id}",
+          "policy": "ComplianceAuthorizationPolicies.ApiUser"
+        }
+      ],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
+        "jsonPointer": "/commands/39",
+        "line": 4630,
+        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
+      },
+      "kind": "http"
+    },
+    {
+      "command": "OpenControlOccurrence",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused"
+      },
+      "fields": [
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ProgramId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ControlId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Trigger",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "OccurredOn",
+          "type": "DateOnly",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "BusinessWindow",
+          "type": "ControlBusinessWindow",
+          "required": true
+        }
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "ControlOccurrenceView",
+        "firstHttpStatus": 200,
+        "terminalResultType": "ControlOccurrenceView"
+      },
+      "http": [
+        {
+          "method": "PUT",
+          "path": "/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/occurrences/{command_id}",
+          "policy": "ComplianceAuthorizationPolicies.ApiUser"
+        }
+      ],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
+        "jsonPointer": "/commands/72",
+        "line": 8333,
+        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
+      },
+      "kind": "http"
+    },
+    {
+      "command": "ReviewControlOccurrence",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ProgramId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ControlId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "OccurrenceId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "AttestationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Outcome",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "Rationale",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "RequestedActions",
+          "type": "IReadOnlyList<string>?",
+          "required": false
+        },
+        {
+          "name": "SeparationOfDutiesWaiverId",
+          "type": "Uuid?",
+          "required": false
+        }
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "ControlOccurrenceView",
+        "firstHttpStatus": 200,
+        "terminalResultType": "ControlOccurrenceView"
+      },
+      "http": [
+        {
+          "method": "PUT",
+          "path": "/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/occurrences/{occurrence_id}/reviews/{command_id}",
+          "policy": "ComplianceAuthorizationPolicies.ApiUser"
+        }
+      ],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
+        "jsonPointer": "/commands/130",
+        "line": 15018,
+        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
+      },
+      "kind": "http"
+    },
+    {
+      "command": "MaterializeControlOccurrence",
+      "kind": "receiver",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "reactor",
+        "rule": "deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Source",
+          "type": "SourceFactProof<DueControlOccurrencesGenerated>",
+          "required": true
+        },
+        {
+          "name": "Target",
+          "type": "EventStreamAddress",
+          "required": true
+        },
+        {
+          "name": "OperationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Generation",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long?",
+          "required": true
+        },
+        {
+          "name": "Intent",
+          "type": "ImmutableContentRef",
+          "required": true,
+          "contentSchema": "ControlOccurrenceCreationIntent"
+        },
+        {
+          "name": "ProgramId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ControlId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "BusinessWindow",
+          "type": "ControlBusinessWindow",
+          "required": true
+        },
+        {
+          "name": "OccurrenceId",
+          "type": "Uuid",
+          "required": true
+        }
+      ],
+      "reactor": "ControlOccurrenceMaterializationReactor",
+      "sourceOwner": "TypeIIPeriod",
+      "sourceEvents": [
+        "DueControlOccurrencesGenerated"
+      ],
+      "guard": "Canonical occurrence identity across generators and full accepted plan/window/owner/reviewer intent.",
+      "eventsEmitted": [
+        "ControlOccurrenceOpened"
+      ],
+      "effectKind": "materialize_control_occurrence",
+      "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
+      "handler": "MaterializeControlOccurrenceHandler",
+      "http": [],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
+        "recorded": "2026-10-29"
+      }
+    }
+  ],
+  "sourceContractEvidence": [
+    {
+      "command": "AttestControlOccurrence",
+      "status": "target_contract",
+      "sourceContract": "src/Compliance.Common/Features/Operations/AttestControlOccurrence.cs",
+      "sourceHandlers": [
+        {
+          "name": "AttestControlOccurrenceHandler",
+          "source": "src/Compliance.Core/Features/Operations/AttestControlOccurrenceHandler.cs",
+          "registered": true
+        }
+      ],
+      "handler": "AttestControlOccurrenceHandler",
+      "sourceRoots": [
+        "ControlOperationsLedger"
+      ],
+      "owner": "ControlOccurrence",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "one immutable authored operation"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ProgramId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ControlId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "OccurrenceId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "Result",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "PerformedAt",
+          "type": "DateTimeOffset",
+          "required": true
+        },
+        {
+          "name": "CoveredFrom",
+          "type": "DateOnly?",
+          "required": true
+        },
+        {
+          "name": "CoveredUntil",
+          "type": "DateOnly?",
+          "required": true
+        },
+        {
+          "name": "Notes",
+          "type": "string?",
+          "required": true
+        },
+        {
+          "name": "Rationale",
+          "type": "string?",
+          "required": true
+        },
+        {
+          "name": "Evidence",
+          "type": "IReadOnlyList<EvidenceReference>",
+          "required": true
+        },
+        {
+          "name": "PerformedByPersonId",
+          "type": "Uuid?",
+          "required": false
+        }
+      ],
+      "http": [
+        {
+          "method": "PUT",
+          "path": "/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/occurrences/{occurrence_id}/attestations/{command_id}",
+          "policy": "ComplianceAuthorizationPolicies.ApiUser"
+        }
+      ],
+      "mcp": false,
+      "entryPoint": "personal_http",
+      "authorizerSources": [
+        "src/Compliance.Core/Features/AccessControl/ClientManagementMutationAuthorizer.cs",
+        "src/Compliance.Core/Features/Programs/ProgramManagementAuthorizer.cs"
+      ],
+      "events": [
+        "ControlOccurrenceAttested"
+      ],
+      "protocols": [
+        "Operating plan and business-window occurrence"
+      ],
+      "guardOrder": [
+        "bind_required_ids",
+        "authenticate_authorize",
+        "canonicalize_authored_intent",
+        "resolve_native_operation_facts",
+        "compare_owner_episode_actor_kind_intent_original_revision",
+        "validate_new_owner_revision_and_source_permits",
+        "append_complete_concrete_attributed_batch"
+      ],
+      "policyPreservation": "All current source handler/aggregate validation rules and source test expectations apply, except the explicit contractChanges and boundary protocol. Lifetime caps and technical attempt events are removed with their structural replacement.",
+      "contractChanges": [
+        "Add required CommandId."
+      ],
+      "existingTests": [
+        "test/Compliance.Tests/Features/AccessControl/AttestManagementWriteWallTests.cs",
+        "test/Compliance.Tests/Features/Operations/OperationsFixture.cs",
+        "test/Compliance.Tests/Features/Work/ConcurrentOccurrenceSubmissionTests.cs"
+      ],
+      "requiredTests": [
+        "ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange",
+        "ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision",
+        "ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity",
+        "ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof",
+        "ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome"
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "ControlOccurrenceView",
+        "firstHttpStatus": 200,
+        "terminalResultType": "ControlOccurrenceView"
+      },
+      "expectedRevisionScope": {
+        "field": "ExpectedRevision",
+        "owner": "ControlOccurrence",
+        "counter": "logical ResourceRevision of this owner",
+        "nullableInternalRule": null
+      }
+    },
+    {
+      "command": "CorrectControlAttestation",
+      "status": "target_contract",
+      "sourceContract": "src/Compliance.Common/Features/Operations/CorrectControlAttestation.cs",
+      "sourceHandlers": [
+        {
+          "name": "CorrectControlAttestationHandler",
+          "source": "src/Compliance.Core/Features/Operations/CorrectControlAttestationHandler.cs",
+          "registered": true
+        }
+      ],
+      "handler": "CorrectControlAttestationHandler",
+      "sourceRoots": [
+        "ControlOperationsLedger"
+      ],
+      "owner": "ControlOccurrence",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "one immutable authored operation"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ProgramId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ControlId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "OccurrenceId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "Result",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "PerformedAt",
+          "type": "DateTimeOffset",
+          "required": true
+        },
+        {
+          "name": "CoveredFrom",
+          "type": "DateOnly?",
+          "required": true
+        },
+        {
+          "name": "CoveredUntil",
+          "type": "DateOnly?",
+          "required": true
+        },
+        {
+          "name": "Notes",
+          "type": "string?",
+          "required": true
+        },
+        {
+          "name": "Rationale",
+          "type": "string?",
+          "required": true
+        },
+        {
+          "name": "Evidence",
+          "type": "IReadOnlyList<EvidenceReference>",
+          "required": true
+        },
+        {
+          "name": "CorrectionReason",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "PerformedByPersonId",
+          "type": "Uuid?",
+          "required": false
+        }
+      ],
+      "http": [
+        {
+          "method": "PUT",
+          "path": "/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/occurrences/{occurrence_id}/corrections/{command_id}",
+          "policy": "ComplianceAuthorizationPolicies.ApiUser"
+        }
+      ],
+      "mcp": false,
+      "entryPoint": "personal_http",
+      "authorizerSources": [
+        "src/Compliance.Core/Features/AccessControl/ClientManagementMutationAuthorizer.cs",
+        "src/Compliance.Core/Features/Programs/ProgramManagementAuthorizer.cs"
+      ],
+      "events": [
+        "ControlOccurrenceAttested"
+      ],
+      "protocols": [
+        "Operating plan and business-window occurrence"
+      ],
+      "guardOrder": [
+        "bind_required_ids",
+        "authenticate_authorize",
+        "canonicalize_authored_intent",
+        "resolve_native_operation_facts",
+        "compare_owner_episode_actor_kind_intent_original_revision",
+        "validate_new_owner_revision_and_source_permits",
+        "append_complete_concrete_attributed_batch"
+      ],
+      "policyPreservation": "All current source handler/aggregate validation rules and source test expectations apply, except the explicit contractChanges and boundary protocol. Lifetime caps and technical attempt events are removed with their structural replacement.",
+      "contractChanges": [
+        "Add required CommandId."
+      ],
+      "existingTests": [
+        "test/Compliance.Tests/Features/Operations/PersonalOccurrenceProofTransportTests.cs",
+        "test/Compliance.Tests/Features/Operations/OperationsFixture.cs",
+        "test/Compliance.Tests/Features/Operations/ControlOccurrenceTests.cs",
+        "test/Compliance.Tests/Features/Work/FitzControlOccurrenceWorkItemDirectoryTests.cs",
+        "test/Compliance.Tests/Features/Work/NotApplicableOccurrenceReviewTests.cs"
+      ],
+      "requiredTests": [
+        "ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange",
+        "ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision",
+        "ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity",
+        "ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof",
+        "ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome"
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "ControlOccurrenceView",
+        "firstHttpStatus": 200,
+        "terminalResultType": "ControlOccurrenceView"
+      },
+      "expectedRevisionScope": {
+        "field": "ExpectedRevision",
+        "owner": "ControlOccurrence",
+        "counter": "logical ResourceRevision of this owner",
+        "nullableInternalRule": null
+      }
+    },
+    {
+      "command": "OpenControlOccurrence",
+      "status": "target_contract",
+      "sourceContract": "src/Compliance.Common/Features/Operations/OpenControlOccurrence.cs",
+      "sourceHandlers": [
+        {
+          "name": "OpenControlOccurrenceHandler",
+          "source": "src/Compliance.Core/Features/Operations/OpenControlOccurrenceHandler.cs",
+          "registered": true
+        }
+      ],
+      "handler": "OpenControlOccurrenceHandler",
+      "sourceRoots": [
+        "ControlOperationsLedger"
+      ],
+      "owner": "ControlOccurrence",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "one immutable authored operation"
+      },
+      "fields": [
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ProgramId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ControlId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Trigger",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "OccurredOn",
+          "type": "DateOnly",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "BusinessWindow",
+          "type": "ControlBusinessWindow",
+          "required": true
+        }
+      ],
+      "http": [
+        {
+          "method": "PUT",
+          "path": "/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/occurrences/{command_id}",
+          "policy": "ComplianceAuthorizationPolicies.ApiUser"
+        }
+      ],
+      "mcp": false,
+      "entryPoint": "authorized_http",
+      "authorizerSources": [
+        "src/Compliance.Core/Features/AccessControl/ClientManagementMutationAuthorizer.cs",
+        "src/Compliance.Core/Features/Programs/ProgramManagementAuthorizer.cs"
+      ],
+      "events": [
+        "ControlOccurrenceOpened"
+      ],
+      "protocols": [
+        "Operating plan and business-window occurrence"
+      ],
+      "guardOrder": [
+        "bind_required_ids",
+        "authenticate_authorize",
+        "canonicalize_authored_intent",
+        "resolve_native_operation_facts",
+        "compare_owner_episode_actor_kind_intent_original_revision",
+        "validate_new_owner_revision_and_source_permits",
+        "append_complete_concrete_attributed_batch"
+      ],
+      "policyPreservation": "All current source handler/aggregate validation rules and source test expectations apply, except the explicit contractChanges and boundary protocol. Lifetime caps and technical attempt events are removed with their structural replacement.",
+      "contractChanges": [
+        "Add required CommandId.",
+        "Add required owner-local ExpectedRevision; business Version remains an exact content version, not owner OCC.",
+        "Resolve OccurrenceId deterministically from tenant/program/control/BusinessWindow across all generators. CommandId distinguishes authored opening attempts; trigger and date cannot create a second occurrence for the same window."
+      ],
+      "existingTests": [
+        "test/Compliance.Tests/Features/Operations/ControlOperatingPlanTests.cs",
+        "test/Compliance.Tests/Features/Operations/ControlOccurrenceTests.cs",
+        "test/Compliance.Tests/Features/Work/FitzControlOccurrenceWorkItemDirectoryTests.cs",
+        "test/Compliance.Tests/Features/Work/WorkSourceCompositionTests.cs",
+        "test/Compliance.Tests/Features/Work/NotApplicableOccurrenceReviewTests.cs"
+      ],
+      "requiredTests": [
+        "ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange",
+        "ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision",
+        "ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity",
+        "ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof",
+        "ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome"
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "ControlOccurrenceView",
+        "firstHttpStatus": 200,
+        "terminalResultType": "ControlOccurrenceView"
+      },
+      "expectedRevisionScope": {
+        "field": "ExpectedRevision",
+        "owner": "ControlOccurrence",
+        "counter": "logical ResourceRevision of this owner",
+        "nullableInternalRule": null
+      }
+    },
+    {
+      "command": "ReviewControlOccurrence",
+      "status": "target_contract",
+      "sourceContract": "src/Compliance.Common/Features/Operations/ReviewControlOccurrence.cs",
+      "sourceHandlers": [
+        {
+          "name": "ReviewControlOccurrenceHandler",
+          "source": "src/Compliance.Core/Features/Operations/ReviewControlOccurrenceHandler.cs",
+          "registered": true
+        }
+      ],
+      "handler": "ReviewControlOccurrenceHandler",
+      "sourceRoots": [
+        "ControlOperationsLedger"
+      ],
+      "owner": "ControlOccurrence",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "one immutable authored operation"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ProgramId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ControlId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "OccurrenceId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "AttestationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Outcome",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "Rationale",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "RequestedActions",
+          "type": "IReadOnlyList<string>?",
+          "required": false
+        },
+        {
+          "name": "SeparationOfDutiesWaiverId",
+          "type": "Uuid?",
+          "required": false
+        }
+      ],
+      "http": [
+        {
+          "method": "PUT",
+          "path": "/api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/occurrences/{occurrence_id}/reviews/{command_id}",
+          "policy": "ComplianceAuthorizationPolicies.ApiUser"
+        }
+      ],
+      "mcp": false,
+      "entryPoint": "personal_http",
+      "authorizerSources": [
+        "src/Compliance.Core/Features/AccessControl/ClientManagementMutationAuthorizer.cs",
+        "src/Compliance.Core/Features/Programs/ProgramManagementAuthorizer.cs"
+      ],
+      "events": [
+        "ControlOccurrenceReviewed"
+      ],
+      "protocols": [
+        "Operating plan and business-window occurrence"
+      ],
+      "guardOrder": [
+        "bind_required_ids",
+        "authenticate_authorize",
+        "canonicalize_authored_intent",
+        "resolve_native_operation_facts",
+        "compare_owner_episode_actor_kind_intent_original_revision",
+        "validate_new_owner_revision_and_source_permits",
+        "append_complete_concrete_attributed_batch"
+      ],
+      "policyPreservation": "All current source handler/aggregate validation rules and source test expectations apply, except the explicit contractChanges and boundary protocol. Lifetime caps and technical attempt events are removed with their structural replacement.",
+      "contractChanges": [
+        "Add required CommandId."
+      ],
+      "existingTests": [
+        "test/Compliance.Tests/Features/AccessControl/AttestManagementWriteWallTests.cs",
+        "test/Compliance.Tests/Features/Operations/OperationsFixture.cs"
+      ],
+      "requiredTests": [
+        "ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange",
+        "ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision",
+        "ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity",
+        "ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof",
+        "ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome"
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "ControlOccurrenceView",
+        "firstHttpStatus": 200,
+        "terminalResultType": "ControlOccurrenceView"
+      },
+      "expectedRevisionScope": {
+        "field": "ExpectedRevision",
+        "owner": "ControlOccurrence",
+        "counter": "logical ResourceRevision of this owner",
+        "nullableInternalRule": null
+      }
+    }
+  ]
+}

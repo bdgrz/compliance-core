@@ -20,15 +20,15 @@ professional engagements, and enforced independence.
 
 | Document | What it establishes |
 | --- | --- |
-| [Product brief](product-brief.md) | Customer, business thesis, objectives, commercial model, journey, and release boundaries |
-| [User journeys and flows](user-journeys.md) | Mermaid maps for MVP workflows and later lifecycle, firm, and commercial journeys; includes story coverage |
+| [Product brief](../proposed/scope.md) | Customer, business thesis, objectives, commercial model, journey, and release boundaries |
+| [User journeys and flows](../proposed/journeys.md) | Mermaid maps for MVP workflows and later lifecycle, firm, and commercial journeys; includes story coverage |
 | [Business operations](business-operations.md) | Multiple organizations per account, client management delegation, organization billing, add-on acceptance, and commercial readiness decisions |
-| [Domain model](domain-model.md) | Process spine, cohesive ownership, relationships, and cross-workflow rules |
+| [Domain model](../proposed/domain-model.md) | Process spine, cohesive ownership, relationships, and cross-workflow rules |
 | [Canonical entity model](canonical-entity-model.md) | Approved identity, workforce, inventory, access, and provenance vocabulary |
-| [System command list](command-list.md) | Existing commands plus the pruned, requirement-linked commands needed for committed product features |
+| [System command list](../proposed/commands/product-scope.md) | Existing commands plus the pruned, requirement-linked commands needed for committed product features |
 | [Command gap analysis](command-inventory-gap-analysis.md) | Story-by-story coverage and rationale for missing or decision-gated commands |
-| [Query and view-model list](query-and-view-model-list.md) | Existing query/model inventory plus requirement-linked read contracts and response views to backfill |
-| [Domain event list](domain-event-list.md) | Existing event inventory plus the pruned, requirement-linked event contracts to backfill |
+| [Query and view-model list](../proposed/read-models.md) | Existing query/model inventory plus requirement-linked read contracts and response views to backfill |
+| [Domain event list](../proposed/events/product-scope.md) | Existing event inventory plus the pruned, requirement-linked event contracts to backfill |
 | [Product decisions](decisions/) | Accepted M0 decisions and subsequent bounded product decisions |
 | [Backlog](backlog.md) | Story users, outcomes, requirements, owners, dependencies, and acceptance evidence |
 | [Delivery cycle](delivery-cycle.md) | Release exits, scheduling, implementation boundaries, and delivery evidence |
@@ -41,7 +41,7 @@ entire story or milestone has shipped.
 
 ## Objectives and owning capabilities
 
-The [brief](product-brief.md#product-objectives) defines observable proof for
+The [brief](../proposed/scope.md#product-objectives) defines observable proof for
 each objective. The backlog supplies story-level acceptance; cross-cutting
 objectives apply to every owning story.
 

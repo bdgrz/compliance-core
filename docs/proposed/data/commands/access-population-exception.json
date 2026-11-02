@@ -1,0 +1,188 @@
+{
+  "owner": "AccessPopulationException",
+  "selectedContracts": [
+    {
+      "command": "ExemptMissingAccessPopulation",
+      "logicalIdentity": {
+        "field": "ExceptionId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "caller-supplied immutable creation identity: an exact retry with the same id and authored intent returns the original result; the same id with changed intent is refused; a different id is a different record"
+      },
+      "fields": [
+        {
+          "name": "ExceptionId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ApplicationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "SystemInstanceId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "Reason",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "ExpiresAt",
+          "type": "DateTimeOffset",
+          "required": true
+        }
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "AccessPopulationExceptionView",
+        "firstHttpStatus": 200,
+        "terminalResultType": "AccessPopulationExceptionView"
+      },
+      "http": [
+        {
+          "method": "PUT",
+          "path": "/api/v1/tenants/{tenant_id}/applications/{application_id}/system-instances/{system_instance_id}/access-population-exceptions/{exception_id}",
+          "policy": "ComplianceAuthorizationPolicies.ApiUser"
+        }
+      ],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
+        "jsonPointer": "/commands/56",
+        "line": 6651,
+        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
+      },
+      "kind": "http"
+    }
+  ],
+  "sourceContractEvidence": [
+    {
+      "command": "ExemptMissingAccessPopulation",
+      "status": "target_contract",
+      "sourceContract": "src/Compliance.Common/Features/AccessReviews/ExemptMissingAccessPopulation.cs",
+      "sourceHandlers": [
+        {
+          "name": "ExemptMissingAccessPopulationHandler",
+          "source": "src/Compliance.Core/Features/AccessReviews/ExemptMissingAccessPopulationHandler.cs",
+          "registered": true
+        }
+      ],
+      "handler": "ExemptMissingAccessPopulationHandler",
+      "sourceRoots": [
+        "AccessReviewSystemLedger"
+      ],
+      "owner": "AccessPopulationException",
+      "logicalIdentity": {
+        "field": "ExceptionId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "exact immutable creation retry"
+      },
+      "fields": [
+        {
+          "name": "ExceptionId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ApplicationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "SystemInstanceId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "Reason",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "ExpiresAt",
+          "type": "DateTimeOffset",
+          "required": true
+        }
+      ],
+      "http": [
+        {
+          "method": "PUT",
+          "path": "/api/v1/tenants/{tenant_id}/applications/{application_id}/system-instances/{system_instance_id}/access-population-exceptions/{exception_id}",
+          "policy": "ComplianceAuthorizationPolicies.ApiUser"
+        }
+      ],
+      "mcp": false,
+      "entryPoint": "personal_http",
+      "authorizerSources": [
+        "src/Compliance.Core/Features/AccessReviews/AccessReviewAuthorizer.cs"
+      ],
+      "events": [
+        "AccessPopulationExceptionRecorded"
+      ],
+      "protocols": [
+        "Expectation succession and population exceptions"
+      ],
+      "guardOrder": [
+        "bind_required_ids",
+        "authenticate_authorize",
+        "canonicalize_authored_intent",
+        "resolve_native_operation_facts",
+        "compare_owner_episode_actor_kind_intent_original_revision",
+        "validate_new_owner_revision_and_source_permits",
+        "append_complete_concrete_attributed_batch"
+      ],
+      "policyPreservation": "All current source handler/aggregate validation rules and source test expectations apply, except the explicit contractChanges and boundary protocol. Lifetime caps and technical attempt events are removed with their structural replacement.",
+      "contractChanges": [
+        "Add required ExceptionId.",
+        "Rename ExpectedLedgerRevision to ExpectedRevision and compare the new target owner revision."
+      ],
+      "existingTests": [
+        "test/Compliance.Tests/Features/AccessReviews/PersonalAccessReviewTransportTests.cs"
+      ],
+      "requiredTests": [
+        "ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange",
+        "ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision",
+        "ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity",
+        "ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof",
+        "ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome"
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "AccessPopulationExceptionView",
+        "firstHttpStatus": 200,
+        "terminalResultType": "AccessPopulationExceptionView"
+      },
+      "expectedRevisionScope": {
+        "field": "ExpectedRevision",
+        "owner": "AccessPopulationException",
+        "meaning": "new independent owner creation requires zero; former directory/tenant/system ledger revision is not reused"
+      }
+    }
+  ]
+}

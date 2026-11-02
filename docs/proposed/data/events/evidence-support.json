@@ -1,0 +1,29 @@
+{
+  "owner": "EvidenceSupport",
+  "events": [
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:EvidenceSupportLinked",
+        "event": "EvidenceSupportLinked",
+        "emissionKind": "business",
+        "owners": [
+          "EvidenceSupport"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": false,
+        "targetConcreteType": "EvidenceSupportLinked",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.evidence.evidence-support-linked",
+          "version": 1
+        },
+        "wireQualification": "Wire matches the declared record in src/Compliance.Common/Features/Evidence/Events/EvidenceSupportLinked.cs at 60029b8f.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "retained_current_schema_native_qualification_required",
+        "sourceStatus": "declared",
+        "meaning": "Records the EvidenceSupportLinked domain fact for one tenant-owned subject revision.",
+        "meaningSource": "record summary in src/Compliance.Common/Features/Evidence/Events/EvidenceSupportLinked.cs"
+      },
+      "schema": null
+    }
+  ]
+}

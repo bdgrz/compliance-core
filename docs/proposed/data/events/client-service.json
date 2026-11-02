@@ -1,0 +1,89 @@
+{
+  "owner": "ClientService",
+  "events": [
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:ClientServiceCreated",
+        "event": "ClientServiceCreated",
+        "emissionKind": "business",
+        "owners": [
+          "ClientService"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": false,
+        "targetConcreteType": "ClientServiceCreated",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.client-service.created",
+          "version": 2
+        },
+        "wireQualification": "Adopted wire is the occupied discriminator declared in src/Compliance.Common/Features/Programs/Events/ClientServiceCreated.cs at 60029b8f (2026-10-29 reconciliation). The earlier selected wire is retained as supersededSelectedWire for provenance only.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "retained_current_schema_native_qualification_required",
+        "sourceStatus": "declared",
+        "supersededSelectedWire": {
+          "discriminator": "bdgrz.client-service.created",
+          "version": 1
+        },
+        "meaning": "A client service was created under its owning program, recorded as the service's first revision.",
+        "meaningSource": "authored 2026-10-29 from src/Compliance.Common/Features/Programs/Events/ClientServiceCreated.cs"
+      },
+      "schema": null
+    },
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:ClientServiceRetired",
+        "event": "ClientServiceRetired",
+        "emissionKind": "business",
+        "owners": [
+          "ClientService"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": false,
+        "targetConcreteType": "ClientServiceRetired",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.client-service.retired",
+          "version": 2
+        },
+        "wireQualification": "Adopted wire is the occupied discriminator declared in src/Compliance.Common/Features/Programs/Events/ClientServiceRetired.cs at 60029b8f (2026-10-29 reconciliation). The earlier selected wire is retained as supersededSelectedWire for provenance only.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "retained_current_schema_native_qualification_required",
+        "sourceStatus": "declared",
+        "supersededSelectedWire": {
+          "discriminator": "bdgrz.client-service.retired",
+          "version": 1
+        },
+        "meaning": "A client service of a program was retired with a retirement record, ending the service while keeping its last content.",
+        "meaningSource": "authored 2026-10-29 from src/Compliance.Common/Features/Programs/Events/ClientServiceRetired.cs"
+      },
+      "schema": null
+    },
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:ClientServiceRevised",
+        "event": "ClientServiceRevised",
+        "emissionKind": "business",
+        "owners": [
+          "ClientService"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": false,
+        "targetConcreteType": "ClientServiceRevised",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.client-service.revised",
+          "version": 2
+        },
+        "wireQualification": "Adopted wire is the occupied discriminator declared in src/Compliance.Common/Features/Programs/Events/ClientServiceRevised.cs at 60029b8f (2026-10-29 reconciliation). The earlier selected wire is retained as supersededSelectedWire for provenance only.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "retained_current_schema_native_qualification_required",
+        "sourceStatus": "declared",
+        "supersededSelectedWire": {
+          "discriminator": "bdgrz.client-service.revised",
+          "version": 1
+        },
+        "meaning": "The content of a client service under a program was revised, recorded as the service's next revision.",
+        "meaningSource": "authored 2026-10-29 from src/Compliance.Common/Features/Programs/Events/ClientServiceRevised.cs"
+      },
+      "schema": null
+    }
+  ]
+}

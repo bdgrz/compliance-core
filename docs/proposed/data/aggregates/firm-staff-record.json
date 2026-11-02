@@ -1,0 +1,823 @@
+{
+  "owner": "FirmStaffRecord",
+  "origin": "selected_split_target",
+  "baselineOwners": [
+    "FirmStaffDirectory"
+  ],
+  "declaredIdentity": "platform / staffMemberId",
+  "invariant": "Immutable canonical user, practice and registration source, plus one staff record active/status revision.",
+  "boundaryDecision": "selected_split",
+  "mustPreserve": "Canonical user maps to exactly one immutable staff/practice identity; status proofs remain versioned and authoritative.",
+  "sources": [
+    {
+      "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
+      "jsonPointer": "/splitOwners/1/targetOwners/0",
+      "line": 92,
+      "sha256": "d349d94b7c43f4d82020ecf36bdacf1aff98bc6498e14993582f1c3164b21f19"
+    }
+  ],
+  "baselineSourcePath": "src/Compliance.Core/Features/AccessControl/FirmStaffDirectory.cs",
+  "baselineEvents": [
+    "FirmStaffChangeRecorded"
+  ],
+  "preliminaryNewEvents": [],
+  "technicalStateToSeparate": [],
+  "classification": "business_aggregate",
+  "businessAggregate": true,
+  "implementationStatus": "SEPARATE_VERIFICATION_REQUIRED_IMPLEMENTATION_HALTED",
+  "identityReadingRule": "selectedIdentitySummary and exact selectedCommandContracts define intended identity. baselineIdentityObservation/declaredIdentity retain older source observations only, including old replay defects; they are not target behavior or authorization to change an occupied key.",
+  "selectedCommandContracts": [
+    {
+      "command": "RegisterFirmStaff",
+      "logicalIdentity": {
+        "field": "StaffMemberId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "caller-supplied immutable creation identity: an exact retry with the same id and authored intent returns the original result; the same id with changed intent is refused; a different id is a different record"
+      },
+      "fields": [
+        {
+          "name": "StaffMemberId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "UserId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Practice",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "SourceReference",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true
+        }
+      ],
+      "responseContract": {
+        "mode": "async_fixed_ack",
+        "responseType": "OperationAcceptedResponse",
+        "firstHttpStatus": 202,
+        "terminalResultType": "FirmStaffMemberView"
+      },
+      "http": [
+        {
+          "method": "PUT",
+          "path": "/api/v1/platform/firm-staff/{staff_member_id}/register-firm-staff",
+          "policy": "PlatformOperator"
+        }
+      ],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
+        "jsonPointer": "/commands/114",
+        "line": 13268,
+        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
+      },
+      "kind": "http"
+    },
+    {
+      "command": "SetFirmStaffStatus",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "StaffMemberId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "IsActive",
+          "type": "bool",
+          "required": true
+        },
+        {
+          "name": "Reason",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true
+        }
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "FirmStaffMemberView",
+        "firstHttpStatus": 200,
+        "terminalResultType": "FirmStaffMemberView"
+      },
+      "http": [
+        {
+          "method": "PUT",
+          "path": "/api/v1/platform/firm-staff/{staff_member_id}/set-firm-staff-status/{command_id}",
+          "policy": "PlatformOperator"
+        }
+      ],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
+        "jsonPointer": "/commands/152",
+        "line": 17695,
+        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
+      },
+      "kind": "http"
+    },
+    {
+      "command": "RejectFirmStaffRegistration",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "rule": "abort receiver identity bound to the exact admitted operation and generation: exact redelivery resolves the original rejected result; an abort after a terminal outcome is a no-op"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "OperationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Target",
+          "type": "EventStreamAddress",
+          "required": true
+        },
+        {
+          "name": "Generation",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "FailureProof",
+          "type": "ImmutableContentRef",
+          "required": true
+        }
+      ],
+      "responseContract": null,
+      "http": null,
+      "source": {
+        "path": "docs/product/audits/2026-10-23/source-admission-contracts.json",
+        "jsonPointer": "/contracts/23",
+        "line": 1423,
+        "sha256": "f1d549ed0879c816cb26e86879f8fa658dab0a8acbf7c591e4d4aed40483f8ae"
+      },
+      "kind": "abort"
+    },
+    {
+      "command": "CompleteFirmStaffRegistration",
+      "kind": "receiver",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "reactor",
+        "rule": "deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Source",
+          "type": "SourceFactProof<FirmStaffIdentityClaimed>",
+          "required": true
+        },
+        {
+          "name": "Target",
+          "type": "EventStreamAddress",
+          "required": true
+        },
+        {
+          "name": "OperationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Generation",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long?",
+          "required": true
+        },
+        {
+          "name": "Intent",
+          "type": "ImmutableContentRef",
+          "required": true,
+          "contentSchema": "FirmStaffRegistrationIntent"
+        },
+        {
+          "name": "StaffMemberId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "UserId",
+          "type": "Uuid",
+          "required": true
+        }
+      ],
+      "reactor": "FirmStaffRegistrationReactor",
+      "sourceOwner": "FirmStaffIdentityClaim",
+      "sourceEvents": [
+        "FirmStaffIdentityClaimed"
+      ],
+      "guard": "Exact source accepted registration and permanent claim; later status cannot rewrite identity.",
+      "eventsEmitted": [
+        "FirmStaffChangeRecorded"
+      ],
+      "effectKind": "complete_firm_staff_registration",
+      "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
+      "handler": "CompleteFirmStaffRegistrationHandler",
+      "http": [],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
+        "recorded": "2026-10-29"
+      }
+    },
+    {
+      "command": "AuthorizeFirmStaffRecordEngagementUse",
+      "kind": "receiver",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "reactor",
+        "rule": "deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Source",
+          "type": "AuthorizeFirmStaffRecordEngagementUseSourceProof",
+          "required": true
+        },
+        {
+          "name": "Target",
+          "type": "EventStreamAddress",
+          "required": true
+        },
+        {
+          "name": "OperationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Generation",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long?",
+          "required": true
+        },
+        {
+          "name": "Intent",
+          "type": "ImmutableContentRef",
+          "required": true,
+          "contentSchema": "SourceUseAuthorizationIntent"
+        },
+        {
+          "name": "SourceOwnerId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "SourceContentEventId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectedContentRevision",
+          "type": "ulong",
+          "required": true
+        },
+        {
+          "name": "EngagementId",
+          "type": "Uuid",
+          "required": true
+        }
+      ],
+      "reactor": "EngagementFirmStaffRecordUseReactor",
+      "sourceOwner": "ServiceEngagementIndependence",
+      "sourceEvents": [
+        "ServiceEngagementAcceptanceRequested",
+        "ServiceEngagementStaffAssignmentRequested",
+        "EngagementPersonalDecisionAdmitted"
+      ],
+      "guard": "Match exact frozen current eligibility/rule/ratification fact under this owner guard. Status/revocation/version changes conflict while granted; hold through irreversible engagement authorization. Deny stale/expired/future/wrong-subject scope.  Use events do not advance public ResourceRevision; the exact content-event identity and metadata owner version remain separate. For this source event, fan out only requirements of kind partner_evaluation; management acknowledgement does not fabricate firm-partner authority.",
+      "eventsEmitted": [
+        "FirmStaffRecordEngagementUseAuthorized"
+      ],
+      "effectKind": "authorize_firm_staff_record_engagement_use",
+      "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
+      "handler": "AuthorizeFirmStaffRecordEngagementUseHandler",
+      "http": [],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
+        "recorded": "2026-10-29"
+      }
+    },
+    {
+      "command": "SettleFirmStaffRecordEngagementUse",
+      "kind": "receiver",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "reactor",
+        "rule": "deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Source",
+          "type": "SettleFirmStaffRecordEngagementUseSourceProof",
+          "required": true
+        },
+        {
+          "name": "Target",
+          "type": "EventStreamAddress",
+          "required": true
+        },
+        {
+          "name": "OperationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Generation",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long?",
+          "required": true
+        },
+        {
+          "name": "Intent",
+          "type": "ImmutableContentRef",
+          "required": true,
+          "contentSchema": "SourceUseAuthorizationIntent"
+        },
+        {
+          "name": "SourceOwnerId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "EngagementId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Disposition",
+          "type": "SourceUseSettlementDisposition",
+          "required": true
+        }
+      ],
+      "reactor": "EngagementFirmStaffRecordUseSettlementReactor",
+      "sourceOwner": "ServiceEngagementIndependence",
+      "sourceEvents": [
+        "EngagementPracticeCommitmentsAuthorized",
+        "ServiceEngagementAcceptanceRejected",
+        "ServiceEngagementStaffAssignmentRejected",
+        "EngagementPersonalDecisionAuthorized",
+        "EngagementPersonalDecisionCanceled"
+      ],
+      "guard": "Release only exact matching use after immutable irreversible authorization or pre-authorization rejection fence. Terminal settlement also fences delayed grant; source may change after irreversible decision, immediately invalidating old eligibility in authoritative composed reads. Derive Disposition from the proven terminal source: parent_closed installs its generation closure fence, canceled clears only this use after parent fence, irreversible_decision releases the pinned source after historical decision. Never clear a use into an unrestricted writable child after parent closure.",
+      "eventsEmitted": [
+        "FirmStaffRecordEngagementUseSettled"
+      ],
+      "effectKind": "settle_firm_staff_record_engagement_use",
+      "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
+      "handler": "SettleFirmStaffRecordEngagementUseHandler",
+      "http": [],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
+        "recorded": "2026-10-29"
+      }
+    },
+    {
+      "command": "AuthorizeFirmStaffProfessionalDutyUse",
+      "kind": "receiver",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "reactor",
+        "rule": "deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Source",
+          "type": "SourceFactProof<ProfessionalDutyChangeAccepted>",
+          "required": true
+        },
+        {
+          "name": "Target",
+          "type": "EventStreamAddress",
+          "required": true
+        },
+        {
+          "name": "OperationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Generation",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long?",
+          "required": true
+        },
+        {
+          "name": "Intent",
+          "type": "ImmutableContentRef",
+          "required": true,
+          "contentSchema": "SourceUseAuthorizationIntent"
+        },
+        {
+          "name": "SourceOwnerId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "SourceContentEventId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectedContentRevision",
+          "type": "ulong",
+          "required": true
+        },
+        {
+          "name": "DesignationId",
+          "type": "Uuid",
+          "required": true
+        }
+      ],
+      "reactor": "ProfessionalDutyStaffEligibilityReactor",
+      "sourceOwner": "FirmProfessionalDutyDesignation",
+      "sourceEvents": [
+        "ProfessionalDutyChangeAccepted"
+      ],
+      "guard": "For record-only ProfessionalDutyChangeIntent, match exact canonical active staff/content revision and assertion UserId, using the staff record guard. Block status changes while granted. No grant or active-staff requirement for revocation. Use does not advance public staff content revision.",
+      "eventsEmitted": [
+        "FirmStaffProfessionalDutyUseAuthorized"
+      ],
+      "effectKind": "authorize_firm_staff_professional_duty_use",
+      "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
+      "handler": "AuthorizeFirmStaffProfessionalDutyUseHandler",
+      "http": [],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
+        "recorded": "2026-10-29"
+      }
+    },
+    {
+      "command": "SettleFirmStaffProfessionalDutyUse",
+      "kind": "receiver",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "reactor",
+        "rule": "deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Source",
+          "type": "SettleFirmStaffProfessionalDutyUseSourceProof",
+          "required": true
+        },
+        {
+          "name": "Target",
+          "type": "EventStreamAddress",
+          "required": true
+        },
+        {
+          "name": "OperationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Generation",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long?",
+          "required": true
+        },
+        {
+          "name": "Intent",
+          "type": "ImmutableContentRef",
+          "required": true,
+          "contentSchema": "SourceUseAuthorizationIntent"
+        },
+        {
+          "name": "SourceOwnerId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "DesignationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Disposition",
+          "type": "SourceUseSettlementDisposition",
+          "required": true
+        }
+      ],
+      "reactor": "ProfessionalDutyStaffEligibilitySettlementReactor",
+      "sourceOwner": "FirmProfessionalDutyDesignation",
+      "sourceEvents": [
+        "FirmProfessionalDutyDesignationRecorded",
+        "ProfessionalDutyChangeRejected"
+      ],
+      "guard": "Release exact staff use only after native recorded designation, or after ProfessionalDutyChangeRejected fences both claim continuation and apply. Terminal settlement fences delayed acquisition; never infer rejection from missing native state.",
+      "eventsEmitted": [
+        "FirmStaffProfessionalDutyUseSettled"
+      ],
+      "effectKind": "settle_firm_staff_professional_duty_use",
+      "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
+      "handler": "SettleFirmStaffProfessionalDutyUseHandler",
+      "http": [],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
+        "recorded": "2026-10-29"
+      }
+    }
+  ],
+  "eventAuthority": "selected_final_event_catalog",
+  "events": [
+    {
+      "event": "FirmStaffChangeRecorded",
+      "discriminator": "bdgrz.firm-staff.changed",
+      "discriminatorVersion": 1,
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
+        "jsonPointer": "/events/155",
+        "line": 19380,
+        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
+      }
+    },
+    {
+      "event": "FirmStaffProfessionalDutyUseAuthorized",
+      "discriminator": "bdgrz.firm-staff-record.firm-staff-professional-duty-use-authorized",
+      "discriminatorVersion": 1,
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
+        "jsonPointer": "/events/157",
+        "line": 19663,
+        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
+      }
+    },
+    {
+      "event": "FirmStaffProfessionalDutyUseSettled",
+      "discriminator": "bdgrz.firm-staff-record.firm-staff-professional-duty-use-settled",
+      "discriminatorVersion": 1,
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
+        "jsonPointer": "/events/158",
+        "line": 19799,
+        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
+      }
+    },
+    {
+      "event": "FirmStaffRecordEngagementUseAuthorized",
+      "discriminator": "bdgrz.firm-staff-record.firm-staff-record-engagement-use-authorized",
+      "discriminatorVersion": 1,
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
+        "jsonPointer": "/events/159",
+        "line": 19935,
+        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
+      }
+    },
+    {
+      "event": "FirmStaffRecordEngagementUseSettled",
+      "discriminator": "bdgrz.firm-staff-record.firm-staff-record-engagement-use-settled",
+      "discriminatorVersion": 1,
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
+        "jsonPointer": "/events/160",
+        "line": 20071,
+        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
+      }
+    },
+    {
+      "event": "FirmStaffRegistrationAccepted",
+      "discriminator": "bdgrz.firm-staff-record.firm-staff-registration-accepted",
+      "discriminatorVersion": 1,
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
+        "jsonPointer": "/events/161",
+        "line": 20207,
+        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
+      }
+    },
+    {
+      "event": "FirmStaffRegistrationRejected",
+      "discriminator": "bdgrz.firm-staff-record.firm-staff-registration-rejected",
+      "discriminatorVersion": 1,
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
+        "jsonPointer": "/events/162",
+        "line": 20341,
+        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
+      }
+    }
+  ],
+  "choreography": [
+    {
+      "reactor": "FirmStaffIdentityClaimReactor",
+      "sourceOwner": "FirmStaffRecord",
+      "targetOwner": "FirmStaffIdentityClaim",
+      "command": "ClaimFirmStaffIdentity",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
+        "jsonPointer": "/reactors/2",
+        "line": 187,
+        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
+      }
+    },
+    {
+      "reactor": "FirmStaffRegistrationReactor",
+      "sourceOwner": "FirmStaffIdentityClaim",
+      "targetOwner": "FirmStaffRecord",
+      "command": "CompleteFirmStaffRegistration",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
+        "jsonPointer": "/reactors/3",
+        "line": 274,
+        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
+      }
+    },
+    {
+      "reactor": "EngagementFirmStaffRecordUseReactor",
+      "sourceOwner": "ServiceEngagementIndependence",
+      "targetOwner": "FirmStaffRecord",
+      "command": "AuthorizeFirmStaffRecordEngagementUse",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
+        "jsonPointer": "/reactors/89",
+        "line": 7644,
+        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
+      }
+    },
+    {
+      "reactor": "EngagementFirmStaffRecordUseSettlementReactor",
+      "sourceOwner": "ServiceEngagementIndependence",
+      "targetOwner": "FirmStaffRecord",
+      "command": "SettleFirmStaffRecordEngagementUse",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
+        "jsonPointer": "/reactors/90",
+        "line": 7741,
+        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
+      }
+    },
+    {
+      "reactor": "ProfessionalDutyStaffEligibilityReactor",
+      "sourceOwner": "FirmProfessionalDutyDesignation",
+      "targetOwner": "FirmStaffRecord",
+      "command": "AuthorizeFirmStaffProfessionalDutyUse",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
+        "jsonPointer": "/reactors/113",
+        "line": 9728,
+        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
+      }
+    },
+    {
+      "reactor": "ProfessionalDutyStaffEligibilitySettlementReactor",
+      "sourceOwner": "FirmProfessionalDutyDesignation",
+      "targetOwner": "FirmStaffRecord",
+      "command": "SettleFirmStaffProfessionalDutyUse",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
+        "jsonPointer": "/reactors/114",
+        "line": 9820,
+        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
+      }
+    }
+  ],
+  "status": "SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED",
+  "baselineIdentityObservation": "platform / staffMemberId",
+  "identityContractRule": "Existing published owner identity/IdFor remains stable. Required typed creation/operation identity and tenant/program/source scope come from the selected signature/protocol references; no context.RequestId minting fallback or guessed new stream key.",
+  "adoptedArchitectureDecisions": [],
+  "selectedIdentitySummary": "Tenant-scoped platform / staffMemberId; `StaffMemberId` on `RegisterFirmStaff` is the caller-supplied immutable creation identity (exact immutable creation retry) so an exact retry resolves the original result and a different id is a different record; later mutations use CommandId bound to this identity and the expected revision.",
+  "baselineIdentityObservationOnly": true,
+  "selectedLogicalIdentityBindings": [
+    {
+      "command": "RegisterFirmStaff",
+      "logicalIdentity": {
+        "field": "StaffMemberId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "exact immutable creation retry"
+      },
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
+        "jsonPointer": "/commands/114",
+        "line": 13268,
+        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
+      }
+    },
+    {
+      "command": "SetFirmStaffStatus",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "one immutable authored operation"
+      },
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
+        "jsonPointer": "/commands/152",
+        "line": 17695,
+        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
+      }
+    },
+    {
+      "command": "RejectFirmStaffRegistration",
+      "logicalIdentity": "CommandId",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/source-admission-contracts.json",
+        "jsonPointer": "/contracts/23",
+        "line": 1423,
+        "sha256": "f1d549ed0879c816cb26e86879f8fa658dab0a8acbf7c591e4d4aed40483f8ae"
+      }
+    }
+  ],
+  "selectedReplayRule": "Current required authorization precedes replay; exact authorized retries resolve the original accepted result using the selected logical identity and immutable actor/intent/source binding. Fresh mutable feasibility, clock selection and body preparation cannot replace that original result. Expected revision is concurrency precondition, not a new identity.",
+  "identityRevisions": [
+    {
+      "date": "2026-10-29",
+      "previous": "platform / staffMemberId"
+    }
+  ]
+}

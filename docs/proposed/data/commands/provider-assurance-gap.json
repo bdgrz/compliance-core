@@ -1,0 +1,514 @@
+{
+  "owner": "ProviderAssuranceGap",
+  "selectedContracts": [
+    {
+      "command": "CloseProviderCoverageGap",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ProviderId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "GapId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "Content",
+          "type": "ProviderCoverageGapClosureContent",
+          "required": true
+        }
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "ProviderCoverageGapRegistration",
+        "firstHttpStatus": 200,
+        "terminalResultType": "ProviderCoverageGapRegistration"
+      },
+      "http": [
+        {
+          "method": "PUT",
+          "path": "/api/v1/tenants/{tenant_id}/providers/{provider_id}/coverage-gaps/close-provider-coverage-gap/{command_id}",
+          "policy": "ApiUser + existing request-scope authorizers"
+        }
+      ],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
+        "jsonPointer": "/commands/34",
+        "line": 4062,
+        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
+      },
+      "kind": "http"
+    },
+    {
+      "command": "LinkProviderCoverageGapRiskAcceptance",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ProgramId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ProviderId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "GapId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectedGapRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "RiskId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "AcceptanceId",
+          "type": "Uuid",
+          "required": true
+        }
+      ],
+      "responseContract": {
+        "mode": "async_fixed_ack",
+        "responseType": "OperationAcceptedResponse",
+        "firstHttpStatus": 202,
+        "terminalResultType": "ProviderCoverageGapRegistration"
+      },
+      "http": [
+        {
+          "method": "PUT",
+          "path": "/api/v1/tenants/{tenant_id}/providers/{provider_id}/coverage-gaps/{gap_id}/risk-acceptances/link-provider-coverage-gap-risk-acceptance/{command_id}",
+          "policy": "ApiUser + existing request-scope authorizers"
+        }
+      ],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
+        "jsonPointer": "/commands/68",
+        "line": 7983,
+        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
+      },
+      "kind": "http"
+    },
+    {
+      "command": "RecordProviderCoverageGap",
+      "logicalIdentity": {
+        "field": "GapId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "caller-supplied immutable creation identity: an exact retry with the same id and authored intent returns the original result; the same id with changed intent is refused; a different id is a different record"
+      },
+      "fields": [
+        {
+          "name": "GapId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ProviderId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Content",
+          "type": "ProviderCoverageGapContent",
+          "required": true
+        }
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "ProviderCoverageGapRegistration",
+        "firstHttpStatus": 200,
+        "terminalResultType": "ProviderCoverageGapRegistration"
+      },
+      "http": [
+        {
+          "method": "PUT",
+          "path": "/api/v1/tenants/{tenant_id}/providers/{provider_id}/coverage-gaps/{gap_id}",
+          "policy": "ComplianceAuthorizationPolicies.ApiUser"
+        }
+      ],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
+        "jsonPointer": "/commands/109",
+        "line": 12681,
+        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
+      },
+      "kind": "http"
+    }
+  ],
+  "sourceContractEvidence": [
+    {
+      "command": "CloseProviderCoverageGap",
+      "status": "target_contract",
+      "sourceContract": "src/Compliance.Common/Features/Providers/CloseProviderCoverageGap.cs",
+      "sourceHandlers": [
+        {
+          "name": "CloseProviderCoverageGapHandler",
+          "source": "src/Compliance.Core/Features/Providers/CloseProviderCoverageGapHandler.cs",
+          "registered": true
+        }
+      ],
+      "handler": "CloseProviderCoverageGapHandler",
+      "sourceRoots": [
+        "ProviderAssuranceRegister"
+      ],
+      "owner": "ProviderAssuranceGap",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "one immutable authored operation"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ProviderId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "GapId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "Content",
+          "type": "ProviderCoverageGapClosureContent",
+          "required": true
+        }
+      ],
+      "http": [
+        {
+          "method": "PUT",
+          "path": "/api/v1/tenants/{tenant_id}/providers/{provider_id}/coverage-gaps/close-provider-coverage-gap/{command_id}",
+          "policy": "ApiUser + existing request-scope authorizers"
+        }
+      ],
+      "mcp": false,
+      "entryPoint": "authorized_http",
+      "authorizerSources": [
+        "src/Compliance.Core/Features/AccessControl/ClientManagementMutationAuthorizer.cs"
+      ],
+      "events": [
+        "ProviderCoverageGapClosed"
+      ],
+      "protocols": [
+        "Independent assurance facts and exact source proofs"
+      ],
+      "guardOrder": [
+        "bind_required_ids",
+        "authenticate_authorize",
+        "canonicalize_authored_intent",
+        "resolve_native_operation_facts",
+        "compare_owner_episode_actor_kind_intent_original_revision",
+        "validate_new_owner_revision_and_source_permits",
+        "append_complete_concrete_attributed_batch"
+      ],
+      "policyPreservation": "All current source handler/aggregate validation rules and source test expectations apply, except the explicit contractChanges and boundary protocol. Lifetime caps and technical attempt events are removed with their structural replacement.",
+      "contractChanges": [
+        "Add required CommandId."
+      ],
+      "existingTests": [],
+      "requiredTests": [
+        "ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange",
+        "ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision",
+        "ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity",
+        "ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof",
+        "ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome"
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "ProviderCoverageGapRegistration",
+        "firstHttpStatus": 200,
+        "terminalResultType": "ProviderCoverageGapRegistration"
+      },
+      "expectedRevisionScope": {
+        "field": "ExpectedRevision",
+        "owner": "ProviderAssuranceGap",
+        "counter": "logical ResourceRevision of this owner",
+        "nullableInternalRule": null
+      }
+    },
+    {
+      "command": "LinkProviderCoverageGapRiskAcceptance",
+      "status": "target_contract",
+      "sourceContract": "src/Compliance.Common/Features/Providers/LinkProviderCoverageGapRiskAcceptance.cs",
+      "sourceHandlers": [
+        {
+          "name": "LinkProviderCoverageGapRiskAcceptanceHandler",
+          "source": "src/Compliance.Core/Features/Providers/LinkProviderCoverageGapRiskAcceptanceHandler.cs",
+          "registered": true
+        }
+      ],
+      "handler": "LinkProviderCoverageGapRiskAcceptanceHandler",
+      "sourceRoots": [
+        "ProviderAssuranceRegister"
+      ],
+      "owner": "ProviderAssuranceGap",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "one immutable authored operation"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ProgramId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ProviderId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "GapId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectedGapRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "RiskId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "AcceptanceId",
+          "type": "Uuid",
+          "required": true
+        }
+      ],
+      "http": [
+        {
+          "method": "PUT",
+          "path": "/api/v1/tenants/{tenant_id}/providers/{provider_id}/coverage-gaps/{gap_id}/risk-acceptances/link-provider-coverage-gap-risk-acceptance/{command_id}",
+          "policy": "ApiUser + existing request-scope authorizers"
+        }
+      ],
+      "mcp": false,
+      "entryPoint": "authorized_http",
+      "authorizerSources": [
+        "src/Compliance.Core/Features/AccessControl/ClientManagementMutationAuthorizer.cs",
+        "src/Compliance.Core/Features/Programs/ProgramManagementAuthorizer.cs"
+      ],
+      "events": [
+        "ProviderCoverageGapRiskAcceptanceAdmitted"
+      ],
+      "protocols": [
+        "Independent assurance facts and exact source proofs"
+      ],
+      "guardOrder": [
+        "bind_required_ids",
+        "authenticate_authorize",
+        "canonicalize_authored_intent",
+        "resolve_native_operation_facts",
+        "compare_owner_episode_actor_kind_intent_original_revision",
+        "validate_new_owner_revision_and_source_permits",
+        "append_complete_concrete_attributed_batch"
+      ],
+      "policyPreservation": "All current source handler/aggregate validation rules and source test expectations apply, except the explicit contractChanges and boundary protocol. Lifetime caps and technical attempt events are removed with their structural replacement.",
+      "contractChanges": [
+        "Add required CommandId.",
+        "Open-gap and duplicate (RiskId, AcceptanceId) checks linearize on gap admission. Child LinkId is this CommandId; materialization preserves admission time even if gap subsequently closes or acceptance later expires."
+      ],
+      "existingTests": [],
+      "requiredTests": [
+        "ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange",
+        "ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision",
+        "ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity",
+        "ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof",
+        "ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome"
+      ],
+      "expectedRevisionScope": {
+        "field": "ExpectedGapRevision",
+        "owner": "ProviderAssuranceGap",
+        "meaning": "revision of the public first-admission owner; never a new child owner revision"
+      },
+      "responseContract": {
+        "mode": "async_fixed_ack",
+        "responseType": "OperationAcceptedResponse",
+        "firstHttpStatus": 202,
+        "terminalResultType": "ProviderCoverageGapRegistration"
+      }
+    },
+    {
+      "command": "RecordProviderCoverageGap",
+      "status": "target_contract",
+      "sourceContract": "src/Compliance.Common/Features/Providers/RecordProviderCoverageGap.cs",
+      "sourceHandlers": [
+        {
+          "name": "RecordProviderCoverageGapHandler",
+          "source": "src/Compliance.Core/Features/Providers/RecordProviderCoverageGapHandler.cs",
+          "registered": true
+        }
+      ],
+      "handler": "RecordProviderCoverageGapHandler",
+      "sourceRoots": [
+        "ProviderAssuranceRegister"
+      ],
+      "owner": "ProviderAssuranceGap",
+      "logicalIdentity": {
+        "field": "GapId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "exact immutable creation retry"
+      },
+      "fields": [
+        {
+          "name": "GapId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ProviderId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Content",
+          "type": "ProviderCoverageGapContent",
+          "required": true
+        }
+      ],
+      "http": [
+        {
+          "method": "PUT",
+          "path": "/api/v1/tenants/{tenant_id}/providers/{provider_id}/coverage-gaps/{gap_id}",
+          "policy": "ComplianceAuthorizationPolicies.ApiUser"
+        }
+      ],
+      "mcp": true,
+      "entryPoint": "authorized_http_and_mcp",
+      "authorizerSources": [
+        "src/Compliance.Core/Features/AccessControl/ClientManagementMutationAuthorizer.cs"
+      ],
+      "events": [
+        "ProviderCoverageGapRecorded"
+      ],
+      "protocols": [
+        "Independent assurance facts and exact source proofs"
+      ],
+      "guardOrder": [
+        "bind_required_ids",
+        "authenticate_authorize",
+        "canonicalize_authored_intent",
+        "resolve_native_operation_facts",
+        "compare_owner_episode_actor_kind_intent_original_revision",
+        "validate_new_owner_revision_and_source_permits",
+        "append_complete_concrete_attributed_batch"
+      ],
+      "policyPreservation": "All current source handler/aggregate validation rules and source test expectations apply, except the explicit contractChanges and boundary protocol. Lifetime caps and technical attempt events are removed with their structural replacement.",
+      "contractChanges": [
+        "Add required GapId."
+      ],
+      "existingTests": [],
+      "requiredTests": [
+        "ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange",
+        "ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision",
+        "ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity",
+        "ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof",
+        "ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome"
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "ProviderCoverageGapRegistration",
+        "firstHttpStatus": 200,
+        "terminalResultType": "ProviderCoverageGapRegistration"
+      },
+      "expectedRevisionScope": {
+        "field": null,
+        "owner": "ProviderAssuranceGap",
+        "counter": "No primary caller ResourceRevision. Enforce required authored source/epoch/version tokens, immutable creation identity or trusted proof/generation as declared; append uses physical OCC."
+      }
+    }
+  ]
+}

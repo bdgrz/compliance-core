@@ -1,0 +1,719 @@
+{
+  "owner": "Member",
+  "origin": "retained_baseline",
+  "baselineOwners": [
+    "Member"
+  ],
+  "declaredIdentity": "UUIDv5 tenant+user. New episode minted on accepted re-registration. Current flags make some retries no-ops but no operation+episode identity fences old commands. Append OCC serializes member writes.",
+  "invariant": "One tenant-user membership has one affiliation/expiry episode; deprovision closes authority and a fresh episode cannot start until authority cleanup completes.",
+  "boundaryDecision": "retain",
+  "boundaryRationale": "Affiliation, lifecycle and current episode must change together. Cleanup completion is an authority-release gate; membership roster/grants remain external.",
+  "sources": [
+    {
+      "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
+      "jsonPointer": "/aggregates/52",
+      "line": 33628,
+      "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
+    }
+  ],
+  "baselineSourcePath": "src/Compliance.Core/Features/AccessControl/Member.cs",
+  "baselineEvents": [
+    "MemberDeprovisionCleanupCompleted",
+    "MemberDeprovisioned",
+    "MemberRegistered",
+    "MemberReinstated",
+    "MemberSuspended"
+  ],
+  "classification": "business_aggregate",
+  "businessAggregate": true,
+  "implementationStatus": "SEPARATE_VERIFICATION_REQUIRED_IMPLEMENTATION_HALTED",
+  "identityReadingRule": "selectedIdentitySummary and exact selectedCommandContracts define intended identity. baselineIdentityObservation/declaredIdentity retain older source observations only, including old replay defects; they are not target behavior or authorization to change an occupied key.",
+  "selectedCommandContracts": [
+    {
+      "command": "CompleteMemberRetirement",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "rule": "CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused"
+      },
+      "fields": [
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "MemberId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "MembershipEpisodeId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TerminationEventId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true,
+          "addedBySelectedTarget": "2026-10-29"
+        }
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "Unit",
+        "firstHttpStatus": 200,
+        "terminalResultType": "Unit"
+      },
+      "http": [],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
+        "jsonPointer": "/contracts/38",
+        "line": 3027,
+        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
+      },
+      "kind": "command",
+      "concurrencyGuard": {
+        "rule": "require_expected_revision",
+        "basis": "jev_atomic_questions",
+        "jev": {
+          "mutates_existing": 0.84,
+          "absorbing": 0.29,
+          "process_reply": 0.6
+        },
+        "date": "2026-10-29"
+      }
+    },
+    {
+      "command": "RegisterMember",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "rule": "CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "UserId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Affiliation",
+          "type": "string",
+          "required": false
+        },
+        {
+          "name": "MembershipExpiresOn",
+          "type": "DateOnly?",
+          "required": false
+        }
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "Unit",
+        "firstHttpStatus": 200,
+        "terminalResultType": "Unit"
+      },
+      "http": [],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
+        "jsonPointer": "/contracts/137",
+        "line": 10365,
+        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
+      },
+      "kind": "command",
+      "concurrencyGuard": {
+        "rule": "creation_key_only",
+        "jev": 0.84,
+        "date": "2026-10-29"
+      }
+    },
+    {
+      "command": "SuspendMember",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "rule": "CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "UserId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Reason",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "MemberEpisodeId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectedMemberRevision",
+          "type": "long",
+          "required": true
+        }
+      ],
+      "responseContract": {
+        "mode": "conditional_async_guarded",
+        "responseType": "AdministratorTransitionResponse",
+        "firstHttpStatus": "202 for administrator guard choreography; 200 for a direct non-administrator source mutation",
+        "terminalResultType": "Unit"
+      },
+      "http": {
+        "method": "PUT",
+        "path": "/api/v1/tenants/{tenant_id}/members/{user_id}/suspensions/{command_id}"
+      },
+      "source": {
+        "path": "docs/product/audits/2026-10-23/source-admission-contracts.json",
+        "jsonPointer": "/contracts/5",
+        "line": 320,
+        "sha256": "f1d549ed0879c816cb26e86879f8fa658dab0a8acbf7c591e4d4aed40483f8ae"
+      },
+      "attributionNote": "Moved from TenantManagerGuard on 2026-10-29: TenantManagerGuard appends an admission fact first (route always); then AdministratorTransitionProcess applies to Member. Fact is TenantManagerWithdrawalAccepted when the episode contributes administrator availability or has a pending registration, otherwise TenantManagerSourceMutationAdmitted (neutral). Applied by ApplyMemberWithdrawal (WithdrawalKind=suspend) or ApplyNeutralMemberSourceMutation, which call Member.Suspend. (source src/Compliance.Core/Features/AccessControl/Handlers/SuspendMemberHandler.cs; Handlers/ApplyMemberWithdrawalHandler.cs; Handlers/ApplyNeutralMemberSourceMutationHandler.cs)",
+      "kind": "http"
+    },
+    {
+      "command": "DeprovisionMember",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "rule": "CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "UserId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Reason",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "MemberEpisodeId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectedMemberRevision",
+          "type": "long",
+          "required": true
+        }
+      ],
+      "responseContract": {
+        "mode": "conditional_async_guarded",
+        "responseType": "AdministratorTransitionResponse",
+        "firstHttpStatus": "202 for administrator guard choreography; 200 for a direct non-administrator source mutation",
+        "terminalResultType": "Unit"
+      },
+      "http": {
+        "method": "PUT",
+        "path": "/api/v1/tenants/{tenant_id}/members/{user_id}/deprovisioning/{command_id}"
+      },
+      "source": {
+        "path": "docs/product/audits/2026-10-23/source-admission-contracts.json",
+        "jsonPointer": "/contracts/6",
+        "line": 391,
+        "sha256": "f1d549ed0879c816cb26e86879f8fa658dab0a8acbf7c591e4d4aed40483f8ae"
+      },
+      "attributionNote": "Moved from TenantManagerGuard on 2026-10-29: TenantManagerGuard appends an admission fact first (route always); then AdministratorTransitionProcess applies to Member. Always a guard fact (withdrawal or neutral); then Member.Deprovision via ApplyMemberWithdrawal (WithdrawalKind=deprovision) / ApplyNeutralMemberSourceMutation; MemberRetirementReactor cleans up authority afterwards. (source src/Compliance.Core/Features/AccessControl/Handlers/DeprovisionMemberHandler.cs; Handlers/ApplyMemberWithdrawalHandler.cs)",
+      "kind": "http"
+    },
+    {
+      "command": "ReinstateMember",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "rule": "CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "UserId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "MemberEpisodeId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectedMemberRevision",
+          "type": "long",
+          "required": true
+        }
+      ],
+      "responseContract": {
+        "mode": "conditional_async_guarded",
+        "responseType": "AdministratorTransitionResponse",
+        "firstHttpStatus": "202 for administrator guard choreography; 200 for a direct non-administrator source mutation",
+        "terminalResultType": "Unit"
+      },
+      "http": {
+        "method": "PUT",
+        "path": "/api/v1/tenants/{tenant_id}/members/by-user/{user_id}/reinstatements/{command_id}"
+      },
+      "source": {
+        "path": "docs/product/audits/2026-10-23/source-admission-contracts.json",
+        "jsonPointer": "/contracts/8",
+        "line": 538,
+        "sha256": "f1d549ed0879c816cb26e86879f8fa658dab0a8acbf7c591e4d4aed40483f8ae"
+      },
+      "attributionNote": "Moved from TenantManagerGuard on 2026-10-29: TenantManagerGuard appends an admission fact first (route always); then AdministratorTransitionProcess applies to Member. Fact is TenantManagerRestorationAccepted when the episode contributes administrator availability, otherwise neutral; waits behind any unfinished suspension of the same episode. Applied by ApplyMemberRestoration / ApplyNeutralMemberSourceMutation -> Member.Reinstate. (source src/Compliance.Core/Features/AccessControl/Handlers/ReinstateMemberHandler.cs; Handlers/ApplyMemberRestorationHandler.cs)",
+      "kind": "http"
+    },
+    {
+      "command": "ApplyMemberWithdrawal",
+      "kind": "receiver",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "reactor",
+        "rule": "deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Source",
+          "type": "SourceFactProof<TenantManagerWithdrawalAccepted>",
+          "required": true
+        },
+        {
+          "name": "Target",
+          "type": "EventStreamAddress",
+          "required": true
+        },
+        {
+          "name": "OperationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Generation",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long?",
+          "required": true
+        },
+        {
+          "name": "Intent",
+          "type": "ImmutableContentRef",
+          "required": true,
+          "contentSchema": "AdministratorTransitionIntent"
+        },
+        {
+          "name": "MemberId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "MemberEpisode",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "WithdrawalKind",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "reactor": "AdministratorWithdrawalReactor",
+      "sourceOwner": "TenantManagerGuard",
+      "sourceEvents": [
+        "TenantManagerWithdrawalAccepted"
+      ],
+      "guard": "Exact operation/generation, administrator guard authorization and old member episode; do not release on restoration request.",
+      "eventsEmitted": [
+        "MemberSuspended",
+        "MemberDeprovisioned"
+      ],
+      "effectKind": "apply_member_withdrawal",
+      "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
+      "handler": "ApplyMemberWithdrawalHandler",
+      "http": [],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
+        "recorded": "2026-10-29"
+      }
+    },
+    {
+      "command": "ApplyNeutralMemberSourceMutation",
+      "kind": "receiver",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "reactor",
+        "rule": "deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Source",
+          "type": "SourceFactProof<TenantManagerSourceMutationAdmitted>",
+          "required": true
+        },
+        {
+          "name": "Target",
+          "type": "EventStreamAddress",
+          "required": true
+        },
+        {
+          "name": "OperationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Generation",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long?",
+          "required": true
+        },
+        {
+          "name": "Intent",
+          "type": "ImmutableContentRef",
+          "required": true,
+          "contentSchema": "AdministratorTransitionIntent"
+        },
+        {
+          "name": "MemberId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "MemberEpisode",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "MutationKind",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "reactor": "AdministratorNeutralMemberMutationReactor",
+      "sourceOwner": "TenantManagerGuard",
+      "sourceEvents": [
+        "TenantManagerSourceMutationAdmitted"
+      ],
+      "guard": "Exact operation/generation and guard admission proving this member episode has no contribution and no pending registration/withdrawal. Applies the original Member source fact unchanged (suspend, deprovision or reinstate) with the authored ExpectedMemberRevision; the guard fact exists only so a concurrent administrator registration for the same episode is serialized. Never registers or releases availability.",
+      "eventsEmitted": [
+        "MemberSuspended",
+        "MemberDeprovisioned",
+        "MemberReinstated"
+      ],
+      "effectKind": "apply_neutral_member_source_mutation",
+      "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
+      "handler": "ApplyNeutralMemberSourceMutationHandler",
+      "http": [],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
+        "recorded": "2026-10-29"
+      }
+    },
+    {
+      "command": "ApplyMemberRestoration",
+      "kind": "receiver",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "reactor",
+        "rule": "deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Source",
+          "type": "SourceFactProof<TenantManagerRestorationAccepted>",
+          "required": true
+        },
+        {
+          "name": "Target",
+          "type": "EventStreamAddress",
+          "required": true
+        },
+        {
+          "name": "OperationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Generation",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long?",
+          "required": true
+        },
+        {
+          "name": "Intent",
+          "type": "ImmutableContentRef",
+          "required": true,
+          "contentSchema": "AdministratorTransitionIntent"
+        },
+        {
+          "name": "MemberId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "MemberEpisode",
+          "type": "Uuid",
+          "required": true
+        }
+      ],
+      "reactor": "AdministratorRestorationReactor",
+      "sourceOwner": "TenantManagerGuard",
+      "sourceEvents": [
+        "TenantManagerRestorationAccepted"
+      ],
+      "guard": "Only restoration kind=member_reinstate. Wait behind incompatible same-episode withdrawal until applied/fenced; restore exact source member first. Deprovisioned membership requires a new RegisterMember episode, not old-episode reinstatement.",
+      "eventsEmitted": [
+        "MemberReinstated"
+      ],
+      "effectKind": "apply_member_restoration",
+      "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
+      "handler": "ApplyMemberRestorationHandler",
+      "http": [],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
+        "recorded": "2026-10-29"
+      }
+    }
+  ],
+  "eventAuthority": "selected_final_event_catalog",
+  "events": [
+    {
+      "event": "MemberDeprovisioned",
+      "discriminator": "bdgrz.rbac.member.deprovisioned",
+      "discriminatorVersion": 1,
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
+        "jsonPointer": "/events/179",
+        "line": 23077,
+        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
+      }
+    },
+    {
+      "event": "MemberReinstated",
+      "discriminator": "bdgrz.rbac.member.reinstated",
+      "discriminatorVersion": 1,
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
+        "jsonPointer": "/events/180",
+        "line": 23283,
+        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
+      }
+    },
+    {
+      "event": "MemberSuspended",
+      "discriminator": "bdgrz.rbac.member.suspended",
+      "discriminatorVersion": 1,
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
+        "jsonPointer": "/events/181",
+        "line": 23484,
+        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
+      }
+    }
+  ],
+  "choreography": [
+    {
+      "reactor": "AdministratorWithdrawalReactor",
+      "sourceOwner": "TenantManagerGuard",
+      "targetOwner": "Member",
+      "command": "ApplyMemberWithdrawal",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
+        "jsonPointer": "/reactors/46",
+        "line": 3937,
+        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
+      }
+    },
+    {
+      "reactor": "AdministratorNeutralMemberMutationReactor",
+      "sourceOwner": "TenantManagerGuard",
+      "targetOwner": "Member",
+      "command": "ApplyNeutralMemberSourceMutation",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
+        "jsonPointer": "/reactors/48",
+        "line": 4112,
+        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
+      }
+    },
+    {
+      "reactor": "AdministratorRestorationReactor",
+      "sourceOwner": "TenantManagerGuard",
+      "targetOwner": "Member",
+      "command": "ApplyMemberRestoration",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
+        "jsonPointer": "/reactors/51",
+        "line": 4374,
+        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
+      }
+    }
+  ],
+  "status": "SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED",
+  "baselineIdentityObservation": "UUIDv5 tenant+user. New episode minted on accepted re-registration. Current flags make some retries no-ops but no operation+episode identity fences old commands. Append OCC serializes member writes.",
+  "identityContractRule": "Existing published owner identity/IdFor remains stable. Required typed creation/operation identity and tenant/program/source scope come from the selected signature/protocol references; no context.RequestId minting fallback or guessed new stream key.",
+  "adoptedArchitectureDecisions": [],
+  "selectedIdentityClarification": "Existing UUIDv5 of TenantId + UserId; membership episodes remain distinct and exact. Selected CommandId binds the original member/episode and intended transition.",
+  "selectedIdentitySummary": "Existing UUIDv5 of TenantId + UserId; membership episodes remain distinct and exact. Selected CommandId binds the original member/episode and intended transition.",
+  "baselineIdentityObservationOnly": true,
+  "selectedLogicalIdentityBindings": [
+    {
+      "command": "CompleteMemberRetirement",
+      "logicalIdentity": "CommandId",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
+        "jsonPointer": "/contracts/38",
+        "line": 3027,
+        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
+      }
+    },
+    {
+      "command": "RegisterMember",
+      "logicalIdentity": "CommandId",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
+        "jsonPointer": "/contracts/137",
+        "line": 10365,
+        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
+      }
+    }
+  ],
+  "selectedReplayRule": "Current required authorization precedes replay; exact authorized retries resolve the original accepted result using the selected logical identity and immutable actor/intent/source binding. Fresh mutable feasibility, clock selection and body preparation cannot replace that original result. Expected revision is concurrency precondition, not a new identity.",
+  "productRules": [
+    {
+      "id": "D14-02",
+      "doc": "m0-d14-advisor-collaboration.md",
+      "rule": "An external consultant hired directly by a client gets a guest membership limited to programs the Org Admin grants, with no approval rights and a required end date."
+    },
+    {
+      "id": "D14-04",
+      "doc": "m0-d14-advisor-collaboration.md",
+      "rule": "The guest end date is persisted on the guest Member registration, access stops at the end of that UTC date, and later grant proposals cannot extend beyond it."
+    },
+    {
+      "id": "D25-03",
+      "doc": "m0-d25-client-tenancy.md",
+      "rule": "Each Membership records exactly one affiliation: client_personnel, firm_staff, or guest."
+    },
+    {
+      "id": "MD-01",
+      "doc": "member-deprovisioning.md",
+      "rule": "Deprovisioning permanently terminates one membership episode in one tenant; it is terminal and distinct from reversible suspension, and a deprovisioned person cannot be reinstated."
+    },
+    {
+      "id": "MD-02",
+      "doc": "member-deprovisioning.md",
+      "rule": "A fresh invitation after deprovisioning creates a new membership episode, and only after the prior episode's tenant authority cleanup completes."
+    },
+    {
+      "id": "MD-05",
+      "doc": "member-deprovisioning.md",
+      "rule": "The deprovision command records actor, timestamp, and reason."
+    },
+    {
+      "id": "MD-07",
+      "doc": "member-deprovisioning.md",
+      "rule": "A new invitation never restores old team assignments or member-scoped grants; each direct member grant is bound to the membership episode active when issued, so retained or delayed grant history from a prior episode cannot become effective after rejoining."
+    }
+  ],
+  "decides": "Affiliation is exactly one of client_personnel, firm_staff, or guest; a guest requires a finite end date, persisted on the registration, access stops at the end of that UTC date, and grants cannot extend beyond it (guests are limited to Org Admin-granted programs and hold no approval rights). Deprovision records actor, timestamp, and reason, refuses self-deprovisioning, and removes team assignments and member-scoped grants prospectively while retaining platform identity, Person, history, business records, and unfinished work. A new invitation never restores old assignments or grants; each direct grant is bound to the episode active when issued, so prior-episode grants cannot become effective after rejoining.",
+  "decidesCovers": [
+    "D14-02",
+    "D14-04",
+    "D25-03",
+    "MD-03",
+    "MD-05",
+    "MD-06",
+    "MD-07"
+  ],
+  "decidesAuthored": "2026-10-29"
+}

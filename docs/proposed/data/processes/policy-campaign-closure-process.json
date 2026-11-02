@@ -1,0 +1,33 @@
+{
+  "process": "PolicyCampaignClosureProcess",
+  "rootSourceEvents": [
+    "PolicyCampaignClosureAccepted"
+  ],
+  "ordered": true,
+  "stages": [
+    {
+      "stage": "acquire",
+      "receivers": [
+        "AuthorizePolicyCampaignParticipantCampaignClosureUse"
+      ],
+      "rule": null
+    },
+    {
+      "stage": "complete",
+      "receivers": [
+        "CompletePolicyCampaignClosure"
+      ],
+      "rule": null
+    },
+    {
+      "stage": "settle",
+      "receivers": [
+        "SettlePolicyCampaignParticipantCampaignClosureUse"
+      ],
+      "rule": null
+    }
+  ],
+  "abort": [
+    "AbortPolicyCampaignClosure"
+  ]
+}

@@ -1,0 +1,53 @@
+{
+  "owner": "ManagementRepresentationLetter",
+  "events": [
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:ManagementRepresentationLetterSigned",
+        "event": "ManagementRepresentationLetterSigned",
+        "emissionKind": "business",
+        "owners": [
+          "ManagementRepresentationLetter"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": false,
+        "targetConcreteType": "ManagementRepresentationLetterSigned",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.examinations.management-representation-letter-signed",
+          "version": 1
+        },
+        "wireQualification": "Wire matches the declared record in src/Compliance.Common/Features/Examinations/Events/ManagementRepresentationLetterSigned.cs at 60029b8f.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "retained_current_schema_native_qualification_required",
+        "sourceStatus": "declared",
+        "meaning": "A named executive signed the management representation letter, retaining their signed letter artifact; once every required signer has signed the letter is final.",
+        "meaningSource": "authored 2026-10-29 from src/Compliance.Common/Features/Examinations/Events/ManagementRepresentationLetterSigned.cs"
+      },
+      "schema": null
+    },
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:RepresentationLetterRecorded",
+        "event": "RepresentationLetterRecorded",
+        "emissionKind": "business",
+        "owners": [
+          "ManagementRepresentationLetter"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": false,
+        "targetConcreteType": "RepresentationLetterRecorded",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.examinations.representation-letter-recorded",
+          "version": 2
+        },
+        "wireQualification": "Wire matches the declared record in src/Compliance.Common/Features/Examinations/Events/RepresentationLetterRecorded.cs at 60029b8f.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "retained_current_schema_native_qualification_required",
+        "sourceStatus": "declared",
+        "meaning": "Records an externally sourced representation letter and its required signers.",
+        "meaningSource": "record summary in src/Compliance.Common/Features/Examinations/Events/RepresentationLetterRecorded.cs"
+      },
+      "schema": null
+    }
+  ]
+}

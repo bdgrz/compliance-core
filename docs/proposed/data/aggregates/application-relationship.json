@@ -1,0 +1,328 @@
+{
+  "owner": "ApplicationRelationship",
+  "origin": "selected_split_target",
+  "baselineOwners": [
+    "DeclaredApplication"
+  ],
+  "declaredIdentity": "relationshipId",
+  "invariant": "One exact directed source/kind/target relationship lifecycle with unchanged deterministic UUIDv5 tuple identity; active endpoint/source-visibility and exact source/target revision guards remain. No independent tuple claim/release authority is introduced.",
+  "boundaryDecision": "selected_split",
+  "mustPreserve": "Retirement requires an approved successor for exact app revision; import holds block incompatible local change.",
+  "sources": [
+    {
+      "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
+      "jsonPointer": "/splitOwners/8/targetOwners/1",
+      "line": 957,
+      "sha256": "d349d94b7c43f4d82020ecf36bdacf1aff98bc6498e14993582f1c3164b21f19"
+    }
+  ],
+  "baselineSourcePath": "src/Compliance.Core/Features/Applications/DeclaredApplication.cs",
+  "baselineEvents": [
+    "ApplicationRelationshipAdded",
+    "ApplicationRelationshipApproved",
+    "ApplicationRelationshipRemoved"
+  ],
+  "preliminaryNewEvents": [
+    "ApplicationRelationshipIdentityClaimed",
+    "ApplicationRelationshipIdentityReleased"
+  ],
+  "technicalStateToSeparate": [],
+  "classification": "business_aggregate",
+  "businessAggregate": true,
+  "implementationStatus": "SEPARATE_VERIFICATION_REQUIRED_IMPLEMENTATION_HALTED",
+  "identityReadingRule": "selectedIdentitySummary and exact selectedCommandContracts define intended identity. baselineIdentityObservation/declaredIdentity retain older source observations only, including old replay defects; they are not target behavior or authorization to change an occupied key.",
+  "selectedCommandContracts": [
+    {
+      "command": "AddApplicationRelationship",
+      "logicalIdentity": {
+        "field": "RelationshipId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "caller-supplied immutable creation identity: an exact retry with the same id and authored intent returns the original result; the same id with changed intent is refused; a different id is a different record"
+      },
+      "fields": [
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ApplicationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "RelationshipId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "TargetApplicationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "RelationshipType",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "ApplicationRelationshipChange",
+        "firstHttpStatus": 200,
+        "terminalResultType": "ApplicationRelationshipChange"
+      },
+      "http": [
+        {
+          "method": "PUT",
+          "path": "/api/v1/tenants/{tenant_id}/applications/{application_id}/relationships/{relationship_id}",
+          "policy": null
+        }
+      ],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
+        "jsonPointer": "/commands/6",
+        "line": 674,
+        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
+      },
+      "kind": "http"
+    },
+    {
+      "command": "ApproveApplicationSuccessor",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "PredecessorApplicationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "SuccessorApplicationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectedSourceRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "ExpectedTargetRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "ImpactDigest",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "Unit",
+        "firstHttpStatus": 200,
+        "terminalResultType": "Unit"
+      },
+      "http": [
+        {
+          "method": "PUT",
+          "path": "/api/v1/tenants/{tenant_id}/applications/{predecessor_application_id}/successors/{successor_application_id}/approval/{command_id}",
+          "policy": "ComplianceAuthorizationPolicies.ApiUser"
+        }
+      ],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
+        "jsonPointer": "/commands/15",
+        "line": 1778,
+        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
+      },
+      "kind": "http"
+    },
+    {
+      "command": "RemoveApplicationRelationship",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ApplicationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "RelationshipId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "Reason",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "ApplicationRelationshipChange",
+        "firstHttpStatus": 200,
+        "terminalResultType": "ApplicationRelationshipChange"
+      },
+      "http": [
+        {
+          "method": "PUT",
+          "path": "/api/v1/tenants/{tenant_id}/applications/{application_id}/relationships/{relationship_id}/removals/{command_id}",
+          "authorizationPolicy": "existing application management authorization"
+        }
+      ],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
+        "jsonPointer": "/commands/116",
+        "line": 13494,
+        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
+      },
+      "kind": "http"
+    }
+  ],
+  "eventAuthority": "selected_final_event_catalog",
+  "events": [
+    {
+      "event": "ApplicationRelationshipAdded",
+      "discriminator": "bdgrz.application.relationship.added",
+      "discriminatorVersion": 1,
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
+        "jsonPointer": "/events/56",
+        "line": 7213,
+        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
+      }
+    },
+    {
+      "event": "ApplicationRelationshipApproved",
+      "discriminator": "bdgrz.application.relationship.approved",
+      "discriminatorVersion": 1,
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
+        "jsonPointer": "/events/57",
+        "line": 7289,
+        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
+      }
+    },
+    {
+      "event": "ApplicationRelationshipRemoved",
+      "discriminator": "bdgrz.application.relationship.removed",
+      "discriminatorVersion": 1,
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
+        "jsonPointer": "/events/58",
+        "line": 7375,
+        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
+      }
+    }
+  ],
+  "choreography": [],
+  "status": "SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED",
+  "baselineIdentityObservation": "relationshipId",
+  "identityContractRule": "Existing published owner identity/IdFor remains stable. Required typed creation/operation identity and tenant/program/source scope come from the selected signature/protocol references; no context.RequestId minting fallback or guessed new stream key.",
+  "adoptedArchitectureDecisions": [],
+  "selectedIdentitySummary": "Tenant + exact directed source application / relationship kind / target application tuple under its unchanged existing UUIDv5 IdFor. Supplied RelationshipId must equal this tuple identity; it is not an arbitrary caller UUID. Source and target direction is significant; accepted EV-D03/EV-D04 remove any separate tuple claim/release owner.",
+  "baselineIdentityObservationOnly": true,
+  "selectedLogicalIdentityBindings": [
+    {
+      "command": "AddApplicationRelationship",
+      "logicalIdentity": {
+        "field": "RelationshipId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "exact immutable creation retry"
+      },
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
+        "jsonPointer": "/commands/6",
+        "line": 674,
+        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
+      }
+    },
+    {
+      "command": "ApproveApplicationSuccessor",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "one immutable authored operation"
+      },
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
+        "jsonPointer": "/commands/15",
+        "line": 1778,
+        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
+      }
+    },
+    {
+      "command": "RemoveApplicationRelationship",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "one immutable authored operation"
+      },
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
+        "jsonPointer": "/commands/116",
+        "line": 13494,
+        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
+      }
+    }
+  ],
+  "selectedReplayRule": "Current required authorization precedes replay; exact authorized retries resolve the original accepted result using the selected logical identity and immutable actor/intent/source binding. Fresh mutable feasibility, clock selection and body preparation cannot replace that original result. Expected revision is concurrency precondition, not a new identity.",
+  "selectedIdentityClarification": "Tenant + exact directed source application / relationship kind / target application tuple under its unchanged existing UUIDv5 IdFor. Supplied RelationshipId must equal this tuple identity; it is not an arbitrary caller UUID. Source and target direction is significant; accepted EV-D03/EV-D04 remove any separate tuple claim/release owner.",
+  "identityAuthority": "Explicit adopted EV-D03/EV-D04 exact existing tuple identity; target-command-contracts AddApplicationRelationship requires unchanged IdFor."
+}

@@ -1,0 +1,381 @@
+{
+  "owner": "ArtifactLegalHold",
+  "selectedContracts": [
+    {
+      "command": "PlaceArtifactLegalHold",
+      "logicalIdentity": {
+        "field": "HoldId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "caller-supplied immutable creation identity: an exact retry with the same id and authored intent returns the original result; the same id with changed intent is refused; a different id is a different record"
+      },
+      "fields": [
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "SourceKind",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "SourceId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectedContentSha256",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "HoldId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "Reason",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "Unit",
+        "firstHttpStatus": 200,
+        "terminalResultType": "Unit"
+      },
+      "http": [
+        {
+          "method": "PUT",
+          "path": "/api/v1/tenants/{tenant_id}/artifact-retention/{source_kind}/{source_id}/legal-holds/{hold_id}",
+          "policy": "ComplianceAuthorizationPolicies.ApiUser"
+        }
+      ],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
+        "jsonPointer": "/commands/74",
+        "line": 8582,
+        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
+      },
+      "kind": "http"
+    },
+    {
+      "command": "ReleaseArtifactLegalHold",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "SourceKind",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "SourceId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectedContentSha256",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "HoldId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "Reason",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "Unit",
+        "firstHttpStatus": 200,
+        "terminalResultType": "Unit"
+      },
+      "http": [
+        {
+          "method": "PUT",
+          "path": "/api/v1/tenants/{tenant_id}/artifact-retention/{source_kind}/{source_id}/legal-holds/{hold_id}/releases/{command_id}",
+          "policy": "ComplianceAuthorizationPolicies.ApiUser"
+        }
+      ],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
+        "jsonPointer": "/commands/115",
+        "line": 13373,
+        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
+      },
+      "kind": "http"
+    }
+  ],
+  "sourceContractEvidence": [
+    {
+      "command": "PlaceArtifactLegalHold",
+      "status": "target_contract",
+      "sourceContract": "src/Compliance.Common/Features/Retention/PlaceArtifactLegalHold.cs",
+      "sourceHandlers": [
+        {
+          "name": "PlaceArtifactLegalHoldHandler",
+          "source": "src/Compliance.Core/Features/Retention/PlaceArtifactLegalHoldHandler.cs",
+          "registered": true
+        }
+      ],
+      "handler": "PlaceArtifactLegalHoldHandler",
+      "sourceRoots": [
+        "ArtifactRetention"
+      ],
+      "owner": "ArtifactLegalHold",
+      "logicalIdentity": {
+        "field": "HoldId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "exact immutable creation retry"
+      },
+      "fields": [
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "SourceKind",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "SourceId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectedContentSha256",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "HoldId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "Reason",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "http": [
+        {
+          "method": "PUT",
+          "path": "/api/v1/tenants/{tenant_id}/artifact-retention/{source_kind}/{source_id}/legal-holds/{hold_id}",
+          "policy": "ComplianceAuthorizationPolicies.ApiUser"
+        }
+      ],
+      "mcp": false,
+      "entryPoint": "authorized_http",
+      "authorizerSources": [
+        "src/Compliance.Core/Features/AccessControl/ClientManagementMutationAuthorizer.cs",
+        "src/Compliance.Core/Features/Retention/ArtifactRetentionAdminAuthorizer.cs"
+      ],
+      "events": [
+        "ArtifactLegalHoldPlaced"
+      ],
+      "protocols": [
+        "Retention basis and authoritative legal-hold barrier"
+      ],
+      "guardOrder": [
+        "bind_required_ids",
+        "authenticate_authorize",
+        "canonicalize_authored_intent",
+        "resolve_native_operation_facts",
+        "compare_owner_episode_actor_kind_intent_original_revision",
+        "validate_new_owner_revision_and_source_permits",
+        "append_complete_concrete_attributed_batch"
+      ],
+      "policyPreservation": "All current source handler/aggregate validation rules and source test expectations apply, except the explicit contractChanges and boundary protocol. Lifetime caps and technical attempt events are removed with their structural replacement.",
+      "contractChanges": [],
+      "existingTests": [
+        "test/Compliance.Tests/Features/Retention/ArtifactRetentionHandlerTests.cs",
+        "test/Compliance.Tests/Features/Retention/AttestRetentionManagementWriteWallTests.cs"
+      ],
+      "requiredTests": [
+        "ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange",
+        "ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision",
+        "ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity",
+        "ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof",
+        "ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome"
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "Unit",
+        "firstHttpStatus": 200,
+        "terminalResultType": "Unit"
+      },
+      "expectedRevisionScope": {
+        "field": "ExpectedRevision",
+        "owner": "ArtifactLegalHold",
+        "counter": "logical ResourceRevision of this owner",
+        "nullableInternalRule": null
+      }
+    },
+    {
+      "command": "ReleaseArtifactLegalHold",
+      "status": "target_contract",
+      "sourceContract": "src/Compliance.Common/Features/Retention/ReleaseArtifactLegalHold.cs",
+      "sourceHandlers": [
+        {
+          "name": "ReleaseArtifactLegalHoldHandler",
+          "source": "src/Compliance.Core/Features/Retention/ReleaseArtifactLegalHoldHandler.cs",
+          "registered": true
+        }
+      ],
+      "handler": "ReleaseArtifactLegalHoldHandler",
+      "sourceRoots": [
+        "ArtifactRetention"
+      ],
+      "owner": "ArtifactLegalHold",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "one immutable authored operation"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "SourceKind",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "SourceId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectedContentSha256",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "HoldId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "Reason",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "http": [
+        {
+          "method": "PUT",
+          "path": "/api/v1/tenants/{tenant_id}/artifact-retention/{source_kind}/{source_id}/legal-holds/{hold_id}/releases/{command_id}",
+          "policy": "ComplianceAuthorizationPolicies.ApiUser"
+        }
+      ],
+      "mcp": false,
+      "entryPoint": "authorized_http",
+      "authorizerSources": [
+        "src/Compliance.Core/Features/AccessControl/ClientManagementMutationAuthorizer.cs",
+        "src/Compliance.Core/Features/Retention/ArtifactRetentionAdminAuthorizer.cs"
+      ],
+      "events": [
+        "ArtifactLegalHoldReleased"
+      ],
+      "protocols": [
+        "Retention basis and authoritative legal-hold barrier"
+      ],
+      "guardOrder": [
+        "bind_required_ids",
+        "authenticate_authorize",
+        "canonicalize_authored_intent",
+        "resolve_native_operation_facts",
+        "compare_owner_episode_actor_kind_intent_original_revision",
+        "validate_new_owner_revision_and_source_permits",
+        "append_complete_concrete_attributed_batch"
+      ],
+      "policyPreservation": "All current source handler/aggregate validation rules and source test expectations apply, except the explicit contractChanges and boundary protocol. Lifetime caps and technical attempt events are removed with their structural replacement.",
+      "contractChanges": [
+        "Add required CommandId."
+      ],
+      "existingTests": [
+        "test/Compliance.Tests/Features/Retention/ArtifactRetentionHandlerTests.cs",
+        "test/Compliance.Tests/Features/Retention/AttestRetentionManagementWriteWallTests.cs"
+      ],
+      "requiredTests": [
+        "ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange",
+        "ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision",
+        "ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity",
+        "ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof",
+        "ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome"
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "Unit",
+        "firstHttpStatus": 200,
+        "terminalResultType": "Unit"
+      },
+      "expectedRevisionScope": {
+        "field": "ExpectedRevision",
+        "owner": "ArtifactLegalHold",
+        "counter": "logical ResourceRevision of this owner",
+        "nullableInternalRule": null
+      }
+    }
+  ]
+}

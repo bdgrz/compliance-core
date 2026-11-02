@@ -1,0 +1,1547 @@
+{
+  "owner": "AuditorRequest",
+  "events": [
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:AuditorCommentAdmitted",
+        "event": "AuditorCommentAdmitted",
+        "emissionKind": "business",
+        "owners": [
+          "AuditorRequest"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": true,
+        "targetConcreteType": "AuditorCommentAdmitted",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.auditor-request.auditor-comment-admitted",
+          "version": 1
+        },
+        "wireQualification": "Wire matches the declared record in src/Compliance.Common/Features/AuditorRequests/Events/AuditorCommentAdmitted.cs at 60029b8f.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "selected_complete_schema",
+        "sourceStatus": "declared",
+        "meaning": "The open request accepted one comment. Intent is the frozen ChildAdmissionIntent with the complete body, compartment and original actor. The logical id of Operation is the comment id, which is also the identity of the thread that materializes it.",
+        "meaningSource": "record summary in src/Compliance.Common/Features/AuditorRequests/Events/AuditorCommentAdmitted.cs"
+      },
+      "schema": {
+        "event": "AuditorCommentAdmitted",
+        "discriminator": "bdgrz.auditor-request.auditor-comment-admitted",
+        "discriminatorVersion": 1,
+        "owner": "AuditorRequest",
+        "existingContract": null,
+        "status": "selected target schema; implementation pending",
+        "reason": "source command accepted result",
+        "fields": [
+          {
+            "name": "Owner",
+            "type": "EventStreamAddress",
+            "required": true
+          },
+          {
+            "name": "Revision",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "Generation",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "Intent",
+            "type": "ImmutableContentRef",
+            "required": true
+          },
+          {
+            "name": "SourceProofs",
+            "type": "ImmutableContentRef?",
+            "required": true
+          },
+          {
+            "name": "Operation",
+            "type": "OperationProvenance",
+            "required": true
+          },
+          {
+            "name": "FirstResponse",
+            "type": "ImmutableContentRef?",
+            "required": true
+          },
+          {
+            "name": "OperationResult",
+            "type": "ImmutableContentRef?",
+            "required": true
+          }
+        ],
+        "contentSchemas": [
+          {
+            "field": "Intent",
+            "schema": "child-admission-intent.v1",
+            "recordType": "ChildAdmissionIntent",
+            "fields": [
+              {
+                "name": "Header",
+                "type": "DurableIntentHeader",
+                "required": true
+              },
+              {
+                "name": "ParentId",
+                "type": "Uuid",
+                "required": true
+              },
+              {
+                "name": "ParentGeneration",
+                "type": "ulong",
+                "required": true
+              },
+              {
+                "name": "ChildKind",
+                "type": "AdmittedChildKind",
+                "required": true
+              },
+              {
+                "name": "ChildId",
+                "type": "Uuid",
+                "required": true
+              },
+              {
+                "name": "CanonicalAuthoredContent",
+                "type": "ImmutableContentRef",
+                "required": true
+              },
+              {
+                "name": "SelectedSourceProofs",
+                "type": "ImmutableSelectionManifest",
+                "required": true
+              },
+              {
+                "name": "ParentAdmissionRevision",
+                "type": "ulong",
+                "required": true
+              }
+            ],
+            "rule": "Concrete child payload schemas are the corresponding normalized Common requests: advisor feedback, auditor response/comment, corrective action, policy acknowledgement/training/waiver. Preserve all authored fields and original actor; child reducer never loads live parent. No later close/revoke discards admitted work.",
+            "variants": [
+              {
+                "recordType": "ChildAdmissionIntent",
+                "schema": "child-admission-intent.v1",
+                "fields": [
+                  {
+                    "name": "Header",
+                    "type": "DurableIntentHeader",
+                    "required": true
+                  },
+                  {
+                    "name": "ParentId",
+                    "type": "Uuid",
+                    "required": true
+                  },
+                  {
+                    "name": "ParentGeneration",
+                    "type": "ulong",
+                    "required": true
+                  },
+                  {
+                    "name": "ChildKind",
+                    "type": "AdmittedChildKind",
+                    "required": true
+                  },
+                  {
+                    "name": "ChildId",
+                    "type": "Uuid",
+                    "required": true
+                  },
+                  {
+                    "name": "CanonicalAuthoredContent",
+                    "type": "ImmutableContentRef",
+                    "required": true
+                  },
+                  {
+                    "name": "SelectedSourceProofs",
+                    "type": "ImmutableSelectionManifest",
+                    "required": true
+                  },
+                  {
+                    "name": "ParentAdmissionRevision",
+                    "type": "ulong",
+                    "required": true
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "changes": [],
+        "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
+        "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
+        "resolvedIntentSchema": "ChildAdmissionIntent",
+        "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
+      }
+    },
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:AuditorRequestAssigned",
+        "event": "AuditorRequestAssigned",
+        "emissionKind": "business",
+        "owners": [
+          "AuditorRequest"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": true,
+        "targetConcreteType": "AuditorRequestAssigned",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.auditorrequests.auditor-request-assigned",
+          "version": 1
+        },
+        "wireQualification": "Wire matches the declared record in src/Compliance.Common/Features/AuditorRequests/Events/AuditorRequestAssigned.cs at 60029b8f.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "selected_complete_schema",
+        "sourceStatus": "declared",
+        "meaning": "An open request was assigned. Change is the complete AuditorRequestTermsContent after the assignment.",
+        "meaningSource": "record summary in src/Compliance.Common/Features/AuditorRequests/Events/AuditorRequestAssigned.cs"
+      },
+      "schema": {
+        "event": "AuditorRequestAssigned",
+        "discriminator": "bdgrz.auditorrequests.auditor-request-assigned",
+        "discriminatorVersion": 1,
+        "owner": "AuditorRequest",
+        "existingContract": "src/Compliance.Common/Features/AuditorRequests/AuditorRequestAssigned.cs",
+        "status": "selected target schema; implementation pending",
+        "reason": "source command accepted result",
+        "fields": [
+          {
+            "name": "TenantId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "SubjectId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "Revision",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "ActorMemberId",
+            "type": "Uuid?",
+            "required": true
+          },
+          {
+            "name": "Change",
+            "type": "ImmutableContentRef",
+            "required": true
+          },
+          {
+            "name": "OccurredAt",
+            "type": "DateTimeOffset",
+            "required": true
+          },
+          {
+            "name": "Operation",
+            "type": "OperationProvenance",
+            "required": true
+          },
+          {
+            "name": "FirstResponse",
+            "type": "ImmutableContentRef?",
+            "required": true
+          },
+          {
+            "name": "OperationResult",
+            "type": "ImmutableContentRef?",
+            "required": true
+          }
+        ],
+        "contentSchemas": [
+          {
+            "field": "Change",
+            "schema": "AuditorRequestAssigned.change.v1",
+            "sourceCommandVariants": [
+              "AssignAuditorRequest"
+            ],
+            "rule": "Tagged by stable source command kind. Contains normalized accepted business field values and exact source proof references from that command, plus server-accepted result identities; excludes unrelated children, history, bearer material and process state. The result data required for replay is immutable and complete."
+          }
+        ],
+        "changes": [
+          "Replace full parent snapshot with a verified immutable event-specific change. Reducer applies the accepted delta; it never re-executes a command or consults foreign state."
+        ],
+        "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
+        "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
+        "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
+      }
+    },
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:AuditorRequestRecorded",
+        "event": "AuditorRequestRecorded",
+        "emissionKind": "business",
+        "owners": [
+          "AuditorRequest"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": true,
+        "targetConcreteType": "AuditorRequestRecorded",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.auditorrequests.auditor-request-recorded",
+          "version": 1
+        },
+        "wireQualification": "Wire matches the declared record in src/Compliance.Common/Features/AuditorRequests/Events/AuditorRequestRecorded.cs at 60029b8f.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "selected_complete_schema",
+        "sourceStatus": "declared",
+        "meaning": "The auditor request was recorded as the root native fact of its operation. Change is the verified immutable AuditorRequestTermsContent of the first terms; the request starts at generation one.",
+        "meaningSource": "record summary in src/Compliance.Common/Features/AuditorRequests/Events/AuditorRequestRecorded.cs"
+      },
+      "schema": {
+        "event": "AuditorRequestRecorded",
+        "discriminator": "bdgrz.auditorrequests.auditor-request-recorded",
+        "discriminatorVersion": 1,
+        "owner": "AuditorRequest",
+        "existingContract": "src/Compliance.Common/Features/AuditorRequests/AuditorRequestRecorded.cs",
+        "status": "selected target schema; implementation pending",
+        "reason": "source command accepted result",
+        "fields": [
+          {
+            "name": "TenantId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "SubjectId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "Revision",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "ActorMemberId",
+            "type": "Uuid?",
+            "required": true
+          },
+          {
+            "name": "Change",
+            "type": "ImmutableContentRef",
+            "required": true
+          },
+          {
+            "name": "OccurredAt",
+            "type": "DateTimeOffset",
+            "required": true
+          },
+          {
+            "name": "Operation",
+            "type": "OperationProvenance",
+            "required": true
+          },
+          {
+            "name": "FirstResponse",
+            "type": "ImmutableContentRef?",
+            "required": true
+          },
+          {
+            "name": "OperationResult",
+            "type": "ImmutableContentRef?",
+            "required": true
+          }
+        ],
+        "contentSchemas": [
+          {
+            "field": "Change",
+            "schema": "AuditorRequestRecorded.change.v1",
+            "sourceCommandVariants": [
+              "RecordAuditorRequest"
+            ],
+            "rule": "Tagged by stable source command kind. Contains normalized accepted business field values and exact source proof references from that command, plus server-accepted result identities; excludes unrelated children, history, bearer material and process state. The result data required for replay is immutable and complete."
+          }
+        ],
+        "changes": [
+          "Replace full parent snapshot with a verified immutable event-specific change. Reducer applies the accepted delta; it never re-executes a command or consults foreign state."
+        ],
+        "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
+        "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
+        "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
+      }
+    },
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:AuditorRequestReopened",
+        "event": "AuditorRequestReopened",
+        "emissionKind": "business",
+        "owners": [
+          "AuditorRequest"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": true,
+        "targetConcreteType": "AuditorRequestReopened",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.auditorrequests.auditor-request-reopened",
+          "version": 1
+        },
+        "wireQualification": "Wire matches the declared record in src/Compliance.Common/Features/AuditorRequests/Events/AuditorRequestReopened.cs at 60029b8f.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "selected_complete_schema",
+        "sourceStatus": "declared",
+        "meaning": "A resolved request was reopened as the root native fact of its operation. The request generation advances and Change is the AuditorRequestReopenContent.",
+        "meaningSource": "record summary in src/Compliance.Common/Features/AuditorRequests/Events/AuditorRequestReopened.cs"
+      },
+      "schema": {
+        "event": "AuditorRequestReopened",
+        "discriminator": "bdgrz.auditorrequests.auditor-request-reopened",
+        "discriminatorVersion": 1,
+        "owner": "AuditorRequest",
+        "existingContract": "src/Compliance.Common/Features/AuditorRequests/AuditorRequestReopened.cs",
+        "status": "selected target schema; implementation pending",
+        "reason": "source command accepted result",
+        "fields": [
+          {
+            "name": "TenantId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "SubjectId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "Revision",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "ActorMemberId",
+            "type": "Uuid?",
+            "required": true
+          },
+          {
+            "name": "Change",
+            "type": "ImmutableContentRef",
+            "required": true
+          },
+          {
+            "name": "OccurredAt",
+            "type": "DateTimeOffset",
+            "required": true
+          },
+          {
+            "name": "Operation",
+            "type": "OperationProvenance",
+            "required": true
+          },
+          {
+            "name": "FirstResponse",
+            "type": "ImmutableContentRef?",
+            "required": true
+          },
+          {
+            "name": "OperationResult",
+            "type": "ImmutableContentRef?",
+            "required": true
+          }
+        ],
+        "contentSchemas": [
+          {
+            "field": "Change",
+            "schema": "AuditorRequestReopened.change.v1",
+            "sourceCommandVariants": [
+              "ReopenAuditorRequest"
+            ],
+            "rule": "Tagged by stable source command kind. Contains normalized accepted business field values and exact source proof references from that command, plus server-accepted result identities; excludes unrelated children, history, bearer material and process state. The result data required for replay is immutable and complete."
+          }
+        ],
+        "changes": [
+          "Replace full parent snapshot with a verified immutable event-specific change. Reducer applies the accepted delta; it never re-executes a command or consults foreign state."
+        ],
+        "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
+        "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
+        "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
+      }
+    },
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:AuditorRequestResolutionAccepted",
+        "event": "AuditorRequestResolutionAccepted",
+        "emissionKind": "business",
+        "owners": [
+          "AuditorRequest"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": true,
+        "targetConcreteType": "AuditorRequestResolutionAccepted",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.auditor-request.auditor-request-resolution-accepted",
+          "version": 1
+        },
+        "wireQualification": "Wire matches the declared record in src/Compliance.Common/Features/AuditorRequests/Events/AuditorRequestResolutionAccepted.cs at 60029b8f.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "selected_complete_schema",
+        "sourceStatus": "declared",
+        "meaning": "The root native acceptance of a resolution. It seals response, comment and sample admission for Generation and references the frozen ClosureIntent; the request only resolves once AuditorRequestResolved follows.",
+        "meaningSource": "record summary in src/Compliance.Common/Features/AuditorRequests/Events/AuditorRequestResolutionAccepted.cs"
+      },
+      "schema": {
+        "event": "AuditorRequestResolutionAccepted",
+        "discriminator": "bdgrz.auditor-request.auditor-request-resolution-accepted",
+        "discriminatorVersion": 1,
+        "owner": "AuditorRequest",
+        "existingContract": null,
+        "status": "selected target schema; implementation pending",
+        "reason": "source command accepted result",
+        "fields": [
+          {
+            "name": "Owner",
+            "type": "EventStreamAddress",
+            "required": true
+          },
+          {
+            "name": "Revision",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "Generation",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "Intent",
+            "type": "ImmutableContentRef",
+            "required": true
+          },
+          {
+            "name": "SourceProofs",
+            "type": "ImmutableContentRef?",
+            "required": true
+          },
+          {
+            "name": "Operation",
+            "type": "OperationProvenance",
+            "required": true
+          },
+          {
+            "name": "FirstResponse",
+            "type": "ImmutableContentRef?",
+            "required": true
+          },
+          {
+            "name": "OperationResult",
+            "type": "ImmutableContentRef?",
+            "required": true
+          }
+        ],
+        "contentSchemas": [
+          {
+            "field": "Intent",
+            "schema": "closure-intent.v1",
+            "recordType": "ClosureIntent",
+            "fields": [
+              {
+                "name": "Header",
+                "type": "DurableIntentHeader",
+                "required": true
+              },
+              {
+                "name": "ParentKind",
+                "type": "ClosureParentKind",
+                "required": true
+              },
+              {
+                "name": "ParentId",
+                "type": "Uuid",
+                "required": true
+              },
+              {
+                "name": "ParentGeneration",
+                "type": "ulong",
+                "required": true
+              },
+              {
+                "name": "AdmittedChildren",
+                "type": "ImmutableSelectionManifest",
+                "required": true
+              },
+              {
+                "name": "AuthoredDecision",
+                "type": "ImmutableContentRef",
+                "required": true
+              },
+              {
+                "name": "SourceUses",
+                "type": "ImmutableSelectionManifest",
+                "required": true,
+                "contentSchema": "SourceUseRequirement"
+              },
+              {
+                "name": "WaiverProof",
+                "type": "ImmutableContentRef?",
+                "required": true
+              }
+            ],
+            "rule": "Seal parent admission, drain all previously admitted materializations, then grant complete exact child/source uses. Nonempty action/response requirements and accepted dispositions remain policy-specific. An abort atomically fences parent finalization before any source settlement.",
+            "variants": [
+              {
+                "recordType": "ClosureIntent",
+                "schema": "closure-intent.v1",
+                "fields": [
+                  {
+                    "name": "Header",
+                    "type": "DurableIntentHeader",
+                    "required": true
+                  },
+                  {
+                    "name": "ParentKind",
+                    "type": "ClosureParentKind",
+                    "required": true
+                  },
+                  {
+                    "name": "ParentId",
+                    "type": "Uuid",
+                    "required": true
+                  },
+                  {
+                    "name": "ParentGeneration",
+                    "type": "ulong",
+                    "required": true
+                  },
+                  {
+                    "name": "AdmittedChildren",
+                    "type": "ImmutableSelectionManifest",
+                    "required": true
+                  },
+                  {
+                    "name": "AuthoredDecision",
+                    "type": "ImmutableContentRef",
+                    "required": true
+                  },
+                  {
+                    "name": "SourceUses",
+                    "type": "ImmutableSelectionManifest",
+                    "required": true,
+                    "contentSchema": "SourceUseRequirement"
+                  },
+                  {
+                    "name": "WaiverProof",
+                    "type": "ImmutableContentRef?",
+                    "required": true
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "changes": [],
+        "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
+        "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
+        "resolvedIntentSchema": "ClosureIntent",
+        "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
+      }
+    },
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:AuditorRequestResolutionCanceled",
+        "event": "AuditorRequestResolutionCanceled",
+        "emissionKind": "business",
+        "owners": [
+          "AuditorRequest"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": true,
+        "targetConcreteType": "AuditorRequestResolutionCanceled",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.auditor-request.auditor-request-resolution-canceled",
+          "version": 1
+        },
+        "wireQualification": "Wire matches the declared record in src/Compliance.Common/Features/AuditorRequests/Events/AuditorRequestResolutionCanceled.cs at 60029b8f.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "selected_complete_schema",
+        "sourceStatus": "declared",
+        "meaning": "A pending resolution ended before it resolved the request. The fact is the local receiver fence: a delayed CompleteAuditorRequestResolution sees it and does nothing, and only then are the response uses settled. SourceProofs is the failure proof. Admission reopens for the generation.",
+        "meaningSource": "record summary in src/Compliance.Common/Features/AuditorRequests/Events/AuditorRequestResolutionCanceled.cs"
+      },
+      "schema": {
+        "event": "AuditorRequestResolutionCanceled",
+        "discriminator": "bdgrz.auditor-request.auditor-request-resolution-canceled",
+        "discriminatorVersion": 1,
+        "owner": "AuditorRequest",
+        "existingContract": null,
+        "status": "selected target schema; implementation pending",
+        "reason": "source admission contract",
+        "fields": [
+          {
+            "name": "Owner",
+            "type": "EventStreamAddress",
+            "required": true
+          },
+          {
+            "name": "Revision",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "Generation",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "Intent",
+            "type": "ImmutableContentRef",
+            "required": true
+          },
+          {
+            "name": "SourceProofs",
+            "type": "ImmutableContentRef?",
+            "required": true
+          },
+          {
+            "name": "Operation",
+            "type": "OperationProvenance",
+            "required": true
+          },
+          {
+            "name": "FirstResponse",
+            "type": "ImmutableContentRef?",
+            "required": true
+          },
+          {
+            "name": "OperationResult",
+            "type": "ImmutableContentRef?",
+            "required": true
+          }
+        ],
+        "contentSchemas": [
+          {
+            "field": "Intent",
+            "schema": "closure-intent.v1",
+            "recordType": "ClosureIntent",
+            "fields": [
+              {
+                "name": "Header",
+                "type": "DurableIntentHeader",
+                "required": true
+              },
+              {
+                "name": "ParentKind",
+                "type": "ClosureParentKind",
+                "required": true
+              },
+              {
+                "name": "ParentId",
+                "type": "Uuid",
+                "required": true
+              },
+              {
+                "name": "ParentGeneration",
+                "type": "ulong",
+                "required": true
+              },
+              {
+                "name": "AdmittedChildren",
+                "type": "ImmutableSelectionManifest",
+                "required": true
+              },
+              {
+                "name": "AuthoredDecision",
+                "type": "ImmutableContentRef",
+                "required": true
+              },
+              {
+                "name": "SourceUses",
+                "type": "ImmutableSelectionManifest",
+                "required": true,
+                "contentSchema": "SourceUseRequirement"
+              },
+              {
+                "name": "WaiverProof",
+                "type": "ImmutableContentRef?",
+                "required": true
+              }
+            ],
+            "rule": "Seal parent admission, drain all previously admitted materializations, then grant complete exact child/source uses. Nonempty action/response requirements and accepted dispositions remain policy-specific. An abort atomically fences parent finalization before any source settlement.",
+            "variants": [
+              {
+                "recordType": "ClosureIntent",
+                "schema": "closure-intent.v1",
+                "fields": [
+                  {
+                    "name": "Header",
+                    "type": "DurableIntentHeader",
+                    "required": true
+                  },
+                  {
+                    "name": "ParentKind",
+                    "type": "ClosureParentKind",
+                    "required": true
+                  },
+                  {
+                    "name": "ParentId",
+                    "type": "Uuid",
+                    "required": true
+                  },
+                  {
+                    "name": "ParentGeneration",
+                    "type": "ulong",
+                    "required": true
+                  },
+                  {
+                    "name": "AdmittedChildren",
+                    "type": "ImmutableSelectionManifest",
+                    "required": true
+                  },
+                  {
+                    "name": "AuthoredDecision",
+                    "type": "ImmutableContentRef",
+                    "required": true
+                  },
+                  {
+                    "name": "SourceUses",
+                    "type": "ImmutableSelectionManifest",
+                    "required": true,
+                    "contentSchema": "SourceUseRequirement"
+                  },
+                  {
+                    "name": "WaiverProof",
+                    "type": "ImmutableContentRef?",
+                    "required": true
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "changes": [],
+        "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
+        "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
+        "resolvedIntentSchema": "ClosureIntent",
+        "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
+      }
+    },
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:AuditorRequestResolved",
+        "event": "AuditorRequestResolved",
+        "emissionKind": "business",
+        "owners": [
+          "AuditorRequest"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": true,
+        "targetConcreteType": "AuditorRequestResolved",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.auditorrequests.auditor-request-resolved",
+          "version": 1
+        },
+        "wireQualification": "Wire matches the declared record in src/Compliance.Common/Features/AuditorRequests/Events/AuditorRequestResolved.cs at 60029b8f.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "selected_complete_schema",
+        "sourceStatus": "declared",
+        "meaning": "The request was resolved by the exact pending resolution. Change is the frozen ClosureIntent of the resolution, ResponseDispositionProofs the complete manifest of the held accepted dispositions of every admitted response and RequestGeneration the generation the resolution sealed.",
+        "meaningSource": "record summary in src/Compliance.Common/Features/AuditorRequests/Events/AuditorRequestResolved.cs"
+      },
+      "schema": {
+        "event": "AuditorRequestResolved",
+        "discriminator": "bdgrz.auditorrequests.auditor-request-resolved",
+        "discriminatorVersion": 1,
+        "owner": "AuditorRequest",
+        "existingContract": "src/Compliance.Common/Features/AuditorRequests/AuditorRequestResolved.cs",
+        "status": "selected target schema; implementation pending",
+        "reason": "typed reactor receiver accepted business fact",
+        "fields": [
+          {
+            "name": "TenantId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "SubjectId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "Revision",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "ActorMemberId",
+            "type": "Uuid?",
+            "required": true
+          },
+          {
+            "name": "Change",
+            "type": "ImmutableContentRef",
+            "required": true
+          },
+          {
+            "name": "OccurredAt",
+            "type": "DateTimeOffset",
+            "required": true
+          },
+          {
+            "name": "Operation",
+            "type": "OperationProvenance",
+            "required": true
+          },
+          {
+            "name": "RequestGeneration",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "ResponseDispositionProofs",
+            "type": "ImmutableContentRef",
+            "required": true
+          },
+          {
+            "name": "FirstResponse",
+            "type": "ImmutableContentRef?",
+            "required": true
+          },
+          {
+            "name": "OperationResult",
+            "type": "ImmutableContentRef?",
+            "required": true
+          }
+        ],
+        "contentSchemas": [
+          {
+            "field": "Change",
+            "schema": "closure-intent.v1",
+            "recordType": "ClosureIntent",
+            "fields": [
+              {
+                "name": "Header",
+                "type": "DurableIntentHeader",
+                "required": true
+              },
+              {
+                "name": "ParentKind",
+                "type": "ClosureParentKind",
+                "required": true
+              },
+              {
+                "name": "ParentId",
+                "type": "Uuid",
+                "required": true
+              },
+              {
+                "name": "ParentGeneration",
+                "type": "ulong",
+                "required": true
+              },
+              {
+                "name": "AdmittedChildren",
+                "type": "ImmutableSelectionManifest",
+                "required": true
+              },
+              {
+                "name": "AuthoredDecision",
+                "type": "ImmutableContentRef",
+                "required": true
+              },
+              {
+                "name": "SourceUses",
+                "type": "ImmutableSelectionManifest",
+                "required": true,
+                "contentSchema": "SourceUseRequirement"
+              },
+              {
+                "name": "WaiverProof",
+                "type": "ImmutableContentRef?",
+                "required": true
+              }
+            ],
+            "rule": "Seal parent admission, drain all previously admitted materializations, then grant complete exact child/source uses. Nonempty action/response requirements and accepted dispositions remain policy-specific. An abort atomically fences parent finalization before any source settlement.",
+            "variants": [
+              {
+                "recordType": "ClosureIntent",
+                "schema": "closure-intent.v1",
+                "fields": [
+                  {
+                    "name": "Header",
+                    "type": "DurableIntentHeader",
+                    "required": true
+                  },
+                  {
+                    "name": "ParentKind",
+                    "type": "ClosureParentKind",
+                    "required": true
+                  },
+                  {
+                    "name": "ParentId",
+                    "type": "Uuid",
+                    "required": true
+                  },
+                  {
+                    "name": "ParentGeneration",
+                    "type": "ulong",
+                    "required": true
+                  },
+                  {
+                    "name": "AdmittedChildren",
+                    "type": "ImmutableSelectionManifest",
+                    "required": true
+                  },
+                  {
+                    "name": "AuthoredDecision",
+                    "type": "ImmutableContentRef",
+                    "required": true
+                  },
+                  {
+                    "name": "SourceUses",
+                    "type": "ImmutableSelectionManifest",
+                    "required": true,
+                    "contentSchema": "SourceUseRequirement"
+                  },
+                  {
+                    "name": "WaiverProof",
+                    "type": "ImmutableContentRef?",
+                    "required": true
+                  }
+                ]
+              }
+            ],
+            "sourceCommandVariants": [
+              "CompleteAuditorRequestResolution"
+            ]
+          }
+        ],
+        "changes": [
+          "Replace full parent snapshot with a verified immutable event-specific change. Reducer applies the accepted delta; it never re-executes a command or consults foreign state."
+        ],
+        "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
+        "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
+        "resolvedIntentSchema": "ClosureIntent",
+        "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
+      }
+    },
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:AuditorRequestRevised",
+        "event": "AuditorRequestRevised",
+        "emissionKind": "business",
+        "owners": [
+          "AuditorRequest"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": true,
+        "targetConcreteType": "AuditorRequestRevised",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.auditorrequests.auditor-request-revised",
+          "version": 1
+        },
+        "wireQualification": "Wire matches the declared record in src/Compliance.Common/Features/AuditorRequests/Events/AuditorRequestRevised.cs at 60029b8f.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "selected_complete_schema",
+        "sourceStatus": "declared",
+        "meaning": "The wording, scope, priority or due date of an open request was revised. Change is the complete AuditorRequestTermsContent after the revision.",
+        "meaningSource": "record summary in src/Compliance.Common/Features/AuditorRequests/Events/AuditorRequestRevised.cs"
+      },
+      "schema": {
+        "event": "AuditorRequestRevised",
+        "discriminator": "bdgrz.auditorrequests.auditor-request-revised",
+        "discriminatorVersion": 1,
+        "owner": "AuditorRequest",
+        "existingContract": "src/Compliance.Common/Features/AuditorRequests/AuditorRequestRevised.cs",
+        "status": "selected target schema; implementation pending",
+        "reason": "source command accepted result",
+        "fields": [
+          {
+            "name": "TenantId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "SubjectId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "Revision",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "ActorMemberId",
+            "type": "Uuid?",
+            "required": true
+          },
+          {
+            "name": "Change",
+            "type": "ImmutableContentRef",
+            "required": true
+          },
+          {
+            "name": "OccurredAt",
+            "type": "DateTimeOffset",
+            "required": true
+          },
+          {
+            "name": "Operation",
+            "type": "OperationProvenance",
+            "required": true
+          },
+          {
+            "name": "FirstResponse",
+            "type": "ImmutableContentRef?",
+            "required": true
+          },
+          {
+            "name": "OperationResult",
+            "type": "ImmutableContentRef?",
+            "required": true
+          }
+        ],
+        "contentSchemas": [
+          {
+            "field": "Change",
+            "schema": "AuditorRequestRevised.change.v1",
+            "sourceCommandVariants": [
+              "ReviseAuditorRequest"
+            ],
+            "rule": "Tagged by stable source command kind. Contains normalized accepted business field values and exact source proof references from that command, plus server-accepted result identities; excludes unrelated children, history, bearer material and process state. The result data required for replay is immutable and complete."
+          }
+        ],
+        "changes": [
+          "Replace full parent snapshot with a verified immutable event-specific change. Reducer applies the accepted delta; it never re-executes a command or consults foreign state."
+        ],
+        "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
+        "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
+        "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
+      }
+    },
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:AuditorResponseAdmitted",
+        "event": "AuditorResponseAdmitted",
+        "emissionKind": "business",
+        "owners": [
+          "AuditorRequest"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": true,
+        "targetConcreteType": "AuditorResponseAdmitted",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.auditor-request.auditor-response-admitted",
+          "version": 1
+        },
+        "wireQualification": "Wire matches the declared record in src/Compliance.Common/Features/AuditorRequests/Events/AuditorResponseAdmitted.cs at 60029b8f.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "selected_complete_schema",
+        "sourceStatus": "declared",
+        "meaning": "The open request accepted one response draft for its current generation. Intent is the frozen ChildAdmissionIntent that carries the complete draft; the response owner is materialized independently, and a later resolution drains it instead of discarding it. The logical id of Operation is the response id.",
+        "meaningSource": "record summary in src/Compliance.Common/Features/AuditorRequests/Events/AuditorResponseAdmitted.cs"
+      },
+      "schema": {
+        "event": "AuditorResponseAdmitted",
+        "discriminator": "bdgrz.auditor-request.auditor-response-admitted",
+        "discriminatorVersion": 1,
+        "owner": "AuditorRequest",
+        "existingContract": null,
+        "status": "selected target schema; implementation pending",
+        "reason": "source command accepted result",
+        "fields": [
+          {
+            "name": "Owner",
+            "type": "EventStreamAddress",
+            "required": true
+          },
+          {
+            "name": "Revision",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "Generation",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "Intent",
+            "type": "ImmutableContentRef",
+            "required": true
+          },
+          {
+            "name": "SourceProofs",
+            "type": "ImmutableContentRef?",
+            "required": true
+          },
+          {
+            "name": "Operation",
+            "type": "OperationProvenance",
+            "required": true
+          },
+          {
+            "name": "FirstResponse",
+            "type": "ImmutableContentRef?",
+            "required": true
+          },
+          {
+            "name": "OperationResult",
+            "type": "ImmutableContentRef?",
+            "required": true
+          }
+        ],
+        "contentSchemas": [
+          {
+            "field": "Intent",
+            "schema": "child-admission-intent.v1",
+            "recordType": "ChildAdmissionIntent",
+            "fields": [
+              {
+                "name": "Header",
+                "type": "DurableIntentHeader",
+                "required": true
+              },
+              {
+                "name": "ParentId",
+                "type": "Uuid",
+                "required": true
+              },
+              {
+                "name": "ParentGeneration",
+                "type": "ulong",
+                "required": true
+              },
+              {
+                "name": "ChildKind",
+                "type": "AdmittedChildKind",
+                "required": true
+              },
+              {
+                "name": "ChildId",
+                "type": "Uuid",
+                "required": true
+              },
+              {
+                "name": "CanonicalAuthoredContent",
+                "type": "ImmutableContentRef",
+                "required": true
+              },
+              {
+                "name": "SelectedSourceProofs",
+                "type": "ImmutableSelectionManifest",
+                "required": true
+              },
+              {
+                "name": "ParentAdmissionRevision",
+                "type": "ulong",
+                "required": true
+              }
+            ],
+            "rule": "Concrete child payload schemas are the corresponding normalized Common requests: advisor feedback, auditor response/comment, corrective action, policy acknowledgement/training/waiver. Preserve all authored fields and original actor; child reducer never loads live parent. No later close/revoke discards admitted work.",
+            "variants": [
+              {
+                "recordType": "ChildAdmissionIntent",
+                "schema": "child-admission-intent.v1",
+                "fields": [
+                  {
+                    "name": "Header",
+                    "type": "DurableIntentHeader",
+                    "required": true
+                  },
+                  {
+                    "name": "ParentId",
+                    "type": "Uuid",
+                    "required": true
+                  },
+                  {
+                    "name": "ParentGeneration",
+                    "type": "ulong",
+                    "required": true
+                  },
+                  {
+                    "name": "ChildKind",
+                    "type": "AdmittedChildKind",
+                    "required": true
+                  },
+                  {
+                    "name": "ChildId",
+                    "type": "Uuid",
+                    "required": true
+                  },
+                  {
+                    "name": "CanonicalAuthoredContent",
+                    "type": "ImmutableContentRef",
+                    "required": true
+                  },
+                  {
+                    "name": "SelectedSourceProofs",
+                    "type": "ImmutableSelectionManifest",
+                    "required": true
+                  },
+                  {
+                    "name": "ParentAdmissionRevision",
+                    "type": "ulong",
+                    "required": true
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "changes": [],
+        "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
+        "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
+        "resolvedIntentSchema": "ChildAdmissionIntent",
+        "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
+      }
+    },
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:AuditorSampleSelectionAdmitted",
+        "event": "AuditorSampleSelectionAdmitted",
+        "emissionKind": "business",
+        "owners": [
+          "AuditorRequest"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": true,
+        "targetConcreteType": "AuditorSampleSelectionAdmitted",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.auditor-request.auditor-sample-selection-admitted",
+          "version": 1
+        },
+        "wireQualification": "Wire matches the declared record in src/Compliance.Common/Features/AuditorRequests/Events/AuditorSampleSelectionAdmitted.cs at 60029b8f.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "selected_complete_schema",
+        "sourceStatus": "declared",
+        "meaning": "The open request accepted one exact sample selection. Intent is the frozen AuditorSampleSelectionIntent with the complete population version content and the nonempty duplicate-free row selection. The population, its version and the superseded selection are repeated as facts so the request can enforce amendment lineage from its own ordered stream. The logical id of Operation is the selection id.",
+        "meaningSource": "record summary in src/Compliance.Common/Features/AuditorRequests/Events/AuditorSampleSelectionAdmitted.cs"
+      },
+      "schema": {
+        "event": "AuditorSampleSelectionAdmitted",
+        "discriminator": "bdgrz.auditor-request.auditor-sample-selection-admitted",
+        "discriminatorVersion": 1,
+        "owner": "AuditorRequest",
+        "existingContract": null,
+        "status": "selected target schema; implementation pending",
+        "reason": "source command accepted result",
+        "fields": [
+          {
+            "name": "Owner",
+            "type": "EventStreamAddress",
+            "required": true
+          },
+          {
+            "name": "Revision",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "Generation",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "Intent",
+            "type": "ImmutableContentRef",
+            "required": true
+          },
+          {
+            "name": "SourceProofs",
+            "type": "ImmutableContentRef?",
+            "required": true
+          },
+          {
+            "name": "Operation",
+            "type": "OperationProvenance",
+            "required": true
+          },
+          {
+            "name": "FirstResponse",
+            "type": "ImmutableContentRef?",
+            "required": true
+          },
+          {
+            "name": "OperationResult",
+            "type": "ImmutableContentRef?",
+            "required": true
+          }
+        ],
+        "contentSchemas": [
+          {
+            "field": "Intent",
+            "schema": "auditor-sample-selection-intent.v1",
+            "recordType": "AuditorSampleSelectionIntent",
+            "fields": [
+              {
+                "name": "Header",
+                "type": "DurableIntentHeader",
+                "required": true
+              },
+              {
+                "name": "RequestId",
+                "type": "Uuid",
+                "required": true
+              },
+              {
+                "name": "RequestGeneration",
+                "type": "ulong",
+                "required": true
+              },
+              {
+                "name": "ParentAdmissionRevision",
+                "type": "ulong",
+                "required": true
+              },
+              {
+                "name": "SelectionId",
+                "type": "Uuid",
+                "required": true
+              },
+              {
+                "name": "SupersedesSelectionId",
+                "type": "Uuid?",
+                "required": true
+              },
+              {
+                "name": "PopulationId",
+                "type": "Uuid",
+                "required": true
+              },
+              {
+                "name": "PopulationVersion",
+                "type": "int",
+                "required": true
+              },
+              {
+                "name": "PopulationContent",
+                "type": "ImmutableContentRef",
+                "required": true,
+                "contentSchema": "AuditPopulationVersionView"
+              },
+              {
+                "name": "PopulationRowIds",
+                "type": "ImmutableSelectionManifest",
+                "required": true,
+                "contentSchema": "Uuid"
+              },
+              {
+                "name": "SelectionMethod",
+                "type": "string",
+                "required": true
+              },
+              {
+                "name": "Source",
+                "type": "string",
+                "required": true
+              },
+              {
+                "name": "ExternalReference",
+                "type": "string",
+                "required": true
+              },
+              {
+                "name": "AmendmentReason",
+                "type": "string?",
+                "required": true
+              },
+              {
+                "name": "RecordedAt",
+                "type": "DateTimeOffset",
+                "required": true
+              }
+            ],
+            "rule": "Open request admits exact nonempty duplicate-free row selection and frozen population content. Amendment identifies a prior admitted selection of the same population with strictly later population version. Freeze request revision separately from new selection zero. Resolution drains every admitted selection; later closure cannot discard it. Child materializes the exact admitted selection without a live parent read.",
+            "variants": [
+              {
+                "recordType": "AuditorSampleSelectionIntent",
+                "schema": "auditor-sample-selection-intent.v1",
+                "fields": [
+                  {
+                    "name": "Header",
+                    "type": "DurableIntentHeader",
+                    "required": true
+                  },
+                  {
+                    "name": "RequestId",
+                    "type": "Uuid",
+                    "required": true
+                  },
+                  {
+                    "name": "RequestGeneration",
+                    "type": "ulong",
+                    "required": true
+                  },
+                  {
+                    "name": "ParentAdmissionRevision",
+                    "type": "ulong",
+                    "required": true
+                  },
+                  {
+                    "name": "SelectionId",
+                    "type": "Uuid",
+                    "required": true
+                  },
+                  {
+                    "name": "SupersedesSelectionId",
+                    "type": "Uuid?",
+                    "required": true
+                  },
+                  {
+                    "name": "PopulationId",
+                    "type": "Uuid",
+                    "required": true
+                  },
+                  {
+                    "name": "PopulationVersion",
+                    "type": "int",
+                    "required": true
+                  },
+                  {
+                    "name": "PopulationContent",
+                    "type": "ImmutableContentRef",
+                    "required": true,
+                    "contentSchema": "AuditPopulationVersionView"
+                  },
+                  {
+                    "name": "PopulationRowIds",
+                    "type": "ImmutableSelectionManifest",
+                    "required": true,
+                    "contentSchema": "Uuid"
+                  },
+                  {
+                    "name": "SelectionMethod",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "Source",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "ExternalReference",
+                    "type": "string",
+                    "required": true
+                  },
+                  {
+                    "name": "AmendmentReason",
+                    "type": "string?",
+                    "required": true
+                  },
+                  {
+                    "name": "RecordedAt",
+                    "type": "DateTimeOffset",
+                    "required": true
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "changes": [],
+        "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
+        "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
+        "resolvedIntentSchema": "AuditorSampleSelectionIntent",
+        "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
+      }
+    }
+  ]
+}

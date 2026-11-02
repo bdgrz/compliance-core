@@ -1,0 +1,498 @@
+{
+  "owner": "UserIdentity",
+  "origin": "retained_baseline",
+  "baselineOwners": [
+    "UserIdentity"
+  ],
+  "declaredIdentity": "UUIDv5 provider+subject; registration stable optional user binding; revoke retries exact replacement no-op, changed replacement conflict. OCC.",
+  "invariant": "External provider+subject associates to exactly one platform user; revoked identity cannot authenticate and has one exact replacement.",
+  "boundaryDecision": "narrow",
+  "boundaryRationale": "Association/revocation must stay together. Provider presentation observations do not decide identity authority and can be separate observation/audit source.",
+  "sources": [
+    {
+      "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
+      "jsonPointer": "/aggregates/95",
+      "line": 58300,
+      "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
+    }
+  ],
+  "baselineSourcePath": "src/Compliance.Core/Features/UserIdentities/UserIdentity.cs",
+  "baselineEvents": [
+    "UserIdentityRegistered",
+    "UserIdentityRevoked"
+  ],
+  "classification": "business_aggregate",
+  "businessAggregate": true,
+  "implementationStatus": "SEPARATE_VERIFICATION_REQUIRED_IMPLEMENTATION_HALTED",
+  "identityReadingRule": "selectedIdentitySummary and exact selectedCommandContracts define intended identity. baselineIdentityObservation/declaredIdentity retain older source observations only, including old replay defects; they are not target behavior or authorization to change an occupied key.",
+  "selectedCommandContracts": [
+    {
+      "command": "ContinueWithOidcProvider",
+      "kind": "http",
+      "logicalIdentity": {
+        "field": "none (no fields; provider and subject come from the authenticated OIDC principal); emits UserIdentityRegistered or UserIdentityAuthenticated, optionally UserIdentityProfileObserved",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "caller-supplied immutable creation identity: an exact retry with the same id and authored intent returns the original result; the same id with changed intent is refused; a different id is a different record"
+      },
+      "fields": [],
+      "http": [
+        {
+          "route": "POST /api/v1/oidc-user-sessions"
+        }
+      ],
+      "source": {
+        "path": "src/Compliance.Core/Features/UserIdentities/Handlers/ContinueWithOidcProviderHandler.cs -> Services/UserIdentityContinuation.cs",
+        "recorded": "2026-10-29"
+      }
+    },
+    {
+      "command": "ContinueWithDeveloperIdentity",
+      "kind": "http",
+      "logicalIdentity": {
+        "field": "none (derived identity provider+subject)",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "caller-supplied immutable creation identity: an exact retry with the same id and authored intent returns the original result; the same id with changed intent is refused; a different id is a different record"
+      },
+      "fields": [
+        {
+          "name": "EmailAddress",
+          "required": true
+        }
+      ],
+      "http": [
+        {
+          "route": "POST /api/v1/developer-user-sessions (only when developer authentication enabled, anonymous)"
+        }
+      ],
+      "source": {
+        "path": "src/Compliance.Core/Features/UserIdentities/Handlers/ContinueWithDeveloperIdentityHandler.cs",
+        "recorded": "2026-10-29"
+      }
+    },
+    {
+      "command": "LinkOidcProviderIdentity",
+      "kind": "http",
+      "logicalIdentity": {
+        "field": "none (principal-derived)",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "caller-supplied immutable creation identity: an exact retry with the same id and authored intent returns the original result; the same id with changed intent is refused; a different id is a different record"
+      },
+      "fields": [],
+      "http": [
+        {
+          "route": "POST /api/v1/my/oidc-identity-links"
+        }
+      ],
+      "source": {
+        "path": "src/Compliance.Core/Features/UserIdentities/Handlers/LinkOidcProviderIdentityHandler.cs:32 (identity.Register)",
+        "recorded": "2026-10-29"
+      }
+    },
+    {
+      "command": "ProtectRecoveryIdentity",
+      "kind": "receiver",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "internal",
+        "rule": "deterministic receiver identity derived from the admitted root fact, episode and generation: exact redelivery resolves the original result, a changed admission is a new identity"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "required": true
+        },
+        {
+          "name": "Source",
+          "required": true
+        },
+        {
+          "name": "Target",
+          "required": true
+        },
+        {
+          "name": "OperationId",
+          "required": true
+        },
+        {
+          "name": "Generation",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "required": true
+        },
+        {
+          "name": "Intent",
+          "required": true
+        },
+        {
+          "name": "ChallengeId",
+          "required": true
+        },
+        {
+          "name": "AccountId",
+          "required": true
+        },
+        {
+          "name": "OldIdentityId",
+          "required": true
+        },
+        {
+          "name": "ReplacementIdentityId",
+          "required": true
+        },
+        {
+          "name": "IdentityId",
+          "required": true
+        },
+        {
+          "name": "IdentityRole",
+          "required": true
+        }
+      ],
+      "http": [],
+      "source": {
+        "path": "src/Compliance.Core/Features/UserIdentities/Handlers/ProtectRecoveryIdentityHandler.cs",
+        "recorded": "2026-10-29"
+      },
+      "reactor": "IdentityRecoveryContinuationReactor",
+      "sourceOwner": "IdentityRecovery",
+      "sourceEvents": [
+        "IdentityRecoveryPrepared"
+      ],
+      "guard": "Before swap acceptance, protect old/replacement slots in canonical key order; exact account, identity role and frozen candidate. Reject conflicting association or revocation before acceptance. Existing same-account association remains valid. No old revocation during preparation.",
+      "eventsEmitted": [
+        "RecoveryIdentityProtected"
+      ],
+      "effectKind": "protect_recovery_identity",
+      "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine."
+    },
+    {
+      "command": "SettleRecoveryIdentityProtection",
+      "kind": "receiver",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "internal",
+        "rule": "deterministic receiver identity derived from the admitted root fact, episode and generation: exact redelivery resolves the original result, a changed admission is a new identity"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "required": true
+        },
+        {
+          "name": "Source",
+          "required": true
+        },
+        {
+          "name": "Target",
+          "required": true
+        },
+        {
+          "name": "OperationId",
+          "required": true
+        },
+        {
+          "name": "Generation",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "required": true
+        },
+        {
+          "name": "Intent",
+          "required": true
+        },
+        {
+          "name": "ChallengeId",
+          "required": true
+        },
+        {
+          "name": "IdentityId",
+          "required": true
+        }
+      ],
+      "http": [],
+      "source": {
+        "path": "src/Compliance.Core/Features/UserIdentities/Handlers/SettleRecoveryIdentityProtectionHandler.cs",
+        "recorded": "2026-10-29"
+      },
+      "reactor": "IdentityRecoveryProtectionReleaseReactor",
+      "sourceOwner": "IdentityRecovery",
+      "sourceEvents": [
+        "IdentityRecoveryCompleted",
+        "IdentityRecoveryPreparationRejected"
+      ],
+      "guard": "Completed swap releases exact matching protection. A pre-acceptance preparation rejection first fences the recovery owner and receiving keys, including not-yet-acquired keys. An accepted swap cannot cancel and must finish forward.",
+      "eventsEmitted": [
+        "RecoveryIdentityProtectionSettled"
+      ],
+      "effectKind": "settle_recovery_identity_protection",
+      "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine."
+    },
+    {
+      "command": "RegisterRecoveredIdentity",
+      "kind": "receiver",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "internal",
+        "rule": "deterministic receiver identity derived from the admitted root fact, episode and generation: exact redelivery resolves the original result, a changed admission is a new identity"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "required": true
+        },
+        {
+          "name": "Source",
+          "required": true
+        },
+        {
+          "name": "Target",
+          "required": true
+        },
+        {
+          "name": "OperationId",
+          "required": true
+        },
+        {
+          "name": "Generation",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "required": true
+        },
+        {
+          "name": "Intent",
+          "required": true
+        },
+        {
+          "name": "ChallengeId",
+          "required": true
+        },
+        {
+          "name": "AccountId",
+          "required": true
+        },
+        {
+          "name": "ReplacementIdentityId",
+          "required": true
+        },
+        {
+          "name": "ProtectionProofManifest",
+          "required": true
+        }
+      ],
+      "http": [],
+      "source": {
+        "path": "src/Compliance.Core/Features/UserIdentities/Handlers/RegisterRecoveredIdentityHandler.cs",
+        "recorded": "2026-10-29"
+      },
+      "reactor": "IdentityRecoveryReplacementReactor",
+      "sourceOwner": "IdentityRecovery",
+      "sourceEvents": [
+        "IdentityRecoveryAccepted"
+      ],
+      "guard": "Complete exact old+replacement protection proofs; register replacement or return authoritative existing same-account registration proof. A no-append existing registration is sufficient and must still continue automatically.",
+      "eventsEmitted": [
+        "UserIdentityRegistered"
+      ],
+      "effectKind": "register_recovered_identity",
+      "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine."
+    },
+    {
+      "command": "RevokeRecoveredOldIdentity",
+      "kind": "receiver",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "internal",
+        "rule": "deterministic receiver identity derived from the admitted root fact, episode and generation: exact redelivery resolves the original result, a changed admission is a new identity"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "required": true
+        },
+        {
+          "name": "Source",
+          "required": true
+        },
+        {
+          "name": "Target",
+          "required": true
+        },
+        {
+          "name": "OperationId",
+          "required": true
+        },
+        {
+          "name": "Generation",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "required": true
+        },
+        {
+          "name": "Intent",
+          "required": true
+        },
+        {
+          "name": "ChallengeId",
+          "required": true
+        },
+        {
+          "name": "OldIdentityId",
+          "required": true
+        },
+        {
+          "name": "ReplacementIdentityId",
+          "required": true
+        },
+        {
+          "name": "ReplacementRegistrationProof",
+          "required": true
+        }
+      ],
+      "http": [],
+      "source": {
+        "path": "src/Compliance.Core/Features/UserIdentities/Handlers/RevokeRecoveredOldIdentityHandler.cs",
+        "recorded": "2026-10-29"
+      },
+      "reactor": "IdentityRecoveryOldRevocationReactor",
+      "sourceOwner": "IdentityRecovery",
+      "sourceEvents": [
+        "IdentityRecoveryAccepted"
+      ],
+      "guard": "Exact accepted challenge plus authoritative replacement registration/account proof, whether registration was new or already existed. No dependency on a new UserIdentityRegistered event; only then revoke exact old identity to that replacement.",
+      "eventsEmitted": [
+        "UserIdentityRevoked"
+      ],
+      "effectKind": "revoke_recovered_old_identity",
+      "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine."
+    }
+  ],
+  "eventAuthority": "selected_final_event_catalog",
+  "events": [
+    {
+      "event": "RecoveryIdentityProtected",
+      "discriminator": "bdgrz.user-identity.recovery-identity-protected",
+      "discriminatorVersion": 1,
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
+        "jsonPointer": "/events/233",
+        "line": 31717,
+        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
+      }
+    },
+    {
+      "event": "RecoveryIdentityProtectionSettled",
+      "discriminator": "bdgrz.user-identity.recovery-identity-protection-settled",
+      "discriminatorVersion": 1,
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
+        "jsonPointer": "/events/234",
+        "line": 31901,
+        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
+      }
+    },
+    {
+      "event": "UserIdentityRegistered",
+      "discriminator": "bdgrz.user-identity.registered",
+      "discriminatorVersion": 1,
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
+        "jsonPointer": "/events/285",
+        "line": 38951,
+        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
+      }
+    },
+    {
+      "event": "UserIdentityRevoked",
+      "discriminator": "bdgrz.user-identity.revoked",
+      "discriminatorVersion": 1,
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
+        "jsonPointer": "/events/286",
+        "line": 39140,
+        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
+      }
+    }
+  ],
+  "choreography": [
+    {
+      "reactor": "IdentityRecoveryContinuationReactor",
+      "sourceOwner": "IdentityRecovery",
+      "targetOwner": "UserIdentity",
+      "command": "ProtectRecoveryIdentity",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
+        "jsonPointer": "/reactors/41",
+        "line": 3479,
+        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
+      }
+    },
+    {
+      "reactor": "IdentityRecoveryReplacementReactor",
+      "sourceOwner": "IdentityRecovery",
+      "targetOwner": "UserIdentity",
+      "command": "RegisterRecoveredIdentity",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
+        "jsonPointer": "/reactors/42",
+        "line": 3581,
+        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
+      }
+    },
+    {
+      "reactor": "IdentityRecoveryOldRevocationReactor",
+      "sourceOwner": "IdentityRecovery",
+      "targetOwner": "UserIdentity",
+      "command": "RevokeRecoveredOldIdentity",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
+        "jsonPointer": "/reactors/43",
+        "line": 3673,
+        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
+      }
+    },
+    {
+      "reactor": "IdentityRecoveryProtectionReleaseReactor",
+      "sourceOwner": "IdentityRecovery",
+      "targetOwner": "UserIdentity",
+      "command": "SettleRecoveryIdentityProtection",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
+        "jsonPointer": "/reactors/57",
+        "line": 4895,
+        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
+      }
+    }
+  ],
+  "status": "SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED",
+  "baselineIdentityObservation": "UUIDv5 provider+subject; registration stable optional user binding; revoke retries exact replacement no-op, changed replacement conflict. OCC.",
+  "identityContractRule": "Existing published owner identity/IdFor remains stable. Required typed creation/operation identity and tenant/program/source scope come from the selected signature/protocol references; no context.RequestId minting fallback or guessed new stream key.",
+  "adoptedArchitectureDecisions": [],
+  "selectedIdentityClarification": "Existing UUIDv5 of identity provider + subject. Exact registration/user binding and revoke/replacement episode remain immutable; native operation terms retain that full binding.",
+  "selectedIdentitySummary": "Existing UUIDv5 of identity provider + subject. Exact registration/user binding and revoke/replacement episode remain immutable; native operation terms retain that full binding.",
+  "baselineIdentityObservationOnly": true,
+  "selectedLogicalIdentityBindings": [],
+  "selectedReplayRule": "Current required authorization precedes replay; exact authorized retries resolve the original accepted result using the selected logical identity and immutable actor/intent/source binding. Fresh mutable feasibility, clock selection and body preparation cannot replace that original result. Expected revision is concurrency precondition, not a new identity.",
+  "commandNote": "Sign-in commands (Continue*/Link*) are HTTP and write the identity inline through UserIdentityContinuation; recovery events are process-dispatched receivers. Authentication/profile events are not idempotent by CommandId."
+}

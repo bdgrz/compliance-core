@@ -2,11 +2,11 @@
 
 Planning baseline: local product contracts and backend source inspected 2026-10-18.
 
-For the reconciled command list, requirement coverage and remaining work, use [System command list](command-list.md), with rationale in the [command gap analysis](command-inventory-gap-analysis.md). Its command conclusions supersede the provisional completion suggestions below, including periodic-review subsystems and external-auditor account proposals.
+For the reconciled command list, requirement coverage and remaining work, use [System command list](../proposed/commands/product-scope.md), with rationale in the [command gap analysis](command-inventory-gap-analysis.md). Its command conclusions supersede the provisional completion suggestions below, including periodic-review subsystems and external-auditor account proposals.
 
-For the read layer, use the [query and view-model list](query-and-view-model-list.md) for the pruned, story-backed backfill. Proposed query candidates later in this inventory are not all required; optional collection and unsettled commerce/capacity hypotheses are excluded there.
+For the read layer, use the [query and view-model list](../proposed/read-models.md) for the pruned, story-backed backfill. Proposed query candidates later in this inventory are not all required; optional collection and unsettled commerce/capacity hypotheses are excluded there.
 
-For the event layer, use the [domain event list](domain-event-list.md) for the pruned, story-backed backfill. It supersedes unvalidated event candidates in the proposed completion inventory below.
+For the event layer, use the [domain event list](../proposed/events/product-scope.md) for the pruned, story-backed backfill. It supersedes unvalidated event candidates in the proposed completion inventory below.
 
 This inventory covers commands, queries, domain events, aggregates, models, HTTP/MCP APIs, reactors, and projectors for the documented Compliance product. It includes the complete local source inventory below and a proposed completion inventory for later workflows. Source presence is not proof of delivery, registration, tests, authorization correctness, or release acceptance. GitHub delivery status was not audited for this document.
 
@@ -23,7 +23,7 @@ This inventory covers commands, queries, domain events, aggregates, models, HTTP
 
 The existing inventory preserves actual source names, including older vocabulary. Proposed names below are design candidates, not approved aggregate boundaries or a declaration that similarly named existing behavior is missing. Compare capabilities and invariants before adding anything.
 
-Sources: [product scope](README.md), [domain ownership](domain-model.md), [canonical models](canonical-entity-model.md), [backlog](backlog.md), [commercial scope](business-operations.md), [projection rules](../architecture/decisions/0007-read-models-projections-and-as-of-calculations.md), [work-source coverage](work-queue-source-coverage.md).
+Sources: [product scope](README.md), [domain ownership](../proposed/domain-model.md), [canonical models](canonical-entity-model.md), [backlog](backlog.md), [commercial scope](business-operations.md), [projection rules](../architecture/decisions/0007-read-models-projections-and-as-of-calculations.md), [work-source coverage](work-queue-source-coverage.md).
 
 ## Required capability checklist
 
@@ -282,7 +282,7 @@ The following is a static source inventory, including internal operations. Queri
 | Explicit MapPortia HTTP route registrations | 493 |
 | Additional custom HTTP route registrations | 1 |
 
-Reconciled 2026-10-19. All 404 declared event types now have a recorded requirement mapping or explicit exclusion in the [event source reconciliation](domain-event-list.md#source-declaration-reconciliation). The HTTP route table below mirrors the typed registrations in `Program.cs`; it does not imply that every command has or should have an HTTP route.
+Reconciled 2026-10-19. All 404 declared event types now have a recorded requirement mapping or explicit exclusion in the [event source reconciliation](../proposed/events/product-scope.md#source-declaration-reconciliation). The HTTP route table below mirrors the typed registrations in `Program.cs`; it does not imply that every command has or should have an HTTP route.
 
 The aggregate count and source list were reconciled on 2026-10-21 against the
 [aggregate and command-handler audit](aggregate-command-coverage-audit.md).

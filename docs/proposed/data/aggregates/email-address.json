@@ -1,0 +1,520 @@
+{
+  "owner": "EmailAddress",
+  "origin": "retained_baseline",
+  "baselineOwners": [
+    "EmailAddress"
+  ],
+  "declaredIdentity": "UUIDv5 normalized address. Reserve owner retry safe; challenge issue handler mints random ID per invocation; recovery pair retry stable until overwritten. Expected-position OCC.",
+  "invariant": "A normalized address reserves exactly one platform user; verification requires its current challenge; a claimed recovery binds one old/replacement pair.",
+  "boundaryDecision": "narrow",
+  "boundaryRationale": "Ownership and current-proof consumption require one authority; delivery outcomes do not. A recovery lifecycle can be separate only with durable claim/admission and revocation recovery.",
+  "sources": [
+    {
+      "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
+      "jsonPointer": "/aggregates/30",
+      "line": 23943,
+      "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
+    }
+  ],
+  "baselineSourcePath": "src/Compliance.Core/Features/UserIdentities/EmailAddress.cs",
+  "baselineEvents": [
+    "EmailAddressReserved",
+    "EmailAddressVerified",
+    "EmailChallengeDeliveryFailed",
+    "EmailChallengeDeliverySent",
+    "EmailChallengeIssued",
+    "IdentityRecoveryChallengeClaimed",
+    "IdentityRecoveryChallengeCompleted",
+    "IdentityRecoveryChallengeIssued"
+  ],
+  "classification": "business_aggregate",
+  "businessAggregate": true,
+  "implementationStatus": "SEPARATE_VERIFICATION_REQUIRED_IMPLEMENTATION_HALTED",
+  "identityReadingRule": "selectedIdentitySummary and exact selectedCommandContracts define intended identity. baselineIdentityObservation/declaredIdentity retain older source observations only, including old replay defects; they are not target behavior or authorization to change an occupied key.",
+  "selectedCommandContracts": [
+    {
+      "command": "CompleteEmailChallenge",
+      "logicalIdentity": {
+        "field": "ChallengeId",
+        "type": "Uuid",
+        "required": true,
+        "rule": "caller-supplied immutable creation identity: an exact retry with the same id and authored intent returns the original result; the same id with changed intent is refused; a different id is a different record"
+      },
+      "fields": [
+        {
+          "name": "ChallengeId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "UserId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "EmailAddress",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "Token",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "Unit",
+        "firstHttpStatus": 200,
+        "terminalResultType": "Unit"
+      },
+      "http": [
+        {
+          "method": "PUT",
+          "path": "/api/v1/users/{user_id}/email-addresses/{email_address}/verifications/{challenge_id}",
+          "authorizationPolicy": "ComplianceAuthorizationPolicies.ApiUser"
+        }
+      ],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
+        "jsonPointer": "/contracts/37",
+        "line": 2961,
+        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
+      },
+      "kind": "http"
+    },
+    {
+      "command": "IssueEmailChallenge",
+      "logicalIdentity": {
+        "field": "ChallengeId",
+        "type": "Uuid",
+        "required": true,
+        "rule": "caller-supplied immutable creation identity: an exact retry with the same id and authored intent returns the original result; the same id with changed intent is refused; a different id is a different record"
+      },
+      "fields": [
+        {
+          "name": "ChallengeId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "UserId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "EmailAddress",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "Unit",
+        "firstHttpStatus": 200,
+        "terminalResultType": "Unit"
+      },
+      "http": [
+        {
+          "method": "PUT",
+          "path": "/api/v1/users/{user_id}/email-addresses/{email_address}/challenges/{challenge_id}",
+          "authorizationPolicy": "ComplianceAuthorizationPolicies.ApiUser"
+        }
+      ],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
+        "jsonPointer": "/contracts/83",
+        "line": 6186,
+        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
+      },
+      "kind": "http"
+    },
+    {
+      "command": "ReserveEmail",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "rule": "CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "UserId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "EmailAddress",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true
+        }
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "Unit",
+        "firstHttpStatus": 200,
+        "terminalResultType": "Unit"
+      },
+      "http": [
+        {
+          "method": "PUT",
+          "path": "/api/v1/users/{user_id}/email-addresses/{email_address}/{command_id}",
+          "authorizationPolicy": "ComplianceAuthorizationPolicies.ApiUser"
+        }
+      ],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
+        "jsonPointer": "/contracts/151",
+        "line": 11238,
+        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
+      },
+      "kind": "http"
+    },
+    {
+      "command": "CompleteIdentityRecovery",
+      "logicalIdentity": {
+        "field": "ChallengeId",
+        "type": "Uuid",
+        "required": true,
+        "rule": "caller-supplied immutable creation identity: an exact retry with the same id and authored intent returns the original result; the same id with changed intent is refused; a different id is a different record"
+      },
+      "fields": [
+        {
+          "name": "EmailAddress",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "ChallengeId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Token",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "OldIdentityId",
+          "type": "Uuid",
+          "required": true
+        }
+      ],
+      "responseContract": {
+        "mode": "async_fixed_ack",
+        "responseType": "OperationAcceptedResponse",
+        "firstHttpStatus": 202,
+        "terminalResultType": "Unit"
+      },
+      "http": {
+        "method": "PUT",
+        "path": "/api/v1/identity-recovery/challenges/{challenge_id}/completion"
+      },
+      "source": {
+        "path": "docs/product/audits/2026-10-23/source-admission-contracts.json",
+        "jsonPointer": "/contracts/0",
+        "line": 4,
+        "sha256": "f1d549ed0879c816cb26e86879f8fa658dab0a8acbf7c591e4d4aed40483f8ae"
+      },
+      "kind": "http"
+    },
+    {
+      "command": "StartIdentityRecovery",
+      "logicalIdentity": {
+        "field": "ChallengeId",
+        "type": "Uuid",
+        "required": true,
+        "rule": "caller-supplied immutable creation identity: an exact retry with the same id and authored intent returns the original result; the same id with changed intent is refused; a different id is a different record"
+      },
+      "fields": [
+        {
+          "name": "ChallengeId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "EmailAddress",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "Unit",
+        "firstHttpStatus": 200,
+        "terminalResultType": "Unit"
+      },
+      "http": {
+        "method": "PUT",
+        "path": "/api/v1/identity-recovery/challenges/{challenge_id}"
+      },
+      "source": {
+        "path": "docs/product/audits/2026-10-23/source-admission-contracts.json",
+        "jsonPointer": "/contracts/1",
+        "line": 60,
+        "sha256": "f1d549ed0879c816cb26e86879f8fa658dab0a8acbf7c591e4d4aed40483f8ae"
+      },
+      "kind": "http"
+    },
+    {
+      "command": "CompleteEmailRecoveryChallenge",
+      "kind": "receiver",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "reactor",
+        "rule": "deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Source",
+          "type": "SourceFactProof<IdentityRecoveryCompleted>",
+          "required": true
+        },
+        {
+          "name": "Target",
+          "type": "EventStreamAddress",
+          "required": true
+        },
+        {
+          "name": "OperationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Generation",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long?",
+          "required": true
+        },
+        {
+          "name": "Intent",
+          "type": "ImmutableContentRef",
+          "required": true,
+          "contentSchema": "IdentityRecoveryIntent"
+        },
+        {
+          "name": "ChallengeId",
+          "type": "Uuid",
+          "required": true
+        }
+      ],
+      "reactor": "IdentityRecoveryEmailCompletionReactor",
+      "sourceOwner": "IdentityRecovery",
+      "sourceEvents": [
+        "IdentityRecoveryCompleted"
+      ],
+      "guard": "Exact completed challenge proof; append old challenge completion without clearing a newer challenge slot.",
+      "eventsEmitted": [
+        "IdentityRecoveryChallengeCompleted"
+      ],
+      "effectKind": "complete_email_recovery_challenge",
+      "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
+      "handler": "CompleteEmailRecoveryChallengeHandler",
+      "http": [],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
+        "recorded": "2026-10-29"
+      }
+    }
+  ],
+  "eventAuthority": "selected_final_event_catalog",
+  "events": [
+    {
+      "event": "IdentityRecoveryChallengeClaimed",
+      "discriminator": "bdgrz.identity-recovery.challenge-claimed",
+      "discriminatorVersion": 1,
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
+        "jsonPointer": "/events/164",
+        "line": 20664,
+        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
+      }
+    },
+    {
+      "event": "IdentityRecoveryChallengeCompleted",
+      "discriminator": "bdgrz.identity-recovery.challenge-completed",
+      "discriminatorVersion": 1,
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
+        "jsonPointer": "/events/165",
+        "line": 20873,
+        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
+      }
+    },
+    {
+      "event": "IdentityRecoveryChallengeIssued",
+      "discriminator": "bdgrz.identity-recovery.challenge-issued",
+      "discriminatorVersion": 1,
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
+        "jsonPointer": "/events/166",
+        "line": 21067,
+        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
+      }
+    },
+    {
+      "event": "EmailAddressReserved",
+      "discriminator": "bdgrz.email-address.reserved",
+      "discriminatorVersion": 1,
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
+        "jsonPointer": "/events/287",
+        "line": 39329,
+        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
+      }
+    },
+    {
+      "event": "EmailChallengeIssued",
+      "discriminator": "bdgrz.email-address.challenge-issued",
+      "discriminatorVersion": 1,
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
+        "jsonPointer": "/events/288",
+        "line": 39370,
+        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
+      }
+    },
+    {
+      "event": "EmailAddressVerified",
+      "discriminator": "bdgrz.email-address.verified",
+      "discriminatorVersion": 1,
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
+        "jsonPointer": "/events/289",
+        "line": 39431,
+        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
+      }
+    }
+  ],
+  "choreography": [
+    {
+      "reactor": "IdentityRecoveryAcceptanceReactor",
+      "sourceOwner": "EmailAddress",
+      "targetOwner": "IdentityRecovery",
+      "command": "MaterializeIdentityRecoveryPreparation",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
+        "jsonPointer": "/reactors/56",
+        "line": 4798,
+        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
+      }
+    },
+    {
+      "reactor": "IdentityRecoveryEmailCompletionReactor",
+      "sourceOwner": "IdentityRecovery",
+      "targetOwner": "EmailAddress",
+      "command": "CompleteEmailRecoveryChallenge",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
+        "jsonPointer": "/reactors/58",
+        "line": 4979,
+        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
+      }
+    },
+    {
+      "reactor": "EmailChallengeDeliveryReactor",
+      "sourceOwner": "EmailAddress",
+      "targetOwner": "EmailChallengeDeliveryLedger",
+      "command": "DeliverEmailChallenge",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
+        "jsonPointer": "/reactors/115",
+        "line": 9909,
+        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
+      }
+    },
+    {
+      "reactor": "RecoveryChallengeDeliveryReactor",
+      "sourceOwner": "EmailAddress",
+      "targetOwner": "EmailChallengeDeliveryLedger",
+      "command": "DeliverRecoveryChallenge",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
+        "jsonPointer": "/reactors/116",
+        "line": 9984,
+        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
+      }
+    }
+  ],
+  "status": "SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED",
+  "baselineIdentityObservation": "UUIDv5 normalized address. Reserve owner retry safe; challenge issue handler mints random ID per invocation; recovery pair retry stable until overwritten. Expected-position OCC.",
+  "identityContractRule": "Existing published owner identity/IdFor remains stable. Required typed creation/operation identity and tenant/program/source scope come from the selected signature/protocol references; no context.RequestId minting fallback or guessed new stream key.",
+  "adoptedArchitectureDecisions": [],
+  "selectedIdentityClarification": "Existing UUIDv5 of the normalized email address. ChallengeId and selected CommandId are distinct stable operation identities bound to this exact address, owner and recovery episode.",
+  "selectedIdentitySummary": "Existing UUIDv5 of the normalized email address. ChallengeId and selected CommandId are distinct stable operation identities bound to this exact address, owner and recovery episode.",
+  "baselineIdentityObservationOnly": true,
+  "selectedLogicalIdentityBindings": [
+    {
+      "command": "CompleteEmailChallenge",
+      "logicalIdentity": "ChallengeId",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
+        "jsonPointer": "/contracts/37",
+        "line": 2961,
+        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
+      }
+    },
+    {
+      "command": "IssueEmailChallenge",
+      "logicalIdentity": "ChallengeId",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
+        "jsonPointer": "/contracts/83",
+        "line": 6186,
+        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
+      }
+    },
+    {
+      "command": "ReserveEmail",
+      "logicalIdentity": "CommandId",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
+        "jsonPointer": "/contracts/151",
+        "line": 11238,
+        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
+      }
+    },
+    {
+      "command": "CompleteIdentityRecovery",
+      "logicalIdentity": "ChallengeId",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/source-admission-contracts.json",
+        "jsonPointer": "/contracts/0",
+        "line": 4,
+        "sha256": "f1d549ed0879c816cb26e86879f8fa658dab0a8acbf7c591e4d4aed40483f8ae"
+      }
+    },
+    {
+      "command": "StartIdentityRecovery",
+      "logicalIdentity": "ChallengeId",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/source-admission-contracts.json",
+        "jsonPointer": "/contracts/1",
+        "line": 60,
+        "sha256": "f1d549ed0879c816cb26e86879f8fa658dab0a8acbf7c591e4d4aed40483f8ae"
+      }
+    }
+  ],
+  "selectedReplayRule": "Current required authorization precedes replay; exact authorized retries resolve the original accepted result using the selected logical identity and immutable actor/intent/source binding. Fresh mutable feasibility, clock selection and body preparation cannot replace that original result. Expected revision is concurrency precondition, not a new identity."
+}

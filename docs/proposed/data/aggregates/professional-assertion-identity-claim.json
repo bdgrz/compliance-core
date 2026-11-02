@@ -1,0 +1,160 @@
+{
+  "owner": "ProfessionalAssertionIdentityClaim",
+  "origin": "selected_split_target",
+  "baselineOwners": [
+    "FirmProfessionalDutyCatalog"
+  ],
+  "declaredIdentity": "platform / assertionId",
+  "invariant": "Permanent binding of signed assertion identity to digest, designation, canonical user and duty scope; claim identity cannot be recycled.",
+  "boundaryDecision": "selected_split",
+  "mustPreserve": "Exact predecessor, monotonically increasing authority revision, stable signed subject, valid staff source proof.",
+  "sources": [
+    {
+      "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
+      "jsonPointer": "/splitOwners/0/targetOwners/1",
+      "line": 39,
+      "sha256": "d349d94b7c43f4d82020ecf36bdacf1aff98bc6498e14993582f1c3164b21f19"
+    }
+  ],
+  "baselineSourcePath": "src/Compliance.Core/Features/AccessControl/FirmProfessionalDutyCatalog.cs",
+  "baselineEvents": [],
+  "preliminaryNewEvents": [
+    "ProfessionalAssertionIdentityClaimed",
+    "ProfessionalAssertionIdentityClaimReleased"
+  ],
+  "technicalStateToSeparate": [],
+  "classification": "business_identity_or_uniqueness_authority",
+  "businessAggregate": true,
+  "implementationStatus": "SEPARATE_VERIFICATION_REQUIRED_IMPLEMENTATION_HALTED",
+  "identityReadingRule": "selectedIdentitySummary and exact selectedCommandContracts define intended identity. baselineIdentityObservation/declaredIdentity retain older source observations only, including old replay defects; they are not target behavior or authorization to change an occupied key.",
+  "selectedCommandContracts": [
+    {
+      "command": "ClaimProfessionalAssertionIdentity",
+      "kind": "receiver",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "internal",
+        "rule": "deterministic receiver identity derived from the admitted root fact, episode and generation: exact redelivery resolves the original result, a changed admission is a new identity"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "required": true
+        },
+        {
+          "name": "Source",
+          "required": true
+        },
+        {
+          "name": "Target",
+          "required": true
+        },
+        {
+          "name": "OperationId",
+          "required": true
+        },
+        {
+          "name": "Generation",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "required": true
+        },
+        {
+          "name": "Intent",
+          "required": true
+        },
+        {
+          "name": "AssertionId",
+          "required": true
+        },
+        {
+          "name": "DesignationId",
+          "required": true
+        },
+        {
+          "name": "AssertionSha256",
+          "required": true
+        },
+        {
+          "name": "StaffEligibilityUse",
+          "required": true
+        }
+      ],
+      "http": [],
+      "source": {
+        "path": "src/Compliance.Core/Features/AccessControl/Processes/ProfessionalDutyChangeReceivers.cs (ClaimAsync)",
+        "recorded": "2026-10-29"
+      },
+      "reactor": "ProfessionalAssertionClaimReactor",
+      "sourceOwner": "FirmProfessionalDutyDesignation",
+      "sourceEvents": [
+        "ProfessionalDutyChangeAccepted"
+      ],
+      "guard": "Signature verified at source admission; permanent exact subject/duty/scope/digest claim. For recording, require exact granted active canonical staff proof bound to this change and held through FirmProfessionalDutyDesignationRecorded. Revocation does not require active staff. A local rejection fence forbids delayed apply; signed validity uses the frozen declared decision instant.",
+      "eventsEmitted": [
+        "ProfessionalAssertionIdentityClaimed"
+      ],
+      "effectKind": "claim_professional_assertion_identity",
+      "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine."
+    }
+  ],
+  "eventAuthority": "selected_final_event_catalog",
+  "events": [
+    {
+      "event": "ProfessionalAssertionIdentityClaimed",
+      "discriminator": "bdgrz.professional-assertion-identity-claim.professional-assertion-identity-claimed",
+      "discriminatorVersion": 1,
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
+        "jsonPointer": "/events/205",
+        "line": 27233,
+        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
+      }
+    }
+  ],
+  "choreography": [
+    {
+      "reactor": "ProfessionalAssertionClaimReactor",
+      "sourceOwner": "FirmProfessionalDutyDesignation",
+      "targetOwner": "ProfessionalAssertionIdentityClaim",
+      "command": "ClaimProfessionalAssertionIdentity",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
+        "jsonPointer": "/reactors/0",
+        "line": 7,
+        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
+      }
+    },
+    {
+      "reactor": "ProfessionalDesignationApplicationReactor",
+      "sourceOwner": "ProfessionalAssertionIdentityClaim",
+      "targetOwner": "FirmProfessionalDutyDesignation",
+      "command": "ApplyProfessionalDutyChange",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
+        "jsonPointer": "/reactors/1",
+        "line": 99,
+        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
+      }
+    }
+  ],
+  "status": "SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED",
+  "baselineIdentityObservation": "platform / assertionId",
+  "identityContractRule": "Existing published owner identity/IdFor remains stable. Required typed creation/operation identity and tenant/program/source scope come from the selected signature/protocol references; no context.RequestId minting fallback or guessed new stream key.",
+  "adoptedArchitectureDecisions": [],
+  "selectedIdentitySummary": "Tenant-scoped platform / assertionId; the identity is established by the admitting owner or reactor named in the choreography, never by a caller request key; mutations bind CommandId to this exact identity.",
+  "baselineIdentityObservationOnly": true,
+  "selectedLogicalIdentityBindings": [],
+  "selectedReplayRule": "Current required authorization precedes replay; exact authorized retries resolve the original accepted result using the selected logical identity and immutable actor/intent/source binding. Fresh mutable feasibility, clock selection and body preparation cannot replace that original result. Expected revision is concurrency precondition, not a new identity.",
+  "identityRevisions": [
+    {
+      "date": "2026-10-29",
+      "previous": "platform / assertionId"
+    }
+  ],
+  "commandNote": "Process-dispatched replay claim keyed by platform/assertionId."
+}

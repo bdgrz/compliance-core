@@ -1,0 +1,29 @@
+{
+  "owner": "RiskMethod",
+  "events": [
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:RiskMethodVersionPublished",
+        "event": "RiskMethodVersionPublished",
+        "emissionKind": "business",
+        "owners": [
+          "RiskMethod"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": false,
+        "targetConcreteType": "RiskMethodVersionPublished",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.risk.method.version_published",
+          "version": 2
+        },
+        "wireQualification": "Wire matches the declared record in src/Compliance.Common/Features/Risks/Events/RiskMethodVersionPublished.cs at 60029b8f.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "retained_current_schema_native_qualification_required",
+        "sourceStatus": "declared",
+        "meaning": "One immutable method publication, with its original operation and result.",
+        "meaningSource": "record summary in src/Compliance.Common/Features/Risks/Events/RiskMethodVersionPublished.cs"
+      },
+      "schema": null
+    }
+  ]
+}

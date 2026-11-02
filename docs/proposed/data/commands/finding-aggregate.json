@@ -1,0 +1,1711 @@
+{
+  "owner": "FindingAggregate",
+  "selectedContracts": [
+    {
+      "command": "AddCorrectiveAction",
+      "logicalIdentity": {
+        "field": "ActionId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "caller-supplied immutable creation identity: an exact retry with the same id and authored intent returns the original result; the same id with changed intent is refused; a different id is a different record"
+      },
+      "fields": [
+        {
+          "name": "ActionId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ProgramId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "FindingId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectedFindingRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "Description",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "OwnerMemberId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "DueOn",
+          "type": "DateOnly",
+          "required": true
+        }
+      ],
+      "responseContract": {
+        "mode": "async_fixed_ack",
+        "responseType": "OperationAcceptedResponse",
+        "firstHttpStatus": 202,
+        "terminalResultType": "FindingView"
+      },
+      "http": [
+        {
+          "method": "PUT",
+          "path": "/api/v1/tenants/{tenant_id}/programs/{program_id}/findings/{finding_id}/corrective-actions/{action_id}",
+          "policy": "ComplianceAuthorizationPolicies.ApiUser"
+        }
+      ],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
+        "jsonPointer": "/commands/7",
+        "line": 787,
+        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
+      },
+      "kind": "http"
+    },
+    {
+      "command": "CloseFinding",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ProgramId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "FindingId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "VerificationRationale",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "ResolutionEvidence",
+          "type": "IReadOnlyList<EvidenceReference>",
+          "required": true
+        },
+        {
+          "name": "Rationale",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "SeparationOfDutiesWaiverId",
+          "type": "Uuid?",
+          "required": false
+        }
+      ],
+      "responseContract": {
+        "mode": "async_fixed_ack",
+        "responseType": "OperationAcceptedResponse",
+        "firstHttpStatus": 202,
+        "terminalResultType": "FindingView"
+      },
+      "http": [
+        {
+          "method": "PUT",
+          "path": "/api/v1/tenants/{tenant_id}/programs/{program_id}/findings/{finding_id}/closures/{command_id}",
+          "policy": "ComplianceAuthorizationPolicies.ApiUser"
+        }
+      ],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
+        "jsonPointer": "/commands/33",
+        "line": 3933,
+        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
+      },
+      "kind": "http"
+    },
+    {
+      "command": "LinkFindingAcceptance",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ProgramId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "FindingId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "Kind",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "RecordId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "DecisionId",
+          "type": "Uuid?",
+          "required": false
+        }
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "FindingView",
+        "firstHttpStatus": 200,
+        "terminalResultType": "FindingView"
+      },
+      "http": [
+        {
+          "method": "PUT",
+          "path": "/api/v1/tenants/{tenant_id}/programs/{program_id}/findings/{finding_id}/acceptances/{command_id}",
+          "policy": "ComplianceAuthorizationPolicies.ApiUser"
+        }
+      ],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
+        "jsonPointer": "/commands/67",
+        "line": 7863,
+        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
+      },
+      "kind": "http"
+    },
+    {
+      "command": "RaiseFinding",
+      "logicalIdentity": {
+        "field": "FindingId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "deterministic receiver identity derived from the admitted root fact, episode and generation: exact redelivery resolves the original result, a changed admission is a new identity"
+      },
+      "fields": [
+        {
+          "name": "FindingId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ProgramId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Source",
+          "type": "FindingSource",
+          "required": true
+        },
+        {
+          "name": "Title",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "Description",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "Severity",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "AffectedScope",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "OwnerMemberId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "DueOn",
+          "type": "DateOnly",
+          "required": true
+        },
+        {
+          "name": "Links",
+          "type": "IReadOnlyList<FindingLink>?",
+          "required": false
+        }
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "FindingRegistration",
+        "firstHttpStatus": 200,
+        "terminalResultType": "FindingRegistration"
+      },
+      "http": [
+        {
+          "method": "PUT",
+          "path": "/api/v1/tenants/{tenant_id}/programs/{program_id}/findings/{finding_id}",
+          "policy": "ComplianceAuthorizationPolicies.ApiUser"
+        }
+      ],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
+        "jsonPointer": "/commands/83",
+        "line": 9686,
+        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
+      },
+      "kind": "http"
+    },
+    {
+      "command": "RaiseOccurrenceFinding",
+      "logicalIdentity": {
+        "field": "FindingId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "source_event_effect",
+        "rule": "caller-supplied immutable creation identity: an exact retry with the same id and authored intent returns the original result; the same id with changed intent is refused; a different id is a different record"
+      },
+      "fields": [
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ProgramId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "FindingId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ControlId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "OccurrenceId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "SourceVersion",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "SourceKind",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "SourceText",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "responseContract": {
+        "mode": "internal",
+        "responseType": "Unit",
+        "firstHttpStatus": null,
+        "terminalResultType": "Unit"
+      },
+      "http": [],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
+        "jsonPointer": "/commands/84",
+        "line": 9821,
+        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
+      },
+      "kind": "creation"
+    },
+    {
+      "command": "ReopenFinding",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ProgramId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "FindingId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "Reason",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "FindingView",
+        "firstHttpStatus": 200,
+        "terminalResultType": "FindingView"
+      },
+      "http": [
+        {
+          "method": "PUT",
+          "path": "/api/v1/tenants/{tenant_id}/programs/{program_id}/findings/{finding_id}/reopenings/{command_id}",
+          "policy": "ComplianceAuthorizationPolicies.ApiUser"
+        }
+      ],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
+        "jsonPointer": "/commands/119",
+        "line": 13728,
+        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
+      },
+      "kind": "http"
+    },
+    {
+      "command": "ReviseFinding",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ProgramId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "FindingId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "Severity",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "OwnerMemberId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "DueOn",
+          "type": "DateOnly",
+          "required": true
+        },
+        {
+          "name": "AffectedScope",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "RootCause",
+          "type": "string?",
+          "required": true
+        },
+        {
+          "name": "Reason",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "FindingView",
+        "firstHttpStatus": 200,
+        "terminalResultType": "FindingView"
+      },
+      "http": [
+        {
+          "method": "PUT",
+          "path": "/api/v1/tenants/{tenant_id}/programs/{program_id}/findings/{finding_id}/revisions/{command_id}",
+          "policy": "ComplianceAuthorizationPolicies.ApiUser"
+        }
+      ],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
+        "jsonPointer": "/commands/140",
+        "line": 16299,
+        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
+      },
+      "kind": "http"
+    },
+    {
+      "command": "RaiseEvaluationDeviationFinding",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "rule": "CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ProgramId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "FindingId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ControlId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "EvaluationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "DeviationId",
+          "type": "Uuid",
+          "required": true
+        }
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "Unit",
+        "firstHttpStatus": 200,
+        "terminalResultType": "Unit"
+      },
+      "http": [],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
+        "jsonPointer": "/contracts/101",
+        "line": 7511,
+        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
+      },
+      "kind": "command",
+      "concurrencyGuard": {
+        "rule": "creation_key_only",
+        "jev": 0.84,
+        "date": "2026-10-29"
+      }
+    },
+    {
+      "command": "AbortFindingClosure",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "rule": "abort receiver identity bound to the exact admitted operation and generation: exact redelivery resolves the original rejected result; an abort after a terminal outcome is a no-op"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "OperationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Target",
+          "type": "EventStreamAddress",
+          "required": true
+        },
+        {
+          "name": "Generation",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "FailureProof",
+          "type": "ImmutableContentRef",
+          "required": true
+        }
+      ],
+      "responseContract": null,
+      "http": null,
+      "source": {
+        "path": "docs/product/audits/2026-10-23/source-admission-contracts.json",
+        "jsonPointer": "/contracts/16",
+        "line": 1017,
+        "sha256": "f1d549ed0879c816cb26e86879f8fa658dab0a8acbf7c591e4d4aed40483f8ae"
+      },
+      "kind": "abort"
+    },
+    {
+      "command": "CompleteFindingClosure",
+      "kind": "receiver",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "reactor",
+        "rule": "deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Source",
+          "type": "SourceFactProof<FindingClosureAccepted>",
+          "required": true
+        },
+        {
+          "name": "Target",
+          "type": "EventStreamAddress",
+          "required": true
+        },
+        {
+          "name": "OperationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Generation",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long?",
+          "required": true
+        },
+        {
+          "name": "Intent",
+          "type": "ImmutableContentRef",
+          "required": true,
+          "contentSchema": "ClosureIntent"
+        },
+        {
+          "name": "FindingId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ActionProofManifest",
+          "type": "ImmutableContentRef",
+          "required": true
+        }
+      ],
+      "reactor": "FindingClosureReactor",
+      "sourceOwner": "FindingAggregate",
+      "sourceEvents": [
+        "FindingClosureAccepted"
+      ],
+      "guard": "Complete nonempty action admission set and exact completed evidence/independence/waiver proofs under read holds.",
+      "eventsEmitted": [
+        "FindingClosedV2"
+      ],
+      "effectKind": "complete_finding_closure",
+      "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
+      "handler": "CompleteFindingClosureHandler",
+      "http": [],
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
+        "recorded": "2026-10-29"
+      }
+    }
+  ],
+  "sourceContractEvidence": [
+    {
+      "command": "AddCorrectiveAction",
+      "status": "target_contract",
+      "sourceContract": "src/Compliance.Common/Features/Remediation/AddCorrectiveAction.cs",
+      "sourceHandlers": [
+        {
+          "name": "AddCorrectiveActionHandler",
+          "source": "src/Compliance.Core/Features/Remediation/AddCorrectiveActionHandler.cs",
+          "registered": true
+        }
+      ],
+      "handler": "AddCorrectiveActionHandler",
+      "sourceRoots": [
+        "FindingAggregate"
+      ],
+      "owner": "FindingAggregate",
+      "logicalIdentity": {
+        "field": "ActionId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "exact immutable creation retry"
+      },
+      "fields": [
+        {
+          "name": "ActionId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ProgramId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "FindingId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectedFindingRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "Description",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "OwnerMemberId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "DueOn",
+          "type": "DateOnly",
+          "required": true
+        }
+      ],
+      "http": [
+        {
+          "method": "PUT",
+          "path": "/api/v1/tenants/{tenant_id}/programs/{program_id}/findings/{finding_id}/corrective-actions/{action_id}",
+          "policy": "ComplianceAuthorizationPolicies.ApiUser"
+        }
+      ],
+      "mcp": false,
+      "entryPoint": "authorized_http",
+      "authorizerSources": [
+        "src/Compliance.Core/Features/AccessControl/ClientManagementMutationAuthorizer.cs",
+        "src/Compliance.Core/Features/Programs/ProgramManagementAuthorizer.cs"
+      ],
+      "events": [
+        "CorrectiveActionAdmitted"
+      ],
+      "protocols": [
+        "Action admission and finding closure"
+      ],
+      "guardOrder": [
+        "bind_required_ids",
+        "authenticate_authorize",
+        "canonicalize_authored_intent",
+        "resolve_native_operation_facts",
+        "compare_owner_episode_actor_kind_intent_original_revision",
+        "validate_new_owner_revision_and_source_permits",
+        "append_complete_concrete_attributed_batch"
+      ],
+      "policyPreservation": "All current source handler/aggregate validation rules and source test expectations apply, except the explicit contractChanges and boundary protocol. Lifetime caps and technical attempt events are removed with their structural replacement.",
+      "contractChanges": [
+        "Add required ActionId."
+      ],
+      "existingTests": [
+        "test/Compliance.Tests/Features/Work/WorkTestData.cs",
+        "test/Compliance.Tests/Features/Remediation/FindingTests.cs"
+      ],
+      "requiredTests": [
+        "ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange",
+        "ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision",
+        "ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity",
+        "ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof",
+        "ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome"
+      ],
+      "expectedRevisionScope": {
+        "field": "ExpectedFindingRevision",
+        "owner": "FindingAggregate",
+        "meaning": "revision of the public first-admission owner; never a new child owner revision"
+      },
+      "responseContract": {
+        "mode": "async_fixed_ack",
+        "responseType": "OperationAcceptedResponse",
+        "firstHttpStatus": 202,
+        "terminalResultType": "FindingView"
+      }
+    },
+    {
+      "command": "CloseFinding",
+      "status": "target_contract",
+      "sourceContract": "src/Compliance.Common/Features/Remediation/CloseFinding.cs",
+      "sourceHandlers": [
+        {
+          "name": "CloseFindingHandler",
+          "source": "src/Compliance.Core/Features/Remediation/CloseFindingHandler.cs",
+          "registered": true
+        }
+      ],
+      "handler": "CloseFindingHandler",
+      "sourceRoots": [
+        "FindingAggregate"
+      ],
+      "owner": "FindingAggregate",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "one immutable authored operation"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ProgramId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "FindingId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "VerificationRationale",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "ResolutionEvidence",
+          "type": "IReadOnlyList<EvidenceReference>",
+          "required": true
+        },
+        {
+          "name": "Rationale",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "SeparationOfDutiesWaiverId",
+          "type": "Uuid?",
+          "required": false
+        }
+      ],
+      "http": [
+        {
+          "method": "PUT",
+          "path": "/api/v1/tenants/{tenant_id}/programs/{program_id}/findings/{finding_id}/closures/{command_id}",
+          "policy": "ComplianceAuthorizationPolicies.ApiUser"
+        }
+      ],
+      "mcp": false,
+      "entryPoint": "personal_http",
+      "authorizerSources": [
+        "src/Compliance.Core/Features/AccessControl/ClientManagementMutationAuthorizer.cs",
+        "src/Compliance.Core/Features/Programs/ProgramManagementAuthorizer.cs"
+      ],
+      "events": [
+        "FindingClosureAccepted"
+      ],
+      "protocols": [
+        "Action admission and finding closure"
+      ],
+      "guardOrder": [
+        "bind_required_ids",
+        "authenticate_authorize",
+        "canonicalize_authored_intent",
+        "resolve_native_operation_facts",
+        "compare_owner_episode_actor_kind_intent_original_revision",
+        "validate_new_owner_revision_and_source_permits",
+        "append_complete_concrete_attributed_batch"
+      ],
+      "policyPreservation": "All current source handler/aggregate validation rules and source test expectations apply, except the explicit contractChanges and boundary protocol. Lifetime caps and technical attempt events are removed with their structural replacement.",
+      "contractChanges": [
+        "Add required CommandId."
+      ],
+      "existingTests": [
+        "test/Compliance.Tests/Features/Work/WorkSourceCompositionTests.cs",
+        "test/Compliance.Tests/Features/Work/FindingClosureWorkTests.cs",
+        "test/Compliance.Tests/Features/Work/ReviewerWorkAuthorityTests.cs",
+        "test/Compliance.Tests/Features/Readiness/PersonalReadinessClosureTransportTests.cs",
+        "test/Compliance.Tests/Features/Remediation/FindingTests.cs"
+      ],
+      "requiredTests": [
+        "ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange",
+        "ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision",
+        "ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity",
+        "ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof",
+        "ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome"
+      ],
+      "responseContract": {
+        "mode": "async_fixed_ack",
+        "responseType": "OperationAcceptedResponse",
+        "firstHttpStatus": 202,
+        "terminalResultType": "FindingView"
+      },
+      "expectedRevisionScope": {
+        "field": "ExpectedRevision",
+        "owner": "FindingAggregate",
+        "counter": "logical ResourceRevision of this owner",
+        "nullableInternalRule": null
+      }
+    },
+    {
+      "command": "CompleteCorrectiveAction",
+      "status": "target_contract",
+      "sourceContract": "src/Compliance.Common/Features/Remediation/CompleteCorrectiveAction.cs",
+      "sourceHandlers": [
+        {
+          "name": "CompleteCorrectiveActionHandler",
+          "source": "src/Compliance.Core/Features/Remediation/CompleteCorrectiveActionHandler.cs",
+          "registered": true
+        }
+      ],
+      "handler": "CompleteCorrectiveActionHandler",
+      "sourceRoots": [
+        "FindingAggregate"
+      ],
+      "owner": "CorrectiveAction",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "one immutable authored operation"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ProgramId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "FindingId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "ActionId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ResolutionNotes",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "Evidence",
+          "type": "IReadOnlyList<EvidenceReference>",
+          "required": true
+        }
+      ],
+      "http": [
+        {
+          "method": "PUT",
+          "path": "/api/v1/tenants/{tenant_id}/programs/{program_id}/findings/{finding_id}/corrective-actions/{action_id}/completions/{command_id}",
+          "policy": "ComplianceAuthorizationPolicies.ApiUser"
+        }
+      ],
+      "mcp": false,
+      "entryPoint": "authorized_http",
+      "authorizerSources": [
+        "src/Compliance.Core/Features/AccessControl/ClientManagementMutationAuthorizer.cs",
+        "src/Compliance.Core/Features/Programs/ProgramManagementAuthorizer.cs"
+      ],
+      "events": [
+        "CorrectiveActionCompletedV2"
+      ],
+      "protocols": [
+        "Action admission and finding closure"
+      ],
+      "guardOrder": [
+        "bind_required_ids",
+        "authenticate_authorize",
+        "canonicalize_authored_intent",
+        "resolve_native_operation_facts",
+        "compare_owner_episode_actor_kind_intent_original_revision",
+        "validate_new_owner_revision_and_source_permits",
+        "append_complete_concrete_attributed_batch"
+      ],
+      "policyPreservation": "All current source handler/aggregate validation rules and source test expectations apply, except the explicit contractChanges and boundary protocol. Lifetime caps and technical attempt events are removed with their structural replacement.",
+      "contractChanges": [
+        "Add required CommandId."
+      ],
+      "existingTests": [
+        "test/Compliance.Tests/Features/AccessControl/AttestManagementWriteWallTests.cs",
+        "test/Compliance.Tests/Features/Work/WorkQueueSearchTests.cs",
+        "test/Compliance.Tests/Features/Work/WorkQueueTests.cs",
+        "test/Compliance.Tests/Features/Work/WorkSourceCompositionTests.cs",
+        "test/Compliance.Tests/Features/Work/FindingClosureWorkTests.cs",
+        "test/Compliance.Tests/Features/Work/ReviewerWorkAuthorityTests.cs",
+        "test/Compliance.Tests/Features/Remediation/FindingTests.cs"
+      ],
+      "requiredTests": [
+        "ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange",
+        "ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision",
+        "ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity",
+        "ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof",
+        "ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome"
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "FindingView",
+        "firstHttpStatus": 200,
+        "terminalResultType": "FindingView"
+      },
+      "expectedRevisionScope": {
+        "field": "ExpectedRevision",
+        "owner": "CorrectiveAction",
+        "counter": "logical ResourceRevision of this owner",
+        "nullableInternalRule": null
+      }
+    },
+    {
+      "command": "LinkFindingAcceptance",
+      "status": "target_contract",
+      "sourceContract": "src/Compliance.Common/Features/Remediation/LinkFindingAcceptance.cs",
+      "sourceHandlers": [
+        {
+          "name": "LinkFindingAcceptanceHandler",
+          "source": "src/Compliance.Core/Features/Remediation/LinkFindingAcceptanceHandler.cs",
+          "registered": true
+        }
+      ],
+      "handler": "LinkFindingAcceptanceHandler",
+      "sourceRoots": [
+        "FindingAggregate"
+      ],
+      "owner": "FindingAggregate",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "one immutable authored operation"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ProgramId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "FindingId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "Kind",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "RecordId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "DecisionId",
+          "type": "Uuid?",
+          "required": false
+        }
+      ],
+      "http": [
+        {
+          "method": "PUT",
+          "path": "/api/v1/tenants/{tenant_id}/programs/{program_id}/findings/{finding_id}/acceptances/{command_id}",
+          "policy": "ComplianceAuthorizationPolicies.ApiUser"
+        }
+      ],
+      "mcp": false,
+      "entryPoint": "authorized_http",
+      "authorizerSources": [
+        "src/Compliance.Core/Features/AccessControl/ClientManagementMutationAuthorizer.cs",
+        "src/Compliance.Core/Features/Programs/ProgramManagementAuthorizer.cs"
+      ],
+      "events": [
+        "FindingAcceptanceLinkedV2"
+      ],
+      "protocols": [
+        "Action admission and finding closure"
+      ],
+      "guardOrder": [
+        "bind_required_ids",
+        "authenticate_authorize",
+        "canonicalize_authored_intent",
+        "resolve_native_operation_facts",
+        "compare_owner_episode_actor_kind_intent_original_revision",
+        "validate_new_owner_revision_and_source_permits",
+        "append_complete_concrete_attributed_batch"
+      ],
+      "policyPreservation": "All current source handler/aggregate validation rules and source test expectations apply, except the explicit contractChanges and boundary protocol. Lifetime caps and technical attempt events are removed with their structural replacement.",
+      "contractChanges": [
+        "Add required CommandId."
+      ],
+      "existingTests": [
+        "test/Compliance.Tests/Features/Remediation/FindingTests.cs"
+      ],
+      "requiredTests": [
+        "ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange",
+        "ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision",
+        "ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity",
+        "ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof",
+        "ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome"
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "FindingView",
+        "firstHttpStatus": 200,
+        "terminalResultType": "FindingView"
+      },
+      "expectedRevisionScope": {
+        "field": "ExpectedRevision",
+        "owner": "FindingAggregate",
+        "counter": "logical ResourceRevision of this owner",
+        "nullableInternalRule": null
+      }
+    },
+    {
+      "command": "RaiseFinding",
+      "status": "target_contract",
+      "sourceContract": "src/Compliance.Common/Features/Remediation/RaiseFinding.cs",
+      "sourceHandlers": [
+        {
+          "name": "RaiseFindingHandler",
+          "source": "src/Compliance.Core/Features/Remediation/RaiseFindingHandler.cs",
+          "registered": true
+        }
+      ],
+      "handler": "RaiseFindingHandler",
+      "sourceRoots": [
+        "FindingAggregate"
+      ],
+      "owner": "FindingAggregate",
+      "logicalIdentity": {
+        "field": "FindingId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "exact immutable creation retry"
+      },
+      "fields": [
+        {
+          "name": "FindingId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ProgramId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Source",
+          "type": "FindingSource",
+          "required": true
+        },
+        {
+          "name": "Title",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "Description",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "Severity",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "AffectedScope",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "OwnerMemberId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "DueOn",
+          "type": "DateOnly",
+          "required": true
+        },
+        {
+          "name": "Links",
+          "type": "IReadOnlyList<FindingLink>?",
+          "required": false
+        }
+      ],
+      "http": [
+        {
+          "method": "PUT",
+          "path": "/api/v1/tenants/{tenant_id}/programs/{program_id}/findings/{finding_id}",
+          "policy": "ComplianceAuthorizationPolicies.ApiUser"
+        }
+      ],
+      "mcp": true,
+      "entryPoint": "authorized_http_and_mcp",
+      "authorizerSources": [
+        "src/Compliance.Core/Features/AccessControl/ClientManagementMutationAuthorizer.cs",
+        "src/Compliance.Core/Features/Programs/ProgramManagementAuthorizer.cs"
+      ],
+      "events": [
+        "FindingRaisedV2"
+      ],
+      "protocols": [
+        "Action admission and finding closure"
+      ],
+      "guardOrder": [
+        "bind_required_ids",
+        "authenticate_authorize",
+        "canonicalize_authored_intent",
+        "resolve_native_operation_facts",
+        "compare_owner_episode_actor_kind_intent_original_revision",
+        "validate_new_owner_revision_and_source_permits",
+        "append_complete_concrete_attributed_batch"
+      ],
+      "policyPreservation": "All current source handler/aggregate validation rules and source test expectations apply, except the explicit contractChanges and boundary protocol. Lifetime caps and technical attempt events are removed with their structural replacement.",
+      "contractChanges": [
+        "Add required FindingId."
+      ],
+      "existingTests": [
+        "test/Compliance.Tests/Features/AccessControl/AttestProgramManagementWriteWallTests.cs",
+        "test/Compliance.Tests/Features/Operations/OperationsFixture.cs"
+      ],
+      "requiredTests": [
+        "ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange",
+        "ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision",
+        "ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity",
+        "ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof",
+        "ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome"
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "FindingRegistration",
+        "firstHttpStatus": 200,
+        "terminalResultType": "FindingRegistration"
+      },
+      "expectedRevisionScope": {
+        "field": null,
+        "owner": "FindingAggregate",
+        "counter": "No primary caller ResourceRevision. Enforce required authored source/epoch/version tokens, immutable creation identity or trusted proof/generation as declared; append uses physical OCC."
+      }
+    },
+    {
+      "command": "RaiseOccurrenceFinding",
+      "status": "target_contract",
+      "sourceContract": "src/Compliance.Common/Features/Remediation/RaiseOccurrenceFinding.cs",
+      "sourceHandlers": [
+        {
+          "name": "RaiseOccurrenceFindingHandler",
+          "source": "src/Compliance.Core/Features/Remediation/RaiseOccurrenceFindingHandler.cs",
+          "registered": true
+        }
+      ],
+      "handler": "RaiseOccurrenceFindingHandler",
+      "sourceRoots": [
+        "FindingAggregate"
+      ],
+      "owner": "FindingAggregate",
+      "logicalIdentity": {
+        "field": "FindingId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "source_event_effect",
+        "rule": "exact immutable creation retry"
+      },
+      "fields": [
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ProgramId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "FindingId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ControlId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "OccurrenceId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "SourceVersion",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "SourceKind",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "SourceText",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "http": [],
+      "mcp": false,
+      "entryPoint": "internal_trusted_command",
+      "authorizerSources": [
+        "src/Compliance.Core/Features/Remediation/OperationsReactionAuthorizer.cs"
+      ],
+      "events": [
+        "FindingRaisedV2",
+        "CorrectiveActionAdmitted"
+      ],
+      "protocols": [
+        "Action admission and finding closure"
+      ],
+      "guardOrder": [
+        "bind_required_ids",
+        "authenticate_authorize",
+        "canonicalize_authored_intent",
+        "resolve_native_operation_facts",
+        "compare_owner_episode_actor_kind_intent_original_revision",
+        "validate_new_owner_revision_and_source_permits",
+        "append_complete_concrete_attributed_batch"
+      ],
+      "policyPreservation": "All current source handler/aggregate validation rules and source test expectations apply, except the explicit contractChanges and boundary protocol. Lifetime caps and technical attempt events are removed with their structural replacement.",
+      "contractChanges": [
+        "When source kind is occurrence_review, preserve the default requested corrective action by atomically admitting its complete deterministic ActionId/content alongside FindingRaisedV2; materialize it independently. Failed/skipped attestation variants without requested action emit FindingRaisedV2 only."
+      ],
+      "existingTests": [
+        "test/Compliance.Tests/Features/Remediation/OccurrenceFindingTests.cs"
+      ],
+      "requiredTests": [
+        "ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange",
+        "ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision",
+        "ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity",
+        "ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof",
+        "ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome"
+      ],
+      "responseContract": {
+        "mode": "internal",
+        "responseType": "Unit",
+        "firstHttpStatus": null,
+        "terminalResultType": "Unit"
+      },
+      "expectedRevisionScope": {
+        "field": null,
+        "owner": "FindingAggregate",
+        "counter": "No primary caller ResourceRevision. Enforce required authored source/epoch/version tokens, immutable creation identity or trusted proof/generation as declared; append uses physical OCC."
+      }
+    },
+    {
+      "command": "ReopenFinding",
+      "status": "target_contract",
+      "sourceContract": "src/Compliance.Common/Features/Remediation/ReopenFinding.cs",
+      "sourceHandlers": [
+        {
+          "name": "ReopenFindingHandler",
+          "source": "src/Compliance.Core/Features/Remediation/ReopenFindingHandler.cs",
+          "registered": true
+        }
+      ],
+      "handler": "ReopenFindingHandler",
+      "sourceRoots": [
+        "FindingAggregate"
+      ],
+      "owner": "FindingAggregate",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "one immutable authored operation"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ProgramId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "FindingId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "Reason",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "http": [
+        {
+          "method": "PUT",
+          "path": "/api/v1/tenants/{tenant_id}/programs/{program_id}/findings/{finding_id}/reopenings/{command_id}",
+          "policy": "ComplianceAuthorizationPolicies.ApiUser"
+        }
+      ],
+      "mcp": false,
+      "entryPoint": "authorized_http",
+      "authorizerSources": [
+        "src/Compliance.Core/Features/AccessControl/ClientManagementMutationAuthorizer.cs",
+        "src/Compliance.Core/Features/Programs/ProgramManagementAuthorizer.cs"
+      ],
+      "events": [
+        "FindingReopenedV2"
+      ],
+      "protocols": [
+        "Action admission and finding closure"
+      ],
+      "guardOrder": [
+        "bind_required_ids",
+        "authenticate_authorize",
+        "canonicalize_authored_intent",
+        "resolve_native_operation_facts",
+        "compare_owner_episode_actor_kind_intent_original_revision",
+        "validate_new_owner_revision_and_source_permits",
+        "append_complete_concrete_attributed_batch"
+      ],
+      "policyPreservation": "All current source handler/aggregate validation rules and source test expectations apply, except the explicit contractChanges and boundary protocol. Lifetime caps and technical attempt events are removed with their structural replacement.",
+      "contractChanges": [
+        "Add required CommandId."
+      ],
+      "existingTests": [
+        "test/Compliance.Tests/Features/Remediation/FindingTests.cs"
+      ],
+      "requiredTests": [
+        "ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange",
+        "ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision",
+        "ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity",
+        "ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof",
+        "ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome"
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "FindingView",
+        "firstHttpStatus": 200,
+        "terminalResultType": "FindingView"
+      },
+      "expectedRevisionScope": {
+        "field": "ExpectedRevision",
+        "owner": "FindingAggregate",
+        "counter": "logical ResourceRevision of this owner",
+        "nullableInternalRule": null
+      }
+    },
+    {
+      "command": "ReviseFinding",
+      "status": "target_contract",
+      "sourceContract": "src/Compliance.Common/Features/Remediation/ReviseFinding.cs",
+      "sourceHandlers": [
+        {
+          "name": "ReviseFindingHandler",
+          "source": "src/Compliance.Core/Features/Remediation/ReviseFindingHandler.cs",
+          "registered": true
+        }
+      ],
+      "handler": "ReviseFindingHandler",
+      "sourceRoots": [
+        "FindingAggregate"
+      ],
+      "owner": "FindingAggregate",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "client",
+        "rule": "one immutable authored operation"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ProgramId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "FindingId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "Severity",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "OwnerMemberId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "DueOn",
+          "type": "DateOnly",
+          "required": true
+        },
+        {
+          "name": "AffectedScope",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "RootCause",
+          "type": "string?",
+          "required": true
+        },
+        {
+          "name": "Reason",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "http": [
+        {
+          "method": "PUT",
+          "path": "/api/v1/tenants/{tenant_id}/programs/{program_id}/findings/{finding_id}/revisions/{command_id}",
+          "policy": "ComplianceAuthorizationPolicies.ApiUser"
+        }
+      ],
+      "mcp": false,
+      "entryPoint": "authorized_http",
+      "authorizerSources": [
+        "src/Compliance.Core/Features/AccessControl/ClientManagementMutationAuthorizer.cs",
+        "src/Compliance.Core/Features/Programs/ProgramManagementAuthorizer.cs"
+      ],
+      "events": [
+        "FindingRevisedV2"
+      ],
+      "protocols": [
+        "Action admission and finding closure"
+      ],
+      "guardOrder": [
+        "bind_required_ids",
+        "authenticate_authorize",
+        "canonicalize_authored_intent",
+        "resolve_native_operation_facts",
+        "compare_owner_episode_actor_kind_intent_original_revision",
+        "validate_new_owner_revision_and_source_permits",
+        "append_complete_concrete_attributed_batch"
+      ],
+      "policyPreservation": "All current source handler/aggregate validation rules and source test expectations apply, except the explicit contractChanges and boundary protocol. Lifetime caps and technical attempt events are removed with their structural replacement.",
+      "contractChanges": [
+        "Add required CommandId."
+      ],
+      "existingTests": [
+        "test/Compliance.Tests/Features/Work/FindingClosureWorkTests.cs",
+        "test/Compliance.Tests/Features/Work/ReviewerWorkAuthorityTests.cs",
+        "test/Compliance.Tests/Features/Remediation/FindingTests.cs"
+      ],
+      "requiredTests": [
+        "ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange",
+        "ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision",
+        "ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity",
+        "ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof",
+        "ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome"
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "FindingView",
+        "firstHttpStatus": 200,
+        "terminalResultType": "FindingView"
+      },
+      "expectedRevisionScope": {
+        "field": "ExpectedRevision",
+        "owner": "FindingAggregate",
+        "counter": "logical ResourceRevision of this owner",
+        "nullableInternalRule": null
+      }
+    }
+  ]
+}

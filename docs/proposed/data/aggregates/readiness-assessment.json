@@ -1,0 +1,163 @@
+{
+  "owner": "ReadinessAssessment",
+  "origin": "selected_split_target",
+  "baselineOwners": [
+    "ReadinessLedger"
+  ],
+  "declaredIdentity": "assessmentId",
+  "invariant": "One immutable assessment source/rule revision and findings.",
+  "boundaryDecision": "selected_split",
+  "mustPreserve": "No projected latest assessment or gap list can authorize entry; all exceptions/required plans acknowledged.",
+  "sources": [
+    {
+      "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
+      "jsonPointer": "/splitOwners/21/targetOwners/0",
+      "line": 2223,
+      "sha256": "d349d94b7c43f4d82020ecf36bdacf1aff98bc6498e14993582f1c3164b21f19"
+    }
+  ],
+  "baselineSourcePath": "src/Compliance.Core/Features/Readiness/ReadinessLedger.cs",
+  "baselineEvents": [
+    "ReadinessAssessmentRecorded"
+  ],
+  "preliminaryNewEvents": [],
+  "technicalStateToSeparate": [],
+  "classification": "business_aggregate",
+  "businessAggregate": true,
+  "implementationStatus": "SEPARATE_VERIFICATION_REQUIRED_IMPLEMENTATION_HALTED",
+  "identityReadingRule": "selectedIdentitySummary and exact selectedCommandContracts define intended identity. baselineIdentityObservation/declaredIdentity retain older source observations only, including old replay defects; they are not target behavior or authorization to change an occupied key.",
+  "selectedCommandContracts": [
+    {
+      "command": "ComputeReadinessAssessment",
+      "kind": "receiver",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "internal",
+        "rule": "deterministic receiver identity derived from the admitted root fact, episode and generation: exact redelivery resolves the original result, a changed admission is a new identity"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "required": true
+        },
+        {
+          "name": "Source",
+          "required": true
+        },
+        {
+          "name": "Target",
+          "required": true
+        },
+        {
+          "name": "OperationId",
+          "required": true
+        },
+        {
+          "name": "Generation",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "required": true
+        },
+        {
+          "name": "Intent",
+          "required": true
+        },
+        {
+          "name": "ProgramId",
+          "required": true
+        },
+        {
+          "name": "AssessmentId",
+          "required": true
+        }
+      ],
+      "http": [],
+      "source": {
+        "path": "src/Compliance.Core/Features/Readiness/Processes/ReadinessRunProcess.cs",
+        "recorded": "2026-10-29"
+      },
+      "reactor": "ReadinessAssessmentComputationReactor",
+      "sourceOwner": "ProgramReadiness",
+      "sourceEvents": [
+        "ReadinessAssessmentRequested"
+      ],
+      "guard": "Evaluate only frozen ReadinessRunIntent input content with its exact supported rule version; missing business facts already represented explicitly in that snapshot. No live source reads during replay or rerun.",
+      "eventsEmitted": [
+        "ReadinessAssessmentRecorded"
+      ],
+      "effectKind": "compute_readiness_assessment",
+      "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine."
+    }
+  ],
+  "eventAuthority": "selected_final_event_catalog",
+  "events": [
+    {
+      "event": "ReadinessAssessmentRecorded",
+      "discriminator": "bdgrz.readiness.assessment.recorded",
+      "discriminatorVersion": 1,
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
+        "jsonPointer": "/events/224",
+        "line": 30298,
+        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
+      }
+    }
+  ],
+  "choreography": [
+    {
+      "reactor": "ReadinessAssessmentAdoptionReactor",
+      "sourceOwner": "ReadinessAssessment",
+      "targetOwner": "ProgramReadiness",
+      "command": "AdoptReadinessAssessment",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
+        "jsonPointer": "/reactors/39",
+        "line": 3295,
+        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
+      }
+    },
+    {
+      "reactor": "ReadinessAssessmentComputationReactor",
+      "sourceOwner": "ProgramReadiness",
+      "targetOwner": "ReadinessAssessment",
+      "command": "ComputeReadinessAssessment",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
+        "jsonPointer": "/reactors/87",
+        "line": 7480,
+        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
+      }
+    }
+  ],
+  "status": "SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED",
+  "baselineIdentityObservation": "assessmentId",
+  "identityContractRule": "Existing published owner identity/IdFor remains stable. Required typed creation/operation identity and tenant/program/source scope come from the selected signature/protocol references; no context.RequestId minting fallback or guessed new stream key.",
+  "adoptedArchitectureDecisions": [],
+  "selectedIdentitySummary": "Tenant-scoped assessmentId; the identity is established by the admitting owner or reactor named in the choreography, never by a caller request key; mutations bind CommandId to this exact identity.",
+  "baselineIdentityObservationOnly": true,
+  "selectedLogicalIdentityBindings": [],
+  "selectedReplayRule": "Current required authorization precedes replay; exact authorized retries resolve the original accepted result using the selected logical identity and immutable actor/intent/source binding. Fresh mutable feasibility, clock selection and body preparation cannot replace that original result. Expected revision is concurrency precondition, not a new identity.",
+  "identityRevisions": [
+    {
+      "date": "2026-10-29",
+      "previous": "assessmentId"
+    }
+  ],
+  "commandNote": "AdoptReadinessAssessment (same process) targets ProgramReadiness, not this owner.",
+  "productRules": [
+    {
+      "id": "D23-09",
+      "doc": "m0-d23-assurance-vocabulary.md",
+      "rule": "Readiness rule definitions, input selection, and assessment calculation are owned solely by R1-08; each ReadinessAssessment records rule version, source record versions, completeness, as-of time, output, and derived gaps."
+    }
+  ],
+  "decides": "Each assessment records its rule version, source record versions, completeness, as-of time, output and derived gaps; rule definitions and input selection are owned solely by R1-08, so the assessment never selects inputs or edits rules itself.",
+  "decidesCovers": [
+    "D23-09"
+  ],
+  "decidesAuthored": "2026-10-29"
+}

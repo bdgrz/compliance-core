@@ -111,7 +111,7 @@ The API and MCP surfaces use Portia command/query authorization and event-source
 
 ## Public references
 
-- No external normative source governs the tenant, operator, invitation, slug, and affiliation decisions; these are original product decisions recorded here and in [the domain model](../../product/domain-model.md).
+- No external normative source governs the tenant, operator, invitation, slug, and affiliation decisions; these are original product decisions recorded here and in [the domain model](../../proposed/domain-model.md).
 - The existing issuer-plus-subject identity binding follows [OpenID Connect Core 1.0, December 2023](https://openid.net/specs/openid-connect-core-1_0.html) as a reference, under the [OIDF implementation-license information](https://openid.net/intellectual-property/openid-foundation-contribution-agreements/) recorded in [the source-reference policy](../../product/source-reference-policy.md). No specification prose or schema is copied here.
 
 ## Follow-up

@@ -1,0 +1,1107 @@
+{
+  "owner": "PolicyDistributionCampaign",
+  "events": [
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:PolicyCampaignAudienceAmended",
+        "event": "PolicyCampaignAudienceAmended",
+        "emissionKind": "business",
+        "owners": [
+          "PolicyDistributionCampaign"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": true,
+        "targetConcreteType": "PolicyCampaignAudienceAmended",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.policy_campaign.audience.amended",
+          "version": 2
+        },
+        "wireQualification": "Adopted wire is the occupied discriminator declared in src/Compliance.Common/Features/PolicyDistribution/Events/PolicyCampaignAudienceAmended.cs at 60029b8f (2026-10-29 reconciliation). The earlier selected wire is retained as supersededSelectedWire for provenance only.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "selected_complete_schema",
+        "sourceStatus": "declared",
+        "supersededSelectedWire": {
+          "discriminator": "bdgrz.policy_campaign.audience.amended",
+          "version": 1
+        },
+        "meaning": "A policy distribution campaign's audience was reconciled against a later roster snapshot, adding or removing recipients without editing the frozen launch audience.",
+        "meaningSource": "authored 2026-10-29 from src/Compliance.Common/Features/PolicyDistribution/Events/PolicyCampaignAudienceAmended.cs"
+      },
+      "schema": {
+        "event": "PolicyCampaignAudienceAmended",
+        "discriminator": "bdgrz.policy_campaign.audience.amended",
+        "discriminatorVersion": 1,
+        "owner": "PolicyDistributionCampaign",
+        "existingContract": "src/Compliance.Common/Features/PolicyDistribution/PolicyCampaignAudienceAmended.cs",
+        "status": "selected target schema; implementation pending",
+        "reason": "source command accepted result",
+        "fields": [
+          {
+            "name": "TenantId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "CampaignId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "Reconciliation",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "Batch",
+            "type": "int",
+            "required": true
+          },
+          {
+            "name": "RosterSnapshotId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "RosterContentSha256",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "ObservedOn",
+            "type": "DateOnly",
+            "required": true
+          },
+          {
+            "name": "AmendmentsManifest",
+            "type": "ImmutableContentRef",
+            "required": true
+          },
+          {
+            "name": "Actor",
+            "type": "ActorReference",
+            "required": true
+          },
+          {
+            "name": "AmendedAt",
+            "type": "DateTimeOffset",
+            "required": true
+          },
+          {
+            "name": "Operation",
+            "type": "OperationProvenance",
+            "required": true
+          },
+          {
+            "name": "FirstResponse",
+            "type": "ImmutableContentRef?",
+            "required": true
+          },
+          {
+            "name": "OperationResult",
+            "type": "ImmutableContentRef?",
+            "required": true
+          }
+        ],
+        "contentSchemas": [
+          {
+            "field": "AmendmentsManifest",
+            "schema": "PolicyCampaignAudienceAmended.AmendmentsManifest.v1",
+            "contentType": "IReadOnlyList<CampaignAudienceAmendment>",
+            "rule": "Full exact original collection with complete count and digest; readers verify content before use."
+          }
+        ],
+        "changes": [
+          "Externalize complete IReadOnlyList<CampaignAudienceAmendment> to verified immutable content; preserve all items/order/identity, no truncation."
+        ],
+        "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
+        "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
+        "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
+      }
+    },
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:PolicyCampaignAudienceFrozen",
+        "event": "PolicyCampaignAudienceFrozen",
+        "emissionKind": "business",
+        "owners": [
+          "PolicyDistributionCampaign"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": true,
+        "targetConcreteType": "PolicyCampaignAudienceFrozen",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.policy_campaign.audience.frozen",
+          "version": 2
+        },
+        "wireQualification": "Adopted wire is the occupied discriminator declared in src/Compliance.Common/Features/PolicyDistribution/Events/PolicyCampaignAudienceFrozen.cs at 60029b8f (2026-10-29 reconciliation). The earlier selected wire is retained as supersededSelectedWire for provenance only.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "selected_complete_schema",
+        "sourceStatus": "declared",
+        "supersededSelectedWire": {
+          "discriminator": "bdgrz.policy_campaign.audience.frozen",
+          "version": 1
+        },
+        "meaning": "The complete frozen launch audience. EntriesManifest holds every CampaignAudienceEntry in canonical person order, with no count cap.",
+        "meaningSource": "record summary in src/Compliance.Common/Features/PolicyDistribution/Events/PolicyCampaignAudienceFrozen.cs"
+      },
+      "schema": {
+        "event": "PolicyCampaignAudienceFrozen",
+        "discriminator": "bdgrz.policy_campaign.audience.frozen",
+        "discriminatorVersion": 1,
+        "owner": "PolicyDistributionCampaign",
+        "existingContract": "src/Compliance.Common/Features/PolicyDistribution/PolicyCampaignAudienceFrozen.cs",
+        "status": "selected target schema; implementation pending",
+        "reason": "existing native business fact, rehomed with its invariant",
+        "fields": [
+          {
+            "name": "TenantId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "CampaignId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "Batch",
+            "type": "int",
+            "required": true
+          },
+          {
+            "name": "EntriesManifest",
+            "type": "ImmutableContentRef",
+            "required": true
+          },
+          {
+            "name": "Operation",
+            "type": "OperationProvenance",
+            "required": true
+          },
+          {
+            "name": "FirstResponse",
+            "type": "ImmutableContentRef?",
+            "required": true
+          },
+          {
+            "name": "OperationResult",
+            "type": "ImmutableContentRef?",
+            "required": true
+          }
+        ],
+        "contentSchemas": [
+          {
+            "field": "EntriesManifest",
+            "schema": "PolicyCampaignAudienceFrozen.EntriesManifest.v1",
+            "contentType": "IReadOnlyList<CampaignAudienceEntry>",
+            "rule": "Full exact original collection with complete count and digest; readers verify content before use."
+          }
+        ],
+        "changes": [
+          "Externalize complete IReadOnlyList<CampaignAudienceEntry> to verified immutable content; preserve all items/order/identity, no truncation."
+        ],
+        "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
+        "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
+        "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
+      }
+    },
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:PolicyCampaignClosed",
+        "event": "PolicyCampaignClosed",
+        "emissionKind": "business",
+        "owners": [
+          "PolicyDistributionCampaign"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": true,
+        "targetConcreteType": "PolicyCampaignClosed",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.policy_campaign.closed",
+          "version": 2
+        },
+        "wireQualification": "Adopted wire is the occupied discriminator declared in src/Compliance.Common/Features/PolicyDistribution/Events/PolicyCampaignClosed.cs at 60029b8f (2026-10-29 reconciliation). The earlier selected wire is retained as supersededSelectedWire for provenance only.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "selected_complete_schema",
+        "sourceStatus": "declared",
+        "supersededSelectedWire": {
+          "discriminator": "bdgrz.policy_campaign.closed",
+          "version": 1
+        },
+        "meaning": "The terminal closure of a campaign, appended by the closure process after every admitted participant result was applied and every participant use was held. TotalsContent is the complete CampaignTotalsView; ParticipantProofs the complete participant proof list.",
+        "meaningSource": "record summary in src/Compliance.Common/Features/PolicyDistribution/Events/PolicyCampaignClosed.cs"
+      },
+      "schema": {
+        "event": "PolicyCampaignClosed",
+        "discriminator": "bdgrz.policy_campaign.closed",
+        "discriminatorVersion": 1,
+        "owner": "PolicyDistributionCampaign",
+        "existingContract": "src/Compliance.Common/Features/PolicyDistribution/PolicyCampaignClosed.cs",
+        "status": "selected target schema; implementation pending",
+        "reason": "typed reactor receiver accepted business fact",
+        "fields": [
+          {
+            "name": "TenantId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "CampaignId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "ClosedOn",
+            "type": "DateOnly",
+            "required": true
+          },
+          {
+            "name": "Rationale",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "TotalsContent",
+            "type": "ImmutableContentRef",
+            "required": true
+          },
+          {
+            "name": "Actor",
+            "type": "ActorReference",
+            "required": true
+          },
+          {
+            "name": "ClosedAt",
+            "type": "DateTimeOffset",
+            "required": true
+          },
+          {
+            "name": "Operation",
+            "type": "OperationProvenance",
+            "required": true
+          },
+          {
+            "name": "AudienceGeneration",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "ParticipantProofs",
+            "type": "ImmutableContentRef",
+            "required": true
+          },
+          {
+            "name": "Intent",
+            "type": "ImmutableContentRef",
+            "required": true
+          },
+          {
+            "name": "FirstResponse",
+            "type": "ImmutableContentRef?",
+            "required": true
+          },
+          {
+            "name": "OperationResult",
+            "type": "ImmutableContentRef?",
+            "required": true
+          }
+        ],
+        "contentSchemas": [
+          {
+            "field": "TotalsContent",
+            "schema": "PolicyCampaignClosed.TotalsContent.v1",
+            "contentType": "CampaignTotalsView",
+            "rule": "Complete original typed structured value, including nested collections, written/verified before this event. No cumulative parent view or mutable latest pointer."
+          },
+          {
+            "field": "Intent",
+            "schema": "closure-intent.v1",
+            "recordType": "ClosureIntent",
+            "fields": [
+              {
+                "name": "Header",
+                "type": "DurableIntentHeader",
+                "required": true
+              },
+              {
+                "name": "ParentKind",
+                "type": "ClosureParentKind",
+                "required": true
+              },
+              {
+                "name": "ParentId",
+                "type": "Uuid",
+                "required": true
+              },
+              {
+                "name": "ParentGeneration",
+                "type": "ulong",
+                "required": true
+              },
+              {
+                "name": "AdmittedChildren",
+                "type": "ImmutableSelectionManifest",
+                "required": true
+              },
+              {
+                "name": "AuthoredDecision",
+                "type": "ImmutableContentRef",
+                "required": true
+              },
+              {
+                "name": "SourceUses",
+                "type": "ImmutableSelectionManifest",
+                "required": true,
+                "contentSchema": "SourceUseRequirement"
+              },
+              {
+                "name": "WaiverProof",
+                "type": "ImmutableContentRef?",
+                "required": true
+              }
+            ],
+            "rule": "Seal parent admission, drain all previously admitted materializations, then grant complete exact child/source uses. Nonempty action/response requirements and accepted dispositions remain policy-specific. An abort atomically fences parent finalization before any source settlement.",
+            "variants": [
+              {
+                "recordType": "ClosureIntent",
+                "schema": "closure-intent.v1",
+                "fields": [
+                  {
+                    "name": "Header",
+                    "type": "DurableIntentHeader",
+                    "required": true
+                  },
+                  {
+                    "name": "ParentKind",
+                    "type": "ClosureParentKind",
+                    "required": true
+                  },
+                  {
+                    "name": "ParentId",
+                    "type": "Uuid",
+                    "required": true
+                  },
+                  {
+                    "name": "ParentGeneration",
+                    "type": "ulong",
+                    "required": true
+                  },
+                  {
+                    "name": "AdmittedChildren",
+                    "type": "ImmutableSelectionManifest",
+                    "required": true
+                  },
+                  {
+                    "name": "AuthoredDecision",
+                    "type": "ImmutableContentRef",
+                    "required": true
+                  },
+                  {
+                    "name": "SourceUses",
+                    "type": "ImmutableSelectionManifest",
+                    "required": true,
+                    "contentSchema": "SourceUseRequirement"
+                  },
+                  {
+                    "name": "WaiverProof",
+                    "type": "ImmutableContentRef?",
+                    "required": true
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "changes": [
+          "Externalize structured CampaignTotalsView including nested collections; a former item cap cannot become an event-size rejection for valid larger content."
+        ],
+        "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
+        "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
+        "resolvedIntentSchema": "ClosureIntent",
+        "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
+      }
+    },
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:PolicyCampaignClosureAccepted",
+        "event": "PolicyCampaignClosureAccepted",
+        "emissionKind": "business",
+        "owners": [
+          "PolicyDistributionCampaign"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": true,
+        "targetConcreteType": "PolicyCampaignClosureAccepted",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.policy-distribution-campaign.policy-campaign-closure-accepted",
+          "version": 1
+        },
+        "wireQualification": "Wire matches the declared record in src/Compliance.Common/Features/PolicyDistribution/Events/PolicyCampaignClosureAccepted.cs at 60029b8f.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "selected_complete_schema",
+        "sourceStatus": "declared",
+        "meaning": "The root native acceptance of a campaign closure. It seals result admission on the open generation and freezes the complete admitted participant results and the exact participant uses to hold.",
+        "meaningSource": "record summary in src/Compliance.Common/Features/PolicyDistribution/Events/PolicyCampaignClosureAccepted.cs"
+      },
+      "schema": {
+        "event": "PolicyCampaignClosureAccepted",
+        "discriminator": "bdgrz.policy-distribution-campaign.policy-campaign-closure-accepted",
+        "discriminatorVersion": 1,
+        "owner": "PolicyDistributionCampaign",
+        "existingContract": null,
+        "status": "selected target schema; implementation pending",
+        "reason": "source command accepted result",
+        "fields": [
+          {
+            "name": "Owner",
+            "type": "EventStreamAddress",
+            "required": true
+          },
+          {
+            "name": "Revision",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "Generation",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "Intent",
+            "type": "ImmutableContentRef",
+            "required": true
+          },
+          {
+            "name": "SourceProofs",
+            "type": "ImmutableContentRef?",
+            "required": true
+          },
+          {
+            "name": "Operation",
+            "type": "OperationProvenance",
+            "required": true
+          },
+          {
+            "name": "FirstResponse",
+            "type": "ImmutableContentRef?",
+            "required": true
+          },
+          {
+            "name": "OperationResult",
+            "type": "ImmutableContentRef?",
+            "required": true
+          }
+        ],
+        "contentSchemas": [
+          {
+            "field": "Intent",
+            "schema": "closure-intent.v1",
+            "recordType": "ClosureIntent",
+            "fields": [
+              {
+                "name": "Header",
+                "type": "DurableIntentHeader",
+                "required": true
+              },
+              {
+                "name": "ParentKind",
+                "type": "ClosureParentKind",
+                "required": true
+              },
+              {
+                "name": "ParentId",
+                "type": "Uuid",
+                "required": true
+              },
+              {
+                "name": "ParentGeneration",
+                "type": "ulong",
+                "required": true
+              },
+              {
+                "name": "AdmittedChildren",
+                "type": "ImmutableSelectionManifest",
+                "required": true
+              },
+              {
+                "name": "AuthoredDecision",
+                "type": "ImmutableContentRef",
+                "required": true
+              },
+              {
+                "name": "SourceUses",
+                "type": "ImmutableSelectionManifest",
+                "required": true,
+                "contentSchema": "SourceUseRequirement"
+              },
+              {
+                "name": "WaiverProof",
+                "type": "ImmutableContentRef?",
+                "required": true
+              }
+            ],
+            "rule": "Seal parent admission, drain all previously admitted materializations, then grant complete exact child/source uses. Nonempty action/response requirements and accepted dispositions remain policy-specific. An abort atomically fences parent finalization before any source settlement.",
+            "variants": [
+              {
+                "recordType": "ClosureIntent",
+                "schema": "closure-intent.v1",
+                "fields": [
+                  {
+                    "name": "Header",
+                    "type": "DurableIntentHeader",
+                    "required": true
+                  },
+                  {
+                    "name": "ParentKind",
+                    "type": "ClosureParentKind",
+                    "required": true
+                  },
+                  {
+                    "name": "ParentId",
+                    "type": "Uuid",
+                    "required": true
+                  },
+                  {
+                    "name": "ParentGeneration",
+                    "type": "ulong",
+                    "required": true
+                  },
+                  {
+                    "name": "AdmittedChildren",
+                    "type": "ImmutableSelectionManifest",
+                    "required": true
+                  },
+                  {
+                    "name": "AuthoredDecision",
+                    "type": "ImmutableContentRef",
+                    "required": true
+                  },
+                  {
+                    "name": "SourceUses",
+                    "type": "ImmutableSelectionManifest",
+                    "required": true,
+                    "contentSchema": "SourceUseRequirement"
+                  },
+                  {
+                    "name": "WaiverProof",
+                    "type": "ImmutableContentRef?",
+                    "required": true
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "changes": [],
+        "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
+        "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
+        "resolvedIntentSchema": "ClosureIntent",
+        "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
+      }
+    },
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:PolicyCampaignClosureCanceled",
+        "event": "PolicyCampaignClosureCanceled",
+        "emissionKind": "business",
+        "owners": [
+          "PolicyDistributionCampaign"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": true,
+        "targetConcreteType": "PolicyCampaignClosureCanceled",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.policy-distribution-campaign.policy-campaign-closure-canceled",
+          "version": 1
+        },
+        "wireQualification": "Wire matches the declared record in src/Compliance.Common/Features/PolicyDistribution/Events/PolicyCampaignClosureCanceled.cs at 60029b8f.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "selected_complete_schema",
+        "sourceStatus": "declared",
+        "meaning": "The pending closure can definitely never complete. The cancellation fences every delayed local finalization of the generation and reopens result admission on the next generation.",
+        "meaningSource": "record summary in src/Compliance.Common/Features/PolicyDistribution/Events/PolicyCampaignClosureCanceled.cs"
+      },
+      "schema": {
+        "event": "PolicyCampaignClosureCanceled",
+        "discriminator": "bdgrz.policy-distribution-campaign.policy-campaign-closure-canceled",
+        "discriminatorVersion": 1,
+        "owner": "PolicyDistributionCampaign",
+        "existingContract": null,
+        "status": "selected target schema; implementation pending",
+        "reason": "source admission contract",
+        "fields": [
+          {
+            "name": "Owner",
+            "type": "EventStreamAddress",
+            "required": true
+          },
+          {
+            "name": "Revision",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "Generation",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "Intent",
+            "type": "ImmutableContentRef",
+            "required": true
+          },
+          {
+            "name": "SourceProofs",
+            "type": "ImmutableContentRef?",
+            "required": true
+          },
+          {
+            "name": "Operation",
+            "type": "OperationProvenance",
+            "required": true
+          },
+          {
+            "name": "FirstResponse",
+            "type": "ImmutableContentRef?",
+            "required": true
+          },
+          {
+            "name": "OperationResult",
+            "type": "ImmutableContentRef?",
+            "required": true
+          }
+        ],
+        "contentSchemas": [
+          {
+            "field": "Intent",
+            "schema": "closure-intent.v1",
+            "recordType": "ClosureIntent",
+            "fields": [
+              {
+                "name": "Header",
+                "type": "DurableIntentHeader",
+                "required": true
+              },
+              {
+                "name": "ParentKind",
+                "type": "ClosureParentKind",
+                "required": true
+              },
+              {
+                "name": "ParentId",
+                "type": "Uuid",
+                "required": true
+              },
+              {
+                "name": "ParentGeneration",
+                "type": "ulong",
+                "required": true
+              },
+              {
+                "name": "AdmittedChildren",
+                "type": "ImmutableSelectionManifest",
+                "required": true
+              },
+              {
+                "name": "AuthoredDecision",
+                "type": "ImmutableContentRef",
+                "required": true
+              },
+              {
+                "name": "SourceUses",
+                "type": "ImmutableSelectionManifest",
+                "required": true,
+                "contentSchema": "SourceUseRequirement"
+              },
+              {
+                "name": "WaiverProof",
+                "type": "ImmutableContentRef?",
+                "required": true
+              }
+            ],
+            "rule": "Seal parent admission, drain all previously admitted materializations, then grant complete exact child/source uses. Nonempty action/response requirements and accepted dispositions remain policy-specific. An abort atomically fences parent finalization before any source settlement.",
+            "variants": [
+              {
+                "recordType": "ClosureIntent",
+                "schema": "closure-intent.v1",
+                "fields": [
+                  {
+                    "name": "Header",
+                    "type": "DurableIntentHeader",
+                    "required": true
+                  },
+                  {
+                    "name": "ParentKind",
+                    "type": "ClosureParentKind",
+                    "required": true
+                  },
+                  {
+                    "name": "ParentId",
+                    "type": "Uuid",
+                    "required": true
+                  },
+                  {
+                    "name": "ParentGeneration",
+                    "type": "ulong",
+                    "required": true
+                  },
+                  {
+                    "name": "AdmittedChildren",
+                    "type": "ImmutableSelectionManifest",
+                    "required": true
+                  },
+                  {
+                    "name": "AuthoredDecision",
+                    "type": "ImmutableContentRef",
+                    "required": true
+                  },
+                  {
+                    "name": "SourceUses",
+                    "type": "ImmutableSelectionManifest",
+                    "required": true,
+                    "contentSchema": "SourceUseRequirement"
+                  },
+                  {
+                    "name": "WaiverProof",
+                    "type": "ImmutableContentRef?",
+                    "required": true
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "changes": [],
+        "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
+        "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
+        "resolvedIntentSchema": "ClosureIntent",
+        "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
+      }
+    },
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:PolicyCampaignLaunched",
+        "event": "PolicyCampaignLaunched",
+        "emissionKind": "business",
+        "owners": [
+          "PolicyDistributionCampaign"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": true,
+        "targetConcreteType": "PolicyCampaignLaunched",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.policy_campaign.launched",
+          "version": 2
+        },
+        "wireQualification": "Adopted wire is the occupied discriminator declared in src/Compliance.Common/Features/PolicyDistribution/Events/PolicyCampaignLaunched.cs at 60029b8f (2026-10-29 reconciliation). The earlier selected wire is retained as supersededSelectedWire for provenance only.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "selected_complete_schema",
+        "sourceStatus": "declared",
+        "supersededSelectedWire": {
+          "discriminator": "bdgrz.policy_campaign.launched",
+          "version": 1
+        },
+        "meaning": "Launches a campaign bound to exact material and a frozen roster snapshot. The audience itself follows as one PolicyCampaignAudienceFrozen fact in the same batch. AudienceTeamsManifest is the complete original list of team names.",
+        "meaningSource": "record summary in src/Compliance.Common/Features/PolicyDistribution/Events/PolicyCampaignLaunched.cs"
+      },
+      "schema": {
+        "event": "PolicyCampaignLaunched",
+        "discriminator": "bdgrz.policy_campaign.launched",
+        "discriminatorVersion": 1,
+        "owner": "PolicyDistributionCampaign",
+        "existingContract": "src/Compliance.Common/Features/PolicyDistribution/PolicyCampaignLaunched.cs",
+        "status": "selected target schema; implementation pending",
+        "reason": "source command accepted result",
+        "fields": [
+          {
+            "name": "TenantId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "ProgramId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "CampaignId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "Subject",
+            "type": "CampaignSubject",
+            "required": true
+          },
+          {
+            "name": "AudienceKind",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "AudienceTeamsManifest",
+            "type": "ImmutableContentRef",
+            "required": true
+          },
+          {
+            "name": "RosterSnapshotId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "RosterContentSha256",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "LaunchedOn",
+            "type": "DateOnly",
+            "required": true
+          },
+          {
+            "name": "DueOn",
+            "type": "DateOnly",
+            "required": true
+          },
+          {
+            "name": "Instructions",
+            "type": "string?",
+            "required": true
+          },
+          {
+            "name": "AcknowledgementText",
+            "type": "string?",
+            "required": true
+          },
+          {
+            "name": "AudienceCount",
+            "type": "int",
+            "required": true
+          },
+          {
+            "name": "Actor",
+            "type": "ActorReference",
+            "required": true
+          },
+          {
+            "name": "ActorMemberId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "LaunchedAt",
+            "type": "DateTimeOffset",
+            "required": true
+          },
+          {
+            "name": "Operation",
+            "type": "OperationProvenance",
+            "required": true
+          },
+          {
+            "name": "FirstResponse",
+            "type": "ImmutableContentRef?",
+            "required": true
+          },
+          {
+            "name": "OperationResult",
+            "type": "ImmutableContentRef?",
+            "required": true
+          }
+        ],
+        "contentSchemas": [
+          {
+            "field": "AudienceTeamsManifest",
+            "schema": "PolicyCampaignLaunched.AudienceTeamsManifest.v1",
+            "contentType": "IReadOnlyList<string>",
+            "rule": "Full exact original collection with complete count and digest; readers verify content before use."
+          }
+        ],
+        "changes": [
+          "Externalize complete IReadOnlyList<string> to verified immutable content; preserve all items/order/identity, no truncation."
+        ],
+        "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
+        "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
+        "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
+      }
+    },
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:PolicyParticipantResultAdmitted",
+        "event": "PolicyParticipantResultAdmitted",
+        "emissionKind": "business",
+        "owners": [
+          "PolicyDistributionCampaign"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": true,
+        "targetConcreteType": "PolicyParticipantResultAdmitted",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.policy-distribution-campaign.policy-participant-result-admitted",
+          "version": 1
+        },
+        "wireQualification": "Wire matches the declared record in src/Compliance.Common/Features/PolicyDistribution/Events/PolicyParticipantResultAdmitted.cs at 60029b8f.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "selected_complete_schema",
+        "sourceStatus": "declared",
+        "meaning": "The campaign admitted one complete participant result on its open generation. The campaign's logical revision advances to Revision; the participant applies the result afterwards from the frozen ChildAdmissionIntent. The root fact carries the original 202 acknowledgment.",
+        "meaningSource": "record summary in src/Compliance.Common/Features/PolicyDistribution/Events/PolicyParticipantResultAdmitted.cs"
+      },
+      "schema": {
+        "event": "PolicyParticipantResultAdmitted",
+        "discriminator": "bdgrz.policy-distribution-campaign.policy-participant-result-admitted",
+        "discriminatorVersion": 1,
+        "owner": "PolicyDistributionCampaign",
+        "existingContract": null,
+        "status": "selected target schema; implementation pending",
+        "reason": "source command accepted result",
+        "fields": [
+          {
+            "name": "Owner",
+            "type": "EventStreamAddress",
+            "required": true
+          },
+          {
+            "name": "Revision",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "Generation",
+            "type": "long",
+            "required": true
+          },
+          {
+            "name": "Intent",
+            "type": "ImmutableContentRef",
+            "required": true
+          },
+          {
+            "name": "SourceProofs",
+            "type": "ImmutableContentRef?",
+            "required": true
+          },
+          {
+            "name": "Operation",
+            "type": "OperationProvenance",
+            "required": true
+          },
+          {
+            "name": "FirstResponse",
+            "type": "ImmutableContentRef?",
+            "required": true
+          },
+          {
+            "name": "OperationResult",
+            "type": "ImmutableContentRef?",
+            "required": true
+          }
+        ],
+        "contentSchemas": [
+          {
+            "field": "Intent",
+            "schema": "child-admission-intent.v1",
+            "recordType": "ChildAdmissionIntent",
+            "fields": [
+              {
+                "name": "Header",
+                "type": "DurableIntentHeader",
+                "required": true
+              },
+              {
+                "name": "ParentId",
+                "type": "Uuid",
+                "required": true
+              },
+              {
+                "name": "ParentGeneration",
+                "type": "ulong",
+                "required": true
+              },
+              {
+                "name": "ChildKind",
+                "type": "AdmittedChildKind",
+                "required": true
+              },
+              {
+                "name": "ChildId",
+                "type": "Uuid",
+                "required": true
+              },
+              {
+                "name": "CanonicalAuthoredContent",
+                "type": "ImmutableContentRef",
+                "required": true
+              },
+              {
+                "name": "SelectedSourceProofs",
+                "type": "ImmutableSelectionManifest",
+                "required": true
+              },
+              {
+                "name": "ParentAdmissionRevision",
+                "type": "ulong",
+                "required": true
+              }
+            ],
+            "rule": "Concrete child payload schemas are the corresponding normalized Common requests: advisor feedback, auditor response/comment, corrective action, policy acknowledgement/training/waiver. Preserve all authored fields and original actor; child reducer never loads live parent. No later close/revoke discards admitted work.",
+            "variants": [
+              {
+                "recordType": "ChildAdmissionIntent",
+                "schema": "child-admission-intent.v1",
+                "fields": [
+                  {
+                    "name": "Header",
+                    "type": "DurableIntentHeader",
+                    "required": true
+                  },
+                  {
+                    "name": "ParentId",
+                    "type": "Uuid",
+                    "required": true
+                  },
+                  {
+                    "name": "ParentGeneration",
+                    "type": "ulong",
+                    "required": true
+                  },
+                  {
+                    "name": "ChildKind",
+                    "type": "AdmittedChildKind",
+                    "required": true
+                  },
+                  {
+                    "name": "ChildId",
+                    "type": "Uuid",
+                    "required": true
+                  },
+                  {
+                    "name": "CanonicalAuthoredContent",
+                    "type": "ImmutableContentRef",
+                    "required": true
+                  },
+                  {
+                    "name": "SelectedSourceProofs",
+                    "type": "ImmutableSelectionManifest",
+                    "required": true
+                  },
+                  {
+                    "name": "ParentAdmissionRevision",
+                    "type": "ulong",
+                    "required": true
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "changes": [],
+        "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
+        "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
+        "resolvedIntentSchema": "ChildAdmissionIntent",
+        "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
+      }
+    }
+  ]
+}

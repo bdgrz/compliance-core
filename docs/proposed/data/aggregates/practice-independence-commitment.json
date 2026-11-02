@@ -1,0 +1,331 @@
+{
+  "owner": "PracticeIndependenceCommitment",
+  "origin": "selected_split_target",
+  "baselineOwners": [
+    "IndependenceLedger"
+  ],
+  "declaredIdentity": "tenant / (subjectKind, subjectId)",
+  "invariant": "Permanent practice binding for subjectKind=staff or canonical_user; acquire both user and staff subjects in canonical stream-key order. No release/revoke command exists.",
+  "boundaryDecision": "selected_split",
+  "mustPreserve": "Never reactivate a permanent independence commitment from reevaluation; acceptance binds exact service, draft, acknowledgement and ratified-rule proofs.",
+  "sources": [
+    {
+      "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
+      "jsonPointer": "/splitOwners/2/targetOwners/0",
+      "line": 180,
+      "sha256": "d349d94b7c43f4d82020ecf36bdacf1aff98bc6498e14993582f1c3164b21f19"
+    }
+  ],
+  "baselineSourcePath": "src/Compliance.Core/Features/AccessControl/IndependenceLedger.cs",
+  "baselineEvents": [],
+  "preliminaryNewEvents": [
+    "PracticeIndependenceCommitted"
+  ],
+  "technicalStateToSeparate": [],
+  "classification": "business_identity_or_uniqueness_authority",
+  "businessAggregate": true,
+  "implementationStatus": "SEPARATE_VERIFICATION_REQUIRED_IMPLEMENTATION_HALTED",
+  "identityReadingRule": "selectedIdentitySummary and exact selectedCommandContracts define intended identity. baselineIdentityObservation/declaredIdentity retain older source observations only, including old replay defects; they are not target behavior or authorization to change an occupied key.",
+  "selectedCommandContracts": [
+    {
+      "command": "ReservePracticeIndependence",
+      "kind": "receiver",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "internal",
+        "rule": "deterministic receiver identity derived from the admitted root fact, episode and generation: exact redelivery resolves the original result, a changed admission is a new identity"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "required": true
+        },
+        {
+          "name": "Source",
+          "required": true
+        },
+        {
+          "name": "Target",
+          "required": true
+        },
+        {
+          "name": "OperationId",
+          "required": true
+        },
+        {
+          "name": "Generation",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "required": true
+        },
+        {
+          "name": "Intent",
+          "required": true
+        },
+        {
+          "name": "SubjectKind",
+          "required": true
+        },
+        {
+          "name": "SubjectId",
+          "required": true
+        },
+        {
+          "name": "Practice",
+          "required": true
+        }
+      ],
+      "http": [],
+      "source": {
+        "path": "src/Compliance.Core/Features/AccessControl/Processes/EngagementAcceptanceProcess.cs:196",
+        "recorded": "2026-10-29"
+      },
+      "reactor": "EngagementPracticeReservationReactor",
+      "sourceOwner": "ServiceEngagementIndependence",
+      "sourceEvents": [
+        "ServiceEngagementAcceptanceRequested",
+        "ServiceEngagementStaffAssignmentRequested"
+      ],
+      "guard": "Verify immutable accepted root intent, exact staff/canonical-user/practice subject and reservation key/generation; enforce local practice conflict and receiving cancellation fence. This is a temporary reservation only and does not require epoch permit before acquisition. Every known temporary key is acquired in canonical stream order. Permanent commit requires EngagementPracticeCommitmentsAuthorized proving complete exact epoch/source/practice grants and current temporal eligibility.",
+      "eventsEmitted": [
+        "PracticeIndependenceReserved"
+      ],
+      "effectKind": "reserve_practice_independence",
+      "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine."
+    },
+    {
+      "command": "CommitPracticeIndependence",
+      "kind": "receiver",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "internal",
+        "rule": "deterministic receiver identity derived from the admitted root fact, episode and generation: exact redelivery resolves the original result, a changed admission is a new identity"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "required": true
+        },
+        {
+          "name": "Source",
+          "required": true
+        },
+        {
+          "name": "Target",
+          "required": true
+        },
+        {
+          "name": "OperationId",
+          "required": true
+        },
+        {
+          "name": "Generation",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "required": true
+        },
+        {
+          "name": "Intent",
+          "required": true
+        },
+        {
+          "name": "SubjectKind",
+          "required": true
+        },
+        {
+          "name": "SubjectId",
+          "required": true
+        },
+        {
+          "name": "Practice",
+          "required": true
+        }
+      ],
+      "http": [],
+      "source": {
+        "path": "src/Compliance.Core/Features/AccessControl/Handlers/CommitPracticeIndependenceHandler.cs",
+        "recorded": "2026-10-29"
+      },
+      "reactor": "EngagementPracticeCommitmentReactor",
+      "sourceOwner": "ServiceEngagementIndependence",
+      "sourceEvents": [
+        "EngagementPracticeCommitmentsAuthorized"
+      ],
+      "guard": "Require exact complete all-subject exclusive reservation proof manifest and irreversible service authorization; commit reserved same practice permanently. No commitment is made while any subject reservation can still fail.",
+      "eventsEmitted": [
+        "PracticeIndependenceCommitted"
+      ],
+      "effectKind": "commit_practice_independence",
+      "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine."
+    },
+    {
+      "command": "SettlePracticeIndependenceReservation",
+      "kind": "receiver",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "origin": "internal",
+        "rule": "deterministic receiver identity derived from the admitted root fact, episode and generation: exact redelivery resolves the original result, a changed admission is a new identity"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "required": true
+        },
+        {
+          "name": "Source",
+          "required": true
+        },
+        {
+          "name": "Target",
+          "required": true
+        },
+        {
+          "name": "OperationId",
+          "required": true
+        },
+        {
+          "name": "Generation",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "required": true
+        },
+        {
+          "name": "Intent",
+          "required": true
+        },
+        {
+          "name": "SubjectKind",
+          "required": true
+        },
+        {
+          "name": "SubjectId",
+          "required": true
+        },
+        {
+          "name": "Disposition",
+          "required": true
+        }
+      ],
+      "http": [],
+      "source": {
+        "path": "src/Compliance.Core/Features/AccessControl/Handlers/SettlePracticeIndependenceReservationHandler.cs",
+        "recorded": "2026-10-29"
+      },
+      "reactor": "EngagementPracticeReservationSettlementReactor",
+      "sourceOwner": "ServiceEngagementIndependence",
+      "sourceEvents": [
+        "ServiceEngagementAcceptanceRecorded",
+        "ServiceEngagementStaffAssigned",
+        "ServiceEngagementAcceptanceRejected",
+        "ServiceEngagementStaffAssignmentRejected"
+      ],
+      "guard": "On completed acceptance require exact permanent commitment and completion proof. Before irreversible authorization, rejected source proves its local fence; settle even not-yet-acquired reservation and block delayed acquire. Never remove a permanent wall.",
+      "eventsEmitted": [
+        "PracticeIndependenceReservationSettled"
+      ],
+      "effectKind": "settle_practice_independence_reservation",
+      "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine."
+    }
+  ],
+  "eventAuthority": "selected_final_event_catalog",
+  "events": [
+    {
+      "event": "PracticeIndependenceCommitted",
+      "discriminator": "bdgrz.practice-independence-commitment.practice-independence-committed",
+      "discriminatorVersion": 1,
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
+        "jsonPointer": "/events/202",
+        "line": 26609,
+        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
+      }
+    },
+    {
+      "event": "PracticeIndependenceReservationSettled",
+      "discriminator": "bdgrz.practice-independence-commitment.practice-independence-reservation-settled",
+      "discriminatorVersion": 1,
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
+        "jsonPointer": "/events/203",
+        "line": 26817,
+        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
+      }
+    },
+    {
+      "event": "PracticeIndependenceReserved",
+      "discriminator": "bdgrz.practice-independence-commitment.practice-independence-reserved",
+      "discriminatorVersion": 1,
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
+        "jsonPointer": "/events/204",
+        "line": 27025,
+        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
+      }
+    }
+  ],
+  "choreography": [
+    {
+      "reactor": "EngagementPracticeCommitmentReactor",
+      "sourceOwner": "ServiceEngagementIndependence",
+      "targetOwner": "PracticeIndependenceCommitment",
+      "command": "CommitPracticeIndependence",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
+        "jsonPointer": "/reactors/5",
+        "line": 440,
+        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
+      }
+    },
+    {
+      "reactor": "EngagementPracticeReservationReactor",
+      "sourceOwner": "ServiceEngagementIndependence",
+      "targetOwner": "PracticeIndependenceCommitment",
+      "command": "ReservePracticeIndependence",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
+        "jsonPointer": "/reactors/83",
+        "line": 7136,
+        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
+      }
+    },
+    {
+      "reactor": "EngagementPracticeReservationSettlementReactor",
+      "sourceOwner": "ServiceEngagementIndependence",
+      "targetOwner": "PracticeIndependenceCommitment",
+      "command": "SettlePracticeIndependenceReservation",
+      "source": {
+        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
+        "jsonPointer": "/reactors/85",
+        "line": 7310,
+        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
+      }
+    }
+  ],
+  "status": "SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED",
+  "baselineIdentityObservation": "tenant / (subjectKind, subjectId)",
+  "identityContractRule": "Existing published owner identity/IdFor remains stable. Required typed creation/operation identity and tenant/program/source scope come from the selected signature/protocol references; no context.RequestId minting fallback or guessed new stream key.",
+  "adoptedArchitectureDecisions": [],
+  "selectedIdentitySummary": "Tenant-scoped tenant / (subjectKind, subjectId); the identity is established by the admitting owner or reactor named in the choreography, never by a caller request key; mutations bind CommandId to this exact identity.",
+  "baselineIdentityObservationOnly": true,
+  "selectedLogicalIdentityBindings": [],
+  "selectedReplayRule": "Current required authorization precedes replay; exact authorized retries resolve the original accepted result using the selected logical identity and immutable actor/intent/source binding. Fresh mutable feasibility, clock selection and body preparation cannot replace that original result. Expected revision is concurrency precondition, not a new identity.",
+  "identityRevisions": [
+    {
+      "date": "2026-10-29",
+      "previous": "tenant / (subjectKind, subjectId)"
+    }
+  ],
+  "commandNote": "Roots are HTTP AcceptServiceEngagement PUT /api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/acceptance/{command_id} and AssignServiceEngagementStaff PUT .../actual-assignments/{staff_member_id}/{command_id}, via ServiceEngagementAcceptanceRequested / ServiceEngagementStaffAssignmentRequested -> EngagementAcceptanceReactor. AuthorizeEngagementPracticeCommitments only reads this owner."
+}

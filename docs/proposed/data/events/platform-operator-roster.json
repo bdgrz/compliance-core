@@ -1,0 +1,77 @@
+{
+  "owner": "PlatformOperatorRoster",
+  "events": [
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:PlatformOperatorGranted",
+        "event": "PlatformOperatorGranted",
+        "emissionKind": "business",
+        "owners": [
+          "PlatformOperatorRoster"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": false,
+        "targetConcreteType": "PlatformOperatorGranted",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.platform.operator.granted",
+          "version": 1
+        },
+        "wireQualification": "Wire matches the declared record in src/Compliance.Common/Features/Tenants/Events/PlatformOperatorGranted.cs at 60029b8f.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "retained_current_schema_native_qualification_required",
+        "sourceStatus": "declared",
+        "meaning": "Platform operator authority was granted to a user by a named actor with a stated reason.",
+        "meaningSource": "authored 2026-10-29 from src/Compliance.Common/Features/Tenants/Events/PlatformOperatorGranted.cs"
+      },
+      "schema": null
+    },
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:PlatformOperatorRevoked",
+        "event": "PlatformOperatorRevoked",
+        "emissionKind": "business",
+        "owners": [
+          "PlatformOperatorRoster"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": false,
+        "targetConcreteType": "PlatformOperatorRevoked",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.platform.operator.revoked",
+          "version": 1
+        },
+        "wireQualification": "Wire matches the declared record in src/Compliance.Common/Features/Tenants/Events/PlatformOperatorRevoked.cs at 60029b8f.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "retained_current_schema_native_qualification_required",
+        "sourceStatus": "declared",
+        "meaning": "A user's platform operator authority was revoked by a named actor with a stated reason, ending the access that assignment gave.",
+        "meaningSource": "authored 2026-10-29 from src/Compliance.Common/Features/Tenants/Events/PlatformOperatorRevoked.cs"
+      },
+      "schema": null
+    },
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:PlatformOperatorRosterSeeded",
+        "event": "PlatformOperatorRosterSeeded",
+        "emissionKind": "business",
+        "owners": [
+          "PlatformOperatorRoster"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": false,
+        "targetConcreteType": "PlatformOperatorRosterSeeded",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.platform.operator-roster.seeded",
+          "version": 1
+        },
+        "wireQualification": "Wire matches the declared record in src/Compliance.Common/Features/Tenants/Events/PlatformOperatorRosterSeeded.cs at 60029b8f.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "retained_current_schema_native_qualification_required",
+        "sourceStatus": "declared",
+        "meaning": "The platform operator roster was initialised with its starting set of operator users by a named actor.",
+        "meaningSource": "authored 2026-10-29 from src/Compliance.Common/Features/Tenants/Events/PlatformOperatorRosterSeeded.cs"
+      },
+      "schema": null
+    }
+  ]
+}

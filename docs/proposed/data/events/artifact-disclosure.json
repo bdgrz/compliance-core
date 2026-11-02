@@ -1,0 +1,77 @@
+{
+  "owner": "ArtifactDisclosure",
+  "events": [
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:ArtifactDisclosureApproved",
+        "event": "ArtifactDisclosureApproved",
+        "emissionKind": "business",
+        "owners": [
+          "ArtifactDisclosure"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": false,
+        "targetConcreteType": "ArtifactDisclosureApproved",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.retention.artifact-disclosure-approved",
+          "version": 1
+        },
+        "wireQualification": "Wire matches the declared record in src/Compliance.Common/Features/Retention/Events/ArtifactDisclosureApproved.cs at 60029b8f.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "retained_current_schema_native_qualification_required",
+        "sourceStatus": "declared",
+        "meaning": "Records the ArtifactDisclosureApproved domain fact for one tenant-owned subject revision.",
+        "meaningSource": "record summary in src/Compliance.Common/Features/Retention/Events/ArtifactDisclosureApproved.cs"
+      },
+      "schema": null
+    },
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:ArtifactDisclosureDelivered",
+        "event": "ArtifactDisclosureDelivered",
+        "emissionKind": "business",
+        "owners": [
+          "ArtifactDisclosure"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": false,
+        "targetConcreteType": "ArtifactDisclosureDelivered",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.retention.artifact-disclosure-delivered",
+          "version": 1
+        },
+        "wireQualification": "Wire matches the declared record in src/Compliance.Common/Features/Retention/Events/ArtifactDisclosureDelivered.cs at 60029b8f.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "retained_current_schema_native_qualification_required",
+        "sourceStatus": "declared",
+        "meaning": "Records the ArtifactDisclosureDelivered domain fact for one tenant-owned subject revision.",
+        "meaningSource": "record summary in src/Compliance.Common/Features/Retention/Events/ArtifactDisclosureDelivered.cs"
+      },
+      "schema": null
+    },
+    {
+      "canonical": {
+        "canonicalSemanticKey": "event:ArtifactDisclosureRevoked",
+        "event": "ArtifactDisclosureRevoked",
+        "emissionKind": "business",
+        "owners": [
+          "ArtifactDisclosure"
+        ],
+        "ownerSelection": "one exact canonical authority owner",
+        "selected295": false,
+        "targetConcreteType": "ArtifactDisclosureRevoked",
+        "adoptedTargetWire": {
+          "discriminator": "bdgrz.retention.artifact-disclosure-revoked",
+          "version": 1
+        },
+        "wireQualification": "Wire matches the declared record in src/Compliance.Common/Features/Retention/Events/ArtifactDisclosureRevoked.cs at 60029b8f.",
+        "adoptedDecisionIds": [],
+        "schemaStatus": "retained_current_schema_native_qualification_required",
+        "sourceStatus": "declared",
+        "meaning": "Records the ArtifactDisclosureRevoked domain fact for one tenant-owned subject revision.",
+        "meaningSource": "record summary in src/Compliance.Common/Features/Retention/Events/ArtifactDisclosureRevoked.cs"
+      },
+      "schema": null
+    }
+  ]
+}
