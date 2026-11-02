@@ -34,6 +34,7 @@ public sealed class AccessGrantTests
     static readonly Uuid MemberId = Uuid.Parse("0862062f-97e9-45de-a312-0f884c48180d", CultureInfo.InvariantCulture);
     static readonly Uuid RoleId = Uuid.Parse("5b66f817-415a-44e8-b809-503cf44b1537", CultureInfo.InvariantCulture);
     static readonly DateTimeOffset EffectiveFrom = new(2026, 9, 28, 12, 0, 0, TimeSpan.Zero);
+    static readonly ActorReference Admin = ActorReference.ForMember(MemberId, "Organization Admin");
 
     [Fact]
     public void ShouldIssueGrantWithScopeAndProvenanceGivenValidTerms()
@@ -185,32 +186,140 @@ public sealed class AccessGrantTests
     }
 
     [Fact]
-    public void ShouldRejectRepeatedRevocationGivenPreviouslyRevokedGrant()
+    public void ShouldRejectReissueGivenRevokedGrantAndChangedTerms()
     {
         // Arrange
-        var terms = new AccessGrantTerms(
-            new AccessGrantPrincipal(AccessGrantPrincipalKind.Member, MemberId),
-            RoleId,
-            new AccessGrantScope(AccessGrantScopeKind.Organization, TenantId),
-            new AccessGrantSource("manual", "request-123"),
-            ActorReference.ForMember(MemberId, "Organization Admin"),
-            EffectiveFrom,
-            null);
-        var scenario = new AggregateScenario<AccessGrant>(new AccessGrant(TenantId, GrantId))
-            .Given(
-                DomainEventSeed.Attach(new AccessGrantIssued(TenantId, GrantId, terms), GrantId, 1),
-                DomainEventSeed.Attach(new AccessGrantRevoked(TenantId, GrantId,
-                    ActorReference.ForMember(MemberId, "Organization Admin"),
-                    EffectiveFrom.AddDays(1)), GrantId, 2));
+        var scenario = IssuedAndRevoked();
 
         // Act
-        var result = scenario.Aggregate.Revoke(ActorReference.ForMember(MemberId, "Organization Admin"),
+        var result = scenario.Aggregate.Issue(Terms() with { EffectiveUntil = EffectiveFrom.AddDays(90) });
+
+        // Assert
+        Assert.False(result.IsSuccess);
+        Assert.Equal(RequestErrorKind.Conflict, result.Error.Kind);
+        Assert.True(scenario.Aggregate.IsRevoked);
+        Assert.Empty(scenario.PendingEvents);
+    }
+
+    [Fact]
+    public void ShouldReturnOriginalRevocationWithoutEventGivenExactRetryByRevokingActor()
+    {
+        // Arrange
+        var scenario = IssuedAndRevoked();
+
+        // Act
+        var result = scenario.Aggregate.Revoke(Admin, EffectiveFrom.AddDays(2));
+
+        // Assert
+        Assert.True(result.IsSuccess);
+        Assert.True(scenario.Aggregate.IsRevoked);
+        Assert.Empty(scenario.PendingEvents);
+    }
+
+    [Fact]
+    public void ShouldRejectRevocationGivenGrantRevokedByAnotherActor()
+    {
+        // Arrange
+        var scenario = IssuedAndRevoked();
+
+        // Act
+        var result = scenario.Aggregate.Revoke(ActorReference.ForMember(Uuid.CreateVersion4(), "Other Admin"),
             EffectiveFrom.AddDays(2));
 
         // Assert
         Assert.False(result.IsSuccess);
         Assert.Equal(RequestErrorKind.Conflict, result.Error.Kind);
         Assert.Empty(scenario.PendingEvents);
+    }
+
+    [Fact]
+    public void ShouldAppendNothingGivenInvalidRevocationActorOrTimestamp()
+    {
+        // Arrange
+        var scenario = new AggregateScenario<AccessGrant>(new AccessGrant(TenantId, GrantId))
+            .Given(DomainEventSeed.Attach(new AccessGrantIssued(TenantId, GrantId, Terms()), GrantId, 1));
+
+        // Act
+        var noTimestamp = scenario.Aggregate.Revoke(Admin, default);
+        var noActor = scenario.Aggregate.Revoke(ActorReference.ForMember(MemberId, ""), EffectiveFrom.AddDays(1));
+
+        // Assert
+        Assert.Equal(RequestErrorKind.Validation, noTimestamp.Error!.Kind);
+        Assert.Equal(RequestErrorKind.Validation, noActor.Error!.Kind);
+        Assert.Empty(scenario.PendingEvents);
+    }
+
+    [Fact]
+    public void ShouldRejectChangedMembershipEpisodeGivenExistingGrantId()
+    {
+        // Arrange
+        var episode = Uuid.CreateVersion4();
+        var scenario = new AggregateScenario<AccessGrant>(new AccessGrant(TenantId, GrantId))
+            .Given(DomainEventSeed.Attach(new AccessGrantIssued(TenantId, GrantId, Terms(), episode), GrantId, 1));
+
+        // Act
+        var retry = scenario.Aggregate.Issue(Terms(), episode);
+        var changed = scenario.Aggregate.Issue(Terms(), Uuid.CreateVersion4());
+        var dropped = scenario.Aggregate.Issue(Terms());
+
+        // Assert
+        Assert.True(retry.IsSuccess);
+        Assert.Equal(RequestErrorKind.Conflict, changed.Error!.Kind);
+        Assert.Equal(RequestErrorKind.Conflict, dropped.Error!.Kind);
+        Assert.Equal(episode, scenario.Aggregate.MembershipEpisodeId);
+        Assert.Empty(scenario.PendingEvents);
+    }
+
+    [Fact]
+    public void ShouldRejectEmptyMembershipEpisodeGivenIssue()
+    {
+        // Arrange
+        var scenario = new AggregateScenario<AccessGrant>(new AccessGrant(TenantId, GrantId));
+
+        // Act
+        var result = scenario.Aggregate.Issue(Terms(), Uuid.Empty);
+
+        // Assert
+        Assert.False(result.IsSuccess);
+        Assert.Equal(RequestErrorKind.Validation, result.Error.Kind);
+        Assert.Empty(scenario.PendingEvents);
+    }
+
+    [Fact]
+    public void ShouldRejectIssueGivenScopeKindMismatchedResourceType()
+    {
+        // Arrange
+        var terms = Terms() with
+        {
+            Scope = new AccessGrantScope(AccessGrantScopeKind.Organization, TenantId, "document"),
+        };
+        var scenario = new AggregateScenario<AccessGrant>(new AccessGrant(TenantId, GrantId));
+
+        // Act
+        var result = scenario.Aggregate.Issue(terms);
+
+        // Assert
+        Assert.False(result.IsSuccess);
+        Assert.Equal(RequestErrorKind.Validation, result.Error.Kind);
+        Assert.Empty(scenario.PendingEvents);
+    }
+
+    [Fact]
+    public void ShouldIssueAndRevokeGivenFreshGrantAcrossCommands()
+    {
+        // Arrange
+        var scenario = new AggregateScenario<AccessGrant>(new AccessGrant(TenantId, GrantId));
+
+        // Act
+        var issued = scenario.Aggregate.Issue(Terms());
+        var revoked = scenario.Aggregate.Revoke(Admin, EffectiveFrom.AddDays(1));
+
+        // Assert
+        Assert.True(issued.IsSuccess);
+        Assert.True(revoked.IsSuccess);
+        Assert.Collection(scenario.PendingEvents,
+            ev => Assert.IsType<AccessGrantIssued>(ev),
+            ev => Assert.IsType<AccessGrantRevoked>(ev));
     }
 
     [Fact]
@@ -258,4 +367,20 @@ public sealed class AccessGrantTests
         Assert.Equal(RequestErrorKind.NotFound, result.Error.Kind);
         Assert.Empty(scenario.PendingEvents);
     }
+
+    static AccessGrantTerms Terms() => new(
+        new AccessGrantPrincipal(AccessGrantPrincipalKind.Member, MemberId),
+        RoleId,
+        new AccessGrantScope(AccessGrantScopeKind.Organization, TenantId),
+        new AccessGrantSource("manual", "request-123"),
+        Admin,
+        EffectiveFrom,
+        null);
+
+    static AggregateScenario<AccessGrant> IssuedAndRevoked() =>
+        new AggregateScenario<AccessGrant>(new AccessGrant(TenantId, GrantId))
+            .Given(
+                DomainEventSeed.Attach(new AccessGrantIssued(TenantId, GrantId, Terms()), GrantId, 1),
+                DomainEventSeed.Attach(new AccessGrantRevoked(TenantId, GrantId, Admin, EffectiveFrom.AddDays(1)),
+                    GrantId, 2));
 }

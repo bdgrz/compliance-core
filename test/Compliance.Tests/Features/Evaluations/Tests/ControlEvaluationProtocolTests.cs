@@ -209,6 +209,24 @@ public sealed class ControlEvaluationProtocolTests
     }
 
     [Fact]
+    public async Task ShouldAppendNothingGivenUnknownReviewDecision()
+    {
+        // Arrange
+        var fixture = await OperationsFixture.CreateAsync();
+        var submitted = await ControlEvaluationTests.SubmittedAsync(fixture);
+        var before = (await StreamAsync(fixture, submitted.EvaluationId)).Count;
+
+        // Act
+        var result = await PersonalControlEvaluationTransportTests.HttpAsync(fixture.Provider, fixture.ApproverUserId,
+            ControlEvaluationTests.Review(fixture, submitted, "approved_maybe"), RequestErrorKind.Validation);
+        var after = (await StreamAsync(fixture, submitted.EvaluationId)).Count;
+
+        // Assert
+        Assert.False(result.IsSuccess);
+        Assert.Equal(before, after);
+    }
+
+    [Fact]
     public async Task ShouldRejectReviewGivenRevisionFromBeforeSubmissionAndSubmitGivenStaleRevision()
     {
         // Arrange

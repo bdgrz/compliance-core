@@ -209,6 +209,9 @@ public sealed class ControlOccurrence : Aggregate
         var prepared = PrepareProof((long)expected, false);
         if (!prepared.IsSuccess)
             return prepared;
+        if (_attestations == 0)
+            return Result.Failure(new RequestError(RequestErrorKind.Conflict,
+                "A review needs an attestation of this occurrence to review."));
         RaiseEvent(new ControlOccurrenceReviewed(_tenantId, _programId, _controlId, Id, _revision + 1, review,
             operation, firstResponse, operationResult));
         return Result.Success;

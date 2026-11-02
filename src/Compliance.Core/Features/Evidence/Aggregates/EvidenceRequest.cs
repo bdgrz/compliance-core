@@ -12,6 +12,7 @@ using Bdgrz.Compliance.Features.Commitments.Rules;
 using Bdgrz.Compliance.Features.Controls.Rules;
 using Bdgrz.Compliance.Features.Evaluations.Rules;
 using Bdgrz.Compliance.Features.Evidence.Models;
+using Bdgrz.Compliance.Features.Evidence.Rules;
 using Bdgrz.Compliance.Features.Incidents.Rules;
 using Bdgrz.Compliance.Features.Kernel.Services;
 using Bdgrz.Compliance.Features.NamedRecords.Contracts;
@@ -187,6 +188,10 @@ public sealed class EvidenceRequest : Aggregate, ISourceUseOwner
         if (operation.Owner != Stream || operation.LogicalId != _requestId)
             return Result.Failure(new RequestError(RequestErrorKind.Validation,
                 "An opening is the logical operation of its own evidence request."));
+        var invalid = EvidenceRequestRules.ValidateOpen(terms.Title, terms.Instructions, terms.OwnerMemberId,
+            terms.ControlId, terms.DueOn, terms.OpenedAt);
+        if (invalid is not null)
+            return Fail(invalid);
         var prepared = PrepareOpen();
         if (!prepared.IsSuccess)
             return prepared;
@@ -202,6 +207,8 @@ public sealed class EvidenceRequest : Aggregate, ISourceUseOwner
     {
         ArgumentNullException.ThrowIfNull(operation);
         ArgumentNullException.ThrowIfNull(fulfilledBy);
+        if (artifactId == Uuid.Empty)
+            return Fail(CommandFailure.InvalidContent("Fulfilling an evidence request requires the captured artifact."));
         var prepared = PrepareOwnDecision(operation);
         if (!prepared.IsSuccess)
             return prepared;
@@ -216,6 +223,9 @@ public sealed class EvidenceRequest : Aggregate, ISourceUseOwner
     {
         ArgumentNullException.ThrowIfNull(operation);
         ArgumentNullException.ThrowIfNull(cancelledBy);
+        var invalid = EvidenceRequestRules.ValidateCancel(rationale);
+        if (invalid is not null)
+            return Fail(invalid);
         var prepared = PrepareOwnDecision(operation);
         if (!prepared.IsSuccess)
             return prepared;

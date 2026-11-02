@@ -1,0 +1,28 @@
+{
+  "model": "jev-1.14.0",
+  "answers": {
+    "second_approval_asserts": {
+      "type": "noul",
+      "noul": 0.9
+    },
+    "unfinalized_cut_asserts": {
+      "type": "noul",
+      "noul": 0.87
+    },
+    "catalog_gap": {
+      "type": "choice",
+      "choice": "no_discrepancy",
+      "confidence": 0.93,
+      "probabilities": {
+        "no_discrepancy": 0.95,
+        "add_to_model": 0.01,
+        "remove": 0,
+        "needs_source_resolution": 0.04
+      }
+    }
+  },
+  "usage": {
+    "input_tokens": 842,
+    "output_tokens": 101
+  }
+}
