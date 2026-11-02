@@ -89,6 +89,7 @@ public sealed partial class DeclaredApplication : Aggregate
         {
             Acceptance.Observe(ev);
             RequireOwnOperation(ev.Operation);
+            RequireOwnIdentity(ev.TenantId, ev.ApplicationId);
             if (_created)
                 throw new InvalidOperationException("The application is already declared.");
             _created = true;
@@ -113,6 +114,7 @@ public sealed partial class DeclaredApplication : Aggregate
         {
             Acceptance.Observe(ev);
             RequireOwnOperation(ev.Operation);
+            RequireOwnIdentity(ev.TenantId, ev.ApplicationId);
             _revision = ev.Revision;
             _classification = ev.Classification;
             _systemOwnerPersonId = ev.SystemOwnerPersonId;
@@ -125,6 +127,7 @@ public sealed partial class DeclaredApplication : Aggregate
         {
             Acceptance.Observe(ev);
             RequireOwnOperation(ev.Operation);
+            RequireOwnIdentity(ev.TenantId, ev.ApplicationId);
             if (ev.MergedIntoApplicationRevision is { } targetRevision &&
                 (ev.MergedIntoApplicationId is not { } successorId || targetRevision < 1 ||
                  Relationship(ApplicationRelationshipIdentity.Replaces, successorId)?.Approval
@@ -303,6 +306,8 @@ public sealed partial class DeclaredApplication : Aggregate
         var check = PrepareRetire(expectedRevision, reason, mergedIntoApplicationId, out var mergedRevision);
         if (check is not null)
             return check;
+        if (effectiveAt == default)
+            return CommandFailure.InvalidContent("A retirement requires an effective date.");
         RaiseEvent(new ApplicationRetired(_tenantId, Id, _revision + 1, effectiveAt,
             reason.Trim(), mergedIntoApplicationId, actorMemberId, actorDisplay, changedAt, operation, firstResponse,
             mergedRevision)
@@ -317,6 +322,12 @@ public sealed partial class DeclaredApplication : Aggregate
         ? Result.Failure(new RequestError(RequestErrorKind.Validation,
             "An application operation requires its own logical operation."))
         : Result.Success;
+
+    void RequireOwnIdentity(Uuid tenantId, Uuid applicationId)
+    {
+        if (tenantId != _tenantId || applicationId != Id)
+            throw new InvalidOperationException("The application fact does not belong to this tenant and application.");
+    }
 
     void RequireOwnOperation(OperationProvenance operation)
     {

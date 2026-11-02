@@ -188,7 +188,8 @@ public sealed class ExaminationSignOff : Aggregate
     static bool SameInitial(ExaminationSignOffView state, ExaminationSignOffContent? content,
         Uuid actor, string role, string display, DateTimeOffset at) =>
         NormalizeContent(content) is { } normalized && Digest(normalized) == Digest(state.Content) &&
-        state.SignedOffByMemberId == actor && state.ApproverRole == role.Trim() &&
+        state.SignedOffByMemberId == actor &&
+        StringComparer.OrdinalIgnoreCase.Equals(state.ApproverRole, role.Trim()) &&
         state.ApproverDisplay == display.Trim() && state.SignedOffAt == at;
 
     static string Digest<T>(T content) => Convert.ToHexString(

@@ -1,0 +1,50 @@
+{
+  "model": "jev-1.14.0",
+  "answers": {
+    "tests_assert_invariant": {
+      "type": "noul",
+      "noul": 0.27
+    },
+    "role_retry": {
+      "type": "choice",
+      "choice": "success_no_new_fact",
+      "confidence": 1,
+      "probabilities": {
+        "success_no_new_fact": 1,
+        "state_conflict": 0,
+        "new_fact": 0,
+        "needs_source_resolution": 0
+      }
+    },
+    "ordering_in_aggregate": {
+      "type": "choice",
+      "choice": "later_handler_stage",
+      "confidence": 0.72,
+      "probabilities": {
+        "later_handler_stage": 0.79,
+        "inside_aggregate": 0.15,
+        "remove_from_model": 0.05,
+        "needs_source_resolution": 0.01
+      }
+    },
+    "payload_identity_duplication": {
+      "type": "choice",
+      "choice": "remove_from_payload",
+      "confidence": 0.91,
+      "probabilities": {
+        "remove_from_payload": 0.93,
+        "keep_as_is": 0.07,
+        "add_to_model": 0,
+        "needs_source_resolution": 0
+      }
+    },
+    "payload_premise": {
+      "type": "noul",
+      "noul": 0.82
+    }
+  },
+  "usage": {
+    "input_tokens": 1313,
+    "output_tokens": 212
+  }
+}
