@@ -1,0 +1,49 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "owner": "InformationAsset",
+    "rule": "One tenant inventory identity has one record kind and one revisioned information classification/retention/owner/lifecycle record. Each asset carries exactly one classification level from public, internal, confidential, or restricted plus a retention reference; a missing or second classification is refused. Lifecycle is active or retired. The catalog has no rule about a revise whose content equals the current content, nor about reactivating a retired asset. Exact retries of a committed operation are decided earlier by logical-operation acceptance, not by the aggregate.",
+    "code_behavior": {
+      "revise_same_content": "A revise at the current expected revision whose changed content equals the current content still appends a new revision.",
+      "reactivate": "A revise at the current revision may set lifecycle from retired back to active; it appends a new revision.",
+      "second_creation": "Creating an identity that already has an information asset returns Conflict and appends nothing, whether the content is the same or changed.",
+      "competing_revisions": "Two revisions both expecting revision 1: the first appends revision 2, the second returns Conflict (stale revision) and appends nothing."
+    },
+    "test_scenarios": {
+      "competing": "Record asset (revision 1). Revise expecting 1 renaming to Winner: success. Revise expecting 1 renaming to Loser: Conflict. Name stays Winner, revision 2, exactly two events appended in total.",
+      "invalid_classification": "Revise with classification 'public,internal' (two values) returns Validation and appends nothing."
+    }
+  },
+  "questions": {
+    "revise_same_content_outcome": {
+      "type": "choice",
+      "instructions": "For `state.code_behavior.revise_same_content`, what should the aggregate do?",
+      "criteria": {
+        "append_revision": "Append a new revision; the catalog defines no no-op rule, so the aggregate does not invent one.",
+        "no_op_success": "Return success without appending an event, since nothing changed.",
+        "needs_source_resolution": "The rule text does not decide this and the catalog owner must resolve it."
+      }
+    },
+    "reactivate_outcome": {
+      "type": "choice",
+      "instructions": "For `state.code_behavior.reactivate`, what should the aggregate do when a revise sets a retired asset back to active?",
+      "criteria": {
+        "allow": "Allow it; the rule only requires lifecycle to be active or retired and prohibits no transition.",
+        "refuse": "Refuse it; retirement is terminal.",
+        "needs_source_resolution": "The rule text does not decide this and the catalog owner must resolve it."
+      }
+    },
+    "competing_test_asserts_invariant": {
+      "type": "noul",
+      "instructions": "The `state.test_scenarios.competing` test shows that one revision decision wins and a competing decision at the same expected revision is refused without appending a fact."
+    },
+    "second_creation_consistent": {
+      "type": "noul",
+      "instructions": "Refusing a second creation of an existing identity with Conflict and no event, as in `state.code_behavior.second_creation`, is consistent with `state.rule`."
+    },
+    "two_classification_test_asserts_rule": {
+      "type": "noul",
+      "instructions": "The `state.test_scenarios.invalid_classification` test shows that a second classification is refused according to `state.rule`."
+    }
+  }
+}

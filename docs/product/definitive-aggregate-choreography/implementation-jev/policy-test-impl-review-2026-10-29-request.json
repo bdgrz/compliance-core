@@ -1,0 +1,37 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "rule": "Policy stream identity is a UUIDv5 of tenant, program and normalized identifier. A discarded draft (never reviewed, never approved, no applicability) leaves the stream occupied and invisible.",
+    "prepare_behavior": "Prepare for create: refused with conflict if the stream already has a created header, including a discarded one; otherwise success. Prepare for any non-create command: success only if the policy is visible and belongs to the given program; otherwise not_found (unopened, other program, discarded).",
+    "test": "The test seeds a draft, hydrates it, then discards it with a seeded fact and hydrates again. It asserts: create on unopened succeeds, revise on unopened is not_found, create on open is conflict, revise on open succeeds, revise on open in another program is not_found, create on discarded is conflict, revise on discarded is not_found, discarded is not visible, native sequence is 2.",
+    "fact_payload": "Each Policy fact carries operation provenance whose actor is checked by Append to equal the fact business actor member id, plus a business actor snapshot (display reference) and the actor member id."
+  },
+  "questions": {
+    "discarded_identity_conflict": {
+      "type": "choice",
+      "instructions": "For the discarded policy stream, which outcome should a new create with the same identifier produce?",
+      "criteria": {
+        "conflict_no_fact": "Create is refused with a conflict and appends no fact because the identity is occupied.",
+        "reopen_fact": "Create is accepted and reopens the discarded stream.",
+        "needs_source_resolution": "The rule text does not decide this."
+      }
+    },
+    "discarded_identity_conflict_premise": {
+      "type": "noul",
+      "instructions": "Is a discarded policy identity still occupied so a create on it must not append a new creation fact?"
+    },
+    "test_asserts_prepare_rule": {
+      "type": "noul",
+      "instructions": "Does the described test fail if Prepare allowed a non-create command on a discarded policy or in another program?"
+    },
+    "actor_snapshot_duplication": {
+      "type": "choice",
+      "instructions": "The fact carries provenance actor and also a business actor snapshot and actor member id that Append requires to match. What should this aggregate review do?",
+      "criteria": {
+        "keep": "Keep; the snapshot preserves the original display reference and the match check prevents mismatch.",
+        "remove": "Remove the duplicated payload fields now.",
+        "needs_source_resolution": "Resolve in the shared schema catalog before any change."
+      }
+    }
+  }
+}

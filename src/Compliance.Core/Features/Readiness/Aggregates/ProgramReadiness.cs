@@ -295,7 +295,7 @@ public sealed class ProgramReadiness : Aggregate
         Uuid assessmentId, ImmutableContentRef decisionProofs, ImmutableContentRef intent, ImmutableContentRef operationResult)
     {
         ArgumentNullException.ThrowIfNull(operation);
-        if (PendingFailure<ReadinessDecisionAccepted>(operation, intent) is { } failure)
+        if (PendingFailure<ReadinessDecisionAccepted>(operation, intent, assessmentId) is { } failure)
             return failure;
         RaiseEvent(new ReadinessDecisionRecorded(_tenantId, _programId, _revision + 1, decisionContent, operation,
             assessmentId, operation.RootOperationId, decisionProofs, intent, null, operationResult));
@@ -307,7 +307,7 @@ public sealed class ProgramReadiness : Aggregate
         Uuid assessmentId, ImmutableContentRef decisionProofs, ImmutableContentRef intent, ImmutableContentRef operationResult)
     {
         ArgumentNullException.ThrowIfNull(operation);
-        if (PendingFailure<TypeIEntryDecisionAccepted>(operation, intent) is { } failure)
+        if (PendingFailure<TypeIEntryDecisionAccepted>(operation, intent, assessmentId) is { } failure)
             return failure;
         RaiseEvent(new TypeIEntryDecisionRecorded(_tenantId, _programId, _revision + 1, decisionContent, operation,
             assessmentId, operation.RootOperationId, decisionProofs, intent, null, operationResult));
@@ -328,10 +328,11 @@ public sealed class ProgramReadiness : Aggregate
         return Result.Success;
     }
 
-    Result? PendingFailure<TAccepted>(OperationProvenance operation, ImmutableContentRef intent)
+    Result? PendingFailure<TAccepted>(OperationProvenance operation, ImmutableContentRef intent, Uuid assessmentId)
         where TAccepted : DomainEvent =>
         _pendingDecision is TAccepted pending && PendingRoot(pending) == operation.RootOperationId &&
-        DecisionTerms(pending)!.Value.Intent == intent && operation.Owner == Stream
+        DecisionTerms(pending)!.Value.Intent == intent && operation.Owner == Stream &&
+        LatestAssessmentId == assessmentId
             ? null
             : Result.Failure(new RequestError(RequestErrorKind.Conflict,
                 "Only the exact pending decision can be recorded.", false));

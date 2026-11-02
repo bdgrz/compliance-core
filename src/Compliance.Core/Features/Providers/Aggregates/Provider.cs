@@ -51,8 +51,8 @@ public sealed class Provider : NamedRecord
         _tenantId = tenantId;
         On<ProviderChangeAccepted>(ObserveAccepted);
         On<ProviderChangeCanceled>(ObserveCanceled);
-        On<ProviderRecorded>(ObserveApplied);
-        On<ProviderRevised>(ObserveApplied);
+        On<ProviderRecorded>(ObserveProviderApplied);
+        On<ProviderRevised>(ObserveProviderApplied);
     }
 
     /// <inheritdoc />
@@ -93,5 +93,12 @@ public sealed class Provider : NamedRecord
         RaiseEvent(new ProviderChangeCanceled(Stream, pending.ExpectedRevision, pending.Generation, pending.Intent,
             failureProof, operation, null, null));
         return Result.Success;
+    }
+
+    void ObserveProviderApplied(INamedRecordAppliedFact fact)
+    {
+        if (fact.RecordTenantId != _tenantId)
+            throw new InvalidOperationException("A provider revision must belong to its tenant.");
+        ObserveApplied(fact);
     }
 }

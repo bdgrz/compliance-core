@@ -73,6 +73,8 @@ public sealed class DataFlow : Aggregate
         Acceptance = new NativeAcceptance(selectedLogicalId);
         On<DataFlowRevisionRecorded>(ev =>
         {
+            if (ev.TenantId != _tenantId || ev.DataFlowId != Id)
+                throw new InvalidOperationException("A data flow revision must belong to its tenant and flow.");
             Acceptance.Observe(ev);
             _created = true;
             _revision = ev.Revision;

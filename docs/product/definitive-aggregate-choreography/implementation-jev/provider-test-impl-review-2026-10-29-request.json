@@ -1,0 +1,34 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "rule": "Provider: one provider record per stream providers/{providerId}. At most one pending change; a generation fence makes a delayed apply or cancel after the change settled a no-op; revision advances only when a change is applied. A creation needs an empty identity (no change ever accepted). Name uniqueness is owned by ProviderNameClaim.",
+    "code": "AcceptChange refuses with Conflict when a change is pending, Conflict when create and any change was ever accepted (even when that creation was later canceled and no record exists), NotFound when revising an unrecorded provider, Conflict on stale expected revision. ApplyChange and CancelChange refuse with Conflict, appending nothing, unless the pending change matches the root operation (apply also matches intent). Reducers for ProviderRecorded and ProviderRevised refuse a fact whose TenantId differs from the owner tenant.",
+    "tests": "Pending change refuses a second accept with no new fact. Apply with a different intent is refused, no fact, still pending. Cancel with a different root is refused, still pending. Late apply after cancel is refused and the next generation accept succeeds. After a canceled creation a revise is refused NotFound and nothing is appended."
+  },
+  "questions": {
+    "intent_test": {
+      "type": "noul",
+      "instructions": "Does the test where an apply with a different intent is refused with Conflict, no fact appended and the change still pending assert that a delayed or mismatched apply cannot append a wrong fact?",
+      "criteria": {"true": "The mismatched apply appends nothing and the pending change is kept.", "false": "The test does not show the apply is fenced."}
+    },
+    "fence_test": {
+      "type": "noul",
+      "instructions": "Does the test where a late apply after a cancel is refused and a next-generation accept then succeeds assert the generation fence rule?",
+      "criteria": {"true": "The late apply is a no-op and the next generation proceeds.", "false": "The test does not show the fence."}
+    },
+    "canceled_creation": {
+      "type": "choice",
+      "instructions": "A creation was accepted and then canceled, so no provider record exists, but a second creation with the same provider id is refused with Conflict (The provider identity already exists). Is this consistent with the rule that the creation identity is caller-supplied and immutable?",
+      "criteria": {
+        "keep_refuse": "The canceled creation consumed the caller-supplied id; the caller creates with a new id. Refusing is consistent.",
+        "allow_retry": "A canceled creation should leave the id reusable, so the creation guard should allow a new creation.",
+        "needs_source_resolution": "The sources do not decide it."
+      }
+    },
+    "tenant_guard": {
+      "type": "noul",
+      "instructions": "Is refusing an applied provider fact whose TenantId differs from the owner's tenant during replay consistent with the invariant that a provider stream belongs to one tenant?",
+      "criteria": {"true": "The guard enforces tenant isolation without adding a new rule.", "false": "It adds a rule the invariant does not state."}
+    }
+  }
+}

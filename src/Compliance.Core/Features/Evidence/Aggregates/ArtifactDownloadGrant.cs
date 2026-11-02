@@ -48,7 +48,7 @@ public sealed class ArtifactDownloadGrant : Aggregate
             contentSha256, contentLength, purpose, issuedBy, issuedAt, operation, intent, Id, null,
             operationResult);
         if (_issued is not null)
-            return _issued == candidate ? Result.Success : Conflict("The download grant is already issued.");
+            return SamePayload(_issued, candidate) ? Result.Success : Conflict("The download grant is already issued.");
         if (_canceled is not null)
             return Conflict("A canceled download grant cannot be issued.");
         var error = ValidateIssued(candidate);
@@ -64,9 +64,9 @@ public sealed class ArtifactDownloadGrant : Aggregate
         var candidate = new ArtifactDownloadGrantCanceled(Stream, 1, generation, intent, sourceProofs,
             operation, Id, null, operationResult);
         if (_canceled is not null)
-            return _canceled == candidate ? Result.Success : Conflict("The download grant is already canceled.");
+            return SamePayload(_canceled, candidate) ? Result.Success : Conflict("The download grant is already canceled.");
         if (_issued is not null)
-            return Conflict("An issued download grant cannot be canceled or renewed.");
+            return Result.Success; // The catalog makes an abort after a terminal outcome a no-op.
         var error = ValidateCanceled(candidate);
         if (error is not null)
             return Result.Failure(error);
@@ -120,6 +120,23 @@ public sealed class ArtifactDownloadGrant : Aggregate
             return new RequestError(RequestErrorKind.Validation, "The canceled download grant does not match its command and source proofs.");
         return null;
     }
+
+    // Stored facts carry committed metadata that a new candidate lacks, so compare business payload only.
+    static bool SamePayload(EvidenceArtifactDownloadIssuedV2 stored, EvidenceArtifactDownloadIssuedV2 candidate) =>
+        stored.TenantId == candidate.TenantId && stored.ArtifactId == candidate.ArtifactId &&
+        stored.Revision == candidate.Revision && stored.RequestId == candidate.RequestId &&
+        stored.ContentSha256 == candidate.ContentSha256 && stored.ContentLength == candidate.ContentLength &&
+        stored.Purpose == candidate.Purpose && stored.IssuedBy == candidate.IssuedBy &&
+        stored.IssuedAt == candidate.IssuedAt && stored.Operation == candidate.Operation &&
+        stored.Intent == candidate.Intent && stored.GrantId == candidate.GrantId &&
+        stored.FirstResponse == candidate.FirstResponse && stored.OperationResult == candidate.OperationResult;
+
+    static bool SamePayload(ArtifactDownloadGrantCanceled stored, ArtifactDownloadGrantCanceled candidate) =>
+        stored.Owner == candidate.Owner && stored.Revision == candidate.Revision &&
+        stored.Generation == candidate.Generation && stored.Intent == candidate.Intent &&
+        stored.SourceProofs == candidate.SourceProofs && stored.Operation == candidate.Operation &&
+        stored.GrantId == candidate.GrantId && stored.FirstResponse == candidate.FirstResponse &&
+        stored.OperationResult == candidate.OperationResult;
 
     static Result Conflict(string message) =>
         Result.Failure(new RequestError(RequestErrorKind.Conflict, message));

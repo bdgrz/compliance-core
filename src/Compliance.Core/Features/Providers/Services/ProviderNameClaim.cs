@@ -36,6 +36,8 @@ using Bdgrz.Compliance.Features.NamedRecords.Aggregates;
 using Bdgrz.Compliance.Features.NativeOperations.Models;
 using Bdgrz.Compliance.Features.Proofs.Models;
 using Bdgrz.Compliance.Features.Providers.Events;
+using Bdgrz.Compliance.Features.Providers.Aggregates;
+using Bdgrz.Compliance.Features.NamedRecords.Services;
 using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
 namespace Bdgrz.Compliance.Features.Providers.Services;
 
@@ -45,6 +47,8 @@ namespace Bdgrz.Compliance.Features.Providers.Services;
 /// </summary>
 public sealed class ProviderNameClaim : NameClaim
 {
+    readonly Uuid _tenantId;
+
     /// <summary>Owner type that seeds the identity.</summary>
     public const string OwnerType = "ProviderNameClaim";
 
@@ -64,18 +68,26 @@ public sealed class ProviderNameClaim : NameClaim
     {
         if (stream.Realm != tenantId.ToString() || stream.Area != Area)
             throw new ArgumentException("A provider name claim lives in its tenant's claim area.", nameof(stream));
-        On<ProviderNameClaimed>(ObserveClaimed);
-        On<ProviderNameReleased>(ObserveReleased);
+        _tenantId = tenantId;
+        On<ProviderNameClaimed>(ObserveProviderNameClaimed);
+        On<ProviderNameReleased>(ObserveProviderNameReleased);
     }
 
     /// <summary>The claim stream of a normalized name.</summary>
-    public static EventStreamAddress AddressOf(Uuid tenantId, string normalizedName) =>
-        new(tenantId.ToString(), Area, AggregateIdentity.Create(OwnerType, tenantId, normalizedName).ToString());
+    public static EventStreamAddress AddressOf(Uuid tenantId, string normalizedName)
+    {
+        ArgumentException.ThrowIfNullOrEmpty(normalizedName);
+        if (!string.Equals(normalizedName, NameNormalization.Normalize(normalizedName), StringComparison.Ordinal))
+            throw new ArgumentException("A provider name claim is addressed by the normalized name.", nameof(normalizedName));
+        return new(tenantId.ToString(), Area, AggregateIdentity.Create(OwnerType, tenantId, normalizedName).ToString());
+    }
 
     /// <inheritdoc />
     public override Result Claim(OperationProvenance operation, EventStreamAddress holder, long expectedRevision,
         long generation, ImmutableContentRef intent)
     {
+        if (!IsProviderOwner(holder))
+            return InvalidHolder();
         var checkedClaim = CheckClaim(operation, holder, generation);
         if (!checkedClaim.IsSuccess)
             return checkedClaim;
@@ -87,10 +99,34 @@ public sealed class ProviderNameClaim : NameClaim
     public override Result Release(OperationProvenance operation, EventStreamAddress holder, long expectedRevision,
         long generation, ImmutableContentRef intent)
     {
+        if (!IsProviderOwner(holder))
+            return InvalidHolder();
         var checkedRelease = CheckRelease(operation, holder, generation);
         if (!checkedRelease.IsSuccess)
             return checkedRelease;
         RaiseEvent(new ProviderNameReleased(holder, expectedRevision, generation, intent, null, operation, null, null));
         return Result.Success;
     }
+
+    void ObserveProviderNameClaimed(ProviderNameClaimed fact)
+    {
+        if (!IsProviderOwner(fact.Owner))
+            throw new InvalidOperationException("A provider name claim must belong to a provider in its tenant.");
+        ObserveClaimed(fact);
+    }
+
+    void ObserveProviderNameReleased(ProviderNameReleased fact)
+    {
+        if (!IsProviderOwner(fact.Owner))
+            throw new InvalidOperationException("A provider name release must belong to a provider in its tenant.");
+        ObserveReleased(fact);
+    }
+
+    bool IsProviderOwner(EventStreamAddress owner) =>
+        owner is not null && owner.Realm == _tenantId.ToString() && owner.Area == Provider.Area &&
+        Uuid.TryParse(owner.Resource, System.Globalization.CultureInfo.InvariantCulture, out var providerId) &&
+        providerId != Uuid.Empty;
+
+    static Result InvalidHolder() => Result.Failure(new RequestError(RequestErrorKind.Validation,
+        "A provider name claim must belong to a provider in its tenant."));
 }
