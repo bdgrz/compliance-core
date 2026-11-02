@@ -115,6 +115,9 @@ public sealed class AccessPopulation : Aggregate
         var prepared = PrepareOpen();
         if (!prepared.IsSuccess)
             return prepared;
+        if (applicationId == Uuid.Empty || systemInstanceId == Uuid.Empty || string.IsNullOrWhiteSpace(source))
+            return AccessReviewOperation.Failure(RequestErrorKind.Validation,
+                "A population names its application, system instance and source.");
         RaiseEvent(new AccessPopulationOpened(_tenantId, Id, applicationId, systemInstanceId, systemInstanceRevision,
             observedAt, AccessReviewVocabulary.ManualAttestation, source, actor, now, operation, firstResponse,
             operationResult));
@@ -156,7 +159,12 @@ public sealed class AccessPopulation : Aggregate
             return AccessReviewOperation.Failure(RequestErrorKind.NotFound, "The population was not found.");
         if (IsAccepted)
             return AccessReviewOperation.Failure(RequestErrorKind.Conflict, "The population was already accepted.");
-        return expectedRevision == Revision ? Result.Success : Stale();
+        if (expectedRevision != Revision)
+            return Stale();
+        return FactsContent is null
+            ? AccessReviewOperation.Failure(RequestErrorKind.Validation,
+                "Record the observed facts before acceptance.")
+            : Result.Success;
     }
 
     /// <summary>Accepts the staged facts as the root native fact of its operation.</summary>
@@ -172,6 +180,10 @@ public sealed class AccessPopulation : Aggregate
         var prepared = PrepareAccept((long)expected);
         if (!prepared.IsSuccess)
             return prepared;
+        if (snapshotId == Uuid.Empty || calculationId == Uuid.Empty || string.IsNullOrWhiteSpace(contentSha256) ||
+            string.IsNullOrWhiteSpace(attestation))
+            return AccessReviewOperation.Failure(RequestErrorKind.Validation,
+                "An acceptance names its snapshot, content hash, calculation and attestation.");
         RaiseEvent(new AccessPopulationAccepted(_tenantId, Id, Revision + 1, snapshotId, contentSha256, calculationId,
             attestation, actor, now, operation, firstResponse, operationResult));
         return Result.Success;

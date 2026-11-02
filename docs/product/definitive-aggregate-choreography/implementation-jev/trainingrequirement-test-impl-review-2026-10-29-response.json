@@ -1,0 +1,31 @@
+{
+  "httpStatus": 200,
+  "response": {
+    "model": "jev-1.14.0",
+    "answers": {
+      "define_mismatch_outcome": {
+        "type": "choice",
+        "choice": "validation_refusal_no_fact",
+        "confidence": 1,
+        "probabilities": {
+          "validation_refusal_no_fact": 1,
+          "append_anyway": 0,
+          "conflict_refusal": 0,
+          "needs_source_resolution": 0
+        }
+      },
+      "test_asserts_invariant": {
+        "type": "noul",
+        "noul": 0.84
+      },
+      "revise_consistent": {
+        "type": "noul",
+        "noul": 0.92
+      }
+    },
+    "usage": {
+      "input_tokens": 770,
+      "output_tokens": 108
+    }
+  }
+}

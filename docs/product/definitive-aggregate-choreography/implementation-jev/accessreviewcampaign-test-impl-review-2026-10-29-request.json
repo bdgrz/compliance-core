@@ -1,0 +1,57 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "owner": "AccessReviewCampaign",
+    "rule": "One campaign has one launch. At most one completion is admitted at a time; while it is pending, a second completion and any bulk decision admission are refused. Closure and cancellation act only on the exact pending completion root; a closure for any other root is refused. A closed campaign is terminal. Every command carries an expected revision and a stale revision is refused with a conflict and appends nothing.",
+    "test_delayed_closure": "History: launch (rev 1), completion A accepted (rev 2), completion A canceled (rev 3), completion B accepted (rev 4). Close naming root A returns Conflict. Close naming root B succeeds and appends one Completed fact at revision 5 carrying B's intent and root B.",
+    "test_sealed": "History: launch, completion accepted (rev 2). A second completion command at expected revision 2 and a bulk admission command at expected revision 2 both return Conflict; no event is pending; revision stays 2.",
+    "test_retry": "History: launch, completion X accepted (rev 2), completion X canceled (rev 3), hydrated for logical operation X. AcceptedFor(X) and CanceledFor(X) return the committed facts. A repeat AcceptCompletion for X at expected revision 3 returns Conflict (selected fact present) and appends nothing; revision stays 3.",
+    "payload_identity": "Catalog and code agree: AccessReviewCampaignLaunched and AccessReviewCampaignCompleted carry TenantId and CampaignId in the payload although the stream address already carries tenant and campaign id; the other three events carry Owner (stream address). Policy: payloads carry only business facts not already carried by stream identity or metadata.",
+    "catalog_version": "Catalog lists discriminator version 1 for Launched and Completed and no ItemIntentManifest field on Launched. Code declares version 2 and has an ItemIntentManifest content reference on Launched (the frozen per-item creation intents). Event names are identical."
+  },
+  "questions": {
+    "delayed_closure_asserts": {
+      "type": "noul",
+      "instructions": "Does state.test_delayed_closure prove that a delayed closure of an already canceled completion cannot close the campaign while a newer completion is pending?",
+      "criteria": {
+        "true": "The refused closure for root A and the accepted closure for root B prove the exact-root fence.",
+        "false": "The scenario could pass while a closure of the canceled root would be accepted."
+      }
+    },
+    "sealed_asserts": {
+      "type": "noul",
+      "instructions": "Does state.test_sealed prove the completion gate seals the campaign against a competing completion and a bulk admission?",
+      "criteria": {
+        "true": "Both competing commands are refused with no pending event, which proves the seal.",
+        "false": "The scenario could pass while a competing admission is appended."
+      }
+    },
+    "retry_consistent": {
+      "type": "noul",
+      "instructions": "Is state.test_retry consistent with the rule that a retry of a committed operation is acknowledged from the committed fact and never appends a new fact?",
+      "criteria": {
+        "true": "The owner exposes the committed facts and refuses to append a new one on the repeat.",
+        "false": "The repeat could append a duplicate fact or the committed fact is not recoverable."
+      }
+    },
+    "payload_identity_gap": {
+      "type": "choice",
+      "instructions": "Given state.payload_identity, should this aggregate stage change the already shipped event payloads that repeat stream identity?",
+      "criteria": {
+        "no_change_now": "Payload identity repetition on shipped events agrees with the catalog; any change is a shared catalog and schema decision outside the aggregate stage.",
+        "remove_fields": "The aggregate stage should remove the repeated identity fields now.",
+        "needs_source_resolution": "Unclear from the given facts."
+      }
+    },
+    "catalog_gap": {
+      "type": "choice",
+      "instructions": "Given state.catalog_version, is there an event-model discrepancy needing action?",
+      "criteria": {
+        "no_discrepancy": "Event names agree and nothing in code is an owner decision the catalog lacks.",
+        "update_catalog_record_shipped_shape": "Names agree but the catalog records an outdated version and omits a shipped payload field; the shared catalog owner should record the shipped shape.",
+        "remove": "Code has an event the catalog does not want.",
+        "needs_source_resolution": "Unclear from the given facts."
+      }
+    }
+  }
+}

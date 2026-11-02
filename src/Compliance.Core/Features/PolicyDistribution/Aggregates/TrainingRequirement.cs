@@ -110,6 +110,11 @@ public sealed class TrainingRequirement : Aggregate
         if (operation.Owner != Stream || operation.LogicalId != Id)
             return Result.Failure(new RequestError(RequestErrorKind.Validation,
                 "A definition is the root operation of its own requirement."));
+        if (!TrainingRequirementIdentity.IsValidIdentifier(normalizedIdentifier) ||
+            TrainingRequirementIdentity.NormalizeIdentifier(normalizedIdentifier) != normalizedIdentifier ||
+            TrainingRequirementIdentity.IdFor(_tenantId, programId, normalizedIdentifier) != Id)
+            return Result.Failure(new RequestError(RequestErrorKind.Validation,
+                "The requirement id is derived from its tenant, program and normalized identifier."));
         var prepared = PrepareDefine();
         if (!prepared.IsSuccess)
             return prepared;

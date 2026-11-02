@@ -1,0 +1,62 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "owner": "CorrectiveAction",
+    "identity": "(tenant, program, finding, action)",
+    "catalog_invariant": "Independent corrective-action lifecycle, evidence and completion proof.",
+    "catalog_must_preserve": "Close only with at least one action, all complete, evidence/rationale present and independent closer unless exact waiver. Closed finding is immutable until reopen.",
+    "code_behavior": {
+      "complete": "Complete is refused with no event when the action is not materialized (not found), when a closed-parent settlement fenced it (state conflict), when a finding-closure source use is active (retryable conflict), when the expected revision is stale, or when already completed (conflict). Otherwise it appends CorrectiveActionCompletedV2 at revision 2.",
+      "materialize": "Materialize appends CorrectiveActionAddedV2 at revision 1 once; a second attempt is a conflict with no event. It does not consult the closed-parent fence.",
+      "authorize_closure_use": "AuthorizeFindingClosureUse holds the action for a finding closure if it is materialized; it does not itself require the action to be completed. The authorize handler refuses an uncompleted action before pinning, and the grant is pinned to the revision.",
+      "completed_payload": "CorrectiveActionCompletedV2 carries CompletedByMemberId (Uuid) and CompletedBy (an ActorReference naming a member) plus completion time, notes and evidence manifest.",
+      "tests": "A test materializes, then replays an Authorized closure-use fact at revision 1 and asserts PrepareComplete(1) is a retryable Conflict with no event."
+    }
+  },
+  "questions": {
+    "active_hold_blocks_completion": {
+      "type": "choice",
+      "instructions": "For state.code_behavior.tests and state.code_behavior.complete, is refusing completion with no event while a closure use is active consistent with state.catalog_must_preserve?",
+      "criteria": {
+        "consistent_refuse_without_event": "Refusing completion while a closure holds the action preserves that the closing decision sees stable complete actions.",
+        "inconsistent_should_allow": "Completion should be accepted despite an active closure hold.",
+        "needs_source_resolution": "Only the owner can decide."
+      }
+    },
+    "materialize_after_fence": {
+      "type": "choice",
+      "instructions": "For state.code_behavior.materialize versus state.catalog_must_preserve (a closed finding is immutable until reopen), should the aggregate also refuse materialization once a closed-parent settlement fenced its stream?",
+      "criteria": {
+        "refuse_when_fenced": "Materialization after a closed-parent fence must be refused at the aggregate.",
+        "allow_guarded_elsewhere": "Not required at the aggregate; the finding owner and handler guard it, and the fence only matters for completion.",
+        "needs_source_resolution": "Only the owner can decide."
+      }
+    },
+    "authorize_requires_completion": {
+      "type": "choice",
+      "instructions": "For state.code_behavior.authorize_closure_use, should the aggregate itself refuse a closure hold on an action that is not completed (the model is silent)?",
+      "criteria": {
+        "require_completion_at_aggregate": "The action aggregate must refuse holding an uncompleted action.",
+        "handler_guard_is_enough": "The handler guard plus the revision-pinned grant is sufficient; no aggregate change needed.",
+        "needs_source_resolution": "Only the owner can decide."
+      }
+    },
+    "completed_by_redundancy": {
+      "type": "choice",
+      "instructions": "For state.code_behavior.completed_payload, is carrying both CompletedByMemberId and CompletedBy a payload field duplicating information already carried, to be removed?",
+      "criteria": {
+        "remove_member_id": "CompletedByMemberId duplicates CompletedBy and should be removed.",
+        "keep_both": "Both are business facts or compatibility fields; keep.",
+        "needs_source_resolution": "Only the owner can decide."
+      }
+    },
+    "fence_premise": {
+      "type": "noul",
+      "instructions": "The premise holds: a closed-parent settlement can only occur after the action exists, because a finding can only close with at least one complete action (state.catalog_must_preserve), so materialization after a fence is unreachable.",
+      "criteria": {
+        "true": "The premise holds.",
+        "false": "It does not hold."
+      }
+    }
+  }
+}

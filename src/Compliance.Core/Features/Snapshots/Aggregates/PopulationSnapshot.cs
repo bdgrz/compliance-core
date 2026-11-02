@@ -150,15 +150,29 @@ public sealed class PopulationSnapshot : Aggregate
     {
         amendmentReason = amendmentReason?.Trim();
         if (digest is null || chunks is null || chunks.Count is < 2 or > PopulationSnapshotStorage.MaximumChunks ||
+            chunks.Any(chunk => chunk is null) ||
             chunks.Sum(chunk => (long)chunk.Count) != digest.RowCount ||
             !HasValidLinkage(rootSnapshotId, amendsSnapshotId, amendmentReason, frozenBy))
             return Failure(RequestErrorKind.Validation,
                 "The snapshot requires ordered storage chunks and valid amendment linkage.");
+        if (!PopulationContentIdentity.Compute(kind, []).IsSuccess || !IsSha256(digest.Sha256) ||
+            digest.ChunkCount != (digest.RowCount + PopulationContentIdentity.RowsPerChunk - 1) /
+            PopulationContentIdentity.RowsPerChunk)
+            return Failure(RequestErrorKind.Validation,
+                "The snapshot requires a valid kind and population identity.");
+        var start = 0;
         for (var index = 0; index < chunks.Count; index++)
         {
-            if (chunks[index].Index != index)
+            var chunk = chunks[index];
+            if (chunk.Index != index || chunk.Start != start)
                 return Failure(RequestErrorKind.Validation,
                     "The snapshot storage chunks must be ordered.");
+            if (chunk.Count is < 1 or > PopulationSnapshotStorage.MaximumRowsPerChunk ||
+                chunk.EncodedBytes is < 1 or > PopulationSnapshotStorage.ChunkByteBudget ||
+                !IsSha256(chunk.Sha256))
+                return Failure(RequestErrorKind.Validation,
+                    "The snapshot storage chunks must be bounded and carry a valid digest.");
+            start += chunk.Count;
         }
         var manifest = PopulationSnapshotStorage.ManifestSha256(kind, digest.RowCount, chunks);
         if (_frozen is not null)
@@ -169,6 +183,9 @@ public sealed class PopulationSnapshot : Aggregate
             frozenAt, chunks.Count, manifest));
         return Result<SnapshotRegistration>.Success(new SnapshotRegistration(Id, digest.Sha256));
     }
+
+    static bool IsSha256(string? value) =>
+        value is { Length: 64 } && value.All(character => character is (>= '0' and <= '9') or (>= 'a' and <= 'f'));
 
     bool HasValidLinkage(Uuid rootSnapshotId, Uuid? amendsSnapshotId, string? amendmentReason,
         ActorReference frozenBy) =>
