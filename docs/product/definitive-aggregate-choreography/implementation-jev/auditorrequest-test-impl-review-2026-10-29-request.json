@@ -1,0 +1,52 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "owner": "AuditorRequest",
+    "invariant": "Pending or accepted resolution seals admission; a resolution is accepted once per generation over exactly the admitted responses (at least one), resolves only via the exact pending operation, and reopen of a resolved request advances the generation.",
+    "code_behavior": {
+      "write_while_pending": "Comment/revise on a request with a pending resolution at the current revision is refused with Conflict marked transient (retry when it settles); no fact appended.",
+      "write_while_resolved": "Comment/revise on a resolved request at the current revision is refused with Conflict, non-transient (reopen first); no fact appended.",
+      "second_resolve_while_pending": "A second Resolve command with a new command id while one is pending is refused with transient Conflict, revision unchanged.",
+      "reopen": "Reopen of a resolved request advances generation 1 to 2 and revision by 1; a comment then admitted carries generation 2.",
+      "whole_history_set": "Resolution must name every response admitted across all generations, not only the current generation."
+    },
+    "tests": "Three tests assert: pending => comment, revise and second resolve all Conflict transient with unchanged revision; resolved => comment and revise Conflict non-transient with unchanged revision; reopen => generation 2, revision+1, admitted comment has generation 2."
+  },
+  "questions": {
+    "pending_seal": {
+      "type": "choice",
+      "instructions": "Is the pending-state behavior in state.code_behavior consistent with state.invariant?",
+      "criteria": {
+        "consistent": "Refusing all writes and a second resolution while pending, without appending a fact, enforces the seal.",
+        "inconsistent": "The behavior does not enforce the seal.",
+        "needs_source_resolution": "Only the owner can decide."
+      }
+    },
+    "transient_vs_state": {
+      "type": "choice",
+      "instructions": "Is it right that pending is a transient conflict while resolved is a non-transient state conflict?",
+      "criteria": {
+        "right": "Pending settles by itself, so retry is valid; resolved needs reopen.",
+        "wrong": "Both should have the same transience.",
+        "needs_source_resolution": "Only the owner can decide."
+      }
+    },
+    "whole_history": {
+      "type": "choice",
+      "instructions": "For state.code_behavior.whole_history_set, is requiring all-generation responses consistent with state.invariant 'exactly the admitted responses'?",
+      "criteria": {
+        "whole_history": "Consistent: admitted responses means all admitted on the stream.",
+        "per_generation": "Should be only current-generation responses.",
+        "needs_source_resolution": "Only the owner can decide."
+      }
+    },
+    "tests_assert_invariant": {
+      "type": "noul",
+      "instructions": "The three tests in state.tests assert the invariant in state.invariant behaviorally (facts not appended, generation advanced).",
+      "criteria": {
+        "true": "They assert it.",
+        "false": "They do not."
+      }
+    }
+  }
+}

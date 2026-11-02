@@ -1,0 +1,48 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "owner": "AccessPrincipalClassification",
+    "rule": "Independent classification decision history for one accepted principal. Each decision is bound to the exact expected revision (the number of this principal's decisions); a stale or ahead revision is refused with a conflict and appends nothing. A decision that is not a root operation of its own principal stream is refused and appends nothing.",
+    "code_behavior": "Classify with a foreign-stream operation, a missing expected revision, or a wrong command kind returns Validation and appends nothing. Classify with a blank provider subject or empty population id returns Validation and appends nothing. Classify with expected revision different from the decision count returns Conflict and appends nothing.",
+    "test_contiguous": "Classify(expected 0) and Classify(expected 1) both succeed; two events are pending, the latest carries tenant, population and subject, and Revision is 2.",
+    "test_replay_competing": "A principal is replayed from one valid decision (revision 1). Classify(expected 0) returns Conflict, nothing is pending and Revision stays 1.",
+    "catalog": "Code declares AccessPrincipalClassified at discriminator version 2; the catalog lists version 1, and the 2026-10-29 reconciliation adopted the code wire. No event is added, removed or renamed; payload tenant/population/subject repeat the stream identity key parts."
+  },
+  "questions": {
+    "contiguous_asserts": {
+      "type": "noul",
+      "instructions": "Does state.test_contiguous prove that decisions are recorded as a contiguous per-principal sequence bound to the expected revision?",
+      "criteria": {
+        "true": "The scenario proves two sequential decisions append two events and advance the revision.",
+        "false": "The scenario could pass while revisions are skipped or duplicated."
+      }
+    },
+    "competing_asserts": {
+      "type": "noul",
+      "instructions": "Does state.test_replay_competing prove that a decision based on an outdated revision is refused after replay and appends nothing?",
+      "criteria": {
+        "true": "The scenario proves the stale decision is refused with no new fact.",
+        "false": "The scenario could pass while a stale decision is accepted."
+      }
+    },
+    "invalid_refusal": {
+      "type": "choice",
+      "instructions": "Given state.rule and state.code_behavior, is refusing a non-own-root or wrong-command decision with Validation and no fact consistent with the rule?",
+      "criteria": {
+        "consistent": "Refusing protects the single-principal contiguous history without appending a malformed fact.",
+        "inconsistent": "The rule requires accepting such a decision.",
+        "needs_source_resolution": "Unclear from the given facts."
+      }
+    },
+    "catalog_gap": {
+      "type": "choice",
+      "instructions": "Given state.catalog, is there an event-model discrepancy needing action in the aggregate or its events?",
+      "criteria": {
+        "no_discrepancy": "Event names agree with the adopted code wire; nothing needs action in the aggregate.",
+        "add_to_model": "Code has an owner-decision event the catalog lacks.",
+        "remove": "Code has an event the model does not want.",
+        "needs_source_resolution": "Unclear from the given facts."
+      }
+    }
+  }
+}

@@ -286,6 +286,82 @@ public sealed class SignificantChangeTests
         Assert.Equal(change.Revision, replay.Current.Revision);
     }
 
+    [Fact]
+    public void ShouldRefuseSecondAssessmentGivenVersionAlreadyAssessed()
+    {
+        // Arrange
+        var change = RecordedChange();
+        Assert.Null(change.Assess(change.Revision, Impact("not_significant", [], []),
+            AssessorId, "Compliance lead", Now.AddHours(1)));
+        var revision = change.Revision;
+        var applied = change.AppliedChanges.Count;
+
+        // Act
+        var second = change.Assess(change.Revision, Impact("significant",
+            [AffectedRecord("control")], changesKeyControl: true), AssessorId,
+            "Compliance lead", Now.AddHours(2));
+
+        // Assert
+        Assert.Equal(CommandFailureCode.StateConflict, Assert.IsType<CommandFailure>(second).Code);
+        Assert.Equal(revision, change.Revision);
+        Assert.Equal(applied, change.AppliedChanges.Count);
+        Assert.Equal("not_significant", change.Current!.CurrentAssessment!.Significance);
+    }
+
+    [Fact]
+    public void ShouldAcknowledgeExactRetryWithoutNewFactGivenIdenticalAssessmentRepeated()
+    {
+        // Arrange
+        var change = RecordedChange();
+        var assessedAt = Now.AddHours(1);
+        Assert.Null(change.Assess(change.Revision, Impact("not_significant", [], []),
+            AssessorId, "Compliance lead", assessedAt));
+        var revision = change.Revision;
+        var applied = change.AppliedChanges.Count;
+
+        // Act
+        var retry = change.Assess(1, Impact("not_significant", [], []),
+            AssessorId, "Compliance lead", assessedAt);
+
+        // Assert
+        Assert.Null(retry);
+        Assert.Equal(revision, change.Revision);
+        Assert.Equal(applied, change.AppliedChanges.Count);
+    }
+
+    [Fact]
+    public void ShouldRefuseAssessmentGivenStaleExpectedRevision()
+    {
+        // Arrange
+        var change = RecordedChange();
+        var stale = change.Revision - 1;
+        var applied = change.AppliedChanges.Count;
+
+        // Act
+        var result = change.Assess(stale, Impact("not_significant", [], []),
+            AssessorId, "Compliance lead", Now.AddHours(1));
+
+        // Assert
+        Assert.Equal(CommandFailureCode.VersionConflict, Assert.IsType<CommandFailure>(result).Code);
+        Assert.Equal(applied, change.AppliedChanges.Count);
+        Assert.Null(change.Current!.CurrentAssessment);
+    }
+
+    [Fact]
+    public void ShouldRefuseAssessmentGivenChangeNotRecorded()
+    {
+        // Arrange
+        var change = NewChange();
+
+        // Act
+        var result = change.Assess(0, Impact("not_significant", [], []),
+            AssessorId, "Compliance lead", Now.AddHours(1));
+
+        // Assert
+        Assert.Equal(CommandFailureCode.MissingRecord, Assert.IsType<CommandFailure>(result).Code);
+        Assert.Empty(change.AppliedChanges);
+    }
+
     static SignificantChangeAggregate NewChange() => new(TenantId, ProgramId, ChangeId);
 
     static SignificantChangeAggregate RecordedChange()
