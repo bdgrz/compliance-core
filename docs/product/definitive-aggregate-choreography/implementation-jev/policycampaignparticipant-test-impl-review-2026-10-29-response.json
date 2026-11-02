@@ -1,0 +1,41 @@
+{
+  "model": "jev-1.14.0",
+  "answers": {
+    "producer": {
+      "type": "noul",
+      "noul": 0.39
+    },
+    "history_gap": {
+      "type": "noul",
+      "noul": 0.86
+    },
+    "selected_wire": {
+      "type": "choice",
+      "choice": "reconcile_owner_metadata",
+      "confidence": 0.95,
+      "probabilities": {
+        "reconcile_owner_metadata": 0.97,
+        "change_wire_to_v1": 0,
+        "needs_source_resolution": 0.03
+      }
+    },
+    "wire_premise": {
+      "type": "noul",
+      "noul": 0.72
+    },
+    "repeated": {
+      "type": "choice",
+      "choice": "needs_source_resolution",
+      "confidence": 0.35,
+      "probabilities": {
+        "retain_existing": 0.07,
+        "plan_versioned_change": 0.36,
+        "needs_source_resolution": 0.57
+      }
+    }
+  },
+  "usage": {
+    "input_tokens": 816,
+    "output_tokens": 151
+  }
+}

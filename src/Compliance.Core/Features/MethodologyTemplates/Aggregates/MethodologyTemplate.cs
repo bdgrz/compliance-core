@@ -43,6 +43,7 @@ using Bdgrz.Compliance.Features.Examinations.Aggregates;
 using Bdgrz.Compliance.Features.MethodologyTemplates.Commands;
 using Bdgrz.Compliance.Features.MethodologyTemplates.Events;
 using Bdgrz.Compliance.Features.MethodologyTemplates.Models;
+using Bdgrz.Compliance.Features.MethodologyTemplates.Rules;
 using Bdgrz.Compliance.Features.Proofs.Models;
 namespace Bdgrz.Compliance.Features.MethodologyTemplates.Aggregates;
 
@@ -116,6 +117,13 @@ public sealed class MethodologyTemplate : Aggregate
         };
         if (!guard.IsSuccess)
             return guard;
+        if (kind == nameof(ApproveMethodologyTemplateVersion) &&
+            (!MethodologyTemplateRules.ValidVersion(version, Id) || version.Status != "published" ||
+             version.ApprovedByMemberId != memberId || version.ApprovedAt != operation.AcceptedAt ||
+             version.VersionId != VersionId ||
+             version.AuthoredByMemberId != AuthorMemberId || version.ContentSha256 != ContentSha256 ||
+             version.Review?.ReviewedByMemberId != ReviewerMemberId))
+            return Conflict("Publication must preserve the exact independently reviewed version.");
         DomainEvent fact = kind switch
         {
             nameof(CreateMethodologyTemplate) => new MethodologyTemplateCreated(Uuid.Empty, Id, _revision + 1,
@@ -179,24 +187,29 @@ public sealed class MethodologyTemplate : Aggregate
                 break;
             case MethodologyTemplateVersionPublished published:
                 guard = PreparePublish(fact.VersionNumber, published.ActorMemberId);
-                if (fact.VersionStatus != "published" || fact.Operation.OriginalExpectedRevision is not null ||
+                if (fact.VersionStatus != "published" || fact.ReviewerMemberId != ReviewerMemberId ||
+                    fact.Operation.OriginalExpectedRevision is not null ||
                     fact.Operation.CommandKind != nameof(ApproveMethodologyTemplateVersion))
                     throw new InvalidOperationException("A publication must answer the independently reviewed version.");
-                _hasPublished = true;
-                PublishedVersionNumber = fact.VersionNumber;
-                PublishedVersionId = fact.VersionId;
                 break;
             default:
                 guard = PrepareRetire(_revision);
                 if (fact.VersionNumber != VersionNumber || fact.Operation.OriginalExpectedRevision != (ulong)_revision ||
                     fact.Operation.CommandKind != nameof(RetireMethodologyTemplate))
                     throw new InvalidOperationException("Retirement must answer the current template revision.");
-                _retired = true;
                 break;
         }
         if (!guard.IsSuccess || value is not (MethodologyTemplateCreated or MethodologyTemplateDraftRevised) &&
             (fact.VersionId != VersionId || fact.AuthorMemberId != AuthorMemberId || fact.ContentSha256 != ContentSha256))
             throw new InvalidOperationException("The template fact violates its current authoritative version.");
+        if (value is MethodologyTemplateVersionPublished)
+        {
+            _hasPublished = true;
+            PublishedVersionNumber = fact.VersionNumber;
+            PublishedVersionId = fact.VersionId;
+        }
+        else if (value is MethodologyTemplateRetired)
+            _retired = true;
         CurrentContent = fact.Change;
         if (value is not MethodologyTemplateRetired)
             CurrentVersionContent = fact.Change;

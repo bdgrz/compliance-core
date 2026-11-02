@@ -1,0 +1,39 @@
+{
+  "model": "jev-1.14.0",
+  "answers": {
+    "outcome_premise": {
+      "type": "noul",
+      "noul": 0.89
+    },
+    "approval_premise": {
+      "type": "noul",
+      "noul": 0.89
+    },
+    "reader_gap": {
+      "type": "noul",
+      "noul": 0.95
+    },
+    "test_quality": {
+      "type": "noul",
+      "noul": 0.65
+    },
+    "payload_disposition": {
+      "type": "choice",
+      "choice": "versioned_contract_change",
+      "confidence": 0.23,
+      "probabilities": {
+        "retain_current_contract": 0.21,
+        "versioned_contract_change": 0.49,
+        "needs_source_resolution": 0.3
+      }
+    },
+    "payload_duplication": {
+      "type": "noul",
+      "noul": 0.76
+    }
+  },
+  "usage": {
+    "input_tokens": 835,
+    "output_tokens": 145
+  }
+}

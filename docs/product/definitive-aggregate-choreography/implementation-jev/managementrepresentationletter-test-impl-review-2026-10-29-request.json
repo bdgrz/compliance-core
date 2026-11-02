@@ -1,0 +1,14 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "catalog": "One tenant/letter stream; the letter is signed exactly when every fixed named required CEO or CISO signer has one immutable distinct signed artifact. Exact authorized creation retries resolve the original result using immutable actor and intent; fresh clock selection cannot replace that result.",
+    "implementation": "Record creates the letter using normalized content, current authenticated actor ID, server-resolved display and server clock. An existing letter now acknowledges matching normalized content and actor ID, irrespective of later display and clock values; it retains the original stored attribution and emits no fact. Signing binds signer, artifact ID, digest and the user-supplied SignedAt; a signer cannot replace a prior signature. Each event contains TenantId, SubjectId, Revision, ActorMemberId, State and OccurredAt. State repeats tenant, letter, revision and full recorded content and signature history.",
+    "tests": "A test records, signs, retries creation with the same actor and content but later display/time, and verifies the original attribution, revision and unchanged event count; changed content or actor conflicts. Another checks refusal/no event for an artifact reused by another signer and a stale revision."
+  },
+  "questions": {
+    "retry_attribution": {"type": "noul", "instructions": "Is acknowledging an exact letter creation retry without changing its recorded display and time consistent with the supplied immutable actor/intent retry rule?"},
+    "event_duplication_premise": {"type": "noul", "instructions": "Do the representation letter event's State fields repeat tenant, letter identity, revision and prior signature history also present in the event envelope or earlier events?"},
+    "event_duplication_disposition": {"type": "choice", "instructions": "How should the repeated representation letter state and envelope fields be handled for an existing versioned event?", "criteria": {"plan_versioned_event_change": "Report a versioned event contract change that removes redundant state and envelope data while preserving replay and migration.", "retain_snapshots": "The full state snapshots are necessary business facts and should remain unchanged.", "needs_source_resolution": "The evidence does not establish an appropriate contract change."}},
+    "signature_premise": {"type": "noul", "instructions": "Do the described direct tests check that a reused signature artifact and stale revision cannot add a signature fact?"}
+  }
+}

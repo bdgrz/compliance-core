@@ -1,0 +1,14 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "rule": "One tenant/subject practice owner permanently binds advisory or attest. A commitment can follow only its exact active reservation for the same root, subject, practice and engagement. A personal root binds actor, episode, authored digest, original expected revision and source/affected/revision owners.",
+    "implementation": "Commit locates the live slot by root, first owner, generation and purpose, checks practice and engagement, and now compares actor, episode, expected revision, digest and owner scopes with the reservation operation. The receiver verifies irreversible authorization and the frozen source-use envelope. A reservation event's intent references a source-use-authorization-intent containing the parent intent; a commitment event references that parent intent directly. Receiver logical IDs and causation facts differ between reserve and commit. The event carries Owner and operation.Owner equal to its stream, Revision, Generation, and business practice and engagement."
+  },
+  "questions": {
+    "root_check": {"type": "noul", "instructions": "Does checking actor, episode, authored digest and owner scopes against the live reservation help bind the commitment to the same personal root?"},
+    "intent_premise": {"type": "noul", "instructions": "Can a reservation's source-use envelope reference and a commitment's parent intent reference differ while describing the same admitted operation?"},
+    "intent_disposition": {"type": "choice", "instructions": "Should the aggregate require reservation Intent and commitment Intent content references to be identical given one is a source-use envelope containing the other as parent intent?", "criteria": {"do_not_require_identical_refs": "Retain distinct references and let the receiver verify the source-use envelope binds its parent intent.", "require_identical_refs": "Reject a commitment unless its reference equals the reservation envelope reference.", "needs_source_resolution": "Evidence does not establish the relationship."}},
+    "owner_premise": {"type": "noul", "instructions": "Does Owner in the practice reservation repeat its stream address while also appearing in operation provenance?"},
+    "owner_disposition": {"type": "choice", "instructions": "How should the practice reservation event's duplicated Owner be handled?", "criteria": {"keep_shared_envelope": "Keep it as part of the shared source-use protocol fact contract.", "version_event_change": "Remove it in a versioned event and migrate source-use protocol consumers.", "needs_source_resolution": "Evidence does not establish a safe contract disposition."}}
+  }
+}

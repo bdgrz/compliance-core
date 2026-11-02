@@ -41,6 +41,8 @@ public sealed class EngagementManagementAcknowledgementOwnerTests
     [InlineData("cause")]
     [InlineData("kind")]
     [InlineData("source")]
+    [InlineData("invalid_source")]
+    [InlineData("empty_source")]
     [InlineData("affected")]
     [InlineData("revision_owner")]
     public void ShouldRefuseMaterializationWithoutFactGivenInvalidIdentityOrChildProvenance(string defect)
@@ -59,6 +61,15 @@ public sealed class EngagementManagementAcknowledgementOwnerTests
             "cause" => operation with { CausationEventId = null },
             "kind" => operation with { CommandKind = "Other" },
             "source" => operation with { FirstOwner = foreign },
+            "invalid_source" => operation with
+            {
+                FirstOwner = new EventStreamAddress(owner.Stream.Realm, ServiceEngagementIndependence.Area,
+                    "not-an-engagement"),
+            },
+            "empty_source" => operation with
+            {
+                FirstOwner = new ServiceEngagementIndependence(tenant, Uuid.Empty).Stream,
+            },
             "affected" => operation with { AffectedOwner = foreign },
             "revision_owner" => operation with { ExpectedRevisionOwner = foreign },
             _ => throw new ArgumentOutOfRangeException(nameof(defect)),

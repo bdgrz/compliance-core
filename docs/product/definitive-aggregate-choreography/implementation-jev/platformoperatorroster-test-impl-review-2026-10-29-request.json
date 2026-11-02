@@ -1,0 +1,19 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "invariant": "The fixed platform roster atomically decides current operator identity and assignment episodes, actor eligibility, and the prohibition on removing the last operator. Bootstrap configuration initializes an empty roster once and never regrants a revoked operator on restart.",
+    "admission": "Before a native append, PlatformOperatorRoster checks its exact revision and physical position and compares the supplied full prior authority to its committed digest. PlatformOperatorRosterRules.Apply checks the actual acting user, exact assignment episode, nonempty result, and applies the change. The owner checks its resulting full authority digest and exact fact and response bindings before raising the event.",
+    "retry": "Native acceptance recognizes an exact accepted command before preparing a new mutation. The current request still passes the platform operator authorizer. A replay returns the original native response without reapplying an old grant or revoke.",
+    "legacy": "PlatformOperatorRosterSeeded uses discriminator bdgrz.platform.operator-roster.seeded v1. The legacy fact stored its initial users in UserIds without a native immutable authority, operation or receipt. The current fact retains that discriminator and property but writes UserIds as an empty array and puts the full users into an immutable Authority reference. The current reducer refuses a legacy fact without the trusted authority and receipt. A checked-in unit test asserts fail-closed replay; actual production streams have not been inspected and no conversion protocol is shown.",
+    "catalog": "The selected event dictionary calls PlatformOperatorRosterSeeded the initialization of the roster with its starting operator users; selected decisions require exact initial identities and prohibit restoring revoked operators on restart. Grant and revoke also retain v1 discriminators and add native provenance and content references.",
+    "payload": "The v1 native facts persist fixed roster or operation identity, actor, occurred time and owner-address bindings together with event stream identity, metadata, immutable original authority, change and response references."
+  },
+  "questions": {
+    "last_operator": {"type": "noul", "instructions": "Does admission enforce the last-operator rule using the full before authority rather than an operator count alone?"},
+    "retry": {"type": "noul", "instructions": "Does the retry behavior described in retry prevent an exact old grant retry from restoring authority after a later revocation?"},
+    "legacy_incompatibility": {"type": "noul", "instructions": "Does the current behavior described in legacy reject retained legacy roster facts lacking native authority?"},
+    "seed_semantics": {"type": "noul", "instructions": "Does the current v1 seeded fact described in legacy put an empty array in the field where the legacy seeded fact stored initial users?"},
+    "legacy_disposition": {"type": "choice", "instructions": "How should the v1 seeded fact compatibility difference in legacy be handled?", "criteria": {"qualify_versioned_cutover": "Preserve the existing legacy contract and qualify an explicit versioned event or trusted conversion and consumer migration before claiming existing streams and consumers are compatible.", "declare_v1_compatible": "The current changed v1 semantics and refusal of legacy facts are compatible with existing histories and legacy consumers.", "needs_source_resolution": "The provided source evidence does not establish which compatibility treatment is correct."}},
+    "payload_duplication": {"type": "noul", "instructions": "Do the roster native facts described in payload contain values already represented by stream identity or event metadata?"}
+  }
+}

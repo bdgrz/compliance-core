@@ -46,3 +46,13 @@ Jev `jev-1.14.0` (advisory; request and response in `implementation-jev/engageme
 Release build and the focused three-owner selection passed (30 tests). Related client independence, acknowledgement and engagement tests passed (129 tests). The full non-broker, non-web suite passed 7,828 tests and failed five: the two ArtifactDownloadGrant coverage-map checks and three weekly-schedule original-result checks; those same five failed on hosted develop before wave 2. The suite is not green. Independent review checked current production operation builders; acknowledgement historical stream contents have not been inspected, and its replay now enforces child provenance earlier. Hosted CI and production qualification remain open.
 
 Whitespace verification passed for the three owners’ changed C# files using `dotnet format whitespace Compliance.slnx --verify-no-changes --no-restore --include <files>`.
+
+## Engagement source identity follow-up
+
+Review of the sibling partner decision found that checking the first owner's realm and area alone admitted a non-UUID or empty engagement resource. The coordinator ran `dotnet test test/Compliance.Tests/Compliance.Tests.csproj -c Release --no-restore --filter 'FullyQualifiedName~EngagementManagementAcknowledgementOwnerTests.ShouldRefuseMaterializationWithoutFactGivenInvalidIdentityOrChildProvenance'` before this fix: 2 failed, 8 passed, with both invalid resource cases accepted. `ValidChild` now also requires a canonical, nonempty engagement UUID in the source resource, matching `ServiceEngagementIndependence` stream construction. The source receiver remains responsible for verifying the exact authorized event and frozen intent. The same validation executes on replay, so existing persisted facts with a malformed source resource would no longer hydrate; normal checked-in producers use canonical engagement IDs, but production history has not been audited. Focused GREEN and review remain pending.
+
+## Wave 10 coordinator validation (2026-10-29)
+
+Release compilation and the contribution, partner decision, roster and acknowledgement selection passed 115 tests. The full non-broker, non-web suite passed 7,887 and failed five: two ArtifactDownloadGrant coverage-map tests and three weekly-schedule original-result tests; the same five failed on hosted develop before wave 2. The suite is not green. Checked-in producers were reviewed; persisted histories, legacy wire migration and production behavior remain unqualified.
+
+Whitespace verification passed for the changed C# files in the combined second and third batches using `dotnet format whitespace Compliance.slnx --verify-no-changes --no-restore --include <files>`.
