@@ -464,13 +464,11 @@ public sealed class AccessReviewCompletionProcessTests
     }
 
     [Fact]
-    public async Task ShouldMatchDesignCatalogGivenCompletionAndLaunchDefinitions()
+    public async Task ShouldMatchRuntimeContractGivenCompletionAndLaunchDefinitions()
     {
         // Arrange
         await using var fixture = await AccessReviewFixture.CreateAsync();
-        var path = Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "..", "docs", "product", "audits",
-            "2026-10-23", "target-reactor-contracts.json");
-        using var document = JsonDocument.Parse(await File.ReadAllTextAsync(path));
+        using var document = RuntimeProcessContracts.Read();
         var catalog = document.RootElement.GetProperty("processes").EnumerateArray()
             .ToDictionary(p => p.GetProperty("process").GetString()!, p => p);
 

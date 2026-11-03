@@ -638,13 +638,11 @@ public sealed class AccessReviewBulkDecisionTests
     }
 
     [Fact]
-    public async Task ShouldMatchDesignCatalogGivenBulkDefinition()
+    public async Task ShouldMatchRuntimeContractGivenBulkDefinition()
     {
         // Arrange
         await using var fixture = await AccessReviewFixture.CreateAsync();
-        var path = Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "..", "docs", "product", "audits",
-            "2026-10-23", "target-reactor-contracts.json");
-        using var document = System.Text.Json.JsonDocument.Parse(await File.ReadAllTextAsync(path));
+        using var document = RuntimeProcessContracts.Read();
         var entry = document.RootElement.GetProperty("processes").EnumerateArray()
             .Single(process => process.GetProperty("process").GetString() == AccessReviewEffects.BulkProcessName);
 

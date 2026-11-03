@@ -155,7 +155,7 @@ sealed class AdoptReadinessAssessmentHandler(IAggregateReader reader, IAggregate
             return SourceUseReceiverSupport.Superseded("A newer adoption generation superseded this run.", null);
         return program.PendingAdoption is { } pending && pending.Generation == command.AdmissionGeneration &&
                pending.Operation.RootOperationId == command.OperationId
-            ? null
+            ? default(Result<ReceiverOutcome>?)
             : SourceUseReceiverSupport.Permanent("The program no longer holds this run's pending adoption generation.");
     }
 

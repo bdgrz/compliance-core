@@ -93,14 +93,11 @@ namespace Bdgrz.Compliance.Tests.Features.NamedRecords.Tests;
 
 /// <summary>
 ///     The three name-change processes (provider, location, operational process) and their receivers over the
-///     shared runner: the registered definitions equal the design catalog, names are claimed and released in
+///     shared runner: the registered definitions match the runtime contract fixture, names are claimed and released in
 ///     canonical order, conflicts abort with a fence, and every step replays exactly.
 /// </summary>
 public sealed class NamedRecordProcessTests
 {
-    static readonly string CatalogPath = Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "..",
-        "docs", "product", "audits", "2026-10-23", "target-reactor-contracts.json");
-
     static readonly NamedRecordKindDescriptor Provider = ProviderNames.Descriptor;
     static readonly NamedRecordKindDescriptor Location = LocationNames.Descriptor;
     static readonly NamedRecordKindDescriptor Process = OperationalProcessNames.Descriptor;
@@ -109,10 +106,10 @@ public sealed class NamedRecordProcessTests
     [InlineData("ProviderNameChangeProcess")]
     [InlineData("LocationNameChangeProcess")]
     [InlineData("OperationalProcessNameChangeProcess")]
-    public void ShouldEqualDesignCatalogGivenRegisteredNameChangeProcess(string name)
+    public void ShouldEqualRuntimeContractGivenRegisteredNameChangeProcess(string name)
     {
         // Arrange
-        using var document = JsonDocument.Parse(File.ReadAllText(CatalogPath));
+        using var document = RuntimeProcessContracts.Read();
         var entry = document.RootElement.GetProperty("processes").EnumerateArray()
             .Single(process => process.GetProperty("process").GetString() == name);
         var definition = new[]

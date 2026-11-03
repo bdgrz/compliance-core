@@ -514,7 +514,7 @@ sealed class TypeIIRangeReceivers(IAggregateReader reader, IAggregateExecutor ex
                 Fact(period.Stream, period.TerminalFor(operation)!));
         return period.IsApplied(operation)
             ? SourceUseReceiverSupport.Replayed(Fact(period.Stream, period.TerminalFor(operation)!))
-            : intent.PeriodId == period.Id ? null
+            : intent.PeriodId == period.Id ? default(Result<ReceiverOutcome>?)
             : SourceUseReceiverSupport.Permanent("The apply names another period.");
     }
 

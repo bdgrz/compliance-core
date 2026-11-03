@@ -40,7 +40,7 @@ static class AdministratorSupersession
         if (member.MembershipEpisodeId != episode)
             return AdministratorReceiverSupport.Superseded("A later membership episode replaced this one.");
         return member.IsRegistered
-            ? null
+            ? default(Result<ReceiverOutcome>?)
             : AdministratorReceiverSupport.Superseded("The membership episode already ended.");
     }
 
@@ -52,7 +52,7 @@ static class AdministratorSupersession
         if (!assignment.IsAssigned)
             return AdministratorReceiverSupport.Superseded("The administrators-team assignment already closed.");
         return assignment.MembershipEpisodeId == episode
-            ? null
+            ? default(Result<ReceiverOutcome>?)
             : AdministratorReceiverSupport.Superseded("A later membership episode replaced this assignment.");
     }
 
@@ -61,6 +61,6 @@ static class AdministratorSupersession
     {
         GateDecision.Wait => AdministratorReceiverSupport.Wait("An earlier withdrawal of this episode is unfinished."),
         GateDecision.Superseded => AdministratorReceiverSupport.Superseded("A later withdrawal replaced this restoration."),
-        _ => null,
+        _ => default(Result<ReceiverOutcome>?),
     };
 }

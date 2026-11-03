@@ -1774,6 +1774,8 @@ namespace Bdgrz.Compliance;
 [JsonSerializable(typeof(WorkDigestDeliveryAttemptView))]
 [JsonSerializable(typeof(WorkDigestSchedulePageView))]
 [JsonSerializable(typeof(WeeklyWorkDigestScheduled))]
+[JsonSerializable(typeof(WeeklyDigestSchedulePage))]
+[JsonSerializable(typeof(WeeklyDigestSchedulePlan))]
 [JsonSerializable(typeof(WeeklyWorkDigestDeliveryRequested))]
 [JsonSerializable(typeof(WeeklyWorkDigestDeliveryRecorded))]
 [JsonSerializable(typeof(WeeklyWorkDigestDeliverySuppressed))]

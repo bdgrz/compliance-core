@@ -36,9 +36,12 @@ public sealed class PinnedFitzFrameTests
             ? "stream://ténant/events/récord" : "kv://ténant/records/évidence");
         var key = Encoding.UTF8.GetBytes("clé");
         var overhead = route.Length + (stream ? 26 : key.Length + 20);
-        var content = new byte[ushort.MaxValue - overhead + excess];
+        var maximumPayload = FitzLimits.MaxFrameSize - FitzLimits.MinFrameSize;
+        var content = new byte[maximumPayload - overhead + excess];
         var payload = OperationPayload(stream, route, key, content);
-        Assert.Equal(ushort.MaxValue + excess, payload.Length);
+        Assert.Equal(15, FitzLimits.MinFrameSize);
+        Assert.Equal(1024 * 1024, FitzLimits.MaxFrameSize);
+        Assert.Equal(maximumPayload + excess, payload.Length);
 
         // Act
         var failure = Record.Exception(() => Encode(operation, payload));
@@ -47,12 +50,12 @@ public sealed class PinnedFitzFrameTests
         if (excess == 0)
         {
             Assert.Null(failure);
-            Assert.Equal(ushort.MaxValue + (stream ? 16 : 14), Encode(operation, payload).Length);
+            Assert.Equal(FitzLimits.MaxFrameSize, Encode(operation, payload).Length);
         }
         else
         {
             Assert.NotNull(failure);
-            Assert.Contains("65535-byte Fitz wire limit", failure.Message, StringComparison.Ordinal);
+            Assert.Contains("1 MiB Wire-2 limit", failure.Message, StringComparison.Ordinal);
         }
     }
 

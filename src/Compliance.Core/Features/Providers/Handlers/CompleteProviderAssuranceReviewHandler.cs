@@ -197,7 +197,7 @@ sealed class CompleteProviderAssuranceReviewHandler(IAggregateReader reader, IAg
             : owner.Recorded is { } recorded
                 ? SourceUseReceiverSupport.Superseded("The review is already recorded.",
                     NativeFactReference.Of(owner.Stream, recorded))
-                : null;
+                : default(Result<ReceiverOutcome>?);
     }
 
     sealed record Decision(Result<ReceiverOutcome> Outcome);

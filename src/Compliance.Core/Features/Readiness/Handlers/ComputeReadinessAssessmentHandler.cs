@@ -178,7 +178,7 @@ sealed class ComputeReadinessAssessmentHandler(IAggregateReader reader, IAggrega
 
         return assessment.IsRecorded
             ? SourceUseReceiverSupport.Permanent("The readiness assessment was already computed by another operation.")
-            : null;
+            : default(Result<ReceiverOutcome>?);
     }
 
     sealed record Decided(Result<ReceiverOutcome> Outcome);

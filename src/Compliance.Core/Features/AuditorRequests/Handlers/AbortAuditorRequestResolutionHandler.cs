@@ -197,7 +197,7 @@ sealed class AbortAuditorRequestResolutionHandler(IAggregateReader reader, IAggr
                 NativeFactReference.Of(request.Stream, resolved)),
             AuditorRequestResolutionCanceled canceled => SourceUseReceiverSupport.Replayed(
                 NativeFactReference.Of(request.Stream, canceled)),
-            _ => null,
+            _ => default(Result<ReceiverOutcome>?),
         };
     }
 

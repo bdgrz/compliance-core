@@ -236,7 +236,7 @@ sealed class PublishAccessReviewDecisionBatchHandler(IAggregateReader reader, IA
         return batch.CancellationAccepted is { } canceled
             ? SourceUseReceiverSupport.Superseded("The bulk decision was canceled; nothing is published.",
                 BulkReceiverSupport.Fact(batch.Stream, canceled))
-            : null;
+            : default(Result<ReceiverOutcome>?);
     }
 
     sealed record PreparedPublication(ImmutableContentRef? Content, Result<ReceiverOutcome>? Outcome);

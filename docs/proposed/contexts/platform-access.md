@@ -113,6 +113,9 @@ stateDiagram-v2
 The tenant has a pending request from `RegisterTenant` until its first slug is
 confirmed or rejected, and from `RequestTenantSlugChange` until that
 slug is confirmed or rejected.
+
+| Event | Carries |
+| --- | --- |
 | TenantSuspended | tenant, operator, reason |
 | TenantReactivated | tenant, operator, reason |
 | TenantOffboardingStarted | tenant, operator, reason |
@@ -401,6 +404,13 @@ contexts that perform the action record that flag.
 ### PlatformUser, SignInIdentity, EmailAddress
 
 These three platform-level aggregates live outside every tenant.
+
+**Identity:** `UserId` for PlatformUser, issuer + subject for SignInIdentity,
+and normalized address for EmailAddress.
+
+**Invariant:** a sign-in identity attaches to at most one platform user and a
+verified email address is claimed by at most one platform user. Recovery retains
+the platform user's identity and history.
 
 - **PlatformUser** (`UserId`): the person who signs in, with display name and
   verified email. Their history (approvals, evidence, actions) stays attached to

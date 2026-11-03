@@ -99,25 +99,22 @@ using Bdgrz.Compliance.Tests;
 namespace Bdgrz.Compliance.Tests.Features.UserIdentities.Tests;
 
 /// <summary>
-///     The ordered identity recovery process and its ten receivers: the registered definition equals the design
-///     catalog, a recovery completes automatically once both proofs are accepted, a competing association before
+///     The ordered identity recovery process and its ten receivers: the registered definition equals the runtime
+///     contract fixture, a recovery completes automatically once both proofs are accepted, a competing association before
 ///     protection rejects the preparation, and every receiver replays, supersedes, waits or refuses as the receiver
 ///     contract says.
 /// </summary>
 public sealed class IdentityRecoveryProcessTests
 {
-    static readonly string CatalogPath = Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "..",
-        "docs", "product", "audits", "2026-10-23", "target-reactor-contracts.json");
-
     const string NewSubject = "new-subject";
 
     static Uuid NewIdentity => UserIdentity.GetIdentityId(IdentityRecoveryHost.NewProvider, NewSubject);
 
     [Fact]
-    public void ShouldEqualDesignCatalogGivenRegisteredIdentityRecoveryProcess()
+    public void ShouldEqualRuntimeContractGivenRegisteredIdentityRecoveryProcess()
     {
         // Arrange
-        using var document = JsonDocument.Parse(File.ReadAllText(CatalogPath));
+        using var document = RuntimeProcessContracts.Read();
         var entry = document.RootElement.GetProperty("processes").EnumerateArray()
             .Single(process => process.GetProperty("process").GetString() == IdentityRecoveryProcess.Name);
 
@@ -138,10 +135,10 @@ public sealed class IdentityRecoveryProcessTests
     }
 
     [Fact]
-    public void ShouldMapEveryCatalogReactorNameToItsReceiverGivenIdentityRecovery()
+    public void ShouldMapEveryRuntimeReactorNameToItsReceiverGivenIdentityRecovery()
     {
         // Arrange
-        using var document = JsonDocument.Parse(File.ReadAllText(CatalogPath));
+        using var document = RuntimeProcessContracts.Read();
         var reactors = document.RootElement.GetProperty("reactors").EnumerateArray()
             .Where(reactor => reactor.TryGetProperty("processes", out var processes) &&
                               processes.EnumerateArray().Any(process => process.GetString() == IdentityRecoveryProcess.Name))

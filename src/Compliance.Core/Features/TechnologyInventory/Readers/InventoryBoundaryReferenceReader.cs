@@ -80,5 +80,5 @@ static class InventoryBoundaryReferenceReader
             ? Result<Page<ApplicationBoundaryReferenceView>>.Failure(new RequestError(
                 RequestErrorKind.Validation,
                 $"The {noun} boundary reference list limit must be between 1 and 200."))
-            : null;
+            : default(Result<Page<ApplicationBoundaryReferenceView>>?);
 }

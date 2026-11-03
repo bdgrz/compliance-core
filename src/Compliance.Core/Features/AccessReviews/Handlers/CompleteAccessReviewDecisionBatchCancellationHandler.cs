@@ -195,7 +195,7 @@ sealed class CompleteAccessReviewDecisionBatchCancellationHandler(IAggregateRead
         return batch.Published is { } published
             ? SourceUseReceiverSupport.Superseded("The batch already published; its decisions recover forward.",
                 BulkReceiverSupport.Fact(batch.Stream, published))
-            : null;
+            : default(Result<ReceiverOutcome>?);
     }
 
     sealed record VerifiedCancellation;

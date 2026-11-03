@@ -165,7 +165,7 @@ sealed class CancelAccessReviewDecisionBatchHandler(IAggregateReader reader, IAg
                 BulkReceiverSupport.Fact(batch.Stream, published));
         return batch.CancellationAccepted is { } canceled
             ? SourceUseReceiverSupport.Replayed(BulkReceiverSupport.Fact(batch.Stream, canceled))
-            : null;
+            : default(Result<ReceiverOutcome>?);
     }
 
     sealed record Verified;

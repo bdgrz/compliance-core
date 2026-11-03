@@ -110,7 +110,7 @@ public sealed class RecordAuditPackageBuildResultHandler(AuditPackageSourceVerif
             return await append.ApplyAsync(() => new AuditPackageManifest(tenant, command.PackageId,
                     command.CommandId, nameof(RecordAuditPackageBuildResult), command.Generation), owner => owner.Acceptance, binding,
                 owner => owner.IsFrozen(command.Generation)
-                    ? ReceiverAppend.Superseded("The exact version was frozen by a delivery.") : null,
+                    ? ReceiverAppend.Superseded("The exact version was frozen by a delivery.") : default(Result<ReceiverOutcome>?),
                 owner => owner.RecordBuilt(verified.Value.Admission.ProgramId, command.ExpectedRevision ?? owner.Revision,
                     command.Generation, operation, command.Source, change, terminalResult, local.Value!), context, ct).ConfigureAwait(false);
         }

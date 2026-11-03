@@ -123,7 +123,7 @@ public sealed class NamedRecordReceivers(ISourceFactResolver resolver, IImmutabl
                 ClaimVerdict.Taken => ReceiverAppend.Rejected(
                     $"The {kind.Noun} name is already claimed by another {kind.Noun}."),
                 ClaimVerdict.Superseded => ReceiverAppend.Superseded("A later change of this record pinned the name."),
-                _ => null,
+                _ => default(Result<ReceiverOutcome>?),
             },
             owner => claim(owner, new ClaimAttempt(provenance, recordStream, step.ExpectedRevision ?? 0,
                 step.Generation, step.Intent)),
@@ -186,7 +186,7 @@ public sealed class NamedRecordReceivers(ISourceFactResolver resolver, IImmutabl
         return await append.ApplyAsync(() => (TRecord)kind.OpenRecord(tenantId, step.RecordId, step.CommandId),
             record => record.Acceptance, binding,
             record => record.IsPending(step.OperationId, step.Generation)
-                ? null
+                ? default(Result<ReceiverOutcome>?)
                 : ReceiverAppend.Superseded("The change is no longer pending."),
             record => apply(record, new ApplyAttempt(provenance, step.Intent, contentRef!,
                 intent.Header.OriginalActor, intent.Header.AcceptedAt, resultRef!)), context, ct)
@@ -218,7 +218,7 @@ public sealed class NamedRecordReceivers(ISourceFactResolver resolver, IImmutabl
         return await append.ApplyAsync(() => (TClaim)kind.OpenClaim(tenantId, step.Target, step.CommandId),
             owner => owner.Acceptance, AcceptedOperationBinding.Of(provenance),
             owner => owner.IsHeldBy(recordStream, step.Generation)
-                ? null
+                ? default(Result<ReceiverOutcome>?)
                 : ReceiverAppend.Superseded("The claim is not held by this change; a later holder or generation owns it."),
             owner => release(owner, new ClaimAttempt(provenance, recordStream, step.ExpectedRevision ?? 0,
                 step.Generation, step.Intent)), context, ct).ConfigureAwait(false);
@@ -254,7 +254,7 @@ public sealed class NamedRecordReceivers(ISourceFactResolver resolver, IImmutabl
             record => record.Acceptance, AcceptedOperationBinding.Of(provenance),
             record => record.Pending is { } pending && pending.RootOperationId == changeOperationId &&
                       pending.Generation == proof.Generation && pending.ExpectedRevision == expectedRevision
-                ? null
+                ? default(Result<ReceiverOutcome>?)
                 : ReceiverAppend.Superseded("The change is already applied or canceled; it recovers forward."),
             record => cancel(record, new CancelAttempt(provenance, failureProof)), context, ct)
             .ConfigureAwait(false);

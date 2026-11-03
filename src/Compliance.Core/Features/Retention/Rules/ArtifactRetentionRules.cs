@@ -48,7 +48,7 @@ public static class ArtifactRetentionRules
         {
             NativeAcceptanceDecision.Replayed => Result.Success,
             NativeAcceptanceDecision.Conflict => Result.Failure(AcceptedAppendResult.ConflictError),
-            _ => null,
+            _ => default(Result?),
         };
 
     internal static bool ValidOperation(OperationProvenance operation, EventStreamAddress owner,

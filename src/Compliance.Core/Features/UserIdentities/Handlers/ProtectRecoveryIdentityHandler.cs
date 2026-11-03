@@ -78,7 +78,7 @@ public sealed class ProtectRecoveryIdentityHandler(IdentityRecoveryReceiverSuppo
                     frozen.ReplacementIdentityId);
                 return decision.Outcome switch
                 {
-                    UserIdentity.ProtectionOutcome.Proceed => null,
+                    UserIdentity.ProtectionOutcome.Proceed => default(Result<ReceiverOutcome>?),
                     UserIdentity.ProtectionOutcome.Wait => IdentityRecoveryReceiverSupport.Wait(decision.Reason),
                     UserIdentity.ProtectionOutcome.Fenced => IdentityRecoveryReceiverSupport.Superseded(decision.Reason),
                     _ => recovery.State == IdentityRecovery.Stage.Prepared

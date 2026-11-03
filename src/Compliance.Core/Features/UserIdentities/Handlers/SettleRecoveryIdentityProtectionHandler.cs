@@ -68,7 +68,7 @@ public sealed class SettleRecoveryIdentityProtectionHandler(IdentityRecoveryRece
             identity => identity.Acceptance, AcceptedOperationBinding.Of(provenance),
             identity => identity.IsSettledFor(request.ChallengeId)
                 ? IdentityRecoveryReceiverSupport.Superseded("The slot protection was already settled.")
-                : null,
+                : default(Result<ReceiverOutcome>?),
             (UserIdentity identity) => identity.Settle(provenance, request.Intent, request.Source.Proof.RequiredFacts,
                 request.ChallengeId, request.Generation), context, ct).ConfigureAwait(false);
     }

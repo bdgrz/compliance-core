@@ -203,7 +203,8 @@ public sealed class EventPersistenceFrameTests
             Assert.Equal(serializer.Serialize(ev).ToArray(), Assert.Single(streams.Bodies));
             Assert.Equal(Encoding.UTF8.GetBytes(Stream.ToString()), Assert.Single(streams.Metadata));
             var operation = PinnedFitzFrameTests.OperationPayload(true, streams.Metadata[0], [], streams.Bodies[0]);
-            Assert.Equal(ushort.MaxValue + 16, PinnedFitzFrameTests.Encode("StreamAppend", operation).Length);
+            Assert.Equal(ushort.MaxValue + FitzLimits.MinFrameSize,
+                PinnedFitzFrameTests.Encode("StreamAppend", operation).Length);
         }
         else
         {

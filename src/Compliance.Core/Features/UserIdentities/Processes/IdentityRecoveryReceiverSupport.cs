@@ -319,7 +319,7 @@ public sealed class IdentityRecoveryReceiverSupport(ISourceFactResolver resolver
             NativeAcceptanceDecision.Replayed => Result<ReceiverOutcome>.Success(
                 new ReceiverOutcome.Replayed(NativeFactReference.Of(stream, acceptance.SelectedFact!))),
             NativeAcceptanceDecision.Conflict => Result<ReceiverOutcome>.Failure(AcceptedAppendResult.ConflictError),
-            _ => null,
+            _ => default(Result<ReceiverOutcome>?),
         };
 
     sealed record ReceiverCandidate<TPrepared>(IdentityOwnerPreparationCut Cut, TPrepared Dependency,

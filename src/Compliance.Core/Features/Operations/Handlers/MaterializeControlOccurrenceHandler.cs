@@ -216,7 +216,7 @@ sealed class MaterializeControlOccurrenceHandler(IAggregateReader reader, IDomai
                 selected.CreationIntentManifest, ct).ConfigureAwait(false);
             return manifest.Selections.Any(selection => selection.OccurrenceId == command.OccurrenceId &&
                                                         selection.Intent == command.Intent)
-                ? null
+                ? default(Result<ReceiverOutcome>?)
                 : SourceUseReceiverSupport.Permanent("The selection does not carry this occurrence and intent.");
         }
         catch (ImmutableContentIntegrityException exception)

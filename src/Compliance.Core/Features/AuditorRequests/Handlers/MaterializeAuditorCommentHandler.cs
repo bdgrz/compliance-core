@@ -165,7 +165,7 @@ sealed class MaterializeAuditorCommentHandler(IAggregateReader reader, IAggregat
 
         return owner.IsMaterialized
             ? SourceUseReceiverSupport.Permanent("The comment thread was already materialized by another operation.")
-            : null;
+            : default(Result<ReceiverOutcome>?);
     }
 
     sealed record Decided(Result<ReceiverOutcome> Outcome);

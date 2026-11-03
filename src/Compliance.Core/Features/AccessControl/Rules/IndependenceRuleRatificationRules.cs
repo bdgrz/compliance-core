@@ -122,7 +122,7 @@ public sealed class IndependenceRuleRatificationRules
                 ? Result<IndependenceRuleRatificationView>.Success(previous.Response)
                 : Failure(RequestErrorKind.Conflict,
                     "The request identity already retains another ratification intent or professional actor.")
-            : null;
+            : default(Result<IndependenceRuleRatificationView>?);
 
     static bool ValidDigest(string value) => value is { Length: 64 } &&
         value.All(character => character is >= '0' and <= '9' or >= 'a' and <= 'f');

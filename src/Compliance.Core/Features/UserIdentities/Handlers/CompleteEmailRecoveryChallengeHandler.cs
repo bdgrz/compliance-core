@@ -65,7 +65,7 @@ public sealed class CompleteEmailRecoveryChallengeHandler(IdentityRecoveryReceiv
             address => address.Acceptance, AcceptedOperationBinding.Of(provenance),
             address => address.ClaimOf(request.ChallengeId) is { } claim && claim.OldIdentityId == frozen.OldIdentityId &&
                        claim.ReplacementIdentityId == frozen.ReplacementIdentityId && claim.Fact.UserId == frozen.AccountId
-                ? null
+                ? default(Result<ReceiverOutcome>?)
                 : IdentityRecoveryReceiverSupport.Invalid<ReceiverOutcome>("The challenge was not claimed for this recovery."),
             (EmailAddress address) => address.CompleteIdentityRecovery(provenance, request.Intent, frozen.AccountId,
                 request.ChallengeId, frozen.OldIdentityId, frozen.ReplacementIdentityId, clock.GetUtcNow()),

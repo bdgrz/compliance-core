@@ -98,7 +98,7 @@ sealed class ExecuteApplicationImportHandler(IAggregateReader reader, IAggregate
                 ? SourceUseReceiverSupport.Superseded("The batch already authorized execution or ended.",
                     owner.Authorization is { } authorized ? NativeFactReference.Of(owner.Stream, authorized)
                         : ApplicationImportVerifier.Evidence(owner))
-                : null;
+                : default(Result<ReceiverOutcome>?);
         }
         var preparation = await NativeReceiverPreparation.PrepareAsync<ApplicationImportBatch, ApplicationImportContext>(reader,
             () => new ApplicationImportBatch(request.TenantId, batch.Id, request.CommandId), Decide,
