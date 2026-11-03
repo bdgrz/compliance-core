@@ -1,0 +1,995 @@
+{
+  "schemaVersion": 1,
+  "purpose": "Current runtime process compatibility, not proposed-domain implementation conformance. Retains merged root, stage, receiver, rule and abort expectations after retirement of docs/product. ArtifactDownloadProcess is excluded because it has no current registered definition.",
+  "source": "Merged process contracts from 190bda47^, reconciled with current registrations at a7f1cca8.",
+  "processes": [
+    {
+      "process": "ProfessionalDutyChangeProcess",
+      "ordered": true,
+      "rootSourceEvents": [
+        "ProfessionalDutyChangeAccepted"
+      ],
+      "stages": [
+        {
+          "stage": "acquire",
+          "receivers": [
+            "AuthorizeFirmStaffProfessionalDutyUse"
+          ],
+          "rule": "Recording only; revocation skips this stage."
+        },
+        {
+          "stage": "claim",
+          "receivers": [
+            "ClaimProfessionalAssertionIdentity"
+          ],
+          "rule": "Permanent; never released."
+        },
+        {
+          "stage": "apply",
+          "receivers": [
+            "ApplyProfessionalDutyChange"
+          ],
+          "rule": null
+        },
+        {
+          "stage": "settle",
+          "receivers": [
+            "SettleFirmStaffProfessionalDutyUse"
+          ],
+          "rule": null
+        }
+      ],
+      "abort": [
+        "RejectProfessionalDutyChange"
+      ]
+    },
+    {
+      "process": "FirmStaffRegistrationProcess",
+      "ordered": true,
+      "rootSourceEvents": [
+        "FirmStaffRegistrationAccepted"
+      ],
+      "stages": [
+        {
+          "stage": "claim",
+          "receivers": [
+            "ClaimFirmStaffIdentity"
+          ],
+          "rule": "Permanent canonical-user claim."
+        },
+        {
+          "stage": "complete",
+          "receivers": [
+            "CompleteFirmStaffRegistration"
+          ],
+          "rule": null
+        }
+      ],
+      "abort": [
+        "RejectFirmStaffRegistration"
+      ]
+    },
+    {
+      "process": "EngagementAcceptanceProcess",
+      "ordered": true,
+      "rootSourceEvents": [
+        "ServiceEngagementAcceptanceRequested",
+        "ServiceEngagementStaffAssignmentRequested"
+      ],
+      "stages": [
+        {
+          "stage": "acquire",
+          "receivers": [
+            "AcquireEngagementServiceEpoch",
+            "AuthorizeFirmStaffRecordEngagementUse",
+            "AuthorizeFirmProfessionalDutyDesignationEngagementUse",
+            "AuthorizeIndependenceRuleCatalogEngagementUse",
+            "AuthorizeIndependenceRuleRatificationCatalogEngagementUse",
+            "ReservePracticeIndependence"
+          ],
+          "rule": "One process acquires every key from the frozen manifest in canonical unsigned UTF8 stream-key order, in final mode, with no upgrades. The receiver list is not an acquisition order; the manifest is."
+        },
+        {
+          "stage": "authorize",
+          "receivers": [
+            "AuthorizeEngagementPracticeCommitments"
+          ],
+          "rule": "Irreversible commit point; requires the complete exact grant set."
+        },
+        {
+          "stage": "commit",
+          "receivers": [
+            "CommitPracticeIndependence"
+          ],
+          "rule": "Permanent walls; survive every later outcome."
+        },
+        {
+          "stage": "complete",
+          "receivers": [
+            "CompleteServiceEngagementAcceptance",
+            "CompleteServiceEngagementStaffAssignment"
+          ],
+          "rule": null
+        },
+        {
+          "stage": "settle",
+          "receivers": [
+            "ReleaseEngagementServiceEpoch",
+            "SettleFirmStaffRecordEngagementUse",
+            "SettleFirmProfessionalDutyDesignationEngagementUse",
+            "SettleIndependenceRuleCatalogEngagementUse",
+            "SettleIndependenceRuleRatificationCatalogEngagementUse",
+            "SettlePracticeIndependenceReservation"
+          ],
+          "rule": "Temporary grants only; permanent commitments remain."
+        }
+      ],
+      "abort": [
+        "RejectServiceEngagementAcceptance",
+        "RejectServiceEngagementStaffAssignment"
+      ]
+    },
+    {
+      "process": "EngagementPersonalDecisionProcess",
+      "ordered": true,
+      "rootSourceEvents": [
+        "EngagementPersonalDecisionAdmitted"
+      ],
+      "stages": [
+        {
+          "stage": "acquire",
+          "receivers": [
+            "AuthorizeClientServicePersonalDecisionUse",
+            "AuthorizeFirmStaffRecordEngagementUse",
+            "AuthorizeFirmProfessionalDutyDesignationEngagementUse",
+            "AuthorizeIndependenceRuleCatalogEngagementUse",
+            "AuthorizeIndependenceRuleRatificationCatalogEngagementUse"
+          ],
+          "rule": "Canonical key order from the frozen RequiredSourceUses manifest; management acknowledgement acquires only the uses its kind requires."
+        },
+        {
+          "stage": "authorize",
+          "receivers": [
+            "AuthorizeEngagementPersonalDecision"
+          ],
+          "rule": "Irreversible; cancellation is only possible before this fact."
+        },
+        {
+          "stage": "materialize",
+          "receivers": [
+            "MaterializeEngagementManagementAcknowledgement",
+            "MaterializePartnerIndependenceDecision"
+          ],
+          "rule": null
+        },
+        {
+          "stage": "settle",
+          "receivers": [
+            "SettleClientServicePersonalDecisionUse",
+            "SettleFirmStaffRecordEngagementUse",
+            "SettleFirmProfessionalDutyDesignationEngagementUse",
+            "SettleIndependenceRuleCatalogEngagementUse",
+            "SettleIndependenceRuleRatificationCatalogEngagementUse",
+            "SettleEngagementPersonalDecision"
+          ],
+          "rule": null
+        }
+      ],
+      "abort": [
+        "CancelEngagementPersonalDecision"
+      ]
+    },
+    {
+      "process": "ClientIndependencePreviewProcess",
+      "ordered": false,
+      "rootSourceEvents": [
+        "ClientIndependenceEvaluationAdmitted"
+      ],
+      "stages": [
+        {
+          "stage": "materialize",
+          "receivers": [
+            "MaterializeClientIndependencePreview"
+          ],
+          "rule": null
+        }
+      ],
+      "abort": []
+    },
+    {
+      "process": "AccessReviewLaunchFanOut",
+      "ordered": false,
+      "rootSourceEvents": [
+        "AccessReviewCampaignLaunched"
+      ],
+      "stages": [
+        {
+          "stage": "materialize",
+          "receivers": [
+            "MaterializeAccessReviewItem"
+          ],
+          "rule": "One receiver command per item in the launch manifest; items are independent."
+        }
+      ],
+      "abort": []
+    },
+    {
+      "process": "BulkAccessDecisionProcess",
+      "ordered": true,
+      "rootSourceEvents": [
+        "AccessReviewDecisionBatchAdmitted"
+      ],
+      "stages": [
+        {
+          "stage": "materialize",
+          "receivers": [
+            "MaterializeAccessReviewDecisionBatch"
+          ],
+          "rule": null
+        },
+        {
+          "stage": "reserve",
+          "receivers": [
+            "ReserveAccessReviewItemDecision"
+          ],
+          "rule": "All selected items in canonical order before any apply."
+        },
+        {
+          "stage": "apply",
+          "receivers": [
+            "ApplyAccessReviewItemDecision"
+          ],
+          "rule": "All items; provisional and hidden."
+        },
+        {
+          "stage": "publish",
+          "receivers": [
+            "PublishAccessReviewDecisionBatch"
+          ],
+          "rule": "One publication fact."
+        },
+        {
+          "stage": "settle",
+          "receivers": [
+            "SettleAccessReviewItemDecision"
+          ],
+          "rule": null
+        }
+      ],
+      "abort": [
+        "CancelAccessReviewDecisionBatch"
+      ]
+    },
+    {
+      "process": "AccessReviewCampaignCompletionProcess",
+      "ordered": true,
+      "rootSourceEvents": [
+        "AccessReviewCampaignCompletionAccepted"
+      ],
+      "stages": [
+        {
+          "stage": "acquire",
+          "receivers": [
+            "AuthorizeAccessReviewItemCampaignCompletionUse"
+          ],
+          "rule": "Canonical order over the drained item set."
+        },
+        {
+          "stage": "complete",
+          "receivers": [
+            "CompleteAccessReviewCampaignClosure"
+          ],
+          "rule": null
+        },
+        {
+          "stage": "settle",
+          "receivers": [
+            "SettleAccessReviewItemCampaignCompletionUse"
+          ],
+          "rule": "Installs the parent-generation closure fence."
+        }
+      ],
+      "abort": [
+        "AbortAccessReviewCampaignCompletion"
+      ]
+    },
+    {
+      "process": "AuditorRequestResolutionProcess",
+      "ordered": true,
+      "rootSourceEvents": [
+        "AuditorRequestResolutionAccepted"
+      ],
+      "stages": [
+        {
+          "stage": "acquire",
+          "receivers": [
+            "AuthorizeAuditorResponseRequestResolutionUse"
+          ],
+          "rule": null
+        },
+        {
+          "stage": "complete",
+          "receivers": [
+            "CompleteAuditorRequestResolution"
+          ],
+          "rule": null
+        },
+        {
+          "stage": "settle",
+          "receivers": [
+            "SettleAuditorResponseRequestResolutionUse"
+          ],
+          "rule": null
+        }
+      ],
+      "abort": [
+        "AbortAuditorRequestResolution"
+      ]
+    },
+    {
+      "process": "FindingClosureProcess",
+      "ordered": true,
+      "rootSourceEvents": [
+        "FindingClosureAccepted"
+      ],
+      "stages": [
+        {
+          "stage": "acquire",
+          "receivers": [
+            "AuthorizeCorrectiveActionFindingClosureUse"
+          ],
+          "rule": null
+        },
+        {
+          "stage": "complete",
+          "receivers": [
+            "CompleteFindingClosure"
+          ],
+          "rule": null
+        },
+        {
+          "stage": "settle",
+          "receivers": [
+            "SettleCorrectiveActionFindingClosureUse"
+          ],
+          "rule": null
+        }
+      ],
+      "abort": [
+        "AbortFindingClosure"
+      ]
+    },
+    {
+      "process": "ReadinessDecisionProcess",
+      "ordered": true,
+      "rootSourceEvents": [
+        "ReadinessDecisionAccepted",
+        "TypeIEntryDecisionAccepted"
+      ],
+      "stages": [
+        {
+          "stage": "acquire",
+          "receivers": [
+            "AuthorizeReadinessGapPlanReadinessDecisionUse"
+          ],
+          "rule": null
+        },
+        {
+          "stage": "complete",
+          "receivers": [
+            "CompleteReadinessDecision",
+            "CompleteTypeIEntryDecision"
+          ],
+          "rule": "One of the two, by decision kind."
+        },
+        {
+          "stage": "settle",
+          "receivers": [
+            "SettleReadinessGapPlanReadinessDecisionUse"
+          ],
+          "rule": null
+        }
+      ],
+      "abort": [
+        "AbortReadinessDecision"
+      ]
+    },
+    {
+      "process": "PolicyCampaignClosureProcess",
+      "ordered": true,
+      "rootSourceEvents": [
+        "PolicyCampaignClosureAccepted"
+      ],
+      "stages": [
+        {
+          "stage": "acquire",
+          "receivers": [
+            "AuthorizePolicyCampaignParticipantCampaignClosureUse"
+          ],
+          "rule": null
+        },
+        {
+          "stage": "complete",
+          "receivers": [
+            "CompletePolicyCampaignClosure"
+          ],
+          "rule": null
+        },
+        {
+          "stage": "settle",
+          "receivers": [
+            "SettlePolicyCampaignParticipantCampaignClosureUse"
+          ],
+          "rule": null
+        }
+      ],
+      "abort": [
+        "AbortPolicyCampaignClosure"
+      ]
+    },
+    {
+      "process": "ProviderReviewProcess",
+      "ordered": true,
+      "rootSourceEvents": [
+        "ProviderReviewRequested"
+      ],
+      "stages": [
+        {
+          "stage": "acquire",
+          "receivers": [
+            "AuthorizeProviderAssuranceReportProviderReviewUse"
+          ],
+          "rule": null
+        },
+        {
+          "stage": "complete",
+          "receivers": [
+            "CompleteProviderAssuranceReview"
+          ],
+          "rule": null
+        },
+        {
+          "stage": "settle",
+          "receivers": [
+            "SettleProviderAssuranceReportProviderReviewUse"
+          ],
+          "rule": null
+        }
+      ],
+      "abort": [
+        "AbortProviderReview"
+      ]
+    },
+    {
+      "process": "RiskActionCompletionReviewProcess",
+      "ordered": true,
+      "rootSourceEvents": [
+        "RiskTreatmentActionCompletionReviewAccepted"
+      ],
+      "stages": [
+        {
+          "stage": "acquire",
+          "receivers": [
+            "AuthorizeEvidenceRequestActionCompletionUse"
+          ],
+          "rule": null
+        },
+        {
+          "stage": "complete",
+          "receivers": [
+            "CompleteRiskTreatmentActionReview"
+          ],
+          "rule": null
+        },
+        {
+          "stage": "settle",
+          "receivers": [
+            "SettleEvidenceRequestActionCompletionUse"
+          ],
+          "rule": null
+        }
+      ],
+      "abort": [
+        "AbortRiskTreatmentActionReview"
+      ]
+    },
+    {
+      "process": "ApplicationImportExecutionProcess",
+      "ordered": true,
+      "rootSourceEvents": [
+        "ApplicationImportPlanSealed"
+      ],
+      "stages": [
+        {
+          "stage": "claim",
+          "receivers": [
+            "ClaimApplicationImportSource"
+          ],
+          "rule": null
+        },
+        {
+          "stage": "reserve",
+          "receivers": [
+            "ReserveApplicationImportTarget"
+          ],
+          "rule": "Every target group in canonical order before any apply; driven by ApplicationImportExecutionAuthorized."
+        },
+        {
+          "stage": "apply",
+          "receivers": [
+            "ApplyApplicationImportEffect"
+          ],
+          "rule": "One preflighted native batch per target group."
+        },
+        {
+          "stage": "publish",
+          "receivers": [
+            "CommitApplicationImportBatch"
+          ],
+          "rule": "One publication gate."
+        },
+        {
+          "stage": "settle",
+          "receivers": [
+            "ReleaseApplicationImportTarget",
+            "ReleaseApplicationImportSource"
+          ],
+          "rule": null
+        }
+      ],
+      "abort": [
+        "CancelApplicationImport"
+      ]
+    },
+    {
+      "process": "ProviderNameChangeProcess",
+      "ordered": true,
+      "rootSourceEvents": [
+        "ProviderChangeAccepted"
+      ],
+      "stages": [
+        {
+          "stage": "claim",
+          "receivers": [
+            "ClaimProviderName"
+          ],
+          "rule": "New then old key in canonical order; hold both through apply."
+        },
+        {
+          "stage": "apply",
+          "receivers": [
+            "ApplyProviderChange"
+          ],
+          "rule": null
+        },
+        {
+          "stage": "release",
+          "receivers": [
+            "ReleaseProviderName"
+          ],
+          "rule": "Old matching generation only."
+        }
+      ],
+      "abort": [
+        "CancelProviderChange"
+      ]
+    },
+    {
+      "process": "LocationNameChangeProcess",
+      "ordered": true,
+      "rootSourceEvents": [
+        "LocationChangeAccepted"
+      ],
+      "stages": [
+        {
+          "stage": "claim",
+          "receivers": [
+            "ClaimLocationName"
+          ],
+          "rule": null
+        },
+        {
+          "stage": "apply",
+          "receivers": [
+            "ApplyLocationChange"
+          ],
+          "rule": null
+        },
+        {
+          "stage": "release",
+          "receivers": [
+            "ReleaseLocationName"
+          ],
+          "rule": null
+        }
+      ],
+      "abort": [
+        "CancelLocationChange"
+      ]
+    },
+    {
+      "process": "OperationalProcessNameChangeProcess",
+      "ordered": true,
+      "rootSourceEvents": [
+        "OperationalProcessChangeAccepted"
+      ],
+      "stages": [
+        {
+          "stage": "claim",
+          "receivers": [
+            "ClaimOperationalProcessName"
+          ],
+          "rule": null
+        },
+        {
+          "stage": "apply",
+          "receivers": [
+            "ApplyOperationalProcessChange"
+          ],
+          "rule": null
+        },
+        {
+          "stage": "release",
+          "receivers": [
+            "ReleaseOperationalProcessName"
+          ],
+          "rule": null
+        }
+      ],
+      "abort": [
+        "CancelOperationalProcessChange"
+      ]
+    },
+    {
+      "process": "AuditPackageBuildProcess",
+      "ordered": true,
+      "rootSourceEvents": [
+        "AuditPackageBuildRequested"
+      ],
+      "stages": [
+        {
+          "stage": "start",
+          "receivers": [
+            "StartAuditPackageBuild"
+          ],
+          "rule": "Technical process; attempts are process state."
+        },
+        {
+          "stage": "record",
+          "receivers": [
+            "RecordAuditPackageBuildResult"
+          ],
+          "rule": "Only a verified archive."
+        }
+      ],
+      "abort": []
+    },
+    {
+      "process": "AuditPackageDeliveryRecordingProcess",
+      "ordered": false,
+      "rootSourceEvents": [
+        "AuditPackageDeliveryAdmitted"
+      ],
+      "stages": [
+        {
+          "stage": "materialize",
+          "receivers": [
+            "MaterializeRecordedAuditPackageDelivery"
+          ],
+          "rule": null
+        }
+      ],
+      "abort": []
+    },
+    {
+      "process": "ReadinessRunProcess",
+      "ordered": true,
+      "rootSourceEvents": [
+        "ReadinessAssessmentRequested"
+      ],
+      "stages": [
+        {
+          "stage": "compute",
+          "receivers": [
+            "ComputeReadinessAssessment"
+          ],
+          "rule": "Pure child computation from the frozen snapshot."
+        },
+        {
+          "stage": "adopt",
+          "receivers": [
+            "AdoptReadinessAssessment"
+          ],
+          "rule": "Exact pending adoption generation."
+        }
+      ],
+      "abort": []
+    },
+    {
+      "process": "IdentityRecoveryProcess",
+      "ordered": true,
+      "rootSourceEvents": [
+        "IdentityRecoveryChallengeClaimed"
+      ],
+      "stages": [
+        {
+          "stage": "prepare",
+          "receivers": [
+            "MaterializeIdentityRecoveryPreparation"
+          ],
+          "rule": null
+        },
+        {
+          "stage": "protect",
+          "receivers": [
+            "ProtectRecoveryIdentity"
+          ],
+          "rule": "Old and replacement slots in canonical key order."
+        },
+        {
+          "stage": "accept",
+          "receivers": [
+            "AcceptProtectedIdentityRecovery"
+          ],
+          "rule": "Irreversible; no cancellation afterwards."
+        },
+        {
+          "stage": "register",
+          "receivers": [
+            "RegisterRecoveredIdentity"
+          ],
+          "rule": null
+        },
+        {
+          "stage": "revoke",
+          "receivers": [
+            "RevokeRecoveredOldIdentity"
+          ],
+          "rule": "Only with authoritative replacement proof."
+        },
+        {
+          "stage": "complete",
+          "receivers": [
+            "CompleteAcceptedIdentityRecovery"
+          ],
+          "rule": null
+        },
+        {
+          "stage": "settle",
+          "receivers": [
+            "SettleRecoveryIdentityProtection",
+            "CompleteEmailRecoveryChallenge",
+            "SendIdentityRecoveryNotice"
+          ],
+          "rule": "Independent; the notice cannot hold completion hostage."
+        }
+      ],
+      "abort": [
+        "RejectIdentityRecoveryPreparation"
+      ]
+    },
+    {
+      "process": "AdministratorTransitionProcess",
+      "ordered": true,
+      "rootSourceEvents": [
+        "TenantManagerWithdrawalAccepted",
+        "TenantManagerRestorationAccepted",
+        "TenantManagerSourceMutationAdmitted"
+      ],
+      "stages": [
+        {
+          "stage": "apply",
+          "receivers": [
+            "ApplyMemberWithdrawal",
+            "ApplyAdministratorAssignmentWithdrawal",
+            "ApplyMemberRestoration",
+            "ApplyAdministratorAssignmentRestoration",
+            "ApplyNeutralMemberSourceMutation",
+            "ApplyNeutralAdministratorAssignmentMutation"
+          ],
+          "rule": "Exactly one receiver per guard fact, selected by TransitionKind; the guard fact is always first."
+        },
+        {
+          "stage": "complete",
+          "receivers": [
+            "CompleteAdministratorWithdrawal",
+            "CompleteAdministratorRestoration"
+          ],
+          "rule": "Neutral mutations have no completion fact."
+        }
+      ],
+      "abort": []
+    },
+    {
+      "process": "TypeIIRangeProcess",
+      "ordered": true,
+      "rootSourceEvents": [
+        "TypeIIPeriodOpeningAccepted",
+        "TypeIIPeriodAmendmentAccepted"
+      ],
+      "stages": [
+        {
+          "stage": "acquire",
+          "receivers": [
+            "AcquireTypeIIPeriodRange"
+          ],
+          "rule": "Old and new range held until applied."
+        },
+        {
+          "stage": "apply",
+          "receivers": [
+            "ApplyTypeIIPeriodRange"
+          ],
+          "rule": null
+        },
+        {
+          "stage": "settle",
+          "receivers": [
+            "SettleTypeIIPeriodRange"
+          ],
+          "rule": null
+        }
+      ],
+      "abort": [
+        "RejectTypeIIPeriodOpening",
+        "RejectTypeIIPeriodAmendment",
+        "CancelTypeIIPeriodAmendment"
+      ]
+    },
+    {
+      "process": "ControlOccurrenceFanOut",
+      "ordered": false,
+      "rootSourceEvents": [
+        "DueControlOccurrencesGenerated"
+      ],
+      "stages": [
+        {
+          "stage": "materialize",
+          "receivers": [
+            "MaterializeControlOccurrence"
+          ],
+          "rule": "One receiver per selected window; canonical OccurrenceId dedupes generators."
+        }
+      ],
+      "abort": []
+    },
+    {
+      "process": "IndependentChildMaterialization",
+      "ordered": false,
+      "rootSourceEvents": [
+        "AdvisorFeedbackAdmitted",
+        "AuditorResponseAdmitted",
+        "AuditorCommentAdmitted",
+        "CorrectiveActionAdmitted",
+        "AuditorSampleSelectionAdmitted",
+        "ProviderCoverageGapRiskAcceptanceAdmitted",
+        "PolicyParticipantResultAdmitted"
+      ],
+      "stages": [
+        {
+          "stage": "materialize",
+          "receivers": [
+            "MaterializeAdvisorFeedback",
+            "MaterializeAuditorResponse",
+            "MaterializeAuditorComment",
+            "MaterializeCorrectiveAction",
+            "MaterializeAuditorSampleSelection",
+            "MaterializeProviderRiskAcceptanceLink",
+            "ApplyPolicyParticipantResult"
+          ],
+          "rule": "Single receiver per admitted child; no cross-receiver ordering. Parent closure drains these before its own acquisition stage."
+        }
+      ],
+      "abort": []
+    },
+    {
+      "process": "EmailChallengeDeliveryProcess",
+      "ordered": true,
+      "rootSourceEvents": [
+        "EmailChallengeIssued",
+        "IdentityRecoveryChallengeIssued"
+      ],
+      "stages": [
+        {
+          "stage": "deliver",
+          "receivers": [
+            "DeliverEmailChallenge",
+            "DeliverRecoveryChallenge"
+          ],
+          "rule": "At-least-once; an unknown result is reconciled before the same message is resent."
+        }
+      ],
+      "abort": []
+    },
+    {
+      "process": "TenantInvitationDeliveryProcess",
+      "ordered": true,
+      "rootSourceEvents": [
+        "TenantMemberInvited"
+      ],
+      "stages": [
+        {
+          "stage": "send",
+          "receivers": [
+            "SendTenantInvitation"
+          ],
+          "rule": "One immutable payload and one attempt identity; a resumed unknown result sends the same attempt."
+        },
+        {
+          "stage": "record",
+          "receivers": [
+            "RecordTenantInvitationDeliverySent",
+            "RecordTenantInvitationDeliveryFailed"
+          ],
+          "rule": "Exactly one outcome receiver, selected by the result the attempt stored."
+        }
+      ],
+      "abort": []
+    }
+  ],
+  "reactors": [
+    {
+      "reactor": "IdentityRecoveryContinuationReactor",
+      "command": "ProtectRecoveryIdentity",
+      "processes": [
+        "IdentityRecoveryProcess"
+      ]
+    },
+    {
+      "reactor": "IdentityRecoveryReplacementReactor",
+      "command": "RegisterRecoveredIdentity",
+      "processes": [
+        "IdentityRecoveryProcess"
+      ]
+    },
+    {
+      "reactor": "IdentityRecoveryOldRevocationReactor",
+      "command": "RevokeRecoveredOldIdentity",
+      "processes": [
+        "IdentityRecoveryProcess"
+      ]
+    },
+    {
+      "reactor": "IdentityRecoveryCompletionReactor",
+      "command": "CompleteAcceptedIdentityRecovery",
+      "processes": [
+        "IdentityRecoveryProcess"
+      ]
+    },
+    {
+      "reactor": "IdentityRecoveryCompletionNoticeReactor",
+      "command": "SendIdentityRecoveryNotice",
+      "processes": [
+        "IdentityRecoveryProcess"
+      ]
+    },
+    {
+      "reactor": "IdentityRecoveryAcceptanceReactor",
+      "command": "MaterializeIdentityRecoveryPreparation",
+      "processes": [
+        "IdentityRecoveryProcess"
+      ]
+    },
+    {
+      "reactor": "IdentityRecoveryProtectionReleaseReactor",
+      "command": "SettleRecoveryIdentityProtection",
+      "processes": [
+        "IdentityRecoveryProcess"
+      ]
+    },
+    {
+      "reactor": "IdentityRecoveryEmailCompletionReactor",
+      "command": "CompleteEmailRecoveryChallenge",
+      "processes": [
+        "IdentityRecoveryProcess"
+      ]
+    },
+    {
+      "reactor": "ProtectedIdentityRecoveryAcceptanceReactor",
+      "command": "AcceptProtectedIdentityRecovery",
+      "processes": [
+        "IdentityRecoveryProcess"
+      ]
+    }
+  ]
+}

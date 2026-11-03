@@ -35,5 +35,7 @@
     <None Update="E2E/recovery.compose.yml" CopyToOutputDirectory="PreserveNewest" />
     <None Include="Fixtures/aggregate-command-coverage.json" Link="aggregate-command-coverage.json"
           CopyToOutputDirectory="PreserveNewest" />
+    <None Include="Fixtures/process-contracts.json" Link="process-contracts.json"
+          CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>

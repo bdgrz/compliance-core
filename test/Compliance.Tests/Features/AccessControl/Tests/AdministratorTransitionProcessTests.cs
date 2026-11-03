@@ -87,19 +87,16 @@ namespace Bdgrz.Compliance.Tests.Features.AccessControl.Tests;
 
 /// <summary>
 ///     The ordered administrator transition process and its eight receivers: the registered definition equals the
-///     design catalog, exactly one apply receiver runs per guard fact, and each receiver replays, supersedes, waits
+///     runtime contract fixture, exactly one apply receiver runs per guard fact, and each receiver replays, supersedes, waits
 ///     or refuses as the receiver contract says.
 /// </summary>
 public sealed class AdministratorTransitionProcessTests
 {
-    static readonly string CatalogPath = Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "..",
-        "docs", "product", "audits", "2026-10-23", "target-reactor-contracts.json");
-
     [Fact]
-    public void ShouldEqualDesignCatalogGivenRegisteredAdministratorTransitionProcess()
+    public void ShouldEqualRuntimeContractGivenRegisteredAdministratorTransitionProcess()
     {
         // Arrange
-        using var document = JsonDocument.Parse(File.ReadAllText(CatalogPath));
+        using var document = RuntimeProcessContracts.Read();
         var entry = document.RootElement.GetProperty("processes").EnumerateArray()
             .Single(process => process.GetProperty("process").GetString() == AdministratorTransitionProcess.Name);
 

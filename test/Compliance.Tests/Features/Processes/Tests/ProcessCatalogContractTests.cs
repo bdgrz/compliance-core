@@ -1,3 +1,5 @@
+using Bdgrz.Compliance.Tests.Testing;
+using Cntryl.Portia;
 using System.Text.Json;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -66,14 +68,11 @@ namespace Bdgrz.Compliance.Tests.Features.Processes.Tests;
 
 public sealed class ProcessCatalogContractTests
 {
-    static readonly string CatalogPath = Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "..",
-        "docs", "product", "audits", "2026-10-23", "target-reactor-contracts.json");
-
     [Fact]
-    public void ShouldMatchDesignCatalogGivenEveryRegisteredProcessDefinition()
+    public void ShouldMatchRuntimeContractGivenEveryRegisteredProcessDefinition()
     {
         // Arrange
-        using var document = JsonDocument.Parse(File.ReadAllText(CatalogPath));
+        using var document = RuntimeProcessContracts.Read();
         var catalog = document.RootElement.GetProperty("processes").EnumerateArray()
             .ToDictionary(p => p.GetProperty("process").GetString()!, p => p);
         var services = new ServiceCollection();
@@ -87,9 +86,13 @@ public sealed class ProcessCatalogContractTests
 
         // Act
         var registered = provider.GetRequiredService<ProcessCatalog>().Definitions;
+        var handlers = services.Where(static descriptor => descriptor.ServiceType == typeof(RequestHandlerRegistration))
+            .Select(static descriptor => ((RequestHandlerRegistration)descriptor.ImplementationInstance!).RequestType.Name)
+            .ToHashSet(StringComparer.Ordinal);
 
         // Assert
-        Assert.Equal(29, catalog.Count);
+        Assert.Equal(catalog.Keys.Order(StringComparer.Ordinal),
+            registered.Select(definition => definition.Name).Order(StringComparer.Ordinal));
         foreach (var definition in registered)
         {
             var entry = Assert.Contains(definition.Name, catalog);
@@ -102,6 +105,8 @@ public sealed class ProcessCatalogContractTests
                     .SelectMany(s => s.GetProperty("receivers").EnumerateArray().Select(r => r.GetString())),
                 definition.Stages.SelectMany(s => s.Receivers));
             Assert.Equal(entry.GetProperty("abort").EnumerateArray().Select(a => a.GetString()), definition.Abort);
+            Assert.All(definition.Stages.SelectMany(static stage => stage.Receivers).Concat(definition.Abort),
+                receiver => Assert.Contains(receiver, handlers));
         }
     }
 

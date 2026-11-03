@@ -162,6 +162,10 @@ public sealed partial class AggregateCommandCoverageTests
             var factEmitters = emitters.Where(item => item.Fact == type.Name).Select(static item => item.Source)
                 .Distinct(StringComparer.Ordinal).Order(StringComparer.Ordinal).ToArray();
             row["contract"] = SourceOf(type.Name, typeSources);
+            var discriminator = type.GetCustomAttribute<DiscriminatorAttribute>()
+                ?? throw new InvalidOperationException($"{type.Name} has no wire discriminator.");
+            row["discriminator"] = discriminator.Name;
+            row["schemaVersion"] = discriminator.Version;
             row["reducers"] = Nodes(factReducers.Select(static item => new JsonObject
             { ["aggregate"] = item.Aggregate, ["source"] = item.Source }));
             row["emitters"] = Strings(factEmitters);
@@ -330,6 +334,10 @@ public sealed partial class AggregateCommandCoverageTests
         }
         root["unwiredAggregateProducers"] = Nodes(unwired);
         var registeredNames = registered.Select(static item => item.HandlerType.Name).ToHashSet(StringComparer.Ordinal);
+        foreach (var adapter in root["applicationAdapters"]!.AsArray().OfType<JsonObject>())
+            adapter["testSymbolReferences"] = Strings(testReferences.GetValueOrDefault(
+                adapter["request"]!.GetValue<string>()) ?? []);
+
         root["counts"] = new JsonObject
         {
             ["domainEventContracts"] = facts.Count,
