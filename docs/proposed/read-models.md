@@ -1,5 +1,7 @@
 # Query and view-model inventory
 
+Names here follow the current source and link to it. Where they differ from the [context docs](contexts), the contexts are authoritative: for example, `SignificantChange…` reads become reads of `Change` ([CI-05](contexts/change-and-incident-oversight.md#decisions)), and engagement holds are kept by Retention's `HoldRegister`.
+
 This is the requirement-backed read-layer plan for the committed product scope. It names query operations and their feature-owned response views. A query is a read, list, preview, or derived assessment; a POST transport does not make a read a command. The inventory tracks required contracts and implementation coverage separately: a source file alone does not prove a handler, projection, API route, or authorization policy exists.
 
 ## Existing inventory
@@ -197,7 +199,5 @@ Every listed query must enforce tenant, program, permission, sensitive-field, an
 
 
 ## Operation-query contracts
-
-The companion operation-query snapshot contains 4 records: [structured query data](data/read-model-contracts.json).
 
 [Placeholder: owner, freshness, authorization, and failure semantics remain unspecified where the product view catalog is silent.]

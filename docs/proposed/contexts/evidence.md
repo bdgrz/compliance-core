@@ -244,7 +244,7 @@ Anything in between is settled by common sense, with the reasoning stated.
 | EV-05 | A mistaken support link is withdrawn with a reason and kept in history. | 0.84. |
 | EV-06 | Disclosures are recorded automatically from deliveries and firm-staff downloads; sharing is checked at delivery, so there is no approval step. | Automatic: 0.48; harm without approval: 0.37. Common sense: AC-01 already decided deliveries need no second approval. |
 | EV-07 | Internal evidence requests are separate from auditor requests. | 0.79. |
-| EV-08 | A quarantined artifact follows the normal disposal rules (retention elapsed, no hold, approval). | 0.70. |
+| EV-08 | A quarantined artifact follows the normal disposal rules: it is disposed only on an authorization from Retention's hold register ([RT-06](retention.md#decisions)). | 0.70. |
 
 ## Open questions
 
