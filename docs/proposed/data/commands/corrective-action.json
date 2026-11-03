@@ -65,13 +65,9 @@
           "policy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/37",
-        "line": 4383,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
       "kind": "http",
+      "sourceOwner": "CorrectiveAction",
+      "owner": "CorrectiveAction",
       "sourceName": "CompleteCorrectiveAction",
       "targetName": "CompleteCorrectiveAction"
     },
@@ -134,7 +130,7 @@
         }
       ],
       "reactor": "CorrectiveActionMaterializationReactor",
-      "sourceOwner": "FindingAggregate",
+      "sourceOwner": "CorrectiveAction",
       "sourceEvents": [
         "CorrectiveActionAdmitted"
       ],
@@ -146,10 +142,7 @@
       "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
       "handler": "MaterializeCorrectiveActionHandler",
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "recorded": "2026-10-29"
-      },
+      "owner": "CorrectiveAction",
       "sourceName": "MaterializeCorrectiveAction",
       "targetName": "CreateCorrectiveAction"
     },
@@ -217,7 +210,7 @@
         }
       ],
       "reactor": "FindingClosureCorrectiveActionAuthorizationReactor",
-      "sourceOwner": "FindingAggregate",
+      "sourceOwner": "CorrectiveAction",
       "sourceEvents": [
         "FindingClosureAccepted"
       ],
@@ -229,10 +222,7 @@
       "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
       "handler": "AuthorizeCorrectiveActionFindingClosureUseHandler",
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "recorded": "2026-10-29"
-      },
+      "owner": "CorrectiveAction",
       "sourceName": "AuthorizeCorrectiveActionFindingClosureUse",
       "targetName": "AuthorizeCorrectiveActionFindingClosure"
     },
@@ -300,7 +290,7 @@
         }
       ],
       "reactor": "FindingClosureCorrectiveActionSettlementReactor",
-      "sourceOwner": "FindingAggregate",
+      "sourceOwner": "CorrectiveAction",
       "sourceEvents": [
         "FindingClosedV2",
         "FindingClosureCanceled"
@@ -313,10 +303,7 @@
       "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
       "handler": "SettleCorrectiveActionFindingClosureUseHandler",
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "recorded": "2026-10-29"
-      },
+      "owner": "CorrectiveAction",
       "sourceName": "SettleCorrectiveActionFindingClosureUse",
       "targetName": "CloseCorrectiveActionFindingClosureAuthorization"
     }
@@ -444,8 +431,7 @@
       "expectedRevisionScope": {
         "field": "ExpectedRevision",
         "owner": "CorrectiveAction",
-        "counter": "logical ResourceRevision of this owner",
-        "nullableInternalRule": null
+        "counter": "logical ResourceRevision of this owner"
       }
     }
   ]

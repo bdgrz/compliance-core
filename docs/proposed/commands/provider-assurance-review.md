@@ -1,5 +1,7 @@
 # ProviderAssuranceReview commands
 
+
+
 Selected command contracts: **3**. Complete selected contracts and companion source evidence: [owner command JSON](../data/commands/provider-assurance-review.json).
 
 | Target command | Selected source name | Kind | Identity | Fields | HTTP routes |
@@ -17,7 +19,8 @@ Selected command contracts: **3**. Complete selected contracts and companion sou
 | Target command name | RecordProviderReview |
 | Selected source command name | RecordProviderReview |
 | Name decision | The selected source name is retained. |
-| Owner | ProviderAssuranceReview |
+| Target owner | ProviderAssuranceReview |
+| Selected source owner | ProviderAssuranceReview |
 | Contract record status | target_contract |
 | Kind | http |
 | Logical identity | ReviewId; Uuid; required=true; client; caller-supplied immutable creation identity: an exact retry with the same id and authored intent returns the original result; the same id with changed intent is refused; a different id is a different record |
@@ -29,7 +32,7 @@ Selected command contracts: **3**. Complete selected contracts and companion sou
 | Contract changes | Add required ReviewId. |
 | Guard order | bind_required_ids, authenticate_authorize, canonicalize_authored_intent, resolve_native_operation_facts, compare_owner_episode_actor_kind_intent_original_revision, validate_new_owner_revision_and_source_permits, append_complete_concrete_attributed_batch |
 | Response contract | `{"mode":"async_fixed_ack","responseType":"OperationAcceptedResponse","firstHttpStatus":202,"terminalResultType":"ProviderReviewRegistration"}` |
-| Expected revision scope | `{"field":null,"owner":"ProviderAssuranceReview","counter":"No primary caller ResourceRevision. Enforce required authored source/epoch/version tokens, immutable creation identity or trusted proof/generation as declared; append uses physical OCC."}` |
+| Expected revision scope | `{"owner":"ProviderAssuranceReview","counter":"No primary caller ResourceRevision. Enforce required authored source/epoch/version tokens, immutable creation identity or trusted proof/generation as declared; append uses physical OCC."}` |
 | Authorizer sources | src/Compliance.Core/Features/AccessControl/ClientManagementMutationAuthorizer.cs |
 | Source contract | src/Compliance.Common/Features/Providers/RecordProviderReview.cs |
 | Primary handler | RecordProviderReviewHandler |
@@ -68,7 +71,8 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Target command name | AbortProviderReview |
 | Selected source command name | AbortProviderReview |
 | Name decision | The selected source name is retained. |
-| Owner | ProviderAssuranceReview |
+| Target owner | ProviderAssuranceReview |
+| Selected source owner | ProviderAssuranceReview |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | abort |
 | Logical identity | CommandId; Uuid; required=true; abort receiver identity bound to the exact admitted operation and generation: exact redelivery resolves the original rejected result; an abort after a terminal outcome is a no-op |
@@ -117,7 +121,8 @@ Required tests: [Placeholder: required tests not recorded]
 | Target command name | CompleteProviderAssuranceReview |
 | Selected source command name | CompleteProviderAssuranceReview |
 | Name decision | The selected source name is retained. |
-| Owner | ProviderAssuranceReview |
+| Target owner | ProviderAssuranceReview |
+| Selected source owner | ProviderAssuranceReview |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; reactor; deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result |

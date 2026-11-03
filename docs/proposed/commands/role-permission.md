@@ -1,5 +1,7 @@
 # RolePermission commands
 
+
+
 Selected command contracts: **2**. Complete selected contracts and companion source evidence: [owner command JSON](../data/commands/role-permission.json).
 
 | Target command | Selected source name | Kind | Identity | Fields | HTTP routes |
@@ -16,7 +18,8 @@ Selected command contracts: **2**. Complete selected contracts and companion sou
 | Target command name | AssignRolePermission |
 | Selected source command name | AssignRolePermission |
 | Name decision | The selected source name is retained. |
-| Owner | RolePermission |
+| Target owner | RolePermission |
+| Selected source owner | RolePermission |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | command |
 | Logical identity | CommandId; Uuid; required=true; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
@@ -64,7 +67,8 @@ Required tests: [Placeholder: required tests not recorded]
 | Target command name | RemoveRolePermission |
 | Selected source command name | RemoveRolePermission |
 | Name decision | The selected source name is retained. |
-| Owner | RolePermission |
+| Target owner | RolePermission |
+| Selected source owner | RolePermission |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | command |
 | Logical identity | CommandId; Uuid; required=true; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |

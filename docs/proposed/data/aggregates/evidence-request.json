@@ -8,14 +8,7 @@
   "invariant": "One open-to-fulfilled/cancelled lifecycle.",
   "boundaryDecision": "selected_split",
   "mustPreserve": "Exactly one terminal transition; require exact source/delivery proof as appropriate.",
-  "sources": [
-    {
-      "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
-      "jsonPointer": "/splitOwners/15/targetOwners/0",
-      "line": 1675,
-      "sha256": "d349d94b7c43f4d82020ecf36bdacf1aff98bc6498e14993582f1c3164b21f19"
-    }
-  ],
+  "sources": [],
   "baselineSourcePath": "src/Compliance.Core/Features/Evidence/EvidenceRequestLedger.cs",
   "baselineEvents": [
     "EvidenceRequestCancelled",
@@ -83,13 +76,9 @@
           "policy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/28",
-        "line": 3351,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
-      "kind": "http"
+      "kind": "http",
+      "sourceOwner": "EvidenceRequest",
+      "owner": "EvidenceRequest"
     },
     {
       "command": "FulfilEvidenceRequest",
@@ -145,13 +134,9 @@
           "policy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/58",
-        "line": 6881,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
-      "kind": "http"
+      "kind": "http",
+      "sourceOwner": "EvidenceRequest",
+      "owner": "EvidenceRequest"
     },
     {
       "command": "OpenEvidenceRequest",
@@ -217,13 +202,9 @@
           "policy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/73",
-        "line": 8459,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
-      "kind": "http"
+      "kind": "http",
+      "sourceOwner": "EvidenceRequest",
+      "owner": "EvidenceRequest"
     },
     {
       "command": "AuthorizeEvidenceRequestActionCompletionUse",
@@ -289,7 +270,7 @@
         }
       ],
       "reactor": "ActionCompletionEvidenceRequestAuthorizationReactor",
-      "sourceOwner": "RiskTreatmentAction",
+      "sourceOwner": "EvidenceRequest",
       "sourceEvents": [
         "RiskTreatmentActionCompletionReviewAccepted"
       ],
@@ -301,10 +282,7 @@
       "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
       "handler": "AuthorizeEvidenceRequestActionCompletionUseHandler",
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "recorded": "2026-10-29"
-      }
+      "owner": "EvidenceRequest"
     },
     {
       "command": "SettleEvidenceRequestActionCompletionUse",
@@ -370,7 +348,7 @@
         }
       ],
       "reactor": "ActionCompletionEvidenceRequestSettlementReactor",
-      "sourceOwner": "RiskTreatmentAction",
+      "sourceOwner": "EvidenceRequest",
       "sourceEvents": [
         "RiskTreatmentActionCompletionReviewed",
         "RiskTreatmentActionCompletionReviewCanceled"
@@ -383,10 +361,7 @@
       "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
       "handler": "SettleEvidenceRequestActionCompletionUseHandler",
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "recorded": "2026-10-29"
-      }
+      "owner": "EvidenceRequest"
     }
   ],
   "eventAuthority": "selected_final_event_catalog",
@@ -394,57 +369,27 @@
     {
       "event": "EvidenceRequestActionCompletionUseAuthorized",
       "discriminator": "bdgrz.evidence-request.evidence-request-action-completion-use-authorized",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/139",
-        "line": 17391,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     },
     {
       "event": "EvidenceRequestActionCompletionUseSettled",
       "discriminator": "bdgrz.evidence-request.evidence-request-action-completion-use-settled",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/140",
-        "line": 17527,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     },
     {
       "event": "EvidenceRequestCancelled",
       "discriminator": "bdgrz.evidence.request.cancelled",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/141",
-        "line": 17663,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     },
     {
       "event": "EvidenceRequestFulfilled",
       "discriminator": "bdgrz.evidence.request.fulfilled",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/142",
-        "line": 17729,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     },
     {
       "event": "EvidenceRequestOpened",
       "discriminator": "bdgrz.evidence.request.opened",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/143",
-        "line": 17795,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     }
   ],
   "choreography": [
@@ -452,25 +397,13 @@
       "reactor": "ActionCompletionEvidenceRequestAuthorizationReactor",
       "sourceOwner": "RiskTreatmentAction",
       "targetOwner": "EvidenceRequest",
-      "command": "AuthorizeEvidenceRequestActionCompletionUse",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "jsonPointer": "/reactors/71",
-        "line": 6116,
-        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
-      }
+      "command": "AuthorizeEvidenceRequestActionCompletionUse"
     },
     {
       "reactor": "ActionCompletionEvidenceRequestSettlementReactor",
       "sourceOwner": "RiskTreatmentAction",
       "targetOwner": "EvidenceRequest",
-      "command": "SettleEvidenceRequestActionCompletionUse",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "jsonPointer": "/reactors/72",
-        "line": 6203,
-        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
-      }
+      "command": "SettleEvidenceRequestActionCompletionUse"
     }
   ],
   "status": "SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED",
@@ -488,12 +421,6 @@
         "required": true,
         "origin": "client",
         "rule": "one immutable authored operation"
-      },
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/28",
-        "line": 3351,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       }
     },
     {
@@ -504,12 +431,6 @@
         "required": true,
         "origin": "client",
         "rule": "one immutable authored operation"
-      },
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/58",
-        "line": 6881,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       }
     },
     {
@@ -520,12 +441,6 @@
         "required": true,
         "origin": "client",
         "rule": "exact immutable creation retry"
-      },
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/73",
-        "line": 8459,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       }
     }
   ],
@@ -535,5 +450,6 @@
       "date": "2026-10-29",
       "previous": "requestId"
     }
-  ]
+  ],
+  "sourceOwner": "EvidenceRequest"
 }

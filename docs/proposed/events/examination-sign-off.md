@@ -42,7 +42,7 @@ Canonical events: **1**. Complete canonical event and available schema records: 
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [X008](../reactors/unassigned-architecture-rows.md#x008) | emitted semantic fact | ManagementRepresentationLetter | SignOffExamination | ExaminationSignOff |
+| [X008](../reactors/unassigned-domain-choreography.md#x008) | emitted semantic fact | ManagementRepresentationLetter | SignOffExamination | ExaminationSignOff |
 
 
 

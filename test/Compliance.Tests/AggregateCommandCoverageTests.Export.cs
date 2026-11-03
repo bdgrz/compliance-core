@@ -112,7 +112,7 @@ public sealed partial class AggregateCommandCoverageTests
         if (string.IsNullOrWhiteSpace(destination))
             return;
         var repository = FindRepositoryRoot();
-        var sourcePath = Path.Combine(repository, "docs", "product", "aggregate-command-coverage.json");
+        var sourcePath = Path.Combine(repository, "test", "Compliance.Tests", "Fixtures", "aggregate-command-coverage.json");
         var root = JsonNode.Parse(File.ReadAllText(sourcePath))!.AsObject();
         var oldFacts = Rows(root, "facts", "fact");
         var oldRequests = Rows(root, "requests", "request");

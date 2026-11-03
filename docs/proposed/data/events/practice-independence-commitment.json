@@ -28,7 +28,6 @@
         "discriminator": "bdgrz.practice-independence-commitment.practice-independence-committed",
         "discriminatorVersion": 1,
         "owner": "PracticeIndependenceCommitment",
-        "existingContract": null,
         "status": "selected target schema; implementation pending",
         "reason": "typed reactor receiver accepted business fact",
         "fields": [
@@ -264,7 +263,6 @@
         "discriminator": "bdgrz.practice-independence-commitment.practice-independence-reservation-settled",
         "discriminatorVersion": 1,
         "owner": "PracticeIndependenceCommitment",
-        "existingContract": null,
         "status": "selected target schema; implementation pending",
         "reason": "typed reactor receiver accepted business fact",
         "fields": [
@@ -500,7 +498,6 @@
         "discriminator": "bdgrz.practice-independence-commitment.practice-independence-reserved",
         "discriminatorVersion": 1,
         "owner": "PracticeIndependenceCommitment",
-        "existingContract": null,
         "status": "selected target schema; implementation pending",
         "reason": "typed reactor receiver accepted business fact",
         "fields": [

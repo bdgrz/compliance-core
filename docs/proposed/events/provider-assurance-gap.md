@@ -178,7 +178,6 @@ Canonical events: **3**. Complete canonical event and available schema records: 
 | Schema discriminator | bdgrz.provider-assurance-gap.provider-coverage-gap-risk-acceptance-admitted |
 | Schema discriminatorVersion | 1 |
 | Schema owner | ProviderAssuranceGap |
-| Schema existingContract | null (recorded) |
 | Schema status | selected target schema; implementation pending |
 | Schema reason | source command accepted result |
 | Schema changes | None listed |
@@ -255,7 +254,7 @@ ProviderRiskLinkIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T088](../reactors/provider-risk-acceptance-link-reactor.md#t088) | physical root, logical prerequisite | ProviderAssuranceGap | LinkProviderRiskAcceptanceToGap | ProviderRiskAcceptance |
+| [T088](../reactors/keep-risk-acceptance-with-provider-gap-reactor.md#t088) | physical root, logical prerequisite | ProviderAssuranceGap | LinkProviderRiskAcceptanceToGap | ProviderRiskAcceptance |
 
 
 

@@ -1,5 +1,7 @@
 # AccessExpectation commands
 
+
+
 Selected command contracts: **3**. Complete selected contracts and companion source evidence: [owner command JSON](../data/commands/access-expectation.json).
 
 | Target command | Selected source name | Kind | Identity | Fields | HTTP routes |
@@ -17,7 +19,8 @@ Selected command contracts: **3**. Complete selected contracts and companion sou
 | Target command name | ApproveAccessExpectation |
 | Selected source command name | ApproveAccessExpectation |
 | Name decision | The selected source name is retained. |
-| Owner | AccessExpectation |
+| Target owner | AccessExpectation |
+| Selected source owner | AccessExpectation |
 | Contract record status | target_contract |
 | Kind | http |
 | Logical identity | CommandId; Uuid; required=true; client; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
@@ -29,7 +32,7 @@ Selected command contracts: **3**. Complete selected contracts and companion sou
 | Contract changes | Add required CommandId., Rename ExpectedLedgerRevision to ExpectedRevision and compare the new target owner revision. |
 | Guard order | bind_required_ids, authenticate_authorize, canonicalize_authored_intent, resolve_native_operation_facts, compare_owner_episode_actor_kind_intent_original_revision, validate_new_owner_revision_and_source_permits, append_complete_concrete_attributed_batch |
 | Response contract | `{"mode":"immediate_original_result","responseType":"AccessExpectationView","firstHttpStatus":200,"terminalResultType":"AccessExpectationView"}` |
-| Expected revision scope | `{"field":"ExpectedRevision","owner":"AccessExpectation","counter":"logical ResourceRevision of this owner","nullableInternalRule":null}` |
+| Expected revision scope | `{"field":"ExpectedRevision","owner":"AccessExpectation","counter":"logical ResourceRevision of this owner"}` |
 | Authorizer sources | src/Compliance.Core/Features/AccessReviews/AccessReviewAuthorizer.cs |
 | Source contract | src/Compliance.Common/Features/AccessReviews/ApproveAccessExpectation.cs |
 | Primary handler | ApproveAccessExpectationHandler |
@@ -70,7 +73,8 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Target command name | ExemptAccessExpectation |
 | Selected source command name | ExemptAccessExpectation |
 | Name decision | The selected source name is retained. |
-| Owner | AccessExpectation |
+| Target owner | AccessExpectation |
+| Selected source owner | AccessExpectation |
 | Contract record status | target_contract |
 | Kind | http |
 | Logical identity | CommandId; Uuid; required=true; client; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
@@ -82,7 +86,7 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Contract changes | Add required CommandId., Rename ExpectedLedgerRevision to ExpectedRevision and compare the new target owner revision. |
 | Guard order | bind_required_ids, authenticate_authorize, canonicalize_authored_intent, resolve_native_operation_facts, compare_owner_episode_actor_kind_intent_original_revision, validate_new_owner_revision_and_source_permits, append_complete_concrete_attributed_batch |
 | Response contract | `{"mode":"immediate_original_result","responseType":"AccessExpectationExceptionView","firstHttpStatus":200,"terminalResultType":"AccessExpectationExceptionView"}` |
-| Expected revision scope | `{"field":"ExpectedRevision","owner":"AccessExpectation","counter":"logical ResourceRevision of this owner","nullableInternalRule":null}` |
+| Expected revision scope | `{"field":"ExpectedRevision","owner":"AccessExpectation","counter":"logical ResourceRevision of this owner"}` |
 | Authorizer sources | src/Compliance.Core/Features/AccessReviews/AccessReviewAuthorizer.cs |
 | Source contract | src/Compliance.Common/Features/AccessReviews/ExemptAccessExpectation.cs |
 | Primary handler | ExemptAccessExpectationHandler |
@@ -126,7 +130,8 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Target command name | ProposeAccessExpectation |
 | Selected source command name | ProposeAccessExpectation |
 | Name decision | The selected source name is retained. |
-| Owner | AccessExpectation |
+| Target owner | AccessExpectation |
+| Selected source owner | AccessExpectation |
 | Contract record status | target_contract |
 | Kind | http |
 | Logical identity | ExpectationId; Uuid; required=true; client; caller-supplied immutable creation identity: an exact retry with the same id and authored intent returns the original result; the same id with changed intent is refused; a different id is a different record |
@@ -138,7 +143,7 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Contract changes | Add required ExpectationId., Rename ExpectedLedgerRevision to ExpectedRevision and compare the new target owner revision. |
 | Guard order | bind_required_ids, authenticate_authorize, canonicalize_authored_intent, resolve_native_operation_facts, compare_owner_episode_actor_kind_intent_original_revision, validate_new_owner_revision_and_source_permits, append_complete_concrete_attributed_batch |
 | Response contract | `{"mode":"immediate_original_result","responseType":"AccessExpectationView","firstHttpStatus":200,"terminalResultType":"AccessExpectationView"}` |
-| Expected revision scope | `{"field":"ExpectedRevision","owner":"AccessExpectation","counter":"logical ResourceRevision of this owner","nullableInternalRule":null}` |
+| Expected revision scope | `{"field":"ExpectedRevision","owner":"AccessExpectation","counter":"logical ResourceRevision of this owner"}` |
 | Authorizer sources | src/Compliance.Core/Features/AccessReviews/AccessReviewAuthorizer.cs |
 | Source contract | src/Compliance.Common/Features/AccessReviews/ProposeAccessExpectation.cs |
 | Primary handler | ProposeAccessExpectationHandler |

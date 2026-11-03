@@ -8,14 +8,7 @@
   "invariant": "External provider+subject associates to exactly one platform user; revoked identity cannot authenticate and has one exact replacement.",
   "boundaryDecision": "narrow",
   "boundaryRationale": "Association/revocation must stay together. Provider presentation observations do not decide identity authority and can be separate observation/audit source.",
-  "sources": [
-    {
-      "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
-      "jsonPointer": "/aggregates/95",
-      "line": 58300,
-      "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
-    }
-  ],
+  "sources": [],
   "baselineSourcePath": "src/Compliance.Core/Features/UserIdentities/UserIdentity.cs",
   "baselineEvents": [
     "UserIdentityRegistered",
@@ -45,7 +38,9 @@
       "source": {
         "path": "src/Compliance.Core/Features/UserIdentities/Handlers/ContinueWithOidcProviderHandler.cs -> Services/UserIdentityContinuation.cs",
         "recorded": "2026-10-29"
-      }
+      },
+      "sourceOwner": "UserIdentity",
+      "owner": "UserIdentity"
     },
     {
       "command": "ContinueWithDeveloperIdentity",
@@ -71,7 +66,9 @@
       "source": {
         "path": "src/Compliance.Core/Features/UserIdentities/Handlers/ContinueWithDeveloperIdentityHandler.cs",
         "recorded": "2026-10-29"
-      }
+      },
+      "sourceOwner": "UserIdentity",
+      "owner": "UserIdentity"
     },
     {
       "command": "LinkOidcProviderIdentity",
@@ -92,7 +89,9 @@
       "source": {
         "path": "src/Compliance.Core/Features/UserIdentities/Handlers/LinkOidcProviderIdentityHandler.cs:32 (identity.Register)",
         "recorded": "2026-10-29"
-      }
+      },
+      "sourceOwner": "UserIdentity",
+      "owner": "UserIdentity"
     },
     {
       "command": "ProtectRecoveryIdentity",
@@ -164,7 +163,7 @@
         "recorded": "2026-10-29"
       },
       "reactor": "IdentityRecoveryContinuationReactor",
-      "sourceOwner": "IdentityRecovery",
+      "sourceOwner": "UserIdentity",
       "sourceEvents": [
         "IdentityRecoveryPrepared"
       ],
@@ -173,7 +172,8 @@
         "RecoveryIdentityProtected"
       ],
       "effectKind": "protect_recovery_identity",
-      "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine."
+      "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
+      "owner": "UserIdentity"
     },
     {
       "command": "SettleRecoveryIdentityProtection",
@@ -229,7 +229,7 @@
         "recorded": "2026-10-29"
       },
       "reactor": "IdentityRecoveryProtectionReleaseReactor",
-      "sourceOwner": "IdentityRecovery",
+      "sourceOwner": "UserIdentity",
       "sourceEvents": [
         "IdentityRecoveryCompleted",
         "IdentityRecoveryPreparationRejected"
@@ -239,7 +239,8 @@
         "RecoveryIdentityProtectionSettled"
       ],
       "effectKind": "settle_recovery_identity_protection",
-      "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine."
+      "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
+      "owner": "UserIdentity"
     },
     {
       "command": "RegisterRecoveredIdentity",
@@ -303,7 +304,7 @@
         "recorded": "2026-10-29"
       },
       "reactor": "IdentityRecoveryReplacementReactor",
-      "sourceOwner": "IdentityRecovery",
+      "sourceOwner": "UserIdentity",
       "sourceEvents": [
         "IdentityRecoveryAccepted"
       ],
@@ -312,7 +313,8 @@
         "UserIdentityRegistered"
       ],
       "effectKind": "register_recovered_identity",
-      "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine."
+      "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
+      "owner": "UserIdentity"
     },
     {
       "command": "RevokeRecoveredOldIdentity",
@@ -376,7 +378,7 @@
         "recorded": "2026-10-29"
       },
       "reactor": "IdentityRecoveryOldRevocationReactor",
-      "sourceOwner": "IdentityRecovery",
+      "sourceOwner": "UserIdentity",
       "sourceEvents": [
         "IdentityRecoveryAccepted"
       ],
@@ -385,7 +387,8 @@
         "UserIdentityRevoked"
       ],
       "effectKind": "revoke_recovered_old_identity",
-      "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine."
+      "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
+      "owner": "UserIdentity"
     }
   ],
   "eventAuthority": "selected_final_event_catalog",
@@ -393,46 +396,22 @@
     {
       "event": "RecoveryIdentityProtected",
       "discriminator": "bdgrz.user-identity.recovery-identity-protected",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/233",
-        "line": 31717,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     },
     {
       "event": "RecoveryIdentityProtectionSettled",
       "discriminator": "bdgrz.user-identity.recovery-identity-protection-settled",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/234",
-        "line": 31901,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     },
     {
       "event": "UserIdentityRegistered",
       "discriminator": "bdgrz.user-identity.registered",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/285",
-        "line": 38951,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     },
     {
       "event": "UserIdentityRevoked",
       "discriminator": "bdgrz.user-identity.revoked",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/286",
-        "line": 39140,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     }
   ],
   "choreography": [
@@ -440,49 +419,25 @@
       "reactor": "IdentityRecoveryContinuationReactor",
       "sourceOwner": "IdentityRecovery",
       "targetOwner": "UserIdentity",
-      "command": "ProtectRecoveryIdentity",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "jsonPointer": "/reactors/41",
-        "line": 3479,
-        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
-      }
+      "command": "ProtectRecoveryIdentity"
     },
     {
       "reactor": "IdentityRecoveryReplacementReactor",
       "sourceOwner": "IdentityRecovery",
       "targetOwner": "UserIdentity",
-      "command": "RegisterRecoveredIdentity",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "jsonPointer": "/reactors/42",
-        "line": 3581,
-        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
-      }
+      "command": "RegisterRecoveredIdentity"
     },
     {
       "reactor": "IdentityRecoveryOldRevocationReactor",
       "sourceOwner": "IdentityRecovery",
       "targetOwner": "UserIdentity",
-      "command": "RevokeRecoveredOldIdentity",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "jsonPointer": "/reactors/43",
-        "line": 3673,
-        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
-      }
+      "command": "RevokeRecoveredOldIdentity"
     },
     {
       "reactor": "IdentityRecoveryProtectionReleaseReactor",
       "sourceOwner": "IdentityRecovery",
       "targetOwner": "UserIdentity",
-      "command": "SettleRecoveryIdentityProtection",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "jsonPointer": "/reactors/57",
-        "line": 4895,
-        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
-      }
+      "command": "SettleRecoveryIdentityProtection"
     }
   ],
   "status": "SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED",
@@ -494,5 +449,6 @@
   "baselineIdentityObservationOnly": true,
   "selectedLogicalIdentityBindings": [],
   "selectedReplayRule": "Current required authorization precedes replay; exact authorized retries resolve the original accepted result using the selected logical identity and immutable actor/intent/source binding. Fresh mutable feasibility, clock selection and body preparation cannot replace that original result. Expected revision is concurrency precondition, not a new identity.",
-  "commandNote": "Sign-in commands (Continue*/Link*) are HTTP and write the identity inline through UserIdentityContinuation; recovery events are process-dispatched receivers. Authentication/profile events are not idempotent by CommandId."
+  "commandNote": "Sign-in commands (Continue*/Link*) are HTTP and write the identity inline through UserIdentityContinuation; recovery events are process-dispatched receivers. Authentication/profile events are not idempotent by CommandId.",
+  "sourceOwner": "UserIdentity"
 }

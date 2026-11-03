@@ -109,9 +109,9 @@
       },
       "schema": null,
       "sourceName": "TemplateSuccessorDispositionRecorded",
-      "targetName": "TemplateSuccessorDispositionRecorded",
-      "nameDecision": "The selected source name is retained.",
-      "targetMeaning": "A decision on a proposed adoption of a methodology template successor was recorded for a program by a named member."
+      "targetName": "TemplateUpdateDecisionRecorded",
+      "nameDecision": "Names the recorded decision about whether this application adopts the proposed new template version.",
+      "targetMeaning": "A named program member recorded whether the application would adopt the proposed new template version."
     }
   ]
 }

@@ -5,6 +5,7 @@
 - Business aggregate: `true`
 - Selected status: `SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED`
 
+
 ## Identity and invariant
 
 **Selected identity:** Tenant + exact validated SourceKey/namespace + BatchId under unchanged ApplicationImportBatch.BatchIdFor and selected SubmissionId/BatchKey bindings. No case folding or source-key normalization is introduced.
@@ -18,6 +19,10 @@
 **Replay:** Current required authorization precedes replay; exact authorized retries resolve the original accepted result using the selected logical identity and immutable actor/intent/source binding. Fresh mutable feasibility, clock selection and body preparation cannot replace that original result. Expected revision is concurrency precondition, not a new identity.
 
 **Lifecycle:** [Placeholder: a consolidated lifecycle sequence is not present in the selected owner record.]
+
+
+
+
 
 ## Commands
 
@@ -50,16 +55,16 @@
 
 | Row | Kind | Source owner | Target owner | Command |
 | --- | --- | --- | --- | --- |
-| [T014](../reactors/import-source-admission-reactor.md#t014) | reaction_or_regular_process_stage | ApplicationImportBatch | ApplicationImportSource | ClaimApplicationImportSource |
-| [T015](../reactors/import-source-admission-reactor.md#t015) | reaction_or_regular_process_stage | ApplicationImportBatch | DeclaredApplication | ReserveApplicationImportTarget |
-| [T016](../reactors/import-source-admission-reactor.md#t016) | reaction_or_regular_process_stage | ApplicationImportBatch | DeclaredApplication | ApplyApplicationImportChange |
-| [T017](../reactors/import-source-admission-reactor.md#t017) | reaction_or_regular_process_stage | ApplicationImportBatch | ApplicationImportBatch | CommitApplicationImportBatch |
-| [T018](../reactors/import-cancellation-reactor.md#t018) | reaction_or_regular_process_stage | ApplicationImportBatch | DeclaredApplication | BlockCanceledApplicationImportChanges |
-| [T019](../reactors/import-cancellation-reactor.md#t019) | reaction_or_regular_process_stage | ApplicationImportBatch | ApplicationImportBatch | CompleteApplicationImportCancellation |
-| [T020](../reactors/import-source-admission-reactor.md#t020) | reaction_or_regular_process_stage | ApplicationImportBatch | ApplicationImportSource | ReleaseApplicationImportSource |
-| [T021](../reactors/import-source-admission-reactor.md#t021) | reaction_or_regular_process_stage | ApplicationImportBatch | DeclaredApplication | ReleaseApplicationImportTarget |
-| [N000](../reactors/import-source-admission-reactor.md#n000) | nested_process_stage | ApplicationImportBatch | ApplicationImportBatch | ExecuteApplicationImport |
-| [A013](../reactors/unassigned-architecture-rows.md#a013) | process_abort_binding | ApplicationImportBatch | ApplicationImportBatch | CancelApplicationImport |
+| [T014](../reactors/apply-accepted-application-import-reactor.md#t014) | reaction_or_regular_process_stage | ApplicationImportBatch | ApplicationImportSource | ClaimApplicationImportSource |
+| [T015](../reactors/apply-accepted-application-import-reactor.md#t015) | reaction_or_regular_process_stage | ApplicationImportBatch | DeclaredApplication | ReserveApplicationImportTarget |
+| [T016](../reactors/apply-accepted-application-import-reactor.md#t016) | reaction_or_regular_process_stage | ApplicationImportBatch | DeclaredApplication | ApplyApplicationImportChange |
+| [T017](../reactors/apply-accepted-application-import-reactor.md#t017) | reaction_or_regular_process_stage | ApplicationImportBatch | ApplicationImportBatch | CommitApplicationImportBatch |
+| [T018](../reactors/cancel-application-import-reactor.md#t018) | reaction_or_regular_process_stage | ApplicationImportBatch | DeclaredApplication | BlockCanceledApplicationImportChanges |
+| [T019](../reactors/cancel-application-import-reactor.md#t019) | reaction_or_regular_process_stage | ApplicationImportBatch | ApplicationImportBatch | CompleteApplicationImportCancellation |
+| [T020](../reactors/apply-accepted-application-import-reactor.md#t020) | reaction_or_regular_process_stage | ApplicationImportBatch | ApplicationImportSource | ReleaseApplicationImportSource |
+| [T021](../reactors/apply-accepted-application-import-reactor.md#t021) | reaction_or_regular_process_stage | ApplicationImportBatch | DeclaredApplication | ReleaseApplicationImportTarget |
+| [N000](../reactors/apply-accepted-application-import-reactor.md#n000) | nested_process_stage | ApplicationImportBatch | ApplicationImportBatch | ExecuteApplicationImport |
+| [A013](../reactors/unassigned-domain-choreography.md#a013) | process_abort_binding | ApplicationImportBatch | ApplicationImportBatch | CancelApplicationImport |
 
 ## Product rules
 
@@ -72,7 +77,7 @@
 ## Evidence and complete record
 
 - Baseline source: [Placeholder: source file is not present in this checkout]
-- Aggregate review: [application-import-batch-review-2026-10-29.md](../../product/definitive-aggregate-choreography/application-import-batch-review-2026-10-29.md)
+- Aggregate review: [Placeholder: no owner-specific review file is present]
 - Full selected record: [JSON](../data/aggregates/application-import-batch.json)
 
 > Target definition is separate from runtime qualification. Implementation status recorded by the source: `SEPARATE_VERIFICATION_REQUIRED_IMPLEMENTATION_HALTED`.

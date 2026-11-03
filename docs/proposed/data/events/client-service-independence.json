@@ -28,7 +28,6 @@
         "discriminator": "bdgrz.client-service-independence.client-independence-evaluation-admitted",
         "discriminatorVersion": 1,
         "owner": "ClientServiceIndependence",
-        "existingContract": null,
         "status": "selected target schema; implementation pending",
         "reason": "source command accepted result",
         "fields": [
@@ -246,7 +245,6 @@
         "discriminator": "bdgrz.client-service-independence.client-service-personal-decision-use-authorized",
         "discriminatorVersion": 1,
         "owner": "ClientServiceIndependence",
-        "existingContract": null,
         "status": "selected target schema; implementation pending",
         "reason": "typed reactor receiver accepted business fact",
         "fields": [
@@ -410,7 +408,6 @@
         "discriminator": "bdgrz.client-service-independence.client-service-personal-decision-use-settled",
         "discriminatorVersion": 1,
         "owner": "ClientServiceIndependence",
-        "existingContract": null,
         "status": "selected target schema; implementation pending",
         "reason": "typed reactor receiver accepted business fact",
         "fields": [
@@ -574,7 +571,6 @@
         "discriminator": "bdgrz.client-service-independence.engagement-service-epoch-authorized",
         "discriminatorVersion": 1,
         "owner": "ClientServiceIndependence",
-        "existingContract": null,
         "status": "selected target schema; implementation pending",
         "reason": "typed reactor receiver accepted business fact",
         "fields": [
@@ -810,7 +806,6 @@
         "discriminator": "bdgrz.client-service-independence.engagement-service-epoch-settled",
         "discriminatorVersion": 1,
         "owner": "ClientServiceIndependence",
-        "existingContract": null,
         "status": "selected target schema; implementation pending",
         "reason": "typed reactor receiver accepted business fact",
         "fields": [

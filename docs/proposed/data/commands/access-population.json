@@ -50,13 +50,9 @@
           "policy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/0",
-        "line": 8,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
       "kind": "http",
+      "sourceOwner": "AccessPopulation",
+      "owner": "AccessPopulation",
       "sourceName": "AcceptAccessPopulation",
       "targetName": "AcceptAccessPopulation"
     },
@@ -119,13 +115,9 @@
           "policy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/71",
-        "line": 8216,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
       "kind": "http",
+      "sourceOwner": "AccessPopulation",
+      "owner": "AccessPopulation",
       "sourceName": "OpenAccessPopulation",
       "targetName": "OpenAccessPopulation"
     },
@@ -193,13 +185,9 @@
           "policy": "ApiUser + existing request-scope authorizers"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/89",
-        "line": 10406,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
       "kind": "http",
+      "sourceOwner": "AccessPopulation",
+      "owner": "AccessPopulation",
       "sourceName": "RecordAccessPopulationFacts",
       "targetName": "RecordAccessPopulationFacts"
     }
@@ -308,8 +296,7 @@
       "expectedRevisionScope": {
         "field": "ExpectedRevision",
         "owner": "AccessPopulation",
-        "counter": "logical ResourceRevision of this owner",
-        "nullableInternalRule": null
+        "counter": "logical ResourceRevision of this owner"
       }
     },
     {
@@ -444,8 +431,7 @@
       "expectedRevisionScope": {
         "field": "ExpectedRevision",
         "owner": "AccessPrincipalClassification",
-        "counter": "logical ResourceRevision of this owner",
-        "nullableInternalRule": null
+        "counter": "logical ResourceRevision of this owner"
       }
     },
     {
@@ -560,7 +546,6 @@
         "terminalResultType": "AccessPopulationRegistration"
       },
       "expectedRevisionScope": {
-        "field": null,
         "owner": "AccessPopulation",
         "counter": "No primary caller ResourceRevision. Enforce required authored source/epoch/version tokens, immutable creation identity or trusted proof/generation as declared; append uses physical OCC."
       }
@@ -683,8 +668,7 @@
       "expectedRevisionScope": {
         "field": "ExpectedRevision",
         "owner": "AccessPopulation",
-        "counter": "logical ResourceRevision of this owner",
-        "nullableInternalRule": null
+        "counter": "logical ResourceRevision of this owner"
       }
     }
   ]

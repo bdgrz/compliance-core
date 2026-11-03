@@ -52,7 +52,7 @@
 
 ## Product rules
 
-- **MD-04** — The last active tenant administrator cannot be deprovisioned. Source: [member-deprovisioning.md](../../product/decisions/member-deprovisioning.md).
+- **MD-04** — The last active tenant administrator cannot be deprovisioned. Source: [member-deprovisioning.md](../decisions/member-deprovisioning.md).
 
 ## Adopted architecture decisions
 
@@ -61,7 +61,7 @@
 ## Evidence and complete record
 
 - Baseline source: [Placeholder: source file is not present in this checkout]
-- Aggregate review: [tenant-manager-guard-review-2026-10-29.md](../../product/definitive-aggregate-choreography/tenant-manager-guard-review-2026-10-29.md)
+- Aggregate review: tenant-manager-guard-review-2026-10-29.md
 - Full selected record: [JSON](../data/aggregates/tenant-manager-guard.json)
 
 > Target definition is separate from runtime qualification. Implementation status recorded by the source: `SEPARATE_VERIFICATION_REQUIRED_IMPLEMENTATION_HALTED`.

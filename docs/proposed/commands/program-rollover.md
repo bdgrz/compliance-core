@@ -1,12 +1,14 @@
 # ProgramRollover commands
 
+
+
 Selected command contracts: **3**. Complete selected contracts and companion source evidence: [owner command JSON](../data/commands/program-rollover.json).
 
 | Target command | Selected source name | Kind | Identity | Fields | HTTP routes |
 | --- | --- | --- | --- | --- | --- |
 | ApproveProgramRollover | ApproveProgramRollover | http | CommandId | 8 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/rollovers/{rollover_id}/decisions/{command_id} |
 | ProposeProgramRollover | ProposeProgramRollover | http | RolloverId | 4 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/rollovers/{rollover_id}/proposals |
-| ReserveProgramRolloverForExecution | ClaimProgramRolloverExecution | command | CommandId | 7 | [Placeholder: value not recorded] |
+| StartApprovedProgramRollover | ClaimProgramRolloverExecution | command | CommandId | 7 | [Placeholder: value not recorded] |
 
 ## Selected command details
 
@@ -17,7 +19,8 @@ Selected command contracts: **3**. Complete selected contracts and companion sou
 | Target command name | ApproveProgramRollover |
 | Selected source command name | ApproveProgramRollover |
 | Name decision | The selected source name is retained. |
-| Owner | ProgramRollover |
+| Target owner | ProgramRollover |
+| Selected source owner | ProgramRollover |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | http |
 | Logical identity | CommandId; Uuid; required=true; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
@@ -70,7 +73,8 @@ Required tests: [Placeholder: required tests not recorded]
 | Target command name | ProposeProgramRollover |
 | Selected source command name | ProposeProgramRollover |
 | Name decision | The selected source name is retained. |
-| Owner | ProgramRollover |
+| Target owner | ProgramRollover |
+| Selected source owner | ProgramRollover |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | http |
 | Logical identity | RolloverId; Uuid; required=true; caller-supplied immutable creation identity: an exact retry with the same id and authored intent returns the original result; the same id with changed intent is refused; a different id is a different record |
@@ -112,14 +116,15 @@ Existing tests: [Placeholder: existing tests not recorded]
 
 Required tests: [Placeholder: required tests not recorded]
 
-### ReserveProgramRolloverForExecution
+### StartApprovedProgramRollover
 
 | Selected contract detail | Value |
 | --- | --- |
-| Target command name | ReserveProgramRolloverForExecution |
+| Target command name | StartApprovedProgramRollover |
 | Selected source command name | ClaimProgramRolloverExecution |
-| Name decision | Reserves the exact approved rollover for one run so its approval cannot change while the successor period is prepared. |
-| Owner | ProgramRollover |
+| Name decision | Starts the approved rollover and fixes its successor plan before the new period is created. |
+| Target owner | ProgramRollover |
+| Selected source owner | ProgramRollover |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | command |
 | Logical identity | CommandId; Uuid; required=true; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |

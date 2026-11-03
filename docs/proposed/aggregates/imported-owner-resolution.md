@@ -5,6 +5,7 @@
 - Business aggregate: `true`
 - Selected status: `SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED`
 
+
 ## Identity and invariant
 
 **Selected identity:** Tenant + import source reference (the imported owner value and its source record); `ResolutionId` must equal that deterministic tuple; manual resolution uses CommandId.
@@ -19,6 +20,10 @@
 
 **Lifecycle:** [Placeholder: a consolidated lifecycle sequence is not present in the selected owner record.]
 
+
+
+
+
 ## Commands
 
 | Command | Kind | Identity field |
@@ -29,7 +34,7 @@
 
 | Event | Discriminator | Version |
 | --- | --- | --- |
-| [ImportedOwnerResolutionRecorded](../events/imported-owner-resolution.md#importedownerresolutionrecorded) | [Placeholder: discriminator not recorded] | null (recorded) |
+| [ImportedOwnerResolutionRecorded](../events/imported-owner-resolution.md#importedownerresolutionrecorded) | [Placeholder: discriminator not recorded] | [Placeholder: value not recorded] |
 
 ## Cross-owner flows
 
@@ -37,7 +42,7 @@
 
 ## Product rules
 
-- **D04-02** — An imported named owner matches a workforce person only by exact normalized email; a name-only or ambiguous match remains an unresolved_owner reference that a person must resolve. Source: [m0-d04-readiness-material.md](../../product/decisions/m0-d04-readiness-material.md).
+- **D04-02** — An imported named owner matches a workforce person only by exact normalized email; a name-only or ambiguous match remains an unresolved_owner reference that a person must resolve. Decision: [m0-d04-readiness-material.md](../decisions/m0-d04-readiness-material.md).
 
 ## Adopted architecture decisions
 

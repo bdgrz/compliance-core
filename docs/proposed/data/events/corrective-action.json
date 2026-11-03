@@ -358,7 +358,6 @@
         "discriminator": "bdgrz.corrective-action.corrective-action-finding-closure-use-authorized",
         "discriminatorVersion": 1,
         "owner": "CorrectiveAction",
-        "existingContract": null,
         "status": "selected target schema; implementation pending",
         "reason": "typed reactor receiver accepted business fact",
         "fields": [
@@ -522,7 +521,6 @@
         "discriminator": "bdgrz.corrective-action.corrective-action-finding-closure-use-settled",
         "discriminatorVersion": 1,
         "owner": "CorrectiveAction",
-        "existingContract": null,
         "status": "selected target schema; implementation pending",
         "reason": "typed reactor receiver accepted business fact",
         "fields": [

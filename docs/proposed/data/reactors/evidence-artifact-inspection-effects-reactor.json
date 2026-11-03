@@ -14,8 +14,6 @@
       "physicalRootEvents": [
         "EvidenceArtifactInspected"
       ],
-      "receiverCommand": null,
-      "targetOwner": null,
       "targetAuthorityKind": "external_content_port",
       "emittedSemanticFacts": [],
       "currentRegisteredRootTypes": [
@@ -77,7 +75,6 @@
       ],
       "targetPort": "IArtifactContentStore",
       "recoveryContractSummary": "Storage operations are idempotently reconciled from current durable verdict; failures prevent checkpoint advance. No receiver command or new domain fact is emitted.",
-      "logicalPrerequisiteRuleGuard": null,
       "logicalPrerequisiteRule": "The inspected artifact must be the exact tenant-registered artifact (same content hash and length) and still in the state the inspection result applies to; the effect only quarantines, deletes or releases per that result and never fabricates a domain verdict.",
       "prerequisiteRuleSource": "authored 2026-10-29 from reactor and target source"
     }

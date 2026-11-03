@@ -708,7 +708,6 @@
         "discriminator": "bdgrz.type-i-i-period.type-i-i-period-amendment-accepted",
         "discriminatorVersion": 1,
         "owner": "TypeIIPeriod",
-        "existingContract": null,
         "status": "selected target schema; implementation pending",
         "reason": "source admission contract",
         "fields": [
@@ -903,7 +902,6 @@
         "discriminator": "bdgrz.type-i-i-period.type-i-i-period-amendment-canceled",
         "discriminatorVersion": 1,
         "owner": "TypeIIPeriod",
-        "existingContract": null,
         "status": "selected target schema; implementation pending",
         "reason": "source admission contract",
         "fields": [
@@ -1154,7 +1152,6 @@
         "discriminator": "bdgrz.type-i-i-period.type-i-i-period-opening-accepted",
         "discriminatorVersion": 1,
         "owner": "TypeIIPeriod",
-        "existingContract": null,
         "status": "selected target schema; implementation pending",
         "reason": "source admission contract",
         "fields": [
@@ -1349,7 +1346,6 @@
         "discriminator": "bdgrz.type-i-i-period.type-i-i-period-opening-rejected",
         "discriminatorVersion": 1,
         "owner": "TypeIIPeriod",
-        "existingContract": null,
         "status": "selected target schema; implementation pending",
         "reason": "source admission contract",
         "fields": [

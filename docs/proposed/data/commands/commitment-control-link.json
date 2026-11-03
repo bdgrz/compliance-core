@@ -47,10 +47,8 @@
         }
       ],
       "http": [],
-      "source": {
-        "path": "docs/product/definitive-aggregate-choreography/choreography.json",
-        "recorded": "2026-10-29"
-      },
+      "sourceOwner": "CommitmentControlLink",
+      "owner": "CommitmentControlLink",
       "sourceName": "ProposeCommitmentControlLink",
       "targetName": "ProposeCommitmentControlLink"
     },
@@ -96,10 +94,8 @@
         }
       ],
       "http": [],
-      "source": {
-        "path": "docs/product/definitive-aggregate-choreography/choreography.json",
-        "recorded": "2026-10-29"
-      },
+      "sourceOwner": "CommitmentControlLink",
+      "owner": "CommitmentControlLink",
       "sourceName": "ReviewCommitmentControlLink",
       "targetName": "ReviewCommitmentControlLink"
     },
@@ -137,10 +133,8 @@
         }
       ],
       "http": [],
-      "source": {
-        "path": "docs/product/definitive-aggregate-choreography/choreography.json",
-        "recorded": "2026-10-29"
-      },
+      "sourceOwner": "CommitmentControlLink",
+      "owner": "CommitmentControlLink",
       "sourceName": "RetireCommitmentControlLink",
       "targetName": "RetireCommitmentControlLink"
     }

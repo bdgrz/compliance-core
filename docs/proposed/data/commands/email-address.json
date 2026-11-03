@@ -44,15 +44,11 @@
           "authorizationPolicy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/37",
-        "line": 2961,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      },
       "kind": "http",
+      "sourceOwner": "EmailAddress",
+      "owner": "EmailAddress",
       "sourceName": "CompleteEmailChallenge",
-      "targetName": "CompleteEmailChallenge"
+      "targetName": "VerifyEmailAddress"
     },
     {
       "command": "IssueEmailChallenge",
@@ -92,13 +88,9 @@
           "authorizationPolicy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/83",
-        "line": 6186,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      },
       "kind": "http",
+      "sourceOwner": "EmailAddress",
+      "owner": "EmailAddress",
       "sourceName": "IssueEmailChallenge",
       "targetName": "IssueEmailChallenge"
     },
@@ -145,13 +137,9 @@
           "authorizationPolicy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/151",
-        "line": 11238,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      },
       "kind": "http",
+      "sourceOwner": "EmailAddress",
+      "owner": "EmailAddress",
       "sourceName": "ReserveEmail",
       "targetName": "ReserveEmail"
     },
@@ -195,13 +183,9 @@
         "method": "PUT",
         "path": "/api/v1/identity-recovery/challenges/{challenge_id}/completion"
       },
-      "source": {
-        "path": "docs/product/audits/2026-10-23/source-admission-contracts.json",
-        "jsonPointer": "/contracts/0",
-        "line": 4,
-        "sha256": "f1d549ed0879c816cb26e86879f8fa658dab0a8acbf7c591e4d4aed40483f8ae"
-      },
       "kind": "http",
+      "sourceOwner": "EmailAddress",
+      "owner": "EmailAddress",
       "sourceName": "CompleteIdentityRecovery",
       "targetName": "CompleteIdentityRecovery"
     },
@@ -235,13 +219,9 @@
         "method": "PUT",
         "path": "/api/v1/identity-recovery/challenges/{challenge_id}"
       },
-      "source": {
-        "path": "docs/product/audits/2026-10-23/source-admission-contracts.json",
-        "jsonPointer": "/contracts/1",
-        "line": 60,
-        "sha256": "f1d549ed0879c816cb26e86879f8fa658dab0a8acbf7c591e4d4aed40483f8ae"
-      },
       "kind": "http",
+      "sourceOwner": "EmailAddress",
+      "owner": "EmailAddress",
       "sourceName": "StartIdentityRecovery",
       "targetName": "StartIdentityRecovery"
     },
@@ -299,7 +279,7 @@
         }
       ],
       "reactor": "IdentityRecoveryEmailCompletionReactor",
-      "sourceOwner": "IdentityRecovery",
+      "sourceOwner": "EmailAddress",
       "sourceEvents": [
         "IdentityRecoveryCompleted"
       ],
@@ -311,10 +291,7 @@
       "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
       "handler": "CompleteEmailRecoveryChallengeHandler",
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "recorded": "2026-10-29"
-      },
+      "owner": "EmailAddress",
       "sourceName": "CompleteEmailRecoveryChallenge",
       "targetName": "CompleteEmailRecoveryChallenge"
     }

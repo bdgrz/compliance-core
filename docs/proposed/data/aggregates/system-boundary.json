@@ -8,14 +8,7 @@
   "invariant": "A boundary has one current draft; approval requires latest accepted review of exact draft revision, an independent/waived actor and strictly increasing approved effective date; exact-scope responsibility changes cannot create retroactive unwaived decision conflict.",
   "boundaryDecision": "narrow",
   "boundaryRationale": "Retain the complete conflict-relevant responsibility/decision state for the current exact boundary draft scope in the same authoritative decision boundary as its review and approval. Do not turn current assignments into independent unconstrained aggregate streams. Narrow accumulated past-scope/version histories and external waiver behavior; a physical draft/publication split is a conditional future design, not the present audit verdict. The collection protects an actual atomic rule over its members: one member cannot hold overlapping work and review/approval responsibilities for the same exact version/revision without an accepted exact waiver, and a later backdated assignment cannot invalidate a prior unwaived review/approval decision. This falls under rule4. Record identity alone does not justify separating assignments.",
-  "sources": [
-    {
-      "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
-      "jsonPointer": "/aggregates/77",
-      "line": 47839,
-      "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
-    }
-  ],
+  "sources": [],
   "baselineSourcePath": "src/Compliance.Core/Features/Boundaries/SystemBoundary.cs",
   "baselineEvents": [
     "BoundaryApproved",
@@ -105,13 +98,9 @@
           "authorizationPolicy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/11",
-        "line": 843,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      },
-      "kind": "http"
+      "kind": "http",
+      "sourceOwner": "SystemBoundary",
+      "owner": "SystemBoundary"
     },
     {
       "command": "CreateBoundary",
@@ -156,13 +145,9 @@
           "authorizationPolicy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/47",
-        "line": 3524,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      },
-      "kind": "http"
+      "kind": "http",
+      "sourceOwner": "SystemBoundary",
+      "owner": "SystemBoundary"
     },
     {
       "command": "DiscardBoundaryDraft",
@@ -217,13 +202,9 @@
           "authorizationPolicy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/68",
-        "line": 5117,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      },
-      "kind": "http"
+      "kind": "http",
+      "sourceOwner": "SystemBoundary",
+      "owner": "SystemBoundary"
     },
     {
       "command": "ProposeBoundarySuccessor",
@@ -278,13 +259,9 @@
           "authorizationPolicy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/90",
-        "line": 6661,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      },
-      "kind": "http"
+      "kind": "http",
+      "sourceOwner": "SystemBoundary",
+      "owner": "SystemBoundary"
     },
     {
       "command": "ReviewBoundary",
@@ -349,13 +326,9 @@
           "authorizationPolicy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/159",
-        "line": 11772,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      },
-      "kind": "http"
+      "kind": "http",
+      "sourceOwner": "SystemBoundary",
+      "owner": "SystemBoundary"
     },
     {
       "command": "ReviseBoundaryDraft",
@@ -404,25 +377,15 @@
         "terminalResultType": "Unit"
       },
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/167",
-        "line": 12449,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      },
-      "kind": "command"
+      "kind": "command",
+      "sourceOwner": "SystemBoundary",
+      "owner": "SystemBoundary"
     }
   ],
   "eventAuthority": "retained_baseline_business_facts_requires_schema_reconciliation",
   "events": [
     {
       "event": "BoundaryApproved",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
-        "jsonPointer": "/aggregates/77",
-        "line": 47839,
-        "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
-      },
       "baselineContract": {
         "event": "BoundaryApproved",
         "emitters": [
@@ -502,12 +465,6 @@
     },
     {
       "event": "BoundaryDraftCreated",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
-        "jsonPointer": "/aggregates/77",
-        "line": 47839,
-        "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
-      },
       "baselineContract": {
         "event": "BoundaryDraftCreated",
         "emitters": [
@@ -562,12 +519,6 @@
     },
     {
       "event": "BoundaryDraftDiscarded",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
-        "jsonPointer": "/aggregates/77",
-        "line": 47839,
-        "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
-      },
       "baselineContract": {
         "event": "BoundaryDraftDiscarded",
         "emitters": [
@@ -622,12 +573,6 @@
     },
     {
       "event": "BoundaryDraftRevised",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
-        "jsonPointer": "/aggregates/77",
-        "line": 47839,
-        "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
-      },
       "baselineContract": {
         "event": "BoundaryDraftRevised",
         "emitters": [
@@ -682,12 +627,6 @@
     },
     {
       "event": "BoundaryReviewed",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
-        "jsonPointer": "/aggregates/77",
-        "line": 47839,
-        "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
-      },
       "baselineContract": {
         "event": "BoundaryReviewed",
         "emitters": [
@@ -757,12 +696,6 @@
     },
     {
       "event": "BoundarySuccessorProposed",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
-        "jsonPointer": "/aggregates/77",
-        "line": 47839,
-        "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
-      },
       "baselineContract": {
         "event": "BoundarySuccessorProposed",
         "emitters": [
@@ -817,12 +750,6 @@
     },
     {
       "event": "ResponsibilityAssigned",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
-        "jsonPointer": "/aggregates/77",
-        "line": 47839,
-        "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
-      },
       "baselineContract": {
         "event": "ResponsibilityAssigned",
         "emitters": [
@@ -892,12 +819,6 @@
     },
     {
       "event": "ResponsibilityRevoked",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
-        "jsonPointer": "/aggregates/77",
-        "line": 47839,
-        "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
-      },
       "baselineContract": {
         "event": "ResponsibilityRevoked",
         "emitters": [
@@ -957,63 +878,27 @@
   "selectedLogicalIdentityBindings": [
     {
       "command": "ApproveBoundary",
-      "logicalIdentity": "CommandId",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/11",
-        "line": 843,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      }
+      "logicalIdentity": "CommandId"
     },
     {
       "command": "CreateBoundary",
-      "logicalIdentity": "BoundaryId",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/47",
-        "line": 3524,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      }
+      "logicalIdentity": "BoundaryId"
     },
     {
       "command": "DiscardBoundaryDraft",
-      "logicalIdentity": "CommandId",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/68",
-        "line": 5117,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      }
+      "logicalIdentity": "CommandId"
     },
     {
       "command": "ProposeBoundarySuccessor",
-      "logicalIdentity": "CommandId",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/90",
-        "line": 6661,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      }
+      "logicalIdentity": "CommandId"
     },
     {
       "command": "ReviewBoundary",
-      "logicalIdentity": "CommandId",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/159",
-        "line": 11772,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      }
+      "logicalIdentity": "CommandId"
     },
     {
       "command": "ReviseBoundaryDraft",
-      "logicalIdentity": "CommandId",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/167",
-        "line": 12449,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      }
+      "logicalIdentity": "CommandId"
     }
   ],
   "selectedReplayRule": "Current required authorization precedes replay; exact authorized retries resolve the original accepted result using the selected logical identity and immutable actor/intent/source binding. Fresh mutable feasibility, clock selection and body preparation cannot replace that original result. Expected revision is concurrency precondition, not a new identity.",
@@ -1052,5 +937,6 @@
     "D01-09",
     "D22-09"
   ],
-  "decidesAuthored": "2026-10-29"
+  "decidesAuthored": "2026-10-29",
+  "sourceOwner": "SystemBoundary"
 }

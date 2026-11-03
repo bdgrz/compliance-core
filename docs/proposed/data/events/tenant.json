@@ -165,9 +165,9 @@
       },
       "schema": null,
       "sourceName": "TenantSlugChangeRejected",
-      "targetName": "TenantSlugChangeRejected",
-      "nameDecision": "The selected source name is retained.",
-      "targetMeaning": "A requested slug change ended because the slug owner refused the new slug."
+      "targetName": "WorkspaceWebAddressChangeRejected",
+      "nameDecision": "Names the completed refusal of a requested workspace web-address change.",
+      "targetMeaning": "The requested workspace web-address change was refused, so the workspace keeps its confirmed address."
     },
     {
       "canonical": {
@@ -193,9 +193,9 @@
       },
       "schema": null,
       "sourceName": "TenantSlugChangeRequested",
-      "targetName": "TenantSlugChangeRequested",
-      "nameDecision": "The selected source name is retained.",
-      "targetMeaning": "An active tenant requested changing its slug from the old to a new value; the change stays pending until completed and blocks a second slug change."
+      "targetName": "WorkspaceWebAddressChangeRequested",
+      "nameDecision": "Names the completed request to change a workspace’s public web address.",
+      "targetMeaning": "A workspace asked to change its public web address; the current address remains in effect until the new address is claimed."
     },
     {
       "canonical": {
@@ -221,9 +221,9 @@
       },
       "schema": null,
       "sourceName": "TenantSlugChanged",
-      "targetName": "TenantSlugChanged",
-      "nameDecision": "The selected source name is retained.",
-      "targetMeaning": "A tenant adopted the slug its slug owner registered. The fact is the native acceptance of the confirming receiver."
+      "targetName": "WorkspaceWebAddressChanged",
+      "nameDecision": "Names the completed change after the new public address was claimed.",
+      "targetMeaning": "The workspace adopted its new public web address after the global owner claimed it."
     },
     {
       "canonical": {
@@ -249,9 +249,9 @@
       },
       "schema": null,
       "sourceName": "TenantSlugConfirmed",
-      "targetName": "TenantSlugConfirmed",
-      "nameDecision": "The selected source name is retained.",
-      "targetMeaning": "The slug owner registered the tenant's first slug and the tenant confirmed it."
+      "targetName": "WorkspaceWebAddressConfirmed",
+      "nameDecision": "Names the workspace’s completed confirmation of a claimed address.",
+      "targetMeaning": "The workspace confirmed the public address claimed by the global owner."
     },
     {
       "canonical": {
@@ -277,9 +277,9 @@
       },
       "schema": null,
       "sourceName": "TenantSlugRejected",
-      "targetName": "TenantSlugRejected",
-      "nameDecision": "The selected source name is retained.",
-      "targetMeaning": "The slug owner refused the tenant's first slug."
+      "targetName": "WorkspaceWebAddressClaimRejected",
+      "nameDecision": "Names the workspace’s completed record of a refused address claim.",
+      "targetMeaning": "The workspace recorded that its requested public address claim was refused, so the requested address did not become active."
     },
     {
       "canonical": {
@@ -305,9 +305,9 @@
       },
       "schema": null,
       "sourceName": "TenantSlugSurrenderConfirmed",
-      "targetName": "TenantSlugSurrenderConfirmed",
-      "nameDecision": "The selected source name is retained.",
-      "targetMeaning": "The slug owner released the slug the tenant was surrendering."
+      "targetName": "WorkspaceWebAddressReleaseConfirmed",
+      "nameDecision": "Names the workspace’s confirmation that it stopped using the released address.",
+      "targetMeaning": "The workspace recorded that the global owner permanently retired its former public address."
     },
     {
       "canonical": {
@@ -333,9 +333,9 @@
       },
       "schema": null,
       "sourceName": "TenantSlugSurrenderFailed",
-      "targetName": "TenantSlugSurrenderFailed",
-      "nameDecision": "The selected source name is retained.",
-      "targetMeaning": "The slug owner refused the tenant's surrender, so the tenant keeps the slug."
+      "targetName": "WorkspaceWebAddressReleaseRejected",
+      "nameDecision": "Names the workspace’s completed record of a refused address release.",
+      "targetMeaning": "The workspace recorded that its request to give up its current public address was refused."
     },
     {
       "canonical": {
@@ -361,9 +361,9 @@
       },
       "schema": null,
       "sourceName": "TenantSlugSurrenderRequested",
-      "targetName": "TenantSlugSurrenderRequested",
-      "nameDecision": "The selected source name is retained.",
-      "targetMeaning": "A tenant started surrendering its confirmed slug."
+      "targetName": "WorkspaceWebAddressReleaseRequested",
+      "nameDecision": "Names the completed request to give up a confirmed public address.",
+      "targetMeaning": "The workspace asked to give up its confirmed public web address."
     },
     {
       "canonical": {

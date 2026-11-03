@@ -8,14 +8,7 @@
   "invariant": "Freeze locks Type I setup to exact approved boundary and complete source coverage; amendments preserve prior baseline and enumerate changed sources.",
   "boundaryDecision": "narrow",
   "boundaryRationale": "Setup/freeze must commit one chosen baseline authorization atomically. Immutable baseline snapshots and history can be separately stored after preparing digest/content; current pointer/lock remains with engagement.",
-  "sources": [
-    {
-      "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
-      "jsonPointer": "/aggregates/36",
-      "line": 26584,
-      "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
-    }
-  ],
+  "sources": [],
   "baselineSourcePath": "src/Compliance.Core/Features/Examinations/ExaminationEngagement.cs",
   "baselineEvents": [
     "ExaminationEngagementOpened",
@@ -101,13 +94,9 @@
           "authorizationPolicy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/5",
-        "line": 404,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      },
-      "kind": "http"
+      "kind": "http",
+      "sourceOwner": "ExaminationEngagement",
+      "owner": "ExaminationEngagement"
     },
     {
       "command": "CreateExaminationEngagement",
@@ -176,13 +165,9 @@
         "terminalResultType": "Unit"
       },
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/51",
-        "line": 3835,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      },
-      "kind": "creation"
+      "kind": "creation",
+      "sourceOwner": "ExaminationEngagement",
+      "owner": "ExaminationEngagement"
     },
     {
       "command": "FreezeTypeIBaseline",
@@ -247,13 +232,9 @@
           "authorizationPolicy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/75",
-        "line": 5622,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      },
-      "kind": "http"
+      "kind": "http",
+      "sourceOwner": "ExaminationEngagement",
+      "owner": "ExaminationEngagement"
     },
     {
       "command": "ReviseExaminationEngagement",
@@ -322,25 +303,15 @@
         "terminalResultType": "Unit"
       },
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/173",
-        "line": 12942,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      },
-      "kind": "command"
+      "kind": "command",
+      "sourceOwner": "ExaminationEngagement",
+      "owner": "ExaminationEngagement"
     }
   ],
   "eventAuthority": "retained_baseline_business_facts_requires_schema_reconciliation",
   "events": [
     {
       "event": "ExaminationEngagementOpened",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
-        "jsonPointer": "/aggregates/36",
-        "line": 26584,
-        "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
-      },
       "baselineContract": {
         "event": "ExaminationEngagementOpened",
         "emitters": [
@@ -370,12 +341,6 @@
     },
     {
       "event": "ExaminationEngagementRevised",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
-        "jsonPointer": "/aggregates/36",
-        "line": 26584,
-        "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
-      },
       "baselineContract": {
         "event": "ExaminationEngagementRevised",
         "emitters": [
@@ -405,12 +370,6 @@
     },
     {
       "event": "TypeIBaselineAmended",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
-        "jsonPointer": "/aggregates/36",
-        "line": 26584,
-        "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
-      },
       "baselineContract": {
         "event": "TypeIBaselineAmended",
         "emitters": [
@@ -445,12 +404,6 @@
     },
     {
       "event": "TypeIBaselineFrozen",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
-        "jsonPointer": "/aggregates/36",
-        "line": 26584,
-        "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
-      },
       "baselineContract": {
         "event": "TypeIBaselineFrozen",
         "emitters": [
@@ -495,43 +448,19 @@
   "selectedLogicalIdentityBindings": [
     {
       "command": "AmendTypeIBaseline",
-      "logicalIdentity": "CommandId",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/5",
-        "line": 404,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      }
+      "logicalIdentity": "CommandId"
     },
     {
       "command": "CreateExaminationEngagement",
-      "logicalIdentity": "ExaminationId",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/51",
-        "line": 3835,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      }
+      "logicalIdentity": "ExaminationId"
     },
     {
       "command": "FreezeTypeIBaseline",
-      "logicalIdentity": "CommandId",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/75",
-        "line": 5622,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      }
+      "logicalIdentity": "CommandId"
     },
     {
       "command": "ReviseExaminationEngagement",
-      "logicalIdentity": "CommandId",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/173",
-        "line": 12942,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      }
+      "logicalIdentity": "CommandId"
     }
   ],
   "selectedReplayRule": "Current required authorization precedes replay; exact authorized retries resolve the original accepted result using the selected logical identity and immutable actor/intent/source binding. Fresh mutable feasibility, clock selection and body preparation cannot replace that original result. Expected revision is concurrency precondition, not a new identity.",
@@ -552,5 +481,6 @@
     "D01-03",
     "D01-11"
   ],
-  "decidesAuthored": "2026-10-29"
+  "decidesAuthored": "2026-10-29",
+  "sourceOwner": "ExaminationEngagement"
 }

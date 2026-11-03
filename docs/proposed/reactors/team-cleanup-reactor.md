@@ -20,11 +20,11 @@ Selected choreography rows: **1**. Required proofs, recovery, effect identity, a
 | id | S010 |
 | kind | business_receiver |
 | status | SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED |
-| sourceOwner | Team |
+| Source owner (target name) | Team (source: Team) |
 | logicalPrerequisiteFacts (target names) | TeamDeleted |
 | physicalRootEvents (target names) | TeamDeleted |
 | Target command (selected source name: RemoveTeamMember) | RemoveTeamMember |
-| targetOwner | TeamMember |
+| Target owner | TeamMember |
 | targetAuthorityKind | business_aggregate |
 | emittedSemanticFacts (target names) | TeamMemberRemoved |
 | currentRegisteredRootTypes (target names) | RemoveTeamAssignmentsAfterTeamDeletionReactor |
@@ -35,7 +35,6 @@ Selected choreography rows: **1**. Required proofs, recovery, effect identity, a
 | sourceOwners | Team |
 | canonicalTargetOwner | TeamMember |
 | recoveryContractSummary | At-least-once checkpoint replay resends the same source-derived command. Missing dependencies remain retryable; actual terminal/superseded episodes are skipped only with the owning proof. |
-| logicalPrerequisiteRuleGuard | null (recorded) |
 | logicalPrerequisiteRule | The source is TeamDeleted; every live TeamMember assignment of that team found from authoritative assignment facts is removed bound to its membership episode and assignment event, unless a newer episode replaced it. For the Administrators team removal goes through the tenant-manager guard. |
 | prerequisiteRuleSource | authored 2026-10-29 from reactor and target source |
 

@@ -1,6 +1,6 @@
 # Canonical event index
 
-Selected canonical events: **501**. Adopted wires come from the canonical event catalog; payload schema mismatches are called out on owner pages.
+Selected source canonical events: **501**. The proposed target has **504** business events, including **4** newly named facts whose event contracts are not selected yet. 1 source event is retained as compatibility evidence without a direct target event mapping.
 
 | Owner | Events | Schemas |
 | --- | --- | --- |
@@ -24,6 +24,7 @@ Selected canonical events: **501**. Adopted wires come from the canonical event 
 | [ArtifactEngagementHold](artifact-engagement-hold.md) | 3 | 0 |
 | [ArtifactLegalHold](artifact-legal-hold.md) | 2 | 2 |
 | [ArtifactRetentionBasis](artifact-retention-basis.md) | 2 | 2 |
+| [AttestEngagementRecordPackage](attest-engagement-record-package.md) | 4 | 0 |
 | [AuditObservation](audit-observation.md) | 4 | 0 |
 | [AuditorFeedbackThread](auditor-feedback-thread.md) | 1 | 1 |
 | [AuditorRequest](auditor-request.md) | 10 | 10 |
@@ -33,7 +34,7 @@ Selected canonical events: **501**. Adopted wires come from the canonical event 
 | [AuditPackageDelivery](audit-package-delivery.md) | 1 | 1 |
 | [AuditPackageManifest](audit-package-manifest.md) | 8 | 8 |
 | [AuditPopulation](audit-population.md) | 8 | 0 |
-| [ClientExport](client-export.md) | 5 | 0 |
+| [ClientExport](client-export.md) | 4 | 0 |
 | [ClientIndependenceDecision](client-independence-decision.md) | 1 | 1 |
 | [ClientService](client-service.md) | 3 | 0 |
 | [ClientServiceIndependence](client-service-independence.md) | 6 | 6 |
@@ -122,11 +123,10 @@ Selected canonical events: **501**. Adopted wires come from the canonical event 
 | [TechnologyComponent](technology-component.md) | 1 | 0 |
 | [TemplateApplication](template-application.md) | 4 | 0 |
 | [Tenant](tenant.md) | 14 | 0 |
+| [TenantAdministratorContinuity](tenant-administrator-continuity.md) | 6 | 6 |
 | [TenantIdentityProvider](tenant-identity-provider.md) | 5 | 5 |
 | [TenantInvitation](tenant-invitation.md) | 2 | 2 |
 | [TenantInvitationMailboxClaim](tenant-invitation-mailbox-claim.md) | 2 | 0 |
-| [TenantManagerGuard](tenant-manager-guard.md) | 6 | 6 |
-| [TenantSlug](tenant-slug.md) | 4 | 0 |
 | [TrainingRequirement](training-requirement.md) | 1 | 1 |
 | [TypeIIObservationCalendar](type-ii-observation-calendar.md) | 2 | 2 |
 | [TypeIIPeriod](type-ii-period.md) | 11 | 8 |
@@ -139,6 +139,7 @@ Selected canonical events: **501**. Adopted wires come from the canonical event 
 | [WorkforceSourceObservation](workforce-source-observation.md) | 2 | 0 |
 | [WorkItemAssignment](work-item-assignment.md) | 3 | 0 |
 | [WorkRelationship](work-relationship.md) | 2 | 0 |
+| [WorkspaceWebAddress](workspace-web-address.md) | 4 | 0 |
 
-Product event scope: [product-scope.md](product-scope.md).
+Source facts kept only for compatibility: [source-compatibility.md](source-compatibility.md).
 Historical name/disposition snapshot: [reconciliation.md](reconciliation.md).

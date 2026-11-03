@@ -1,0 +1,16 @@
+[
+  {
+    "event": "ClientExportAttestPackageDeliveryRecorded",
+    "sourceOwner": "ClientExport",
+    "status": "SOURCE_COMPATIBILITY_EVIDENCE_NO_DIRECT_TARGET_EVENT_MAPPING",
+    "targetOwner": "AttestEngagementRecordPackage",
+    "relatedTargetEvent": "AttestEngagementRecordPackageDelivered",
+    "reason": "The source event records both delivered and not_delivered decisions for an M0-D27 engagement package on the ClientExport stream. The target separates the package from ClientExport and names successful delivery as AttestEngagementRecordPackageDelivered. Preserve the old discriminator and history as source evidence; define how both old outcomes map to the target before implementation.",
+    "sourceMeaning": "A delivery decision for an attest package was recorded on a successfully built client export, with its rationale, recipient and delivery reference, for the exact package manifest.",
+    "sourceWire": {
+      "discriminator": "bdgrz.exports.client-export-attest-package-delivery-recorded",
+      "version": 1
+    },
+    "sourceStatus": "declared"
+  }
+]

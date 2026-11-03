@@ -8,14 +8,7 @@
   "invariant": "One risk’s governance and reassessment obligations.",
   "boundaryDecision": "selected_split",
   "mustPreserve": "Assessment belongs to RiskEvaluation; risk governance consumes exact risk/source proofs, no live aggregate authority.",
-  "sources": [
-    {
-      "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
-      "jsonPointer": "/splitOwners/24/targetOwners/0",
-      "line": 2561,
-      "sha256": "d349d94b7c43f4d82020ecf36bdacf1aff98bc6498e14993582f1c3164b21f19"
-    }
-  ],
+  "sources": [],
   "baselineSourcePath": "src/Compliance.Core/Features/Risks/RiskGovernanceLedger.cs",
   "baselineEvents": [
     "RiskOwnerAssigned",
@@ -87,13 +80,9 @@
           "policy": "ApiUser + existing request-scope authorizers"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/22",
-        "line": 2633,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
-      "kind": "http"
+      "kind": "http",
+      "sourceOwner": "RiskGovernance",
+      "owner": "RiskGovernance"
     },
     {
       "command": "RaiseRiskReassessmentTriggers",
@@ -149,22 +138,17 @@
       "responseContract": {
         "mode": "internal",
         "responseType": "Unit",
-        "firstHttpStatus": null,
         "terminalResultType": "Unit"
       },
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/85",
-        "line": 9934,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
       "kind": "command",
       "concurrencyGuard": {
         "rule": "creation_key_only",
         "jev": 0.81,
         "date": "2026-10-29"
-      }
+      },
+      "sourceOwner": "RiskGovernance",
+      "owner": "RiskGovernance"
     },
     {
       "command": "RecordRiskReassessmentObligation",
@@ -216,10 +200,8 @@
         }
       ],
       "http": [],
-      "source": {
-        "path": "docs/product/definitive-aggregate-choreography/choreography.json",
-        "recorded": "2026-10-29"
-      }
+      "sourceOwner": "RiskGovernance",
+      "owner": "RiskGovernance"
     }
   ],
   "eventAuthority": "selected_final_event_catalog",
@@ -227,24 +209,12 @@
     {
       "event": "RiskOwnerAssigned",
       "discriminator": "bdgrz.risk.owner.assigned",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/238",
-        "line": 32312,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     },
     {
       "event": "RiskReassessmentTriggered",
       "discriminator": "bdgrz.risk.reassessment.triggered",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/239",
-        "line": 32377,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     }
   ],
   "choreography": [],
@@ -263,12 +233,6 @@
         "required": true,
         "origin": "client",
         "rule": "one immutable authored operation"
-      },
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/22",
-        "line": 2633,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       }
     },
     {
@@ -279,12 +243,6 @@
         "required": true,
         "origin": "source_event_effect",
         "rule": "one immutable authored operation"
-      },
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/85",
-        "line": 9934,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       }
     }
   ],
@@ -300,5 +258,6 @@
   "decidesCovers": [
     "D10-09"
   ],
-  "decidesAuthored": "2026-10-29"
+  "decidesAuthored": "2026-10-29",
+  "sourceOwner": "RiskGovernance"
 }

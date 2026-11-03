@@ -38,7 +38,6 @@ Canonical events: **3**. Complete canonical event and available schema records: 
 | Schema discriminator | bdgrz.independence-rule-catalog.independence-rule-catalog-engagement-use-authorized |
 | Schema discriminatorVersion | 1 |
 | Schema owner | IndependenceRuleCatalog |
-| Schema existingContract | null (recorded) |
 | Schema status | selected target schema; implementation pending |
 | Schema reason | typed reactor receiver accepted business fact |
 | Schema changes | None listed |
@@ -131,7 +130,6 @@ SourceUseAuthorizationIntent
 | Schema discriminator | bdgrz.independence-rule-catalog.independence-rule-catalog-engagement-use-settled |
 | Schema discriminatorVersion | 1 |
 | Schema owner | IndependenceRuleCatalog |
-| Schema existingContract | null (recorded) |
 | Schema status | selected target schema; implementation pending |
 | Schema reason | typed reactor receiver accepted business fact |
 | Schema changes | None listed |

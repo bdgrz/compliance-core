@@ -8,14 +8,7 @@
   "invariant": "Only current proposed content with exact carried-gap acknowledgements receives an independent review; executive approval requires review and three distinct roles, after which plan is immutable.",
   "boundaryDecision": "narrow",
   "boundaryRationale": "Current authored content/reviewer/approver must remain one same-version decision. Past proposal bodies/reviews are historical records and need not remain state.",
-  "sources": [
-    {
-      "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
-      "jsonPointer": "/aggregates/94",
-      "line": 57796,
-      "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
-    }
-  ],
+  "sources": [],
   "baselineSourcePath": "src/Compliance.Core/Features/Examinations/TypeIIPlan.cs",
   "baselineEvents": [
     "TypeIIPlanApproved",
@@ -81,12 +74,6 @@
         "terminalResultType": "Unit"
       },
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/21",
-        "line": 1704,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      },
       "kind": "command",
       "concurrencyGuard": {
         "rule": "require_expected_revision",
@@ -97,7 +84,9 @@
           "process_reply": 0.22
         },
         "date": "2026-10-29"
-      }
+      },
+      "sourceOwner": "TypeIIPlan",
+      "owner": "TypeIIPlan"
     },
     {
       "command": "ProposeTypeIIOperatingPlan",
@@ -147,13 +136,9 @@
           "authorizationPolicy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/98",
-        "line": 7277,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      },
-      "kind": "http"
+      "kind": "http",
+      "sourceOwner": "TypeIIPlan",
+      "owner": "TypeIIPlan"
     },
     {
       "command": "ReviewTypeIIOperatingPlan",
@@ -213,30 +198,20 @@
         "terminalResultType": "Unit"
       },
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/165",
-        "line": 12288,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      },
       "kind": "command",
       "concurrencyGuard": {
         "rule": "require_expected_revision",
         "jev": 0.81,
         "date": "2026-10-29"
-      }
+      },
+      "sourceOwner": "TypeIIPlan",
+      "owner": "TypeIIPlan"
     }
   ],
   "eventAuthority": "retained_baseline_business_facts_requires_schema_reconciliation",
   "events": [
     {
       "event": "TypeIIPlanApproved",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
-        "jsonPointer": "/aggregates/94",
-        "line": 57796,
-        "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
-      },
       "baselineContract": {
         "event": "TypeIIPlanApproved",
         "emitters": [
@@ -281,12 +256,6 @@
     },
     {
       "event": "TypeIIPlanProposed",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
-        "jsonPointer": "/aggregates/94",
-        "line": 57796,
-        "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
-      },
       "baselineContract": {
         "event": "TypeIIPlanProposed",
         "emitters": [
@@ -331,12 +300,6 @@
     },
     {
       "event": "TypeIIPlanReviewed",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
-        "jsonPointer": "/aggregates/94",
-        "line": 57796,
-        "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
-      },
       "baselineContract": {
         "event": "TypeIIPlanReviewed",
         "emitters": [
@@ -381,12 +344,6 @@
     },
     {
       "event": "TypeIIPlanRevised",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
-        "jsonPointer": "/aggregates/94",
-        "line": 57796,
-        "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
-      },
       "baselineContract": {
         "event": "TypeIIPlanRevised",
         "emitters": [
@@ -441,34 +398,17 @@
   "selectedLogicalIdentityBindings": [
     {
       "command": "ApproveTypeIIOperatingPlan",
-      "logicalIdentity": "CommandId",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/21",
-        "line": 1704,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      }
+      "logicalIdentity": "CommandId"
     },
     {
       "command": "ProposeTypeIIOperatingPlan",
-      "logicalIdentity": "PlanId",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/98",
-        "line": 7277,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      }
+      "logicalIdentity": "PlanId"
     },
     {
       "command": "ReviewTypeIIOperatingPlan",
-      "logicalIdentity": "CommandId",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/165",
-        "line": 12288,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      }
+      "logicalIdentity": "CommandId"
     }
   ],
-  "selectedReplayRule": "Current required authorization precedes replay; exact authorized retries resolve the original accepted result using the selected logical identity and immutable actor/intent/source binding. Fresh mutable feasibility, clock selection and body preparation cannot replace that original result. Expected revision is concurrency precondition, not a new identity."
+  "selectedReplayRule": "Current required authorization precedes replay; exact authorized retries resolve the original accepted result using the selected logical identity and immutable actor/intent/source binding. Fresh mutable feasibility, clock selection and body preparation cannot replace that original result. Expected revision is concurrency precondition, not a new identity.",
+  "sourceOwner": "TypeIIPlan"
 }

@@ -1,5 +1,7 @@
 # PolicyCampaignParticipant commands
 
+
+
 Selected command contracts: **6**. Complete selected contracts and companion source evidence: [owner command JSON](../data/commands/policy-campaign-participant.json).
 
 | Target command | Selected source name | Kind | Identity | Fields | HTTP routes |
@@ -20,7 +22,8 @@ Selected command contracts: **6**. Complete selected contracts and companion sou
 | Target command name | AcknowledgePolicy |
 | Selected source command name | AcknowledgePolicy |
 | Name decision | The selected source name is retained. |
-| Owner | PolicyCampaignParticipant |
+| Target owner | PolicyCampaignParticipant |
+| Selected source owner | PolicyCampaignParticipant |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | http |
 | Logical identity | CommandId; Uuid; required=true; client; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
@@ -74,7 +77,8 @@ Required tests: [Placeholder: required tests not recorded]
 | Target command name | ApproveCampaignWaiver |
 | Selected source command name | ApproveCampaignWaiver |
 | Name decision | The selected source name is retained. |
-| Owner | PolicyCampaignParticipant |
+| Target owner | PolicyCampaignParticipant |
+| Selected source owner | PolicyCampaignParticipant |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | http |
 | Logical identity | CommandId; Uuid; required=true; client; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
@@ -127,7 +131,8 @@ Required tests: [Placeholder: required tests not recorded]
 | Target command name | RecordTrainingCompletion |
 | Selected source command name | RecordTrainingCompletion |
 | Name decision | The selected source name is retained. |
-| Owner | PolicyCampaignParticipant |
+| Target owner | PolicyCampaignParticipant |
+| Selected source owner | PolicyCampaignParticipant |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | http |
 | Logical identity | CommandId; Uuid; required=true; client; deterministic receiver identity derived from the admitted root fact, episode and generation: exact redelivery resolves the original result, a changed admission is a new identity |
@@ -182,7 +187,8 @@ Required tests: [Placeholder: required tests not recorded]
 | Target command name | ApplyPolicyParticipantResult |
 | Selected source command name | ApplyPolicyParticipantResult |
 | Name decision | The selected source name is retained. |
-| Owner | PolicyCampaignParticipant |
+| Target owner | PolicyCampaignParticipant |
+| Selected source owner | PolicyCampaignParticipant |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; internal; deterministic receiver identity derived from the admitted root fact, episode and generation: exact redelivery resolves the original result, a changed admission is a new identity |
@@ -235,7 +241,8 @@ Required tests: [Placeholder: required tests not recorded]
 | Target command name | AuthorizePolicyCampaignParticipantCampaignClosure |
 | Selected source command name | AuthorizePolicyCampaignParticipantCampaignClosureUse |
 | Name decision | The command authorizes the named business action; the extra Use suffix describes the coordination mechanism. |
-| Owner | PolicyCampaignParticipant |
+| Target owner | PolicyCampaignParticipant |
+| Selected source owner | PolicyCampaignParticipant |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; internal; deterministic receiver identity derived from the admitted root fact, episode and generation: exact redelivery resolves the original result, a changed admission is a new identity |
@@ -290,7 +297,8 @@ Required tests: [Placeholder: required tests not recorded]
 | Target command name | ClosePolicyCampaignParticipantCampaignClosureAuthorization |
 | Selected source command name | SettlePolicyCampaignParticipantCampaignClosureUse |
 | Name decision | The command ends the exact authorization after its business action or cancellation. |
-| Owner | PolicyCampaignParticipant |
+| Target owner | PolicyCampaignParticipant |
+| Selected source owner | PolicyCampaignParticipant |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; internal; deterministic receiver identity derived from the admitted root fact, episode and generation: exact redelivery resolves the original result, a changed admission is a new identity |

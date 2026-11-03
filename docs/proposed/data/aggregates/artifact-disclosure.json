@@ -8,14 +8,7 @@
   "invariant": "One disclosure binds immutable artifact content, handling-policy revision, recipient and purpose; delivery requires that approved identity and revocation is final.",
   "boundaryDecision": "retain",
   "boundaryRationale": "Separating approval from delivery without a one-use approval authorization could deliver changed content or a different recipient. These three monotonic states fit together.",
-  "sources": [
-    {
-      "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
-      "jsonPointer": "/aggregates/6",
-      "line": 5596,
-      "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
-    }
-  ],
+  "sources": [],
   "baselineSourcePath": "src/Compliance.Core/Features/Retention/ArtifactDisclosure.cs",
   "baselineEvents": [
     "ArtifactDisclosureApproved",
@@ -90,12 +83,6 @@
         "terminalResultType": "Unit"
       },
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/9",
-        "line": 706,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      },
       "kind": "command",
       "concurrencyGuard": {
         "rule": "require_expected_revision",
@@ -106,7 +93,9 @@
           "process_reply": 0.2
         },
         "date": "2026-10-29"
-      }
+      },
+      "sourceOwner": "ArtifactDisclosure",
+      "owner": "ArtifactDisclosure"
     },
     {
       "command": "RecordArtifactDisclosureDelivery",
@@ -160,13 +149,9 @@
         "terminalResultType": "Unit"
       },
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/106",
-        "line": 7876,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      },
-      "kind": "command"
+      "kind": "command",
+      "sourceOwner": "ArtifactDisclosure",
+      "owner": "ArtifactDisclosure"
     },
     {
       "command": "RevokeArtifactDisclosure",
@@ -215,25 +200,15 @@
         "terminalResultType": "Unit"
       },
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/187",
-        "line": 14075,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      },
-      "kind": "command"
+      "kind": "command",
+      "sourceOwner": "ArtifactDisclosure",
+      "owner": "ArtifactDisclosure"
     }
   ],
   "eventAuthority": "retained_baseline_business_facts_requires_schema_reconciliation",
   "events": [
     {
       "event": "ArtifactDisclosureApproved",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
-        "jsonPointer": "/aggregates/6",
-        "line": 5596,
-        "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
-      },
       "baselineContract": {
         "event": "ArtifactDisclosureApproved",
         "emitters": [
@@ -278,12 +253,6 @@
     },
     {
       "event": "ArtifactDisclosureDelivered",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
-        "jsonPointer": "/aggregates/6",
-        "line": 5596,
-        "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
-      },
       "baselineContract": {
         "event": "ArtifactDisclosureDelivered",
         "emitters": [
@@ -328,12 +297,6 @@
     },
     {
       "event": "ArtifactDisclosureRevoked",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
-        "jsonPointer": "/aggregates/6",
-        "line": 5596,
-        "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
-      },
       "baselineContract": {
         "event": "ArtifactDisclosureRevoked",
         "emitters": [
@@ -388,33 +351,15 @@
   "selectedLogicalIdentityBindings": [
     {
       "command": "ApproveArtifactDisclosure",
-      "logicalIdentity": "CommandId",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/9",
-        "line": 706,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      }
+      "logicalIdentity": "CommandId"
     },
     {
       "command": "RecordArtifactDisclosureDelivery",
-      "logicalIdentity": "CommandId",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/106",
-        "line": 7876,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      }
+      "logicalIdentity": "CommandId"
     },
     {
       "command": "RevokeArtifactDisclosure",
-      "logicalIdentity": "CommandId",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/187",
-        "line": 14075,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      }
+      "logicalIdentity": "CommandId"
     }
   ],
   "selectedReplayRule": "Current required authorization precedes replay; exact authorized retries resolve the original accepted result using the selected logical identity and immutable actor/intent/source binding. Fresh mutable feasibility, clock selection and body preparation cannot replace that original result. Expected revision is concurrency precondition, not a new identity.",
@@ -429,5 +374,6 @@
   "decidesCovers": [
     "D16-13"
   ],
-  "decidesAuthored": "2026-10-29"
+  "decidesAuthored": "2026-10-29",
+  "sourceOwner": "ArtifactDisclosure"
 }

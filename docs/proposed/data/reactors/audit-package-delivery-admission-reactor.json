@@ -28,7 +28,6 @@
       "currentRegisteredRootTypes": [
         "AuditPackageDeliveryAdmissionReactor"
       ],
-      "plannedRootRole": null,
       "processes": [
         "AuditPackageDeliveryRecordingProcess"
       ],

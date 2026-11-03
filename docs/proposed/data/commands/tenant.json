@@ -44,12 +44,6 @@
         "terminalResultType": "Unit"
       },
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/2",
-        "line": 165,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      },
       "kind": "command",
       "concurrencyGuard": {
         "rule": "require_expected_revision",
@@ -61,6 +55,8 @@
         },
         "date": "2026-10-29"
       },
+      "sourceOwner": "Tenant",
+      "owner": "Tenant",
       "sourceName": "ActivateTenant",
       "targetName": "ActivateTenant"
     },
@@ -107,15 +103,11 @@
           "authorizationPolicy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/32",
-        "line": 2585,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      },
       "kind": "http",
+      "sourceOwner": "Tenant",
+      "owner": "Tenant",
       "sourceName": "ChangeTenantSlug",
-      "targetName": "ChangeTenantSlug"
+      "targetName": "ChangeWorkspaceWebAddress"
     },
     {
       "command": "CompleteTenantOffboarding",
@@ -169,13 +161,9 @@
         "terminalResultType": "Unit"
       },
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/39",
-        "line": 3090,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      },
       "kind": "command",
+      "sourceOwner": "Tenant",
+      "owner": "Tenant",
       "sourceName": "CompleteTenantOffboarding",
       "targetName": "CompleteTenantOffboarding"
     },
@@ -211,12 +199,6 @@
         "terminalResultType": "Unit"
       },
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/42",
-        "line": 3322,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      },
       "kind": "command",
       "concurrencyGuard": {
         "rule": "process_reply_bound_by_operation",
@@ -228,8 +210,10 @@
         },
         "date": "2026-10-29"
       },
+      "sourceOwner": "Tenant",
+      "owner": "Tenant",
       "sourceName": "ConfirmTenantSlug",
-      "targetName": "ConfirmTenantSlug"
+      "targetName": "ConfirmWorkspaceWebAddress"
     },
     {
       "command": "ConfirmTenantSlugSurrender",
@@ -263,12 +247,6 @@
         "terminalResultType": "Unit"
       },
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/43",
-        "line": 3377,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      },
       "kind": "command",
       "concurrencyGuard": {
         "rule": "process_reply_bound_by_operation",
@@ -280,8 +258,10 @@
         },
         "date": "2026-10-29"
       },
+      "sourceOwner": "Tenant",
+      "owner": "Tenant",
       "sourceName": "ConfirmTenantSlugSurrender",
-      "targetName": "ConfirmTenantSlugSurrender"
+      "targetName": "ConfirmWorkspaceWebAddressRelease"
     },
     {
       "command": "OffboardTenant",
@@ -326,13 +306,9 @@
           "authorizationPolicy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/87",
-        "line": 6433,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      },
       "kind": "http",
+      "sourceOwner": "Tenant",
+      "owner": "Tenant",
       "sourceName": "OffboardTenant",
       "targetName": "OffboardTenant"
     },
@@ -374,18 +350,14 @@
         "terminalResultType": "Unit"
       },
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/103",
-        "line": 7674,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      },
       "kind": "command",
       "concurrencyGuard": {
         "rule": "require_expected_revision",
         "jev": 0.81,
         "date": "2026-10-29"
       },
+      "sourceOwner": "Tenant",
+      "owner": "Tenant",
       "sourceName": "ReactivateTenant",
       "targetName": "ReactivateTenant"
     },
@@ -437,13 +409,9 @@
           "authorizationPolicy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/138",
-        "line": 10437,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      },
       "kind": "http",
+      "sourceOwner": "Tenant",
+      "owner": "Tenant",
       "sourceName": "RegisterTenant",
       "targetName": "RegisterTenant"
     },
@@ -479,12 +447,6 @@
         "terminalResultType": "Unit"
       },
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/141",
-        "line": 10624,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      },
       "kind": "command",
       "concurrencyGuard": {
         "rule": "process_reply_bound_by_operation",
@@ -496,8 +458,10 @@
         },
         "date": "2026-10-29"
       },
+      "sourceOwner": "Tenant",
+      "owner": "Tenant",
       "sourceName": "RejectTenantSlug",
-      "targetName": "RejectTenantSlug"
+      "targetName": "RejectWorkspaceWebAddressRequest"
     },
     {
       "command": "RejectTenantSlugSurrender",
@@ -531,12 +495,6 @@
         "terminalResultType": "Unit"
       },
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/142",
-        "line": 10679,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      },
       "kind": "command",
       "concurrencyGuard": {
         "rule": "process_reply_bound_by_operation",
@@ -548,8 +506,10 @@
         },
         "date": "2026-10-29"
       },
+      "sourceOwner": "Tenant",
+      "owner": "Tenant",
       "sourceName": "RejectTenantSlugSurrender",
-      "targetName": "RejectTenantSlugSurrender"
+      "targetName": "RejectWorkspaceWebAddressRelease"
     },
     {
       "command": "RequestTenantSlugSurrender",
@@ -589,12 +549,6 @@
         "terminalResultType": "Unit"
       },
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/150",
-        "line": 11185,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      },
       "kind": "command",
       "concurrencyGuard": {
         "rule": "require_expected_revision",
@@ -606,8 +560,10 @@
         },
         "date": "2026-10-29"
       },
+      "sourceOwner": "Tenant",
+      "owner": "Tenant",
       "sourceName": "RequestTenantSlugSurrender",
-      "targetName": "RequestTenantSlugSurrender"
+      "targetName": "RequestWorkspaceWebAddressRelease"
     },
     {
       "command": "SuspendTenant",
@@ -652,13 +608,9 @@
           "authorizationPolicy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/198",
-        "line": 14844,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      },
       "kind": "http",
+      "sourceOwner": "Tenant",
+      "owner": "Tenant",
       "sourceName": "SuspendTenant",
       "targetName": "SuspendTenant"
     }

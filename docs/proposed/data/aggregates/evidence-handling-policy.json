@@ -8,14 +8,7 @@
   "invariant": "One exact artifact identity has one current reviewed classification, changed only at expected revision with attributed rationale.",
   "boundaryDecision": "narrow",
   "boundaryRationale": "Current classification CAS must remain atomic; past classifications/history do not participate in that decision.",
-  "sources": [
-    {
-      "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
-      "jsonPointer": "/aggregates/32",
-      "line": 25317,
-      "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
-    }
-  ],
+  "sources": [],
   "baselineSourcePath": "src/Compliance.Core/Features/Retention/EvidenceHandlingPolicy.cs",
   "baselineEvents": [
     "ArtifactHandlingPolicyAssigned",
@@ -78,13 +71,9 @@
         "terminalResultType": "Unit"
       },
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/25",
-        "line": 2005,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      },
-      "kind": "command"
+      "kind": "command",
+      "sourceOwner": "EvidenceHandlingPolicy",
+      "owner": "EvidenceHandlingPolicy"
     },
     {
       "command": "AuthorizeArtifactHandlingDownloadUse",
@@ -145,7 +134,7 @@
         }
       ],
       "reactor": "ArtifactHandlingDownloadUseReactor",
-      "sourceOwner": "EvidenceArtifact",
+      "sourceOwner": "EvidenceHandlingPolicy",
       "sourceEvents": [
         "EvidenceArtifactDownloadRequested"
       ],
@@ -157,10 +146,7 @@
       "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
       "handler": "AuthorizeArtifactHandlingDownloadUseHandler",
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "recorded": "2026-10-29"
-      }
+      "owner": "EvidenceHandlingPolicy"
     },
     {
       "command": "SettleArtifactHandlingDownloadUse",
@@ -216,7 +202,7 @@
         }
       ],
       "reactor": "SettleArtifactHandlingDownloadUseReactor",
-      "sourceOwner": "ArtifactDownloadGrant",
+      "sourceOwner": "EvidenceHandlingPolicy",
       "sourceEvents": [
         "EvidenceArtifactDownloadIssued",
         "ArtifactDownloadGrantCanceled"
@@ -229,10 +215,7 @@
       "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
       "handler": "SettleArtifactHandlingDownloadUseHandler",
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "recorded": "2026-10-29"
-      }
+      "owner": "EvidenceHandlingPolicy"
     }
   ],
   "eventAuthority": "selected_final_event_catalog",
@@ -240,24 +223,12 @@
     {
       "event": "ArtifactHandlingDownloadUseAuthorized",
       "discriminator": "bdgrz.evidence-handling-policy.artifact-handling-download-use-authorized",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/63",
-        "line": 7973,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     },
     {
       "event": "ArtifactHandlingDownloadUseSettled",
       "discriminator": "bdgrz.evidence-handling-policy.artifact-handling-download-use-settled",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/64",
-        "line": 8109,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     }
   ],
   "choreography": [
@@ -265,25 +236,13 @@
       "reactor": "ArtifactHandlingDownloadUseReactor",
       "sourceOwner": "EvidenceArtifact",
       "targetOwner": "EvidenceHandlingPolicy",
-      "command": "AuthorizeArtifactHandlingDownloadUse",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "jsonPointer": "/reactors/100",
-        "line": 8677,
-        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
-      }
+      "command": "AuthorizeArtifactHandlingDownloadUse"
     },
     {
       "reactor": "SettleArtifactHandlingDownloadUseReactor",
       "sourceOwner": "ArtifactDownloadGrant",
       "targetOwner": "EvidenceHandlingPolicy",
-      "command": "SettleArtifactHandlingDownloadUse",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "jsonPointer": "/reactors/103",
-        "line": 8925,
-        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
-      }
+      "command": "SettleArtifactHandlingDownloadUse"
     }
   ],
   "status": "SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED",
@@ -296,13 +255,7 @@
   "selectedLogicalIdentityBindings": [
     {
       "command": "AssignArtifactHandlingPolicy",
-      "logicalIdentity": "CommandId",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/25",
-        "line": 2005,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      }
+      "logicalIdentity": "CommandId"
     }
   ],
   "selectedReplayRule": "Current required authorization precedes replay; exact authorized retries resolve the original accepted result using the selected logical identity and immutable actor/intent/source binding. Fresh mutable feasibility, clock selection and body preparation cannot replace that original result. Expected revision is concurrency precondition, not a new identity.",
@@ -317,5 +270,6 @@
   "decidesCovers": [
     "D16-01"
   ],
-  "decidesAuthored": "2026-10-29"
+  "decidesAuthored": "2026-10-29",
+  "sourceOwner": "EvidenceHandlingPolicy"
 }

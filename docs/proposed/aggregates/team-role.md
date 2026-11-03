@@ -5,6 +5,7 @@
 - Business aggregate: `true`
 - Selected status: `SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED`
 
+
 ## Identity and invariant
 
 **Selected identity:** Existing UUIDv5 of tenant + team + role. Selected CommandId binds the exact assignment episode and removal intent.
@@ -18,6 +19,10 @@
 **Replay:** Current required authorization precedes replay; exact authorized retries resolve the original accepted result using the selected logical identity and immutable actor/intent/source binding. Fresh mutable feasibility, clock selection and body preparation cannot replace that original result. Expected revision is concurrency precondition, not a new identity.
 
 **Lifecycle:** [Placeholder: a consolidated lifecycle sequence is not present in the selected owner record.]
+
+
+
+
 
 ## Commands
 
@@ -37,8 +42,8 @@
 
 | Row | Kind | Source owner | Target owner | Command |
 | --- | --- | --- | --- | --- |
-| [S009](../reactors/role-cleanup-reactor.md#s009) | business_receiver | Role | TeamRole | RemoveTeamRole |
-| [S014](../reactors/tenant-rbac-bootstrap-reactor.md#s014) | business_receiver | Tenant | TeamRole | AssignTeamRole |
+| [S009](../reactors/remove-role-assignments-after-role-deletion-reactor.md#s009) | business_receiver | Role | TeamRole | RemoveTeamRole |
+| [S014](../reactors/set-up-starting-tenant-access-reactor.md#s014) | business_receiver | Tenant | TeamRole | AssignTeamRole |
 
 ## Product rules
 

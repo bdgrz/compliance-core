@@ -5,6 +5,7 @@
 - Business aggregate: `true`
 - Selected status: `SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED`
 
+
 ## Identity and invariant
 
 **Selected identity:** Tenant-scoped handoffId; `HandoffId` on `CreateAdvisorHandoff` is the caller-supplied immutable creation identity (exact immutable creation retry) so an exact retry resolves the original result and a different id is a different record; later mutations use CommandId bound to this identity and the expected revision.
@@ -18,6 +19,10 @@
 **Replay:** Current required authorization precedes replay; exact authorized retries resolve the original accepted result using the selected logical identity and immutable actor/intent/source binding. Fresh mutable feasibility, clock selection and body preparation cannot replace that original result. Expected revision is concurrency precondition, not a new identity.
 
 **Lifecycle:** [Placeholder: a consolidated lifecycle sequence is not present in the selected owner record.]
+
+
+
+
 
 ## Commands
 
@@ -49,14 +54,14 @@
 
 | Row | Kind | Source owner | Target owner | Command |
 | --- | --- | --- | --- | --- |
-| [T013](../reactors/advisor-feedback-materialization-reactor.md#t013) | reaction_or_regular_process_stage | AdvisorHandoff | AdvisorFeedbackThread | RecordAdvisorHandoffFeedback |
-| [T099](../reactors/one-committed-evidence-artifact-download-requested-starter.md#t099) | reaction_or_regular_process_stage | EvidenceArtifact | AdvisorHandoff | AuthorizeAdvisorArtifactDownload |
-| [T102](../reactors/one-committed-evidence-artifact-download-requested-starter.md#t102) | reaction_or_regular_process_stage | ArtifactDownloadGrant | AdvisorHandoff | CloseAdvisorArtifactDownloadAuthorization |
+| [T013](../reactors/preserve-advisor-feedback-after-handoff-reactor.md#t013) | reaction_or_regular_process_stage | AdvisorHandoff | AdvisorFeedbackThread | RecordAdvisorHandoffFeedback |
+| [T099](../reactors/fulfill-authorized-artifact-download-request-reactor.md#t099) | reaction_or_regular_process_stage | EvidenceArtifact | AdvisorHandoff | AuthorizeAdvisorArtifactDownload |
+| [T102](../reactors/fulfill-authorized-artifact-download-request-reactor.md#t102) | reaction_or_regular_process_stage | ArtifactDownloadGrant | AdvisorHandoff | CloseAdvisorArtifactDownloadAuthorization |
 
 ## Product rules
 
-- **D14-06** — An AdvisorHandoff is a bounded selection of exact draft record versions that the Compliance Lead marks ready_for_review; advisors and guests see only records in an open handoff plus already-approved records. Source: [m0-d14-advisor-collaboration.md](../../product/decisions/m0-d14-advisor-collaboration.md).
-- **D14-07** — Closing or revoking a handoff removes advisor and guest access to its records while history stays. Source: [m0-d14-advisor-collaboration.md](../../product/decisions/m0-d14-advisor-collaboration.md).
+- **D14-06** — An AdvisorHandoff is a bounded selection of exact draft record versions that the Compliance Lead marks ready_for_review; advisors and guests see only records in an open handoff plus already-approved records. Decision: [m0-d14-advisor-collaboration.md](../decisions/m0-d14-advisor-collaboration.md).
+- **D14-07** — Closing or revoking a handoff removes advisor and guest access to its records while history stays. Decision: [m0-d14-advisor-collaboration.md](../decisions/m0-d14-advisor-collaboration.md).
 
 ## Adopted architecture decisions
 
@@ -65,7 +70,7 @@
 ## Evidence and complete record
 
 - Baseline source: [Placeholder: source file is not present in this checkout]
-- Aggregate review: [advisor-handoff-review-2026-10-29.md](../../product/definitive-aggregate-choreography/advisor-handoff-review-2026-10-29.md)
+- Aggregate review: [Placeholder: no owner-specific review file is present]
 - Full selected record: [JSON](../data/aggregates/advisor-handoff.json)
 
 > Target definition is separate from runtime qualification. Implementation status recorded by the source: `SEPARATE_VERIFICATION_REQUIRED_IMPLEMENTATION_HALTED`.

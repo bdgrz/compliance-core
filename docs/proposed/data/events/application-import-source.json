@@ -32,7 +32,6 @@
         "discriminator": "bdgrz.application-import-source.application-import-source-admission-recorded",
         "discriminatorVersion": 1,
         "owner": "ApplicationImportSource",
-        "existingContract": null,
         "status": "selected target schema; implementation pending",
         "reason": "typed reactor receiver accepted business fact",
         "fields": [
@@ -291,7 +290,6 @@
         "discriminator": "bdgrz.application-import-source.application-import-source-settled",
         "discriminatorVersion": 1,
         "owner": "ApplicationImportSource",
-        "existingContract": null,
         "status": "selected target schema; implementation pending",
         "reason": "typed reactor receiver accepted business fact",
         "fields": [

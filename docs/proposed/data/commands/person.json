@@ -43,13 +43,9 @@
         "terminalResultType": "Unit"
       },
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/46",
-        "line": 3458,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      },
       "kind": "command",
+      "sourceOwner": "Person",
+      "owner": "Person",
       "sourceName": "CorrelatePersonMembership",
       "targetName": "SetPersonTenantMemberLink"
     },
@@ -101,13 +97,9 @@
           "authorizationPolicy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/124",
-        "line": 9281,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      },
       "kind": "http",
+      "sourceOwner": "Person",
+      "owner": "Person",
       "sourceName": "RecordPerson",
       "targetName": "RecordPerson"
     },
@@ -163,13 +155,9 @@
         "terminalResultType": "Unit"
       },
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/177",
-        "line": 13246,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      },
       "kind": "command",
+      "sourceOwner": "Person",
+      "owner": "Person",
       "sourceName": "RevisePerson",
       "targetName": "RevisePerson"
     }

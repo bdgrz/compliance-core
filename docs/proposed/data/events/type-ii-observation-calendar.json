@@ -33,7 +33,6 @@
         "discriminator": "bdgrz.type-i-i-observation-calendar.type-i-i-period-range-authorized",
         "discriminatorVersion": 1,
         "owner": "TypeIIObservationCalendar",
-        "existingContract": null,
         "status": "selected target schema; implementation pending",
         "reason": "typed reactor receiver accepted business fact",
         "fields": [
@@ -229,7 +228,6 @@
         "discriminator": "bdgrz.type-i-i-observation-calendar.type-i-i-period-range-settled",
         "discriminatorVersion": 1,
         "owner": "TypeIIObservationCalendar",
-        "existingContract": null,
         "status": "selected target schema; implementation pending",
         "reason": "typed reactor receiver accepted business fact",
         "fields": [

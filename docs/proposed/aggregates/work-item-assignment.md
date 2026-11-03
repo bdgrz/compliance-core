@@ -5,6 +5,7 @@
 - Business aggregate: `true`
 - Selected status: `SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED`
 
+
 ## Identity and invariant
 
 **Selected identity:** Tenant / work-item-assignments / existing UUIDv5 of ProgramId and WorkItemId. Selected CommandId binds original actor, exact source work identity and assignment episode; imported ledger history is read-only provenance.
@@ -18,6 +19,10 @@
 **Replay:** Current required authorization precedes replay; exact authorized retries resolve the original accepted result using the selected logical identity and immutable actor/intent/source binding. Fresh mutable feasibility, clock selection and body preparation cannot replace that original result. Expected revision is concurrency precondition, not a new identity.
 
 **Lifecycle:** [Placeholder: a consolidated lifecycle sequence is not present in the selected owner record.]
+
+
+
+
 
 ## Commands
 
@@ -42,10 +47,10 @@
 
 ## Product rules
 
-- **D15-05** — The identity of a finding-closure work item includes the exact finding revision; revising or reopening a finding creates a new work identity, and an assignment made against an earlier revision cannot authorize or assign the new round. Source: [m0-d15-work-queue.md](../../product/decisions/m0-d15-work-queue.md).
-- **D15-09** — An unassigned team work item may be claimed only by a member of that team holding the role the source workflow requires; assign and reassign are limited to a Compliance Lead or Org Admin; delegate is limited to the current assignee and only to someone eligible under the source workflow; escalate may be done by any assignee or by the system. Source: [m0-d15-work-queue.md](../../product/decisions/m0-d15-work-queue.md).
-- **D15-10** — Every work-item assignment action is attributed and checked against separation-of-duties rules; an item cannot be assigned to a person the source workflow would reject. Source: [m0-d15-work-queue.md](../../product/decisions/m0-d15-work-queue.md).
-- **D15-11** — A work item that is 7 days overdue escalates automatically to the Compliance Lead, recorded as a system-actor escalation; escalation adds visibility only and does not reassign the item. Source: [m0-d15-work-queue.md](../../product/decisions/m0-d15-work-queue.md).
+- **D15-05** — The identity of a finding-closure work item includes the exact finding revision; revising or reopening a finding creates a new work identity, and an assignment made against an earlier revision cannot authorize or assign the new round. Decision: [m0-d15-work-queue.md](../decisions/m0-d15-work-queue.md).
+- **D15-09** — An unassigned team work item may be claimed only by a member of that team holding the role the source workflow requires; assign and reassign are limited to a Compliance Lead or Org Admin; delegate is limited to the current assignee and only to someone eligible under the source workflow; escalate may be done by any assignee or by the system. Decision: [m0-d15-work-queue.md](../decisions/m0-d15-work-queue.md).
+- **D15-10** — Every work-item assignment action is attributed and checked against separation-of-duties rules; an item cannot be assigned to a person the source workflow would reject. Decision: [m0-d15-work-queue.md](../decisions/m0-d15-work-queue.md).
+- **D15-11** — A work item that is 7 days overdue escalates automatically to the Compliance Lead, recorded as a system-actor escalation; escalation adds visibility only and does not reassign the item. Decision: [m0-d15-work-queue.md](../decisions/m0-d15-work-queue.md).
 
 ## Adopted architecture decisions
 

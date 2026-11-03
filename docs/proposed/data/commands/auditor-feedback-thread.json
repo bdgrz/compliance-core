@@ -55,7 +55,7 @@
         "recorded": "2026-10-29"
       },
       "reactor": "AuditorCommentMaterializationReactor",
-      "sourceOwner": "AuditorRequest",
+      "sourceOwner": "AuditorFeedbackThread",
       "sourceEvents": [
         "AuditorCommentAdmitted"
       ],
@@ -65,6 +65,7 @@
       ],
       "effectKind": "materialize_auditor_comment",
       "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
+      "owner": "AuditorFeedbackThread",
       "sourceName": "MaterializeAuditorComment",
       "targetName": "RecordAuditorComment"
     }

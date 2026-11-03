@@ -8,14 +8,7 @@
   "invariant": "One licensed text overlay and sequential revision line.",
   "boundaryDecision": "selected_split",
   "mustPreserve": "Exact prior revision and one request identity/intent; license/source proof validated per overlay.",
-  "sources": [
-    {
-      "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
-      "jsonPointer": "/splitOwners/13/targetOwners/0",
-      "line": 1535,
-      "sha256": "d349d94b7c43f4d82020ecf36bdacf1aff98bc6498e14993582f1c3164b21f19"
-    }
-  ],
+  "sources": [],
   "baselineSourcePath": "src/Compliance.Core/Features/Criteria/CriteriaTextOverlayLedger.cs",
   "baselineEvents": [
     "CriteriaTextOverlayEntryRevised"
@@ -81,13 +74,9 @@
           "policy": "ApiUser + existing request-scope authorizers"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/151",
-        "line": 17583,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
-      "kind": "http"
+      "kind": "http",
+      "sourceOwner": "CriteriaTextOverlay",
+      "owner": "CriteriaTextOverlay"
     }
   ],
   "eventAuthority": "selected_final_event_catalog",
@@ -95,13 +84,7 @@
     {
       "event": "CriteriaTextOverlayEntryRevised",
       "discriminator": "bdgrz.criteria-overlay.entry-revised",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/123",
-        "line": 15011,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     }
   ],
   "choreography": [],
@@ -120,12 +103,6 @@
         "required": true,
         "origin": "client",
         "rule": "one immutable authored operation"
-      },
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/151",
-        "line": 17583,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       }
     }
   ],
@@ -147,5 +124,6 @@
   "decidesCovers": [
     "D02-06"
   ],
-  "decidesAuthored": "2026-10-29"
+  "decidesAuthored": "2026-10-29",
+  "sourceOwner": "CriteriaTextOverlay"
 }

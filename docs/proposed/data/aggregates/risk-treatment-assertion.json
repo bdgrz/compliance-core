@@ -8,14 +8,7 @@
   "invariant": "One pending/accepted assertion line per risk/control.",
   "boundaryDecision": "selected_split",
   "mustPreserve": "Assessment belongs to RiskEvaluation; risk governance consumes exact risk/source proofs, no live aggregate authority.",
-  "sources": [
-    {
-      "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
-      "jsonPointer": "/splitOwners/24/targetOwners/1",
-      "line": 2577,
-      "sha256": "d349d94b7c43f4d82020ecf36bdacf1aff98bc6498e14993582f1c3164b21f19"
-    }
-  ],
+  "sources": [],
   "baselineSourcePath": "src/Compliance.Core/Features/Risks/RiskGovernanceLedger.cs",
   "baselineEvents": [
     "RiskControlTreatmentProposed",
@@ -93,13 +86,9 @@
           "policy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/80",
-        "line": 9346,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
-      "kind": "http"
+      "kind": "http",
+      "sourceOwner": "RiskTreatmentAssertion",
+      "owner": "RiskTreatmentAssertion"
     },
     {
       "command": "RetireRiskControlTreatment",
@@ -160,13 +149,9 @@
           "policy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/126",
-        "line": 14529,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
-      "kind": "http"
+      "kind": "http",
+      "sourceOwner": "RiskTreatmentAssertion",
+      "owner": "RiskTreatmentAssertion"
     },
     {
       "command": "ReviewRiskControlTreatment",
@@ -237,13 +222,9 @@
           "policy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/132",
-        "line": 15276,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
-      "kind": "http"
+      "kind": "http",
+      "sourceOwner": "RiskTreatmentAssertion",
+      "owner": "RiskTreatmentAssertion"
     }
   ],
   "eventAuthority": "selected_final_event_catalog",
@@ -251,35 +232,17 @@
     {
       "event": "RiskControlTreatmentProposed",
       "discriminator": "bdgrz.risk.control_treatment.proposed",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/235",
-        "line": 32085,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     },
     {
       "event": "RiskControlTreatmentRetired",
       "discriminator": "bdgrz.risk.control_treatment.retired",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/236",
-        "line": 32155,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     },
     {
       "event": "RiskControlTreatmentReviewed",
       "discriminator": "bdgrz.risk.control_treatment.reviewed",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/237",
-        "line": 32226,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     }
   ],
   "choreography": [],
@@ -298,12 +261,6 @@
         "required": true,
         "origin": "client",
         "rule": "one immutable authored operation"
-      },
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/80",
-        "line": 9346,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       }
     },
     {
@@ -314,12 +271,6 @@
         "required": true,
         "origin": "client",
         "rule": "one immutable authored operation"
-      },
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/126",
-        "line": 14529,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       }
     },
     {
@@ -330,12 +281,6 @@
         "required": true,
         "origin": "client",
         "rule": "one immutable authored operation"
-      },
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/132",
-        "line": 15276,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       }
     }
   ],
@@ -357,5 +302,6 @@
   "decidesCovers": [
     "D22-08"
   ],
-  "decidesAuthored": "2026-10-29"
+  "decidesAuthored": "2026-10-29",
+  "sourceOwner": "RiskTreatmentAssertion"
 }

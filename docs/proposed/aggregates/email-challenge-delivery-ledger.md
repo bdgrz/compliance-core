@@ -5,6 +5,7 @@
 - Business aggregate: `false`
 - Selected status: `SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED`
 
+
 ## Identity and invariant
 
 **Selected identity:** [Placeholder: selected target identity is not recorded.]
@@ -19,6 +20,10 @@
 
 **Lifecycle:** [Placeholder: a consolidated lifecycle sequence is not present in the selected owner record.]
 
+
+
+
+
 ## Commands
 
 [Placeholder: no selected commands are listed for this owner.]
@@ -31,10 +36,10 @@
 
 | Row | Kind | Source owner | Target owner | Command |
 | --- | --- | --- | --- | --- |
-| [T115](../reactors/email-challenge-delivery-reactor.md#t115) | reaction_or_regular_process_stage | EmailAddress | EmailChallengeDeliveryLedger | DeliverEmailChallenge |
-| [T116](../reactors/email-challenge-delivery-reactor.md#t116) | reaction_or_regular_process_stage | EmailAddress | EmailChallengeDeliveryLedger | DeliverRecoveryChallenge |
-| [N001](../reactors/email-challenge-delivery-reactor.md#n001) | nested_process_stage | EmailAddress | EmailChallengeDeliveryLedger | RecordEmailChallengeDeliverySent |
-| [N002](../reactors/email-challenge-delivery-reactor.md#n002) | nested_process_stage | EmailAddress | EmailChallengeDeliveryLedger | RecordEmailChallengeDeliveryFailed |
+| [T115](../reactors/send-account-verification-and-recovery-emails-reactor.md#t115) | reaction_or_regular_process_stage | EmailAddress | EmailChallengeDeliveryLedger | DeliverEmailChallenge |
+| [T116](../reactors/send-account-verification-and-recovery-emails-reactor.md#t116) | reaction_or_regular_process_stage | EmailAddress | EmailChallengeDeliveryLedger | DeliverRecoveryChallenge |
+| [N001](../reactors/send-account-verification-and-recovery-emails-reactor.md#n001) | nested_process_stage | EmailAddress | EmailChallengeDeliveryLedger | RecordEmailChallengeDeliverySent |
+| [N002](../reactors/send-account-verification-and-recovery-emails-reactor.md#n002) | nested_process_stage | EmailAddress | EmailChallengeDeliveryLedger | RecordEmailChallengeDeliveryFailed |
 
 ## Product rules
 

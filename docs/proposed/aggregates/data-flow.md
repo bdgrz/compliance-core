@@ -5,6 +5,7 @@
 - Business aggregate: `true`
 - Selected status: `SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED`
 
+
 ## Identity and invariant
 
 **Selected identity:** Tenant + caller DataFlowId under the preserved shared technology-inventory address/sentinel scheme.
@@ -18,6 +19,10 @@
 **Replay:** Current required authorization precedes replay; exact authorized retries resolve the original accepted result using the selected logical identity and immutable actor/intent/source binding. Fresh mutable feasibility, clock selection and body preparation cannot replace that original result. Expected revision is concurrency precondition, not a new identity.
 
 **Lifecycle:** A new data flow is active. ReviseDataFlow may set it to active or retired while preserving its source, destination, information, protection, and effective-date rules. Changing its status does not automatically change related asset or technology records, and a retired flow is not permanently closed by this rule.
+
+
+
+
 
 ## Commands
 
@@ -38,8 +43,8 @@
 
 ## Product rules
 
-- **D08-05** — A DataFlow runs from a service or system instance to a data store or external party, carries one or more information assets, a purpose, and encrypted_in_transit and encrypted_at_rest flags, and is effective-dated and versioned. Source: [m0-d08-technology-inventory.md](../../product/decisions/m0-d08-technology-inventory.md).
-- **D08-06** — A DataFlow is invalid when any carried information asset is confidential or restricted and either encryption flag is false, unless an approved exception is referenced. Source: [m0-d08-technology-inventory.md](../../product/decisions/m0-d08-technology-inventory.md).
+- **D08-05** — A DataFlow runs from a service or system instance to a data store or external party, carries one or more information assets, a purpose, and encrypted_in_transit and encrypted_at_rest flags, and is effective-dated and versioned. Decision: [m0-d08-technology-inventory.md](../decisions/m0-d08-technology-inventory.md).
+- **D08-06** — A DataFlow is invalid when any carried information asset is confidential or restricted and either encryption flag is false, unless an approved exception is referenced. Decision: [m0-d08-technology-inventory.md](../decisions/m0-d08-technology-inventory.md).
 
 ## Adopted architecture decisions
 
@@ -48,7 +53,7 @@
 ## Evidence and complete record
 
 - Baseline source: [Placeholder: source file is not present in this checkout]
-- Aggregate review: [data-flow-review-2026-10-29.md](../../product/definitive-aggregate-choreography/data-flow-review-2026-10-29.md)
+- Aggregate review: [Placeholder: no owner-specific review file is present]
 - Full selected record: [JSON](../data/aggregates/data-flow.json)
 
 > Target definition is separate from runtime qualification. Implementation status recorded by the source: `SEPARATE_VERIFICATION_REQUIRED_IMPLEMENTATION_HALTED`.

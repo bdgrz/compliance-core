@@ -105,7 +105,7 @@ ChildAdmissionIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T034](../reactors/auditor-comment-materialization-reactor.md#t034) | emitted semantic fact | AuditorRequest | RecordAuditorComment | AuditorFeedbackThread |
+| [T034](../reactors/preserve-auditor-comments-after-request-reactor.md#t034) | emitted semantic fact | AuditorRequest | RecordAuditorComment | AuditorFeedbackThread |
 
 
 

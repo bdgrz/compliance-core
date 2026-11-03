@@ -55,13 +55,9 @@
           "policy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/28",
-        "line": 3351,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
       "kind": "http",
+      "sourceOwner": "EvidenceRequest",
+      "owner": "EvidenceRequest",
       "sourceName": "CancelEvidenceRequest",
       "targetName": "CancelEvidenceRequest"
     },
@@ -119,13 +115,9 @@
           "policy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/58",
-        "line": 6881,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
       "kind": "http",
+      "sourceOwner": "EvidenceRequest",
+      "owner": "EvidenceRequest",
       "sourceName": "FulfilEvidenceRequest",
       "targetName": "FulfilEvidenceRequest"
     },
@@ -193,13 +185,9 @@
           "policy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/73",
-        "line": 8459,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
       "kind": "http",
+      "sourceOwner": "EvidenceRequest",
+      "owner": "EvidenceRequest",
       "sourceName": "OpenEvidenceRequest",
       "targetName": "OpenEvidenceRequest"
     },
@@ -267,7 +255,7 @@
         }
       ],
       "reactor": "ActionCompletionEvidenceRequestAuthorizationReactor",
-      "sourceOwner": "RiskTreatmentAction",
+      "sourceOwner": "EvidenceRequest",
       "sourceEvents": [
         "RiskTreatmentActionCompletionReviewAccepted"
       ],
@@ -279,10 +267,7 @@
       "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
       "handler": "AuthorizeEvidenceRequestActionCompletionUseHandler",
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "recorded": "2026-10-29"
-      },
+      "owner": "EvidenceRequest",
       "sourceName": "AuthorizeEvidenceRequestActionCompletionUse",
       "targetName": "AuthorizeEvidenceRequestActionCompletion"
     },
@@ -350,7 +335,7 @@
         }
       ],
       "reactor": "ActionCompletionEvidenceRequestSettlementReactor",
-      "sourceOwner": "RiskTreatmentAction",
+      "sourceOwner": "EvidenceRequest",
       "sourceEvents": [
         "RiskTreatmentActionCompletionReviewed",
         "RiskTreatmentActionCompletionReviewCanceled"
@@ -363,10 +348,7 @@
       "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
       "handler": "SettleEvidenceRequestActionCompletionUseHandler",
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "recorded": "2026-10-29"
-      },
+      "owner": "EvidenceRequest",
       "sourceName": "SettleEvidenceRequestActionCompletionUse",
       "targetName": "CloseEvidenceRequestActionCompletionAuthorization"
     }
@@ -481,8 +463,7 @@
       "expectedRevisionScope": {
         "field": "ExpectedRevision",
         "owner": "EvidenceRequest",
-        "counter": "logical ResourceRevision of this owner",
-        "nullableInternalRule": null
+        "counter": "logical ResourceRevision of this owner"
       }
     },
     {
@@ -591,8 +572,7 @@
       "expectedRevisionScope": {
         "field": "ExpectedRevision",
         "owner": "EvidenceRequest",
-        "counter": "logical ResourceRevision of this owner",
-        "nullableInternalRule": null
+        "counter": "logical ResourceRevision of this owner"
       }
     },
     {
@@ -713,7 +693,6 @@
         "terminalResultType": "EvidenceRequestView"
       },
       "expectedRevisionScope": {
-        "field": null,
         "owner": "EvidenceRequest",
         "counter": "No primary caller ResourceRevision. Enforce required authored source/epoch/version tokens, immutable creation identity or trusted proof/generation as declared; append uses physical OCC."
       }

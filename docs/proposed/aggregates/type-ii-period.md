@@ -5,6 +5,7 @@
 - Business aggregate: `true`
 - Selected status: `SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED`
 
+
 ## Identity and invariant
 
 **Selected identity:** Tenant / type-ii-periods / PeriodId, with immutable ProgramId and exact accepted plan/opening. PeriodId identifies creation; selected CommandId/GenerationKey identify exact freeze/reconciliation/amendment operations and their immutable closing identities.
@@ -18,6 +19,10 @@
 **Replay:** Current required authorization precedes replay; exact authorized retries resolve the original accepted result using the selected logical identity and immutable actor/intent/source binding. Fresh mutable feasibility, clock selection and body preparation cannot replace that original result. Expected revision is concurrency precondition, not a new identity.
 
 **Lifecycle:** [Placeholder: a consolidated lifecycle sequence is not present in the selected owner record.]
+
+
+
+
 
 ## Commands
 
@@ -54,17 +59,17 @@
 
 | Row | Kind | Source owner | Target owner | Command |
 | --- | --- | --- | --- | --- |
-| [T040](../reactors/control-occurrence-fan-out-reactor.md#t040) | reaction_or_regular_process_stage | TypeIIPeriod | ControlOccurrence | OpenDueControlOccurrence |
-| [T053](../reactors/type-ii-range-reactor.md#t053) | reaction_or_regular_process_stage | TypeIIPeriod | TypeIIObservationCalendar | AcquireTypeIIPeriodRange |
-| [T054](../reactors/type-ii-range-reactor.md#t054) | reaction_or_regular_process_stage | TypeIIObservationCalendar | TypeIIPeriod | ApplyTypeIIPeriodRange |
-| [T055](../reactors/type-ii-range-reactor.md#t055) | reaction_or_regular_process_stage | TypeIIPeriod | TypeIIObservationCalendar | CloseTypeIIPeriodRangeReservation |
-| [A018](../reactors/unassigned-architecture-rows.md#a018) | process_abort_binding | TypeIIPeriod | TypeIIPeriod | RejectTypeIIPeriodOpening |
-| [A019](../reactors/unassigned-architecture-rows.md#a019) | process_abort_binding | TypeIIPeriod | TypeIIPeriod | RejectTypeIIPeriodAmendment |
-| [A020](../reactors/unassigned-architecture-rows.md#a020) | process_abort_binding | TypeIIPeriod | TypeIIPeriod | CancelTypeIIPeriodAmendment |
+| [T040](../reactors/open-due-control-work-reactor.md#t040) | reaction_or_regular_process_stage | TypeIIPeriod | ControlOccurrence | OpenDueControlOccurrence |
+| [T053](../reactors/reserve-accepted-type-ii-period-dates-reactor.md#t053) | reaction_or_regular_process_stage | TypeIIPeriod | TypeIIObservationCalendar | AcquireTypeIIPeriodRange |
+| [T054](../reactors/reserve-accepted-type-ii-period-dates-reactor.md#t054) | reaction_or_regular_process_stage | TypeIIObservationCalendar | TypeIIPeriod | ApplyTypeIIPeriodRange |
+| [T055](../reactors/reserve-accepted-type-ii-period-dates-reactor.md#t055) | reaction_or_regular_process_stage | TypeIIPeriod | TypeIIObservationCalendar | CloseTypeIIPeriodRangeReservation |
+| [A018](../reactors/unassigned-domain-choreography.md#a018) | process_abort_binding | TypeIIPeriod | TypeIIPeriod | RejectTypeIIPeriodOpening |
+| [A019](../reactors/unassigned-domain-choreography.md#a019) | process_abort_binding | TypeIIPeriod | TypeIIPeriod | RejectTypeIIPeriodAmendment |
+| [A020](../reactors/unassigned-domain-choreography.md#a020) | process_abort_binding | TypeIIPeriod | TypeIIPeriod | CancelTypeIIPeriodAmendment |
 
 ## Product rules
 
-- **D21-08** — Period close validation lists every significant item in the period and fails while any flagged system description section is unresolved. Source: [m0-d21-significant-change.md](../../product/decisions/m0-d21-significant-change.md).
+- **D21-08** — Period close validation lists every significant item in the period and fails while any flagged system description section is unresolved. Decision: [m0-d21-significant-change.md](../decisions/m0-d21-significant-change.md).
 
 ## Adopted architecture decisions
 

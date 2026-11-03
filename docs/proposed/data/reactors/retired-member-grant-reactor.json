@@ -88,7 +88,6 @@
       ],
       "canonicalTargetOwner": "AccessGrant",
       "recoveryContractSummary": "At-least-once checkpoint replay resends the same source-derived command. Missing dependencies remain retryable; actual terminal/superseded episodes are skipped only with the owning proof.",
-      "logicalPrerequisiteRuleGuard": null,
       "logicalPrerequisiteRule": "A member-principal AccessGrantIssued fact names a membership episode; if that episode is already terminated the grant is revoked with that termination as proof, if still the live registered episode nothing happens, otherwise the reaction retries until authority is visible.",
       "prerequisiteRuleSource": "authored 2026-10-29 from reactor and target source"
     }

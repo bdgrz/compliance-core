@@ -8,14 +8,7 @@
   "invariant": "One normalized role-permission tuple has a single active relationship at a time.",
   "boundaryDecision": "retain",
   "boundaryRationale": "Relationship can be assigned/removed without serializing unrelated permissions; a roster in Role is unnecessary.",
-  "sources": [
-    {
-      "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
-      "jsonPointer": "/aggregates/73",
-      "line": 46133,
-      "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
-    }
-  ],
+  "sources": [],
   "baselineSourcePath": "src/Compliance.Core/Features/AccessControl/RolePermission.cs",
   "baselineEvents": [
     "RolePermissionAssigned",
@@ -68,13 +61,9 @@
         "terminalResultType": "Unit"
       },
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/27",
-        "line": 2212,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      },
-      "kind": "command"
+      "kind": "command",
+      "sourceOwner": "RolePermission",
+      "owner": "RolePermission"
     },
     {
       "command": "RemoveRolePermission",
@@ -123,25 +112,15 @@
         "terminalResultType": "Unit"
       },
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/145",
-        "line": 10877,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      },
-      "kind": "command"
+      "kind": "command",
+      "sourceOwner": "RolePermission",
+      "owner": "RolePermission"
     }
   ],
   "eventAuthority": "retained_baseline_business_facts_requires_schema_reconciliation",
   "events": [
     {
       "event": "RolePermissionAssigned",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
-        "jsonPointer": "/aggregates/73",
-        "line": 46133,
-        "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
-      },
       "baselineContract": {
         "event": "RolePermissionAssigned",
         "emitters": [
@@ -186,12 +165,6 @@
     },
     {
       "event": "RolePermissionRemoved",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
-        "jsonPointer": "/aggregates/73",
-        "line": 46133,
-        "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
-      },
       "baselineContract": {
         "event": "RolePermissionRemoved",
         "emitters": [
@@ -251,24 +224,13 @@
   "selectedLogicalIdentityBindings": [
     {
       "command": "AssignRolePermission",
-      "logicalIdentity": "CommandId",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/27",
-        "line": 2212,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      }
+      "logicalIdentity": "CommandId"
     },
     {
       "command": "RemoveRolePermission",
-      "logicalIdentity": "CommandId",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/145",
-        "line": 10877,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      }
+      "logicalIdentity": "CommandId"
     }
   ],
-  "selectedReplayRule": "Current required authorization precedes replay; exact authorized retries resolve the original accepted result using the selected logical identity and immutable actor/intent/source binding. Fresh mutable feasibility, clock selection and body preparation cannot replace that original result. Expected revision is concurrency precondition, not a new identity."
+  "selectedReplayRule": "Current required authorization precedes replay; exact authorized retries resolve the original accepted result using the selected logical identity and immutable actor/intent/source binding. Fresh mutable feasibility, clock selection and body preparation cannot replace that original result. Expected revision is concurrency precondition, not a new identity.",
+  "sourceOwner": "RolePermission"
 }

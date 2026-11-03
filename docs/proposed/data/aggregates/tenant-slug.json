@@ -8,14 +8,7 @@
   "invariant": "One normalized global slug can belong to one tenant and once surrendered is permanently retired.",
   "boundaryDecision": "retain",
   "boundaryRationale": "Global claim/retirement must be atomic; tenant activation and reply transport need not be in same owner.",
-  "sources": [
-    {
-      "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
-      "jsonPointer": "/aggregates/90",
-      "line": 55758,
-      "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
-    }
-  ],
+  "sources": [],
   "baselineSourcePath": "src/Compliance.Core/Features/Tenants/TenantSlug.cs",
   "baselineEvents": [
     "TenantSlugRegistered",
@@ -60,12 +53,6 @@
         "terminalResultType": "Unit"
       },
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/140",
-        "line": 10568,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      },
       "kind": "command",
       "concurrencyGuard": {
         "rule": "creation_key_only",
@@ -105,12 +92,6 @@
         "terminalResultType": "Unit"
       },
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/197",
-        "line": 14789,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      },
       "kind": "command",
       "concurrencyGuard": {
         "rule": "terminal_idempotent_no_guard",
@@ -123,12 +104,6 @@
   "events": [
     {
       "event": "TenantSlugRegistered",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
-        "jsonPointer": "/aggregates/90",
-        "line": 55758,
-        "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
-      },
       "baselineContract": {
         "event": "TenantSlugRegistered",
         "emitters": [
@@ -153,12 +128,6 @@
     },
     {
       "event": "TenantSlugRegistrationRejected",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
-        "jsonPointer": "/aggregates/90",
-        "line": 55758,
-        "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
-      },
       "baselineContract": {
         "event": "TenantSlugRegistrationRejected",
         "emitters": [
@@ -183,12 +152,6 @@
     },
     {
       "event": "TenantSlugSurrenderRejected",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
-        "jsonPointer": "/aggregates/90",
-        "line": 55758,
-        "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
-      },
       "baselineContract": {
         "event": "TenantSlugSurrenderRejected",
         "emitters": [
@@ -213,12 +176,6 @@
     },
     {
       "event": "TenantSlugSurrendered",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
-        "jsonPointer": "/aggregates/90",
-        "line": 55758,
-        "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
-      },
       "baselineContract": {
         "event": "TenantSlugSurrendered",
         "emitters": [
@@ -253,23 +210,11 @@
   "selectedLogicalIdentityBindings": [
     {
       "command": "RegisterTenantSlug",
-      "logicalIdentity": "CommandId",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/140",
-        "line": 10568,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      }
+      "logicalIdentity": "CommandId"
     },
     {
       "command": "SurrenderTenantSlug",
-      "logicalIdentity": "CommandId",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/197",
-        "line": 14789,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      }
+      "logicalIdentity": "CommandId"
     }
   ],
   "selectedReplayRule": "Current required authorization precedes replay; exact authorized retries resolve the original accepted result using the selected logical identity and immutable actor/intent/source binding. Fresh mutable feasibility, clock selection and body preparation cannot replace that original result. Expected revision is concurrency precondition, not a new identity."

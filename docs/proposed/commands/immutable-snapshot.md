@@ -1,22 +1,25 @@
 # ImmutableSnapshot commands
 
+
+
 Selected command contracts: **2**. Complete selected contracts and companion source evidence: [owner command JSON](../data/commands/immutable-snapshot.json).
 
 | Target command | Selected source name | Kind | Identity | Fields | HTTP routes |
 | --- | --- | --- | --- | --- | --- |
-| AmendProgramScopeSnapshot | AmendProgramScopeSnapshot | http | CommandId | 9 | PUT /api/v1/tenants/{tenant_id}/scope-snapshots/{snapshot_id}/amendments/{command_id} |
+| CreateProgramScopeSnapshotAmendment | AmendProgramScopeSnapshot | http | CommandId | 9 | PUT /api/v1/tenants/{tenant_id}/scope-snapshots/{snapshot_id}/amendments/{command_id} |
 | FinalizeProgramScopeSnapshot | FreezeProgramScopeSnapshot | http | SnapshotId | 6 | PUT /api/v1/tenants/{tenant_id}/scope-snapshots/{snapshot_id} |
 
 ## Selected command details
 
-### AmendProgramScopeSnapshot
+### CreateProgramScopeSnapshotAmendment
 
 | Selected contract detail | Value |
 | --- | --- |
-| Target command name | AmendProgramScopeSnapshot |
+| Target command name | CreateProgramScopeSnapshotAmendment |
 | Selected source command name | AmendProgramScopeSnapshot |
-| Name decision | The selected source name is retained. |
-| Owner | ImmutableSnapshot |
+| Name decision | Creates a new immutable snapshot that amends the specified earlier program scope; the earlier snapshot stays unchanged. |
+| Target owner | ImmutableSnapshot |
+| Selected source owner | ImmutableSnapshot |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | http |
 | Logical identity | CommandId; Uuid; required=true; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
@@ -70,7 +73,8 @@ Required tests: [Placeholder: required tests not recorded]
 | Target command name | FinalizeProgramScopeSnapshot |
 | Selected source command name | FreezeProgramScopeSnapshot |
 | Name decision | Finalizes the exact approved program scope as an immutable snapshot for later compliance work. |
-| Owner | ImmutableSnapshot |
+| Target owner | ImmutableSnapshot |
+| Selected source owner | ImmutableSnapshot |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | http |
 | Logical identity | SnapshotId; Uuid; required=true; caller-supplied immutable creation identity: an exact retry with the same id and authored intent returns the original result; the same id with changed intent is refused; a different id is a different record |

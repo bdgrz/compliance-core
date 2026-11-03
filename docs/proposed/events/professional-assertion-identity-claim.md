@@ -36,7 +36,6 @@ Canonical events: **1**. Complete canonical event and available schema records: 
 | Schema discriminator | bdgrz.professional-assertion-identity-claim.professional-assertion-identity-claimed |
 | Schema discriminatorVersion | 1 |
 | Schema owner | ProfessionalAssertionIdentityClaim |
-| Schema existingContract | null (recorded) |
 | Schema status | selected target schema; implementation pending |
 | Schema reason | typed reactor receiver accepted business fact |
 | Schema changes | None listed |
@@ -107,8 +106,8 @@ ProfessionalDutyChangeIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T000](../reactors/professional-duty-change-reactor.md#t000) | emitted semantic fact | FirmProfessionalDutyDesignation | ClaimProfessionalAssertionIdentity | ProfessionalAssertionIdentityClaim |
-| [T001](../reactors/professional-duty-change-reactor.md#t001) | logical prerequisite | ProfessionalAssertionIdentityClaim | ApplyProfessionalDutyChange | FirmProfessionalDutyDesignation |
+| [T000](../reactors/apply-or-revoke-professional-duty-designation-reactor.md#t000) | emitted semantic fact | FirmProfessionalDutyDesignation | ClaimProfessionalAssertionIdentity | ProfessionalAssertionIdentityClaim |
+| [T001](../reactors/apply-or-revoke-professional-duty-designation-reactor.md#t001) | logical prerequisite | ProfessionalAssertionIdentityClaim | ApplyProfessionalDutyChange | FirmProfessionalDutyDesignation |
 
 
 

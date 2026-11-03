@@ -8,14 +8,7 @@
   "invariant": "One role has one active/deleted lifecycle, normalized display name and built-in protection.",
   "boundaryDecision": "retain",
   "boundaryRationale": "Display name and deletion are one role lifecycle; permissions/teams correctly separate identity/lifecycles and projections.",
-  "sources": [
-    {
-      "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
-      "jsonPointer": "/aggregates/72",
-      "line": 45791,
-      "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
-    }
-  ],
+  "sources": [],
   "baselineSourcePath": "src/Compliance.Core/Features/AccessControl/Role.cs",
   "baselineEvents": [
     "RoleDefined",
@@ -65,13 +58,9 @@
           "authorizationPolicy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/60",
-        "line": 4565,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      },
-      "kind": "http"
+      "kind": "http",
+      "sourceOwner": "Role",
+      "owner": "Role"
     },
     {
       "command": "DeleteRole",
@@ -105,18 +94,14 @@
         "terminalResultType": "Unit"
       },
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/63",
-        "line": 4773,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      },
       "kind": "command",
       "concurrencyGuard": {
         "rule": "terminal_idempotent_no_guard",
         "jev": 0.85,
         "date": "2026-10-29"
-      }
+      },
+      "sourceOwner": "Role",
+      "owner": "Role"
     },
     {
       "command": "RenameRole",
@@ -161,30 +146,20 @@
         "terminalResultType": "Unit"
       },
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/147",
-        "line": 11019,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      },
       "kind": "command",
       "concurrencyGuard": {
         "rule": "require_expected_revision",
         "jev": 0.98,
         "date": "2026-10-29"
-      }
+      },
+      "sourceOwner": "Role",
+      "owner": "Role"
     }
   ],
   "eventAuthority": "retained_baseline_business_facts_requires_schema_reconciliation",
   "events": [
     {
       "event": "RoleDefined",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
-        "jsonPointer": "/aggregates/72",
-        "line": 45791,
-        "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
-      },
       "baselineContract": {
         "event": "RoleDefined",
         "emitters": [
@@ -214,12 +189,6 @@
     },
     {
       "event": "RoleDeleted",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
-        "jsonPointer": "/aggregates/72",
-        "line": 45791,
-        "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
-      },
       "baselineContract": {
         "event": "RoleDeleted",
         "emitters": [
@@ -244,12 +213,6 @@
     },
     {
       "event": "RoleRenamed",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
-        "jsonPointer": "/aggregates/72",
-        "line": 45791,
-        "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
-      },
       "baselineContract": {
         "event": "RoleRenamed",
         "emitters": [
@@ -289,33 +252,15 @@
   "selectedLogicalIdentityBindings": [
     {
       "command": "DefineRole",
-      "logicalIdentity": "RoleId",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/60",
-        "line": 4565,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      }
+      "logicalIdentity": "RoleId"
     },
     {
       "command": "DeleteRole",
-      "logicalIdentity": "CommandId",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/63",
-        "line": 4773,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      }
+      "logicalIdentity": "CommandId"
     },
     {
       "command": "RenameRole",
-      "logicalIdentity": "CommandId",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/147",
-        "line": 11019,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      }
+      "logicalIdentity": "CommandId"
     }
   ],
   "selectedReplayRule": "Current required authorization precedes replay; exact authorized retries resolve the original accepted result using the selected logical identity and immutable actor/intent/source binding. Fresh mutable feasibility, clock selection and body preparation cannot replace that original result. Expected revision is concurrency precondition, not a new identity.",
@@ -324,5 +269,6 @@
   "decidesCovers": [
     "D03-01"
   ],
-  "decidesAuthored": "2026-10-29"
+  "decidesAuthored": "2026-10-29",
+  "sourceOwner": "Role"
 }

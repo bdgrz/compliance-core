@@ -5,15 +5,7 @@
   "declaredIdentity": "Deterministic tenant + program + commitment identity + control identity tuple (same scheme as RiskTreatmentAssertion); `LinkId` must equal that tuple; later commands use CommandId with the exact commitment version and control version.",
   "invariant": "One commitment-to-control link has one pending/accepted version line: each accepted version binds an exact commitment version to an exact control version with rationale, a successor needs independent review, and a retired link stays terminal (M0-D09 D09-09). Neither CommitmentDraft nor ControlDraft owns the other side's version list.",
   "boundaryDecision": "selected_new_owner",
-  "mustPreserve": null,
-  "sources": [
-    {
-      "path": "docs/product/definitive-aggregate-choreography/jev-review-2026-10-29-polish/round3-response.json",
-      "decisionId": "OWNER_CommitmentControlLink",
-      "rationale": "Versioned many-to-many links need their own owner; neither endpoint can decide the pair atomically. Jev new_link_owner 0.98."
-    }
-  ],
-  "baselineSourcePath": null,
+  "sources": [],
   "baselineEvents": [],
   "preliminaryNewEvents": [
     "CommitmentControlLinkProposed",
@@ -71,10 +63,8 @@
         }
       ],
       "http": [],
-      "source": {
-        "path": "docs/product/definitive-aggregate-choreography/choreography.json",
-        "recorded": "2026-10-29"
-      }
+      "sourceOwner": "CommitmentControlLink",
+      "owner": "CommitmentControlLink"
     },
     {
       "command": "ReviewCommitmentControlLink",
@@ -118,10 +108,8 @@
         }
       ],
       "http": [],
-      "source": {
-        "path": "docs/product/definitive-aggregate-choreography/choreography.json",
-        "recorded": "2026-10-29"
-      }
+      "sourceOwner": "CommitmentControlLink",
+      "owner": "CommitmentControlLink"
     },
     {
       "command": "RetireCommitmentControlLink",
@@ -157,10 +145,8 @@
         }
       ],
       "http": [],
-      "source": {
-        "path": "docs/product/definitive-aggregate-choreography/choreography.json",
-        "recorded": "2026-10-29"
-      }
+      "sourceOwner": "CommitmentControlLink",
+      "owner": "CommitmentControlLink"
     }
   ],
   "events": [],
@@ -174,5 +160,6 @@
       "doc": "m0-d09-commitments.md",
       "rule": "Commitments and controls are linked many-to-many through versioned commitment-control links."
     }
-  ]
+  ],
+  "sourceOwner": "CommitmentControlLink"
 }

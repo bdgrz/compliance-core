@@ -65,13 +65,9 @@
           "policy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/80",
-        "line": 9346,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
       "kind": "http",
+      "sourceOwner": "RiskTreatmentAssertion",
+      "owner": "RiskTreatmentAssertion",
       "sourceName": "ProposeRiskControlTreatment",
       "targetName": "ProposeRiskControlTreatment"
     },
@@ -134,13 +130,9 @@
           "policy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/126",
-        "line": 14529,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
       "kind": "http",
+      "sourceOwner": "RiskTreatmentAssertion",
+      "owner": "RiskTreatmentAssertion",
       "sourceName": "RetireRiskControlTreatment",
       "targetName": "RetireRiskControlTreatment"
     },
@@ -213,13 +205,9 @@
           "policy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/132",
-        "line": 15276,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
       "kind": "http",
+      "sourceOwner": "RiskTreatmentAssertion",
+      "owner": "RiskTreatmentAssertion",
       "sourceName": "ReviewRiskControlTreatment",
       "targetName": "ReviewRiskControlTreatment"
     }
@@ -343,8 +331,7 @@
       "expectedRevisionScope": {
         "field": "ExpectedRevision",
         "owner": "RiskTreatmentAssertion",
-        "counter": "logical ResourceRevision of this owner",
-        "nullableInternalRule": null
+        "counter": "logical ResourceRevision of this owner"
       }
     },
     {
@@ -456,8 +443,7 @@
       "expectedRevisionScope": {
         "field": "ExpectedRevision",
         "owner": "RiskTreatmentAssertion",
-        "counter": "logical ResourceRevision of this owner",
-        "nullableInternalRule": null
+        "counter": "logical ResourceRevision of this owner"
       }
     },
     {
@@ -582,8 +568,7 @@
       "expectedRevisionScope": {
         "field": "ExpectedRevision",
         "owner": "RiskTreatmentAssertion",
-        "counter": "logical ResourceRevision of this owner",
-        "nullableInternalRule": null
+        "counter": "logical ResourceRevision of this owner"
       }
     }
   ]

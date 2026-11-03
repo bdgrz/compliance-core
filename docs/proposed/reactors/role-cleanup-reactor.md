@@ -21,11 +21,11 @@ Selected choreography rows: **2**. Required proofs, recovery, effect identity, a
 | id | S008 |
 | kind | business_receiver |
 | status | SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED |
-| sourceOwner | Role |
+| Source owner (target name) | Role (source: Role) |
 | logicalPrerequisiteFacts (target names) | RoleDeleted |
 | physicalRootEvents (target names) | RoleDeleted |
 | Target command (selected source name: RemoveRolePermission) | RemoveRolePermission |
-| targetOwner | RolePermission |
+| Target owner | RolePermission |
 | targetAuthorityKind | business_aggregate |
 | emittedSemanticFacts (target names) | RolePermissionRemoved |
 | currentRegisteredRootTypes (target names) | RemoveRoleAssignmentsAfterRoleDeletionReactor |
@@ -36,7 +36,6 @@ Selected choreography rows: **2**. Required proofs, recovery, effect identity, a
 | sourceOwners | Role |
 | canonicalTargetOwner | RolePermission |
 | recoveryContractSummary | At-least-once checkpoint replay resends the same source-derived command. Missing dependencies remain retryable; actual terminal/superseded episodes are skipped only with the owning proof. |
-| logicalPrerequisiteRuleGuard | null (recorded) |
 | logicalPrerequisiteRule | The source is RoleDeleted for a non-built-in role; every live RolePermission assignment of that role discovered from authoritative assignment facts is removed by its exact assignment id and revision, and an assignment replaced by a newer episode is left alone. |
 | prerequisiteRuleSource | authored 2026-10-29 from reactor and target source |
 
@@ -47,11 +46,11 @@ Selected choreography rows: **2**. Required proofs, recovery, effect identity, a
 | id | S009 |
 | kind | business_receiver |
 | status | SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED |
-| sourceOwner | Role |
+| Source owner (target name) | Role (source: Role) |
 | logicalPrerequisiteFacts (target names) | RoleDeleted |
 | physicalRootEvents (target names) | RoleDeleted |
 | Target command (selected source name: RemoveTeamRole) | RemoveTeamRole |
-| targetOwner | TeamRole |
+| Target owner | TeamRole |
 | targetAuthorityKind | business_aggregate |
 | emittedSemanticFacts (target names) | TeamRoleRemoved |
 | currentRegisteredRootTypes (target names) | RemoveRoleAssignmentsAfterRoleDeletionReactor |
@@ -62,7 +61,6 @@ Selected choreography rows: **2**. Required proofs, recovery, effect identity, a
 | sourceOwners | Role |
 | canonicalTargetOwner | TeamRole |
 | recoveryContractSummary | At-least-once checkpoint replay resends the same source-derived command. Missing dependencies remain retryable; actual terminal/superseded episodes are skipped only with the owning proof. |
-| logicalPrerequisiteRuleGuard | null (recorded) |
 | logicalPrerequisiteRule | The source is RoleDeleted; every live TeamRole assignment of that role found from authoritative assignment facts is removed by exact team, role, assignment id and revision, unless a newer episode superseded it; the Administrators-to-Tenant Administration link is never removable. |
 | prerequisiteRuleSource | authored 2026-10-29 from reactor and target source |
 

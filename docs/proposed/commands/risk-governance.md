@@ -1,12 +1,14 @@
 # RiskGovernance commands
 
+
+
 Selected command contracts: **3**. Complete selected contracts and companion source evidence: [owner command JSON](../data/commands/risk-governance.json).
 
 | Target command | Selected source name | Kind | Identity | Fields | HTTP routes |
 | --- | --- | --- | --- | --- | --- |
 | AssignRiskOwner | AssignRiskOwner | http | CommandId | 7 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/risks/{risk_id}/assign-risk-owner/{command_id} [ApiUser + existing request-scope authorizers] |
 | RaiseRiskReassessmentTriggers | RaiseRiskReassessmentTriggers | command | CommandId | 8 | [Placeholder: value not recorded] |
-| RecordRiskReassessmentObligation | RecordRiskReassessmentObligation | receiver | CommandId | 9 | [Placeholder: value not recorded] |
+| RequireRiskReassessment | RecordRiskReassessmentObligation | receiver | CommandId | 9 | [Placeholder: value not recorded] |
 
 ## Selected command details
 
@@ -17,7 +19,8 @@ Selected command contracts: **3**. Complete selected contracts and companion sou
 | Target command name | AssignRiskOwner |
 | Selected source command name | AssignRiskOwner |
 | Name decision | The selected source name is retained. |
-| Owner | RiskGovernance |
+| Target owner | RiskGovernance |
+| Selected source owner | RiskGovernance |
 | Contract record status | target_contract |
 | Kind | http |
 | Logical identity | CommandId; Uuid; required=true; client; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
@@ -29,7 +32,7 @@ Selected command contracts: **3**. Complete selected contracts and companion sou
 | Contract changes | Add required CommandId. |
 | Guard order | bind_required_ids, authenticate_authorize, canonicalize_authored_intent, resolve_native_operation_facts, compare_owner_episode_actor_kind_intent_original_revision, validate_new_owner_revision_and_source_permits, append_complete_concrete_attributed_batch |
 | Response contract | `{"mode":"immediate_original_result","responseType":"Unit","firstHttpStatus":200,"terminalResultType":"Unit"}` |
-| Expected revision scope | `{"field":"ExpectedRevision","owner":"RiskGovernance","counter":"logical ResourceRevision of this owner","nullableInternalRule":null}` |
+| Expected revision scope | `{"field":"ExpectedRevision","owner":"RiskGovernance","counter":"logical ResourceRevision of this owner"}` |
 | Authorizer sources | src/Compliance.Core/Features/AccessControl/ClientManagementMutationAuthorizer.cs, src/Compliance.Core/Features/Programs/ProgramManagementAuthorizer.cs |
 | Source contract | src/Compliance.Common/Features/Risks/AssignRiskOwner.cs |
 | Primary handler | AssignRiskOwnerHandler |
@@ -71,7 +74,8 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Target command name | RaiseRiskReassessmentTriggers |
 | Selected source command name | RaiseRiskReassessmentTriggers |
 | Name decision | The selected source name is retained. |
-| Owner | RiskGovernance |
+| Target owner | RiskGovernance |
+| Selected source owner | RiskGovernance |
 | Contract record status | target_contract |
 | Kind | command |
 | Logical identity | CommandId; Uuid; required=true; source_event_effect; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
@@ -82,8 +86,8 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Policy preservation | All current source handler/aggregate validation rules and source test expectations apply, except the explicit contractChanges and boundary protocol. Lifetime caps and technical attempt events are removed with their structural replacement. |
 | Contract changes | Add required CommandId., Retain public type name during direct cutover but process exactly one RiskId per source-derived internal command; reactor owns complete fan-out. |
 | Guard order | bind_required_ids, authenticate_authorize, canonicalize_authored_intent, resolve_native_operation_facts, compare_owner_episode_actor_kind_intent_original_revision, validate_new_owner_revision_and_source_permits, append_complete_concrete_attributed_batch |
-| Response contract | `{"mode":"internal","responseType":"Unit","firstHttpStatus":null,"terminalResultType":"Unit"}` |
-| Expected revision scope | `{"field":null,"owner":"RiskGovernance","counter":"No primary caller ResourceRevision. Enforce required authored source/epoch/version tokens, immutable creation identity or trusted proof/generation as declared; append uses physical OCC."}` |
+| Response contract | `{"mode":"internal","responseType":"Unit","terminalResultType":"Unit"}` |
+| Expected revision scope | `{"owner":"RiskGovernance","counter":"No primary caller ResourceRevision. Enforce required authored source/epoch/version tokens, immutable creation identity or trusted proof/generation as declared; append uses physical OCC."}` |
 | Authorizer sources | src/Compliance.Core/Features/Risks/RiskReassessmentReactionAuthorizer.cs |
 | Source contract | src/Compliance.Common/Features/Risks/RaiseRiskReassessmentTriggers.cs |
 | Primary handler | RaiseRiskReassessmentTriggersHandler |
@@ -117,14 +121,15 @@ Existing tests: test/Compliance.Tests/Features/Risks/RiskGovernanceHandlerTests.
 
 Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision, ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity, ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof, ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome
 
-### RecordRiskReassessmentObligation
+### RequireRiskReassessment
 
 | Selected contract detail | Value |
 | --- | --- |
-| Target command name | RecordRiskReassessmentObligation |
+| Target command name | RequireRiskReassessment |
 | Selected source command name | RecordRiskReassessmentObligation |
-| Name decision | The selected source name is retained. |
-| Owner | RiskGovernance |
+| Name decision | Requires a risk reassessment after a business event makes the current evaluation due for review. |
+| Target owner | RiskGovernance |
+| Selected source owner | RiskGovernance |
 | Contract record status | PLANNED |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; reactor; deterministic receiver identity derived from the admitted root fact, episode and generation: exact redelivery resolves the original result, a changed admission is a new identity |

@@ -43,10 +43,8 @@
         }
       ],
       "http": [],
-      "source": {
-        "path": "docs/product/definitive-aggregate-choreography/choreography.json",
-        "recorded": "2026-10-29"
-      },
+      "sourceOwner": "ImportedOwnerResolution",
+      "owner": "ImportedOwnerResolution",
       "sourceName": "RecordImportedOwnerResolution",
       "targetName": "RecordImportedOwnerResolution"
     }

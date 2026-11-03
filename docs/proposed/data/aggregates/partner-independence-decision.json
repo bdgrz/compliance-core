@@ -8,14 +8,7 @@
   "invariant": "One personal partner evaluation bound to exact engagement revision, complete service epoch and ratified-rule digest.",
   "boundaryDecision": "selected_split",
   "mustPreserve": "Never reactivate a permanent independence commitment from reevaluation; acceptance binds exact service, draft, acknowledgement and ratified-rule proofs.",
-  "sources": [
-    {
-      "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
-      "jsonPointer": "/splitOwners/2/targetOwners/4",
-      "line": 247,
-      "sha256": "d349d94b7c43f4d82020ecf36bdacf1aff98bc6498e14993582f1c3164b21f19"
-    }
-  ],
+  "sources": [],
   "baselineSourcePath": "src/Compliance.Core/Features/AccessControl/IndependenceLedger.cs",
   "baselineEvents": [
     "PartnerIndependenceEvaluationRecorded"
@@ -81,7 +74,7 @@
         "recorded": "2026-10-29"
       },
       "reactor": "PartnerIndependenceDecisionMaterializationReactor",
-      "sourceOwner": "ServiceEngagementIndependence",
+      "sourceOwner": "PartnerIndependenceDecision",
       "sourceEvents": [
         "EngagementPersonalDecisionAuthorized"
       ],
@@ -90,7 +83,8 @@
         "PartnerIndependenceEvaluationRecorded"
       ],
       "effectKind": "claim_professional_assertion_identity",
-      "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine."
+      "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
+      "owner": "PartnerIndependenceDecision"
     },
     {
       "command": "RecordPartnerIndependenceEvaluation",
@@ -161,14 +155,10 @@
           "policy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/107",
-        "line": 12459,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
       "attributionNote": "Creates the partner evaluation record; the engagement owner only consumes it (T110) (2026-10-29)",
-      "kind": "http"
+      "kind": "http",
+      "sourceOwner": "PartnerIndependenceDecision",
+      "owner": "PartnerIndependenceDecision"
     }
   ],
   "eventAuthority": "selected_final_event_catalog",
@@ -176,13 +166,7 @@
     {
       "event": "PartnerIndependenceEvaluationRecorded",
       "discriminator": "bdgrz.service-engagement.partner-evaluation.recorded",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/191",
-        "line": 25034,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     }
   ],
   "choreography": [
@@ -190,13 +174,7 @@
       "reactor": "PartnerIndependenceDecisionMaterializationReactor",
       "sourceOwner": "ServiceEngagementIndependence",
       "targetOwner": "PartnerIndependenceDecision",
-      "command": "MaterializePartnerIndependenceDecision",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "jsonPointer": "/reactors/109",
-        "line": 9406,
-        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
-      }
+      "command": "MaterializePartnerIndependenceDecision"
     }
   ],
   "status": "SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED",
@@ -213,5 +191,6 @@
       "previous": "tenant / evaluationId"
     }
   ],
-  "commandNote": "Same process as EngagementManagementAcknowledgement; only the Materialize receiver writes this owner."
+  "commandNote": "Same process as EngagementManagementAcknowledgement; only the Materialize receiver writes this owner.",
+  "sourceOwner": "PartnerIndependenceDecision"
 }

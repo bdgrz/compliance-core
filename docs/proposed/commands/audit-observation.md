@@ -1,5 +1,7 @@
 # AuditObservation commands
 
+
+
 Selected command contracts: **4**. Complete selected contracts and companion source evidence: [owner command JSON](../data/commands/audit-observation.json).
 
 | Target command | Selected source name | Kind | Identity | Fields | HTTP routes |
@@ -18,7 +20,8 @@ Selected command contracts: **4**. Complete selected contracts and companion sou
 | Target command name | RecordAuditObservation |
 | Selected source command name | RecordAuditObservation |
 | Name decision | The selected source name is retained. |
-| Owner | AuditObservation |
+| Target owner | AuditObservation |
+| Selected source owner | AuditObservation |
 | Contract record status | PLANNED |
 | Kind | creation |
 | Logical identity | ObservationId; Uuid; required=true; client; caller-supplied immutable creation identity: an exact retry with the same id and authored intent returns the original result; the same id with changed intent is refused; a different id is a different record |
@@ -66,7 +69,8 @@ Required tests: [Placeholder: required tests not recorded]
 | Target command name | CorrectAuditObservation |
 | Selected source command name | CorrectAuditObservation |
 | Name decision | The selected source name is retained. |
-| Owner | AuditObservation |
+| Target owner | AuditObservation |
+| Selected source owner | AuditObservation |
 | Contract record status | PLANNED |
 | Kind | command |
 | Logical identity | CommandId; Uuid; required=true; client; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
@@ -116,7 +120,8 @@ Required tests: [Placeholder: required tests not recorded]
 | Target command name | RecordAuditObservationManagementResponse |
 | Selected source command name | RecordAuditObservationManagementResponse |
 | Name decision | The selected source name is retained. |
-| Owner | AuditObservation |
+| Target owner | AuditObservation |
+| Selected source owner | AuditObservation |
 | Contract record status | PLANNED |
 | Kind | command |
 | Logical identity | CommandId; Uuid; required=true; client; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
@@ -165,7 +170,8 @@ Required tests: [Placeholder: required tests not recorded]
 | Target command name | LinkAuditObservationFinding |
 | Selected source command name | LinkAuditObservationFinding |
 | Name decision | The selected source name is retained. |
-| Owner | AuditObservation |
+| Target owner | AuditObservation |
+| Selected source owner | AuditObservation |
 | Contract record status | PLANNED |
 | Kind | command |
 | Logical identity | CommandId; Uuid; required=true; client; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |

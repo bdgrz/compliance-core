@@ -29,7 +29,6 @@
         "discriminator": "bdgrz.firm-professional-duty-designation.firm-professional-duty-designation-engagement-use-authorized",
         "discriminatorVersion": 1,
         "owner": "FirmProfessionalDutyDesignation",
-        "existingContract": null,
         "status": "selected target schema; implementation pending",
         "reason": "typed reactor receiver accepted business fact",
         "fields": [
@@ -193,7 +192,6 @@
         "discriminator": "bdgrz.firm-professional-duty-designation.firm-professional-duty-designation-engagement-use-settled",
         "discriminatorVersion": 1,
         "owner": "FirmProfessionalDutyDesignation",
-        "existingContract": null,
         "status": "selected target schema; implementation pending",
         "reason": "typed reactor receiver accepted business fact",
         "fields": [
@@ -784,7 +782,6 @@
         "discriminator": "bdgrz.firm-professional-duty-designation.professional-duty-change-accepted",
         "discriminatorVersion": 1,
         "owner": "FirmProfessionalDutyDesignation",
-        "existingContract": null,
         "status": "selected target schema; implementation pending",
         "reason": "source command accepted result",
         "fields": [
@@ -989,7 +986,6 @@
         "discriminator": "bdgrz.firm-professional-duty-designation.professional-duty-change-rejected",
         "discriminatorVersion": 1,
         "owner": "FirmProfessionalDutyDesignation",
-        "existingContract": null,
         "status": "selected target schema; implementation pending",
         "reason": "source admission contract",
         "fields": [

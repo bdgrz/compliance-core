@@ -5,6 +5,7 @@
 - Business aggregate: `true`
 - Selected status: `SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED`
 
+
 ## Identity and invariant
 
 **Selected identity:** Tenant-scoped tenant / programId: one stream per tenant/program; there is no creation key, the first readiness run opens it, and `AssessmentId` identifies each run while CommandId identifies each decision.
@@ -18,6 +19,10 @@
 **Replay:** Current required authorization precedes replay; exact authorized retries resolve the original accepted result using the selected logical identity and immutable actor/intent/source binding. Fresh mutable feasibility, clock selection and body preparation cannot replace that original result. Expected revision is concurrency precondition, not a new identity.
 
 **Lifecycle:** [Placeholder: a consolidated lifecycle sequence is not present in the selected owner record.]
+
+
+
+
 
 ## Commands
 
@@ -47,17 +52,17 @@
 
 | Row | Kind | Source owner | Target owner | Command |
 | --- | --- | --- | --- | --- |
-| [T039](../reactors/readiness-run-reactor.md#t039) | reaction_or_regular_process_stage | ReadinessAssessment | ProgramReadiness | AdoptReadinessAssessment |
-| [T065](../reactors/readiness-decision-reactor.md#t065) | reaction_or_regular_process_stage | ProgramReadiness | ReadinessGapPlan | AuthorizeReadinessGapPlanReadinessDecision |
-| [T066](../reactors/readiness-decision-reactor.md#t066) | reaction_or_regular_process_stage | ProgramReadiness | ReadinessGapPlan | CloseReadinessGapPlanReadinessDecisionAuthorization |
-| [T074](../reactors/readiness-decision-reactor.md#t074) | reaction_or_regular_process_stage | ProgramReadiness | ProgramReadiness | CompleteReadinessDecision |
-| [T075](../reactors/readiness-decision-reactor.md#t075) | reaction_or_regular_process_stage | ProgramReadiness | ProgramReadiness | CompleteTypeIEntryDecision |
-| [T087](../reactors/readiness-run-reactor.md#t087) | reaction_or_regular_process_stage | ProgramReadiness | ReadinessAssessment | ComputeReadinessAssessment |
-| [A009](../reactors/unassigned-architecture-rows.md#a009) | process_abort_binding | ProgramReadiness | ProgramReadiness | AbortReadinessDecision |
+| [T039](../reactors/reassess-program-readiness-reactor.md#t039) | reaction_or_regular_process_stage | ReadinessAssessment | ProgramReadiness | AdoptReadinessAssessment |
+| [T065](../reactors/record-program-readiness-and-type-i-decisions-reactor.md#t065) | reaction_or_regular_process_stage | ProgramReadiness | ReadinessGapPlan | AuthorizeReadinessGapPlanReadinessDecision |
+| [T066](../reactors/record-program-readiness-and-type-i-decisions-reactor.md#t066) | reaction_or_regular_process_stage | ProgramReadiness | ReadinessGapPlan | CloseReadinessGapPlanReadinessDecisionAuthorization |
+| [T074](../reactors/record-program-readiness-and-type-i-decisions-reactor.md#t074) | reaction_or_regular_process_stage | ProgramReadiness | ProgramReadiness | CompleteReadinessDecision |
+| [T075](../reactors/record-program-readiness-and-type-i-decisions-reactor.md#t075) | reaction_or_regular_process_stage | ProgramReadiness | ProgramReadiness | CompleteTypeIEntryDecision |
+| [T087](../reactors/reassess-program-readiness-reactor.md#t087) | reaction_or_regular_process_stage | ProgramReadiness | ReadinessAssessment | ComputeReadinessAssessment |
+| [A009](../reactors/unassigned-domain-choreography.md#a009) | process_abort_binding | ProgramReadiness | ProgramReadiness | AbortReadinessDecision |
 
 ## Product rules
 
-- **D23-10** — A ReadinessSnapshot is an immutable freeze of one reproducible readiness assessment calculation plus management's Type I entry decision, and does not redefine readiness rules; monitoring measures cannot silently change a readiness verdict. Source: [m0-d23-assurance-vocabulary.md](../../product/decisions/m0-d23-assurance-vocabulary.md).
+- **D23-10** — A ReadinessSnapshot is an immutable freeze of one reproducible readiness assessment calculation plus management's Type I entry decision, and does not redefine readiness rules; monitoring measures cannot silently change a readiness verdict. Decision: [m0-d23-assurance-vocabulary.md](../decisions/m0-d23-assurance-vocabulary.md).
 
 ## Adopted architecture decisions
 
@@ -66,7 +71,7 @@
 ## Evidence and complete record
 
 - Baseline source: [Placeholder: source file is not present in this checkout]
-- Aggregate review: [program-readiness-review-2026-10-29.md](../../product/definitive-aggregate-choreography/program-readiness-review-2026-10-29.md)
+- Aggregate review: [Placeholder: no owner-specific review file is present]
 - Full selected record: [JSON](../data/aggregates/program-readiness.json)
 
 > Target definition is separate from runtime qualification. Implementation status recorded by the source: `SEPARATE_VERIFICATION_REQUIRED_IMPLEMENTATION_HALTED`.

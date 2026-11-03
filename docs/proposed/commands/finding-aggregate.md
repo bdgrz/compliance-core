@@ -1,5 +1,7 @@
 # FindingAggregate commands
 
+
+
 Selected command contracts: **10**. Complete selected contracts and companion source evidence: [owner command JSON](../data/commands/finding-aggregate.json).
 
 | Target command | Selected source name | Kind | Identity | Fields | HTTP routes |
@@ -24,7 +26,8 @@ Selected command contracts: **10**. Complete selected contracts and companion so
 | Target command name | AddCorrectiveAction |
 | Selected source command name | AddCorrectiveAction |
 | Name decision | The selected source name is retained. |
-| Owner | FindingAggregate |
+| Target owner | FindingAggregate |
+| Selected source owner | FindingAggregate |
 | Contract record status | target_contract |
 | Kind | http |
 | Logical identity | ActionId; Uuid; required=true; client; caller-supplied immutable creation identity: an exact retry with the same id and authored intent returns the original result; the same id with changed intent is refused; a different id is a different record |
@@ -79,7 +82,8 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Target command name | CloseFinding |
 | Selected source command name | CloseFinding |
 | Name decision | The selected source name is retained. |
-| Owner | FindingAggregate |
+| Target owner | FindingAggregate |
+| Selected source owner | FindingAggregate |
 | Contract record status | target_contract |
 | Kind | http |
 | Logical identity | CommandId; Uuid; required=true; client; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
@@ -91,7 +95,7 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Contract changes | Add required CommandId. |
 | Guard order | bind_required_ids, authenticate_authorize, canonicalize_authored_intent, resolve_native_operation_facts, compare_owner_episode_actor_kind_intent_original_revision, validate_new_owner_revision_and_source_permits, append_complete_concrete_attributed_batch |
 | Response contract | `{"mode":"async_fixed_ack","responseType":"OperationAcceptedResponse","firstHttpStatus":202,"terminalResultType":"FindingView"}` |
-| Expected revision scope | `{"field":"ExpectedRevision","owner":"FindingAggregate","counter":"logical ResourceRevision of this owner","nullableInternalRule":null}` |
+| Expected revision scope | `{"field":"ExpectedRevision","owner":"FindingAggregate","counter":"logical ResourceRevision of this owner"}` |
 | Authorizer sources | src/Compliance.Core/Features/AccessControl/ClientManagementMutationAuthorizer.cs, src/Compliance.Core/Features/Programs/ProgramManagementAuthorizer.cs |
 | Source contract | src/Compliance.Common/Features/Remediation/CloseFinding.cs |
 | Primary handler | CloseFindingHandler |
@@ -135,7 +139,8 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Target command name | LinkFindingAcceptance |
 | Selected source command name | LinkFindingAcceptance |
 | Name decision | The selected source name is retained. |
-| Owner | FindingAggregate |
+| Target owner | FindingAggregate |
+| Selected source owner | FindingAggregate |
 | Contract record status | target_contract |
 | Kind | http |
 | Logical identity | CommandId; Uuid; required=true; client; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
@@ -147,7 +152,7 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Contract changes | Add required CommandId. |
 | Guard order | bind_required_ids, authenticate_authorize, canonicalize_authored_intent, resolve_native_operation_facts, compare_owner_episode_actor_kind_intent_original_revision, validate_new_owner_revision_and_source_permits, append_complete_concrete_attributed_batch |
 | Response contract | `{"mode":"immediate_original_result","responseType":"FindingView","firstHttpStatus":200,"terminalResultType":"FindingView"}` |
-| Expected revision scope | `{"field":"ExpectedRevision","owner":"FindingAggregate","counter":"logical ResourceRevision of this owner","nullableInternalRule":null}` |
+| Expected revision scope | `{"field":"ExpectedRevision","owner":"FindingAggregate","counter":"logical ResourceRevision of this owner"}` |
 | Authorizer sources | src/Compliance.Core/Features/AccessControl/ClientManagementMutationAuthorizer.cs, src/Compliance.Core/Features/Programs/ProgramManagementAuthorizer.cs |
 | Source contract | src/Compliance.Common/Features/Remediation/LinkFindingAcceptance.cs |
 | Primary handler | LinkFindingAcceptanceHandler |
@@ -190,7 +195,8 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Target command name | RaiseFinding |
 | Selected source command name | RaiseFinding |
 | Name decision | The selected source name is retained. |
-| Owner | FindingAggregate |
+| Target owner | FindingAggregate |
+| Selected source owner | FindingAggregate |
 | Contract record status | target_contract |
 | Kind | http |
 | Logical identity | FindingId; Uuid; required=true; client; deterministic receiver identity derived from the admitted root fact, episode and generation: exact redelivery resolves the original result, a changed admission is a new identity |
@@ -202,7 +208,7 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Contract changes | Add required FindingId. |
 | Guard order | bind_required_ids, authenticate_authorize, canonicalize_authored_intent, resolve_native_operation_facts, compare_owner_episode_actor_kind_intent_original_revision, validate_new_owner_revision_and_source_permits, append_complete_concrete_attributed_batch |
 | Response contract | `{"mode":"immediate_original_result","responseType":"FindingRegistration","firstHttpStatus":200,"terminalResultType":"FindingRegistration"}` |
-| Expected revision scope | `{"field":null,"owner":"FindingAggregate","counter":"No primary caller ResourceRevision. Enforce required authored source/epoch/version tokens, immutable creation identity or trusted proof/generation as declared; append uses physical OCC."}` |
+| Expected revision scope | `{"owner":"FindingAggregate","counter":"No primary caller ResourceRevision. Enforce required authored source/epoch/version tokens, immutable creation identity or trusted proof/generation as declared; append uses physical OCC."}` |
 | Authorizer sources | src/Compliance.Core/Features/AccessControl/ClientManagementMutationAuthorizer.cs, src/Compliance.Core/Features/Programs/ProgramManagementAuthorizer.cs |
 | Source contract | src/Compliance.Common/Features/Remediation/RaiseFinding.cs |
 | Primary handler | RaiseFindingHandler |
@@ -248,7 +254,8 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Target command name | RaiseOccurrenceFinding |
 | Selected source command name | RaiseOccurrenceFinding |
 | Name decision | The selected source name is retained. |
-| Owner | FindingAggregate |
+| Target owner | FindingAggregate |
+| Selected source owner | FindingAggregate |
 | Contract record status | target_contract |
 | Kind | creation |
 | Logical identity | FindingId; Uuid; required=true; source_event_effect; caller-supplied immutable creation identity: an exact retry with the same id and authored intent returns the original result; the same id with changed intent is refused; a different id is a different record |
@@ -259,8 +266,8 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Policy preservation | All current source handler/aggregate validation rules and source test expectations apply, except the explicit contractChanges and boundary protocol. Lifetime caps and technical attempt events are removed with their structural replacement. |
 | Contract changes | When source kind is occurrence_review, preserve the default requested corrective action by atomically admitting its complete deterministic ActionId/content alongside FindingRaisedV2; materialize it independently. Failed/skipped attestation variants without requested action emit FindingRaisedV2 only. |
 | Guard order | bind_required_ids, authenticate_authorize, canonicalize_authored_intent, resolve_native_operation_facts, compare_owner_episode_actor_kind_intent_original_revision, validate_new_owner_revision_and_source_permits, append_complete_concrete_attributed_batch |
-| Response contract | `{"mode":"internal","responseType":"Unit","firstHttpStatus":null,"terminalResultType":"Unit"}` |
-| Expected revision scope | `{"field":null,"owner":"FindingAggregate","counter":"No primary caller ResourceRevision. Enforce required authored source/epoch/version tokens, immutable creation identity or trusted proof/generation as declared; append uses physical OCC."}` |
+| Response contract | `{"mode":"internal","responseType":"Unit","terminalResultType":"Unit"}` |
+| Expected revision scope | `{"owner":"FindingAggregate","counter":"No primary caller ResourceRevision. Enforce required authored source/epoch/version tokens, immutable creation identity or trusted proof/generation as declared; append uses physical OCC."}` |
 | Authorizer sources | src/Compliance.Core/Features/Remediation/OperationsReactionAuthorizer.cs |
 | Source contract | src/Compliance.Common/Features/Remediation/RaiseOccurrenceFinding.cs |
 | Primary handler | RaiseOccurrenceFindingHandler |
@@ -301,7 +308,8 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Target command name | ReopenFinding |
 | Selected source command name | ReopenFinding |
 | Name decision | The selected source name is retained. |
-| Owner | FindingAggregate |
+| Target owner | FindingAggregate |
+| Selected source owner | FindingAggregate |
 | Contract record status | target_contract |
 | Kind | http |
 | Logical identity | CommandId; Uuid; required=true; client; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
@@ -313,7 +321,7 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Contract changes | Add required CommandId. |
 | Guard order | bind_required_ids, authenticate_authorize, canonicalize_authored_intent, resolve_native_operation_facts, compare_owner_episode_actor_kind_intent_original_revision, validate_new_owner_revision_and_source_permits, append_complete_concrete_attributed_batch |
 | Response contract | `{"mode":"immediate_original_result","responseType":"FindingView","firstHttpStatus":200,"terminalResultType":"FindingView"}` |
-| Expected revision scope | `{"field":"ExpectedRevision","owner":"FindingAggregate","counter":"logical ResourceRevision of this owner","nullableInternalRule":null}` |
+| Expected revision scope | `{"field":"ExpectedRevision","owner":"FindingAggregate","counter":"logical ResourceRevision of this owner"}` |
 | Authorizer sources | src/Compliance.Core/Features/AccessControl/ClientManagementMutationAuthorizer.cs, src/Compliance.Core/Features/Programs/ProgramManagementAuthorizer.cs |
 | Source contract | src/Compliance.Common/Features/Remediation/ReopenFinding.cs |
 | Primary handler | ReopenFindingHandler |
@@ -354,7 +362,8 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Target command name | ReviseFinding |
 | Selected source command name | ReviseFinding |
 | Name decision | The selected source name is retained. |
-| Owner | FindingAggregate |
+| Target owner | FindingAggregate |
+| Selected source owner | FindingAggregate |
 | Contract record status | target_contract |
 | Kind | http |
 | Logical identity | CommandId; Uuid; required=true; client; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
@@ -366,7 +375,7 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Contract changes | Add required CommandId. |
 | Guard order | bind_required_ids, authenticate_authorize, canonicalize_authored_intent, resolve_native_operation_facts, compare_owner_episode_actor_kind_intent_original_revision, validate_new_owner_revision_and_source_permits, append_complete_concrete_attributed_batch |
 | Response contract | `{"mode":"immediate_original_result","responseType":"FindingView","firstHttpStatus":200,"terminalResultType":"FindingView"}` |
-| Expected revision scope | `{"field":"ExpectedRevision","owner":"FindingAggregate","counter":"logical ResourceRevision of this owner","nullableInternalRule":null}` |
+| Expected revision scope | `{"field":"ExpectedRevision","owner":"FindingAggregate","counter":"logical ResourceRevision of this owner"}` |
 | Authorizer sources | src/Compliance.Core/Features/AccessControl/ClientManagementMutationAuthorizer.cs, src/Compliance.Core/Features/Programs/ProgramManagementAuthorizer.cs |
 | Source contract | src/Compliance.Common/Features/Remediation/ReviseFinding.cs |
 | Primary handler | ReviseFindingHandler |
@@ -412,7 +421,8 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Target command name | RaiseEvaluationDeviationFinding |
 | Selected source command name | RaiseEvaluationDeviationFinding |
 | Name decision | The selected source name is retained. |
-| Owner | FindingAggregate |
+| Target owner | FindingAggregate |
+| Selected source owner | FindingAggregate |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | command |
 | Logical identity | CommandId; Uuid; required=true; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
@@ -462,7 +472,8 @@ Required tests: [Placeholder: required tests not recorded]
 | Target command name | AbortFindingClosure |
 | Selected source command name | AbortFindingClosure |
 | Name decision | The selected source name is retained. |
-| Owner | FindingAggregate |
+| Target owner | FindingAggregate |
+| Selected source owner | FindingAggregate |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | abort |
 | Logical identity | CommandId; Uuid; required=true; abort receiver identity bound to the exact admitted operation and generation: exact redelivery resolves the original rejected result; an abort after a terminal outcome is a no-op |
@@ -511,7 +522,8 @@ Required tests: [Placeholder: required tests not recorded]
 | Target command name | CompleteFindingClosure |
 | Selected source command name | CompleteFindingClosure |
 | Name decision | The selected source name is retained. |
-| Owner | FindingAggregate |
+| Target owner | FindingAggregate |
+| Selected source owner | FindingAggregate |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; reactor; deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result |

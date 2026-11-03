@@ -8,14 +8,7 @@
   "invariant": "One exact directed source/kind/target relationship lifecycle with unchanged deterministic UUIDv5 tuple identity; active endpoint/source-visibility and exact source/target revision guards remain. No independent tuple claim/release authority is introduced.",
   "boundaryDecision": "selected_split",
   "mustPreserve": "Retirement requires an approved successor for exact app revision; import holds block incompatible local change.",
-  "sources": [
-    {
-      "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
-      "jsonPointer": "/splitOwners/8/targetOwners/1",
-      "line": 957,
-      "sha256": "d349d94b7c43f4d82020ecf36bdacf1aff98bc6498e14993582f1c3164b21f19"
-    }
-  ],
+  "sources": [],
   "baselineSourcePath": "src/Compliance.Core/Features/Applications/DeclaredApplication.cs",
   "baselineEvents": [
     "ApplicationRelationshipAdded",
@@ -82,17 +75,12 @@
       "http": [
         {
           "method": "PUT",
-          "path": "/api/v1/tenants/{tenant_id}/applications/{application_id}/relationships/{relationship_id}",
-          "policy": null
+          "path": "/api/v1/tenants/{tenant_id}/applications/{application_id}/relationships/{relationship_id}"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/6",
-        "line": 674,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
-      "kind": "http"
+      "kind": "http",
+      "sourceOwner": "ApplicationRelationship",
+      "owner": "ApplicationRelationship"
     },
     {
       "command": "ApproveApplicationSuccessor",
@@ -158,13 +146,9 @@
           "policy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/15",
-        "line": 1778,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
-      "kind": "http"
+      "kind": "http",
+      "sourceOwner": "ApplicationRelationship",
+      "owner": "ApplicationRelationship"
     },
     {
       "command": "RemoveApplicationRelationship",
@@ -220,13 +204,9 @@
           "authorizationPolicy": "existing application management authorization"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/116",
-        "line": 13494,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
-      "kind": "http"
+      "kind": "http",
+      "sourceOwner": "ApplicationRelationship",
+      "owner": "ApplicationRelationship"
     }
   ],
   "eventAuthority": "selected_final_event_catalog",
@@ -234,35 +214,17 @@
     {
       "event": "ApplicationRelationshipAdded",
       "discriminator": "bdgrz.application.relationship.added",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/56",
-        "line": 7213,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     },
     {
       "event": "ApplicationRelationshipApproved",
       "discriminator": "bdgrz.application.relationship.approved",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/57",
-        "line": 7289,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     },
     {
       "event": "ApplicationRelationshipRemoved",
       "discriminator": "bdgrz.application.relationship.removed",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/58",
-        "line": 7375,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     }
   ],
   "choreography": [],
@@ -281,12 +243,6 @@
         "required": true,
         "origin": "client",
         "rule": "exact immutable creation retry"
-      },
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/6",
-        "line": 674,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       }
     },
     {
@@ -297,12 +253,6 @@
         "required": true,
         "origin": "client",
         "rule": "one immutable authored operation"
-      },
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/15",
-        "line": 1778,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       }
     },
     {
@@ -313,16 +263,11 @@
         "required": true,
         "origin": "client",
         "rule": "one immutable authored operation"
-      },
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/116",
-        "line": 13494,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       }
     }
   ],
   "selectedReplayRule": "Current required authorization precedes replay; exact authorized retries resolve the original accepted result using the selected logical identity and immutable actor/intent/source binding. Fresh mutable feasibility, clock selection and body preparation cannot replace that original result. Expected revision is concurrency precondition, not a new identity.",
   "selectedIdentityClarification": "Tenant + exact directed source application / relationship kind / target application tuple under its unchanged existing UUIDv5 IdFor. Supplied RelationshipId must equal this tuple identity; it is not an arbitrary caller UUID. Source and target direction is significant; accepted EV-D03/EV-D04 remove any separate tuple claim/release owner.",
-  "identityAuthority": "Explicit adopted EV-D03/EV-D04 exact existing tuple identity; target-command-contracts AddApplicationRelationship requires unchanged IdFor."
+  "identityAuthority": "Explicit adopted EV-D03/EV-D04 exact existing tuple identity; target-command-contracts AddApplicationRelationship requires unchanged IdFor.",
+  "sourceOwner": "ApplicationRelationship"
 }

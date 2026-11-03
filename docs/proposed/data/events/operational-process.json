@@ -28,7 +28,6 @@
         "discriminator": "bdgrz.operational-process.operational-process-change-accepted",
         "discriminatorVersion": 1,
         "owner": "OperationalProcess",
-        "existingContract": null,
         "status": "selected target schema; implementation pending",
         "reason": "source command accepted result",
         "fields": [
@@ -219,7 +218,6 @@
         "discriminator": "bdgrz.operational-process.operational-process-change-canceled",
         "discriminatorVersion": 1,
         "owner": "OperationalProcess",
-        "existingContract": null,
         "status": "selected target schema; implementation pending",
         "reason": "source admission contract",
         "fields": [
@@ -393,7 +391,6 @@
         ],
         "ownerSelection": "one exact canonical authority owner",
         "targetConcreteType": "OperationalProcessRetired",
-        "adoptedTargetWire": null,
         "wireQualification": "Planned; no declared record yet. Today the transition is a Lifecycle value inside the generic revision fact.",
         "adoptedDecisionIds": [
           "EV-D07"

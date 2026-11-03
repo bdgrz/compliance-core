@@ -1,5 +1,7 @@
 # TenantInvitationMailboxClaim commands
 
+
+
 Selected command contracts: **4**. Complete selected contracts and companion source evidence: [owner command JSON](../data/commands/tenant-invitation-mailbox-claim.json).
 
 | Target command | Selected source name | Kind | Identity | Fields | HTTP routes |
@@ -18,7 +20,8 @@ Selected command contracts: **4**. Complete selected contracts and companion sou
 | Target command name | InviteTenantMember |
 | Selected source command name | InviteTenantMember |
 | Name decision | The selected source name is retained. |
-| Owner | TenantInvitationMailboxClaim |
+| Target owner | TenantInvitationMailboxClaim |
+| Selected source owner | TenantInvitationMailboxClaim |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | http |
 | Logical identity | InvitationId; Uuid; required=true; client; caller-supplied immutable creation identity: an exact retry with the same id and authored intent returns the original result; the same id with changed intent is refused; a different id is a different record |
@@ -68,7 +71,8 @@ Required tests: [Placeholder: required tests not recorded]
 | Target command name | InviteOrganizationMember |
 | Selected source command name | InviteOrganizationMember |
 | Name decision | The selected source name is retained. |
-| Owner | TenantInvitationMailboxClaim |
+| Target owner | TenantInvitationMailboxClaim |
+| Selected source owner | TenantInvitationMailboxClaim |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | http |
 | Logical identity | InvitationId; Uuid; required=true; client; caller-supplied immutable creation identity: an exact retry with the same id and authored intent returns the original result; the same id with changed intent is refused; a different id is a different record |
@@ -117,7 +121,8 @@ Required tests: [Placeholder: required tests not recorded]
 | Target command name | InviteGuestConsultant |
 | Selected source command name | InviteGuestConsultant |
 | Name decision | The selected source name is retained. |
-| Owner | TenantInvitationMailboxClaim |
+| Target owner | TenantInvitationMailboxClaim |
+| Selected source owner | TenantInvitationMailboxClaim |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | http |
 | Logical identity | InvitationId; Uuid; required=true; client; caller-supplied immutable creation identity: an exact retry with the same id and authored intent returns the original result; the same id with changed intent is refused; a different id is a different record |
@@ -167,7 +172,8 @@ Required tests: [Placeholder: required tests not recorded]
 | Target command name | AcceptTenantInvitation |
 | Selected source command name | AcceptTenantInvitation |
 | Name decision | The selected source name is retained. |
-| Owner | TenantInvitationMailboxClaim |
+| Target owner | TenantInvitationMailboxClaim |
+| Selected source owner | TenantInvitationMailboxClaim |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | http |
 | Logical identity | TenantInvitationIds.AcceptanceOf(InvitationId); Uuid; required=true; client; caller-supplied immutable creation identity: an exact retry with the same id and authored intent returns the original result; the same id with changed intent is refused; a different id is a different record |

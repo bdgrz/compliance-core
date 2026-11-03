@@ -5,6 +5,7 @@
 - Business aggregate: `true`
 - Selected status: `SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED`
 
+
 ## Identity and invariant
 
 **Selected identity:** Tenant-scoped (riskId, controlId); the identity is established by the admitting owner or reactor named in the choreography, never by a caller request key; mutations bind CommandId to this exact identity.
@@ -18,6 +19,10 @@
 **Replay:** Current required authorization precedes replay; exact authorized retries resolve the original accepted result using the selected logical identity and immutable actor/intent/source binding. Fresh mutable feasibility, clock selection and body preparation cannot replace that original result. Expected revision is concurrency precondition, not a new identity.
 
 **Lifecycle:** [Placeholder: a consolidated lifecycle sequence is not present in the selected owner record.]
+
+
+
+
 
 ## Commands
 
@@ -41,7 +46,7 @@
 
 ## Product rules
 
-- **D22-08** — The control-to-risk relationship is a versioned assertion owned by risk treatment that a specific control version treats a specific risk, with rationale and review; a control does not silently acquire risk coverage. Source: [m0-d22-canonical-ownership.md](../../product/decisions/m0-d22-canonical-ownership.md).
+- **D22-08** — The control-to-risk relationship is a versioned assertion owned by risk treatment that a specific control version treats a specific risk, with rationale and review; a control does not silently acquire risk coverage. Decision: [m0-d22-canonical-ownership.md](../decisions/m0-d22-canonical-ownership.md).
 
 ## Adopted architecture decisions
 

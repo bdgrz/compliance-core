@@ -60,13 +60,9 @@
           "policy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/79",
-        "line": 9229,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
       "kind": "http",
+      "sourceOwner": "CriterionApplicability",
+      "owner": "CriterionApplicability",
       "sourceName": "ProposeCriterionNotApplicable",
       "targetName": "ProposeCriterionNotApplicable"
     },
@@ -134,13 +130,9 @@
           "policy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/131",
-        "line": 15154,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
       "kind": "http",
+      "sourceOwner": "CriterionApplicability",
+      "owner": "CriterionApplicability",
       "sourceName": "ReviewCriterionApplicability",
       "targetName": "ReviewCriterionApplicability"
     },
@@ -198,13 +190,9 @@
           "policy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/159",
-        "line": 18502,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
       "kind": "http",
+      "sourceOwner": "CriterionApplicability",
+      "owner": "CriterionApplicability",
       "sourceName": "WithdrawCriterionNotApplicable",
       "targetName": "WithdrawCriterionNotApplicable"
     }
@@ -323,8 +311,7 @@
       "expectedRevisionScope": {
         "field": "ExpectedRevision",
         "owner": "CriterionApplicability",
-        "counter": "logical ResourceRevision of this owner",
-        "nullableInternalRule": null
+        "counter": "logical ResourceRevision of this owner"
       }
     },
     {
@@ -445,8 +432,7 @@
       "expectedRevisionScope": {
         "field": "ExpectedRevision",
         "owner": "CriterionApplicability",
-        "counter": "logical ResourceRevision of this owner",
-        "nullableInternalRule": null
+        "counter": "logical ResourceRevision of this owner"
       }
     },
     {
@@ -555,8 +541,7 @@
       "expectedRevisionScope": {
         "field": "ExpectedRevision",
         "owner": "CriterionApplicability",
-        "counter": "logical ResourceRevision of this owner",
-        "nullableInternalRule": null
+        "counter": "logical ResourceRevision of this owner"
       }
     }
   ]

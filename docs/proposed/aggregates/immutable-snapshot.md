@@ -5,6 +5,7 @@
 - Business aggregate: `true`
 - Selected status: `SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED`
 
+
 ## Identity and invariant
 
 **Selected identity:** Tenant + selected SnapshotId, immutable canonical manifest and exact amendment lineage; no generated creation fallback.
@@ -19,11 +20,15 @@
 
 **Lifecycle:** [Placeholder: a consolidated lifecycle sequence is not present in the selected owner record.]
 
+
+
+
+
 ## Commands
 
 | Command | Kind | Identity field |
 | --- | --- | --- |
-| [AmendProgramScopeSnapshot](../commands/immutable-snapshot.md#amendprogramscopesnapshot) | http | CommandId |
+| [CreateProgramScopeSnapshotAmendment](../commands/immutable-snapshot.md#createprogramscopesnapshotamendment) | http | CommandId |
 | [FinalizeProgramScopeSnapshot](../commands/immutable-snapshot.md#finalizeprogramscopesnapshot) | http | SnapshotId |
 
 ## Events
@@ -47,7 +52,7 @@
 ## Evidence and complete record
 
 - Baseline source: [Placeholder: source file is not present in this checkout]
-- Aggregate review: [immutable-snapshot-review-2026-10-29.md](../../product/definitive-aggregate-choreography/immutable-snapshot-review-2026-10-29.md)
+- Aggregate review: [Placeholder: no owner-specific review file is present]
 - Full selected record: [JSON](../data/aggregates/immutable-snapshot.json)
 
 > Target definition is separate from runtime qualification. Implementation status recorded by the source: `SEPARATE_VERIFICATION_REQUIRED_IMPLEMENTATION_HALTED`.

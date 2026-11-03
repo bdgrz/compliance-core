@@ -59,12 +59,6 @@
         "terminalResultType": "Unit"
       },
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/15",
-        "line": 1220,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      },
       "kind": "command",
       "concurrencyGuard": {
         "rule": "require_expected_revision",
@@ -76,6 +70,8 @@
         },
         "date": "2026-10-29"
       },
+      "sourceOwner": "ManagementAssertion",
+      "owner": "ManagementAssertion",
       "sourceName": "ApproveManagementAssertion",
       "targetName": "ApproveManagementAssertion"
     },
@@ -127,15 +123,11 @@
           "authorizationPolicy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/119",
-        "line": 8920,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      },
       "kind": "http",
+      "sourceOwner": "ManagementAssertion",
+      "owner": "ManagementAssertion",
       "sourceName": "RecordManagementAssertion",
-      "targetName": "RecordManagementAssertion"
+      "targetName": "CreateManagementAssertion"
     }
   ],
   "sourceContractEvidence": []

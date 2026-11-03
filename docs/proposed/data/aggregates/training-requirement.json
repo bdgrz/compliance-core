@@ -8,14 +8,7 @@
   "invariant": "One normalized training requirement creation and version line.",
   "boundaryDecision": "selected_split",
   "mustPreserve": "Original creation identity remains recognizable after revisions; each revision uses expected version and valid audience/source.",
-  "sources": [
-    {
-      "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
-      "jsonPointer": "/splitOwners/18/targetOwners/0",
-      "line": 1960,
-      "sha256": "d349d94b7c43f4d82020ecf36bdacf1aff98bc6498e14993582f1c3164b21f19"
-    }
-  ],
+  "sources": [],
   "baselineSourcePath": "src/Compliance.Core/Features/PolicyDistribution/TrainingCatalog.cs",
   "baselineEvents": [
     "TrainingRequirementDefined"
@@ -76,13 +69,9 @@
           "policy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/49",
-        "line": 5854,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
-      "kind": "http"
+      "kind": "http",
+      "sourceOwner": "TrainingRequirement",
+      "owner": "TrainingRequirement"
     },
     {
       "command": "ReviseTrainingRequirement",
@@ -138,13 +127,9 @@
           "policy": "ApiUser + existing request-scope authorizers"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/146",
-        "line": 17046,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
-      "kind": "http"
+      "kind": "http",
+      "sourceOwner": "TrainingRequirement",
+      "owner": "TrainingRequirement"
     }
   ],
   "eventAuthority": "selected_final_event_catalog",
@@ -152,13 +137,7 @@
     {
       "event": "TrainingRequirementDefined",
       "discriminator": "bdgrz.training_requirement.defined",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/276",
-        "line": 37454,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     }
   ],
   "choreography": [],
@@ -177,12 +156,6 @@
         "required": true,
         "origin": "client",
         "rule": "exact immutable creation retry"
-      },
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/49",
-        "line": 5854,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       }
     },
     {
@@ -193,12 +166,6 @@
         "required": true,
         "origin": "client",
         "rule": "one immutable authored operation"
-      },
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/146",
-        "line": 17046,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       }
     }
   ],
@@ -214,5 +181,6 @@
   "decidesCovers": [
     "D12-10"
   ],
-  "decidesAuthored": "2026-10-29"
+  "decidesAuthored": "2026-10-29",
+  "sourceOwner": "TrainingRequirement"
 }

@@ -22,13 +22,13 @@ Selected choreography rows: **3**. Required proofs, recovery, effect identity, a
 | id | X000 |
 | kind | planned_reaction |
 | status | PLANNED_TARGET_DEFINITION_2026-10-29 |
-| sourceOwner | DeclaredApplication |
+| Source owner (target name) | DeclaredApplication (source: DeclaredApplication) |
 | logicalPrerequisiteFacts (target names) | ApplicationDeclared, ApplicationRevised |
 | logicalPrerequisiteRule | Every normalized name and alias of the declared or revised application must be unheld or already held by this exact application stream; a name held by a different active application refuses. |
 | physicalRootEvents (target names) | ApplicationDeclared, ApplicationRevised |
 | originalAdmissionKinds (target names) | ApplicationDeclared |
 | Target command (selected source name: ClaimApplicationName) | ClaimApplicationName |
-| targetOwner | ApplicationNameClaim |
+| Target owner | ApplicationNameClaim |
 | targetAuthorityKind | business_identity_or_uniqueness_authority |
 | emittedSemanticFacts (target names) | ApplicationNameClaimed |
 | emittedEventContracts | None listed |
@@ -52,13 +52,13 @@ Selected choreography rows: **3**. Required proofs, recovery, effect identity, a
 | id | X001 |
 | kind | planned_reaction |
 | status | PLANNED_TARGET_DEFINITION_2026-10-29 |
-| sourceOwner | ApplicationNameClaim |
+| Source owner (target name) | ApplicationNameClaim (source: ApplicationNameClaim) |
 | logicalPrerequisiteFacts (target names) | ApplicationNameClaimed |
 | logicalPrerequisiteRule | Every name of the accepted change is claimed for this exact application and the application is at the expected owner-local revision; apply authored content exactly. |
 | physicalRootEvents (target names) | ApplicationNameClaimed |
 | originalAdmissionKinds (target names) | ApplicationNameClaimed |
 | Target command (selected source name: ApplyApplicationNameChange) | ApplyApplicationNameChange |
-| targetOwner | DeclaredApplication |
+| Target owner | DeclaredApplication |
 | targetAuthorityKind | business_aggregate |
 | emittedSemanticFacts (target names) | ApplicationRevised |
 | emittedEventContracts | None listed |
@@ -82,13 +82,13 @@ Selected choreography rows: **3**. Required proofs, recovery, effect identity, a
 | id | X002 |
 | kind | planned_reaction |
 | status | PLANNED_TARGET_DEFINITION_2026-10-29 |
-| sourceOwner | DeclaredApplication |
+| Source owner (target name) | DeclaredApplication (source: DeclaredApplication) |
 | logicalPrerequisiteFacts (target names) | ApplicationRevised, ApplicationRetired |
 | logicalPrerequisiteRule | Names no longer held after the revision, and all names on retirement or merge, are released, but only those the exact application stream currently holds. |
 | physicalRootEvents (target names) | ApplicationRevised, ApplicationRetired |
 | originalAdmissionKinds (target names) | ApplicationRevised |
 | Target command (selected source name: ReleaseApplicationName) | ReleaseApplicationName |
-| targetOwner | ApplicationNameClaim |
+| Target owner | ApplicationNameClaim |
 | targetAuthorityKind | business_identity_or_uniqueness_authority |
 | emittedSemanticFacts (target names) | ApplicationNameReleased |
 | emittedEventContracts | None listed |

@@ -8,14 +8,7 @@
   "invariant": "Immutable canonical user, practice and registration source, plus one staff record active/status revision.",
   "boundaryDecision": "selected_split",
   "mustPreserve": "Canonical user maps to exactly one immutable staff/practice identity; status proofs remain versioned and authoritative.",
-  "sources": [
-    {
-      "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
-      "jsonPointer": "/splitOwners/1/targetOwners/0",
-      "line": 92,
-      "sha256": "d349d94b7c43f4d82020ecf36bdacf1aff98bc6498e14993582f1c3164b21f19"
-    }
-  ],
+  "sources": [],
   "baselineSourcePath": "src/Compliance.Core/Features/AccessControl/FirmStaffDirectory.cs",
   "baselineEvents": [
     "FirmStaffChangeRecorded"
@@ -76,13 +69,9 @@
           "policy": "PlatformOperator"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/114",
-        "line": 13268,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
-      "kind": "http"
+      "kind": "http",
+      "sourceOwner": "FirmStaffRecord",
+      "owner": "FirmStaffRecord"
     },
     {
       "command": "SetFirmStaffStatus",
@@ -133,13 +122,9 @@
           "policy": "PlatformOperator"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/152",
-        "line": 17695,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
-      "kind": "http"
+      "kind": "http",
+      "sourceOwner": "FirmStaffRecord",
+      "owner": "FirmStaffRecord"
     },
     {
       "command": "RejectFirmStaffRegistration",
@@ -181,15 +166,9 @@
           "required": true
         }
       ],
-      "responseContract": null,
-      "http": null,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/source-admission-contracts.json",
-        "jsonPointer": "/contracts/23",
-        "line": 1423,
-        "sha256": "f1d549ed0879c816cb26e86879f8fa658dab0a8acbf7c591e4d4aed40483f8ae"
-      },
-      "kind": "abort"
+      "kind": "abort",
+      "sourceOwner": "FirmStaffRecord",
+      "owner": "FirmStaffRecord"
     },
     {
       "command": "CompleteFirmStaffRegistration",
@@ -250,7 +229,7 @@
         }
       ],
       "reactor": "FirmStaffRegistrationReactor",
-      "sourceOwner": "FirmStaffIdentityClaim",
+      "sourceOwner": "FirmStaffRecord",
       "sourceEvents": [
         "FirmStaffIdentityClaimed"
       ],
@@ -262,10 +241,7 @@
       "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
       "handler": "CompleteFirmStaffRegistrationHandler",
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "recorded": "2026-10-29"
-      }
+      "owner": "FirmStaffRecord"
     },
     {
       "command": "AuthorizeFirmStaffRecordEngagementUse",
@@ -336,7 +312,7 @@
         }
       ],
       "reactor": "EngagementFirmStaffRecordUseReactor",
-      "sourceOwner": "ServiceEngagementIndependence",
+      "sourceOwner": "FirmStaffRecord",
       "sourceEvents": [
         "ServiceEngagementAcceptanceRequested",
         "ServiceEngagementStaffAssignmentRequested",
@@ -350,10 +326,7 @@
       "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
       "handler": "AuthorizeFirmStaffRecordEngagementUseHandler",
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "recorded": "2026-10-29"
-      }
+      "owner": "FirmStaffRecord"
     },
     {
       "command": "SettleFirmStaffRecordEngagementUse",
@@ -419,7 +392,7 @@
         }
       ],
       "reactor": "EngagementFirmStaffRecordUseSettlementReactor",
-      "sourceOwner": "ServiceEngagementIndependence",
+      "sourceOwner": "FirmStaffRecord",
       "sourceEvents": [
         "EngagementPracticeCommitmentsAuthorized",
         "ServiceEngagementAcceptanceRejected",
@@ -435,10 +408,7 @@
       "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
       "handler": "SettleFirmStaffRecordEngagementUseHandler",
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "recorded": "2026-10-29"
-      }
+      "owner": "FirmStaffRecord"
     },
     {
       "command": "AuthorizeFirmStaffProfessionalDutyUse",
@@ -509,7 +479,7 @@
         }
       ],
       "reactor": "ProfessionalDutyStaffEligibilityReactor",
-      "sourceOwner": "FirmProfessionalDutyDesignation",
+      "sourceOwner": "FirmStaffRecord",
       "sourceEvents": [
         "ProfessionalDutyChangeAccepted"
       ],
@@ -521,10 +491,7 @@
       "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
       "handler": "AuthorizeFirmStaffProfessionalDutyUseHandler",
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "recorded": "2026-10-29"
-      }
+      "owner": "FirmStaffRecord"
     },
     {
       "command": "SettleFirmStaffProfessionalDutyUse",
@@ -590,7 +557,7 @@
         }
       ],
       "reactor": "ProfessionalDutyStaffEligibilitySettlementReactor",
-      "sourceOwner": "FirmProfessionalDutyDesignation",
+      "sourceOwner": "FirmStaffRecord",
       "sourceEvents": [
         "FirmProfessionalDutyDesignationRecorded",
         "ProfessionalDutyChangeRejected"
@@ -603,10 +570,7 @@
       "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
       "handler": "SettleFirmStaffProfessionalDutyUseHandler",
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "recorded": "2026-10-29"
-      }
+      "owner": "FirmStaffRecord"
     }
   ],
   "eventAuthority": "selected_final_event_catalog",
@@ -614,79 +578,37 @@
     {
       "event": "FirmStaffChangeRecorded",
       "discriminator": "bdgrz.firm-staff.changed",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/155",
-        "line": 19380,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     },
     {
       "event": "FirmStaffProfessionalDutyUseAuthorized",
       "discriminator": "bdgrz.firm-staff-record.firm-staff-professional-duty-use-authorized",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/157",
-        "line": 19663,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     },
     {
       "event": "FirmStaffProfessionalDutyUseSettled",
       "discriminator": "bdgrz.firm-staff-record.firm-staff-professional-duty-use-settled",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/158",
-        "line": 19799,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     },
     {
       "event": "FirmStaffRecordEngagementUseAuthorized",
       "discriminator": "bdgrz.firm-staff-record.firm-staff-record-engagement-use-authorized",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/159",
-        "line": 19935,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     },
     {
       "event": "FirmStaffRecordEngagementUseSettled",
       "discriminator": "bdgrz.firm-staff-record.firm-staff-record-engagement-use-settled",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/160",
-        "line": 20071,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     },
     {
       "event": "FirmStaffRegistrationAccepted",
       "discriminator": "bdgrz.firm-staff-record.firm-staff-registration-accepted",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/161",
-        "line": 20207,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     },
     {
       "event": "FirmStaffRegistrationRejected",
       "discriminator": "bdgrz.firm-staff-record.firm-staff-registration-rejected",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/162",
-        "line": 20341,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     }
   ],
   "choreography": [
@@ -694,73 +616,37 @@
       "reactor": "FirmStaffIdentityClaimReactor",
       "sourceOwner": "FirmStaffRecord",
       "targetOwner": "FirmStaffIdentityClaim",
-      "command": "ClaimFirmStaffIdentity",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "jsonPointer": "/reactors/2",
-        "line": 187,
-        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
-      }
+      "command": "ClaimFirmStaffIdentity"
     },
     {
       "reactor": "FirmStaffRegistrationReactor",
       "sourceOwner": "FirmStaffIdentityClaim",
       "targetOwner": "FirmStaffRecord",
-      "command": "CompleteFirmStaffRegistration",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "jsonPointer": "/reactors/3",
-        "line": 274,
-        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
-      }
+      "command": "CompleteFirmStaffRegistration"
     },
     {
       "reactor": "EngagementFirmStaffRecordUseReactor",
       "sourceOwner": "ServiceEngagementIndependence",
       "targetOwner": "FirmStaffRecord",
-      "command": "AuthorizeFirmStaffRecordEngagementUse",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "jsonPointer": "/reactors/89",
-        "line": 7644,
-        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
-      }
+      "command": "AuthorizeFirmStaffRecordEngagementUse"
     },
     {
       "reactor": "EngagementFirmStaffRecordUseSettlementReactor",
       "sourceOwner": "ServiceEngagementIndependence",
       "targetOwner": "FirmStaffRecord",
-      "command": "SettleFirmStaffRecordEngagementUse",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "jsonPointer": "/reactors/90",
-        "line": 7741,
-        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
-      }
+      "command": "SettleFirmStaffRecordEngagementUse"
     },
     {
       "reactor": "ProfessionalDutyStaffEligibilityReactor",
       "sourceOwner": "FirmProfessionalDutyDesignation",
       "targetOwner": "FirmStaffRecord",
-      "command": "AuthorizeFirmStaffProfessionalDutyUse",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "jsonPointer": "/reactors/113",
-        "line": 9728,
-        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
-      }
+      "command": "AuthorizeFirmStaffProfessionalDutyUse"
     },
     {
       "reactor": "ProfessionalDutyStaffEligibilitySettlementReactor",
       "sourceOwner": "FirmProfessionalDutyDesignation",
       "targetOwner": "FirmStaffRecord",
-      "command": "SettleFirmStaffProfessionalDutyUse",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "jsonPointer": "/reactors/114",
-        "line": 9820,
-        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
-      }
+      "command": "SettleFirmStaffProfessionalDutyUse"
     }
   ],
   "status": "SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED",
@@ -778,12 +664,6 @@
         "required": true,
         "origin": "client",
         "rule": "exact immutable creation retry"
-      },
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/114",
-        "line": 13268,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       }
     },
     {
@@ -794,23 +674,11 @@
         "required": true,
         "origin": "client",
         "rule": "one immutable authored operation"
-      },
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/152",
-        "line": 17695,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       }
     },
     {
       "command": "RejectFirmStaffRegistration",
-      "logicalIdentity": "CommandId",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/source-admission-contracts.json",
-        "jsonPointer": "/contracts/23",
-        "line": 1423,
-        "sha256": "f1d549ed0879c816cb26e86879f8fa658dab0a8acbf7c591e4d4aed40483f8ae"
-      }
+      "logicalIdentity": "CommandId"
     }
   ],
   "selectedReplayRule": "Current required authorization precedes replay; exact authorized retries resolve the original accepted result using the selected logical identity and immutable actor/intent/source binding. Fresh mutable feasibility, clock selection and body preparation cannot replace that original result. Expected revision is concurrency precondition, not a new identity.",
@@ -819,5 +687,6 @@
       "date": "2026-10-29",
       "previous": "platform / staffMemberId"
     }
-  ]
+  ],
+  "sourceOwner": "FirmStaffRecord"
 }

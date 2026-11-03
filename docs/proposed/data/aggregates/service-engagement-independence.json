@@ -8,14 +8,7 @@
   "invariant": "One engagement lifecycle, proposed and actual staff assignments, current content revision and accepted epoch bindings. Engagement revision and service epoch live in state; historical epoch streams cannot compete independently. An impaired independence evaluation result blocks acceptance of the attest engagement with no override (M0-D26 D26-07; Jev 0.81)",
   "boundaryDecision": "selected_split",
   "mustPreserve": "Never reactivate a permanent independence commitment from reevaluation; acceptance binds exact service, draft, acknowledgement and ratified-rule proofs.",
-  "sources": [
-    {
-      "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
-      "jsonPointer": "/splitOwners/2/targetOwners/1",
-      "line": 192,
-      "sha256": "d349d94b7c43f4d82020ecf36bdacf1aff98bc6498e14993582f1c3164b21f19"
-    }
-  ],
+  "sources": [],
   "baselineSourcePath": "src/Compliance.Core/Features/AccessControl/IndependenceLedger.cs",
   "baselineEvents": [
     "AssignmentIndependenceReevaluated",
@@ -77,13 +70,9 @@
           "policy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/2",
-        "line": 220,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
-      "kind": "http"
+      "kind": "http",
+      "sourceOwner": "ServiceEngagementIndependence",
+      "owner": "ServiceEngagementIndependence"
     },
     {
       "command": "AmendServiceEngagement",
@@ -134,13 +123,9 @@
           "policy": "ApiUser + existing request-scope authorizers"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/11",
-        "line": 1311,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
-      "kind": "http"
+      "kind": "http",
+      "sourceOwner": "ServiceEngagementIndependence",
+      "owner": "ServiceEngagementIndependence"
     },
     {
       "command": "AssignServiceEngagementStaff",
@@ -196,13 +181,9 @@
           "policy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/23",
-        "line": 2748,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
-      "kind": "http"
+      "kind": "http",
+      "sourceOwner": "ServiceEngagementIndependence",
+      "owner": "ServiceEngagementIndependence"
     },
     {
       "command": "CloseServiceEngagement",
@@ -253,13 +234,9 @@
           "policy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/35",
-        "line": 4169,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
-      "kind": "http"
+      "kind": "http",
+      "sourceOwner": "ServiceEngagementIndependence",
+      "owner": "ServiceEngagementIndependence"
     },
     {
       "command": "CreateServiceEngagement",
@@ -305,13 +282,9 @@
           "policy": "ApiUser + existing request-scope authorizers"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/44",
-        "line": 5257,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
-      "kind": "http"
+      "kind": "http",
+      "sourceOwner": "ServiceEngagementIndependence",
+      "owner": "ServiceEngagementIndependence"
     },
     {
       "command": "ProposeServiceEngagementStaff",
@@ -362,13 +335,9 @@
           "policy": "ApiUser + existing request-scope authorizers"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/81",
-        "line": 9468,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
-      "kind": "http"
+      "kind": "http",
+      "sourceOwner": "ServiceEngagementIndependence",
+      "owner": "ServiceEngagementIndependence"
     },
     {
       "command": "RecordDirectoryIndependenceReevaluation",
@@ -449,16 +418,9 @@
       "responseContract": {
         "mode": "internal",
         "responseType": "Unit",
-        "firstHttpStatus": null,
         "terminalResultType": "Unit"
       },
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/102",
-        "line": 11905,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
       "kind": "command",
       "concurrencyGuard": {
         "rule": "process_reply_bound_by_operation",
@@ -469,7 +431,9 @@
           "process_reply": 0.79
         },
         "date": "2026-10-29"
-      }
+      },
+      "sourceOwner": "ServiceEngagementIndependence",
+      "owner": "ServiceEngagementIndependence"
     },
     {
       "command": "RevokeServiceEngagementActualStaff",
@@ -525,13 +489,9 @@
           "policy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/149",
-        "line": 17365,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
-      "kind": "http"
+      "kind": "http",
+      "sourceOwner": "ServiceEngagementIndependence",
+      "owner": "ServiceEngagementIndependence"
     },
     {
       "command": "WithdrawServiceEngagementStaffProposal",
@@ -587,13 +547,9 @@
           "policy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/160",
-        "line": 18612,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
-      "kind": "http"
+      "kind": "http",
+      "sourceOwner": "ServiceEngagementIndependence",
+      "owner": "ServiceEngagementIndependence"
     },
     {
       "command": "RejectServiceEngagementAcceptance",
@@ -635,15 +591,9 @@
           "required": true
         }
       ],
-      "responseContract": null,
-      "http": null,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/source-admission-contracts.json",
-        "jsonPointer": "/contracts/25",
-        "line": 1539,
-        "sha256": "f1d549ed0879c816cb26e86879f8fa658dab0a8acbf7c591e4d4aed40483f8ae"
-      },
-      "kind": "abort"
+      "kind": "abort",
+      "sourceOwner": "ServiceEngagementIndependence",
+      "owner": "ServiceEngagementIndependence"
     },
     {
       "command": "RejectServiceEngagementStaffAssignment",
@@ -685,15 +635,9 @@
           "required": true
         }
       ],
-      "responseContract": null,
-      "http": null,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/source-admission-contracts.json",
-        "jsonPointer": "/contracts/26",
-        "line": 1597,
-        "sha256": "f1d549ed0879c816cb26e86879f8fa658dab0a8acbf7c591e4d4aed40483f8ae"
-      },
-      "kind": "abort"
+      "kind": "abort",
+      "sourceOwner": "ServiceEngagementIndependence",
+      "owner": "ServiceEngagementIndependence"
     },
     {
       "command": "CancelEngagementPersonalDecision",
@@ -730,15 +674,9 @@
           "required": true
         }
       ],
-      "responseContract": null,
-      "http": null,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/source-admission-contracts.json",
-        "jsonPointer": "/contracts/29",
-        "line": 1754,
-        "sha256": "f1d549ed0879c816cb26e86879f8fa658dab0a8acbf7c591e4d4aed40483f8ae"
-      },
-      "kind": "abort"
+      "kind": "abort",
+      "sourceOwner": "ServiceEngagementIndependence",
+      "owner": "ServiceEngagementIndependence"
     },
     {
       "command": "CompleteServiceEngagementAcceptance",
@@ -816,10 +754,7 @@
       "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
       "handler": "CompleteServiceEngagementAcceptanceHandler",
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "recorded": "2026-10-29"
-      }
+      "owner": "ServiceEngagementIndependence"
     },
     {
       "command": "CompleteServiceEngagementStaffAssignment",
@@ -902,10 +837,7 @@
       "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
       "handler": "CompleteServiceEngagementStaffAssignmentHandler",
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "recorded": "2026-10-29"
-      }
+      "owner": "ServiceEngagementIndependence"
     },
     {
       "command": "AuthorizeEngagementPracticeCommitments",
@@ -979,10 +911,7 @@
       "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
       "handler": "AuthorizeEngagementPracticeCommitmentsHandler",
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "recorded": "2026-10-29"
-      }
+      "owner": "ServiceEngagementIndependence"
     },
     {
       "command": "SettleEngagementPersonalDecision",
@@ -1038,7 +967,7 @@
         }
       ],
       "reactor": "EngagementPersonalDecisionSettlementReactor",
-      "sourceOwner": "EngagementManagementAcknowledgement|PartnerIndependenceDecision",
+      "sourceOwner": "ServiceEngagementIndependence",
       "sourceEvents": [
         "EngagementManagementAcknowledged",
         "PartnerIndependenceEvaluationRecorded"
@@ -1051,10 +980,7 @@
       "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
       "handler": "SettleEngagementPersonalDecisionHandler",
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "recorded": "2026-10-29"
-      }
+      "owner": "ServiceEngagementIndependence"
     },
     {
       "command": "AuthorizeEngagementPersonalDecision",
@@ -1127,10 +1053,7 @@
       "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
       "handler": "AuthorizeEngagementPersonalDecisionHandler",
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "recorded": "2026-10-29"
-      }
+      "owner": "ServiceEngagementIndependence"
     }
   ],
   "eventAuthority": "selected_final_event_catalog",
@@ -1138,178 +1061,82 @@
     {
       "event": "AssignmentIndependenceReevaluated",
       "discriminator": "bdgrz.independence.assignment-reevaluated",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/69",
-        "line": 8519,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     },
     {
       "event": "DirectoryIndependenceReevaluated",
       "discriminator": "bdgrz.independence.directory-reevaluated",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/127",
-        "line": 15334,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     },
     {
       "event": "EngagementPersonalDecisionAdmitted",
       "discriminator": "bdgrz.service-engagement-independence.engagement-personal-decision-admitted",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/130",
-        "line": 15657,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     },
     {
       "event": "EngagementPersonalDecisionAuthorized",
       "discriminator": "bdgrz.service-engagement-independence.engagement-personal-decision-authorized",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/131",
-        "line": 15825,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     },
     {
       "event": "EngagementPersonalDecisionCanceled",
       "discriminator": "bdgrz.service-engagement-independence.engagement-personal-decision-canceled",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/132",
-        "line": 16003,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     },
     {
       "event": "EngagementPersonalDecisionMaterialized",
       "discriminator": "bdgrz.service-engagement-independence.engagement-personal-decision-materialized",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/133",
-        "line": 16171,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     },
     {
       "event": "EngagementPracticeCommitmentsAuthorized",
       "discriminator": "bdgrz.service-engagement-independence.engagement-practice-commitments-authorized",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/134",
-        "line": 16339,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     },
     {
       "event": "ServiceEngagementAcceptanceRecorded",
       "discriminator": "bdgrz.service-engagement.acceptance-recorded",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/248",
-        "line": 33486,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     },
     {
       "event": "ServiceEngagementAcceptanceRejected",
       "discriminator": "bdgrz.service-engagement-independence.service-engagement-acceptance-rejected",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/249",
-        "line": 33703,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     },
     {
       "event": "ServiceEngagementAcceptanceRequested",
       "discriminator": "bdgrz.service-engagement-independence.service-engagement-acceptance-requested",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/250",
-        "line": 33911,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     },
     {
       "event": "ServiceEngagementAssignmentRevoked",
       "discriminator": "bdgrz.service-engagement.assignment-revoked",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/251",
-        "line": 34119,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     },
     {
       "event": "ServiceEngagementMutationRecorded",
       "discriminator": "bdgrz.service-engagement.changed",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/252",
-        "line": 34197,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     },
     {
       "event": "ServiceEngagementStaffAssigned",
       "discriminator": "bdgrz.access-control.service-engagement.staff-assigned",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/253",
-        "line": 34269,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     },
     {
       "event": "ServiceEngagementStaffAssignmentRejected",
       "discriminator": "bdgrz.service-engagement-independence.service-engagement-staff-assignment-rejected",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/254",
-        "line": 34535,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     },
     {
       "event": "ServiceEngagementStaffAssignmentRequested",
       "discriminator": "bdgrz.service-engagement-independence.service-engagement-staff-assignment-requested",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/255",
-        "line": 34743,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     },
     {
       "event": "ServiceIndependenceReevaluated",
       "discriminator": "bdgrz.independence.service-reevaluated",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/256",
-        "line": 34951,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     }
   ],
   "choreography": [
@@ -1317,265 +1144,133 @@
       "reactor": "EngagementAcceptanceReactor",
       "sourceOwner": "ServiceEngagementIndependence",
       "targetOwner": "ClientServiceIndependence",
-      "command": "AcquireEngagementServiceEpoch",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "jsonPointer": "/reactors/4",
-        "line": 356,
-        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
-      }
+      "command": "AcquireEngagementServiceEpoch"
     },
     {
       "reactor": "EngagementPracticeCommitmentReactor",
       "sourceOwner": "ServiceEngagementIndependence",
       "targetOwner": "PracticeIndependenceCommitment",
-      "command": "CommitPracticeIndependence",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "jsonPointer": "/reactors/5",
-        "line": 440,
-        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
-      }
+      "command": "CommitPracticeIndependence"
     },
     {
       "reactor": "EngagementAcceptanceCompletionReactor",
       "sourceOwner": "ServiceEngagementIndependence",
       "targetOwner": "ServiceEngagementIndependence",
-      "command": "CompleteServiceEngagementAcceptance",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "jsonPointer": "/reactors/6",
-        "line": 527,
-        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
-      }
+      "command": "CompleteServiceEngagementAcceptance"
     },
     {
       "reactor": "EngagementServiceEpochReleaseReactor",
       "sourceOwner": "ServiceEngagementIndependence",
       "targetOwner": "ClientServiceIndependence",
-      "command": "ReleaseEngagementServiceEpoch",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "jsonPointer": "/reactors/7",
-        "line": 614,
-        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
-      }
+      "command": "ReleaseEngagementServiceEpoch"
     },
     {
       "reactor": "EngagementStaffAssignmentCompletionReactor",
       "sourceOwner": "ServiceEngagementIndependence",
       "targetOwner": "ServiceEngagementIndependence",
-      "command": "CompleteServiceEngagementStaffAssignment",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "jsonPointer": "/reactors/82",
-        "line": 7044,
-        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
-      }
+      "command": "CompleteServiceEngagementStaffAssignment"
     },
     {
       "reactor": "EngagementPracticeReservationReactor",
       "sourceOwner": "ServiceEngagementIndependence",
       "targetOwner": "PracticeIndependenceCommitment",
-      "command": "ReservePracticeIndependence",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "jsonPointer": "/reactors/83",
-        "line": 7136,
-        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
-      }
+      "command": "ReservePracticeIndependence"
     },
     {
       "reactor": "EngagementPracticeAuthorizationReactor",
       "sourceOwner": "ServiceEngagementIndependence",
       "targetOwner": "ServiceEngagementIndependence",
-      "command": "AuthorizeEngagementPracticeCommitments",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "jsonPointer": "/reactors/84",
-        "line": 7226,
-        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
-      }
+      "command": "AuthorizeEngagementPracticeCommitments"
     },
     {
       "reactor": "EngagementPracticeReservationSettlementReactor",
       "sourceOwner": "ServiceEngagementIndependence",
       "targetOwner": "PracticeIndependenceCommitment",
-      "command": "SettlePracticeIndependenceReservation",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "jsonPointer": "/reactors/85",
-        "line": 7310,
-        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
-      }
+      "command": "SettlePracticeIndependenceReservation"
     },
     {
       "reactor": "EngagementFirmStaffRecordUseReactor",
       "sourceOwner": "ServiceEngagementIndependence",
       "targetOwner": "FirmStaffRecord",
-      "command": "AuthorizeFirmStaffRecordEngagementUse",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "jsonPointer": "/reactors/89",
-        "line": 7644,
-        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
-      }
+      "command": "AuthorizeFirmStaffRecordEngagementUse"
     },
     {
       "reactor": "EngagementFirmStaffRecordUseSettlementReactor",
       "sourceOwner": "ServiceEngagementIndependence",
       "targetOwner": "FirmStaffRecord",
-      "command": "SettleFirmStaffRecordEngagementUse",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "jsonPointer": "/reactors/90",
-        "line": 7741,
-        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
-      }
+      "command": "SettleFirmStaffRecordEngagementUse"
     },
     {
       "reactor": "EngagementFirmProfessionalDutyDesignationUseReactor",
       "sourceOwner": "ServiceEngagementIndependence",
       "targetOwner": "FirmProfessionalDutyDesignation",
-      "command": "AuthorizeFirmProfessionalDutyDesignationEngagementUse",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "jsonPointer": "/reactors/91",
-        "line": 7837,
-        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
-      }
+      "command": "AuthorizeFirmProfessionalDutyDesignationEngagementUse"
     },
     {
       "reactor": "EngagementFirmProfessionalDutyDesignationUseSettlementReactor",
       "sourceOwner": "ServiceEngagementIndependence",
       "targetOwner": "FirmProfessionalDutyDesignation",
-      "command": "SettleFirmProfessionalDutyDesignationEngagementUse",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "jsonPointer": "/reactors/92",
-        "line": 7934,
-        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
-      }
+      "command": "SettleFirmProfessionalDutyDesignationEngagementUse"
     },
     {
       "reactor": "EngagementIndependenceRuleCatalogUseReactor",
       "sourceOwner": "ServiceEngagementIndependence",
       "targetOwner": "IndependenceRuleCatalog",
-      "command": "AuthorizeIndependenceRuleCatalogEngagementUse",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "jsonPointer": "/reactors/93",
-        "line": 8030,
-        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
-      }
+      "command": "AuthorizeIndependenceRuleCatalogEngagementUse"
     },
     {
       "reactor": "EngagementIndependenceRuleCatalogUseSettlementReactor",
       "sourceOwner": "ServiceEngagementIndependence",
       "targetOwner": "IndependenceRuleCatalog",
-      "command": "SettleIndependenceRuleCatalogEngagementUse",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "jsonPointer": "/reactors/94",
-        "line": 8127,
-        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
-      }
+      "command": "SettleIndependenceRuleCatalogEngagementUse"
     },
     {
       "reactor": "EngagementIndependenceRuleRatificationCatalogUseReactor",
       "sourceOwner": "ServiceEngagementIndependence",
       "targetOwner": "IndependenceRuleRatificationCatalog",
-      "command": "AuthorizeIndependenceRuleRatificationCatalogEngagementUse",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "jsonPointer": "/reactors/95",
-        "line": 8223,
-        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
-      }
+      "command": "AuthorizeIndependenceRuleRatificationCatalogEngagementUse"
     },
     {
       "reactor": "EngagementIndependenceRuleRatificationCatalogUseSettlementReactor",
       "sourceOwner": "ServiceEngagementIndependence",
       "targetOwner": "IndependenceRuleRatificationCatalog",
-      "command": "SettleIndependenceRuleRatificationCatalogEngagementUse",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "jsonPointer": "/reactors/96",
-        "line": 8320,
-        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
-      }
+      "command": "SettleIndependenceRuleRatificationCatalogEngagementUse"
     },
     {
       "reactor": "EngagementPersonalDecisionSourceUseReactor",
       "sourceOwner": "ServiceEngagementIndependence",
       "targetOwner": "ClientServiceIndependence",
-      "command": "AuthorizeClientServicePersonalDecisionUse",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "jsonPointer": "/reactors/107",
-        "line": 9242,
-        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
-      }
+      "command": "AuthorizeClientServicePersonalDecisionUse"
     },
     {
       "reactor": "ManagementAcknowledgementMaterializationReactor",
       "sourceOwner": "ServiceEngagementIndependence",
       "targetOwner": "EngagementManagementAcknowledgement",
-      "command": "MaterializeEngagementManagementAcknowledgement",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "jsonPointer": "/reactors/108",
-        "line": 9324,
-        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
-      }
+      "command": "MaterializeEngagementManagementAcknowledgement"
     },
     {
       "reactor": "PartnerIndependenceDecisionMaterializationReactor",
       "sourceOwner": "ServiceEngagementIndependence",
       "targetOwner": "PartnerIndependenceDecision",
-      "command": "MaterializePartnerIndependenceDecision",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "jsonPointer": "/reactors/109",
-        "line": 9406,
-        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
-      }
+      "command": "MaterializePartnerIndependenceDecision"
     },
     {
       "reactor": "EngagementPersonalDecisionSettlementReactor",
       "sourceOwner": "EngagementManagementAcknowledgement|PartnerIndependenceDecision",
       "targetOwner": "ServiceEngagementIndependence",
-      "command": "SettleEngagementPersonalDecision",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "jsonPointer": "/reactors/110",
-        "line": 9488,
-        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
-      }
+      "command": "SettleEngagementPersonalDecision"
     },
     {
       "reactor": "ClientServicePersonalDecisionSettlementReactor",
       "sourceOwner": "ServiceEngagementIndependence",
       "targetOwner": "ClientServiceIndependence",
-      "command": "SettleClientServicePersonalDecisionUse",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "jsonPointer": "/reactors/111",
-        "line": 9567,
-        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
-      }
+      "command": "SettleClientServicePersonalDecisionUse"
     },
     {
       "reactor": "EngagementPersonalDecisionAuthorizationReactor",
       "sourceOwner": "ServiceEngagementIndependence",
       "targetOwner": "ServiceEngagementIndependence",
-      "command": "AuthorizeEngagementPersonalDecision",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "jsonPointer": "/reactors/112",
-        "line": 9646,
-        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
-      }
+      "command": "AuthorizeEngagementPersonalDecision"
     }
   ],
   "status": "SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED",
@@ -1593,12 +1288,6 @@
         "required": true,
         "origin": "client",
         "rule": "one immutable authored operation"
-      },
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/2",
-        "line": 220,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       }
     },
     {
@@ -1609,12 +1298,6 @@
         "required": true,
         "origin": "client",
         "rule": "exact immutable creation retry"
-      },
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/4",
-        "line": 422,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       }
     },
     {
@@ -1625,12 +1308,6 @@
         "required": true,
         "origin": "client",
         "rule": "one immutable authored operation"
-      },
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/11",
-        "line": 1311,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       }
     },
     {
@@ -1641,12 +1318,6 @@
         "required": true,
         "origin": "client",
         "rule": "one immutable authored operation"
-      },
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/23",
-        "line": 2748,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       }
     },
     {
@@ -1657,12 +1328,6 @@
         "required": true,
         "origin": "client",
         "rule": "one immutable authored operation"
-      },
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/35",
-        "line": 4169,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       }
     },
     {
@@ -1673,12 +1338,6 @@
         "required": true,
         "origin": "client",
         "rule": "exact immutable creation retry"
-      },
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/44",
-        "line": 5257,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       }
     },
     {
@@ -1689,12 +1348,6 @@
         "required": true,
         "origin": "client",
         "rule": "one immutable authored operation"
-      },
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/81",
-        "line": 9468,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       }
     },
     {
@@ -1705,12 +1358,6 @@
         "required": true,
         "origin": "source_event_effect",
         "rule": "one immutable authored operation"
-      },
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/102",
-        "line": 11905,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       }
     },
     {
@@ -1721,12 +1368,6 @@
         "required": true,
         "origin": "client",
         "rule": "exact immutable creation retry"
-      },
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/107",
-        "line": 12459,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       }
     },
     {
@@ -1737,12 +1378,6 @@
         "required": true,
         "origin": "client",
         "rule": "one immutable authored operation"
-      },
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/149",
-        "line": 17365,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       }
     },
     {
@@ -1753,43 +1388,19 @@
         "required": true,
         "origin": "client",
         "rule": "one immutable authored operation"
-      },
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/160",
-        "line": 18612,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       }
     },
     {
       "command": "RejectServiceEngagementAcceptance",
-      "logicalIdentity": "CommandId",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/source-admission-contracts.json",
-        "jsonPointer": "/contracts/25",
-        "line": 1539,
-        "sha256": "f1d549ed0879c816cb26e86879f8fa658dab0a8acbf7c591e4d4aed40483f8ae"
-      }
+      "logicalIdentity": "CommandId"
     },
     {
       "command": "RejectServiceEngagementStaffAssignment",
-      "logicalIdentity": "CommandId",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/source-admission-contracts.json",
-        "jsonPointer": "/contracts/26",
-        "line": 1597,
-        "sha256": "f1d549ed0879c816cb26e86879f8fa658dab0a8acbf7c591e4d4aed40483f8ae"
-      }
+      "logicalIdentity": "CommandId"
     },
     {
       "command": "CancelEngagementPersonalDecision",
-      "logicalIdentity": "CommandId",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/source-admission-contracts.json",
-        "jsonPointer": "/contracts/29",
-        "line": 1754,
-        "sha256": "f1d549ed0879c816cb26e86879f8fa658dab0a8acbf7c591e4d4aed40483f8ae"
-      }
+      "logicalIdentity": "CommandId"
     }
   ],
   "selectedReplayRule": "Current required authorization precedes replay; exact authorized retries resolve the original accepted result using the selected logical identity and immutable actor/intent/source binding. Fresh mutable feasibility, clock selection and body preparation cannot replace that original result. Expected revision is concurrency precondition, not a new identity.",
@@ -1835,5 +1446,6 @@
     "D26-01",
     "D26-07"
   ],
-  "decidesAuthored": "2026-10-29"
+  "decidesAuthored": "2026-10-29",
+  "sourceOwner": "ServiceEngagementIndependence"
 }

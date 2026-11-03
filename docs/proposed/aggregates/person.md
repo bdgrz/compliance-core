@@ -5,6 +5,7 @@
 - Business aggregate: `true`
 - Selected status: `SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED`
 
+
 ## Identity and invariant
 
 **Selected identity:** Tenant + caller PersonId; PersonId is exact immutable creation logical identity. Revise/correlation use caller CommandId and person revision.
@@ -18,6 +19,10 @@
 **Replay:** Current required authorization precedes replay; exact authorized retries resolve the original accepted result using the selected logical identity and immutable actor/intent/source binding. Fresh mutable feasibility, clock selection and body preparation cannot replace that original result. Expected revision is concurrency precondition, not a new identity.
 
 **Lifecycle:** The proposed target has no separate event for ending or retiring a Person. WorkRelationship records employment status; Member records platform access. Changing contact details or platform access does not end the person's employment.
+
+
+
+
 
 ## Commands
 
@@ -41,7 +46,7 @@
 
 ## Product rules
 
-- **D22-02** — Person and WorkRelationship are owned by workforce assurance; access governance correlates observed accounts to a person and must not import a competing person roster; a platform member is a separate access relationship. Source: [m0-d22-canonical-ownership.md](../../product/decisions/m0-d22-canonical-ownership.md).
+- **D22-02** — Person and WorkRelationship are owned by workforce assurance; access governance correlates observed accounts to a person and must not import a competing person roster; a platform member is a separate access relationship. Decision: [m0-d22-canonical-ownership.md](../decisions/m0-d22-canonical-ownership.md).
 
 ## Adopted architecture decisions
 
@@ -50,7 +55,7 @@
 ## Evidence and complete record
 
 - Baseline source: [Placeholder: source file is not present in this checkout]
-- Aggregate review: [person-review-2026-10-29.md](../../product/definitive-aggregate-choreography/person-review-2026-10-29.md)
+- Aggregate review: [Placeholder: no owner-specific review file is present]
 - Full selected record: [JSON](../data/aggregates/person.json)
 
 > Target definition is separate from runtime qualification. Implementation status recorded by the source: `SEPARATE_VERIFICATION_REQUIRED_IMPLEMENTATION_HALTED`.

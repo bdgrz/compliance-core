@@ -100,7 +100,6 @@
       ],
       "canonicalTargetOwner": "SignificantChange",
       "recoveryContractSummary": "At-least-once checkpoint replay resends the same source-derived command. Missing dependencies remain retryable; actual terminal/superseded episodes are skipped only with the owning proof.",
-      "logicalPrerequisiteRuleGuard": null,
       "logicalPrerequisiteRule": "The source is an approved system description or a recorded no-change decision for a change that still requires system-description review; the receiver records the decision only if it matches the current assessment (content version and hash), the correlated decision is not earlier than the assessment, all required follow-up work is already linked, and the decider is not the change assessor.",
       "prerequisiteRuleSource": "authored 2026-10-29 from reactor and target source"
     },
@@ -199,7 +198,6 @@
       ],
       "canonicalTargetOwner": "ComplianceIncident",
       "recoveryContractSummary": "At-least-once checkpoint replay resends the same source-derived command. Missing dependencies remain retryable; actual terminal/superseded episodes are skipped only with the owning proof.",
-      "logicalPrerequisiteRuleGuard": null,
       "logicalPrerequisiteRule": "A no-change system-description decision must correlate to exactly one incident current-assessment (incident, version and hash) requiring system description review, and no change with the same ID; the incident records the decision once.",
       "prerequisiteRuleSource": "authored 2026-10-29 from reactor and target source"
     }

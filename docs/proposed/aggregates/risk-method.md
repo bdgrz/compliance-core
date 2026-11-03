@@ -5,6 +5,7 @@
 - Business aggregate: `true`
 - Selected status: `SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED`
 
+
 ## Identity and invariant
 
 **Selected identity:** Existing tenant-scoped risk-method identity derived from ProgramId by the unchanged UUIDv5 algorithm. Selected CommandId identifies publication of one exact method/version intent.
@@ -18,6 +19,10 @@
 **Replay:** Current required authorization precedes replay; exact authorized retries resolve the original accepted result using the selected logical identity and immutable actor/intent/source binding. Fresh mutable feasibility, clock selection and body preparation cannot replace that original result. Expected revision is concurrency precondition, not a new identity.
 
 **Lifecycle:** [Placeholder: a consolidated lifecycle sequence is not present in the selected owner record.]
+
+
+
+
 
 ## Commands
 
@@ -39,7 +44,7 @@
 
 ## Product rules
 
-- **D10-01** — A risk method is versioned per program, uses a qualitative 5x5 kind with five-level likelihood and impact scales, and carries a nullable appetite threshold (1 to 25 residual score) and a one-year reassessment interval. Source: [m0-d10-risk-method.md](../../product/decisions/m0-d10-risk-method.md).
+- **D10-01** — A risk method is versioned per program, uses a qualitative 5x5 kind with five-level likelihood and impact scales, and carries a nullable appetite threshold (1 to 25 residual score) and a one-year reassessment interval. Decision: [m0-d10-risk-method.md](../decisions/m0-d10-risk-method.md).
 
 ## Adopted architecture decisions
 

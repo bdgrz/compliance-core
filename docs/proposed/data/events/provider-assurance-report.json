@@ -248,7 +248,6 @@
         "discriminator": "bdgrz.provider-assurance-report.provider-assurance-report-provider-review-use-authorized",
         "discriminatorVersion": 1,
         "owner": "ProviderAssuranceReport",
-        "existingContract": null,
         "status": "selected target schema; implementation pending",
         "reason": "typed reactor receiver accepted business fact",
         "fields": [
@@ -412,7 +411,6 @@
         "discriminator": "bdgrz.provider-assurance-report.provider-assurance-report-provider-review-use-settled",
         "discriminatorVersion": 1,
         "owner": "ProviderAssuranceReport",
-        "existingContract": null,
         "status": "selected target schema; implementation pending",
         "reason": "typed reactor receiver accepted business fact",
         "fields": [

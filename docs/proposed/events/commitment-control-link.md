@@ -4,9 +4,9 @@ Canonical events: **3**. Complete canonical event and available schema records: 
 
 | Target event | Selected source name | Kind | Adopted discriminator | Version | Schema fields | Meaning |
 | --- | --- | --- | --- | --- | --- | --- |
-| CommitmentControlLinkProposed | CommitmentControlLinkProposed | business | null (recorded) | null (recorded) | [Placeholder: schema absent] | A link between an exact commitment version and an exact control version was proposed with rationale, awaiting independent review. |
-| CommitmentControlLinkRetired | CommitmentControlLinkRetired | business | null (recorded) | null (recorded) | [Placeholder: schema absent] | A commitment-to-control link was retired; the pair no longer supports the commitment and no successor can revive this link identity. |
-| CommitmentControlLinkReviewed | CommitmentControlLinkReviewed | business | null (recorded) | null (recorded) | [Placeholder: schema absent] | An independent reviewer accepted or returned the proposed commitment-to-control link version; acceptance makes it the current link. |
+| CommitmentControlLinkProposed | CommitmentControlLinkProposed | business | [Placeholder: value not recorded] | [Placeholder: value not recorded] | [Placeholder: schema absent] | A link between an exact commitment version and an exact control version was proposed with rationale, awaiting independent review. |
+| CommitmentControlLinkRetired | CommitmentControlLinkRetired | business | [Placeholder: value not recorded] | [Placeholder: value not recorded] | [Placeholder: schema absent] | A commitment-to-control link was retired; the pair no longer supports the commitment and no successor can revive this link identity. |
+| CommitmentControlLinkReviewed | CommitmentControlLinkReviewed | business | [Placeholder: value not recorded] | [Placeholder: value not recorded] | [Placeholder: schema absent] | An independent reviewer accepted or returned the proposed commitment-to-control link version; acceptance makes it the current link. |
 
 ## Event details
 
@@ -20,7 +20,7 @@ Canonical events: **3**. Complete canonical event and available schema records: 
 | Canonical semantic key | event:CommitmentControlLinkProposed |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | CommitmentControlLinkProposed |
-| Adopted wire | null (recorded) |
+| Adopted wire | [Placeholder: value not recorded] |
 | Wire qualification | Planned; no declared record yet. |
 | Schema status | planned_schema |
 | Source status | planned_no_source_type |
@@ -54,7 +54,7 @@ Canonical events: **3**. Complete canonical event and available schema records: 
 | Canonical semantic key | event:CommitmentControlLinkRetired |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | CommitmentControlLinkRetired |
-| Adopted wire | null (recorded) |
+| Adopted wire | [Placeholder: value not recorded] |
 | Wire qualification | Planned; no declared record yet. |
 | Schema status | planned_schema |
 | Source status | planned_no_source_type |
@@ -88,7 +88,7 @@ Canonical events: **3**. Complete canonical event and available schema records: 
 | Canonical semantic key | event:CommitmentControlLinkReviewed |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | CommitmentControlLinkReviewed |
-| Adopted wire | null (recorded) |
+| Adopted wire | [Placeholder: value not recorded] |
 | Wire qualification | Planned; no declared record yet. |
 | Schema status | planned_schema |
 | Source status | planned_no_source_type |

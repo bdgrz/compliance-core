@@ -10,12 +10,6 @@
   "boundaryRationale": "Keep current complete row/category/source reconciliation and authoritative freeze seal together. Immutable row/version content may use chunked capsules and history projections; independent export attempts need their own process/identity. No per-row projected counts may decide freeze.",
   "sources": [
     {
-      "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
-      "jsonPointer": "/aggregates/13",
-      "line": 9107,
-      "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
-    },
-    {
       "path": "[Placeholder: source artifact was recorded outside this repository]",
       "jsonPointer": "/decisions/2",
       "sha256": "8fdaec764a3554f2ea470aba66f2ce0945a424adbeba7505684314655d62216f",
@@ -99,13 +93,9 @@
         "terminalResultType": "Unit"
       },
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/3",
-        "line": 229,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      },
-      "kind": "command"
+      "kind": "command",
+      "sourceOwner": "AuditPopulation",
+      "owner": "AuditPopulation"
     },
     {
       "command": "ClassifyAuditPopulationRow",
@@ -165,18 +155,14 @@
         "terminalResultType": "Unit"
       },
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/35",
-        "line": 2803,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      },
       "kind": "command",
       "concurrencyGuard": {
         "rule": "require_expected_revision",
         "jev": 0.85,
         "date": "2026-10-29"
-      }
+      },
+      "sourceOwner": "AuditPopulation",
+      "owner": "AuditPopulation"
     },
     {
       "command": "DefineAuditPopulation",
@@ -225,14 +211,10 @@
         "terminalResultType": "Unit"
       },
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/58",
-        "line": 4403,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      },
       "kind": "creation",
-      "identityNote": "DefinitionId is the PopulationId of the new stream (2026-10-29, source AuditPopulationMutations.cs:69)."
+      "identityNote": "DefinitionId is the PopulationId of the new stream (2026-10-29, source AuditPopulationMutations.cs:69).",
+      "sourceOwner": "AuditPopulation",
+      "owner": "AuditPopulation"
     },
     {
       "command": "FreezeAuditPopulation",
@@ -281,13 +263,9 @@
         "terminalResultType": "Unit"
       },
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/73",
-        "line": 5474,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      },
-      "kind": "command"
+      "kind": "command",
+      "sourceOwner": "AuditPopulation",
+      "owner": "AuditPopulation"
     },
     {
       "command": "GenerateAuditPopulation",
@@ -331,13 +309,9 @@
         "terminalResultType": "Unit"
       },
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/78",
-        "line": 5844,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      },
-      "kind": "creation"
+      "kind": "creation",
+      "sourceOwner": "AuditPopulation",
+      "owner": "AuditPopulation"
     },
     {
       "command": "ReconcileAuditPopulation",
@@ -386,13 +360,9 @@
         "terminalResultType": "Unit"
       },
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/104",
-        "line": 7727,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      },
-      "kind": "command"
+      "kind": "command",
+      "sourceOwner": "AuditPopulation",
+      "owner": "AuditPopulation"
     },
     {
       "command": "RecordAuditPopulationFacts",
@@ -446,13 +416,9 @@
         "terminalResultType": "Unit"
       },
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/108",
-        "line": 8043,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      },
-      "kind": "command"
+      "kind": "command",
+      "sourceOwner": "AuditPopulation",
+      "owner": "AuditPopulation"
     },
     {
       "command": "ReviseAuditPopulationDefinition",
@@ -516,25 +482,15 @@
         "terminalResultType": "Unit"
       },
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/166",
-        "line": 12363,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      },
-      "kind": "command"
+      "kind": "command",
+      "sourceOwner": "AuditPopulation",
+      "owner": "AuditPopulation"
     }
   ],
   "eventAuthority": "retained_baseline_business_facts_requires_schema_reconciliation",
   "events": [
     {
       "event": "AuditPopulationAmended",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
-        "jsonPointer": "/aggregates/13",
-        "line": 9107,
-        "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
-      },
       "baselineContract": {
         "event": "AuditPopulationAmended",
         "emitters": [
@@ -579,12 +535,6 @@
     },
     {
       "event": "AuditPopulationDefined",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
-        "jsonPointer": "/aggregates/13",
-        "line": 9107,
-        "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
-      },
       "baselineContract": {
         "event": "AuditPopulationDefined",
         "emitters": [
@@ -629,12 +579,6 @@
     },
     {
       "event": "AuditPopulationDefinitionRevised",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
-        "jsonPointer": "/aggregates/13",
-        "line": 9107,
-        "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
-      },
       "baselineContract": {
         "event": "AuditPopulationDefinitionRevised",
         "emitters": [
@@ -679,12 +623,6 @@
     },
     {
       "event": "AuditPopulationExportGenerated",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
-        "jsonPointer": "/aggregates/13",
-        "line": 9107,
-        "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
-      },
       "baselineContract": {
         "event": "AuditPopulationExportGenerated",
         "emitters": [
@@ -729,12 +667,6 @@
     },
     {
       "event": "AuditPopulationFactRecorded",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
-        "jsonPointer": "/aggregates/13",
-        "line": 9107,
-        "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
-      },
       "baselineContract": {
         "event": "AuditPopulationFactRecorded",
         "emitters": [
@@ -779,12 +711,6 @@
     },
     {
       "event": "AuditPopulationFrozen",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
-        "jsonPointer": "/aggregates/13",
-        "line": 9107,
-        "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
-      },
       "baselineContract": {
         "event": "AuditPopulationFrozen",
         "emitters": [
@@ -829,12 +755,6 @@
     },
     {
       "event": "AuditPopulationGenerated",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
-        "jsonPointer": "/aggregates/13",
-        "line": 9107,
-        "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
-      },
       "baselineContract": {
         "event": "AuditPopulationGenerated",
         "emitters": [
@@ -879,12 +799,6 @@
     },
     {
       "event": "AuditPopulationReconciled",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
-        "jsonPointer": "/aggregates/13",
-        "line": 9107,
-        "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
-      },
       "baselineContract": {
         "event": "AuditPopulationReconciled",
         "emitters": [
@@ -929,12 +843,6 @@
     },
     {
       "event": "AuditPopulationRowClassified",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
-        "jsonPointer": "/aggregates/13",
-        "line": 9107,
-        "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
-      },
       "baselineContract": {
         "event": "AuditPopulationRowClassified",
         "emitters": [
@@ -999,83 +907,35 @@
   "selectedLogicalIdentityBindings": [
     {
       "command": "AmendAuditPopulation",
-      "logicalIdentity": "CommandId",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/3",
-        "line": 229,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      }
+      "logicalIdentity": "CommandId"
     },
     {
       "command": "ClassifyAuditPopulationRow",
-      "logicalIdentity": "CommandId",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/35",
-        "line": 2803,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      }
+      "logicalIdentity": "CommandId"
     },
     {
       "command": "DefineAuditPopulation",
-      "logicalIdentity": "DefinitionId",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/58",
-        "line": 4403,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      }
+      "logicalIdentity": "DefinitionId"
     },
     {
       "command": "FreezeAuditPopulation",
-      "logicalIdentity": "CommandId",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/73",
-        "line": 5474,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      }
+      "logicalIdentity": "CommandId"
     },
     {
       "command": "GenerateAuditPopulation",
-      "logicalIdentity": "GenerationKey",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/78",
-        "line": 5844,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      }
+      "logicalIdentity": "GenerationKey"
     },
     {
       "command": "ReconcileAuditPopulation",
-      "logicalIdentity": "CommandId",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/104",
-        "line": 7727,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      }
+      "logicalIdentity": "CommandId"
     },
     {
       "command": "RecordAuditPopulationFacts",
-      "logicalIdentity": "CommandId",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/108",
-        "line": 8043,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      }
+      "logicalIdentity": "CommandId"
     },
     {
       "command": "ReviseAuditPopulationDefinition",
-      "logicalIdentity": "CommandId",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/166",
-        "line": 12363,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      }
+      "logicalIdentity": "CommandId"
     }
   ],
   "selectedReplayRule": "Current required authorization precedes replay; exact authorized retries resolve the original accepted result using the selected logical identity and immutable actor/intent/source binding. Fresh mutable feasibility, clock selection and body preparation cannot replace that original result. Expected revision is concurrency precondition, not a new identity.",
@@ -1102,5 +962,6 @@
       "date": "2026-10-29",
       "previous": "Tenant / audit-populations / PopulationId. Selected definition creation is identified by DefinitionId; later selected commands use their exact CommandId or GenerationKey and population/source scope from the signature."
     }
-  ]
+  ],
+  "sourceOwner": "AuditPopulation"
 }

@@ -8,14 +8,7 @@
   "invariant": "One tenant-user membership has one affiliation/expiry episode; deprovision closes authority and a fresh episode cannot start until authority cleanup completes.",
   "boundaryDecision": "retain",
   "boundaryRationale": "Affiliation, lifecycle and current episode must change together. Cleanup completion is an authority-release gate; membership roster/grants remain external.",
-  "sources": [
-    {
-      "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
-      "jsonPointer": "/aggregates/52",
-      "line": 33628,
-      "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
-    }
-  ],
+  "sources": [],
   "baselineSourcePath": "src/Compliance.Core/Features/AccessControl/Member.cs",
   "baselineEvents": [
     "MemberDeprovisionCleanupCompleted",
@@ -77,12 +70,6 @@
         "terminalResultType": "Unit"
       },
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/38",
-        "line": 3027,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      },
       "kind": "command",
       "concurrencyGuard": {
         "rule": "require_expected_revision",
@@ -93,7 +80,9 @@
           "process_reply": 0.6
         },
         "date": "2026-10-29"
-      }
+      },
+      "sourceOwner": "Member",
+      "owner": "Member"
     },
     {
       "command": "RegisterMember",
@@ -137,18 +126,14 @@
         "terminalResultType": "Unit"
       },
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/137",
-        "line": 10365,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      },
       "kind": "command",
       "concurrencyGuard": {
         "rule": "creation_key_only",
         "jev": 0.84,
         "date": "2026-10-29"
-      }
+      },
+      "sourceOwner": "Member",
+      "owner": "Member"
     },
     {
       "command": "SuspendMember",
@@ -200,14 +185,10 @@
         "method": "PUT",
         "path": "/api/v1/tenants/{tenant_id}/members/{user_id}/suspensions/{command_id}"
       },
-      "source": {
-        "path": "docs/product/audits/2026-10-23/source-admission-contracts.json",
-        "jsonPointer": "/contracts/5",
-        "line": 320,
-        "sha256": "f1d549ed0879c816cb26e86879f8fa658dab0a8acbf7c591e4d4aed40483f8ae"
-      },
       "attributionNote": "Moved from TenantManagerGuard on 2026-10-29: TenantManagerGuard appends an admission fact first (route always); then AdministratorTransitionProcess applies to Member. Fact is TenantManagerWithdrawalAccepted when the episode contributes administrator availability or has a pending registration, otherwise TenantManagerSourceMutationAdmitted (neutral). Applied by ApplyMemberWithdrawal (WithdrawalKind=suspend) or ApplyNeutralMemberSourceMutation, which call Member.Suspend. (source src/Compliance.Core/Features/AccessControl/Handlers/SuspendMemberHandler.cs; Handlers/ApplyMemberWithdrawalHandler.cs; Handlers/ApplyNeutralMemberSourceMutationHandler.cs)",
-      "kind": "http"
+      "kind": "http",
+      "sourceOwner": "Member",
+      "owner": "Member"
     },
     {
       "command": "DeprovisionMember",
@@ -259,14 +240,10 @@
         "method": "PUT",
         "path": "/api/v1/tenants/{tenant_id}/members/{user_id}/deprovisioning/{command_id}"
       },
-      "source": {
-        "path": "docs/product/audits/2026-10-23/source-admission-contracts.json",
-        "jsonPointer": "/contracts/6",
-        "line": 391,
-        "sha256": "f1d549ed0879c816cb26e86879f8fa658dab0a8acbf7c591e4d4aed40483f8ae"
-      },
       "attributionNote": "Moved from TenantManagerGuard on 2026-10-29: TenantManagerGuard appends an admission fact first (route always); then AdministratorTransitionProcess applies to Member. Always a guard fact (withdrawal or neutral); then Member.Deprovision via ApplyMemberWithdrawal (WithdrawalKind=deprovision) / ApplyNeutralMemberSourceMutation; MemberRetirementReactor cleans up authority afterwards. (source src/Compliance.Core/Features/AccessControl/Handlers/DeprovisionMemberHandler.cs; Handlers/ApplyMemberWithdrawalHandler.cs)",
-      "kind": "http"
+      "kind": "http",
+      "sourceOwner": "Member",
+      "owner": "Member"
     },
     {
       "command": "ReinstateMember",
@@ -313,14 +290,10 @@
         "method": "PUT",
         "path": "/api/v1/tenants/{tenant_id}/members/by-user/{user_id}/reinstatements/{command_id}"
       },
-      "source": {
-        "path": "docs/product/audits/2026-10-23/source-admission-contracts.json",
-        "jsonPointer": "/contracts/8",
-        "line": 538,
-        "sha256": "f1d549ed0879c816cb26e86879f8fa658dab0a8acbf7c591e4d4aed40483f8ae"
-      },
       "attributionNote": "Moved from TenantManagerGuard on 2026-10-29: TenantManagerGuard appends an admission fact first (route always); then AdministratorTransitionProcess applies to Member. Fact is TenantManagerRestorationAccepted when the episode contributes administrator availability, otherwise neutral; waits behind any unfinished suspension of the same episode. Applied by ApplyMemberRestoration / ApplyNeutralMemberSourceMutation -> Member.Reinstate. (source src/Compliance.Core/Features/AccessControl/Handlers/ReinstateMemberHandler.cs; Handlers/ApplyMemberRestorationHandler.cs)",
-      "kind": "http"
+      "kind": "http",
+      "sourceOwner": "Member",
+      "owner": "Member"
     },
     {
       "command": "ApplyMemberWithdrawal",
@@ -386,7 +359,7 @@
         }
       ],
       "reactor": "AdministratorWithdrawalReactor",
-      "sourceOwner": "TenantManagerGuard",
+      "sourceOwner": "Member",
       "sourceEvents": [
         "TenantManagerWithdrawalAccepted"
       ],
@@ -399,10 +372,7 @@
       "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
       "handler": "ApplyMemberWithdrawalHandler",
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "recorded": "2026-10-29"
-      }
+      "owner": "Member"
     },
     {
       "command": "ApplyNeutralMemberSourceMutation",
@@ -468,7 +438,7 @@
         }
       ],
       "reactor": "AdministratorNeutralMemberMutationReactor",
-      "sourceOwner": "TenantManagerGuard",
+      "sourceOwner": "Member",
       "sourceEvents": [
         "TenantManagerSourceMutationAdmitted"
       ],
@@ -482,10 +452,7 @@
       "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
       "handler": "ApplyNeutralMemberSourceMutationHandler",
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "recorded": "2026-10-29"
-      }
+      "owner": "Member"
     },
     {
       "command": "ApplyMemberRestoration",
@@ -546,7 +513,7 @@
         }
       ],
       "reactor": "AdministratorRestorationReactor",
-      "sourceOwner": "TenantManagerGuard",
+      "sourceOwner": "Member",
       "sourceEvents": [
         "TenantManagerRestorationAccepted"
       ],
@@ -558,10 +525,7 @@
       "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
       "handler": "ApplyMemberRestorationHandler",
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "recorded": "2026-10-29"
-      }
+      "owner": "Member"
     }
   ],
   "eventAuthority": "selected_final_event_catalog",
@@ -569,35 +533,17 @@
     {
       "event": "MemberDeprovisioned",
       "discriminator": "bdgrz.rbac.member.deprovisioned",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/179",
-        "line": 23077,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     },
     {
       "event": "MemberReinstated",
       "discriminator": "bdgrz.rbac.member.reinstated",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/180",
-        "line": 23283,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     },
     {
       "event": "MemberSuspended",
       "discriminator": "bdgrz.rbac.member.suspended",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/181",
-        "line": 23484,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     }
   ],
   "choreography": [
@@ -605,37 +551,19 @@
       "reactor": "AdministratorWithdrawalReactor",
       "sourceOwner": "TenantManagerGuard",
       "targetOwner": "Member",
-      "command": "ApplyMemberWithdrawal",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "jsonPointer": "/reactors/46",
-        "line": 3937,
-        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
-      }
+      "command": "ApplyMemberWithdrawal"
     },
     {
       "reactor": "AdministratorNeutralMemberMutationReactor",
       "sourceOwner": "TenantManagerGuard",
       "targetOwner": "Member",
-      "command": "ApplyNeutralMemberSourceMutation",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "jsonPointer": "/reactors/48",
-        "line": 4112,
-        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
-      }
+      "command": "ApplyNeutralMemberSourceMutation"
     },
     {
       "reactor": "AdministratorRestorationReactor",
       "sourceOwner": "TenantManagerGuard",
       "targetOwner": "Member",
-      "command": "ApplyMemberRestoration",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "jsonPointer": "/reactors/51",
-        "line": 4374,
-        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
-      }
+      "command": "ApplyMemberRestoration"
     }
   ],
   "status": "SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED",
@@ -648,23 +576,11 @@
   "selectedLogicalIdentityBindings": [
     {
       "command": "CompleteMemberRetirement",
-      "logicalIdentity": "CommandId",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/38",
-        "line": 3027,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      }
+      "logicalIdentity": "CommandId"
     },
     {
       "command": "RegisterMember",
-      "logicalIdentity": "CommandId",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/137",
-        "line": 10365,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      }
+      "logicalIdentity": "CommandId"
     }
   ],
   "selectedReplayRule": "Current required authorization precedes replay; exact authorized retries resolve the original accepted result using the selected logical identity and immutable actor/intent/source binding. Fresh mutable feasibility, clock selection and body preparation cannot replace that original result. Expected revision is concurrency precondition, not a new identity.",
@@ -715,5 +631,6 @@
     "MD-06",
     "MD-07"
   ],
-  "decidesAuthored": "2026-10-29"
+  "decidesAuthored": "2026-10-29",
+  "sourceOwner": "Member"
 }

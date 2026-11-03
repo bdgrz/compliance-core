@@ -8,14 +8,7 @@
   "invariant": "Independent classification decision history for one accepted principal.",
   "boundaryDecision": "selected_split",
   "mustPreserve": "Classification requires exact accepted population proof and contiguous per-principal decision sequence.",
-  "sources": [
-    {
-      "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
-      "jsonPointer": "/splitOwners/3/targetOwners/1",
-      "line": 389,
-      "sha256": "d349d94b7c43f4d82020ecf36bdacf1aff98bc6498e14993582f1c3164b21f19"
-    }
-  ],
+  "sources": [],
   "baselineSourcePath": "src/Compliance.Core/Features/AccessReviews/AccessPopulation.cs",
   "baselineEvents": [
     "AccessPrincipalClassified"
@@ -106,13 +99,9 @@
           "policy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/30",
-        "line": 3577,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
-      "kind": "http"
+      "kind": "http",
+      "sourceOwner": "AccessPrincipalClassification",
+      "owner": "AccessPrincipalClassification"
     }
   ],
   "eventAuthority": "selected_final_event_catalog",
@@ -120,13 +109,7 @@
     {
       "event": "AccessPrincipalClassified",
       "discriminator": "bdgrz.access_population.principal_classified",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/8",
-        "line": 668,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     }
   ],
   "choreography": [],
@@ -145,12 +128,6 @@
         "required": true,
         "origin": "client",
         "rule": "one immutable authored operation"
-      },
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/30",
-        "line": 3577,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       }
     }
   ],
@@ -160,5 +137,6 @@
   "decidesCovers": [
     "D07-06"
   ],
-  "decidesAuthored": "2026-10-29"
+  "decidesAuthored": "2026-10-29",
+  "sourceOwner": "AccessPrincipalClassification"
 }

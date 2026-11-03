@@ -51,10 +51,8 @@
         }
       ],
       "http": [],
-      "source": {
-        "path": "docs/product/definitive-aggregate-choreography/choreography.json",
-        "recorded": "2026-10-29"
-      },
+      "sourceOwner": "ApplicationNameClaim",
+      "owner": "ApplicationNameClaim",
       "sourceName": "ClaimApplicationName",
       "targetName": "ClaimApplicationName"
     },
@@ -104,10 +102,8 @@
         }
       ],
       "http": [],
-      "source": {
-        "path": "docs/product/definitive-aggregate-choreography/choreography.json",
-        "recorded": "2026-10-29"
-      },
+      "sourceOwner": "ApplicationNameClaim",
+      "owner": "ApplicationNameClaim",
       "sourceName": "ReleaseApplicationName",
       "targetName": "ReleaseApplicationName"
     }

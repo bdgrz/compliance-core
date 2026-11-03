@@ -59,7 +59,7 @@
         "recorded": "2026-10-29"
       },
       "reactor": "ProviderNameClaimReactor",
-      "sourceOwner": "Provider",
+      "sourceOwner": "ProviderNameClaim",
       "sourceEvents": [
         "ProviderChangeAccepted"
       ],
@@ -69,6 +69,7 @@
       ],
       "effectKind": "claim_provider_name",
       "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
+      "owner": "ProviderNameClaim",
       "sourceName": "ClaimProviderName",
       "targetName": "ClaimProviderName"
     },
@@ -126,7 +127,7 @@
         "recorded": "2026-10-29"
       },
       "reactor": "ProviderOldNameReleaseReactor",
-      "sourceOwner": "Provider",
+      "sourceOwner": "ProviderNameClaim",
       "sourceEvents": [
         "ProviderRecorded",
         "ProviderRevised",
@@ -138,6 +139,7 @@
       ],
       "effectKind": "release_provider_name",
       "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
+      "owner": "ProviderNameClaim",
       "sourceName": "ReleaseProviderName",
       "targetName": "ReleaseProviderName"
     }

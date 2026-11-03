@@ -1,5 +1,7 @@
 # CriteriaTextOverlay commands
 
+
+
 Selected command contracts: **1**. Complete selected contracts and companion source evidence: [owner command JSON](../data/commands/criteria-text-overlay.json).
 
 | Target command | Selected source name | Kind | Identity | Fields | HTTP routes |
@@ -15,7 +17,8 @@ Selected command contracts: **1**. Complete selected contracts and companion sou
 | Target command name | SetCriteriaTextOverlay |
 | Selected source command name | SetCriteriaTextOverlay |
 | Name decision | The selected source name is retained. |
-| Owner | CriteriaTextOverlay |
+| Target owner | CriteriaTextOverlay |
+| Selected source owner | CriteriaTextOverlay |
 | Contract record status | target_contract |
 | Kind | http |
 | Logical identity | CommandId; Uuid; required=true; client; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
@@ -27,7 +30,7 @@ Selected command contracts: **1**. Complete selected contracts and companion sou
 | Contract changes | Add required CommandId. |
 | Guard order | bind_required_ids, authenticate_authorize, canonicalize_authored_intent, resolve_native_operation_facts, compare_owner_episode_actor_kind_intent_original_revision, validate_new_owner_revision_and_source_permits, append_complete_concrete_attributed_batch |
 | Response contract | `{"mode":"immediate_original_result","responseType":"CriteriaTextOverlayRegistration","firstHttpStatus":200,"terminalResultType":"CriteriaTextOverlayRegistration"}` |
-| Expected revision scope | `{"field":"ExpectedRevision","owner":"CriteriaTextOverlay","counter":"logical ResourceRevision of this owner","nullableInternalRule":null}` |
+| Expected revision scope | `{"field":"ExpectedRevision","owner":"CriteriaTextOverlay","counter":"logical ResourceRevision of this owner"}` |
 | Authorizer sources | src/Compliance.Core/Features/AccessControl/ClientManagementMutationAuthorizer.cs, src/Compliance.Core/Features/Programs/ProgramManagementAuthorizer.cs |
 | Source contract | src/Compliance.Common/Features/Criteria/SetCriteriaTextOverlay.cs |
 | Primary handler | SetCriteriaTextOverlayHandler |

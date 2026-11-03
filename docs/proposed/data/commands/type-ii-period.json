@@ -53,13 +53,9 @@
         "terminalResultType": "Unit"
       },
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/6",
-        "line": 501,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      },
       "kind": "command",
+      "sourceOwner": "TypeIIPeriod",
+      "owner": "TypeIIPeriod",
       "sourceName": "AmendTypeIIPeriodClose",
       "targetName": "AmendTypeIIPeriodClose"
     },
@@ -121,13 +117,9 @@
           "authorizationPolicy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/22",
-        "line": 1774,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      },
       "kind": "http",
+      "sourceOwner": "TypeIIPeriod",
+      "owner": "TypeIIPeriod",
       "sourceName": "ApproveTypeIIPeriodClose",
       "targetName": "ApproveTypeIIPeriodClose"
     },
@@ -184,13 +176,9 @@
           "authorizationPolicy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/76",
-        "line": 5709,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      },
       "kind": "http",
+      "sourceOwner": "TypeIIPeriod",
+      "owner": "TypeIIPeriod",
       "sourceName": "FreezeTypeIIPeriodClose",
       "targetName": "FreezeTypeIIPeriodClose"
     },
@@ -236,13 +224,9 @@
         "terminalResultType": "Unit"
       },
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/79",
-        "line": 5907,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      },
       "kind": "creation",
+      "sourceOwner": "TypeIIPeriod",
+      "owner": "TypeIIPeriod",
       "sourceName": "GenerateDueControlOccurrences",
       "targetName": "OpenDueControlOccurrences"
     },
@@ -301,13 +285,9 @@
         "method": "PUT",
         "path": "/api/v1/tenants/{tenant_id}/programs/{program_id}/type-ii-periods/{period_id}"
       },
-      "source": {
-        "path": "docs/product/audits/2026-10-23/source-admission-contracts.json",
-        "jsonPointer": "/contracts/2",
-        "line": 106,
-        "sha256": "f1d549ed0879c816cb26e86879f8fa658dab0a8acbf7c591e4d4aed40483f8ae"
-      },
       "kind": "http",
+      "sourceOwner": "TypeIIPeriod",
+      "owner": "TypeIIPeriod",
       "sourceName": "StartTypeIIObservationPeriod",
       "targetName": "StartTypeIIObservationPeriod"
     },
@@ -371,13 +351,9 @@
         "method": "PUT",
         "path": "/api/v1/tenants/{tenant_id}/programs/{program_id}/type-ii-periods/{period_id}/amendments/{command_id}"
       },
-      "source": {
-        "path": "docs/product/audits/2026-10-23/source-admission-contracts.json",
-        "jsonPointer": "/contracts/3",
-        "line": 177,
-        "sha256": "f1d549ed0879c816cb26e86879f8fa658dab0a8acbf7c591e4d4aed40483f8ae"
-      },
       "kind": "http",
+      "sourceOwner": "TypeIIPeriod",
+      "owner": "TypeIIPeriod",
       "sourceName": "AmendTypeIIObservationPeriod",
       "targetName": "AmendTypeIIObservationPeriod"
     },
@@ -426,18 +402,13 @@
           "required": true
         }
       ],
-      "responseContract": null,
       "http": {
         "method": "PUT",
         "path": "/api/v1/tenants/{tenant_id}/programs/{program_id}/type-ii-periods/{period_id}/amendments/{amendment_id}/cancellations/{command_id}"
       },
-      "source": {
-        "path": "docs/product/audits/2026-10-23/source-admission-contracts.json",
-        "jsonPointer": "/contracts/4",
-        "line": 254,
-        "sha256": "f1d549ed0879c816cb26e86879f8fa658dab0a8acbf7c591e4d4aed40483f8ae"
-      },
       "kind": "http",
+      "sourceOwner": "TypeIIPeriod",
+      "owner": "TypeIIPeriod",
       "sourceName": "CancelTypeIIPeriodAmendment",
       "targetName": "CancelTypeIIPeriodAmendment"
     },
@@ -481,15 +452,9 @@
           "required": true
         }
       ],
-      "responseContract": null,
-      "http": null,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/source-admission-contracts.json",
-        "jsonPointer": "/contracts/21",
-        "line": 1307,
-        "sha256": "f1d549ed0879c816cb26e86879f8fa658dab0a8acbf7c591e4d4aed40483f8ae"
-      },
       "kind": "abort",
+      "sourceOwner": "TypeIIPeriod",
+      "owner": "TypeIIPeriod",
       "sourceName": "RejectTypeIIPeriodOpening",
       "targetName": "RejectTypeIIPeriodOpening"
     },
@@ -533,15 +498,9 @@
           "required": true
         }
       ],
-      "responseContract": null,
-      "http": null,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/source-admission-contracts.json",
-        "jsonPointer": "/contracts/22",
-        "line": 1365,
-        "sha256": "f1d549ed0879c816cb26e86879f8fa658dab0a8acbf7c591e4d4aed40483f8ae"
-      },
       "kind": "abort",
+      "sourceOwner": "TypeIIPeriod",
+      "owner": "TypeIIPeriod",
       "sourceName": "RejectTypeIIPeriodAmendment",
       "targetName": "RejectTypeIIPeriodAmendment"
     },
@@ -599,7 +558,7 @@
         }
       ],
       "reactor": "TypeIIPeriodRangeApplicationReactor",
-      "sourceOwner": "TypeIIObservationCalendar",
+      "sourceOwner": "TypeIIPeriod",
       "sourceEvents": [
         "TypeIIPeriodRangeAuthorized"
       ],
@@ -612,64 +571,10 @@
       "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
       "handler": "ApplyTypeIIPeriodRangeHandler",
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "recorded": "2026-10-29"
-      },
+      "owner": "TypeIIPeriod",
       "sourceName": "ApplyTypeIIPeriodRange",
       "targetName": "ApplyTypeIIPeriodRange"
     }
   ],
-  "sourceContractEvidence": [],
-  "supplementalSourceWriteRequests": [
-    {
-      "command": "RecordTypeIIPeriodCloseValidation",
-      "owner": "TypeIIPeriod",
-      "classification": "implemented_source_write_not_in_selected_per_command_contracts",
-      "sourcePath": "src/Compliance.Common/Features/Operations/Commands/RecordTypeIIPeriodCloseValidation.cs",
-      "sourceDescription": "[Placeholder: source summary not recorded]",
-      "discriminator": {
-        "name": "bdgrz.operations.record-type-ii-period-close-validation",
-        "version": 1
-      },
-      "requestFields": [
-        {
-          "name": "CommandId",
-          "type": "Uuid",
-          "required": true
-        },
-        {
-          "name": "TenantId",
-          "type": "Uuid",
-          "required": true
-        },
-        {
-          "name": "ProgramId",
-          "type": "Uuid",
-          "required": true
-        },
-        {
-          "name": "PeriodId",
-          "type": "Uuid",
-          "required": true
-        },
-        {
-          "name": "ExpectedRevision",
-          "type": "long",
-          "required": true
-        }
-      ],
-      "responseType": "UnitResult",
-      "requestInterfaces": [
-        "IRequest",
-        "IIdentifiedRequest",
-        "IProgramScopedRequest",
-        "IClientManagementMutationRequest",
-        "ICallable"
-      ],
-      "handlerSource": "src/Compliance.Core/Features/Operations/Handlers/RecordTypeIIPeriodCloseValidationHandler.cs",
-      "httpRoutes": [],
-      "contractNotes": "No HTTP route is recorded in the source request contract. Internal process and receiver commands are invoked by their owning workflow."
-    }
-  ]
+  "sourceContractEvidence": []
 }

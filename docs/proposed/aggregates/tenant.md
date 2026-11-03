@@ -5,6 +5,7 @@
 - Business aggregate: `true`
 - Selected status: `SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED`
 
+
 ## Identity and invariant
 
 **Selected identity:** Caller TenantId is immutable tenant creation identity; lifecycle operations use caller CommandId.
@@ -19,21 +20,25 @@
 
 **Lifecycle:** [Placeholder: a consolidated lifecycle sequence is not present in the selected owner record.]
 
+
+
+
+
 ## Commands
 
 | Command | Kind | Identity field |
 | --- | --- | --- |
 | [ActivateTenant](../commands/tenant.md#activatetenant) | command | CommandId |
-| [ChangeTenantSlug](../commands/tenant.md#changetenantslug) | http | CommandId |
+| [ChangeWorkspaceWebAddress](../commands/tenant.md#changeworkspacewebaddress) | http | CommandId |
 | [CompleteTenantOffboarding](../commands/tenant.md#completetenantoffboarding) | command | CommandId |
-| [ConfirmTenantSlug](../commands/tenant.md#confirmtenantslug) | command | CommandId |
-| [ConfirmTenantSlugSurrender](../commands/tenant.md#confirmtenantslugsurrender) | command | CommandId |
+| [ConfirmWorkspaceWebAddress](../commands/tenant.md#confirmworkspacewebaddress) | command | CommandId |
+| [ConfirmWorkspaceWebAddressRelease](../commands/tenant.md#confirmworkspacewebaddressrelease) | command | CommandId |
 | [OffboardTenant](../commands/tenant.md#offboardtenant) | http | CommandId |
 | [ReactivateTenant](../commands/tenant.md#reactivatetenant) | command | CommandId |
 | [RegisterTenant](../commands/tenant.md#registertenant) | http | TenantId |
-| [RejectTenantSlug](../commands/tenant.md#rejecttenantslug) | command | CommandId |
-| [RejectTenantSlugSurrender](../commands/tenant.md#rejecttenantslugsurrender) | command | CommandId |
-| [RequestTenantSlugSurrender](../commands/tenant.md#requesttenantslugsurrender) | command | CommandId |
+| [RejectWorkspaceWebAddressRequest](../commands/tenant.md#rejectworkspacewebaddressrequest) | command | CommandId |
+| [RejectWorkspaceWebAddressRelease](../commands/tenant.md#rejectworkspacewebaddressrelease) | command | CommandId |
+| [RequestWorkspaceWebAddressRelease](../commands/tenant.md#requestworkspacewebaddressrelease) | command | CommandId |
 | [SuspendTenant](../commands/tenant.md#suspendtenant) | http | CommandId |
 
 ## Events
@@ -45,40 +50,40 @@
 | [TenantOffboardingStarted](../events/tenant.md#tenantoffboardingstarted) | bdgrz.tenant.offboarding.started | 2 |
 | [TenantReactivated](../events/tenant.md#tenantreactivated) | bdgrz.tenant.reactivated | 2 |
 | [TenantRegistered](../events/tenant.md#tenantregistered) | bdgrz.tenant.registered | 1 |
-| [TenantSlugChangeRejected](../events/tenant.md#tenantslugchangerejected) | bdgrz.tenant-slug.change-rejected | 1 |
-| [TenantSlugChangeRequested](../events/tenant.md#tenantslugchangerequested) | bdgrz.tenant-slug.change-requested | 1 |
-| [TenantSlugChanged](../events/tenant.md#tenantslugchanged) | bdgrz.tenant-slug.changed | 1 |
-| [TenantSlugConfirmed](../events/tenant.md#tenantslugconfirmed) | bdgrz.tenant-slug.confirmed | 1 |
-| [TenantSlugRejected](../events/tenant.md#tenantslugrejected) | bdgrz.tenant-slug.rejected | 1 |
-| [TenantSlugSurrenderConfirmed](../events/tenant.md#tenantslugsurrenderconfirmed) | bdgrz.tenant-slug-surrender.confirmed | 1 |
-| [TenantSlugSurrenderFailed](../events/tenant.md#tenantslugsurrenderfailed) | bdgrz.tenant-slug-surrender.failed | 1 |
-| [TenantSlugSurrenderRequested](../events/tenant.md#tenantslugsurrenderrequested) | bdgrz.tenant-slug.surrender-requested | 1 |
+| [WorkspaceWebAddressChangeRejected](../events/tenant.md#workspacewebaddresschangerejected) | bdgrz.tenant-slug.change-rejected | 1 |
+| [WorkspaceWebAddressChangeRequested](../events/tenant.md#workspacewebaddresschangerequested) | bdgrz.tenant-slug.change-requested | 1 |
+| [WorkspaceWebAddressChanged](../events/tenant.md#workspacewebaddresschanged) | bdgrz.tenant-slug.changed | 1 |
+| [WorkspaceWebAddressConfirmed](../events/tenant.md#workspacewebaddressconfirmed) | bdgrz.tenant-slug.confirmed | 1 |
+| [WorkspaceWebAddressClaimRejected](../events/tenant.md#workspacewebaddressclaimrejected) | bdgrz.tenant-slug.rejected | 1 |
+| [WorkspaceWebAddressReleaseConfirmed](../events/tenant.md#workspacewebaddressreleaseconfirmed) | bdgrz.tenant-slug-surrender.confirmed | 1 |
+| [WorkspaceWebAddressReleaseRejected](../events/tenant.md#workspacewebaddressreleaserejected) | bdgrz.tenant-slug-surrender.failed | 1 |
+| [WorkspaceWebAddressReleaseRequested](../events/tenant.md#workspacewebaddressreleaserequested) | bdgrz.tenant-slug.surrender-requested | 1 |
 | [TenantSuspended](../events/tenant.md#tenantsuspended) | bdgrz.tenant.suspended | 2 |
 
 ## Cross-owner flows
 
 | Row | Kind | Source owner | Target owner | Command |
 | --- | --- | --- | --- | --- |
-| [S011](../reactors/tenant-rbac-bootstrap-reactor.md#s011) | business_receiver | Tenant | Role | DefineRole |
-| [S012](../reactors/tenant-rbac-bootstrap-reactor.md#s012) | business_receiver | Tenant | Team | DefineTeam |
-| [S013](../reactors/tenant-rbac-bootstrap-reactor.md#s013) | business_receiver | Tenant | Member | RegisterMember |
-| [S014](../reactors/tenant-rbac-bootstrap-reactor.md#s014) | business_receiver | Tenant | TeamRole | AssignTeamRole |
-| [S015](../reactors/tenant-rbac-bootstrap-reactor.md#s015) | business_receiver | Tenant | RolePermission | AssignRolePermission |
-| [S016](../reactors/tenant-rbac-bootstrap-reactor.md#s016) | business_receiver | Tenant | TeamMember | AssignTeamMember |
-| [S022](../reactors/tenant-slug-reactor.md#s022) | business_receiver | TenantSlug | Tenant | ConfirmTenantSlug |
-| [S023](../reactors/tenant-slug-reactor.md#s023) | business_receiver | TenantSlug | Tenant | RejectTenantSlug |
-| [S024](../reactors/tenant-slug-reactor.md#s024) | business_receiver | TenantSlug | Tenant | ConfirmTenantSlugSurrender |
-| [S025](../reactors/tenant-slug-reactor.md#s025) | business_receiver | TenantSlug | Tenant | RejectTenantSlugSurrender |
-| [S029](../reactors/tenant-invitation-reactor.md#s029) | business_receiver | TenantInvitation | Tenant | ActivateTenant |
-| [S030](../reactors/tenant-registration-reactor.md#s030) | business_receiver | Tenant | TenantSlug | RegisterTenantSlug |
-| [S031](../reactors/tenant-registration-reactor.md#s031) | business_receiver | Tenant | TenantInvitation | InviteTenantMember |
-| [S032](../reactors/tenant-registration-reactor.md#s032) | business_receiver | Tenant | TenantSlug | RegisterTenantSlug |
-| [S033](../reactors/tenant-registration-reactor.md#s033) | business_receiver | Tenant | TenantSlug | SurrenderTenantSlug |
+| [S011](../reactors/set-up-starting-tenant-access-reactor.md#s011) | business_receiver | Tenant | Role | DefineRole |
+| [S012](../reactors/set-up-starting-tenant-access-reactor.md#s012) | business_receiver | Tenant | Team | DefineTeam |
+| [S013](../reactors/set-up-starting-tenant-access-reactor.md#s013) | business_receiver | Tenant | Member | RegisterMember |
+| [S014](../reactors/set-up-starting-tenant-access-reactor.md#s014) | business_receiver | Tenant | TeamRole | AssignTeamRole |
+| [S015](../reactors/set-up-starting-tenant-access-reactor.md#s015) | business_receiver | Tenant | RolePermission | AssignRolePermission |
+| [S016](../reactors/set-up-starting-tenant-access-reactor.md#s016) | business_receiver | Tenant | TeamMember | AssignTeamMember |
+| [S022](../reactors/keep-workspace-web-addresses-unique-reactor.md#s022) | business_receiver | WorkspaceWebAddress | Tenant | ConfirmWorkspaceWebAddress |
+| [S023](../reactors/keep-workspace-web-addresses-unique-reactor.md#s023) | business_receiver | WorkspaceWebAddress | Tenant | RejectWorkspaceWebAddressRequest |
+| [S024](../reactors/keep-workspace-web-addresses-unique-reactor.md#s024) | business_receiver | WorkspaceWebAddress | Tenant | ConfirmWorkspaceWebAddressRelease |
+| [S025](../reactors/keep-workspace-web-addresses-unique-reactor.md#s025) | business_receiver | WorkspaceWebAddress | Tenant | RejectWorkspaceWebAddressRelease |
+| [S029](../reactors/activate-membership-after-invitation-acceptance-reactor.md#s029) | business_receiver | TenantInvitation | Tenant | ActivateTenant |
+| [S030](../reactors/establish-tenant-and-invite-owner-reactor.md#s030) | business_receiver | Tenant | WorkspaceWebAddress | ClaimWorkspaceWebAddress |
+| [S031](../reactors/establish-tenant-and-invite-owner-reactor.md#s031) | business_receiver | Tenant | TenantInvitation | InviteTenantMember |
+| [S032](../reactors/establish-tenant-and-invite-owner-reactor.md#s032) | business_receiver | Tenant | WorkspaceWebAddress | ClaimWorkspaceWebAddress |
+| [S033](../reactors/establish-tenant-and-invite-owner-reactor.md#s033) | business_receiver | Tenant | WorkspaceWebAddress | RetireWorkspaceWebAddress |
 | [S034](../reactors/tenant-self-service-activation-reactor.md#s034) | business_receiver | TeamMember | Tenant | ActivateTenant |
 
 ## Product rules
 
-- **D03-09** — There is exactly one workspace per organization; programs and engagements provide sub-scoping. Source: [m0-d03-roles-and-separation-of-duties.md](../../product/decisions/m0-d03-roles-and-separation-of-duties.md).
+- **D03-09** — There is exactly one workspace per organization; programs and engagements provide sub-scoping. Decision: [m0-d03-roles-and-separation-of-duties.md](../decisions/m0-d03-roles-and-separation-of-duties.md).
 
 ## Adopted architecture decisions
 
@@ -87,7 +92,7 @@
 ## Evidence and complete record
 
 - Baseline source: [Placeholder: source file is not present in this checkout]
-- Aggregate review: [tenant-review-2026-10-29.md](../../product/definitive-aggregate-choreography/tenant-review-2026-10-29.md)
+- Aggregate review: [Placeholder: no owner-specific review file is present]
 - Full selected record: [JSON](../data/aggregates/tenant.json)
 
 > Target definition is separate from runtime qualification. Implementation status recorded by the source: `SEPARATE_VERIFICATION_REQUIRED_IMPLEMENTATION_HALTED`.

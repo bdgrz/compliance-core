@@ -8,14 +8,7 @@
   "invariant": "One current assurance gap with exact source-version and closure lineage.",
   "boundaryDecision": "selected_split",
   "mustPreserve": "Risk adoption cannot close a gap or occur after closure; each review binds same provider/current report.",
-  "sources": [
-    {
-      "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
-      "jsonPointer": "/splitOwners/19/targetOwners/2",
-      "line": 2055,
-      "sha256": "d349d94b7c43f4d82020ecf36bdacf1aff98bc6498e14993582f1c3164b21f19"
-    }
-  ],
+  "sources": [],
   "baselineSourcePath": "src/Compliance.Core/Features/Providers/ProviderAssuranceRegister.cs",
   "baselineEvents": [
     "ProviderCoverageGapClosed",
@@ -82,13 +75,9 @@
           "policy": "ApiUser + existing request-scope authorizers"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/34",
-        "line": 4062,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
-      "kind": "http"
+      "kind": "http",
+      "sourceOwner": "ProviderAssuranceGap",
+      "owner": "ProviderAssuranceGap"
     },
     {
       "command": "LinkProviderCoverageGapRiskAcceptance",
@@ -154,13 +143,9 @@
           "policy": "ApiUser + existing request-scope authorizers"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/68",
-        "line": 7983,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
-      "kind": "http"
+      "kind": "http",
+      "sourceOwner": "ProviderAssuranceGap",
+      "owner": "ProviderAssuranceGap"
     },
     {
       "command": "RecordProviderCoverageGap",
@@ -206,13 +191,9 @@
           "policy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/109",
-        "line": 12681,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
-      "kind": "http"
+      "kind": "http",
+      "sourceOwner": "ProviderAssuranceGap",
+      "owner": "ProviderAssuranceGap"
     }
   ],
   "eventAuthority": "selected_final_event_catalog",
@@ -220,35 +201,17 @@
     {
       "event": "ProviderCoverageGapClosed",
       "discriminator": "bdgrz.provider.coverage_gap.closed",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/212",
-        "line": 28367,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     },
     {
       "event": "ProviderCoverageGapRecorded",
       "discriminator": "bdgrz.provider.coverage_gap.recorded",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/213",
-        "line": 28447,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     },
     {
       "event": "ProviderCoverageGapRiskAcceptanceAdmitted",
       "discriminator": "bdgrz.provider-assurance-gap.provider-coverage-gap-risk-acceptance-admitted",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/214",
-        "line": 28527,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     }
   ],
   "choreography": [
@@ -256,13 +219,7 @@
       "reactor": "ProviderRiskAcceptanceLinkReactor",
       "sourceOwner": "ProviderAssuranceGap",
       "targetOwner": "ProviderRiskAcceptance",
-      "command": "MaterializeProviderRiskAcceptanceLink",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "jsonPointer": "/reactors/88",
-        "line": 7562,
-        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
-      }
+      "command": "MaterializeProviderRiskAcceptanceLink"
     }
   ],
   "status": "SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED",
@@ -280,12 +237,6 @@
         "required": true,
         "origin": "client",
         "rule": "one immutable authored operation"
-      },
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/34",
-        "line": 4062,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       }
     },
     {
@@ -296,12 +247,6 @@
         "required": true,
         "origin": "client",
         "rule": "one immutable authored operation"
-      },
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/68",
-        "line": 7983,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       }
     },
     {
@@ -312,12 +257,6 @@
         "required": true,
         "origin": "client",
         "rule": "exact immutable creation retry"
-      },
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/109",
-        "line": 12681,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       }
     }
   ],
@@ -327,5 +266,6 @@
       "date": "2026-10-29",
       "previous": "(tenantId, providerId, gapId)"
     }
-  ]
+  ],
+  "sourceOwner": "ProviderAssuranceGap"
 }

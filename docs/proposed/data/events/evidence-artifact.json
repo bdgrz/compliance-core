@@ -22,15 +22,13 @@
         ],
         "schemaStatus": "selected_complete_schema",
         "sourceStatus": "planned_no_source_type",
-        "emissionKindNote": "Owner-held reservation or its settlement: authoritative for the owner invariant (the reducer must refuse conflicting commands while held) but not a business decision in its own right. Adopted 2026-10-29 (decision EV-D06).",
-        "meaning": null
+        "emissionKindNote": "Owner-held reservation or its settlement: authoritative for the owner invariant (the reducer must refuse conflicting commands while held) but not a business decision in its own right. Adopted 2026-10-29 (decision EV-D06)."
       },
       "schema": {
         "event": "ArtifactDownloadAvailabilityUseSettled",
         "discriminator": "bdgrz.evidence-artifact.artifact-download-availability-use-settled",
         "discriminatorVersion": 1,
         "owner": "EvidenceArtifact",
-        "existingContract": null,
         "status": "selected target schema; implementation pending",
         "reason": "typed reactor receiver accepted business fact",
         "fields": [
@@ -163,8 +161,8 @@
       },
       "sourceName": "ArtifactDownloadAvailabilityUseSettled",
       "targetName": "ArtifactDownloadAvailabilityAuthorizationClosed",
-      "nameDecision": "The exact authorization ended; the recorded outcome still distinguishes use, cancellation, or a late fence.",
-      "targetMeaning": null
+      "nameDecision": "Names the completed end of the artifact’s availability decision for one download.",
+      "targetMeaning": "The artifact ended the temporary availability hold for one exact download after the file was issued or the request was canceled."
     },
     {
       "canonical": {
@@ -186,15 +184,13 @@
           "ARTIFACT_DOWNLOAD"
         ],
         "schemaStatus": "selected_complete_schema",
-        "sourceStatus": "planned_no_source_type",
-        "meaning": null
+        "sourceStatus": "planned_no_source_type"
       },
       "schema": {
         "event": "EvidenceArtifactDownloadRequested",
         "discriminator": "bdgrz.evidence-artifact.evidence-artifact-download-requested",
         "discriminatorVersion": 1,
         "owner": "EvidenceArtifact",
-        "existingContract": null,
         "status": "selected target schema; implementation pending",
         "reason": "source command accepted result",
         "fields": [
@@ -385,8 +381,8 @@
       },
       "sourceName": "EvidenceArtifactDownloadRequested",
       "targetName": "EvidenceArtifactDownloadRequested",
-      "nameDecision": "The selected source name is retained.",
-      "targetMeaning": null
+      "nameDecision": "Names a member’s completed request to download a specific evidence artifact.",
+      "targetMeaning": "A member requested a specific evidence file and recorded the purpose for downloading it. The file is made available only after its handling rules are satisfied."
     },
     {
       "canonical": {

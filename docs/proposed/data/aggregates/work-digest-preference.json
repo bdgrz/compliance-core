@@ -8,14 +8,7 @@
   "invariant": "One member stores current notification consent and valid scheduling time zone; identical current setting is no-op. This is chiefly a settings state holder, with no multi-part business invariant identified.",
   "boundaryDecision": "retain",
   "boundaryRationale": "Retain per-member notification consent/time-zone authority or equivalent dedicated versioned consent owner. Matching Member identity does not justify a shared revision. Add logical retry and expected revision so an old consent command cannot override later consent.",
-  "sources": [
-    {
-      "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
-      "jsonPointer": "/aggregates/98",
-      "line": 59544,
-      "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
-    }
-  ],
+  "sources": [],
   "baselineSourcePath": "src/Compliance.Core/Features/Work/WorkDigestPreference.cs",
   "baselineEvents": [
     "WorkDigestPreferenceChanged"
@@ -57,24 +50,14 @@
         "terminalResultType": "WorkDigestPreferenceView"
       },
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/194",
-        "line": 14552,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      }
+      "sourceOwner": "WorkDigestPreference",
+      "owner": "WorkDigestPreference"
     }
   ],
   "eventAuthority": "retained_baseline_business_facts_requires_schema_reconciliation",
   "events": [
     {
       "event": "WorkDigestPreferenceChanged",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
-        "jsonPointer": "/aggregates/98",
-        "line": 59544,
-        "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
-      },
       "baselineContract": {
         "event": "WorkDigestPreferenceChanged",
         "emitters": [
@@ -124,13 +107,7 @@
   "selectedLogicalIdentityBindings": [
     {
       "command": "SetWorkDigestPreference",
-      "logicalIdentity": "CommandId",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/194",
-        "line": 14552,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      }
+      "logicalIdentity": "CommandId"
     }
   ],
   "selectedReplayRule": "Current required authorization precedes replay; exact authorized retries resolve the original accepted result using the selected logical identity and immutable actor/intent/source binding. Fresh mutable feasibility, clock selection and body preparation cannot replace that original result. Expected revision is concurrency precondition, not a new identity.",
@@ -140,5 +117,6 @@
     "to": "technical_settings_state",
     "decisionId": "OWNER_WorkDigestPreference_Technical",
     "rationale": "Stores one member's notification consent and time zone; identical setting is a no-op. No multi-part business invariant. WorkDigestPreferenceRecorded remains a retained emission consumed by WeeklyWorkDigest scheduling."
-  }
+  },
+  "sourceOwner": "WorkDigestPreference"
 }

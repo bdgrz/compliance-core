@@ -1,5 +1,7 @@
 # PolicyDistributionCampaign commands
 
+
+
 Selected command contracts: **6**. Complete selected contracts and companion source evidence: [owner command JSON](../data/commands/policy-distribution-campaign.json).
 
 | Target command | Selected source name | Kind | Identity | Fields | HTTP routes |
@@ -20,7 +22,8 @@ Selected command contracts: **6**. Complete selected contracts and companion sou
 | Target command name | CloseCampaign |
 | Selected source command name | CloseCampaign |
 | Name decision | The selected source name is retained. |
-| Owner | PolicyDistributionCampaign |
+| Target owner | PolicyDistributionCampaign |
+| Selected source owner | PolicyDistributionCampaign |
 | Contract record status | target_contract |
 | Kind | http |
 | Logical identity | CommandId; Uuid; required=true; client; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
@@ -32,7 +35,7 @@ Selected command contracts: **6**. Complete selected contracts and companion sou
 | Contract changes | Add required CommandId., Add required owner-local ExpectedRevision; business Version remains an exact content version, not owner OCC. |
 | Guard order | bind_required_ids, authenticate_authorize, canonicalize_authored_intent, resolve_native_operation_facts, compare_owner_episode_actor_kind_intent_original_revision, validate_new_owner_revision_and_source_permits, append_complete_concrete_attributed_batch |
 | Response contract | `{"mode":"async_fixed_ack","responseType":"OperationAcceptedResponse","firstHttpStatus":202,"terminalResultType":"CampaignView"}` |
-| Expected revision scope | `{"field":"ExpectedRevision","owner":"PolicyDistributionCampaign","counter":"logical ResourceRevision of this owner","nullableInternalRule":null}` |
+| Expected revision scope | `{"field":"ExpectedRevision","owner":"PolicyDistributionCampaign","counter":"logical ResourceRevision of this owner"}` |
 | Authorizer sources | src/Compliance.Core/Features/AccessControl/ClientManagementMutationAuthorizer.cs, src/Compliance.Core/Features/Programs/ProgramManagementAuthorizer.cs |
 | Source contract | src/Compliance.Common/Features/PolicyDistribution/CloseCampaign.cs |
 | Primary handler | CloseCampaignHandler |
@@ -73,7 +76,8 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Target command name | LaunchPolicyCampaign |
 | Selected source command name | LaunchPolicyCampaign |
 | Name decision | The selected source name is retained. |
-| Owner | PolicyDistributionCampaign |
+| Target owner | PolicyDistributionCampaign |
+| Selected source owner | PolicyDistributionCampaign |
 | Contract record status | target_contract |
 | Kind | http |
 | Logical identity | CampaignId; Uuid; required=true; client; caller-supplied immutable creation identity: an exact retry with the same id and authored intent returns the original result; the same id with changed intent is refused; a different id is a different record |
@@ -85,7 +89,7 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Contract changes | Add required CampaignId. |
 | Guard order | bind_required_ids, authenticate_authorize, canonicalize_authored_intent, resolve_native_operation_facts, compare_owner_episode_actor_kind_intent_original_revision, validate_new_owner_revision_and_source_permits, append_complete_concrete_attributed_batch |
 | Response contract | `{"mode":"immediate_original_result","responseType":"CampaignRegistration","firstHttpStatus":200,"terminalResultType":"CampaignRegistration"}` |
-| Expected revision scope | `{"field":null,"owner":"PolicyDistributionCampaign","counter":"No primary caller ResourceRevision. Enforce required authored source/epoch/version tokens, immutable creation identity or trusted proof/generation as declared; append uses physical OCC."}` |
+| Expected revision scope | `{"owner":"PolicyDistributionCampaign","counter":"No primary caller ResourceRevision. Enforce required authored source/epoch/version tokens, immutable creation identity or trusted proof/generation as declared; append uses physical OCC."}` |
 | Authorizer sources | src/Compliance.Core/Features/AccessControl/ClientManagementMutationAuthorizer.cs, src/Compliance.Core/Features/Programs/ProgramManagementAuthorizer.cs |
 | Source contract | src/Compliance.Common/Features/PolicyDistribution/LaunchPolicyCampaign.cs |
 | Primary handler | LaunchPolicyCampaignHandler |
@@ -128,7 +132,8 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Target command name | LaunchTrainingCampaign |
 | Selected source command name | LaunchTrainingCampaign |
 | Name decision | The selected source name is retained. |
-| Owner | PolicyDistributionCampaign |
+| Target owner | PolicyDistributionCampaign |
+| Selected source owner | PolicyDistributionCampaign |
 | Contract record status | target_contract |
 | Kind | http |
 | Logical identity | CampaignId; Uuid; required=true; client; caller-supplied immutable creation identity: an exact retry with the same id and authored intent returns the original result; the same id with changed intent is refused; a different id is a different record |
@@ -140,7 +145,7 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Contract changes | Add required CampaignId. |
 | Guard order | bind_required_ids, authenticate_authorize, canonicalize_authored_intent, resolve_native_operation_facts, compare_owner_episode_actor_kind_intent_original_revision, validate_new_owner_revision_and_source_permits, append_complete_concrete_attributed_batch |
 | Response contract | `{"mode":"immediate_original_result","responseType":"CampaignRegistration","firstHttpStatus":200,"terminalResultType":"CampaignRegistration"}` |
-| Expected revision scope | `{"field":null,"owner":"PolicyDistributionCampaign","counter":"No primary caller ResourceRevision. Enforce required authored source/epoch/version tokens, immutable creation identity or trusted proof/generation as declared; append uses physical OCC."}` |
+| Expected revision scope | `{"owner":"PolicyDistributionCampaign","counter":"No primary caller ResourceRevision. Enforce required authored source/epoch/version tokens, immutable creation identity or trusted proof/generation as declared; append uses physical OCC."}` |
 | Authorizer sources | src/Compliance.Core/Features/AccessControl/ClientManagementMutationAuthorizer.cs, src/Compliance.Core/Features/Programs/ProgramManagementAuthorizer.cs |
 | Source contract | src/Compliance.Common/Features/PolicyDistribution/LaunchTrainingCampaign.cs |
 | Primary handler | LaunchTrainingCampaignHandler |
@@ -183,7 +188,8 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Target command name | ReconcileCampaignAudience |
 | Selected source command name | ReconcileCampaignAudience |
 | Name decision | The selected source name is retained. |
-| Owner | PolicyDistributionCampaign |
+| Target owner | PolicyDistributionCampaign |
+| Selected source owner | PolicyDistributionCampaign |
 | Contract record status | target_contract |
 | Kind | http |
 | Logical identity | CommandId; Uuid; required=true; client; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
@@ -195,7 +201,7 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Contract changes | Add required CommandId., Add required owner-local ExpectedRevision; business Version remains an exact content version, not owner OCC. |
 | Guard order | bind_required_ids, authenticate_authorize, canonicalize_authored_intent, resolve_native_operation_facts, compare_owner_episode_actor_kind_intent_original_revision, validate_new_owner_revision_and_source_permits, append_complete_concrete_attributed_batch |
 | Response contract | `{"mode":"immediate_original_result","responseType":"CampaignReconciliationView","firstHttpStatus":200,"terminalResultType":"CampaignReconciliationView"}` |
-| Expected revision scope | `{"field":"ExpectedRevision","owner":"PolicyDistributionCampaign","counter":"logical ResourceRevision of this owner","nullableInternalRule":null}` |
+| Expected revision scope | `{"field":"ExpectedRevision","owner":"PolicyDistributionCampaign","counter":"logical ResourceRevision of this owner"}` |
 | Authorizer sources | src/Compliance.Core/Features/AccessControl/ClientManagementMutationAuthorizer.cs, src/Compliance.Core/Features/Programs/ProgramManagementAuthorizer.cs |
 | Source contract | src/Compliance.Common/Features/PolicyDistribution/ReconcileCampaignAudience.cs |
 | Primary handler | ReconcileCampaignAudienceHandler |
@@ -236,7 +242,8 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Target command name | AbortPolicyCampaignClosure |
 | Selected source command name | AbortPolicyCampaignClosure |
 | Name decision | The selected source name is retained. |
-| Owner | PolicyDistributionCampaign |
+| Target owner | PolicyDistributionCampaign |
+| Selected source owner | PolicyDistributionCampaign |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | abort |
 | Logical identity | CommandId; Uuid; required=true; abort receiver identity bound to the exact admitted operation and generation: exact redelivery resolves the original rejected result; an abort after a terminal outcome is a no-op |
@@ -285,7 +292,8 @@ Required tests: [Placeholder: required tests not recorded]
 | Target command name | CompletePolicyCampaignClosure |
 | Selected source command name | CompletePolicyCampaignClosure |
 | Name decision | The selected source name is retained. |
-| Owner | PolicyDistributionCampaign |
+| Target owner | PolicyDistributionCampaign |
+| Selected source owner | PolicyDistributionCampaign |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; reactor; deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result |

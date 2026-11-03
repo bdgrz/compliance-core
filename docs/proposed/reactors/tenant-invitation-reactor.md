@@ -23,11 +23,11 @@ Selected choreography rows: **4**. Required proofs, recovery, effect identity, a
 | id | S026 |
 | kind | business_receiver |
 | status | SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED |
-| sourceOwner | TenantInvitation |
+| Source owner (target name) | TenantInvitation (source: TenantInvitation) |
 | logicalPrerequisiteFacts (target names) | TenantInvitationAccepted |
 | physicalRootEvents (target names) | TenantInvitationAccepted |
 | Target command (selected source name: RegisterMember) | RegisterMember |
-| targetOwner | Member |
+| Target owner | Member |
 | targetAuthorityKind | business_aggregate |
 | emittedSemanticFacts (target names) | MemberRegistered |
 | currentRegisteredRootTypes (target names) | ActivateMembershipAfterInvitationAcceptanceReactor |
@@ -38,7 +38,6 @@ Selected choreography rows: **4**. Required proofs, recovery, effect identity, a
 | sourceOwners | TenantInvitation |
 | canonicalTargetOwner | Member |
 | recoveryContractSummary | Stable source-derived IDs; exact live-member/already-assigned conflict is explicitly accepted for the existing episode; activation uses bounded TenantActivationPolicy retries. Guest grant never broadens captured program scope. |
-| logicalPrerequisiteRuleGuard | null (recorded) |
 | logicalPrerequisiteRule | The source is the committed TenantInvitationAccepted carrying the affiliation (client_personnel, firm_staff or guest) and for a guest a retained program scope manifest and finite end date not before acceptance; the member is registered with that affiliation only if the user has no live episode and any prior episode finished cleanup. |
 | prerequisiteRuleSource | authored 2026-10-29 from reactor and target source |
 
@@ -49,11 +48,11 @@ Selected choreography rows: **4**. Required proofs, recovery, effect identity, a
 | id | S027 |
 | kind | business_receiver |
 | status | SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED |
-| sourceOwner | TenantInvitation |
+| Source owner (target name) | TenantInvitation (source: TenantInvitation) |
 | logicalPrerequisiteFacts (target names) | TenantInvitationAccepted |
 | physicalRootEvents (target names) | TenantInvitationAccepted |
 | Target command (selected source name: AssignTeamMember) | AssignTeamMember |
-| targetOwner | TeamMember |
+| Target owner | TeamMember |
 | targetAuthorityKind | business_aggregate |
 | emittedSemanticFacts (target names) | TeamMemberAssigned |
 | currentRegisteredRootTypes (target names) | ActivateMembershipAfterInvitationAcceptanceReactor |
@@ -64,7 +63,6 @@ Selected choreography rows: **4**. Required proofs, recovery, effect identity, a
 | sourceOwners | TenantInvitation |
 | canonicalTargetOwner | TeamMember |
 | recoveryContractSummary | Stable source-derived IDs; exact live-member/already-assigned conflict is explicitly accepted for the existing episode; activation uses bounded TenantActivationPolicy retries. Guest grant never broadens captured program scope. |
-| logicalPrerequisiteRuleGuard | null (recorded) |
 | logicalPrerequisiteRule | The source is the exact TenantInvitationAccepted; the receiver assigns the accepted user's member to the team for the accepted built-in role (or the Administrators team for an administrator offer) only for the membership episode the same acceptance registered. |
 | prerequisiteRuleSource | authored 2026-10-29 from reactor and target source |
 
@@ -75,11 +73,11 @@ Selected choreography rows: **4**. Required proofs, recovery, effect identity, a
 | id | S028 |
 | kind | business_receiver |
 | status | SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED |
-| sourceOwner | TenantInvitation |
+| Source owner (target name) | TenantInvitation (source: TenantInvitation) |
 | logicalPrerequisiteFacts (target names) | TenantInvitationAccepted |
 | physicalRootEvents (target names) | TenantInvitationAccepted |
 | Target command (selected source name: ProvisionGuestProgramAccess) | ProvisionGuestProgramAccess |
-| targetOwner | AccessGrant |
+| Target owner | AccessGrant |
 | targetAuthorityKind | business_aggregate |
 | emittedSemanticFacts (target names) | AccessGrantIssued |
 | currentRegisteredRootTypes (target names) | ActivateMembershipAfterInvitationAcceptanceReactor |
@@ -90,7 +88,6 @@ Selected choreography rows: **4**. Required proofs, recovery, effect identity, a
 | sourceOwners | TenantInvitation |
 | canonicalTargetOwner | AccessGrant |
 | recoveryContractSummary | Stable source-derived IDs; exact live-member/already-assigned conflict is explicitly accepted for the existing episode; activation uses bounded TenantActivationPolicy retries. Guest grant never broadens captured program scope. |
-| logicalPrerequisiteRuleGuard | null (recorded) |
 | logicalPrerequisiteRule | The accepted invitation must be a guest affiliation retaining a nonempty program manifest, inviter attribution and expiry on or after acceptance date; one guest-program grant is issued per manifest program for that user bounded by the expiry. |
 | prerequisiteRuleSource | authored 2026-10-29 from reactor and target source |
 
@@ -101,11 +98,11 @@ Selected choreography rows: **4**. Required proofs, recovery, effect identity, a
 | id | S029 |
 | kind | business_receiver |
 | status | SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED |
-| sourceOwner | TenantInvitation |
+| Source owner (target name) | TenantInvitation (source: TenantInvitation) |
 | logicalPrerequisiteFacts (target names) | TenantInvitationAccepted |
 | physicalRootEvents (target names) | TenantInvitationAccepted |
 | Target command (selected source name: ActivateTenant) | ActivateTenant |
-| targetOwner | Tenant |
+| Target owner | Tenant |
 | targetAuthorityKind | business_aggregate |
 | emittedSemanticFacts (target names) | TenantActivated |
 | currentRegisteredRootTypes (target names) | ActivateMembershipAfterInvitationAcceptanceReactor |
@@ -116,7 +113,6 @@ Selected choreography rows: **4**. Required proofs, recovery, effect identity, a
 | sourceOwners | TenantInvitation |
 | canonicalTargetOwner | Tenant |
 | recoveryContractSummary | Stable source-derived IDs; exact live-member/already-assigned conflict is explicitly accepted for the existing episode; activation uses bounded TenantActivationPolicy retries. Guest grant never broadens captured program scope. |
-| logicalPrerequisiteRuleGuard | null (recorded) |
 | logicalPrerequisiteRule | The source is TenantInvitationAccepted for an administrator offer (first administrator); activation is accepted only if the invited user is the invited first-administrator email, a registered client-personnel member, assigned to the Administrators team on the same episode, with membership visible and TenantAccess, TenantRbacManage and ProgramManage all effective, and the tenant slug confirmed. |
 | prerequisiteRuleSource | authored 2026-10-29 from reactor and target source |
 

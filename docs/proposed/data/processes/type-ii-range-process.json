@@ -17,15 +17,13 @@
       "stage": "apply",
       "receivers": [
         "ApplyTypeIIPeriodRange"
-      ],
-      "rule": null
+      ]
     },
     {
       "stage": "settle",
       "receivers": [
         "SettleTypeIIPeriodRange"
-      ],
-      "rule": null
+      ]
     }
   ],
   "abort": [

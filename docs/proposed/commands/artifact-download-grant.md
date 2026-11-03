@@ -1,5 +1,7 @@
 # ArtifactDownloadGrant commands
 
+
+
 Selected command contracts: **2**. Complete selected contracts and companion source evidence: [owner command JSON](../data/commands/artifact-download-grant.json).
 
 | Target command | Selected source name | Kind | Identity | Fields | HTTP routes |
@@ -16,7 +18,8 @@ Selected command contracts: **2**. Complete selected contracts and companion sou
 | Target command name | CancelProtectedArtifactDownloadGrant |
 | Selected source command name | CancelProtectedArtifactDownloadGrant |
 | Name decision | The selected source name is retained. |
-| Owner | ArtifactDownloadGrant |
+| Target owner | ArtifactDownloadGrant |
+| Selected source owner | ArtifactDownloadGrant |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | abort |
 | Logical identity | CommandId; Uuid; required=true; abort receiver identity bound to the exact admitted operation and generation: exact redelivery resolves the original rejected result; an abort after a terminal outcome is a no-op |
@@ -64,7 +67,8 @@ Required tests: [Placeholder: required tests not recorded]
 | Target command name | IssueProtectedArtifactDownloadGrant |
 | Selected source command name | IssueProtectedArtifactDownloadGrant |
 | Name decision | The selected source name is retained. |
-| Owner | ArtifactDownloadGrant |
+| Target owner | ArtifactDownloadGrant |
+| Selected source owner | ArtifactDownloadGrant |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; reactor; deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result |

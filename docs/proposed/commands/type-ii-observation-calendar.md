@@ -1,5 +1,7 @@
 # TypeIIObservationCalendar commands
 
+
+
 Selected command contracts: **2**. Complete selected contracts and companion source evidence: [owner command JSON](../data/commands/type-ii-observation-calendar.json).
 
 | Target command | Selected source name | Kind | Identity | Fields | HTTP routes |
@@ -16,7 +18,8 @@ Selected command contracts: **2**. Complete selected contracts and companion sou
 | Target command name | AcquireTypeIIPeriodRange |
 | Selected source command name | AcquireTypeIIPeriodRange |
 | Name decision | The selected source name is retained. |
-| Owner | TypeIIObservationCalendar |
+| Target owner | TypeIIObservationCalendar |
+| Selected source owner | TypeIIObservationCalendar |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; internal; deterministic receiver identity derived from the admitted root fact, episode and generation: exact redelivery resolves the original result, a changed admission is a new identity |
@@ -69,7 +72,8 @@ Required tests: [Placeholder: required tests not recorded]
 | Target command name | CloseTypeIIPeriodRangeReservation |
 | Selected source command name | SettleTypeIIPeriodRange |
 | Name decision | Ends the exact Type II date reservation after acceptance, replacement, or cancellation. |
-| Owner | TypeIIObservationCalendar |
+| Target owner | TypeIIObservationCalendar |
+| Selected source owner | TypeIIObservationCalendar |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | reactor |
 | Logical identity | CommandId; Uuid; required=true; internal; deterministic receiver identity derived from the admitted root fact, episode and generation: exact redelivery resolves the original result, a changed admission is a new identity |

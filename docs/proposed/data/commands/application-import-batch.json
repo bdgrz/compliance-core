@@ -45,13 +45,9 @@
           "policy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/1",
-        "line": 115,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
       "kind": "http",
+      "sourceOwner": "ApplicationImportBatch",
+      "owner": "ApplicationImportBatch",
       "sourceName": "AcceptApplicationImport",
       "targetName": "AcceptApplicationImport"
     },
@@ -104,13 +100,9 @@
           "policy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/27",
-        "line": 3242,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
       "kind": "http",
+      "sourceOwner": "ApplicationImportBatch",
+      "owner": "ApplicationImportBatch",
       "sourceName": "CancelApplicationImport",
       "targetName": "CancelApplicationImport"
     },
@@ -183,13 +175,9 @@
           "policy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/40",
-        "line": 4789,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
       "kind": "http",
+      "sourceOwner": "ApplicationImportBatch",
+      "owner": "ApplicationImportBatch",
       "sourceName": "CorrelateApplicationImportRow",
       "targetName": "RecordApplicationImportRowChoice"
     },
@@ -228,16 +216,9 @@
       "responseContract": {
         "mode": "internal",
         "responseType": "Unit",
-        "firstHttpStatus": null,
         "terminalResultType": "Unit"
       },
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/53",
-        "line": 6321,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
       "kind": "command",
       "concurrencyGuard": {
         "rule": "require_expected_revision",
@@ -249,6 +230,8 @@
         },
         "date": "2026-10-29"
       },
+      "sourceOwner": "ApplicationImportBatch",
+      "owner": "ApplicationImportBatch",
       "sourceName": "ExecuteApplicationImport",
       "targetName": "ExecuteApplicationImport"
     },
@@ -311,13 +294,9 @@
           "policy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/57",
-        "line": 6765,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
       "kind": "http",
+      "sourceOwner": "ApplicationImportBatch",
+      "owner": "ApplicationImportBatch",
       "sourceName": "FreezeApplicationImportOmissionProposal",
       "targetName": "FreezeApplicationImportOmissionProposal"
     },
@@ -374,13 +353,9 @@
           "authorizationPolicy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/196",
-        "line": 14687,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      },
       "kind": "http",
+      "sourceOwner": "ApplicationImportBatch",
+      "owner": "ApplicationImportBatch",
       "sourceName": "StageApplicationImport",
       "targetName": "StageApplicationImport"
     },
@@ -455,10 +430,7 @@
       "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
       "handler": "CommitApplicationImportBatchHandler",
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "recorded": "2026-10-29"
-      },
+      "owner": "ApplicationImportBatch",
       "sourceName": "CommitApplicationImportBatch",
       "targetName": "CommitApplicationImportBatch"
     },
@@ -533,10 +505,7 @@
       "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
       "handler": "CompleteApplicationImportCancellationHandler",
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "recorded": "2026-10-29"
-      },
+      "owner": "ApplicationImportBatch",
       "sourceName": "CompleteApplicationImportCancellation",
       "targetName": "CompleteApplicationImportCancellation"
     }
@@ -643,8 +612,7 @@
       "expectedRevisionScope": {
         "field": "ExpectedRevision",
         "owner": "ApplicationImportBatch",
-        "counter": "logical ResourceRevision of this owner",
-        "nullableInternalRule": null
+        "counter": "logical ResourceRevision of this owner"
       }
     },
     {
@@ -752,8 +720,7 @@
       "expectedRevisionScope": {
         "field": "ExpectedRevision",
         "owner": "ApplicationImportBatch",
-        "counter": "logical ResourceRevision of this owner",
-        "nullableInternalRule": null
+        "counter": "logical ResourceRevision of this owner"
       }
     },
     {
@@ -897,8 +864,7 @@
       "expectedRevisionScope": {
         "field": "ExpectedRevision",
         "owner": "ApplicationImportBatch",
-        "counter": "logical ResourceRevision of this owner",
-        "nullableInternalRule": null
+        "counter": "logical ResourceRevision of this owner"
       }
     },
     {
@@ -980,11 +946,9 @@
       "responseContract": {
         "mode": "internal",
         "responseType": "Unit",
-        "firstHttpStatus": null,
         "terminalResultType": "Unit"
       },
       "expectedRevisionScope": {
-        "field": null,
         "owner": "ApplicationImportBatch",
         "counter": "No primary caller ResourceRevision. Enforce required authored source/epoch/version tokens, immutable creation identity or trusted proof/generation as declared; append uses physical OCC."
       }
@@ -1101,8 +1065,7 @@
       "expectedRevisionScope": {
         "field": "ExpectedRevision",
         "owner": "ApplicationImportBatch",
-        "counter": "logical ResourceRevision of this owner",
-        "nullableInternalRule": null
+        "counter": "logical ResourceRevision of this owner"
       }
     }
   ]

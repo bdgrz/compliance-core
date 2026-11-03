@@ -8,14 +8,7 @@
   "invariant": "Technical delivery process with one immutable effect payload and multiple attempt records. Attempt identity is state, never a new unconstrained process owner.",
   "boundaryDecision": "selected_split",
   "mustPreserve": "Retry same invitation ID with exact terms returns original acceptance; changed terms conflict. New invitation generation is independent. Delivery retries preserve exact token and accepted at-least-once policy.",
-  "sources": [
-    {
-      "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
-      "jsonPointer": "/splitOwners/28/targetOwners/2",
-      "line": 3012,
-      "sha256": "d349d94b7c43f4d82020ecf36bdacf1aff98bc6498e14993582f1c3164b21f19"
-    }
-  ],
+  "sources": [],
   "baselineSourcePath": "src/Compliance.Core/Features/Tenants/TenantInvitation.cs",
   "baselineEvents": [],
   "preliminaryNewEvents": [],
@@ -25,5 +18,7 @@
   "classification": "technical_process_or_storage_owner",
   "businessAggregate": false,
   "status": "SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED",
-  "logicalPhysicalRule": "Logical technical responsibility is separate from physical storage/owner. Existing native operational journals may remain where required for exact recovery; this inventory does not require conversion to KV/CAS or count them as business authority."
+  "logicalPhysicalRule": "Logical technical responsibility is separate from physical storage/owner. Existing native operational journals may remain where required for exact recovery; this inventory does not require conversion to KV/CAS or count them as business authority.",
+  "sourceOwner": "TenantInvitationDeliveryProcess",
+  "selectedCommandContracts": []
 }

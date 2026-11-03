@@ -1,5 +1,7 @@
 # AuditPopulation commands
 
+
+
 Selected command contracts: **8**. Complete selected contracts and companion source evidence: [owner command JSON](../data/commands/audit-population.json).
 
 | Target command | Selected source name | Kind | Identity | Fields | HTTP routes |
@@ -22,7 +24,8 @@ Selected command contracts: **8**. Complete selected contracts and companion sou
 | Target command name | AmendAuditPopulation |
 | Selected source command name | AmendAuditPopulation |
 | Name decision | The selected source name is retained. |
-| Owner | AuditPopulation |
+| Target owner | AuditPopulation |
+| Selected source owner | AuditPopulation |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | command |
 | Logical identity | CommandId; Uuid; required=true; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
@@ -73,7 +76,8 @@ Required tests: [Placeholder: required tests not recorded]
 | Target command name | ClassifyAuditPopulationRow |
 | Selected source command name | ClassifyAuditPopulationRow |
 | Name decision | The selected source name is retained. |
-| Owner | AuditPopulation |
+| Target owner | AuditPopulation |
+| Selected source owner | AuditPopulation |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | command |
 | Logical identity | CommandId; Uuid; required=true; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
@@ -124,7 +128,8 @@ Required tests: [Placeholder: required tests not recorded]
 | Target command name | DefineAuditPopulation |
 | Selected source command name | DefineAuditPopulation |
 | Name decision | The selected source name is retained. |
-| Owner | AuditPopulation |
+| Target owner | AuditPopulation |
+| Selected source owner | AuditPopulation |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | creation |
 | Logical identity | DefinitionId; Uuid; required=true; caller-supplied immutable creation identity: an exact retry with the same id and authored intent returns the original result; the same id with changed intent is refused; a different id is a different record |
@@ -173,7 +178,8 @@ Required tests: [Placeholder: required tests not recorded]
 | Target command name | FreezeAuditPopulation |
 | Selected source command name | FreezeAuditPopulation |
 | Name decision | The selected source name is retained. |
-| Owner | AuditPopulation |
+| Target owner | AuditPopulation |
+| Selected source owner | AuditPopulation |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | command |
 | Logical identity | CommandId; Uuid; required=true; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
@@ -222,7 +228,8 @@ Required tests: [Placeholder: required tests not recorded]
 | Target command name | GenerateAuditPopulation |
 | Selected source command name | GenerateAuditPopulation |
 | Name decision | The selected source name is retained. |
-| Owner | AuditPopulation |
+| Target owner | AuditPopulation |
+| Selected source owner | AuditPopulation |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | creation |
 | Logical identity | GenerationKey; Uuid; required=true; caller-supplied immutable creation identity: an exact retry with the same id and authored intent returns the original result; the same id with changed intent is refused; a different id is a different record |
@@ -270,7 +277,8 @@ Required tests: [Placeholder: required tests not recorded]
 | Target command name | ReconcileAuditPopulation |
 | Selected source command name | ReconcileAuditPopulation |
 | Name decision | The selected source name is retained. |
-| Owner | AuditPopulation |
+| Target owner | AuditPopulation |
+| Selected source owner | AuditPopulation |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | command |
 | Logical identity | CommandId; Uuid; required=true; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
@@ -319,7 +327,8 @@ Required tests: [Placeholder: required tests not recorded]
 | Target command name | RecordAuditPopulationFacts |
 | Selected source command name | RecordAuditPopulationFacts |
 | Name decision | The selected source name is retained. |
-| Owner | AuditPopulation |
+| Target owner | AuditPopulation |
+| Selected source owner | AuditPopulation |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | command |
 | Logical identity | CommandId; Uuid; required=true; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
@@ -369,7 +378,8 @@ Required tests: [Placeholder: required tests not recorded]
 | Target command name | ReviseAuditPopulationDefinition |
 | Selected source command name | ReviseAuditPopulationDefinition |
 | Name decision | The selected source name is retained. |
-| Owner | AuditPopulation |
+| Target owner | AuditPopulation |
+| Selected source owner | AuditPopulation |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | command |
 | Logical identity | CommandId; Uuid; required=true; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |

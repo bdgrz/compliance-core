@@ -28,7 +28,6 @@
         "discriminator": "bdgrz.access-review-decision-batch.access-review-decision-batch-accepted",
         "discriminatorVersion": 1,
         "owner": "AccessReviewDecisionBatch",
-        "existingContract": null,
         "status": "selected target schema; implementation pending",
         "reason": "typed reactor receiver accepted business fact",
         "fields": [
@@ -221,7 +220,6 @@
         "discriminator": "bdgrz.access-review-decision-batch.access-review-decision-batch-canceled",
         "discriminatorVersion": 1,
         "owner": "AccessReviewDecisionBatch",
-        "existingContract": null,
         "status": "selected target schema; implementation pending",
         "reason": "typed reactor receiver accepted business fact",
         "fields": [
@@ -414,7 +412,6 @@
         "discriminator": "bdgrz.access-review-decision-batch.access-review-decision-batch-cancellation-accepted",
         "discriminatorVersion": 1,
         "owner": "AccessReviewDecisionBatch",
-        "existingContract": null,
         "status": "selected target schema; implementation pending",
         "reason": "source admission contract",
         "fields": [
@@ -607,7 +604,6 @@
         "discriminator": "bdgrz.access-review-decision-batch.access-review-decision-batch-published",
         "discriminatorVersion": 1,
         "owner": "AccessReviewDecisionBatch",
-        "existingContract": null,
         "status": "selected target schema; implementation pending",
         "reason": "typed reactor receiver accepted business fact",
         "fields": [

@@ -23,15 +23,13 @@
       "stage": "apply",
       "receivers": [
         "ApplyProfessionalDutyChange"
-      ],
-      "rule": null
+      ]
     },
     {
       "stage": "settle",
       "receivers": [
         "SettleFirmStaffProfessionalDutyUse"
-      ],
-      "rule": null
+      ]
     }
   ],
   "abort": [

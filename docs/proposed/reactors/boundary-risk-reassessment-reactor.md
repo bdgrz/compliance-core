@@ -20,11 +20,11 @@ Selected choreography rows: **1**. Required proofs, recovery, effect identity, a
 | id | S037 |
 | kind | business_receiver |
 | status | SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED |
-| sourceOwner | SystemBoundary |
+| Source owner (target name) | SystemBoundary (source: SystemBoundary) |
 | logicalPrerequisiteFacts (target names) | BoundaryApproved |
 | physicalRootEvents (target names) | BoundaryApproved |
 | Target command (selected source name: RaiseRiskReassessmentTriggers) | RaiseRiskReassessmentTriggers |
-| targetOwner | RiskGovernance |
+| Target owner | RiskGovernance |
 | targetAuthorityKind | business_aggregate |
 | emittedSemanticFacts (target names) | RiskReassessmentTriggered |
 | currentRegisteredRootTypes (target names) | BoundaryRiskReassessmentReactor |
@@ -35,7 +35,6 @@ Selected choreography rows: **1**. Required proofs, recovery, effect identity, a
 | sourceOwners | SystemBoundary |
 | canonicalTargetOwner | RiskGovernance |
 | recoveryContractSummary | At-least-once checkpoint replay resends the same source-derived command. Missing dependencies remain retryable; actual terminal/superseded episodes are skipped only with the owning proof. |
-| logicalPrerequisiteRuleGuard | null (recorded) |
 | logicalPrerequisiteRule | The source is BoundaryApproved for a successor boundary version (not the first approval of the boundary); a boundary-changed reassessment trigger is raised for each assessed risk of the program, and only if no trigger with the same deterministic id exists. |
 | prerequisiteRuleSource | authored 2026-10-29 from reactor and target source |
 

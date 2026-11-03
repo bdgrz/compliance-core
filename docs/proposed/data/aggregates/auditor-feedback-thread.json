@@ -8,14 +8,7 @@
   "invariant": "Independent comments and responses with stable command identity.",
   "boundaryDecision": "selected_split",
   "mustPreserve": "Admission cannot race resolution; exact response selections and dispositions are immutable proofs.",
-  "sources": [
-    {
-      "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
-      "jsonPointer": "/splitOwners/10/targetOwners/1",
-      "line": 1252,
-      "sha256": "d349d94b7c43f4d82020ecf36bdacf1aff98bc6498e14993582f1c3164b21f19"
-    }
-  ],
+  "sources": [],
   "baselineSourcePath": "src/Compliance.Core/Features/AuditorRequests/AuditorRequest.cs",
   "baselineEvents": [
     "AuditorRequestCommentRecorded"
@@ -81,7 +74,7 @@
         "recorded": "2026-10-29"
       },
       "reactor": "AuditorCommentMaterializationReactor",
-      "sourceOwner": "AuditorRequest",
+      "sourceOwner": "AuditorFeedbackThread",
       "sourceEvents": [
         "AuditorCommentAdmitted"
       ],
@@ -90,7 +83,8 @@
         "AuditorRequestCommentRecorded"
       ],
       "effectKind": "materialize_auditor_comment",
-      "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine."
+      "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
+      "owner": "AuditorFeedbackThread"
     }
   ],
   "eventAuthority": "selected_final_event_catalog",
@@ -98,13 +92,7 @@
     {
       "event": "AuditorRequestCommentRecorded",
       "discriminator": "bdgrz.auditorrequests.auditor-request-comment-recorded",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/85",
-        "line": 10416,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     }
   ],
   "choreography": [
@@ -112,13 +100,7 @@
       "reactor": "AuditorCommentMaterializationReactor",
       "sourceOwner": "AuditorRequest",
       "targetOwner": "AuditorFeedbackThread",
-      "command": "MaterializeAuditorComment",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "jsonPointer": "/reactors/34",
-        "line": 2885,
-        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
-      }
+      "command": "MaterializeAuditorComment"
     }
   ],
   "status": "SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED",
@@ -135,5 +117,6 @@
       "previous": "(requestId, threadId)"
     }
   ],
-  "commandNote": "Admission sits on AuditorRequest; this owner is written only by the process child materialization."
+  "commandNote": "Admission sits on AuditorRequest; this owner is written only by the process child materialization.",
+  "sourceOwner": "AuditorFeedbackThread"
 }

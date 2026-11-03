@@ -126,7 +126,7 @@ BulkAccessDecisionIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T010](../reactors/access-review-bulk-admission-reactor.md#t010) | emitted semantic fact | AccessReviewDecisionBatch | ApplyAccessReviewItemDecision | AccessReviewItem |
+| [T010](../reactors/publish-approved-access-review-decision-reactor.md#t010) | emitted semantic fact | AccessReviewDecisionBatch | ApplyAccessReviewItemDecision | AccessReviewItem |
 
 ### AccessRemediationChangeRecorded
 
@@ -357,7 +357,6 @@ BulkAccessDecisionIntent
 | Schema discriminator | bdgrz.access-review-item.access-review-item-campaign-completion-use-authorized |
 | Schema discriminatorVersion | 1 |
 | Schema owner | AccessReviewItem |
-| Schema existingContract | null (recorded) |
 | Schema status | selected target schema; implementation pending |
 | Schema reason | typed reactor receiver accepted business fact |
 | Schema changes | None listed |
@@ -450,7 +449,6 @@ SourceUseAuthorizationIntent
 | Schema discriminator | bdgrz.access-review-item.access-review-item-campaign-completion-use-settled |
 | Schema discriminatorVersion | 1 |
 | Schema owner | AccessReviewItem |
-| Schema existingContract | null (recorded) |
 | Schema status | selected target schema; implementation pending |
 | Schema reason | typed reactor receiver accepted business fact |
 | Schema changes | None listed |
@@ -543,7 +541,6 @@ SourceUseAuthorizationIntent
 | Schema discriminator | bdgrz.access-review-item.access-review-item-decision-authorized |
 | Schema discriminatorVersion | 1 |
 | Schema owner | AccessReviewItem |
-| Schema existingContract | null (recorded) |
 | Schema status | selected target schema; implementation pending |
 | Schema reason | typed reactor receiver accepted business fact |
 | Schema changes | None listed |
@@ -612,7 +609,7 @@ BulkAccessDecisionIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T009](../reactors/access-review-bulk-admission-reactor.md#t009) | emitted semantic fact | AccessReviewDecisionBatch | ReserveAccessReviewItemDecision | AccessReviewItem |
+| [T009](../reactors/publish-approved-access-review-decision-reactor.md#t009) | emitted semantic fact | AccessReviewDecisionBatch | ReserveAccessReviewItemDecision | AccessReviewItem |
 
 ### AccessReviewItemDecisionCanceled
 
@@ -642,7 +639,6 @@ BulkAccessDecisionIntent
 | Schema discriminator | bdgrz.access-review-item.access-review-item-decision-canceled |
 | Schema discriminatorVersion | 1 |
 | Schema owner | AccessReviewItem |
-| Schema existingContract | null (recorded) |
 | Schema status | selected target schema; implementation pending |
 | Schema reason | typed reactor receiver accepted business fact |
 | Schema changes | None listed |
@@ -711,7 +707,7 @@ BulkAccessDecisionIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T012](../reactors/access-review-bulk-cancellation-reactor.md#t012) | emitted semantic fact | AccessReviewDecisionBatch | CancelAccessReviewItemDecision | AccessReviewItem |
+| [T012](../reactors/cancel-unpublished-access-review-decisions-reactor.md#t012) | emitted semantic fact | AccessReviewDecisionBatch | CancelAccessReviewItemDecision | AccessReviewItem |
 
 ### AccessReviewItemDecisionAuthorizationClosed
 
@@ -741,7 +737,6 @@ BulkAccessDecisionIntent
 | Schema discriminator | bdgrz.access-review-item.access-review-item-decision-settled |
 | Schema discriminatorVersion | 1 |
 | Schema owner | AccessReviewItem |
-| Schema existingContract | null (recorded) |
 | Schema status | selected target schema; implementation pending |
 | Schema reason | typed reactor receiver accepted business fact |
 | Schema changes | None listed |
@@ -810,7 +805,7 @@ BulkAccessDecisionIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T080](../reactors/access-review-bulk-admission-reactor.md#t080) | emitted semantic fact | AccessReviewDecisionBatch | CloseAccessReviewItemDecisionAuthorization | AccessReviewItem |
+| [T080](../reactors/publish-approved-access-review-decision-reactor.md#t080) | emitted semantic fact | AccessReviewDecisionBatch | CloseAccessReviewItemDecisionAuthorization | AccessReviewItem |
 
 ### AccessReviewItemOpened
 
@@ -840,7 +835,6 @@ BulkAccessDecisionIntent
 | Schema discriminator | bdgrz.access-review-item.access-review-item-opened |
 | Schema discriminatorVersion | 1 |
 | Schema owner | AccessReviewItem |
-| Schema existingContract | null (recorded) |
 | Schema status | selected target schema; implementation pending |
 | Schema reason | typed reactor receiver accepted business fact |
 | Schema changes | None listed |
@@ -909,7 +903,7 @@ AccessReviewItemCreationIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T008](../reactors/access-review-launch-fan-out-reactor.md#t008) | emitted semantic fact | AccessReviewCampaign | OpenAccessReviewItem | AccessReviewItem |
+| [T008](../reactors/open-access-review-work-reactor.md#t008) | emitted semantic fact | AccessReviewCampaign | OpenAccessReviewItem | AccessReviewItem |
 
 ### AccessReviewResponsibilityReassigned
 

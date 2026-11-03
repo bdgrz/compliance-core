@@ -80,7 +80,6 @@
       ],
       "canonicalTargetOwner": "ServiceEngagementIndependence",
       "recoveryContractSummary": "At-least-once checkpoint replay resends the same source-derived command. Missing dependencies remain retryable; actual terminal/superseded episodes are skipped only with the owning proof.",
-      "logicalPrerequisiteRuleGuard": null,
       "logicalPrerequisiteRule": "The source is a FirmStaffChangeRecorded with ChangeKind status, verified against its authoritative record history; for every active tenant and every accepted engagement acceptance/assignment pair naming that staff member whose recorded directory staff revision is older than the change, a denial-only receipt is recorded against the exact historical acceptance and change pair. A receipt never reactivates an acceptance.",
       "prerequisiteRuleSource": "authored 2026-10-29 from reactor and target source"
     }

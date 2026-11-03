@@ -28,7 +28,6 @@
       "currentRegisteredRootTypes": [
         "ProviderChangeAcceptedReactor"
       ],
-      "plannedRootRole": null,
       "processes": [
         "ProviderNameChangeProcess"
       ],
@@ -136,7 +135,6 @@
       "currentRegisteredRootTypes": [
         "ProviderChangeAcceptedReactor"
       ],
-      "plannedRootRole": null,
       "processes": [
         "ProviderNameChangeProcess"
       ],
@@ -245,7 +243,6 @@
       "currentRegisteredRootTypes": [
         "ProviderChangeAcceptedReactor"
       ],
-      "plannedRootRole": null,
       "processes": [
         "ProviderNameChangeProcess"
       ],

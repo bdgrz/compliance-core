@@ -22,15 +22,13 @@
         ],
         "schemaStatus": "selected_complete_schema",
         "sourceStatus": "planned_no_source_type",
-        "emissionKindNote": "Owner-held reservation or its settlement: authoritative for the owner invariant (the reducer must refuse conflicting commands while held) but not a business decision in its own right. Adopted 2026-10-29 (decision EV-D06).",
-        "meaning": null
+        "emissionKindNote": "Owner-held reservation or its settlement: authoritative for the owner invariant (the reducer must refuse conflicting commands while held) but not a business decision in its own right. Adopted 2026-10-29 (decision EV-D06)."
       },
       "schema": {
         "event": "ArtifactHandlingDownloadUseAuthorized",
         "discriminator": "bdgrz.evidence-handling-policy.artifact-handling-download-use-authorized",
         "discriminatorVersion": 1,
         "owner": "EvidenceHandlingPolicy",
-        "existingContract": null,
         "status": "selected target schema; implementation pending",
         "reason": "typed reactor receiver accepted business fact",
         "fields": [
@@ -163,8 +161,8 @@
       },
       "sourceName": "ArtifactHandlingDownloadUseAuthorized",
       "targetName": "ArtifactHandlingDownloadAuthorized",
-      "nameDecision": "Authorization is already the completed fact; Use adds no stakeholder meaning.",
-      "targetMeaning": null
+      "nameDecision": "Names the policy’s completed approval for one artifact download.",
+      "targetMeaning": "The evidence handling policy allowed one download under the artifact’s current classification and handling rules."
     },
     {
       "canonical": {
@@ -187,15 +185,13 @@
         ],
         "schemaStatus": "selected_complete_schema",
         "sourceStatus": "planned_no_source_type",
-        "emissionKindNote": "Owner-held reservation or its settlement: authoritative for the owner invariant (the reducer must refuse conflicting commands while held) but not a business decision in its own right. Adopted 2026-10-29 (decision EV-D06).",
-        "meaning": null
+        "emissionKindNote": "Owner-held reservation or its settlement: authoritative for the owner invariant (the reducer must refuse conflicting commands while held) but not a business decision in its own right. Adopted 2026-10-29 (decision EV-D06)."
       },
       "schema": {
         "event": "ArtifactHandlingDownloadUseSettled",
         "discriminator": "bdgrz.evidence-handling-policy.artifact-handling-download-use-settled",
         "discriminatorVersion": 1,
         "owner": "EvidenceHandlingPolicy",
-        "existingContract": null,
         "status": "selected target schema; implementation pending",
         "reason": "typed reactor receiver accepted business fact",
         "fields": [
@@ -328,8 +324,8 @@
       },
       "sourceName": "ArtifactHandlingDownloadUseSettled",
       "targetName": "ArtifactHandlingDownloadAuthorizationClosed",
-      "nameDecision": "The exact authorization ended; the recorded outcome still distinguishes use, cancellation, or a late fence.",
-      "targetMeaning": null
+      "nameDecision": "Names the completed closure of the policy’s exact download authorization.",
+      "targetMeaning": "The evidence handling policy closed permission for one exact download after the file was issued or the request was canceled."
     },
     {
       "canonical": {

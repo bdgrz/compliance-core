@@ -58,7 +58,7 @@
 ## Evidence and complete record
 
 - Baseline source: [Placeholder: source file is not present in this checkout]
-- Aggregate review: [tenant-slug-review-2026-10-29.md](../../product/definitive-aggregate-choreography/tenant-slug-review-2026-10-29.md)
+- Aggregate review: tenant-slug-review-2026-10-29.md
 - Full selected record: [JSON](../data/aggregates/tenant-slug.json)
 
 > Target definition is separate from runtime qualification. Implementation status recorded by the source: `SEPARATE_VERIFICATION_REQUIRED_IMPLEMENTATION_HALTED`.

@@ -49,12 +49,6 @@
         "terminalResultType": "Unit"
       },
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/10",
-        "line": 786,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      },
       "kind": "command",
       "concurrencyGuard": {
         "rule": "require_expected_revision",
@@ -66,6 +60,8 @@
         },
         "date": "2026-10-29"
       },
+      "sourceOwner": "ArtifactDisposition",
+      "owner": "ArtifactDisposition",
       "sourceName": "ApproveArtifactDisposition",
       "targetName": "ApproveArtifactDisposition"
     },
@@ -106,18 +102,14 @@
         "terminalResultType": "Unit"
       },
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/72",
-        "line": 5422,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      },
       "kind": "command",
       "concurrencyGuard": {
         "rule": "terminal_idempotent_no_guard",
         "jev": 0.8,
         "date": "2026-10-29"
       },
+      "sourceOwner": "ArtifactDisposition",
+      "owner": "ArtifactDisposition",
       "sourceName": "ExecuteArtifactDisposition",
       "targetName": "ExecuteArtifactDisposition"
     },
@@ -188,13 +180,9 @@
         "terminalResultType": "Unit"
       },
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/107",
-        "line": 7952,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      },
       "kind": "command",
+      "sourceOwner": "ArtifactDisposition",
+      "owner": "ArtifactDisposition",
       "sourceName": "RecordArtifactDispositionResult",
       "targetName": "RecordArtifactDispositionResult"
     },
@@ -244,10 +232,8 @@
         }
       ],
       "http": [],
-      "source": {
-        "path": "docs/product/definitive-aggregate-choreography/choreography.json",
-        "recorded": "2026-10-29"
-      },
+      "sourceOwner": "ArtifactDisposition",
+      "owner": "ArtifactDisposition",
       "sourceName": "FenceArtifactDispositionForHold",
       "targetName": "StopArtifactDisposalForHold"
     }

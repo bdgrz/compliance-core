@@ -148,7 +148,7 @@ Canonical events: **5**. Complete canonical event and available schema records: 
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [S021](../reactors/system-description-decision-reactor.md#s021) | emitted semantic fact | SystemDescription | RecordComplianceIncidentSystemDescriptionDecision | ComplianceIncident |
+| [S021](../reactors/update-system-description-after-significant-change-reactor.md#s021) | emitted semantic fact | SystemDescription | RecordComplianceIncidentSystemDescriptionDecision | ComplianceIncident |
 
 ### IncidentResolutionRecorded
 

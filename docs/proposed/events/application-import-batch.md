@@ -128,9 +128,9 @@ ImportFrozenPlanIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T019](../reactors/import-cancellation-reactor.md#t019) | emitted semantic fact | ApplicationImportBatch | CompleteApplicationImportCancellation | ApplicationImportBatch |
-| [T020](../reactors/import-source-admission-reactor.md#t020) | logical prerequisite | ApplicationImportBatch | ReleaseApplicationImportSource | ApplicationImportSource |
-| [T021](../reactors/import-source-admission-reactor.md#t021) | logical prerequisite | ApplicationImportBatch | ReleaseApplicationImportTarget | DeclaredApplication |
+| [T019](../reactors/cancel-application-import-reactor.md#t019) | emitted semantic fact | ApplicationImportBatch | CompleteApplicationImportCancellation | ApplicationImportBatch |
+| [T020](../reactors/apply-accepted-application-import-reactor.md#t020) | logical prerequisite | ApplicationImportBatch | ReleaseApplicationImportSource | ApplicationImportSource |
+| [T021](../reactors/apply-accepted-application-import-reactor.md#t021) | logical prerequisite | ApplicationImportBatch | ReleaseApplicationImportTarget | DeclaredApplication |
 
 ### ApplicationImportCancellationAccepted
 
@@ -160,7 +160,6 @@ ImportFrozenPlanIntent
 | Schema discriminator | bdgrz.application-import-batch.application-import-cancellation-accepted |
 | Schema discriminatorVersion | 1 |
 | Schema owner | ApplicationImportBatch |
-| Schema existingContract | null (recorded) |
 | Schema status | selected target schema; implementation pending |
 | Schema reason | source command accepted result |
 | Schema changes | None listed |
@@ -241,11 +240,11 @@ ImportFrozenPlanIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T018](../reactors/import-cancellation-reactor.md#t018) | physical root, logical prerequisite | ApplicationImportBatch | BlockCanceledApplicationImportChanges | DeclaredApplication |
-| [T019](../reactors/import-cancellation-reactor.md#t019) | physical root, logical prerequisite | ApplicationImportBatch | CompleteApplicationImportCancellation | ApplicationImportBatch |
-| [T020](../reactors/import-source-admission-reactor.md#t020) | physical root | ApplicationImportBatch | ReleaseApplicationImportSource | ApplicationImportSource |
-| [T021](../reactors/import-source-admission-reactor.md#t021) | physical root | ApplicationImportBatch | ReleaseApplicationImportTarget | DeclaredApplication |
-| [A013](../reactors/unassigned-architecture-rows.md#a013) | emitted semantic fact | ApplicationImportBatch | CancelApplicationImport | ApplicationImportBatch |
+| [T018](../reactors/cancel-application-import-reactor.md#t018) | physical root, logical prerequisite | ApplicationImportBatch | BlockCanceledApplicationImportChanges | DeclaredApplication |
+| [T019](../reactors/cancel-application-import-reactor.md#t019) | physical root, logical prerequisite | ApplicationImportBatch | CompleteApplicationImportCancellation | ApplicationImportBatch |
+| [T020](../reactors/apply-accepted-application-import-reactor.md#t020) | physical root | ApplicationImportBatch | ReleaseApplicationImportSource | ApplicationImportSource |
+| [T021](../reactors/apply-accepted-application-import-reactor.md#t021) | physical root | ApplicationImportBatch | ReleaseApplicationImportTarget | DeclaredApplication |
+| [A013](../reactors/unassigned-domain-choreography.md#a013) | emitted semantic fact | ApplicationImportBatch | CancelApplicationImport | ApplicationImportBatch |
 
 ### ApplicationImportCommitted
 
@@ -371,9 +370,9 @@ ImportFrozenPlanIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T017](../reactors/import-source-admission-reactor.md#t017) | emitted semantic fact | ApplicationImportBatch | CommitApplicationImportBatch | ApplicationImportBatch |
-| [T020](../reactors/import-source-admission-reactor.md#t020) | logical prerequisite | ApplicationImportBatch | ReleaseApplicationImportSource | ApplicationImportSource |
-| [T021](../reactors/import-source-admission-reactor.md#t021) | logical prerequisite | ApplicationImportBatch | ReleaseApplicationImportTarget | DeclaredApplication |
+| [T017](../reactors/apply-accepted-application-import-reactor.md#t017) | emitted semantic fact | ApplicationImportBatch | CommitApplicationImportBatch | ApplicationImportBatch |
+| [T020](../reactors/apply-accepted-application-import-reactor.md#t020) | logical prerequisite | ApplicationImportBatch | ReleaseApplicationImportSource | ApplicationImportSource |
+| [T021](../reactors/apply-accepted-application-import-reactor.md#t021) | logical prerequisite | ApplicationImportBatch | ReleaseApplicationImportTarget | DeclaredApplication |
 
 ### ApplicationImportExecutionAuthorized
 
@@ -403,7 +402,6 @@ ImportFrozenPlanIntent
 | Schema discriminator | bdgrz.application-import-batch.application-import-execution-authorized |
 | Schema discriminatorVersion | 1 |
 | Schema owner | ApplicationImportBatch |
-| Schema existingContract | null (recorded) |
 | Schema status | selected target schema; implementation pending |
 | Schema reason | source command accepted result |
 | Schema changes | None listed |
@@ -484,10 +482,10 @@ ImportFrozenPlanIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T015](../reactors/import-source-admission-reactor.md#t015) | logical prerequisite | ApplicationImportBatch | ReserveApplicationImportTarget | DeclaredApplication |
-| [T016](../reactors/import-source-admission-reactor.md#t016) | logical prerequisite | ApplicationImportBatch | ApplyApplicationImportChange | DeclaredApplication |
-| [T017](../reactors/import-source-admission-reactor.md#t017) | logical prerequisite | ApplicationImportBatch | CommitApplicationImportBatch | ApplicationImportBatch |
-| [N000](../reactors/import-source-admission-reactor.md#n000) | emitted semantic fact | ApplicationImportBatch | ExecuteApplicationImport | ApplicationImportBatch |
+| [T015](../reactors/apply-accepted-application-import-reactor.md#t015) | logical prerequisite | ApplicationImportBatch | ReserveApplicationImportTarget | DeclaredApplication |
+| [T016](../reactors/apply-accepted-application-import-reactor.md#t016) | logical prerequisite | ApplicationImportBatch | ApplyApplicationImportChange | DeclaredApplication |
+| [T017](../reactors/apply-accepted-application-import-reactor.md#t017) | logical prerequisite | ApplicationImportBatch | CommitApplicationImportBatch | ApplicationImportBatch |
+| [N000](../reactors/apply-accepted-application-import-reactor.md#n000) | emitted semantic fact | ApplicationImportBatch | ExecuteApplicationImport | ApplicationImportBatch |
 
 ### ApplicationImportFailed
 
@@ -550,8 +548,8 @@ ImportFrozenPlanIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T020](../reactors/import-source-admission-reactor.md#t020) | logical prerequisite | ApplicationImportBatch | ReleaseApplicationImportSource | ApplicationImportSource |
-| [T021](../reactors/import-source-admission-reactor.md#t021) | logical prerequisite | ApplicationImportBatch | ReleaseApplicationImportTarget | DeclaredApplication |
+| [T020](../reactors/apply-accepted-application-import-reactor.md#t020) | logical prerequisite | ApplicationImportBatch | ReleaseApplicationImportSource | ApplicationImportSource |
+| [T021](../reactors/apply-accepted-application-import-reactor.md#t021) | logical prerequisite | ApplicationImportBatch | ReleaseApplicationImportTarget | DeclaredApplication |
 
 ### ApplicationImportPlanAccepted
 
@@ -666,14 +664,14 @@ ImportFrozenPlanIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T014](../reactors/import-source-admission-reactor.md#t014) | physical root, logical prerequisite | ApplicationImportBatch | ClaimApplicationImportSource | ApplicationImportSource |
-| [T015](../reactors/import-source-admission-reactor.md#t015) | physical root | ApplicationImportBatch | ReserveApplicationImportTarget | DeclaredApplication |
-| [T016](../reactors/import-source-admission-reactor.md#t016) | physical root | ApplicationImportBatch | ApplyApplicationImportChange | DeclaredApplication |
-| [T017](../reactors/import-source-admission-reactor.md#t017) | physical root | ApplicationImportBatch | CommitApplicationImportBatch | ApplicationImportBatch |
-| [T020](../reactors/import-source-admission-reactor.md#t020) | physical root | ApplicationImportBatch | ReleaseApplicationImportSource | ApplicationImportSource |
-| [T021](../reactors/import-source-admission-reactor.md#t021) | physical root | ApplicationImportBatch | ReleaseApplicationImportTarget | DeclaredApplication |
-| [N000](../reactors/import-source-admission-reactor.md#n000) | physical root, logical prerequisite | ApplicationImportBatch | ExecuteApplicationImport | ApplicationImportBatch |
-| [A013](../reactors/unassigned-architecture-rows.md#a013) | physical root, logical prerequisite | ApplicationImportBatch | CancelApplicationImport | ApplicationImportBatch |
+| [T014](../reactors/apply-accepted-application-import-reactor.md#t014) | physical root, logical prerequisite | ApplicationImportBatch | ClaimApplicationImportSource | ApplicationImportSource |
+| [T015](../reactors/apply-accepted-application-import-reactor.md#t015) | physical root | ApplicationImportBatch | ReserveApplicationImportTarget | DeclaredApplication |
+| [T016](../reactors/apply-accepted-application-import-reactor.md#t016) | physical root | ApplicationImportBatch | ApplyApplicationImportChange | DeclaredApplication |
+| [T017](../reactors/apply-accepted-application-import-reactor.md#t017) | physical root | ApplicationImportBatch | CommitApplicationImportBatch | ApplicationImportBatch |
+| [T020](../reactors/apply-accepted-application-import-reactor.md#t020) | physical root | ApplicationImportBatch | ReleaseApplicationImportSource | ApplicationImportSource |
+| [T021](../reactors/apply-accepted-application-import-reactor.md#t021) | physical root | ApplicationImportBatch | ReleaseApplicationImportTarget | DeclaredApplication |
+| [N000](../reactors/apply-accepted-application-import-reactor.md#n000) | physical root, logical prerequisite | ApplicationImportBatch | ExecuteApplicationImport | ApplicationImportBatch |
+| [A013](../reactors/unassigned-domain-choreography.md#a013) | physical root, logical prerequisite | ApplicationImportBatch | CancelApplicationImport | ApplicationImportBatch |
 
 ### ApplicationImportRetirementProposalFinalized
 

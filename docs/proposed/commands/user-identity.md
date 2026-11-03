@@ -1,5 +1,7 @@
 # UserIdentity commands
 
+
+
 Selected command contracts: **7**. Complete selected contracts and companion source evidence: [owner command JSON](../data/commands/user-identity.json).
 
 | Target command | Selected source name | Kind | Identity | Fields | HTTP routes |
@@ -21,7 +23,8 @@ Selected command contracts: **7**. Complete selected contracts and companion sou
 | Target command name | ContinueSignInWithExternalProvider |
 | Selected source command name | ContinueWithOidcProvider |
 | Name decision | Completes sign-in with an identity verified by an external sign-in provider. |
-| Owner | UserIdentity |
+| Target owner | UserIdentity |
+| Selected source owner | UserIdentity |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | http |
 | Logical identity | none (no fields; provider and subject come from the authenticated OIDC principal); emits UserIdentityRegistered or UserIdentityAuthenticated, optionally UserIdentityProfileObserved; Uuid; required=true; client; caller-supplied immutable creation identity: an exact retry with the same id and authored intent returns the original result; the same id with changed intent is refused; a different id is a different record |
@@ -65,7 +68,8 @@ Required tests: [Placeholder: required tests not recorded]
 | Target command name | SignInWithDevelopmentAccount |
 | Selected source command name | ContinueWithDeveloperIdentity |
 | Name decision | Signs in with the deterministic development identity when developer sign-in is enabled. |
-| Owner | UserIdentity |
+| Target owner | UserIdentity |
+| Selected source owner | UserIdentity |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | http |
 | Logical identity | none (derived identity provider+subject); Uuid; required=true; client; caller-supplied immutable creation identity: an exact retry with the same id and authored intent returns the original result; the same id with changed intent is refused; a different id is a different record |
@@ -111,7 +115,8 @@ Required tests: [Placeholder: required tests not recorded]
 | Target command name | LinkExternalSignInToCurrentAccount |
 | Selected source command name | LinkOidcProviderIdentity |
 | Name decision | Links the verified external sign-in identity to the account already signed in in this browser. |
-| Owner | UserIdentity |
+| Target owner | UserIdentity |
+| Selected source owner | UserIdentity |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | http |
 | Logical identity | none (principal-derived); Uuid; required=true; client; caller-supplied immutable creation identity: an exact retry with the same id and authored intent returns the original result; the same id with changed intent is refused; a different id is a different record |
@@ -155,7 +160,8 @@ Required tests: [Placeholder: required tests not recorded]
 | Target command name | ProtectRecoveryIdentity |
 | Selected source command name | ProtectRecoveryIdentity |
 | Name decision | The selected source name is retained. |
-| Owner | UserIdentity |
+| Target owner | UserIdentity |
+| Selected source owner | UserIdentity |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; internal; deterministic receiver identity derived from the admitted root fact, episode and generation: exact redelivery resolves the original result, a changed admission is a new identity |
@@ -211,7 +217,8 @@ Required tests: [Placeholder: required tests not recorded]
 | Target command name | EndRecoveryIdentityProtection |
 | Selected source command name | SettleRecoveryIdentityProtection |
 | Name decision | Ends protection of the exact recovery identity slot, including when protection never began. |
-| Owner | UserIdentity |
+| Target owner | UserIdentity |
+| Selected source owner | UserIdentity |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; internal; deterministic receiver identity derived from the admitted root fact, episode and generation: exact redelivery resolves the original result, a changed admission is a new identity |
@@ -263,7 +270,8 @@ Required tests: [Placeholder: required tests not recorded]
 | Target command name | RegisterRecoveredIdentity |
 | Selected source command name | RegisterRecoveredIdentity |
 | Name decision | The selected source name is retained. |
-| Owner | UserIdentity |
+| Target owner | UserIdentity |
+| Selected source owner | UserIdentity |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; internal; deterministic receiver identity derived from the admitted root fact, episode and generation: exact redelivery resolves the original result, a changed admission is a new identity |
@@ -317,7 +325,8 @@ Required tests: [Placeholder: required tests not recorded]
 | Target command name | RevokeRecoveredOldIdentity |
 | Selected source command name | RevokeRecoveredOldIdentity |
 | Name decision | The selected source name is retained. |
-| Owner | UserIdentity |
+| Target owner | UserIdentity |
+| Selected source owner | UserIdentity |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; internal; deterministic receiver identity derived from the admitted root fact, episode and generation: exact redelivery resolves the original result, a changed admission is a new identity |

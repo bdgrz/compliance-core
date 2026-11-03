@@ -1,5 +1,7 @@
 # Member commands
 
+
+
 Selected command contracts: **8**. Complete selected contracts and companion source evidence: [owner command JSON](../data/commands/member.json).
 
 | Target command | Selected source name | Kind | Identity | Fields | HTTP routes |
@@ -22,7 +24,8 @@ Selected command contracts: **8**. Complete selected contracts and companion sou
 | Target command name | CompleteMemberRetirement |
 | Selected source command name | CompleteMemberRetirement |
 | Name decision | The selected source name is retained. |
-| Owner | Member |
+| Target owner | Member |
+| Selected source owner | Member |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | command |
 | Logical identity | CommandId; Uuid; required=true; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
@@ -71,7 +74,8 @@ Required tests: [Placeholder: required tests not recorded]
 | Target command name | RegisterMember |
 | Selected source command name | RegisterMember |
 | Name decision | The selected source name is retained. |
-| Owner | Member |
+| Target owner | Member |
+| Selected source owner | Member |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | command |
 | Logical identity | CommandId; Uuid; required=true; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
@@ -119,7 +123,8 @@ Required tests: [Placeholder: required tests not recorded]
 | Target command name | SuspendMember |
 | Selected source command name | SuspendMember |
 | Name decision | The selected source name is retained. |
-| Owner | Member |
+| Target owner | Member |
+| Selected source owner | Member |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | http |
 | Logical identity | CommandId; Uuid; required=true; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
@@ -168,7 +173,8 @@ Required tests: [Placeholder: required tests not recorded]
 | Target command name | DeprovisionMember |
 | Selected source command name | DeprovisionMember |
 | Name decision | The selected source name is retained. |
-| Owner | Member |
+| Target owner | Member |
+| Selected source owner | Member |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | http |
 | Logical identity | CommandId; Uuid; required=true; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
@@ -217,7 +223,8 @@ Required tests: [Placeholder: required tests not recorded]
 | Target command name | ReinstateMember |
 | Selected source command name | ReinstateMember |
 | Name decision | The selected source name is retained. |
-| Owner | Member |
+| Target owner | Member |
+| Selected source owner | Member |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | http |
 | Logical identity | CommandId; Uuid; required=true; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
@@ -265,7 +272,8 @@ Required tests: [Placeholder: required tests not recorded]
 | Target command name | ApplyMemberWithdrawal |
 | Selected source command name | ApplyMemberWithdrawal |
 | Name decision | The selected source name is retained. |
-| Owner | Member |
+| Target owner | Member |
+| Selected source owner | Member |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; reactor; deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result |
@@ -318,7 +326,8 @@ Required tests: [Placeholder: required tests not recorded]
 | Target command name | ApplyMemberStatusChange |
 | Selected source command name | ApplyNeutralMemberSourceMutation |
 | Name decision | Applies the admitted suspend, deprovision, or reinstate decision to the exact member episode. |
-| Owner | Member |
+| Target owner | Member |
+| Selected source owner | Member |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; reactor; deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result |
@@ -371,7 +380,8 @@ Required tests: [Placeholder: required tests not recorded]
 | Target command name | ApplyMemberRestoration |
 | Selected source command name | ApplyMemberRestoration |
 | Name decision | The selected source name is retained. |
-| Owner | Member |
+| Target owner | Member |
+| Selected source owner | Member |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; reactor; deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result |

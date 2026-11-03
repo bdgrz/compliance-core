@@ -9,10 +9,10 @@ Selected choreography rows: **4**. Required proofs, recovery, effect identity, a
 
 | Row | Kind | Prerequisite facts | Command | Target owner | Emitted facts |
 | --- | --- | --- | --- | --- | --- |
-| S030 | business_receiver | TenantRegistered | RegisterTenantSlug | TenantSlug | TenantSlugRegistered, TenantSlugRegistrationRejected |
+| S030 | business_receiver | TenantRegistered | ClaimWorkspaceWebAddress | WorkspaceWebAddress | WorkspaceWebAddressClaimed, WorkspaceWebAddressClaimDenied |
 | S031 | business_receiver | TenantRegistered | InviteTenantMember | TenantInvitation | TenantMemberInvited |
-| S032 | business_receiver | TenantSlugChangeRequested | RegisterTenantSlug | TenantSlug | TenantSlugRegistered, TenantSlugRegistrationRejected |
-| S033 | business_receiver | TenantSlugChanged, TenantSlugSurrenderRequested | SurrenderTenantSlug | TenantSlug | TenantSlugSurrendered, TenantSlugSurrenderRejected |
+| S032 | business_receiver | WorkspaceWebAddressChangeRequested | ClaimWorkspaceWebAddress | WorkspaceWebAddress | WorkspaceWebAddressClaimed, WorkspaceWebAddressClaimDenied |
+| S033 | business_receiver | WorkspaceWebAddressChanged, WorkspaceWebAddressReleaseRequested | RetireWorkspaceWebAddress | WorkspaceWebAddress | WorkspaceWebAddressRetired, WorkspaceWebAddressReleaseDenied |
 
 ## Selected row details
 
@@ -23,13 +23,13 @@ Selected choreography rows: **4**. Required proofs, recovery, effect identity, a
 | id | S030 |
 | kind | business_receiver |
 | status | SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED |
-| sourceOwner | Tenant |
+| Source owner (target name) | Tenant (source: Tenant) |
 | logicalPrerequisiteFacts (target names) | TenantRegistered |
-| physicalRootEvents (target names) | TenantRegistered, TenantSlugChangeRequested, TenantSlugChanged, TenantSlugSurrenderRequested |
-| Target command (selected source name: RegisterTenantSlug) | RegisterTenantSlug |
-| targetOwner | TenantSlug |
+| physicalRootEvents (target names) | TenantRegistered, WorkspaceWebAddressChangeRequested, WorkspaceWebAddressChanged, WorkspaceWebAddressReleaseRequested |
+| Target command (selected source name: RegisterTenantSlug) | ClaimWorkspaceWebAddress |
+| Target owner | WorkspaceWebAddress |
 | targetAuthorityKind | business_aggregate |
-| emittedSemanticFacts (target names) | TenantSlugRegistered, TenantSlugRegistrationRejected |
+| emittedSemanticFacts (target names) | WorkspaceWebAddressClaimed, WorkspaceWebAddressClaimDenied |
 | currentRegisteredRootTypes (target names) | EstablishTenantAndInviteOwnerReactor |
 | requiredProofContract | `{"proofGate":"Tenant registration owns its user already; register only exact selected normalized slug, derived logical claim ID and tenant owner.","verification":{"admission":"AdmissionReference is a locator only. Resolve and independently verify actual typed admitted fact, exact owner/tenant/program, saved metadata and physical/hydrated cut, original root/episode/actor/intent and immutable content.","stageAndTerminal":"Materialize each required typed stage/terminal proof from actual committed facts and full required immutable selections; prove complete grant/fence/provisional/child sets, not counts/checkpoints. Guard sets are not weakened by carrier choice.","earlyReplay":"If native receipt binding does not cover a supplied/interpreted command term, bind that term through the required actual typed proof/body before early replay. Exact receipt cannot bypass proof manifest or source tuple guards.","resultAndRecovery":"Current public authorization precedes replay. Original result/receipt and unknown-append recovery stay exact; requested cancellation propagates. Unavailable proof/content remains transient; corruption/changed intent is permanent; no inferred absence/release.","implementationStatus":"Installed pointer/handler/process presence is not proof of conformance. Field/wire migration and required behavioral tests remain separately verifiable implementation work."},"prerequisiteVerification":{"admission":"The receiver resolves the original admitted root fact by its exact owner, tenant, episode, actor and immutable intent, and verifies the saved fact and content hash before acting; a reference alone grants nothing.","stageProofs":"Each required stage proof (grant, hold, review, or terminal fact) is materialised from the actual committed fact and its full immutable selection; counts, checkpoints and stage order are not accepted as proof."},"stageProofStatus":"specified","requiredTypedStageProofSets":[{"factKinds":["TenantSlugRegistered","TenantSlugSurrendered"],"role":"No other tenant holds the slug and it has not been permanently retired","quantifier":"none_outstanding","condition":"","requiredVerification":"Resolve the actual saved fact and its full immutable selection; verify the typed payload and the exact admission, root, target, generation, actor and intent binding. A pointer, checkpoint or stage order alone is not authority."}],"stageProofRationale":"TenantSlug.Register raises TenantSlugRegistrationRejected for reserved, retired or other-tenant slugs; reactor does not read tenant state.","stageProofSource":"authored 2026-10-29 from reactor and target source"}` |
 | recoveryContract | `{"lostAcknowledgement":"If the receiver's append succeeded but the acknowledgement was lost, redelivery resolves the same deterministic effect identity and returns the original committed result without a second append.","retryAfterPartialProgress":"A retry re-reads the target stream; a proven superseded or already-applied operation is a terminal no-op; an unavailable dependency or unknown append outcome is transient and retried; changed intent or an invalid proof is a permanent conflict and the operation is quarantined.","concurrencyConflict":"On an optimistic-concurrency conflict at the target the receiver re-reads and re-decides under the target's current state; it never overwrites a newer decision.","abortOfAdmittedRoot":"If the admitted root is cancelled or the process is aborted, the bound abort receiver fences the target so a delayed delivery cannot apply, and any held reservation is released only after the fence is durable.","source":"Canonical recovery contract stated in four cases on 2026-10-29; semantically equal to the former one-sentence contract, which is retained as `recoveryContractSummary`."}` |
@@ -38,7 +38,6 @@ Selected choreography rows: **4**. Required proofs, recovery, effect identity, a
 | sourceOwners | Tenant |
 | canonicalTargetOwner | TenantSlug |
 | recoveryContractSummary | At-least-once checkpoint replay resends the same source-derived command. Missing dependencies remain retryable; actual terminal/superseded episodes are skipped only with the owning proof. |
-| logicalPrerequisiteRuleGuard | null (recorded) |
 | logicalPrerequisiteRule | The source is TenantRegistered with its chosen normalized slug; the slug owner accepts the claim for that tenant only if the slug is not a reserved route, not surrendered, and not held by another tenant, otherwise it records a rejection; a repeated claim by the same tenant is a no-op. |
 | prerequisiteRuleSource | authored 2026-10-29 from reactor and target source |
 
@@ -49,11 +48,11 @@ Selected choreography rows: **4**. Required proofs, recovery, effect identity, a
 | id | S031 |
 | kind | business_receiver |
 | status | SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED |
-| sourceOwner | Tenant |
+| Source owner (target name) | Tenant (source: Tenant) |
 | logicalPrerequisiteFacts (target names) | TenantRegistered |
-| physicalRootEvents (target names) | TenantRegistered, TenantSlugChangeRequested, TenantSlugChanged, TenantSlugSurrenderRequested |
+| physicalRootEvents (target names) | TenantRegistered, WorkspaceWebAddressChangeRequested, WorkspaceWebAddressChanged, WorkspaceWebAddressReleaseRequested |
 | Target command (selected source name: InviteTenantMember) | InviteTenantMember |
-| targetOwner | TenantInvitation |
+| Target owner | TenantInvitation |
 | targetAuthorityKind | business_aggregate |
 | emittedSemanticFacts (target names) | TenantMemberInvited |
 | currentRegisteredRootTypes (target names) | EstablishTenantAndInviteOwnerReactor |
@@ -64,7 +63,6 @@ Selected choreography rows: **4**. Required proofs, recovery, effect identity, a
 | sourceOwners | Tenant |
 | canonicalTargetOwner | TenantInvitation |
 | recoveryContractSummary | At-least-once checkpoint replay resends the same source-derived command. Missing dependencies remain retryable; actual terminal/superseded episodes are skipped only with the owning proof. |
-| logicalPrerequisiteRuleGuard | null (recorded) |
 | logicalPrerequisiteRule | The source is TenantRegistered where the creator is not the selected administrator and a FirstAdministratorEmail is present; the deterministic first-administrator client-personnel invitation is admitted only if the tenant is registered and the normalized mailbox is not claimed by a different live invitation, and an exact retry is the same invitation. |
 | prerequisiteRuleSource | authored 2026-10-29 from reactor and target source |
 
@@ -75,13 +73,13 @@ Selected choreography rows: **4**. Required proofs, recovery, effect identity, a
 | id | S032 |
 | kind | business_receiver |
 | status | SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED |
-| sourceOwner | Tenant |
-| logicalPrerequisiteFacts (target names) | TenantSlugChangeRequested |
-| physicalRootEvents (target names) | TenantRegistered, TenantSlugChangeRequested, TenantSlugChanged, TenantSlugSurrenderRequested |
-| Target command (selected source name: RegisterTenantSlug) | RegisterTenantSlug |
-| targetOwner | TenantSlug |
+| Source owner (target name) | Tenant (source: Tenant) |
+| logicalPrerequisiteFacts (target names) | WorkspaceWebAddressChangeRequested |
+| physicalRootEvents (target names) | TenantRegistered, WorkspaceWebAddressChangeRequested, WorkspaceWebAddressChanged, WorkspaceWebAddressReleaseRequested |
+| Target command (selected source name: RegisterTenantSlug) | ClaimWorkspaceWebAddress |
+| Target owner | WorkspaceWebAddress |
 | targetAuthorityKind | business_aggregate |
-| emittedSemanticFacts (target names) | TenantSlugRegistered, TenantSlugRegistrationRejected |
+| emittedSemanticFacts (target names) | WorkspaceWebAddressClaimed, WorkspaceWebAddressClaimDenied |
 | currentRegisteredRootTypes (target names) | EstablishTenantAndInviteOwnerReactor |
 | requiredProofContract | `{"proofGate":"Exact pending new slug; derive claim identity from the actual request source event; existing slug remains authoritative until confirmed.","verification":{"admission":"AdmissionReference is a locator only. Resolve and independently verify actual typed admitted fact, exact owner/tenant/program, saved metadata and physical/hydrated cut, original root/episode/actor/intent and immutable content.","stageAndTerminal":"Materialize each required typed stage/terminal proof from actual committed facts and full required immutable selections; prove complete grant/fence/provisional/child sets, not counts/checkpoints. Guard sets are not weakened by carrier choice.","earlyReplay":"If native receipt binding does not cover a supplied/interpreted command term, bind that term through the required actual typed proof/body before early replay. Exact receipt cannot bypass proof manifest or source tuple guards.","resultAndRecovery":"Current public authorization precedes replay. Original result/receipt and unknown-append recovery stay exact; requested cancellation propagates. Unavailable proof/content remains transient; corruption/changed intent is permanent; no inferred absence/release.","implementationStatus":"Installed pointer/handler/process presence is not proof of conformance. Field/wire migration and required behavioral tests remain separately verifiable implementation work."},"prerequisiteVerification":{"admission":"The receiver resolves the original admitted root fact by its exact owner, tenant, episode, actor and immutable intent, and verifies the saved fact and content hash before acting; a reference alone grants nothing.","stageProofs":"Each required stage proof (grant, hold, review, or terminal fact) is materialised from the actual committed fact and its full immutable selection; counts, checkpoints and stage order are not accepted as proof."},"stageProofStatus":"specified","requiredTypedStageProofSets":[{"factKinds":["TenantSlugRegistered","TenantSlugSurrendered"],"role":"No other tenant holds the new slug and it has not been permanently retired","quantifier":"none_outstanding","condition":"","requiredVerification":"Resolve the actual saved fact and its full immutable selection; verify the typed payload and the exact admission, root, target, generation, actor and intent binding. A pointer, checkpoint or stage order alone is not authority."},{"factKinds":["TenantSlugChangeRejected","TenantSlugChanged"],"role":"Resolution of the same change request; none may exist or the claim is stale","quantifier":"none_outstanding","condition":"","requiredVerification":"Resolve the actual saved fact and its full immutable selection; verify the typed payload and the exact admission, root, target, generation, actor and intent binding. A pointer, checkpoint or stage order alone is not authority."}],"stageProofRationale":"Claim identity derives from the request source event.","stageProofSource":"authored 2026-10-29 from reactor and target source"}` |
 | recoveryContract | `{"lostAcknowledgement":"If the receiver's append succeeded but the acknowledgement was lost, redelivery resolves the same deterministic effect identity and returns the original committed result without a second append.","retryAfterPartialProgress":"A retry re-reads the target stream; a proven superseded or already-applied operation is a terminal no-op; an unavailable dependency or unknown append outcome is transient and retried; changed intent or an invalid proof is a permanent conflict and the operation is quarantined.","concurrencyConflict":"On an optimistic-concurrency conflict at the target the receiver re-reads and re-decides under the target's current state; it never overwrites a newer decision.","abortOfAdmittedRoot":"If the admitted root is cancelled or the process is aborted, the bound abort receiver fences the target so a delayed delivery cannot apply, and any held reservation is released only after the fence is durable.","source":"Canonical recovery contract stated in four cases on 2026-10-29; semantically equal to the former one-sentence contract, which is retained as `recoveryContractSummary`."}` |
@@ -90,7 +88,6 @@ Selected choreography rows: **4**. Required proofs, recovery, effect identity, a
 | sourceOwners | Tenant |
 | canonicalTargetOwner | TenantSlug |
 | recoveryContractSummary | At-least-once checkpoint replay resends the same source-derived command. Missing dependencies remain retryable; actual terminal/superseded episodes are skipped only with the owning proof. |
-| logicalPrerequisiteRuleGuard | null (recorded) |
 | logicalPrerequisiteRule | The source is TenantSlugChangeRequested with the exact pending new slug; the slug owner accepts the claim for the same tenant only if the new slug is unreserved, unretired and unheld by another tenant, otherwise it rejects. The old slug stays authoritative until confirmed. |
 | prerequisiteRuleSource | authored 2026-10-29 from reactor and target source |
 
@@ -101,13 +98,13 @@ Selected choreography rows: **4**. Required proofs, recovery, effect identity, a
 | id | S033 |
 | kind | business_receiver |
 | status | SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED |
-| sourceOwner | Tenant |
-| logicalPrerequisiteFacts (target names) | TenantSlugChanged, TenantSlugSurrenderRequested |
-| physicalRootEvents (target names) | TenantRegistered, TenantSlugChangeRequested, TenantSlugChanged, TenantSlugSurrenderRequested |
-| Target command (selected source name: SurrenderTenantSlug) | SurrenderTenantSlug |
-| targetOwner | TenantSlug |
+| Source owner (target name) | Tenant (source: Tenant) |
+| logicalPrerequisiteFacts (target names) | WorkspaceWebAddressChanged, WorkspaceWebAddressReleaseRequested |
+| physicalRootEvents (target names) | TenantRegistered, WorkspaceWebAddressChangeRequested, WorkspaceWebAddressChanged, WorkspaceWebAddressReleaseRequested |
+| Target command (selected source name: SurrenderTenantSlug) | RetireWorkspaceWebAddress |
+| Target owner | WorkspaceWebAddress |
 | targetAuthorityKind | business_aggregate |
-| emittedSemanticFacts (target names) | TenantSlugSurrendered, TenantSlugSurrenderRejected |
+| emittedSemanticFacts (target names) | WorkspaceWebAddressRetired, WorkspaceWebAddressReleaseDenied |
 | currentRegisteredRootTypes (target names) | EstablishTenantAndInviteOwnerReactor |
 | requiredProofContract | `{"proofGate":"Changed releases exact old slug; explicit surrender releases exact requested slug, with source-derived operation; delayed release cannot delete a newer claimant.","verification":{"admission":"AdmissionReference is a locator only. Resolve and independently verify actual typed admitted fact, exact owner/tenant/program, saved metadata and physical/hydrated cut, original root/episode/actor/intent and immutable content.","stageAndTerminal":"Materialize each required typed stage/terminal proof from actual committed facts and full required immutable selections; prove complete grant/fence/provisional/child sets, not counts/checkpoints. Guard sets are not weakened by carrier choice.","earlyReplay":"If native receipt binding does not cover a supplied/interpreted command term, bind that term through the required actual typed proof/body before early replay. Exact receipt cannot bypass proof manifest or source tuple guards.","resultAndRecovery":"Current public authorization precedes replay. Original result/receipt and unknown-append recovery stay exact; requested cancellation propagates. Unavailable proof/content remains transient; corruption/changed intent is permanent; no inferred absence/release.","implementationStatus":"Installed pointer/handler/process presence is not proof of conformance. Field/wire migration and required behavioral tests remain separately verifiable implementation work."},"prerequisiteVerification":{"admission":"The receiver resolves the original admitted root fact by its exact owner, tenant, episode, actor and immutable intent, and verifies the saved fact and content hash before acting; a reference alone grants nothing.","stageProofs":"Each required stage proof (grant, hold, review, or terminal fact) is materialised from the actual committed fact and its full immutable selection; counts, checkpoints and stage order are not accepted as proof."},"stageProofStatus":"specified","requiredTypedStageProofSets":[{"factKinds":["TenantSlugRegistered"],"role":"Registered claim of the slug being surrendered by the surrendering tenant","quantifier":"exactly_one","condition":"","requiredVerification":"Resolve the actual saved fact and its full immutable selection; verify the typed payload and the exact admission, root, target, generation, actor and intent binding. A pointer, checkpoint or stage order alone is not authority."},{"factKinds":["TenantSlugSurrendered"],"role":"Prior surrender of the same slug; none may exist (exact retry is a no-op)","quantifier":"none_outstanding","condition":"","requiredVerification":"Resolve the actual saved fact and its full immutable selection; verify the typed payload and the exact admission, root, target, generation, actor and intent binding. A pointer, checkpoint or stage order alone is not authority."}],"stageProofRationale":"TenantSlug.Surrender compares _tenantId and emits TenantSlugSurrendered or TenantSlugSurrenderRejected.","stageProofSource":"authored 2026-10-29 from reactor and target source"}` |
 | recoveryContract | `{"lostAcknowledgement":"If the receiver's append succeeded but the acknowledgement was lost, redelivery resolves the same deterministic effect identity and returns the original committed result without a second append.","retryAfterPartialProgress":"A retry re-reads the target stream; a proven superseded or already-applied operation is a terminal no-op; an unavailable dependency or unknown append outcome is transient and retried; changed intent or an invalid proof is a permanent conflict and the operation is quarantined.","concurrencyConflict":"On an optimistic-concurrency conflict at the target the receiver re-reads and re-decides under the target's current state; it never overwrites a newer decision.","abortOfAdmittedRoot":"If the admitted root is cancelled or the process is aborted, the bound abort receiver fences the target so a delayed delivery cannot apply, and any held reservation is released only after the fence is durable.","source":"Canonical recovery contract stated in four cases on 2026-10-29; semantically equal to the former one-sentence contract, which is retained as `recoveryContractSummary`."}` |
@@ -116,7 +113,6 @@ Selected choreography rows: **4**. Required proofs, recovery, effect identity, a
 | sourceOwners | Tenant |
 | canonicalTargetOwner | TenantSlug |
 | recoveryContractSummary | At-least-once checkpoint replay resends the same source-derived command. Missing dependencies remain retryable; actual terminal/superseded episodes are skipped only with the owning proof. |
-| logicalPrerequisiteRuleGuard | null (recorded) |
 | logicalPrerequisiteRule | The source is TenantSlugChanged (old slug released) or TenantSlugSurrenderRequested (explicit surrender); the slug owner retires the slug only if that same tenant holds it, otherwise it records a rejection, so a delayed release never deletes a newer claimant. |
 | prerequisiteRuleSource | authored 2026-10-29 from reactor and target source |
 

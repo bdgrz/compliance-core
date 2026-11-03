@@ -5,6 +5,7 @@
 - Business aggregate: `true`
 - Selected status: `SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED`
 
+
 ## Identity and invariant
 
 **Selected identity:** Tenant / existing EvidenceStreams artifact key / ArtifactId, with immutable source identity and verified content binding. ArtifactId identifies registration; selected mutations use CommandId. Download grants use the separately adopted artifact-qualified receiving identity.
@@ -18,6 +19,10 @@
 **Replay:** Current required authorization precedes replay; exact authorized retries resolve the original accepted result using the selected logical identity and immutable actor/intent/source binding. Fresh mutable feasibility, clock selection and body preparation cannot replace that original result. Expected revision is concurrency precondition, not a new identity.
 
 **Lifecycle:** [Placeholder: a consolidated lifecycle sequence is not present in the selected owner record.]
+
+
+
+
 
 ## Commands
 
@@ -43,22 +48,22 @@
 
 | Row | Kind | Source owner | Target owner | Command |
 | --- | --- | --- | --- | --- |
-| [T099](../reactors/one-committed-evidence-artifact-download-requested-starter.md#t099) | reaction_or_regular_process_stage | EvidenceArtifact | AdvisorHandoff | AuthorizeAdvisorArtifactDownload |
-| [T100](../reactors/one-committed-evidence-artifact-download-requested-starter.md#t100) | reaction_or_regular_process_stage | EvidenceArtifact | EvidenceHandlingPolicy | AuthorizeArtifactHandlingDownload |
-| [T101](../reactors/one-committed-evidence-artifact-download-requested-starter.md#t101) | reaction_or_regular_process_stage | EvidenceArtifact | ArtifactDownloadGrant | IssueProtectedArtifactDownloadGrant |
-| [T104](../reactors/one-committed-evidence-artifact-download-requested-starter.md#t104) | reaction_or_regular_process_stage | ArtifactDownloadGrant | EvidenceArtifact | CloseArtifactDownloadAvailabilityAuthorization |
-| [S000](../reactors/evidence-artifact-inspection-effects-reactor.md#s000) | external_storage_reconciliation | EvidenceArtifact | null (recorded) | null (recorded) |
-| [A021](../reactors/unassigned-architecture-rows.md#a021) | process_abort_binding | EvidenceArtifact | ArtifactDownloadGrant | CancelProtectedArtifactDownloadGrant |
-| [P000](../reactors/unassigned-architecture-rows.md#p000) | personal_source_admission | null (recorded) | EvidenceArtifact | IssueArtifactDownload |
+| [T099](../reactors/fulfill-authorized-artifact-download-request-reactor.md#t099) | reaction_or_regular_process_stage | EvidenceArtifact | AdvisorHandoff | AuthorizeAdvisorArtifactDownload |
+| [T100](../reactors/fulfill-authorized-artifact-download-request-reactor.md#t100) | reaction_or_regular_process_stage | EvidenceArtifact | EvidenceHandlingPolicy | AuthorizeArtifactHandlingDownload |
+| [T101](../reactors/fulfill-authorized-artifact-download-request-reactor.md#t101) | reaction_or_regular_process_stage | EvidenceArtifact | ArtifactDownloadGrant | IssueProtectedArtifactDownloadGrant |
+| [T104](../reactors/fulfill-authorized-artifact-download-request-reactor.md#t104) | reaction_or_regular_process_stage | ArtifactDownloadGrant | EvidenceArtifact | CloseArtifactDownloadAvailabilityAuthorization |
+| [S000](../reactors/apply-artifact-inspection-outcome-reactor.md#s000) | external_storage_reconciliation | EvidenceArtifact | [Placeholder: value not recorded] | [Placeholder: value not recorded] |
+| [A021](../reactors/unassigned-domain-choreography.md#a021) | process_abort_binding | EvidenceArtifact | ArtifactDownloadGrant | CancelProtectedArtifactDownloadGrant |
+| [P000](../reactors/unassigned-domain-choreography.md#p000) | personal_source_admission | [Placeholder: value not recorded] | EvidenceArtifact | IssueArtifactDownload |
 
 ## Product rules
 
-- **D16-02** — Credentials, secrets, private keys, access tokens, and session cookies are never stored; uploads are scanned for them before content becomes available. Source: [m0-d16-evidence-handling.md](../../product/decisions/m0-d16-evidence-handling.md).
-- **D16-03** — When a secret is detected in an upload, the upload moves to rejected with reason secret_detected, its content is purged immediately, and only a tombstone (content hash, size, uploader, time, reason) is kept. Source: [m0-d16-evidence-handling.md](../../product/decisions/m0-d16-evidence-handling.md).
-- **D16-04** — A secret-bearing (secret_detected) upload can never be released, quarantined, or made available; the uploader must submit a redacted replacement as a new upload. Source: [m0-d16-evidence-handling.md](../../product/decisions/m0-d16-evidence-handling.md).
-- **D16-11** — Evidence artifact states are pending_inspection, available, quarantined (reason malware), rejected (reason secret_detected or invalid, content purged), and disposed; every upload must be scanned for malware and secrets before it becomes available. Source: [m0-d16-evidence-handling.md](../../product/decisions/m0-d16-evidence-handling.md).
-- **D16-12** — A quarantined artifact cannot be downloaded or shared; only an Org Admin may release a malware false positive (a recorded decision after rescan) or dispose of it. Source: [m0-d16-evidence-handling.md](../../product/decisions/m0-d16-evidence-handling.md).
-- **D16-14** — Evidence content identity (hash) is verified on restore. Source: [m0-d16-evidence-handling.md](../../product/decisions/m0-d16-evidence-handling.md).
+- **D16-02** — Credentials, secrets, private keys, access tokens, and session cookies are never stored; uploads are scanned for them before content becomes available. Decision: [m0-d16-evidence-handling.md](../decisions/m0-d16-evidence-handling.md).
+- **D16-03** — When a secret is detected in an upload, the upload moves to rejected with reason secret_detected, its content is purged immediately, and only a tombstone (content hash, size, uploader, time, reason) is kept. Decision: [m0-d16-evidence-handling.md](../decisions/m0-d16-evidence-handling.md).
+- **D16-04** — A secret-bearing (secret_detected) upload can never be released, quarantined, or made available; the uploader must submit a redacted replacement as a new upload. Decision: [m0-d16-evidence-handling.md](../decisions/m0-d16-evidence-handling.md).
+- **D16-11** — Evidence artifact states are pending_inspection, available, quarantined (reason malware), rejected (reason secret_detected or invalid, content purged), and disposed; every upload must be scanned for malware and secrets before it becomes available. Decision: [m0-d16-evidence-handling.md](../decisions/m0-d16-evidence-handling.md).
+- **D16-12** — A quarantined artifact cannot be downloaded or shared; only an Org Admin may release a malware false positive (a recorded decision after rescan) or dispose of it. Decision: [m0-d16-evidence-handling.md](../decisions/m0-d16-evidence-handling.md).
+- **D16-14** — Evidence content identity (hash) is verified on restore. Decision: [m0-d16-evidence-handling.md](../decisions/m0-d16-evidence-handling.md).
 
 ## Adopted architecture decisions
 
@@ -67,7 +72,7 @@
 ## Evidence and complete record
 
 - Baseline source: [Placeholder: source file is not present in this checkout]
-- Aggregate review: [evidence-artifact-review-2026-10-29.md](../../product/definitive-aggregate-choreography/evidence-artifact-review-2026-10-29.md)
+- Aggregate review: [Placeholder: no owner-specific review file is present]
 - Full selected record: [JSON](../data/aggregates/evidence-artifact.json)
 
 > Target definition is separate from runtime qualification. Implementation status recorded by the source: `SEPARATE_VERIFICATION_REQUIRED_IMPLEMENTATION_HALTED`.

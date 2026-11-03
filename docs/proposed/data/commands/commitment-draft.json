@@ -74,13 +74,9 @@
           "authorizationPolicy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/12",
-        "line": 941,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      },
       "kind": "http",
+      "sourceOwner": "CommitmentDraft",
+      "owner": "CommitmentDraft",
       "sourceName": "ApproveCommitmentDraft",
       "targetName": "ApproveCommitmentDraft"
     },
@@ -157,13 +153,9 @@
           "authorizationPolicy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/49",
-        "line": 3666,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      },
       "kind": "http",
+      "sourceOwner": "CommitmentDraft",
+      "owner": "CommitmentDraft",
       "sourceName": "CreateCommitmentDraft",
       "targetName": "CreateCommitmentDraft"
     },
@@ -219,13 +211,9 @@
         "terminalResultType": "Unit"
       },
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/155",
-        "line": 11455,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      },
       "kind": "command",
+      "sourceOwner": "CommitmentDraft",
+      "owner": "CommitmentDraft",
       "sourceName": "RetireCommitment",
       "targetName": "RetireCommitment"
     },
@@ -322,13 +310,9 @@
           "authorizationPolicy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/160",
-        "line": 11860,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      },
       "kind": "http",
+      "sourceOwner": "CommitmentDraft",
+      "owner": "CommitmentDraft",
       "sourceName": "ReviewCommitmentDraft",
       "targetName": "ReviewCommitmentDraft"
     },
@@ -389,13 +373,9 @@
         "terminalResultType": "Unit"
       },
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/169",
-        "line": 12592,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      },
       "kind": "command",
+      "sourceOwner": "CommitmentDraft",
+      "owner": "CommitmentDraft",
       "sourceName": "ReviseCommitmentDraft",
       "targetName": "ReviseCommitmentDraft"
     }

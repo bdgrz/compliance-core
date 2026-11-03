@@ -1,20 +1,22 @@
 # Tenant commands
 
+
+
 Selected command contracts: **12**. Complete selected contracts and companion source evidence: [owner command JSON](../data/commands/tenant.json).
 
 | Target command | Selected source name | Kind | Identity | Fields | HTTP routes |
 | --- | --- | --- | --- | --- | --- |
 | ActivateTenant | ActivateTenant | command | CommandId | 5 | [Placeholder: value not recorded] |
-| ChangeTenantSlug | ChangeTenantSlug | http | CommandId | 4 | PUT /api/v1/tenants/{tenant_id}/slug-changes/{command_id} |
+| ChangeWorkspaceWebAddress | ChangeTenantSlug | http | CommandId | 4 | PUT /api/v1/tenants/{tenant_id}/slug-changes/{command_id} |
 | CompleteTenantOffboarding | CompleteTenantOffboarding | command | CommandId | 7 | [Placeholder: value not recorded] |
-| ConfirmTenantSlug | ConfirmTenantSlug | command | CommandId | 3 | [Placeholder: value not recorded] |
-| ConfirmTenantSlugSurrender | ConfirmTenantSlugSurrender | command | CommandId | 3 | [Placeholder: value not recorded] |
+| ConfirmWorkspaceWebAddress | ConfirmTenantSlug | command | CommandId | 3 | [Placeholder: value not recorded] |
+| ConfirmWorkspaceWebAddressRelease | ConfirmTenantSlugSurrender | command | CommandId | 3 | [Placeholder: value not recorded] |
 | OffboardTenant | OffboardTenant | http | CommandId | 4 | PUT /api/v1/tenants/{tenant_id}/offboarding/{command_id} |
 | ReactivateTenant | ReactivateTenant | command | CommandId | 4 | [Placeholder: value not recorded] |
 | RegisterTenant | RegisterTenant | http | TenantId | 5 | PUT /api/v1/tenants/{tenant_id} |
-| RejectTenantSlug | RejectTenantSlug | command | CommandId | 3 | [Placeholder: value not recorded] |
-| RejectTenantSlugSurrender | RejectTenantSlugSurrender | command | CommandId | 3 | [Placeholder: value not recorded] |
-| RequestTenantSlugSurrender | RequestTenantSlugSurrender | command | CommandId | 4 | [Placeholder: value not recorded] |
+| RejectWorkspaceWebAddressRequest | RejectTenantSlug | command | CommandId | 3 | [Placeholder: value not recorded] |
+| RejectWorkspaceWebAddressRelease | RejectTenantSlugSurrender | command | CommandId | 3 | [Placeholder: value not recorded] |
+| RequestWorkspaceWebAddressRelease | RequestTenantSlugSurrender | command | CommandId | 4 | [Placeholder: value not recorded] |
 | SuspendTenant | SuspendTenant | http | CommandId | 4 | PUT /api/v1/tenants/{tenant_id}/suspensions/{command_id} |
 
 ## Selected command details
@@ -26,7 +28,8 @@ Selected command contracts: **12**. Complete selected contracts and companion so
 | Target command name | ActivateTenant |
 | Selected source command name | ActivateTenant |
 | Name decision | The selected source name is retained. |
-| Owner | Tenant |
+| Target owner | Tenant |
+| Selected source owner | Tenant |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | command |
 | Logical identity | CommandId; Uuid; required=true; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
@@ -67,14 +70,15 @@ Existing tests: [Placeholder: existing tests not recorded]
 
 Required tests: [Placeholder: required tests not recorded]
 
-### ChangeTenantSlug
+### ChangeWorkspaceWebAddress
 
 | Selected contract detail | Value |
 | --- | --- |
-| Target command name | ChangeTenantSlug |
+| Target command name | ChangeWorkspaceWebAddress |
 | Selected source command name | ChangeTenantSlug |
-| Name decision | The selected source name is retained. |
-| Owner | Tenant |
+| Name decision | Requests a change to the workspace’s public web address; the current address stays in effect until the new one is claimed. |
+| Target owner | Tenant |
+| Selected source owner | Tenant |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | http |
 | Logical identity | CommandId; Uuid; required=true; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
@@ -123,7 +127,8 @@ Required tests: [Placeholder: required tests not recorded]
 | Target command name | CompleteTenantOffboarding |
 | Selected source command name | CompleteTenantOffboarding |
 | Name decision | The selected source name is retained. |
-| Owner | Tenant |
+| Target owner | Tenant |
+| Selected source owner | Tenant |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | command |
 | Logical identity | CommandId; Uuid; required=true; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
@@ -166,14 +171,15 @@ Existing tests: [Placeholder: existing tests not recorded]
 
 Required tests: [Placeholder: required tests not recorded]
 
-### ConfirmTenantSlug
+### ConfirmWorkspaceWebAddress
 
 | Selected contract detail | Value |
 | --- | --- |
-| Target command name | ConfirmTenantSlug |
+| Target command name | ConfirmWorkspaceWebAddress |
 | Selected source command name | ConfirmTenantSlug |
-| Name decision | The selected source name is retained. |
-| Owner | Tenant |
+| Name decision | Confirms the workspace address after the global address owner has claimed it. |
+| Target owner | Tenant |
+| Selected source owner | Tenant |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | command |
 | Logical identity | CommandId; Uuid; required=true; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
@@ -212,14 +218,15 @@ Existing tests: [Placeholder: existing tests not recorded]
 
 Required tests: [Placeholder: required tests not recorded]
 
-### ConfirmTenantSlugSurrender
+### ConfirmWorkspaceWebAddressRelease
 
 | Selected contract detail | Value |
 | --- | --- |
-| Target command name | ConfirmTenantSlugSurrender |
+| Target command name | ConfirmWorkspaceWebAddressRelease |
 | Selected source command name | ConfirmTenantSlugSurrender |
-| Name decision | The selected source name is retained. |
-| Owner | Tenant |
+| Name decision | Confirms that the workspace has stopped using an address after the global owner permanently retired it. |
+| Target owner | Tenant |
+| Selected source owner | Tenant |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | command |
 | Logical identity | CommandId; Uuid; required=true; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
@@ -265,7 +272,8 @@ Required tests: [Placeholder: required tests not recorded]
 | Target command name | OffboardTenant |
 | Selected source command name | OffboardTenant |
 | Name decision | The selected source name is retained. |
-| Owner | Tenant |
+| Target owner | Tenant |
+| Selected source owner | Tenant |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | http |
 | Logical identity | CommandId; Uuid; required=true; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
@@ -314,7 +322,8 @@ Required tests: [Placeholder: required tests not recorded]
 | Target command name | ReactivateTenant |
 | Selected source command name | ReactivateTenant |
 | Name decision | The selected source name is retained. |
-| Owner | Tenant |
+| Target owner | Tenant |
+| Selected source owner | Tenant |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | command |
 | Logical identity | CommandId; Uuid; required=true; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
@@ -361,7 +370,8 @@ Required tests: [Placeholder: required tests not recorded]
 | Target command name | RegisterTenant |
 | Selected source command name | RegisterTenant |
 | Name decision | The selected source name is retained. |
-| Owner | Tenant |
+| Target owner | Tenant |
+| Selected source owner | Tenant |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | http |
 | Logical identity | TenantId; Uuid; required=true; caller-supplied immutable creation identity: an exact retry with the same id and authored intent returns the original result; the same id with changed intent is refused; a different id is a different record |
@@ -404,14 +414,15 @@ Existing tests: [Placeholder: existing tests not recorded]
 
 Required tests: [Placeholder: required tests not recorded]
 
-### RejectTenantSlug
+### RejectWorkspaceWebAddressRequest
 
 | Selected contract detail | Value |
 | --- | --- |
-| Target command name | RejectTenantSlug |
+| Target command name | RejectWorkspaceWebAddressRequest |
 | Selected source command name | RejectTenantSlug |
-| Name decision | The selected source name is retained. |
-| Owner | Tenant |
+| Name decision | Records that the workspace’s requested address claim or change was refused. |
+| Target owner | Tenant |
+| Selected source owner | Tenant |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | command |
 | Logical identity | CommandId; Uuid; required=true; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
@@ -450,14 +461,15 @@ Existing tests: [Placeholder: existing tests not recorded]
 
 Required tests: [Placeholder: required tests not recorded]
 
-### RejectTenantSlugSurrender
+### RejectWorkspaceWebAddressRelease
 
 | Selected contract detail | Value |
 | --- | --- |
-| Target command name | RejectTenantSlugSurrender |
+| Target command name | RejectWorkspaceWebAddressRelease |
 | Selected source command name | RejectTenantSlugSurrender |
-| Name decision | The selected source name is retained. |
-| Owner | Tenant |
+| Name decision | Records that the global address owner refused a request to release the workspace’s current address. |
+| Target owner | Tenant |
+| Selected source owner | Tenant |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | command |
 | Logical identity | CommandId; Uuid; required=true; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
@@ -496,14 +508,15 @@ Existing tests: [Placeholder: existing tests not recorded]
 
 Required tests: [Placeholder: required tests not recorded]
 
-### RequestTenantSlugSurrender
+### RequestWorkspaceWebAddressRelease
 
 | Selected contract detail | Value |
 | --- | --- |
-| Target command name | RequestTenantSlugSurrender |
+| Target command name | RequestWorkspaceWebAddressRelease |
 | Selected source command name | RequestTenantSlugSurrender |
-| Name decision | The selected source name is retained. |
-| Owner | Tenant |
+| Name decision | Asks a workspace to give up its confirmed public web address. |
+| Target owner | Tenant |
+| Selected source owner | Tenant |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | command |
 | Logical identity | CommandId; Uuid; required=true; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
@@ -550,7 +563,8 @@ Required tests: [Placeholder: required tests not recorded]
 | Target command name | SuspendTenant |
 | Selected source command name | SuspendTenant |
 | Name decision | The selected source name is retained. |
-| Owner | Tenant |
+| Target owner | Tenant |
+| Selected source owner | Tenant |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | http |
 | Logical identity | CommandId; Uuid; required=true; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |

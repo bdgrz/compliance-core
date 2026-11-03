@@ -8,14 +8,7 @@
   "invariant": "One tenant/team/member relationship is active only for one current membership episode.",
   "boundaryDecision": "retain",
   "boundaryRationale": "Membership episode and active flag must be together; team-wide roster does not need an atomic revision. Tenant-manager invariant requires separate authoritative removal coordination.",
-  "sources": [
-    {
-      "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
-      "jsonPointer": "/aggregates/81",
-      "line": 50902,
-      "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
-    }
-  ],
+  "sources": [],
   "baselineSourcePath": "src/Compliance.Core/Features/AccessControl/TeamMember.cs",
   "baselineEvents": [
     "TeamMemberAssigned",
@@ -81,14 +74,10 @@
         "method": "PUT",
         "path": "/api/v1/tenants/{tenant_id}/teams/{team_id}/members/{member_id}/{command_id}"
       },
-      "source": {
-        "path": "docs/product/audits/2026-10-23/source-admission-contracts.json",
-        "jsonPointer": "/contracts/9",
-        "line": 604,
-        "sha256": "f1d549ed0879c816cb26e86879f8fa658dab0a8acbf7c591e4d4aed40483f8ae"
-      },
       "attributionNote": "Moved from TenantManagerGuard on 2026-10-29: Only for the built-in Administrators team: the guard admits first (restoration/availability fact), then ApplyAdministratorAssignmentRestoration writes TeamMember. For every other team the handler is a direct NativeOperation<TeamMember> and never reads the guard. (source src/Compliance.Core/Features/AccessControl/Handlers/AssignTeamMemberHandler.cs)",
-      "kind": "http"
+      "kind": "http",
+      "sourceOwner": "TeamMember",
+      "owner": "TeamMember"
     },
     {
       "command": "RemoveTeamMember",
@@ -145,14 +134,10 @@
         "method": "PUT",
         "path": "/api/v1/tenants/{tenant_id}/members/{member_id}/team-removals/{command_id}"
       },
-      "source": {
-        "path": "docs/product/audits/2026-10-23/source-admission-contracts.json",
-        "jsonPointer": "/contracts/7",
-        "line": 462,
-        "sha256": "f1d549ed0879c816cb26e86879f8fa658dab0a8acbf7c591e4d4aed40483f8ae"
-      },
       "attributionNote": "Moved from TenantManagerGuard on 2026-10-29: Only for the Administrators team: guard withdrawal first (reason RemovedFromAdministrators), then ApplyAdministratorAssignmentWithdrawal removes the assignment. Other teams: direct NativeOperation<TeamMember>. (source src/Compliance.Core/Features/AccessControl/Handlers/RemoveTeamMemberHandler.cs)",
-      "kind": "http"
+      "kind": "http",
+      "sourceOwner": "TeamMember",
+      "owner": "TeamMember"
     },
     {
       "command": "ApplyAdministratorAssignmentRestoration",
@@ -216,7 +201,7 @@
         "recorded": "2026-10-29"
       },
       "reactor": "AdministratorAssignmentRestorationReactor",
-      "sourceOwner": "TenantManagerGuard",
+      "sourceOwner": "TeamMember",
       "sourceEvents": [
         "TenantManagerRestorationAccepted"
       ],
@@ -225,7 +210,8 @@
         "TeamMemberAssigned"
       ],
       "effectKind": "claim_professional_assertion_identity",
-      "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine."
+      "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
+      "owner": "TeamMember"
     },
     {
       "command": "ApplyAdministratorAssignmentWithdrawal",
@@ -285,7 +271,7 @@
         "recorded": "2026-10-29"
       },
       "reactor": "AdministratorAssignmentWithdrawalReactor",
-      "sourceOwner": "TenantManagerGuard",
+      "sourceOwner": "TeamMember",
       "sourceEvents": [
         "TenantManagerWithdrawalAccepted"
       ],
@@ -294,7 +280,8 @@
         "TeamMemberRemoved"
       ],
       "effectKind": "apply_administrator_assignment_withdrawal",
-      "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine."
+      "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
+      "owner": "TeamMember"
     },
     {
       "command": "ApplyNeutralAdministratorAssignmentMutation",
@@ -354,7 +341,7 @@
         "recorded": "2026-10-29"
       },
       "reactor": "AdministratorNeutralAssignmentMutationReactor",
-      "sourceOwner": "TenantManagerGuard",
+      "sourceOwner": "TeamMember",
       "sourceEvents": [
         "TenantManagerSourceMutationAdmitted"
       ],
@@ -363,7 +350,8 @@
         "TeamMemberRemoved"
       ],
       "effectKind": "apply_neutral_administrator_assignment_mutation",
-      "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine."
+      "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
+      "owner": "TeamMember"
     },
     {
       "command": "CleanupRetiredMembershipRelationship",
@@ -427,7 +415,9 @@
           "process_reply": 0.8
         },
         "date": "2026-10-29"
-      }
+      },
+      "sourceOwner": "TeamMember",
+      "owner": "TeamMember"
     }
   ],
   "eventAuthority": "selected_final_event_catalog",
@@ -435,24 +425,12 @@
     {
       "event": "TeamMemberAssigned",
       "discriminator": "bdgrz.rbac.team-member.assigned",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/265",
-        "line": 35567,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     },
     {
       "event": "TeamMemberRemoved",
       "discriminator": "bdgrz.rbac.team-member.removed",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/266",
-        "line": 35753,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     }
   ],
   "choreography": [
@@ -460,37 +438,19 @@
       "reactor": "AdministratorAssignmentWithdrawalReactor",
       "sourceOwner": "TenantManagerGuard",
       "targetOwner": "TeamMember",
-      "command": "ApplyAdministratorAssignmentWithdrawal",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "jsonPointer": "/reactors/47",
-        "line": 4025,
-        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
-      }
+      "command": "ApplyAdministratorAssignmentWithdrawal"
     },
     {
       "reactor": "AdministratorNeutralAssignmentMutationReactor",
       "sourceOwner": "TenantManagerGuard",
       "targetOwner": "TeamMember",
-      "command": "ApplyNeutralAdministratorAssignmentMutation",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "jsonPointer": "/reactors/49",
-        "line": 4201,
-        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
-      }
+      "command": "ApplyNeutralAdministratorAssignmentMutation"
     },
     {
       "reactor": "AdministratorAssignmentRestorationReactor",
       "sourceOwner": "TenantManagerGuard",
       "targetOwner": "TeamMember",
-      "command": "ApplyAdministratorAssignmentRestoration",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "jsonPointer": "/reactors/98",
-        "line": 8498,
-        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
-      }
+      "command": "ApplyAdministratorAssignmentRestoration"
     }
   ],
   "status": "SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED",
@@ -502,5 +462,6 @@
   "baselineIdentityObservationOnly": true,
   "selectedLogicalIdentityBindings": [],
   "selectedReplayRule": "Current required authorization precedes replay; exact authorized retries resolve the original accepted result using the selected logical identity and immutable actor/intent/source binding. Fresh mutable feasibility, clock selection and body preparation cannot replace that original result. Expected revision is concurrency precondition, not a new identity.",
-  "commandNote": "Real owner of AssignTeamMember / RemoveTeamMember (they belong here, not on TenantManagerGuard). Guard participates only for the built-in Administrators team."
+  "commandNote": "Real owner of AssignTeamMember / RemoveTeamMember (they belong here, not on TenantManagerGuard). Guard participates only for the built-in Administrators team.",
+  "sourceOwner": "TeamMember"
 }

@@ -5,19 +5,28 @@
 - Business aggregate: `true`
 - Selected status: `SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED`
 
+
 ## Identity and invariant
 
 **Selected identity:** Tenant / client-exports / ExportId, with exact approved frozen inventory, attempt identity and attest-package proofs. ExportId creates the export; selected mutations use their declared CommandId/PackageId.
 
 **Invariant:** Final export delivery requires archive counts matching frozen included/withheld inventory and a successful exact-manifest delivery for each required attest package.
 
-**Additional decision rule:** Final delivery is accepted only when the archive counts match the included and withheld items listed at the start, and every required attestation package has been delivered successfully with the required contents.
+**Additional decision rule:** Final delivery records that the named recipient received the agreed export after its included and withheld records were fixed and the export was successfully prepared. This satisfies the ClientExport obligation only; it does not satisfy the separate M0-D27 engagement record package delivery to the firm's audit software.
 
 **Must preserve:** [Placeholder: preservation rule not recorded.]
 
 **Replay:** Current required authorization precedes replay; exact authorized retries resolve the original accepted result using the selected logical identity and immutable actor/intent/source binding. Fresh mutable feasibility, clock selection and body preparation cannot replace that original result. Expected revision is concurrency precondition, not a new identity.
 
-**Lifecycle:** RequestClientExport starts the delivery obligation. A build result alone does not mean the client received it. RecordClientExportDelivery completes the obligation and provides the delivery fact needed before offboarding and evidence disposition.
+**Lifecycle:** RequestClientExport fixes the delivery obligation and its record list. A successful export result does not mean the recipient received it. RecordClientExportDelivery records the recipient's receipt and provides the delivery fact needed before offboarding and evidence disposition. The target keeps the M0-D27 engagement record package on its own owner.
+
+
+
+## Source event compatibility
+
+| Selected source event | Source owner | Target owner | Disposition |
+| --- | --- | --- | --- |
+| `ClientExportAttestPackageDeliveryRecorded` | `ClientExport` | `AttestEngagementRecordPackage` | The source event records both delivered and not_delivered decisions for an M0-D27 engagement package on the ClientExport stream. The target separates the package from ClientExport and names successful delivery as AttestEngagementRecordPackageDelivered. Preserve the old discriminator and history as source evidence; define how both old outcomes map to the target before implementation. |
 
 ## Commands
 
@@ -25,16 +34,12 @@
 | --- | --- | --- |
 | [RecordClientExportBuildResult](../commands/client-export.md#recordclientexportbuildresult) | command | CommandId |
 | [RecordClientExportDelivery](../commands/client-export.md#recordclientexportdelivery) | command | CommandId |
-| [RecordOwnAttestRecordDelivery](../commands/client-export.md#recordownattestrecorddelivery) | command | CommandId |
-| [RecordOwnAttestRecordPackageResult](../commands/client-export.md#recordownattestrecordpackageresult) | command | CommandId |
 | [RequestClientExport](../commands/client-export.md#requestclientexport) | creation | ExportId |
-| [RequestOwnAttestRecordPackage](../commands/client-export.md#requestownattestrecordpackage) | creation | PackageId |
 
 ## Events
 
 | Event | Discriminator | Version |
 | --- | --- | --- |
-| [ClientExportAttestPackageDeliveryRecorded](../events/client-export.md#clientexportattestpackagedeliveryrecorded) | bdgrz.exports.client-export-attest-package-delivery-recorded | 1 |
 | [ClientExportBuildFailed](../events/client-export.md#clientexportbuildfailed) | bdgrz.exports.client-export-build-failed | 2 |
 | [ClientExportBuilt](../events/client-export.md#clientexportbuilt) | bdgrz.exports.client-export-built | 2 |
 | [ClientExportDelivered](../events/client-export.md#clientexportdelivered) | bdgrz.exports.client-export-delivered | 2 |
@@ -44,7 +49,7 @@
 
 | Row | Kind | Source owner | Target owner | Command |
 | --- | --- | --- | --- | --- |
-| [X007](../reactors/client-export-delivery-reactor.md#x007) | planned_reaction | ClientExport | ArtifactEngagementHold | RecordEngagementPackageDelivery |
+| [X007](../reactors/keep-engagement-evidence-protected-after-delivery-reactor.md#x007) | planned_reaction | ClientExport | ArtifactEngagementHold | RecordEngagementPackageDelivery |
 
 ## Product rules
 
@@ -57,7 +62,7 @@
 ## Evidence and complete record
 
 - Baseline source: [Placeholder: source file is not present in this checkout]
-- Aggregate review: [client-export-review-2026-10-29.md](../../product/definitive-aggregate-choreography/client-export-review-2026-10-29.md)
+- Aggregate review: [Placeholder: no owner-specific review file is present]
 - Full selected record: [JSON](../data/aggregates/client-export.json)
 
 > Target definition is separate from runtime qualification. Implementation status recorded by the source: `SEPARATE_VERIFICATION_REQUIRED_IMPLEMENTATION_HALTED`.

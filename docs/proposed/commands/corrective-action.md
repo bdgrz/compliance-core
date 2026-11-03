@@ -1,5 +1,7 @@
 # CorrectiveAction commands
 
+
+
 Selected command contracts: **4**. Complete selected contracts and companion source evidence: [owner command JSON](../data/commands/corrective-action.json).
 
 | Target command | Selected source name | Kind | Identity | Fields | HTTP routes |
@@ -18,7 +20,8 @@ Selected command contracts: **4**. Complete selected contracts and companion sou
 | Target command name | CompleteCorrectiveAction |
 | Selected source command name | CompleteCorrectiveAction |
 | Name decision | The selected source name is retained. |
-| Owner | CorrectiveAction |
+| Target owner | CorrectiveAction |
+| Selected source owner | CorrectiveAction |
 | Contract record status | target_contract |
 | Kind | http |
 | Logical identity | CommandId; Uuid; required=true; client; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
@@ -30,7 +33,7 @@ Selected command contracts: **4**. Complete selected contracts and companion sou
 | Contract changes | Add required CommandId. |
 | Guard order | bind_required_ids, authenticate_authorize, canonicalize_authored_intent, resolve_native_operation_facts, compare_owner_episode_actor_kind_intent_original_revision, validate_new_owner_revision_and_source_permits, append_complete_concrete_attributed_batch |
 | Response contract | `{"mode":"immediate_original_result","responseType":"FindingView","firstHttpStatus":200,"terminalResultType":"FindingView"}` |
-| Expected revision scope | `{"field":"ExpectedRevision","owner":"CorrectiveAction","counter":"logical ResourceRevision of this owner","nullableInternalRule":null}` |
+| Expected revision scope | `{"field":"ExpectedRevision","owner":"CorrectiveAction","counter":"logical ResourceRevision of this owner"}` |
 | Authorizer sources | src/Compliance.Core/Features/AccessControl/ClientManagementMutationAuthorizer.cs, src/Compliance.Core/Features/Programs/ProgramManagementAuthorizer.cs |
 | Source contract | src/Compliance.Common/Features/Remediation/CompleteCorrectiveAction.cs |
 | Primary handler | CompleteCorrectiveActionHandler |
@@ -73,7 +76,8 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Target command name | CreateCorrectiveAction |
 | Selected source command name | MaterializeCorrectiveAction |
 | Name decision | Creates accepted corrective work with its own lifecycle, even if the finding later closes. |
-| Owner | CorrectiveAction |
+| Target owner | CorrectiveAction |
+| Selected source owner | CorrectiveAction |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; reactor; deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result |
@@ -125,7 +129,8 @@ Required tests: [Placeholder: required tests not recorded]
 | Target command name | AuthorizeCorrectiveActionFindingClosure |
 | Selected source command name | AuthorizeCorrectiveActionFindingClosureUse |
 | Name decision | The command authorizes the named business action; the extra Use suffix describes the coordination mechanism. |
-| Owner | CorrectiveAction |
+| Target owner | CorrectiveAction |
+| Selected source owner | CorrectiveAction |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; reactor; deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result |
@@ -178,7 +183,8 @@ Required tests: [Placeholder: required tests not recorded]
 | Target command name | CloseCorrectiveActionFindingClosureAuthorization |
 | Selected source command name | SettleCorrectiveActionFindingClosureUse |
 | Name decision | The command ends the exact authorization after its business action or cancellation. |
-| Owner | CorrectiveAction |
+| Target owner | CorrectiveAction |
+| Selected source owner | CorrectiveAction |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; reactor; deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result |

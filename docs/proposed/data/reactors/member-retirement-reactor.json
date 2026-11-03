@@ -97,7 +97,6 @@
       ],
       "canonicalTargetOwner": "Member",
       "recoveryContractSummary": "At-least-once checkpoint replay resends the same source-derived command. Missing dependencies remain retryable; actual terminal/superseded episodes are skipped only with the owning proof.",
-      "logicalPrerequisiteRuleGuard": null,
       "logicalPrerequisiteRule": "The source is MemberDeprovisioned with an exact termination proof for the membership episode; cleanup completes only after every team assignment and direct member access grant of that exact episode has been removed or revoked and no live relationship remains.",
       "prerequisiteRuleSource": "authored 2026-10-29 from reactor and target source"
     },
@@ -177,7 +176,6 @@
       ],
       "canonicalTargetOwner": "TeamMember",
       "recoveryContractSummary": "At-least-once checkpoint replay resends the same source-derived command. Missing dependencies remain retryable; actual terminal/superseded episodes are skipped only with the owning proof.",
-      "logicalPrerequisiteRuleGuard": null,
       "logicalPrerequisiteRule": "The source is MemberDeprovisioned (the membership termination proof) for an exact membership episode; every TeamMemberAssigned of that member and episode discovered by a complete authoritative scan is removed at its exact assignment event and position, and only after the full scan does the member's cleanup complete.",
       "prerequisiteRuleSource": "authored 2026-10-29 from reactor and target source"
     },
@@ -257,7 +255,6 @@
       ],
       "canonicalTargetOwner": "AccessGrant",
       "recoveryContractSummary": "At-least-once checkpoint replay resends the same source-derived command. Missing dependencies remain retryable; actual terminal/superseded episodes are skipped only with the owning proof.",
-      "logicalPrerequisiteRuleGuard": null,
       "logicalPrerequisiteRule": "A MemberDeprovisioned fact for a membership episode must exist, and the grant must be a still-unrevoked member-principal grant issued for that same episode; only that grant is revoked.",
       "prerequisiteRuleSource": "authored 2026-10-29 from reactor and target source"
     }

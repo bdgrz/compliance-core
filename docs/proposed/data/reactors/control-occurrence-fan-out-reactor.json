@@ -28,7 +28,6 @@
       "currentRegisteredRootTypes": [
         "ControlOccurrenceFanOutReactor"
       ],
-      "plannedRootRole": null,
       "processes": [
         "ControlOccurrenceFanOut"
       ],

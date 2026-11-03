@@ -5,6 +5,7 @@
 - Business aggregate: `true`
 - Selected status: `SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED`
 
+
 ## Identity and invariant
 
 **Selected identity:** UUIDv5 namespace ArtifactId, UTF8 artifact-download-grant:v1:{canonical TenantId}:{canonical CommandId}. Receiving root additionally verifies exact artifact/command/original-actor tuple. No generic operation lookup.
@@ -18,6 +19,10 @@
 **Replay:** Current required authorization precedes replay; exact authorized retries resolve the original accepted result using the selected logical identity and immutable actor/intent/source binding. Fresh mutable feasibility, clock selection and body preparation cannot replace that original result. Expected revision is concurrency precondition, not a new identity.
 
 **Lifecycle:** [Placeholder: a consolidated lifecycle sequence is not present in the selected owner record.]
+
+
+
+
 
 ## Commands
 
@@ -37,12 +42,12 @@
 
 | Row | Kind | Source owner | Target owner | Command |
 | --- | --- | --- | --- | --- |
-| [T101](../reactors/one-committed-evidence-artifact-download-requested-starter.md#t101) | reaction_or_regular_process_stage | EvidenceArtifact | ArtifactDownloadGrant | IssueProtectedArtifactDownloadGrant |
-| [T102](../reactors/one-committed-evidence-artifact-download-requested-starter.md#t102) | reaction_or_regular_process_stage | ArtifactDownloadGrant | AdvisorHandoff | CloseAdvisorArtifactDownloadAuthorization |
-| [T103](../reactors/one-committed-evidence-artifact-download-requested-starter.md#t103) | reaction_or_regular_process_stage | ArtifactDownloadGrant | EvidenceHandlingPolicy | CloseArtifactHandlingDownloadAuthorization |
-| [T104](../reactors/one-committed-evidence-artifact-download-requested-starter.md#t104) | reaction_or_regular_process_stage | ArtifactDownloadGrant | EvidenceArtifact | CloseArtifactDownloadAvailabilityAuthorization |
-| [A021](../reactors/unassigned-architecture-rows.md#a021) | process_abort_binding | EvidenceArtifact | ArtifactDownloadGrant | CancelProtectedArtifactDownloadGrant |
-| [Q000](../reactors/unassigned-architecture-rows.md#q000) | personal_scoped_query | null (recorded) | ArtifactDownloadGrant | GetArtifactDownloadGrant |
+| [T101](../reactors/fulfill-authorized-artifact-download-request-reactor.md#t101) | reaction_or_regular_process_stage | EvidenceArtifact | ArtifactDownloadGrant | IssueProtectedArtifactDownloadGrant |
+| [T102](../reactors/fulfill-authorized-artifact-download-request-reactor.md#t102) | reaction_or_regular_process_stage | ArtifactDownloadGrant | AdvisorHandoff | CloseAdvisorArtifactDownloadAuthorization |
+| [T103](../reactors/fulfill-authorized-artifact-download-request-reactor.md#t103) | reaction_or_regular_process_stage | ArtifactDownloadGrant | EvidenceHandlingPolicy | CloseArtifactHandlingDownloadAuthorization |
+| [T104](../reactors/fulfill-authorized-artifact-download-request-reactor.md#t104) | reaction_or_regular_process_stage | ArtifactDownloadGrant | EvidenceArtifact | CloseArtifactDownloadAvailabilityAuthorization |
+| [A021](../reactors/unassigned-domain-choreography.md#a021) | process_abort_binding | EvidenceArtifact | ArtifactDownloadGrant | CancelProtectedArtifactDownloadGrant |
+| [Q000](../reactors/unassigned-domain-choreography.md#q000) | personal_scoped_query | [Placeholder: value not recorded] | ArtifactDownloadGrant | GetArtifactDownloadGrant |
 
 ## Product rules
 
@@ -55,7 +60,7 @@
 ## Evidence and complete record
 
 - Baseline source: [Placeholder: baseline source not recorded]
-- Aggregate review: [artifact-download-grant-review-2026-10-29.md](../../product/definitive-aggregate-choreography/artifact-download-grant-review-2026-10-29.md)
+- Aggregate review: [Placeholder: no owner-specific review file is present]
 - Full selected record: [JSON](../data/aggregates/artifact-download-grant.json)
 
 > Target definition is separate from runtime qualification. Implementation status recorded by the source: `SEPARATE_VERIFICATION_REQUIRED_IMPLEMENTATION_HALTED`.

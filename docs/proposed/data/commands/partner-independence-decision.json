@@ -55,7 +55,7 @@
         "recorded": "2026-10-29"
       },
       "reactor": "PartnerIndependenceDecisionMaterializationReactor",
-      "sourceOwner": "ServiceEngagementIndependence",
+      "sourceOwner": "PartnerIndependenceDecision",
       "sourceEvents": [
         "EngagementPersonalDecisionAuthorized"
       ],
@@ -65,6 +65,7 @@
       ],
       "effectKind": "claim_professional_assertion_identity",
       "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
+      "owner": "PartnerIndependenceDecision",
       "sourceName": "MaterializePartnerIndependenceDecision",
       "targetName": "RecordPartnerIndependenceEvaluation"
     },
@@ -137,14 +138,10 @@
           "policy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/107",
-        "line": 12459,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
       "attributionNote": "Creates the partner evaluation record; the engagement owner only consumes it (T110) (2026-10-29)",
       "kind": "http",
+      "sourceOwner": "PartnerIndependenceDecision",
+      "owner": "PartnerIndependenceDecision",
       "sourceName": "RecordPartnerIndependenceEvaluation",
       "targetName": "SubmitPartnerIndependenceEvaluation"
     }

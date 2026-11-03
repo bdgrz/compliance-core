@@ -28,7 +28,6 @@
       "currentRegisteredRootTypes": [
         "ImportSourceAdmissionReactor"
       ],
-      "plannedRootRole": null,
       "processes": [
         "ApplicationImportExecutionProcess"
       ],
@@ -135,7 +134,6 @@
       "currentRegisteredRootTypes": [
         "ImportSourceAdmissionReactor"
       ],
-      "plannedRootRole": null,
       "processes": [
         "ApplicationImportExecutionProcess"
       ],
@@ -201,7 +199,6 @@
       ],
       "canonicalTargetOwner": "DeclaredApplication",
       "logicalPrerequisiteRuleTemplate": "selected applicable typed variant/set; see required proof contract",
-      "prerequisiteRuleSource": "receiver guard from docs/product/audits/2026-10-23/target-reactor-contracts.json, lifted 2026-10-29",
       "recoveryContractSummary": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine."
     },
     {
@@ -229,7 +226,6 @@
       "currentRegisteredRootTypes": [
         "ImportSourceAdmissionReactor"
       ],
-      "plannedRootRole": null,
       "processes": [
         "ApplicationImportExecutionProcess"
       ],
@@ -304,7 +300,6 @@
       ],
       "canonicalTargetOwner": "DeclaredApplication",
       "logicalPrerequisiteRuleTemplate": "selected applicable typed variant/set; see required proof contract",
-      "prerequisiteRuleSource": "receiver guard from docs/product/audits/2026-10-23/target-reactor-contracts.json, lifted 2026-10-29",
       "recoveryContractSummary": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine."
     },
     {
@@ -332,7 +327,6 @@
       "currentRegisteredRootTypes": [
         "ImportSourceAdmissionReactor"
       ],
-      "plannedRootRole": null,
       "processes": [
         "ApplicationImportExecutionProcess"
       ],
@@ -407,7 +401,6 @@
       ],
       "canonicalTargetOwner": "ApplicationImportBatch",
       "logicalPrerequisiteRuleTemplate": "selected applicable typed variant/set; see required proof contract",
-      "prerequisiteRuleSource": "receiver guard from docs/product/audits/2026-10-23/target-reactor-contracts.json, lifted 2026-10-29",
       "recoveryContractSummary": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine."
     },
     {
@@ -439,7 +432,6 @@
         "ImportSourceAdmissionReactor",
         "ImportCancellationReactor"
       ],
-      "plannedRootRole": null,
       "processes": [
         "ApplicationImportExecutionProcess"
       ],
@@ -494,7 +486,6 @@
           "stageProofs": "Each required stage proof (grant, hold, review, or terminal fact) is materialised from the actual committed fact and its full immutable selection; counts, checkpoints and stage order are not accepted as proof."
         },
         "stageProofStatus": "specified",
-        "stageProofRationale": null,
         "stageProofSource": "authored 2026-10-29 from reactor and target source"
       },
       "effectIdentity": {
@@ -560,7 +551,6 @@
         "ImportSourceAdmissionReactor",
         "ImportCancellationReactor"
       ],
-      "plannedRootRole": null,
       "processes": [
         "ApplicationImportExecutionProcess"
       ],
@@ -628,7 +618,6 @@
       ],
       "canonicalTargetOwner": "DeclaredApplication",
       "logicalPrerequisiteRuleTemplate": "selected applicable typed variant/set; see required proof contract",
-      "prerequisiteRuleSource": "receiver guard from docs/product/audits/2026-10-23/target-reactor-contracts.json, lifted 2026-10-29",
       "recoveryContractSummary": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine."
     },
     {

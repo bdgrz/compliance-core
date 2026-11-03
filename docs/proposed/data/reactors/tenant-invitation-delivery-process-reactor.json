@@ -26,7 +26,6 @@
       "currentRegisteredRootTypes": [
         "TenantInvitationDeliveryProcessReactor"
       ],
-      "plannedRootRole": null,
       "processes": [
         "TenantInvitationDeliveryProcess"
       ],
@@ -134,7 +133,6 @@
       "currentRegisteredRootTypes": [
         "TenantInvitationDeliveryProcessReactor"
       ],
-      "plannedRootRole": null,
       "processes": [
         "TenantInvitationDeliveryProcess"
       ],
@@ -222,7 +220,6 @@
       "currentRegisteredRootTypes": [
         "TenantInvitationDeliveryProcessReactor"
       ],
-      "plannedRootRole": null,
       "processes": [
         "TenantInvitationDeliveryProcess"
       ],

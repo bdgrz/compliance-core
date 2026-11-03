@@ -8,14 +8,7 @@
   "invariant": "Program target dates must form a coherent chronological plan; one program identity has immutable creation intent. Criteria selection separately chooses current edition.",
   "boundaryDecision": "narrow",
   "boundaryRationale": "Remove historical criteria-selection collection from command state while preserving authoritative as-of selection proofs. Keep coherent program date plan together. A separate current criteria-selection owner is a possible targeted split, not yet a required new aggregate. Splitting individual plan dates would lose chronological validation. Dropping criteria history without replacing authoritative temporal lookup would lose exact baseline/readiness source semantics. A stale projection cannot substitute for the contributor current-source check. Splitting current edition from program plan causes no observed write-rule loss, but also needs no invented new business lifecycle.",
-  "sources": [
-    {
-      "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
-      "jsonPointer": "/aggregates/19",
-      "line": 15270,
-      "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
-    }
-  ],
+  "sources": [],
   "baselineSourcePath": "src/Compliance.Core/Features/Programs/ComplianceProgram.cs",
   "baselineEvents": [
     "ProgramCreated",
@@ -70,13 +63,9 @@
           "authorizationPolicy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/54",
-        "line": 4048,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      },
-      "kind": "http"
+      "kind": "http",
+      "sourceOwner": "ComplianceProgram",
+      "owner": "ComplianceProgram"
     },
     {
       "command": "ReviseProgram",
@@ -125,13 +114,9 @@
         "terminalResultType": "Unit"
       },
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/179",
-        "line": 13391,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      },
-      "kind": "command"
+      "kind": "command",
+      "sourceOwner": "ComplianceProgram",
+      "owner": "ComplianceProgram"
     },
     {
       "command": "SelectProgramCriteriaEdition",
@@ -175,25 +160,15 @@
         "terminalResultType": "Unit"
       },
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/193",
-        "line": 14485,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      },
-      "kind": "command"
+      "kind": "command",
+      "sourceOwner": "ComplianceProgram",
+      "owner": "ComplianceProgram"
     }
   ],
   "eventAuthority": "retained_baseline_business_facts_requires_schema_reconciliation",
   "events": [
     {
       "event": "ProgramCreated",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
-        "jsonPointer": "/aggregates/19",
-        "line": 15270,
-        "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
-      },
       "baselineContract": {
         "event": "ProgramCreated",
         "emitters": [
@@ -243,12 +218,6 @@
     },
     {
       "event": "ProgramCriteriaEditionSelected",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
-        "jsonPointer": "/aggregates/19",
-        "line": 15270,
-        "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
-      },
       "baselineContract": {
         "event": "ProgramCriteriaEditionSelected",
         "emitters": [
@@ -298,12 +267,6 @@
     },
     {
       "event": "ProgramRevised",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
-        "jsonPointer": "/aggregates/19",
-        "line": 15270,
-        "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
-      },
       "baselineContract": {
         "event": "ProgramRevised",
         "emitters": [
@@ -368,33 +331,15 @@
   "selectedLogicalIdentityBindings": [
     {
       "command": "CreateProgram",
-      "logicalIdentity": "ProgramId",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/54",
-        "line": 4048,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      }
+      "logicalIdentity": "ProgramId"
     },
     {
       "command": "ReviseProgram",
-      "logicalIdentity": "CommandId",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/179",
-        "line": 13391,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      }
+      "logicalIdentity": "CommandId"
     },
     {
       "command": "SelectProgramCriteriaEdition",
-      "logicalIdentity": "CommandId",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/193",
-        "line": 14485,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      }
+      "logicalIdentity": "CommandId"
     }
   ],
   "selectedReplayRule": "Current required authorization precedes replay; exact authorized retries resolve the original accepted result using the selected logical identity and immutable actor/intent/source binding. Fresh mutable feasibility, clock selection and body preparation cannot replace that original result. Expected revision is concurrency precondition, not a new identity.",
@@ -428,5 +373,6 @@
     "D01-10",
     "D02-02"
   ],
-  "decidesAuthored": "2026-10-29"
+  "decidesAuthored": "2026-10-29",
+  "sourceOwner": "ComplianceProgram"
 }

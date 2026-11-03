@@ -5,6 +5,7 @@
 - Business aggregate: `true`
 - Selected status: `SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED`
 
+
 ## Identity and invariant
 
 **Selected identity:** Tenant / significant-changes / ChangeId, with immutable ProgramId. ChangeId is the selected immutable creation identity; later selected commands use CommandId and exact changed-version/source bindings.
@@ -18,6 +19,10 @@
 **Replay:** Current required authorization precedes replay; exact authorized retries resolve the original accepted result using the selected logical identity and immutable actor/intent/source binding. Fresh mutable feasibility, clock selection and body preparation cannot replace that original result. Expected revision is concurrency precondition, not a new identity.
 
 **Lifecycle:** [Placeholder: a consolidated lifecycle sequence is not present in the selected owner record.]
+
+
+
+
 
 ## Commands
 
@@ -43,13 +48,13 @@
 
 | Row | Kind | Source owner | Target owner | Command |
 | --- | --- | --- | --- | --- |
-| [S019](../reactors/link-impact-review-work-reactor.md#s019) | business_receiver | SignificantChange | SignificantChange | LinkImpactReviewWork |
-| [S020](../reactors/system-description-decision-reactor.md#s020) | business_receiver | SystemDescription | SignificantChange | RecordSignificantChangeSystemDescriptionDecision |
+| [S019](../reactors/request-impact-review-after-significant-change-reactor.md#s019) | business_receiver | SignificantChange | SignificantChange | LinkImpactReviewWork |
+| [S020](../reactors/update-system-description-after-significant-change-reactor.md#s020) | business_receiver | SystemDescription | SignificantChange | RecordSignificantChangeSystemDescriptionDecision |
 
 ## Product rules
 
-- **D21-01** — An authorized user may record a SignificantChange or ComplianceIncident directly when no source tool exists; the product keeps its own record identity, recorder, dates, assessment, and evidence, and external source_system, source_identifier, and source_url are optional provenance only. Source: [m0-d21-significant-change.md](../../product/decisions/m0-d21-significant-change.md).
-- **D21-02** — Significance is a recorded human assessment of significant or not_significant with a required rationale and assessed_by and assessed_at; handling_class uses the evidence vocabulary and defaults to confidential. Source: [m0-d21-significant-change.md](../../product/decisions/m0-d21-significant-change.md).
+- **D21-01** — An authorized user may record a SignificantChange or ComplianceIncident directly when no source tool exists; the product keeps its own record identity, recorder, dates, assessment, and evidence, and external source_system, source_identifier, and source_url are optional provenance only. Decision: [m0-d21-significant-change.md](../decisions/m0-d21-significant-change.md).
+- **D21-02** — Significance is a recorded human assessment of significant or not_significant with a required rationale and assessed_by and assessed_at; handling_class uses the evidence vocabulary and defaults to confidential. Decision: [m0-d21-significant-change.md](../decisions/m0-d21-significant-change.md).
 
 ## Adopted architecture decisions
 
@@ -58,7 +63,7 @@
 ## Evidence and complete record
 
 - Baseline source: [Placeholder: source file is not present in this checkout]
-- Aggregate review: [significant-change-review-2026-10-29.md](../../product/definitive-aggregate-choreography/significant-change-review-2026-10-29.md)
+- Aggregate review: [Placeholder: no owner-specific review file is present]
 - Full selected record: [JSON](../data/aggregates/significant-change.json)
 
 > Target definition is separate from runtime qualification. Implementation status recorded by the source: `SEPARATE_VERIFICATION_REQUIRED_IMPLEMENTATION_HALTED`.

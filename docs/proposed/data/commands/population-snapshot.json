@@ -47,10 +47,8 @@
       ],
       "http": [],
       "status": "PLANNED",
-      "source": {
-        "path": "docs/product/definitive-aggregate-choreography/decisions.json",
-        "recorded": "2026-10-29"
-      },
+      "sourceOwner": "PopulationSnapshot",
+      "owner": "PopulationSnapshot",
       "sourceName": "FreezePopulationSnapshot",
       "targetName": "FinalizePopulationSnapshot"
     }

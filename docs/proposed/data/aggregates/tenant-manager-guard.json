@@ -8,14 +8,7 @@
   "invariant": "Removal from effective administrator set must leave another active tenant administrator.",
   "boundaryDecision": "retain",
   "boundaryRationale": "Without a shared authoritative decision/hold two removals could each rely on the other. The coordination boundary is justified; guard-to-member transition protocol is incomplete.",
-  "sources": [
-    {
-      "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
-      "jsonPointer": "/aggregates/88",
-      "line": 55160,
-      "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
-    }
-  ],
+  "sources": [],
   "baselineSourcePath": "src/Compliance.Core/Features/AccessControl/TenantManagerGuard.cs",
   "baselineEvents": [
     "TenantManagerRestored",
@@ -98,11 +91,7 @@
       "effectKind": "complete_administrator_withdrawal",
       "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
       "handler": "CompleteAdministratorWithdrawalHandler",
-      "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "recorded": "2026-10-29"
-      }
+      "http": []
     },
     {
       "command": "CompleteAdministratorRestoration",
@@ -181,11 +170,7 @@
       "effectKind": "complete_administrator_restoration",
       "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
       "handler": "CompleteAdministratorRestorationHandler",
-      "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "recorded": "2026-10-29"
-      }
+      "http": []
     }
   ],
   "eventAuthority": "selected_final_event_catalog",
@@ -193,68 +178,32 @@
     {
       "event": "TenantManagerRestorationAccepted",
       "discriminator": "bdgrz.tenant-manager-guard.tenant-manager-restoration-accepted",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/268",
-        "line": 36044,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     },
     {
       "event": "TenantManagerRestorationCompleted",
       "discriminator": "bdgrz.tenant-manager-guard.tenant-manager-restoration-completed",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/269",
-        "line": 36230,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     },
     {
       "event": "TenantManagerRestored",
       "discriminator": "bdgrz.rbac.manager_guard.restored",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/270",
-        "line": 36416,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     },
     {
       "event": "TenantManagerSourceMutationAdmitted",
       "discriminator": "bdgrz.tenant-manager-guard.tenant-manager-source-mutation-admitted",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/271",
-        "line": 36597,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     },
     {
       "event": "TenantManagerWithdrawalAccepted",
       "discriminator": "bdgrz.tenant-manager-guard.tenant-manager-withdrawal-accepted",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/272",
-        "line": 36783,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     },
     {
       "event": "TenantManagerWithdrawalCompleted",
       "discriminator": "bdgrz.tenant-manager-guard.tenant-manager-withdrawal-completed",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/273",
-        "line": 36969,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     }
   ],
   "choreography": [
@@ -262,97 +211,49 @@
       "reactor": "AdministratorWithdrawalReactor",
       "sourceOwner": "TenantManagerGuard",
       "targetOwner": "Member",
-      "command": "ApplyMemberWithdrawal",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "jsonPointer": "/reactors/46",
-        "line": 3937,
-        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
-      }
+      "command": "ApplyMemberWithdrawal"
     },
     {
       "reactor": "AdministratorAssignmentWithdrawalReactor",
       "sourceOwner": "TenantManagerGuard",
       "targetOwner": "TeamMember",
-      "command": "ApplyAdministratorAssignmentWithdrawal",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "jsonPointer": "/reactors/47",
-        "line": 4025,
-        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
-      }
+      "command": "ApplyAdministratorAssignmentWithdrawal"
     },
     {
       "reactor": "AdministratorNeutralMemberMutationReactor",
       "sourceOwner": "TenantManagerGuard",
       "targetOwner": "Member",
-      "command": "ApplyNeutralMemberSourceMutation",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "jsonPointer": "/reactors/48",
-        "line": 4112,
-        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
-      }
+      "command": "ApplyNeutralMemberSourceMutation"
     },
     {
       "reactor": "AdministratorNeutralAssignmentMutationReactor",
       "sourceOwner": "TenantManagerGuard",
       "targetOwner": "TeamMember",
-      "command": "ApplyNeutralAdministratorAssignmentMutation",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "jsonPointer": "/reactors/49",
-        "line": 4201,
-        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
-      }
+      "command": "ApplyNeutralAdministratorAssignmentMutation"
     },
     {
       "reactor": "AdministratorWithdrawalCompletionReactor",
       "sourceOwner": "Member|TeamMember",
       "targetOwner": "TenantManagerGuard",
-      "command": "CompleteAdministratorWithdrawal",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "jsonPointer": "/reactors/50",
-        "line": 4288,
-        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
-      }
+      "command": "CompleteAdministratorWithdrawal"
     },
     {
       "reactor": "AdministratorRestorationReactor",
       "sourceOwner": "TenantManagerGuard",
       "targetOwner": "Member",
-      "command": "ApplyMemberRestoration",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "jsonPointer": "/reactors/51",
-        "line": 4374,
-        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
-      }
+      "command": "ApplyMemberRestoration"
     },
     {
       "reactor": "AdministratorRestorationCompletionReactor",
       "sourceOwner": "Member|TeamMember",
       "targetOwner": "TenantManagerGuard",
-      "command": "CompleteAdministratorRestoration",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "jsonPointer": "/reactors/52",
-        "line": 4456,
-        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
-      }
+      "command": "CompleteAdministratorRestoration"
     },
     {
       "reactor": "AdministratorAssignmentRestorationReactor",
       "sourceOwner": "TenantManagerGuard",
       "targetOwner": "TeamMember",
-      "command": "ApplyAdministratorAssignmentRestoration",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "jsonPointer": "/reactors/98",
-        "line": 8498,
-        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
-      }
+      "command": "ApplyAdministratorAssignmentRestoration"
     }
   ],
   "status": "SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED",
@@ -365,53 +266,23 @@
   "selectedLogicalIdentityBindings": [
     {
       "command": "SuspendMember",
-      "logicalIdentity": "CommandId",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/source-admission-contracts.json",
-        "jsonPointer": "/contracts/5",
-        "line": 320,
-        "sha256": "f1d549ed0879c816cb26e86879f8fa658dab0a8acbf7c591e4d4aed40483f8ae"
-      }
+      "logicalIdentity": "CommandId"
     },
     {
       "command": "DeprovisionMember",
-      "logicalIdentity": "CommandId",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/source-admission-contracts.json",
-        "jsonPointer": "/contracts/6",
-        "line": 391,
-        "sha256": "f1d549ed0879c816cb26e86879f8fa658dab0a8acbf7c591e4d4aed40483f8ae"
-      }
+      "logicalIdentity": "CommandId"
     },
     {
       "command": "RemoveTeamMember",
-      "logicalIdentity": "CommandId",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/source-admission-contracts.json",
-        "jsonPointer": "/contracts/7",
-        "line": 462,
-        "sha256": "f1d549ed0879c816cb26e86879f8fa658dab0a8acbf7c591e4d4aed40483f8ae"
-      }
+      "logicalIdentity": "CommandId"
     },
     {
       "command": "ReinstateMember",
-      "logicalIdentity": "CommandId",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/source-admission-contracts.json",
-        "jsonPointer": "/contracts/8",
-        "line": 538,
-        "sha256": "f1d549ed0879c816cb26e86879f8fa658dab0a8acbf7c591e4d4aed40483f8ae"
-      }
+      "logicalIdentity": "CommandId"
     },
     {
       "command": "AssignTeamMember",
-      "logicalIdentity": "CommandId",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/source-admission-contracts.json",
-        "jsonPointer": "/contracts/9",
-        "line": 604,
-        "sha256": "f1d549ed0879c816cb26e86879f8fa658dab0a8acbf7c591e4d4aed40483f8ae"
-      }
+      "logicalIdentity": "CommandId"
     }
   ],
   "selectedReplayRule": "Current required authorization precedes replay; exact authorized retries resolve the original accepted result using the selected logical identity and immutable actor/intent/source binding. Fresh mutable feasibility, clock selection and body preparation cannot replace that original result. Expected revision is concurrency precondition, not a new identity.",

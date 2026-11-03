@@ -4,7 +4,7 @@ Canonical events: **1**. Complete canonical event and available schema records: 
 
 | Target event | Selected source name | Kind | Adopted discriminator | Version | Schema fields | Meaning |
 | --- | --- | --- | --- | --- | --- | --- |
-| ImportedOwnerResolutionRecorded | ImportedOwnerResolutionRecorded | business | null (recorded) | null (recorded) | [Placeholder: schema absent] | An imported owner reference was bound to a workforce person by exact email match at import or by one attributed manual resolution; unresolved references stay unresolved until then. |
+| ImportedOwnerResolutionRecorded | ImportedOwnerResolutionRecorded | business | [Placeholder: value not recorded] | [Placeholder: value not recorded] | [Placeholder: schema absent] | An imported owner reference was bound to a workforce person by exact email match at import or by one attributed manual resolution; unresolved references stay unresolved until then. |
 
 ## Event details
 
@@ -18,7 +18,7 @@ Canonical events: **1**. Complete canonical event and available schema records: 
 | Canonical semantic key | event:ImportedOwnerResolutionRecorded |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | ImportedOwnerResolutionRecorded |
-| Adopted wire | null (recorded) |
+| Adopted wire | [Placeholder: value not recorded] |
 | Wire qualification | Planned; no declared record yet. |
 | Schema status | planned_schema |
 | Source status | planned_no_source_type |

@@ -4,9 +4,9 @@ Canonical events: **4**. Complete canonical event and available schema records: 
 
 | Target event | Selected source name | Kind | Adopted discriminator | Version | Schema fields | Meaning |
 | --- | --- | --- | --- | --- | --- | --- |
-| WorkDigestDeliveryAttemptStarted | WorkDigestDispatchAttemptStarted | technical | bdgrz.work.digest_dispatch.attempt_started | 1 | [Placeholder: schema absent] | null (recorded) |
-| WorkDigestDeliveryOutcomeRecorded | WorkDigestDispatchOutcomeRecorded | technical | bdgrz.work.digest_dispatch.outcome_recorded | 1 | [Placeholder: schema absent] | null (recorded) |
-| WorkDigestDeliveryScheduled | WorkDigestDispatchScheduled | technical | bdgrz.work.digest_dispatch.scheduled | 1 | [Placeholder: schema absent] | null (recorded) |
+| WorkDigestDeliveryAttemptStarted | WorkDigestDispatchAttemptStarted | technical | bdgrz.work.digest_dispatch.attempt_started | 1 | [Placeholder: schema absent] | The system began sending one weekly work digest to its intended member. |
+| WorkDigestDeliveryOutcomeRecorded | WorkDigestDispatchOutcomeRecorded | technical | bdgrz.work.digest_dispatch.outcome_recorded | 1 | [Placeholder: schema absent] | The system recorded whether one member’s weekly work digest was delivered, failed, or could not be confirmed. |
+| WorkDigestDeliveryScheduled | WorkDigestDispatchScheduled | technical | bdgrz.work.digest_dispatch.scheduled | 1 | [Placeholder: schema absent] | The system scheduled one member’s weekly digest for its next delivery time. |
 | WorkDigestRetryApprovedAfterUnknownDelivery | WorkDigestUnknownRetryAuthorized | technical | bdgrz.work.digest_dispatch.unknown_retry_authorized | 2 | [Placeholder: schema absent] | A native operator admission bound to its exact unknown attempt and immutable original result. |
 
 ## Event details
@@ -17,7 +17,7 @@ Canonical events: **4**. Complete canonical event and available schema records: 
 | --- | --- |
 | Target event name | WorkDigestDeliveryAttemptStarted |
 | Selected source event name | WorkDigestDispatchAttemptStarted |
-| Name decision | Names the start of one scheduled digest delivery attempt without using the transport term dispatch. |
+| Name decision | Names the start of one weekly digest email delivery attempt. |
 | Canonical semantic key | event:WorkDigestDispatchAttemptStarted |
 | Owner selection | exact declared technical/storage owner |
 | Target concrete type | WorkDigestDispatchAttemptStarted |
@@ -27,8 +27,8 @@ Canonical events: **4**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Target meaning | null (recorded) |
-| Selected source meaning | null (recorded) |
+| Target meaning | The system began sending one weekly work digest to its intended member. |
+| Selected source meaning | [Placeholder: value not recorded] |
 | Meaning source | [Placeholder: value not recorded] |
 
 #### Schema
@@ -51,7 +51,7 @@ Canonical events: **4**. Complete canonical event and available schema records: 
 | --- | --- |
 | Target event name | WorkDigestDeliveryOutcomeRecorded |
 | Selected source event name | WorkDigestDispatchOutcomeRecorded |
-| Name decision | Names the recorded result of one work digest delivery attempt. |
+| Name decision | Names the recorded result of one weekly digest email delivery attempt. |
 | Canonical semantic key | event:WorkDigestDispatchOutcomeRecorded |
 | Owner selection | exact declared technical/storage owner |
 | Target concrete type | WorkDigestDispatchOutcomeRecorded |
@@ -61,8 +61,8 @@ Canonical events: **4**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Target meaning | null (recorded) |
-| Selected source meaning | null (recorded) |
+| Target meaning | The system recorded whether one member’s weekly work digest was delivered, failed, or could not be confirmed. |
+| Selected source meaning | [Placeholder: value not recorded] |
 | Meaning source | [Placeholder: value not recorded] |
 
 #### Schema
@@ -85,7 +85,7 @@ Canonical events: **4**. Complete canonical event and available schema records: 
 | --- | --- |
 | Target event name | WorkDigestDeliveryScheduled |
 | Selected source event name | WorkDigestDispatchScheduled |
-| Name decision | Names the scheduled work digest delivery time. |
+| Name decision | Names the scheduled delivery of one member’s weekly digest. |
 | Canonical semantic key | event:WorkDigestDispatchScheduled |
 | Owner selection | exact declared technical/storage owner |
 | Target concrete type | WorkDigestDispatchScheduled |
@@ -95,8 +95,8 @@ Canonical events: **4**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Target meaning | null (recorded) |
-| Selected source meaning | null (recorded) |
+| Target meaning | The system scheduled one member’s weekly digest for its next delivery time. |
+| Selected source meaning | [Placeholder: value not recorded] |
 | Meaning source | [Placeholder: value not recorded] |
 
 #### Schema

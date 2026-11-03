@@ -9,8 +9,7 @@
       "stage": "materialize",
       "receivers": [
         "MaterializeClientIndependencePreview"
-      ],
-      "rule": null
+      ]
     }
   ],
   "abort": []

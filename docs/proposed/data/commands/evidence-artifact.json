@@ -38,13 +38,9 @@
         "terminalResultType": "EvidenceCapture"
       },
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/31",
-        "line": 2525,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      },
       "kind": "creation",
+      "sourceOwner": "EvidenceArtifact",
+      "owner": "EvidenceArtifact",
       "sourceName": "CaptureEvidenceArtifact",
       "targetName": "CaptureEvidenceArtifact"
     },
@@ -114,13 +110,9 @@
           "authorizationPolicy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/82",
-        "line": 6088,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      },
       "kind": "http",
+      "sourceOwner": "EvidenceArtifact",
+      "owner": "EvidenceArtifact",
       "sourceName": "IssueArtifactDownload",
       "targetName": "IssueArtifactDownload"
     },
@@ -172,12 +164,6 @@
         "terminalResultType": "Unit"
       },
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/116",
-        "line": 8675,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      },
       "kind": "command",
       "concurrencyGuard": {
         "rule": "require_expected_revision",
@@ -189,6 +175,8 @@
         },
         "date": "2026-10-29"
       },
+      "sourceOwner": "EvidenceArtifact",
+      "owner": "EvidenceArtifact",
       "sourceName": "RecordEvidenceArtifactInspection",
       "targetName": "RecordEvidenceArtifactInspection"
     },
@@ -240,13 +228,9 @@
           "authorizationPolicy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/144",
-        "line": 10805,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      },
       "kind": "http",
+      "sourceOwner": "EvidenceArtifact",
+      "owner": "EvidenceArtifact",
       "sourceName": "ReleaseEvidenceArtifactQuarantine",
       "targetName": "ReleaseEvidenceArtifactQuarantine"
     },
@@ -304,7 +288,7 @@
         }
       ],
       "reactor": "SettleArtifactDownloadAvailabilityUseReactor",
-      "sourceOwner": "ArtifactDownloadGrant",
+      "sourceOwner": "EvidenceArtifact",
       "sourceEvents": [
         "EvidenceArtifactDownloadIssued",
         "ArtifactDownloadGrantCanceled"
@@ -317,10 +301,7 @@
       "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
       "handler": "SettleArtifactDownloadAvailabilityUseHandler",
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "recorded": "2026-10-29"
-      },
+      "owner": "EvidenceArtifact",
       "sourceName": "SettleArtifactDownloadAvailabilityUse",
       "targetName": "CloseArtifactDownloadAvailabilityAuthorization"
     }

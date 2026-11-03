@@ -38,7 +38,6 @@
         "TypeIIRangeReactor",
         "TypeIIRangeReleaseReactor"
       ],
-      "plannedRootRole": null,
       "processes": [
         "TypeIIRangeProcess"
       ],
@@ -103,7 +102,6 @@
           "stageProofs": "Each required stage proof (grant, hold, review, or terminal fact) is materialised from the actual committed fact and its full immutable selection; counts, checkpoints and stage order are not accepted as proof."
         },
         "stageProofStatus": "specified",
-        "stageProofRationale": null,
         "stageProofSource": "authored 2026-10-29 from reactor and target source"
       },
       "effectIdentity": {

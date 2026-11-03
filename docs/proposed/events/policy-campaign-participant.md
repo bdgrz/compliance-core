@@ -112,7 +112,7 @@ ChildAdmissionIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T076](../reactors/policy-participant-result-reactor.md#t076) | emitted semantic fact | PolicyDistributionCampaign | ApplyPolicyParticipantResult | PolicyCampaignParticipant |
+| [T076](../reactors/record-policy-requirement-outcomes-reactor.md#t076) | emitted semantic fact | PolicyDistributionCampaign | ApplyPolicyParticipantResult | PolicyCampaignParticipant |
 
 ### PolicyAcknowledgementRecorded
 
@@ -217,7 +217,7 @@ ChildAdmissionIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T076](../reactors/policy-participant-result-reactor.md#t076) | emitted semantic fact | PolicyDistributionCampaign | ApplyPolicyParticipantResult | PolicyCampaignParticipant |
+| [T076](../reactors/record-policy-requirement-outcomes-reactor.md#t076) | emitted semantic fact | PolicyDistributionCampaign | ApplyPolicyParticipantResult | PolicyCampaignParticipant |
 
 ### PolicyCampaignParticipantCampaignClosureAuthorized
 
@@ -247,7 +247,6 @@ ChildAdmissionIntent
 | Schema discriminator | bdgrz.policy-campaign-participant.policy-campaign-participant-campaign-closure-use-authorized |
 | Schema discriminatorVersion | 1 |
 | Schema owner | PolicyCampaignParticipant |
-| Schema existingContract | null (recorded) |
 | Schema status | selected target schema; implementation pending |
 | Schema reason | typed reactor receiver accepted business fact |
 | Schema changes | None listed |
@@ -340,7 +339,6 @@ SourceUseAuthorizationIntent
 | Schema discriminator | bdgrz.policy-campaign-participant.policy-campaign-participant-campaign-closure-use-settled |
 | Schema discriminatorVersion | 1 |
 | Schema owner | PolicyCampaignParticipant |
-| Schema existingContract | null (recorded) |
 | Schema status | selected target schema; implementation pending |
 | Schema reason | typed reactor receiver accepted business fact |
 | Schema changes | None listed |
@@ -507,7 +505,7 @@ ChildAdmissionIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T076](../reactors/policy-participant-result-reactor.md#t076) | emitted semantic fact | PolicyDistributionCampaign | ApplyPolicyParticipantResult | PolicyCampaignParticipant |
+| [T076](../reactors/record-policy-requirement-outcomes-reactor.md#t076) | emitted semantic fact | PolicyDistributionCampaign | ApplyPolicyParticipantResult | PolicyCampaignParticipant |
 
 
 ## Wire/schema version discrepancies

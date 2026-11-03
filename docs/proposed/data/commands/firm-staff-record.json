@@ -50,13 +50,9 @@
           "policy": "PlatformOperator"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/114",
-        "line": 13268,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
       "kind": "http",
+      "sourceOwner": "FirmStaffRecord",
+      "owner": "FirmStaffRecord",
       "sourceName": "RegisterFirmStaff",
       "targetName": "RegisterFirmStaff"
     },
@@ -109,13 +105,9 @@
           "policy": "PlatformOperator"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/152",
-        "line": 17695,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
       "kind": "http",
+      "sourceOwner": "FirmStaffRecord",
+      "owner": "FirmStaffRecord",
       "sourceName": "SetFirmStaffStatus",
       "targetName": "SetFirmStaffStatus"
     },
@@ -159,15 +151,9 @@
           "required": true
         }
       ],
-      "responseContract": null,
-      "http": null,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/source-admission-contracts.json",
-        "jsonPointer": "/contracts/23",
-        "line": 1423,
-        "sha256": "f1d549ed0879c816cb26e86879f8fa658dab0a8acbf7c591e4d4aed40483f8ae"
-      },
       "kind": "abort",
+      "sourceOwner": "FirmStaffRecord",
+      "owner": "FirmStaffRecord",
       "sourceName": "RejectFirmStaffRegistration",
       "targetName": "RejectFirmStaffRegistration"
     },
@@ -230,7 +216,7 @@
         }
       ],
       "reactor": "FirmStaffRegistrationReactor",
-      "sourceOwner": "FirmStaffIdentityClaim",
+      "sourceOwner": "FirmStaffRecord",
       "sourceEvents": [
         "FirmStaffIdentityClaimed"
       ],
@@ -242,10 +228,7 @@
       "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
       "handler": "CompleteFirmStaffRegistrationHandler",
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "recorded": "2026-10-29"
-      },
+      "owner": "FirmStaffRecord",
       "sourceName": "CompleteFirmStaffRegistration",
       "targetName": "CompleteFirmStaffRegistration"
     },
@@ -318,7 +301,7 @@
         }
       ],
       "reactor": "EngagementFirmStaffRecordUseReactor",
-      "sourceOwner": "ServiceEngagementIndependence",
+      "sourceOwner": "FirmStaffRecord",
       "sourceEvents": [
         "ServiceEngagementAcceptanceRequested",
         "ServiceEngagementStaffAssignmentRequested",
@@ -332,10 +315,7 @@
       "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
       "handler": "AuthorizeFirmStaffRecordEngagementUseHandler",
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "recorded": "2026-10-29"
-      },
+      "owner": "FirmStaffRecord",
       "sourceName": "AuthorizeFirmStaffRecordEngagementUse",
       "targetName": "AuthorizeFirmStaffRecordEngagement"
     },
@@ -403,7 +383,7 @@
         }
       ],
       "reactor": "EngagementFirmStaffRecordUseSettlementReactor",
-      "sourceOwner": "ServiceEngagementIndependence",
+      "sourceOwner": "FirmStaffRecord",
       "sourceEvents": [
         "EngagementPracticeCommitmentsAuthorized",
         "ServiceEngagementAcceptanceRejected",
@@ -419,10 +399,7 @@
       "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
       "handler": "SettleFirmStaffRecordEngagementUseHandler",
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "recorded": "2026-10-29"
-      },
+      "owner": "FirmStaffRecord",
       "sourceName": "SettleFirmStaffRecordEngagementUse",
       "targetName": "CloseFirmStaffRecordEngagementAuthorization"
     },
@@ -495,7 +472,7 @@
         }
       ],
       "reactor": "ProfessionalDutyStaffEligibilityReactor",
-      "sourceOwner": "FirmProfessionalDutyDesignation",
+      "sourceOwner": "FirmStaffRecord",
       "sourceEvents": [
         "ProfessionalDutyChangeAccepted"
       ],
@@ -507,10 +484,7 @@
       "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
       "handler": "AuthorizeFirmStaffProfessionalDutyUseHandler",
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "recorded": "2026-10-29"
-      },
+      "owner": "FirmStaffRecord",
       "sourceName": "AuthorizeFirmStaffProfessionalDutyUse",
       "targetName": "AuthorizeFirmStaffProfessionalDuty"
     },
@@ -578,7 +552,7 @@
         }
       ],
       "reactor": "ProfessionalDutyStaffEligibilitySettlementReactor",
-      "sourceOwner": "FirmProfessionalDutyDesignation",
+      "sourceOwner": "FirmStaffRecord",
       "sourceEvents": [
         "FirmProfessionalDutyDesignationRecorded",
         "ProfessionalDutyChangeRejected"
@@ -591,10 +565,7 @@
       "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
       "handler": "SettleFirmStaffProfessionalDutyUseHandler",
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "recorded": "2026-10-29"
-      },
+      "owner": "FirmStaffRecord",
       "sourceName": "SettleFirmStaffProfessionalDutyUse",
       "targetName": "CloseFirmStaffProfessionalDutyAuthorization"
     }
@@ -806,8 +777,7 @@
       "expectedRevisionScope": {
         "field": "ExpectedRevision",
         "owner": "FirmStaffRecord",
-        "counter": "logical ResourceRevision of this owner",
-        "nullableInternalRule": null
+        "counter": "logical ResourceRevision of this owner"
       }
     }
   ]

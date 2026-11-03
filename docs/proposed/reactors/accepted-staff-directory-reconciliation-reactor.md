@@ -20,11 +20,11 @@ Selected choreography rows: **1**. Required proofs, recovery, effect identity, a
 | id | S018 |
 | kind | business_receiver |
 | status | SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED |
-| sourceOwner | ServiceEngagementIndependence |
+| Source owner (target name) | ServiceEngagementIndependence (source: ServiceEngagementIndependence) |
 | logicalPrerequisiteFacts (target names) | ServiceEngagementAcceptanceRecorded, ServiceEngagementStaffAssigned |
 | physicalRootEvents (target names) | ServiceEngagementAcceptanceRecorded, ServiceEngagementStaffAssigned |
 | Target command (selected source name: RecordDirectoryIndependenceReevaluation) | RecordDirectoryIndependenceReevaluation |
-| targetOwner | ServiceEngagementIndependence |
+| Target owner | ServiceEngagementIndependence |
 | targetAuthorityKind | business_aggregate |
 | emittedSemanticFacts (target names) | DirectoryIndependenceReevaluated |
 | currentRegisteredRootTypes (target names) | ReassessStaffIndependenceAfterChangesReactor |
@@ -35,7 +35,6 @@ Selected choreography rows: **1**. Required proofs, recovery, effect identity, a
 | sourceOwners | ServiceEngagementIndependence |
 | canonicalTargetOwner | ServiceEngagementIndependence |
 | recoveryContractSummary | At-least-once checkpoint replay resends the same source-derived command. Missing dependencies remain retryable; actual terminal/superseded episodes are skipped only with the owning proof. |
-| logicalPrerequisiteRuleGuard | null (recorded) |
 | logicalPrerequisiteRule | The source is a newly recorded ServiceEngagementAcceptanceRecorded or ServiceEngagementStaffAssigned; every earlier directory status change for each assigned staff member that postdates the recorded directory staff revision yields a denial-only receipt against that exact pair; the receipt never reactivates acceptance. |
 | prerequisiteRuleSource | authored 2026-10-29 from reactor and target source |
 

@@ -34,7 +34,6 @@
       "currentRegisteredRootTypes": [
         "AuditorSampleSelectionMaterializationReactor"
       ],
-      "plannedRootRole": null,
       "processes": [
         "IndependentChildMaterialization"
       ],

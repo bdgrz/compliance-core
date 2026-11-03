@@ -1,4 +1,4 @@
-# Architecture and product decisions
+# Selected domain and architecture decisions
 
 Architecture decisions: **35**. Complete selected records: [decision JSON](data/decisions.json).
 
@@ -24,15 +24,15 @@ Architecture decisions: **35**. Complete selected records: [decision JSON](data/
 | EV-D08 | SELECTED_FOR_TARGET_DEFINITION | keep_per_child_admission | PolicyDistributionCampaign keeps per-participant result admission on its stream; growth is bounded by the campaign audience and life and is accepted. |
 | EV-D09 | SELECTED_FOR_TARGET_DEFINITION | refusals_retained_as_facts | The thirteen Rejected/Failed events remain business facts (eleven at 0.78 or higher). TenantSlugRegistrationRejected (0.61) and TenantSlugSurrenderRejected (0.58) are retained but flagged for review. |
 | RULE_D26_OWNERS | SELECTED_FOR_TARGET_DEFINITION | assign_independence_rules | D26-05 to IndependenceRuleCatalog, D26-07 to ServiceEngagementIndependence, D26-03 to ClientServiceIndependence (moderate), D26-06 to ClientIndependenceDecision (moderate); D26-04 remains open. |
-| OPEN_ResponseReceiptsInPayload | OPEN | null (recorded) | Whether FirstResponse/OperationResult belong inside the business event or in an operation receipt keyed by command identity is unsettled (0.57 vs 0.39, confidence 0.35). Revision-in-payload as metadata 0.68. No contract change adopted. |
-| OPEN_CriteriaEditionOwner | OPEN | null (recorded) | Whether a platform CriteriaEdition owner is needed for D02-01 is unsettled (0.62 at confidence 0.43). |
-| OPEN_LifecycleFactsOtherInventories | OPEN | null (recorded) | Distinct lifecycle facts for ServiceIdentity (0.67), Person (0.65), WorkRelationship, Location, DataFlow (0.60), TechnologyComponent (0.56), InformationAsset (0.54) are unsettled; generic revision facts stay. |
-| OPEN_ClientExportClassification | OPEN | null (recorded) | ClientExport reads as governor 0.50 / technical 0.38; classification unchanged. |
+| OPEN_ResponseReceiptsInPayload | OPEN | [Placeholder: value not recorded] | Whether FirstResponse/OperationResult belong inside the business event or in an operation receipt keyed by command identity is unsettled (0.57 vs 0.39, confidence 0.35). Revision-in-payload as metadata 0.68. No contract change adopted. |
+| OPEN_CriteriaEditionOwner | OPEN | [Placeholder: value not recorded] | Whether a platform CriteriaEdition owner is needed for D02-01 is unsettled (0.62 at confidence 0.43). |
+| OPEN_LifecycleFactsOtherInventories | OPEN | [Placeholder: value not recorded] | Distinct lifecycle facts for ServiceIdentity (0.67), Person (0.65), WorkRelationship, Location, DataFlow (0.60), TechnologyComponent (0.56), InformationAsset (0.54) are unsettled; generic revision facts stay. |
+| OPEN_ClientExportClassification | OPEN | [Placeholder: value not recorded] | ClientExport reads as governor 0.50 / technical 0.38; classification unchanged. |
 | OWNER_CommitmentControlLink | SELECTED_FOR_TARGET_DEFINITION | add_owner | Versioned many-to-many commitment/control links need their own owner, mirroring RiskTreatmentAssertion. |
 | OWNER_ImportedOwnerResolution | SELECTED_FOR_TARGET_DEFINITION | add_owner | Exact-email match at import and attributed manual resolution are one write decision with no existing owner. |
 | RULE_D26-04 | SELECTED_FOR_TARGET_DEFINITION | two_step | ClientIndependenceDecision classifies conditionally_compatible; ClientServiceIndependence refuses acceptance admission without a referencing partner evaluation. |
 | RULE_D16-15 | SELECTED_FOR_TARGET_DEFINITION | ArtifactEngagementHold | Active holds block disposition at offboarding; the hold owner decides it. |
-| OPEN_CampaignNaturalKey | OPEN | null (recorded) | Whether a second open PolicyDistributionCampaign for the same policy version and roster snapshot is an error is leaning yes (0.65); if so Jev prefers an active-campaign claim owner (0.72). Access review campaign overlap is unsettled (0.49); duplicate legal holds leaning error (0.63). No owner added. |
+| OPEN_CampaignNaturalKey | OPEN | [Placeholder: value not recorded] | Whether a second open PolicyDistributionCampaign for the same policy version and roster snapshot is an error is leaning yes (0.65); if so Jev prefers an active-campaign claim owner (0.72). Access review campaign overlap is unsettled (0.49); duplicate legal holds leaning error (0.63). No owner added. |
 | CMD_ConcurrencyGuards | SELECTED_FOR_TARGET_DEFINITION | per_command | 41 CommandId-identified mutations without ExpectedRevision were classified: adopted at confidence 0.7 or higher ({'creation_key_only': 5, 'terminal_idempotent_no_guard': 5, 'require_expected_revision': 4}); 27 remain unresolved and keep their current fields. |
 | CHOREO_PlannedEdges | SELECTED_FOR_TARGET_DEFINITION | add_planned_edges | Ten planned reaction rows X000-X009 for the planned owners and facts and for the pass F reactions Jev rated above 0.6 with a confident counterpart; receiver guards from the October 23 reactor contracts lifted onto 113 edges as their prerequisite rule. |
 | CHOREO_RecoveryContractCases | SELECTED_FOR_TARGET_DEFINITION | state_four_cases | The one-sentence recovery contract on every row is stated as four named cases (lost acknowledgement, retry after partial progress, concurrency conflict, abort of the admitted root) with unchanged meaning; calibration on five rows moved Jev recovery_complete from 0.14-0.41 to 0.94-0.98. 121 rows still have no edge-specific stage proof set and are marked stageProofStatus=to_be_specified. |
@@ -41,38 +41,3 @@ Architecture decisions: **35**. Complete selected records: [decision JSON](data/
 | CMD_AuditObservationPlanned | SELECTED_FOR_TARGET_DEFINITION | planned_from_aggregate_methods | Four planned command contracts derived from the existing aggregate methods so the owner is no longer command-less. |
 
 The source catalog retains some older OPEN labels. Their proposed write-model disposition is recorded in [Write model domain rules](write-model-domain-rules.md).
-
-Product decision records remain the individual authority:
-
-- [m0-d01-program-targets.md](../product/decisions/m0-d01-program-targets.md)
-- [m0-d02-criteria-content.md](../product/decisions/m0-d02-criteria-content.md)
-- [m0-d03-roles-and-separation-of-duties.md](../product/decisions/m0-d03-roles-and-separation-of-duties.md)
-- [m0-d04-readiness-material.md](../product/decisions/m0-d04-readiness-material.md)
-- [m0-d05-application-inventory.md](../product/decisions/m0-d05-application-inventory.md)
-- [m0-d06-workforce-source.md](../product/decisions/m0-d06-workforce-source.md)
-- [m0-d07-access-review-population.md](../product/decisions/m0-d07-access-review-population.md)
-- [m0-d08-technology-inventory.md](../product/decisions/m0-d08-technology-inventory.md)
-- [m0-d09-commitments.md](../product/decisions/m0-d09-commitments.md)
-- [m0-d10-risk-method.md](../product/decisions/m0-d10-risk-method.md)
-- [m0-d11-vendors.md](../product/decisions/m0-d11-vendors.md)
-- [m0-d12-policy-acknowledgement-training.md](../product/decisions/m0-d12-policy-acknowledgement-training.md)
-- [m0-d13-control-evaluation.md](../product/decisions/m0-d13-control-evaluation.md)
-- [m0-d14-advisor-collaboration.md](../product/decisions/m0-d14-advisor-collaboration.md)
-- [m0-d15-work-queue.md](../product/decisions/m0-d15-work-queue.md)
-- [m0-d16-evidence-handling.md](../product/decisions/m0-d16-evidence-handling.md)
-- [m0-d17-audit-deliverables.md](../product/decisions/m0-d17-audit-deliverables.md)
-- [m0-d18-success-measures.md](../product/decisions/m0-d18-success-measures.md)
-- [m0-d19-periodic-reviews.md](../product/decisions/m0-d19-periodic-reviews.md)
-- [m0-d20-integration-sources.md](../product/decisions/m0-d20-integration-sources.md)
-- [m0-d21-significant-change.md](../product/decisions/m0-d21-significant-change.md)
-- [m0-d22-canonical-ownership.md](../product/decisions/m0-d22-canonical-ownership.md)
-- [m0-d23-assurance-vocabulary.md](../product/decisions/m0-d23-assurance-vocabulary.md)
-- [m0-d24-accessibility-and-browsers.md](../product/decisions/m0-d24-accessibility-and-browsers.md)
-- [m0-d25-client-tenancy.md](../product/decisions/m0-d25-client-tenancy.md)
-- [m0-d26-independence.md](../product/decisions/m0-d26-independence.md)
-- [m0-d27-attest-scope.md](../product/decisions/m0-d27-attest-scope.md)
-- [member-deprovisioning.md](../product/decisions/member-deprovisioning.md)
-- [r2-access-review-campaign-routing.md](../product/decisions/r2-access-review-campaign-routing.md)
-- [r2-weekly-work-digest-delivery.md](../product/decisions/r2-weekly-work-digest-delivery.md)
-- [restricted-application-visibility.md](../product/decisions/restricted-application-visibility.md)
-- [restricted-technology-inventory-visibility.md](../product/decisions/restricted-technology-inventory-visibility.md)

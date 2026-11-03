@@ -28,7 +28,6 @@
       "currentRegisteredRootTypes": [
         "EmailChallengeDeliveryReactor"
       ],
-      "plannedRootRole": null,
       "processes": [
         "EmailChallengeDeliveryProcess"
       ],
@@ -147,7 +146,6 @@
       "currentRegisteredRootTypes": [
         "EmailChallengeDeliveryReactor"
       ],
-      "plannedRootRole": null,
       "processes": [
         "EmailChallengeDeliveryProcess"
       ],

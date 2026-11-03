@@ -45,7 +45,6 @@ Canonical events: **10**. Complete canonical event and available schema records:
 | Schema discriminator | bdgrz.auditor-request.auditor-comment-admitted |
 | Schema discriminatorVersion | 1 |
 | Schema owner | AuditorRequest |
-| Schema existingContract | null (recorded) |
 | Schema status | selected target schema; implementation pending |
 | Schema reason | source command accepted result |
 | Schema changes | None listed |
@@ -112,7 +111,7 @@ ChildAdmissionIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T034](../reactors/auditor-comment-materialization-reactor.md#t034) | physical root, logical prerequisite | AuditorRequest | RecordAuditorComment | AuditorFeedbackThread |
+| [T034](../reactors/preserve-auditor-comments-after-request-reactor.md#t034) | physical root, logical prerequisite | AuditorRequest | RecordAuditorComment | AuditorFeedbackThread |
 
 ### AuditorRequestAssigned
 
@@ -346,7 +345,6 @@ ChildAdmissionIntent
 | Schema discriminator | bdgrz.auditor-request.auditor-request-resolution-accepted |
 | Schema discriminatorVersion | 1 |
 | Schema owner | AuditorRequest |
-| Schema existingContract | null (recorded) |
 | Schema status | selected target schema; implementation pending |
 | Schema reason | source command accepted result |
 | Schema changes | None listed |
@@ -416,7 +414,7 @@ ClosureIntent
 | [T035](../reactors/auditor-request-resolution-reactor.md#t035) | physical root, logical prerequisite | AuditorRequest | CompleteAuditorRequestResolution | AuditorRequest |
 | [T061](../reactors/auditor-request-resolution-reactor.md#t061) | physical root, logical prerequisite | AuditorRequest | AuthorizeAuditorResponseRequestResolution | AuditorResponse |
 | [T062](../reactors/auditor-request-resolution-reactor.md#t062) | physical root | AuditorRequest | CloseAuditorResponseRequestResolutionAuthorization | AuditorResponse |
-| [A007](../reactors/unassigned-architecture-rows.md#a007) | physical root, logical prerequisite | AuditorRequest | AbortAuditorRequestResolution | AuditorRequest |
+| [A007](../reactors/unassigned-domain-choreography.md#a007) | physical root, logical prerequisite | AuditorRequest | AbortAuditorRequestResolution | AuditorRequest |
 
 ### AuditorRequestResolutionCanceled
 
@@ -446,7 +444,6 @@ ClosureIntent
 | Schema discriminator | bdgrz.auditor-request.auditor-request-resolution-canceled |
 | Schema discriminatorVersion | 1 |
 | Schema owner | AuditorRequest |
-| Schema existingContract | null (recorded) |
 | Schema status | selected target schema; implementation pending |
 | Schema reason | source admission contract |
 | Schema changes | None listed |
@@ -514,7 +511,7 @@ ClosureIntent
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
 | [T062](../reactors/auditor-request-resolution-reactor.md#t062) | logical prerequisite | AuditorRequest | CloseAuditorResponseRequestResolutionAuthorization | AuditorResponse |
-| [A007](../reactors/unassigned-architecture-rows.md#a007) | emitted semantic fact | AuditorRequest | AbortAuditorRequestResolution | AuditorRequest |
+| [A007](../reactors/unassigned-domain-choreography.md#a007) | emitted semantic fact | AuditorRequest | AbortAuditorRequestResolution | AuditorRequest |
 
 ### AuditorRequestResolved
 
@@ -714,7 +711,6 @@ ClosureIntent
 | Schema discriminator | bdgrz.auditor-request.auditor-response-admitted |
 | Schema discriminatorVersion | 1 |
 | Schema owner | AuditorRequest |
-| Schema existingContract | null (recorded) |
 | Schema status | selected target schema; implementation pending |
 | Schema reason | source command accepted result |
 | Schema changes | None listed |
@@ -781,7 +777,7 @@ ChildAdmissionIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T033](../reactors/auditor-response-materialization-reactor.md#t033) | physical root, logical prerequisite | AuditorRequest | CreateAuditorResponseDraft | AuditorResponse |
+| [T033](../reactors/preserve-auditor-response-draft-after-request-reactor.md#t033) | physical root, logical prerequisite | AuditorRequest | CreateAuditorResponseDraft | AuditorResponse |
 
 ### AuditorSampleSelectionAdmitted
 
@@ -811,7 +807,6 @@ ChildAdmissionIntent
 | Schema discriminator | bdgrz.auditor-request.auditor-sample-selection-admitted |
 | Schema discriminatorVersion | 1 |
 | Schema owner | AuditorRequest |
-| Schema existingContract | null (recorded) |
 | Schema status | selected target schema; implementation pending |
 | Schema reason | source command accepted result |
 | Schema changes | None listed |
@@ -892,7 +887,7 @@ AuditorSampleSelectionIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T105](../reactors/auditor-sample-selection-materialization-reactor.md#t105) | physical root, logical prerequisite | AuditorRequest | RecordAuditorSampleSelection | AuditorSampleSelection |
+| [T105](../reactors/record-auditor-sample-selection-reactor.md#t105) | physical root, logical prerequisite | AuditorRequest | RecordAuditorSampleSelection | AuditorSampleSelection |
 
 
 

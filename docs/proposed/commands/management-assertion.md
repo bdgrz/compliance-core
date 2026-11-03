@@ -1,11 +1,13 @@
 # ManagementAssertion commands
 
+
+
 Selected command contracts: **2**. Complete selected contracts and companion source evidence: [owner command JSON](../data/commands/management-assertion.json).
 
 | Target command | Selected source name | Kind | Identity | Fields | HTTP routes |
 | --- | --- | --- | --- | --- | --- |
 | ApproveManagementAssertion | ApproveManagementAssertion | command | CommandId | 8 | [Placeholder: value not recorded] |
-| RecordManagementAssertion | RecordManagementAssertion | http | AssertionId | 5 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/examinations/{examination_id}/assertions/{assertion_id} |
+| CreateManagementAssertion | RecordManagementAssertion | http | AssertionId | 5 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/examinations/{examination_id}/assertions/{assertion_id} |
 
 ## Selected command details
 
@@ -16,7 +18,8 @@ Selected command contracts: **2**. Complete selected contracts and companion sou
 | Target command name | ApproveManagementAssertion |
 | Selected source command name | ApproveManagementAssertion |
 | Name decision | The selected source name is retained. |
-| Owner | ManagementAssertion |
+| Target owner | ManagementAssertion |
+| Selected source owner | ManagementAssertion |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | command |
 | Logical identity | CommandId; Uuid; required=true; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
@@ -60,14 +63,15 @@ Existing tests: [Placeholder: existing tests not recorded]
 
 Required tests: [Placeholder: required tests not recorded]
 
-### RecordManagementAssertion
+### CreateManagementAssertion
 
 | Selected contract detail | Value |
 | --- | --- |
-| Target command name | RecordManagementAssertion |
+| Target command name | CreateManagementAssertion |
 | Selected source command name | RecordManagementAssertion |
-| Name decision | The selected source name is retained. |
-| Owner | ManagementAssertion |
+| Name decision | Creates management’s assertion for the exact examination; approval of an assertion version is a separate action. |
+| Target owner | ManagementAssertion |
+| Selected source owner | ManagementAssertion |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | http |
 | Logical identity | AssertionId; Uuid; required=true; caller-supplied immutable creation identity: an exact retry with the same id and authored intent returns the original result; the same id with changed intent is refused; a different id is a different record |

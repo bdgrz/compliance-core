@@ -9,8 +9,7 @@
       "stage": "materialize",
       "receivers": [
         "MaterializeAccessReviewDecisionBatch"
-      ],
-      "rule": null
+      ]
     },
     {
       "stage": "reserve",
@@ -37,8 +36,7 @@
       "stage": "settle",
       "receivers": [
         "SettleAccessReviewItemDecision"
-      ],
-      "rule": null
+      ]
     }
   ],
   "abort": [
@@ -56,15 +54,13 @@
       "stage": "complete",
       "receivers": [
         "CompleteAccessReviewDecisionBatchCancellation"
-      ],
-      "rule": null
+      ]
     },
     {
       "stage": "settle",
       "receivers": [
         "SettleAccessReviewItemDecision"
-      ],
-      "rule": null
+      ]
     }
   ]
 }

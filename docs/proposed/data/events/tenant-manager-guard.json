@@ -32,7 +32,6 @@
         "discriminator": "bdgrz.tenant-manager-guard.tenant-manager-restoration-accepted",
         "discriminatorVersion": 1,
         "owner": "TenantManagerGuard",
-        "existingContract": null,
         "status": "selected target schema; implementation pending",
         "reason": "source admission contract",
         "fields": [
@@ -249,7 +248,6 @@
         "discriminator": "bdgrz.tenant-manager-guard.tenant-manager-restoration-completed",
         "discriminatorVersion": 1,
         "owner": "TenantManagerGuard",
-        "existingContract": null,
         "status": "selected target schema; implementation pending",
         "reason": "typed reactor receiver accepted business fact",
         "fields": [
@@ -678,7 +676,6 @@
         "discriminator": "bdgrz.tenant-manager-guard.tenant-manager-source-mutation-admitted",
         "discriminatorVersion": 1,
         "owner": "TenantManagerGuard",
-        "existingContract": null,
         "status": "selected target schema; implementation pending",
         "reason": "source admission contract; administrator-capable source mutation that changes no availability",
         "fields": [
@@ -895,7 +892,6 @@
         "discriminator": "bdgrz.tenant-manager-guard.tenant-manager-withdrawal-accepted",
         "discriminatorVersion": 1,
         "owner": "TenantManagerGuard",
-        "existingContract": null,
         "status": "selected target schema; implementation pending",
         "reason": "source admission contract",
         "fields": [
@@ -1112,7 +1108,6 @@
         "discriminator": "bdgrz.tenant-manager-guard.tenant-manager-withdrawal-completed",
         "discriminatorVersion": 1,
         "owner": "TenantManagerGuard",
-        "existingContract": null,
         "status": "selected target schema; implementation pending",
         "reason": "typed reactor receiver accepted business fact",
         "fields": [

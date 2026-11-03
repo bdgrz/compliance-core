@@ -19,14 +19,13 @@
         "wireQualification": "Wire matches the declared record in src/Compliance.Common/Features/Work/Events/WorkDigestDispatchAttemptStarted.cs at 60029b8f.",
         "adoptedDecisionIds": [],
         "schemaStatus": "retained_current_schema_native_qualification_required",
-        "sourceStatus": "declared",
-        "meaning": null
+        "sourceStatus": "declared"
       },
       "schema": null,
       "sourceName": "WorkDigestDispatchAttemptStarted",
       "targetName": "WorkDigestDeliveryAttemptStarted",
-      "nameDecision": "Names the start of one scheduled digest delivery attempt without using the transport term dispatch.",
-      "targetMeaning": null
+      "nameDecision": "Names the start of one weekly digest email delivery attempt.",
+      "targetMeaning": "The system began sending one weekly work digest to its intended member."
     },
     {
       "canonical": {
@@ -46,14 +45,13 @@
         "wireQualification": "Wire matches the declared record in src/Compliance.Common/Features/Work/Events/WorkDigestDispatchOutcomeRecorded.cs at 60029b8f.",
         "adoptedDecisionIds": [],
         "schemaStatus": "retained_current_schema_native_qualification_required",
-        "sourceStatus": "declared",
-        "meaning": null
+        "sourceStatus": "declared"
       },
       "schema": null,
       "sourceName": "WorkDigestDispatchOutcomeRecorded",
       "targetName": "WorkDigestDeliveryOutcomeRecorded",
-      "nameDecision": "Names the recorded result of one work digest delivery attempt.",
-      "targetMeaning": null
+      "nameDecision": "Names the recorded result of one weekly digest email delivery attempt.",
+      "targetMeaning": "The system recorded whether one member’s weekly work digest was delivered, failed, or could not be confirmed."
     },
     {
       "canonical": {
@@ -73,14 +71,13 @@
         "wireQualification": "Wire matches the declared record in src/Compliance.Common/Features/Work/Events/WorkDigestDispatchScheduled.cs at 60029b8f.",
         "adoptedDecisionIds": [],
         "schemaStatus": "retained_current_schema_native_qualification_required",
-        "sourceStatus": "declared",
-        "meaning": null
+        "sourceStatus": "declared"
       },
       "schema": null,
       "sourceName": "WorkDigestDispatchScheduled",
       "targetName": "WorkDigestDeliveryScheduled",
-      "nameDecision": "Names the scheduled work digest delivery time.",
-      "targetMeaning": null
+      "nameDecision": "Names the scheduled delivery of one member’s weekly digest.",
+      "targetMeaning": "The system scheduled one member’s weekly digest for its next delivery time."
     },
     {
       "canonical": {

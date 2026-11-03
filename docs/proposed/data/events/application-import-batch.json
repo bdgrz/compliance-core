@@ -306,7 +306,6 @@
         "discriminator": "bdgrz.application-import-batch.application-import-cancellation-accepted",
         "discriminatorVersion": 1,
         "owner": "ApplicationImportBatch",
-        "existingContract": null,
         "status": "selected target schema; implementation pending",
         "reason": "source command accepted result",
         "fields": [
@@ -863,7 +862,6 @@
         "discriminator": "bdgrz.application-import-batch.application-import-execution-authorized",
         "discriminatorVersion": 1,
         "owner": "ApplicationImportBatch",
-        "existingContract": null,
         "status": "selected target schema; implementation pending",
         "reason": "source command accepted result",
         "fields": [

@@ -38,7 +38,6 @@ Canonical events: **3**. Complete canonical event and available schema records: 
 | Schema discriminator | bdgrz.provider-assurance-review.provider-review-canceled |
 | Schema discriminatorVersion | 1 |
 | Schema owner | ProviderAssuranceReview |
-| Schema existingContract | null (recorded) |
 | Schema status | selected target schema; implementation pending |
 | Schema reason | source admission contract |
 | Schema changes | None listed |
@@ -103,8 +102,8 @@ ProviderReviewIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T070](../reactors/provider-review-reactor.md#t070) | logical prerequisite | ProviderAssuranceReview | CloseProviderAssuranceReportProviderReviewAuthorization | ProviderAssuranceReport |
-| [A011](../reactors/unassigned-architecture-rows.md#a011) | emitted semantic fact | ProviderAssuranceReview | AbortProviderReview | ProviderAssuranceReview |
+| [T070](../reactors/record-provider-assurance-report-review-reactor.md#t070) | logical prerequisite | ProviderAssuranceReview | CloseProviderAssuranceReportProviderReviewAuthorization | ProviderAssuranceReport |
+| [A011](../reactors/unassigned-domain-choreography.md#a011) | emitted semantic fact | ProviderAssuranceReview | AbortProviderReview | ProviderAssuranceReview |
 
 ### ProviderReviewRecorded
 
@@ -214,8 +213,8 @@ ProviderReviewIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T070](../reactors/provider-review-reactor.md#t070) | logical prerequisite | ProviderAssuranceReview | CloseProviderAssuranceReportProviderReviewAuthorization | ProviderAssuranceReport |
-| [T077](../reactors/provider-review-reactor.md#t077) | emitted semantic fact | ProviderAssuranceReview | CompleteProviderAssuranceReview | ProviderAssuranceReview |
+| [T070](../reactors/record-provider-assurance-report-review-reactor.md#t070) | logical prerequisite | ProviderAssuranceReview | CloseProviderAssuranceReportProviderReviewAuthorization | ProviderAssuranceReport |
+| [T077](../reactors/record-provider-assurance-report-review-reactor.md#t077) | emitted semantic fact | ProviderAssuranceReview | CompleteProviderAssuranceReview | ProviderAssuranceReview |
 
 ### ProviderReviewRequested
 
@@ -245,7 +244,6 @@ ProviderReviewIntent
 | Schema discriminator | bdgrz.provider-assurance-review.provider-review-requested |
 | Schema discriminatorVersion | 1 |
 | Schema owner | ProviderAssuranceReview |
-| Schema existingContract | null (recorded) |
 | Schema status | selected target schema; implementation pending |
 | Schema reason | source command accepted result |
 | Schema changes | None listed |
@@ -310,10 +308,10 @@ ProviderReviewIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T069](../reactors/provider-review-reactor.md#t069) | physical root, logical prerequisite | ProviderAssuranceReview | AuthorizeProviderAssuranceReportProviderReview | ProviderAssuranceReport |
-| [T070](../reactors/provider-review-reactor.md#t070) | physical root | ProviderAssuranceReview | CloseProviderAssuranceReportProviderReviewAuthorization | ProviderAssuranceReport |
-| [T077](../reactors/provider-review-reactor.md#t077) | physical root, logical prerequisite | ProviderAssuranceReview | CompleteProviderAssuranceReview | ProviderAssuranceReview |
-| [A011](../reactors/unassigned-architecture-rows.md#a011) | physical root, logical prerequisite | ProviderAssuranceReview | AbortProviderReview | ProviderAssuranceReview |
+| [T069](../reactors/record-provider-assurance-report-review-reactor.md#t069) | physical root, logical prerequisite | ProviderAssuranceReview | AuthorizeProviderAssuranceReportProviderReview | ProviderAssuranceReport |
+| [T070](../reactors/record-provider-assurance-report-review-reactor.md#t070) | physical root | ProviderAssuranceReview | CloseProviderAssuranceReportProviderReviewAuthorization | ProviderAssuranceReport |
+| [T077](../reactors/record-provider-assurance-report-review-reactor.md#t077) | physical root, logical prerequisite | ProviderAssuranceReview | CompleteProviderAssuranceReview | ProviderAssuranceReview |
+| [A011](../reactors/unassigned-domain-choreography.md#a011) | physical root, logical prerequisite | ProviderAssuranceReview | AbortProviderReview | ProviderAssuranceReview |
 
 
 

@@ -5,6 +5,7 @@
 - Business aggregate: `true`
 - Selected status: `SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED`
 
+
 ## Identity and invariant
 
 **Selected identity:** Tenant-scoped (campaignId, itemId); the identity is established by the admitting owner or reactor named in the choreography, never by a caller request key; mutations bind CommandId to this exact identity.
@@ -18,6 +19,10 @@
 **Replay:** Current required authorization precedes replay; exact authorized retries resolve the original accepted result using the selected logical identity and immutable actor/intent/source binding. Fresh mutable feasibility, clock selection and body preparation cannot replace that original result. Expected revision is concurrency precondition, not a new identity.
 
 **Lifecycle:** [Placeholder: a consolidated lifecycle sequence is not present in the selected owner record.]
+
+
+
+
 
 ## Commands
 
@@ -56,18 +61,18 @@
 
 | Row | Kind | Source owner | Target owner | Command |
 | --- | --- | --- | --- | --- |
-| [T008](../reactors/access-review-launch-fan-out-reactor.md#t008) | reaction_or_regular_process_stage | AccessReviewCampaign | AccessReviewItem | OpenAccessReviewItem |
-| [T009](../reactors/access-review-bulk-admission-reactor.md#t009) | reaction_or_regular_process_stage | AccessReviewDecisionBatch | AccessReviewItem | ReserveAccessReviewItemDecision |
-| [T010](../reactors/access-review-bulk-admission-reactor.md#t010) | reaction_or_regular_process_stage | AccessReviewDecisionBatch | AccessReviewItem | ApplyAccessReviewItemDecision |
-| [T012](../reactors/access-review-bulk-cancellation-reactor.md#t012) | reaction_or_regular_process_stage | AccessReviewDecisionBatch | AccessReviewItem | CancelAccessReviewItemDecision |
+| [T008](../reactors/open-access-review-work-reactor.md#t008) | reaction_or_regular_process_stage | AccessReviewCampaign | AccessReviewItem | OpenAccessReviewItem |
+| [T009](../reactors/publish-approved-access-review-decision-reactor.md#t009) | reaction_or_regular_process_stage | AccessReviewDecisionBatch | AccessReviewItem | ReserveAccessReviewItemDecision |
+| [T010](../reactors/publish-approved-access-review-decision-reactor.md#t010) | reaction_or_regular_process_stage | AccessReviewDecisionBatch | AccessReviewItem | ApplyAccessReviewItemDecision |
+| [T012](../reactors/cancel-unpublished-access-review-decisions-reactor.md#t012) | reaction_or_regular_process_stage | AccessReviewDecisionBatch | AccessReviewItem | CancelAccessReviewItemDecision |
 | [T059](../reactors/access-review-completion-reactor.md#t059) | reaction_or_regular_process_stage | AccessReviewCampaign | AccessReviewItem | AuthorizeAccessReviewItemCampaignCompletion |
 | [T060](../reactors/access-review-completion-reactor.md#t060) | reaction_or_regular_process_stage | AccessReviewCampaign | AccessReviewItem | CloseAccessReviewItemCampaignCompletionAuthorization |
-| [T080](../reactors/access-review-bulk-admission-reactor.md#t080) | reaction_or_regular_process_stage | AccessReviewDecisionBatch | AccessReviewItem | CloseAccessReviewItemDecisionAuthorization |
+| [T080](../reactors/publish-approved-access-review-decision-reactor.md#t080) | reaction_or_regular_process_stage | AccessReviewDecisionBatch | AccessReviewItem | CloseAccessReviewItemDecisionAuthorization |
 
 ## Product rules
 
-- **D07-09** — Privileged entitlements require named reviewer approval in each review campaign. Source: [m0-d07-access-review-population.md](../../product/decisions/m0-d07-access-review-population.md).
-- **D07-11** — Access remediation is complete only when a later population snapshot shows the entitlement removed or changed; a ticket alone is not verification. Source: [m0-d07-access-review-population.md](../../product/decisions/m0-d07-access-review-population.md).
+- **D07-09** — Privileged entitlements require named reviewer approval in each review campaign. Decision: [m0-d07-access-review-population.md](../decisions/m0-d07-access-review-population.md).
+- **D07-11** — Access remediation is complete only when a later population snapshot shows the entitlement removed or changed; a ticket alone is not verification. Decision: [m0-d07-access-review-population.md](../decisions/m0-d07-access-review-population.md).
 
 ## Adopted architecture decisions
 
@@ -76,7 +81,7 @@
 ## Evidence and complete record
 
 - Baseline source: [Placeholder: source file is not present in this checkout]
-- Aggregate review: [access-review-item-review-2026-10-29.md](../../product/definitive-aggregate-choreography/access-review-item-review-2026-10-29.md)
+- Aggregate review: [Placeholder: no owner-specific review file is present]
 - Full selected record: [JSON](../data/aggregates/access-review-item.json)
 
 > Target definition is separate from runtime qualification. Implementation status recorded by the source: `SEPARATE_VERIFICATION_REQUIRED_IMPLEMENTATION_HALTED`.

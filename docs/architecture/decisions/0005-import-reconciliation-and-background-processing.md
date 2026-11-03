@@ -125,7 +125,7 @@ built.
   belongs in Portia, following the rule that reusable infrastructure lives
   there, before building a Compliance-local version.
 
-The [2026-10-06 ownership assessment](../application-import-ledger-assessment.md)
+The [2026-10-06 ownership assessment](../../proposed/aggregates/application-import-batch.md)
 checks Portia 0.7.0's published primitives and scope. It records the application
 ledger boundary and the implementation gates; acceptance and the visibility
 barrier remain work for EN-05.
@@ -228,23 +228,23 @@ worker parser with its own progress and retention.
 
 - [M0-D28 #139](https://github.com/bdgrz/compliance/issues/139) approves the
   canonical source-observation and correlation vocabulary. This ADR uses the
-  current [canonical entity model](../../product/canonical-entity-model.md)
+  current [application-import domain model](../../proposed/aggregates/application-import-batch.md)
   terms and will align with the approved catalog.
 - [M0-D05 #62](https://github.com/bdgrz/compliance/issues/62) validates the
   governed Application and SystemInstance boundaries for the first consumer.
 - Third-party schemas, connector mappings, and vendor content remain excluded
   unless their exact use is approved under the
-  [source-reference policy](../../product/source-reference-policy.md).
+  the project source register.
 - Whole-platform recovery remains owned by
   [cntryl/portia#70](https://github.com/cntryl/portia/issues/70) and DevOps
   under accepted [ADR 0003](0003-event-sourced-history-and-effective-versions.md).
 
 The first-consumer wire contract is
-[application-import-v1.md](../../product/application-import-v1.md).
+[application import command catalog](../../proposed/commands/application-import-batch.md).
 
 ## Public references
 
 No external normative source; original product decision. The relevant internal
 model is [domain-model.md](../../proposed/domain-model.md), and source
 eligibility follows
-[source-reference-policy.md](../../product/source-reference-policy.md).
+the project source register.

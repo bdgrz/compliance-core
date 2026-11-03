@@ -194,7 +194,6 @@
         "discriminator": "bdgrz.service-engagement-independence.engagement-personal-decision-admitted",
         "discriminatorVersion": 1,
         "owner": "ServiceEngagementIndependence",
-        "existingContract": null,
         "status": "selected target schema; implementation pending",
         "reason": "source command accepted result",
         "fields": [
@@ -390,7 +389,6 @@
         "discriminator": "bdgrz.service-engagement-independence.engagement-personal-decision-authorized",
         "discriminatorVersion": 1,
         "owner": "ServiceEngagementIndependence",
-        "existingContract": null,
         "status": "selected target schema; implementation pending",
         "reason": "typed reactor receiver accepted business fact",
         "fields": [
@@ -595,7 +593,6 @@
         "discriminator": "bdgrz.service-engagement-independence.engagement-personal-decision-canceled",
         "discriminatorVersion": 1,
         "owner": "ServiceEngagementIndependence",
-        "existingContract": null,
         "status": "selected target schema; implementation pending",
         "reason": "source admission contract",
         "fields": [
@@ -790,7 +787,6 @@
         "discriminator": "bdgrz.service-engagement-independence.engagement-personal-decision-materialized",
         "discriminatorVersion": 1,
         "owner": "ServiceEngagementIndependence",
-        "existingContract": null,
         "status": "selected target schema; implementation pending",
         "reason": "typed reactor receiver accepted business fact",
         "fields": [
@@ -986,7 +982,6 @@
         "discriminator": "bdgrz.service-engagement-independence.engagement-practice-commitments-authorized",
         "discriminatorVersion": 1,
         "owner": "ServiceEngagementIndependence",
-        "existingContract": null,
         "status": "selected target schema; implementation pending",
         "reason": "typed reactor receiver accepted business fact",
         "fields": [
@@ -1475,7 +1470,6 @@
         "discriminator": "bdgrz.service-engagement-independence.service-engagement-acceptance-rejected",
         "discriminatorVersion": 1,
         "owner": "ServiceEngagementIndependence",
-        "existingContract": null,
         "status": "selected target schema; implementation pending",
         "reason": "source admission contract",
         "fields": [
@@ -1710,7 +1704,6 @@
         "discriminator": "bdgrz.service-engagement-independence.service-engagement-acceptance-requested",
         "discriminatorVersion": 1,
         "owner": "ServiceEngagementIndependence",
-        "existingContract": null,
         "status": "selected target schema; implementation pending",
         "reason": "source command accepted result",
         "fields": [
@@ -2442,7 +2435,6 @@
         "discriminator": "bdgrz.service-engagement-independence.service-engagement-staff-assignment-rejected",
         "discriminatorVersion": 1,
         "owner": "ServiceEngagementIndependence",
-        "existingContract": null,
         "status": "selected target schema; implementation pending",
         "reason": "source admission contract",
         "fields": [
@@ -2677,7 +2669,6 @@
         "discriminator": "bdgrz.service-engagement-independence.service-engagement-staff-assignment-requested",
         "discriminatorVersion": 1,
         "owner": "ServiceEngagementIndependence",
-        "existingContract": null,
         "status": "selected target schema; implementation pending",
         "reason": "source command accepted result",
         "fields": [

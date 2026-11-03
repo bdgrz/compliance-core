@@ -1,6 +1,6 @@
 # Historical event-name reconciliation snapshot
 
-This full name/disposition map is retained from an earlier reconciliation packet. Its recorded polish date is 2026-10-29, but its summary still reports 129 owners and 492 emitted events. The current canonical catalog reports 131 owners and 501 event rows. Treat the snapshot as historical evidence until it is reconciled against the current catalogs.
+This full name/disposition map is retained from an earlier reconciliation packet. Its recorded polish date is 2026-10-29, but its summary still reports 129 owners and 492 emitted events. The selected source catalogs report 131 business owners and 501 source event rows; the proposed target omits 1 source-only compatibility fact and adds 4 newly named event facts. Treat the snapshot as historical evidence until it is reconciled against the current catalogs.
 
 Current selected event index: [events/README.md](README.md). Complete captured snapshot: [JSON](../data/event-reconciliation-snapshot.json).
 

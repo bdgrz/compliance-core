@@ -90,7 +90,7 @@ Canonical events: **11**. Complete canonical event and available schema records:
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T040](../reactors/control-occurrence-fan-out-reactor.md#t040) | physical root, logical prerequisite | TypeIIPeriod | OpenDueControlOccurrence | ControlOccurrence |
+| [T040](../reactors/open-due-control-work-reactor.md#t040) | physical root, logical prerequisite | TypeIIPeriod | OpenDueControlOccurrence | ControlOccurrence |
 
 ### ObservationPeriodAmended
 
@@ -193,8 +193,8 @@ TypeIIRangeIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T054](../reactors/type-ii-range-reactor.md#t054) | emitted semantic fact | TypeIIObservationCalendar | ApplyTypeIIPeriodRange | TypeIIPeriod |
-| [T055](../reactors/type-ii-range-reactor.md#t055) | logical prerequisite | TypeIIPeriod | CloseTypeIIPeriodRangeReservation | TypeIIObservationCalendar |
+| [T054](../reactors/reserve-accepted-type-ii-period-dates-reactor.md#t054) | emitted semantic fact | TypeIIObservationCalendar | ApplyTypeIIPeriodRange | TypeIIPeriod |
+| [T055](../reactors/reserve-accepted-type-ii-period-dates-reactor.md#t055) | logical prerequisite | TypeIIPeriod | CloseTypeIIPeriodRangeReservation | TypeIIObservationCalendar |
 
 ### ObservationPeriodCloseFrozen
 
@@ -266,7 +266,7 @@ TypeIIRangeIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T055](../reactors/type-ii-range-reactor.md#t055) | physical root, logical prerequisite | TypeIIPeriod | CloseTypeIIPeriodRangeReservation | TypeIIObservationCalendar |
+| [T055](../reactors/reserve-accepted-type-ii-period-dates-reactor.md#t055) | physical root, logical prerequisite | TypeIIPeriod | CloseTypeIIPeriodRangeReservation | TypeIIObservationCalendar |
 
 ### ObservationPeriodCloseProposed
 
@@ -403,8 +403,8 @@ TypeIIRangeIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T054](../reactors/type-ii-range-reactor.md#t054) | emitted semantic fact | TypeIIObservationCalendar | ApplyTypeIIPeriodRange | TypeIIPeriod |
-| [T055](../reactors/type-ii-range-reactor.md#t055) | logical prerequisite | TypeIIPeriod | CloseTypeIIPeriodRangeReservation | TypeIIObservationCalendar |
+| [T054](../reactors/reserve-accepted-type-ii-period-dates-reactor.md#t054) | emitted semantic fact | TypeIIObservationCalendar | ApplyTypeIIPeriodRange | TypeIIPeriod |
+| [T055](../reactors/reserve-accepted-type-ii-period-dates-reactor.md#t055) | logical prerequisite | TypeIIPeriod | CloseTypeIIPeriodRangeReservation | TypeIIObservationCalendar |
 
 ### TypeIIPeriodAmendmentAccepted
 
@@ -434,7 +434,6 @@ TypeIIRangeIntent
 | Schema discriminator | bdgrz.type-i-i-period.type-i-i-period-amendment-accepted |
 | Schema discriminatorVersion | 1 |
 | Schema owner | TypeIIPeriod |
-| Schema existingContract | null (recorded) |
 | Schema status | selected target schema; implementation pending |
 | Schema reason | source admission contract |
 | Schema changes | None listed |
@@ -503,12 +502,12 @@ TypeIIRangeIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T053](../reactors/type-ii-range-reactor.md#t053) | physical root, logical prerequisite | TypeIIPeriod | AcquireTypeIIPeriodRange | TypeIIObservationCalendar |
-| [T054](../reactors/type-ii-range-reactor.md#t054) | physical root | TypeIIObservationCalendar | ApplyTypeIIPeriodRange | TypeIIPeriod |
-| [T055](../reactors/type-ii-range-reactor.md#t055) | physical root | TypeIIPeriod | CloseTypeIIPeriodRangeReservation | TypeIIObservationCalendar |
-| [A018](../reactors/unassigned-architecture-rows.md#a018) | physical root, logical prerequisite | TypeIIPeriod | RejectTypeIIPeriodOpening | TypeIIPeriod |
-| [A019](../reactors/unassigned-architecture-rows.md#a019) | physical root, logical prerequisite | TypeIIPeriod | RejectTypeIIPeriodAmendment | TypeIIPeriod |
-| [A020](../reactors/unassigned-architecture-rows.md#a020) | physical root, logical prerequisite | TypeIIPeriod | CancelTypeIIPeriodAmendment | TypeIIPeriod |
+| [T053](../reactors/reserve-accepted-type-ii-period-dates-reactor.md#t053) | physical root, logical prerequisite | TypeIIPeriod | AcquireTypeIIPeriodRange | TypeIIObservationCalendar |
+| [T054](../reactors/reserve-accepted-type-ii-period-dates-reactor.md#t054) | physical root | TypeIIObservationCalendar | ApplyTypeIIPeriodRange | TypeIIPeriod |
+| [T055](../reactors/reserve-accepted-type-ii-period-dates-reactor.md#t055) | physical root | TypeIIPeriod | CloseTypeIIPeriodRangeReservation | TypeIIObservationCalendar |
+| [A018](../reactors/unassigned-domain-choreography.md#a018) | physical root, logical prerequisite | TypeIIPeriod | RejectTypeIIPeriodOpening | TypeIIPeriod |
+| [A019](../reactors/unassigned-domain-choreography.md#a019) | physical root, logical prerequisite | TypeIIPeriod | RejectTypeIIPeriodAmendment | TypeIIPeriod |
+| [A020](../reactors/unassigned-domain-choreography.md#a020) | physical root, logical prerequisite | TypeIIPeriod | CancelTypeIIPeriodAmendment | TypeIIPeriod |
 
 ### TypeIIPeriodAmendmentCanceled
 
@@ -538,7 +537,6 @@ TypeIIRangeIntent
 | Schema discriminator | bdgrz.type-i-i-period.type-i-i-period-amendment-canceled |
 | Schema discriminatorVersion | 1 |
 | Schema owner | TypeIIPeriod |
-| Schema existingContract | null (recorded) |
 | Schema status | selected target schema; implementation pending |
 | Schema reason | source admission contract |
 | Schema changes | None listed |
@@ -607,9 +605,9 @@ TypeIIRangeIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T055](../reactors/type-ii-range-reactor.md#t055) | physical root, logical prerequisite | TypeIIPeriod | CloseTypeIIPeriodRangeReservation | TypeIIObservationCalendar |
-| [A019](../reactors/unassigned-architecture-rows.md#a019) | emitted semantic fact | TypeIIPeriod | RejectTypeIIPeriodAmendment | TypeIIPeriod |
-| [A020](../reactors/unassigned-architecture-rows.md#a020) | emitted semantic fact | TypeIIPeriod | CancelTypeIIPeriodAmendment | TypeIIPeriod |
+| [T055](../reactors/reserve-accepted-type-ii-period-dates-reactor.md#t055) | physical root, logical prerequisite | TypeIIPeriod | CloseTypeIIPeriodRangeReservation | TypeIIObservationCalendar |
+| [A019](../reactors/unassigned-domain-choreography.md#a019) | emitted semantic fact | TypeIIPeriod | RejectTypeIIPeriodAmendment | TypeIIPeriod |
+| [A020](../reactors/unassigned-domain-choreography.md#a020) | emitted semantic fact | TypeIIPeriod | CancelTypeIIPeriodAmendment | TypeIIPeriod |
 
 ### TypeIIPeriodCloseAmended
 
@@ -707,7 +705,6 @@ TypeIIRangeIntent
 | Schema discriminator | bdgrz.type-i-i-period.type-i-i-period-opening-accepted |
 | Schema discriminatorVersion | 1 |
 | Schema owner | TypeIIPeriod |
-| Schema existingContract | null (recorded) |
 | Schema status | selected target schema; implementation pending |
 | Schema reason | source admission contract |
 | Schema changes | None listed |
@@ -776,12 +773,12 @@ TypeIIRangeIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T053](../reactors/type-ii-range-reactor.md#t053) | physical root, logical prerequisite | TypeIIPeriod | AcquireTypeIIPeriodRange | TypeIIObservationCalendar |
-| [T054](../reactors/type-ii-range-reactor.md#t054) | physical root | TypeIIObservationCalendar | ApplyTypeIIPeriodRange | TypeIIPeriod |
-| [T055](../reactors/type-ii-range-reactor.md#t055) | physical root | TypeIIPeriod | CloseTypeIIPeriodRangeReservation | TypeIIObservationCalendar |
-| [A018](../reactors/unassigned-architecture-rows.md#a018) | physical root, logical prerequisite | TypeIIPeriod | RejectTypeIIPeriodOpening | TypeIIPeriod |
-| [A019](../reactors/unassigned-architecture-rows.md#a019) | physical root, logical prerequisite | TypeIIPeriod | RejectTypeIIPeriodAmendment | TypeIIPeriod |
-| [A020](../reactors/unassigned-architecture-rows.md#a020) | physical root, logical prerequisite | TypeIIPeriod | CancelTypeIIPeriodAmendment | TypeIIPeriod |
+| [T053](../reactors/reserve-accepted-type-ii-period-dates-reactor.md#t053) | physical root, logical prerequisite | TypeIIPeriod | AcquireTypeIIPeriodRange | TypeIIObservationCalendar |
+| [T054](../reactors/reserve-accepted-type-ii-period-dates-reactor.md#t054) | physical root | TypeIIObservationCalendar | ApplyTypeIIPeriodRange | TypeIIPeriod |
+| [T055](../reactors/reserve-accepted-type-ii-period-dates-reactor.md#t055) | physical root | TypeIIPeriod | CloseTypeIIPeriodRangeReservation | TypeIIObservationCalendar |
+| [A018](../reactors/unassigned-domain-choreography.md#a018) | physical root, logical prerequisite | TypeIIPeriod | RejectTypeIIPeriodOpening | TypeIIPeriod |
+| [A019](../reactors/unassigned-domain-choreography.md#a019) | physical root, logical prerequisite | TypeIIPeriod | RejectTypeIIPeriodAmendment | TypeIIPeriod |
+| [A020](../reactors/unassigned-domain-choreography.md#a020) | physical root, logical prerequisite | TypeIIPeriod | CancelTypeIIPeriodAmendment | TypeIIPeriod |
 
 ### TypeIIPeriodOpeningRejected
 
@@ -811,7 +808,6 @@ TypeIIRangeIntent
 | Schema discriminator | bdgrz.type-i-i-period.type-i-i-period-opening-rejected |
 | Schema discriminatorVersion | 1 |
 | Schema owner | TypeIIPeriod |
-| Schema existingContract | null (recorded) |
 | Schema status | selected target schema; implementation pending |
 | Schema reason | source admission contract |
 | Schema changes | None listed |
@@ -880,8 +876,8 @@ TypeIIRangeIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T055](../reactors/type-ii-range-reactor.md#t055) | physical root, logical prerequisite | TypeIIPeriod | CloseTypeIIPeriodRangeReservation | TypeIIObservationCalendar |
-| [A018](../reactors/unassigned-architecture-rows.md#a018) | emitted semantic fact | TypeIIPeriod | RejectTypeIIPeriodOpening | TypeIIPeriod |
+| [T055](../reactors/reserve-accepted-type-ii-period-dates-reactor.md#t055) | physical root, logical prerequisite | TypeIIPeriod | CloseTypeIIPeriodRangeReservation | TypeIIObservationCalendar |
+| [A018](../reactors/unassigned-domain-choreography.md#a018) | emitted semantic fact | TypeIIPeriod | RejectTypeIIPeriodOpening | TypeIIPeriod |
 
 
 

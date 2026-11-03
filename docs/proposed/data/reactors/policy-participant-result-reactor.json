@@ -36,7 +36,6 @@
       "currentRegisteredRootTypes": [
         "PolicyParticipantResultReactor"
       ],
-      "plannedRootRole": null,
       "processes": [
         "IndependentChildMaterialization"
       ],

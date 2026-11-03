@@ -1,5 +1,7 @@
 # WorkDigestPreference commands
 
+
+
 Selected command contracts: **1**. Complete selected contracts and companion source evidence: [owner command JSON](../data/commands/work-digest-preference.json).
 
 | Target command | Selected source name | Kind | Identity | Fields | HTTP routes |
@@ -15,7 +17,8 @@ Selected command contracts: **1**. Complete selected contracts and companion sou
 | Target command name | SetWorkDigestPreference |
 | Selected source command name | SetWorkDigestPreference |
 | Name decision | The selected source name is retained. |
-| Owner | WorkDigestPreference |
+| Target owner | WorkDigestPreference |
+| Selected source owner | WorkDigestPreference |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | [Placeholder: value not recorded] |
 | Logical identity | [Placeholder: required status not recorded] |

@@ -110,11 +110,11 @@ AdministratorTransitionIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T052](../reactors/administrator-restoration-reactor.md#t052) | logical prerequisite | Member\|TeamMember | CompleteAdministratorRestoration | TenantManagerGuard |
-| [T098](../reactors/administrator-assignment-restoration-reactor.md#t098) | emitted semantic fact | TenantManagerGuard | ApplyAdministratorAssignmentRestoration | TeamMember |
-| [S007](../reactors/retired-team-assignment-reactor.md#s007) | physical root, logical prerequisite | TeamMember | RemoveRetiredMemberAccessAndAssignments | TeamMember |
-| [S016](../reactors/tenant-rbac-bootstrap-reactor.md#s016) | emitted semantic fact | Tenant | AssignTeamMember | TeamMember |
-| [S027](../reactors/tenant-invitation-reactor.md#s027) | emitted semantic fact | TenantInvitation | AssignTeamMember | TeamMember |
+| [T052](../reactors/administrator-restoration-reactor.md#t052) | logical prerequisite | Member\|TeamMember | CompleteAdministratorRestoration | TenantAdministratorContinuity |
+| [T098](../reactors/administrator-assignment-restoration-reactor.md#t098) | emitted semantic fact | TenantAdministratorContinuity | ApplyAdministratorAssignmentRestoration | TeamMember |
+| [S007](../reactors/remove-team-assignment-after-member-retirement-reactor.md#s007) | physical root, logical prerequisite | TeamMember | RemoveRetiredMemberAccessAndAssignments | TeamMember |
+| [S016](../reactors/set-up-starting-tenant-access-reactor.md#s016) | emitted semantic fact | Tenant | AssignTeamMember | TeamMember |
+| [S027](../reactors/activate-membership-after-invitation-acceptance-reactor.md#s027) | emitted semantic fact | TenantInvitation | AssignTeamMember | TeamMember |
 | [S034](../reactors/tenant-self-service-activation-reactor.md#s034) | physical root, logical prerequisite | TeamMember | ActivateTenant | Tenant |
 
 ### TeamMemberRemoved
@@ -220,12 +220,12 @@ AdministratorTransitionIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T047](../reactors/administrator-assignment-withdrawal-reactor.md#t047) | emitted semantic fact | TenantManagerGuard | ApplyAdministratorAssignmentWithdrawal | TeamMember |
-| [T049](../reactors/administrator-neutral-assignment-mutation-reactor.md#t049) | emitted semantic fact | TenantManagerGuard | RemoveAdministratorAssignment | TeamMember |
-| [T050](../reactors/administrator-withdrawal-reactor.md#t050) | logical prerequisite | Member\|TeamMember | CompleteAdministratorWithdrawal | TenantManagerGuard |
-| [S004](../reactors/member-retirement-reactor.md#s004) | emitted semantic fact | Member | RemoveRetiredMemberAccessAndAssignments | TeamMember |
-| [S007](../reactors/retired-team-assignment-reactor.md#s007) | emitted semantic fact | TeamMember | RemoveRetiredMemberAccessAndAssignments | TeamMember |
-| [S010](../reactors/team-cleanup-reactor.md#s010) | emitted semantic fact | Team | RemoveTeamMember | TeamMember |
+| [T047](../reactors/administrator-assignment-withdrawal-reactor.md#t047) | emitted semantic fact | TenantAdministratorContinuity | ApplyAdministratorAssignmentWithdrawal | TeamMember |
+| [T049](../reactors/remove-unneeded-administrator-assignment-reactor.md#t049) | emitted semantic fact | TenantAdministratorContinuity | RemoveAdministratorAssignment | TeamMember |
+| [T050](../reactors/administrator-withdrawal-reactor.md#t050) | logical prerequisite | Member\|TeamMember | CompleteAdministratorWithdrawal | TenantAdministratorContinuity |
+| [S004](../reactors/remove-member-assignments-and-access-after-membership-ends-reactor.md#s004) | emitted semantic fact | Member | RemoveRetiredMemberAccessAndAssignments | TeamMember |
+| [S007](../reactors/remove-team-assignment-after-member-retirement-reactor.md#s007) | emitted semantic fact | TeamMember | RemoveRetiredMemberAccessAndAssignments | TeamMember |
+| [S010](../reactors/remove-team-assignments-after-team-deletion-reactor.md#s010) | emitted semantic fact | Team | RemoveTeamMember | TeamMember |
 
 
 ## Wire/schema version discrepancies

@@ -1,5 +1,7 @@
 # ApplicationNameClaim commands
 
+
+
 Selected command contracts: **2**. Complete selected contracts and companion source evidence: [owner command JSON](../data/commands/application-name-claim.json).
 
 | Target command | Selected source name | Kind | Identity | Fields | HTTP routes |
@@ -16,7 +18,8 @@ Selected command contracts: **2**. Complete selected contracts and companion sou
 | Target command name | ClaimApplicationName |
 | Selected source command name | ClaimApplicationName |
 | Name decision | The selected source name is retained. |
-| Owner | ApplicationNameClaim |
+| Target owner | ApplicationNameClaim |
+| Selected source owner | ApplicationNameClaim |
 | Contract record status | PLANNED |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; reactor; deterministic receiver identity derived from the admitted root fact, episode and generation: exact redelivery resolves the original result, a changed admission is a new identity |
@@ -68,7 +71,8 @@ Required tests: [Placeholder: required tests not recorded]
 | Target command name | ReleaseApplicationName |
 | Selected source command name | ReleaseApplicationName |
 | Name decision | The selected source name is retained. |
-| Owner | ApplicationNameClaim |
+| Target owner | ApplicationNameClaim |
+| Selected source owner | ApplicationNameClaim |
 | Contract record status | PLANNED |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; reactor; deterministic receiver identity derived from the admitted root fact, episode and generation: exact redelivery resolves the original result, a changed admission is a new identity |

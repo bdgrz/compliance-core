@@ -54,8 +54,8 @@
       "schema": null,
       "sourceName": "WeeklyWorkDigestDeliveryRequested",
       "targetName": "WeeklyWorkDigestDeliveryRequested",
-      "nameDecision": "The selected source name is retained.",
-      "targetMeaning": "Records one deterministic email delivery attempt for a scheduled weekly digest."
+      "nameDecision": "Names one recorded email delivery request for a scheduled weekly digest.",
+      "targetMeaning": "The system recorded one email delivery attempt for a member’s scheduled weekly digest. This fact does not mean the email arrived."
     },
     {
       "canonical": {

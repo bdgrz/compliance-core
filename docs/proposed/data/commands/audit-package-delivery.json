@@ -59,7 +59,7 @@
         "recorded": "2026-10-29"
       },
       "reactor": "AuditPackageDeliveryAdmissionReactor",
-      "sourceOwner": "AuditPackageManifest",
+      "sourceOwner": "AuditPackageDelivery",
       "sourceEvents": [
         "AuditPackageDeliveryAdmitted"
       ],
@@ -69,6 +69,7 @@
       ],
       "effectKind": "materialize_recorded_audit_package_delivery",
       "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
+      "owner": "AuditPackageDelivery",
       "sourceName": "MaterializeRecordedAuditPackageDelivery",
       "targetName": "RecordAuditPackageDelivery"
     }

@@ -1,5 +1,7 @@
 # ControlOccurrence commands
 
+
+
 Selected command contracts: **5**. Complete selected contracts and companion source evidence: [owner command JSON](../data/commands/control-occurrence.json).
 
 | Target command | Selected source name | Kind | Identity | Fields | HTTP routes |
@@ -19,7 +21,8 @@ Selected command contracts: **5**. Complete selected contracts and companion sou
 | Target command name | AttestControlOccurrence |
 | Selected source command name | AttestControlOccurrence |
 | Name decision | The selected source name is retained. |
-| Owner | ControlOccurrence |
+| Target owner | ControlOccurrence |
+| Selected source owner | ControlOccurrence |
 | Contract record status | target_contract |
 | Kind | http |
 | Logical identity | CommandId; Uuid; required=true; client; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
@@ -31,7 +34,7 @@ Selected command contracts: **5**. Complete selected contracts and companion sou
 | Contract changes | Add required CommandId. |
 | Guard order | bind_required_ids, authenticate_authorize, canonicalize_authored_intent, resolve_native_operation_facts, compare_owner_episode_actor_kind_intent_original_revision, validate_new_owner_revision_and_source_permits, append_complete_concrete_attributed_batch |
 | Response contract | `{"mode":"immediate_original_result","responseType":"ControlOccurrenceView","firstHttpStatus":200,"terminalResultType":"ControlOccurrenceView"}` |
-| Expected revision scope | `{"field":"ExpectedRevision","owner":"ControlOccurrence","counter":"logical ResourceRevision of this owner","nullableInternalRule":null}` |
+| Expected revision scope | `{"field":"ExpectedRevision","owner":"ControlOccurrence","counter":"logical ResourceRevision of this owner"}` |
 | Authorizer sources | src/Compliance.Core/Features/AccessControl/ClientManagementMutationAuthorizer.cs, src/Compliance.Core/Features/Programs/ProgramManagementAuthorizer.cs |
 | Source contract | src/Compliance.Common/Features/Operations/AttestControlOccurrence.cs |
 | Primary handler | AttestControlOccurrenceHandler |
@@ -80,7 +83,8 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Target command name | CorrectControlAttestation |
 | Selected source command name | CorrectControlAttestation |
 | Name decision | The selected source name is retained. |
-| Owner | ControlOccurrence |
+| Target owner | ControlOccurrence |
+| Selected source owner | ControlOccurrence |
 | Contract record status | target_contract |
 | Kind | http |
 | Logical identity | CommandId; Uuid; required=true; client; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
@@ -92,7 +96,7 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Contract changes | Add required CommandId. |
 | Guard order | bind_required_ids, authenticate_authorize, canonicalize_authored_intent, resolve_native_operation_facts, compare_owner_episode_actor_kind_intent_original_revision, validate_new_owner_revision_and_source_permits, append_complete_concrete_attributed_batch |
 | Response contract | `{"mode":"immediate_original_result","responseType":"ControlOccurrenceView","firstHttpStatus":200,"terminalResultType":"ControlOccurrenceView"}` |
-| Expected revision scope | `{"field":"ExpectedRevision","owner":"ControlOccurrence","counter":"logical ResourceRevision of this owner","nullableInternalRule":null}` |
+| Expected revision scope | `{"field":"ExpectedRevision","owner":"ControlOccurrence","counter":"logical ResourceRevision of this owner"}` |
 | Authorizer sources | src/Compliance.Core/Features/AccessControl/ClientManagementMutationAuthorizer.cs, src/Compliance.Core/Features/Programs/ProgramManagementAuthorizer.cs |
 | Source contract | src/Compliance.Common/Features/Operations/CorrectControlAttestation.cs |
 | Primary handler | CorrectControlAttestationHandler |
@@ -142,7 +146,8 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Target command name | OpenControlOccurrence |
 | Selected source command name | OpenControlOccurrence |
 | Name decision | The selected source name is retained. |
-| Owner | ControlOccurrence |
+| Target owner | ControlOccurrence |
+| Selected source owner | ControlOccurrence |
 | Contract record status | target_contract |
 | Kind | http |
 | Logical identity | CommandId; Uuid; required=true; client; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
@@ -154,7 +159,7 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Contract changes | Add required CommandId., Add required owner-local ExpectedRevision; business Version remains an exact content version, not owner OCC., Resolve OccurrenceId deterministically from tenant/program/control/BusinessWindow across all generators. CommandId distinguishes authored opening attempts; trigger and date cannot create a second occurrence for the same window. |
 | Guard order | bind_required_ids, authenticate_authorize, canonicalize_authored_intent, resolve_native_operation_facts, compare_owner_episode_actor_kind_intent_original_revision, validate_new_owner_revision_and_source_permits, append_complete_concrete_attributed_batch |
 | Response contract | `{"mode":"immediate_original_result","responseType":"ControlOccurrenceView","firstHttpStatus":200,"terminalResultType":"ControlOccurrenceView"}` |
-| Expected revision scope | `{"field":"ExpectedRevision","owner":"ControlOccurrence","counter":"logical ResourceRevision of this owner","nullableInternalRule":null}` |
+| Expected revision scope | `{"field":"ExpectedRevision","owner":"ControlOccurrence","counter":"logical ResourceRevision of this owner"}` |
 | Authorizer sources | src/Compliance.Core/Features/AccessControl/ClientManagementMutationAuthorizer.cs, src/Compliance.Core/Features/Programs/ProgramManagementAuthorizer.cs |
 | Source contract | src/Compliance.Common/Features/Operations/OpenControlOccurrence.cs |
 | Primary handler | OpenControlOccurrenceHandler |
@@ -197,7 +202,8 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Target command name | ReviewControlOccurrence |
 | Selected source command name | ReviewControlOccurrence |
 | Name decision | The selected source name is retained. |
-| Owner | ControlOccurrence |
+| Target owner | ControlOccurrence |
+| Selected source owner | ControlOccurrence |
 | Contract record status | target_contract |
 | Kind | http |
 | Logical identity | CommandId; Uuid; required=true; client; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
@@ -209,7 +215,7 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Contract changes | Add required CommandId. |
 | Guard order | bind_required_ids, authenticate_authorize, canonicalize_authored_intent, resolve_native_operation_facts, compare_owner_episode_actor_kind_intent_original_revision, validate_new_owner_revision_and_source_permits, append_complete_concrete_attributed_batch |
 | Response contract | `{"mode":"immediate_original_result","responseType":"ControlOccurrenceView","firstHttpStatus":200,"terminalResultType":"ControlOccurrenceView"}` |
-| Expected revision scope | `{"field":"ExpectedRevision","owner":"ControlOccurrence","counter":"logical ResourceRevision of this owner","nullableInternalRule":null}` |
+| Expected revision scope | `{"field":"ExpectedRevision","owner":"ControlOccurrence","counter":"logical ResourceRevision of this owner"}` |
 | Authorizer sources | src/Compliance.Core/Features/AccessControl/ClientManagementMutationAuthorizer.cs, src/Compliance.Core/Features/Programs/ProgramManagementAuthorizer.cs |
 | Source contract | src/Compliance.Common/Features/Operations/ReviewControlOccurrence.cs |
 | Primary handler | ReviewControlOccurrenceHandler |
@@ -255,7 +261,8 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Target command name | OpenDueControlOccurrence |
 | Selected source command name | MaterializeControlOccurrence |
 | Name decision | Opens the due control work item for its exact period, plan, owner, and reviewer. |
-| Owner | ControlOccurrence |
+| Target owner | ControlOccurrence |
+| Selected source owner | ControlOccurrence |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; reactor; deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result |

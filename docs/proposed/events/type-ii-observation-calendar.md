@@ -37,7 +37,6 @@ Canonical events: **2**. Complete canonical event and available schema records: 
 | Schema discriminator | bdgrz.type-i-i-observation-calendar.type-i-i-period-range-authorized |
 | Schema discriminatorVersion | 1 |
 | Schema owner | TypeIIObservationCalendar |
-| Schema existingContract | null (recorded) |
 | Schema status | selected target schema; implementation pending |
 | Schema reason | typed reactor receiver accepted business fact |
 | Schema changes | None listed |
@@ -106,8 +105,8 @@ TypeIIRangeIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T053](../reactors/type-ii-range-reactor.md#t053) | emitted semantic fact | TypeIIPeriod | AcquireTypeIIPeriodRange | TypeIIObservationCalendar |
-| [T054](../reactors/type-ii-range-reactor.md#t054) | logical prerequisite | TypeIIObservationCalendar | ApplyTypeIIPeriodRange | TypeIIPeriod |
+| [T053](../reactors/reserve-accepted-type-ii-period-dates-reactor.md#t053) | emitted semantic fact | TypeIIPeriod | AcquireTypeIIPeriodRange | TypeIIObservationCalendar |
+| [T054](../reactors/reserve-accepted-type-ii-period-dates-reactor.md#t054) | logical prerequisite | TypeIIObservationCalendar | ApplyTypeIIPeriodRange | TypeIIPeriod |
 
 ### TypeIIPeriodDateRangeReservationEnded
 
@@ -137,7 +136,6 @@ TypeIIRangeIntent
 | Schema discriminator | bdgrz.type-i-i-observation-calendar.type-i-i-period-range-settled |
 | Schema discriminatorVersion | 1 |
 | Schema owner | TypeIIObservationCalendar |
-| Schema existingContract | null (recorded) |
 | Schema status | selected target schema; implementation pending |
 | Schema reason | typed reactor receiver accepted business fact |
 | Schema changes | None listed |
@@ -206,7 +204,7 @@ TypeIIRangeIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T055](../reactors/type-ii-range-reactor.md#t055) | emitted semantic fact | TypeIIPeriod | CloseTypeIIPeriodRangeReservation | TypeIIObservationCalendar |
+| [T055](../reactors/reserve-accepted-type-ii-period-dates-reactor.md#t055) | emitted semantic fact | TypeIIPeriod | CloseTypeIIPeriodRangeReservation | TypeIIObservationCalendar |
 
 
 ## Wire/schema version discrepancies

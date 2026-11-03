@@ -5,6 +5,7 @@
 - Business aggregate: `true`
 - Selected status: `SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED`
 
+
 ## Identity and invariant
 
 **Selected identity:** (tenantId, programId, controlId, businessWindow)
@@ -18,6 +19,10 @@
 **Replay:** Current required authorization precedes replay; exact authorized retries resolve the original accepted result using the selected logical identity and immutable actor/intent/source binding. Fresh mutable feasibility, clock selection and body preparation cannot replace that original result. Expected revision is concurrency precondition, not a new identity.
 
 **Lifecycle:** [Placeholder: a consolidated lifecycle sequence is not present in the selected owner record.]
+
+
+
+
 
 ## Commands
 
@@ -41,14 +46,14 @@
 
 | Row | Kind | Source owner | Target owner | Command |
 | --- | --- | --- | --- | --- |
-| [T040](../reactors/control-occurrence-fan-out-reactor.md#t040) | reaction_or_regular_process_stage | TypeIIPeriod | ControlOccurrence | OpenDueControlOccurrence |
+| [T040](../reactors/open-due-control-work-reactor.md#t040) | reaction_or_regular_process_stage | TypeIIPeriod | ControlOccurrence | OpenDueControlOccurrence |
 | [S002](../reactors/control-occurrence-finding-reactor.md#s002) | business_receiver | ControlOccurrence | FindingAggregate | RaiseOccurrenceFinding |
 
 ## Product rules
 
-- **D19-02** — A management compliance review's ControlOccurrence has a frozen evidence set binding the exact readiness assessment version, the monitoring measure versions, and the agenda or minutes artifact; later data changes never alter the frozen set; it replaces a separate ManagementReviewSnapshot aggregate. Source: [m0-d19-periodic-reviews.md](../../product/decisions/m0-d19-periodic-reviews.md).
-- **D19-03** — Management's sign-off on the review occurrence is an immutable decision with outcome approved, action_requested, or deferred and a rationale. Source: [m0-d19-periodic-reviews.md](../../product/decisions/m0-d19-periodic-reviews.md).
-- **D19-05** — Annual policy review is one occurrence per policy with evidence of the approved new or unchanged policy version; annual vendor review is one occurrence per material provider with evidence of the assurance-report review. Source: [m0-d19-periodic-reviews.md](../../product/decisions/m0-d19-periodic-reviews.md).
+- **D19-02** — A management compliance review's ControlOccurrence has a frozen evidence set binding the exact readiness assessment version, the monitoring measure versions, and the agenda or minutes artifact; later data changes never alter the frozen set; it replaces a separate ManagementReviewSnapshot aggregate. Decision: [m0-d19-periodic-reviews.md](../decisions/m0-d19-periodic-reviews.md).
+- **D19-03** — Management's sign-off on the review occurrence is an immutable decision with outcome approved, action_requested, or deferred and a rationale. Decision: [m0-d19-periodic-reviews.md](../decisions/m0-d19-periodic-reviews.md).
+- **D19-05** — Annual policy review is one occurrence per policy with evidence of the approved new or unchanged policy version; annual vendor review is one occurrence per material provider with evidence of the assurance-report review. Decision: [m0-d19-periodic-reviews.md](../decisions/m0-d19-periodic-reviews.md).
 
 ## Adopted architecture decisions
 
@@ -57,7 +62,7 @@
 ## Evidence and complete record
 
 - Baseline source: [Placeholder: source file is not present in this checkout]
-- Aggregate review: [control-occurrence-review-2026-10-29.md](../../product/definitive-aggregate-choreography/control-occurrence-review-2026-10-29.md)
+- Aggregate review: [Placeholder: no owner-specific review file is present]
 - Full selected record: [JSON](../data/aggregates/control-occurrence.json)
 
 > Target definition is separate from runtime qualification. Implementation status recorded by the source: `SEPARATE_VERIFICATION_REQUIRED_IMPLEMENTATION_HALTED`.

@@ -7,7 +7,7 @@ Canonical events: **5**. Complete canonical event and available schema records: 
 | ProviderChangeAccepted | ProviderChangeAccepted | business | bdgrz.provider.provider-change-accepted | 1 | 8 | The provider record accepted a complete change: its normalized content and claim keys are frozen in the intent and the name-change process continues from this fact. |
 | ProviderChangeCanceled | ProviderChangeCanceled | business | bdgrz.provider.provider-change-canceled | 1 | 8 | The pending provider change was canceled after a definite failure; it fences the local apply before any newly acquired claim is released. |
 | ProviderRecorded | ProviderRecorded | business | bdgrz.provider.recorded | 1 | 10 | The creating change of a provider was applied after its governed name was claimed. The complete normalized ProviderContent is the content behind ContentContent. |
-| ProviderRetired | ProviderRetired | business | null (recorded) | null (recorded) | [Placeholder: schema absent] | A provider was retired from the tenant register; it can no longer be referenced by new scope, flows, or assurance reviews, and its governed name is released. |
+| ProviderRetired | ProviderRetired | business | [Placeholder: value not recorded] | [Placeholder: value not recorded] | [Placeholder: schema absent] | A provider was retired from the tenant register; it can no longer be referenced by new scope, flows, or assurance reviews, and its governed name is released. |
 | ProviderRevised | ProviderRevised | business | bdgrz.provider.revised | 1 | 11 | A later change of a provider was applied after the names it needs were claimed. The complete normalized ProviderContent is the content behind ContentContent. |
 
 ## Event details
@@ -40,7 +40,6 @@ Canonical events: **5**. Complete canonical event and available schema records: 
 | Schema discriminator | bdgrz.provider.provider-change-accepted |
 | Schema discriminatorVersion | 1 |
 | Schema owner | Provider |
-| Schema existingContract | null (recorded) |
 | Schema status | selected target schema; implementation pending |
 | Schema reason | source command accepted result |
 | Schema changes | None listed |
@@ -109,10 +108,10 @@ RecordNameChangeIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T022](../reactors/provider-change-accepted-reactor.md#t022) | physical root, logical prerequisite | Provider | ClaimProviderName | ProviderNameClaim |
-| [T023](../reactors/provider-change-accepted-reactor.md#t023) | physical root | ProviderNameClaim | ApplyProviderChange | Provider |
-| [T024](../reactors/provider-change-accepted-reactor.md#t024) | physical root | Provider | ReleaseProviderName | ProviderNameClaim |
-| [A014](../reactors/unassigned-architecture-rows.md#a014) | physical root, logical prerequisite | Provider | CancelProviderChange | Provider |
+| [T022](../reactors/keep-provider-names-unique-reactor.md#t022) | physical root, logical prerequisite | Provider | ClaimProviderName | ProviderNameClaim |
+| [T023](../reactors/keep-provider-names-unique-reactor.md#t023) | physical root | ProviderNameClaim | ApplyProviderChange | Provider |
+| [T024](../reactors/keep-provider-names-unique-reactor.md#t024) | physical root | Provider | ReleaseProviderName | ProviderNameClaim |
+| [A014](../reactors/unassigned-domain-choreography.md#a014) | physical root, logical prerequisite | Provider | CancelProviderChange | Provider |
 
 ### ProviderChangeCanceled
 
@@ -142,7 +141,6 @@ RecordNameChangeIntent
 | Schema discriminator | bdgrz.provider.provider-change-canceled |
 | Schema discriminatorVersion | 1 |
 | Schema owner | Provider |
-| Schema existingContract | null (recorded) |
 | Schema status | selected target schema; implementation pending |
 | Schema reason | source admission contract |
 | Schema changes | None listed |
@@ -211,8 +209,8 @@ RecordNameChangeIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T024](../reactors/provider-change-accepted-reactor.md#t024) | logical prerequisite | Provider | ReleaseProviderName | ProviderNameClaim |
-| [A014](../reactors/unassigned-architecture-rows.md#a014) | emitted semantic fact | Provider | CancelProviderChange | Provider |
+| [T024](../reactors/keep-provider-names-unique-reactor.md#t024) | logical prerequisite | Provider | ReleaseProviderName | ProviderNameClaim |
+| [A014](../reactors/unassigned-domain-choreography.md#a014) | emitted semantic fact | Provider | CancelProviderChange | Provider |
 
 ### ProviderRecorded
 
@@ -322,8 +320,8 @@ RecordNameChangeIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T023](../reactors/provider-change-accepted-reactor.md#t023) | emitted semantic fact | ProviderNameClaim | ApplyProviderChange | Provider |
-| [T024](../reactors/provider-change-accepted-reactor.md#t024) | logical prerequisite | Provider | ReleaseProviderName | ProviderNameClaim |
+| [T023](../reactors/keep-provider-names-unique-reactor.md#t023) | emitted semantic fact | ProviderNameClaim | ApplyProviderChange | Provider |
+| [T024](../reactors/keep-provider-names-unique-reactor.md#t024) | logical prerequisite | Provider | ReleaseProviderName | ProviderNameClaim |
 
 ### ProviderRetired
 
@@ -335,7 +333,7 @@ RecordNameChangeIntent
 | Canonical semantic key | event:ProviderRetired |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | ProviderRetired |
-| Adopted wire | null (recorded) |
+| Adopted wire | [Placeholder: value not recorded] |
 | Wire qualification | Planned; no declared record yet. Today the transition is a Lifecycle value inside the generic revision fact. |
 | Schema status | planned_schema |
 | Source status | planned_no_source_type |
@@ -359,7 +357,7 @@ RecordNameChangeIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [X003](../reactors/provider-change-accepted-reactor.md#x003) | physical root, logical prerequisite | Provider | ReleaseProviderName | ProviderNameClaim |
+| [X003](../reactors/keep-provider-names-unique-reactor.md#x003) | physical root, logical prerequisite | Provider | ReleaseProviderName | ProviderNameClaim |
 
 ### ProviderRevised
 
@@ -470,8 +468,8 @@ RecordNameChangeIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T023](../reactors/provider-change-accepted-reactor.md#t023) | emitted semantic fact | ProviderNameClaim | ApplyProviderChange | Provider |
-| [T024](../reactors/provider-change-accepted-reactor.md#t024) | logical prerequisite | Provider | ReleaseProviderName | ProviderNameClaim |
+| [T023](../reactors/keep-provider-names-unique-reactor.md#t023) | emitted semantic fact | ProviderNameClaim | ApplyProviderChange | Provider |
+| [T024](../reactors/keep-provider-names-unique-reactor.md#t024) | logical prerequisite | Provider | ReleaseProviderName | ProviderNameClaim |
 
 
 

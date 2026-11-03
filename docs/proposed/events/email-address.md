@@ -67,7 +67,7 @@ Canonical events: **6**. Complete canonical event and available schema records: 
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [S035](../reactors/email-reservation-reactor.md#s035) | emitted semantic fact | UserIdentity | ReserveEmail | EmailAddress |
+| [S035](../reactors/keep-tenant-email-addresses-unique-reactor.md#s035) | emitted semantic fact | UserIdentity | ReserveEmail | EmailAddress |
 
 ### EmailAddressVerified
 
@@ -182,10 +182,10 @@ Canonical events: **6**. Complete canonical event and available schema records: 
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T115](../reactors/email-challenge-delivery-reactor.md#t115) | physical root, logical prerequisite | EmailAddress | DeliverEmailChallenge | EmailChallengeDeliveryLedger |
-| [T116](../reactors/email-challenge-delivery-reactor.md#t116) | physical root | EmailAddress | DeliverRecoveryChallenge | EmailChallengeDeliveryLedger |
-| [N001](../reactors/email-challenge-delivery-reactor.md#n001) | physical root, logical prerequisite | EmailAddress | RecordEmailChallengeDeliverySent | EmailChallengeDeliveryLedger |
-| [N002](../reactors/email-challenge-delivery-reactor.md#n002) | physical root, logical prerequisite | EmailAddress | RecordEmailChallengeDeliveryFailed | EmailChallengeDeliveryLedger |
+| [T115](../reactors/send-account-verification-and-recovery-emails-reactor.md#t115) | physical root, logical prerequisite | EmailAddress | DeliverEmailChallenge | EmailChallengeDeliveryLedger |
+| [T116](../reactors/send-account-verification-and-recovery-emails-reactor.md#t116) | physical root | EmailAddress | DeliverRecoveryChallenge | EmailChallengeDeliveryLedger |
+| [N001](../reactors/send-account-verification-and-recovery-emails-reactor.md#n001) | physical root, logical prerequisite | EmailAddress | RecordEmailChallengeDeliverySent | EmailChallengeDeliveryLedger |
+| [N002](../reactors/send-account-verification-and-recovery-emails-reactor.md#n002) | physical root, logical prerequisite | EmailAddress | RecordEmailChallengeDeliveryFailed | EmailChallengeDeliveryLedger |
 
 ### IdentityRecoveryChallengeClaimed
 
@@ -293,16 +293,16 @@ IdentityRecoveryIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T041](../reactors/identity-recovery-acceptance-reactor.md#t041) | physical root | IdentityRecovery | ProtectRecoveryIdentity | UserIdentity |
-| [T042](../reactors/identity-recovery-acceptance-reactor.md#t042) | physical root | IdentityRecovery | RegisterRecoveredIdentity | UserIdentity |
-| [T043](../reactors/identity-recovery-acceptance-reactor.md#t043) | physical root | IdentityRecovery | RevokeRecoveredOldIdentity | UserIdentity |
-| [T044](../reactors/identity-recovery-acceptance-reactor.md#t044) | physical root | IdentityRecovery | CompleteAcceptedIdentityRecovery | IdentityRecovery |
-| [T045](../reactors/identity-recovery-acceptance-reactor.md#t045) | physical root | IdentityRecovery | SendIdentityRecoveryNotice | IdentityRecoveryNoticeProcess |
-| [T056](../reactors/identity-recovery-acceptance-reactor.md#t056) | physical root, logical prerequisite | EmailAddress | PrepareAccountRecovery | IdentityRecovery |
-| [T057](../reactors/identity-recovery-acceptance-reactor.md#t057) | physical root | IdentityRecovery | EndRecoveryIdentityProtection | UserIdentity |
-| [T058](../reactors/identity-recovery-acceptance-reactor.md#t058) | physical root | IdentityRecovery | CompleteEmailRecoveryChallenge | EmailAddress |
-| [T097](../reactors/identity-recovery-acceptance-reactor.md#t097) | physical root | IdentityRecovery | AcceptProtectedIdentityRecovery | IdentityRecovery |
-| [A017](../reactors/unassigned-architecture-rows.md#a017) | physical root, logical prerequisite | EmailAddress | RejectIdentityRecoveryPreparation | IdentityRecovery |
+| [T041](../reactors/complete-account-recovery-reactor.md#t041) | physical root | IdentityRecovery | ProtectRecoveryIdentity | UserIdentity |
+| [T042](../reactors/complete-account-recovery-reactor.md#t042) | physical root | IdentityRecovery | RegisterRecoveredIdentity | UserIdentity |
+| [T043](../reactors/complete-account-recovery-reactor.md#t043) | physical root | IdentityRecovery | RevokeRecoveredOldIdentity | UserIdentity |
+| [T044](../reactors/complete-account-recovery-reactor.md#t044) | physical root | IdentityRecovery | CompleteAcceptedIdentityRecovery | IdentityRecovery |
+| [T045](../reactors/complete-account-recovery-reactor.md#t045) | physical root | IdentityRecovery | SendIdentityRecoveryNotice | IdentityRecoveryNoticeProcess |
+| [T056](../reactors/complete-account-recovery-reactor.md#t056) | physical root, logical prerequisite | EmailAddress | PrepareAccountRecovery | IdentityRecovery |
+| [T057](../reactors/complete-account-recovery-reactor.md#t057) | physical root | IdentityRecovery | EndRecoveryIdentityProtection | UserIdentity |
+| [T058](../reactors/complete-account-recovery-reactor.md#t058) | physical root | IdentityRecovery | CompleteEmailRecoveryChallenge | EmailAddress |
+| [T097](../reactors/complete-account-recovery-reactor.md#t097) | physical root | IdentityRecovery | AcceptProtectedIdentityRecovery | IdentityRecovery |
+| [A017](../reactors/unassigned-domain-choreography.md#a017) | physical root, logical prerequisite | EmailAddress | RejectIdentityRecoveryPreparation | IdentityRecovery |
 
 ### IdentityRecoveryChallengeCompleted
 
@@ -407,7 +407,7 @@ IdentityRecoveryIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T058](../reactors/identity-recovery-acceptance-reactor.md#t058) | emitted semantic fact | IdentityRecovery | CompleteEmailRecoveryChallenge | EmailAddress |
+| [T058](../reactors/complete-account-recovery-reactor.md#t058) | emitted semantic fact | IdentityRecovery | CompleteEmailRecoveryChallenge | EmailAddress |
 
 ### IdentityRecoveryChallengeIssued
 
@@ -467,10 +467,10 @@ IdentityRecoveryIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T115](../reactors/email-challenge-delivery-reactor.md#t115) | physical root | EmailAddress | DeliverEmailChallenge | EmailChallengeDeliveryLedger |
-| [T116](../reactors/email-challenge-delivery-reactor.md#t116) | physical root, logical prerequisite | EmailAddress | DeliverRecoveryChallenge | EmailChallengeDeliveryLedger |
-| [N001](../reactors/email-challenge-delivery-reactor.md#n001) | physical root, logical prerequisite | EmailAddress | RecordEmailChallengeDeliverySent | EmailChallengeDeliveryLedger |
-| [N002](../reactors/email-challenge-delivery-reactor.md#n002) | physical root, logical prerequisite | EmailAddress | RecordEmailChallengeDeliveryFailed | EmailChallengeDeliveryLedger |
+| [T115](../reactors/send-account-verification-and-recovery-emails-reactor.md#t115) | physical root | EmailAddress | DeliverEmailChallenge | EmailChallengeDeliveryLedger |
+| [T116](../reactors/send-account-verification-and-recovery-emails-reactor.md#t116) | physical root, logical prerequisite | EmailAddress | DeliverRecoveryChallenge | EmailChallengeDeliveryLedger |
+| [N001](../reactors/send-account-verification-and-recovery-emails-reactor.md#n001) | physical root, logical prerequisite | EmailAddress | RecordEmailChallengeDeliverySent | EmailChallengeDeliveryLedger |
+| [N002](../reactors/send-account-verification-and-recovery-emails-reactor.md#n002) | physical root, logical prerequisite | EmailAddress | RecordEmailChallengeDeliveryFailed | EmailChallengeDeliveryLedger |
 
 
 

@@ -10,8 +10,7 @@
       "stage": "acquire",
       "receivers": [
         "AuthorizeReadinessGapPlanReadinessDecisionUse"
-      ],
-      "rule": null
+      ]
     },
     {
       "stage": "complete",
@@ -25,8 +24,7 @@
       "stage": "settle",
       "receivers": [
         "SettleReadinessGapPlanReadinessDecisionUse"
-      ],
-      "rule": null
+      ]
     }
   ],
   "abort": [

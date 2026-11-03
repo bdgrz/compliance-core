@@ -46,7 +46,7 @@ Canonical events: **5**. Complete canonical event and available schema records: 
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [S019](../reactors/link-impact-review-work-reactor.md#s019) | emitted semantic fact | SignificantChange | LinkImpactReviewWork | SignificantChange |
+| [S019](../reactors/request-impact-review-after-significant-change-reactor.md#s019) | emitted semantic fact | SignificantChange | LinkImpactReviewWork | SignificantChange |
 
 ### SignificantChangeImpactAssessed
 
@@ -82,7 +82,7 @@ Canonical events: **5**. Complete canonical event and available schema records: 
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [S019](../reactors/link-impact-review-work-reactor.md#s019) | physical root, logical prerequisite | SignificantChange | LinkImpactReviewWork | SignificantChange |
+| [S019](../reactors/request-impact-review-after-significant-change-reactor.md#s019) | physical root, logical prerequisite | SignificantChange | LinkImpactReviewWork | SignificantChange |
 
 ### SignificantChangeRecorded
 
@@ -186,7 +186,7 @@ Canonical events: **5**. Complete canonical event and available schema records: 
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [S020](../reactors/system-description-decision-reactor.md#s020) | emitted semantic fact | SystemDescription | RecordSignificantChangeSystemDescriptionDecision | SignificantChange |
+| [S020](../reactors/update-system-description-after-significant-change-reactor.md#s020) | emitted semantic fact | SystemDescription | RecordSignificantChangeSystemDescriptionDecision | SignificantChange |
 
 
 

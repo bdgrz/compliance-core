@@ -1,5 +1,7 @@
 # ControlDraft commands
 
+
+
 Selected command contracts: **10**. Complete selected contracts and companion source evidence: [owner command JSON](../data/commands/control-draft.json).
 
 | Target command | Selected source name | Kind | Identity | Fields | HTTP routes |
@@ -24,7 +26,8 @@ Selected command contracts: **10**. Complete selected contracts and companion so
 | Target command name | ApproveControl |
 | Selected source command name | ApproveControl |
 | Name decision | The selected source name is retained. |
-| Owner | ControlDraft |
+| Target owner | ControlDraft |
+| Selected source owner | ControlDraft |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | http |
 | Logical identity | CommandId; Uuid; required=true; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
@@ -79,7 +82,8 @@ Required tests: [Placeholder: required tests not recorded]
 | Target command name | CreateControlDraft |
 | Selected source command name | CreateControlDraft |
 | Name decision | The selected source name is retained. |
-| Owner | ControlDraft |
+| Target owner | ControlDraft |
+| Selected source owner | ControlDraft |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | http |
 | Logical identity | ControlId; Uuid; required=true; caller-supplied immutable creation identity: an exact retry with the same id and authored intent returns the original result; the same id with changed intent is refused; a different id is a different record |
@@ -129,7 +133,8 @@ Required tests: [Placeholder: required tests not recorded]
 | Target command name | DesignateControlOwnerPerson |
 | Selected source command name | DesignateControlOwnerPerson |
 | Name decision | The selected source name is retained. |
-| Owner | ControlDraft |
+| Target owner | ControlDraft |
+| Selected source owner | ControlDraft |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | command |
 | Logical identity | CommandId; Uuid; required=true; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
@@ -179,7 +184,8 @@ Required tests: [Placeholder: required tests not recorded]
 | Target command name | DiscardControlDraft |
 | Selected source command name | DiscardControlDraft |
 | Name decision | The selected source name is retained. |
-| Owner | ControlDraft |
+| Target owner | ControlDraft |
+| Selected source owner | ControlDraft |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | http |
 | Logical identity | CommandId; Uuid; required=true; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
@@ -230,7 +236,8 @@ Required tests: [Placeholder: required tests not recorded]
 | Target command name | ProposeControlRetirement |
 | Selected source command name | ProposeControlRetirement |
 | Name decision | The selected source name is retained. |
-| Owner | ControlDraft |
+| Target owner | ControlDraft |
+| Selected source owner | ControlDraft |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | http |
 | Logical identity | CommandId; Uuid; required=true; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
@@ -283,7 +290,8 @@ Required tests: [Placeholder: required tests not recorded]
 | Target command name | ProposeControlSuccessor |
 | Selected source command name | ProposeControlSuccessor |
 | Name decision | The selected source name is retained. |
-| Owner | ControlDraft |
+| Target owner | ControlDraft |
+| Selected source owner | ControlDraft |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | http |
 | Logical identity | CommandId; Uuid; required=true; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
@@ -335,7 +343,8 @@ Required tests: [Placeholder: required tests not recorded]
 | Target command name | RetireControl |
 | Selected source command name | RetireControl |
 | Name decision | The selected source name is retained. |
-| Owner | ControlDraft |
+| Target owner | ControlDraft |
+| Selected source owner | ControlDraft |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | http |
 | Logical identity | CommandId; Uuid; required=true; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
@@ -389,7 +398,8 @@ Required tests: [Placeholder: required tests not recorded]
 | Target command name | ReviewControl |
 | Selected source command name | ReviewControl |
 | Name decision | The selected source name is retained. |
-| Owner | ControlDraft |
+| Target owner | ControlDraft |
+| Selected source owner | ControlDraft |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | http |
 | Logical identity | CommandId; Uuid; required=true; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
@@ -442,7 +452,8 @@ Required tests: [Placeholder: required tests not recorded]
 | Target command name | ReviseControlDraft |
 | Selected source command name | ReviseControlDraft |
 | Name decision | The selected source name is retained. |
-| Owner | ControlDraft |
+| Target owner | ControlDraft |
+| Selected source owner | ControlDraft |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | command |
 | Logical identity | CommandId; Uuid; required=true; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
@@ -491,7 +502,8 @@ Required tests: [Placeholder: required tests not recorded]
 | Target command name | WithdrawControlProposal |
 | Selected source command name | WithdrawControlProposal |
 | Name decision | The selected source name is retained. |
-| Owner | ControlDraft |
+| Target owner | ControlDraft |
+| Selected source owner | ControlDraft |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | http |
 | Logical identity | CommandId; Uuid; required=true; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |

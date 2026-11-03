@@ -5,6 +5,7 @@
 - Business aggregate: `true`
 - Selected status: `SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED`
 
+
 ## Identity and invariant
 
 **Selected identity:** Tenant / artifact-engagement-holds / HoldId, bound to exact artifact, engagement and report issuance. Selected mutations use CommandId.
@@ -18,6 +19,10 @@
 **Replay:** Current required authorization precedes replay; exact authorized retries resolve the original accepted result using the selected logical identity and immutable actor/intent/source binding. Fresh mutable feasibility, clock selection and body preparation cannot replace that original result. Expected revision is concurrency precondition, not a new identity.
 
 **Lifecycle:** [Placeholder: a consolidated lifecycle sequence is not present in the selected owner record.]
+
+
+
+
 
 ## Commands
 
@@ -40,12 +45,12 @@
 
 | Row | Kind | Source owner | Target owner | Command |
 | --- | --- | --- | --- | --- |
-| [X007](../reactors/client-export-delivery-reactor.md#x007) | planned_reaction | ClientExport | ArtifactEngagementHold | RecordEngagementPackageDelivery |
+| [X007](../reactors/keep-engagement-evidence-protected-after-delivery-reactor.md#x007) | planned_reaction | ClientExport | ArtifactEngagementHold | RecordEngagementPackageDelivery |
 
 ## Product rules
 
-- **D16-06** — An EvidenceHold is either engagement kind, applying until the report is issued plus 1 year, or legal kind, applying until an Org Admin releases it with no end date. Source: [m0-d16-evidence-handling.md](../../product/decisions/m0-d16-evidence-handling.md).
-- **D27-05** — An attributed decision must record that the engagement record package was delivered into the attest team's audit software; the engagement hold blocks disposition until that delivery decision exists, so offboarding cannot complete without it. Source: [m0-d27-attest-scope.md](../../product/decisions/m0-d27-attest-scope.md).
+- **D16-06** — An EvidenceHold is either engagement kind, applying until the report is issued plus 1 year, or legal kind, applying until an Org Admin releases it with no end date. Decision: [m0-d16-evidence-handling.md](../decisions/m0-d16-evidence-handling.md).
+- **D27-05** — An attributed decision must record that the engagement record package was delivered into the attest team's audit software; the engagement hold blocks disposition until that delivery decision exists, so offboarding cannot complete without it. Decision: [m0-d27-attest-scope.md](../decisions/m0-d27-attest-scope.md).
 
 ## Adopted architecture decisions
 
@@ -54,7 +59,7 @@
 ## Evidence and complete record
 
 - Baseline source: [Placeholder: source file is not present in this checkout]
-- Aggregate review: [artifact-engagement-hold-review-2026-10-29.md](../../product/definitive-aggregate-choreography/artifact-engagement-hold-review-2026-10-29.md)
+- Aggregate review: [Placeholder: no owner-specific review file is present]
 - Full selected record: [JSON](../data/aggregates/artifact-engagement-hold.json)
 
 > Target definition is separate from runtime qualification. Implementation status recorded by the source: `SEPARATE_VERIFICATION_REQUIRED_IMPLEMENTATION_HALTED`.

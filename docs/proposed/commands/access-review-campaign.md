@@ -1,5 +1,7 @@
 # AccessReviewCampaign commands
 
+
+
 Selected command contracts: **5**. Complete selected contracts and companion source evidence: [owner command JSON](../data/commands/access-review-campaign.json).
 
 | Target command | Selected source name | Kind | Identity | Fields | HTTP routes |
@@ -19,7 +21,8 @@ Selected command contracts: **5**. Complete selected contracts and companion sou
 | Target command name | CompleteAccessReviewCampaign |
 | Selected source command name | CompleteAccessReviewCampaign |
 | Name decision | The selected source name is retained. |
-| Owner | AccessReviewCampaign |
+| Target owner | AccessReviewCampaign |
+| Selected source owner | AccessReviewCampaign |
 | Contract record status | target_contract |
 | Kind | http |
 | Logical identity | CommandId; Uuid; required=true; client; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
@@ -31,7 +34,7 @@ Selected command contracts: **5**. Complete selected contracts and companion sou
 | Contract changes | Add required CommandId. |
 | Guard order | bind_required_ids, authenticate_authorize, canonicalize_authored_intent, resolve_native_operation_facts, compare_owner_episode_actor_kind_intent_original_revision, validate_new_owner_revision_and_source_permits, append_complete_concrete_attributed_batch |
 | Response contract | `{"mode":"async_fixed_ack","responseType":"OperationAcceptedResponse","firstHttpStatus":202,"terminalResultType":"AccessReviewCampaignCompletionView"}` |
-| Expected revision scope | `{"field":"ExpectedRevision","owner":"AccessReviewCampaign","counter":"logical ResourceRevision of this owner","nullableInternalRule":null}` |
+| Expected revision scope | `{"field":"ExpectedRevision","owner":"AccessReviewCampaign","counter":"logical ResourceRevision of this owner"}` |
 | Authorizer sources | src/Compliance.Core/Features/AccessReviews/AccessReviewAuthorizer.cs |
 | Source contract | src/Compliance.Common/Features/AccessReviews/CompleteAccessReviewCampaign.cs |
 | Primary handler | CompleteAccessReviewCampaignHandler |
@@ -71,7 +74,8 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Target command name | LaunchAccessReviewCampaign |
 | Selected source command name | LaunchAccessReviewCampaign |
 | Name decision | The selected source name is retained. |
-| Owner | AccessReviewCampaign |
+| Target owner | AccessReviewCampaign |
+| Selected source owner | AccessReviewCampaign |
 | Contract record status | target_contract |
 | Kind | http |
 | Logical identity | CampaignId; Uuid; required=true; client; caller-supplied immutable creation identity: an exact retry with the same id and authored intent returns the original result; the same id with changed intent is refused; a different id is a different record |
@@ -83,7 +87,7 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Contract changes | Add required CampaignId. |
 | Guard order | bind_required_ids, authenticate_authorize, canonicalize_authored_intent, resolve_native_operation_facts, compare_owner_episode_actor_kind_intent_original_revision, validate_new_owner_revision_and_source_permits, append_complete_concrete_attributed_batch |
 | Response contract | `{"mode":"immediate_original_result","responseType":"AccessReviewCampaignRegistration","firstHttpStatus":200,"terminalResultType":"AccessReviewCampaignRegistration"}` |
-| Expected revision scope | `{"field":null,"owner":"AccessReviewCampaign","counter":"No primary caller ResourceRevision. Enforce required authored source/epoch/version tokens, immutable creation identity or trusted proof/generation as declared; append uses physical OCC."}` |
+| Expected revision scope | `{"owner":"AccessReviewCampaign","counter":"No primary caller ResourceRevision. Enforce required authored source/epoch/version tokens, immutable creation identity or trusted proof/generation as declared; append uses physical OCC."}` |
 | Authorizer sources | src/Compliance.Core/Features/AccessReviews/AccessReviewAuthorizer.cs |
 | Source contract | src/Compliance.Common/Features/AccessReviews/LaunchAccessReviewCampaign.cs |
 | Primary handler | LaunchAccessReviewCampaignHandler |
@@ -126,7 +130,8 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Target command name | RecordBulkAccessDecision |
 | Selected source command name | RecordBulkAccessDecision |
 | Name decision | The selected source name is retained. |
-| Owner | AccessReviewCampaign |
+| Target owner | AccessReviewCampaign |
+| Selected source owner | AccessReviewCampaign |
 | Contract record status | target_contract |
 | Kind | http |
 | Logical identity | DecisionBatchId; Uuid; required=true; client; caller-supplied immutable creation identity: an exact retry with the same id and authored intent returns the original result; the same id with changed intent is refused; a different id is a different record |
@@ -181,7 +186,8 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Target command name | AbortAccessReviewCampaignCompletion |
 | Selected source command name | AbortAccessReviewCampaignCompletion |
 | Name decision | The selected source name is retained. |
-| Owner | AccessReviewCampaign |
+| Target owner | AccessReviewCampaign |
+| Selected source owner | AccessReviewCampaign |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | abort |
 | Logical identity | CommandId; Uuid; required=true; abort receiver identity bound to the exact admitted operation and generation: exact redelivery resolves the original rejected result; an abort after a terminal outcome is a no-op |
@@ -230,7 +236,8 @@ Required tests: [Placeholder: required tests not recorded]
 | Target command name | CompleteAccessReviewCampaignClosure |
 | Selected source command name | CompleteAccessReviewCampaignClosure |
 | Name decision | The selected source name is retained. |
-| Owner | AccessReviewCampaign |
+| Target owner | AccessReviewCampaign |
+| Selected source owner | AccessReviewCampaign |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; reactor; deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result |

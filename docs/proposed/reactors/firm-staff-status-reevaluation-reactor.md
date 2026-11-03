@@ -20,11 +20,11 @@ Selected choreography rows: **1**. Required proofs, recovery, effect identity, a
 | id | S017 |
 | kind | business_receiver |
 | status | SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED |
-| sourceOwner | FirmStaffRecord |
+| Source owner (target name) | FirmStaffRecord (source: FirmStaffRecord) |
 | logicalPrerequisiteFacts (target names) | FirmStaffChangeRecorded |
 | physicalRootEvents (target names) | FirmStaffChangeRecorded |
 | Target command (selected source name: RecordDirectoryIndependenceReevaluation) | RecordDirectoryIndependenceReevaluation |
-| targetOwner | ServiceEngagementIndependence |
+| Target owner | ServiceEngagementIndependence |
 | targetAuthorityKind | business_aggregate |
 | emittedSemanticFacts (target names) | DirectoryIndependenceReevaluated |
 | currentRegisteredRootTypes (target names) | ReassessFirmStaffIndependenceAfterChangesReactor |
@@ -35,7 +35,6 @@ Selected choreography rows: **1**. Required proofs, recovery, effect identity, a
 | sourceOwners | FirmStaffRecord |
 | canonicalTargetOwner | ServiceEngagementIndependence |
 | recoveryContractSummary | At-least-once checkpoint replay resends the same source-derived command. Missing dependencies remain retryable; actual terminal/superseded episodes are skipped only with the owning proof. |
-| logicalPrerequisiteRuleGuard | null (recorded) |
 | logicalPrerequisiteRule | The source is a FirmStaffChangeRecorded with ChangeKind status, verified against its authoritative record history; for every active tenant and every accepted engagement acceptance/assignment pair naming that staff member whose recorded directory staff revision is older than the change, a denial-only receipt is recorded against the exact historical acceptance and change pair. A receipt never reactivates an acceptance. |
 | prerequisiteRuleSource | authored 2026-10-29 from reactor and target source |
 

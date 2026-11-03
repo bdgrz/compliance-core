@@ -8,14 +8,7 @@
   "invariant": "Independent governed operational process lifecycle. Retirement is a distinct terminal fact (planned OperationalProcessRetired), not a value inside a revision",
   "boundaryDecision": "selected_split",
   "mustPreserve": "Process content/version is checked against exact prior revision; inactive names may be reused only when policy permits.",
-  "sources": [
-    {
-      "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
-      "jsonPointer": "/splitOwners/27/targetOwners/0",
-      "line": 2903,
-      "sha256": "d349d94b7c43f4d82020ecf36bdacf1aff98bc6498e14993582f1c3164b21f19"
-    }
-  ],
+  "sources": [],
   "baselineSourcePath": "src/Compliance.Core/Features/TechnologyInventory/OperationalProcessRegister.cs",
   "baselineEvents": [
     "OperationalProcessRevisionRecorded"
@@ -90,13 +83,9 @@
           "policy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/106",
-        "line": 12348,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
-      "kind": "http"
+      "kind": "http",
+      "sourceOwner": "OperationalProcess",
+      "owner": "OperationalProcess"
     },
     {
       "command": "ReviseOperationalProcess",
@@ -172,13 +161,9 @@
           "policy": "ApiUser + existing request-scope authorizers"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/142",
-        "line": 16553,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
-      "kind": "http"
+      "kind": "http",
+      "sourceOwner": "OperationalProcess",
+      "owner": "OperationalProcess"
     },
     {
       "command": "CancelOperationalProcessChange",
@@ -220,15 +205,9 @@
           "required": true
         }
       ],
-      "responseContract": null,
-      "http": null,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/source-admission-contracts.json",
-        "jsonPointer": "/contracts/13",
-        "line": 843,
-        "sha256": "f1d549ed0879c816cb26e86879f8fa658dab0a8acbf7c591e4d4aed40483f8ae"
-      },
-      "kind": "abort"
+      "kind": "abort",
+      "sourceOwner": "OperationalProcess",
+      "owner": "OperationalProcess"
     },
     {
       "command": "ApplyOperationalProcessChange",
@@ -284,7 +263,7 @@
         }
       ],
       "reactor": "OperationalProcessChangeApplicationReactor",
-      "sourceOwner": "OperationalProcessNameClaim",
+      "sourceOwner": "OperationalProcess",
       "sourceEvents": [
         "OperationalProcessNameClaimed"
       ],
@@ -296,10 +275,7 @@
       "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
       "handler": "ApplyOperationalProcessChangeHandler",
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "recorded": "2026-10-29"
-      }
+      "owner": "OperationalProcess"
     }
   ],
   "eventAuthority": "selected_final_event_catalog",
@@ -307,35 +283,17 @@
     {
       "event": "OperationalProcessChangeAccepted",
       "discriminator": "bdgrz.operational-process.operational-process-change-accepted",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/186",
-        "line": 24196,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     },
     {
       "event": "OperationalProcessChangeCanceled",
       "discriminator": "bdgrz.operational-process.operational-process-change-canceled",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/187",
-        "line": 24360,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     },
     {
       "event": "OperationalProcessRevisionRecorded",
       "discriminator": "bdgrz.inventory.operational_process.revision_recorded",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/190",
-        "line": 24852,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     }
   ],
   "choreography": [
@@ -343,37 +301,19 @@
       "reactor": "OperationalProcessNameClaimReactor",
       "sourceOwner": "OperationalProcess",
       "targetOwner": "OperationalProcessNameClaim",
-      "command": "ClaimOperationalProcessName",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "jsonPointer": "/reactors/28",
-        "line": 2383,
-        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
-      }
+      "command": "ClaimOperationalProcessName"
     },
     {
       "reactor": "OperationalProcessChangeApplicationReactor",
       "sourceOwner": "OperationalProcessNameClaim",
       "targetOwner": "OperationalProcess",
-      "command": "ApplyOperationalProcessChange",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "jsonPointer": "/reactors/29",
-        "line": 2470,
-        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
-      }
+      "command": "ApplyOperationalProcessChange"
     },
     {
       "reactor": "OperationalProcessOldNameReleaseReactor",
       "sourceOwner": "OperationalProcess",
       "targetOwner": "OperationalProcessNameClaim",
-      "command": "ReleaseOperationalProcessName",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "jsonPointer": "/reactors/30",
-        "line": 2547,
-        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
-      }
+      "command": "ReleaseOperationalProcessName"
     }
   ],
   "status": "SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED",
@@ -391,12 +331,6 @@
         "required": true,
         "origin": "client",
         "rule": "exact immutable creation retry"
-      },
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/106",
-        "line": 12348,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       }
     },
     {
@@ -407,23 +341,11 @@
         "required": true,
         "origin": "client",
         "rule": "one immutable authored operation"
-      },
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/142",
-        "line": 16553,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       }
     },
     {
       "command": "CancelOperationalProcessChange",
-      "logicalIdentity": "CommandId",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/source-admission-contracts.json",
-        "jsonPointer": "/contracts/13",
-        "line": 843,
-        "sha256": "f1d549ed0879c816cb26e86879f8fa658dab0a8acbf7c591e4d4aed40483f8ae"
-      }
+      "logicalIdentity": "CommandId"
     }
   ],
   "selectedReplayRule": "Current required authorization precedes replay; exact authorized retries resolve the original accepted result using the selected logical identity and immutable actor/intent/source binding. Fresh mutable feasibility, clock selection and body preparation cannot replace that original result. Expected revision is concurrency precondition, not a new identity.",
@@ -450,5 +372,6 @@
   "decidesCovers": [
     "D22-06"
   ],
-  "decidesAuthored": "2026-10-29"
+  "decidesAuthored": "2026-10-29",
+  "sourceOwner": "OperationalProcess"
 }

@@ -8,14 +8,7 @@
   "invariant": "A redaction approval must target current exact original/derived preparation and be independent of its preparer unless exact scoped waiver proof authorizes self-approval.",
   "boundaryDecision": "narrow",
   "boundaryRationale": "Preparation and approval need same-version admission gate; historical preparations/approvals can be read-side facts with selected-command retry lookup. Waiver is a separate owner and must enter as a value proof.",
-  "sources": [
-    {
-      "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
-      "jsonPointer": "/aggregates/33",
-      "line": 25551,
-      "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
-    }
-  ],
+  "sources": [],
   "baselineSourcePath": "src/Compliance.Core/Features/Evidence/EvidenceRedaction.cs",
   "baselineEvents": [
     "EvidenceRedactionApproved",
@@ -84,13 +77,9 @@
           "authorizationPolicy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/14",
-        "line": 1138,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      },
-      "kind": "http"
+      "kind": "http",
+      "sourceOwner": "EvidenceRedaction",
+      "owner": "EvidenceRedaction"
     },
     {
       "command": "PrepareEvidenceRedaction",
@@ -155,25 +144,15 @@
           "authorizationPolicy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/89",
-        "line": 6574,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      },
-      "kind": "http"
+      "kind": "http",
+      "sourceOwner": "EvidenceRedaction",
+      "owner": "EvidenceRedaction"
     }
   ],
   "eventAuthority": "retained_baseline_business_facts_requires_schema_reconciliation",
   "events": [
     {
       "event": "EvidenceRedactionApproved",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
-        "jsonPointer": "/aggregates/33",
-        "line": 25551,
-        "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
-      },
       "baselineContract": {
         "event": "EvidenceRedactionApproved",
         "emitters": [
@@ -208,12 +187,6 @@
     },
     {
       "event": "EvidenceRedactionPrepared",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
-        "jsonPointer": "/aggregates/33",
-        "line": 25551,
-        "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
-      },
       "baselineContract": {
         "event": "EvidenceRedactionPrepared",
         "emitters": [
@@ -258,23 +231,11 @@
   "selectedLogicalIdentityBindings": [
     {
       "command": "ApproveEvidenceRedaction",
-      "logicalIdentity": "CommandId",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/14",
-        "line": 1138,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      }
+      "logicalIdentity": "CommandId"
     },
     {
       "command": "PrepareEvidenceRedaction",
-      "logicalIdentity": "CommandId",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/89",
-        "line": 6574,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      }
+      "logicalIdentity": "CommandId"
     }
   ],
   "selectedReplayRule": "Current required authorization precedes replay; exact authorized retries resolve the original accepted result using the selected logical identity and immutable actor/intent/source binding. Fresh mutable feasibility, clock selection and body preparation cannot replace that original result. Expected revision is concurrency precondition, not a new identity.",
@@ -290,5 +251,6 @@
     "D16-09",
     "D16-10"
   ],
-  "decidesAuthored": "2026-10-29"
+  "decidesAuthored": "2026-10-29",
+  "sourceOwner": "EvidenceRedaction"
 }

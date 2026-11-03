@@ -153,8 +153,8 @@ Canonical events: **16**. Complete canonical event and available schema records:
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [S017](../reactors/firm-staff-status-reevaluation-reactor.md#s017) | emitted semantic fact | FirmStaffRecord | RecordDirectoryIndependenceReevaluation | ServiceEngagementIndependence |
-| [S018](../reactors/accepted-staff-directory-reconciliation-reactor.md#s018) | emitted semantic fact | ServiceEngagementIndependence | RecordDirectoryIndependenceReevaluation | ServiceEngagementIndependence |
+| [S017](../reactors/reassess-firm-staff-independence-after-changes-reactor.md#s017) | emitted semantic fact | FirmStaffRecord | RecordDirectoryIndependenceReevaluation | ServiceEngagementIndependence |
+| [S018](../reactors/reassess-staff-independence-after-changes-reactor.md#s018) | emitted semantic fact | ServiceEngagementIndependence | RecordDirectoryIndependenceReevaluation | ServiceEngagementIndependence |
 
 ### EngagementPersonalDecisionAdmitted
 
@@ -184,7 +184,6 @@ Canonical events: **16**. Complete canonical event and available schema records:
 | Schema discriminator | bdgrz.service-engagement-independence.engagement-personal-decision-admitted |
 | Schema discriminatorVersion | 1 |
 | Schema owner | ServiceEngagementIndependence |
-| Schema existingContract | null (recorded) |
 | Schema status | selected target schema; implementation pending |
 | Schema reason | source command accepted result |
 | Schema changes | None listed |
@@ -261,13 +260,13 @@ EngagementPersonalDecisionIntent
 | [T094](../reactors/engagement-acceptance-reactor.md#t094) | physical root | ServiceEngagementIndependence | CloseIndependenceRuleCatalogEngagementAuthorization | IndependenceRuleCatalog |
 | [T095](../reactors/engagement-acceptance-reactor.md#t095) | physical root, logical prerequisite | ServiceEngagementIndependence | AuthorizeIndependenceRuleRatificationCatalogEngagement | IndependenceRuleRatificationCatalog |
 | [T096](../reactors/engagement-acceptance-reactor.md#t096) | physical root | ServiceEngagementIndependence | CloseIndependenceRuleRatificationCatalogEngagementAuthorization | IndependenceRuleRatificationCatalog |
-| [T107](../reactors/engagement-personal-decision-reactor.md#t107) | physical root, logical prerequisite | ServiceEngagementIndependence | AuthorizeClientServicePersonalDecision | ClientServiceIndependence |
-| [T108](../reactors/engagement-personal-decision-reactor.md#t108) | physical root | ServiceEngagementIndependence | RecordEngagementManagementAcknowledgement | EngagementManagementAcknowledgement |
-| [T109](../reactors/engagement-personal-decision-reactor.md#t109) | physical root | ServiceEngagementIndependence | RecordPartnerIndependenceEvaluation | PartnerIndependenceDecision |
-| [T110](../reactors/engagement-personal-decision-reactor.md#t110) | physical root | EngagementManagementAcknowledgement\|PartnerIndependenceDecision | CloseEngagementPersonalDecision | ServiceEngagementIndependence |
-| [T111](../reactors/engagement-personal-decision-reactor.md#t111) | physical root | ServiceEngagementIndependence | CloseClientServicePersonalDecisionAuthorization | ClientServiceIndependence |
-| [T112](../reactors/engagement-personal-decision-reactor.md#t112) | physical root, logical prerequisite | ServiceEngagementIndependence | AuthorizeEngagementPersonalDecision | ServiceEngagementIndependence |
-| [A004](../reactors/unassigned-architecture-rows.md#a004) | physical root, logical prerequisite | ServiceEngagementIndependence | CancelEngagementPersonalDecision | ServiceEngagementIndependence |
+| [T107](../reactors/record-engagement-independence-decisions-reactor.md#t107) | physical root, logical prerequisite | ServiceEngagementIndependence | AuthorizeClientServicePersonalDecision | ClientServiceIndependence |
+| [T108](../reactors/record-engagement-independence-decisions-reactor.md#t108) | physical root | ServiceEngagementIndependence | RecordEngagementManagementAcknowledgement | EngagementManagementAcknowledgement |
+| [T109](../reactors/record-engagement-independence-decisions-reactor.md#t109) | physical root | ServiceEngagementIndependence | RecordPartnerIndependenceEvaluation | PartnerIndependenceDecision |
+| [T110](../reactors/record-engagement-independence-decisions-reactor.md#t110) | physical root | EngagementManagementAcknowledgement\|PartnerIndependenceDecision | RecordEngagementPersonalDecision | ServiceEngagementIndependence |
+| [T111](../reactors/record-engagement-independence-decisions-reactor.md#t111) | physical root | ServiceEngagementIndependence | CloseClientServicePersonalDecisionAuthorization | ClientServiceIndependence |
+| [T112](../reactors/record-engagement-independence-decisions-reactor.md#t112) | physical root, logical prerequisite | ServiceEngagementIndependence | AuthorizeEngagementPersonalDecision | ServiceEngagementIndependence |
+| [A004](../reactors/unassigned-domain-choreography.md#a004) | physical root, logical prerequisite | ServiceEngagementIndependence | CancelEngagementPersonalDecision | ServiceEngagementIndependence |
 
 ### EngagementPersonalDecisionAuthorized
 
@@ -297,7 +296,6 @@ EngagementPersonalDecisionIntent
 | Schema discriminator | bdgrz.service-engagement-independence.engagement-personal-decision-authorized |
 | Schema discriminatorVersion | 1 |
 | Schema owner | ServiceEngagementIndependence |
-| Schema existingContract | null (recorded) |
 | Schema status | selected target schema; implementation pending |
 | Schema reason | typed reactor receiver accepted business fact |
 | Schema changes | None listed |
@@ -372,10 +370,10 @@ EngagementPersonalDecisionIntent
 | [T092](../reactors/engagement-acceptance-reactor.md#t092) | logical prerequisite | ServiceEngagementIndependence | CloseFirmProfessionalDutyDesignationEngagementAuthorization | FirmProfessionalDutyDesignation |
 | [T094](../reactors/engagement-acceptance-reactor.md#t094) | logical prerequisite | ServiceEngagementIndependence | CloseIndependenceRuleCatalogEngagementAuthorization | IndependenceRuleCatalog |
 | [T096](../reactors/engagement-acceptance-reactor.md#t096) | logical prerequisite | ServiceEngagementIndependence | CloseIndependenceRuleRatificationCatalogEngagementAuthorization | IndependenceRuleRatificationCatalog |
-| [T108](../reactors/engagement-personal-decision-reactor.md#t108) | logical prerequisite | ServiceEngagementIndependence | RecordEngagementManagementAcknowledgement | EngagementManagementAcknowledgement |
-| [T109](../reactors/engagement-personal-decision-reactor.md#t109) | logical prerequisite | ServiceEngagementIndependence | RecordPartnerIndependenceEvaluation | PartnerIndependenceDecision |
-| [T111](../reactors/engagement-personal-decision-reactor.md#t111) | logical prerequisite | ServiceEngagementIndependence | CloseClientServicePersonalDecisionAuthorization | ClientServiceIndependence |
-| [T112](../reactors/engagement-personal-decision-reactor.md#t112) | emitted semantic fact | ServiceEngagementIndependence | AuthorizeEngagementPersonalDecision | ServiceEngagementIndependence |
+| [T108](../reactors/record-engagement-independence-decisions-reactor.md#t108) | logical prerequisite | ServiceEngagementIndependence | RecordEngagementManagementAcknowledgement | EngagementManagementAcknowledgement |
+| [T109](../reactors/record-engagement-independence-decisions-reactor.md#t109) | logical prerequisite | ServiceEngagementIndependence | RecordPartnerIndependenceEvaluation | PartnerIndependenceDecision |
+| [T111](../reactors/record-engagement-independence-decisions-reactor.md#t111) | logical prerequisite | ServiceEngagementIndependence | CloseClientServicePersonalDecisionAuthorization | ClientServiceIndependence |
+| [T112](../reactors/record-engagement-independence-decisions-reactor.md#t112) | emitted semantic fact | ServiceEngagementIndependence | AuthorizeEngagementPersonalDecision | ServiceEngagementIndependence |
 
 ### EngagementPersonalDecisionCanceled
 
@@ -405,7 +403,6 @@ EngagementPersonalDecisionIntent
 | Schema discriminator | bdgrz.service-engagement-independence.engagement-personal-decision-canceled |
 | Schema discriminatorVersion | 1 |
 | Schema owner | ServiceEngagementIndependence |
-| Schema existingContract | null (recorded) |
 | Schema status | selected target schema; implementation pending |
 | Schema reason | source admission contract |
 | Schema changes | None listed |
@@ -478,8 +475,8 @@ EngagementPersonalDecisionIntent
 | [T092](../reactors/engagement-acceptance-reactor.md#t092) | logical prerequisite | ServiceEngagementIndependence | CloseFirmProfessionalDutyDesignationEngagementAuthorization | FirmProfessionalDutyDesignation |
 | [T094](../reactors/engagement-acceptance-reactor.md#t094) | logical prerequisite | ServiceEngagementIndependence | CloseIndependenceRuleCatalogEngagementAuthorization | IndependenceRuleCatalog |
 | [T096](../reactors/engagement-acceptance-reactor.md#t096) | logical prerequisite | ServiceEngagementIndependence | CloseIndependenceRuleRatificationCatalogEngagementAuthorization | IndependenceRuleRatificationCatalog |
-| [T111](../reactors/engagement-personal-decision-reactor.md#t111) | logical prerequisite | ServiceEngagementIndependence | CloseClientServicePersonalDecisionAuthorization | ClientServiceIndependence |
-| [A004](../reactors/unassigned-architecture-rows.md#a004) | emitted semantic fact | ServiceEngagementIndependence | CancelEngagementPersonalDecision | ServiceEngagementIndependence |
+| [T111](../reactors/record-engagement-independence-decisions-reactor.md#t111) | logical prerequisite | ServiceEngagementIndependence | CloseClientServicePersonalDecisionAuthorization | ClientServiceIndependence |
+| [A004](../reactors/unassigned-domain-choreography.md#a004) | emitted semantic fact | ServiceEngagementIndependence | CancelEngagementPersonalDecision | ServiceEngagementIndependence |
 
 ### EngagementPersonalDecisionRecorded
 
@@ -509,7 +506,6 @@ EngagementPersonalDecisionIntent
 | Schema discriminator | bdgrz.service-engagement-independence.engagement-personal-decision-materialized |
 | Schema discriminatorVersion | 1 |
 | Schema owner | ServiceEngagementIndependence |
-| Schema existingContract | null (recorded) |
 | Schema status | selected target schema; implementation pending |
 | Schema reason | typed reactor receiver accepted business fact |
 | Schema changes | None listed |
@@ -578,7 +574,7 @@ EngagementPersonalDecisionIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T110](../reactors/engagement-personal-decision-reactor.md#t110) | emitted semantic fact | EngagementManagementAcknowledgement\|PartnerIndependenceDecision | CloseEngagementPersonalDecision | ServiceEngagementIndependence |
+| [T110](../reactors/record-engagement-independence-decisions-reactor.md#t110) | emitted semantic fact | EngagementManagementAcknowledgement\|PartnerIndependenceDecision | RecordEngagementPersonalDecision | ServiceEngagementIndependence |
 
 ### EngagementPracticeCommitmentsAuthorized
 
@@ -608,7 +604,6 @@ EngagementPersonalDecisionIntent
 | Schema discriminator | bdgrz.service-engagement-independence.engagement-practice-commitments-authorized |
 | Schema discriminatorVersion | 1 |
 | Schema owner | ServiceEngagementIndependence |
-| Schema existingContract | null (recorded) |
 | Schema status | selected target schema; implementation pending |
 | Schema reason | typed reactor receiver accepted business fact |
 | Schema changes | None listed |
@@ -813,7 +808,7 @@ EngagementIndependenceIntent
 | [T006](../reactors/engagement-acceptance-reactor.md#t006) | emitted semantic fact | ServiceEngagementIndependence | CompleteServiceEngagementAcceptance | ServiceEngagementIndependence |
 | [T007](../reactors/engagement-acceptance-reactor.md#t007) | logical prerequisite | ServiceEngagementIndependence | ReleaseEngagementServiceHistoryReservation | ClientServiceIndependence |
 | [T085](../reactors/engagement-acceptance-reactor.md#t085) | logical prerequisite | ServiceEngagementIndependence | ClosePracticeIndependenceReservation | PracticeIndependenceCommitment |
-| [S018](../reactors/accepted-staff-directory-reconciliation-reactor.md#s018) | physical root, logical prerequisite | ServiceEngagementIndependence | RecordDirectoryIndependenceReevaluation | ServiceEngagementIndependence |
+| [S018](../reactors/reassess-staff-independence-after-changes-reactor.md#s018) | physical root, logical prerequisite | ServiceEngagementIndependence | RecordDirectoryIndependenceReevaluation | ServiceEngagementIndependence |
 
 ### ServiceEngagementAcceptanceRejected
 
@@ -843,7 +838,6 @@ EngagementIndependenceIntent
 | Schema discriminator | bdgrz.service-engagement-independence.service-engagement-acceptance-rejected |
 | Schema discriminatorVersion | 1 |
 | Schema owner | ServiceEngagementIndependence |
-| Schema existingContract | null (recorded) |
 | Schema status | selected target schema; implementation pending |
 | Schema reason | source admission contract |
 | Schema changes | None listed |
@@ -926,7 +920,7 @@ EngagementIndependenceIntent
 | [T092](../reactors/engagement-acceptance-reactor.md#t092) | logical prerequisite | ServiceEngagementIndependence | CloseFirmProfessionalDutyDesignationEngagementAuthorization | FirmProfessionalDutyDesignation |
 | [T094](../reactors/engagement-acceptance-reactor.md#t094) | logical prerequisite | ServiceEngagementIndependence | CloseIndependenceRuleCatalogEngagementAuthorization | IndependenceRuleCatalog |
 | [T096](../reactors/engagement-acceptance-reactor.md#t096) | logical prerequisite | ServiceEngagementIndependence | CloseIndependenceRuleRatificationCatalogEngagementAuthorization | IndependenceRuleRatificationCatalog |
-| [A002](../reactors/unassigned-architecture-rows.md#a002) | emitted semantic fact | ServiceEngagementIndependence | RejectServiceEngagementAcceptance | ServiceEngagementIndependence |
+| [A002](../reactors/unassigned-domain-choreography.md#a002) | emitted semantic fact | ServiceEngagementIndependence | RejectServiceEngagementAcceptance | ServiceEngagementIndependence |
 
 ### ServiceEngagementAcceptanceRequested
 
@@ -956,7 +950,6 @@ EngagementIndependenceIntent
 | Schema discriminator | bdgrz.service-engagement-independence.service-engagement-acceptance-requested |
 | Schema discriminatorVersion | 1 |
 | Schema owner | ServiceEngagementIndependence |
-| Schema existingContract | null (recorded) |
 | Schema status | selected target schema; implementation pending |
 | Schema reason | source command accepted result |
 | Schema changes | None listed |
@@ -1049,8 +1042,8 @@ EngagementIndependenceIntent
 | [T094](../reactors/engagement-acceptance-reactor.md#t094) | physical root | ServiceEngagementIndependence | CloseIndependenceRuleCatalogEngagementAuthorization | IndependenceRuleCatalog |
 | [T095](../reactors/engagement-acceptance-reactor.md#t095) | physical root, logical prerequisite | ServiceEngagementIndependence | AuthorizeIndependenceRuleRatificationCatalogEngagement | IndependenceRuleRatificationCatalog |
 | [T096](../reactors/engagement-acceptance-reactor.md#t096) | physical root | ServiceEngagementIndependence | CloseIndependenceRuleRatificationCatalogEngagementAuthorization | IndependenceRuleRatificationCatalog |
-| [A002](../reactors/unassigned-architecture-rows.md#a002) | physical root, logical prerequisite | ServiceEngagementIndependence | RejectServiceEngagementAcceptance | ServiceEngagementIndependence |
-| [A003](../reactors/unassigned-architecture-rows.md#a003) | physical root, logical prerequisite | ServiceEngagementIndependence | RejectServiceEngagementStaffAssignment | ServiceEngagementIndependence |
+| [A002](../reactors/unassigned-domain-choreography.md#a002) | physical root, logical prerequisite | ServiceEngagementIndependence | RejectServiceEngagementAcceptance | ServiceEngagementIndependence |
+| [A003](../reactors/unassigned-domain-choreography.md#a003) | physical root, logical prerequisite | ServiceEngagementIndependence | RejectServiceEngagementStaffAssignment | ServiceEngagementIndependence |
 
 ### ServiceEngagementAssignmentRevoked
 
@@ -1322,7 +1315,7 @@ EngagementIndependenceIntent
 | [T007](../reactors/engagement-acceptance-reactor.md#t007) | logical prerequisite | ServiceEngagementIndependence | ReleaseEngagementServiceHistoryReservation | ClientServiceIndependence |
 | [T082](../reactors/engagement-acceptance-reactor.md#t082) | emitted semantic fact | ServiceEngagementIndependence | CompleteServiceEngagementStaffAssignment | ServiceEngagementIndependence |
 | [T085](../reactors/engagement-acceptance-reactor.md#t085) | logical prerequisite | ServiceEngagementIndependence | ClosePracticeIndependenceReservation | PracticeIndependenceCommitment |
-| [S018](../reactors/accepted-staff-directory-reconciliation-reactor.md#s018) | physical root, logical prerequisite | ServiceEngagementIndependence | RecordDirectoryIndependenceReevaluation | ServiceEngagementIndependence |
+| [S018](../reactors/reassess-staff-independence-after-changes-reactor.md#s018) | physical root, logical prerequisite | ServiceEngagementIndependence | RecordDirectoryIndependenceReevaluation | ServiceEngagementIndependence |
 
 ### ServiceEngagementStaffAssignmentRejected
 
@@ -1352,7 +1345,6 @@ EngagementIndependenceIntent
 | Schema discriminator | bdgrz.service-engagement-independence.service-engagement-staff-assignment-rejected |
 | Schema discriminatorVersion | 1 |
 | Schema owner | ServiceEngagementIndependence |
-| Schema existingContract | null (recorded) |
 | Schema status | selected target schema; implementation pending |
 | Schema reason | source admission contract |
 | Schema changes | None listed |
@@ -1435,7 +1427,7 @@ EngagementIndependenceIntent
 | [T092](../reactors/engagement-acceptance-reactor.md#t092) | logical prerequisite | ServiceEngagementIndependence | CloseFirmProfessionalDutyDesignationEngagementAuthorization | FirmProfessionalDutyDesignation |
 | [T094](../reactors/engagement-acceptance-reactor.md#t094) | logical prerequisite | ServiceEngagementIndependence | CloseIndependenceRuleCatalogEngagementAuthorization | IndependenceRuleCatalog |
 | [T096](../reactors/engagement-acceptance-reactor.md#t096) | logical prerequisite | ServiceEngagementIndependence | CloseIndependenceRuleRatificationCatalogEngagementAuthorization | IndependenceRuleRatificationCatalog |
-| [A003](../reactors/unassigned-architecture-rows.md#a003) | emitted semantic fact | ServiceEngagementIndependence | RejectServiceEngagementStaffAssignment | ServiceEngagementIndependence |
+| [A003](../reactors/unassigned-domain-choreography.md#a003) | emitted semantic fact | ServiceEngagementIndependence | RejectServiceEngagementStaffAssignment | ServiceEngagementIndependence |
 
 ### ServiceEngagementStaffAssignmentRequested
 
@@ -1465,7 +1457,6 @@ EngagementIndependenceIntent
 | Schema discriminator | bdgrz.service-engagement-independence.service-engagement-staff-assignment-requested |
 | Schema discriminatorVersion | 1 |
 | Schema owner | ServiceEngagementIndependence |
-| Schema existingContract | null (recorded) |
 | Schema status | selected target schema; implementation pending |
 | Schema reason | source command accepted result |
 | Schema changes | None listed |
@@ -1558,8 +1549,8 @@ EngagementIndependenceIntent
 | [T094](../reactors/engagement-acceptance-reactor.md#t094) | physical root | ServiceEngagementIndependence | CloseIndependenceRuleCatalogEngagementAuthorization | IndependenceRuleCatalog |
 | [T095](../reactors/engagement-acceptance-reactor.md#t095) | physical root, logical prerequisite | ServiceEngagementIndependence | AuthorizeIndependenceRuleRatificationCatalogEngagement | IndependenceRuleRatificationCatalog |
 | [T096](../reactors/engagement-acceptance-reactor.md#t096) | physical root | ServiceEngagementIndependence | CloseIndependenceRuleRatificationCatalogEngagementAuthorization | IndependenceRuleRatificationCatalog |
-| [A002](../reactors/unassigned-architecture-rows.md#a002) | physical root, logical prerequisite | ServiceEngagementIndependence | RejectServiceEngagementAcceptance | ServiceEngagementIndependence |
-| [A003](../reactors/unassigned-architecture-rows.md#a003) | physical root, logical prerequisite | ServiceEngagementIndependence | RejectServiceEngagementStaffAssignment | ServiceEngagementIndependence |
+| [A002](../reactors/unassigned-domain-choreography.md#a002) | physical root, logical prerequisite | ServiceEngagementIndependence | RejectServiceEngagementAcceptance | ServiceEngagementIndependence |
+| [A003](../reactors/unassigned-domain-choreography.md#a003) | physical root, logical prerequisite | ServiceEngagementIndependence | RejectServiceEngagementStaffAssignment | ServiceEngagementIndependence |
 
 ### ServiceIndependenceReevaluated
 

@@ -59,7 +59,7 @@
         "recorded": "2026-10-29"
       },
       "reactor": "FirmStaffIdentityClaimReactor",
-      "sourceOwner": "FirmStaffRecord",
+      "sourceOwner": "FirmStaffIdentityClaim",
       "sourceEvents": [
         "FirmStaffRegistrationAccepted"
       ],
@@ -69,6 +69,7 @@
       ],
       "effectKind": "claim_firm_staff_identity",
       "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
+      "owner": "FirmStaffIdentityClaim",
       "sourceName": "ClaimFirmStaffIdentity",
       "targetName": "ClaimFirmStaffIdentity"
     }

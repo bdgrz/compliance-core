@@ -460,7 +460,6 @@
         "discriminator": "bdgrz.policy-distribution-campaign.policy-campaign-closure-accepted",
         "discriminatorVersion": 1,
         "owner": "PolicyDistributionCampaign",
-        "existingContract": null,
         "status": "selected target schema; implementation pending",
         "reason": "source command accepted result",
         "fields": [
@@ -643,7 +642,6 @@
         "discriminator": "bdgrz.policy-distribution-campaign.policy-campaign-closure-canceled",
         "discriminatorVersion": 1,
         "owner": "PolicyDistributionCampaign",
-        "existingContract": null,
         "status": "selected target schema; implementation pending",
         "reason": "source admission contract",
         "fields": [
@@ -977,7 +975,6 @@
         "discriminator": "bdgrz.policy-distribution-campaign.policy-participant-result-admitted",
         "discriminatorVersion": 1,
         "owner": "PolicyDistributionCampaign",
-        "existingContract": null,
         "status": "selected target schema; implementation pending",
         "reason": "source command accepted result",
         "fields": [

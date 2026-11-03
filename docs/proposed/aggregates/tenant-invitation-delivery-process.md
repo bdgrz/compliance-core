@@ -5,6 +5,7 @@
 - Business aggregate: `false`
 - Selected status: `SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED`
 
+
 ## Identity and invariant
 
 **Selected identity:** [Placeholder: selected target identity is not recorded.]
@@ -19,6 +20,10 @@
 
 **Lifecycle:** [Placeholder: a consolidated lifecycle sequence is not present in the selected owner record.]
 
+
+
+
+
 ## Commands
 
 [Placeholder: no selected commands are listed for this owner.]
@@ -31,9 +36,9 @@
 
 | Row | Kind | Source owner | Target owner | Command |
 | --- | --- | --- | --- | --- |
-| [T117](../reactors/tenant-invitation-delivery-process-reactor.md#t117) | reaction_or_regular_process_stage | TenantInvitation | TenantInvitationDeliveryProcess | SendTenantInvitation |
-| [T118](../reactors/tenant-invitation-delivery-process-reactor.md#t118) | reaction_or_regular_process_stage | TenantInvitation | TenantInvitationDeliveryProcess | RecordTenantInvitationDeliverySent |
-| [T119](../reactors/tenant-invitation-delivery-process-reactor.md#t119) | reaction_or_regular_process_stage | TenantInvitation | TenantInvitationDeliveryProcess | RecordTenantInvitationDeliveryFailed |
+| [T117](../reactors/invite-member-to-join-tenant-reactor.md#t117) | reaction_or_regular_process_stage | TenantInvitation | TenantInvitationDeliveryProcess | SendTenantInvitation |
+| [T118](../reactors/invite-member-to-join-tenant-reactor.md#t118) | reaction_or_regular_process_stage | TenantInvitation | TenantInvitationDeliveryProcess | RecordTenantInvitationDeliverySent |
+| [T119](../reactors/invite-member-to-join-tenant-reactor.md#t119) | reaction_or_regular_process_stage | TenantInvitation | TenantInvitationDeliveryProcess | RecordTenantInvitationDeliveryFailed |
 
 ## Product rules
 

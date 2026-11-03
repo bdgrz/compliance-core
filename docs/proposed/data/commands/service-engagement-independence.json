@@ -45,13 +45,9 @@
           "policy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/2",
-        "line": 220,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
       "kind": "http",
+      "sourceOwner": "ServiceEngagementIndependence",
+      "owner": "ServiceEngagementIndependence",
       "sourceName": "AcceptServiceEngagement",
       "targetName": "AcceptServiceEngagement"
     },
@@ -104,13 +100,9 @@
           "policy": "ApiUser + existing request-scope authorizers"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/11",
-        "line": 1311,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
       "kind": "http",
+      "sourceOwner": "ServiceEngagementIndependence",
+      "owner": "ServiceEngagementIndependence",
       "sourceName": "AmendServiceEngagement",
       "targetName": "AmendServiceEngagement"
     },
@@ -168,13 +160,9 @@
           "policy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/23",
-        "line": 2748,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
       "kind": "http",
+      "sourceOwner": "ServiceEngagementIndependence",
+      "owner": "ServiceEngagementIndependence",
       "sourceName": "AssignServiceEngagementStaff",
       "targetName": "AssignServiceEngagementStaff"
     },
@@ -227,13 +215,9 @@
           "policy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/35",
-        "line": 4169,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
       "kind": "http",
+      "sourceOwner": "ServiceEngagementIndependence",
+      "owner": "ServiceEngagementIndependence",
       "sourceName": "CloseServiceEngagement",
       "targetName": "CloseServiceEngagement"
     },
@@ -281,13 +265,9 @@
           "policy": "ApiUser + existing request-scope authorizers"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/44",
-        "line": 5257,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
       "kind": "http",
+      "sourceOwner": "ServiceEngagementIndependence",
+      "owner": "ServiceEngagementIndependence",
       "sourceName": "CreateServiceEngagement",
       "targetName": "CreateServiceEngagement"
     },
@@ -340,13 +320,9 @@
           "policy": "ApiUser + existing request-scope authorizers"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/81",
-        "line": 9468,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
       "kind": "http",
+      "sourceOwner": "ServiceEngagementIndependence",
+      "owner": "ServiceEngagementIndependence",
       "sourceName": "ProposeServiceEngagementStaff",
       "targetName": "ProposeServiceEngagementStaff"
     },
@@ -429,16 +405,9 @@
       "responseContract": {
         "mode": "internal",
         "responseType": "Unit",
-        "firstHttpStatus": null,
         "terminalResultType": "Unit"
       },
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/102",
-        "line": 11905,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
       "kind": "command",
       "concurrencyGuard": {
         "rule": "process_reply_bound_by_operation",
@@ -450,6 +419,8 @@
         },
         "date": "2026-10-29"
       },
+      "sourceOwner": "ServiceEngagementIndependence",
+      "owner": "ServiceEngagementIndependence",
       "sourceName": "RecordDirectoryIndependenceReevaluation",
       "targetName": "RecordDirectoryIndependenceReevaluation"
     },
@@ -507,13 +478,9 @@
           "policy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/149",
-        "line": 17365,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
       "kind": "http",
+      "sourceOwner": "ServiceEngagementIndependence",
+      "owner": "ServiceEngagementIndependence",
       "sourceName": "RevokeServiceEngagementActualStaff",
       "targetName": "RevokeServiceEngagementActualStaff"
     },
@@ -571,13 +538,9 @@
           "policy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/160",
-        "line": 18612,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
       "kind": "http",
+      "sourceOwner": "ServiceEngagementIndependence",
+      "owner": "ServiceEngagementIndependence",
       "sourceName": "WithdrawServiceEngagementStaffProposal",
       "targetName": "WithdrawServiceEngagementStaffProposal"
     },
@@ -621,15 +584,9 @@
           "required": true
         }
       ],
-      "responseContract": null,
-      "http": null,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/source-admission-contracts.json",
-        "jsonPointer": "/contracts/25",
-        "line": 1539,
-        "sha256": "f1d549ed0879c816cb26e86879f8fa658dab0a8acbf7c591e4d4aed40483f8ae"
-      },
       "kind": "abort",
+      "sourceOwner": "ServiceEngagementIndependence",
+      "owner": "ServiceEngagementIndependence",
       "sourceName": "RejectServiceEngagementAcceptance",
       "targetName": "RejectServiceEngagementAcceptance"
     },
@@ -673,15 +630,9 @@
           "required": true
         }
       ],
-      "responseContract": null,
-      "http": null,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/source-admission-contracts.json",
-        "jsonPointer": "/contracts/26",
-        "line": 1597,
-        "sha256": "f1d549ed0879c816cb26e86879f8fa658dab0a8acbf7c591e4d4aed40483f8ae"
-      },
       "kind": "abort",
+      "sourceOwner": "ServiceEngagementIndependence",
+      "owner": "ServiceEngagementIndependence",
       "sourceName": "RejectServiceEngagementStaffAssignment",
       "targetName": "RejectServiceEngagementStaffAssignment"
     },
@@ -720,15 +671,9 @@
           "required": true
         }
       ],
-      "responseContract": null,
-      "http": null,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/source-admission-contracts.json",
-        "jsonPointer": "/contracts/29",
-        "line": 1754,
-        "sha256": "f1d549ed0879c816cb26e86879f8fa658dab0a8acbf7c591e4d4aed40483f8ae"
-      },
       "kind": "abort",
+      "sourceOwner": "ServiceEngagementIndependence",
+      "owner": "ServiceEngagementIndependence",
       "sourceName": "CancelEngagementPersonalDecision",
       "targetName": "CancelEngagementPersonalDecision"
     },
@@ -808,10 +753,7 @@
       "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
       "handler": "CompleteServiceEngagementAcceptanceHandler",
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "recorded": "2026-10-29"
-      },
+      "owner": "ServiceEngagementIndependence",
       "sourceName": "CompleteServiceEngagementAcceptance",
       "targetName": "CompleteServiceEngagementAcceptance"
     },
@@ -896,10 +838,7 @@
       "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
       "handler": "CompleteServiceEngagementStaffAssignmentHandler",
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "recorded": "2026-10-29"
-      },
+      "owner": "ServiceEngagementIndependence",
       "sourceName": "CompleteServiceEngagementStaffAssignment",
       "targetName": "CompleteServiceEngagementStaffAssignment"
     },
@@ -975,10 +914,7 @@
       "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
       "handler": "AuthorizeEngagementPracticeCommitmentsHandler",
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "recorded": "2026-10-29"
-      },
+      "owner": "ServiceEngagementIndependence",
       "sourceName": "AuthorizeEngagementPracticeCommitments",
       "targetName": "AuthorizeEngagementPracticeCommitments"
     },
@@ -1036,7 +972,7 @@
         }
       ],
       "reactor": "EngagementPersonalDecisionSettlementReactor",
-      "sourceOwner": "EngagementManagementAcknowledgement|PartnerIndependenceDecision",
+      "sourceOwner": "ServiceEngagementIndependence",
       "sourceEvents": [
         "EngagementManagementAcknowledged",
         "PartnerIndependenceEvaluationRecorded"
@@ -1049,12 +985,9 @@
       "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
       "handler": "SettleEngagementPersonalDecisionHandler",
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "recorded": "2026-10-29"
-      },
+      "owner": "ServiceEngagementIndependence",
       "sourceName": "SettleEngagementPersonalDecision",
-      "targetName": "CloseEngagementPersonalDecision"
+      "targetName": "RecordEngagementPersonalDecision"
     },
     {
       "command": "AuthorizeEngagementPersonalDecision",
@@ -1127,10 +1060,7 @@
       "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
       "handler": "AuthorizeEngagementPersonalDecisionHandler",
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "recorded": "2026-10-29"
-      },
+      "owner": "ServiceEngagementIndependence",
       "sourceName": "AuthorizeEngagementPersonalDecision",
       "targetName": "AuthorizeEngagementPersonalDecision"
     }
@@ -1233,8 +1163,7 @@
       "expectedRevisionScope": {
         "field": "ExpectedRevision",
         "owner": "ServiceEngagementIndependence",
-        "counter": "logical ResourceRevision of this owner",
-        "nullableInternalRule": null
+        "counter": "logical ResourceRevision of this owner"
       }
     },
     {
@@ -1464,8 +1393,7 @@
       "expectedRevisionScope": {
         "field": "ExpectedRevision",
         "owner": "ServiceEngagementIndependence",
-        "counter": "logical ResourceRevision of this owner",
-        "nullableInternalRule": null
+        "counter": "logical ResourceRevision of this owner"
       }
     },
     {
@@ -1575,8 +1503,7 @@
       "expectedRevisionScope": {
         "field": "ExpectedRevision",
         "owner": "ServiceEngagementIndependence",
-        "counter": "logical ResourceRevision of this owner",
-        "nullableInternalRule": null
+        "counter": "logical ResourceRevision of this owner"
       }
     },
     {
@@ -1683,8 +1610,7 @@
       "expectedRevisionScope": {
         "field": "ExpectedRevision",
         "owner": "ServiceEngagementIndependence",
-        "counter": "logical ResourceRevision of this owner",
-        "nullableInternalRule": null
+        "counter": "logical ResourceRevision of this owner"
       }
     },
     {
@@ -1893,8 +1819,7 @@
       "expectedRevisionScope": {
         "field": "ExpectedRevision",
         "owner": "ServiceEngagementIndependence",
-        "counter": "logical ResourceRevision of this owner",
-        "nullableInternalRule": null
+        "counter": "logical ResourceRevision of this owner"
       }
     },
     {
@@ -2026,11 +1951,9 @@
       "responseContract": {
         "mode": "internal",
         "responseType": "Unit",
-        "firstHttpStatus": null,
         "terminalResultType": "Unit"
       },
       "expectedRevisionScope": {
-        "field": null,
         "owner": "ServiceEngagementIndependence",
         "counter": "No primary caller ResourceRevision. Enforce required authored source/epoch/version tokens, immutable creation identity or trusted proof/generation as declared; append uses physical OCC."
       }
@@ -2268,8 +2191,7 @@
       "expectedRevisionScope": {
         "field": "ExpectedRevision",
         "owner": "ServiceEngagementIndependence",
-        "counter": "logical ResourceRevision of this owner",
-        "nullableInternalRule": null
+        "counter": "logical ResourceRevision of this owner"
       }
     },
     {
@@ -2380,8 +2302,7 @@
       "expectedRevisionScope": {
         "field": "ExpectedRevision",
         "owner": "ServiceEngagementIndependence",
-        "counter": "logical ResourceRevision of this owner",
-        "nullableInternalRule": null
+        "counter": "logical ResourceRevision of this owner"
       }
     }
   ]

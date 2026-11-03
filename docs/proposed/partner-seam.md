@@ -8,7 +8,7 @@ A [Provider](aggregates/provider.md) is a domain record about a service provider
 
 M0-D11 selects these rules: materiality is based on customer-data processing/storage or a critical-path role, not spend; material providers need current SOC 2 or ISO/IEC 27001 evidence, with a completed security questionnaire accepted when neither exists; material reviews recur annually; and subservice organizations default to carve-out with CSOCs represented as subservice-responsibility commitments. A carved-out subservice without a CSOC and a material provider without a current review are readiness gaps.
 
-Decision source: [M0-D11](../product/decisions/m0-d11-vendors.md). The selected data-shape alignment to M0-D28 is recorded in that decision; exact source/catalog implementation mapping remains visible on the owner pages.
+Decision source: [M0-D11](decisions/m0-d11-vendors.md). The selected data-shape alignment to M0-D28 is recorded in that decision; exact source/catalog implementation mapping remains visible on the owner pages.
 
 ## External source and integration boundary
 
@@ -16,7 +16,7 @@ M0-D20 defers connector/import work in R1/R2 until the canonical data shape and 
 
 For technology inventory, M0-D08 makes the governed Compliance inventory authoritative; cloud-console, MDM, and repository-host data are discovery-only. Its component, information-classification, and data-flow rules are included in the proposed domain model.
 
-The manual workforce observation path is separately captured in [workforce source governance](../product/workforce-source-governance.md). It records observed external facts, explicit correlation, authority labels, and human reconciliation. Provider observations can corroborate service-identity facts but do not assign governed owner, purpose, or review date.
+The manual workforce observation path is separately captured in [workforce source governance](partner-seam.md). It records observed external facts, explicit correlation, authority labels, and human reconciliation. Provider observations can corroborate service-identity facts but do not assign governed owner, purpose, or review date.
 
 A future source adapter must write observations through the canonical source shape and the staged all-or-nothing acceptance boundary described by [ADR 0005](../architecture/decisions/0005-import-reconciliation-and-background-processing.md). A callback or status endpoint is an observation, not proof of complete partner state.
 
@@ -42,10 +42,10 @@ A connector must not blindly repeat a partner-side write after an unknown respon
 
 ## Source and unresolved details
 
-- Product decision: [M0-D20](../product/decisions/m0-d20-integration-sources.md).
-- Provider policy: [M0-D11](../product/decisions/m0-d11-vendors.md).
-- Technology inventory decisions: [M0-D08](../product/decisions/m0-d08-technology-inventory.md).
-- Workforce source contract: [workforce-source-governance.md](../product/workforce-source-governance.md).
-- Canonical model: [canonical-entity-model.md](../product/canonical-entity-model.md).
+- Product decision: [M0-D20](decisions/m0-d20-integration-sources.md).
+- Provider policy: [M0-D11](decisions/m0-d11-vendors.md).
+- Technology inventory decisions: [M0-D08](decisions/m0-d08-technology-inventory.md).
+- Workforce source contract: [workforce-source-governance.md](partner-seam.md).
+- Canonical model: [canonical-entity-model.md](domain-model.md).
 
 [Placeholder: candidate-specific source authority, verified partner contract, authentication, credentials, limits, retries, cadence, acceptance tests, and operational owner are unknown until a connector is selected.]

@@ -4,8 +4,8 @@ Canonical events: **5**. Complete canonical event and available schema records: 
 
 | Target event | Selected source name | Kind | Adopted discriminator | Version | Schema fields | Meaning |
 | --- | --- | --- | --- | --- | --- | --- |
-| ArtifactDownloadAvailabilityAuthorizationClosed | ArtifactDownloadAvailabilityUseSettled | reservation | bdgrz.evidence-artifact.artifact-download-availability-use-settled | 1 | 8 | null (recorded) |
-| EvidenceArtifactDownloadRequested | EvidenceArtifactDownloadRequested | business | bdgrz.evidence-artifact.evidence-artifact-download-requested | 1 | 8 | null (recorded) |
+| ArtifactDownloadAvailabilityAuthorizationClosed | ArtifactDownloadAvailabilityUseSettled | reservation | bdgrz.evidence-artifact.artifact-download-availability-use-settled | 1 | 8 | The artifact ended the temporary availability hold for one exact download after the file was issued or the request was canceled. |
+| EvidenceArtifactDownloadRequested | EvidenceArtifactDownloadRequested | business | bdgrz.evidence-artifact.evidence-artifact-download-requested | 1 | 8 | A member requested a specific evidence file and recorded the purpose for downloading it. The file is made available only after its handling rules are satisfied. |
 | EvidenceArtifactInspected | EvidenceArtifactInspected | business | bdgrz.evidence.artifact.inspected | 1 | [Placeholder: schema absent] | Records the inspection result that moves an artifact out of pending inspection. |
 | EvidenceArtifactQuarantineReleased | EvidenceArtifactQuarantineReleased | business | bdgrz.evidence.artifact.quarantine_released | 1 | [Placeholder: schema absent] | A quarantined evidence artifact was released after a clean rescan, with a rationale and the deciding actor recording that the malware detection was a false positive. |
 | EvidenceArtifactRegistered | EvidenceArtifactRegistered | business | bdgrz.evidence.artifact.registered | 1 | [Placeholder: schema absent] | Registers uploaded content as evidence awaiting inspection; the content is not yet available. |
@@ -18,7 +18,7 @@ Canonical events: **5**. Complete canonical event and available schema records: 
 | --- | --- |
 | Target event name | ArtifactDownloadAvailabilityAuthorizationClosed |
 | Selected source event name | ArtifactDownloadAvailabilityUseSettled |
-| Name decision | The exact authorization ended; the recorded outcome still distinguishes use, cancellation, or a late fence. |
+| Name decision | Names the completed end of the artifact’s availability decision for one download. |
 | Canonical semantic key | event:ArtifactDownloadAvailabilityUseSettled |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | ArtifactDownloadAvailabilityUseSettled |
@@ -28,8 +28,8 @@ Canonical events: **5**. Complete canonical event and available schema records: 
 | Source status | planned_no_source_type |
 | Adopted decision IDs | ARTIFACT_DOWNLOAD |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Target meaning | null (recorded) |
-| Selected source meaning | null (recorded) |
+| Target meaning | The artifact ended the temporary availability hold for one exact download after the file was issued or the request was canceled. |
+| Selected source meaning | [Placeholder: value not recorded] |
 | Meaning source | [Placeholder: value not recorded] |
 
 #### Selected schema and implementation evidence
@@ -40,7 +40,6 @@ Canonical events: **5**. Complete canonical event and available schema records: 
 | Schema discriminator | bdgrz.evidence-artifact.artifact-download-availability-use-settled |
 | Schema discriminatorVersion | 1 |
 | Schema owner | EvidenceArtifact |
-| Schema existingContract | null (recorded) |
 | Schema status | selected target schema; implementation pending |
 | Schema reason | typed reactor receiver accepted business fact |
 | Schema changes | None listed |
@@ -103,7 +102,7 @@ SourceUseAuthorizationIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T104](../reactors/one-committed-evidence-artifact-download-requested-starter.md#t104) | emitted semantic fact | ArtifactDownloadGrant | CloseArtifactDownloadAvailabilityAuthorization | EvidenceArtifact |
+| [T104](../reactors/fulfill-authorized-artifact-download-request-reactor.md#t104) | emitted semantic fact | ArtifactDownloadGrant | CloseArtifactDownloadAvailabilityAuthorization | EvidenceArtifact |
 
 ### EvidenceArtifactDownloadRequested
 
@@ -111,7 +110,7 @@ SourceUseAuthorizationIntent
 | --- | --- |
 | Target event name | EvidenceArtifactDownloadRequested |
 | Selected source event name | EvidenceArtifactDownloadRequested |
-| Name decision | The selected source name is retained. |
+| Name decision | Names a member’s completed request to download a specific evidence artifact. |
 | Canonical semantic key | event:EvidenceArtifactDownloadRequested |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | EvidenceArtifactDownloadRequested |
@@ -121,8 +120,8 @@ SourceUseAuthorizationIntent
 | Source status | planned_no_source_type |
 | Adopted decision IDs | ARTIFACT_DOWNLOAD |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Target meaning | null (recorded) |
-| Selected source meaning | null (recorded) |
+| Target meaning | A member requested a specific evidence file and recorded the purpose for downloading it. The file is made available only after its handling rules are satisfied. |
+| Selected source meaning | [Placeholder: value not recorded] |
 | Meaning source | [Placeholder: value not recorded] |
 
 #### Selected schema and implementation evidence
@@ -133,7 +132,6 @@ SourceUseAuthorizationIntent
 | Schema discriminator | bdgrz.evidence-artifact.evidence-artifact-download-requested |
 | Schema discriminatorVersion | 1 |
 | Schema owner | EvidenceArtifact |
-| Schema existingContract | null (recorded) |
 | Schema status | selected target schema; implementation pending |
 | Schema reason | source command accepted result |
 | Schema changes | None listed |
@@ -208,12 +206,12 @@ EvidenceDownloadIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T099](../reactors/one-committed-evidence-artifact-download-requested-starter.md#t099) | logical prerequisite | EvidenceArtifact | AuthorizeAdvisorArtifactDownload | AdvisorHandoff |
-| [T100](../reactors/one-committed-evidence-artifact-download-requested-starter.md#t100) | logical prerequisite | EvidenceArtifact | AuthorizeArtifactHandlingDownload | EvidenceHandlingPolicy |
-| [T101](../reactors/one-committed-evidence-artifact-download-requested-starter.md#t101) | logical prerequisite | EvidenceArtifact | IssueProtectedArtifactDownloadGrant | ArtifactDownloadGrant |
-| [A021](../reactors/unassigned-architecture-rows.md#a021) | physical root, logical prerequisite | EvidenceArtifact | CancelProtectedArtifactDownloadGrant | ArtifactDownloadGrant |
-| [P000](../reactors/unassigned-architecture-rows.md#p000) | emitted semantic fact | null (recorded) | IssueArtifactDownload | EvidenceArtifact |
-| [Q000](../reactors/unassigned-architecture-rows.md#q000) | logical prerequisite | null (recorded) | GetArtifactDownloadGrant | ArtifactDownloadGrant |
+| [T099](../reactors/fulfill-authorized-artifact-download-request-reactor.md#t099) | logical prerequisite | EvidenceArtifact | AuthorizeAdvisorArtifactDownload | AdvisorHandoff |
+| [T100](../reactors/fulfill-authorized-artifact-download-request-reactor.md#t100) | logical prerequisite | EvidenceArtifact | AuthorizeArtifactHandlingDownload | EvidenceHandlingPolicy |
+| [T101](../reactors/fulfill-authorized-artifact-download-request-reactor.md#t101) | logical prerequisite | EvidenceArtifact | IssueProtectedArtifactDownloadGrant | ArtifactDownloadGrant |
+| [A021](../reactors/unassigned-domain-choreography.md#a021) | physical root, logical prerequisite | EvidenceArtifact | CancelProtectedArtifactDownloadGrant | ArtifactDownloadGrant |
+| [P000](../reactors/unassigned-domain-choreography.md#p000) | emitted semantic fact | [Placeholder: value not recorded] | IssueArtifactDownload | EvidenceArtifact |
+| [Q000](../reactors/unassigned-domain-choreography.md#q000) | logical prerequisite | [Placeholder: value not recorded] | GetArtifactDownloadGrant | ArtifactDownloadGrant |
 
 ### EvidenceArtifactInspected
 
@@ -249,7 +247,7 @@ EvidenceDownloadIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [S000](../reactors/evidence-artifact-inspection-effects-reactor.md#s000) | physical root, logical prerequisite | EvidenceArtifact | null (recorded) | null (recorded) |
+| [S000](../reactors/apply-artifact-inspection-outcome-reactor.md#s000) | physical root, logical prerequisite | EvidenceArtifact | [Placeholder: value not recorded] | [Placeholder: value not recorded] |
 
 ### EvidenceArtifactQuarantineReleased
 

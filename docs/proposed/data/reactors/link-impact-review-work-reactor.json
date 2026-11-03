@@ -90,7 +90,6 @@
       ],
       "canonicalTargetOwner": "SignificantChange",
       "recoveryContractSummary": "Same source+target effect identity replays original native result. Newer assessment supersedes old work; not-yet-visible source/work remains transient.",
-      "logicalPrerequisiteRuleGuard": null,
       "logicalPrerequisiteRule": "The source is a SignificantChangeImpactAssessed with ChangeCount 1 whose change/current content decode and match the program and content version; every related review-work and corrective-action id is owned by the same tenant and program, still the current assessment version, and not already linked; an empty set creates no follow-up.",
       "prerequisiteRuleSource": "authored 2026-10-29 from reactor and target source"
     }

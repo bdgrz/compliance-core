@@ -7,7 +7,7 @@ Canonical events: **6**. Complete canonical event and available schema records: 
 | ProgramNextPeriodCreated | ProgramNextPeriodCreated | business | bdgrz.programs.program-next-period-created | 1 | [Placeholder: schema absent] | Records the exact next period and approved plan created from a rollover. |
 | ProgramRolloverApproved | ProgramRolloverApproved | business | bdgrz.programs.program-rollover-approved | 2 | [Placeholder: schema absent] | Records the ProgramRolloverApproved domain fact for one tenant-owned subject revision. |
 | ProgramRolloverDecisionRecorded | ProgramRolloverDecisionRecorded | business | bdgrz.programs.program-rollover-decision-recorded | 1 | [Placeholder: schema absent] | A decision on a program carry-forward proposal version was recorded by someone other than its proposer, rejecting that proposal version. |
-| ProgramRolloverReservedForExecution | ProgramRolloverExecutionClaimed | business | bdgrz.programs.program-rollover-execution-claimed | 1 | [Placeholder: schema absent] | The exact independently approved rollover version and content were reserved for one run. The reservation prevents revision or rejection while the successor period is prepared. |
+| ProgramRolloverStarted | ProgramRolloverExecutionClaimed | business | bdgrz.programs.program-rollover-execution-claimed | 1 | [Placeholder: schema absent] | The approved rollover began with its exact successor plan fixed for the work that follows. |
 | ProgramRolloverProposed | ProgramRolloverProposed | business | bdgrz.programs.program-rollover-proposed | 2 | [Placeholder: schema absent] | Records the ProgramRolloverProposed domain fact for one tenant-owned subject revision. |
 | ProgramRolloverRevised | ProgramRolloverRevised | business | bdgrz.programs.program-rollover-revised | 1 | [Placeholder: schema absent] | Records a revised carry-forward selection against the same completed source period. |
 
@@ -81,7 +81,7 @@ Canonical events: **6**. Complete canonical event and available schema records: 
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [R000](../reactors/one-new-committed-execution-claim-starter.md#r000) | logical prerequisite | ProgramRollover | StartProgramRolloverExecutionProcess | ProgramRolloverExecutionProcess |
+| [R000](../reactors/start-approved-program-rollover-reactor.md#r000) | logical prerequisite | ProgramRollover | StartProgramRolloverExecutionProcess | ProgramRolloverExecutionProcess |
 
 ### ProgramRolloverDecisionRecorded
 
@@ -117,13 +117,13 @@ Canonical events: **6**. Complete canonical event and available schema records: 
 
 [Placeholder: no selected choreography row names this event as root, prerequisite, or emitted fact.]
 
-### ProgramRolloverReservedForExecution
+### ProgramRolloverStarted
 
 | Canonical event detail | Value |
 | --- | --- |
-| Target event name | ProgramRolloverReservedForExecution |
+| Target event name | ProgramRolloverStarted |
 | Selected source event name | ProgramRolloverExecutionClaimed |
-| Name decision | Names the reservation of the exact approved rollover for one run without exposing the internal claim mechanism. |
+| Name decision | Names the start of approved rollover work after its successor plan is fixed. |
 | Canonical semantic key | event:ProgramRolloverExecutionClaimed |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | ProgramRolloverExecutionClaimed |
@@ -133,8 +133,8 @@ Canonical events: **6**. Complete canonical event and available schema records: 
 | Source status | planned_no_source_type |
 | Adopted decision IDs | PROGRAM_ROLLOVER_EXECUTION |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Target meaning | The exact independently approved rollover version and content were reserved for one run. The reservation prevents revision or rejection while the successor period is prepared. |
-| Selected source meaning | null (recorded) |
+| Target meaning | The approved rollover began with its exact successor plan fixed for the work that follows. |
+| Selected source meaning | [Placeholder: value not recorded] |
 | Meaning source | [Placeholder: value not recorded] |
 
 #### Schema
@@ -151,7 +151,7 @@ Canonical events: **6**. Complete canonical event and available schema records: 
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [R000](../reactors/one-new-committed-execution-claim-starter.md#r000) | physical root | ProgramRollover | StartProgramRolloverExecutionProcess | ProgramRolloverExecutionProcess |
+| [R000](../reactors/start-approved-program-rollover-reactor.md#r000) | physical root | ProgramRollover | StartProgramRolloverExecutionProcess | ProgramRolloverExecutionProcess |
 
 ### ProgramRolloverProposed
 

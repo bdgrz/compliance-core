@@ -8,14 +8,7 @@
   "invariant": "Only an approved exact source with elapsed retention/no active holds or reliance may start execution; one outstanding attempt; disposed result is terminal and yields tombstone.",
   "boundaryDecision": "process",
   "boundaryRationale": "Approval and execution need an explicit durable authorization token and one outstanding executor claim if separated; the lifetime attempt history itself is unnecessary to that rule.",
-  "sources": [
-    {
-      "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
-      "jsonPointer": "/aggregates/7",
-      "line": 6026,
-      "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
-    }
-  ],
+  "sources": [],
   "baselineSourcePath": "src/Compliance.Core/Features/Retention/ArtifactDisposition.cs",
   "baselineEvents": [
     "ArtifactDispositionApproved",
@@ -75,12 +68,6 @@
         "terminalResultType": "Unit"
       },
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/10",
-        "line": 786,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      },
       "kind": "command",
       "concurrencyGuard": {
         "rule": "require_expected_revision",
@@ -91,7 +78,9 @@
           "process_reply": 0.34
         },
         "date": "2026-10-29"
-      }
+      },
+      "sourceOwner": "ArtifactDisposition",
+      "owner": "ArtifactDisposition"
     },
     {
       "command": "ExecuteArtifactDisposition",
@@ -130,18 +119,14 @@
         "terminalResultType": "Unit"
       },
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/72",
-        "line": 5422,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      },
       "kind": "command",
       "concurrencyGuard": {
         "rule": "terminal_idempotent_no_guard",
         "jev": 0.8,
         "date": "2026-10-29"
-      }
+      },
+      "sourceOwner": "ArtifactDisposition",
+      "owner": "ArtifactDisposition"
     },
     {
       "command": "RecordArtifactDispositionResult",
@@ -210,13 +195,9 @@
         "terminalResultType": "Unit"
       },
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/107",
-        "line": 7952,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      },
-      "kind": "command"
+      "kind": "command",
+      "sourceOwner": "ArtifactDisposition",
+      "owner": "ArtifactDisposition"
     },
     {
       "command": "FenceArtifactDispositionForHold",
@@ -264,22 +245,14 @@
         }
       ],
       "http": [],
-      "source": {
-        "path": "docs/product/definitive-aggregate-choreography/choreography.json",
-        "recorded": "2026-10-29"
-      }
+      "sourceOwner": "ArtifactDisposition",
+      "owner": "ArtifactDisposition"
     }
   ],
   "eventAuthority": "retained_baseline_business_facts_requires_schema_reconciliation",
   "events": [
     {
       "event": "ArtifactDispositionApproved",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
-        "jsonPointer": "/aggregates/7",
-        "line": 6026,
-        "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
-      },
       "baselineContract": {
         "event": "ArtifactDispositionApproved",
         "emitters": [
@@ -324,12 +297,6 @@
     },
     {
       "event": "ArtifactDispositionExecutionRequested",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
-        "jsonPointer": "/aggregates/7",
-        "line": 6026,
-        "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
-      },
       "baselineContract": {
         "event": "ArtifactDispositionExecutionRequested",
         "emitters": [
@@ -374,12 +341,6 @@
     },
     {
       "event": "ArtifactDispositionResultRecorded",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
-        "jsonPointer": "/aggregates/7",
-        "line": 6026,
-        "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
-      },
       "baselineContract": {
         "event": "ArtifactDispositionResultRecorded",
         "emitters": [
@@ -434,33 +395,15 @@
   "selectedLogicalIdentityBindings": [
     {
       "command": "ApproveArtifactDisposition",
-      "logicalIdentity": "CommandId",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/10",
-        "line": 786,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      }
+      "logicalIdentity": "CommandId"
     },
     {
       "command": "ExecuteArtifactDisposition",
-      "logicalIdentity": "CommandId",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/72",
-        "line": 5422,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      }
+      "logicalIdentity": "CommandId"
     },
     {
       "command": "RecordArtifactDispositionResult",
-      "logicalIdentity": "CommandId",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/107",
-        "line": 7952,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      }
+      "logicalIdentity": "CommandId"
     }
   ],
   "selectedReplayRule": "Current required authorization precedes replay; exact authorized retries resolve the original accepted result using the selected logical identity and immutable actor/intent/source binding. Fresh mutable feasibility, clock selection and body preparation cannot replace that original result. Expected revision is concurrency precondition, not a new identity.",
@@ -486,5 +429,6 @@
     "D16-08",
     "D16-15"
   ],
-  "decidesAuthored": "2026-10-29"
+  "decidesAuthored": "2026-10-29",
+  "sourceOwner": "ArtifactDisposition"
 }

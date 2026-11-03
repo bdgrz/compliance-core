@@ -28,7 +28,6 @@
         "discriminator": "bdgrz.provider.provider-change-accepted",
         "discriminatorVersion": 1,
         "owner": "Provider",
-        "existingContract": null,
         "status": "selected target schema; implementation pending",
         "reason": "source command accepted result",
         "fields": [
@@ -219,7 +218,6 @@
         "discriminator": "bdgrz.provider.provider-change-canceled",
         "discriminatorVersion": 1,
         "owner": "Provider",
-        "existingContract": null,
         "status": "selected target schema; implementation pending",
         "reason": "source admission contract",
         "fields": [
@@ -602,7 +600,6 @@
         ],
         "ownerSelection": "one exact canonical authority owner",
         "targetConcreteType": "ProviderRetired",
-        "adoptedTargetWire": null,
         "wireQualification": "Planned; no declared record yet. Today the transition is a Lifecycle value inside the generic revision fact.",
         "adoptedDecisionIds": [
           "EV-D07"

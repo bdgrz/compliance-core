@@ -60,13 +60,9 @@
           "policy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/12",
-        "line": 1418,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
       "kind": "http",
+      "sourceOwner": "ReadinessGapPlan",
+      "owner": "ReadinessGapPlan",
       "sourceName": "AnnotateReadinessGap",
       "targetName": "AnnotateReadinessGap"
     },
@@ -134,13 +130,9 @@
           "policy": "ApiUser + existing request-scope authorizers"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/75",
-        "line": 8696,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
       "kind": "http",
+      "sourceOwner": "ReadinessGapPlan",
+      "owner": "ReadinessGapPlan",
       "sourceName": "PlanReadinessGap",
       "targetName": "PlanReadinessGap"
     },
@@ -208,7 +200,7 @@
         }
       ],
       "reactor": "ReadinessDecisionReadinessGapPlanAuthorizationReactor",
-      "sourceOwner": "ProgramReadiness",
+      "sourceOwner": "ReadinessGapPlan",
       "sourceEvents": [
         "ReadinessDecisionAccepted",
         "TypeIEntryDecisionAccepted"
@@ -221,10 +213,7 @@
       "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
       "handler": "AuthorizeReadinessGapPlanReadinessDecisionUseHandler",
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "recorded": "2026-10-29"
-      },
+      "owner": "ReadinessGapPlan",
       "sourceName": "AuthorizeReadinessGapPlanReadinessDecisionUse",
       "targetName": "AuthorizeReadinessGapPlanReadinessDecision"
     },
@@ -292,7 +281,7 @@
         }
       ],
       "reactor": "ReadinessDecisionReadinessGapPlanSettlementReactor",
-      "sourceOwner": "ProgramReadiness",
+      "sourceOwner": "ReadinessGapPlan",
       "sourceEvents": [
         "ReadinessDecisionRecorded",
         "TypeIEntryDecisionRecorded",
@@ -306,10 +295,7 @@
       "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
       "handler": "SettleReadinessGapPlanReadinessDecisionUseHandler",
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "recorded": "2026-10-29"
-      },
+      "owner": "ReadinessGapPlan",
       "sourceName": "SettleReadinessGapPlanReadinessDecisionUse",
       "targetName": "CloseReadinessGapPlanReadinessDecisionAuthorization"
     }
@@ -427,8 +413,7 @@
       "expectedRevisionScope": {
         "field": "ExpectedRevision",
         "owner": "ReadinessGapPlan",
-        "counter": "logical ResourceRevision of this owner",
-        "nullableInternalRule": null
+        "counter": "logical ResourceRevision of this owner"
       }
     },
     {
@@ -547,8 +532,7 @@
       "expectedRevisionScope": {
         "field": "ExpectedRevision",
         "owner": "ReadinessGapPlan",
-        "counter": "logical ResourceRevision of this owner",
-        "nullableInternalRule": null
+        "counter": "logical ResourceRevision of this owner"
       }
     }
   ]

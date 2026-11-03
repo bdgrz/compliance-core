@@ -117,7 +117,7 @@ ChildAdmissionIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T036](../reactors/corrective-action-materialization-reactor.md#t036) | emitted semantic fact | FindingAggregate | CreateCorrectiveAction | CorrectiveAction |
+| [T036](../reactors/open-corrective-action-for-finding-reactor.md#t036) | emitted semantic fact | FindingAggregate | CreateCorrectiveAction | CorrectiveAction |
 
 ### CorrectiveActionCompleted
 
@@ -220,7 +220,6 @@ ChildAdmissionIntent
 | Schema discriminator | bdgrz.corrective-action.corrective-action-finding-closure-use-authorized |
 | Schema discriminatorVersion | 1 |
 | Schema owner | CorrectiveAction |
-| Schema existingContract | null (recorded) |
 | Schema status | selected target schema; implementation pending |
 | Schema reason | typed reactor receiver accepted business fact |
 | Schema changes | None listed |
@@ -313,7 +312,6 @@ SourceUseAuthorizationIntent
 | Schema discriminator | bdgrz.corrective-action.corrective-action-finding-closure-use-settled |
 | Schema discriminatorVersion | 1 |
 | Schema owner | CorrectiveAction |
-| Schema existingContract | null (recorded) |
 | Schema status | selected target schema; implementation pending |
 | Schema reason | typed reactor receiver accepted business fact |
 | Schema changes | None listed |

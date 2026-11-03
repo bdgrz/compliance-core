@@ -8,14 +8,7 @@
   "invariant": "Independent corrective-action lifecycle, evidence and completion proof.",
   "boundaryDecision": "selected_split",
   "mustPreserve": "Close only with at least one action, all complete, evidence/rationale present and independent closer unless exact waiver. Closed finding is immutable until reopen.",
-  "sources": [
-    {
-      "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
-      "jsonPointer": "/splitOwners/22/targetOwners/1",
-      "line": 2362,
-      "sha256": "d349d94b7c43f4d82020ecf36bdacf1aff98bc6498e14993582f1c3164b21f19"
-    }
-  ],
+  "sources": [],
   "baselineSourcePath": "src/Compliance.Core/Features/Remediation/FindingAggregate.cs",
   "baselineEvents": [
     "CorrectiveActionAddedV2",
@@ -92,13 +85,9 @@
           "policy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/37",
-        "line": 4383,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
-      "kind": "http"
+      "kind": "http",
+      "sourceOwner": "CorrectiveAction",
+      "owner": "CorrectiveAction"
     },
     {
       "command": "MaterializeCorrectiveAction",
@@ -159,7 +148,7 @@
         }
       ],
       "reactor": "CorrectiveActionMaterializationReactor",
-      "sourceOwner": "FindingAggregate",
+      "sourceOwner": "CorrectiveAction",
       "sourceEvents": [
         "CorrectiveActionAdmitted"
       ],
@@ -171,10 +160,7 @@
       "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
       "handler": "MaterializeCorrectiveActionHandler",
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "recorded": "2026-10-29"
-      }
+      "owner": "CorrectiveAction"
     },
     {
       "command": "AuthorizeCorrectiveActionFindingClosureUse",
@@ -240,7 +226,7 @@
         }
       ],
       "reactor": "FindingClosureCorrectiveActionAuthorizationReactor",
-      "sourceOwner": "FindingAggregate",
+      "sourceOwner": "CorrectiveAction",
       "sourceEvents": [
         "FindingClosureAccepted"
       ],
@@ -252,10 +238,7 @@
       "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
       "handler": "AuthorizeCorrectiveActionFindingClosureUseHandler",
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "recorded": "2026-10-29"
-      }
+      "owner": "CorrectiveAction"
     },
     {
       "command": "SettleCorrectiveActionFindingClosureUse",
@@ -321,7 +304,7 @@
         }
       ],
       "reactor": "FindingClosureCorrectiveActionSettlementReactor",
-      "sourceOwner": "FindingAggregate",
+      "sourceOwner": "CorrectiveAction",
       "sourceEvents": [
         "FindingClosedV2",
         "FindingClosureCanceled"
@@ -334,10 +317,7 @@
       "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
       "handler": "SettleCorrectiveActionFindingClosureUseHandler",
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "recorded": "2026-10-29"
-      }
+      "owner": "CorrectiveAction"
     }
   ],
   "eventAuthority": "selected_final_event_catalog",
@@ -345,46 +325,22 @@
     {
       "event": "CorrectiveActionAddedV2",
       "discriminator": "bdgrz.finding.corrective_action.added",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/118",
-        "line": 14318,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     },
     {
       "event": "CorrectiveActionCompletedV2",
       "discriminator": "bdgrz.finding.corrective_action.completed",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/120",
-        "line": 14644,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     },
     {
       "event": "CorrectiveActionFindingClosureUseAuthorized",
       "discriminator": "bdgrz.corrective-action.corrective-action-finding-closure-use-authorized",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/121",
-        "line": 14739,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     },
     {
       "event": "CorrectiveActionFindingClosureUseSettled",
       "discriminator": "bdgrz.corrective-action.corrective-action-finding-closure-use-settled",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/122",
-        "line": 14875,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     }
   ],
   "choreography": [
@@ -392,37 +348,19 @@
       "reactor": "CorrectiveActionMaterializationReactor",
       "sourceOwner": "FindingAggregate",
       "targetOwner": "CorrectiveAction",
-      "command": "MaterializeCorrectiveAction",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "jsonPointer": "/reactors/36",
-        "line": 3049,
-        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
-      }
+      "command": "MaterializeCorrectiveAction"
     },
     {
       "reactor": "FindingClosureCorrectiveActionAuthorizationReactor",
       "sourceOwner": "FindingAggregate",
       "targetOwner": "CorrectiveAction",
-      "command": "AuthorizeCorrectiveActionFindingClosureUse",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "jsonPointer": "/reactors/63",
-        "line": 5408,
-        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
-      }
+      "command": "AuthorizeCorrectiveActionFindingClosureUse"
     },
     {
       "reactor": "FindingClosureCorrectiveActionSettlementReactor",
       "sourceOwner": "FindingAggregate",
       "targetOwner": "CorrectiveAction",
-      "command": "SettleCorrectiveActionFindingClosureUse",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "jsonPointer": "/reactors/64",
-        "line": 5495,
-        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
-      }
+      "command": "SettleCorrectiveActionFindingClosureUse"
     }
   ],
   "status": "SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED",
@@ -440,12 +378,6 @@
         "required": true,
         "origin": "client",
         "rule": "one immutable authored operation"
-      },
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/37",
-        "line": 4383,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       }
     }
   ],
@@ -455,5 +387,6 @@
       "date": "2026-10-29",
       "previous": "(findingId, actionId)"
     }
-  ]
+  ],
+  "sourceOwner": "CorrectiveAction"
 }

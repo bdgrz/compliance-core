@@ -9,22 +9,19 @@
       "stage": "acquire",
       "receivers": [
         "AuthorizeCorrectiveActionFindingClosureUse"
-      ],
-      "rule": null
+      ]
     },
     {
       "stage": "complete",
       "receivers": [
         "CompleteFindingClosure"
-      ],
-      "rule": null
+      ]
     },
     {
       "stage": "settle",
       "receivers": [
         "SettleCorrectiveActionFindingClosureUse"
-      ],
-      "rule": null
+      ]
     }
   ],
   "abort": [

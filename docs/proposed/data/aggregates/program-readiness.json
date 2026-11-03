@@ -8,14 +8,7 @@
   "invariant": "Compact latest-assessment pointer, decision admission/seal generation, latest management decision and permanent approved Type I entry pointer. Serialize latest-assessment adoption with decision append; keep full assessment/decision content in immutable manifests. Run admission precedes child computation and reserves exactly one pending latest-adoption generation.",
   "boundaryDecision": "selected_split",
   "mustPreserve": "No projected latest assessment or gap list can authorize entry; all exceptions/required plans acknowledged.",
-  "sources": [
-    {
-      "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
-      "jsonPointer": "/splitOwners/21/targetOwners/2",
-      "line": 2251,
-      "sha256": "d349d94b7c43f4d82020ecf36bdacf1aff98bc6498e14993582f1c3164b21f19"
-    }
-  ],
+  "sources": [],
   "baselineSourcePath": "src/Compliance.Core/Features/Readiness/ReadinessLedger.cs",
   "baselineEvents": [
     "ReadinessDecisionRecorded",
@@ -92,13 +85,9 @@
           "policy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/46",
-        "line": 5466,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
-      "kind": "http"
+      "kind": "http",
+      "sourceOwner": "ProgramReadiness",
+      "owner": "ProgramReadiness"
     },
     {
       "command": "DecideTypeIEntry",
@@ -169,13 +158,9 @@
           "policy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/47",
-        "line": 5587,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
-      "kind": "http"
+      "kind": "http",
+      "sourceOwner": "ProgramReadiness",
+      "owner": "ProgramReadiness"
     },
     {
       "command": "RunReadinessAssessment",
@@ -226,13 +211,9 @@
           "policy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/150",
-        "line": 17477,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
-      "kind": "http"
+      "kind": "http",
+      "sourceOwner": "ProgramReadiness",
+      "owner": "ProgramReadiness"
     },
     {
       "command": "AbortReadinessDecision",
@@ -274,15 +255,9 @@
           "required": true
         }
       ],
-      "responseContract": null,
-      "http": null,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/source-admission-contracts.json",
-        "jsonPointer": "/contracts/17",
-        "line": 1075,
-        "sha256": "f1d549ed0879c816cb26e86879f8fa658dab0a8acbf7c591e4d4aed40483f8ae"
-      },
-      "kind": "abort"
+      "kind": "abort",
+      "sourceOwner": "ProgramReadiness",
+      "owner": "ProgramReadiness"
     },
     {
       "command": "AdoptReadinessAssessment",
@@ -353,7 +328,7 @@
         }
       ],
       "reactor": "ReadinessAssessmentAdoptionReactor",
-      "sourceOwner": "ReadinessAssessment",
+      "sourceOwner": "ProgramReadiness",
       "sourceEvents": [
         "ReadinessAssessmentRecorded"
       ],
@@ -365,10 +340,7 @@
       "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
       "handler": "AdoptReadinessAssessmentHandler",
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "recorded": "2026-10-29"
-      }
+      "owner": "ProgramReadiness"
     },
     {
       "command": "CompleteReadinessDecision",
@@ -441,10 +413,7 @@
       "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
       "handler": "CompleteReadinessDecisionHandler",
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "recorded": "2026-10-29"
-      }
+      "owner": "ProgramReadiness"
     },
     {
       "command": "CompleteTypeIEntryDecision",
@@ -517,10 +486,7 @@
       "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
       "handler": "CompleteTypeIEntryDecisionHandler",
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "recorded": "2026-10-29"
-      }
+      "owner": "ProgramReadiness"
     }
   ],
   "eventAuthority": "selected_final_event_catalog",
@@ -528,79 +494,37 @@
     {
       "event": "ReadinessAssessmentAdopted",
       "discriminator": "bdgrz.program-readiness.readiness-assessment-adopted",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/223",
-        "line": 30132,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     },
     {
       "event": "ReadinessAssessmentRequested",
       "discriminator": "bdgrz.program-readiness.readiness-assessment-requested",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/225",
-        "line": 30536,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     },
     {
       "event": "ReadinessDecisionAccepted",
       "discriminator": "bdgrz.program-readiness.readiness-decision-accepted",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/226",
-        "line": 30702,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     },
     {
       "event": "ReadinessDecisionCanceled",
       "discriminator": "bdgrz.program-readiness.readiness-decision-canceled",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/227",
-        "line": 30902,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     },
     {
       "event": "ReadinessDecisionRecorded",
       "discriminator": "bdgrz.readiness.decision.recorded",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/228",
-        "line": 31102,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     },
     {
       "event": "TypeIEntryDecisionAccepted",
       "discriminator": "bdgrz.program-readiness.type-i-entry-decision-accepted",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/277",
-        "line": 37544,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     },
     {
       "event": "TypeIEntryDecisionRecorded",
       "discriminator": "bdgrz.readiness.type_i_entry.decided",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/278",
-        "line": 37744,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     }
   ],
   "choreography": [
@@ -608,73 +532,37 @@
       "reactor": "ReadinessAssessmentAdoptionReactor",
       "sourceOwner": "ReadinessAssessment",
       "targetOwner": "ProgramReadiness",
-      "command": "AdoptReadinessAssessment",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "jsonPointer": "/reactors/39",
-        "line": 3295,
-        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
-      }
+      "command": "AdoptReadinessAssessment"
     },
     {
       "reactor": "ReadinessDecisionReadinessGapPlanAuthorizationReactor",
       "sourceOwner": "ProgramReadiness",
       "targetOwner": "ReadinessGapPlan",
-      "command": "AuthorizeReadinessGapPlanReadinessDecisionUse",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "jsonPointer": "/reactors/65",
-        "line": 5584,
-        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
-      }
+      "command": "AuthorizeReadinessGapPlanReadinessDecisionUse"
     },
     {
       "reactor": "ReadinessDecisionReadinessGapPlanSettlementReactor",
       "sourceOwner": "ProgramReadiness",
       "targetOwner": "ReadinessGapPlan",
-      "command": "SettleReadinessGapPlanReadinessDecisionUse",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "jsonPointer": "/reactors/66",
-        "line": 5673,
-        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
-      }
+      "command": "SettleReadinessGapPlanReadinessDecisionUse"
     },
     {
       "reactor": "ReadinessDecisionCompletionReactor",
       "sourceOwner": "ProgramReadiness",
       "targetOwner": "ProgramReadiness",
-      "command": "CompleteReadinessDecision",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "jsonPointer": "/reactors/74",
-        "line": 6374,
-        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
-      }
+      "command": "CompleteReadinessDecision"
     },
     {
       "reactor": "TypeIEntryDecisionCompletionReactor",
       "sourceOwner": "ProgramReadiness",
       "targetOwner": "ProgramReadiness",
-      "command": "CompleteTypeIEntryDecision",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "jsonPointer": "/reactors/75",
-        "line": 6456,
-        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
-      }
+      "command": "CompleteTypeIEntryDecision"
     },
     {
       "reactor": "ReadinessAssessmentComputationReactor",
       "sourceOwner": "ProgramReadiness",
       "targetOwner": "ReadinessAssessment",
-      "command": "ComputeReadinessAssessment",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "jsonPointer": "/reactors/87",
-        "line": 7480,
-        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
-      }
+      "command": "ComputeReadinessAssessment"
     }
   ],
   "status": "SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED",
@@ -692,12 +580,6 @@
         "required": true,
         "origin": "client",
         "rule": "one immutable authored operation"
-      },
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/46",
-        "line": 5466,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       }
     },
     {
@@ -708,12 +590,6 @@
         "required": true,
         "origin": "client",
         "rule": "one immutable authored operation"
-      },
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/47",
-        "line": 5587,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       }
     },
     {
@@ -724,23 +600,11 @@
         "required": true,
         "origin": "client",
         "rule": "exact immutable creation retry"
-      },
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/150",
-        "line": 17477,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       }
     },
     {
       "command": "AbortReadinessDecision",
-      "logicalIdentity": "CommandId",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/source-admission-contracts.json",
-        "jsonPointer": "/contracts/17",
-        "line": 1075,
-        "sha256": "f1d549ed0879c816cb26e86879f8fa658dab0a8acbf7c591e4d4aed40483f8ae"
-      }
+      "logicalIdentity": "CommandId"
     }
   ],
   "selectedReplayRule": "Current required authorization precedes replay; exact authorized retries resolve the original accepted result using the selected logical identity and immutable actor/intent/source binding. Fresh mutable feasibility, clock selection and body preparation cannot replace that original result. Expected revision is concurrency precondition, not a new identity.",
@@ -761,5 +625,6 @@
   "decidesCovers": [
     "D23-10"
   ],
-  "decidesAuthored": "2026-10-29"
+  "decidesAuthored": "2026-10-29",
+  "sourceOwner": "ProgramReadiness"
 }

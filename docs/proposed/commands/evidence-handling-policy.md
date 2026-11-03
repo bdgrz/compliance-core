@@ -1,5 +1,7 @@
 # EvidenceHandlingPolicy commands
 
+
+
 Selected command contracts: **3**. Complete selected contracts and companion source evidence: [owner command JSON](../data/commands/evidence-handling-policy.json).
 
 | Target command | Selected source name | Kind | Identity | Fields | HTTP routes |
@@ -17,7 +19,8 @@ Selected command contracts: **3**. Complete selected contracts and companion sou
 | Target command name | AssignArtifactHandlingPolicy |
 | Selected source command name | AssignArtifactHandlingPolicy |
 | Name decision | The selected source name is retained. |
-| Owner | EvidenceHandlingPolicy |
+| Target owner | EvidenceHandlingPolicy |
+| Selected source owner | EvidenceHandlingPolicy |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | command |
 | Logical identity | CommandId; Uuid; required=true; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
@@ -67,7 +70,8 @@ Required tests: [Placeholder: required tests not recorded]
 | Target command name | AuthorizeArtifactHandlingDownload |
 | Selected source command name | AuthorizeArtifactHandlingDownloadUse |
 | Name decision | The command authorizes the named business action; the extra Use suffix describes the coordination mechanism. |
-| Owner | EvidenceHandlingPolicy |
+| Target owner | EvidenceHandlingPolicy |
+| Selected source owner | EvidenceHandlingPolicy |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; reactor; deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result |
@@ -119,7 +123,8 @@ Required tests: [Placeholder: required tests not recorded]
 | Target command name | CloseArtifactHandlingDownloadAuthorization |
 | Selected source command name | SettleArtifactHandlingDownloadUse |
 | Name decision | The command ends the exact authorization after its business action or cancellation. |
-| Owner | EvidenceHandlingPolicy |
+| Target owner | EvidenceHandlingPolicy |
+| Selected source owner | EvidenceHandlingPolicy |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; reactor; deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result |

@@ -145,7 +145,7 @@ Canonical events: **2**. Complete canonical event and available schema records: 
 | --- | --- | --- | --- | --- |
 | [S036](../reactors/risk-method-reassessment-reactor.md#s036) | emitted semantic fact | RiskMethod | RaiseRiskReassessmentTriggers | RiskGovernance |
 | [S037](../reactors/boundary-risk-reassessment-reactor.md#s037) | emitted semantic fact | SystemBoundary | RaiseRiskReassessmentTriggers | RiskGovernance |
-| [X009](../reactors/risk-evaluation-reactor.md#x009) | emitted semantic fact | RiskEvaluation | RecordRiskReassessmentObligation | RiskGovernance |
+| [X009](../reactors/request-risk-reassessment-when-risk-changes-reactor.md#x009) | emitted semantic fact | RiskEvaluation | RequireRiskReassessment | RiskGovernance |
 
 
 ## Wire/schema version discrepancies

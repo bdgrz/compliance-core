@@ -16,7 +16,7 @@ This is the naming target for commands → events → reactors. The complete tar
 | Write model element | Target names |
 | --- | --- |
 | Commands | 503 |
-| Events | 501 |
+| Events | 504 |
 | Named reactor roots | 72 |
 
 Selected command-contract entries: 507; distinct source command names: 503. Repeated source-command entries under multiple owners share their target name. Each distinct command, event, and reactor root has a unique target name. Every named reactor root has a stated business reason. Names not listed as changed retain their selected source name. Repeated authorization command/event names follow the suffix rules recorded in [the structured naming decisions](data/write-model-names.json).
@@ -57,12 +57,14 @@ Selected command-contract entries: 507; distinct source command names: 503. Repe
 | `SettleCorrectiveActionFindingClosureUse` | `CloseCorrectiveActionFindingClosureAuthorization` | The command ends the exact authorization after its business action or cancellation. |
 | `ApplyApplicationImportEffect` | `ApplyApplicationImportChange` | Applies the exact frozen import change provisionally while the full batch remains unpublished. |
 | `FenceApplicationImportTarget` | `BlockCanceledApplicationImportChanges` | Blocks delayed changes from a canceled import batch from reaching the application. |
+| `CompleteEmailChallenge` | `VerifyEmailAddress` | Names the business action: verify control of the email address by completing its current verification challenge. |
 | `MaterializeEngagementManagementAcknowledgement` | `RecordEngagementManagementAcknowledgement` | Records the manager's acknowledgement of the exact engagement revision and service history. |
 | `SettleArtifactDownloadAvailabilityUse` | `CloseArtifactDownloadAvailabilityAuthorization` | The command ends the exact authorization after its business action or cancellation. |
 | `AuthorizeArtifactHandlingDownloadUse` | `AuthorizeArtifactHandlingDownload` | The command authorizes the named business action; the extra Use suffix describes the coordination mechanism. |
 | `SettleArtifactHandlingDownloadUse` | `CloseArtifactHandlingDownloadAuthorization` | The command ends the exact authorization after its business action or cancellation. |
 | `AuthorizeEvidenceRequestActionCompletionUse` | `AuthorizeEvidenceRequestActionCompletion` | The command authorizes the named business action; the extra Use suffix describes the coordination mechanism. |
 | `SettleEvidenceRequestActionCompletionUse` | `CloseEvidenceRequestActionCompletionAuthorization` | The command ends the exact authorization after its business action or cancellation. |
+| `RecordManagementExaminationReview` | `SignOffExamination` | Names management’s final sign-off on the exact examination package, assertion, representation letter, outcome, and unresolved items. |
 | `AuthorizeFirmProfessionalDutyDesignationEngagementUse` | `AuthorizeFirmProfessionalDutyDesignationEngagement` | The command authorizes the named business action; the extra Use suffix describes the coordination mechanism. |
 | `SettleFirmProfessionalDutyDesignationEngagementUse` | `CloseFirmProfessionalDutyDesignationEngagementAuthorization` | The command ends the exact authorization after its business action or cancellation. |
 | `AuthorizeFirmStaffRecordEngagementUse` | `AuthorizeFirmStaffRecordEngagement` | The command authorizes the named business action; the extra Use suffix describes the coordination mechanism. |
@@ -70,11 +72,13 @@ Selected command-contract entries: 507; distinct source command names: 503. Repe
 | `AuthorizeFirmStaffProfessionalDutyUse` | `AuthorizeFirmStaffProfessionalDuty` | The command authorizes the named business action; the extra Use suffix describes the coordination mechanism. |
 | `SettleFirmStaffProfessionalDutyUse` | `CloseFirmStaffProfessionalDutyAuthorization` | The command ends the exact authorization after its business action or cancellation. |
 | `MaterializeIdentityRecoveryPreparation` | `PrepareAccountRecovery` | Prepares the exact recovery candidate only after both required identity proofs are verified. |
+| `AmendProgramScopeSnapshot` | `CreateProgramScopeSnapshotAmendment` | Creates a new immutable snapshot that amends the specified earlier program scope; the earlier snapshot stays unchanged. |
 | `FreezeProgramScopeSnapshot` | `FinalizeProgramScopeSnapshot` | Finalizes the exact approved program scope as an immutable snapshot for later compliance work. |
 | `AuthorizeIndependenceRuleCatalogEngagementUse` | `AuthorizeIndependenceRuleCatalogEngagement` | The command authorizes the named business action; the extra Use suffix describes the coordination mechanism. |
 | `SettleIndependenceRuleCatalogEngagementUse` | `CloseIndependenceRuleCatalogEngagementAuthorization` | The command ends the exact authorization after its business action or cancellation. |
 | `AuthorizeIndependenceRuleRatificationCatalogEngagementUse` | `AuthorizeIndependenceRuleRatificationCatalogEngagement` | The command authorizes the named business action; the extra Use suffix describes the coordination mechanism. |
 | `SettleIndependenceRuleRatificationCatalogEngagementUse` | `CloseIndependenceRuleRatificationCatalogEngagementAuthorization` | The command ends the exact authorization after its business action or cancellation. |
+| `RecordManagementAssertion` | `CreateManagementAssertion` | Creates management’s assertion for the exact examination; approval of an assertion version is a separate action. |
 | `ApplyNeutralMemberSourceMutation` | `ApplyMemberStatusChange` | Applies the admitted suspend, deprovision, or reinstate decision to the exact member episode. |
 | `MaterializePartnerIndependenceDecision` | `RecordPartnerIndependenceEvaluation` | Records the partner evaluation against the exact engagement revision and service history. |
 | `RecordPartnerIndependenceEvaluation` | `SubmitPartnerIndependenceEvaluation` | Names the partner's action to submit an independence evaluation with its exact engagement, service history, and rule version. |
@@ -84,26 +88,51 @@ Selected command-contract entries: 507; distinct source command names: 503. Repe
 | `SettlePolicyCampaignParticipantCampaignClosureUse` | `ClosePolicyCampaignParticipantCampaignClosureAuthorization` | The command ends the exact authorization after its business action or cancellation. |
 | `FreezePopulationSnapshot` | `FinalizePopulationSnapshot` | Finalizes the complete ordered population as the immutable snapshot used by later compliance work. |
 | `SettlePracticeIndependenceReservation` | `ClosePracticeIndependenceReservation` | Ends the temporary practice reservation after commitment or cancellation. |
-| `ClaimProgramRolloverExecution` | `ReserveProgramRolloverForExecution` | Reserves the exact approved rollover for one run so its approval cannot change while the successor period is prepared. |
+| `ClaimProgramRolloverExecution` | `StartApprovedProgramRollover` | Starts the approved rollover and fixes its successor plan before the new period is created. |
 | `AuthorizeProviderAssuranceReportProviderReviewUse` | `AuthorizeProviderAssuranceReportProviderReview` | The command authorizes the named business action; the extra Use suffix describes the coordination mechanism. |
 | `SettleProviderAssuranceReportProviderReviewUse` | `CloseProviderAssuranceReportProviderReviewAuthorization` | The command ends the exact authorization after its business action or cancellation. |
 | `MaterializeProviderRiskAcceptanceLink` | `LinkProviderRiskAcceptanceToGap` | Links the exact active risk acceptance to the provider gap that admitted it. |
 | `AuthorizeReadinessGapPlanReadinessDecisionUse` | `AuthorizeReadinessGapPlanReadinessDecision` | The command authorizes the named business action; the extra Use suffix describes the coordination mechanism. |
 | `SettleReadinessGapPlanReadinessDecisionUse` | `CloseReadinessGapPlanReadinessDecisionAuthorization` | The command ends the exact authorization after its business action or cancellation. |
-| `SettleEngagementPersonalDecision` | `CloseEngagementPersonalDecision` | Closes the exact engagement personal decision after its authorization or cancellation. |
+| `RecordRiskReassessmentObligation` | `RequireRiskReassessment` | Requires a risk reassessment after a business event makes the current evaluation due for review. |
+| `SettleEngagementPersonalDecision` | `RecordEngagementPersonalDecision` | Records the already authorized management acknowledgement or partner independence evaluation on the exact engagement. |
+| `RecordSystemDescriptionNoChangeDecision` | `ConfirmSystemDescriptionUnchanged` | Confirms that the current system description remains accurate for the exact version and change review. |
 | `ApplyNeutralAdministratorAssignmentMutation` | `RemoveAdministratorAssignment` | Removes an initial administrator assignment only when the member has no current contribution. |
 | `CleanupRetiredMembershipRelationship` | `RemoveRetiredMemberAccessAndAssignments` | Removes team assignments and access grants after the exact membership episode ends. |
+| `RecordTemplateSuccessorDisposition` | `DecideWhetherToAdoptNewTemplateVersion` | Decides whether this template application will adopt the proposed new version, with a recorded rationale. |
+| `ChangeTenantSlug` | `ChangeWorkspaceWebAddress` | Requests a change to the workspace’s public web address; the current address stays in effect until the new one is claimed. |
+| `ConfirmTenantSlug` | `ConfirmWorkspaceWebAddress` | Confirms the workspace address after the global address owner has claimed it. |
+| `ConfirmTenantSlugSurrender` | `ConfirmWorkspaceWebAddressRelease` | Confirms that the workspace has stopped using an address after the global owner permanently retired it. |
+| `RejectTenantSlug` | `RejectWorkspaceWebAddressRequest` | Records that the workspace’s requested address claim or change was refused. |
+| `RejectTenantSlugSurrender` | `RejectWorkspaceWebAddressRelease` | Records that the global address owner refused a request to release the workspace’s current address. |
+| `RequestTenantSlugSurrender` | `RequestWorkspaceWebAddressRelease` | Asks a workspace to give up its confirmed public web address. |
 | `ConfigureTenantIdentityProvider` | `ConfigureTenantSignInConnection` | Sets up the tenant's external sign-in connection and its approved credentials. |
 | `DisableTenantIdentityProvider` | `DisableTenantSignInConnection` | Turns off external sign-in for the tenant while retaining the recorded connection. |
 | `RecordTenantIdentityProviderTestResult` | `RecordSignInConnectionTestResult` | Records whether the tenant's current sign-in connection passed; changed credentials invalidate earlier results. |
 | `RotateTenantIdentityProviderCredentials` | `RotateTenantSignInCredentials` | Replaces the tenant's sign-in credentials and invalidates earlier connection tests. |
 | `TestTenantIdentityProvider` | `TestTenantSignInConnection` | Tests whether the tenant's configured external sign-in connection works. |
+| `RegisterTenantSlug` | `ClaimWorkspaceWebAddress` | Claims a globally unique public web address for one workspace; a surrendered address cannot be claimed again. |
+| `SurrenderTenantSlug` | `RetireWorkspaceWebAddress` | Permanently retires an address after its workspace owner gives it up; it cannot be claimed again. |
 | `SettleTypeIIPeriodRange` | `CloseTypeIIPeriodRangeReservation` | Ends the exact Type II date reservation after acceptance, replacement, or cancellation. |
 | `GenerateDueControlOccurrences` | `OpenDueControlOccurrences` | Opens the control work due under the exact accepted plan and period. |
 | `ContinueWithOidcProvider` | `ContinueSignInWithExternalProvider` | Completes sign-in with an identity verified by an external sign-in provider. |
 | `ContinueWithDeveloperIdentity` | `SignInWithDevelopmentAccount` | Signs in with the deterministic development identity when developer sign-in is enabled. |
 | `LinkOidcProviderIdentity` | `LinkExternalSignInToCurrentAccount` | Links the verified external sign-in identity to the account already signed in in this browser. |
 | `SettleRecoveryIdentityProtection` | `EndRecoveryIdentityProtection` | Ends protection of the exact recovery identity slot, including when protection never began. |
+| `RecordOwnAttestRecordDelivery` | `RecordAttestEngagementRecordPackageDelivery` | Records delivery of the exact attest engagement record package to the firm’s audit software. |
+| `RecordOwnAttestRecordPackageResult` | `RecordAttestEngagementPackageBuildResult` | Records whether generation of the firm’s attest engagement record package succeeded, including the exact artifact or failure. |
+| `RequestOwnAttestRecordPackage` | `RequestAttestEngagementRecordPackage` | Requests the engagement record package required to preserve the firm’s own attest engagement. |
+
+### Command names retained
+
+| Name retained | Why it is the right action |
+| --- | --- |
+| `RecordSampleSelection` | Records the exact sample selected by the external auditor for a frozen population. The command records that choice; it does not choose rows for the auditor. |
+| `DecideTypeIEntry` | Keeps the accepted assurance term “Type I entry decision”; the actor chooses approve, approve with exceptions, or defer. |
+| `ReserveApplicationImportTarget` | Reserves the target application during one approved import. This hold protects the application while the exact import is applied; it does not mean the import has finished. |
+| `RecordTrainingCompletion` | Records that a person completed the assigned training and preserves the source and evidence reference. |
+| `RecordSignificantChange` | Records a reported significant change for the human significance assessment and required follow-up. |
+| `RecordManagementRepresentationLetter` | Records the existing management letter and its source artifact; a separate action records the CEO or CISO signature. |
 
 ## Events
 
@@ -112,8 +141,8 @@ Selected command-contract entries: 507; distinct source command names: 503. Repe
 | `AccessReviewItemCampaignCompletionUseAuthorized` | `AccessReviewItemCampaignCompletionAuthorized` | Authorization is already the completed fact; Use adds no stakeholder meaning. |
 | `AccessReviewItemCampaignCompletionUseSettled` | `AccessReviewItemCampaignCompletionAuthorizationClosed` | The exact authorization ended; the recorded outcome still distinguishes use, cancellation, or a late fence. |
 | `AccessReviewItemDecisionSettled` | `AccessReviewItemDecisionAuthorizationClosed` | Names the end of the exact authorization after publication or cancellation; the payload preserves which outcome occurred. |
-| `AdvisorArtifactDownloadUseAuthorized` | `AdvisorArtifactDownloadAuthorized` | Authorization is already the completed fact; Use adds no stakeholder meaning. |
-| `AdvisorArtifactDownloadUseSettled` | `AdvisorArtifactDownloadAuthorizationClosed` | The exact authorization ended; the recorded outcome still distinguishes use, cancellation, or a late fence. |
+| `AdvisorArtifactDownloadUseAuthorized` | `AdvisorArtifactDownloadAuthorized` | Names the handoff’s completed authorization for one selected artifact download. |
+| `AdvisorArtifactDownloadUseSettled` | `AdvisorArtifactDownloadAuthorizationClosed` | Names the completed closure of the handoff’s exact download authorization. |
 | `AdvisorHandoffReadiedForReview` | `AdvisorHandoffOpenedForReview` | Names the completed opening of the handoff to its assigned advisor for review. |
 | `ApplicationImportEffectCanceled` | `ApplicationImportChangesBlockedAfterCancellation` | Names the protection that prevents a canceled import batch from changing this application after cancellation. |
 | `ApplicationImportEffectPending` | `ApplicationImportChangeProvisionallyApplied` | Names the exact change applied provisionally while the import batch awaits its final result. |
@@ -123,9 +152,9 @@ Selected command-contract entries: 507; distinct source command names: 503. Repe
 | `ApplicationImportSourceSettled` | `ApplicationImportSourceBatchCompleted` | Names the terminal result of source-claim processing; published source claims remain active after the batch completes. |
 | `ApplicationImportStaged` | `ApplicationImportPrepared` | Names the immutable source observation and complete rows submitted for an import batch. |
 | `ApplicationImportTargetSettled` | `ApplicationImportTargetHoldEnded` | Names the end of the exact application hold; the payload preserves whether publication, cancellation, or failure ended it. |
-| `ArtifactDownloadAvailabilityUseSettled` | `ArtifactDownloadAvailabilityAuthorizationClosed` | The exact authorization ended; the recorded outcome still distinguishes use, cancellation, or a late fence. |
-| `ArtifactHandlingDownloadUseAuthorized` | `ArtifactHandlingDownloadAuthorized` | Authorization is already the completed fact; Use adds no stakeholder meaning. |
-| `ArtifactHandlingDownloadUseSettled` | `ArtifactHandlingDownloadAuthorizationClosed` | The exact authorization ended; the recorded outcome still distinguishes use, cancellation, or a late fence. |
+| `ArtifactDownloadAvailabilityUseSettled` | `ArtifactDownloadAvailabilityAuthorizationClosed` | Names the completed end of the artifact’s availability decision for one download. |
+| `ArtifactHandlingDownloadUseAuthorized` | `ArtifactHandlingDownloadAuthorized` | Names the policy’s completed approval for one artifact download. |
+| `ArtifactHandlingDownloadUseSettled` | `ArtifactHandlingDownloadAuthorizationClosed` | Names the completed closure of the policy’s exact download authorization. |
 | `ArtifactRetentionBound` | `ArtifactRetentionPeriodSet` | Names the historical retention period assigned to an artifact source. |
 | `AuditorResponseRequestResolutionUseAuthorized` | `AuditorResponseRequestResolutionAuthorized` | Authorization is already the completed fact; Use adds no stakeholder meaning. |
 | `AuditorResponseRequestResolutionUseSettled` | `AuditorResponseRequestResolutionAuthorizationClosed` | The exact authorization ended; the recorded outcome still distinguishes use, cancellation, or a late fence. |
@@ -162,10 +191,10 @@ Selected command-contract entries: 507; distinct source command names: 503. Repe
 | `PlatformOperatorRosterSeeded` | `PlatformOperatorRosterCreated` | Names the completed creation of the roster's initial set of operator users. |
 | `PolicyCampaignParticipantCampaignClosureUseAuthorized` | `PolicyCampaignParticipantCampaignClosureAuthorized` | Authorization is already the completed fact; Use adds no stakeholder meaning. |
 | `PolicyCampaignParticipantCampaignClosureUseSettled` | `PolicyCampaignParticipantCampaignClosureAuthorizationClosed` | The exact authorization ended; the recorded outcome still distinguishes use, cancellation, or a late fence. |
-| `PopulationSnapshotChunkStored` | `PopulationSnapshotPartRecorded` | Names one ordered part of population data recorded before the complete snapshot is finalized. |
+| `PopulationSnapshotChunkStored` | `PopulationSnapshotPartRecorded` | Names one group of population rows saved while the complete snapshot is assembled. |
 | `PopulationSnapshotFrozen` | `PopulationSnapshotFinalized` | Names the complete, immutable population snapshot that is ready for later compliance work. |
 | `PracticeIndependenceReservationSettled` | `PracticeIndependenceReservationEnded` | Names the end of the temporary reservation after commitment or cancellation. |
-| `ProgramRolloverExecutionClaimed` | `ProgramRolloverReservedForExecution` | Names the reservation of the exact approved rollover for one run without exposing the internal claim mechanism. |
+| `ProgramRolloverExecutionClaimed` | `ProgramRolloverStarted` | Names the start of approved rollover work after its successor plan is fixed. |
 | `ProviderAssuranceReportProviderReviewUseAuthorized` | `ProviderAssuranceReportProviderReviewAuthorized` | Authorization is already the completed fact; Use adds no stakeholder meaning. |
 | `ProviderAssuranceReportProviderReviewUseSettled` | `ProviderAssuranceReportProviderReviewAuthorizationClosed` | The exact authorization ended; the recorded outcome still distinguishes use, cancellation, or a late fence. |
 | `ReadinessGapPlanReadinessDecisionUseAuthorized` | `ReadinessGapPlanReadinessDecisionAuthorized` | Authorization is already the completed fact; Use adds no stakeholder meaning. |
@@ -174,24 +203,80 @@ Selected command-contract entries: 507; distinct source command names: 503. Repe
 | `SnapshotFrozen` | `SnapshotFinalized` | Names the complete, immutable snapshot after it can no longer change. |
 | `SystemDescriptionBound` | `SystemDescriptionLinkedToExamination` | Names which approved system description version supports the exact examination snapshot. |
 | `SystemDescriptionSourcesBound` | `SystemDescriptionSourcesRecorded` | Names the current sources a member reconciled against a system description draft. |
+| `TemplateSuccessorDispositionRecorded` | `TemplateUpdateDecisionRecorded` | Names the recorded decision about whether this application adopts the proposed new template version. |
 | `TenantActivatedV2` | `TenantActivated` | Names the tenant's completed activation without exposing the implementation version suffix. |
-| `TenantManagerSourceMutationAdmitted` | `TenantManagerMemberChangeAccepted` | Names the accepted member change that is serialized with other changes to the same membership episode. |
+| `TenantManagerRestorationAccepted` | `TenantAdministratorRestorationAuthorized` | Names the completed authorization for a first or restored administrator assignment. |
+| `TenantManagerSourceMutationAdmitted` | `TenantMemberChangeAuthorized` | Names the completed authorization for a member change that does not alter administrator coverage. |
+| `TenantManagerWithdrawalAccepted` | `TenantAdministratorWithdrawalAuthorized` | Names the completed authorization to remove an administrator contribution when another active administrator remains. |
 | `TenantOffboardingStartedV2` | `TenantOffboardingStarted` | Names the start of tenant offboarding without exposing the implementation version suffix. |
 | `TenantReactivatedV2` | `TenantReactivated` | Names the tenant's completed reactivation without exposing the implementation version suffix. |
+| `TenantSlugChangeRejected` | `WorkspaceWebAddressChangeRejected` | Names the completed refusal of a requested workspace web-address change. |
+| `TenantSlugChangeRequested` | `WorkspaceWebAddressChangeRequested` | Names the completed request to change a workspace’s public web address. |
+| `TenantSlugChanged` | `WorkspaceWebAddressChanged` | Names the completed change after the new public address was claimed. |
+| `TenantSlugConfirmed` | `WorkspaceWebAddressConfirmed` | Names the workspace’s completed confirmation of a claimed address. |
+| `TenantSlugRegistered` | `WorkspaceWebAddressClaimed` | Names the completed claim of a public address for one workspace. |
+| `TenantSlugRegistrationRejected` | `WorkspaceWebAddressClaimDenied` | Names the global owner’s refusal to claim a public address. |
+| `TenantSlugRejected` | `WorkspaceWebAddressClaimRejected` | Names the workspace’s completed record of a refused address claim. |
+| `TenantSlugSurrenderConfirmed` | `WorkspaceWebAddressReleaseConfirmed` | Names the workspace’s confirmation that it stopped using the released address. |
+| `TenantSlugSurrenderFailed` | `WorkspaceWebAddressReleaseRejected` | Names the workspace’s completed record of a refused address release. |
+| `TenantSlugSurrenderRejected` | `WorkspaceWebAddressReleaseDenied` | Names the global owner’s refusal to retire the workspace’s current address. |
+| `TenantSlugSurrenderRequested` | `WorkspaceWebAddressReleaseRequested` | Names the completed request to give up a confirmed public address. |
+| `TenantSlugSurrendered` | `WorkspaceWebAddressRetired` | Names the permanent retirement of a surrendered public address. |
 | `TenantSuspendedV2` | `TenantSuspended` | Names the tenant's completed suspension without exposing the implementation version suffix. |
 | `TypeIIPeriodRangeAuthorized` | `TypeIIPeriodDateRangeReserved` | Names the reserved observation dates before a Type II period opening or amendment. |
 | `TypeIIPeriodRangeSettled` | `TypeIIPeriodDateRangeReservationEnded` | Names the end of the exact date reservation after acceptance, replacement, or cancellation. |
-| `WorkDigestDispatchAttemptStarted` | `WorkDigestDeliveryAttemptStarted` | Names the start of one scheduled digest delivery attempt without using the transport term dispatch. |
-| `WorkDigestDispatchOutcomeRecorded` | `WorkDigestDeliveryOutcomeRecorded` | Names the recorded result of one work digest delivery attempt. |
-| `WorkDigestDispatchScheduled` | `WorkDigestDeliveryScheduled` | Names the scheduled work digest delivery time. |
+| `WorkDigestDispatchAttemptStarted` | `WorkDigestDeliveryAttemptStarted` | Names the start of one weekly digest email delivery attempt. |
+| `WorkDigestDispatchOutcomeRecorded` | `WorkDigestDeliveryOutcomeRecorded` | Names the recorded result of one weekly digest email delivery attempt. |
+| `WorkDigestDispatchScheduled` | `WorkDigestDeliveryScheduled` | Names the scheduled delivery of one member’s weekly digest. |
 | `WorkDigestUnknownRetryAuthorized` | `WorkDigestRetryApprovedAfterUnknownDelivery` | Names the operator's approval to retry a weekly digest when its prior delivery result could not be confirmed. |
 
+### Event names retained for exact meaning
 
+| Name retained | Reason |
+| --- | --- |
+| `WeeklyWorkDigestDeliveryRequested` | Names one recorded email delivery request for a scheduled weekly digest. |
+| `EvidenceArtifactDownloadRequested` | Names a member’s completed request to download a specific evidence artifact. |
 ### Meaning clarified from the choreography
 
 | Target event name | Meaning |
 | --- | --- |
-| `ProgramRolloverReservedForExecution` | The exact independently approved rollover version and content were reserved for one run. The reservation prevents revision or rejection while the successor period is prepared. |
+| `TenantMemberChangeAuthorized` | A tenant member change was authorized because it does not affect the number of active tenant administrators. The member change itself is recorded afterward. |
+| `WorkDigestDeliveryAttemptStarted` | The system began sending one weekly work digest to its intended member. |
+| `WorkDigestDeliveryOutcomeRecorded` | The system recorded whether one member’s weekly work digest was delivered, failed, or could not be confirmed. |
+| `WorkDigestDeliveryScheduled` | The system scheduled one member’s weekly digest for its next delivery time. |
+| `PopulationSnapshotPartRecorded` | A group of population rows was saved for the snapshot. The full population is not available until all parts are finalized. |
+| `ProgramRolloverStarted` | The approved rollover began with its exact successor plan fixed for the work that follows. |
+| `WorkspaceWebAddressChangeRejected` | The requested workspace web-address change was refused, so the workspace keeps its confirmed address. |
+| `WorkspaceWebAddressChangeRequested` | A workspace asked to change its public web address; the current address remains in effect until the new address is claimed. |
+| `WorkspaceWebAddressChanged` | The workspace adopted its new public web address after the global owner claimed it. |
+| `WorkspaceWebAddressConfirmed` | The workspace confirmed the public address claimed by the global owner. |
+| `WorkspaceWebAddressClaimed` | The global address owner claimed this normalized public web address for one workspace. |
+| `WorkspaceWebAddressClaimDenied` | The global owner refused the address claim because it was reserved, already belonged to another workspace, or had been permanently retired. |
+| `WorkspaceWebAddressClaimRejected` | The workspace recorded that its requested public address claim was refused, so the requested address did not become active. |
+| `WorkspaceWebAddressReleaseConfirmed` | The workspace recorded that the global owner permanently retired its former public address. |
+| `WorkspaceWebAddressReleaseRejected` | The workspace recorded that its request to give up its current public address was refused. |
+| `WorkspaceWebAddressReleaseDenied` | The global address owner refused to retire the workspace’s current public address. |
+| `WorkspaceWebAddressReleaseRequested` | The workspace asked to give up its confirmed public web address. |
+| `WorkspaceWebAddressRetired` | The global owner permanently retired the surrendered address; it cannot be claimed again. |
+| `TenantAdministratorRestorationAuthorized` | A first or restored administrator assignment was authorized while preserving the rule that the workspace keeps an active administrator; the assignment follows. |
+| `TenantAdministratorWithdrawalAuthorized` | Removal of an administrator contribution was authorized because another active tenant administrator remains; the source membership change follows. |
+| `TemplateUpdateDecisionRecorded` | A named program member recorded whether the application would adopt the proposed new template version. |
+| `WeeklyWorkDigestDeliveryRequested` | The system recorded one email delivery attempt for a member’s scheduled weekly digest. This fact does not mean the email arrived. |
+| `AdvisorArtifactDownloadAuthorized` | The handoff authorized one download of an artifact in its ready, active selection. The file is delivered only after a separate download grant is issued. |
+| `AdvisorArtifactDownloadAuthorizationClosed` | The handoff closed its temporary download authorization after the protected file was issued or the request was canceled. |
+| `ArtifactDownloadAvailabilityAuthorizationClosed` | The artifact ended the temporary availability hold for one exact download after the file was issued or the request was canceled. |
+| `ArtifactHandlingDownloadAuthorized` | The evidence handling policy allowed one download under the artifact’s current classification and handling rules. |
+| `ArtifactHandlingDownloadAuthorizationClosed` | The evidence handling policy closed permission for one exact download after the file was issued or the request was canceled. |
+| `EvidenceArtifactDownloadRequested` | A member requested a specific evidence file and recorded the purpose for downloading it. The file is made available only after its handling rules are satisfied. |
+
+### New target event names
+
+| Target event | Owner | Why this fact is recorded | Meaning |
+| --- | --- | --- | --- |
+| `AttestEngagementRecordPackageRequested` | `AttestEngagementRecordPackage` | Names the completed request for the exact package the firm must retain. | The firm requested the engagement record package needed to preserve its own attest engagement. |
+| `AttestEngagementRecordPackageGenerated` | `AttestEngagementRecordPackage` | Names successful generation of the exact engagement record package. | The exact attest engagement record package was generated successfully and is ready for delivery. |
+| `AttestEngagementRecordPackageGenerationFailed` | `AttestEngagementRecordPackage` | Names the completed failure to generate the exact engagement record package. | Generation of the exact attest engagement record package failed; it has not been delivered. |
+| `AttestEngagementRecordPackageDelivered` | `AttestEngagementRecordPackage` | Names successful delivery of the exact package to the firm’s audit software. | The exact engagement record package was delivered to the firm’s audit software and its delivery was recorded. |
 
 Event discriminator strings and versions remain exactly as recorded in the source contracts. The target type name is a separate decision; implementation must preserve wire compatibility while adopting the target name.
 
@@ -245,7 +330,7 @@ Event discriminator strings and versions remain exactly as recorded in the sourc
 | `AcceptedStaffDirectoryReconciliationReactor` | `ReassessStaffIndependenceAfterChangesReactor` | Prevent a client service from relying on an independence decision after a staff member's status or assignment has changed. |
 | `LinkImpactReviewWorkReactor` | `RequestImpactReviewAfterSignificantChangeReactor` | Make sure a significant change's required control and risk reviews are assigned and linked before the change is treated as addressed. |
 | `SystemDescriptionDecisionReactor` | `UpdateSystemDescriptionAfterSignificantChangeReactor` | Require an approved system description or a recorded no-change decision before closing the impact review for a significant change or incident. |
-| `TenantSlugReactor` | `KeepTenantWebAddressesUniqueReactor` | Confirm, reject, or release a tenant web address while preserving its unique claim. |
+| `TenantSlugReactor` | `KeepWorkspaceWebAddressesUniqueReactor` | Keep each workspace’s web address unique. A change takes effect only after the new address is claimed, and a surrendered address stays retired. |
 | `TenantInvitationReactor` | `ActivateMembershipAfterInvitationAcceptanceReactor` | Create the accepted member's membership, team access, guest grant when needed, and first-admin tenant activation. |
 | `TenantRegistrationReactor` | `EstablishTenantAndInviteOwnerReactor` | Give each new organization a usable, unique web address and invite its first administrator when that person is not already a member. |
 | `EmailReservationReactor` | `KeepTenantEmailAddressesUniqueReactor` | Reserve the normalized email address so two tenant identities cannot claim the same address. |
@@ -255,6 +340,13 @@ Event discriminator strings and versions remain exactly as recorded in the sourc
 | `ArtifactLegalHoldReactor` | `ProtectArtifactsUnderLegalHoldReactor` | Stop an approved artifact disposal while a legal hold applies and allow it to proceed only after all holds are clear. |
 | `ClientExportDeliveryReactor` | `KeepEngagementEvidenceProtectedAfterDeliveryReactor` | Record package delivery on the engagement hold so evidence remains protected for the required period. |
 | `RiskEvaluationReactor` | `RequestRiskReassessmentWhenRiskChangesReactor` | Request a new assessment when a risk acceptance expires or recorded exposure exceeds appetite. |
+
+## Owner names
+
+| Selected source owner | Target owner | Why the target name fits |
+| --- | --- | --- |
+| `TenantSlug` | `WorkspaceWebAddress` | Uses the product’s public name for the globally unique workspace address instead of the internal term slug. |
+| `TenantManagerGuard` | `TenantAdministratorContinuity` | Names the business protection this tenant-wide owner provides instead of calling it a guard. |
 
 ## Implementation boundary
 

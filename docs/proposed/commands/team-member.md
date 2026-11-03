@@ -1,5 +1,7 @@
 # TeamMember commands
 
+
+
 Selected command contracts: **6**. Complete selected contracts and companion source evidence: [owner command JSON](../data/commands/team-member.json).
 
 | Target command | Selected source name | Kind | Identity | Fields | HTTP routes |
@@ -20,7 +22,8 @@ Selected command contracts: **6**. Complete selected contracts and companion sou
 | Target command name | AssignTeamMember |
 | Selected source command name | AssignTeamMember |
 | Name decision | The selected source name is retained. |
-| Owner | TeamMember |
+| Target owner | TeamMember |
+| Selected source owner | TeamMember |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | http |
 | Logical identity | CommandId; Uuid; required=true; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
@@ -70,7 +73,8 @@ Required tests: [Placeholder: required tests not recorded]
 | Target command name | RemoveTeamMember |
 | Selected source command name | RemoveTeamMember |
 | Name decision | The selected source name is retained. |
-| Owner | TeamMember |
+| Target owner | TeamMember |
+| Selected source owner | TeamMember |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | http |
 | Logical identity | CommandId; Uuid; required=true; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
@@ -120,7 +124,8 @@ Required tests: [Placeholder: required tests not recorded]
 | Target command name | ApplyAdministratorAssignmentRestoration |
 | Selected source command name | ApplyAdministratorAssignmentRestoration |
 | Name decision | The selected source name is retained. |
-| Owner | TeamMember |
+| Target owner | TeamMember |
+| Selected source owner | TeamMember |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; internal; deterministic receiver identity derived from the admitted root fact, episode and generation: exact redelivery resolves the original result, a changed admission is a new identity |
@@ -174,7 +179,8 @@ Required tests: [Placeholder: required tests not recorded]
 | Target command name | ApplyAdministratorAssignmentWithdrawal |
 | Selected source command name | ApplyAdministratorAssignmentWithdrawal |
 | Name decision | The selected source name is retained. |
-| Owner | TeamMember |
+| Target owner | TeamMember |
+| Selected source owner | TeamMember |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; internal; deterministic receiver identity derived from the admitted root fact, episode and generation: exact redelivery resolves the original result, a changed admission is a new identity |
@@ -227,7 +233,8 @@ Required tests: [Placeholder: required tests not recorded]
 | Target command name | RemoveAdministratorAssignment |
 | Selected source command name | ApplyNeutralAdministratorAssignmentMutation |
 | Name decision | Removes an initial administrator assignment only when the member has no current contribution. |
-| Owner | TeamMember |
+| Target owner | TeamMember |
+| Selected source owner | TeamMember |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; internal; deterministic receiver identity derived from the admitted root fact, episode and generation: exact redelivery resolves the original result, a changed admission is a new identity |
@@ -280,7 +287,8 @@ Required tests: [Placeholder: required tests not recorded]
 | Target command name | RemoveRetiredMemberAccessAndAssignments |
 | Selected source command name | CleanupRetiredMembershipRelationship |
 | Name decision | Removes team assignments and access grants after the exact membership episode ends. |
-| Owner | TeamMember |
+| Target owner | TeamMember |
+| Selected source owner | TeamMember |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | reactor |
 | Logical identity | CommandId; Uuid; required=true; internal; deterministic receiver identity derived from the admitted root fact, episode and generation: exact redelivery resolves the original result, a changed admission is a new identity |

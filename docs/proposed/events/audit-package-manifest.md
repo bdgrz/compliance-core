@@ -186,8 +186,8 @@ PackageBuildIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T031](../reactors/audit-package-build-process-reactor.md#t031) | physical root, logical prerequisite | AuditPackageManifest | StartAuditPackageBuild | AuditPackageBuildProcess |
-| [T032](../reactors/audit-package-build-process-reactor.md#t032) | physical root | AuditPackageBuildProcess | RecordAuditPackageBuildResult | AuditPackageManifest |
+| [T031](../reactors/build-audit-package-for-review-reactor.md#t031) | physical root, logical prerequisite | AuditPackageManifest | StartAuditPackageBuild | AuditPackageBuildProcess |
+| [T032](../reactors/build-audit-package-for-review-reactor.md#t032) | physical root | AuditPackageBuildProcess | RecordAuditPackageBuildResult | AuditPackageManifest |
 
 ### AuditPackageBuilt
 
@@ -292,7 +292,7 @@ PackageBuildIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T032](../reactors/audit-package-build-process-reactor.md#t032) | emitted semantic fact | AuditPackageBuildProcess | RecordAuditPackageBuildResult | AuditPackageManifest |
+| [T032](../reactors/build-audit-package-for-review-reactor.md#t032) | emitted semantic fact | AuditPackageBuildProcess | RecordAuditPackageBuildResult | AuditPackageManifest |
 
 ### AuditPackageCreated
 
@@ -390,7 +390,6 @@ PackageBuildIntent
 | Schema discriminator | bdgrz.audit-package-manifest.audit-package-delivery-admitted |
 | Schema discriminatorVersion | 1 |
 | Schema owner | AuditPackageManifest |
-| Schema existingContract | null (recorded) |
 | Schema status | selected target schema; implementation pending |
 | Schema reason | source command accepted result |
 | Schema changes | None listed |
@@ -471,7 +470,7 @@ PackageDeliveryRecordingIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T081](../reactors/audit-package-delivery-admission-reactor.md#t081) | physical root, logical prerequisite | AuditPackageManifest | RecordAuditPackageDelivery | AuditPackageDelivery |
+| [T081](../reactors/record-audit-package-delivery-reactor.md#t081) | physical root, logical prerequisite | AuditPackageManifest | RecordAuditPackageDelivery | AuditPackageDelivery |
 
 ### AuditPackageDisclosureApproved
 

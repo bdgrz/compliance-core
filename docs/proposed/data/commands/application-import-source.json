@@ -59,7 +59,7 @@
         "recorded": "2026-10-29"
       },
       "reactor": "ImportSourceAdmissionReactor",
-      "sourceOwner": "ApplicationImportBatch",
+      "sourceOwner": "ApplicationImportSource",
       "sourceEvents": [
         "ApplicationImportPlanSealed"
       ],
@@ -69,6 +69,7 @@
       ],
       "effectKind": "claim_application_import_source",
       "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
+      "owner": "ApplicationImportSource",
       "sourceName": "ClaimApplicationImportSource",
       "targetName": "ClaimApplicationImportSource"
     },
@@ -122,7 +123,7 @@
         "recorded": "2026-10-29"
       },
       "reactor": "ImportSourceReleaseReactor",
-      "sourceOwner": "ApplicationImportBatch",
+      "sourceOwner": "ApplicationImportSource",
       "sourceEvents": [
         "ApplicationImportCommitted",
         "ApplicationImportCanceled",
@@ -134,6 +135,7 @@
       ],
       "effectKind": "release_application_import_source",
       "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
+      "owner": "ApplicationImportSource",
       "sourceName": "ReleaseApplicationImportSource",
       "targetName": "ReleaseApplicationImportSource"
     }

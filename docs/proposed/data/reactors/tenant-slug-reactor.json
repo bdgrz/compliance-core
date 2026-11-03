@@ -1,7 +1,7 @@
 {
   "sourceRoot": "TenantSlugReactor",
-  "targetRoot": "KeepTenantWebAddressesUniqueReactor",
-  "businessReason": "Confirm, reject, or release a tenant web address while preserving its unique claim.",
+  "targetRoot": "KeepWorkspaceWebAddressesUniqueReactor",
+  "businessReason": "Keep each workspace’s web address unique. A change takes effect only after the new address is claimed, and a surrendered address stays retired.",
   "rows": [
     {
       "id": "S022",
@@ -87,7 +87,6 @@
       ],
       "canonicalTargetOwner": "Tenant",
       "recoveryContractSummary": "Original result replays; stale answer is durable/terminal no-op according to tenant receiver, so the global checkpoint advances.",
-      "logicalPrerequisiteRuleGuard": null,
       "logicalPrerequisiteRule": "The source is TenantSlugRegistered for the tenant; the tenant confirms (or completes a slug change) only if the answered slug equals its pending initial slug or pending new slug and the operation is still pending; a stale or replayed answer is a terminal no-op.",
       "prerequisiteRuleSource": "authored 2026-10-29 from reactor and target source"
     },
@@ -175,7 +174,6 @@
       ],
       "canonicalTargetOwner": "Tenant",
       "recoveryContractSummary": "Original result replays; stale answer is durable/terminal no-op according to tenant receiver, so the global checkpoint advances.",
-      "logicalPrerequisiteRuleGuard": null,
       "logicalPrerequisiteRule": "The source is TenantSlugRegistrationRejected; the tenant records rejection (registration or change rejection) only if the refused slug is its pending initial or new slug and nothing resolved it; a stale answer is a no-op.",
       "prerequisiteRuleSource": "authored 2026-10-29 from reactor and target source"
     },
@@ -259,7 +257,6 @@
       ],
       "canonicalTargetOwner": "Tenant",
       "recoveryContractSummary": "Original result replays; stale answer is durable/terminal no-op according to tenant receiver, so the global checkpoint advances.",
-      "logicalPrerequisiteRuleGuard": null,
       "logicalPrerequisiteRule": "The source is TenantSlugSurrendered for the tenant's own slug; the tenant records TenantSlugSurrenderConfirmed only if it is currently Surrendering that exact slug, otherwise the answer (including the old-slug release after a change) is a no-op.",
       "prerequisiteRuleSource": "authored 2026-10-29 from reactor and target source"
     },
@@ -343,7 +340,6 @@
       ],
       "canonicalTargetOwner": "Tenant",
       "recoveryContractSummary": "Original result replays; stale answer is durable/terminal no-op according to tenant receiver, so the global checkpoint advances.",
-      "logicalPrerequisiteRuleGuard": null,
       "logicalPrerequisiteRule": "The source is TenantSlugSurrenderRejected; the tenant records TenantSlugSurrenderFailed only if it is Surrendering that exact slug, otherwise it is a stale no-op.",
       "prerequisiteRuleSource": "authored 2026-10-29 from reactor and target source"
     }

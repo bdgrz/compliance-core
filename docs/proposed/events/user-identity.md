@@ -41,7 +41,6 @@ Canonical events: **6**. Complete canonical event and available schema records: 
 | Schema discriminator | bdgrz.user-identity.recovery-identity-protected |
 | Schema discriminatorVersion | 1 |
 | Schema owner | UserIdentity |
-| Schema existingContract | null (recorded) |
 | Schema status | selected target schema; implementation pending |
 | Schema reason | typed reactor receiver accepted business fact |
 | Schema changes | None listed |
@@ -114,7 +113,7 @@ IdentityRecoveryIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T041](../reactors/identity-recovery-acceptance-reactor.md#t041) | emitted semantic fact | IdentityRecovery | ProtectRecoveryIdentity | UserIdentity |
+| [T041](../reactors/complete-account-recovery-reactor.md#t041) | emitted semantic fact | IdentityRecovery | ProtectRecoveryIdentity | UserIdentity |
 
 ### RecoveryIdentityProtectionEnded
 
@@ -144,7 +143,6 @@ IdentityRecoveryIntent
 | Schema discriminator | bdgrz.user-identity.recovery-identity-protection-settled |
 | Schema discriminatorVersion | 1 |
 | Schema owner | UserIdentity |
-| Schema existingContract | null (recorded) |
 | Schema status | selected target schema; implementation pending |
 | Schema reason | typed reactor receiver accepted business fact |
 | Schema changes | None listed |
@@ -217,7 +215,7 @@ IdentityRecoveryIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T057](../reactors/identity-recovery-acceptance-reactor.md#t057) | emitted semantic fact | IdentityRecovery | EndRecoveryIdentityProtection | UserIdentity |
+| [T057](../reactors/complete-account-recovery-reactor.md#t057) | emitted semantic fact | IdentityRecovery | EndRecoveryIdentityProtection | UserIdentity |
 
 ### UserIdentityAuthenticated
 
@@ -389,8 +387,8 @@ IdentityRecoveryIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T042](../reactors/identity-recovery-acceptance-reactor.md#t042) | emitted semantic fact | IdentityRecovery | RegisterRecoveredIdentity | UserIdentity |
-| [S035](../reactors/email-reservation-reactor.md#s035) | physical root, logical prerequisite | UserIdentity | ReserveEmail | EmailAddress |
+| [T042](../reactors/complete-account-recovery-reactor.md#t042) | emitted semantic fact | IdentityRecovery | RegisterRecoveredIdentity | UserIdentity |
+| [S035](../reactors/keep-tenant-email-addresses-unique-reactor.md#s035) | physical root, logical prerequisite | UserIdentity | ReserveEmail | EmailAddress |
 
 ### UserIdentityRevoked
 
@@ -494,7 +492,7 @@ IdentityRecoveryIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T043](../reactors/identity-recovery-acceptance-reactor.md#t043) | emitted semantic fact | IdentityRecovery | RevokeRecoveredOldIdentity | UserIdentity |
+| [T043](../reactors/complete-account-recovery-reactor.md#t043) | emitted semantic fact | IdentityRecovery | RevokeRecoveredOldIdentity | UserIdentity |
 
 
 

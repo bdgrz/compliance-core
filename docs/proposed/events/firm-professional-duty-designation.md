@@ -41,7 +41,6 @@ Canonical events: **6**. Complete canonical event and available schema records: 
 | Schema discriminator | bdgrz.firm-professional-duty-designation.firm-professional-duty-designation-engagement-use-authorized |
 | Schema discriminatorVersion | 1 |
 | Schema owner | FirmProfessionalDutyDesignation |
-| Schema existingContract | null (recorded) |
 | Schema status | selected target schema; implementation pending |
 | Schema reason | typed reactor receiver accepted business fact |
 | Schema changes | None listed |
@@ -134,7 +133,6 @@ SourceUseAuthorizationIntent
 | Schema discriminator | bdgrz.firm-professional-duty-designation.firm-professional-duty-designation-engagement-use-settled |
 | Schema discriminatorVersion | 1 |
 | Schema owner | FirmProfessionalDutyDesignation |
-| Schema existingContract | null (recorded) |
 | Schema status | selected target schema; implementation pending |
 | Schema reason | typed reactor receiver accepted business fact |
 | Schema changes | None listed |
@@ -307,8 +305,8 @@ ProfessionalDutyChangeIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T001](../reactors/professional-duty-change-reactor.md#t001) | emitted semantic fact | ProfessionalAssertionIdentityClaim | ApplyProfessionalDutyChange | FirmProfessionalDutyDesignation |
-| [T114](../reactors/professional-duty-change-reactor.md#t114) | logical prerequisite | FirmProfessionalDutyDesignation | CloseFirmStaffProfessionalDutyAuthorization | FirmStaffRecord |
+| [T001](../reactors/apply-or-revoke-professional-duty-designation-reactor.md#t001) | emitted semantic fact | ProfessionalAssertionIdentityClaim | ApplyProfessionalDutyChange | FirmProfessionalDutyDesignation |
+| [T114](../reactors/apply-or-revoke-professional-duty-designation-reactor.md#t114) | logical prerequisite | FirmProfessionalDutyDesignation | CloseFirmStaffProfessionalDutyAuthorization | FirmStaffRecord |
 
 ### FirmProfessionalDutyDesignationRevoked
 
@@ -418,7 +416,7 @@ ProfessionalDutyChangeIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T001](../reactors/professional-duty-change-reactor.md#t001) | emitted semantic fact | ProfessionalAssertionIdentityClaim | ApplyProfessionalDutyChange | FirmProfessionalDutyDesignation |
+| [T001](../reactors/apply-or-revoke-professional-duty-designation-reactor.md#t001) | emitted semantic fact | ProfessionalAssertionIdentityClaim | ApplyProfessionalDutyChange | FirmProfessionalDutyDesignation |
 
 ### ProfessionalDutyChangeAccepted
 
@@ -448,7 +446,6 @@ ProfessionalDutyChangeIntent
 | Schema discriminator | bdgrz.firm-professional-duty-designation.professional-duty-change-accepted |
 | Schema discriminatorVersion | 1 |
 | Schema owner | FirmProfessionalDutyDesignation |
-| Schema existingContract | null (recorded) |
 | Schema status | selected target schema; implementation pending |
 | Schema reason | source command accepted result |
 | Schema changes | None listed |
@@ -519,11 +516,11 @@ ProfessionalDutyChangeIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T000](../reactors/professional-duty-change-reactor.md#t000) | physical root, logical prerequisite | FirmProfessionalDutyDesignation | ClaimProfessionalAssertionIdentity | ProfessionalAssertionIdentityClaim |
-| [T001](../reactors/professional-duty-change-reactor.md#t001) | physical root | ProfessionalAssertionIdentityClaim | ApplyProfessionalDutyChange | FirmProfessionalDutyDesignation |
-| [T113](../reactors/professional-duty-change-reactor.md#t113) | physical root, logical prerequisite | FirmProfessionalDutyDesignation | AuthorizeFirmStaffProfessionalDuty | FirmStaffRecord |
-| [T114](../reactors/professional-duty-change-reactor.md#t114) | physical root | FirmProfessionalDutyDesignation | CloseFirmStaffProfessionalDutyAuthorization | FirmStaffRecord |
-| [A000](../reactors/unassigned-architecture-rows.md#a000) | physical root, logical prerequisite | FirmProfessionalDutyDesignation | RejectProfessionalDutyChange | FirmProfessionalDutyDesignation |
+| [T000](../reactors/apply-or-revoke-professional-duty-designation-reactor.md#t000) | physical root, logical prerequisite | FirmProfessionalDutyDesignation | ClaimProfessionalAssertionIdentity | ProfessionalAssertionIdentityClaim |
+| [T001](../reactors/apply-or-revoke-professional-duty-designation-reactor.md#t001) | physical root | ProfessionalAssertionIdentityClaim | ApplyProfessionalDutyChange | FirmProfessionalDutyDesignation |
+| [T113](../reactors/apply-or-revoke-professional-duty-designation-reactor.md#t113) | physical root, logical prerequisite | FirmProfessionalDutyDesignation | AuthorizeFirmStaffProfessionalDuty | FirmStaffRecord |
+| [T114](../reactors/apply-or-revoke-professional-duty-designation-reactor.md#t114) | physical root | FirmProfessionalDutyDesignation | CloseFirmStaffProfessionalDutyAuthorization | FirmStaffRecord |
+| [A000](../reactors/unassigned-domain-choreography.md#a000) | physical root, logical prerequisite | FirmProfessionalDutyDesignation | RejectProfessionalDutyChange | FirmProfessionalDutyDesignation |
 
 ### ProfessionalDutyChangeRejected
 
@@ -553,7 +550,6 @@ ProfessionalDutyChangeIntent
 | Schema discriminator | bdgrz.firm-professional-duty-designation.professional-duty-change-rejected |
 | Schema discriminatorVersion | 1 |
 | Schema owner | FirmProfessionalDutyDesignation |
-| Schema existingContract | null (recorded) |
 | Schema status | selected target schema; implementation pending |
 | Schema reason | source admission contract |
 | Schema changes | None listed |
@@ -624,8 +620,8 @@ ProfessionalDutyChangeIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T114](../reactors/professional-duty-change-reactor.md#t114) | logical prerequisite | FirmProfessionalDutyDesignation | CloseFirmStaffProfessionalDutyAuthorization | FirmStaffRecord |
-| [A000](../reactors/unassigned-architecture-rows.md#a000) | emitted semantic fact | FirmProfessionalDutyDesignation | RejectProfessionalDutyChange | FirmProfessionalDutyDesignation |
+| [T114](../reactors/apply-or-revoke-professional-duty-designation-reactor.md#t114) | logical prerequisite | FirmProfessionalDutyDesignation | CloseFirmStaffProfessionalDutyAuthorization | FirmStaffRecord |
+| [A000](../reactors/unassigned-domain-choreography.md#a000) | emitted semantic fact | FirmProfessionalDutyDesignation | RejectProfessionalDutyChange | FirmProfessionalDutyDesignation |
 
 
 

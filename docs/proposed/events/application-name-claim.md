@@ -4,8 +4,8 @@ Canonical events: **2**. Complete canonical event and available schema records: 
 
 | Target event | Selected source name | Kind | Adopted discriminator | Version | Schema fields | Meaning |
 | --- | --- | --- | --- | --- | --- | --- |
-| ApplicationNameClaimed | ApplicationNameClaimed | business | null (recorded) | null (recorded) | [Placeholder: schema absent] | A normalized application name or alias was claimed for one declared application in the tenant; no other active application may hold it. |
-| ApplicationNameReleased | ApplicationNameReleased | business | null (recorded) | null (recorded) | [Placeholder: schema absent] | A previously claimed application name or alias was released because the holder was retired, renamed, or merged into another application. |
+| ApplicationNameClaimed | ApplicationNameClaimed | business | [Placeholder: value not recorded] | [Placeholder: value not recorded] | [Placeholder: schema absent] | A normalized application name or alias was claimed for one declared application in the tenant; no other active application may hold it. |
+| ApplicationNameReleased | ApplicationNameReleased | business | [Placeholder: value not recorded] | [Placeholder: value not recorded] | [Placeholder: schema absent] | A previously claimed application name or alias was released because the holder was retired, renamed, or merged into another application. |
 
 ## Event details
 
@@ -19,7 +19,7 @@ Canonical events: **2**. Complete canonical event and available schema records: 
 | Canonical semantic key | event:ApplicationNameClaimed |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | ApplicationNameClaimed |
-| Adopted wire | null (recorded) |
+| Adopted wire | [Placeholder: value not recorded] |
 | Wire qualification | Planned; no declared record yet. Discriminator to follow the inventory name-claim convention when implemented. |
 | Schema status | planned_schema |
 | Source status | planned_no_source_type |
@@ -43,8 +43,8 @@ Canonical events: **2**. Complete canonical event and available schema records: 
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [X000](../reactors/application-name-change-reactor.md#x000) | emitted semantic fact | DeclaredApplication | ClaimApplicationName | ApplicationNameClaim |
-| [X001](../reactors/application-name-change-reactor.md#x001) | physical root, logical prerequisite | ApplicationNameClaim | ApplyApplicationNameChange | DeclaredApplication |
+| [X000](../reactors/keep-application-names-unique-reactor.md#x000) | emitted semantic fact | DeclaredApplication | ClaimApplicationName | ApplicationNameClaim |
+| [X001](../reactors/keep-application-names-unique-reactor.md#x001) | physical root, logical prerequisite | ApplicationNameClaim | ApplyApplicationNameChange | DeclaredApplication |
 
 ### ApplicationNameReleased
 
@@ -56,7 +56,7 @@ Canonical events: **2**. Complete canonical event and available schema records: 
 | Canonical semantic key | event:ApplicationNameReleased |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | ApplicationNameReleased |
-| Adopted wire | null (recorded) |
+| Adopted wire | [Placeholder: value not recorded] |
 | Wire qualification | Planned; no declared record yet. Discriminator to follow the inventory name-claim convention when implemented. |
 | Schema status | planned_schema |
 | Source status | planned_no_source_type |
@@ -80,7 +80,7 @@ Canonical events: **2**. Complete canonical event and available schema records: 
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [X002](../reactors/application-name-change-reactor.md#x002) | emitted semantic fact | DeclaredApplication | ReleaseApplicationName | ApplicationNameClaim |
+| [X002](../reactors/keep-application-names-unique-reactor.md#x002) | emitted semantic fact | DeclaredApplication | ReleaseApplicationName | ApplicationNameClaim |
 
 
 

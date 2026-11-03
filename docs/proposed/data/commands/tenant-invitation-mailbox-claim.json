@@ -42,6 +42,8 @@
         "path": "src/Compliance.Core/Features/Tenants/Handlers/InviteTenantMemberHandler.cs -> Tenants/Services/TenantInvitationAdmission.cs:95 (mailboxes.AcquireAsync)",
         "recorded": "2026-10-29"
       },
+      "sourceOwner": "TenantInvitationMailboxClaim",
+      "owner": "TenantInvitationMailboxClaim",
       "sourceName": "InviteTenantMember",
       "targetName": "InviteTenantMember"
     },
@@ -82,6 +84,8 @@
         "path": "src/Compliance.Core/Features/Tenants/Handlers/InviteOrganizationMemberHandler.cs",
         "recorded": "2026-10-29"
       },
+      "sourceOwner": "TenantInvitationMailboxClaim",
+      "owner": "TenantInvitationMailboxClaim",
       "sourceName": "InviteOrganizationMember",
       "targetName": "InviteOrganizationMember"
     },
@@ -126,6 +130,8 @@
         "path": "src/Compliance.Core/Features/Tenants/Handlers/InviteGuestConsultantHandler.cs",
         "recorded": "2026-10-29"
       },
+      "sourceOwner": "TenantInvitationMailboxClaim",
+      "owner": "TenantInvitationMailboxClaim",
       "sourceName": "InviteGuestConsultant",
       "targetName": "InviteGuestConsultant"
     },
@@ -166,6 +172,8 @@
         "path": "src/Compliance.Core/Features/Tenants/Handlers/AcceptTenantInvitationHandler.cs:118 (mailboxes.ReleaseAsync)",
         "recorded": "2026-10-29"
       },
+      "sourceOwner": "TenantInvitationMailboxClaim",
+      "owner": "TenantInvitationMailboxClaim",
       "sourceName": "AcceptTenantInvitation",
       "targetName": "AcceptTenantInvitation"
     }

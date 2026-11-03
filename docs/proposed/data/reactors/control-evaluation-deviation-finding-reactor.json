@@ -97,7 +97,6 @@
       ],
       "canonicalTargetOwner": "FindingAggregate",
       "recoveryContractSummary": "At-least-once checkpoint replay resends the same source-derived command. Missing dependencies remain retryable; actual terminal/superseded episodes are skipped only with the owning proof.",
-      "logicalPrerequisiteRuleGuard": null,
       "logicalPrerequisiteRule": "The source is a committed ControlEvaluationSubmitted whose verified submission lists a deviation classified material; the finding id derives from the deviation, and the finding is raised only if that deviation is still the latest submitted material deviation with the same finding id and the control version's owner (or the evaluator) can be resolved as owner.",
       "prerequisiteRuleSource": "authored 2026-10-29 from reactor and target source"
     }

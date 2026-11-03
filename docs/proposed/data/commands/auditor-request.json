@@ -95,13 +95,9 @@
           "policy": "ApiUser + existing request-scope authorizers"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/10",
-        "line": 1161,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
       "kind": "http",
+      "sourceOwner": "AuditorRequest",
+      "owner": "AuditorRequest",
       "sourceName": "AmendSampleSelection",
       "targetName": "AmendSampleSelection"
     },
@@ -169,13 +165,9 @@
           "policy": "ApiUser + existing request-scope authorizers"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/21",
-        "line": 2512,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
       "kind": "http",
+      "sourceOwner": "AuditorRequest",
+      "owner": "AuditorRequest",
       "sourceName": "AssignAuditorRequest",
       "targetName": "AssignAuditorRequest"
     },
@@ -238,13 +230,9 @@
           "policy": "ApiUser + existing request-scope authorizers"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/43",
-        "line": 5145,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
       "kind": "http",
+      "sourceOwner": "AuditorRequest",
+      "owner": "AuditorRequest",
       "sourceName": "CreateAuditResponseDraft",
       "targetName": "CreateAuditResponseDraft"
     },
@@ -327,13 +315,9 @@
           "policy": "ApiUser + existing request-scope authorizers"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/97",
-        "line": 11267,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
       "kind": "http",
+      "sourceOwner": "AuditorRequest",
+      "owner": "AuditorRequest",
       "sourceName": "RecordAuditorRequest",
       "targetName": "RecordAuditorRequest"
     },
@@ -396,13 +380,9 @@
           "policy": "ApiUser + existing request-scope authorizers"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/98",
-        "line": 11399,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
       "kind": "http",
+      "sourceOwner": "AuditorRequest",
+      "owner": "AuditorRequest",
       "sourceName": "RecordAuditorRequestComment",
       "targetName": "RecordAuditorRequestComment"
     },
@@ -490,13 +470,9 @@
           "policy": "ApiUser + existing request-scope authorizers"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/111",
-        "line": 12876,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
       "kind": "http",
+      "sourceOwner": "AuditorRequest",
+      "owner": "AuditorRequest",
       "sourceName": "RecordSampleSelection",
       "targetName": "RecordSampleSelection"
     },
@@ -554,13 +530,9 @@
           "policy": "ApiUser + existing request-scope authorizers"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/118",
-        "line": 13617,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
       "kind": "http",
+      "sourceOwner": "AuditorRequest",
+      "owner": "AuditorRequest",
       "sourceName": "ReopenAuditorRequest",
       "targetName": "ReopenAuditorRequest"
     },
@@ -623,13 +595,9 @@
           "policy": "ApiUser + existing request-scope authorizers"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/122",
-        "line": 14070,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
       "kind": "http",
+      "sourceOwner": "AuditorRequest",
+      "owner": "AuditorRequest",
       "sourceName": "ResolveAuditorRequest",
       "targetName": "ResolveAuditorRequest"
     },
@@ -707,13 +675,9 @@
           "policy": "ApiUser + existing request-scope authorizers"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/139",
-        "line": 16169,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
       "kind": "http",
+      "sourceOwner": "AuditorRequest",
+      "owner": "AuditorRequest",
       "sourceName": "ReviseAuditorRequest",
       "targetName": "ReviseAuditorRequest"
     },
@@ -757,15 +721,9 @@
           "required": true
         }
       ],
-      "responseContract": null,
-      "http": null,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/source-admission-contracts.json",
-        "jsonPointer": "/contracts/15",
-        "line": 959,
-        "sha256": "f1d549ed0879c816cb26e86879f8fa658dab0a8acbf7c591e4d4aed40483f8ae"
-      },
       "kind": "abort",
+      "sourceOwner": "AuditorRequest",
+      "owner": "AuditorRequest",
       "sourceName": "AbortAuditorRequestResolution",
       "targetName": "AbortAuditorRequestResolution"
     },
@@ -840,10 +798,7 @@
       "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
       "handler": "CompleteAuditorRequestResolutionHandler",
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "recorded": "2026-10-29"
-      },
+      "owner": "AuditorRequest",
       "sourceName": "CompleteAuditorRequestResolution",
       "targetName": "CompleteAuditorRequestResolution"
     }
@@ -1116,8 +1071,7 @@
       "expectedRevisionScope": {
         "field": "ExpectedRevision",
         "owner": "AuditorRequest",
-        "counter": "logical ResourceRevision of this owner",
-        "nullableInternalRule": null
+        "counter": "logical ResourceRevision of this owner"
       }
     },
     {
@@ -1354,8 +1308,7 @@
       "expectedRevisionScope": {
         "field": "ExpectedRevision",
         "owner": "AuditorResponse",
-        "counter": "logical ResourceRevision of this owner",
-        "nullableInternalRule": null
+        "counter": "logical ResourceRevision of this owner"
       }
     },
     {
@@ -1485,7 +1438,6 @@
         "terminalResultType": "Unit"
       },
       "expectedRevisionScope": {
-        "field": null,
         "owner": "AuditorRequest",
         "counter": "No primary caller ResourceRevision. Enforce required authored source/epoch/version tokens, immutable creation identity or trusted proof/generation as declared; append uses physical OCC."
       }
@@ -1726,8 +1678,7 @@
       "expectedRevisionScope": {
         "field": "ExpectedRevision",
         "owner": "AuditorResponse",
-        "counter": "logical ResourceRevision of this owner",
-        "nullableInternalRule": null
+        "counter": "logical ResourceRevision of this owner"
       }
     },
     {
@@ -1977,8 +1928,7 @@
       "expectedRevisionScope": {
         "field": "ExpectedRevision",
         "owner": "AuditorRequest",
-        "counter": "logical ResourceRevision of this owner",
-        "nullableInternalRule": null
+        "counter": "logical ResourceRevision of this owner"
       }
     },
     {
@@ -2095,8 +2045,7 @@
       "expectedRevisionScope": {
         "field": "ExpectedRevision",
         "owner": "AuditorRequest",
-        "counter": "logical ResourceRevision of this owner",
-        "nullableInternalRule": null
+        "counter": "logical ResourceRevision of this owner"
       }
     },
     {
@@ -2221,8 +2170,7 @@
       "expectedRevisionScope": {
         "field": "ExpectedRevision",
         "owner": "AuditorResponse",
-        "counter": "logical ResourceRevision of this owner",
-        "nullableInternalRule": null
+        "counter": "logical ResourceRevision of this owner"
       }
     },
     {
@@ -2341,8 +2289,7 @@
       "expectedRevisionScope": {
         "field": "ExpectedRevision",
         "owner": "AuditorResponse",
-        "counter": "logical ResourceRevision of this owner",
-        "nullableInternalRule": null
+        "counter": "logical ResourceRevision of this owner"
       }
     },
     {
@@ -2471,8 +2418,7 @@
       "expectedRevisionScope": {
         "field": "ExpectedRevision",
         "owner": "AuditorRequest",
-        "counter": "logical ResourceRevision of this owner",
-        "nullableInternalRule": null
+        "counter": "logical ResourceRevision of this owner"
       }
     },
     {
@@ -2592,8 +2538,7 @@
       "expectedRevisionScope": {
         "field": "ExpectedRevision",
         "owner": "AuditorResponse",
-        "counter": "logical ResourceRevision of this owner",
-        "nullableInternalRule": null
+        "counter": "logical ResourceRevision of this owner"
       }
     }
   ]

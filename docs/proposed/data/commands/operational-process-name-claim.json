@@ -59,7 +59,7 @@
         "recorded": "2026-10-29"
       },
       "reactor": "OperationalProcessNameClaimReactor",
-      "sourceOwner": "OperationalProcess",
+      "sourceOwner": "OperationalProcessNameClaim",
       "sourceEvents": [
         "OperationalProcessChangeAccepted"
       ],
@@ -69,6 +69,7 @@
       ],
       "effectKind": "claim_operational_process_name",
       "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
+      "owner": "OperationalProcessNameClaim",
       "sourceName": "ClaimOperationalProcessName",
       "targetName": "ClaimOperationalProcessName"
     },
@@ -126,7 +127,7 @@
         "recorded": "2026-10-29"
       },
       "reactor": "OperationalProcessOldNameReleaseReactor",
-      "sourceOwner": "OperationalProcess",
+      "sourceOwner": "OperationalProcessNameClaim",
       "sourceEvents": [
         "OperationalProcessRevisionRecorded",
         "OperationalProcessChangeCanceled"
@@ -137,6 +138,7 @@
       ],
       "effectKind": "release_operational_process_name",
       "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
+      "owner": "OperationalProcessNameClaim",
       "sourceName": "ReleaseOperationalProcessName",
       "targetName": "ReleaseOperationalProcessName"
     }

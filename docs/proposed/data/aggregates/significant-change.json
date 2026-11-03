@@ -8,14 +8,7 @@
   "invariant": "One change version may be assessed once; current-version independent description decision and required follow-up eligibility gate advancement.",
   "boundaryDecision": "narrow",
   "boundaryRationale": "Keep current version, assessment and eligibility/independence gate atomic. Historical versions/decisions are immutable histories; do not split current gate simply by entity nouns. Required work selection can be sealed exact-version content with authority proofs.",
-  "sources": [
-    {
-      "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
-      "jsonPointer": "/aggregates/76",
-      "line": 47130,
-      "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
-    }
-  ],
+  "sources": [],
   "baselineSourcePath": "src/Compliance.Core/Features/Changes/SignificantChange.cs",
   "baselineEvents": [
     "ImpactReviewWorkLinked",
@@ -82,13 +75,9 @@
           "authorizationPolicy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/24",
-        "line": 1927,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      },
-      "kind": "http"
+      "kind": "http",
+      "sourceOwner": "SignificantChange",
+      "owner": "SignificantChange"
     },
     {
       "command": "LinkImpactReviewWork",
@@ -138,12 +127,6 @@
         "terminalResultType": "Unit"
       },
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/85",
-        "line": 6355,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      },
       "kind": "command",
       "concurrencyGuard": {
         "rule": "require_expected_revision",
@@ -154,7 +137,9 @@
           "process_reply": 0.11
         },
         "date": "2026-10-29"
-      }
+      },
+      "sourceOwner": "SignificantChange",
+      "owner": "SignificantChange"
     },
     {
       "command": "RecordSignificantChange",
@@ -193,13 +178,9 @@
         "terminalResultType": "Unit"
       },
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/128",
-        "line": 9624,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      },
-      "kind": "creation"
+      "kind": "creation",
+      "sourceOwner": "SignificantChange",
+      "owner": "SignificantChange"
     },
     {
       "command": "RecordSignificantChangeSystemDescriptionDecision",
@@ -274,12 +255,6 @@
         "terminalResultType": "Unit"
       },
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/129",
-        "line": 9683,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      },
       "kind": "command",
       "concurrencyGuard": {
         "rule": "require_expected_revision",
@@ -290,7 +265,9 @@
           "process_reply": 0.14
         },
         "date": "2026-10-29"
-      }
+      },
+      "sourceOwner": "SignificantChange",
+      "owner": "SignificantChange"
     },
     {
       "command": "ReviseSignificantChange",
@@ -350,25 +327,15 @@
           "authorizationPolicy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/182",
-        "line": 13652,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      },
-      "kind": "http"
+      "kind": "http",
+      "sourceOwner": "SignificantChange",
+      "owner": "SignificantChange"
     }
   ],
   "eventAuthority": "retained_baseline_business_facts_requires_schema_reconciliation",
   "events": [
     {
       "event": "ImpactReviewWorkLinked",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
-        "jsonPointer": "/aggregates/76",
-        "line": 47130,
-        "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
-      },
       "baselineContract": {
         "event": "ImpactReviewWorkLinked",
         "emitters": [
@@ -413,12 +380,6 @@
     },
     {
       "event": "SignificantChangeImpactAssessed",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
-        "jsonPointer": "/aggregates/76",
-        "line": 47130,
-        "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
-      },
       "baselineContract": {
         "event": "SignificantChangeImpactAssessed",
         "emitters": [
@@ -463,12 +424,6 @@
     },
     {
       "event": "SignificantChangeRecorded",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
-        "jsonPointer": "/aggregates/76",
-        "line": 47130,
-        "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
-      },
       "baselineContract": {
         "event": "SignificantChangeRecorded",
         "emitters": [
@@ -513,12 +468,6 @@
     },
     {
       "event": "SignificantChangeRevised",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
-        "jsonPointer": "/aggregates/76",
-        "line": 47130,
-        "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
-      },
       "baselineContract": {
         "event": "SignificantChangeRevised",
         "emitters": [
@@ -563,12 +512,6 @@
     },
     {
       "event": "SignificantChangeSystemDescriptionDecisionRecorded",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
-        "jsonPointer": "/aggregates/76",
-        "line": 47130,
-        "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
-      },
       "baselineContract": {
         "event": "SignificantChangeSystemDescriptionDecisionRecorded",
         "emitters": [
@@ -623,53 +566,23 @@
   "selectedLogicalIdentityBindings": [
     {
       "command": "AssessSignificantChange",
-      "logicalIdentity": "CommandId",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/24",
-        "line": 1927,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      }
+      "logicalIdentity": "CommandId"
     },
     {
       "command": "LinkImpactReviewWork",
-      "logicalIdentity": "CommandId",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/85",
-        "line": 6355,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      }
+      "logicalIdentity": "CommandId"
     },
     {
       "command": "RecordSignificantChange",
-      "logicalIdentity": "ChangeId",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/128",
-        "line": 9624,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      }
+      "logicalIdentity": "ChangeId"
     },
     {
       "command": "RecordSignificantChangeSystemDescriptionDecision",
-      "logicalIdentity": "CommandId",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/129",
-        "line": 9683,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      }
+      "logicalIdentity": "CommandId"
     },
     {
       "command": "ReviseSignificantChange",
-      "logicalIdentity": "CommandId",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/182",
-        "line": 13652,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      }
+      "logicalIdentity": "CommandId"
     }
   ],
   "selectedReplayRule": "Current required authorization precedes replay; exact authorized retries resolve the original accepted result using the selected logical identity and immutable actor/intent/source binding. Fresh mutable feasibility, clock selection and body preparation cannot replace that original result. Expected revision is concurrency precondition, not a new identity.",
@@ -691,5 +604,6 @@
     "D21-02",
     "D21-03"
   ],
-  "decidesAuthored": "2026-10-29"
+  "decidesAuthored": "2026-10-29",
+  "sourceOwner": "SignificantChange"
 }

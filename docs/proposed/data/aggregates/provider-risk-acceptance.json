@@ -8,14 +8,7 @@
   "invariant": "One immutable accepted-risk linkage admitted on an open provider gap; source gap serializes duplicate tuple and closure. Never owns gap closure.",
   "boundaryDecision": "selected_split",
   "mustPreserve": "Risk adoption cannot close a gap or occur after closure; each review binds same provider/current report.",
-  "sources": [
-    {
-      "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
-      "jsonPointer": "/splitOwners/19/targetOwners/3",
-      "line": 2072,
-      "sha256": "d349d94b7c43f4d82020ecf36bdacf1aff98bc6498e14993582f1c3164b21f19"
-    }
-  ],
+  "sources": [],
   "baselineSourcePath": "src/Compliance.Core/Features/Providers/ProviderAssuranceRegister.cs",
   "baselineEvents": [
     "ProviderCoverageGapRiskAcceptanceLinked"
@@ -81,7 +74,7 @@
         "recorded": "2026-10-29"
       },
       "reactor": "ProviderRiskAcceptanceLinkReactor",
-      "sourceOwner": "ProviderAssuranceGap",
+      "sourceOwner": "ProviderRiskAcceptance",
       "sourceEvents": [
         "ProviderCoverageGapRiskAcceptanceAdmitted"
       ],
@@ -90,7 +83,8 @@
         "ProviderCoverageGapRiskAcceptanceLinked"
       ],
       "effectKind": "materialize_provider_risk_acceptance_link",
-      "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine."
+      "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
+      "owner": "ProviderRiskAcceptance"
     }
   ],
   "eventAuthority": "selected_final_event_catalog",
@@ -98,13 +92,7 @@
     {
       "event": "ProviderCoverageGapRiskAcceptanceLinked",
       "discriminator": "bdgrz.provider.coverage_gap.risk_acceptance_linked",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/215",
-        "line": 28731,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     }
   ],
   "choreography": [
@@ -112,13 +100,7 @@
       "reactor": "ProviderRiskAcceptanceLinkReactor",
       "sourceOwner": "ProviderAssuranceGap",
       "targetOwner": "ProviderRiskAcceptance",
-      "command": "MaterializeProviderRiskAcceptanceLink",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "jsonPointer": "/reactors/88",
-        "line": 7562,
-        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
-      }
+      "command": "MaterializeProviderRiskAcceptanceLink"
     }
   ],
   "status": "SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED",
@@ -129,5 +111,6 @@
   "baselineIdentityObservationOnly": true,
   "selectedLogicalIdentityBindings": [],
   "selectedReplayRule": "Current required authorization precedes replay; exact authorized retries resolve the original accepted result using the selected logical identity and immutable actor/intent/source binding. Fresh mutable feasibility, clock selection and body preparation cannot replace that original result. Expected revision is concurrency precondition, not a new identity.",
-  "commandNote": "Link identity (LinkId) equals the admitting CommandId."
+  "commandNote": "Link identity (LinkId) equals the admitting CommandId.",
+  "sourceOwner": "ProviderRiskAcceptance"
 }

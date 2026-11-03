@@ -242,7 +242,6 @@
         "discriminator": "bdgrz.provider-assurance-gap.provider-coverage-gap-risk-acceptance-admitted",
         "discriminatorVersion": 1,
         "owner": "ProviderAssuranceGap",
-        "existingContract": null,
         "status": "selected target schema; implementation pending",
         "reason": "source command accepted result",
         "fields": [

@@ -180,7 +180,6 @@ Canonical events: **4**. Complete canonical event and available schema records: 
 | Schema discriminator | bdgrz.provider-assurance-report.provider-assurance-report-provider-review-use-authorized |
 | Schema discriminatorVersion | 1 |
 | Schema owner | ProviderAssuranceReport |
-| Schema existingContract | null (recorded) |
 | Schema status | selected target schema; implementation pending |
 | Schema reason | typed reactor receiver accepted business fact |
 | Schema changes | None listed |
@@ -243,7 +242,7 @@ SourceUseAuthorizationIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T069](../reactors/provider-review-reactor.md#t069) | emitted semantic fact | ProviderAssuranceReview | AuthorizeProviderAssuranceReportProviderReview | ProviderAssuranceReport |
+| [T069](../reactors/record-provider-assurance-report-review-reactor.md#t069) | emitted semantic fact | ProviderAssuranceReview | AuthorizeProviderAssuranceReportProviderReview | ProviderAssuranceReport |
 
 ### ProviderAssuranceReportProviderReviewAuthorizationClosed
 
@@ -273,7 +272,6 @@ SourceUseAuthorizationIntent
 | Schema discriminator | bdgrz.provider-assurance-report.provider-assurance-report-provider-review-use-settled |
 | Schema discriminatorVersion | 1 |
 | Schema owner | ProviderAssuranceReport |
-| Schema existingContract | null (recorded) |
 | Schema status | selected target schema; implementation pending |
 | Schema reason | typed reactor receiver accepted business fact |
 | Schema changes | None listed |
@@ -336,7 +334,7 @@ SourceUseAuthorizationIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T070](../reactors/provider-review-reactor.md#t070) | emitted semantic fact | ProviderAssuranceReview | CloseProviderAssuranceReportProviderReviewAuthorization | ProviderAssuranceReport |
+| [T070](../reactors/record-provider-assurance-report-review-reactor.md#t070) | emitted semantic fact | ProviderAssuranceReview | CloseProviderAssuranceReportProviderReviewAuthorization | ProviderAssuranceReport |
 
 
 

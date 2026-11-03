@@ -5,6 +5,7 @@
 - Business aggregate: `true`
 - Selected status: `SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED`
 
+
 ## Identity and invariant
 
 **Selected identity:** Tenant / management-assertions / AssertionId, with immutable ProgramId/examination scope. AssertionId identifies creation; selected mutations use CommandId and exact asserted version/source proofs.
@@ -19,12 +20,16 @@
 
 **Lifecycle:** [Placeholder: a consolidated lifecycle sequence is not present in the selected owner record.]
 
+
+
+
+
 ## Commands
 
 | Command | Kind | Identity field |
 | --- | --- | --- |
 | [ApproveManagementAssertion](../commands/management-assertion.md#approvemanagementassertion) | command | CommandId |
-| [RecordManagementAssertion](../commands/management-assertion.md#recordmanagementassertion) | http | AssertionId |
+| [CreateManagementAssertion](../commands/management-assertion.md#createmanagementassertion) | http | AssertionId |
 
 ## Events
 
@@ -40,7 +45,7 @@
 
 ## Product rules
 
-- **D17-06** — The management assertion and the representation letter are each signed by the CEO or the CISO, recorded as an attributable sign-off decision on an exact package version. Source: [m0-d17-audit-deliverables.md](../../product/decisions/m0-d17-audit-deliverables.md).
+- **D17-06** — The management assertion and the representation letter are each signed by the CEO or the CISO, recorded as an attributable sign-off decision on an exact package version. Decision: [m0-d17-audit-deliverables.md](../decisions/m0-d17-audit-deliverables.md).
 
 ## Adopted architecture decisions
 
@@ -49,7 +54,7 @@
 ## Evidence and complete record
 
 - Baseline source: [Placeholder: source file is not present in this checkout]
-- Aggregate review: [management-assertion-review-2026-10-29.md](../../product/definitive-aggregate-choreography/management-assertion-review-2026-10-29.md)
+- Aggregate review: [Placeholder: no owner-specific review file is present]
 - Full selected record: [JSON](../data/aggregates/management-assertion.json)
 
 > Target definition is separate from runtime qualification. Implementation status recorded by the source: `SEPARATE_VERIFICATION_REQUIRED_IMPLEMENTATION_HALTED`.

@@ -94,13 +94,9 @@
           "authorizationPolicy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/114",
-        "line": 8486,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      },
       "kind": "http",
+      "sourceOwner": "DataFlow",
+      "owner": "DataFlow",
       "sourceName": "RecordDataFlow",
       "targetName": "RecordDataFlow"
     },
@@ -206,13 +202,9 @@
         "terminalResultType": "Unit"
       },
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/172",
-        "line": 12818,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      },
       "kind": "command",
+      "sourceOwner": "DataFlow",
+      "owner": "DataFlow",
       "sourceName": "ReviseDataFlow",
       "targetName": "ReviseDataFlow"
     }

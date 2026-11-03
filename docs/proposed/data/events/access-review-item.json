@@ -532,7 +532,6 @@
         "discriminator": "bdgrz.access-review-item.access-review-item-campaign-completion-use-authorized",
         "discriminatorVersion": 1,
         "owner": "AccessReviewItem",
-        "existingContract": null,
         "status": "selected target schema; implementation pending",
         "reason": "typed reactor receiver accepted business fact",
         "fields": [
@@ -696,7 +695,6 @@
         "discriminator": "bdgrz.access-review-item.access-review-item-campaign-completion-use-settled",
         "discriminatorVersion": 1,
         "owner": "AccessReviewItem",
-        "existingContract": null,
         "status": "selected target schema; implementation pending",
         "reason": "typed reactor receiver accepted business fact",
         "fields": [
@@ -860,7 +858,6 @@
         "discriminator": "bdgrz.access-review-item.access-review-item-decision-authorized",
         "discriminatorVersion": 1,
         "owner": "AccessReviewItem",
-        "existingContract": null,
         "status": "selected target schema; implementation pending",
         "reason": "typed reactor receiver accepted business fact",
         "fields": [
@@ -1053,7 +1050,6 @@
         "discriminator": "bdgrz.access-review-item.access-review-item-decision-canceled",
         "discriminatorVersion": 1,
         "owner": "AccessReviewItem",
-        "existingContract": null,
         "status": "selected target schema; implementation pending",
         "reason": "typed reactor receiver accepted business fact",
         "fields": [
@@ -1247,7 +1243,6 @@
         "discriminator": "bdgrz.access-review-item.access-review-item-decision-settled",
         "discriminatorVersion": 1,
         "owner": "AccessReviewItem",
-        "existingContract": null,
         "status": "selected target schema; implementation pending",
         "reason": "typed reactor receiver accepted business fact",
         "fields": [
@@ -1440,7 +1435,6 @@
         "discriminator": "bdgrz.access-review-item.access-review-item-opened",
         "discriminatorVersion": 1,
         "owner": "AccessReviewItem",
-        "existingContract": null,
         "status": "selected target schema; implementation pending",
         "reason": "typed reactor receiver accepted business fact",
         "fields": [

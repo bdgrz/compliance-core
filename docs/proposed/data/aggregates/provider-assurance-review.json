@@ -8,14 +8,7 @@
   "invariant": "One immutable personal same-provider due-diligence review bound to exact report revision, evidence kind, validity window and cadence.",
   "boundaryDecision": "selected_split",
   "mustPreserve": "Risk adoption cannot close a gap or occur after closure; each review binds same provider/current report.",
-  "sources": [
-    {
-      "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
-      "jsonPointer": "/splitOwners/19/targetOwners/1",
-      "line": 2041,
-      "sha256": "d349d94b7c43f4d82020ecf36bdacf1aff98bc6498e14993582f1c3164b21f19"
-    }
-  ],
+  "sources": [],
   "baselineSourcePath": "src/Compliance.Core/Features/Providers/ProviderAssuranceRegister.cs",
   "baselineEvents": [
     "ProviderReviewRecorded"
@@ -71,13 +64,9 @@
           "policy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/110",
-        "line": 12777,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
-      "kind": "http"
+      "kind": "http",
+      "sourceOwner": "ProviderAssuranceReview",
+      "owner": "ProviderAssuranceReview"
     },
     {
       "command": "AbortProviderReview",
@@ -119,15 +108,9 @@
           "required": true
         }
       ],
-      "responseContract": null,
-      "http": null,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/source-admission-contracts.json",
-        "jsonPointer": "/contracts/19",
-        "line": 1191,
-        "sha256": "f1d549ed0879c816cb26e86879f8fa658dab0a8acbf7c591e4d4aed40483f8ae"
-      },
-      "kind": "abort"
+      "kind": "abort",
+      "sourceOwner": "ProviderAssuranceReview",
+      "owner": "ProviderAssuranceReview"
     },
     {
       "command": "CompleteProviderAssuranceReview",
@@ -200,10 +183,7 @@
       "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
       "handler": "CompleteProviderAssuranceReviewHandler",
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "recorded": "2026-10-29"
-      }
+      "owner": "ProviderAssuranceReview"
     }
   ],
   "eventAuthority": "selected_final_event_catalog",
@@ -211,35 +191,17 @@
     {
       "event": "ProviderReviewCanceled",
       "discriminator": "bdgrz.provider-assurance-review.provider-review-canceled",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/219",
-        "line": 29463,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     },
     {
       "event": "ProviderReviewRecorded",
       "discriminator": "bdgrz.provider.review.recorded",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/220",
-        "line": 29611,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     },
     {
       "event": "ProviderReviewRequested",
       "discriminator": "bdgrz.provider-assurance-review.provider-review-requested",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/221",
-        "line": 29797,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     }
   ],
   "choreography": [
@@ -247,37 +209,19 @@
       "reactor": "ProviderReviewProviderAssuranceReportAuthorizationReactor",
       "sourceOwner": "ProviderAssuranceReview",
       "targetOwner": "ProviderAssuranceReport",
-      "command": "AuthorizeProviderAssuranceReportProviderReviewUse",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "jsonPointer": "/reactors/69",
-        "line": 5940,
-        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
-      }
+      "command": "AuthorizeProviderAssuranceReportProviderReviewUse"
     },
     {
       "reactor": "ProviderReviewProviderAssuranceReportSettlementReactor",
       "sourceOwner": "ProviderAssuranceReview",
       "targetOwner": "ProviderAssuranceReport",
-      "command": "SettleProviderAssuranceReportProviderReviewUse",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "jsonPointer": "/reactors/70",
-        "line": 6027,
-        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
-      }
+      "command": "SettleProviderAssuranceReportProviderReviewUse"
     },
     {
       "reactor": "ProviderReviewCompletionReactor",
       "sourceOwner": "ProviderAssuranceReview",
       "targetOwner": "ProviderAssuranceReview",
-      "command": "CompleteProviderAssuranceReview",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "jsonPointer": "/reactors/77",
-        "line": 6627,
-        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
-      }
+      "command": "CompleteProviderAssuranceReview"
     }
   ],
   "status": "SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED",
@@ -295,23 +239,11 @@
         "required": true,
         "origin": "client",
         "rule": "exact immutable creation retry"
-      },
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/110",
-        "line": 12777,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       }
     },
     {
       "command": "AbortProviderReview",
-      "logicalIdentity": "CommandId",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/source-admission-contracts.json",
-        "jsonPointer": "/contracts/19",
-        "line": 1191,
-        "sha256": "f1d549ed0879c816cb26e86879f8fa658dab0a8acbf7c591e4d4aed40483f8ae"
-      }
+      "logicalIdentity": "CommandId"
     }
   ],
   "selectedReplayRule": "Current required authorization precedes replay; exact authorized retries resolve the original accepted result using the selected logical identity and immutable actor/intent/source binding. Fresh mutable feasibility, clock selection and body preparation cannot replace that original result. Expected revision is concurrency precondition, not a new identity.",
@@ -344,5 +276,6 @@
     "D11-03",
     "D11-04"
   ],
-  "decidesAuthored": "2026-10-29"
+  "decidesAuthored": "2026-10-29",
+  "sourceOwner": "ProviderAssuranceReview"
 }

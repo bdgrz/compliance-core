@@ -28,7 +28,6 @@
         "discriminator": "bdgrz.identity-recovery.identity-recovery-accepted",
         "discriminatorVersion": 1,
         "owner": "IdentityRecovery",
-        "existingContract": null,
         "status": "selected target schema; implementation pending",
         "reason": "typed reactor receiver accepted business fact",
         "fields": [
@@ -244,7 +243,6 @@
         "discriminator": "bdgrz.identity-recovery.identity-recovery-completed",
         "discriminatorVersion": 1,
         "owner": "IdentityRecovery",
-        "existingContract": null,
         "status": "selected target schema; implementation pending",
         "reason": "typed reactor receiver accepted business fact",
         "fields": [
@@ -460,7 +458,6 @@
         "discriminator": "bdgrz.identity-recovery.identity-recovery-preparation-rejected",
         "discriminatorVersion": 1,
         "owner": "IdentityRecovery",
-        "existingContract": null,
         "status": "selected target schema; implementation pending",
         "reason": "source admission contract",
         "fields": [
@@ -676,7 +673,6 @@
         "discriminator": "bdgrz.identity-recovery.identity-recovery-prepared",
         "discriminatorVersion": 1,
         "owner": "IdentityRecovery",
-        "existingContract": null,
         "status": "selected target schema; implementation pending",
         "reason": "typed reactor receiver accepted business fact",
         "fields": [

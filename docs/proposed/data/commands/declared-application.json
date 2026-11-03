@@ -67,18 +67,11 @@
       "responseContract": {
         "mode": "internal",
         "responseType": "Unit",
-        "firstHttpStatus": null,
         "terminalResultType": "Unit"
       },
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/13",
-        "line": 1534,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
       "reactor": "ImportTargetApplicationReactor",
-      "sourceOwner": "ApplicationImportBatch",
+      "sourceOwner": "DeclaredApplication",
       "sourceEvents": [
         "ApplicationImportExecutionAuthorized"
       ],
@@ -89,6 +82,7 @@
       "effectKind": "apply_application_import_effect",
       "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
       "kind": "receiver",
+      "owner": "DeclaredApplication",
       "sourceName": "ApplyApplicationImportEffect",
       "targetName": "ApplyApplicationImportChange"
     },
@@ -171,13 +165,9 @@
           "policy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/48",
-        "line": 5715,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
       "kind": "http",
+      "sourceOwner": "DeclaredApplication",
+      "owner": "DeclaredApplication",
       "sourceName": "DeclareApplication",
       "targetName": "DeclareApplication"
     },
@@ -240,13 +230,9 @@
           "policy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/124",
-        "line": 14304,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
       "kind": "http",
+      "sourceOwner": "DeclaredApplication",
+      "owner": "DeclaredApplication",
       "sourceName": "RetireApplication",
       "targetName": "RetireApplication"
     },
@@ -360,13 +346,9 @@
           "policy": "ApiUser + existing request-scope authorizers"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/136",
-        "line": 15765,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
       "kind": "http",
+      "sourceOwner": "DeclaredApplication",
+      "owner": "DeclaredApplication",
       "sourceName": "ReviseApplication",
       "targetName": "ReviseApplication"
     },
@@ -434,7 +416,7 @@
         }
       ],
       "reactor": "ImportTargetReservationReactor",
-      "sourceOwner": "ApplicationImportBatch",
+      "sourceOwner": "DeclaredApplication",
       "sourceEvents": [
         "ApplicationImportExecutionAuthorized"
       ],
@@ -446,10 +428,7 @@
       "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
       "handler": "ReserveApplicationImportTargetHandler",
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "recorded": "2026-10-29"
-      },
+      "owner": "DeclaredApplication",
       "sourceName": "ReserveApplicationImportTarget",
       "targetName": "ReserveApplicationImportTarget"
     },
@@ -512,7 +491,7 @@
         }
       ],
       "reactor": "ImportCancellationFenceReactor",
-      "sourceOwner": "ApplicationImportBatch",
+      "sourceOwner": "DeclaredApplication",
       "sourceEvents": [
         "ApplicationImportCancellationAccepted"
       ],
@@ -524,10 +503,7 @@
       "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
       "handler": "FenceApplicationImportTargetHandler",
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "recorded": "2026-10-29"
-      },
+      "owner": "DeclaredApplication",
       "sourceName": "FenceApplicationImportTarget",
       "targetName": "BlockCanceledApplicationImportChanges"
     },
@@ -590,7 +566,7 @@
         }
       ],
       "reactor": "ImportTargetReleaseReactor",
-      "sourceOwner": "ApplicationImportBatch",
+      "sourceOwner": "DeclaredApplication",
       "sourceEvents": [
         "ApplicationImportCommitted",
         "ApplicationImportCanceled",
@@ -604,10 +580,7 @@
       "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
       "handler": "ReleaseApplicationImportTargetHandler",
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "recorded": "2026-10-29"
-      },
+      "owner": "DeclaredApplication",
       "sourceName": "ReleaseApplicationImportTarget",
       "targetName": "ReleaseApplicationImportTarget"
     },
@@ -657,10 +630,8 @@
         }
       ],
       "http": [],
-      "source": {
-        "path": "docs/product/definitive-aggregate-choreography/choreography.json",
-        "recorded": "2026-10-29"
-      },
+      "sourceOwner": "DeclaredApplication",
+      "owner": "DeclaredApplication",
       "sourceName": "ApplyApplicationNameChange",
       "targetName": "ApplyApplicationNameChange"
     }
@@ -724,8 +695,7 @@
       "http": [
         {
           "method": "PUT",
-          "path": "/api/v1/tenants/{tenant_id}/applications/{application_id}/relationships/{relationship_id}",
-          "policy": null
+          "path": "/api/v1/tenants/{tenant_id}/applications/{application_id}/relationships/{relationship_id}"
         }
       ],
       "mcp": false,
@@ -775,8 +745,7 @@
       "expectedRevisionScope": {
         "field": "ExpectedRevision",
         "owner": "ApplicationRelationship",
-        "counter": "logical ResourceRevision of this owner",
-        "nullableInternalRule": null
+        "counter": "logical ResourceRevision of this owner"
       }
     },
     {
@@ -900,7 +869,6 @@
       "responseContract": {
         "mode": "internal",
         "responseType": "Unit",
-        "firstHttpStatus": null,
         "terminalResultType": "Unit"
       },
       "intentSchema": "ImportTargetGroupIntent",
@@ -1030,8 +998,7 @@
       "expectedRevisionScope": {
         "field": "ExpectedRevision",
         "owner": "ApplicationRelationship",
-        "counter": "logical ResourceRevision of this owner",
-        "nullableInternalRule": null
+        "counter": "logical ResourceRevision of this owner"
       }
     },
     {
@@ -1168,7 +1135,6 @@
         "terminalResultType": "ApplicationRegistration"
       },
       "expectedRevisionScope": {
-        "field": null,
         "owner": "DeclaredApplication",
         "counter": "No primary caller ResourceRevision. Enforce required authored source/epoch/version tokens, immutable creation identity or trusted proof/generation as declared; append uses physical OCC."
       }
@@ -1283,8 +1249,7 @@
       "expectedRevisionScope": {
         "field": "ExpectedRevision",
         "owner": "ApplicationRelationship",
-        "counter": "logical ResourceRevision of this owner",
-        "nullableInternalRule": null
+        "counter": "logical ResourceRevision of this owner"
       }
     },
     {
@@ -1398,8 +1363,7 @@
       "expectedRevisionScope": {
         "field": "ExpectedRevision",
         "owner": "DeclaredApplication",
-        "counter": "logical ResourceRevision of this owner",
-        "nullableInternalRule": null
+        "counter": "logical ResourceRevision of this owner"
       }
     },
     {
@@ -1572,8 +1536,7 @@
       "expectedRevisionScope": {
         "field": "ExpectedRevision",
         "owner": "DeclaredApplication",
-        "counter": "logical ResourceRevision of this owner",
-        "nullableInternalRule": null
+        "counter": "logical ResourceRevision of this owner"
       }
     }
   ]

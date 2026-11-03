@@ -1,5 +1,7 @@
 # AdvisorHandoff commands
 
+
+
 Selected command contracts: **8**. Complete selected contracts and companion source evidence: [owner command JSON](../data/commands/advisor-handoff.json).
 
 | Target command | Selected source name | Kind | Identity | Fields | HTTP routes |
@@ -22,7 +24,8 @@ Selected command contracts: **8**. Complete selected contracts and companion sou
 | Target command name | CloseAdvisorHandoff |
 | Selected source command name | CloseAdvisorHandoff |
 | Name decision | The selected source name is retained. |
-| Owner | AdvisorHandoff |
+| Target owner | AdvisorHandoff |
+| Selected source owner | AdvisorHandoff |
 | Contract record status | target_contract |
 | Kind | http |
 | Logical identity | CommandId; Uuid; required=true; client; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
@@ -34,7 +37,7 @@ Selected command contracts: **8**. Complete selected contracts and companion sou
 | Contract changes | Add required CommandId., Add required owner-local ExpectedRevision; business Version remains an exact content version, not owner OCC. |
 | Guard order | bind_required_ids, authenticate_authorize, canonicalize_authored_intent, resolve_native_operation_facts, compare_owner_episode_actor_kind_intent_original_revision, validate_new_owner_revision_and_source_permits, append_complete_concrete_attributed_batch |
 | Response contract | `{"mode":"immediate_original_result","responseType":"Unit","firstHttpStatus":200,"terminalResultType":"Unit"}` |
-| Expected revision scope | `{"field":"ExpectedRevision","owner":"AdvisorHandoff","counter":"logical ResourceRevision of this owner","nullableInternalRule":null}` |
+| Expected revision scope | `{"field":"ExpectedRevision","owner":"AdvisorHandoff","counter":"logical ResourceRevision of this owner"}` |
 | Authorizer sources | src/Compliance.Core/Features/AccessControl/ClientManagementMutationAuthorizer.cs, src/Compliance.Core/Features/Programs/ProgramManagementAuthorizer.cs |
 | Source contract | src/Compliance.Common/Features/AdvisorCollaboration/CloseAdvisorHandoff.cs |
 | Primary handler | CloseAdvisorHandoffHandler |
@@ -75,7 +78,8 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Target command name | CreateAdvisorHandoff |
 | Selected source command name | CreateAdvisorHandoff |
 | Name decision | The selected source name is retained. |
-| Owner | AdvisorHandoff |
+| Target owner | AdvisorHandoff |
+| Selected source owner | AdvisorHandoff |
 | Contract record status | target_contract |
 | Kind | http |
 | Logical identity | HandoffId; Uuid; required=true; client; caller-supplied immutable creation identity: an exact retry with the same id and authored intent returns the original result; the same id with changed intent is refused; a different id is a different record |
@@ -87,7 +91,7 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Contract changes | None listed |
 | Guard order | bind_required_ids, authenticate_authorize, canonicalize_authored_intent, resolve_native_operation_facts, compare_owner_episode_actor_kind_intent_original_revision, validate_new_owner_revision_and_source_permits, append_complete_concrete_attributed_batch |
 | Response contract | `{"mode":"immediate_original_result","responseType":"Unit","firstHttpStatus":200,"terminalResultType":"Unit"}` |
-| Expected revision scope | `{"field":null,"owner":"AdvisorHandoff","counter":"No primary caller ResourceRevision. Enforce required authored source/epoch/version tokens, immutable creation identity or trusted proof/generation as declared; append uses physical OCC."}` |
+| Expected revision scope | `{"owner":"AdvisorHandoff","counter":"No primary caller ResourceRevision. Enforce required authored source/epoch/version tokens, immutable creation identity or trusted proof/generation as declared; append uses physical OCC."}` |
 | Authorizer sources | src/Compliance.Core/Features/AccessControl/ClientManagementMutationAuthorizer.cs, src/Compliance.Core/Features/Programs/ProgramManagementAuthorizer.cs |
 | Source contract | src/Compliance.Common/Features/AdvisorCollaboration/CreateAdvisorHandoff.cs |
 | Primary handler | CreateAdvisorHandoffHandler |
@@ -129,7 +133,8 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Target command name | MarkAdvisorHandoffReadyForReview |
 | Selected source command name | MarkAdvisorHandoffReadyForReview |
 | Name decision | The selected source name is retained. |
-| Owner | AdvisorHandoff |
+| Target owner | AdvisorHandoff |
+| Selected source owner | AdvisorHandoff |
 | Contract record status | target_contract |
 | Kind | http |
 | Logical identity | CommandId; Uuid; required=true; client; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
@@ -141,7 +146,7 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Contract changes | Add required CommandId. |
 | Guard order | bind_required_ids, authenticate_authorize, canonicalize_authored_intent, resolve_native_operation_facts, compare_owner_episode_actor_kind_intent_original_revision, validate_new_owner_revision_and_source_permits, append_complete_concrete_attributed_batch |
 | Response contract | `{"mode":"immediate_original_result","responseType":"Unit","firstHttpStatus":200,"terminalResultType":"Unit"}` |
-| Expected revision scope | `{"field":"ExpectedRevision","owner":"AdvisorHandoff","counter":"logical ResourceRevision of this owner","nullableInternalRule":null}` |
+| Expected revision scope | `{"field":"ExpectedRevision","owner":"AdvisorHandoff","counter":"logical ResourceRevision of this owner"}` |
 | Authorizer sources | src/Compliance.Core/Features/AccessControl/ClientManagementMutationAuthorizer.cs, src/Compliance.Core/Features/Programs/ProgramManagementAuthorizer.cs |
 | Source contract | src/Compliance.Common/Features/AdvisorCollaboration/MarkAdvisorHandoffReadyForReview.cs |
 | Primary handler | MarkAdvisorHandoffReadyForReviewHandler |
@@ -181,7 +186,8 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Target command name | SubmitAdvisorFeedback |
 | Selected source command name | RecordAdvisorFeedback |
 | Name decision | Names the advisor's action to submit feedback for review and admission against the handoff. |
-| Owner | AdvisorHandoff |
+| Target owner | AdvisorHandoff |
+| Selected source owner | AdvisorHandoff |
 | Contract record status | target_contract |
 | Kind | http |
 | Logical identity | FeedbackId; Uuid; required=true; client; caller-supplied immutable creation identity: an exact retry with the same id and authored intent returns the original result; the same id with changed intent is refused; a different id is a different record |
@@ -238,7 +244,8 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Target command name | ReviseAdvisorHandoffSelection |
 | Selected source command name | ReviseAdvisorHandoffSelection |
 | Name decision | The selected source name is retained. |
-| Owner | AdvisorHandoff |
+| Target owner | AdvisorHandoff |
+| Selected source owner | AdvisorHandoff |
 | Contract record status | target_contract |
 | Kind | http |
 | Logical identity | CommandId; Uuid; required=true; client; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
@@ -250,7 +257,7 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Contract changes | Add required CommandId. |
 | Guard order | bind_required_ids, authenticate_authorize, canonicalize_authored_intent, resolve_native_operation_facts, compare_owner_episode_actor_kind_intent_original_revision, validate_new_owner_revision_and_source_permits, append_complete_concrete_attributed_batch |
 | Response contract | `{"mode":"immediate_original_result","responseType":"Unit","firstHttpStatus":200,"terminalResultType":"Unit"}` |
-| Expected revision scope | `{"field":"ExpectedRevision","owner":"AdvisorHandoff","counter":"logical ResourceRevision of this owner","nullableInternalRule":null}` |
+| Expected revision scope | `{"field":"ExpectedRevision","owner":"AdvisorHandoff","counter":"logical ResourceRevision of this owner"}` |
 | Authorizer sources | src/Compliance.Core/Features/AccessControl/ClientManagementMutationAuthorizer.cs, src/Compliance.Core/Features/Programs/ProgramManagementAuthorizer.cs |
 | Source contract | src/Compliance.Common/Features/AdvisorCollaboration/ReviseAdvisorHandoffSelection.cs |
 | Primary handler | ReviseAdvisorHandoffSelectionHandler |
@@ -292,7 +299,8 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Target command name | RevokeAdvisorHandoff |
 | Selected source command name | RevokeAdvisorHandoff |
 | Name decision | The selected source name is retained. |
-| Owner | AdvisorHandoff |
+| Target owner | AdvisorHandoff |
+| Selected source owner | AdvisorHandoff |
 | Contract record status | target_contract |
 | Kind | http |
 | Logical identity | CommandId; Uuid; required=true; client; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
@@ -304,7 +312,7 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Contract changes | Add required CommandId., Add required owner-local ExpectedRevision; business Version remains an exact content version, not owner OCC. |
 | Guard order | bind_required_ids, authenticate_authorize, canonicalize_authored_intent, resolve_native_operation_facts, compare_owner_episode_actor_kind_intent_original_revision, validate_new_owner_revision_and_source_permits, append_complete_concrete_attributed_batch |
 | Response contract | `{"mode":"immediate_original_result","responseType":"Unit","firstHttpStatus":200,"terminalResultType":"Unit"}` |
-| Expected revision scope | `{"field":"ExpectedRevision","owner":"AdvisorHandoff","counter":"logical ResourceRevision of this owner","nullableInternalRule":null}` |
+| Expected revision scope | `{"field":"ExpectedRevision","owner":"AdvisorHandoff","counter":"logical ResourceRevision of this owner"}` |
 | Authorizer sources | src/Compliance.Core/Features/AccessControl/ClientManagementMutationAuthorizer.cs, src/Compliance.Core/Features/Programs/ProgramManagementAuthorizer.cs |
 | Source contract | src/Compliance.Common/Features/AdvisorCollaboration/RevokeAdvisorHandoff.cs |
 | Primary handler | RevokeAdvisorHandoffHandler |
@@ -345,7 +353,8 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Target command name | AuthorizeAdvisorArtifactDownload |
 | Selected source command name | AuthorizeAdvisorArtifactDownloadUse |
 | Name decision | The command authorizes the named business action; the extra Use suffix describes the coordination mechanism. |
-| Owner | AdvisorHandoff |
+| Target owner | AdvisorHandoff |
+| Selected source owner | AdvisorHandoff |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; reactor; deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result |
@@ -398,7 +407,8 @@ Required tests: [Placeholder: required tests not recorded]
 | Target command name | CloseAdvisorArtifactDownloadAuthorization |
 | Selected source command name | SettleAdvisorArtifactDownloadUse |
 | Name decision | The command ends the exact authorization after its business action or cancellation. |
-| Owner | AdvisorHandoff |
+| Target owner | AdvisorHandoff |
+| Selected source owner | AdvisorHandoff |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; reactor; deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result |

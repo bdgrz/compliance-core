@@ -8,14 +8,7 @@
   "invariant": "One personal management acknowledgement bound to exact engagement revision and complete service history.",
   "boundaryDecision": "selected_split",
   "mustPreserve": "Never reactivate a permanent independence commitment from reevaluation; acceptance binds exact service, draft, acknowledgement and ratified-rule proofs.",
-  "sources": [
-    {
-      "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
-      "jsonPointer": "/splitOwners/2/targetOwners/5",
-      "line": 258,
-      "sha256": "d349d94b7c43f4d82020ecf36bdacf1aff98bc6498e14993582f1c3164b21f19"
-    }
-  ],
+  "sources": [],
   "baselineSourcePath": "src/Compliance.Core/Features/AccessControl/IndependenceLedger.cs",
   "baselineEvents": [
     "EngagementManagementAcknowledged"
@@ -81,7 +74,7 @@
         "recorded": "2026-10-29"
       },
       "reactor": "ManagementAcknowledgementMaterializationReactor",
-      "sourceOwner": "ServiceEngagementIndependence",
+      "sourceOwner": "EngagementManagementAcknowledgement",
       "sourceEvents": [
         "EngagementPersonalDecisionAuthorized"
       ],
@@ -90,7 +83,8 @@
         "EngagementManagementAcknowledged"
       ],
       "effectKind": "claim_professional_assertion_identity",
-      "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine."
+      "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
+      "owner": "EngagementManagementAcknowledgement"
     },
     {
       "command": "AcknowledgeEngagementManagement",
@@ -151,14 +145,10 @@
           "policy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/4",
-        "line": 422,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
       "attributionNote": "Creates the acknowledgement record; the engagement owner only consumes it (T110) (2026-10-29)",
-      "kind": "http"
+      "kind": "http",
+      "sourceOwner": "EngagementManagementAcknowledgement",
+      "owner": "EngagementManagementAcknowledgement"
     }
   ],
   "eventAuthority": "selected_final_event_catalog",
@@ -166,13 +156,7 @@
     {
       "event": "EngagementManagementAcknowledged",
       "discriminator": "bdgrz.service-engagement.management-acknowledged",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/129",
-        "line": 15480,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     }
   ],
   "choreography": [
@@ -180,13 +164,7 @@
       "reactor": "ManagementAcknowledgementMaterializationReactor",
       "sourceOwner": "ServiceEngagementIndependence",
       "targetOwner": "EngagementManagementAcknowledgement",
-      "command": "MaterializeEngagementManagementAcknowledgement",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "jsonPointer": "/reactors/108",
-        "line": 9324,
-        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
-      }
+      "command": "MaterializeEngagementManagementAcknowledgement"
     }
   ],
   "status": "SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED",
@@ -203,5 +181,6 @@
       "previous": "tenant / acknowledgementId"
     }
   ],
-  "commandNote": "Process also dispatches AuthorizeEngagementPersonalDecision and SettleEngagementPersonalDecision, but those mutate ServiceEngagementIndependence, not this owner."
+  "commandNote": "Process also dispatches AuthorizeEngagementPersonalDecision and SettleEngagementPersonalDecision, but those mutate ServiceEngagementIndependence, not this owner.",
+  "sourceOwner": "EngagementManagementAcknowledgement"
 }

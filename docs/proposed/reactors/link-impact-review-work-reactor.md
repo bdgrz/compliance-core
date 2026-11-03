@@ -20,11 +20,11 @@ Selected choreography rows: **1**. Required proofs, recovery, effect identity, a
 | id | S019 |
 | kind | business_receiver |
 | status | SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED |
-| sourceOwner | SignificantChange |
+| Source owner (target name) | SignificantChange (source: SignificantChange) |
 | logicalPrerequisiteFacts (target names) | SignificantChangeImpactAssessed |
 | physicalRootEvents (target names) | SignificantChangeImpactAssessed |
 | Target command (selected source name: LinkImpactReviewWork) | LinkImpactReviewWork |
-| targetOwner | SignificantChange |
+| Target owner | SignificantChange |
 | targetAuthorityKind | business_aggregate |
 | emittedSemanticFacts (target names) | ImpactReviewWorkLinked |
 | currentRegisteredRootTypes (target names) | RequestImpactReviewAfterSignificantChangeReactor |
@@ -35,7 +35,6 @@ Selected choreography rows: **1**. Required proofs, recovery, effect identity, a
 | sourceOwners | SignificantChange |
 | canonicalTargetOwner | SignificantChange |
 | recoveryContractSummary | Same source+target effect identity replays original native result. Newer assessment supersedes old work; not-yet-visible source/work remains transient. |
-| logicalPrerequisiteRuleGuard | null (recorded) |
 | logicalPrerequisiteRule | The source is a SignificantChangeImpactAssessed with ChangeCount 1 whose change/current content decode and match the program and content version; every related review-work and corrective-action id is owned by the same tenant and program, still the current assessment version, and not already linked; an empty set creates no follow-up. |
 | prerequisiteRuleSource | authored 2026-10-29 from reactor and target source |
 

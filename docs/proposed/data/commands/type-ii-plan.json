@@ -54,12 +54,6 @@
         "terminalResultType": "Unit"
       },
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/21",
-        "line": 1704,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      },
       "kind": "command",
       "concurrencyGuard": {
         "rule": "require_expected_revision",
@@ -71,6 +65,8 @@
         },
         "date": "2026-10-29"
       },
+      "sourceOwner": "TypeIIPlan",
+      "owner": "TypeIIPlan",
       "sourceName": "ApproveTypeIIOperatingPlan",
       "targetName": "ApproveTypeIIOperatingPlan"
     },
@@ -122,13 +118,9 @@
           "authorizationPolicy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/98",
-        "line": 7277,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      },
       "kind": "http",
+      "sourceOwner": "TypeIIPlan",
+      "owner": "TypeIIPlan",
       "sourceName": "ProposeTypeIIOperatingPlan",
       "targetName": "ProposeTypeIIOperatingPlan"
     },
@@ -190,18 +182,14 @@
         "terminalResultType": "Unit"
       },
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/165",
-        "line": 12288,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      },
       "kind": "command",
       "concurrencyGuard": {
         "rule": "require_expected_revision",
         "jev": 0.81,
         "date": "2026-10-29"
       },
+      "sourceOwner": "TypeIIPlan",
+      "owner": "TypeIIPlan",
       "sourceName": "ReviewTypeIIOperatingPlan",
       "targetName": "ReviewTypeIIOperatingPlan"
     }

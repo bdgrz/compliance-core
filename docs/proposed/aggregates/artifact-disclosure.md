@@ -5,6 +5,7 @@
 - Business aggregate: `true`
 - Selected status: `SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED`
 
+
 ## Identity and invariant
 
 **Selected identity:** Tenant / artifact-disclosures / DisclosureId, with exact artifact content, handling-policy revision and recipient/purpose binding. Selected mutations use CommandId.
@@ -18,6 +19,10 @@
 **Replay:** Current required authorization precedes replay; exact authorized retries resolve the original accepted result using the selected logical identity and immutable actor/intent/source binding. Fresh mutable feasibility, clock selection and body preparation cannot replace that original result. Expected revision is concurrency precondition, not a new identity.
 
 **Lifecycle:** [Placeholder: a consolidated lifecycle sequence is not present in the selected owner record.]
+
+
+
+
 
 ## Commands
 
@@ -41,7 +46,7 @@
 
 ## Product rules
 
-- **D16-13** — Only available, non-quarantined artifacts, or their approved redacted derivatives, may be shared with auditors, and every disclosure is logged. Source: [m0-d16-evidence-handling.md](../../product/decisions/m0-d16-evidence-handling.md).
+- **D16-13** — Only available, non-quarantined artifacts, or their approved redacted derivatives, may be shared with auditors, and every disclosure is logged. Decision: [m0-d16-evidence-handling.md](../decisions/m0-d16-evidence-handling.md).
 
 ## Adopted architecture decisions
 
@@ -50,7 +55,7 @@
 ## Evidence and complete record
 
 - Baseline source: [Placeholder: source file is not present in this checkout]
-- Aggregate review: [artifact-disclosure-review-2026-10-29.md](../../product/definitive-aggregate-choreography/artifact-disclosure-review-2026-10-29.md)
+- Aggregate review: [Placeholder: no owner-specific review file is present]
 - Full selected record: [JSON](../data/aggregates/artifact-disclosure.json)
 
 > Target definition is separate from runtime qualification. Implementation status recorded by the source: `SEPARATE_VERIFICATION_REQUIRED_IMPLEMENTATION_HALTED`.

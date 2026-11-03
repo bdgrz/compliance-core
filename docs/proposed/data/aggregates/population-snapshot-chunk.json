@@ -8,14 +8,7 @@
   "invariant": "Technical invariant only: one snapshot/index stores one immutable kind+row digest, changed bytes conflict. No independent business decision or lifecycle.",
   "boundaryDecision": "process",
   "boundaryRationale": "Chunking is storage for the snapshot-owned freeze invariant; chunks can be moved to content-addressed storage without losing a business decision if manifest visibility and integrity remain atomic.",
-  "sources": [
-    {
-      "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
-      "jsonPointer": "/aggregates/61",
-      "line": 39705,
-      "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
-    }
-  ],
+  "sources": [],
   "baselineSourcePath": "src/Compliance.Core/Features/Snapshots/PopulationSnapshotChunk.cs",
   "baselineEvents": [
     "PopulationSnapshotChunkStored"
@@ -23,5 +16,7 @@
   "classification": "technical_process_or_storage_owner",
   "businessAggregate": false,
   "status": "SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED",
-  "logicalPhysicalRule": "Logical technical responsibility is separate from physical storage/owner. Existing native operational journals may remain where required for exact recovery; this inventory does not require conversion to KV/CAS or count them as business authority."
+  "logicalPhysicalRule": "Logical technical responsibility is separate from physical storage/owner. Existing native operational journals may remain where required for exact recovery; this inventory does not require conversion to KV/CAS or count them as business authority.",
+  "sourceOwner": "PopulationSnapshotChunk",
+  "selectedCommandContracts": []
 }

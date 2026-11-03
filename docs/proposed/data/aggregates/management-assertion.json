@@ -8,14 +8,7 @@
   "invariant": "One exact current authored assertion version receives at most one immutable independent named CEO/CISO decision; revision creates changed wording/input bindings.",
   "boundaryDecision": "narrow",
   "boundaryRationale": "Current version/proposer/signers and decision must stay atomic. Historical version bodies and past approvals are not needed in current state; separate immutable versions or historical reads preserve provenance.",
-  "sources": [
-    {
-      "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
-      "jsonPointer": "/aggregates/50",
-      "line": 32920,
-      "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
-    }
-  ],
+  "sources": [],
   "baselineSourcePath": "src/Compliance.Core/Features/Examinations/ManagementAssertion.cs",
   "baselineEvents": [
     "ManagementAssertionApproved",
@@ -85,12 +78,6 @@
         "terminalResultType": "Unit"
       },
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/15",
-        "line": 1220,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      },
       "kind": "command",
       "concurrencyGuard": {
         "rule": "require_expected_revision",
@@ -101,7 +88,9 @@
           "process_reply": 0.18
         },
         "date": "2026-10-29"
-      }
+      },
+      "sourceOwner": "ManagementAssertion",
+      "owner": "ManagementAssertion"
     },
     {
       "command": "RecordManagementAssertion",
@@ -151,25 +140,15 @@
           "authorizationPolicy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/119",
-        "line": 8920,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      },
-      "kind": "http"
+      "kind": "http",
+      "sourceOwner": "ManagementAssertion",
+      "owner": "ManagementAssertion"
     }
   ],
   "eventAuthority": "retained_baseline_business_facts_requires_schema_reconciliation",
   "events": [
     {
       "event": "ManagementAssertionApproved",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
-        "jsonPointer": "/aggregates/50",
-        "line": 32920,
-        "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
-      },
       "baselineContract": {
         "event": "ManagementAssertionApproved",
         "emitters": [
@@ -214,12 +193,6 @@
     },
     {
       "event": "ManagementAssertionRecorded",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
-        "jsonPointer": "/aggregates/50",
-        "line": 32920,
-        "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
-      },
       "baselineContract": {
         "event": "ManagementAssertionRecorded",
         "emitters": [
@@ -264,12 +237,6 @@
     },
     {
       "event": "ManagementAssertionRevised",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
-        "jsonPointer": "/aggregates/50",
-        "line": 32920,
-        "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
-      },
       "baselineContract": {
         "event": "ManagementAssertionRevised",
         "emitters": [
@@ -324,23 +291,11 @@
   "selectedLogicalIdentityBindings": [
     {
       "command": "ApproveManagementAssertion",
-      "logicalIdentity": "CommandId",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/15",
-        "line": 1220,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      }
+      "logicalIdentity": "CommandId"
     },
     {
       "command": "RecordManagementAssertion",
-      "logicalIdentity": "AssertionId",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/119",
-        "line": 8920,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      }
+      "logicalIdentity": "AssertionId"
     }
   ],
   "selectedReplayRule": "Current required authorization precedes replay; exact authorized retries resolve the original accepted result using the selected logical identity and immutable actor/intent/source binding. Fresh mutable feasibility, clock selection and body preparation cannot replace that original result. Expected revision is concurrency precondition, not a new identity.",
@@ -355,5 +310,6 @@
   "decidesCovers": [
     "D17-06"
   ],
-  "decidesAuthored": "2026-10-29"
+  "decidesAuthored": "2026-10-29",
+  "sourceOwner": "ManagementAssertion"
 }

@@ -8,14 +8,7 @@
   "invariant": "Evidence report for one provider and exact provider revision.",
   "boundaryDecision": "selected_split",
   "mustPreserve": "Risk adoption cannot close a gap or occur after closure; each review binds same provider/current report.",
-  "sources": [
-    {
-      "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
-      "jsonPointer": "/splitOwners/19/targetOwners/0",
-      "line": 2025,
-      "sha256": "d349d94b7c43f4d82020ecf36bdacf1aff98bc6498e14993582f1c3164b21f19"
-    }
-  ],
+  "sources": [],
   "baselineSourcePath": "src/Compliance.Core/Features/Providers/ProviderAssuranceRegister.cs",
   "baselineEvents": [
     "AssuranceReportRecorded",
@@ -72,13 +65,9 @@
           "policy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/94",
-        "line": 10917,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
-      "kind": "http"
+      "kind": "http",
+      "sourceOwner": "ProviderAssuranceReport",
+      "owner": "ProviderAssuranceReport"
     },
     {
       "command": "ReviseAssuranceReport",
@@ -134,13 +123,9 @@
           "policy": "ApiUser + existing request-scope authorizers"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/137",
-        "line": 15939,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
-      "kind": "http"
+      "kind": "http",
+      "sourceOwner": "ProviderAssuranceReport",
+      "owner": "ProviderAssuranceReport"
     },
     {
       "command": "AuthorizeProviderAssuranceReportProviderReviewUse",
@@ -206,7 +191,7 @@
         }
       ],
       "reactor": "ProviderReviewProviderAssuranceReportAuthorizationReactor",
-      "sourceOwner": "ProviderAssuranceReview",
+      "sourceOwner": "ProviderAssuranceReport",
       "sourceEvents": [
         "ProviderReviewRequested"
       ],
@@ -218,10 +203,7 @@
       "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
       "handler": "AuthorizeProviderAssuranceReportProviderReviewUseHandler",
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "recorded": "2026-10-29"
-      }
+      "owner": "ProviderAssuranceReport"
     },
     {
       "command": "SettleProviderAssuranceReportProviderReviewUse",
@@ -287,7 +269,7 @@
         }
       ],
       "reactor": "ProviderReviewProviderAssuranceReportSettlementReactor",
-      "sourceOwner": "ProviderAssuranceReview",
+      "sourceOwner": "ProviderAssuranceReport",
       "sourceEvents": [
         "ProviderReviewRecorded",
         "ProviderReviewCanceled"
@@ -300,10 +282,7 @@
       "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
       "handler": "SettleProviderAssuranceReportProviderReviewUseHandler",
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "recorded": "2026-10-29"
-      }
+      "owner": "ProviderAssuranceReport"
     }
   ],
   "eventAuthority": "selected_final_event_catalog",
@@ -311,46 +290,22 @@
     {
       "event": "AssuranceReportRecorded",
       "discriminator": "bdgrz.provider.assurance_report.recorded",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/70",
-        "line": 8575,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     },
     {
       "event": "AssuranceReportRevised",
       "discriminator": "bdgrz.provider.assurance_report.revised",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/71",
-        "line": 8655,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     },
     {
       "event": "ProviderAssuranceReportProviderReviewUseAuthorized",
       "discriminator": "bdgrz.provider-assurance-report.provider-assurance-report-provider-review-use-authorized",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/208",
-        "line": 27767,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     },
     {
       "event": "ProviderAssuranceReportProviderReviewUseSettled",
       "discriminator": "bdgrz.provider-assurance-report.provider-assurance-report-provider-review-use-settled",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/209",
-        "line": 27903,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     }
   ],
   "choreography": [
@@ -358,25 +313,13 @@
       "reactor": "ProviderReviewProviderAssuranceReportAuthorizationReactor",
       "sourceOwner": "ProviderAssuranceReview",
       "targetOwner": "ProviderAssuranceReport",
-      "command": "AuthorizeProviderAssuranceReportProviderReviewUse",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "jsonPointer": "/reactors/69",
-        "line": 5940,
-        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
-      }
+      "command": "AuthorizeProviderAssuranceReportProviderReviewUse"
     },
     {
       "reactor": "ProviderReviewProviderAssuranceReportSettlementReactor",
       "sourceOwner": "ProviderAssuranceReview",
       "targetOwner": "ProviderAssuranceReport",
-      "command": "SettleProviderAssuranceReportProviderReviewUse",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "jsonPointer": "/reactors/70",
-        "line": 6027,
-        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
-      }
+      "command": "SettleProviderAssuranceReportProviderReviewUse"
     }
   ],
   "status": "SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED",
@@ -394,12 +337,6 @@
         "required": true,
         "origin": "client",
         "rule": "exact immutable creation retry"
-      },
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/94",
-        "line": 10917,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       }
     },
     {
@@ -410,12 +347,6 @@
         "required": true,
         "origin": "client",
         "rule": "one immutable authored operation"
-      },
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/137",
-        "line": 15939,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       }
     }
   ],
@@ -437,5 +368,6 @@
   "decidesCovers": [
     "D11-05"
   ],
-  "decidesAuthored": "2026-10-29"
+  "decidesAuthored": "2026-10-29",
+  "sourceOwner": "ProviderAssuranceReport"
 }

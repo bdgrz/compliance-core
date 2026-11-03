@@ -1,5 +1,7 @@
 # PracticeIndependenceCommitment commands
 
+
+
 Selected command contracts: **3**. Complete selected contracts and companion source evidence: [owner command JSON](../data/commands/practice-independence-commitment.json).
 
 | Target command | Selected source name | Kind | Identity | Fields | HTTP routes |
@@ -17,7 +19,8 @@ Selected command contracts: **3**. Complete selected contracts and companion sou
 | Target command name | ReservePracticeIndependence |
 | Selected source command name | ReservePracticeIndependence |
 | Name decision | The selected source name is retained. |
-| Owner | PracticeIndependenceCommitment |
+| Target owner | PracticeIndependenceCommitment |
+| Selected source owner | PracticeIndependenceCommitment |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; internal; deterministic receiver identity derived from the admitted root fact, episode and generation: exact redelivery resolves the original result, a changed admission is a new identity |
@@ -70,7 +73,8 @@ Required tests: [Placeholder: required tests not recorded]
 | Target command name | CommitPracticeIndependence |
 | Selected source command name | CommitPracticeIndependence |
 | Name decision | The selected source name is retained. |
-| Owner | PracticeIndependenceCommitment |
+| Target owner | PracticeIndependenceCommitment |
+| Selected source owner | PracticeIndependenceCommitment |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; internal; deterministic receiver identity derived from the admitted root fact, episode and generation: exact redelivery resolves the original result, a changed admission is a new identity |
@@ -123,7 +127,8 @@ Required tests: [Placeholder: required tests not recorded]
 | Target command name | ClosePracticeIndependenceReservation |
 | Selected source command name | SettlePracticeIndependenceReservation |
 | Name decision | Ends the temporary practice reservation after commitment or cancellation. |
-| Owner | PracticeIndependenceCommitment |
+| Target owner | PracticeIndependenceCommitment |
+| Selected source owner | PracticeIndependenceCommitment |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; internal; deterministic receiver identity derived from the admitted root fact, episode and generation: exact redelivery resolves the original result, a changed admission is a new identity |

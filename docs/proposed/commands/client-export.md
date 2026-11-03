@@ -1,15 +1,14 @@
 # ClientExport commands
 
-Selected command contracts: **6**. Complete selected contracts and companion source evidence: [owner command JSON](../data/commands/client-export.json).
+
+
+Selected command contracts: **3**. Complete selected contracts and companion source evidence: [owner command JSON](../data/commands/client-export.json).
 
 | Target command | Selected source name | Kind | Identity | Fields | HTTP routes |
 | --- | --- | --- | --- | --- | --- |
 | RecordClientExportBuildResult | RecordClientExportBuildResult | command | CommandId | 7 | [Placeholder: value not recorded] |
 | RecordClientExportDelivery | RecordClientExportDelivery | command | CommandId | 7 | [Placeholder: value not recorded] |
-| RecordOwnAttestRecordDelivery | RecordOwnAttestRecordDelivery | command | CommandId | 8 | [Placeholder: value not recorded] |
-| RecordOwnAttestRecordPackageResult | RecordOwnAttestRecordPackageResult | command | CommandId | 8 | [Placeholder: value not recorded] |
 | RequestClientExport | RequestClientExport | creation | ExportId | 5 | [Placeholder: value not recorded] |
-| RequestOwnAttestRecordPackage | RequestOwnAttestRecordPackage | creation | PackageId | 4 | [Placeholder: value not recorded] |
 
 ## Selected command details
 
@@ -20,7 +19,8 @@ Selected command contracts: **6**. Complete selected contracts and companion sou
 | Target command name | RecordClientExportBuildResult |
 | Selected source command name | RecordClientExportBuildResult |
 | Name decision | The selected source name is retained. |
-| Owner | ClientExport |
+| Target owner | ClientExport |
+| Selected source owner | ClientExport |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | command |
 | Logical identity | CommandId; Uuid; required=true; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
@@ -70,7 +70,8 @@ Required tests: [Placeholder: required tests not recorded]
 | Target command name | RecordClientExportDelivery |
 | Selected source command name | RecordClientExportDelivery |
 | Name decision | The selected source name is retained. |
-| Owner | ClientExport |
+| Target owner | ClientExport |
+| Selected source owner | ClientExport |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | command |
 | Logical identity | CommandId; Uuid; required=true; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
@@ -113,108 +114,6 @@ Existing tests: [Placeholder: existing tests not recorded]
 
 Required tests: [Placeholder: required tests not recorded]
 
-### RecordOwnAttestRecordDelivery
-
-| Selected contract detail | Value |
-| --- | --- |
-| Target command name | RecordOwnAttestRecordDelivery |
-| Selected source command name | RecordOwnAttestRecordDelivery |
-| Name decision | The selected source name is retained. |
-| Owner | ClientExport |
-| Contract record status | [Placeholder: value not recorded] |
-| Kind | command |
-| Logical identity | CommandId; Uuid; required=true; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
-| Entry point | [Placeholder: value not recorded] |
-| MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | None listed |
-| Protocols | [Placeholder: value not recorded] |
-| Policy preservation | [Placeholder: value not recorded] |
-| Contract changes | [Placeholder: value not recorded] |
-| Guard order | [Placeholder: value not recorded] |
-| Response contract | `{"mode":"immediate_original_result","responseType":"Unit","firstHttpStatus":200,"terminalResultType":"Unit"}` |
-| Expected revision scope | `{}` |
-| Authorizer sources | [Placeholder: value not recorded] |
-| Source contract | [Placeholder: value not recorded] |
-| Primary handler | [Placeholder: value not recorded] |
-
-#### Request fields
-
-| Field | Type | Required |
-| --- | --- | --- |
-| CommandId | Uuid | true |
-| TenantId | Uuid | true |
-| EngagementId | Uuid | true |
-| PackageId | Uuid | true |
-| Recipient | string | true |
-| DeliveredAt | DateTimeOffset | true |
-| DeliveryReference | string | true |
-| ExpectedRevision | long | true |
-
-#### HTTP routes
-
-[Placeholder: no HTTP route is recorded for this command.]
-
-#### Handler source evidence
-
-[Placeholder: handler source evidence is not recorded.]
-
-#### Test evidence recorded by the target contract
-
-Existing tests: [Placeholder: existing tests not recorded]
-
-Required tests: [Placeholder: required tests not recorded]
-
-### RecordOwnAttestRecordPackageResult
-
-| Selected contract detail | Value |
-| --- | --- |
-| Target command name | RecordOwnAttestRecordPackageResult |
-| Selected source command name | RecordOwnAttestRecordPackageResult |
-| Name decision | The selected source name is retained. |
-| Owner | ClientExport |
-| Contract record status | [Placeholder: value not recorded] |
-| Kind | command |
-| Logical identity | CommandId; Uuid; required=true; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
-| Entry point | [Placeholder: value not recorded] |
-| MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | None listed |
-| Protocols | [Placeholder: value not recorded] |
-| Policy preservation | [Placeholder: value not recorded] |
-| Contract changes | [Placeholder: value not recorded] |
-| Guard order | [Placeholder: value not recorded] |
-| Response contract | `{"mode":"immediate_original_result","responseType":"Unit","firstHttpStatus":200,"terminalResultType":"Unit"}` |
-| Expected revision scope | `{}` |
-| Authorizer sources | [Placeholder: value not recorded] |
-| Source contract | [Placeholder: value not recorded] |
-| Primary handler | [Placeholder: value not recorded] |
-
-#### Request fields
-
-| Field | Type | Required |
-| --- | --- | --- |
-| CommandId | Uuid | true |
-| TenantId | Uuid | true |
-| PackageId | Uuid | true |
-| Outcome | string | true |
-| ArtifactId | Uuid? | true |
-| FailureCode | string? | true |
-| CompletedAt | DateTimeOffset | true |
-| ExpectedRevision | long | true |
-
-#### HTTP routes
-
-[Placeholder: no HTTP route is recorded for this command.]
-
-#### Handler source evidence
-
-[Placeholder: handler source evidence is not recorded.]
-
-#### Test evidence recorded by the target contract
-
-Existing tests: [Placeholder: existing tests not recorded]
-
-Required tests: [Placeholder: required tests not recorded]
-
 ### RequestClientExport
 
 | Selected contract detail | Value |
@@ -222,7 +121,8 @@ Required tests: [Placeholder: required tests not recorded]
 | Target command name | RequestClientExport |
 | Selected source command name | RequestClientExport |
 | Name decision | The selected source name is retained. |
-| Owner | ClientExport |
+| Target owner | ClientExport |
+| Selected source owner | ClientExport |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | creation |
 | Logical identity | ExportId; Uuid; required=true; caller-supplied immutable creation identity: an exact retry with the same id and authored intent returns the original result; the same id with changed intent is refused; a different id is a different record |
@@ -248,53 +148,6 @@ Required tests: [Placeholder: required tests not recorded]
 | Scope | string | true |
 | Format | string | true |
 | ExportKey | string | true |
-
-#### HTTP routes
-
-[Placeholder: no HTTP route is recorded for this command.]
-
-#### Handler source evidence
-
-[Placeholder: handler source evidence is not recorded.]
-
-#### Test evidence recorded by the target contract
-
-Existing tests: [Placeholder: existing tests not recorded]
-
-Required tests: [Placeholder: required tests not recorded]
-
-### RequestOwnAttestRecordPackage
-
-| Selected contract detail | Value |
-| --- | --- |
-| Target command name | RequestOwnAttestRecordPackage |
-| Selected source command name | RequestOwnAttestRecordPackage |
-| Name decision | The selected source name is retained. |
-| Owner | ClientExport |
-| Contract record status | [Placeholder: value not recorded] |
-| Kind | creation |
-| Logical identity | PackageId; Uuid; required=true; caller-supplied immutable creation identity: an exact retry with the same id and authored intent returns the original result; the same id with changed intent is refused; a different id is a different record |
-| Entry point | [Placeholder: value not recorded] |
-| MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | None listed |
-| Protocols | [Placeholder: value not recorded] |
-| Policy preservation | [Placeholder: value not recorded] |
-| Contract changes | [Placeholder: value not recorded] |
-| Guard order | [Placeholder: value not recorded] |
-| Response contract | `{"mode":"immediate_original_result","responseType":"Unit","firstHttpStatus":200,"terminalResultType":"Unit"}` |
-| Expected revision scope | `{}` |
-| Authorizer sources | [Placeholder: value not recorded] |
-| Source contract | [Placeholder: value not recorded] |
-| Primary handler | [Placeholder: value not recorded] |
-
-#### Request fields
-
-| Field | Type | Required |
-| --- | --- | --- |
-| TenantId | Uuid | true |
-| EngagementId | Uuid | true |
-| PackageId | Uuid | true |
-| PackageKey | string | true |
 
 #### HTTP routes
 

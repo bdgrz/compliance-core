@@ -5,6 +5,7 @@
 - Business aggregate: `true`
 - Selected status: `SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED`
 
+
 ## Identity and invariant
 
 **Selected identity:** Tenant + caller ComponentId using preserved TechnologyInventoryStreams identity; cloud-account identity remains bound to its selected system instance.
@@ -18,6 +19,10 @@
 **Replay:** Current required authorization precedes replay; exact authorized retries resolve the original accepted result using the selected logical identity and immutable actor/intent/source binding. Fresh mutable feasibility, clock selection and body preparation cannot replace that original result. Expected revision is concurrency precondition, not a new identity.
 
 **Lifecycle:** A new component is active. ReviseTechnologyComponent may set it to active or retired. Retirement keeps the same component identity and historical references. This change alone does not change the system instance or access.
+
+
+
+
 
 ## Commands
 
@@ -38,9 +43,9 @@
 
 ## Product rules
 
-- **D08-01** — The technology inventory is recorded at account and environment granularity with component categories cloud_account, environment, network, data_store, repository, and endpoint_class, not per resource; each component has a governed name, owner, environment reference, location reference, and lifecycle. Source: [m0-d08-technology-inventory.md](../../product/decisions/m0-d08-technology-inventory.md).
-- **D08-02** — A cloud_account infrastructure component corresponds one-to-one with a SystemInstance of kind cloud_account and must not be duplicated. Source: [m0-d08-technology-inventory.md](../../product/decisions/m0-d08-technology-inventory.md).
-- **D08-03** — An endpoint class is a class record with a count and a management source; individual devices are not inventoried. Source: [m0-d08-technology-inventory.md](../../product/decisions/m0-d08-technology-inventory.md).
+- **D08-01** — The technology inventory is recorded at account and environment granularity with component categories cloud_account, environment, network, data_store, repository, and endpoint_class, not per resource; each component has a governed name, owner, environment reference, location reference, and lifecycle. Decision: [m0-d08-technology-inventory.md](../decisions/m0-d08-technology-inventory.md).
+- **D08-02** — A cloud_account infrastructure component corresponds one-to-one with a SystemInstance of kind cloud_account and must not be duplicated. Decision: [m0-d08-technology-inventory.md](../decisions/m0-d08-technology-inventory.md).
+- **D08-03** — An endpoint class is a class record with a count and a management source; individual devices are not inventoried. Decision: [m0-d08-technology-inventory.md](../decisions/m0-d08-technology-inventory.md).
 
 ## Adopted architecture decisions
 

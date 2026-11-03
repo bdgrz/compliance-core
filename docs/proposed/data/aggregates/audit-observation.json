@@ -8,14 +8,7 @@
   "invariant": "Received auditor source corrections preserve examination/snapshot and exact source lineage; response/link commands must name current source version, and each selected command identity has immutable intent.",
   "boundaryDecision": "retain",
   "boundaryRationale": "A correction racing a response/link would lose the current-source-version gate if moved without source-owner admission authorization. Retaining these current facts is defensible; independent response/link ownership is a close alternative if historical version proofs suffice.",
-  "sources": [
-    {
-      "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
-      "jsonPointer": "/aggregates/10",
-      "line": 7406,
-      "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
-    }
-  ],
+  "sources": [],
   "baselineSourcePath": "src/Compliance.Core/Features/Examinations/AuditObservation.cs",
   "baselineEvents": [
     "AuditObservationCorrected",
@@ -66,7 +59,9 @@
         "path": "src/Compliance.Core/Features/Examinations/Aggregates/AuditObservation.cs",
         "method": "Record",
         "recorded": "2026-10-29"
-      }
+      },
+      "sourceOwner": "AuditObservation",
+      "owner": "AuditObservation"
     },
     {
       "command": "CorrectAuditObservation",
@@ -114,7 +109,9 @@
         "path": "src/Compliance.Core/Features/Examinations/Aggregates/AuditObservation.cs",
         "method": "Correct",
         "recorded": "2026-10-29"
-      }
+      },
+      "sourceOwner": "AuditObservation",
+      "owner": "AuditObservation"
     },
     {
       "command": "RecordAuditObservationManagementResponse",
@@ -158,7 +155,9 @@
         "path": "src/Compliance.Core/Features/Examinations/Aggregates/AuditObservation.cs",
         "method": "RecordManagementResponse",
         "recorded": "2026-10-29"
-      }
+      },
+      "sourceOwner": "AuditObservation",
+      "owner": "AuditObservation"
     },
     {
       "command": "LinkAuditObservationFinding",
@@ -198,19 +197,15 @@
         "path": "src/Compliance.Core/Features/Examinations/Aggregates/AuditObservation.cs",
         "method": "LinkFinding",
         "recorded": "2026-10-29"
-      }
+      },
+      "sourceOwner": "AuditObservation",
+      "owner": "AuditObservation"
     }
   ],
   "eventAuthority": "retained_baseline_business_facts_requires_schema_reconciliation",
   "events": [
     {
       "event": "AuditObservationCorrected",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
-        "jsonPointer": "/aggregates/10",
-        "line": 7406,
-        "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
-      },
       "baselineContract": {
         "event": "AuditObservationCorrected",
         "emitters": [
@@ -270,12 +265,6 @@
     },
     {
       "event": "AuditObservationFindingLinked",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
-        "jsonPointer": "/aggregates/10",
-        "line": 7406,
-        "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
-      },
       "baselineContract": {
         "event": "AuditObservationFindingLinked",
         "emitters": [
@@ -325,12 +314,6 @@
     },
     {
       "event": "AuditObservationManagementResponseRecorded",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
-        "jsonPointer": "/aggregates/10",
-        "line": 7406,
-        "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
-      },
       "baselineContract": {
         "event": "AuditObservationManagementResponseRecorded",
         "emitters": [
@@ -380,12 +363,6 @@
     },
     {
       "event": "AuditObservationRecorded",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
-        "jsonPointer": "/aggregates/10",
-        "line": 7406,
-        "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
-      },
       "baselineContract": {
         "event": "AuditObservationRecorded",
         "emitters": [
@@ -463,5 +440,6 @@
     "D04-04",
     "D27-03"
   ],
-  "decidesAuthored": "2026-10-29"
+  "decidesAuthored": "2026-10-29",
+  "sourceOwner": "AuditObservation"
 }

@@ -116,7 +116,7 @@ FirmStaffRegistrationIntent
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
 | [T003](../reactors/firm-staff-registration-reactor.md#t003) | emitted semantic fact | FirmStaffIdentityClaim | CompleteFirmStaffRegistration | FirmStaffRecord |
-| [S017](../reactors/firm-staff-status-reevaluation-reactor.md#s017) | physical root, logical prerequisite | FirmStaffRecord | RecordDirectoryIndependenceReevaluation | ServiceEngagementIndependence |
+| [S017](../reactors/reassess-firm-staff-independence-after-changes-reactor.md#s017) | physical root, logical prerequisite | FirmStaffRecord | RecordDirectoryIndependenceReevaluation | ServiceEngagementIndependence |
 
 ### FirmStaffProfessionalDutyAuthorized
 
@@ -146,7 +146,6 @@ FirmStaffRegistrationIntent
 | Schema discriminator | bdgrz.firm-staff-record.firm-staff-professional-duty-use-authorized |
 | Schema discriminatorVersion | 1 |
 | Schema owner | FirmStaffRecord |
-| Schema existingContract | null (recorded) |
 | Schema status | selected target schema; implementation pending |
 | Schema reason | Exact currently active canonical staff authority through designation recording |
 | Schema changes | None listed |
@@ -209,7 +208,7 @@ SourceUseAuthorizationIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T113](../reactors/professional-duty-change-reactor.md#t113) | emitted semantic fact | FirmProfessionalDutyDesignation | AuthorizeFirmStaffProfessionalDuty | FirmStaffRecord |
+| [T113](../reactors/apply-or-revoke-professional-duty-designation-reactor.md#t113) | emitted semantic fact | FirmProfessionalDutyDesignation | AuthorizeFirmStaffProfessionalDuty | FirmStaffRecord |
 
 ### FirmStaffProfessionalDutyAuthorizationClosed
 
@@ -239,7 +238,6 @@ SourceUseAuthorizationIntent
 | Schema discriminator | bdgrz.firm-staff-record.firm-staff-professional-duty-use-settled |
 | Schema discriminatorVersion | 1 |
 | Schema owner | FirmStaffRecord |
-| Schema existingContract | null (recorded) |
 | Schema status | selected target schema; implementation pending |
 | Schema reason | Exact currently active canonical staff authority through designation recording |
 | Schema changes | None listed |
@@ -302,7 +300,7 @@ SourceUseAuthorizationIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T114](../reactors/professional-duty-change-reactor.md#t114) | emitted semantic fact | FirmProfessionalDutyDesignation | CloseFirmStaffProfessionalDutyAuthorization | FirmStaffRecord |
+| [T114](../reactors/apply-or-revoke-professional-duty-designation-reactor.md#t114) | emitted semantic fact | FirmProfessionalDutyDesignation | CloseFirmStaffProfessionalDutyAuthorization | FirmStaffRecord |
 
 ### FirmStaffRecordEngagementAuthorized
 
@@ -332,7 +330,6 @@ SourceUseAuthorizationIntent
 | Schema discriminator | bdgrz.firm-staff-record.firm-staff-record-engagement-use-authorized |
 | Schema discriminatorVersion | 1 |
 | Schema owner | FirmStaffRecord |
-| Schema existingContract | null (recorded) |
 | Schema status | selected target schema; implementation pending |
 | Schema reason | typed reactor receiver accepted business fact |
 | Schema changes | None listed |
@@ -425,7 +422,6 @@ SourceUseAuthorizationIntent
 | Schema discriminator | bdgrz.firm-staff-record.firm-staff-record-engagement-use-settled |
 | Schema discriminatorVersion | 1 |
 | Schema owner | FirmStaffRecord |
-| Schema existingContract | null (recorded) |
 | Schema status | selected target schema; implementation pending |
 | Schema reason | typed reactor receiver accepted business fact |
 | Schema changes | None listed |
@@ -518,7 +514,6 @@ SourceUseAuthorizationIntent
 | Schema discriminator | bdgrz.firm-staff-record.firm-staff-registration-accepted |
 | Schema discriminatorVersion | 1 |
 | Schema owner | FirmStaffRecord |
-| Schema existingContract | null (recorded) |
 | Schema status | selected target schema; implementation pending |
 | Schema reason | source command accepted result |
 | Schema changes | None listed |
@@ -583,7 +578,7 @@ FirmStaffRegistrationIntent
 | --- | --- | --- | --- | --- |
 | [T002](../reactors/firm-staff-registration-reactor.md#t002) | physical root, logical prerequisite | FirmStaffRecord | ClaimFirmStaffIdentity | FirmStaffIdentityClaim |
 | [T003](../reactors/firm-staff-registration-reactor.md#t003) | physical root | FirmStaffIdentityClaim | CompleteFirmStaffRegistration | FirmStaffRecord |
-| [A001](../reactors/unassigned-architecture-rows.md#a001) | physical root, logical prerequisite | FirmStaffRecord | RejectFirmStaffRegistration | FirmStaffRecord |
+| [A001](../reactors/unassigned-domain-choreography.md#a001) | physical root, logical prerequisite | FirmStaffRecord | RejectFirmStaffRegistration | FirmStaffRecord |
 
 ### FirmStaffRegistrationRejected
 
@@ -613,7 +608,6 @@ FirmStaffRegistrationIntent
 | Schema discriminator | bdgrz.firm-staff-record.firm-staff-registration-rejected |
 | Schema discriminatorVersion | 1 |
 | Schema owner | FirmStaffRecord |
-| Schema existingContract | null (recorded) |
 | Schema status | selected target schema; implementation pending |
 | Schema reason | source admission contract |
 | Schema changes | None listed |
@@ -676,7 +670,7 @@ FirmStaffRegistrationIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [A001](../reactors/unassigned-architecture-rows.md#a001) | emitted semantic fact | FirmStaffRecord | RejectFirmStaffRegistration | FirmStaffRecord |
+| [A001](../reactors/unassigned-domain-choreography.md#a001) | emitted semantic fact | FirmStaffRecord | RejectFirmStaffRegistration | FirmStaffRecord |
 
 
 

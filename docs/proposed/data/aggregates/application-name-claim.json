@@ -5,15 +5,7 @@
   "declaredIdentity": "Tenant + normalized application name or alias (one claim stream per normalized name, same scheme as LocationNameClaim); holder is the exact DeclaredApplication stream in the same tenant.",
   "invariant": "One normalized application name or alias is held by at most one active application within a tenant. Claim precedes the application fact that uses the name; release follows retirement or rename. An attributed merge retires the losing application with a merged_into reference and transfers or releases its names to the survivor (M0-D05 rules D05-09, D05-10).",
   "boundaryDecision": "selected_new_owner",
-  "mustPreserve": null,
-  "sources": [
-    {
-      "path": "docs/product/definitive-aggregate-choreography/jev-review-2026-10-29-polish/response.json",
-      "decisionId": "OWNER_ApplicationNameClaim",
-      "rationale": "Tenant-wide alias uniqueness cannot be decided by the per-application owner, and a directory projection check is not authoritative. Jev: application_name_claim_needed Noul 0.83."
-    }
-  ],
-  "baselineSourcePath": null,
+  "sources": [],
   "baselineEvents": [],
   "preliminaryNewEvents": [
     "ApplicationNameClaimed",
@@ -74,10 +66,8 @@
         }
       ],
       "http": [],
-      "source": {
-        "path": "docs/product/definitive-aggregate-choreography/choreography.json",
-        "recorded": "2026-10-29"
-      }
+      "sourceOwner": "ApplicationNameClaim",
+      "owner": "ApplicationNameClaim"
     },
     {
       "command": "ReleaseApplicationName",
@@ -125,10 +115,8 @@
         }
       ],
       "http": [],
-      "source": {
-        "path": "docs/product/definitive-aggregate-choreography/choreography.json",
-        "recorded": "2026-10-29"
-      }
+      "sourceOwner": "ApplicationNameClaim",
+      "owner": "ApplicationNameClaim"
     }
   ],
   "events": [],
@@ -153,5 +141,6 @@
     "D05-09",
     "D05-10"
   ],
-  "decidesAuthored": "2026-10-29"
+  "decidesAuthored": "2026-10-29",
+  "sourceOwner": "ApplicationNameClaim"
 }

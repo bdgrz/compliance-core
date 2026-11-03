@@ -17,14 +17,7 @@ Dependencies point inward: App references Core and Common; Core references Commo
 The web client consumes the backend API contract and owns its source, build, and
 test configuration in its separate repository.
 
-Product discovery and delivery are governed by the
-[product scope](docs/proposed/scope.md),
-[proposed domain model](docs/proposed/domain-model.md),
-[write-model catalog](docs/proposed/README.md),
-[user-story backlog](docs/product/backlog.md), and
-[triage](docs/product/triage.md). The domain model and the domain slice and
-implementation subtasks in every story are part of that story's delivery
-contract.
+The [domain model](docs/proposed/README.md) is the source of truth for business rules, aggregates, commands, events, processes, and reactors. [Architecture decisions and diagrams](docs/architecture/README.md) describe system structure and technical boundaries.
 
 ## Prerequisites
 

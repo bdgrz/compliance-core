@@ -28,7 +28,6 @@
       "currentRegisteredRootTypes": [
         "AccessReviewLaunchFanOutReactor"
       ],
-      "plannedRootRole": null,
       "processes": [
         "AccessReviewLaunchFanOut"
       ],

@@ -116,7 +116,6 @@
         "discriminator": "bdgrz.readiness-gap-plan.readiness-gap-plan-readiness-decision-use-authorized",
         "discriminatorVersion": 1,
         "owner": "ReadinessGapPlan",
-        "existingContract": null,
         "status": "selected target schema; implementation pending",
         "reason": "typed reactor receiver accepted business fact",
         "fields": [
@@ -280,7 +279,6 @@
         "discriminator": "bdgrz.readiness-gap-plan.readiness-gap-plan-readiness-decision-use-settled",
         "discriminatorVersion": 1,
         "owner": "ReadinessGapPlan",
-        "existingContract": null,
         "status": "selected target schema; implementation pending",
         "reason": "typed reactor receiver accepted business fact",
         "fields": [

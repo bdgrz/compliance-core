@@ -28,7 +28,6 @@
         "discriminator": "bdgrz.firm-staff-identity-claim.firm-staff-identity-claimed",
         "discriminatorVersion": 1,
         "owner": "FirmStaffIdentityClaim",
-        "existingContract": null,
         "status": "selected target schema; implementation pending",
         "reason": "typed reactor receiver accepted business fact",
         "fields": [

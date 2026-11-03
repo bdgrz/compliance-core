@@ -83,8 +83,8 @@ Canonical events: **8**. Complete canonical event and available schema records: 
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [S020](../reactors/system-description-decision-reactor.md#s020) | physical root, logical prerequisite | SystemDescription | RecordSignificantChangeSystemDescriptionDecision | SignificantChange |
-| [S021](../reactors/system-description-decision-reactor.md#s021) | physical root | SystemDescription | RecordComplianceIncidentSystemDescriptionDecision | ComplianceIncident |
+| [S020](../reactors/update-system-description-after-significant-change-reactor.md#s020) | physical root, logical prerequisite | SystemDescription | RecordSignificantChangeSystemDescriptionDecision | SignificantChange |
+| [S021](../reactors/update-system-description-after-significant-change-reactor.md#s021) | physical root | SystemDescription | RecordComplianceIncidentSystemDescriptionDecision | ComplianceIncident |
 
 ### SystemDescriptionLinkedToExamination
 
@@ -358,8 +358,8 @@ Canonical events: **8**. Complete canonical event and available schema records: 
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [S020](../reactors/system-description-decision-reactor.md#s020) | physical root, logical prerequisite | SystemDescription | RecordSignificantChangeSystemDescriptionDecision | SignificantChange |
-| [S021](../reactors/system-description-decision-reactor.md#s021) | physical root, logical prerequisite | SystemDescription | RecordComplianceIncidentSystemDescriptionDecision | ComplianceIncident |
+| [S020](../reactors/update-system-description-after-significant-change-reactor.md#s020) | physical root, logical prerequisite | SystemDescription | RecordSignificantChangeSystemDescriptionDecision | SignificantChange |
+| [S021](../reactors/update-system-description-after-significant-change-reactor.md#s021) | physical root, logical prerequisite | SystemDescription | RecordComplianceIncidentSystemDescriptionDecision | ComplianceIncident |
 
 ### SystemDescriptionReviewed
 

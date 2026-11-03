@@ -5,6 +5,7 @@
 - Business aggregate: `true`
 - Selected status: `SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED`
 
+
 ## Identity and invariant
 
 **Selected identity:** Tenant-scoped riskId; the identity is established by the admitting owner or reactor named in the choreography, never by a caller request key; mutations bind CommandId to this exact identity.
@@ -19,13 +20,17 @@
 
 **Lifecycle:** [Placeholder: a consolidated lifecycle sequence is not present in the selected owner record.]
 
+
+
+
+
 ## Commands
 
 | Command | Kind | Identity field |
 | --- | --- | --- |
 | [AssignRiskOwner](../commands/risk-governance.md#assignriskowner) | http | CommandId |
 | [RaiseRiskReassessmentTriggers](../commands/risk-governance.md#raiseriskreassessmenttriggers) | command | CommandId |
-| [RecordRiskReassessmentObligation](../commands/risk-governance.md#recordriskreassessmentobligation) | receiver | CommandId |
+| [RequireRiskReassessment](../commands/risk-governance.md#requireriskreassessment) | receiver | CommandId |
 
 ## Events
 
@@ -40,7 +45,7 @@
 | --- | --- | --- | --- | --- |
 | [S036](../reactors/risk-method-reassessment-reactor.md#s036) | business_receiver | RiskMethod | RiskGovernance | RaiseRiskReassessmentTriggers |
 | [S037](../reactors/boundary-risk-reassessment-reactor.md#s037) | business_receiver | SystemBoundary | RiskGovernance | RaiseRiskReassessmentTriggers |
-| [X009](../reactors/risk-evaluation-reactor.md#x009) | planned_reaction | RiskEvaluation | RiskGovernance | RecordRiskReassessmentObligation |
+| [X009](../reactors/request-risk-reassessment-when-risk-changes-reactor.md#x009) | planned_reaction | RiskEvaluation | RiskGovernance | RequireRiskReassessment |
 
 ## Product rules
 

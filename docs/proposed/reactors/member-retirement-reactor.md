@@ -22,11 +22,11 @@ Selected choreography rows: **3**. Required proofs, recovery, effect identity, a
 | id | S003 |
 | kind | business_receiver |
 | status | SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED |
-| sourceOwner | Member |
+| Source owner (target name) | Member (source: Member) |
 | logicalPrerequisiteFacts (target names) | MemberDeprovisioned |
 | physicalRootEvents (target names) | MemberDeprovisioned |
 | Target command (selected source name: CompleteMemberRetirement) | CompleteMemberRetirement |
-| targetOwner | Member |
+| Target owner | Member |
 | targetAuthorityKind | business_aggregate |
 | emittedSemanticFacts (target names) | MemberAccessAndAssignmentsRemoved |
 | currentRegisteredRootTypes (target names) | RemoveMemberAssignmentsAndAccessAfterMembershipEndsReactor |
@@ -37,7 +37,6 @@ Selected choreography rows: **3**. Required proofs, recovery, effect identity, a
 | sourceOwners | Member |
 | canonicalTargetOwner | Member |
 | recoveryContractSummary | At-least-once checkpoint replay resends the same source-derived command. Missing dependencies remain retryable; actual terminal/superseded episodes are skipped only with the owning proof. |
-| logicalPrerequisiteRuleGuard | null (recorded) |
 | logicalPrerequisiteRule | The source is MemberDeprovisioned with an exact termination proof for the membership episode; cleanup completes only after every team assignment and direct member access grant of that exact episode has been removed or revoked and no live relationship remains. |
 | prerequisiteRuleSource | authored 2026-10-29 from reactor and target source |
 
@@ -48,11 +47,11 @@ Selected choreography rows: **3**. Required proofs, recovery, effect identity, a
 | id | S004 |
 | kind | business_receiver |
 | status | SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED |
-| sourceOwner | Member |
+| Source owner (target name) | Member (source: Member) |
 | logicalPrerequisiteFacts (target names) | MemberDeprovisioned |
 | physicalRootEvents (target names) | MemberDeprovisioned |
 | Target command (selected source name: CleanupRetiredMembershipRelationship) | RemoveRetiredMemberAccessAndAssignments |
-| targetOwner | TeamMember |
+| Target owner | TeamMember |
 | targetAuthorityKind | business_aggregate |
 | emittedSemanticFacts (target names) | TeamMemberRemoved |
 | currentRegisteredRootTypes (target names) | RemoveMemberAssignmentsAndAccessAfterMembershipEndsReactor |
@@ -63,7 +62,6 @@ Selected choreography rows: **3**. Required proofs, recovery, effect identity, a
 | sourceOwners | Member |
 | canonicalTargetOwner | TeamMember |
 | recoveryContractSummary | At-least-once checkpoint replay resends the same source-derived command. Missing dependencies remain retryable; actual terminal/superseded episodes are skipped only with the owning proof. |
-| logicalPrerequisiteRuleGuard | null (recorded) |
 | logicalPrerequisiteRule | The source is MemberDeprovisioned (the membership termination proof) for an exact membership episode; every TeamMemberAssigned of that member and episode discovered by a complete authoritative scan is removed at its exact assignment event and position, and only after the full scan does the member's cleanup complete. |
 | prerequisiteRuleSource | authored 2026-10-29 from reactor and target source |
 
@@ -74,11 +72,11 @@ Selected choreography rows: **3**. Required proofs, recovery, effect identity, a
 | id | S005 |
 | kind | business_receiver |
 | status | SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED |
-| sourceOwner | Member |
+| Source owner (target name) | Member (source: Member) |
 | logicalPrerequisiteFacts (target names) | MemberDeprovisioned |
 | physicalRootEvents (target names) | MemberDeprovisioned |
 | Target command (selected source name: CleanupRetiredMembershipRelationship) | RemoveRetiredMemberAccessAndAssignments |
-| targetOwner | AccessGrant |
+| Target owner | AccessGrant |
 | targetAuthorityKind | business_aggregate |
 | emittedSemanticFacts (target names) | AccessGrantRevoked |
 | currentRegisteredRootTypes (target names) | RemoveMemberAssignmentsAndAccessAfterMembershipEndsReactor |
@@ -89,7 +87,6 @@ Selected choreography rows: **3**. Required proofs, recovery, effect identity, a
 | sourceOwners | Member |
 | canonicalTargetOwner | AccessGrant |
 | recoveryContractSummary | At-least-once checkpoint replay resends the same source-derived command. Missing dependencies remain retryable; actual terminal/superseded episodes are skipped only with the owning proof. |
-| logicalPrerequisiteRuleGuard | null (recorded) |
 | logicalPrerequisiteRule | A MemberDeprovisioned fact for a membership episode must exist, and the grant must be a still-unrevoked member-principal grant issued for that same episode; only that grant is revoked. |
 | prerequisiteRuleSource | authored 2026-10-29 from reactor and target source |
 

@@ -1,5 +1,7 @@
 # ProgramReadiness commands
 
+
+
 Selected command contracts: **7**. Complete selected contracts and companion source evidence: [owner command JSON](../data/commands/program-readiness.json).
 
 | Target command | Selected source name | Kind | Identity | Fields | HTTP routes |
@@ -21,7 +23,8 @@ Selected command contracts: **7**. Complete selected contracts and companion sou
 | Target command name | DecideReadiness |
 | Selected source command name | DecideReadiness |
 | Name decision | The selected source name is retained. |
-| Owner | ProgramReadiness |
+| Target owner | ProgramReadiness |
+| Selected source owner | ProgramReadiness |
 | Contract record status | target_contract |
 | Kind | http |
 | Logical identity | CommandId; Uuid; required=true; client; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
@@ -33,7 +36,7 @@ Selected command contracts: **7**. Complete selected contracts and companion sou
 | Contract changes | Add required CommandId. |
 | Guard order | bind_required_ids, authenticate_authorize, canonicalize_authored_intent, resolve_native_operation_facts, compare_owner_episode_actor_kind_intent_original_revision, validate_new_owner_revision_and_source_permits, append_complete_concrete_attributed_batch |
 | Response contract | `{"mode":"async_fixed_ack","responseType":"OperationAcceptedResponse","firstHttpStatus":202,"terminalResultType":"ReadinessDecisionView"}` |
-| Expected revision scope | `{"field":"ExpectedRevision","owner":"ProgramReadiness","counter":"logical ResourceRevision of this owner","nullableInternalRule":null}` |
+| Expected revision scope | `{"field":"ExpectedRevision","owner":"ProgramReadiness","counter":"logical ResourceRevision of this owner"}` |
 | Authorizer sources | src/Compliance.Core/Features/AccessControl/ClientManagementMutationAuthorizer.cs, src/Compliance.Core/Features/Programs/ProgramManagementAuthorizer.cs |
 | Source contract | src/Compliance.Common/Features/Readiness/DecideReadiness.cs |
 | Primary handler | DecideReadinessHandler |
@@ -76,7 +79,8 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Target command name | DecideTypeIEntry |
 | Selected source command name | DecideTypeIEntry |
 | Name decision | The selected source name is retained. |
-| Owner | ProgramReadiness |
+| Target owner | ProgramReadiness |
+| Selected source owner | ProgramReadiness |
 | Contract record status | target_contract |
 | Kind | http |
 | Logical identity | CommandId; Uuid; required=true; client; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
@@ -88,7 +92,7 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Contract changes | Add required CommandId. |
 | Guard order | bind_required_ids, authenticate_authorize, canonicalize_authored_intent, resolve_native_operation_facts, compare_owner_episode_actor_kind_intent_original_revision, validate_new_owner_revision_and_source_permits, append_complete_concrete_attributed_batch |
 | Response contract | `{"mode":"async_fixed_ack","responseType":"OperationAcceptedResponse","firstHttpStatus":202,"terminalResultType":"TypeIEntryDecisionView"}` |
-| Expected revision scope | `{"field":"ExpectedRevision","owner":"ProgramReadiness","counter":"logical ResourceRevision of this owner","nullableInternalRule":null}` |
+| Expected revision scope | `{"field":"ExpectedRevision","owner":"ProgramReadiness","counter":"logical ResourceRevision of this owner"}` |
 | Authorizer sources | src/Compliance.Core/Features/AccessControl/ClientManagementMutationAuthorizer.cs, src/Compliance.Core/Features/Programs/ProgramManagementAuthorizer.cs |
 | Source contract | src/Compliance.Common/Features/Readiness/DecideTypeIEntry.cs |
 | Primary handler | DecideTypeIEntryHandler |
@@ -132,7 +136,8 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Target command name | RunReadinessAssessment |
 | Selected source command name | RunReadinessAssessment |
 | Name decision | The selected source name is retained. |
-| Owner | ProgramReadiness |
+| Target owner | ProgramReadiness |
+| Selected source owner | ProgramReadiness |
 | Contract record status | target_contract |
 | Kind | http |
 | Logical identity | AssessmentId; Uuid; required=true; client; caller-supplied immutable creation identity: an exact retry with the same id and authored intent returns the original result; the same id with changed intent is refused; a different id is a different record |
@@ -184,7 +189,8 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Target command name | AbortReadinessDecision |
 | Selected source command name | AbortReadinessDecision |
 | Name decision | The selected source name is retained. |
-| Owner | ProgramReadiness |
+| Target owner | ProgramReadiness |
+| Selected source owner | ProgramReadiness |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | abort |
 | Logical identity | CommandId; Uuid; required=true; abort receiver identity bound to the exact admitted operation and generation: exact redelivery resolves the original rejected result; an abort after a terminal outcome is a no-op |
@@ -233,7 +239,8 @@ Required tests: [Placeholder: required tests not recorded]
 | Target command name | AdoptReadinessAssessment |
 | Selected source command name | AdoptReadinessAssessment |
 | Name decision | The selected source name is retained. |
-| Owner | ProgramReadiness |
+| Target owner | ProgramReadiness |
+| Selected source owner | ProgramReadiness |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; reactor; deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result |
@@ -287,7 +294,8 @@ Required tests: [Placeholder: required tests not recorded]
 | Target command name | CompleteReadinessDecision |
 | Selected source command name | CompleteReadinessDecision |
 | Name decision | The selected source name is retained. |
-| Owner | ProgramReadiness |
+| Target owner | ProgramReadiness |
+| Selected source owner | ProgramReadiness |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; reactor; deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result |
@@ -339,7 +347,8 @@ Required tests: [Placeholder: required tests not recorded]
 | Target command name | CompleteTypeIEntryDecision |
 | Selected source command name | CompleteTypeIEntryDecision |
 | Name decision | The selected source name is retained. |
-| Owner | ProgramReadiness |
+| Target owner | ProgramReadiness |
+| Selected source owner | ProgramReadiness |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; reactor; deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result |

@@ -46,7 +46,7 @@ Canonical events: **5**. Complete canonical event and available schema records: 
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [S003](../reactors/member-retirement-reactor.md#s003) | emitted semantic fact | Member | CompleteMemberRetirement | Member |
+| [S003](../reactors/remove-member-assignments-and-access-after-membership-ends-reactor.md#s003) | emitted semantic fact | Member | CompleteMemberRetirement | Member |
 
 ### MemberDeprovisioned
 
@@ -153,12 +153,12 @@ AdministratorTransitionIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T046](../reactors/administrator-withdrawal-reactor.md#t046) | emitted semantic fact | TenantManagerGuard | ApplyMemberWithdrawal | Member |
-| [T048](../reactors/administrator-neutral-member-mutation-reactor.md#t048) | emitted semantic fact | TenantManagerGuard | ApplyMemberStatusChange | Member |
-| [T050](../reactors/administrator-withdrawal-reactor.md#t050) | logical prerequisite | Member\|TeamMember | CompleteAdministratorWithdrawal | TenantManagerGuard |
-| [S003](../reactors/member-retirement-reactor.md#s003) | physical root, logical prerequisite | Member | CompleteMemberRetirement | Member |
-| [S004](../reactors/member-retirement-reactor.md#s004) | physical root, logical prerequisite | Member | RemoveRetiredMemberAccessAndAssignments | TeamMember |
-| [S005](../reactors/member-retirement-reactor.md#s005) | physical root, logical prerequisite | Member | RemoveRetiredMemberAccessAndAssignments | AccessGrant |
+| [T046](../reactors/administrator-withdrawal-reactor.md#t046) | emitted semantic fact | TenantAdministratorContinuity | ApplyMemberWithdrawal | Member |
+| [T048](../reactors/apply-accepted-member-status-change-reactor.md#t048) | emitted semantic fact | TenantAdministratorContinuity | ApplyMemberStatusChange | Member |
+| [T050](../reactors/administrator-withdrawal-reactor.md#t050) | logical prerequisite | Member\|TeamMember | CompleteAdministratorWithdrawal | TenantAdministratorContinuity |
+| [S003](../reactors/remove-member-assignments-and-access-after-membership-ends-reactor.md#s003) | physical root, logical prerequisite | Member | CompleteMemberRetirement | Member |
+| [S004](../reactors/remove-member-assignments-and-access-after-membership-ends-reactor.md#s004) | physical root, logical prerequisite | Member | RemoveRetiredMemberAccessAndAssignments | TeamMember |
+| [S005](../reactors/remove-member-assignments-and-access-after-membership-ends-reactor.md#s005) | physical root, logical prerequisite | Member | RemoveRetiredMemberAccessAndAssignments | AccessGrant |
 
 ### MemberRegistered
 
@@ -194,8 +194,8 @@ AdministratorTransitionIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [S013](../reactors/tenant-rbac-bootstrap-reactor.md#s013) | emitted semantic fact | Tenant | RegisterMember | Member |
-| [S026](../reactors/tenant-invitation-reactor.md#s026) | emitted semantic fact | TenantInvitation | RegisterMember | Member |
+| [S013](../reactors/set-up-starting-tenant-access-reactor.md#s013) | emitted semantic fact | Tenant | RegisterMember | Member |
+| [S026](../reactors/activate-membership-after-invitation-acceptance-reactor.md#s026) | emitted semantic fact | TenantInvitation | RegisterMember | Member |
 
 ### MemberReinstated
 
@@ -301,9 +301,9 @@ AdministratorTransitionIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T048](../reactors/administrator-neutral-member-mutation-reactor.md#t048) | emitted semantic fact | TenantManagerGuard | ApplyMemberStatusChange | Member |
-| [T051](../reactors/administrator-restoration-reactor.md#t051) | emitted semantic fact | TenantManagerGuard | ApplyMemberRestoration | Member |
-| [T052](../reactors/administrator-restoration-reactor.md#t052) | logical prerequisite | Member\|TeamMember | CompleteAdministratorRestoration | TenantManagerGuard |
+| [T048](../reactors/apply-accepted-member-status-change-reactor.md#t048) | emitted semantic fact | TenantAdministratorContinuity | ApplyMemberStatusChange | Member |
+| [T051](../reactors/administrator-restoration-reactor.md#t051) | emitted semantic fact | TenantAdministratorContinuity | ApplyMemberRestoration | Member |
+| [T052](../reactors/administrator-restoration-reactor.md#t052) | logical prerequisite | Member\|TeamMember | CompleteAdministratorRestoration | TenantAdministratorContinuity |
 
 ### MemberSuspended
 
@@ -409,9 +409,9 @@ AdministratorTransitionIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T046](../reactors/administrator-withdrawal-reactor.md#t046) | emitted semantic fact | TenantManagerGuard | ApplyMemberWithdrawal | Member |
-| [T048](../reactors/administrator-neutral-member-mutation-reactor.md#t048) | emitted semantic fact | TenantManagerGuard | ApplyMemberStatusChange | Member |
-| [T050](../reactors/administrator-withdrawal-reactor.md#t050) | logical prerequisite | Member\|TeamMember | CompleteAdministratorWithdrawal | TenantManagerGuard |
+| [T046](../reactors/administrator-withdrawal-reactor.md#t046) | emitted semantic fact | TenantAdministratorContinuity | ApplyMemberWithdrawal | Member |
+| [T048](../reactors/apply-accepted-member-status-change-reactor.md#t048) | emitted semantic fact | TenantAdministratorContinuity | ApplyMemberStatusChange | Member |
+| [T050](../reactors/administrator-withdrawal-reactor.md#t050) | logical prerequisite | Member\|TeamMember | CompleteAdministratorWithdrawal | TenantAdministratorContinuity |
 
 
 ## Wire/schema version discrepancies

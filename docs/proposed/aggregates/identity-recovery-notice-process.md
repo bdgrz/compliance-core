@@ -5,6 +5,7 @@
 - Business aggregate: `false`
 - Selected status: `SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED`
 
+
 ## Identity and invariant
 
 **Selected identity:** [Placeholder: selected target identity is not recorded.]
@@ -19,6 +20,10 @@
 
 **Lifecycle:** [Placeholder: a consolidated lifecycle sequence is not present in the selected owner record.]
 
+
+
+
+
 ## Commands
 
 [Placeholder: no selected commands are listed for this owner.]
@@ -31,7 +36,7 @@
 
 | Row | Kind | Source owner | Target owner | Command |
 | --- | --- | --- | --- | --- |
-| [T045](../reactors/identity-recovery-acceptance-reactor.md#t045) | reaction_or_regular_process_stage | IdentityRecovery | IdentityRecoveryNoticeProcess | SendIdentityRecoveryNotice |
+| [T045](../reactors/complete-account-recovery-reactor.md#t045) | reaction_or_regular_process_stage | IdentityRecovery | IdentityRecoveryNoticeProcess | SendIdentityRecoveryNotice |
 
 ## Product rules
 

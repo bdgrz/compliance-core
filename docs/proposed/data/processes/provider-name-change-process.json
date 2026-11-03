@@ -16,8 +16,7 @@
       "stage": "apply",
       "receivers": [
         "ApplyProviderChange"
-      ],
-      "rule": null
+      ]
     },
     {
       "stage": "release",

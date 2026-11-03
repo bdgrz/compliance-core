@@ -74,13 +74,9 @@
           "authorizationPolicy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/13",
-        "line": 1039,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      },
       "kind": "http",
+      "sourceOwner": "ControlDraft",
+      "owner": "ControlDraft",
       "sourceName": "ApproveControl",
       "targetName": "ApproveControl"
     },
@@ -132,13 +128,9 @@
           "authorizationPolicy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/50",
-        "line": 3763,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      },
       "kind": "http",
+      "sourceOwner": "ControlDraft",
+      "owner": "ControlDraft",
       "sourceName": "CreateControlDraft",
       "targetName": "CreateControlDraft"
     },
@@ -194,13 +186,9 @@
         "terminalResultType": "Unit"
       },
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/66",
-        "line": 4967,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      },
       "kind": "command",
+      "sourceOwner": "ControlDraft",
+      "owner": "ControlDraft",
       "sourceName": "DesignateControlOwnerPerson",
       "targetName": "DesignateControlOwnerPerson"
     },
@@ -257,13 +245,9 @@
           "authorizationPolicy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/69",
-        "line": 5192,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      },
       "kind": "http",
+      "sourceOwner": "ControlDraft",
+      "owner": "ControlDraft",
       "sourceName": "DiscardControlDraft",
       "targetName": "DiscardControlDraft"
     },
@@ -330,13 +314,9 @@
           "authorizationPolicy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/91",
-        "line": 6737,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      },
       "kind": "http",
+      "sourceOwner": "ControlDraft",
+      "owner": "ControlDraft",
       "sourceName": "ProposeControlRetirement",
       "targetName": "ProposeControlRetirement"
     },
@@ -398,13 +378,9 @@
           "authorizationPolicy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/92",
-        "line": 6826,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      },
       "kind": "http",
+      "sourceOwner": "ControlDraft",
+      "owner": "ControlDraft",
       "sourceName": "ProposeControlSuccessor",
       "targetName": "ProposeControlSuccessor"
     },
@@ -476,13 +452,9 @@
           "authorizationPolicy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/156",
-        "line": 11531,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      },
       "kind": "http",
+      "sourceOwner": "ControlDraft",
+      "owner": "ControlDraft",
       "sourceName": "RetireControl",
       "targetName": "RetireControl"
     },
@@ -549,13 +521,9 @@
           "authorizationPolicy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/161",
-        "line": 11979,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      },
       "kind": "http",
+      "sourceOwner": "ControlDraft",
+      "owner": "ControlDraft",
       "sourceName": "ReviewControl",
       "targetName": "ReviewControl"
     },
@@ -606,13 +574,9 @@
         "terminalResultType": "Unit"
       },
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/171",
-        "line": 12747,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      },
       "kind": "command",
+      "sourceOwner": "ControlDraft",
+      "owner": "ControlDraft",
       "sourceName": "ReviseControlDraft",
       "targetName": "ReviseControlDraft"
     },
@@ -669,13 +633,9 @@
           "authorizationPolicy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/200",
-        "line": 14975,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      },
       "kind": "http",
+      "sourceOwner": "ControlDraft",
+      "owner": "ControlDraft",
       "sourceName": "WithdrawControlProposal",
       "targetName": "WithdrawControlProposal"
     }

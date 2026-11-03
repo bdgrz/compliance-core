@@ -1,5 +1,7 @@
 # Role commands
 
+
+
 Selected command contracts: **3**. Complete selected contracts and companion source evidence: [owner command JSON](../data/commands/role.json).
 
 | Target command | Selected source name | Kind | Identity | Fields | HTTP routes |
@@ -17,7 +19,8 @@ Selected command contracts: **3**. Complete selected contracts and companion sou
 | Target command name | DefineRole |
 | Selected source command name | DefineRole |
 | Name decision | The selected source name is retained. |
-| Owner | Role |
+| Target owner | Role |
+| Selected source owner | Role |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | http |
 | Logical identity | RoleId; Uuid; required=true; caller-supplied immutable creation identity: an exact retry with the same id and authored intent returns the original result; the same id with changed intent is refused; a different id is a different record |
@@ -65,7 +68,8 @@ Required tests: [Placeholder: required tests not recorded]
 | Target command name | DeleteRole |
 | Selected source command name | DeleteRole |
 | Name decision | The selected source name is retained. |
-| Owner | Role |
+| Target owner | Role |
+| Selected source owner | Role |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | command |
 | Logical identity | CommandId; Uuid; required=true; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
@@ -111,7 +115,8 @@ Required tests: [Placeholder: required tests not recorded]
 | Target command name | RenameRole |
 | Selected source command name | RenameRole |
 | Name decision | The selected source name is retained. |
-| Owner | Role |
+| Target owner | Role |
+| Selected source owner | Role |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | command |
 | Logical identity | CommandId; Uuid; required=true; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |

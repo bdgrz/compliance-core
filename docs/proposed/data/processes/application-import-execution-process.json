@@ -9,8 +9,7 @@
       "stage": "claim",
       "receivers": [
         "ClaimApplicationImportSource"
-      ],
-      "rule": null
+      ]
     },
     {
       "stage": "reserve",
@@ -38,8 +37,7 @@
       "receivers": [
         "ReleaseApplicationImportTarget",
         "ReleaseApplicationImportSource"
-      ],
-      "rule": null
+      ]
     }
   ],
   "abort": [
@@ -57,16 +55,14 @@
       "stage": "complete",
       "receivers": [
         "CompleteApplicationImportCancellation"
-      ],
-      "rule": null
+      ]
     },
     {
       "stage": "settle",
       "receivers": [
         "ReleaseApplicationImportTarget",
         "ReleaseApplicationImportSource"
-      ],
-      "rule": null
+      ]
     }
   ]
 }

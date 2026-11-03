@@ -28,7 +28,6 @@
         "discriminator": "bdgrz.operational-process-name-claim.operational-process-name-claimed",
         "discriminatorVersion": 1,
         "owner": "OperationalProcessNameClaim",
-        "existingContract": null,
         "status": "selected target schema; implementation pending",
         "reason": "typed reactor receiver accepted business fact",
         "fields": [
@@ -219,7 +218,6 @@
         "discriminator": "bdgrz.operational-process-name-claim.operational-process-name-released",
         "discriminatorVersion": 1,
         "owner": "OperationalProcessNameClaim",
-        "existingContract": null,
         "status": "selected target schema; implementation pending",
         "reason": "typed reactor receiver accepted business fact",
         "fields": [

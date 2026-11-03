@@ -1,6 +1,6 @@
 # Aggregate and technical-owner index
 
-Selected target: **131 business/authority owners** and **14 technical/storage responsibilities**. Technical responsibilities are not business aggregates.
+Selected target: **132 business/authority owners** and **14 technical/storage responsibilities**. Technical responsibilities are not business aggregates.
 
 Groups are derived from source feature paths. They are navigation labels, not bounded-context decisions.
 
@@ -43,7 +43,7 @@ Groups are derived from source feature paths. They are navigation labels, not bo
 | [Team](team.md) | business_aggregate | 2 | 2 | One team definition has an active/deleted lifecycle and built-in team cannot be deleted. |
 | [TeamMember](team-member.md) | business_aggregate | 6 | 2 | One tenant/team/member relationship is active only for one current membership episode. |
 | [TeamRole](team-role.md) | business_aggregate | 2 | 2 | One tenant/team/role relationship has a single active assignment. |
-| [TenantManagerGuard](tenant-manager-guard.md) | business_governor | 2 | 6 | Removal from effective administrator set must leave another active tenant administrator. |
+| [TenantAdministratorContinuity](tenant-administrator-continuity.md) | business_governor | 2 | 6 | Removal from effective administrator set must leave another active tenant administrator. |
 
 ## AccessReviews
 
@@ -74,6 +74,12 @@ Groups are derived from source feature paths. They are navigation labels, not bo
 | [DeclaredApplication](declared-application.md) | business_aggregate | 8 | 7 | Application creation, metadata revision, retirement and import admission generation. Name and alias uniqueness is decided by ApplicationNameClaim, which the application must hold before using a name; a merge retires this application with a merged_into reference to the survivor (M0-D05 D05-10) |
 | [DeclaredSystemInstance](declared-system-instance.md) | business_aggregate | 3 | 3 | One system instance has one immutable application parent and registered identity; metadata revisions and terminal retirement follow its own expected revision. |
 | [SystemInstanceAccessReviewScope](system-instance-access-review-scope.md) | business_aggregate | 1 | 1 | Scope decisions for one instance advance a monotonic effective date and expected decision sequence with independent approver or exact-scope waiver. |
+
+## AttestRecords
+
+| Owner | Class | Commands | Events | Invariant |
+| --- | --- | --- | --- | --- |
+| [AttestEngagementRecordPackage](attest-engagement-record-package.md) | business_aggregate | 3 | 4 | The firm’s own attest engagement record is preserved by generating its exact record package and recording delivery into the firm’s audit software before engagement closure or client offboarding. ClientExport delivery cannot satisfy this obligation. |
 
 ## AuditorRequests
 
@@ -167,7 +173,7 @@ Groups are derived from source feature paths. They are navigation labels, not bo
 
 | Owner | Class | Commands | Events | Invariant |
 | --- | --- | --- | --- | --- |
-| [ClientExport](client-export.md) | business_aggregate | 6 | 5 | Final export delivery requires archive counts matching frozen included/withheld inventory and a successful exact-manifest delivery for each required attest package. |
+| [ClientExport](client-export.md) | business_aggregate | 3 | 4 | Final export delivery requires archive counts matching frozen included/withheld inventory and a successful exact-manifest delivery for each required attest package. |
 
 ## Incidents
 
@@ -299,7 +305,7 @@ Groups are derived from source feature paths. They are navigation labels, not bo
 | [Tenant](tenant.md) | business_aggregate | 12 | 14 | One tenant lifecycle activates only after its slug and first-administrator conditions; offboarding forbids new active service; one current slug transition admitted at a time. Lifecycle: registered becomes active only after the slug is confirmed and the first administrator is assigned; active and suspended alternate only by an acting platform operator; active or suspended may start offboarding; offboarding completes only after the attest-record package delivery decision and retention disposition are recorded; every other transition is refused and a repeat of the current state is a no-op. |
 | [TenantInvitation](tenant-invitation.md) | business_aggregate | 4 | 2 | One immutable offer, token acceptance and terminal lifecycle; each invitation has exact recipient, purpose, scopes and expiry. |
 | [TenantInvitationMailboxClaim](tenant-invitation-mailbox-claim.md) | business_identity_or_uniqueness_authority | 4 | 2 | At most one pending invitation per mailbox. InvitationId and generation live in state and every release compares both; generation is never part of the stream key. |
-| [TenantSlug](tenant-slug.md) | business_identity_or_uniqueness_authority | 2 | 4 | One normalized global slug can belong to one tenant and once surrendered is permanently retired. |
+| [WorkspaceWebAddress](workspace-web-address.md) | business_identity_or_uniqueness_authority | 2 | 4 | One normalized global slug can belong to one tenant and once surrendered is permanently retired. |
 | [TenantInvitationDeliveryProcess](tenant-invitation-delivery-process.md) | technical_process_or_storage_owner | 0 | 0 | Technical delivery process with one immutable effect payload and multiple attempt records. Attempt identity is state, never a new unconstrained process owner. |
 
 ## UserIdentities

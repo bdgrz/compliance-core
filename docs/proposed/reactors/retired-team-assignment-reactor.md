@@ -20,11 +20,11 @@ Selected choreography rows: **1**. Required proofs, recovery, effect identity, a
 | id | S007 |
 | kind | business_receiver |
 | status | SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED |
-| sourceOwner | TeamMember |
+| Source owner (target name) | TeamMember (source: TeamMember) |
 | logicalPrerequisiteFacts (target names) | TeamMemberAssigned |
 | physicalRootEvents (target names) | TeamMemberAssigned |
 | Target command (selected source name: CleanupRetiredMembershipRelationship) | RemoveRetiredMemberAccessAndAssignments |
-| targetOwner | TeamMember |
+| Target owner | TeamMember |
 | targetAuthorityKind | business_aggregate |
 | emittedSemanticFacts (target names) | TeamMemberRemoved |
 | currentRegisteredRootTypes (target names) | RemoveTeamAssignmentAfterMemberRetirementReactor |
@@ -35,7 +35,6 @@ Selected choreography rows: **1**. Required proofs, recovery, effect identity, a
 | sourceOwners | TeamMember |
 | canonicalTargetOwner | TeamMember |
 | recoveryContractSummary | At-least-once checkpoint replay resends the same source-derived command. Missing dependencies remain retryable; actual terminal/superseded episodes are skipped only with the owning proof. |
-| logicalPrerequisiteRuleGuard | null (recorded) |
 | logicalPrerequisiteRule | The source is a late TeamMemberAssigned whose member episode has already been terminated; the receiver removes that exact assignment only when the member's termination proof for the same episode exists and the owner still holds that assignment event. |
 | prerequisiteRuleSource | authored 2026-10-29 from reactor and target source |
 

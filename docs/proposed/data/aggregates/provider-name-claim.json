@@ -8,14 +8,7 @@
   "invariant": "Authoritative unique active name reservation.",
   "boundaryDecision": "selected_split",
   "mustPreserve": "Exact creation identity and expected provider revision; active normalized name unique within tenant.",
-  "sources": [
-    {
-      "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
-      "jsonPointer": "/splitOwners/20/targetOwners/1",
-      "line": 2161,
-      "sha256": "d349d94b7c43f4d82020ecf36bdacf1aff98bc6498e14993582f1c3164b21f19"
-    }
-  ],
+  "sources": [],
   "baselineSourcePath": "src/Compliance.Core/Features/Providers/ProviderRegister.cs",
   "baselineEvents": [],
   "preliminaryNewEvents": [
@@ -86,7 +79,7 @@
         "recorded": "2026-10-29"
       },
       "reactor": "ProviderNameClaimReactor",
-      "sourceOwner": "Provider",
+      "sourceOwner": "ProviderNameClaim",
       "sourceEvents": [
         "ProviderChangeAccepted"
       ],
@@ -95,7 +88,8 @@
         "ProviderNameClaimed"
       ],
       "effectKind": "claim_provider_name",
-      "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine."
+      "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
+      "owner": "ProviderNameClaim"
     },
     {
       "command": "ReleaseProviderName",
@@ -151,7 +145,7 @@
         "recorded": "2026-10-29"
       },
       "reactor": "ProviderOldNameReleaseReactor",
-      "sourceOwner": "Provider",
+      "sourceOwner": "ProviderNameClaim",
       "sourceEvents": [
         "ProviderRecorded",
         "ProviderRevised",
@@ -162,7 +156,8 @@
         "ProviderNameReleased"
       ],
       "effectKind": "release_provider_name",
-      "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine."
+      "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
+      "owner": "ProviderNameClaim"
     }
   ],
   "eventAuthority": "selected_final_event_catalog",
@@ -170,24 +165,12 @@
     {
       "event": "ProviderNameClaimed",
       "discriminator": "bdgrz.provider-name-claim.provider-name-claimed",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/216",
-        "line": 28953,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     },
     {
       "event": "ProviderNameReleased",
       "discriminator": "bdgrz.provider-name-claim.provider-name-released",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/217",
-        "line": 29117,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     }
   ],
   "choreography": [
@@ -195,37 +178,19 @@
       "reactor": "ProviderNameClaimReactor",
       "sourceOwner": "Provider",
       "targetOwner": "ProviderNameClaim",
-      "command": "ClaimProviderName",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "jsonPointer": "/reactors/22",
-        "line": 1884,
-        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
-      }
+      "command": "ClaimProviderName"
     },
     {
       "reactor": "ProviderChangeApplicationReactor",
       "sourceOwner": "ProviderNameClaim",
       "targetOwner": "Provider",
-      "command": "ApplyProviderChange",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "jsonPointer": "/reactors/23",
-        "line": 1971,
-        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
-      }
+      "command": "ApplyProviderChange"
     },
     {
       "reactor": "ProviderOldNameReleaseReactor",
       "sourceOwner": "Provider",
       "targetOwner": "ProviderNameClaim",
-      "command": "ReleaseProviderName",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "jsonPointer": "/reactors/24",
-        "line": 2049,
-        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
-      }
+      "command": "ReleaseProviderName"
     }
   ],
   "status": "SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED",
@@ -242,5 +207,6 @@
       "previous": "(tenantId, normalizedGovernedName)"
     }
   ],
-  "commandNote": "Source is SourceFactProof<ProviderChangeAccepted>. INamedRecordReceiver; no HTTP command."
+  "commandNote": "Source is SourceFactProof<ProviderChangeAccepted>. INamedRecordReceiver; no HTTP command.",
+  "sourceOwner": "ProviderNameClaim"
 }

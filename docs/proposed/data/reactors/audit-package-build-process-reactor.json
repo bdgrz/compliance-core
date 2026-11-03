@@ -26,7 +26,6 @@
       "currentRegisteredRootTypes": [
         "AuditPackageBuildProcessReactor"
       ],
-      "plannedRootRole": null,
       "processes": [
         "AuditPackageBuildProcess"
       ],
@@ -142,7 +141,6 @@
       "currentRegisteredRootTypes": [
         "AuditPackageBuildProcessReactor"
       ],
-      "plannedRootRole": null,
       "processes": [
         "AuditPackageBuildProcess"
       ],

@@ -1,0 +1,226 @@
+{
+  "owner": "WorkspaceWebAddress",
+  "origin": "retained_baseline",
+  "baselineOwners": [
+    "TenantSlug"
+  ],
+  "declaredIdentity": "UUIDv5 normalized slug. Register current same owner emits duplicate fact; rejection emits reply receipts; expected-position OCC enforces competing claims.",
+  "invariant": "One normalized global slug can belong to one tenant and once surrendered is permanently retired.",
+  "boundaryDecision": "retain",
+  "boundaryRationale": "Global claim/retirement must be atomic; tenant activation and reply transport need not be in same owner.",
+  "sources": [],
+  "baselineSourcePath": "src/Compliance.Core/Features/Tenants/TenantSlug.cs",
+  "baselineEvents": [
+    "TenantSlugRegistered",
+    "TenantSlugRegistrationRejected",
+    "TenantSlugSurrenderRejected",
+    "TenantSlugSurrendered"
+  ],
+  "classification": "business_identity_or_uniqueness_authority",
+  "businessAggregate": true,
+  "implementationStatus": "SEPARATE_VERIFICATION_REQUIRED_IMPLEMENTATION_HALTED",
+  "identityReadingRule": "selectedIdentitySummary and exact selectedCommandContracts define intended identity. baselineIdentityObservation/declaredIdentity retain older source observations only, including old replay defects; they are not target behavior or authorization to change an occupied key.",
+  "selectedCommandContracts": [
+    {
+      "command": "RegisterTenantSlug",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "rule": "CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Slug",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "Unit",
+        "firstHttpStatus": 200,
+        "terminalResultType": "Unit"
+      },
+      "http": [],
+      "kind": "command",
+      "concurrencyGuard": {
+        "rule": "creation_key_only",
+        "jev": 0.92,
+        "date": "2026-10-29"
+      },
+      "sourceOwner": "TenantSlug",
+      "owner": "WorkspaceWebAddress"
+    },
+    {
+      "command": "SurrenderTenantSlug",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "rule": "CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Slug",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "Unit",
+        "firstHttpStatus": 200,
+        "terminalResultType": "Unit"
+      },
+      "http": [],
+      "kind": "command",
+      "concurrencyGuard": {
+        "rule": "terminal_idempotent_no_guard",
+        "jev": 0.88,
+        "date": "2026-10-29"
+      },
+      "sourceOwner": "TenantSlug",
+      "owner": "WorkspaceWebAddress"
+    }
+  ],
+  "eventAuthority": "retained_baseline_business_facts_requires_schema_reconciliation",
+  "events": [
+    {
+      "event": "TenantSlugRegistered",
+      "baselineContract": {
+        "event": "TenantSlugRegistered",
+        "emitters": [
+          "src/Compliance.Core/Features/Tenants/TenantSlug.cs"
+        ],
+        "eventDisposition": "aggregate_fact",
+        "emitterOwnership": "aggregate or partial source",
+        "typedFields": [
+          {
+            "name": "TenantId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "Slug",
+            "type": "string",
+            "required": true
+          }
+        ],
+        "eventContract": "src/Compliance.Common/Features/Tenants/TenantSlugRegistered.cs"
+      }
+    },
+    {
+      "event": "TenantSlugRegistrationRejected",
+      "baselineContract": {
+        "event": "TenantSlugRegistrationRejected",
+        "emitters": [
+          "src/Compliance.Core/Features/Tenants/TenantSlug.cs"
+        ],
+        "eventDisposition": "aggregate_fact",
+        "emitterOwnership": "aggregate or partial source",
+        "typedFields": [
+          {
+            "name": "TenantId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "Slug",
+            "type": "string",
+            "required": true
+          }
+        ],
+        "eventContract": "src/Compliance.Common/Features/Tenants/TenantSlugRegistrationRejected.cs"
+      }
+    },
+    {
+      "event": "TenantSlugSurrenderRejected",
+      "baselineContract": {
+        "event": "TenantSlugSurrenderRejected",
+        "emitters": [
+          "src/Compliance.Core/Features/Tenants/TenantSlug.cs"
+        ],
+        "eventDisposition": "aggregate_fact",
+        "emitterOwnership": "aggregate or partial source",
+        "typedFields": [
+          {
+            "name": "TenantId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "Slug",
+            "type": "string",
+            "required": true
+          }
+        ],
+        "eventContract": "src/Compliance.Common/Features/Tenants/TenantSlugSurrenderRejected.cs"
+      }
+    },
+    {
+      "event": "TenantSlugSurrendered",
+      "baselineContract": {
+        "event": "TenantSlugSurrendered",
+        "emitters": [
+          "src/Compliance.Core/Features/Tenants/TenantSlug.cs"
+        ],
+        "eventDisposition": "aggregate_fact",
+        "emitterOwnership": "aggregate or partial source",
+        "typedFields": [
+          {
+            "name": "TenantId",
+            "type": "Uuid",
+            "required": true
+          },
+          {
+            "name": "Slug",
+            "type": "string",
+            "required": true
+          }
+        ],
+        "eventContract": "src/Compliance.Common/Features/Tenants/TenantSlugSurrendered.cs"
+      }
+    }
+  ],
+  "choreography": [],
+  "status": "SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED",
+  "baselineIdentityObservation": "UUIDv5 normalized slug. Register current same owner emits duplicate fact; rejection emits reply receipts; expected-position OCC enforces competing claims.",
+  "identityContractRule": "Existing published owner identity/IdFor remains stable. Required typed creation/operation identity and tenant/program/source scope come from the selected signature/protocol references; no context.RequestId minting fallback or guessed new stream key.",
+  "adoptedArchitectureDecisions": [],
+  "selectedIdentityClarification": "Existing UUIDv5 of normalized slug. Selected CommandId binds exact claimant tenant and reservation episode; the existing normalization and UUID algorithm remain unchanged.",
+  "selectedIdentitySummary": "Existing UUIDv5 of normalized slug. Selected CommandId binds exact claimant tenant and reservation episode; the existing normalization and UUID algorithm remain unchanged.",
+  "baselineIdentityObservationOnly": true,
+  "selectedLogicalIdentityBindings": [
+    {
+      "command": "RegisterTenantSlug",
+      "logicalIdentity": "CommandId"
+    },
+    {
+      "command": "SurrenderTenantSlug",
+      "logicalIdentity": "CommandId"
+    }
+  ],
+  "selectedReplayRule": "Current required authorization precedes replay; exact authorized retries resolve the original accepted result using the selected logical identity and immutable actor/intent/source binding. Fresh mutable feasibility, clock selection and body preparation cannot replace that original result. Expected revision is concurrency precondition, not a new identity.",
+  "sourceOwner": "TenantSlug"
+}

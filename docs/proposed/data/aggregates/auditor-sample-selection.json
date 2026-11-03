@@ -8,14 +8,7 @@
   "invariant": "Independent exact sample selection lifecycle.",
   "boundaryDecision": "selected_split",
   "mustPreserve": "Admission cannot race resolution; exact response selections and dispositions are immutable proofs.",
-  "sources": [
-    {
-      "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
-      "jsonPointer": "/splitOwners/10/targetOwners/2",
-      "line": 1264,
-      "sha256": "d349d94b7c43f4d82020ecf36bdacf1aff98bc6498e14993582f1c3164b21f19"
-    }
-  ],
+  "sources": [],
   "baselineSourcePath": "src/Compliance.Core/Features/AuditorRequests/AuditorRequest.cs",
   "baselineEvents": [
     "SampleSelectionRecorded"
@@ -81,7 +74,7 @@
         "recorded": "2026-10-29"
       },
       "reactor": "AuditorSampleSelectionMaterializationReactor",
-      "sourceOwner": "AuditorRequest",
+      "sourceOwner": "AuditorSampleSelection",
       "sourceEvents": [
         "AuditorSampleSelectionAdmitted"
       ],
@@ -90,7 +83,8 @@
         "SampleSelectionRecorded"
       ],
       "effectKind": "claim_professional_assertion_identity",
-      "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine."
+      "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
+      "owner": "AuditorSampleSelection"
     }
   ],
   "eventAuthority": "selected_final_event_catalog",
@@ -98,13 +92,7 @@
     {
       "event": "SampleSelectionRecorded",
       "discriminator": "bdgrz.auditorrequests.sample-selection-recorded",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/247",
-        "line": 33248,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     }
   ],
   "choreography": [
@@ -112,13 +100,7 @@
       "reactor": "AuditorSampleSelectionMaterializationReactor",
       "sourceOwner": "AuditorRequest",
       "targetOwner": "AuditorSampleSelection",
-      "command": "MaterializeAuditorSampleSelection",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "jsonPointer": "/reactors/105",
-        "line": 9083,
-        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
-      }
+      "command": "MaterializeAuditorSampleSelection"
     }
   ],
   "status": "SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED",
@@ -147,5 +129,6 @@
   "decidesCovers": [
     "D17-03"
   ],
-  "decidesAuthored": "2026-10-29"
+  "decidesAuthored": "2026-10-29",
+  "sourceOwner": "AuditorSampleSelection"
 }

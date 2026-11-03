@@ -44,7 +44,7 @@ Canonical events: **3**. Complete canonical event and available schema records: 
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [S011](../reactors/tenant-rbac-bootstrap-reactor.md#s011) | emitted semantic fact | Tenant | DefineRole | Role |
+| [S011](../reactors/set-up-starting-tenant-access-reactor.md#s011) | emitted semantic fact | Tenant | DefineRole | Role |
 
 ### RoleDeleted
 
@@ -80,8 +80,8 @@ Canonical events: **3**. Complete canonical event and available schema records: 
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [S008](../reactors/role-cleanup-reactor.md#s008) | physical root, logical prerequisite | Role | RemoveRolePermission | RolePermission |
-| [S009](../reactors/role-cleanup-reactor.md#s009) | physical root, logical prerequisite | Role | RemoveTeamRole | TeamRole |
+| [S008](../reactors/remove-role-assignments-after-role-deletion-reactor.md#s008) | physical root, logical prerequisite | Role | RemoveRolePermission | RolePermission |
+| [S009](../reactors/remove-role-assignments-after-role-deletion-reactor.md#s009) | physical root, logical prerequisite | Role | RemoveTeamRole | TeamRole |
 
 ### RoleRenamed
 

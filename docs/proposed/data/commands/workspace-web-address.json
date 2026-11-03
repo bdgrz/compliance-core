@@ -1,0 +1,92 @@
+{
+  "owner": "WorkspaceWebAddress",
+  "selectedContracts": [
+    {
+      "command": "RegisterTenantSlug",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "rule": "CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Slug",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "Unit",
+        "firstHttpStatus": 200,
+        "terminalResultType": "Unit"
+      },
+      "http": [],
+      "kind": "command",
+      "concurrencyGuard": {
+        "rule": "creation_key_only",
+        "jev": 0.92,
+        "date": "2026-10-29"
+      },
+      "sourceOwner": "TenantSlug",
+      "owner": "WorkspaceWebAddress",
+      "sourceName": "RegisterTenantSlug",
+      "targetName": "ClaimWorkspaceWebAddress"
+    },
+    {
+      "command": "SurrenderTenantSlug",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "rule": "CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Slug",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "Unit",
+        "firstHttpStatus": 200,
+        "terminalResultType": "Unit"
+      },
+      "http": [],
+      "kind": "command",
+      "concurrencyGuard": {
+        "rule": "terminal_idempotent_no_guard",
+        "jev": 0.88,
+        "date": "2026-10-29"
+      },
+      "sourceOwner": "TenantSlug",
+      "owner": "WorkspaceWebAddress",
+      "sourceName": "SurrenderTenantSlug",
+      "targetName": "RetireWorkspaceWebAddress"
+    }
+  ],
+  "sourceContractEvidence": []
+}

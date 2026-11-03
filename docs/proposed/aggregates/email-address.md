@@ -5,6 +5,7 @@
 - Business aggregate: `true`
 - Selected status: `SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED`
 
+
 ## Identity and invariant
 
 **Selected identity:** Existing UUIDv5 of the normalized email address. ChallengeId and selected CommandId are distinct stable operation identities bound to this exact address, owner and recovery episode.
@@ -19,11 +20,15 @@
 
 **Lifecycle:** [Placeholder: a consolidated lifecycle sequence is not present in the selected owner record.]
 
+
+
+
+
 ## Commands
 
 | Command | Kind | Identity field |
 | --- | --- | --- |
-| [CompleteEmailChallenge](../commands/email-address.md#completeemailchallenge) | http | ChallengeId |
+| [VerifyEmailAddress](../commands/email-address.md#verifyemailaddress) | http | ChallengeId |
 | [IssueEmailChallenge](../commands/email-address.md#issueemailchallenge) | http | ChallengeId |
 | [ReserveEmail](../commands/email-address.md#reserveemail) | http | CommandId |
 | [CompleteIdentityRecovery](../commands/email-address.md#completeidentityrecovery) | http | ChallengeId |
@@ -45,14 +50,14 @@
 
 | Row | Kind | Source owner | Target owner | Command |
 | --- | --- | --- | --- | --- |
-| [T056](../reactors/identity-recovery-acceptance-reactor.md#t056) | reaction_or_regular_process_stage | EmailAddress | IdentityRecovery | PrepareAccountRecovery |
-| [T058](../reactors/identity-recovery-acceptance-reactor.md#t058) | reaction_or_regular_process_stage | IdentityRecovery | EmailAddress | CompleteEmailRecoveryChallenge |
-| [T115](../reactors/email-challenge-delivery-reactor.md#t115) | reaction_or_regular_process_stage | EmailAddress | EmailChallengeDeliveryLedger | DeliverEmailChallenge |
-| [T116](../reactors/email-challenge-delivery-reactor.md#t116) | reaction_or_regular_process_stage | EmailAddress | EmailChallengeDeliveryLedger | DeliverRecoveryChallenge |
-| [S035](../reactors/email-reservation-reactor.md#s035) | business_receiver | UserIdentity | EmailAddress | ReserveEmail |
-| [N001](../reactors/email-challenge-delivery-reactor.md#n001) | nested_process_stage | EmailAddress | EmailChallengeDeliveryLedger | RecordEmailChallengeDeliverySent |
-| [N002](../reactors/email-challenge-delivery-reactor.md#n002) | nested_process_stage | EmailAddress | EmailChallengeDeliveryLedger | RecordEmailChallengeDeliveryFailed |
-| [A017](../reactors/unassigned-architecture-rows.md#a017) | process_abort_binding | EmailAddress | IdentityRecovery | RejectIdentityRecoveryPreparation |
+| [T056](../reactors/complete-account-recovery-reactor.md#t056) | reaction_or_regular_process_stage | EmailAddress | IdentityRecovery | PrepareAccountRecovery |
+| [T058](../reactors/complete-account-recovery-reactor.md#t058) | reaction_or_regular_process_stage | IdentityRecovery | EmailAddress | CompleteEmailRecoveryChallenge |
+| [T115](../reactors/send-account-verification-and-recovery-emails-reactor.md#t115) | reaction_or_regular_process_stage | EmailAddress | EmailChallengeDeliveryLedger | DeliverEmailChallenge |
+| [T116](../reactors/send-account-verification-and-recovery-emails-reactor.md#t116) | reaction_or_regular_process_stage | EmailAddress | EmailChallengeDeliveryLedger | DeliverRecoveryChallenge |
+| [S035](../reactors/keep-tenant-email-addresses-unique-reactor.md#s035) | business_receiver | UserIdentity | EmailAddress | ReserveEmail |
+| [N001](../reactors/send-account-verification-and-recovery-emails-reactor.md#n001) | nested_process_stage | EmailAddress | EmailChallengeDeliveryLedger | RecordEmailChallengeDeliverySent |
+| [N002](../reactors/send-account-verification-and-recovery-emails-reactor.md#n002) | nested_process_stage | EmailAddress | EmailChallengeDeliveryLedger | RecordEmailChallengeDeliveryFailed |
+| [A017](../reactors/unassigned-domain-choreography.md#a017) | process_abort_binding | EmailAddress | IdentityRecovery | RejectIdentityRecoveryPreparation |
 
 ## Product rules
 
@@ -65,7 +70,7 @@
 ## Evidence and complete record
 
 - Baseline source: [Placeholder: source file is not present in this checkout]
-- Aggregate review: [email-address-review-2026-10-29.md](../../product/definitive-aggregate-choreography/email-address-review-2026-10-29.md)
+- Aggregate review: [Placeholder: no owner-specific review file is present]
 - Full selected record: [JSON](../data/aggregates/email-address.json)
 
 > Target definition is separate from runtime qualification. Implementation status recorded by the source: `SEPARATE_VERIFICATION_REQUIRED_IMPLEMENTATION_HALTED`.

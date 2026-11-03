@@ -5,6 +5,7 @@
 - Business aggregate: `true`
 - Selected status: `SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED`
 
+
 ## Identity and invariant
 
 **Selected identity:** Tenant-scoped tenant / reviewId; `ReviewId` on `RecordProviderReview` is the caller-supplied immutable creation identity (exact immutable creation retry) so an exact retry resolves the original result and a different id is a different record; later mutations use CommandId bound to this identity and the expected revision.
@@ -18,6 +19,10 @@
 **Replay:** Current required authorization precedes replay; exact authorized retries resolve the original accepted result using the selected logical identity and immutable actor/intent/source binding. Fresh mutable feasibility, clock selection and body preparation cannot replace that original result. Expected revision is concurrency precondition, not a new identity.
 
 **Lifecycle:** [Placeholder: a consolidated lifecycle sequence is not present in the selected owner record.]
+
+
+
+
 
 ## Commands
 
@@ -39,16 +44,16 @@
 
 | Row | Kind | Source owner | Target owner | Command |
 | --- | --- | --- | --- | --- |
-| [T069](../reactors/provider-review-reactor.md#t069) | reaction_or_regular_process_stage | ProviderAssuranceReview | ProviderAssuranceReport | AuthorizeProviderAssuranceReportProviderReview |
-| [T070](../reactors/provider-review-reactor.md#t070) | reaction_or_regular_process_stage | ProviderAssuranceReview | ProviderAssuranceReport | CloseProviderAssuranceReportProviderReviewAuthorization |
-| [T077](../reactors/provider-review-reactor.md#t077) | reaction_or_regular_process_stage | ProviderAssuranceReview | ProviderAssuranceReview | CompleteProviderAssuranceReview |
-| [A011](../reactors/unassigned-architecture-rows.md#a011) | process_abort_binding | ProviderAssuranceReview | ProviderAssuranceReview | AbortProviderReview |
+| [T069](../reactors/record-provider-assurance-report-review-reactor.md#t069) | reaction_or_regular_process_stage | ProviderAssuranceReview | ProviderAssuranceReport | AuthorizeProviderAssuranceReportProviderReview |
+| [T070](../reactors/record-provider-assurance-report-review-reactor.md#t070) | reaction_or_regular_process_stage | ProviderAssuranceReview | ProviderAssuranceReport | CloseProviderAssuranceReportProviderReviewAuthorization |
+| [T077](../reactors/record-provider-assurance-report-review-reactor.md#t077) | reaction_or_regular_process_stage | ProviderAssuranceReview | ProviderAssuranceReview | CompleteProviderAssuranceReview |
+| [A011](../reactors/unassigned-domain-choreography.md#a011) | process_abort_binding | ProviderAssuranceReview | ProviderAssuranceReview | AbortProviderReview |
 
 ## Product rules
 
-- **D11-03** — A provider review's next review due date must be no later than one year after the review date for a material provider. Source: [m0-d11-vendors.md](../../product/decisions/m0-d11-vendors.md).
-- **D11-04** — A provider review records the provider, review time, evidence kind (soc2_type1, soc2_type2, iso27001, questionnaire), optional assurance report, conclusion, and reviewer. Source: [m0-d11-vendors.md](../../product/decisions/m0-d11-vendors.md).
-- **D11-02** — A material provider requires a current SOC 2 report, ISO/IEC 27001 certificate, or, if neither exists, a completed security questionnaire, reviewed at onboarding and at least annually; a non-material provider needs only a recorded classification rationale. Source: [m0-d11-vendors.md](../../product/decisions/m0-d11-vendors.md).
+- **D11-03** — A provider review's next review due date must be no later than one year after the review date for a material provider. Decision: [m0-d11-vendors.md](../decisions/m0-d11-vendors.md).
+- **D11-04** — A provider review records the provider, review time, evidence kind (soc2_type1, soc2_type2, iso27001, questionnaire), optional assurance report, conclusion, and reviewer. Decision: [m0-d11-vendors.md](../decisions/m0-d11-vendors.md).
+- **D11-02** — A material provider requires a current SOC 2 report, ISO/IEC 27001 certificate, or, if neither exists, a completed security questionnaire, reviewed at onboarding and at least annually; a non-material provider needs only a recorded classification rationale. Decision: [m0-d11-vendors.md](../decisions/m0-d11-vendors.md).
 
 ## Adopted architecture decisions
 

@@ -1,10 +1,12 @@
 # EmailAddress commands
 
+
+
 Selected command contracts: **6**. Complete selected contracts and companion source evidence: [owner command JSON](../data/commands/email-address.json).
 
 | Target command | Selected source name | Kind | Identity | Fields | HTTP routes |
 | --- | --- | --- | --- | --- | --- |
-| CompleteEmailChallenge | CompleteEmailChallenge | http | ChallengeId | 4 | PUT /api/v1/users/{user_id}/email-addresses/{email_address}/verifications/{challenge_id} |
+| VerifyEmailAddress | CompleteEmailChallenge | http | ChallengeId | 4 | PUT /api/v1/users/{user_id}/email-addresses/{email_address}/verifications/{challenge_id} |
 | IssueEmailChallenge | IssueEmailChallenge | http | ChallengeId | 3 | PUT /api/v1/users/{user_id}/email-addresses/{email_address}/challenges/{challenge_id} |
 | ReserveEmail | ReserveEmail | http | CommandId | 4 | PUT /api/v1/users/{user_id}/email-addresses/{email_address}/{command_id} |
 | CompleteIdentityRecovery | CompleteIdentityRecovery | http | ChallengeId | 4 | {"method":"PUT","path":"/api/v1/identity-recovery/challenges/{challenge_id}/completion"} |
@@ -13,14 +15,15 @@ Selected command contracts: **6**. Complete selected contracts and companion sou
 
 ## Selected command details
 
-### CompleteEmailChallenge
+### VerifyEmailAddress
 
 | Selected contract detail | Value |
 | --- | --- |
-| Target command name | CompleteEmailChallenge |
+| Target command name | VerifyEmailAddress |
 | Selected source command name | CompleteEmailChallenge |
-| Name decision | The selected source name is retained. |
-| Owner | EmailAddress |
+| Name decision | Names the business action: verify control of the email address by completing its current verification challenge. |
+| Target owner | EmailAddress |
+| Selected source owner | EmailAddress |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | http |
 | Logical identity | ChallengeId; Uuid; required=true; caller-supplied immutable creation identity: an exact retry with the same id and authored intent returns the original result; the same id with changed intent is refused; a different id is a different record |
@@ -69,7 +72,8 @@ Required tests: [Placeholder: required tests not recorded]
 | Target command name | IssueEmailChallenge |
 | Selected source command name | IssueEmailChallenge |
 | Name decision | The selected source name is retained. |
-| Owner | EmailAddress |
+| Target owner | EmailAddress |
+| Selected source owner | EmailAddress |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | http |
 | Logical identity | ChallengeId; Uuid; required=true; caller-supplied immutable creation identity: an exact retry with the same id and authored intent returns the original result; the same id with changed intent is refused; a different id is a different record |
@@ -117,7 +121,8 @@ Required tests: [Placeholder: required tests not recorded]
 | Target command name | ReserveEmail |
 | Selected source command name | ReserveEmail |
 | Name decision | The selected source name is retained. |
-| Owner | EmailAddress |
+| Target owner | EmailAddress |
+| Selected source owner | EmailAddress |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | http |
 | Logical identity | CommandId; Uuid; required=true; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
@@ -166,7 +171,8 @@ Required tests: [Placeholder: required tests not recorded]
 | Target command name | CompleteIdentityRecovery |
 | Selected source command name | CompleteIdentityRecovery |
 | Name decision | The selected source name is retained. |
-| Owner | EmailAddress |
+| Target owner | EmailAddress |
+| Selected source owner | EmailAddress |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | http |
 | Logical identity | ChallengeId; Uuid; required=true; caller-supplied immutable creation identity: an exact retry with the same id and authored intent returns the original result; the same id with changed intent is refused; a different id is a different record |
@@ -213,7 +219,8 @@ Required tests: [Placeholder: required tests not recorded]
 | Target command name | StartIdentityRecovery |
 | Selected source command name | StartIdentityRecovery |
 | Name decision | The selected source name is retained. |
-| Owner | EmailAddress |
+| Target owner | EmailAddress |
+| Selected source owner | EmailAddress |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | http |
 | Logical identity | ChallengeId; Uuid; required=true; caller-supplied immutable creation identity: an exact retry with the same id and authored intent returns the original result; the same id with changed intent is refused; a different id is a different record |
@@ -258,7 +265,8 @@ Required tests: [Placeholder: required tests not recorded]
 | Target command name | CompleteEmailRecoveryChallenge |
 | Selected source command name | CompleteEmailRecoveryChallenge |
 | Name decision | The selected source name is retained. |
-| Owner | EmailAddress |
+| Target owner | EmailAddress |
+| Selected source owner | EmailAddress |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; reactor; deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result |

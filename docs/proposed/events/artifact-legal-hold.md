@@ -68,7 +68,7 @@ Canonical events: **2**. Complete canonical event and available schema records: 
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [X006](../reactors/artifact-legal-hold-reactor.md#x006) | physical root, logical prerequisite | ArtifactLegalHold | StopArtifactDisposalForHold | ArtifactDisposition |
+| [X006](../reactors/protect-artifacts-under-legal-hold-reactor.md#x006) | physical root, logical prerequisite | ArtifactLegalHold | StopArtifactDisposalForHold | ArtifactDisposition |
 
 ### ArtifactLegalHoldReleased
 
@@ -129,7 +129,7 @@ Canonical events: **2**. Complete canonical event and available schema records: 
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [X006](../reactors/artifact-legal-hold-reactor.md#x006) | physical root, logical prerequisite | ArtifactLegalHold | StopArtifactDisposalForHold | ArtifactDisposition |
+| [X006](../reactors/protect-artifacts-under-legal-hold-reactor.md#x006) | physical root, logical prerequisite | ArtifactLegalHold | StopArtifactDisposalForHold | ArtifactDisposition |
 
 
 

@@ -5,6 +5,7 @@
 - Business aggregate: `true`
 - Selected status: `SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED`
 
+
 ## Identity and invariant
 
 **Selected identity:** Tenant + caller ProgramId; creation uses that identity and later mutations use caller CommandId.
@@ -18,6 +19,10 @@
 **Replay:** Current required authorization precedes replay; exact authorized retries resolve the original accepted result using the selected logical identity and immutable actor/intent/source binding. Fresh mutable feasibility, clock selection and body preparation cannot replace that original result. Expected revision is concurrency precondition, not a new identity.
 
 **Lifecycle:** [Placeholder: a consolidated lifecycle sequence is not present in the selected owner record.]
+
+
+
+
 
 ## Commands
 
@@ -41,10 +46,10 @@
 
 ## Product rules
 
-- **D01-02** — Program target dates are optional (nullable) values that carry author and revision attribution; a target date is never promoted to an auditor-confirmed date by passage of time, status display, or an imported note. Source: [m0-d01-program-targets.md](../../product/decisions/m0-d01-program-targets.md).
-- **D01-04** — Revising a program plan preserves earlier target dates and their author attribution rather than overwriting them. Source: [m0-d01-program-targets.md](../../product/decisions/m0-d01-program-targets.md).
-- **D02-02** — A program references a criteria catalog edition by exact edition identifier, and existing programs and engagements keep the edition they selected; moving to a newer edition is an explicit, attributed remapping. Source: [m0-d02-criteria-content.md](../../product/decisions/m0-d02-criteria-content.md).
-- **D01-01** — A program keeps one identity through its readiness, Type I, and Type II stages; the stages are planned and do not assert that an examination or operating period occurred, and an engagement and its outcome are separate records from the program. Source: [m0-d01-program-targets.md](../../product/decisions/m0-d01-program-targets.md).
+- **D01-02** — Program target dates are optional (nullable) values that carry author and revision attribution; a target date is never promoted to an auditor-confirmed date by passage of time, status display, or an imported note. Decision: [m0-d01-program-targets.md](../decisions/m0-d01-program-targets.md).
+- **D01-04** — Revising a program plan preserves earlier target dates and their author attribution rather than overwriting them. Decision: [m0-d01-program-targets.md](../decisions/m0-d01-program-targets.md).
+- **D02-02** — A program references a criteria catalog edition by exact edition identifier, and existing programs and engagements keep the edition they selected; moving to a newer edition is an explicit, attributed remapping. Decision: [m0-d02-criteria-content.md](../decisions/m0-d02-criteria-content.md).
+- **D01-01** — A program keeps one identity through its readiness, Type I, and Type II stages; the stages are planned and do not assert that an examination or operating period occurred, and an engagement and its outcome are separate records from the program. Decision: [m0-d01-program-targets.md](../decisions/m0-d01-program-targets.md).
 
 ## Adopted architecture decisions
 

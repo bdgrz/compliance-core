@@ -5,6 +5,7 @@
 - Business aggregate: `true`
 - Selected status: `SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED`
 
+
 ## Identity and invariant
 
 **Selected identity:** Tenant-scoped tenant / client-service-epoch: one stream per tenant (client-service-epoch); there is no creation key, the first NonattestServiceRecorded or evaluation admission opens it, and every command binds CommandId plus the expected service epoch.
@@ -18,6 +19,10 @@
 **Replay:** Current required authorization precedes replay; exact authorized retries resolve the original accepted result using the selected logical identity and immutable actor/intent/source binding. Fresh mutable feasibility, clock selection and body preparation cannot replace that original result. Expected revision is concurrency precondition, not a new identity.
 
 **Lifecycle:** [Placeholder: a consolidated lifecycle sequence is not present in the selected owner record.]
+
+
+
+
 
 ## Commands
 
@@ -47,15 +52,15 @@
 | --- | --- | --- | --- | --- |
 | [T004](../reactors/engagement-acceptance-reactor.md#t004) | reaction_or_regular_process_stage | ServiceEngagementIndependence | ClientServiceIndependence | ReserveEngagementServiceHistory |
 | [T007](../reactors/engagement-acceptance-reactor.md#t007) | reaction_or_regular_process_stage | ServiceEngagementIndependence | ClientServiceIndependence | ReleaseEngagementServiceHistoryReservation |
-| [T106](../reactors/client-independence-preview-reactor.md#t106) | reaction_or_regular_process_stage | ClientServiceIndependence | ClientIndependenceDecision | RecordClientIndependenceEvaluation |
-| [T107](../reactors/engagement-personal-decision-reactor.md#t107) | reaction_or_regular_process_stage | ServiceEngagementIndependence | ClientServiceIndependence | AuthorizeClientServicePersonalDecision |
-| [T111](../reactors/engagement-personal-decision-reactor.md#t111) | reaction_or_regular_process_stage | ServiceEngagementIndependence | ClientServiceIndependence | CloseClientServicePersonalDecisionAuthorization |
+| [T106](../reactors/evaluate-client-independence-for-acceptance-reactor.md#t106) | reaction_or_regular_process_stage | ClientServiceIndependence | ClientIndependenceDecision | RecordClientIndependenceEvaluation |
+| [T107](../reactors/record-engagement-independence-decisions-reactor.md#t107) | reaction_or_regular_process_stage | ServiceEngagementIndependence | ClientServiceIndependence | AuthorizeClientServicePersonalDecision |
+| [T111](../reactors/record-engagement-independence-decisions-reactor.md#t111) | reaction_or_regular_process_stage | ServiceEngagementIndependence | ClientServiceIndependence | CloseClientServicePersonalDecisionAuthorization |
 
 ## Product rules
 
-- **D26-03** — An attest ServiceEngagement cannot be accepted for a client that received any service classified impairing in the active IndependenceRuleSet from the firm within 12 months before the examination period starts, evaluated against the client's NonattestServiceRecord history with no hard-coded service kinds. Source: [m0-d26-independence.md](../../product/decisions/m0-d26-independence.md).
-- **D26-04** — A client whose only nonattest service was a readiness assessment is conditionally_compatible, and acceptance requires a recorded partner evaluation. Source: [m0-d26-independence.md](../../product/decisions/m0-d26-independence.md).
-- **D26-08** — A new attest ServiceEngagement for a client previously served with advisory work goes through the same evaluation using the client's full NonattestServiceRecord history, and advisory staff who served the client are excluded from the attest team. Source: [m0-d26-independence.md](../../product/decisions/m0-d26-independence.md).
+- **D26-03** — An attest ServiceEngagement cannot be accepted for a client that received any service classified impairing in the active IndependenceRuleSet from the firm within 12 months before the examination period starts, evaluated against the client's NonattestServiceRecord history with no hard-coded service kinds. Decision: [m0-d26-independence.md](../decisions/m0-d26-independence.md).
+- **D26-04** — A client whose only nonattest service was a readiness assessment is conditionally_compatible, and acceptance requires a recorded partner evaluation. Decision: [m0-d26-independence.md](../decisions/m0-d26-independence.md).
+- **D26-08** — A new attest ServiceEngagement for a client previously served with advisory work goes through the same evaluation using the client's full NonattestServiceRecord history, and advisory staff who served the client are excluded from the attest team. Decision: [m0-d26-independence.md](../decisions/m0-d26-independence.md).
 
 ## Adopted architecture decisions
 
@@ -64,7 +69,7 @@
 ## Evidence and complete record
 
 - Baseline source: [Placeholder: source file is not present in this checkout]
-- Aggregate review: [client-service-independence-review-2026-10-29.md](../../product/definitive-aggregate-choreography/client-service-independence-review-2026-10-29.md)
+- Aggregate review: [Placeholder: no owner-specific review file is present]
 - Full selected record: [JSON](../data/aggregates/client-service-independence.json)
 
 > Target definition is separate from runtime qualification. Implementation status recorded by the source: `SEPARATE_VERIFICATION_REQUIRED_IMPLEMENTATION_HALTED`.

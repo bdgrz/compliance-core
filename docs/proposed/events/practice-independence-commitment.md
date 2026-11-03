@@ -38,7 +38,6 @@ Canonical events: **3**. Complete canonical event and available schema records: 
 | Schema discriminator | bdgrz.practice-independence-commitment.practice-independence-committed |
 | Schema discriminatorVersion | 1 |
 | Schema owner | PracticeIndependenceCommitment |
-| Schema existingContract | null (recorded) |
 | Schema status | selected target schema; implementation pending |
 | Schema reason | typed reactor receiver accepted business fact |
 | Schema changes | None listed |
@@ -145,7 +144,6 @@ EngagementIndependenceIntent
 | Schema discriminator | bdgrz.practice-independence-commitment.practice-independence-reservation-settled |
 | Schema discriminatorVersion | 1 |
 | Schema owner | PracticeIndependenceCommitment |
-| Schema existingContract | null (recorded) |
 | Schema status | selected target schema; implementation pending |
 | Schema reason | typed reactor receiver accepted business fact |
 | Schema changes | None listed |
@@ -252,7 +250,6 @@ EngagementIndependenceIntent
 | Schema discriminator | bdgrz.practice-independence-commitment.practice-independence-reserved |
 | Schema discriminatorVersion | 1 |
 | Schema owner | PracticeIndependenceCommitment |
-| Schema existingContract | null (recorded) |
 | Schema status | selected target schema; implementation pending |
 | Schema reason | typed reactor receiver accepted business fact |
 | Schema changes | None listed |

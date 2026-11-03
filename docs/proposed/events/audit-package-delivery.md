@@ -119,7 +119,7 @@ PackageDeliveryRecordingIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T081](../reactors/audit-package-delivery-admission-reactor.md#t081) | emitted semantic fact | AuditPackageManifest | RecordAuditPackageDelivery | AuditPackageDelivery |
+| [T081](../reactors/record-audit-package-delivery-reactor.md#t081) | emitted semantic fact | AuditPackageManifest | RecordAuditPackageDelivery | AuditPackageDelivery |
 
 
 

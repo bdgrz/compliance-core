@@ -8,14 +8,7 @@
   "invariant": "Manifest identity, selected immutable content version and delivery gate.",
   "boundaryDecision": "selected_split",
   "mustPreserve": "No current aggregate should retain all build attempts or delivery history as command state.",
-  "sources": [
-    {
-      "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
-      "jsonPointer": "/splitOwners/9/targetOwners/0",
-      "line": 1073,
-      "sha256": "d349d94b7c43f4d82020ecf36bdacf1aff98bc6498e14993582f1c3164b21f19"
-    }
-  ],
+  "sources": [],
   "baselineSourcePath": "src/Compliance.Core/Features/AuditPackages/AuditPackage.cs",
   "baselineEvents": [
     "AuditPackageAmended",
@@ -97,13 +90,9 @@
           "policy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/9",
-        "line": 1041,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
-      "kind": "http"
+      "kind": "http",
+      "sourceOwner": "AuditPackageManifest",
+      "owner": "AuditPackageManifest"
     },
     {
       "command": "ApproveAuditPackageDisclosure",
@@ -174,13 +163,9 @@
           "policy": "ApiUser + existing request-scope authorizers"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/16",
-        "line": 1901,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
-      "kind": "http"
+      "kind": "http",
+      "sourceOwner": "AuditPackageManifest",
+      "owner": "AuditPackageManifest"
     },
     {
       "command": "ApproveAuditPackageValidationOverride",
@@ -246,13 +231,9 @@
           "policy": "ApiUser + existing request-scope authorizers"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/17",
-        "line": 2027,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
-      "kind": "http"
+      "kind": "http",
+      "sourceOwner": "AuditPackageManifest",
+      "owner": "AuditPackageManifest"
     },
     {
       "command": "CreateAuditPackage",
@@ -298,13 +279,9 @@
           "policy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/42",
-        "line": 5047,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
-      "kind": "http"
+      "kind": "http",
+      "sourceOwner": "AuditPackageManifest",
+      "owner": "AuditPackageManifest"
     },
     {
       "command": "RecordAuditPackageBuildResult",
@@ -371,18 +348,11 @@
       "responseContract": {
         "mode": "internal",
         "responseType": "Unit",
-        "firstHttpStatus": null,
         "terminalResultType": "Unit"
       },
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/95",
-        "line": 11016,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
       "reactor": "AuditPackageBuildResultReactor",
-      "sourceOwner": "AuditPackageBuildProcess",
+      "sourceOwner": "AuditPackageManifest",
       "sourceEvents": [
         "process:verified_build_output"
       ],
@@ -392,7 +362,8 @@
       ],
       "effectKind": "record_audit_package_build_result",
       "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
-      "kind": "receiver"
+      "kind": "receiver",
+      "owner": "AuditPackageManifest"
     },
     {
       "command": "RecordAuditPackageDelivery",
@@ -463,13 +434,9 @@
           "authorizationPolicy": "ApiUser + existing client-management/program authorizers + AuditPackageCommandActor personal HTTP"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/96",
-        "line": 11143,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
-      "kind": "http"
+      "kind": "http",
+      "sourceOwner": "AuditPackageManifest",
+      "owner": "AuditPackageManifest"
     },
     {
       "command": "RequestAuditPackageBuild",
@@ -535,13 +502,9 @@
           "authorizationPolicy": "ApiUser + existing client-management/program authorizers + AuditPackageCommandActor personal HTTP"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/120",
-        "line": 13838,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
-      "kind": "http"
+      "kind": "http",
+      "sourceOwner": "AuditPackageManifest",
+      "owner": "AuditPackageManifest"
     },
     {
       "command": "ValidateAuditPackage",
@@ -602,13 +565,9 @@
           "policy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/157",
-        "line": 18276,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
-      "kind": "http"
+      "kind": "http",
+      "sourceOwner": "AuditPackageManifest",
+      "owner": "AuditPackageManifest"
     }
   ],
   "eventAuthority": "selected_final_event_catalog",
@@ -616,90 +575,42 @@
     {
       "event": "AuditPackageAmended",
       "discriminator": "bdgrz.auditpackages.audit-package-amended",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/72",
-        "line": 8740,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     },
     {
       "event": "AuditPackageBuildRequested",
       "discriminator": "bdgrz.auditpackages.audit-package-build-requested",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/73",
-        "line": 8812,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     },
     {
       "event": "AuditPackageBuilt",
       "discriminator": "bdgrz.auditpackages.audit-package-built",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/74",
-        "line": 9010,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     },
     {
       "event": "AuditPackageCreated",
       "discriminator": "bdgrz.auditpackages.audit-package-created",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/75",
-        "line": 9208,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     },
     {
       "event": "AuditPackageDeliveryAdmitted",
       "discriminator": "bdgrz.audit-package-manifest.audit-package-delivery-admitted",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/77",
-        "line": 9514,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     },
     {
       "event": "AuditPackageDisclosureApproved",
       "discriminator": "bdgrz.auditpackages.audit-package-disclosure-approved",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/78",
-        "line": 9738,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     },
     {
       "event": "AuditPackageValidated",
       "discriminator": "bdgrz.auditpackages.audit-package-validated",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/79",
-        "line": 9810,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     },
     {
       "event": "AuditPackageValidationOverrideApproved",
       "discriminator": "bdgrz.auditpackages.audit-package-validation-override-approved",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/80",
-        "line": 9882,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     }
   ],
   "choreography": [
@@ -707,37 +618,19 @@
       "reactor": "AuditPackageBuildProcessReactor",
       "sourceOwner": "AuditPackageManifest",
       "targetOwner": "AuditPackageBuildProcess",
-      "command": "StartAuditPackageBuild",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "jsonPointer": "/reactors/31",
-        "line": 2631,
-        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
-      }
+      "command": "StartAuditPackageBuild"
     },
     {
       "reactor": "AuditPackageBuildResultReactor",
       "sourceOwner": "AuditPackageBuildProcess",
       "targetOwner": "AuditPackageManifest",
-      "command": "RecordAuditPackageBuildResult",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "jsonPointer": "/reactors/32",
-        "line": 2716,
-        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
-      }
+      "command": "RecordAuditPackageBuildResult"
     },
     {
       "reactor": "AuditPackageDeliveryAdmissionReactor",
       "sourceOwner": "AuditPackageManifest",
       "targetOwner": "AuditPackageDelivery",
-      "command": "MaterializeRecordedAuditPackageDelivery",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "jsonPointer": "/reactors/81",
-        "line": 6957,
-        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
-      }
+      "command": "MaterializeRecordedAuditPackageDelivery"
     }
   ],
   "status": "SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED",
@@ -755,12 +648,6 @@
         "required": true,
         "origin": "client",
         "rule": "one immutable authored operation"
-      },
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/9",
-        "line": 1041,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       }
     },
     {
@@ -771,12 +658,6 @@
         "required": true,
         "origin": "client",
         "rule": "one immutable authored operation"
-      },
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/16",
-        "line": 1901,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       }
     },
     {
@@ -787,12 +668,6 @@
         "required": true,
         "origin": "client",
         "rule": "one immutable authored operation"
-      },
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/17",
-        "line": 2027,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       }
     },
     {
@@ -803,12 +678,6 @@
         "required": true,
         "origin": "client",
         "rule": "exact immutable creation retry"
-      },
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/42",
-        "line": 5047,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       }
     },
     {
@@ -819,12 +688,6 @@
         "required": true,
         "origin": "source_event_effect",
         "rule": "UUIDv5(source eventId, length-prefixed effectKind + canonical target stream + source lifecycle episode); external process callback source is the immutable accepted business source event plus exact effect key, never attemptId."
-      },
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/95",
-        "line": 11016,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       }
     },
     {
@@ -835,12 +698,6 @@
         "required": true,
         "origin": "client",
         "rule": "Must equal existing UUIDv5(53cb20d6-01ef-5fd5-99b3-04087e39bf77, packageId + newline + packageVersion + newline + Clean(recipient) + newline + Clean(deliveryReference)); this identifies exact manual delivery recording."
-      },
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/96",
-        "line": 11143,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       }
     },
     {
@@ -851,12 +708,6 @@
         "required": true,
         "origin": "client",
         "rule": "Required BuildKey with PackageId/PackageVersion. IIdentifiedRequest.RequestId = UUIDv5(698c0bb6-2dfc-58b3-b2fd-2f3dc04369f8, $\"{PackageId}\\n{PackageVersion}\\n{BuildKey.Trim()}\"); preserve existing token validation."
-      },
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/120",
-        "line": 13838,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       }
     },
     {
@@ -867,12 +718,6 @@
         "required": true,
         "origin": "client",
         "rule": "one immutable authored operation"
-      },
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/157",
-        "line": 18276,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       }
     }
   ],
@@ -888,5 +733,6 @@
   "decidesCovers": [
     "D17-04"
   ],
-  "decidesAuthored": "2026-10-29"
+  "decidesAuthored": "2026-10-29",
+  "sourceOwner": "AuditPackageManifest"
 }

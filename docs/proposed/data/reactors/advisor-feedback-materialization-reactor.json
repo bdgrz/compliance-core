@@ -34,7 +34,6 @@
       "currentRegisteredRootTypes": [
         "AdvisorFeedbackMaterializationReactor"
       ],
-      "plannedRootRole": null,
       "processes": [
         "IndependentChildMaterialization"
       ],

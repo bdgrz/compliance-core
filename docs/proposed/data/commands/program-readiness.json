@@ -65,13 +65,9 @@
           "policy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/46",
-        "line": 5466,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
       "kind": "http",
+      "sourceOwner": "ProgramReadiness",
+      "owner": "ProgramReadiness",
       "sourceName": "DecideReadiness",
       "targetName": "DecideReadiness"
     },
@@ -144,13 +140,9 @@
           "policy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/47",
-        "line": 5587,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
       "kind": "http",
+      "sourceOwner": "ProgramReadiness",
+      "owner": "ProgramReadiness",
       "sourceName": "DecideTypeIEntry",
       "targetName": "DecideTypeIEntry"
     },
@@ -203,13 +195,9 @@
           "policy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/150",
-        "line": 17477,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
       "kind": "http",
+      "sourceOwner": "ProgramReadiness",
+      "owner": "ProgramReadiness",
       "sourceName": "RunReadinessAssessment",
       "targetName": "RunReadinessAssessment"
     },
@@ -253,15 +241,9 @@
           "required": true
         }
       ],
-      "responseContract": null,
-      "http": null,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/source-admission-contracts.json",
-        "jsonPointer": "/contracts/17",
-        "line": 1075,
-        "sha256": "f1d549ed0879c816cb26e86879f8fa658dab0a8acbf7c591e4d4aed40483f8ae"
-      },
       "kind": "abort",
+      "sourceOwner": "ProgramReadiness",
+      "owner": "ProgramReadiness",
       "sourceName": "AbortReadinessDecision",
       "targetName": "AbortReadinessDecision"
     },
@@ -334,7 +316,7 @@
         }
       ],
       "reactor": "ReadinessAssessmentAdoptionReactor",
-      "sourceOwner": "ReadinessAssessment",
+      "sourceOwner": "ProgramReadiness",
       "sourceEvents": [
         "ReadinessAssessmentRecorded"
       ],
@@ -346,10 +328,7 @@
       "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
       "handler": "AdoptReadinessAssessmentHandler",
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "recorded": "2026-10-29"
-      },
+      "owner": "ProgramReadiness",
       "sourceName": "AdoptReadinessAssessment",
       "targetName": "AdoptReadinessAssessment"
     },
@@ -424,10 +403,7 @@
       "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
       "handler": "CompleteReadinessDecisionHandler",
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "recorded": "2026-10-29"
-      },
+      "owner": "ProgramReadiness",
       "sourceName": "CompleteReadinessDecision",
       "targetName": "CompleteReadinessDecision"
     },
@@ -502,10 +478,7 @@
       "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
       "handler": "CompleteTypeIEntryDecisionHandler",
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "recorded": "2026-10-29"
-      },
+      "owner": "ProgramReadiness",
       "sourceName": "CompleteTypeIEntryDecision",
       "targetName": "CompleteTypeIEntryDecision"
     }
@@ -628,8 +601,7 @@
       "expectedRevisionScope": {
         "field": "ExpectedRevision",
         "owner": "ProgramReadiness",
-        "counter": "logical ResourceRevision of this owner",
-        "nullableInternalRule": null
+        "counter": "logical ResourceRevision of this owner"
       }
     },
     {
@@ -756,8 +728,7 @@
       "expectedRevisionScope": {
         "field": "ExpectedRevision",
         "owner": "ProgramReadiness",
-        "counter": "logical ResourceRevision of this owner",
-        "nullableInternalRule": null
+        "counter": "logical ResourceRevision of this owner"
       }
     },
     {

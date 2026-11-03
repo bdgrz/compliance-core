@@ -160,7 +160,6 @@
         "discriminator": "bdgrz.declared-application.application-import-effect-canceled",
         "discriminatorVersion": 1,
         "owner": "DeclaredApplication",
-        "existingContract": null,
         "status": "selected target schema; implementation pending",
         "reason": "typed reactor receiver accepted business fact",
         "fields": [
@@ -534,7 +533,6 @@
         "discriminator": "bdgrz.declared-application.application-import-target-authorized",
         "discriminatorVersion": 1,
         "owner": "DeclaredApplication",
-        "existingContract": null,
         "status": "selected target schema; implementation pending",
         "reason": "typed reactor receiver accepted business fact",
         "fields": [
@@ -712,7 +710,6 @@
         "discriminator": "bdgrz.declared-application.application-import-target-settled",
         "discriminatorVersion": 1,
         "owner": "DeclaredApplication",
-        "existingContract": null,
         "status": "selected target schema; implementation pending",
         "reason": "typed reactor receiver accepted business fact",
         "fields": [

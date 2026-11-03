@@ -1,5 +1,7 @@
 # TypeIIPeriod commands
 
+
+
 Selected command contracts: **10**. Complete selected contracts and companion source evidence: [owner command JSON](../data/commands/type-ii-period.json).
 
 | Target command | Selected source name | Kind | Identity | Fields | HTTP routes |
@@ -24,7 +26,8 @@ Selected command contracts: **10**. Complete selected contracts and companion so
 | Target command name | AmendTypeIIPeriodClose |
 | Selected source command name | AmendTypeIIPeriodClose |
 | Name decision | The selected source name is retained. |
-| Owner | TypeIIPeriod |
+| Target owner | TypeIIPeriod |
+| Selected source owner | TypeIIPeriod |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | command |
 | Logical identity | CommandId; Uuid; required=true; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
@@ -74,7 +77,8 @@ Required tests: [Placeholder: required tests not recorded]
 | Target command name | ApproveTypeIIPeriodClose |
 | Selected source command name | ApproveTypeIIPeriodClose |
 | Name decision | The selected source name is retained. |
-| Owner | TypeIIPeriod |
+| Target owner | TypeIIPeriod |
+| Selected source owner | TypeIIPeriod |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | http |
 | Logical identity | CommandId; Uuid; required=true; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
@@ -126,7 +130,8 @@ Required tests: [Placeholder: required tests not recorded]
 | Target command name | FreezeTypeIIPeriodClose |
 | Selected source command name | FreezeTypeIIPeriodClose |
 | Name decision | The selected source name is retained. |
-| Owner | TypeIIPeriod |
+| Target owner | TypeIIPeriod |
+| Selected source owner | TypeIIPeriod |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | http |
 | Logical identity | CommandId; Uuid; required=true; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
@@ -177,7 +182,8 @@ Required tests: [Placeholder: required tests not recorded]
 | Target command name | OpenDueControlOccurrences |
 | Selected source command name | GenerateDueControlOccurrences |
 | Name decision | Opens the control work due under the exact accepted plan and period. |
-| Owner | TypeIIPeriod |
+| Target owner | TypeIIPeriod |
+| Selected source owner | TypeIIPeriod |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | creation |
 | Logical identity | GenerationKey; Uuid; required=true; caller-supplied immutable creation identity: an exact retry with the same id and authored intent returns the original result; the same id with changed intent is refused; a different id is a different record |
@@ -225,7 +231,8 @@ Required tests: [Placeholder: required tests not recorded]
 | Target command name | StartTypeIIObservationPeriod |
 | Selected source command name | StartTypeIIObservationPeriod |
 | Name decision | The selected source name is retained. |
-| Owner | TypeIIPeriod |
+| Target owner | TypeIIPeriod |
+| Selected source owner | TypeIIPeriod |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | http |
 | Logical identity | PeriodId; Uuid; required=true; caller-supplied immutable creation identity: an exact retry with the same id and authored intent returns the original result; the same id with changed intent is refused; a different id is a different record |
@@ -275,7 +282,8 @@ Required tests: [Placeholder: required tests not recorded]
 | Target command name | AmendTypeIIObservationPeriod |
 | Selected source command name | AmendTypeIIObservationPeriod |
 | Name decision | The selected source name is retained. |
-| Owner | TypeIIPeriod |
+| Target owner | TypeIIPeriod |
+| Selected source owner | TypeIIPeriod |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | http |
 | Logical identity | CommandId; Uuid; required=true; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
@@ -326,7 +334,8 @@ Required tests: [Placeholder: required tests not recorded]
 | Target command name | CancelTypeIIPeriodAmendment |
 | Selected source command name | CancelTypeIIPeriodAmendment |
 | Name decision | The selected source name is retained. |
-| Owner | TypeIIPeriod |
+| Target owner | TypeIIPeriod |
+| Selected source owner | TypeIIPeriod |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | http |
 | Logical identity | CommandId; Uuid; required=true; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
@@ -376,7 +385,8 @@ Required tests: [Placeholder: required tests not recorded]
 | Target command name | RejectTypeIIPeriodOpening |
 | Selected source command name | RejectTypeIIPeriodOpening |
 | Name decision | The selected source name is retained. |
-| Owner | TypeIIPeriod |
+| Target owner | TypeIIPeriod |
+| Selected source owner | TypeIIPeriod |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | abort |
 | Logical identity | CommandId; Uuid; required=true; abort receiver identity bound to the exact admitted operation and generation: exact redelivery resolves the original rejected result; an abort after a terminal outcome is a no-op |
@@ -425,7 +435,8 @@ Required tests: [Placeholder: required tests not recorded]
 | Target command name | RejectTypeIIPeriodAmendment |
 | Selected source command name | RejectTypeIIPeriodAmendment |
 | Name decision | The selected source name is retained. |
-| Owner | TypeIIPeriod |
+| Target owner | TypeIIPeriod |
+| Selected source owner | TypeIIPeriod |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | abort |
 | Logical identity | CommandId; Uuid; required=true; abort receiver identity bound to the exact admitted operation and generation: exact redelivery resolves the original rejected result; an abort after a terminal outcome is a no-op |
@@ -474,7 +485,8 @@ Required tests: [Placeholder: required tests not recorded]
 | Target command name | ApplyTypeIIPeriodRange |
 | Selected source command name | ApplyTypeIIPeriodRange |
 | Name decision | The selected source name is retained. |
-| Owner | TypeIIPeriod |
+| Target owner | TypeIIPeriod |
+| Selected source owner | TypeIIPeriod |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; reactor; deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result |
@@ -524,26 +536,3 @@ Required tests: [Placeholder: required tests not recorded]
 [Placeholder: no companion target-command source records match this owner.]
 
 [Placeholder: owner-wide caller/channel authorization boundary is not consolidated in this catalog.]
-
-## Current source write requests without selected target entries
-
-These request types exist in the current source and have handlers or receiver implementations, but are not included in this owner's selected command contracts above. This section records their implemented request shape without implying that the proposed target has approved a separate owner or business rule.
-
-### RecordTypeIIPeriodCloseValidation
-
-[Placeholder: source summary not recorded]
-
-- Source: [src/Compliance.Common/Features/Operations/Commands/RecordTypeIIPeriodCloseValidation.cs](../../../src/Compliance.Common/Features/Operations/Commands/RecordTypeIIPeriodCloseValidation.cs)
-- Handler: [src/Compliance.Core/Features/Operations/Handlers/RecordTypeIIPeriodCloseValidationHandler.cs](../../../src/Compliance.Core/Features/Operations/Handlers/RecordTypeIIPeriodCloseValidationHandler.cs)
-- Discriminator: `bdgrz.operations.record-type-ii-period-close-validation@1`
-- Request interfaces: IRequest, IIdentifiedRequest, IProgramScopedRequest, IClientManagementMutationRequest, ICallable
-- Response: `UnitResult`
-- HTTP route: none recorded; dispatched by its internal workflow/receiver.
-
-| Field | Type | Required |
-| --- | --- | --- |
-| CommandId | Uuid | true |
-| TenantId | Uuid | true |
-| ProgramId | Uuid | true |
-| PeriodId | Uuid | true |
-| ExpectedRevision | long | true |

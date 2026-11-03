@@ -173,7 +173,7 @@ ChildAdmissionIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T013](../reactors/advisor-feedback-materialization-reactor.md#t013) | emitted semantic fact | AdvisorHandoff | RecordAdvisorHandoffFeedback | AdvisorFeedbackThread |
+| [T013](../reactors/preserve-advisor-feedback-after-handoff-reactor.md#t013) | emitted semantic fact | AdvisorHandoff | RecordAdvisorHandoffFeedback | AdvisorFeedbackThread |
 
 ### AdvisorFeedbackResolved
 

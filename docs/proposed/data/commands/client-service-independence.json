@@ -50,13 +50,9 @@
           "policy": "ApiUser + existing request-scope authorizers"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/52",
-        "line": 6215,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
       "kind": "http",
+      "sourceOwner": "ClientServiceIndependence",
+      "owner": "ClientServiceIndependence",
       "sourceName": "EvaluateClientIndependence",
       "targetName": "EvaluateClientIndependence"
     },
@@ -104,13 +100,9 @@
           "policy": "ApiUser + existing request-scope authorizers"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/105",
-        "line": 12249,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
       "kind": "http",
+      "sourceOwner": "ClientServiceIndependence",
+      "owner": "ClientServiceIndependence",
       "sourceName": "RecordNonattestService",
       "targetName": "RecordNonattestService"
     },
@@ -173,7 +165,7 @@
         }
       ],
       "reactor": "EngagementAcceptanceReactor",
-      "sourceOwner": "ServiceEngagementIndependence",
+      "sourceOwner": "ClientServiceIndependence",
       "sourceEvents": [
         "ServiceEngagementAcceptanceRequested",
         "ServiceEngagementStaffAssignmentRequested"
@@ -186,10 +178,7 @@
       "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
       "handler": "AcquireEngagementServiceEpochHandler",
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "recorded": "2026-10-29"
-      },
+      "owner": "ClientServiceIndependence",
       "sourceName": "AcquireEngagementServiceEpoch",
       "targetName": "ReserveEngagementServiceHistory"
     },
@@ -252,7 +241,7 @@
         }
       ],
       "reactor": "EngagementServiceEpochReleaseReactor",
-      "sourceOwner": "ServiceEngagementIndependence",
+      "sourceOwner": "ClientServiceIndependence",
       "sourceEvents": [
         "ServiceEngagementAcceptanceRecorded",
         "ServiceEngagementStaffAssigned",
@@ -267,10 +256,7 @@
       "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
       "handler": "ReleaseEngagementServiceEpochHandler",
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "recorded": "2026-10-29"
-      },
+      "owner": "ClientServiceIndependence",
       "sourceName": "ReleaseEngagementServiceEpoch",
       "targetName": "ReleaseEngagementServiceHistoryReservation"
     },
@@ -333,7 +319,7 @@
         }
       ],
       "reactor": "EngagementPersonalDecisionSourceUseReactor",
-      "sourceOwner": "ServiceEngagementIndependence",
+      "sourceOwner": "ClientServiceIndependence",
       "sourceEvents": [
         "EngagementPersonalDecisionAdmitted"
       ],
@@ -345,10 +331,7 @@
       "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
       "handler": "AuthorizeClientServicePersonalDecisionUseHandler",
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "recorded": "2026-10-29"
-      },
+      "owner": "ClientServiceIndependence",
       "sourceName": "AuthorizeClientServicePersonalDecisionUse",
       "targetName": "AuthorizeClientServicePersonalDecision"
     },
@@ -406,7 +389,7 @@
         }
       ],
       "reactor": "ClientServicePersonalDecisionSettlementReactor",
-      "sourceOwner": "ServiceEngagementIndependence",
+      "sourceOwner": "ClientServiceIndependence",
       "sourceEvents": [
         "EngagementPersonalDecisionAuthorized",
         "EngagementPersonalDecisionCanceled"
@@ -419,10 +402,7 @@
       "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
       "handler": "SettleClientServicePersonalDecisionUseHandler",
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "recorded": "2026-10-29"
-      },
+      "owner": "ClientServiceIndependence",
       "sourceName": "SettleClientServicePersonalDecisionUse",
       "targetName": "CloseClientServicePersonalDecisionAuthorization"
     }

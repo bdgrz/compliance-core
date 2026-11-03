@@ -1,5 +1,7 @@
 # OperationalProcessNameClaim commands
 
+
+
 Selected command contracts: **2**. Complete selected contracts and companion source evidence: [owner command JSON](../data/commands/operational-process-name-claim.json).
 
 | Target command | Selected source name | Kind | Identity | Fields | HTTP routes |
@@ -16,7 +18,8 @@ Selected command contracts: **2**. Complete selected contracts and companion sou
 | Target command name | ClaimOperationalProcessName |
 | Selected source command name | ClaimOperationalProcessName |
 | Name decision | The selected source name is retained. |
-| Owner | OperationalProcessNameClaim |
+| Target owner | OperationalProcessNameClaim |
+| Selected source owner | OperationalProcessNameClaim |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; internal; deterministic receiver identity derived from the admitted root fact, episode and generation: exact redelivery resolves the original result, a changed admission is a new identity |
@@ -69,7 +72,8 @@ Required tests: [Placeholder: required tests not recorded]
 | Target command name | ReleaseOperationalProcessName |
 | Selected source command name | ReleaseOperationalProcessName |
 | Name decision | The selected source name is retained. |
-| Owner | OperationalProcessNameClaim |
+| Target owner | OperationalProcessNameClaim |
+| Selected source owner | OperationalProcessNameClaim |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; internal; deterministic receiver identity derived from the admitted root fact, episode and generation: exact redelivery resolves the original result, a changed admission is a new identity |

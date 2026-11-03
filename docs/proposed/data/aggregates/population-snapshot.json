@@ -8,14 +8,7 @@
   "invariant": "Freeze exactly one canonical immutable population identity, optionally a manifest over ordered immutable chunk identities; amendments have separate roots.",
   "boundaryDecision": "retain",
   "boundaryRationale": "Rows may live outside root because immutable hashes/manifests bind exact order/count; root commit makes snapshot visible only after chunks exist. Current implementation has retry-based recovery, not a recovery reactor.",
-  "sources": [
-    {
-      "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
-      "jsonPointer": "/aggregates/60",
-      "line": 39296,
-      "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
-    }
-  ],
+  "sources": [],
   "baselineSourcePath": "src/Compliance.Core/Features/Snapshots/PopulationSnapshot.cs",
   "baselineEvents": [
     "PopulationSnapshotFrozen"
@@ -71,22 +64,14 @@
       ],
       "http": [],
       "status": "PLANNED",
-      "source": {
-        "path": "docs/product/definitive-aggregate-choreography/decisions.json",
-        "recorded": "2026-10-29"
-      }
+      "sourceOwner": "PopulationSnapshot",
+      "owner": "PopulationSnapshot"
     }
   ],
   "eventAuthority": "retained_baseline_business_facts_requires_schema_reconciliation",
   "events": [
     {
       "event": "PopulationSnapshotFrozen",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
-        "jsonPointer": "/aggregates/60",
-        "line": 39296,
-        "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
-      },
       "baselineContract": {
         "event": "PopulationSnapshotFrozen",
         "emitters": [
@@ -192,5 +177,6 @@
   "decidesCovers": [
     "D17-01"
   ],
-  "decidesAuthored": "2026-10-29"
+  "decidesAuthored": "2026-10-29",
+  "sourceOwner": "PopulationSnapshot"
 }

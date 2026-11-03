@@ -29,7 +29,6 @@
         "discriminator": "bdgrz.independence-rule-catalog.independence-rule-catalog-engagement-use-authorized",
         "discriminatorVersion": 1,
         "owner": "IndependenceRuleCatalog",
-        "existingContract": null,
         "status": "selected target schema; implementation pending",
         "reason": "typed reactor receiver accepted business fact",
         "fields": [
@@ -193,7 +192,6 @@
         "discriminator": "bdgrz.independence-rule-catalog.independence-rule-catalog-engagement-use-settled",
         "discriminatorVersion": 1,
         "owner": "IndependenceRuleCatalog",
-        "existingContract": null,
         "status": "selected target schema; implementation pending",
         "reason": "typed reactor receiver accepted business fact",
         "fields": [

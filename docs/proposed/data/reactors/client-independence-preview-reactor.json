@@ -28,7 +28,6 @@
       "currentRegisteredRootTypes": [
         "ClientIndependencePreviewReactor"
       ],
-      "plannedRootRole": null,
       "processes": [
         "ClientIndependencePreviewProcess"
       ],

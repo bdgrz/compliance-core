@@ -5,6 +5,7 @@
 - Business aggregate: `true`
 - Selected status: `SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED`
 
+
 ## Identity and invariant
 
 **Selected identity:** Existing UUIDv5 of tenant + team + member. Each assignment episode remains exact; selected native operation/receiver identity is bound to that member/team episode.
@@ -18,6 +19,10 @@
 **Replay:** Current required authorization precedes replay; exact authorized retries resolve the original accepted result using the selected logical identity and immutable actor/intent/source binding. Fresh mutable feasibility, clock selection and body preparation cannot replace that original result. Expected revision is concurrency precondition, not a new identity.
 
 **Lifecycle:** [Placeholder: a consolidated lifecycle sequence is not present in the selected owner record.]
+
+
+
+
 
 ## Commands
 
@@ -41,14 +46,14 @@
 
 | Row | Kind | Source owner | Target owner | Command |
 | --- | --- | --- | --- | --- |
-| [T047](../reactors/administrator-assignment-withdrawal-reactor.md#t047) | reaction_or_regular_process_stage | TenantManagerGuard | TeamMember | ApplyAdministratorAssignmentWithdrawal |
-| [T049](../reactors/administrator-neutral-assignment-mutation-reactor.md#t049) | reaction_or_regular_process_stage | TenantManagerGuard | TeamMember | RemoveAdministratorAssignment |
-| [T098](../reactors/administrator-assignment-restoration-reactor.md#t098) | reaction_or_regular_process_stage | TenantManagerGuard | TeamMember | ApplyAdministratorAssignmentRestoration |
-| [S004](../reactors/member-retirement-reactor.md#s004) | business_receiver | Member | TeamMember | RemoveRetiredMemberAccessAndAssignments |
-| [S007](../reactors/retired-team-assignment-reactor.md#s007) | business_receiver | TeamMember | TeamMember | RemoveRetiredMemberAccessAndAssignments |
-| [S010](../reactors/team-cleanup-reactor.md#s010) | business_receiver | Team | TeamMember | RemoveTeamMember |
-| [S016](../reactors/tenant-rbac-bootstrap-reactor.md#s016) | business_receiver | Tenant | TeamMember | AssignTeamMember |
-| [S027](../reactors/tenant-invitation-reactor.md#s027) | business_receiver | TenantInvitation | TeamMember | AssignTeamMember |
+| [T047](../reactors/administrator-assignment-withdrawal-reactor.md#t047) | reaction_or_regular_process_stage | TenantAdministratorContinuity | TeamMember | ApplyAdministratorAssignmentWithdrawal |
+| [T049](../reactors/remove-unneeded-administrator-assignment-reactor.md#t049) | reaction_or_regular_process_stage | TenantAdministratorContinuity | TeamMember | RemoveAdministratorAssignment |
+| [T098](../reactors/administrator-assignment-restoration-reactor.md#t098) | reaction_or_regular_process_stage | TenantAdministratorContinuity | TeamMember | ApplyAdministratorAssignmentRestoration |
+| [S004](../reactors/remove-member-assignments-and-access-after-membership-ends-reactor.md#s004) | business_receiver | Member | TeamMember | RemoveRetiredMemberAccessAndAssignments |
+| [S007](../reactors/remove-team-assignment-after-member-retirement-reactor.md#s007) | business_receiver | TeamMember | TeamMember | RemoveRetiredMemberAccessAndAssignments |
+| [S010](../reactors/remove-team-assignments-after-team-deletion-reactor.md#s010) | business_receiver | Team | TeamMember | RemoveTeamMember |
+| [S016](../reactors/set-up-starting-tenant-access-reactor.md#s016) | business_receiver | Tenant | TeamMember | AssignTeamMember |
+| [S027](../reactors/activate-membership-after-invitation-acceptance-reactor.md#s027) | business_receiver | TenantInvitation | TeamMember | AssignTeamMember |
 | [S034](../reactors/tenant-self-service-activation-reactor.md#s034) | business_receiver | TeamMember | Tenant | ActivateTenant |
 
 ## Product rules

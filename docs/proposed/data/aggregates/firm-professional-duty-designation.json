@@ -8,14 +8,7 @@
   "invariant": "One active signed duty designation and monotonic signed authority revision per exact subject/duty/scope; retain continuity proof. The platform scope is explicit and is not an empty tenant UUID.",
   "boundaryDecision": "selected_split",
   "mustPreserve": "Exact predecessor, monotonically increasing authority revision, stable signed subject, valid staff source proof.",
-  "sources": [
-    {
-      "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
-      "jsonPointer": "/splitOwners/0/targetOwners/0",
-      "line": 23,
-      "sha256": "d349d94b7c43f4d82020ecf36bdacf1aff98bc6498e14993582f1c3164b21f19"
-    }
-  ],
+  "sources": [],
   "baselineSourcePath": "src/Compliance.Core/Features/AccessControl/FirmProfessionalDutyCatalog.cs",
   "baselineEvents": [
     "FirmProfessionalDutyDesignationRecorded",
@@ -72,13 +65,9 @@
           "policy": "existing platform firm-duty authorizer + signed assertion verifier"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/103",
-        "line": 12043,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
-      "kind": "http"
+      "kind": "http",
+      "sourceOwner": "FirmProfessionalDutyDesignation",
+      "owner": "FirmProfessionalDutyDesignation"
     },
     {
       "command": "RevokeFirmProfessionalDutyDesignation",
@@ -124,13 +113,9 @@
           "policy": "existing platform firm-duty authorizer + signed assertion verifier"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/148",
-        "line": 17265,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
-      "kind": "http"
+      "kind": "http",
+      "sourceOwner": "FirmProfessionalDutyDesignation",
+      "owner": "FirmProfessionalDutyDesignation"
     },
     {
       "command": "RejectProfessionalDutyChange",
@@ -172,15 +157,9 @@
           "required": true
         }
       ],
-      "responseContract": null,
-      "http": null,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/source-admission-contracts.json",
-        "jsonPointer": "/contracts/24",
-        "line": 1481,
-        "sha256": "f1d549ed0879c816cb26e86879f8fa658dab0a8acbf7c591e4d4aed40483f8ae"
-      },
-      "kind": "abort"
+      "kind": "abort",
+      "sourceOwner": "FirmProfessionalDutyDesignation",
+      "owner": "FirmProfessionalDutyDesignation"
     },
     {
       "command": "ApplyProfessionalDutyChange",
@@ -246,7 +225,7 @@
         }
       ],
       "reactor": "ProfessionalDesignationApplicationReactor",
-      "sourceOwner": "ProfessionalAssertionIdentityClaim",
+      "sourceOwner": "FirmProfessionalDutyDesignation",
       "sourceEvents": [
         "ProfessionalAssertionIdentityClaimed"
       ],
@@ -259,10 +238,7 @@
       "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
       "handler": "ApplyProfessionalDutyChangeHandler",
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "recorded": "2026-10-29"
-      }
+      "owner": "FirmProfessionalDutyDesignation"
     },
     {
       "command": "AuthorizeFirmProfessionalDutyDesignationEngagementUse",
@@ -333,7 +309,7 @@
         }
       ],
       "reactor": "EngagementFirmProfessionalDutyDesignationUseReactor",
-      "sourceOwner": "ServiceEngagementIndependence",
+      "sourceOwner": "FirmProfessionalDutyDesignation",
       "sourceEvents": [
         "ServiceEngagementAcceptanceRequested",
         "ServiceEngagementStaffAssignmentRequested",
@@ -347,10 +323,7 @@
       "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
       "handler": "AuthorizeFirmProfessionalDutyDesignationEngagementUseHandler",
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "recorded": "2026-10-29"
-      }
+      "owner": "FirmProfessionalDutyDesignation"
     },
     {
       "command": "SettleFirmProfessionalDutyDesignationEngagementUse",
@@ -416,7 +389,7 @@
         }
       ],
       "reactor": "EngagementFirmProfessionalDutyDesignationUseSettlementReactor",
-      "sourceOwner": "ServiceEngagementIndependence",
+      "sourceOwner": "FirmProfessionalDutyDesignation",
       "sourceEvents": [
         "EngagementPracticeCommitmentsAuthorized",
         "ServiceEngagementAcceptanceRejected",
@@ -432,10 +405,7 @@
       "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
       "handler": "SettleFirmProfessionalDutyDesignationEngagementUseHandler",
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "recorded": "2026-10-29"
-      }
+      "owner": "FirmProfessionalDutyDesignation"
     }
   ],
   "eventAuthority": "selected_final_event_catalog",
@@ -443,68 +413,32 @@
     {
       "event": "FirmProfessionalDutyDesignationEngagementUseAuthorized",
       "discriminator": "bdgrz.firm-professional-duty-designation.firm-professional-duty-designation-engagement-use-authorized",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/151",
-        "line": 18734,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     },
     {
       "event": "FirmProfessionalDutyDesignationEngagementUseSettled",
       "discriminator": "bdgrz.firm-professional-duty-designation.firm-professional-duty-designation-engagement-use-settled",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/152",
-        "line": 18870,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     },
     {
       "event": "FirmProfessionalDutyDesignationRecorded",
       "discriminator": "bdgrz.firm.professional-duty.designation-recorded",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/153",
-        "line": 19006,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     },
     {
       "event": "FirmProfessionalDutyDesignationRevoked",
       "discriminator": "bdgrz.firm.professional-duty.designation-revoked",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/154",
-        "line": 19193,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     },
     {
       "event": "ProfessionalDutyChangeAccepted",
       "discriminator": "bdgrz.firm-professional-duty-designation.professional-duty-change-accepted",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/206",
-        "line": 27411,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     },
     {
       "event": "ProfessionalDutyChangeRejected",
       "discriminator": "bdgrz.firm-professional-duty-designation.professional-duty-change-rejected",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/207",
-        "line": 27589,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     }
   ],
   "choreography": [
@@ -512,73 +446,37 @@
       "reactor": "ProfessionalAssertionClaimReactor",
       "sourceOwner": "FirmProfessionalDutyDesignation",
       "targetOwner": "ProfessionalAssertionIdentityClaim",
-      "command": "ClaimProfessionalAssertionIdentity",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "jsonPointer": "/reactors/0",
-        "line": 7,
-        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
-      }
+      "command": "ClaimProfessionalAssertionIdentity"
     },
     {
       "reactor": "ProfessionalDesignationApplicationReactor",
       "sourceOwner": "ProfessionalAssertionIdentityClaim",
       "targetOwner": "FirmProfessionalDutyDesignation",
-      "command": "ApplyProfessionalDutyChange",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "jsonPointer": "/reactors/1",
-        "line": 99,
-        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
-      }
+      "command": "ApplyProfessionalDutyChange"
     },
     {
       "reactor": "EngagementFirmProfessionalDutyDesignationUseReactor",
       "sourceOwner": "ServiceEngagementIndependence",
       "targetOwner": "FirmProfessionalDutyDesignation",
-      "command": "AuthorizeFirmProfessionalDutyDesignationEngagementUse",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "jsonPointer": "/reactors/91",
-        "line": 7837,
-        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
-      }
+      "command": "AuthorizeFirmProfessionalDutyDesignationEngagementUse"
     },
     {
       "reactor": "EngagementFirmProfessionalDutyDesignationUseSettlementReactor",
       "sourceOwner": "ServiceEngagementIndependence",
       "targetOwner": "FirmProfessionalDutyDesignation",
-      "command": "SettleFirmProfessionalDutyDesignationEngagementUse",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "jsonPointer": "/reactors/92",
-        "line": 7934,
-        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
-      }
+      "command": "SettleFirmProfessionalDutyDesignationEngagementUse"
     },
     {
       "reactor": "ProfessionalDutyStaffEligibilityReactor",
       "sourceOwner": "FirmProfessionalDutyDesignation",
       "targetOwner": "FirmStaffRecord",
-      "command": "AuthorizeFirmStaffProfessionalDutyUse",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "jsonPointer": "/reactors/113",
-        "line": 9728,
-        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
-      }
+      "command": "AuthorizeFirmStaffProfessionalDutyUse"
     },
     {
       "reactor": "ProfessionalDutyStaffEligibilitySettlementReactor",
       "sourceOwner": "FirmProfessionalDutyDesignation",
       "targetOwner": "FirmStaffRecord",
-      "command": "SettleFirmStaffProfessionalDutyUse",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "jsonPointer": "/reactors/114",
-        "line": 9820,
-        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
-      }
+      "command": "SettleFirmStaffProfessionalDutyUse"
     }
   ],
   "status": "SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED",
@@ -596,12 +494,6 @@
         "required": true,
         "origin": "client",
         "rule": "one immutable signed authority assertion; verified AssertionId must match the signed assertion"
-      },
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/103",
-        "line": 12043,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       }
     },
     {
@@ -612,23 +504,11 @@
         "required": true,
         "origin": "client",
         "rule": "one immutable signed authority assertion; verified AssertionId must match the signed assertion"
-      },
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/148",
-        "line": 17265,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       }
     },
     {
       "command": "RejectProfessionalDutyChange",
-      "logicalIdentity": "CommandId",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/source-admission-contracts.json",
-        "jsonPointer": "/contracts/24",
-        "line": 1481,
-        "sha256": "f1d549ed0879c816cb26e86879f8fa658dab0a8acbf7c591e4d4aed40483f8ae"
-      }
+      "logicalIdentity": "CommandId"
     }
   ],
   "selectedReplayRule": "Current required authorization precedes replay; exact authorized retries resolve the original accepted result using the selected logical identity and immutable actor/intent/source binding. Fresh mutable feasibility, clock selection and body preparation cannot replace that original result. Expected revision is concurrency precondition, not a new identity.",
@@ -637,5 +517,6 @@
   "decidesCovers": [
     "D03-14"
   ],
-  "decidesAuthored": "2026-10-29"
+  "decidesAuthored": "2026-10-29",
+  "sourceOwner": "FirmProfessionalDutyDesignation"
 }

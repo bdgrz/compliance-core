@@ -8,14 +8,7 @@
   "invariant": "One immutable exact preview/item selection and shared-rationale bulk decision, item reservations and one all-item publication decision. Partial item application stays unpublished.",
   "boundaryDecision": "selected_split",
   "mustPreserve": "Keep reviewer and remediation owner distinct per item unless exact waiver; no stale projected summary may satisfy completion.",
-  "sources": [
-    {
-      "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
-      "jsonPointer": "/splitOwners/4/targetOwners/2",
-      "line": 506,
-      "sha256": "d349d94b7c43f4d82020ecf36bdacf1aff98bc6498e14993582f1c3164b21f19"
-    }
-  ],
+  "sources": [],
   "baselineSourcePath": "src/Compliance.Core/Features/AccessReviews/AccessReviewCampaign.cs",
   "baselineEvents": [],
   "preliminaryNewEvents": [],
@@ -55,15 +48,9 @@
           "required": true
         }
       ],
-      "responseContract": null,
-      "http": null,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/source-admission-contracts.json",
-        "jsonPointer": "/contracts/10",
-        "line": 679,
-        "sha256": "f1d549ed0879c816cb26e86879f8fa658dab0a8acbf7c591e4d4aed40483f8ae"
-      },
-      "kind": "abort"
+      "kind": "abort",
+      "sourceOwner": "AccessReviewDecisionBatch",
+      "owner": "AccessReviewDecisionBatch"
     },
     {
       "command": "PublishAccessReviewDecisionBatch",
@@ -136,10 +123,7 @@
       "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
       "handler": "PublishAccessReviewDecisionBatchHandler",
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "recorded": "2026-10-29"
-      }
+      "owner": "AccessReviewDecisionBatch"
     },
     {
       "command": "CompleteAccessReviewDecisionBatchCancellation",
@@ -212,10 +196,7 @@
       "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
       "handler": "CompleteAccessReviewDecisionBatchCancellationHandler",
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "recorded": "2026-10-29"
-      }
+      "owner": "AccessReviewDecisionBatch"
     },
     {
       "command": "MaterializeAccessReviewDecisionBatch",
@@ -276,7 +257,7 @@
         }
       ],
       "reactor": "AccessReviewDecisionBatchAdmissionReactor",
-      "sourceOwner": "AccessReviewCampaign",
+      "sourceOwner": "AccessReviewDecisionBatch",
       "sourceEvents": [
         "AccessReviewDecisionBatchAdmitted"
       ],
@@ -288,10 +269,7 @@
       "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
       "handler": "MaterializeAccessReviewDecisionBatchHandler",
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "recorded": "2026-10-29"
-      }
+      "owner": "AccessReviewDecisionBatch"
     }
   ],
   "eventAuthority": "selected_final_event_catalog",
@@ -299,46 +277,22 @@
     {
       "event": "AccessReviewDecisionBatchAccepted",
       "discriminator": "bdgrz.access-review-decision-batch.access-review-decision-batch-accepted",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/16",
-        "line": 1521,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     },
     {
       "event": "AccessReviewDecisionBatchCanceled",
       "discriminator": "bdgrz.access-review-decision-batch.access-review-decision-batch-canceled",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/18",
-        "line": 1853,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     },
     {
       "event": "AccessReviewDecisionBatchCancellationAccepted",
       "discriminator": "bdgrz.access-review-decision-batch.access-review-decision-batch-cancellation-accepted",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/19",
-        "line": 2019,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     },
     {
       "event": "AccessReviewDecisionBatchPublished",
       "discriminator": "bdgrz.access-review-decision-batch.access-review-decision-batch-published",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/20",
-        "line": 2185,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     }
   ],
   "choreography": [
@@ -346,85 +300,43 @@
       "reactor": "AccessReviewBulkReservationReactor",
       "sourceOwner": "AccessReviewDecisionBatch",
       "targetOwner": "AccessReviewItem",
-      "command": "ReserveAccessReviewItemDecision",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "jsonPointer": "/reactors/9",
-        "line": 784,
-        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
-      }
+      "command": "ReserveAccessReviewItemDecision"
     },
     {
       "reactor": "AccessReviewBulkApplicationReactor",
       "sourceOwner": "AccessReviewDecisionBatch",
       "targetOwner": "AccessReviewItem",
-      "command": "ApplyAccessReviewItemDecision",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "jsonPointer": "/reactors/10",
-        "line": 876,
-        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
-      }
+      "command": "ApplyAccessReviewItemDecision"
     },
     {
       "reactor": "AccessReviewBulkPublicationReactor",
       "sourceOwner": "AccessReviewDecisionBatch",
       "targetOwner": "AccessReviewDecisionBatch",
-      "command": "PublishAccessReviewDecisionBatch",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "jsonPointer": "/reactors/11",
-        "line": 963,
-        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
-      }
+      "command": "PublishAccessReviewDecisionBatch"
     },
     {
       "reactor": "AccessReviewBulkCancellationReactor",
       "sourceOwner": "AccessReviewDecisionBatch",
       "targetOwner": "AccessReviewItem",
-      "command": "FenceAccessReviewItemDecision",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "jsonPointer": "/reactors/12",
-        "line": 1045,
-        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
-      }
+      "command": "FenceAccessReviewItemDecision"
     },
     {
       "reactor": "AccessReviewBulkCancellationCompletionReactor",
       "sourceOwner": "AccessReviewDecisionBatch",
       "targetOwner": "AccessReviewDecisionBatch",
-      "command": "CompleteAccessReviewDecisionBatchCancellation",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "jsonPointer": "/reactors/79",
-        "line": 6791,
-        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
-      }
+      "command": "CompleteAccessReviewDecisionBatchCancellation"
     },
     {
       "reactor": "AccessReviewBulkSettlementReactor",
       "sourceOwner": "AccessReviewDecisionBatch",
       "targetOwner": "AccessReviewItem",
-      "command": "SettleAccessReviewItemDecision",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "jsonPointer": "/reactors/80",
-        "line": 6873,
-        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
-      }
+      "command": "SettleAccessReviewItemDecision"
     },
     {
       "reactor": "AccessReviewDecisionBatchAdmissionReactor",
       "sourceOwner": "AccessReviewCampaign",
       "targetOwner": "AccessReviewDecisionBatch",
-      "command": "MaterializeAccessReviewDecisionBatch",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "jsonPointer": "/reactors/86",
-        "line": 7398,
-        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
-      }
+      "command": "MaterializeAccessReviewDecisionBatch"
     }
   ],
   "status": "SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED",
@@ -436,13 +348,7 @@
   "selectedLogicalIdentityBindings": [
     {
       "command": "CancelAccessReviewDecisionBatch",
-      "logicalIdentity": "CommandId",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/source-admission-contracts.json",
-        "jsonPointer": "/contracts/10",
-        "line": 679,
-        "sha256": "f1d549ed0879c816cb26e86879f8fa658dab0a8acbf7c591e4d4aed40483f8ae"
-      }
+      "logicalIdentity": "CommandId"
     }
   ],
   "selectedReplayRule": "Current required authorization precedes replay; exact authorized retries resolve the original accepted result using the selected logical identity and immutable actor/intent/source binding. Fresh mutable feasibility, clock selection and body preparation cannot replace that original result. Expected revision is concurrency precondition, not a new identity.",
@@ -451,5 +357,6 @@
       "date": "2026-10-29",
       "previous": "tenant / (campaignId, decisionBatchId)"
     }
-  ]
+  ],
+  "sourceOwner": "AccessReviewDecisionBatch"
 }

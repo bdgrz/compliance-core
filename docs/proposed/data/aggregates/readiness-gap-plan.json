@@ -8,14 +8,7 @@
   "invariant": "One stable gap action/owner/date plan and independent annotations; admission/seal generation fences changes during a readiness decision.",
   "boundaryDecision": "selected_split",
   "mustPreserve": "No projected latest assessment or gap list can authorize entry; all exceptions/required plans acknowledged.",
-  "sources": [
-    {
-      "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
-      "jsonPointer": "/splitOwners/21/targetOwners/1",
-      "line": 2235,
-      "sha256": "d349d94b7c43f4d82020ecf36bdacf1aff98bc6498e14993582f1c3164b21f19"
-    }
-  ],
+  "sources": [],
   "baselineSourcePath": "src/Compliance.Core/Features/Readiness/ReadinessLedger.cs",
   "baselineEvents": [
     "ReadinessGapAnnotated",
@@ -87,13 +80,9 @@
           "policy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/12",
-        "line": 1418,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
-      "kind": "http"
+      "kind": "http",
+      "sourceOwner": "ReadinessGapPlan",
+      "owner": "ReadinessGapPlan"
     },
     {
       "command": "PlanReadinessGap",
@@ -159,13 +148,9 @@
           "policy": "ApiUser + existing request-scope authorizers"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/75",
-        "line": 8696,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
-      "kind": "http"
+      "kind": "http",
+      "sourceOwner": "ReadinessGapPlan",
+      "owner": "ReadinessGapPlan"
     },
     {
       "command": "AuthorizeReadinessGapPlanReadinessDecisionUse",
@@ -231,7 +216,7 @@
         }
       ],
       "reactor": "ReadinessDecisionReadinessGapPlanAuthorizationReactor",
-      "sourceOwner": "ProgramReadiness",
+      "sourceOwner": "ReadinessGapPlan",
       "sourceEvents": [
         "ReadinessDecisionAccepted",
         "TypeIEntryDecisionAccepted"
@@ -244,10 +229,7 @@
       "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
       "handler": "AuthorizeReadinessGapPlanReadinessDecisionUseHandler",
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "recorded": "2026-10-29"
-      }
+      "owner": "ReadinessGapPlan"
     },
     {
       "command": "SettleReadinessGapPlanReadinessDecisionUse",
@@ -313,7 +295,7 @@
         }
       ],
       "reactor": "ReadinessDecisionReadinessGapPlanSettlementReactor",
-      "sourceOwner": "ProgramReadiness",
+      "sourceOwner": "ReadinessGapPlan",
       "sourceEvents": [
         "ReadinessDecisionRecorded",
         "TypeIEntryDecisionRecorded",
@@ -327,10 +309,7 @@
       "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
       "handler": "SettleReadinessGapPlanReadinessDecisionUseHandler",
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "recorded": "2026-10-29"
-      }
+      "owner": "ReadinessGapPlan"
     }
   ],
   "eventAuthority": "selected_final_event_catalog",
@@ -338,46 +317,22 @@
     {
       "event": "ReadinessGapAnnotated",
       "discriminator": "bdgrz.readiness.gap.annotated",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/229",
-        "line": 31325,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     },
     {
       "event": "ReadinessGapPlanReadinessDecisionUseAuthorized",
       "discriminator": "bdgrz.readiness-gap-plan.readiness-gap-plan-readiness-decision-use-authorized",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/230",
-        "line": 31385,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     },
     {
       "event": "ReadinessGapPlanReadinessDecisionUseSettled",
       "discriminator": "bdgrz.readiness-gap-plan.readiness-gap-plan-readiness-decision-use-settled",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/231",
-        "line": 31521,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     },
     {
       "event": "ReadinessGapPlanned",
       "discriminator": "bdgrz.readiness.gap.planned",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/232",
-        "line": 31657,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     }
   ],
   "choreography": [
@@ -385,25 +340,13 @@
       "reactor": "ReadinessDecisionReadinessGapPlanAuthorizationReactor",
       "sourceOwner": "ProgramReadiness",
       "targetOwner": "ReadinessGapPlan",
-      "command": "AuthorizeReadinessGapPlanReadinessDecisionUse",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "jsonPointer": "/reactors/65",
-        "line": 5584,
-        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
-      }
+      "command": "AuthorizeReadinessGapPlanReadinessDecisionUse"
     },
     {
       "reactor": "ReadinessDecisionReadinessGapPlanSettlementReactor",
       "sourceOwner": "ProgramReadiness",
       "targetOwner": "ReadinessGapPlan",
-      "command": "SettleReadinessGapPlanReadinessDecisionUse",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "jsonPointer": "/reactors/66",
-        "line": 5673,
-        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
-      }
+      "command": "SettleReadinessGapPlanReadinessDecisionUse"
     }
   ],
   "status": "SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED",
@@ -421,12 +364,6 @@
         "required": true,
         "origin": "client",
         "rule": "one immutable authored operation"
-      },
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/12",
-        "line": 1418,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       }
     },
     {
@@ -437,12 +374,6 @@
         "required": true,
         "origin": "client",
         "rule": "one immutable authored operation"
-      },
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/75",
-        "line": 8696,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       }
     }
   ],
@@ -452,5 +383,6 @@
       "date": "2026-10-29",
       "previous": "tenant / (programId, gapId)"
     }
-  ]
+  ],
+  "sourceOwner": "ReadinessGapPlan"
 }

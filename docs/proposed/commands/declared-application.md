@@ -1,5 +1,7 @@
 # DeclaredApplication commands
 
+
+
 Selected command contracts: **8**. Complete selected contracts and companion source evidence: [owner command JSON](../data/commands/declared-application.json).
 
 | Target command | Selected source name | Kind | Identity | Fields | HTTP routes |
@@ -22,7 +24,8 @@ Selected command contracts: **8**. Complete selected contracts and companion sou
 | Target command name | ApplyApplicationImportChange |
 | Selected source command name | ApplyApplicationImportEffect |
 | Name decision | Applies the exact frozen import change provisionally while the full batch remains unpublished. |
-| Owner | DeclaredApplication |
+| Target owner | DeclaredApplication |
+| Selected source owner | DeclaredApplication |
 | Contract record status | target_contract |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; source_event_effect; UUIDv5(source eventId, length-prefixed effectKind + canonical target stream + source lifecycle episode); external process callback source is the immutable accepted business source event plus exact effect key, never attemptId. |
@@ -33,7 +36,7 @@ Selected command contracts: **8**. Complete selected contracts and companion sou
 | Policy preservation | All current source handler/aggregate validation rules and source test expectations apply, except the explicit contractChanges and boundary protocol. Lifetime caps and technical attempt events are removed with their structural replacement. |
 | Contract changes | Add required CommandId., Use the exact trusted internal receiver signature from the reactor catalog; Source is concretely typed and carries the accepted business fact, never a process-stage pseudo-event., Use the exact trusted internal receiver signature from the reactor catalog; Source is concretely typed and carries the accepted business fact, never a process-stage pseudo-event. |
 | Guard order | bind_required_ids, authenticate_authorize, canonicalize_authored_intent, resolve_native_operation_facts, compare_owner_episode_actor_kind_intent_original_revision, validate_new_owner_revision_and_source_permits, append_complete_concrete_attributed_batch |
-| Response contract | `{"mode":"internal","responseType":"Unit","firstHttpStatus":null,"terminalResultType":"Unit"}` |
+| Response contract | `{"mode":"internal","responseType":"Unit","terminalResultType":"Unit"}` |
 | Expected revision scope | `{"field":"ExpectedRevision","owner":"DeclaredApplication","counter":"logical ResourceRevision of this owner","nullableInternalRule":"Explicit null requires exact source authorization/generation and physical append OCC; never substitute current logical revision."}` |
 | Authorizer sources | src/Compliance.Core/Features/Applications/ApplyApplicationImportEffectAuthorizer.cs |
 | Source contract | src/Compliance.Common/Features/Applications/ApplyApplicationImportEffect.cs |
@@ -77,7 +80,8 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Target command name | DeclareApplication |
 | Selected source command name | DeclareApplication |
 | Name decision | The selected source name is retained. |
-| Owner | DeclaredApplication |
+| Target owner | DeclaredApplication |
+| Selected source owner | DeclaredApplication |
 | Contract record status | target_contract |
 | Kind | http |
 | Logical identity | ApplicationId; Uuid; required=true; client; caller-supplied immutable creation identity: an exact retry with the same id and authored intent returns the original result; the same id with changed intent is refused; a different id is a different record |
@@ -89,7 +93,7 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Contract changes | Add required ApplicationId., Remove optional DeclarationKey; ApplicationId is the required creation key. |
 | Guard order | bind_required_ids, authenticate_authorize, canonicalize_authored_intent, resolve_native_operation_facts, compare_owner_episode_actor_kind_intent_original_revision, validate_new_owner_revision_and_source_permits, append_complete_concrete_attributed_batch |
 | Response contract | `{"mode":"immediate_original_result","responseType":"ApplicationRegistration","firstHttpStatus":200,"terminalResultType":"ApplicationRegistration"}` |
-| Expected revision scope | `{"field":null,"owner":"DeclaredApplication","counter":"No primary caller ResourceRevision. Enforce required authored source/epoch/version tokens, immutable creation identity or trusted proof/generation as declared; append uses physical OCC."}` |
+| Expected revision scope | `{"owner":"DeclaredApplication","counter":"No primary caller ResourceRevision. Enforce required authored source/epoch/version tokens, immutable creation identity or trusted proof/generation as declared; append uses physical OCC."}` |
 | Authorizer sources | src/Compliance.Core/Features/AccessControl/ClientManagementMutationAuthorizer.cs, src/Compliance.Core/Features/Applications/ApplicationInventoryAuthorizer.cs |
 | Source contract | src/Compliance.Common/Features/Applications/DeclareApplication.cs |
 | Primary handler | DeclareApplicationHandler |
@@ -135,7 +139,8 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Target command name | RetireApplication |
 | Selected source command name | RetireApplication |
 | Name decision | The selected source name is retained. |
-| Owner | DeclaredApplication |
+| Target owner | DeclaredApplication |
+| Selected source owner | DeclaredApplication |
 | Contract record status | target_contract |
 | Kind | http |
 | Logical identity | CommandId; Uuid; required=true; client; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
@@ -147,7 +152,7 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Contract changes | Add required CommandId. |
 | Guard order | bind_required_ids, authenticate_authorize, canonicalize_authored_intent, resolve_native_operation_facts, compare_owner_episode_actor_kind_intent_original_revision, validate_new_owner_revision_and_source_permits, append_complete_concrete_attributed_batch |
 | Response contract | `{"mode":"immediate_original_result","responseType":"Unit","firstHttpStatus":200,"terminalResultType":"Unit"}` |
-| Expected revision scope | `{"field":"ExpectedRevision","owner":"DeclaredApplication","counter":"logical ResourceRevision of this owner","nullableInternalRule":null}` |
+| Expected revision scope | `{"field":"ExpectedRevision","owner":"DeclaredApplication","counter":"logical ResourceRevision of this owner"}` |
 | Authorizer sources | src/Compliance.Core/Features/AccessControl/ClientManagementMutationAuthorizer.cs, src/Compliance.Core/Features/Applications/ApplicationInventoryAuthorizer.cs |
 | Source contract | src/Compliance.Common/Features/Applications/RetireApplication.cs |
 | Primary handler | RetireApplicationHandler |
@@ -189,7 +194,8 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Target command name | ReviseApplication |
 | Selected source command name | ReviseApplication |
 | Name decision | The selected source name is retained. |
-| Owner | DeclaredApplication |
+| Target owner | DeclaredApplication |
+| Selected source owner | DeclaredApplication |
 | Contract record status | target_contract |
 | Kind | http |
 | Logical identity | CommandId; Uuid; required=true; client; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
@@ -201,7 +207,7 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Contract changes | Add required CommandId., Include init-only authored scope and field-presence semantics omitted by the earlier positional-record scan. JsonIgnore presence flags are adapter-owned and canonicalized explicitly; never serialize/replay them as if false meant omitted. |
 | Guard order | bind_required_ids, authenticate_authorize, canonicalize_authored_intent, resolve_native_operation_facts, compare_owner_episode_actor_kind_intent_original_revision, validate_new_owner_revision_and_source_permits, append_complete_concrete_attributed_batch |
 | Response contract | `{"mode":"immediate_original_result","responseType":"Unit","firstHttpStatus":200,"terminalResultType":"Unit"}` |
-| Expected revision scope | `{"field":"ExpectedRevision","owner":"DeclaredApplication","counter":"logical ResourceRevision of this owner","nullableInternalRule":null}` |
+| Expected revision scope | `{"field":"ExpectedRevision","owner":"DeclaredApplication","counter":"logical ResourceRevision of this owner"}` |
 | Authorizer sources | src/Compliance.Core/Features/AccessControl/ClientManagementMutationAuthorizer.cs, src/Compliance.Core/Features/Applications/ApplicationInventoryAuthorizer.cs |
 | Source contract | src/Compliance.Common/Features/Applications/ReviseApplication.cs |
 | Primary handler | ReviseApplicationHandler |
@@ -252,7 +258,8 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Target command name | ReserveApplicationImportTarget |
 | Selected source command name | ReserveApplicationImportTarget |
 | Name decision | The selected source name is retained. |
-| Owner | DeclaredApplication |
+| Target owner | DeclaredApplication |
+| Selected source owner | DeclaredApplication |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; reactor; deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result |
@@ -305,7 +312,8 @@ Required tests: [Placeholder: required tests not recorded]
 | Target command name | BlockCanceledApplicationImportChanges |
 | Selected source command name | FenceApplicationImportTarget |
 | Name decision | Blocks delayed changes from a canceled import batch from reaching the application. |
-| Owner | DeclaredApplication |
+| Target owner | DeclaredApplication |
+| Selected source owner | DeclaredApplication |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; reactor; deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result |
@@ -357,7 +365,8 @@ Required tests: [Placeholder: required tests not recorded]
 | Target command name | ReleaseApplicationImportTarget |
 | Selected source command name | ReleaseApplicationImportTarget |
 | Name decision | The selected source name is retained. |
-| Owner | DeclaredApplication |
+| Target owner | DeclaredApplication |
+| Selected source owner | DeclaredApplication |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; reactor; deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result |
@@ -409,7 +418,8 @@ Required tests: [Placeholder: required tests not recorded]
 | Target command name | ApplyApplicationNameChange |
 | Selected source command name | ApplyApplicationNameChange |
 | Name decision | The selected source name is retained. |
-| Owner | DeclaredApplication |
+| Target owner | DeclaredApplication |
+| Selected source owner | DeclaredApplication |
 | Contract record status | PLANNED |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; reactor; deterministic receiver identity derived from the admitted root fact, episode and generation: exact redelivery resolves the original result, a changed admission is a new identity |

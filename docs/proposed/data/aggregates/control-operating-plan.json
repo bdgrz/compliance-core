@@ -8,14 +8,7 @@
   "invariant": "One independently approved, non-overlapping plan version line for a control.",
   "boundaryDecision": "selected_split",
   "mustPreserve": "Occurrence facts bind exact frozen plan and evidence requirements; one business window has one identity across all generators.",
-  "sources": [
-    {
-      "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
-      "jsonPointer": "/splitOwners/16/targetOwners/0",
-      "line": 1749,
-      "sha256": "d349d94b7c43f4d82020ecf36bdacf1aff98bc6498e14993582f1c3164b21f19"
-    }
-  ],
+  "sources": [],
   "baselineSourcePath": "src/Compliance.Core/Features/Operations/ControlOperationsLedger.cs",
   "baselineEvents": [
     "ControlOperatingPlanApproved",
@@ -92,13 +85,9 @@
           "policy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/19",
-        "line": 2270,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
-      "kind": "http"
+      "kind": "http",
+      "sourceOwner": "ControlOperatingPlan",
+      "owner": "ControlOperatingPlan"
     },
     {
       "command": "ProposeControlOperatingPlan",
@@ -189,13 +178,9 @@
           "policy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/78",
-        "line": 9084,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
-      "kind": "http"
+      "kind": "http",
+      "sourceOwner": "ControlOperatingPlan",
+      "owner": "ControlOperatingPlan"
     }
   ],
   "eventAuthority": "selected_final_event_catalog",
@@ -203,24 +188,12 @@
     {
       "event": "ControlOperatingPlanApproved",
       "discriminator": "bdgrz.control.operating_plan.approved",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/116",
-        "line": 14158,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     },
     {
       "event": "ControlOperatingPlanProposed",
       "discriminator": "bdgrz.control.operating_plan.proposed",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/117",
-        "line": 14253,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     }
   ],
   "choreography": [],
@@ -239,12 +212,6 @@
         "required": true,
         "origin": "client",
         "rule": "one immutable authored operation"
-      },
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/19",
-        "line": 2270,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       }
     },
     {
@@ -255,12 +222,6 @@
         "required": true,
         "origin": "client",
         "rule": "exact immutable creation retry"
-      },
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/78",
-        "line": 9084,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       }
     }
   ],
@@ -274,5 +235,6 @@
   "productRules": [],
   "decides": "No additional write-time refusals beyond the invariant are traced to this owner; D19-05 (annual policy review one occurrence per policy, annual vendor review one per material provider) is reassigned to ControlOccurrence.",
   "decidesCovers": [],
-  "decidesAuthored": "2026-10-29"
+  "decidesAuthored": "2026-10-29",
+  "sourceOwner": "ControlOperatingPlan"
 }

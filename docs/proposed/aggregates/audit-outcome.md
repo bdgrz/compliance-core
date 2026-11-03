@@ -5,6 +5,7 @@
 - Business aggregate: `true`
 - Selected status: `SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED`
 
+
 ## Identity and invariant
 
 **Selected identity:** Tenant / audit-outcomes / OutcomeId, with immutable ProgramId, delivered package and snapshot provenance. OutcomeId is the selected immutable creation identity.
@@ -18,6 +19,10 @@
 **Replay:** Current required authorization precedes replay; exact authorized retries resolve the original accepted result using the selected logical identity and immutable actor/intent/source binding. Fresh mutable feasibility, clock selection and body preparation cannot replace that original result. Expected revision is concurrency precondition, not a new identity.
 
 **Lifecycle:** [Placeholder: a consolidated lifecycle sequence is not present in the selected owner record.]
+
+
+
+
 
 ## Commands
 
@@ -37,8 +42,8 @@
 
 ## Product rules
 
-- **D27-01** — The platform holds no attest workpaper, test conclusion, or report draft; it may retain only an issued report and the auditor-authored outcome as received, and never authors or recalculates the auditor's opinion. Source: [m0-d27-attest-scope.md](../../product/decisions/m0-d27-attest-scope.md).
-- **D27-02** — Management's evaluations and sign-offs remain separate from the auditor-authored outcome received. Source: [m0-d27-attest-scope.md](../../product/decisions/m0-d27-attest-scope.md).
+- **D27-01** — The platform holds no attest workpaper, test conclusion, or report draft; it may retain only an issued report and the auditor-authored outcome as received, and never authors or recalculates the auditor's opinion. Decision: [m0-d27-attest-scope.md](../decisions/m0-d27-attest-scope.md).
+- **D27-02** — Management's evaluations and sign-offs remain separate from the auditor-authored outcome received. Decision: [m0-d27-attest-scope.md](../decisions/m0-d27-attest-scope.md).
 
 ## Adopted architecture decisions
 
@@ -47,7 +52,7 @@
 ## Evidence and complete record
 
 - Baseline source: [Placeholder: source file is not present in this checkout]
-- Aggregate review: [audit-outcome-review-2026-10-29.md](../../product/definitive-aggregate-choreography/audit-outcome-review-2026-10-29.md)
+- Aggregate review: [Placeholder: no owner-specific review file is present]
 - Full selected record: [JSON](../data/aggregates/audit-outcome.json)
 
 > Target definition is separate from runtime qualification. Implementation status recorded by the source: `SEPARATE_VERIFICATION_REQUIRED_IMPLEMENTATION_HALTED`.

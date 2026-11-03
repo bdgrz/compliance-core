@@ -233,7 +233,6 @@
         "discriminator": "bdgrz.access-review-campaign.access-review-campaign-completion-accepted",
         "discriminatorVersion": 1,
         "owner": "AccessReviewCampaign",
-        "existingContract": null,
         "status": "selected target schema; implementation pending",
         "reason": "source command accepted result",
         "fields": [
@@ -416,7 +415,6 @@
         "discriminator": "bdgrz.access-review-campaign.access-review-campaign-completion-canceled",
         "discriminatorVersion": 1,
         "owner": "AccessReviewCampaign",
-        "existingContract": null,
         "status": "selected target schema; implementation pending",
         "reason": "source admission contract",
         "fields": [
@@ -742,7 +740,6 @@
         "discriminator": "bdgrz.access-review-campaign.access-review-decision-batch-admitted",
         "discriminatorVersion": 1,
         "owner": "AccessReviewCampaign",
-        "existingContract": null,
         "status": "selected target schema; implementation pending",
         "reason": "source command accepted result",
         "fields": [

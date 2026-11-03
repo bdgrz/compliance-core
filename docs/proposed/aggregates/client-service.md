@@ -5,6 +5,7 @@
 - Business aggregate: `true`
 - Selected status: `SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED`
 
+
 ## Identity and invariant
 
 **Selected identity:** Tenant + caller ServiceId; creation uses that identity and mutations use caller CommandId.
@@ -18,6 +19,10 @@
 **Replay:** Current required authorization precedes replay; exact authorized retries resolve the original accepted result using the selected logical identity and immutable actor/intent/source binding. Fresh mutable feasibility, clock selection and body preparation cannot replace that original result. Expected revision is concurrency precondition, not a new identity.
 
 **Lifecycle:** [Placeholder: a consolidated lifecycle sequence is not present in the selected owner record.]
+
+
+
+
 
 ## Commands
 
@@ -41,7 +46,7 @@
 
 ## Product rules
 
-- **D22-04** — ClientService is owned by program and scope, distinct from an application and from a firm ServiceEngagement; each new service belongs to a program, and a boundary draft may cite only active services owned by that same program. Source: [m0-d22-canonical-ownership.md](../../product/decisions/m0-d22-canonical-ownership.md).
+- **D22-04** — ClientService is owned by program and scope, distinct from an application and from a firm ServiceEngagement; each new service belongs to a program, and a boundary draft may cite only active services owned by that same program. Decision: [m0-d22-canonical-ownership.md](../decisions/m0-d22-canonical-ownership.md).
 
 ## Adopted architecture decisions
 

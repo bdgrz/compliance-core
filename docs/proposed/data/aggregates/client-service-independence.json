@@ -8,14 +8,7 @@
   "invariant": "Complete immutable nonattest-service history manifest, current service epoch and acceptance admission barrier. A changed service set advances epoch and makes old acceptance ineligible immediately through authoritative composed reads. Acceptance admission refuses an attest engagement when the firm provided any service classified impairing under the active ratified rule set within the 12 months before the examination period starts (M0-D26 D26-03; Jev 0.62, moderate). When the current client evaluation is conditionally_compatible, acceptance admission also requires a recorded partner evaluation that references that evaluation (M0-D26 D26-04; Jev two-step 0.80, gate owner 0.58 moderate)",
   "boundaryDecision": "selected_split",
   "mustPreserve": "Never reactivate a permanent independence commitment from reevaluation; acceptance binds exact service, draft, acknowledgement and ratified-rule proofs.",
-  "sources": [
-    {
-      "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
-      "jsonPointer": "/splitOwners/2/targetOwners/2",
-      "line": 222,
-      "sha256": "d349d94b7c43f4d82020ecf36bdacf1aff98bc6498e14993582f1c3164b21f19"
-    }
-  ],
+  "sources": [],
   "baselineSourcePath": "src/Compliance.Core/Features/AccessControl/IndependenceLedger.cs",
   "baselineEvents": [
     "NonattestServiceRecorded"
@@ -76,13 +69,9 @@
           "policy": "ApiUser + existing request-scope authorizers"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/52",
-        "line": 6215,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
-      "kind": "http"
+      "kind": "http",
+      "sourceOwner": "ClientServiceIndependence",
+      "owner": "ClientServiceIndependence"
     },
     {
       "command": "RecordNonattestService",
@@ -128,13 +117,9 @@
           "policy": "ApiUser + existing request-scope authorizers"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/105",
-        "line": 12249,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
-      "kind": "http"
+      "kind": "http",
+      "sourceOwner": "ClientServiceIndependence",
+      "owner": "ClientServiceIndependence"
     },
     {
       "command": "AcquireEngagementServiceEpoch",
@@ -195,7 +180,7 @@
         }
       ],
       "reactor": "EngagementAcceptanceReactor",
-      "sourceOwner": "ServiceEngagementIndependence",
+      "sourceOwner": "ClientServiceIndependence",
       "sourceEvents": [
         "ServiceEngagementAcceptanceRequested",
         "ServiceEngagementStaffAssignmentRequested"
@@ -208,10 +193,7 @@
       "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
       "handler": "AcquireEngagementServiceEpochHandler",
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "recorded": "2026-10-29"
-      }
+      "owner": "ClientServiceIndependence"
     },
     {
       "command": "ReleaseEngagementServiceEpoch",
@@ -272,7 +254,7 @@
         }
       ],
       "reactor": "EngagementServiceEpochReleaseReactor",
-      "sourceOwner": "ServiceEngagementIndependence",
+      "sourceOwner": "ClientServiceIndependence",
       "sourceEvents": [
         "ServiceEngagementAcceptanceRecorded",
         "ServiceEngagementStaffAssigned",
@@ -287,10 +269,7 @@
       "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
       "handler": "ReleaseEngagementServiceEpochHandler",
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "recorded": "2026-10-29"
-      }
+      "owner": "ClientServiceIndependence"
     },
     {
       "command": "AuthorizeClientServicePersonalDecisionUse",
@@ -351,7 +330,7 @@
         }
       ],
       "reactor": "EngagementPersonalDecisionSourceUseReactor",
-      "sourceOwner": "ServiceEngagementIndependence",
+      "sourceOwner": "ClientServiceIndependence",
       "sourceEvents": [
         "EngagementPersonalDecisionAdmitted"
       ],
@@ -363,10 +342,7 @@
       "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
       "handler": "AuthorizeClientServicePersonalDecisionUseHandler",
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "recorded": "2026-10-29"
-      }
+      "owner": "ClientServiceIndependence"
     },
     {
       "command": "SettleClientServicePersonalDecisionUse",
@@ -422,7 +398,7 @@
         }
       ],
       "reactor": "ClientServicePersonalDecisionSettlementReactor",
-      "sourceOwner": "ServiceEngagementIndependence",
+      "sourceOwner": "ClientServiceIndependence",
       "sourceEvents": [
         "EngagementPersonalDecisionAuthorized",
         "EngagementPersonalDecisionCanceled"
@@ -435,10 +411,7 @@
       "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
       "handler": "SettleClientServicePersonalDecisionUseHandler",
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "recorded": "2026-10-29"
-      }
+      "owner": "ClientServiceIndependence"
     }
   ],
   "eventAuthority": "selected_final_event_catalog",
@@ -446,68 +419,32 @@
     {
       "event": "ClientIndependenceEvaluationAdmitted",
       "discriminator": "bdgrz.client-service-independence.client-independence-evaluation-admitted",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/102",
-        "line": 12604,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     },
     {
       "event": "ClientServicePersonalDecisionUseAuthorized",
       "discriminator": "bdgrz.client-service-independence.client-service-personal-decision-use-authorized",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/103",
-        "line": 12794,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     },
     {
       "event": "ClientServicePersonalDecisionUseSettled",
       "discriminator": "bdgrz.client-service-independence.client-service-personal-decision-use-settled",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/104",
-        "line": 12930,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     },
     {
       "event": "EngagementServiceEpochAuthorized",
       "discriminator": "bdgrz.client-service-independence.engagement-service-epoch-authorized",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/135",
-        "line": 16557,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     },
     {
       "event": "EngagementServiceEpochSettled",
       "discriminator": "bdgrz.client-service-independence.engagement-service-epoch-settled",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/136",
-        "line": 16765,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     },
     {
       "event": "NonattestServiceRecorded",
       "discriminator": "bdgrz.independence.service.recorded",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/182",
-        "line": 23685,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     }
   ],
   "choreography": [
@@ -515,61 +452,31 @@
       "reactor": "EngagementAcceptanceReactor",
       "sourceOwner": "ServiceEngagementIndependence",
       "targetOwner": "ClientServiceIndependence",
-      "command": "AcquireEngagementServiceEpoch",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "jsonPointer": "/reactors/4",
-        "line": 356,
-        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
-      }
+      "command": "AcquireEngagementServiceEpoch"
     },
     {
       "reactor": "EngagementServiceEpochReleaseReactor",
       "sourceOwner": "ServiceEngagementIndependence",
       "targetOwner": "ClientServiceIndependence",
-      "command": "ReleaseEngagementServiceEpoch",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "jsonPointer": "/reactors/7",
-        "line": 614,
-        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
-      }
+      "command": "ReleaseEngagementServiceEpoch"
     },
     {
       "reactor": "ClientIndependencePreviewReactor",
       "sourceOwner": "ClientServiceIndependence",
       "targetOwner": "ClientIndependenceDecision",
-      "command": "MaterializeClientIndependencePreview",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "jsonPointer": "/reactors/106",
-        "line": 9165,
-        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
-      }
+      "command": "MaterializeClientIndependencePreview"
     },
     {
       "reactor": "EngagementPersonalDecisionSourceUseReactor",
       "sourceOwner": "ServiceEngagementIndependence",
       "targetOwner": "ClientServiceIndependence",
-      "command": "AuthorizeClientServicePersonalDecisionUse",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "jsonPointer": "/reactors/107",
-        "line": 9242,
-        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
-      }
+      "command": "AuthorizeClientServicePersonalDecisionUse"
     },
     {
       "reactor": "ClientServicePersonalDecisionSettlementReactor",
       "sourceOwner": "ServiceEngagementIndependence",
       "targetOwner": "ClientServiceIndependence",
-      "command": "SettleClientServicePersonalDecisionUse",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "jsonPointer": "/reactors/111",
-        "line": 9567,
-        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
-      }
+      "command": "SettleClientServicePersonalDecisionUse"
     }
   ],
   "status": "SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED",
@@ -587,12 +494,6 @@
         "required": true,
         "origin": "client",
         "rule": "exact immutable creation retry"
-      },
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/52",
-        "line": 6215,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       }
     },
     {
@@ -603,12 +504,6 @@
         "required": true,
         "origin": "client",
         "rule": "exact immutable creation retry"
-      },
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/105",
-        "line": 12249,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       }
     }
   ],
@@ -651,5 +546,6 @@
     "D26-03",
     "D26-08"
   ],
-  "decidesAuthored": "2026-10-29"
+  "decidesAuthored": "2026-10-29",
+  "sourceOwner": "ClientServiceIndependence"
 }

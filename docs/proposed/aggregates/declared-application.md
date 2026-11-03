@@ -5,6 +5,7 @@
 - Business aggregate: `true`
 - Selected status: `SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED`
 
+
 ## Identity and invariant
 
 **Selected identity:** Tenant-scoped applicationId; `ApplicationId` on `DeclareApplication` is the caller-supplied immutable creation identity (exact immutable creation retry) so an exact retry resolves the original result and a different id is a different record; later mutations use CommandId bound to this identity and the expected revision.
@@ -18,6 +19,10 @@
 **Replay:** Current required authorization precedes replay; exact authorized retries resolve the original accepted result using the selected logical identity and immutable actor/intent/source binding. Fresh mutable feasibility, clock selection and body preparation cannot replace that original result. Expected revision is concurrency precondition, not a new identity.
 
 **Lifecycle:** [Placeholder: a consolidated lifecycle sequence is not present in the selected owner record.]
+
+
+
+
 
 ## Commands
 
@@ -48,19 +53,19 @@
 
 | Row | Kind | Source owner | Target owner | Command |
 | --- | --- | --- | --- | --- |
-| [T015](../reactors/import-source-admission-reactor.md#t015) | reaction_or_regular_process_stage | ApplicationImportBatch | DeclaredApplication | ReserveApplicationImportTarget |
-| [T016](../reactors/import-source-admission-reactor.md#t016) | reaction_or_regular_process_stage | ApplicationImportBatch | DeclaredApplication | ApplyApplicationImportChange |
-| [T018](../reactors/import-cancellation-reactor.md#t018) | reaction_or_regular_process_stage | ApplicationImportBatch | DeclaredApplication | BlockCanceledApplicationImportChanges |
-| [T021](../reactors/import-source-admission-reactor.md#t021) | reaction_or_regular_process_stage | ApplicationImportBatch | DeclaredApplication | ReleaseApplicationImportTarget |
-| [X000](../reactors/application-name-change-reactor.md#x000) | planned_reaction | DeclaredApplication | ApplicationNameClaim | ClaimApplicationName |
-| [X001](../reactors/application-name-change-reactor.md#x001) | planned_reaction | ApplicationNameClaim | DeclaredApplication | ApplyApplicationNameChange |
-| [X002](../reactors/application-name-change-reactor.md#x002) | planned_reaction | DeclaredApplication | ApplicationNameClaim | ReleaseApplicationName |
-| [X005](../reactors/application-retirement-reactor.md#x005) | planned_reaction | DeclaredApplication | ApplicationRelationship | RemoveApplicationRelationship |
+| [T015](../reactors/apply-accepted-application-import-reactor.md#t015) | reaction_or_regular_process_stage | ApplicationImportBatch | DeclaredApplication | ReserveApplicationImportTarget |
+| [T016](../reactors/apply-accepted-application-import-reactor.md#t016) | reaction_or_regular_process_stage | ApplicationImportBatch | DeclaredApplication | ApplyApplicationImportChange |
+| [T018](../reactors/cancel-application-import-reactor.md#t018) | reaction_or_regular_process_stage | ApplicationImportBatch | DeclaredApplication | BlockCanceledApplicationImportChanges |
+| [T021](../reactors/apply-accepted-application-import-reactor.md#t021) | reaction_or_regular_process_stage | ApplicationImportBatch | DeclaredApplication | ReleaseApplicationImportTarget |
+| [X000](../reactors/keep-application-names-unique-reactor.md#x000) | planned_reaction | DeclaredApplication | ApplicationNameClaim | ClaimApplicationName |
+| [X001](../reactors/keep-application-names-unique-reactor.md#x001) | planned_reaction | ApplicationNameClaim | DeclaredApplication | ApplyApplicationNameChange |
+| [X002](../reactors/keep-application-names-unique-reactor.md#x002) | planned_reaction | DeclaredApplication | ApplicationNameClaim | ReleaseApplicationName |
+| [X005](../reactors/remove-relationships-after-application-retirement-reactor.md#x005) | planned_reaction | DeclaredApplication | ApplicationRelationship | RemoveApplicationRelationship |
 
 ## Product rules
 
-- **D05-02** — Every active application has a governed name, application kind, lifecycle, criticality, a system owner, and an access owner, and both owners are workforce Person references who need not be platform members. Source: [m0-d05-application-inventory.md](../../product/decisions/m0-d05-application-inventory.md).
-- **D05-11** — Retiring an application is effective-dated, requires a reason, and never deletes history or any snapshot reference to it. Source: [m0-d05-application-inventory.md](../../product/decisions/m0-d05-application-inventory.md).
+- **D05-02** — Every active application has a governed name, application kind, lifecycle, criticality, a system owner, and an access owner, and both owners are workforce Person references who need not be platform members. Decision: [m0-d05-application-inventory.md](../decisions/m0-d05-application-inventory.md).
+- **D05-11** — Retiring an application is effective-dated, requires a reason, and never deletes history or any snapshot reference to it. Decision: [m0-d05-application-inventory.md](../decisions/m0-d05-application-inventory.md).
 
 ## Adopted architecture decisions
 
@@ -69,7 +74,7 @@
 ## Evidence and complete record
 
 - Baseline source: [Placeholder: source file is not present in this checkout]
-- Aggregate review: [declared-application-review-2026-10-29.md](../../product/definitive-aggregate-choreography/declared-application-review-2026-10-29.md)
+- Aggregate review: [Placeholder: no owner-specific review file is present]
 - Full selected record: [JSON](../data/aggregates/declared-application.json)
 
 > Target definition is separate from runtime qualification. Implementation status recorded by the source: `SEPARATE_VERIFICATION_REQUIRED_IMPLEMENTATION_HALTED`.

@@ -59,7 +59,7 @@
         "recorded": "2026-10-29"
       },
       "reactor": "LocationNameClaimReactor",
-      "sourceOwner": "Location",
+      "sourceOwner": "LocationNameClaim",
       "sourceEvents": [
         "LocationChangeAccepted"
       ],
@@ -69,6 +69,7 @@
       ],
       "effectKind": "claim_location_name",
       "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
+      "owner": "LocationNameClaim",
       "sourceName": "ClaimLocationName",
       "targetName": "ClaimLocationName"
     },
@@ -126,7 +127,7 @@
         "recorded": "2026-10-29"
       },
       "reactor": "LocationOldNameReleaseReactor",
-      "sourceOwner": "Location",
+      "sourceOwner": "LocationNameClaim",
       "sourceEvents": [
         "LocationRevisionRecorded",
         "LocationChangeCanceled"
@@ -137,6 +138,7 @@
       ],
       "effectKind": "release_location_name",
       "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
+      "owner": "LocationNameClaim",
       "sourceName": "ReleaseLocationName",
       "targetName": "ReleaseLocationName"
     }

@@ -5,7 +5,7 @@ Canonical events: **4**. Complete canonical event and available schema records: 
 | Target event | Selected source name | Kind | Adopted discriminator | Version | Schema fields | Meaning |
 | --- | --- | --- | --- | --- | --- | --- |
 | WeeklyWorkDigestDeliveryRecorded | WeeklyWorkDigestDeliveryRecorded | technical | bdgrz.work.weekly-digest.delivery-recorded | 2 | [Placeholder: schema absent] | Records the durable outcome of one exact weekly digest delivery attempt. |
-| WeeklyWorkDigestDeliveryRequested | WeeklyWorkDigestDeliveryRequested | technical | bdgrz.work.weekly-digest.delivery-requested | 2 | [Placeholder: schema absent] | Records one deterministic email delivery attempt for a scheduled weekly digest. |
+| WeeklyWorkDigestDeliveryRequested | WeeklyWorkDigestDeliveryRequested | technical | bdgrz.work.weekly-digest.delivery-requested | 2 | [Placeholder: schema absent] | The system recorded one email delivery attempt for a member’s scheduled weekly digest. This fact does not mean the email arrived. |
 | WeeklyWorkDigestDeliverySuppressed | WeeklyWorkDigestDeliverySuppressed | technical | bdgrz.work.weekly-digest.delivery-suppressed | 2 | [Placeholder: schema absent] | Records why a scheduled digest was suppressed before an email attempt began. |
 | WeeklyWorkDigestScheduled | WeeklyWorkDigestScheduled | technical | bdgrz.work.weekly-digest.scheduled | 1 | [Placeholder: schema absent] | Schedules one member's stable weekly digest identity for delivery processing. |
 
@@ -51,7 +51,7 @@ Canonical events: **4**. Complete canonical event and available schema records: 
 | --- | --- |
 | Target event name | WeeklyWorkDigestDeliveryRequested |
 | Selected source event name | WeeklyWorkDigestDeliveryRequested |
-| Name decision | The selected source name is retained. |
+| Name decision | Names one recorded email delivery request for a scheduled weekly digest. |
 | Canonical semantic key | event:WeeklyWorkDigestDeliveryRequested |
 | Owner selection | exact declared technical/storage owner |
 | Target concrete type | WeeklyWorkDigestDeliveryRequested |
@@ -61,7 +61,7 @@ Canonical events: **4**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Target meaning | Records one deterministic email delivery attempt for a scheduled weekly digest. |
+| Target meaning | The system recorded one email delivery attempt for a member’s scheduled weekly digest. This fact does not mean the email arrived. |
 | Selected source meaning | Records one deterministic email delivery attempt for a scheduled weekly digest. |
 | Meaning source | record summary in src/Compliance.Common/Features/Work/Events/WeeklyWorkDigestDeliveryRequested.cs |
 

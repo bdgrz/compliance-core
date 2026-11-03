@@ -5,6 +5,7 @@
 - Business aggregate: `true`
 - Selected status: `SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED`
 
+
 ## Identity and invariant
 
 **Selected identity:** Existing UUIDv5 of TenantId + UserId; membership episodes remain distinct and exact. Selected CommandId binds the original member/episode and intended transition.
@@ -18,6 +19,10 @@
 **Replay:** Current required authorization precedes replay; exact authorized retries resolve the original accepted result using the selected logical identity and immutable actor/intent/source binding. Fresh mutable feasibility, clock selection and body preparation cannot replace that original result. Expected revision is concurrency precondition, not a new identity.
 
 **Lifecycle:** [Placeholder: a consolidated lifecycle sequence is not present in the selected owner record.]
+
+
+
+
 
 ## Commands
 
@@ -46,24 +51,24 @@
 
 | Row | Kind | Source owner | Target owner | Command |
 | --- | --- | --- | --- | --- |
-| [T046](../reactors/administrator-withdrawal-reactor.md#t046) | reaction_or_regular_process_stage | TenantManagerGuard | Member | ApplyMemberWithdrawal |
-| [T048](../reactors/administrator-neutral-member-mutation-reactor.md#t048) | reaction_or_regular_process_stage | TenantManagerGuard | Member | ApplyMemberStatusChange |
-| [T051](../reactors/administrator-restoration-reactor.md#t051) | reaction_or_regular_process_stage | TenantManagerGuard | Member | ApplyMemberRestoration |
-| [S003](../reactors/member-retirement-reactor.md#s003) | business_receiver | Member | Member | CompleteMemberRetirement |
-| [S004](../reactors/member-retirement-reactor.md#s004) | business_receiver | Member | TeamMember | RemoveRetiredMemberAccessAndAssignments |
-| [S005](../reactors/member-retirement-reactor.md#s005) | business_receiver | Member | AccessGrant | RemoveRetiredMemberAccessAndAssignments |
-| [S013](../reactors/tenant-rbac-bootstrap-reactor.md#s013) | business_receiver | Tenant | Member | RegisterMember |
-| [S026](../reactors/tenant-invitation-reactor.md#s026) | business_receiver | TenantInvitation | Member | RegisterMember |
+| [T046](../reactors/administrator-withdrawal-reactor.md#t046) | reaction_or_regular_process_stage | TenantAdministratorContinuity | Member | ApplyMemberWithdrawal |
+| [T048](../reactors/apply-accepted-member-status-change-reactor.md#t048) | reaction_or_regular_process_stage | TenantAdministratorContinuity | Member | ApplyMemberStatusChange |
+| [T051](../reactors/administrator-restoration-reactor.md#t051) | reaction_or_regular_process_stage | TenantAdministratorContinuity | Member | ApplyMemberRestoration |
+| [S003](../reactors/remove-member-assignments-and-access-after-membership-ends-reactor.md#s003) | business_receiver | Member | Member | CompleteMemberRetirement |
+| [S004](../reactors/remove-member-assignments-and-access-after-membership-ends-reactor.md#s004) | business_receiver | Member | TeamMember | RemoveRetiredMemberAccessAndAssignments |
+| [S005](../reactors/remove-member-assignments-and-access-after-membership-ends-reactor.md#s005) | business_receiver | Member | AccessGrant | RemoveRetiredMemberAccessAndAssignments |
+| [S013](../reactors/set-up-starting-tenant-access-reactor.md#s013) | business_receiver | Tenant | Member | RegisterMember |
+| [S026](../reactors/activate-membership-after-invitation-acceptance-reactor.md#s026) | business_receiver | TenantInvitation | Member | RegisterMember |
 
 ## Product rules
 
-- **D14-02** — An external consultant hired directly by a client gets a guest membership limited to programs the Org Admin grants, with no approval rights and a required end date. Source: [m0-d14-advisor-collaboration.md](../../product/decisions/m0-d14-advisor-collaboration.md).
-- **D14-04** — The guest end date is persisted on the guest Member registration, access stops at the end of that UTC date, and later grant proposals cannot extend beyond it. Source: [m0-d14-advisor-collaboration.md](../../product/decisions/m0-d14-advisor-collaboration.md).
-- **D25-03** — Each Membership records exactly one affiliation: client_personnel, firm_staff, or guest. Source: [m0-d25-client-tenancy.md](../../product/decisions/m0-d25-client-tenancy.md).
-- **MD-01** — Deprovisioning permanently terminates one membership episode in one tenant; it is terminal and distinct from reversible suspension, and a deprovisioned person cannot be reinstated. Source: [member-deprovisioning.md](../../product/decisions/member-deprovisioning.md).
-- **MD-02** — A fresh invitation after deprovisioning creates a new membership episode, and only after the prior episode's tenant authority cleanup completes. Source: [member-deprovisioning.md](../../product/decisions/member-deprovisioning.md).
-- **MD-05** — The deprovision command records actor, timestamp, and reason. Source: [member-deprovisioning.md](../../product/decisions/member-deprovisioning.md).
-- **MD-07** — A new invitation never restores old team assignments or member-scoped grants; each direct member grant is bound to the membership episode active when issued, so retained or delayed grant history from a prior episode cannot become effective after rejoining. Source: [member-deprovisioning.md](../../product/decisions/member-deprovisioning.md).
+- **D14-02** — An external consultant hired directly by a client gets a guest membership limited to programs the Org Admin grants, with no approval rights and a required end date. Decision: [m0-d14-advisor-collaboration.md](../decisions/m0-d14-advisor-collaboration.md).
+- **D14-04** — The guest end date is persisted on the guest Member registration, access stops at the end of that UTC date, and later grant proposals cannot extend beyond it. Decision: [m0-d14-advisor-collaboration.md](../decisions/m0-d14-advisor-collaboration.md).
+- **D25-03** — Each Membership records exactly one affiliation: client_personnel, firm_staff, or guest. Decision: [m0-d25-client-tenancy.md](../decisions/m0-d25-client-tenancy.md).
+- **MD-01** — Deprovisioning permanently terminates one membership episode in one tenant; it is terminal and distinct from reversible suspension, and a deprovisioned person cannot be reinstated. Decision: [member-deprovisioning.md](../decisions/member-deprovisioning.md).
+- **MD-02** — A fresh invitation after deprovisioning creates a new membership episode, and only after the prior episode's tenant authority cleanup completes. Decision: [member-deprovisioning.md](../decisions/member-deprovisioning.md).
+- **MD-05** — The deprovision command records actor, timestamp, and reason. Decision: [member-deprovisioning.md](../decisions/member-deprovisioning.md).
+- **MD-07** — A new invitation never restores old team assignments or member-scoped grants; each direct member grant is bound to the membership episode active when issued, so retained or delayed grant history from a prior episode cannot become effective after rejoining. Decision: [member-deprovisioning.md](../decisions/member-deprovisioning.md).
 
 ## Adopted architecture decisions
 

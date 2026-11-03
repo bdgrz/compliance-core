@@ -60,13 +60,9 @@
           "policy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/106",
-        "line": 12348,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
       "kind": "http",
+      "sourceOwner": "OperationalProcess",
+      "owner": "OperationalProcess",
       "sourceName": "RecordOperationalProcess",
       "targetName": "RecordOperationalProcess"
     },
@@ -144,13 +140,9 @@
           "policy": "ApiUser + existing request-scope authorizers"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/142",
-        "line": 16553,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
       "kind": "http",
+      "sourceOwner": "OperationalProcess",
+      "owner": "OperationalProcess",
       "sourceName": "ReviseOperationalProcess",
       "targetName": "ReviseOperationalProcess"
     },
@@ -194,15 +186,9 @@
           "required": true
         }
       ],
-      "responseContract": null,
-      "http": null,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/source-admission-contracts.json",
-        "jsonPointer": "/contracts/13",
-        "line": 843,
-        "sha256": "f1d549ed0879c816cb26e86879f8fa658dab0a8acbf7c591e4d4aed40483f8ae"
-      },
       "kind": "abort",
+      "sourceOwner": "OperationalProcess",
+      "owner": "OperationalProcess",
       "sourceName": "CancelOperationalProcessChange",
       "targetName": "CancelOperationalProcessChange"
     },
@@ -260,7 +246,7 @@
         }
       ],
       "reactor": "OperationalProcessChangeApplicationReactor",
-      "sourceOwner": "OperationalProcessNameClaim",
+      "sourceOwner": "OperationalProcess",
       "sourceEvents": [
         "OperationalProcessNameClaimed"
       ],
@@ -272,10 +258,7 @@
       "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
       "handler": "ApplyOperationalProcessChangeHandler",
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "recorded": "2026-10-29"
-      },
+      "owner": "OperationalProcess",
       "sourceName": "ApplyOperationalProcessChange",
       "targetName": "ApplyOperationalProcessChange"
     }
@@ -387,7 +370,6 @@
         "terminalResultType": "OperationalProcessRegistration"
       },
       "expectedRevisionScope": {
-        "field": null,
         "owner": "OperationalProcess",
         "counter": "No primary caller ResourceRevision. Enforce required authored source/epoch/version tokens, immutable creation identity or trusted proof/generation as declared; append uses physical OCC."
       }
@@ -515,8 +497,7 @@
       "expectedRevisionScope": {
         "field": "ExpectedRevision",
         "owner": "OperationalProcess",
-        "counter": "named process record revision",
-        "nullableInternalRule": null
+        "counter": "named process record revision"
       }
     }
   ]

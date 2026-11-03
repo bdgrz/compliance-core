@@ -65,13 +65,9 @@
           "policy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/38",
-        "line": 4509,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
       "kind": "http",
+      "sourceOwner": "AdvisorFeedbackThread",
+      "owner": "AdvisorFeedbackThread",
       "sourceName": "CorrectAdvisorFeedback",
       "targetName": "CorrectAdvisorFeedback"
     },
@@ -129,13 +125,9 @@
           "policy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/121",
-        "line": 13958,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
       "kind": "http",
+      "sourceOwner": "AdvisorFeedbackThread",
+      "owner": "AdvisorFeedbackThread",
       "sourceName": "ResolveAdvisorFeedback",
       "targetName": "ResolveAdvisorFeedback"
     },
@@ -198,13 +190,9 @@
           "policy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/123",
-        "line": 14188,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
       "kind": "http",
+      "sourceOwner": "AdvisorFeedbackThread",
+      "owner": "AdvisorFeedbackThread",
       "sourceName": "RespondToAdvisorFeedback",
       "targetName": "RespondToAdvisorFeedback"
     },
@@ -267,7 +255,7 @@
         }
       ],
       "reactor": "AdvisorFeedbackMaterializationReactor",
-      "sourceOwner": "AdvisorHandoff",
+      "sourceOwner": "AdvisorFeedbackThread",
       "sourceEvents": [
         "AdvisorFeedbackAdmitted"
       ],
@@ -279,10 +267,7 @@
       "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
       "handler": "MaterializeAdvisorFeedbackHandler",
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "recorded": "2026-10-29"
-      },
+      "owner": "AdvisorFeedbackThread",
       "sourceName": "MaterializeAdvisorFeedback",
       "targetName": "RecordAdvisorHandoffFeedback"
     }
@@ -405,8 +390,7 @@
       "expectedRevisionScope": {
         "field": "ExpectedRevision",
         "owner": "AdvisorFeedbackThread",
-        "counter": "logical ResourceRevision of this owner",
-        "nullableInternalRule": null
+        "counter": "logical ResourceRevision of this owner"
       }
     },
     {
@@ -517,8 +501,7 @@
       "expectedRevisionScope": {
         "field": "ExpectedRevision",
         "owner": "AdvisorFeedbackThread",
-        "counter": "logical ResourceRevision of this owner",
-        "nullableInternalRule": null
+        "counter": "logical ResourceRevision of this owner"
       }
     },
     {
@@ -633,8 +616,7 @@
       "expectedRevisionScope": {
         "field": "ExpectedRevision",
         "owner": "AdvisorFeedbackThread",
-        "counter": "logical ResourceRevision of this owner",
-        "nullableInternalRule": null
+        "counter": "logical ResourceRevision of this owner"
       }
     }
   ]

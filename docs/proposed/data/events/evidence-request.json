@@ -29,7 +29,6 @@
         "discriminator": "bdgrz.evidence-request.evidence-request-action-completion-use-authorized",
         "discriminatorVersion": 1,
         "owner": "EvidenceRequest",
-        "existingContract": null,
         "status": "selected target schema; implementation pending",
         "reason": "typed reactor receiver accepted business fact",
         "fields": [
@@ -193,7 +192,6 @@
         "discriminator": "bdgrz.evidence-request.evidence-request-action-completion-use-settled",
         "discriminatorVersion": 1,
         "owner": "EvidenceRequest",
-        "existingContract": null,
         "status": "selected target schema; implementation pending",
         "reason": "typed reactor receiver accepted business fact",
         "fields": [

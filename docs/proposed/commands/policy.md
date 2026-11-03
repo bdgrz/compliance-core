@@ -1,5 +1,7 @@
 # Policy commands
 
+
+
 Selected command contracts: **9**. Complete selected contracts and companion source evidence: [owner command JSON](../data/commands/policy.json).
 
 | Target command | Selected source name | Kind | Identity | Fields | HTTP routes |
@@ -23,7 +25,8 @@ Selected command contracts: **9**. Complete selected contracts and companion sou
 | Target command name | ApprovePolicy |
 | Selected source command name | ApprovePolicy |
 | Name decision | The selected source name is retained. |
-| Owner | Policy |
+| Target owner | Policy |
+| Selected source owner | Policy |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | http |
 | Logical identity | CommandId; Uuid; required=true; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
@@ -79,7 +82,8 @@ Required tests: [Placeholder: required tests not recorded]
 | Target command name | ApprovePolicyRetirement |
 | Selected source command name | ApprovePolicyRetirement |
 | Name decision | The selected source name is retained. |
-| Owner | Policy |
+| Target owner | Policy |
+| Selected source owner | Policy |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | http |
 | Logical identity | CommandId; Uuid; required=true; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
@@ -132,7 +136,8 @@ Required tests: [Placeholder: required tests not recorded]
 | Target command name | ConfirmPolicyReview |
 | Selected source command name | ConfirmPolicyReview |
 | Name decision | The selected source name is retained. |
-| Owner | Policy |
+| Target owner | Policy |
+| Selected source owner | Policy |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | http |
 | Logical identity | CommandId; Uuid; required=true; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
@@ -183,7 +188,8 @@ Required tests: [Placeholder: required tests not recorded]
 | Target command name | CreatePolicyDraft |
 | Selected source command name | CreatePolicyDraft |
 | Name decision | The selected source name is retained. |
-| Owner | Policy |
+| Target owner | Policy |
+| Selected source owner | Policy |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | http |
 | Logical identity | PolicyId; Uuid; required=true; caller-supplied immutable creation identity: an exact retry with the same id and authored intent returns the original result; the same id with changed intent is refused; a different id is a different record |
@@ -233,7 +239,8 @@ Required tests: [Placeholder: required tests not recorded]
 | Target command name | DiscardPolicyDraft |
 | Selected source command name | DiscardPolicyDraft |
 | Name decision | The selected source name is retained. |
-| Owner | Policy |
+| Target owner | Policy |
+| Selected source owner | Policy |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | http |
 | Logical identity | CommandId; Uuid; required=true; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
@@ -284,7 +291,8 @@ Required tests: [Placeholder: required tests not recorded]
 | Target command name | ProposePolicyRetirement |
 | Selected source command name | ProposePolicyRetirement |
 | Name decision | The selected source name is retained. |
-| Owner | Policy |
+| Target owner | Policy |
+| Selected source owner | Policy |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | http |
 | Logical identity | CommandId; Uuid; required=true; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
@@ -336,7 +344,8 @@ Required tests: [Placeholder: required tests not recorded]
 | Target command name | ProposePolicySuccessor |
 | Selected source command name | ProposePolicySuccessor |
 | Name decision | The selected source name is retained. |
-| Owner | Policy |
+| Target owner | Policy |
+| Selected source owner | Policy |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | http |
 | Logical identity | CommandId; Uuid; required=true; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
@@ -387,7 +396,8 @@ Required tests: [Placeholder: required tests not recorded]
 | Target command name | ReviewPolicyDraft |
 | Selected source command name | ReviewPolicyDraft |
 | Name decision | The selected source name is retained. |
-| Owner | Policy |
+| Target owner | Policy |
+| Selected source owner | Policy |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | http |
 | Logical identity | CommandId; Uuid; required=true; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
@@ -440,7 +450,8 @@ Required tests: [Placeholder: required tests not recorded]
 | Target command name | RevisePolicyDraft |
 | Selected source command name | RevisePolicyDraft |
 | Name decision | The selected source name is retained. |
-| Owner | Policy |
+| Target owner | Policy |
+| Selected source owner | Policy |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | command |
 | Logical identity | CommandId; Uuid; required=true; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |

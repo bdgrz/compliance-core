@@ -9,22 +9,19 @@
       "stage": "acquire",
       "receivers": [
         "AuthorizeEvidenceRequestActionCompletionUse"
-      ],
-      "rule": null
+      ]
     },
     {
       "stage": "complete",
       "receivers": [
         "CompleteRiskTreatmentActionReview"
-      ],
-      "rule": null
+      ]
     },
     {
       "stage": "settle",
       "receivers": [
         "SettleEvidenceRequestActionCompletionUse"
-      ],
-      "rule": null
+      ]
     }
   ],
   "abort": [

@@ -97,7 +97,6 @@
       ],
       "canonicalTargetOwner": "Tenant",
       "recoveryContractSummary": "Bounded TenantActivationPolicy retries for dependency lag. Exact native original result survives later tenant lifecycle changes.",
-      "logicalPrerequisiteRuleGuard": null,
       "logicalPrerequisiteRule": "The source is TeamMemberAssigned to the canonical Administrators team for the tenant creator while the tenant still needs creator activation; ActivateTenant is accepted only if the creator is an active registered client-personnel member, the assignment is on the same membership episode, tenant membership is visible, and TenantAccess, TenantRbacManage and ProgramManage are all effective.",
       "prerequisiteRuleSource": "authored 2026-10-29 from reactor and target source"
     }

@@ -1,5 +1,7 @@
 # FirmProfessionalDutyDesignation commands
 
+
+
 Selected command contracts: **6**. Complete selected contracts and companion source evidence: [owner command JSON](../data/commands/firm-professional-duty-designation.json).
 
 | Target command | Selected source name | Kind | Identity | Fields | HTTP routes |
@@ -20,7 +22,8 @@ Selected command contracts: **6**. Complete selected contracts and companion sou
 | Target command name | RecordFirmProfessionalDutyDesignation |
 | Selected source command name | RecordFirmProfessionalDutyDesignation |
 | Name decision | The selected source name is retained. |
-| Owner | FirmProfessionalDutyDesignation |
+| Target owner | FirmProfessionalDutyDesignation |
+| Selected source owner | FirmProfessionalDutyDesignation |
 | Contract record status | target_contract |
 | Kind | http |
 | Logical identity | AssertionId; Uuid; required=true; client; one immutable signed authority assertion; verified AssertionId must match the signed assertion |
@@ -32,7 +35,7 @@ Selected command contracts: **6**. Complete selected contracts and companion sou
 | Contract changes | Rename ExpectedSequence to ExpectedRevision and compare the new target owner revision., AssertionId is required and must equal the verified signed assertion identity; DesignationId cannot identify repeated refresh/revocation assertions. |
 | Guard order | bind_required_ids, authenticate_authorize, canonicalize_authored_intent, resolve_native_operation_facts, compare_owner_episode_actor_kind_intent_original_revision, validate_new_owner_revision_and_source_permits, append_complete_concrete_attributed_batch |
 | Response contract | `{"mode":"async_fixed_ack","responseType":"OperationAcceptedResponse","firstHttpStatus":202,"terminalResultType":"FirmProfessionalDutyDesignationView"}` |
-| Expected revision scope | `{"field":"ExpectedRevision","owner":"FirmProfessionalDutyDesignation","counter":"logical ResourceRevision of this owner","nullableInternalRule":null}` |
+| Expected revision scope | `{"field":"ExpectedRevision","owner":"FirmProfessionalDutyDesignation","counter":"logical ResourceRevision of this owner"}` |
 | Authorizer sources | src/Compliance.Core/Features/AccessControl/ProfessionalDutyAdministrationAuthorizer.cs |
 | Source contract | src/Compliance.Common/Features/AccessControl/RecordFirmProfessionalDutyDesignation.cs |
 | Primary handler | RecordFirmProfessionalDutyDesignationHandler |
@@ -71,7 +74,8 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Target command name | RevokeFirmProfessionalDutyDesignation |
 | Selected source command name | RevokeFirmProfessionalDutyDesignation |
 | Name decision | The selected source name is retained. |
-| Owner | FirmProfessionalDutyDesignation |
+| Target owner | FirmProfessionalDutyDesignation |
+| Selected source owner | FirmProfessionalDutyDesignation |
 | Contract record status | target_contract |
 | Kind | http |
 | Logical identity | AssertionId; Uuid; required=true; client; one immutable signed authority assertion; verified AssertionId must match the signed assertion |
@@ -83,7 +87,7 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Contract changes | Rename ExpectedSequence to ExpectedRevision and compare the new target owner revision., AssertionId is required and must equal the verified signed assertion identity; DesignationId cannot identify repeated refresh/revocation assertions. |
 | Guard order | bind_required_ids, authenticate_authorize, canonicalize_authored_intent, resolve_native_operation_facts, compare_owner_episode_actor_kind_intent_original_revision, validate_new_owner_revision_and_source_permits, append_complete_concrete_attributed_batch |
 | Response contract | `{"mode":"async_fixed_ack","responseType":"OperationAcceptedResponse","firstHttpStatus":202,"terminalResultType":"FirmProfessionalDutyDesignationView"}` |
-| Expected revision scope | `{"field":"ExpectedRevision","owner":"FirmProfessionalDutyDesignation","counter":"logical ResourceRevision of this owner","nullableInternalRule":null}` |
+| Expected revision scope | `{"field":"ExpectedRevision","owner":"FirmProfessionalDutyDesignation","counter":"logical ResourceRevision of this owner"}` |
 | Authorizer sources | src/Compliance.Core/Features/AccessControl/ProfessionalDutyAdministrationAuthorizer.cs |
 | Source contract | src/Compliance.Common/Features/AccessControl/RevokeFirmProfessionalDutyDesignation.cs |
 | Primary handler | RevokeFirmProfessionalDutyDesignationHandler |
@@ -122,7 +126,8 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Target command name | RejectProfessionalDutyChange |
 | Selected source command name | RejectProfessionalDutyChange |
 | Name decision | The selected source name is retained. |
-| Owner | FirmProfessionalDutyDesignation |
+| Target owner | FirmProfessionalDutyDesignation |
+| Selected source owner | FirmProfessionalDutyDesignation |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | abort |
 | Logical identity | CommandId; Uuid; required=true; abort receiver identity bound to the exact admitted operation and generation: exact redelivery resolves the original rejected result; an abort after a terminal outcome is a no-op |
@@ -171,7 +176,8 @@ Required tests: [Placeholder: required tests not recorded]
 | Target command name | ApplyProfessionalDutyChange |
 | Selected source command name | ApplyProfessionalDutyChange |
 | Name decision | The selected source name is retained. |
-| Owner | FirmProfessionalDutyDesignation |
+| Target owner | FirmProfessionalDutyDesignation |
+| Selected source owner | FirmProfessionalDutyDesignation |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; reactor; deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result |
@@ -224,7 +230,8 @@ Required tests: [Placeholder: required tests not recorded]
 | Target command name | AuthorizeFirmProfessionalDutyDesignationEngagement |
 | Selected source command name | AuthorizeFirmProfessionalDutyDesignationEngagementUse |
 | Name decision | The command authorizes the named business action; the extra Use suffix describes the coordination mechanism. |
-| Owner | FirmProfessionalDutyDesignation |
+| Target owner | FirmProfessionalDutyDesignation |
+| Selected source owner | FirmProfessionalDutyDesignation |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; reactor; deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result |
@@ -278,7 +285,8 @@ Required tests: [Placeholder: required tests not recorded]
 | Target command name | CloseFirmProfessionalDutyDesignationEngagementAuthorization |
 | Selected source command name | SettleFirmProfessionalDutyDesignationEngagementUse |
 | Name decision | The command ends the exact authorization after its business action or cancellation. |
-| Owner | FirmProfessionalDutyDesignation |
+| Target owner | FirmProfessionalDutyDesignation |
+| Selected source owner | FirmProfessionalDutyDesignation |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; reactor; deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result |

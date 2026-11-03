@@ -37,7 +37,6 @@ Canonical events: **2**. Complete canonical event and available schema records: 
 | Schema discriminator | bdgrz.artifact-download-grant.artifact-download-grant-canceled |
 | Schema discriminatorVersion | 1 |
 | Schema owner | ArtifactDownloadGrant |
-| Schema existingContract | null (recorded) |
 | Schema status | selected target schema; implementation pending |
 | Schema reason | source admission contract |
 | Schema changes | None listed |
@@ -113,11 +112,11 @@ EvidenceDownloadIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T102](../reactors/one-committed-evidence-artifact-download-requested-starter.md#t102) | logical prerequisite | ArtifactDownloadGrant | CloseAdvisorArtifactDownloadAuthorization | AdvisorHandoff |
-| [T103](../reactors/one-committed-evidence-artifact-download-requested-starter.md#t103) | logical prerequisite | ArtifactDownloadGrant | CloseArtifactHandlingDownloadAuthorization | EvidenceHandlingPolicy |
-| [T104](../reactors/one-committed-evidence-artifact-download-requested-starter.md#t104) | logical prerequisite | ArtifactDownloadGrant | CloseArtifactDownloadAvailabilityAuthorization | EvidenceArtifact |
-| [A021](../reactors/unassigned-architecture-rows.md#a021) | emitted semantic fact | EvidenceArtifact | CancelProtectedArtifactDownloadGrant | ArtifactDownloadGrant |
-| [Q000](../reactors/unassigned-architecture-rows.md#q000) | logical prerequisite | null (recorded) | GetArtifactDownloadGrant | ArtifactDownloadGrant |
+| [T102](../reactors/fulfill-authorized-artifact-download-request-reactor.md#t102) | logical prerequisite | ArtifactDownloadGrant | CloseAdvisorArtifactDownloadAuthorization | AdvisorHandoff |
+| [T103](../reactors/fulfill-authorized-artifact-download-request-reactor.md#t103) | logical prerequisite | ArtifactDownloadGrant | CloseArtifactHandlingDownloadAuthorization | EvidenceHandlingPolicy |
+| [T104](../reactors/fulfill-authorized-artifact-download-request-reactor.md#t104) | logical prerequisite | ArtifactDownloadGrant | CloseArtifactDownloadAvailabilityAuthorization | EvidenceArtifact |
+| [A021](../reactors/unassigned-domain-choreography.md#a021) | emitted semantic fact | EvidenceArtifact | CancelProtectedArtifactDownloadGrant | ArtifactDownloadGrant |
+| [Q000](../reactors/unassigned-domain-choreography.md#q000) | logical prerequisite | [Placeholder: value not recorded] | GetArtifactDownloadGrant | ArtifactDownloadGrant |
 
 ### EvidenceArtifactDownloadIssued
 
@@ -228,11 +227,11 @@ EvidenceDownloadIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T101](../reactors/one-committed-evidence-artifact-download-requested-starter.md#t101) | emitted semantic fact | EvidenceArtifact | IssueProtectedArtifactDownloadGrant | ArtifactDownloadGrant |
-| [T102](../reactors/one-committed-evidence-artifact-download-requested-starter.md#t102) | logical prerequisite | ArtifactDownloadGrant | CloseAdvisorArtifactDownloadAuthorization | AdvisorHandoff |
-| [T103](../reactors/one-committed-evidence-artifact-download-requested-starter.md#t103) | logical prerequisite | ArtifactDownloadGrant | CloseArtifactHandlingDownloadAuthorization | EvidenceHandlingPolicy |
-| [T104](../reactors/one-committed-evidence-artifact-download-requested-starter.md#t104) | logical prerequisite | ArtifactDownloadGrant | CloseArtifactDownloadAvailabilityAuthorization | EvidenceArtifact |
-| [Q000](../reactors/unassigned-architecture-rows.md#q000) | logical prerequisite | null (recorded) | GetArtifactDownloadGrant | ArtifactDownloadGrant |
+| [T101](../reactors/fulfill-authorized-artifact-download-request-reactor.md#t101) | emitted semantic fact | EvidenceArtifact | IssueProtectedArtifactDownloadGrant | ArtifactDownloadGrant |
+| [T102](../reactors/fulfill-authorized-artifact-download-request-reactor.md#t102) | logical prerequisite | ArtifactDownloadGrant | CloseAdvisorArtifactDownloadAuthorization | AdvisorHandoff |
+| [T103](../reactors/fulfill-authorized-artifact-download-request-reactor.md#t103) | logical prerequisite | ArtifactDownloadGrant | CloseArtifactHandlingDownloadAuthorization | EvidenceHandlingPolicy |
+| [T104](../reactors/fulfill-authorized-artifact-download-request-reactor.md#t104) | logical prerequisite | ArtifactDownloadGrant | CloseArtifactDownloadAvailabilityAuthorization | EvidenceArtifact |
+| [Q000](../reactors/unassigned-domain-choreography.md#q000) | logical prerequisite | [Placeholder: value not recorded] | GetArtifactDownloadGrant | ArtifactDownloadGrant |
 
 
 ## Wire/schema version discrepancies

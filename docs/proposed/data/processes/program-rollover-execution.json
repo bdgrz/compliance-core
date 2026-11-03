@@ -107,7 +107,6 @@
     "ProgramRollover"
   ],
   "canonicalTargetOwner": "ProgramRolloverExecutionProcess",
-  "recoveryContractSummary": null,
   "recoveryContract": {
     "lostAcknowledgement": "If the receiver's append succeeded but the acknowledgement was lost, redelivery resolves the same deterministic effect identity and returns the original committed result without a second append.",
     "retryAfterPartialProgress": "A retry re-reads the target stream; a proven superseded or already-applied operation is a terminal no-op; an unavailable dependency or unknown append outcome is transient and retried; changed intent or an invalid proof is a permanent conflict and the operation is quarantined.",

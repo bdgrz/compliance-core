@@ -616,7 +616,6 @@
         "discriminator": "bdgrz.auditor-response.auditor-response-request-resolution-use-authorized",
         "discriminatorVersion": 1,
         "owner": "AuditorResponse",
-        "existingContract": null,
         "status": "selected target schema; implementation pending",
         "reason": "typed reactor receiver accepted business fact",
         "fields": [
@@ -780,7 +779,6 @@
         "discriminator": "bdgrz.auditor-response.auditor-response-request-resolution-use-settled",
         "discriminatorVersion": 1,
         "owner": "AuditorResponse",
-        "existingContract": null,
         "status": "selected target schema; implementation pending",
         "reason": "typed reactor receiver accepted business fact",
         "fields": [

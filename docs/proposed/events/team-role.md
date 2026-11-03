@@ -43,7 +43,7 @@ Canonical events: **2**. Complete canonical event and available schema records: 
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [S014](../reactors/tenant-rbac-bootstrap-reactor.md#s014) | emitted semantic fact | Tenant | AssignTeamRole | TeamRole |
+| [S014](../reactors/set-up-starting-tenant-access-reactor.md#s014) | emitted semantic fact | Tenant | AssignTeamRole | TeamRole |
 
 ### TeamRoleRemoved
 
@@ -79,7 +79,7 @@ Canonical events: **2**. Complete canonical event and available schema records: 
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [S009](../reactors/role-cleanup-reactor.md#s009) | emitted semantic fact | Role | RemoveTeamRole | TeamRole |
+| [S009](../reactors/remove-role-assignments-after-role-deletion-reactor.md#s009) | emitted semantic fact | Role | RemoveTeamRole | TeamRole |
 
 
 

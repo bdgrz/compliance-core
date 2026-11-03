@@ -105,7 +105,6 @@ Canonical events: **4**. Complete canonical event and available schema records: 
 | Schema discriminator | bdgrz.readiness-gap-plan.readiness-gap-plan-readiness-decision-use-authorized |
 | Schema discriminatorVersion | 1 |
 | Schema owner | ReadinessGapPlan |
-| Schema existingContract | null (recorded) |
 | Schema status | selected target schema; implementation pending |
 | Schema reason | typed reactor receiver accepted business fact |
 | Schema changes | None listed |
@@ -168,7 +167,7 @@ SourceUseAuthorizationIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T065](../reactors/readiness-decision-reactor.md#t065) | emitted semantic fact | ProgramReadiness | AuthorizeReadinessGapPlanReadinessDecision | ReadinessGapPlan |
+| [T065](../reactors/record-program-readiness-and-type-i-decisions-reactor.md#t065) | emitted semantic fact | ProgramReadiness | AuthorizeReadinessGapPlanReadinessDecision | ReadinessGapPlan |
 
 ### ReadinessGapPlanReadinessDecisionAuthorizationClosed
 
@@ -198,7 +197,6 @@ SourceUseAuthorizationIntent
 | Schema discriminator | bdgrz.readiness-gap-plan.readiness-gap-plan-readiness-decision-use-settled |
 | Schema discriminatorVersion | 1 |
 | Schema owner | ReadinessGapPlan |
-| Schema existingContract | null (recorded) |
 | Schema status | selected target schema; implementation pending |
 | Schema reason | typed reactor receiver accepted business fact |
 | Schema changes | None listed |
@@ -261,7 +259,7 @@ SourceUseAuthorizationIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T066](../reactors/readiness-decision-reactor.md#t066) | emitted semantic fact | ProgramReadiness | CloseReadinessGapPlanReadinessDecisionAuthorization | ReadinessGapPlan |
+| [T066](../reactors/record-program-readiness-and-type-i-decisions-reactor.md#t066) | emitted semantic fact | ProgramReadiness | CloseReadinessGapPlanReadinessDecisionAuthorization | ReadinessGapPlan |
 
 ### ReadinessGapPlanned
 

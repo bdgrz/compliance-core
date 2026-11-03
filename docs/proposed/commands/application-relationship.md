@@ -1,5 +1,7 @@
 # ApplicationRelationship commands
 
+
+
 Selected command contracts: **3**. Complete selected contracts and companion source evidence: [owner command JSON](../data/commands/application-relationship.json).
 
 | Target command | Selected source name | Kind | Identity | Fields | HTTP routes |
@@ -17,7 +19,8 @@ Selected command contracts: **3**. Complete selected contracts and companion sou
 | Target command name | AddApplicationRelationship |
 | Selected source command name | AddApplicationRelationship |
 | Name decision | The selected source name is retained. |
-| Owner | ApplicationRelationship |
+| Target owner | ApplicationRelationship |
+| Selected source owner | ApplicationRelationship |
 | Contract record status | target_contract |
 | Kind | http |
 | Logical identity | RelationshipId; Uuid; required=true; client; caller-supplied immutable creation identity: an exact retry with the same id and authored intent returns the original result; the same id with changed intent is refused; a different id is a different record |
@@ -29,7 +32,7 @@ Selected command contracts: **3**. Complete selected contracts and companion sou
 | Contract changes | Rename ExpectedRelationshipRevision to ExpectedRevision and compare the new target owner revision., Canonical sole public relationship creation command. Preserve active endpoint/visibility and source/target revision guards from the removed RecordApplicationRelationship path; RelationshipId must equal exact existing tuple IdFor. |
 | Guard order | bind_required_ids, authenticate_authorize, canonicalize_authored_intent, resolve_native_operation_facts, compare_owner_episode_actor_kind_intent_original_revision, validate_new_owner_revision_and_source_permits, append_complete_concrete_attributed_batch |
 | Response contract | `{"mode":"immediate_original_result","responseType":"ApplicationRelationshipChange","firstHttpStatus":200,"terminalResultType":"ApplicationRelationshipChange"}` |
-| Expected revision scope | `{"field":"ExpectedRevision","owner":"ApplicationRelationship","counter":"logical ResourceRevision of this owner","nullableInternalRule":null}` |
+| Expected revision scope | `{"field":"ExpectedRevision","owner":"ApplicationRelationship","counter":"logical ResourceRevision of this owner"}` |
 | Authorizer sources | src/Compliance.Core/Features/AccessControl/ClientManagementMutationAuthorizer.cs, src/Compliance.Core/Features/Applications/ApplicationInventoryAuthorizer.cs |
 | Source contract | src/Compliance.Common/Features/Applications/AddApplicationRelationship.cs |
 | Primary handler | AddApplicationRelationshipHandler |
@@ -49,7 +52,7 @@ Selected command contracts: **3**. Complete selected contracts and companion sou
 
 | Method | Path | Policy |
 | --- | --- | --- |
-| PUT | /api/v1/tenants/{tenant_id}/applications/{application_id}/relationships/{relationship_id} | null (recorded) |
+| PUT | /api/v1/tenants/{tenant_id}/applications/{application_id}/relationships/{relationship_id} | [Placeholder: value not recorded] |
 
 #### Handler source evidence
 
@@ -70,7 +73,8 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Target command name | ApproveApplicationSuccessor |
 | Selected source command name | ApproveApplicationSuccessor |
 | Name decision | The selected source name is retained. |
-| Owner | ApplicationRelationship |
+| Target owner | ApplicationRelationship |
+| Selected source owner | ApplicationRelationship |
 | Contract record status | target_contract |
 | Kind | http |
 | Logical identity | CommandId; Uuid; required=true; client; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
@@ -82,7 +86,7 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Contract changes | Add required CommandId., Rename ExpectedRelationshipRevision to ExpectedRevision and compare the new target owner revision. |
 | Guard order | bind_required_ids, authenticate_authorize, canonicalize_authored_intent, resolve_native_operation_facts, compare_owner_episode_actor_kind_intent_original_revision, validate_new_owner_revision_and_source_permits, append_complete_concrete_attributed_batch |
 | Response contract | `{"mode":"immediate_original_result","responseType":"Unit","firstHttpStatus":200,"terminalResultType":"Unit"}` |
-| Expected revision scope | `{"field":"ExpectedRevision","owner":"ApplicationRelationship","counter":"logical ResourceRevision of this owner","nullableInternalRule":null}` |
+| Expected revision scope | `{"field":"ExpectedRevision","owner":"ApplicationRelationship","counter":"logical ResourceRevision of this owner"}` |
 | Authorizer sources | src/Compliance.Core/Features/AccessControl/ClientManagementMutationAuthorizer.cs, src/Compliance.Core/Features/Applications/ApplicationInventoryAuthorizer.cs |
 | Source contract | src/Compliance.Common/Features/Applications/ApproveApplicationSuccessor.cs |
 | Primary handler | ApproveApplicationSuccessorHandler |
@@ -125,7 +129,8 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Target command name | RemoveApplicationRelationship |
 | Selected source command name | RemoveApplicationRelationship |
 | Name decision | The selected source name is retained. |
-| Owner | ApplicationRelationship |
+| Target owner | ApplicationRelationship |
+| Selected source owner | ApplicationRelationship |
 | Contract record status | target_contract |
 | Kind | http |
 | Logical identity | CommandId; Uuid; required=true; client; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
@@ -137,7 +142,7 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Contract changes | Add required CommandId., Rename ExpectedRelationshipRevision to ExpectedRevision and compare the new target owner revision., Canonical sole relationship removal command; preserve all endpoint/type/authority and reason rules from removed governed-removal path. Require Reason. Use owner-local ExpectedRevision, not a directory visible revision. |
 | Guard order | bind_required_ids, authenticate_authorize, canonicalize_authored_intent, resolve_native_operation_facts, compare_owner_episode_actor_kind_intent_original_revision, validate_new_owner_revision_and_source_permits, append_complete_concrete_attributed_batch |
 | Response contract | `{"mode":"immediate_original_result","responseType":"ApplicationRelationshipChange","firstHttpStatus":200,"terminalResultType":"ApplicationRelationshipChange"}` |
-| Expected revision scope | `{"field":"ExpectedRevision","owner":"ApplicationRelationship","counter":"logical ResourceRevision of this owner","nullableInternalRule":null}` |
+| Expected revision scope | `{"field":"ExpectedRevision","owner":"ApplicationRelationship","counter":"logical ResourceRevision of this owner"}` |
 | Authorizer sources | src/Compliance.Core/Features/AccessControl/ClientManagementMutationAuthorizer.cs, src/Compliance.Core/Features/Applications/ApplicationInventoryAuthorizer.cs |
 | Source contract | src/Compliance.Common/Features/Applications/RemoveApplicationRelationship.cs |
 | Primary handler | RemoveApplicationRelationshipHandler |

@@ -1,5 +1,7 @@
 # AuditorRequest commands
 
+
+
 Selected command contracts: **11**. Complete selected contracts and companion source evidence: [owner command JSON](../data/commands/auditor-request.json).
 
 | Target command | Selected source name | Kind | Identity | Fields | HTTP routes |
@@ -25,7 +27,8 @@ Selected command contracts: **11**. Complete selected contracts and companion so
 | Target command name | AmendSampleSelection |
 | Selected source command name | AmendSampleSelection |
 | Name decision | The selected source name is retained. |
-| Owner | AuditorRequest |
+| Target owner | AuditorRequest |
+| Selected source owner | AuditorRequest |
 | Contract record status | target_contract |
 | Kind | http |
 | Logical identity | SelectionId; Uuid; required=true; client; deterministic receiver identity derived from the admitted root fact, episode and generation: exact redelivery resolves the original result, a changed admission is a new identity |
@@ -86,7 +89,8 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Target command name | AssignAuditorRequest |
 | Selected source command name | AssignAuditorRequest |
 | Name decision | The selected source name is retained. |
-| Owner | AuditorRequest |
+| Target owner | AuditorRequest |
+| Selected source owner | AuditorRequest |
 | Contract record status | target_contract |
 | Kind | http |
 | Logical identity | CommandId; Uuid; required=true; client; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
@@ -98,7 +102,7 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Contract changes | Add required CommandId., Add required owner-local ExpectedRevision; business Version remains an exact content version, not owner OCC. |
 | Guard order | bind_required_ids, authenticate_authorize, canonicalize_authored_intent, resolve_native_operation_facts, compare_owner_episode_actor_kind_intent_original_revision, validate_new_owner_revision_and_source_permits, append_complete_concrete_attributed_batch |
 | Response contract | `{"mode":"immediate_original_result","responseType":"Unit","firstHttpStatus":200,"terminalResultType":"Unit"}` |
-| Expected revision scope | `{"field":"ExpectedRevision","owner":"AuditorRequest","counter":"logical ResourceRevision of this owner","nullableInternalRule":null}` |
+| Expected revision scope | `{"field":"ExpectedRevision","owner":"AuditorRequest","counter":"logical ResourceRevision of this owner"}` |
 | Authorizer sources | src/Compliance.Core/Features/AccessControl/ClientManagementMutationAuthorizer.cs, src/Compliance.Core/Features/Programs/ProgramManagementAuthorizer.cs |
 | Source contract | src/Compliance.Common/Features/AuditorRequests/AssignAuditorRequest.cs |
 | Primary handler | AssignAuditorRequestHandler |
@@ -141,7 +145,8 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Target command name | CreateAuditResponseDraft |
 | Selected source command name | CreateAuditResponseDraft |
 | Name decision | The selected source name is retained. |
-| Owner | AuditorRequest |
+| Target owner | AuditorRequest |
+| Selected source owner | AuditorRequest |
 | Contract record status | target_contract |
 | Kind | http |
 | Logical identity | ResponseId; Uuid; required=true; client; caller-supplied immutable creation identity: an exact retry with the same id and authored intent returns the original result; the same id with changed intent is refused; a different id is a different record |
@@ -195,7 +200,8 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Target command name | RecordAuditorRequest |
 | Selected source command name | RecordAuditorRequest |
 | Name decision | The selected source name is retained. |
-| Owner | AuditorRequest |
+| Target owner | AuditorRequest |
+| Selected source owner | AuditorRequest |
 | Contract record status | target_contract |
 | Kind | http |
 | Logical identity | RequestId; Uuid; required=true; client; deterministic receiver identity derived from the admitted root fact, episode and generation: exact redelivery resolves the original result, a changed admission is a new identity |
@@ -207,7 +213,7 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Contract changes | None listed |
 | Guard order | bind_required_ids, authenticate_authorize, canonicalize_authored_intent, resolve_native_operation_facts, compare_owner_episode_actor_kind_intent_original_revision, validate_new_owner_revision_and_source_permits, append_complete_concrete_attributed_batch |
 | Response contract | `{"mode":"immediate_original_result","responseType":"Unit","firstHttpStatus":200,"terminalResultType":"Unit"}` |
-| Expected revision scope | `{"field":null,"owner":"AuditorRequest","counter":"No primary caller ResourceRevision. Enforce required authored source/epoch/version tokens, immutable creation identity or trusted proof/generation as declared; append uses physical OCC."}` |
+| Expected revision scope | `{"owner":"AuditorRequest","counter":"No primary caller ResourceRevision. Enforce required authored source/epoch/version tokens, immutable creation identity or trusted proof/generation as declared; append uses physical OCC."}` |
 | Authorizer sources | src/Compliance.Core/Features/AccessControl/ClientManagementMutationAuthorizer.cs, src/Compliance.Core/Features/Programs/ProgramManagementAuthorizer.cs |
 | Source contract | src/Compliance.Common/Features/AuditorRequests/RecordAuditorRequest.cs |
 | Primary handler | RecordAuditorRequestHandler |
@@ -253,7 +259,8 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Target command name | RecordAuditorRequestComment |
 | Selected source command name | RecordAuditorRequestComment |
 | Name decision | The selected source name is retained. |
-| Owner | AuditorRequest |
+| Target owner | AuditorRequest |
+| Selected source owner | AuditorRequest |
 | Contract record status | target_contract |
 | Kind | http |
 | Logical identity | CommentId; Uuid; required=true; client; caller-supplied immutable creation identity: an exact retry with the same id and authored intent returns the original result; the same id with changed intent is refused; a different id is a different record |
@@ -307,7 +314,8 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Target command name | RecordSampleSelection |
 | Selected source command name | RecordSampleSelection |
 | Name decision | The selected source name is retained. |
-| Owner | AuditorRequest |
+| Target owner | AuditorRequest |
+| Selected source owner | AuditorRequest |
 | Contract record status | target_contract |
 | Kind | http |
 | Logical identity | SelectionId; Uuid; required=true; client; deterministic receiver identity derived from the admitted root fact, episode and generation: exact redelivery resolves the original result, a changed admission is a new identity |
@@ -366,7 +374,8 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Target command name | ReopenAuditorRequest |
 | Selected source command name | ReopenAuditorRequest |
 | Name decision | The selected source name is retained. |
-| Owner | AuditorRequest |
+| Target owner | AuditorRequest |
+| Selected source owner | AuditorRequest |
 | Contract record status | target_contract |
 | Kind | http |
 | Logical identity | CommandId; Uuid; required=true; client; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
@@ -378,7 +387,7 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Contract changes | Add required CommandId., Add required owner-local ExpectedRevision; business Version remains an exact content version, not owner OCC. |
 | Guard order | bind_required_ids, authenticate_authorize, canonicalize_authored_intent, resolve_native_operation_facts, compare_owner_episode_actor_kind_intent_original_revision, validate_new_owner_revision_and_source_permits, append_complete_concrete_attributed_batch |
 | Response contract | `{"mode":"immediate_original_result","responseType":"Unit","firstHttpStatus":200,"terminalResultType":"Unit"}` |
-| Expected revision scope | `{"field":"ExpectedRevision","owner":"AuditorRequest","counter":"logical ResourceRevision of this owner","nullableInternalRule":null}` |
+| Expected revision scope | `{"field":"ExpectedRevision","owner":"AuditorRequest","counter":"logical ResourceRevision of this owner"}` |
 | Authorizer sources | src/Compliance.Core/Features/AccessControl/ClientManagementMutationAuthorizer.cs, src/Compliance.Core/Features/Programs/ProgramManagementAuthorizer.cs |
 | Source contract | src/Compliance.Common/Features/AuditorRequests/ReopenAuditorRequest.cs |
 | Primary handler | ReopenAuditorRequestHandler |
@@ -419,7 +428,8 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Target command name | ResolveAuditorRequest |
 | Selected source command name | ResolveAuditorRequest |
 | Name decision | The selected source name is retained. |
-| Owner | AuditorRequest |
+| Target owner | AuditorRequest |
+| Selected source owner | AuditorRequest |
 | Contract record status | target_contract |
 | Kind | http |
 | Logical identity | CommandId; Uuid; required=true; client; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
@@ -431,7 +441,7 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Contract changes | Add required CommandId., Add required owner-local ExpectedRevision; business Version remains an exact content version, not owner OCC., ResponseIds must be nonempty, duplicate-free and exactly equal to every admitted response in this request resolution universe; freeze complete selection at admission. |
 | Guard order | bind_required_ids, authenticate_authorize, canonicalize_authored_intent, resolve_native_operation_facts, compare_owner_episode_actor_kind_intent_original_revision, validate_new_owner_revision_and_source_permits, append_complete_concrete_attributed_batch |
 | Response contract | `{"mode":"async_fixed_ack","responseType":"OperationAcceptedResponse","firstHttpStatus":202,"terminalResultType":"Unit"}` |
-| Expected revision scope | `{"field":"ExpectedRevision","owner":"AuditorRequest","counter":"logical ResourceRevision of this owner","nullableInternalRule":null}` |
+| Expected revision scope | `{"field":"ExpectedRevision","owner":"AuditorRequest","counter":"logical ResourceRevision of this owner"}` |
 | Authorizer sources | src/Compliance.Core/Features/AccessControl/ClientManagementMutationAuthorizer.cs, src/Compliance.Core/Features/Programs/ProgramManagementAuthorizer.cs |
 | Source contract | src/Compliance.Common/Features/AuditorRequests/ResolveAuditorRequest.cs |
 | Primary handler | ResolveAuditorRequestHandler |
@@ -473,7 +483,8 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Target command name | ReviseAuditorRequest |
 | Selected source command name | ReviseAuditorRequest |
 | Name decision | The selected source name is retained. |
-| Owner | AuditorRequest |
+| Target owner | AuditorRequest |
+| Selected source owner | AuditorRequest |
 | Contract record status | target_contract |
 | Kind | http |
 | Logical identity | CommandId; Uuid; required=true; client; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
@@ -485,7 +496,7 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Contract changes | Add required CommandId. |
 | Guard order | bind_required_ids, authenticate_authorize, canonicalize_authored_intent, resolve_native_operation_facts, compare_owner_episode_actor_kind_intent_original_revision, validate_new_owner_revision_and_source_permits, append_complete_concrete_attributed_batch |
 | Response contract | `{"mode":"immediate_original_result","responseType":"Unit","firstHttpStatus":200,"terminalResultType":"Unit"}` |
-| Expected revision scope | `{"field":"ExpectedRevision","owner":"AuditorRequest","counter":"logical ResourceRevision of this owner","nullableInternalRule":null}` |
+| Expected revision scope | `{"field":"ExpectedRevision","owner":"AuditorRequest","counter":"logical ResourceRevision of this owner"}` |
 | Authorizer sources | src/Compliance.Core/Features/AccessControl/ClientManagementMutationAuthorizer.cs, src/Compliance.Core/Features/Programs/ProgramManagementAuthorizer.cs |
 | Source contract | src/Compliance.Common/Features/AuditorRequests/ReviseAuditorRequest.cs |
 | Primary handler | ReviseAuditorRequestHandler |
@@ -530,7 +541,8 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Target command name | AbortAuditorRequestResolution |
 | Selected source command name | AbortAuditorRequestResolution |
 | Name decision | The selected source name is retained. |
-| Owner | AuditorRequest |
+| Target owner | AuditorRequest |
+| Selected source owner | AuditorRequest |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | abort |
 | Logical identity | CommandId; Uuid; required=true; abort receiver identity bound to the exact admitted operation and generation: exact redelivery resolves the original rejected result; an abort after a terminal outcome is a no-op |
@@ -579,7 +591,8 @@ Required tests: [Placeholder: required tests not recorded]
 | Target command name | CompleteAuditorRequestResolution |
 | Selected source command name | CompleteAuditorRequestResolution |
 | Name decision | The selected source name is retained. |
-| Owner | AuditorRequest |
+| Target owner | AuditorRequest |
+| Selected source owner | AuditorRequest |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; reactor; deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result |

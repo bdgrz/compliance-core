@@ -8,14 +8,7 @@
   "invariant": "Immutable contribution with its correction/response lifecycle.",
   "boundaryDecision": "selected_split",
   "mustPreserve": "Feedback records exact selected source version and admitted generation; later selection makes it historical.",
-  "sources": [
-    {
-      "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
-      "jsonPointer": "/splitOwners/6/targetOwners/1",
-      "line": 714,
-      "sha256": "d349d94b7c43f4d82020ecf36bdacf1aff98bc6498e14993582f1c3164b21f19"
-    }
-  ],
+  "sources": [],
   "baselineSourcePath": "src/Compliance.Core/Features/AdvisorCollaboration/AdvisorHandoff.cs",
   "baselineEvents": [
     "AdvisorFeedbackCorrected",
@@ -94,13 +87,9 @@
           "policy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/38",
-        "line": 4509,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
-      "kind": "http"
+      "kind": "http",
+      "sourceOwner": "AdvisorFeedbackThread",
+      "owner": "AdvisorFeedbackThread"
     },
     {
       "command": "ResolveAdvisorFeedback",
@@ -156,13 +145,9 @@
           "policy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/121",
-        "line": 13958,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
-      "kind": "http"
+      "kind": "http",
+      "sourceOwner": "AdvisorFeedbackThread",
+      "owner": "AdvisorFeedbackThread"
     },
     {
       "command": "RespondToAdvisorFeedback",
@@ -223,13 +208,9 @@
           "policy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/123",
-        "line": 14188,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
-      "kind": "http"
+      "kind": "http",
+      "sourceOwner": "AdvisorFeedbackThread",
+      "owner": "AdvisorFeedbackThread"
     },
     {
       "command": "MaterializeAdvisorFeedback",
@@ -290,7 +271,7 @@
         }
       ],
       "reactor": "AdvisorFeedbackMaterializationReactor",
-      "sourceOwner": "AdvisorHandoff",
+      "sourceOwner": "AdvisorFeedbackThread",
       "sourceEvents": [
         "AdvisorFeedbackAdmitted"
       ],
@@ -302,10 +283,7 @@
       "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
       "handler": "MaterializeAdvisorFeedbackHandler",
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "recorded": "2026-10-29"
-      }
+      "owner": "AdvisorFeedbackThread"
     }
   ],
   "eventAuthority": "selected_final_event_catalog",
@@ -313,46 +291,22 @@
     {
       "event": "AdvisorFeedbackCorrected",
       "discriminator": "bdgrz.advisor-feedback.corrected",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/31",
-        "line": 3773,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     },
     {
       "event": "AdvisorFeedbackRecorded",
       "discriminator": "bdgrz.advisor-feedback.recorded",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/32",
-        "line": 3849,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     },
     {
       "event": "AdvisorFeedbackResolved",
       "discriminator": "bdgrz.advisor-feedback.resolved",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/33",
-        "line": 4033,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     },
     {
       "event": "AdvisorFeedbackResponded",
       "discriminator": "bdgrz.advisor-feedback.responded",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/34",
-        "line": 4094,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     }
   ],
   "choreography": [
@@ -360,13 +314,7 @@
       "reactor": "AdvisorFeedbackMaterializationReactor",
       "sourceOwner": "AdvisorHandoff",
       "targetOwner": "AdvisorFeedbackThread",
-      "command": "MaterializeAdvisorFeedback",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "jsonPointer": "/reactors/13",
-        "line": 1127,
-        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
-      }
+      "command": "MaterializeAdvisorFeedback"
     }
   ],
   "status": "SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED",
@@ -384,12 +332,6 @@
         "required": true,
         "origin": "client",
         "rule": "one immutable authored operation"
-      },
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/38",
-        "line": 4509,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       }
     },
     {
@@ -400,12 +342,6 @@
         "required": true,
         "origin": "client",
         "rule": "one immutable authored operation"
-      },
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/121",
-        "line": 13958,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       }
     },
     {
@@ -416,12 +352,6 @@
         "required": true,
         "origin": "client",
         "rule": "one immutable authored operation"
-      },
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/123",
-        "line": 14188,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       }
     }
   ],
@@ -456,5 +386,6 @@
     "D14-09",
     "D14-11"
   ],
-  "decidesAuthored": "2026-10-29"
+  "decidesAuthored": "2026-10-29",
+  "sourceOwner": "AdvisorFeedbackThread"
 }

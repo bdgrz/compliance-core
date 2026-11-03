@@ -33,13 +33,9 @@
         "terminalResultType": "IndependenceRuleVersionView"
       },
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/174",
-        "line": 13033,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      },
       "kind": "command",
+      "sourceOwner": "IndependenceRuleCatalog",
+      "owner": "IndependenceRuleCatalog",
       "sourceName": "ReviseIndependenceRules",
       "targetName": "ReviseIndependenceRules"
     },
@@ -112,7 +108,7 @@
         }
       ],
       "reactor": "EngagementIndependenceRuleCatalogUseReactor",
-      "sourceOwner": "ServiceEngagementIndependence",
+      "sourceOwner": "IndependenceRuleCatalog",
       "sourceEvents": [
         "ServiceEngagementAcceptanceRequested",
         "ServiceEngagementStaffAssignmentRequested",
@@ -126,10 +122,7 @@
       "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
       "handler": "AuthorizeIndependenceRuleCatalogEngagementUseHandler",
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "recorded": "2026-10-29"
-      },
+      "owner": "IndependenceRuleCatalog",
       "sourceName": "AuthorizeIndependenceRuleCatalogEngagementUse",
       "targetName": "AuthorizeIndependenceRuleCatalogEngagement"
     },
@@ -197,7 +190,7 @@
         }
       ],
       "reactor": "EngagementIndependenceRuleCatalogUseSettlementReactor",
-      "sourceOwner": "ServiceEngagementIndependence",
+      "sourceOwner": "IndependenceRuleCatalog",
       "sourceEvents": [
         "EngagementPracticeCommitmentsAuthorized",
         "ServiceEngagementAcceptanceRejected",
@@ -213,10 +206,7 @@
       "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
       "handler": "SettleIndependenceRuleCatalogEngagementUseHandler",
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "recorded": "2026-10-29"
-      },
+      "owner": "IndependenceRuleCatalog",
       "sourceName": "SettleIndependenceRuleCatalogEngagementUse",
       "targetName": "CloseIndependenceRuleCatalogEngagementAuthorization"
     }

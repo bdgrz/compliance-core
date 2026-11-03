@@ -114,8 +114,8 @@ EngagementPersonalDecisionIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T108](../reactors/engagement-personal-decision-reactor.md#t108) | emitted semantic fact | ServiceEngagementIndependence | RecordEngagementManagementAcknowledgement | EngagementManagementAcknowledgement |
-| [T110](../reactors/engagement-personal-decision-reactor.md#t110) | logical prerequisite | EngagementManagementAcknowledgement\|PartnerIndependenceDecision | CloseEngagementPersonalDecision | ServiceEngagementIndependence |
+| [T108](../reactors/record-engagement-independence-decisions-reactor.md#t108) | emitted semantic fact | ServiceEngagementIndependence | RecordEngagementManagementAcknowledgement | EngagementManagementAcknowledgement |
+| [T110](../reactors/record-engagement-independence-decisions-reactor.md#t110) | logical prerequisite | EngagementManagementAcknowledgement\|PartnerIndependenceDecision | RecordEngagementPersonalDecision | ServiceEngagementIndependence |
 
 
 

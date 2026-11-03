@@ -5,6 +5,7 @@
 - Business aggregate: `true`
 - Selected status: `SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED`
 
+
 ## Identity and invariant
 
 **Selected identity:** platform / (canonicalUserId, duty, nullable tenantScope)
@@ -18,6 +19,10 @@
 **Replay:** Current required authorization precedes replay; exact authorized retries resolve the original accepted result using the selected logical identity and immutable actor/intent/source binding. Fresh mutable feasibility, clock selection and body preparation cannot replace that original result. Expected revision is concurrency precondition, not a new identity.
 
 **Lifecycle:** [Placeholder: a consolidated lifecycle sequence is not present in the selected owner record.]
+
+
+
+
 
 ## Commands
 
@@ -45,13 +50,13 @@
 
 | Row | Kind | Source owner | Target owner | Command |
 | --- | --- | --- | --- | --- |
-| [T000](../reactors/professional-duty-change-reactor.md#t000) | reaction_or_regular_process_stage | FirmProfessionalDutyDesignation | ProfessionalAssertionIdentityClaim | ClaimProfessionalAssertionIdentity |
-| [T001](../reactors/professional-duty-change-reactor.md#t001) | reaction_or_regular_process_stage | ProfessionalAssertionIdentityClaim | FirmProfessionalDutyDesignation | ApplyProfessionalDutyChange |
+| [T000](../reactors/apply-or-revoke-professional-duty-designation-reactor.md#t000) | reaction_or_regular_process_stage | FirmProfessionalDutyDesignation | ProfessionalAssertionIdentityClaim | ClaimProfessionalAssertionIdentity |
+| [T001](../reactors/apply-or-revoke-professional-duty-designation-reactor.md#t001) | reaction_or_regular_process_stage | ProfessionalAssertionIdentityClaim | FirmProfessionalDutyDesignation | ApplyProfessionalDutyChange |
 | [T091](../reactors/engagement-acceptance-reactor.md#t091) | reaction_or_regular_process_stage | ServiceEngagementIndependence | FirmProfessionalDutyDesignation | AuthorizeFirmProfessionalDutyDesignationEngagement |
 | [T092](../reactors/engagement-acceptance-reactor.md#t092) | reaction_or_regular_process_stage | ServiceEngagementIndependence | FirmProfessionalDutyDesignation | CloseFirmProfessionalDutyDesignationEngagementAuthorization |
-| [T113](../reactors/professional-duty-change-reactor.md#t113) | reaction_or_regular_process_stage | FirmProfessionalDutyDesignation | FirmStaffRecord | AuthorizeFirmStaffProfessionalDuty |
-| [T114](../reactors/professional-duty-change-reactor.md#t114) | reaction_or_regular_process_stage | FirmProfessionalDutyDesignation | FirmStaffRecord | CloseFirmStaffProfessionalDutyAuthorization |
-| [A000](../reactors/unassigned-architecture-rows.md#a000) | process_abort_binding | FirmProfessionalDutyDesignation | FirmProfessionalDutyDesignation | RejectProfessionalDutyChange |
+| [T113](../reactors/apply-or-revoke-professional-duty-designation-reactor.md#t113) | reaction_or_regular_process_stage | FirmProfessionalDutyDesignation | FirmStaffRecord | AuthorizeFirmStaffProfessionalDuty |
+| [T114](../reactors/apply-or-revoke-professional-duty-designation-reactor.md#t114) | reaction_or_regular_process_stage | FirmProfessionalDutyDesignation | FirmStaffRecord | CloseFirmStaffProfessionalDutyAuthorization |
+| [A000](../reactors/unassigned-domain-choreography.md#a000) | process_abort_binding | FirmProfessionalDutyDesignation | FirmProfessionalDutyDesignation | RejectProfessionalDutyChange |
 
 ## Product rules
 
@@ -64,7 +69,7 @@
 ## Evidence and complete record
 
 - Baseline source: [Placeholder: source file is not present in this checkout]
-- Aggregate review: [firm-professional-duty-designation-review-2026-10-29.md](../../product/definitive-aggregate-choreography/firm-professional-duty-designation-review-2026-10-29.md)
+- Aggregate review: [Placeholder: no owner-specific review file is present]
 - Full selected record: [JSON](../data/aggregates/firm-professional-duty-designation.json)
 
 > Target definition is separate from runtime qualification. Implementation status recorded by the source: `SEPARATE_VERIFICATION_REQUIRED_IMPLEMENTATION_HALTED`.

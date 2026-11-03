@@ -20,11 +20,11 @@ Selected choreography rows: **1**. Required proofs, recovery, effect identity, a
 | id | S035 |
 | kind | business_receiver |
 | status | SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED |
-| sourceOwner | UserIdentity |
+| Source owner (target name) | UserIdentity (source: UserIdentity) |
 | logicalPrerequisiteFacts (target names) | UserIdentityRegistered |
 | physicalRootEvents (target names) | UserIdentityRegistered |
 | Target command (selected source name: ReserveEmail) | ReserveEmail |
-| targetOwner | EmailAddress |
+| Target owner | EmailAddress |
 | targetAuthorityKind | business_aggregate |
 | emittedSemanticFacts (target names) | EmailAddressReserved |
 | currentRegisteredRootTypes (target names) | KeepTenantEmailAddressesUniqueReactor |
@@ -35,7 +35,6 @@ Selected choreography rows: **1**. Required proofs, recovery, effect identity, a
 | sourceOwners | UserIdentity |
 | canonicalTargetOwner | EmailAddress |
 | recoveryContractSummary | At-least-once checkpoint replay resends the same source-derived command. Missing dependencies remain retryable; actual terminal/superseded episodes are skipped only with the owning proof. |
-| logicalPrerequisiteRuleGuard | null (recorded) |
 | logicalPrerequisiteRule | A registered user with an email address reserves the normalized address once; if another user already owns it, the conflict is terminal for this registration. |
 | prerequisiteRuleSource | authored 2026-10-29 from reactor and target source |
 

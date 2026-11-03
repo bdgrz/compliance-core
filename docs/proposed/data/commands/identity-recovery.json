@@ -31,15 +31,9 @@
           "required": true
         }
       ],
-      "responseContract": null,
-      "http": null,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/source-admission-contracts.json",
-        "jsonPointer": "/contracts/27",
-        "line": 1655,
-        "sha256": "f1d549ed0879c816cb26e86879f8fa658dab0a8acbf7c591e4d4aed40483f8ae"
-      },
       "kind": "command",
+      "sourceOwner": "IdentityRecovery",
+      "owner": "IdentityRecovery",
       "sourceName": "RejectIdentityRecoveryPreparation",
       "targetName": "RejectIdentityRecoveryPreparation"
     },
@@ -124,10 +118,7 @@
       "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
       "handler": "CompleteAcceptedIdentityRecoveryHandler",
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "recorded": "2026-10-29"
-      },
+      "owner": "IdentityRecovery",
       "sourceName": "CompleteAcceptedIdentityRecovery",
       "targetName": "CompleteAcceptedIdentityRecovery"
     },
@@ -205,7 +196,7 @@
         }
       ],
       "reactor": "IdentityRecoveryAcceptanceReactor",
-      "sourceOwner": "EmailAddress",
+      "sourceOwner": "IdentityRecovery",
       "sourceEvents": [
         "IdentityRecoveryChallengeClaimed"
       ],
@@ -217,10 +208,7 @@
       "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
       "handler": "MaterializeIdentityRecoveryPreparationHandler",
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "recorded": "2026-10-29"
-      },
+      "owner": "IdentityRecovery",
       "sourceName": "MaterializeIdentityRecoveryPreparation",
       "targetName": "PrepareAccountRecovery"
     },
@@ -295,10 +283,7 @@
       "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
       "handler": "AcceptProtectedIdentityRecoveryHandler",
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "recorded": "2026-10-29"
-      },
+      "owner": "IdentityRecovery",
       "sourceName": "AcceptProtectedIdentityRecovery",
       "targetName": "AcceptProtectedIdentityRecovery"
     }

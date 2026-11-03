@@ -37,7 +37,6 @@ Canonical events: **2**. Complete canonical event and available schema records: 
 | Schema discriminator | bdgrz.location-name-claim.location-name-claimed |
 | Schema discriminatorVersion | 1 |
 | Schema owner | LocationNameClaim |
-| Schema existingContract | null (recorded) |
 | Schema status | selected target schema; implementation pending |
 | Schema reason | typed reactor receiver accepted business fact |
 | Schema changes | None listed |
@@ -106,8 +105,8 @@ RecordNameChangeIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T025](../reactors/location-change-accepted-reactor.md#t025) | emitted semantic fact | Location | ClaimLocationName | LocationNameClaim |
-| [T026](../reactors/location-change-accepted-reactor.md#t026) | logical prerequisite | LocationNameClaim | ApplyLocationChange | Location |
+| [T025](../reactors/keep-location-names-unique-reactor.md#t025) | emitted semantic fact | Location | ClaimLocationName | LocationNameClaim |
+| [T026](../reactors/keep-location-names-unique-reactor.md#t026) | logical prerequisite | LocationNameClaim | ApplyLocationChange | Location |
 
 ### LocationNameReleased
 
@@ -137,7 +136,6 @@ RecordNameChangeIntent
 | Schema discriminator | bdgrz.location-name-claim.location-name-released |
 | Schema discriminatorVersion | 1 |
 | Schema owner | LocationNameClaim |
-| Schema existingContract | null (recorded) |
 | Schema status | selected target schema; implementation pending |
 | Schema reason | typed reactor receiver accepted business fact |
 | Schema changes | None listed |
@@ -206,7 +204,7 @@ RecordNameChangeIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T027](../reactors/location-change-accepted-reactor.md#t027) | emitted semantic fact | Location | ReleaseLocationName | LocationNameClaim |
+| [T027](../reactors/keep-location-names-unique-reactor.md#t027) | emitted semantic fact | Location | ReleaseLocationName | LocationNameClaim |
 
 
 

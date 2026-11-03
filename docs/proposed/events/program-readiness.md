@@ -42,7 +42,6 @@ Canonical events: **7**. Complete canonical event and available schema records: 
 | Schema discriminator | bdgrz.program-readiness.readiness-assessment-adopted |
 | Schema discriminatorVersion | 1 |
 | Schema owner | ProgramReadiness |
-| Schema existingContract | null (recorded) |
 | Schema status | selected target schema; implementation pending |
 | Schema reason | typed reactor receiver accepted business fact |
 | Schema changes | None listed |
@@ -111,7 +110,7 @@ ReadinessRunIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T039](../reactors/readiness-run-reactor.md#t039) | emitted semantic fact | ReadinessAssessment | AdoptReadinessAssessment | ProgramReadiness |
+| [T039](../reactors/reassess-program-readiness-reactor.md#t039) | emitted semantic fact | ReadinessAssessment | AdoptReadinessAssessment | ProgramReadiness |
 
 ### ReadinessAssessmentRequested
 
@@ -141,7 +140,6 @@ ReadinessRunIntent
 | Schema discriminator | bdgrz.program-readiness.readiness-assessment-requested |
 | Schema discriminatorVersion | 1 |
 | Schema owner | ProgramReadiness |
-| Schema existingContract | null (recorded) |
 | Schema status | selected target schema; implementation pending |
 | Schema reason | source command accepted result |
 | Schema changes | None listed |
@@ -210,8 +208,8 @@ ReadinessRunIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T039](../reactors/readiness-run-reactor.md#t039) | physical root | ReadinessAssessment | AdoptReadinessAssessment | ProgramReadiness |
-| [T087](../reactors/readiness-run-reactor.md#t087) | physical root, logical prerequisite | ProgramReadiness | ComputeReadinessAssessment | ReadinessAssessment |
+| [T039](../reactors/reassess-program-readiness-reactor.md#t039) | physical root | ReadinessAssessment | AdoptReadinessAssessment | ProgramReadiness |
+| [T087](../reactors/reassess-program-readiness-reactor.md#t087) | physical root, logical prerequisite | ProgramReadiness | ComputeReadinessAssessment | ReadinessAssessment |
 
 ### ReadinessDecisionAccepted
 
@@ -241,7 +239,6 @@ ReadinessRunIntent
 | Schema discriminator | bdgrz.program-readiness.readiness-decision-accepted |
 | Schema discriminatorVersion | 1 |
 | Schema owner | ProgramReadiness |
-| Schema existingContract | null (recorded) |
 | Schema status | selected target schema; implementation pending |
 | Schema reason | source command accepted result |
 | Schema changes | None listed |
@@ -316,11 +313,11 @@ ReadinessDecisionIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T065](../reactors/readiness-decision-reactor.md#t065) | physical root, logical prerequisite | ProgramReadiness | AuthorizeReadinessGapPlanReadinessDecision | ReadinessGapPlan |
-| [T066](../reactors/readiness-decision-reactor.md#t066) | physical root | ProgramReadiness | CloseReadinessGapPlanReadinessDecisionAuthorization | ReadinessGapPlan |
-| [T074](../reactors/readiness-decision-reactor.md#t074) | physical root, logical prerequisite | ProgramReadiness | CompleteReadinessDecision | ProgramReadiness |
-| [T075](../reactors/readiness-decision-reactor.md#t075) | physical root | ProgramReadiness | CompleteTypeIEntryDecision | ProgramReadiness |
-| [A009](../reactors/unassigned-architecture-rows.md#a009) | physical root, logical prerequisite | ProgramReadiness | AbortReadinessDecision | ProgramReadiness |
+| [T065](../reactors/record-program-readiness-and-type-i-decisions-reactor.md#t065) | physical root, logical prerequisite | ProgramReadiness | AuthorizeReadinessGapPlanReadinessDecision | ReadinessGapPlan |
+| [T066](../reactors/record-program-readiness-and-type-i-decisions-reactor.md#t066) | physical root | ProgramReadiness | CloseReadinessGapPlanReadinessDecisionAuthorization | ReadinessGapPlan |
+| [T074](../reactors/record-program-readiness-and-type-i-decisions-reactor.md#t074) | physical root, logical prerequisite | ProgramReadiness | CompleteReadinessDecision | ProgramReadiness |
+| [T075](../reactors/record-program-readiness-and-type-i-decisions-reactor.md#t075) | physical root | ProgramReadiness | CompleteTypeIEntryDecision | ProgramReadiness |
+| [A009](../reactors/unassigned-domain-choreography.md#a009) | physical root, logical prerequisite | ProgramReadiness | AbortReadinessDecision | ProgramReadiness |
 
 ### ReadinessDecisionCanceled
 
@@ -350,7 +347,6 @@ ReadinessDecisionIntent
 | Schema discriminator | bdgrz.program-readiness.readiness-decision-canceled |
 | Schema discriminatorVersion | 1 |
 | Schema owner | ProgramReadiness |
-| Schema existingContract | null (recorded) |
 | Schema status | selected target schema; implementation pending |
 | Schema reason | source admission contract |
 | Schema changes | None listed |
@@ -425,8 +421,8 @@ ReadinessDecisionIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T066](../reactors/readiness-decision-reactor.md#t066) | logical prerequisite | ProgramReadiness | CloseReadinessGapPlanReadinessDecisionAuthorization | ReadinessGapPlan |
-| [A009](../reactors/unassigned-architecture-rows.md#a009) | emitted semantic fact | ProgramReadiness | AbortReadinessDecision | ProgramReadiness |
+| [T066](../reactors/record-program-readiness-and-type-i-decisions-reactor.md#t066) | logical prerequisite | ProgramReadiness | CloseReadinessGapPlanReadinessDecisionAuthorization | ReadinessGapPlan |
+| [A009](../reactors/unassigned-domain-choreography.md#a009) | emitted semantic fact | ProgramReadiness | AbortReadinessDecision | ProgramReadiness |
 
 ### ReadinessDecisionRecorded
 
@@ -543,8 +539,8 @@ ReadinessDecisionIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T066](../reactors/readiness-decision-reactor.md#t066) | logical prerequisite | ProgramReadiness | CloseReadinessGapPlanReadinessDecisionAuthorization | ReadinessGapPlan |
-| [T074](../reactors/readiness-decision-reactor.md#t074) | emitted semantic fact | ProgramReadiness | CompleteReadinessDecision | ProgramReadiness |
+| [T066](../reactors/record-program-readiness-and-type-i-decisions-reactor.md#t066) | logical prerequisite | ProgramReadiness | CloseReadinessGapPlanReadinessDecisionAuthorization | ReadinessGapPlan |
+| [T074](../reactors/record-program-readiness-and-type-i-decisions-reactor.md#t074) | emitted semantic fact | ProgramReadiness | CompleteReadinessDecision | ProgramReadiness |
 
 ### TypeIEntryDecisionAccepted
 
@@ -574,7 +570,6 @@ ReadinessDecisionIntent
 | Schema discriminator | bdgrz.program-readiness.type-i-entry-decision-accepted |
 | Schema discriminatorVersion | 1 |
 | Schema owner | ProgramReadiness |
-| Schema existingContract | null (recorded) |
 | Schema status | selected target schema; implementation pending |
 | Schema reason | source command accepted result |
 | Schema changes | None listed |
@@ -649,11 +644,11 @@ ReadinessDecisionIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T065](../reactors/readiness-decision-reactor.md#t065) | physical root, logical prerequisite | ProgramReadiness | AuthorizeReadinessGapPlanReadinessDecision | ReadinessGapPlan |
-| [T066](../reactors/readiness-decision-reactor.md#t066) | physical root | ProgramReadiness | CloseReadinessGapPlanReadinessDecisionAuthorization | ReadinessGapPlan |
-| [T074](../reactors/readiness-decision-reactor.md#t074) | physical root | ProgramReadiness | CompleteReadinessDecision | ProgramReadiness |
-| [T075](../reactors/readiness-decision-reactor.md#t075) | physical root, logical prerequisite | ProgramReadiness | CompleteTypeIEntryDecision | ProgramReadiness |
-| [A009](../reactors/unassigned-architecture-rows.md#a009) | physical root, logical prerequisite | ProgramReadiness | AbortReadinessDecision | ProgramReadiness |
+| [T065](../reactors/record-program-readiness-and-type-i-decisions-reactor.md#t065) | physical root, logical prerequisite | ProgramReadiness | AuthorizeReadinessGapPlanReadinessDecision | ReadinessGapPlan |
+| [T066](../reactors/record-program-readiness-and-type-i-decisions-reactor.md#t066) | physical root | ProgramReadiness | CloseReadinessGapPlanReadinessDecisionAuthorization | ReadinessGapPlan |
+| [T074](../reactors/record-program-readiness-and-type-i-decisions-reactor.md#t074) | physical root | ProgramReadiness | CompleteReadinessDecision | ProgramReadiness |
+| [T075](../reactors/record-program-readiness-and-type-i-decisions-reactor.md#t075) | physical root, logical prerequisite | ProgramReadiness | CompleteTypeIEntryDecision | ProgramReadiness |
+| [A009](../reactors/unassigned-domain-choreography.md#a009) | physical root, logical prerequisite | ProgramReadiness | AbortReadinessDecision | ProgramReadiness |
 
 ### TypeIEntryDecisionRecorded
 
@@ -770,8 +765,8 @@ ReadinessDecisionIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T066](../reactors/readiness-decision-reactor.md#t066) | logical prerequisite | ProgramReadiness | CloseReadinessGapPlanReadinessDecisionAuthorization | ReadinessGapPlan |
-| [T075](../reactors/readiness-decision-reactor.md#t075) | emitted semantic fact | ProgramReadiness | CompleteTypeIEntryDecision | ProgramReadiness |
+| [T066](../reactors/record-program-readiness-and-type-i-decisions-reactor.md#t066) | logical prerequisite | ProgramReadiness | CloseReadinessGapPlanReadinessDecisionAuthorization | ReadinessGapPlan |
+| [T075](../reactors/record-program-readiness-and-type-i-decisions-reactor.md#t075) | emitted semantic fact | ProgramReadiness | CompleteTypeIEntryDecision | ProgramReadiness |
 
 
 

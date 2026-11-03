@@ -1,5 +1,7 @@
 # ClientServiceIndependence commands
 
+
+
 Selected command contracts: **6**. Complete selected contracts and companion source evidence: [owner command JSON](../data/commands/client-service-independence.json).
 
 | Target command | Selected source name | Kind | Identity | Fields | HTTP routes |
@@ -20,7 +22,8 @@ Selected command contracts: **6**. Complete selected contracts and companion sou
 | Target command name | EvaluateClientIndependence |
 | Selected source command name | EvaluateClientIndependence |
 | Name decision | The selected source name is retained. |
-| Owner | ClientServiceIndependence |
+| Target owner | ClientServiceIndependence |
+| Selected source owner | ClientServiceIndependence |
 | Contract record status | target_contract |
 | Kind | http |
 | Logical identity | EvaluationId; Uuid; required=true; client; caller-supplied immutable creation identity: an exact retry with the same id and authored intent returns the original result; the same id with changed intent is refused; a different id is a different record |
@@ -72,7 +75,8 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Target command name | RecordNonattestService |
 | Selected source command name | RecordNonattestService |
 | Name decision | The selected source name is retained. |
-| Owner | ClientServiceIndependence |
+| Target owner | ClientServiceIndependence |
+| Selected source owner | ClientServiceIndependence |
 | Contract record status | target_contract |
 | Kind | http |
 | Logical identity | ServiceRecordId; Uuid; required=true; client; caller-supplied immutable creation identity: an exact retry with the same id and authored intent returns the original result; the same id with changed intent is refused; a different id is a different record |
@@ -123,7 +127,8 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Target command name | ReserveEngagementServiceHistory |
 | Selected source command name | AcquireEngagementServiceEpoch |
 | Name decision | Holds the exact service history stable while an engagement acceptance or assignment decision is made. |
-| Owner | ClientServiceIndependence |
+| Target owner | ClientServiceIndependence |
+| Selected source owner | ClientServiceIndependence |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; reactor; deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result |
@@ -175,7 +180,8 @@ Required tests: [Placeholder: required tests not recorded]
 | Target command name | ReleaseEngagementServiceHistoryReservation |
 | Selected source command name | ReleaseEngagementServiceEpoch |
 | Name decision | Ends the exact temporary service-history hold after the decision or cancellation. |
-| Owner | ClientServiceIndependence |
+| Target owner | ClientServiceIndependence |
+| Selected source owner | ClientServiceIndependence |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; reactor; deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result |
@@ -227,7 +233,8 @@ Required tests: [Placeholder: required tests not recorded]
 | Target command name | AuthorizeClientServicePersonalDecision |
 | Selected source command name | AuthorizeClientServicePersonalDecisionUse |
 | Name decision | The command authorizes the named business action; the extra Use suffix describes the coordination mechanism. |
-| Owner | ClientServiceIndependence |
+| Target owner | ClientServiceIndependence |
+| Selected source owner | ClientServiceIndependence |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; reactor; deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result |
@@ -279,7 +286,8 @@ Required tests: [Placeholder: required tests not recorded]
 | Target command name | CloseClientServicePersonalDecisionAuthorization |
 | Selected source command name | SettleClientServicePersonalDecisionUse |
 | Name decision | The command ends the exact authorization after its business action or cancellation. |
-| Owner | ClientServiceIndependence |
+| Target owner | ClientServiceIndependence |
+| Selected source owner | ClientServiceIndependence |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; reactor; deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result |

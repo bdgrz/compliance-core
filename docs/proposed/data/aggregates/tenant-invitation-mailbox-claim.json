@@ -8,14 +8,7 @@
   "invariant": "At most one pending invitation per mailbox. InvitationId and generation live in state and every release compares both; generation is never part of the stream key.",
   "boundaryDecision": "selected_split",
   "mustPreserve": "Retry same invitation ID with exact terms returns original acceptance; changed terms conflict. New invitation generation is independent. Delivery retries preserve exact token and accepted at-least-once policy.",
-  "sources": [
-    {
-      "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
-      "jsonPointer": "/splitOwners/28/targetOwners/1",
-      "line": 2999,
-      "sha256": "d349d94b7c43f4d82020ecf36bdacf1aff98bc6498e14993582f1c3164b21f19"
-    }
-  ],
+  "sources": [],
   "baselineSourcePath": "src/Compliance.Core/Features/Tenants/TenantInvitation.cs",
   "baselineEvents": [],
   "preliminaryNewEvents": [
@@ -68,7 +61,9 @@
       "source": {
         "path": "src/Compliance.Core/Features/Tenants/Handlers/InviteTenantMemberHandler.cs -> Tenants/Services/TenantInvitationAdmission.cs:95 (mailboxes.AcquireAsync)",
         "recorded": "2026-10-29"
-      }
+      },
+      "sourceOwner": "TenantInvitationMailboxClaim",
+      "owner": "TenantInvitationMailboxClaim"
     },
     {
       "command": "InviteOrganizationMember",
@@ -106,7 +101,9 @@
       "source": {
         "path": "src/Compliance.Core/Features/Tenants/Handlers/InviteOrganizationMemberHandler.cs",
         "recorded": "2026-10-29"
-      }
+      },
+      "sourceOwner": "TenantInvitationMailboxClaim",
+      "owner": "TenantInvitationMailboxClaim"
     },
     {
       "command": "InviteGuestConsultant",
@@ -148,7 +145,9 @@
       "source": {
         "path": "src/Compliance.Core/Features/Tenants/Handlers/InviteGuestConsultantHandler.cs",
         "recorded": "2026-10-29"
-      }
+      },
+      "sourceOwner": "TenantInvitationMailboxClaim",
+      "owner": "TenantInvitationMailboxClaim"
     },
     {
       "command": "AcceptTenantInvitation",
@@ -186,7 +185,9 @@
       "source": {
         "path": "src/Compliance.Core/Features/Tenants/Handlers/AcceptTenantInvitationHandler.cs:118 (mailboxes.ReleaseAsync)",
         "recorded": "2026-10-29"
-      }
+      },
+      "sourceOwner": "TenantInvitationMailboxClaim",
+      "owner": "TenantInvitationMailboxClaim"
     }
   ],
   "eventAuthority": "retained_baseline_business_facts_requires_schema_reconciliation",
@@ -206,5 +207,6 @@
       "previous": "tenant / normalizedEmail"
     }
   ],
-  "commandNote": "No standalone command. The mailbox owner is claimed inline (TenantInvitationMailboxes.AcquireAsync, supersedes an unusable holder) by the three invite handlers before the invitation fact, and released inline (ReleaseAsync with exact holder+generation, else no-op) by AcceptTenantInvitation. Treat as service-called side effects of those commands, not independent commands."
+  "commandNote": "No standalone command. The mailbox owner is claimed inline (TenantInvitationMailboxes.AcquireAsync, supersedes an unusable holder) by the three invite handlers before the invitation fact, and released inline (ReleaseAsync with exact holder+generation, else no-op) by AcceptTenantInvitation. Treat as service-called side effects of those commands, not independent commands.",
+  "sourceOwner": "TenantInvitationMailboxClaim"
 }

@@ -5,6 +5,7 @@
 - Business aggregate: `true`
 - Selected status: `SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED`
 
+
 ## Identity and invariant
 
 **Selected identity:** Tenant / program-rollovers / RolloverId, with exact source program/version and successor proof. RolloverId identifies creation; selected mutations use CommandId.
@@ -19,13 +20,17 @@
 
 **Lifecycle:** [Placeholder: a consolidated lifecycle sequence is not present in the selected owner record.]
 
+
+
+
+
 ## Commands
 
 | Command | Kind | Identity field |
 | --- | --- | --- |
 | [ApproveProgramRollover](../commands/program-rollover.md#approveprogramrollover) | http | CommandId |
 | [ProposeProgramRollover](../commands/program-rollover.md#proposeprogramrollover) | http | RolloverId |
-| [ReserveProgramRolloverForExecution](../commands/program-rollover.md#reserveprogramrolloverforexecution) | command | CommandId |
+| [StartApprovedProgramRollover](../commands/program-rollover.md#startapprovedprogramrollover) | command | CommandId |
 
 ## Events
 
@@ -34,7 +39,7 @@
 | [ProgramNextPeriodCreated](../events/program-rollover.md#programnextperiodcreated) | bdgrz.programs.program-next-period-created | 1 |
 | [ProgramRolloverApproved](../events/program-rollover.md#programrolloverapproved) | bdgrz.programs.program-rollover-approved | 2 |
 | [ProgramRolloverDecisionRecorded](../events/program-rollover.md#programrolloverdecisionrecorded) | bdgrz.programs.program-rollover-decision-recorded | 1 |
-| [ProgramRolloverReservedForExecution](../events/program-rollover.md#programrolloverreservedforexecution) | bdgrz.programs.program-rollover-execution-claimed | 1 |
+| [ProgramRolloverStarted](../events/program-rollover.md#programrolloverstarted) | bdgrz.programs.program-rollover-execution-claimed | 1 |
 | [ProgramRolloverProposed](../events/program-rollover.md#programrolloverproposed) | bdgrz.programs.program-rollover-proposed | 2 |
 | [ProgramRolloverRevised](../events/program-rollover.md#programrolloverrevised) | bdgrz.programs.program-rollover-revised | 1 |
 
@@ -42,7 +47,7 @@
 
 | Row | Kind | Source owner | Target owner | Command |
 | --- | --- | --- | --- | --- |
-| [R000](../reactors/one-new-committed-execution-claim-starter.md#r000) | reaction_or_regular_process_stage | ProgramRollover | ProgramRolloverExecutionProcess | StartProgramRolloverExecutionProcess |
+| [R000](../reactors/start-approved-program-rollover-reactor.md#r000) | reaction_or_regular_process_stage | ProgramRollover | ProgramRolloverExecutionProcess | StartProgramRolloverExecutionProcess |
 
 ## Product rules
 
@@ -55,7 +60,7 @@
 ## Evidence and complete record
 
 - Baseline source: [Placeholder: source file is not present in this checkout]
-- Aggregate review: [program-rollover-review-2026-10-29.md](../../product/definitive-aggregate-choreography/program-rollover-review-2026-10-29.md)
+- Aggregate review: [Placeholder: no owner-specific review file is present]
 - Full selected record: [JSON](../data/aggregates/program-rollover.json)
 
 > Target definition is separate from runtime qualification. Implementation status recorded by the source: `SEPARATE_VERIFICATION_REQUIRED_IMPLEMENTATION_HALTED`.

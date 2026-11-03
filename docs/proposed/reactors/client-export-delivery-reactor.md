@@ -20,13 +20,13 @@ Selected choreography rows: **1**. Required proofs, recovery, effect identity, a
 | id | X007 |
 | kind | planned_reaction |
 | status | PLANNED_TARGET_DEFINITION_2026-10-29 |
-| sourceOwner | ClientExport |
+| Source owner (target name) | ClientExport (source: ClientExport) |
 | logicalPrerequisiteFacts (target names) | ClientExportAttestPackageDeliveryRecorded |
 | logicalPrerequisiteRule | The attributed attest-package delivery decision for the engagement is recorded on every engagement hold bound to it; release then still waits until one year after report issuance. |
 | physicalRootEvents (target names) | ClientExportAttestPackageDeliveryRecorded |
 | originalAdmissionKinds (target names) | ClientExportAttestPackageDeliveryRecorded |
 | Target command (selected source name: RecordEngagementPackageDelivered) | RecordEngagementPackageDelivery |
-| targetOwner | ArtifactEngagementHold |
+| Target owner | ArtifactEngagementHold |
 | targetAuthorityKind | business_aggregate |
 | emittedSemanticFacts (target names) | ArtifactEngagementHoldReleased |
 | emittedEventContracts | None listed |

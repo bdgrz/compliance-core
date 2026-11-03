@@ -8,14 +8,7 @@
   "invariant": "Authoritative active normalized-name uniqueness.",
   "boundaryDecision": "selected_split",
   "mustPreserve": "Process content/version is checked against exact prior revision; inactive names may be reused only when policy permits.",
-  "sources": [
-    {
-      "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
-      "jsonPointer": "/splitOwners/27/targetOwners/1",
-      "line": 2920,
-      "sha256": "d349d94b7c43f4d82020ecf36bdacf1aff98bc6498e14993582f1c3164b21f19"
-    }
-  ],
+  "sources": [],
   "baselineSourcePath": "src/Compliance.Core/Features/TechnologyInventory/OperationalProcessRegister.cs",
   "baselineEvents": [],
   "preliminaryNewEvents": [
@@ -88,7 +81,7 @@
         "recorded": "2026-10-29"
       },
       "reactor": "OperationalProcessNameClaimReactor",
-      "sourceOwner": "OperationalProcess",
+      "sourceOwner": "OperationalProcessNameClaim",
       "sourceEvents": [
         "OperationalProcessChangeAccepted"
       ],
@@ -97,7 +90,8 @@
         "OperationalProcessNameClaimed"
       ],
       "effectKind": "claim_operational_process_name",
-      "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine."
+      "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
+      "owner": "OperationalProcessNameClaim"
     },
     {
       "command": "ReleaseOperationalProcessName",
@@ -153,7 +147,7 @@
         "recorded": "2026-10-29"
       },
       "reactor": "OperationalProcessOldNameReleaseReactor",
-      "sourceOwner": "OperationalProcess",
+      "sourceOwner": "OperationalProcessNameClaim",
       "sourceEvents": [
         "OperationalProcessRevisionRecorded",
         "OperationalProcessChangeCanceled"
@@ -163,7 +157,8 @@
         "OperationalProcessNameReleased"
       ],
       "effectKind": "release_operational_process_name",
-      "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine."
+      "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
+      "owner": "OperationalProcessNameClaim"
     }
   ],
   "eventAuthority": "selected_final_event_catalog",
@@ -171,24 +166,12 @@
     {
       "event": "OperationalProcessNameClaimed",
       "discriminator": "bdgrz.operational-process-name-claim.operational-process-name-claimed",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/188",
-        "line": 24524,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     },
     {
       "event": "OperationalProcessNameReleased",
       "discriminator": "bdgrz.operational-process-name-claim.operational-process-name-released",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/189",
-        "line": 24688,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     }
   ],
   "choreography": [
@@ -196,37 +179,19 @@
       "reactor": "OperationalProcessNameClaimReactor",
       "sourceOwner": "OperationalProcess",
       "targetOwner": "OperationalProcessNameClaim",
-      "command": "ClaimOperationalProcessName",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "jsonPointer": "/reactors/28",
-        "line": 2383,
-        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
-      }
+      "command": "ClaimOperationalProcessName"
     },
     {
       "reactor": "OperationalProcessChangeApplicationReactor",
       "sourceOwner": "OperationalProcessNameClaim",
       "targetOwner": "OperationalProcess",
-      "command": "ApplyOperationalProcessChange",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "jsonPointer": "/reactors/29",
-        "line": 2470,
-        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
-      }
+      "command": "ApplyOperationalProcessChange"
     },
     {
       "reactor": "OperationalProcessOldNameReleaseReactor",
       "sourceOwner": "OperationalProcess",
       "targetOwner": "OperationalProcessNameClaim",
-      "command": "ReleaseOperationalProcessName",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "jsonPointer": "/reactors/30",
-        "line": 2547,
-        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
-      }
+      "command": "ReleaseOperationalProcessName"
     }
   ],
   "status": "SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED",
@@ -243,5 +208,6 @@
       "previous": "(tenantId, normalizedName)"
     }
   ],
-  "commandNote": "Source is SourceFactProof<OperationalProcessChangeAccepted>. INamedRecordReceiver; no HTTP command."
+  "commandNote": "Source is SourceFactProof<OperationalProcessChangeAccepted>. INamedRecordReceiver; no HTTP command.",
+  "sourceOwner": "OperationalProcessNameClaim"
 }

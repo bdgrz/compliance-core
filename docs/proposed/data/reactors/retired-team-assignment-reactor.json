@@ -79,7 +79,6 @@
       ],
       "canonicalTargetOwner": "TeamMember",
       "recoveryContractSummary": "At-least-once checkpoint replay resends the same source-derived command. Missing dependencies remain retryable; actual terminal/superseded episodes are skipped only with the owning proof.",
-      "logicalPrerequisiteRuleGuard": null,
       "logicalPrerequisiteRule": "The source is a late TeamMemberAssigned whose member episode has already been terminated; the receiver removes that exact assignment only when the member's termination proof for the same episode exists and the owner still holds that assignment event.",
       "prerequisiteRuleSource": "authored 2026-10-29 from reactor and target source"
     }

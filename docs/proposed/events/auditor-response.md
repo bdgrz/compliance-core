@@ -112,7 +112,7 @@ ChildAdmissionIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T033](../reactors/auditor-response-materialization-reactor.md#t033) | emitted semantic fact | AuditorRequest | CreateAuditorResponseDraft | AuditorResponse |
+| [T033](../reactors/preserve-auditor-response-draft-after-request-reactor.md#t033) | emitted semantic fact | AuditorRequest | CreateAuditorResponseDraft | AuditorResponse |
 
 ### AuditResponseDraftRevised
 
@@ -414,7 +414,6 @@ ChildAdmissionIntent
 | Schema discriminator | bdgrz.auditor-response.auditor-response-request-resolution-use-authorized |
 | Schema discriminatorVersion | 1 |
 | Schema owner | AuditorResponse |
-| Schema existingContract | null (recorded) |
 | Schema status | selected target schema; implementation pending |
 | Schema reason | typed reactor receiver accepted business fact |
 | Schema changes | None listed |
@@ -507,7 +506,6 @@ SourceUseAuthorizationIntent
 | Schema discriminator | bdgrz.auditor-response.auditor-response-request-resolution-use-settled |
 | Schema discriminatorVersion | 1 |
 | Schema owner | AuditorResponse |
-| Schema existingContract | null (recorded) |
 | Schema status | selected target schema; implementation pending |
 | Schema reason | typed reactor receiver accepted business fact |
 | Schema changes | None listed |

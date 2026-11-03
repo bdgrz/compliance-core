@@ -108,7 +108,6 @@
       ],
       "canonicalTargetOwner": "FindingAggregate",
       "recoveryContractSummary": "At-least-once checkpoint replay resends the same source-derived command. Missing dependencies remain retryable; actual terminal/superseded episodes are skipped only with the owning proof.",
-      "logicalPrerequisiteRuleGuard": null,
       "logicalPrerequisiteRule": "The source is a committed ControlOccurrenceAttested with a failed or skipped result, or a ControlOccurrenceReviewed with an action_requested outcome; each finding id derives from the attestation or decision and requested-action index, and the occurrence must still exist with at least one attestation for the finding to be raised.",
       "prerequisiteRuleSource": "authored 2026-10-29 from reactor and target source"
     }

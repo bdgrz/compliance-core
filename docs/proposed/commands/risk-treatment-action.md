@@ -1,5 +1,7 @@
 # RiskTreatmentAction commands
 
+
+
 Selected command contracts: **7**. Complete selected contracts and companion source evidence: [owner command JSON](../data/commands/risk-treatment-action.json).
 
 | Target command | Selected source name | Kind | Identity | Fields | HTTP routes |
@@ -21,7 +23,8 @@ Selected command contracts: **7**. Complete selected contracts and companion sou
 | Target command name | AddRiskTreatmentAction |
 | Selected source command name | AddRiskTreatmentAction |
 | Name decision | The selected source name is retained. |
-| Owner | RiskTreatmentAction |
+| Target owner | RiskTreatmentAction |
+| Selected source owner | RiskTreatmentAction |
 | Contract record status | target_contract |
 | Kind | http |
 | Logical identity | ActionId; Uuid; required=true; client; caller-supplied immutable creation identity: an exact retry with the same id and authored intent returns the original result; the same id with changed intent is refused; a different id is a different record |
@@ -79,7 +82,8 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Target command name | CancelRiskTreatmentAction |
 | Selected source command name | CancelRiskTreatmentAction |
 | Name decision | The selected source name is retained. |
-| Owner | RiskTreatmentAction |
+| Target owner | RiskTreatmentAction |
+| Selected source owner | RiskTreatmentAction |
 | Contract record status | target_contract |
 | Kind | http |
 | Logical identity | CommandId; Uuid; required=true; client; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
@@ -91,7 +95,7 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Contract changes | Add required CommandId. |
 | Guard order | bind_required_ids, authenticate_authorize, canonicalize_authored_intent, resolve_native_operation_facts, compare_owner_episode_actor_kind_intent_original_revision, validate_new_owner_revision_and_source_permits, append_complete_concrete_attributed_batch |
 | Response contract | `{"mode":"immediate_original_result","responseType":"Unit","firstHttpStatus":200,"terminalResultType":"Unit"}` |
-| Expected revision scope | `{"field":"ExpectedRevision","owner":"RiskTreatmentAction","counter":"logical ResourceRevision of this owner","nullableInternalRule":null}` |
+| Expected revision scope | `{"field":"ExpectedRevision","owner":"RiskTreatmentAction","counter":"logical ResourceRevision of this owner"}` |
 | Authorizer sources | src/Compliance.Core/Features/AccessControl/ClientManagementMutationAuthorizer.cs, src/Compliance.Core/Features/Programs/ProgramManagementAuthorizer.cs |
 | Source contract | src/Compliance.Common/Features/Risks/CancelRiskTreatmentAction.cs |
 | Primary handler | CancelRiskTreatmentActionHandler |
@@ -133,7 +137,8 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Target command name | ReviewRiskTreatmentActionCompletion |
 | Selected source command name | ReviewRiskTreatmentActionCompletion |
 | Name decision | The selected source name is retained. |
-| Owner | RiskTreatmentAction |
+| Target owner | RiskTreatmentAction |
+| Selected source owner | RiskTreatmentAction |
 | Contract record status | target_contract |
 | Kind | http |
 | Logical identity | CommandId; Uuid; required=true; client; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
@@ -145,7 +150,7 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Contract changes | Add required CommandId. |
 | Guard order | bind_required_ids, authenticate_authorize, canonicalize_authored_intent, resolve_native_operation_facts, compare_owner_episode_actor_kind_intent_original_revision, validate_new_owner_revision_and_source_permits, append_complete_concrete_attributed_batch |
 | Response contract | `{"mode":"async_fixed_ack","responseType":"OperationAcceptedResponse","firstHttpStatus":202,"terminalResultType":"Unit"}` |
-| Expected revision scope | `{"field":"ExpectedRevision","owner":"RiskTreatmentAction","counter":"logical ResourceRevision of this owner","nullableInternalRule":null}` |
+| Expected revision scope | `{"field":"ExpectedRevision","owner":"RiskTreatmentAction","counter":"logical ResourceRevision of this owner"}` |
 | Authorizer sources | src/Compliance.Core/Features/AccessControl/ClientManagementMutationAuthorizer.cs, src/Compliance.Core/Features/Programs/ProgramManagementAuthorizer.cs |
 | Source contract | src/Compliance.Common/Features/Risks/ReviewRiskTreatmentActionCompletion.cs |
 | Primary handler | ReviewRiskTreatmentActionCompletionHandler |
@@ -189,7 +194,8 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Target command name | ReviseRiskTreatmentAction |
 | Selected source command name | ReviseRiskTreatmentAction |
 | Name decision | The selected source name is retained. |
-| Owner | RiskTreatmentAction |
+| Target owner | RiskTreatmentAction |
+| Selected source owner | RiskTreatmentAction |
 | Contract record status | target_contract |
 | Kind | http |
 | Logical identity | CommandId; Uuid; required=true; client; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
@@ -201,7 +207,7 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Contract changes | Add required CommandId. |
 | Guard order | bind_required_ids, authenticate_authorize, canonicalize_authored_intent, resolve_native_operation_facts, compare_owner_episode_actor_kind_intent_original_revision, validate_new_owner_revision_and_source_permits, append_complete_concrete_attributed_batch |
 | Response contract | `{"mode":"immediate_original_result","responseType":"Unit","firstHttpStatus":200,"terminalResultType":"Unit"}` |
-| Expected revision scope | `{"field":"ExpectedRevision","owner":"RiskTreatmentAction","counter":"logical ResourceRevision of this owner","nullableInternalRule":null}` |
+| Expected revision scope | `{"field":"ExpectedRevision","owner":"RiskTreatmentAction","counter":"logical ResourceRevision of this owner"}` |
 | Authorizer sources | src/Compliance.Core/Features/AccessControl/ClientManagementMutationAuthorizer.cs, src/Compliance.Core/Features/Programs/ProgramManagementAuthorizer.cs |
 | Source contract | src/Compliance.Common/Features/Risks/ReviseRiskTreatmentAction.cs |
 | Primary handler | ReviseRiskTreatmentActionHandler |
@@ -248,7 +254,8 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Target command name | SubmitRiskTreatmentActionCompletion |
 | Selected source command name | SubmitRiskTreatmentActionCompletion |
 | Name decision | The selected source name is retained. |
-| Owner | RiskTreatmentAction |
+| Target owner | RiskTreatmentAction |
+| Selected source owner | RiskTreatmentAction |
 | Contract record status | target_contract |
 | Kind | http |
 | Logical identity | CommandId; Uuid; required=true; client; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
@@ -260,7 +267,7 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Contract changes | Add required CommandId. |
 | Guard order | bind_required_ids, authenticate_authorize, canonicalize_authored_intent, resolve_native_operation_facts, compare_owner_episode_actor_kind_intent_original_revision, validate_new_owner_revision_and_source_permits, append_complete_concrete_attributed_batch |
 | Response contract | `{"mode":"immediate_original_result","responseType":"RiskTreatmentActionCompletionRegistration","firstHttpStatus":200,"terminalResultType":"RiskTreatmentActionCompletionRegistration"}` |
-| Expected revision scope | `{"field":"ExpectedRevision","owner":"RiskTreatmentAction","counter":"logical ResourceRevision of this owner","nullableInternalRule":null}` |
+| Expected revision scope | `{"field":"ExpectedRevision","owner":"RiskTreatmentAction","counter":"logical ResourceRevision of this owner"}` |
 | Authorizer sources | src/Compliance.Core/Features/AccessControl/ClientManagementMutationAuthorizer.cs, src/Compliance.Core/Features/Programs/ProgramManagementAuthorizer.cs |
 | Source contract | src/Compliance.Common/Features/Risks/SubmitRiskTreatmentActionCompletion.cs |
 | Primary handler | SubmitRiskTreatmentActionCompletionHandler |
@@ -303,7 +310,8 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Target command name | AbortRiskTreatmentActionReview |
 | Selected source command name | AbortRiskTreatmentActionReview |
 | Name decision | The selected source name is retained. |
-| Owner | RiskTreatmentAction |
+| Target owner | RiskTreatmentAction |
+| Selected source owner | RiskTreatmentAction |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | abort |
 | Logical identity | CommandId; Uuid; required=true; abort receiver identity bound to the exact admitted operation and generation: exact redelivery resolves the original rejected result; an abort after a terminal outcome is a no-op |
@@ -352,7 +360,8 @@ Required tests: [Placeholder: required tests not recorded]
 | Target command name | CompleteRiskTreatmentActionReview |
 | Selected source command name | CompleteRiskTreatmentActionReview |
 | Name decision | The selected source name is retained. |
-| Owner | RiskTreatmentAction |
+| Target owner | RiskTreatmentAction |
+| Selected source owner | RiskTreatmentAction |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; reactor; deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result |

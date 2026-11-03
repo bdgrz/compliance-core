@@ -1,5 +1,7 @@
 # ImportedOwnerResolution commands
 
+
+
 Selected command contracts: **1**. Complete selected contracts and companion source evidence: [owner command JSON](../data/commands/imported-owner-resolution.json).
 
 | Target command | Selected source name | Kind | Identity | Fields | HTTP routes |
@@ -15,7 +17,8 @@ Selected command contracts: **1**. Complete selected contracts and companion sou
 | Target command name | RecordImportedOwnerResolution |
 | Selected source command name | RecordImportedOwnerResolution |
 | Name decision | The selected source name is retained. |
-| Owner | ImportedOwnerResolution |
+| Target owner | ImportedOwnerResolution |
+| Selected source owner | ImportedOwnerResolution |
 | Contract record status | PLANNED |
 | Kind | creation |
 | Logical identity | ResolutionId; Uuid; required=true; client; caller-supplied immutable creation identity: an exact retry with the same id and authored intent returns the original result; the same id with changed intent is refused; a different id is a different record |

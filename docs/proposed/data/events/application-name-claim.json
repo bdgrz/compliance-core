@@ -11,7 +11,6 @@
         ],
         "ownerSelection": "one exact canonical authority owner",
         "targetConcreteType": "ApplicationNameClaimed",
-        "adoptedTargetWire": null,
         "wireQualification": "Planned; no declared record yet. Discriminator to follow the inventory name-claim convention when implemented.",
         "adoptedDecisionIds": [
           "OWNER_ApplicationNameClaim"
@@ -37,7 +36,6 @@
         ],
         "ownerSelection": "one exact canonical authority owner",
         "targetConcreteType": "ApplicationNameReleased",
-        "adoptedTargetWire": null,
         "wireQualification": "Planned; no declared record yet. Discriminator to follow the inventory name-claim convention when implemented.",
         "adoptedDecisionIds": [
           "OWNER_ApplicationNameClaim"

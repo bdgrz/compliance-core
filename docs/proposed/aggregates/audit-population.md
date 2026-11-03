@@ -5,6 +5,7 @@
 - Business aggregate: `true`
 - Selected status: `SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED`
 
+
 ## Identity and invariant
 
 **Selected identity:** Tenant / audit-populations / PopulationId, where PopulationId equals the caller-supplied DefinitionId of the defining command (AuditPopulationMutations.DefineAsync constructs the owner with DefinitionId as the population identity); an exact retry of DefineAuditPopulation with the same DefinitionId resolves the original result, and later commands carry PopulationId explicitly with CommandId or GenerationKey and the expected revision.
@@ -18,6 +19,10 @@
 **Replay:** Current required authorization precedes replay; exact authorized retries resolve the original accepted result using the selected logical identity and immutable actor/intent/source binding. Fresh mutable feasibility, clock selection and body preparation cannot replace that original result. Expected revision is concurrency precondition, not a new identity.
 
 **Lifecycle:** [Placeholder: a consolidated lifecycle sequence is not present in the selected owner record.]
+
+
+
+
 
 ## Commands
 
@@ -51,8 +56,8 @@
 
 ## Product rules
 
-- **D07-12** — A team must declare scope, observation time, and completeness of a manually recorded population before it can claim an audit-ready population. Source: [m0-d07-access-review-population.md](../../product/decisions/m0-d07-access-review-population.md).
-- **D17-02** — Late or corrected population rows produce a new population version that references the superseded version and each superseded row. Source: [m0-d17-audit-deliverables.md](../../product/decisions/m0-d17-audit-deliverables.md).
+- **D07-12** — A team must declare scope, observation time, and completeness of a manually recorded population before it can claim an audit-ready population. Decision: [m0-d07-access-review-population.md](../decisions/m0-d07-access-review-population.md).
+- **D17-02** — Late or corrected population rows produce a new population version that references the superseded version and each superseded row. Decision: [m0-d17-audit-deliverables.md](../decisions/m0-d17-audit-deliverables.md).
 
 ## Adopted architecture decisions
 
@@ -61,7 +66,7 @@
 ## Evidence and complete record
 
 - Baseline source: [Placeholder: source file is not present in this checkout]
-- Aggregate review: [audit-population-review-2026-10-29.md](../../product/definitive-aggregate-choreography/audit-population-review-2026-10-29.md)
+- Aggregate review: [Placeholder: no owner-specific review file is present]
 - Full selected record: [JSON](../data/aggregates/audit-population.json)
 
 > Target definition is separate from runtime qualification. Implementation status recorded by the source: `SEPARATE_VERIFICATION_REQUIRED_IMPLEMENTATION_HALTED`.

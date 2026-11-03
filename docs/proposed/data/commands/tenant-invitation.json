@@ -45,13 +45,9 @@
           "policy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/3",
-        "line": 321,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
       "kind": "http",
+      "sourceOwner": "TenantInvitation",
+      "owner": "TenantInvitation",
       "sourceName": "AcceptTenantInvitation",
       "targetName": "AcceptTenantInvitation"
     },
@@ -104,13 +100,9 @@
           "policy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/61",
-        "line": 7203,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
       "kind": "http",
+      "sourceOwner": "TenantInvitation",
+      "owner": "TenantInvitation",
       "sourceName": "InviteGuestConsultant",
       "targetName": "InviteGuestConsultant"
     },
@@ -158,13 +150,9 @@
           "policy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/62",
-        "line": 7307,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
       "kind": "http",
+      "sourceOwner": "TenantInvitation",
+      "owner": "TenantInvitation",
       "sourceName": "InviteOrganizationMember",
       "targetName": "InviteOrganizationMember"
     },
@@ -217,13 +205,9 @@
           "policy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/63",
-        "line": 7405,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
       "kind": "http",
+      "sourceOwner": "TenantInvitation",
+      "owner": "TenantInvitation",
       "sourceName": "InviteTenantMember",
       "targetName": "InviteTenantMember"
     }
@@ -324,10 +308,8 @@
         "terminalResultType": "Unit"
       },
       "expectedRevisionScope": {
-        "field": null,
         "owner": "TenantInvitation",
-        "counter": "none; token consumption serializes on the invitation lifecycle",
-        "nullableInternalRule": null
+        "counter": "none; token consumption serializes on the invitation lifecycle"
       }
     },
     {
@@ -429,7 +411,6 @@
         "terminalResultType": "Unit"
       },
       "expectedRevisionScope": {
-        "field": null,
         "owner": "TenantInvitation",
         "counter": "No primary caller ResourceRevision. Enforce required authored source/epoch/version tokens, immutable creation identity or trusted proof/generation as declared; append uses physical OCC."
       }
@@ -527,7 +508,6 @@
         "terminalResultType": "Unit"
       },
       "expectedRevisionScope": {
-        "field": null,
         "owner": "TenantInvitation",
         "counter": "No primary caller ResourceRevision. Enforce required authored source/epoch/version tokens, immutable creation identity or trusted proof/generation as declared; append uses physical OCC."
       }
@@ -628,7 +608,6 @@
         "terminalResultType": "Unit"
       },
       "expectedRevisionScope": {
-        "field": null,
         "owner": "TenantInvitation",
         "counter": "No primary caller ResourceRevision. Enforce required authored source/epoch/version tokens, immutable creation identity or trusted proof/generation as declared; append uses physical OCC."
       }

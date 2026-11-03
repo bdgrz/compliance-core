@@ -9,8 +9,7 @@
       "stage": "prepare",
       "receivers": [
         "MaterializeIdentityRecoveryPreparation"
-      ],
-      "rule": null
+      ]
     },
     {
       "stage": "protect",
@@ -30,8 +29,7 @@
       "stage": "register",
       "receivers": [
         "RegisterRecoveredIdentity"
-      ],
-      "rule": null
+      ]
     },
     {
       "stage": "revoke",
@@ -44,8 +42,7 @@
       "stage": "complete",
       "receivers": [
         "CompleteAcceptedIdentityRecovery"
-      ],
-      "rule": null
+      ]
     },
     {
       "stage": "settle",

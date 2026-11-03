@@ -40,7 +40,6 @@ Canonical events: **5**. Complete canonical event and available schema records: 
 | Schema discriminator | bdgrz.evidence-request.evidence-request-action-completion-use-authorized |
 | Schema discriminatorVersion | 1 |
 | Schema owner | EvidenceRequest |
-| Schema existingContract | null (recorded) |
 | Schema status | selected target schema; implementation pending |
 | Schema reason | typed reactor receiver accepted business fact |
 | Schema changes | None listed |
@@ -133,7 +132,6 @@ SourceUseAuthorizationIntent
 | Schema discriminator | bdgrz.evidence-request.evidence-request-action-completion-use-settled |
 | Schema discriminatorVersion | 1 |
 | Schema owner | EvidenceRequest |
-| Schema existingContract | null (recorded) |
 | Schema status | selected target schema; implementation pending |
 | Schema reason | typed reactor receiver accepted business fact |
 | Schema changes | None listed |

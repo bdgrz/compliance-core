@@ -29,7 +29,6 @@
         "discriminator": "bdgrz.user-identity.recovery-identity-protected",
         "discriminatorVersion": 1,
         "owner": "UserIdentity",
-        "existingContract": null,
         "status": "selected target schema; implementation pending",
         "reason": "typed reactor receiver accepted business fact",
         "fields": [
@@ -241,7 +240,6 @@
         "discriminator": "bdgrz.user-identity.recovery-identity-protection-settled",
         "discriminatorVersion": 1,
         "owner": "UserIdentity",
-        "existingContract": null,
         "status": "selected target schema; implementation pending",
         "reason": "typed reactor receiver accepted business fact",
         "fields": [

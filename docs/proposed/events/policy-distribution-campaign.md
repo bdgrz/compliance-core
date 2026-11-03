@@ -292,7 +292,6 @@ ClosureIntent
 | Schema discriminator | bdgrz.policy-distribution-campaign.policy-campaign-closure-accepted |
 | Schema discriminatorVersion | 1 |
 | Schema owner | PolicyDistributionCampaign |
-| Schema existingContract | null (recorded) |
 | Schema status | selected target schema; implementation pending |
 | Schema reason | source command accepted result |
 | Schema changes | None listed |
@@ -362,7 +361,7 @@ ClosureIntent
 | [T038](../reactors/policy-campaign-closure-reactor.md#t038) | physical root, logical prerequisite | PolicyDistributionCampaign | CompletePolicyCampaignClosure | PolicyDistributionCampaign |
 | [T067](../reactors/policy-campaign-closure-reactor.md#t067) | physical root, logical prerequisite | PolicyDistributionCampaign | AuthorizePolicyCampaignParticipantCampaignClosure | PolicyCampaignParticipant |
 | [T068](../reactors/policy-campaign-closure-reactor.md#t068) | physical root | PolicyDistributionCampaign | ClosePolicyCampaignParticipantCampaignClosureAuthorization | PolicyCampaignParticipant |
-| [A010](../reactors/unassigned-architecture-rows.md#a010) | physical root, logical prerequisite | PolicyDistributionCampaign | AbortPolicyCampaignClosure | PolicyDistributionCampaign |
+| [A010](../reactors/unassigned-domain-choreography.md#a010) | physical root, logical prerequisite | PolicyDistributionCampaign | AbortPolicyCampaignClosure | PolicyDistributionCampaign |
 
 ### PolicyCampaignClosureCanceled
 
@@ -392,7 +391,6 @@ ClosureIntent
 | Schema discriminator | bdgrz.policy-distribution-campaign.policy-campaign-closure-canceled |
 | Schema discriminatorVersion | 1 |
 | Schema owner | PolicyDistributionCampaign |
-| Schema existingContract | null (recorded) |
 | Schema status | selected target schema; implementation pending |
 | Schema reason | source admission contract |
 | Schema changes | None listed |
@@ -460,7 +458,7 @@ ClosureIntent
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
 | [T068](../reactors/policy-campaign-closure-reactor.md#t068) | logical prerequisite | PolicyDistributionCampaign | ClosePolicyCampaignParticipantCampaignClosureAuthorization | PolicyCampaignParticipant |
-| [A010](../reactors/unassigned-architecture-rows.md#a010) | emitted semantic fact | PolicyDistributionCampaign | AbortPolicyCampaignClosure | PolicyDistributionCampaign |
+| [A010](../reactors/unassigned-domain-choreography.md#a010) | emitted semantic fact | PolicyDistributionCampaign | AbortPolicyCampaignClosure | PolicyDistributionCampaign |
 
 ### PolicyCampaignLaunched
 
@@ -568,7 +566,6 @@ ClosureIntent
 | Schema discriminator | bdgrz.policy-distribution-campaign.policy-participant-result-admitted |
 | Schema discriminatorVersion | 1 |
 | Schema owner | PolicyDistributionCampaign |
-| Schema existingContract | null (recorded) |
 | Schema status | selected target schema; implementation pending |
 | Schema reason | source command accepted result |
 | Schema changes | None listed |
@@ -635,7 +632,7 @@ ChildAdmissionIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T076](../reactors/policy-participant-result-reactor.md#t076) | physical root, logical prerequisite | PolicyDistributionCampaign | ApplyPolicyParticipantResult | PolicyCampaignParticipant |
+| [T076](../reactors/record-policy-requirement-outcomes-reactor.md#t076) | physical root, logical prerequisite | PolicyDistributionCampaign | ApplyPolicyParticipantResult | PolicyCampaignParticipant |
 
 
 ## Wire/schema version discrepancies

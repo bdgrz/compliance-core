@@ -1,0 +1,309 @@
+{
+  "sourceRoot": "ApplicationNameChangeReactor",
+  "targetRoot": "KeepApplicationNamesUniqueReactor",
+  "businessReason": "Keep every application name and alias unique while names are changed or an application is retired.",
+  "rows": [
+    {
+      "id": "X000",
+      "kind": "planned_reaction",
+      "status": "PLANNED_TARGET_DEFINITION_2026-10-29",
+      "sourceOwner": "DeclaredApplication",
+      "logicalPrerequisiteFacts": [
+        "ApplicationDeclared",
+        "ApplicationRevised"
+      ],
+      "logicalPrerequisiteRule": "Every normalized name and alias of the declared or revised application must be unheld or already held by this exact application stream; a name held by a different active application refuses.",
+      "physicalRootEvents": [
+        "ApplicationDeclared",
+        "ApplicationRevised"
+      ],
+      "originalAdmissionKinds": [
+        "ApplicationDeclared"
+      ],
+      "receiverCommand": "ClaimApplicationName",
+      "targetOwner": "ApplicationNameClaim",
+      "targetAuthorityKind": "business_identity_or_uniqueness_authority",
+      "emittedSemanticFacts": [
+        "ApplicationNameClaimed"
+      ],
+      "emittedEventContracts": [],
+      "currentRegisteredRootTypes": [],
+      "plannedRootRole": "ApplicationNameChangeReactor",
+      "processes": [
+        "ApplicationNameChangeProcess"
+      ],
+      "requiredProofContract": {
+        "canonicalCarrier": "original admitted root reference + required independently verified typed stage/terminal proof sets",
+        "admissionReferenceFactKinds": [
+          "LocationChangeAccepted"
+        ],
+        "admissionReferenceRole": "original business admission/first-owner fact, distinct from subscription trigger and intermediate/terminal prerequisites",
+        "verification": {
+          "admission": "AdmissionReference is a locator only. Resolve and independently verify actual typed admitted fact, exact owner/tenant/program, saved metadata and physical/hydrated cut, original root/episode/actor/intent and immutable content.",
+          "stageAndTerminal": "Materialize each required typed stage/terminal proof from actual committed facts and full required immutable selections; prove complete grant/fence/provisional/child sets, not counts/checkpoints. Guard sets are not weakened by carrier choice.",
+          "earlyReplay": "If native receipt binding does not cover a supplied/interpreted command term, bind that term through the required actual typed proof/body before early replay. Exact receipt cannot bypass proof manifest or source tuple guards.",
+          "resultAndRecovery": "Current public authorization precedes replay. Original result/receipt and unknown-append recovery stay exact; requested cancellation propagates. Unavailable proof/content remains transient; corruption/changed intent is permanent; no inferred absence/release.",
+          "implementationStatus": "Installed pointer/handler/process presence is not proof of conformance. Field/wire migration and required behavioral tests remain separately verifiable implementation work."
+        },
+        "requiredTypedStageProofSets": [
+          {
+            "factKinds": [
+              "ApplicationNameClaimed"
+            ],
+            "role": "Existing claim of the same normalized name, to detect holder",
+            "quantifier": "at_most_one",
+            "condition": "per name",
+            "requiredVerification": "Resolve the actual saved fact and its full immutable selection; verify the typed payload and the exact admission, root, target, generation, actor and intent binding. A pointer, checkpoint or stage order alone is not authority."
+          },
+          {
+            "factKinds": [
+              "ApplicationNameReleased"
+            ],
+            "role": "Name released by a previous holder",
+            "quantifier": "none_outstanding",
+            "condition": "when name was previously held",
+            "requiredVerification": "Resolve the actual saved fact and its full immutable selection; verify the typed payload and the exact admission, root, target, generation, actor and intent binding. A pointer, checkpoint or stage order alone is not authority."
+          }
+        ],
+        "pinnedSourceRequirements": "Every exact source owner/event/content revision and complete immutable manifest required by intendedProofGate remains mandatory; no absent optional source is fabricated.",
+        "proofGate": "Exact declared or revised application content with its normalized canonical name and aliases; claim each normalized name for the exact application stream; a name held by another active application refuses the change.",
+        "requiredLogicalPrerequisiteProofs": "Every applicable logical prerequisite is independently verified as an actual typed saved fact (or actual technical proof where explicitly technical); a terminal proof may establish an earlier stage only through a verified native chain that includes that required typed stage. Stage order/checkpoint alone never substitutes.",
+        "prerequisiteVerification": {
+          "admission": "The receiver resolves the original admitted root fact by its exact owner, tenant, episode, actor and immutable intent, and verifies the saved fact and content hash before acting; a reference alone grants nothing.",
+          "stageProofs": "Each required stage proof (grant, hold, review, or terminal fact) is materialised from the actual committed fact and its full immutable selection; counts, checkpoints and stage order are not accepted as proof."
+        },
+        "stageProofStatus": "specified",
+        "stageProofRationale": "",
+        "stageProofSource": "authored 2026-10-29 from reactor and target source"
+      },
+      "effectIdentity": {
+        "version": "effect-identity-v2",
+        "namespace": "actual committed ApplicationDeclared.Metadata.EventId",
+        "fieldsInOrder": [
+          "effectKind",
+          "canonical target EventStreamAddress",
+          "episode"
+        ],
+        "rule": "explicitly versioned injective length-prefixed encoding for this new edge; no reuse of occupied v1 bytes"
+      },
+      "recoveryContract": {
+        "lostAcknowledgement": "If the receiver's append succeeded but the acknowledgement was lost, redelivery resolves the same deterministic effect identity and returns the original committed result without a second append.",
+        "retryAfterPartialProgress": "A retry re-reads the target stream; a proven superseded or already-applied operation is a terminal no-op; an unavailable dependency or unknown append outcome is transient and retried; changed intent or an invalid proof is a permanent conflict and the operation is quarantined.",
+        "concurrencyConflict": "On an optimistic-concurrency conflict at the target the receiver re-reads and re-decides under the target's current state; it never overwrites a newer decision.",
+        "abortOfAdmittedRoot": "If the admitted root is cancelled or the process is aborted, the bound abort receiver fences the target so a delayed delivery cannot apply, and any held reservation is released only after the fence is durable.",
+        "source": "Canonical recovery contract stated in four cases on 2026-10-29; semantically equal to the former one-sentence contract, which is retained as `recoveryContractSummary`."
+      },
+      "implementationConformance": "UNIMPLEMENTED_PLANNED_TARGET",
+      "rationale": "Mirror of the location/provider/process name-claim flow (T022/T025).",
+      "jev": {
+        "needs_inbound": 0.87,
+        "source": "DeclaredApplication 0.96"
+      },
+      "recoveryContractSummary": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
+      "logicalPrerequisiteRuleGuard": "Exact declared or revised application content with its normalized canonical name and aliases; claim each normalized name for the exact application stream; a name held by another active application refuses the change.",
+      "prerequisiteRuleSource": "authored 2026-10-29 from reactor and target source"
+    },
+    {
+      "id": "X001",
+      "kind": "planned_reaction",
+      "status": "PLANNED_TARGET_DEFINITION_2026-10-29",
+      "sourceOwner": "ApplicationNameClaim",
+      "logicalPrerequisiteFacts": [
+        "ApplicationNameClaimed"
+      ],
+      "logicalPrerequisiteRule": "Every name of the accepted change is claimed for this exact application and the application is at the expected owner-local revision; apply authored content exactly.",
+      "physicalRootEvents": [
+        "ApplicationNameClaimed"
+      ],
+      "originalAdmissionKinds": [
+        "ApplicationNameClaimed"
+      ],
+      "receiverCommand": "ApplyApplicationNameChange",
+      "targetOwner": "DeclaredApplication",
+      "targetAuthorityKind": "business_aggregate",
+      "emittedSemanticFacts": [
+        "ApplicationRevised"
+      ],
+      "emittedEventContracts": [],
+      "currentRegisteredRootTypes": [],
+      "plannedRootRole": "ApplicationNameChangeReactor",
+      "processes": [
+        "ApplicationNameChangeProcess"
+      ],
+      "requiredProofContract": {
+        "canonicalCarrier": "original admitted root reference + required independently verified typed stage/terminal proof sets",
+        "admissionReferenceFactKinds": [
+          "LocationChangeAccepted"
+        ],
+        "admissionReferenceRole": "original business admission/first-owner fact, distinct from subscription trigger and intermediate/terminal prerequisites",
+        "verification": {
+          "admission": "AdmissionReference is a locator only. Resolve and independently verify actual typed admitted fact, exact owner/tenant/program, saved metadata and physical/hydrated cut, original root/episode/actor/intent and immutable content.",
+          "stageAndTerminal": "Materialize each required typed stage/terminal proof from actual committed facts and full required immutable selections; prove complete grant/fence/provisional/child sets, not counts/checkpoints. Guard sets are not weakened by carrier choice.",
+          "earlyReplay": "If native receipt binding does not cover a supplied/interpreted command term, bind that term through the required actual typed proof/body before early replay. Exact receipt cannot bypass proof manifest or source tuple guards.",
+          "resultAndRecovery": "Current public authorization precedes replay. Original result/receipt and unknown-append recovery stay exact; requested cancellation propagates. Unavailable proof/content remains transient; corruption/changed intent is permanent; no inferred absence/release.",
+          "implementationStatus": "Installed pointer/handler/process presence is not proof of conformance. Field/wire migration and required behavioral tests remain separately verifiable implementation work."
+        },
+        "requiredTypedStageProofSets": [
+          {
+            "factKinds": [
+              "ApplicationNameClaimed"
+            ],
+            "role": "Claim per name held by this application stream",
+            "quantifier": "all_of_selection",
+            "condition": "every canonical name and alias in the accepted change",
+            "requiredVerification": "Resolve the actual saved fact and its full immutable selection; verify the typed payload and the exact admission, root, target, generation, actor and intent binding. A pointer, checkpoint or stage order alone is not authority."
+          },
+          {
+            "factKinds": [
+              "ApplicationDeclared",
+              "ApplicationRevised"
+            ],
+            "role": "Application at expected revision",
+            "quantifier": "exactly_one",
+            "condition": "always",
+            "requiredVerification": "Resolve the actual saved fact and its full immutable selection; verify the typed payload and the exact admission, root, target, generation, actor and intent binding. A pointer, checkpoint or stage order alone is not authority."
+          },
+          {
+            "factKinds": [
+              "ApplicationRetired"
+            ],
+            "role": "Application is not retired",
+            "quantifier": "none_outstanding",
+            "condition": "always",
+            "requiredVerification": "Resolve the actual saved fact and its full immutable selection; verify the typed payload and the exact admission, root, target, generation, actor and intent binding. A pointer, checkpoint or stage order alone is not authority."
+          }
+        ],
+        "pinnedSourceRequirements": "Every exact source owner/event/content revision and complete immutable manifest required by intendedProofGate remains mandatory; no absent optional source is fabricated.",
+        "proofGate": "All names of the accepted change are claimed for this application; owner-local expected revision; apply the authored content exactly.",
+        "requiredLogicalPrerequisiteProofs": "Every applicable logical prerequisite is independently verified as an actual typed saved fact (or actual technical proof where explicitly technical); a terminal proof may establish an earlier stage only through a verified native chain that includes that required typed stage. Stage order/checkpoint alone never substitutes.",
+        "prerequisiteVerification": {
+          "admission": "The receiver resolves the original admitted root fact by its exact owner, tenant, episode, actor and immutable intent, and verifies the saved fact and content hash before acting; a reference alone grants nothing.",
+          "stageProofs": "Each required stage proof (grant, hold, review, or terminal fact) is materialised from the actual committed fact and its full immutable selection; counts, checkpoints and stage order are not accepted as proof."
+        },
+        "stageProofStatus": "specified",
+        "stageProofRationale": "",
+        "stageProofSource": "authored 2026-10-29 from reactor and target source"
+      },
+      "effectIdentity": {
+        "version": "effect-identity-v2",
+        "namespace": "actual committed ApplicationNameClaimed.Metadata.EventId",
+        "fieldsInOrder": [
+          "effectKind",
+          "canonical target EventStreamAddress",
+          "episode"
+        ],
+        "rule": "explicitly versioned injective length-prefixed encoding for this new edge; no reuse of occupied v1 bytes"
+      },
+      "recoveryContract": {
+        "lostAcknowledgement": "If the receiver's append succeeded but the acknowledgement was lost, redelivery resolves the same deterministic effect identity and returns the original committed result without a second append.",
+        "retryAfterPartialProgress": "A retry re-reads the target stream; a proven superseded or already-applied operation is a terminal no-op; an unavailable dependency or unknown append outcome is transient and retried; changed intent or an invalid proof is a permanent conflict and the operation is quarantined.",
+        "concurrencyConflict": "On an optimistic-concurrency conflict at the target the receiver re-reads and re-decides under the target's current state; it never overwrites a newer decision.",
+        "abortOfAdmittedRoot": "If the admitted root is cancelled or the process is aborted, the bound abort receiver fences the target so a delayed delivery cannot apply, and any held reservation is released only after the fence is durable.",
+        "source": "Canonical recovery contract stated in four cases on 2026-10-29; semantically equal to the former one-sentence contract, which is retained as `recoveryContractSummary`."
+      },
+      "implementationConformance": "UNIMPLEMENTED_PLANNED_TARGET",
+      "rationale": "Mirror of T026.",
+      "jev": {},
+      "recoveryContractSummary": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
+      "logicalPrerequisiteRuleGuard": "All names of the accepted change are claimed for this application; owner-local expected revision; apply the authored content exactly.",
+      "prerequisiteRuleSource": "authored 2026-10-29 from reactor and target source"
+    },
+    {
+      "id": "X002",
+      "kind": "planned_reaction",
+      "status": "PLANNED_TARGET_DEFINITION_2026-10-29",
+      "sourceOwner": "DeclaredApplication",
+      "logicalPrerequisiteFacts": [
+        "ApplicationRevised",
+        "ApplicationRetired"
+      ],
+      "logicalPrerequisiteRule": "Names no longer held after the revision, and all names on retirement or merge, are released, but only those the exact application stream currently holds.",
+      "physicalRootEvents": [
+        "ApplicationRevised",
+        "ApplicationRetired"
+      ],
+      "originalAdmissionKinds": [
+        "ApplicationRevised"
+      ],
+      "receiverCommand": "ReleaseApplicationName",
+      "targetOwner": "ApplicationNameClaim",
+      "targetAuthorityKind": "business_identity_or_uniqueness_authority",
+      "emittedSemanticFacts": [
+        "ApplicationNameReleased"
+      ],
+      "emittedEventContracts": [],
+      "currentRegisteredRootTypes": [],
+      "plannedRootRole": "ApplicationNameChangeReactor",
+      "processes": [
+        "ApplicationNameChangeProcess"
+      ],
+      "requiredProofContract": {
+        "canonicalCarrier": "original admitted root reference + required independently verified typed stage/terminal proof sets",
+        "admissionReferenceFactKinds": [
+          "LocationChangeAccepted"
+        ],
+        "admissionReferenceRole": "original business admission/first-owner fact, distinct from subscription trigger and intermediate/terminal prerequisites",
+        "verification": {
+          "admission": "AdmissionReference is a locator only. Resolve and independently verify actual typed admitted fact, exact owner/tenant/program, saved metadata and physical/hydrated cut, original root/episode/actor/intent and immutable content.",
+          "stageAndTerminal": "Materialize each required typed stage/terminal proof from actual committed facts and full required immutable selections; prove complete grant/fence/provisional/child sets, not counts/checkpoints. Guard sets are not weakened by carrier choice.",
+          "earlyReplay": "If native receipt binding does not cover a supplied/interpreted command term, bind that term through the required actual typed proof/body before early replay. Exact receipt cannot bypass proof manifest or source tuple guards.",
+          "resultAndRecovery": "Current public authorization precedes replay. Original result/receipt and unknown-append recovery stay exact; requested cancellation propagates. Unavailable proof/content remains transient; corruption/changed intent is permanent; no inferred absence/release.",
+          "implementationStatus": "Installed pointer/handler/process presence is not proof of conformance. Field/wire migration and required behavioral tests remain separately verifiable implementation work."
+        },
+        "requiredTypedStageProofSets": [
+          {
+            "factKinds": [
+              "ApplicationNameClaimed"
+            ],
+            "role": "Active claim held by this application stream",
+            "quantifier": "exactly_one",
+            "condition": "per name being released",
+            "requiredVerification": "Resolve the actual saved fact and its full immutable selection; verify the typed payload and the exact admission, root, target, generation, actor and intent binding. A pointer, checkpoint or stage order alone is not authority."
+          },
+          {
+            "factKinds": [
+              "ApplicationNameReleased"
+            ],
+            "role": "Name not already released (retry no-op)",
+            "quantifier": "none_outstanding",
+            "condition": "always",
+            "requiredVerification": "Resolve the actual saved fact and its full immutable selection; verify the typed payload and the exact admission, root, target, generation, actor and intent binding. A pointer, checkpoint or stage order alone is not authority."
+          }
+        ],
+        "pinnedSourceRequirements": "Every exact source owner/event/content revision and complete immutable manifest required by intendedProofGate remains mandatory; no absent optional source is fabricated.",
+        "proofGate": "Release every normalized name no longer held by the application after the revision, and every name on retirement or merge; release names only the exact application stream holds.",
+        "requiredLogicalPrerequisiteProofs": "Every applicable logical prerequisite is independently verified as an actual typed saved fact (or actual technical proof where explicitly technical); a terminal proof may establish an earlier stage only through a verified native chain that includes that required typed stage. Stage order/checkpoint alone never substitutes.",
+        "prerequisiteVerification": {
+          "admission": "The receiver resolves the original admitted root fact by its exact owner, tenant, episode, actor and immutable intent, and verifies the saved fact and content hash before acting; a reference alone grants nothing.",
+          "stageProofs": "Each required stage proof (grant, hold, review, or terminal fact) is materialised from the actual committed fact and its full immutable selection; counts, checkpoints and stage order are not accepted as proof."
+        },
+        "stageProofStatus": "specified",
+        "stageProofRationale": "",
+        "stageProofSource": "authored 2026-10-29 from reactor and target source"
+      },
+      "effectIdentity": {
+        "version": "effect-identity-v2",
+        "namespace": "actual committed ApplicationRevised.Metadata.EventId",
+        "fieldsInOrder": [
+          "effectKind",
+          "canonical target EventStreamAddress",
+          "episode"
+        ],
+        "rule": "explicitly versioned injective length-prefixed encoding for this new edge; no reuse of occupied v1 bytes"
+      },
+      "recoveryContract": {
+        "lostAcknowledgement": "If the receiver's append succeeded but the acknowledgement was lost, redelivery resolves the same deterministic effect identity and returns the original committed result without a second append.",
+        "retryAfterPartialProgress": "A retry re-reads the target stream; a proven superseded or already-applied operation is a terminal no-op; an unavailable dependency or unknown append outcome is transient and retried; changed intent or an invalid proof is a permanent conflict and the operation is quarantined.",
+        "concurrencyConflict": "On an optimistic-concurrency conflict at the target the receiver re-reads and re-decides under the target's current state; it never overwrites a newer decision.",
+        "abortOfAdmittedRoot": "If the admitted root is cancelled or the process is aborted, the bound abort receiver fences the target so a delayed delivery cannot apply, and any held reservation is released only after the fence is durable.",
+        "source": "Canonical recovery contract stated in four cases on 2026-10-29; semantically equal to the former one-sentence contract, which is retained as `recoveryContractSummary`."
+      },
+      "implementationConformance": "UNIMPLEMENTED_PLANNED_TARGET",
+      "rationale": "Mirror of T027 plus retirement release (D05-10).",
+      "jev": {},
+      "recoveryContractSummary": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
+      "logicalPrerequisiteRuleGuard": "Release every normalized name no longer held by the application after the revision, and every name on retirement or merge; release names only the exact application stream holds.",
+      "prerequisiteRuleSource": "authored 2026-10-29 from reactor and target source"
+    }
+  ]
+}

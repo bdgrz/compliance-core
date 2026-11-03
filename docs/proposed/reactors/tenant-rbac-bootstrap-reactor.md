@@ -25,11 +25,11 @@ Selected choreography rows: **6**. Required proofs, recovery, effect identity, a
 | id | S011 |
 | kind | business_receiver |
 | status | SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED |
-| sourceOwner | Tenant |
+| Source owner (target name) | Tenant (source: Tenant) |
 | logicalPrerequisiteFacts (target names) | TenantRegistered |
 | physicalRootEvents (target names) | TenantRegistered |
 | Target command (selected source name: DefineRole) | DefineRole |
-| targetOwner | Role |
+| Target owner | Role |
 | targetAuthorityKind | business_aggregate |
 | emittedSemanticFacts (target names) | RoleDefined |
 | currentRegisteredRootTypes (target names) | SetUpStartingTenantAccessReactor |
@@ -42,7 +42,6 @@ Selected choreography rows: **6**. Required proofs, recovery, effect identity, a
 | orderedGroup | TenantRbacBootstrap |
 | orderingConstraint | `{"order":1,"condition":"always"}` |
 | recoveryContractSummary | Replayed bootstrap allows existing role/team-definition conflicts as explicitly coded; other effects retry identical deterministic identities. Never manufacture a missing permission or membership result. |
-| logicalPrerequisiteRuleGuard | null (recorded) |
 | logicalPrerequisiteRule | The source is a TenantRegistered fact for the tenant; the receiver defines only the fixed built-in role catalog IDs derived from that tenant id, and an already-defined identical role is an exact retry. |
 | prerequisiteRuleSource | authored 2026-10-29 from reactor and target source |
 
@@ -53,11 +52,11 @@ Selected choreography rows: **6**. Required proofs, recovery, effect identity, a
 | id | S012 |
 | kind | business_receiver |
 | status | SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED |
-| sourceOwner | Tenant |
+| Source owner (target name) | Tenant (source: Tenant) |
 | logicalPrerequisiteFacts (target names) | TenantRegistered |
 | physicalRootEvents (target names) | TenantRegistered |
 | Target command (selected source name: DefineTeam) | DefineTeam |
-| targetOwner | Team |
+| Target owner | Team |
 | targetAuthorityKind | business_aggregate |
 | emittedSemanticFacts (target names) | TeamDefined |
 | currentRegisteredRootTypes (target names) | SetUpStartingTenantAccessReactor |
@@ -70,7 +69,6 @@ Selected choreography rows: **6**. Required proofs, recovery, effect identity, a
 | orderedGroup | TenantRbacBootstrap |
 | orderingConstraint | `{"order":2,"condition":"always"}` |
 | recoveryContractSummary | Replayed bootstrap allows existing role/team-definition conflicts as explicitly coded; other effects retry identical deterministic identities. Never manufacture a missing permission or membership result. |
-| logicalPrerequisiteRuleGuard | null (recorded) |
 | logicalPrerequisiteRule | The source is a TenantRegistered fact for the tenant; the receiver defines only built-in team IDs derived from that tenant id, and an already-defined identical team is an exact retry. |
 | prerequisiteRuleSource | authored 2026-10-29 from reactor and target source |
 
@@ -81,11 +79,11 @@ Selected choreography rows: **6**. Required proofs, recovery, effect identity, a
 | id | S013 |
 | kind | business_receiver |
 | status | SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED |
-| sourceOwner | Tenant |
+| Source owner (target name) | Tenant (source: Tenant) |
 | logicalPrerequisiteFacts (target names) | TenantRegistered |
 | physicalRootEvents (target names) | TenantRegistered |
 | Target command (selected source name: RegisterMember) | RegisterMember |
-| targetOwner | Member |
+| Target owner | Member |
 | targetAuthorityKind | business_aggregate |
 | emittedSemanticFacts (target names) | MemberRegistered |
 | currentRegisteredRootTypes (target names) | SetUpStartingTenantAccessReactor |
@@ -98,7 +96,6 @@ Selected choreography rows: **6**. Required proofs, recovery, effect identity, a
 | orderedGroup | TenantRbacBootstrap |
 | orderingConstraint | `{"order":3,"condition":"ownerBecomesAdministrator"}` |
 | recoveryContractSummary | Replayed bootstrap allows existing role/team-definition conflicts as explicitly coded; other effects retry identical deterministic identities. Never manufacture a missing permission or membership result. |
-| logicalPrerequisiteRuleGuard | null (recorded) |
 | logicalPrerequisiteRule | The source is the committed TenantRegistered; the owner is registered as a member of the new tenant only when the tenant's creator is the administrator or no first administrator email is named, and a deprovisioned prior episode would block until cleanup completes. |
 | prerequisiteRuleSource | authored 2026-10-29 from reactor and target source |
 
@@ -109,11 +106,11 @@ Selected choreography rows: **6**. Required proofs, recovery, effect identity, a
 | id | S014 |
 | kind | business_receiver |
 | status | SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED |
-| sourceOwner | Tenant |
+| Source owner (target name) | Tenant (source: Tenant) |
 | logicalPrerequisiteFacts (target names) | TenantRegistered |
 | physicalRootEvents (target names) | TenantRegistered |
 | Target command (selected source name: AssignTeamRole) | AssignTeamRole |
-| targetOwner | TeamRole |
+| Target owner | TeamRole |
 | targetAuthorityKind | business_aggregate |
 | emittedSemanticFacts (target names) | TeamRoleAssigned |
 | currentRegisteredRootTypes (target names) | SetUpStartingTenantAccessReactor |
@@ -126,7 +123,6 @@ Selected choreography rows: **6**. Required proofs, recovery, effect identity, a
 | orderedGroup | TenantRbacBootstrap |
 | orderingConstraint | `{"order":4,"condition":"always","after":["S011","S012"]}` |
 | recoveryContractSummary | Replayed bootstrap allows existing role/team-definition conflicts as explicitly coded; other effects retry identical deterministic identities. Never manufacture a missing permission or membership result. |
-| logicalPrerequisiteRuleGuard | null (recorded) |
 | logicalPrerequisiteRule | The source is a TenantRegistered fact; the receiver links the built-in team to its built-in role (Administrators to Tenant Administration, Power Users to Compliance Management, Standard Users to Compliance Participation, Viewers to Viewer) only when that tenant-derived team and role are defined and no active link already exists. |
 | prerequisiteRuleSource | authored 2026-10-29 from reactor and target source |
 
@@ -137,11 +133,11 @@ Selected choreography rows: **6**. Required proofs, recovery, effect identity, a
 | id | S015 |
 | kind | business_receiver |
 | status | SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED |
-| sourceOwner | Tenant |
+| Source owner (target name) | Tenant (source: Tenant) |
 | logicalPrerequisiteFacts (target names) | TenantRegistered |
 | physicalRootEvents (target names) | TenantRegistered |
 | Target command (selected source name: AssignRolePermission) | AssignRolePermission |
-| targetOwner | RolePermission |
+| Target owner | RolePermission |
 | targetAuthorityKind | business_aggregate |
 | emittedSemanticFacts (target names) | RolePermissionAssigned |
 | currentRegisteredRootTypes (target names) | SetUpStartingTenantAccessReactor |
@@ -154,7 +150,6 @@ Selected choreography rows: **6**. Required proofs, recovery, effect identity, a
 | orderedGroup | TenantRbacBootstrap |
 | orderingConstraint | `{"order":5,"condition":"always","after":["S014"],"requiredEffects":["TenantAccess","TenantRbacManage","ProgramManage"]}` |
 | recoveryContractSummary | Replayed bootstrap allows existing role/team-definition conflicts as explicitly coded; other effects retry identical deterministic identities. Never manufacture a missing permission or membership result. |
-| logicalPrerequisiteRuleGuard | null (recorded) |
 | logicalPrerequisiteRule | The source is a TenantRegistered fact; the receiver assigns each canonical built-in permission to its built-in role only when the role is defined and the normalized tenant/role/permission tuple has no active assignment. |
 | prerequisiteRuleSource | authored 2026-10-29 from reactor and target source |
 
@@ -165,11 +160,11 @@ Selected choreography rows: **6**. Required proofs, recovery, effect identity, a
 | id | S016 |
 | kind | business_receiver |
 | status | SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED |
-| sourceOwner | Tenant |
+| Source owner (target name) | Tenant (source: Tenant) |
 | logicalPrerequisiteFacts (target names) | TenantRegistered |
 | physicalRootEvents (target names) | TenantRegistered |
 | Target command (selected source name: AssignTeamMember) | AssignTeamMember |
-| targetOwner | TeamMember |
+| Target owner | TeamMember |
 | targetAuthorityKind | business_aggregate |
 | emittedSemanticFacts (target names) | TeamMemberAssigned |
 | currentRegisteredRootTypes (target names) | SetUpStartingTenantAccessReactor |
@@ -182,7 +177,6 @@ Selected choreography rows: **6**. Required proofs, recovery, effect identity, a
 | orderedGroup | TenantRbacBootstrap |
 | orderingConstraint | `{"order":6,"condition":"ownerBecomesAdministrator","after":["S013","S014","S015"],"activationTrigger":true}` |
 | recoveryContractSummary | Replayed bootstrap allows existing role/team-definition conflicts as explicitly coded; other effects retry identical deterministic identities. Never manufacture a missing permission or membership result. |
-| logicalPrerequisiteRuleGuard | null (recorded) |
 | logicalPrerequisiteRule | The source is a TenantRegistered fact where the creator is administrator (or no first administrator email exists); the receiver assigns the tenant owner's member to the Administrators team for the owner's currently registered membership episode, via the tenant-manager guard route. |
 | prerequisiteRuleSource | authored 2026-10-29 from reactor and target source |
 

@@ -64,13 +64,9 @@
           "authorizationPolicy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/40",
-        "line": 3158,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      },
       "kind": "http",
+      "sourceOwner": "TenantIdentityProvider",
+      "owner": "TenantIdentityProvider",
       "sourceName": "ConfigureTenantIdentityProvider",
       "targetName": "ConfigureTenantSignInConnection"
     },
@@ -122,13 +118,9 @@
           "authorizationPolicy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/67",
-        "line": 5045,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      },
       "kind": "http",
+      "sourceOwner": "TenantIdentityProvider",
+      "owner": "TenantIdentityProvider",
       "sourceName": "DisableTenantIdentityProvider",
       "targetName": "DisableTenantSignInConnection"
     },
@@ -184,13 +176,9 @@
         "terminalResultType": "Unit"
       },
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/132",
-        "line": 9955,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      },
       "kind": "command",
+      "sourceOwner": "TenantIdentityProvider",
+      "owner": "TenantIdentityProvider",
       "sourceName": "RecordTenantIdentityProviderTestResult",
       "targetName": "RecordSignInConnectionTestResult"
     },
@@ -247,13 +235,9 @@
           "authorizationPolicy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/190",
-        "line": 14298,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      },
       "kind": "http",
+      "sourceOwner": "TenantIdentityProvider",
+      "owner": "TenantIdentityProvider",
       "sourceName": "RotateTenantIdentityProviderCredentials",
       "targetName": "RotateTenantSignInCredentials"
     },
@@ -300,13 +284,9 @@
           "authorizationPolicy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/199",
-        "line": 14910,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      },
       "kind": "http",
+      "sourceOwner": "TenantIdentityProvider",
+      "owner": "TenantIdentityProvider",
       "sourceName": "TestTenantIdentityProvider",
       "targetName": "TestTenantSignInConnection"
     }

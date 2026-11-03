@@ -1,5 +1,7 @@
 # IndependenceRuleRatificationCatalog commands
 
+
+
 Selected command contracts: **3**. Complete selected contracts and companion source evidence: [owner command JSON](../data/commands/independence-rule-ratification-catalog.json).
 
 | Target command | Selected source name | Kind | Identity | Fields | HTTP routes |
@@ -17,7 +19,8 @@ Selected command contracts: **3**. Complete selected contracts and companion sou
 | Target command name | RatifyIndependenceRuleVersion |
 | Selected source command name | RatifyIndependenceRuleVersion |
 | Name decision | The selected source name is retained. |
-| Owner | IndependenceRuleRatificationCatalog |
+| Target owner | IndependenceRuleRatificationCatalog |
+| Selected source owner | IndependenceRuleRatificationCatalog |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | http |
 | Logical identity | CommandId; Uuid; required=true; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
@@ -70,7 +73,8 @@ Required tests: [Placeholder: required tests not recorded]
 | Target command name | AuthorizeIndependenceRuleRatificationCatalogEngagement |
 | Selected source command name | AuthorizeIndependenceRuleRatificationCatalogEngagementUse |
 | Name decision | The command authorizes the named business action; the extra Use suffix describes the coordination mechanism. |
-| Owner | IndependenceRuleRatificationCatalog |
+| Target owner | IndependenceRuleRatificationCatalog |
+| Selected source owner | IndependenceRuleRatificationCatalog |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; reactor; deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result |
@@ -124,7 +128,8 @@ Required tests: [Placeholder: required tests not recorded]
 | Target command name | CloseIndependenceRuleRatificationCatalogEngagementAuthorization |
 | Selected source command name | SettleIndependenceRuleRatificationCatalogEngagementUse |
 | Name decision | The command ends the exact authorization after its business action or cancellation. |
-| Owner | IndependenceRuleRatificationCatalog |
+| Target owner | IndependenceRuleRatificationCatalog |
+| Selected source owner | IndependenceRuleRatificationCatalog |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; reactor; deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result |

@@ -65,13 +65,9 @@
           "policy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/9",
-        "line": 1041,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
       "kind": "http",
+      "sourceOwner": "AuditPackageManifest",
+      "owner": "AuditPackageManifest",
       "sourceName": "AmendAuditPackage",
       "targetName": "AmendAuditPackage"
     },
@@ -144,13 +140,9 @@
           "policy": "ApiUser + existing request-scope authorizers"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/16",
-        "line": 1901,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
       "kind": "http",
+      "sourceOwner": "AuditPackageManifest",
+      "owner": "AuditPackageManifest",
       "sourceName": "ApproveAuditPackageDisclosure",
       "targetName": "ApproveAuditPackageDisclosure"
     },
@@ -218,13 +210,9 @@
           "policy": "ApiUser + existing request-scope authorizers"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/17",
-        "line": 2027,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
       "kind": "http",
+      "sourceOwner": "AuditPackageManifest",
+      "owner": "AuditPackageManifest",
       "sourceName": "ApproveAuditPackageValidationOverride",
       "targetName": "ApproveAuditPackageValidationOverride"
     },
@@ -272,13 +260,9 @@
           "policy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/42",
-        "line": 5047,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
       "kind": "http",
+      "sourceOwner": "AuditPackageManifest",
+      "owner": "AuditPackageManifest",
       "sourceName": "CreateAuditPackage",
       "targetName": "CreateAuditPackage"
     },
@@ -347,18 +331,11 @@
       "responseContract": {
         "mode": "internal",
         "responseType": "Unit",
-        "firstHttpStatus": null,
         "terminalResultType": "Unit"
       },
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/95",
-        "line": 11016,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
       "reactor": "AuditPackageBuildResultReactor",
-      "sourceOwner": "AuditPackageBuildProcess",
+      "sourceOwner": "AuditPackageManifest",
       "sourceEvents": [
         "process:verified_build_output"
       ],
@@ -369,6 +346,7 @@
       "effectKind": "record_audit_package_build_result",
       "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
       "kind": "receiver",
+      "owner": "AuditPackageManifest",
       "sourceName": "RecordAuditPackageBuildResult",
       "targetName": "RecordAuditPackageBuildResult"
     },
@@ -441,13 +419,9 @@
           "authorizationPolicy": "ApiUser + existing client-management/program authorizers + AuditPackageCommandActor personal HTTP"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/96",
-        "line": 11143,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
       "kind": "http",
+      "sourceOwner": "AuditPackageManifest",
+      "owner": "AuditPackageManifest",
       "sourceName": "RecordAuditPackageDelivery",
       "targetName": "ReportAuditPackageDelivery"
     },
@@ -515,13 +489,9 @@
           "authorizationPolicy": "ApiUser + existing client-management/program authorizers + AuditPackageCommandActor personal HTTP"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/120",
-        "line": 13838,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
       "kind": "http",
+      "sourceOwner": "AuditPackageManifest",
+      "owner": "AuditPackageManifest",
       "sourceName": "RequestAuditPackageBuild",
       "targetName": "RequestAuditPackageBuild"
     },
@@ -584,13 +554,9 @@
           "policy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/157",
-        "line": 18276,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
       "kind": "http",
+      "sourceOwner": "AuditPackageManifest",
+      "owner": "AuditPackageManifest",
       "sourceName": "ValidateAuditPackage",
       "targetName": "ValidateAuditPackage"
     }
@@ -712,8 +678,7 @@
       "expectedRevisionScope": {
         "field": "ExpectedRevision",
         "owner": "AuditPackageManifest",
-        "counter": "logical ResourceRevision of this owner",
-        "nullableInternalRule": null
+        "counter": "logical ResourceRevision of this owner"
       }
     },
     {
@@ -838,8 +803,7 @@
       "expectedRevisionScope": {
         "field": "ExpectedRevision",
         "owner": "AuditPackageManifest",
-        "counter": "logical ResourceRevision of this owner",
-        "nullableInternalRule": null
+        "counter": "logical ResourceRevision of this owner"
       }
     },
     {
@@ -959,8 +923,7 @@
       "expectedRevisionScope": {
         "field": "ExpectedRevision",
         "owner": "AuditPackageManifest",
-        "counter": "logical ResourceRevision of this owner",
-        "nullableInternalRule": null
+        "counter": "logical ResourceRevision of this owner"
       }
     },
     {
@@ -1056,7 +1019,6 @@
         "terminalResultType": "Unit"
       },
       "expectedRevisionScope": {
-        "field": null,
         "owner": "AuditPackageManifest",
         "counter": "No primary caller ResourceRevision. Enforce required authored source/epoch/version tokens, immutable creation identity or trusted proof/generation as declared; append uses physical OCC."
       }
@@ -1177,7 +1139,6 @@
       "responseContract": {
         "mode": "internal",
         "responseType": "Unit",
-        "firstHttpStatus": null,
         "terminalResultType": "Unit"
       },
       "intentSchema": "PackageBuildIntent",
@@ -1544,8 +1505,7 @@
       "expectedRevisionScope": {
         "field": "ExpectedRevision",
         "owner": "AuditPackageManifest",
-        "counter": "logical ResourceRevision of this owner",
-        "nullableInternalRule": null
+        "counter": "logical ResourceRevision of this owner"
       }
     }
   ]

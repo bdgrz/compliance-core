@@ -200,7 +200,7 @@ the API host, which serves HTTP in both standalone and split mode.
 - [OpenID Connect Core 1.0, December 2023](https://openid.net/specs/openid-connect-core-1_0.html)
   §2 (the `iss` and `sub` pair identifies an end user) is used as a reference
   under the [OIDF implementation-license information](https://openid.net/intellectual-property/openid-foundation-contribution-agreements/),
-  recorded in [the source-reference policy](../../product/source-reference-policy.md).
+  recorded in the project source register.
   No specification prose or schema is copied.
 - The slug, workspace, and log-redaction rules are original product
   decisions.

@@ -1,5 +1,7 @@
 # EvidenceArtifact commands
 
+
+
 Selected command contracts: **5**. Complete selected contracts and companion source evidence: [owner command JSON](../data/commands/evidence-artifact.json).
 
 | Target command | Selected source name | Kind | Identity | Fields | HTTP routes |
@@ -19,7 +21,8 @@ Selected command contracts: **5**. Complete selected contracts and companion sou
 | Target command name | CaptureEvidenceArtifact |
 | Selected source command name | CaptureEvidenceArtifact |
 | Name decision | The selected source name is retained. |
-| Owner | EvidenceArtifact |
+| Target owner | EvidenceArtifact |
+| Selected source owner | EvidenceArtifact |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | creation |
 | Logical identity | ArtifactId; Uuid; required=true; caller-supplied immutable creation identity: an exact retry with the same id and authored intent returns the original result; the same id with changed intent is refused; a different id is a different record |
@@ -66,7 +69,8 @@ Required tests: [Placeholder: required tests not recorded]
 | Target command name | IssueArtifactDownload |
 | Selected source command name | IssueArtifactDownload |
 | Name decision | The selected source name is retained. |
-| Owner | EvidenceArtifact |
+| Target owner | EvidenceArtifact |
+| Selected source owner | EvidenceArtifact |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | http |
 | Logical identity | CommandId; Uuid; required=true; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
@@ -119,7 +123,8 @@ Required tests: [Placeholder: required tests not recorded]
 | Target command name | RecordEvidenceArtifactInspection |
 | Selected source command name | RecordEvidenceArtifactInspection |
 | Name decision | The selected source name is retained. |
-| Owner | EvidenceArtifact |
+| Target owner | EvidenceArtifact |
+| Selected source owner | EvidenceArtifact |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | command |
 | Logical identity | CommandId; Uuid; required=true; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
@@ -168,7 +173,8 @@ Required tests: [Placeholder: required tests not recorded]
 | Target command name | ReleaseEvidenceArtifactQuarantine |
 | Selected source command name | ReleaseEvidenceArtifactQuarantine |
 | Name decision | The selected source name is retained. |
-| Owner | EvidenceArtifact |
+| Target owner | EvidenceArtifact |
+| Selected source owner | EvidenceArtifact |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | http |
 | Logical identity | CommandId; Uuid; required=true; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
@@ -218,7 +224,8 @@ Required tests: [Placeholder: required tests not recorded]
 | Target command name | CloseArtifactDownloadAvailabilityAuthorization |
 | Selected source command name | SettleArtifactDownloadAvailabilityUse |
 | Name decision | The command ends the exact authorization after its business action or cancellation. |
-| Owner | EvidenceArtifact |
+| Target owner | EvidenceArtifact |
+| Selected source owner | EvidenceArtifact |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; reactor; deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result |

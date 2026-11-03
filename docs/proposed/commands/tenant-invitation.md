@@ -1,5 +1,7 @@
 # TenantInvitation commands
 
+
+
 Selected command contracts: **4**. Complete selected contracts and companion source evidence: [owner command JSON](../data/commands/tenant-invitation.json).
 
 | Target command | Selected source name | Kind | Identity | Fields | HTTP routes |
@@ -18,7 +20,8 @@ Selected command contracts: **4**. Complete selected contracts and companion sou
 | Target command name | AcceptTenantInvitation |
 | Selected source command name | AcceptTenantInvitation |
 | Name decision | The selected source name is retained. |
-| Owner | TenantInvitation |
+| Target owner | TenantInvitation |
+| Selected source owner | TenantInvitation |
 | Contract record status | target_contract |
 | Kind | http |
 | Logical identity | InvitationId; Uuid; required=true; client; caller-supplied immutable creation identity: an exact retry with the same id and authored intent returns the original result; the same id with changed intent is refused; a different id is a different record |
@@ -30,7 +33,7 @@ Selected command contracts: **4**. Complete selected contracts and companion sou
 | Contract changes | InvitationId is route-bound and token verification must resolve the same immutable invitation; token is a secret verification input and is excluded from persisted authored intent. Persist verified token/challenge provenance without bearer material., Add required InvitationId., No ExpectedRevision: acceptance consumes a one-time token, the invitee holds only the token link, and the invitation lifecycle (pending, accepted, expired, canceled) already serializes acceptance. This matches CompleteIdentityRecovery; both are token-consumption commands. |
 | Guard order | bind_required_ids, authenticate_authorize, canonicalize_authored_intent, resolve_native_operation_facts, compare_owner_episode_actor_kind_intent_original_revision, validate_new_owner_revision_and_source_permits, append_complete_concrete_attributed_batch |
 | Response contract | `{"mode":"immediate_original_result","responseType":"Unit","firstHttpStatus":200,"terminalResultType":"Unit"}` |
-| Expected revision scope | `{"field":null,"owner":"TenantInvitation","counter":"none; token consumption serializes on the invitation lifecycle","nullableInternalRule":null}` |
+| Expected revision scope | `{"owner":"TenantInvitation","counter":"none; token consumption serializes on the invitation lifecycle"}` |
 | Authorizer sources | src/Compliance.Core/Features/Tenants/AcceptTenantInvitationAuthorizer.cs |
 | Source contract | src/Compliance.Common/Features/Tenants/AcceptTenantInvitation.cs |
 | Primary handler | AcceptTenantInvitationHandler |
@@ -69,7 +72,8 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Target command name | InviteGuestConsultant |
 | Selected source command name | InviteGuestConsultant |
 | Name decision | The selected source name is retained. |
-| Owner | TenantInvitation |
+| Target owner | TenantInvitation |
+| Selected source owner | TenantInvitation |
 | Contract record status | target_contract |
 | Kind | http |
 | Logical identity | InvitationId; Uuid; required=true; client; caller-supplied immutable creation identity: an exact retry with the same id and authored intent returns the original result; the same id with changed intent is refused; a different id is a different record |
@@ -81,7 +85,7 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Contract changes | Add required InvitationId. |
 | Guard order | bind_required_ids, authenticate_authorize, canonicalize_authored_intent, resolve_native_operation_facts, compare_owner_episode_actor_kind_intent_original_revision, validate_new_owner_revision_and_source_permits, append_complete_concrete_attributed_batch |
 | Response contract | `{"mode":"immediate_original_result","responseType":"Unit","firstHttpStatus":200,"terminalResultType":"Unit"}` |
-| Expected revision scope | `{"field":null,"owner":"TenantInvitation","counter":"No primary caller ResourceRevision. Enforce required authored source/epoch/version tokens, immutable creation identity or trusted proof/generation as declared; append uses physical OCC."}` |
+| Expected revision scope | `{"owner":"TenantInvitation","counter":"No primary caller ResourceRevision. Enforce required authored source/epoch/version tokens, immutable creation identity or trusted proof/generation as declared; append uses physical OCC."}` |
 | Authorizer sources | src/Compliance.Core/Features/AccessControl/ClientRbacMutationAuthorizer.cs |
 | Source contract | src/Compliance.Common/Features/Tenants/InviteGuestConsultant.cs |
 | Primary handler | InviteGuestConsultantHandler |
@@ -121,7 +125,8 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Target command name | InviteOrganizationMember |
 | Selected source command name | InviteOrganizationMember |
 | Name decision | The selected source name is retained. |
-| Owner | TenantInvitation |
+| Target owner | TenantInvitation |
+| Selected source owner | TenantInvitation |
 | Contract record status | target_contract |
 | Kind | http |
 | Logical identity | InvitationId; Uuid; required=true; client; caller-supplied immutable creation identity: an exact retry with the same id and authored intent returns the original result; the same id with changed intent is refused; a different id is a different record |
@@ -133,7 +138,7 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Contract changes | Add required InvitationId. |
 | Guard order | bind_required_ids, authenticate_authorize, canonicalize_authored_intent, resolve_native_operation_facts, compare_owner_episode_actor_kind_intent_original_revision, validate_new_owner_revision_and_source_permits, append_complete_concrete_attributed_batch |
 | Response contract | `{"mode":"immediate_original_result","responseType":"Unit","firstHttpStatus":200,"terminalResultType":"Unit"}` |
-| Expected revision scope | `{"field":null,"owner":"TenantInvitation","counter":"No primary caller ResourceRevision. Enforce required authored source/epoch/version tokens, immutable creation identity or trusted proof/generation as declared; append uses physical OCC."}` |
+| Expected revision scope | `{"owner":"TenantInvitation","counter":"No primary caller ResourceRevision. Enforce required authored source/epoch/version tokens, immutable creation identity or trusted proof/generation as declared; append uses physical OCC."}` |
 | Authorizer sources | src/Compliance.Core/Features/AccessControl/ClientRbacMutationAuthorizer.cs |
 | Source contract | src/Compliance.Common/Features/Tenants/InviteOrganizationMember.cs |
 | Primary handler | InviteOrganizationMemberHandler |
@@ -172,7 +177,8 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Target command name | InviteTenantMember |
 | Selected source command name | InviteTenantMember |
 | Name decision | The selected source name is retained. |
-| Owner | TenantInvitation |
+| Target owner | TenantInvitation |
+| Selected source owner | TenantInvitation |
 | Contract record status | target_contract |
 | Kind | http |
 | Logical identity | InvitationId; Uuid; required=true; client; caller-supplied immutable creation identity: an exact retry with the same id and authored intent returns the original result; the same id with changed intent is refused; a different id is a different record |
@@ -184,7 +190,7 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Contract changes | Add required InvitationId. |
 | Guard order | bind_required_ids, authenticate_authorize, canonicalize_authored_intent, resolve_native_operation_facts, compare_owner_episode_actor_kind_intent_original_revision, validate_new_owner_revision_and_source_permits, append_complete_concrete_attributed_batch |
 | Response contract | `{"mode":"immediate_original_result","responseType":"Unit","firstHttpStatus":200,"terminalResultType":"Unit"}` |
-| Expected revision scope | `{"field":null,"owner":"TenantInvitation","counter":"No primary caller ResourceRevision. Enforce required authored source/epoch/version tokens, immutable creation identity or trusted proof/generation as declared; append uses physical OCC."}` |
+| Expected revision scope | `{"owner":"TenantInvitation","counter":"No primary caller ResourceRevision. Enforce required authored source/epoch/version tokens, immutable creation identity or trusted proof/generation as declared; append uses physical OCC."}` |
 | Authorizer sources | src/Compliance.Core/Features/Tenants/PlatformOperatorAuthorizer.cs |
 | Source contract | src/Compliance.Common/Features/Tenants/InviteTenantMember.cs |
 | Primary handler | InviteTenantMemberHandler |

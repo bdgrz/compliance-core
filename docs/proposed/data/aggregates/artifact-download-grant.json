@@ -6,12 +6,6 @@
   "invariant": "One exact receiving grant owns the authenticated encrypted original artifact ticket/result after EvidenceArtifact first admitted and pinned availability with frozen202. Complete required held source uses and exact issue DecisionAt precede native issued-v2; cancellation fences delayed issuance and terminal proofs settle all uses. Original expiry never renews under the same root identity. Existing artifact-issued v1 decoder remains read-only compatibility.",
   "sources": [
     {
-      "path": "docs/product/audits/2026-10-23/target-owner-extensions.json",
-      "jsonPointer": "/owners/5",
-      "line": 45,
-      "sha256": "c0101f0c92d259872199b98a0dc32e6315b49f55c61b8085d62647b28cde4ef5"
-    },
-    {
       "path": "[Placeholder: source artifact was recorded outside this repository]",
       "jsonPointer": "/decisions/9",
       "sha256": "8fdaec764a3554f2ea470aba66f2ce0945a424adbeba7505684314655d62216f",
@@ -66,15 +60,9 @@
           "required": true
         }
       ],
-      "responseContract": null,
-      "http": null,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/source-admission-contracts.json",
-        "jsonPointer": "/contracts/28",
-        "line": 1702,
-        "sha256": "f1d549ed0879c816cb26e86879f8fa658dab0a8acbf7c591e4d4aed40483f8ae"
-      },
-      "kind": "abort"
+      "kind": "abort",
+      "sourceOwner": "ArtifactDownloadGrant",
+      "owner": "ArtifactDownloadGrant"
     },
     {
       "command": "IssueProtectedArtifactDownloadGrant",
@@ -140,7 +128,7 @@
         }
       ],
       "reactor": "ProtectedArtifactDownloadGrantReactor",
-      "sourceOwner": "EvidenceArtifact",
+      "sourceOwner": "ArtifactDownloadGrant",
       "sourceEvents": [
         "EvidenceArtifactDownloadRequested"
       ],
@@ -152,10 +140,7 @@
       "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
       "handler": "IssueProtectedArtifactDownloadGrantHandler",
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "recorded": "2026-10-29"
-      }
+      "owner": "ArtifactDownloadGrant"
     }
   ],
   "eventAuthority": "selected_final_event_catalog",
@@ -163,24 +148,12 @@
     {
       "event": "ArtifactDownloadGrantCanceled",
       "discriminator": "bdgrz.artifact-download-grant.artifact-download-grant-canceled",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/62",
-        "line": 7774,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     },
     {
       "event": "EvidenceArtifactDownloadIssued",
       "discriminator": "bdgrz.evidence.evidence-artifact-download-issued",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/137",
-        "line": 16973,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     }
   ],
   "choreography": [
@@ -188,49 +161,25 @@
       "reactor": "ProtectedArtifactDownloadGrantReactor",
       "sourceOwner": "EvidenceArtifact",
       "targetOwner": "ArtifactDownloadGrant",
-      "command": "IssueProtectedArtifactDownloadGrant",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "jsonPointer": "/reactors/101",
-        "line": 8759,
-        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
-      }
+      "command": "IssueProtectedArtifactDownloadGrant"
     },
     {
       "reactor": "SettleAdvisorArtifactDownloadUseReactor",
       "sourceOwner": "ArtifactDownloadGrant",
       "targetOwner": "AdvisorHandoff",
-      "command": "SettleAdvisorArtifactDownloadUse",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "jsonPointer": "/reactors/102",
-        "line": 8846,
-        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
-      }
+      "command": "SettleAdvisorArtifactDownloadUse"
     },
     {
       "reactor": "SettleArtifactHandlingDownloadUseReactor",
       "sourceOwner": "ArtifactDownloadGrant",
       "targetOwner": "EvidenceHandlingPolicy",
-      "command": "SettleArtifactHandlingDownloadUse",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "jsonPointer": "/reactors/103",
-        "line": 8925,
-        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
-      }
+      "command": "SettleArtifactHandlingDownloadUse"
     },
     {
       "reactor": "SettleArtifactDownloadAvailabilityUseReactor",
       "sourceOwner": "ArtifactDownloadGrant",
       "targetOwner": "EvidenceArtifact",
-      "command": "SettleArtifactDownloadAvailabilityUse",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "jsonPointer": "/reactors/104",
-        "line": 9004,
-        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
-      }
+      "command": "SettleArtifactDownloadAvailabilityUse"
     }
   ],
   "status": "SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED",
@@ -257,14 +206,9 @@
   "selectedLogicalIdentityBindings": [
     {
       "command": "CancelProtectedArtifactDownloadGrant",
-      "logicalIdentity": "CommandId",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/source-admission-contracts.json",
-        "jsonPointer": "/contracts/28",
-        "line": 1702,
-        "sha256": "f1d549ed0879c816cb26e86879f8fa658dab0a8acbf7c591e4d4aed40483f8ae"
-      }
+      "logicalIdentity": "CommandId"
     }
   ],
-  "selectedReplayRule": "Current required authorization precedes replay; exact authorized retries resolve the original accepted result using the selected logical identity and immutable actor/intent/source binding. Fresh mutable feasibility, clock selection and body preparation cannot replace that original result. Expected revision is concurrency precondition, not a new identity."
+  "selectedReplayRule": "Current required authorization precedes replay; exact authorized retries resolve the original accepted result using the selected logical identity and immutable actor/intent/source binding. Fresh mutable feasibility, clock selection and body preparation cannot replace that original result. Expected revision is concurrency precondition, not a new identity.",
+  "sourceOwner": "ArtifactDownloadGrant"
 }

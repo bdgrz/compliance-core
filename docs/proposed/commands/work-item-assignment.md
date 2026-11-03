@@ -1,5 +1,7 @@
 # WorkItemAssignment commands
 
+
+
 Selected command contracts: **4**. Complete selected contracts and companion source evidence: [owner command JSON](../data/commands/work-item-assignment.json).
 
 | Target command | Selected source name | Kind | Identity | Fields | HTTP routes |
@@ -18,7 +20,8 @@ Selected command contracts: **4**. Complete selected contracts and companion sou
 | Target command name | AssignWorkItem |
 | Selected source command name | AssignWorkItem |
 | Name decision | The selected source name is retained. |
-| Owner | WorkItemAssignment |
+| Target owner | WorkItemAssignment |
+| Selected source owner | WorkItemAssignment |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | http |
 | Logical identity | CommandId; Uuid; required=true; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
@@ -70,7 +73,8 @@ Required tests: [Placeholder: required tests not recorded]
 | Target command name | ClaimWorkItem |
 | Selected source command name | ClaimWorkItem |
 | Name decision | The selected source name is retained. |
-| Owner | WorkItemAssignment |
+| Target owner | WorkItemAssignment |
+| Selected source owner | WorkItemAssignment |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | http |
 | Logical identity | CommandId; Uuid; required=true; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
@@ -120,7 +124,8 @@ Required tests: [Placeholder: required tests not recorded]
 | Target command name | DelegateWorkItem |
 | Selected source command name | DelegateWorkItem |
 | Name decision | The selected source name is retained. |
-| Owner | WorkItemAssignment |
+| Target owner | WorkItemAssignment |
+| Selected source owner | WorkItemAssignment |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | http |
 | Logical identity | CommandId; Uuid; required=true; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
@@ -172,7 +177,8 @@ Required tests: [Placeholder: required tests not recorded]
 | Target command name | EscalateWorkItem |
 | Selected source command name | EscalateWorkItem |
 | Name decision | The selected source name is retained. |
-| Owner | WorkItemAssignment |
+| Target owner | WorkItemAssignment |
+| Selected source owner | WorkItemAssignment |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | http |
 | Logical identity | CommandId; Uuid; required=true; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |

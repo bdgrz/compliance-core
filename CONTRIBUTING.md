@@ -26,12 +26,7 @@ remain in `containers.yml`, after successful CI on `main` or manual dispatch.
 
 ## Change workflow
 
-Use [Project 2](https://github.com/orgs/bdgrz/projects/2), the
-[delivery cycle](docs/product/delivery-cycle.md) and
-[sprint planning](docs/product/sprint-planning.md) to select work. Stories carry
-user outcomes; epics retain broader acceptance and tasks carry bounded gaps.
-Ready means known scope and accepted prerequisites; Sequenced waits for its
-named predecessor. High priority or a sprint date does not bypass readiness.
+Select work from the GitHub project and linked issues. Keep issue scope, acceptance, dependencies, and delivery progress in GitHub. The domain model is maintained in `docs/proposed`; architecture decisions and diagrams are maintained in `docs/architecture`.
 
 Keep one clean checkout per repository, WIP = 1 across backend and clients, and
 architect → coder → reviewer sequential. Preserve unrelated dirty work; do not

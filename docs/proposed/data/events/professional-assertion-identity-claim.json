@@ -28,7 +28,6 @@
         "discriminator": "bdgrz.professional-assertion-identity-claim.professional-assertion-identity-claimed",
         "discriminatorVersion": 1,
         "owner": "ProfessionalAssertionIdentityClaim",
-        "existingContract": null,
         "status": "selected target schema; implementation pending",
         "reason": "typed reactor receiver accepted business fact",
         "fields": [

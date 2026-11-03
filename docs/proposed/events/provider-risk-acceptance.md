@@ -124,7 +124,7 @@ ProviderRiskLinkIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T088](../reactors/provider-risk-acceptance-link-reactor.md#t088) | emitted semantic fact | ProviderAssuranceGap | LinkProviderRiskAcceptanceToGap | ProviderRiskAcceptance |
+| [T088](../reactors/keep-risk-acceptance-with-provider-gap-reactor.md#t088) | emitted semantic fact | ProviderAssuranceGap | LinkProviderRiskAcceptanceToGap | ProviderRiskAcceptance |
 
 
 

@@ -8,14 +8,7 @@
   "invariant": "Permanent canonical user to staffMemberId/practice mapping; disable/status changes never release this mapping.",
   "boundaryDecision": "selected_split",
   "mustPreserve": "Canonical user maps to exactly one immutable staff/practice identity; status proofs remain versioned and authoritative.",
-  "sources": [
-    {
-      "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
-      "jsonPointer": "/splitOwners/1/targetOwners/1",
-      "line": 107,
-      "sha256": "d349d94b7c43f4d82020ecf36bdacf1aff98bc6498e14993582f1c3164b21f19"
-    }
-  ],
+  "sources": [],
   "baselineSourcePath": "src/Compliance.Core/Features/AccessControl/FirmStaffDirectory.cs",
   "baselineEvents": [],
   "preliminaryNewEvents": [
@@ -85,7 +78,7 @@
         "recorded": "2026-10-29"
       },
       "reactor": "FirmStaffIdentityClaimReactor",
-      "sourceOwner": "FirmStaffRecord",
+      "sourceOwner": "FirmStaffIdentityClaim",
       "sourceEvents": [
         "FirmStaffRegistrationAccepted"
       ],
@@ -94,7 +87,8 @@
         "FirmStaffIdentityClaimed"
       ],
       "effectKind": "claim_firm_staff_identity",
-      "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine."
+      "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
+      "owner": "FirmStaffIdentityClaim"
     }
   ],
   "eventAuthority": "selected_final_event_catalog",
@@ -102,13 +96,7 @@
     {
       "event": "FirmStaffIdentityClaimed",
       "discriminator": "bdgrz.firm-staff-identity-claim.firm-staff-identity-claimed",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/156",
-        "line": 19529,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     }
   ],
   "choreography": [
@@ -116,25 +104,13 @@
       "reactor": "FirmStaffIdentityClaimReactor",
       "sourceOwner": "FirmStaffRecord",
       "targetOwner": "FirmStaffIdentityClaim",
-      "command": "ClaimFirmStaffIdentity",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "jsonPointer": "/reactors/2",
-        "line": 187,
-        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
-      }
+      "command": "ClaimFirmStaffIdentity"
     },
     {
       "reactor": "FirmStaffRegistrationReactor",
       "sourceOwner": "FirmStaffIdentityClaim",
       "targetOwner": "FirmStaffRecord",
-      "command": "CompleteFirmStaffRegistration",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "jsonPointer": "/reactors/3",
-        "line": 274,
-        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
-      }
+      "command": "CompleteFirmStaffRegistration"
     }
   ],
   "status": "SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED",
@@ -163,5 +139,6 @@
   "decidesCovers": [
     "D25-04"
   ],
-  "decidesAuthored": "2026-10-29"
+  "decidesAuthored": "2026-10-29",
+  "sourceOwner": "FirmStaffIdentityClaim"
 }

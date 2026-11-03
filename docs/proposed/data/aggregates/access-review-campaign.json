@@ -8,14 +8,7 @@
   "invariant": "Frozen campaign snapshot, generation, and compact completion gate.",
   "boundaryDecision": "selected_split",
   "mustPreserve": "Keep reviewer and remediation owner distinct per item unless exact waiver; no stale projected summary may satisfy completion.",
-  "sources": [
-    {
-      "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
-      "jsonPointer": "/splitOwners/4/targetOwners/0",
-      "line": 467,
-      "sha256": "d349d94b7c43f4d82020ecf36bdacf1aff98bc6498e14993582f1c3164b21f19"
-    }
-  ],
+  "sources": [],
   "baselineSourcePath": "src/Compliance.Core/Features/AccessReviews/AccessReviewCampaign.cs",
   "baselineEvents": [
     "AccessReviewCampaignLaunched",
@@ -77,13 +70,9 @@
           "policy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/36",
-        "line": 4277,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
-      "kind": "http"
+      "kind": "http",
+      "sourceOwner": "AccessReviewCampaign",
+      "owner": "AccessReviewCampaign"
     },
     {
       "command": "LaunchAccessReviewCampaign",
@@ -149,13 +138,9 @@
           "policy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/64",
-        "line": 7506,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
-      "kind": "http"
+      "kind": "http",
+      "sourceOwner": "AccessReviewCampaign",
+      "owner": "AccessReviewCampaign"
     },
     {
       "command": "RecordBulkAccessDecision",
@@ -221,13 +206,9 @@
           "policy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/100",
-        "line": 11639,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
-      "kind": "http"
+      "kind": "http",
+      "sourceOwner": "AccessReviewCampaign",
+      "owner": "AccessReviewCampaign"
     },
     {
       "command": "AbortAccessReviewCampaignCompletion",
@@ -269,15 +250,9 @@
           "required": true
         }
       ],
-      "responseContract": null,
-      "http": null,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/source-admission-contracts.json",
-        "jsonPointer": "/contracts/14",
-        "line": 901,
-        "sha256": "f1d549ed0879c816cb26e86879f8fa658dab0a8acbf7c591e4d4aed40483f8ae"
-      },
-      "kind": "abort"
+      "kind": "abort",
+      "sourceOwner": "AccessReviewCampaign",
+      "owner": "AccessReviewCampaign"
     },
     {
       "command": "CompleteAccessReviewCampaignClosure",
@@ -350,10 +325,7 @@
       "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
       "handler": "CompleteAccessReviewCampaignClosureHandler",
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "recorded": "2026-10-29"
-      }
+      "owner": "AccessReviewCampaign"
     }
   ],
   "eventAuthority": "selected_final_event_catalog",
@@ -361,57 +333,27 @@
     {
       "event": "AccessReviewCampaignCompleted",
       "discriminator": "bdgrz.access_review.campaign.completed",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/12",
-        "line": 923,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     },
     {
       "event": "AccessReviewCampaignCompletionAccepted",
       "discriminator": "bdgrz.access-review-campaign.access-review-campaign-completion-accepted",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/13",
-        "line": 1097,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     },
     {
       "event": "AccessReviewCampaignCompletionCanceled",
       "discriminator": "bdgrz.access-review-campaign.access-review-campaign-completion-canceled",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/14",
-        "line": 1253,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     },
     {
       "event": "AccessReviewCampaignLaunched",
       "discriminator": "bdgrz.access_review.campaign.launched",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/15",
-        "line": 1409,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     },
     {
       "event": "AccessReviewDecisionBatchAdmitted",
       "discriminator": "bdgrz.access-review-campaign.access-review-decision-batch-admitted",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/17",
-        "line": 1687,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     }
   ],
   "choreography": [
@@ -419,61 +361,31 @@
       "reactor": "AccessReviewItemMaterializationReactor",
       "sourceOwner": "AccessReviewCampaign",
       "targetOwner": "AccessReviewItem",
-      "command": "MaterializeAccessReviewItem",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "jsonPointer": "/reactors/8",
-        "line": 702,
-        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
-      }
+      "command": "MaterializeAccessReviewItem"
     },
     {
       "reactor": "CampaignCompletionAccessReviewItemAuthorizationReactor",
       "sourceOwner": "AccessReviewCampaign",
       "targetOwner": "AccessReviewItem",
-      "command": "AuthorizeAccessReviewItemCampaignCompletionUse",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "jsonPointer": "/reactors/59",
-        "line": 5056,
-        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
-      }
+      "command": "AuthorizeAccessReviewItemCampaignCompletionUse"
     },
     {
       "reactor": "CampaignCompletionAccessReviewItemSettlementReactor",
       "sourceOwner": "AccessReviewCampaign",
       "targetOwner": "AccessReviewItem",
-      "command": "SettleAccessReviewItemCampaignCompletionUse",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "jsonPointer": "/reactors/60",
-        "line": 5143,
-        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
-      }
+      "command": "SettleAccessReviewItemCampaignCompletionUse"
     },
     {
       "reactor": "AccessReviewCampaignCompletionReactor",
       "sourceOwner": "AccessReviewCampaign",
       "targetOwner": "AccessReviewCampaign",
-      "command": "CompleteAccessReviewCampaignClosure",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "jsonPointer": "/reactors/73",
-        "line": 6292,
-        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
-      }
+      "command": "CompleteAccessReviewCampaignClosure"
     },
     {
       "reactor": "AccessReviewDecisionBatchAdmissionReactor",
       "sourceOwner": "AccessReviewCampaign",
       "targetOwner": "AccessReviewDecisionBatch",
-      "command": "MaterializeAccessReviewDecisionBatch",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "jsonPointer": "/reactors/86",
-        "line": 7398,
-        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
-      }
+      "command": "MaterializeAccessReviewDecisionBatch"
     }
   ],
   "status": "SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED",
@@ -491,12 +403,6 @@
         "required": true,
         "origin": "client",
         "rule": "one immutable authored operation"
-      },
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/36",
-        "line": 4277,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       }
     },
     {
@@ -507,12 +413,6 @@
         "required": true,
         "origin": "client",
         "rule": "exact immutable creation retry"
-      },
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/64",
-        "line": 7506,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       }
     },
     {
@@ -523,23 +423,11 @@
         "required": true,
         "origin": "client",
         "rule": "one immutable authored operation"
-      },
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/100",
-        "line": 11639,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       }
     },
     {
       "command": "AbortAccessReviewCampaignCompletion",
-      "logicalIdentity": "CommandId",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/source-admission-contracts.json",
-        "jsonPointer": "/contracts/14",
-        "line": 901,
-        "sha256": "f1d549ed0879c816cb26e86879f8fa658dab0a8acbf7c591e4d4aed40483f8ae"
-      }
+      "logicalIdentity": "CommandId"
     }
   ],
   "selectedReplayRule": "Current required authorization precedes replay; exact authorized retries resolve the original accepted result using the selected logical identity and immutable actor/intent/source binding. Fresh mutable feasibility, clock selection and body preparation cannot replace that original result. Expected revision is concurrency precondition, not a new identity.",
@@ -548,5 +436,6 @@
       "date": "2026-10-29",
       "previous": "campaignId"
     }
-  ]
+  ],
+  "sourceOwner": "AccessReviewCampaign"
 }

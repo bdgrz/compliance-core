@@ -20,11 +20,11 @@ Selected choreography rows: **1**. Required proofs, recovery, effect identity, a
 | id | S006 |
 | kind | business_receiver |
 | status | SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED |
-| sourceOwner | AccessGrant |
+| Source owner (target name) | AccessGrant (source: AccessGrant) |
 | logicalPrerequisiteFacts (target names) | AccessGrantIssued |
 | physicalRootEvents (target names) | AccessGrantIssued |
 | Target command (selected source name: CleanupRetiredMembershipRelationship) | RemoveRetiredMemberAccessAndAssignments |
-| targetOwner | AccessGrant |
+| Target owner | AccessGrant |
 | targetAuthorityKind | business_aggregate |
 | emittedSemanticFacts (target names) | AccessGrantRevoked |
 | currentRegisteredRootTypes (target names) | RevokeAccessAfterMemberRetirementReactor |
@@ -35,7 +35,6 @@ Selected choreography rows: **1**. Required proofs, recovery, effect identity, a
 | sourceOwners | AccessGrant |
 | canonicalTargetOwner | AccessGrant |
 | recoveryContractSummary | At-least-once checkpoint replay resends the same source-derived command. Missing dependencies remain retryable; actual terminal/superseded episodes are skipped only with the owning proof. |
-| logicalPrerequisiteRuleGuard | null (recorded) |
 | logicalPrerequisiteRule | A member-principal AccessGrantIssued fact names a membership episode; if that episode is already terminated the grant is revoked with that termination as proof, if still the live registered episode nothing happens, otherwise the reaction retries until authority is visible. |
 | prerequisiteRuleSource | authored 2026-10-29 from reactor and target source |
 

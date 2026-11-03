@@ -5,6 +5,7 @@
 - Business aggregate: `true`
 - Selected status: `SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED`
 
+
 ## Identity and invariant
 
 **Selected identity:** Tenant / policies / PolicyId; supplied PolicyId must equal the unchanged tenant/program/normalized-identifier UUIDv5. Selected mutations use CommandId and exact policy/content/version/review bindings.
@@ -18,6 +19,10 @@
 **Replay:** Current required authorization precedes replay; exact authorized retries resolve the original accepted result using the selected logical identity and immutable actor/intent/source binding. Fresh mutable feasibility, clock selection and body preparation cannot replace that original result. Expected revision is concurrency precondition, not a new identity.
 
 **Lifecycle:** [Placeholder: a consolidated lifecycle sequence is not present in the selected owner record.]
+
+
+
+
 
 ## Commands
 
@@ -52,7 +57,7 @@
 
 ## Product rules
 
-- **D12-02** — Each approved policy version carries exactly one audience kind (core_security or role_targeted); a role_targeted policy version names a non-empty list of roster teams. Source: [m0-d12-policy-acknowledgement-training.md](../../product/decisions/m0-d12-policy-acknowledgement-training.md).
+- **D12-02** — Each approved policy version carries exactly one audience kind (core_security or role_targeted); a role_targeted policy version names a non-empty list of roster teams. Decision: [m0-d12-policy-acknowledgement-training.md](../decisions/m0-d12-policy-acknowledgement-training.md).
 
 ## Adopted architecture decisions
 
@@ -61,7 +66,7 @@
 ## Evidence and complete record
 
 - Baseline source: [Placeholder: source file is not present in this checkout]
-- Aggregate review: [policy-review-2026-10-29.md](../../product/definitive-aggregate-choreography/policy-review-2026-10-29.md)
+- Aggregate review: [Placeholder: no owner-specific review file is present]
 - Full selected record: [JSON](../data/aggregates/policy.json)
 
 > Target definition is separate from runtime qualification. Implementation status recorded by the source: `SEPARATE_VERIFICATION_REQUIRED_IMPLEMENTATION_HALTED`.

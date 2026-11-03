@@ -5,15 +5,7 @@
   "declaredIdentity": "Tenant + import source reference (the imported owner value and its source record); `ResolutionId` must equal that deterministic tuple; manual resolution uses CommandId.",
   "invariant": "An imported named owner is bound to a workforce Person only by exact normalized email match at import, otherwise it stays an unresolved_owner reference until one attributed manual resolution names the Person; a name-only or ambiguous match never binds, and the resolution is immutable once recorded (M0-D04 D04-02).",
   "boundaryDecision": "selected_new_owner",
-  "mustPreserve": null,
-  "sources": [
-    {
-      "path": "docs/product/definitive-aggregate-choreography/jev-review-2026-10-29-polish/round3-response.json",
-      "decisionId": "OWNER_ImportedOwnerResolution",
-      "rationale": "The exact-email match and the attributed manual resolution are one write decision with no current owner. Jev new_owner_resolution 0.85."
-    }
-  ],
-  "baselineSourcePath": null,
+  "sources": [],
   "baselineEvents": [],
   "preliminaryNewEvents": [
     "ImportedOwnerResolutionRecorded"
@@ -65,10 +57,8 @@
         }
       ],
       "http": [],
-      "source": {
-        "path": "docs/product/definitive-aggregate-choreography/choreography.json",
-        "recorded": "2026-10-29"
-      }
+      "sourceOwner": "ImportedOwnerResolution",
+      "owner": "ImportedOwnerResolution"
     }
   ],
   "events": [],
@@ -82,5 +72,6 @@
       "doc": "m0-d04-readiness-material.md",
       "rule": "An imported named owner matches a workforce person only by exact normalized email; a name-only or ambiguous match remains an unresolved_owner reference that a person must resolve."
     }
-  ]
+  ],
+  "sourceOwner": "ImportedOwnerResolution"
 }

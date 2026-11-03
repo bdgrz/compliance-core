@@ -1,0 +1,231 @@
+{
+  "owner": "AttestEngagementRecordPackage",
+  "sourceOwner": "ClientExport",
+  "classification": "business_aggregate",
+  "businessAggregate": true,
+  "sourceCapabilityArea": "AttestRecords",
+  "baselineSourcePath": "src/Compliance.Common/Features/AttestRecords/Commands/RequestOwnAttestRecordPackage.cs",
+  "status": "PROPOSED_TARGET_OWNER_FROM_ACCEPTED_PRODUCT_RULE",
+  "implementationStatus": "PROPOSED_TARGET_OWNER_FROM_ACCEPTED_PRODUCT_RULE",
+  "selectedIdentitySummary": "Tenant + ServiceEngagementId + PackageId. PackageId identifies the requested record package for the exact firm attest engagement.",
+  "invariant": "The firm’s own attest engagement record is preserved by generating its exact record package and recording delivery into the firm’s audit software before engagement closure or client offboarding. ClientExport delivery cannot satisfy this obligation.",
+  "targetNote": "The source aggregate catalog groups these three commands under ClientExport. The source event ClientExportAttestPackageDeliveryRecorded also records delivered or not_delivered decisions for an M0-D27 package on the ClientExport stream. This target gives the package its own business record based on M0-D27 and the ClientExport review, which distinguishes the package from ClientExport’s export to its named recipient. Reconcile the old command and event records with this separate target owner before implementation.",
+  "sources": [],
+  "productRules": [
+    {
+      "id": "M0-D27",
+      "doc": "m0-d27-attest-scope.md",
+      "rule": "For an in-product attest engagement that must be preserved, request and generate its engagement record package, then record its delivery into the attest team's audit software before the engagement closes or the client is offboarded. ClientExport is a separate delivery to its named recipient; neither delivery satisfies the other. Keep the engagement hold in place until the attest engagement record package is delivered."
+    }
+  ],
+  "selectedCommandContracts": [
+    {
+      "command": "RecordOwnAttestRecordDelivery",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "rule": "CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "EngagementId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "PackageId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Recipient",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "DeliveredAt",
+          "type": "DateTimeOffset",
+          "required": true
+        },
+        {
+          "name": "DeliveryReference",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true,
+          "addedBySelectedTarget": "2026-10-29"
+        }
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "Unit",
+        "firstHttpStatus": 200,
+        "terminalResultType": "Unit"
+      },
+      "http": [],
+      "kind": "command",
+      "concurrencyGuard": {
+        "rule": "require_expected_revision",
+        "basis": "default under the optimistic-concurrency principle (Jev unsettled)",
+        "jev": {
+          "mutates_existing": 0.84,
+          "absorbing": 0.33,
+          "process_reply": 0.51
+        },
+        "date": "2026-10-29"
+      },
+      "sourceOwner": "ClientExport",
+      "owner": "AttestEngagementRecordPackage"
+    },
+    {
+      "command": "RecordOwnAttestRecordPackageResult",
+      "logicalIdentity": {
+        "field": "CommandId",
+        "type": "Uuid",
+        "required": true,
+        "rule": "CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused"
+      },
+      "fields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "PackageId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Outcome",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "ArtifactId",
+          "type": "Uuid?",
+          "required": true
+        },
+        {
+          "name": "FailureCode",
+          "type": "string?",
+          "required": true
+        },
+        {
+          "name": "CompletedAt",
+          "type": "DateTimeOffset",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long",
+          "required": true,
+          "addedBySelectedTarget": "2026-10-29"
+        }
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "Unit",
+        "firstHttpStatus": 200,
+        "terminalResultType": "Unit"
+      },
+      "http": [],
+      "kind": "command",
+      "concurrencyGuard": {
+        "rule": "require_expected_revision",
+        "basis": "jev_atomic_questions",
+        "jev": {
+          "mutates_existing": 0.73,
+          "absorbing": 0.29,
+          "process_reply": 0.69
+        },
+        "date": "2026-10-29"
+      },
+      "sourceOwner": "ClientExport",
+      "owner": "AttestEngagementRecordPackage"
+    },
+    {
+      "command": "RequestOwnAttestRecordPackage",
+      "logicalIdentity": {
+        "field": "PackageId",
+        "type": "Uuid",
+        "required": true,
+        "rule": "caller-supplied immutable creation identity: an exact retry with the same id and authored intent returns the original result; the same id with changed intent is refused; a different id is a different record"
+      },
+      "fields": [
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "EngagementId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "PackageId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "PackageKey",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "responseContract": {
+        "mode": "immediate_original_result",
+        "responseType": "Unit",
+        "firstHttpStatus": 200,
+        "terminalResultType": "Unit"
+      },
+      "http": [],
+      "kind": "creation",
+      "sourceOwner": "ClientExport",
+      "owner": "AttestEngagementRecordPackage"
+    }
+  ],
+  "targetEvents": [
+    {
+      "event": "AttestEngagementRecordPackageRequested",
+      "reason": "Names the completed request for the exact package the firm must retain.",
+      "meaning": "The firm requested the engagement record package needed to preserve its own attest engagement."
+    },
+    {
+      "event": "AttestEngagementRecordPackageGenerated",
+      "reason": "Names successful generation of the exact engagement record package.",
+      "meaning": "The exact attest engagement record package was generated successfully and is ready for delivery."
+    },
+    {
+      "event": "AttestEngagementRecordPackageGenerationFailed",
+      "reason": "Names the completed failure to generate the exact engagement record package.",
+      "meaning": "Generation of the exact attest engagement record package failed; it has not been delivered."
+    },
+    {
+      "event": "AttestEngagementRecordPackageDelivered",
+      "reason": "Names successful delivery of the exact package to the firm’s audit software.",
+      "meaning": "The exact engagement record package was delivered to the firm’s audit software and its delivery was recorded."
+    }
+  ],
+  "targetOnly": true
+}

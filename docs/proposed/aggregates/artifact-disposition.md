@@ -5,6 +5,7 @@
 - Business aggregate: `true`
 - Selected status: `SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED`
 
+
 ## Identity and invariant
 
 **Selected identity:** Tenant / artifact-dispositions / DispositionId, with exact approved content and execution attempt identity. Selected mutations use CommandId.
@@ -18,6 +19,10 @@
 **Replay:** Current required authorization precedes replay; exact authorized retries resolve the original accepted result using the selected logical identity and immutable actor/intent/source binding. Fresh mutable feasibility, clock selection and body preparation cannot replace that original result. Expected revision is concurrency precondition, not a new identity.
 
 **Lifecycle:** [Placeholder: a consolidated lifecycle sequence is not present in the selected owner record.]
+
+
+
+
 
 ## Commands
 
@@ -40,13 +45,13 @@
 
 | Row | Kind | Source owner | Target owner | Command |
 | --- | --- | --- | --- | --- |
-| [X006](../reactors/artifact-legal-hold-reactor.md#x006) | planned_reaction | ArtifactLegalHold | ArtifactDisposition | StopArtifactDisposalForHold |
+| [X006](../reactors/protect-artifacts-under-legal-hold-reactor.md#x006) | planned_reaction | ArtifactLegalHold | ArtifactDisposition | StopArtifactDisposalForHold |
 
 ## Product rules
 
-- **D16-07** — An evidence artifact is eligible for disposition only when its retention period has elapsed and it has no active hold. Source: [m0-d16-evidence-handling.md](../../product/decisions/m0-d16-evidence-handling.md).
-- **D16-08** — Disposition of evidence requires Org Admin approval recorded as an immutable decision, may be batched, and leaves a tombstone with content hash, size, retention basis, and the decision; nothing is disposed of automatically. Source: [m0-d16-evidence-handling.md](../../product/decisions/m0-d16-evidence-handling.md).
-- **D16-15** — When a client offboards, active holds block disposition of held artifacts; everything else follows the retention schedule after the ClientExport is delivered. Source: [m0-d16-evidence-handling.md](../../product/decisions/m0-d16-evidence-handling.md).
+- **D16-07** — An evidence artifact is eligible for disposition only when its retention period has elapsed and it has no active hold. Decision: [m0-d16-evidence-handling.md](../decisions/m0-d16-evidence-handling.md).
+- **D16-08** — Disposition of evidence requires Org Admin approval recorded as an immutable decision, may be batched, and leaves a tombstone with content hash, size, retention basis, and the decision; nothing is disposed of automatically. Decision: [m0-d16-evidence-handling.md](../decisions/m0-d16-evidence-handling.md).
+- **D16-15** — When a client offboards, active holds block disposition of held artifacts; everything else follows the retention schedule after the ClientExport is delivered. Decision: [m0-d16-evidence-handling.md](../decisions/m0-d16-evidence-handling.md).
 
 ## Adopted architecture decisions
 
@@ -55,7 +60,7 @@
 ## Evidence and complete record
 
 - Baseline source: [Placeholder: source file is not present in this checkout]
-- Aggregate review: [artifact-disposition-review-2026-10-29.md](../../product/definitive-aggregate-choreography/artifact-disposition-review-2026-10-29.md)
+- Aggregate review: [Placeholder: no owner-specific review file is present]
 - Full selected record: [JSON](../data/aggregates/artifact-disposition.json)
 
 > Target definition is separate from runtime qualification. Implementation status recorded by the source: `SEPARATE_VERIFICATION_REQUIRED_IMPLEMENTATION_HALTED`.

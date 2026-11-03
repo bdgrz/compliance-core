@@ -9,22 +9,19 @@
       "stage": "acquire",
       "receivers": [
         "AuthorizeAuditorResponseRequestResolutionUse"
-      ],
-      "rule": null
+      ]
     },
     {
       "stage": "complete",
       "receivers": [
         "CompleteAuditorRequestResolution"
-      ],
-      "rule": null
+      ]
     },
     {
       "stage": "settle",
       "receivers": [
         "SettleAuditorResponseRequestResolutionUse"
-      ],
-      "rule": null
+      ]
     }
   ],
   "abort": [

@@ -40,6 +40,8 @@
         "method": "Record",
         "recorded": "2026-10-29"
       },
+      "sourceOwner": "AuditObservation",
+      "owner": "AuditObservation",
       "sourceName": "RecordAuditObservation",
       "targetName": "RecordAuditObservation"
     },
@@ -90,6 +92,8 @@
         "method": "Correct",
         "recorded": "2026-10-29"
       },
+      "sourceOwner": "AuditObservation",
+      "owner": "AuditObservation",
       "sourceName": "CorrectAuditObservation",
       "targetName": "CorrectAuditObservation"
     },
@@ -136,6 +140,8 @@
         "method": "RecordManagementResponse",
         "recorded": "2026-10-29"
       },
+      "sourceOwner": "AuditObservation",
+      "owner": "AuditObservation",
       "sourceName": "RecordAuditObservationManagementResponse",
       "targetName": "RecordAuditObservationManagementResponse"
     },
@@ -178,6 +184,8 @@
         "method": "LinkFinding",
         "recorded": "2026-10-29"
       },
+      "sourceOwner": "AuditObservation",
+      "owner": "AuditObservation",
       "sourceName": "LinkAuditObservationFinding",
       "targetName": "LinkAuditObservationFinding"
     }

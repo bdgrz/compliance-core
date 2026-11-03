@@ -70,14 +70,10 @@
           "policy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/5",
-        "line": 546,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
       "attributionNote": "Moved from PolicyDistributionCampaign on 2026-10-29: PolicyDistributionCampaign is the admission owner: it freezes the complete result as PolicyParticipantResultAdmitted at ExpectedCampaignRevision (via PolicyParticipantAdmission) with a fixed 202; it is not the owner of the participant fact. The root fact starts IndependentChildMaterialization, which sends ApplyPolicyParticipantResult to PolicyCampaignParticipant (events PolicyAcknowledgementRecorded / TrainingCompletionRecorded / CampaignWaiverApproved).  (source src/Compliance.Core/Features/PolicyDistribution/Handlers/AcknowledgePolicyHandler.cs; Handlers/ApplyPolicyParticipantResultHandler.cs)",
       "kind": "http",
+      "sourceOwner": "PolicyCampaignParticipant",
+      "owner": "PolicyCampaignParticipant",
       "sourceName": "AcknowledgePolicy",
       "targetName": "AcknowledgePolicy"
     },
@@ -145,14 +141,10 @@
           "policy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/18",
-        "line": 2148,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
       "attributionNote": "Moved from PolicyDistributionCampaign on 2026-10-29: PolicyDistributionCampaign is the admission owner: it freezes the complete result as PolicyParticipantResultAdmitted at ExpectedCampaignRevision (via PolicyParticipantAdmission) with a fixed 202; it is not the owner of the participant fact. The root fact starts IndependentChildMaterialization, which sends ApplyPolicyParticipantResult to PolicyCampaignParticipant (events PolicyAcknowledgementRecorded / TrainingCompletionRecorded / CampaignWaiverApproved).  (source src/Compliance.Core/Features/PolicyDistribution/Handlers/ApproveCampaignWaiverHandler.cs; Handlers/ApplyPolicyParticipantResultHandler.cs)",
       "kind": "http",
+      "sourceOwner": "PolicyCampaignParticipant",
+      "owner": "PolicyCampaignParticipant",
       "sourceName": "ApproveCampaignWaiver",
       "targetName": "ApproveCampaignWaiver"
     },
@@ -230,14 +222,10 @@
           "policy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/113",
-        "line": 13137,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
       "attributionNote": "Moved from PolicyDistributionCampaign on 2026-10-29: PolicyDistributionCampaign is the admission owner: it freezes the complete result as PolicyParticipantResultAdmitted at ExpectedCampaignRevision (via PolicyParticipantAdmission) with a fixed 202; it is not the owner of the participant fact. The root fact starts IndependentChildMaterialization, which sends ApplyPolicyParticipantResult to PolicyCampaignParticipant (events PolicyAcknowledgementRecorded / TrainingCompletionRecorded / CampaignWaiverApproved).  (source src/Compliance.Core/Features/PolicyDistribution/Handlers/RecordTrainingCompletionHandler.cs; Handlers/ApplyPolicyParticipantResultHandler.cs)",
       "kind": "http",
+      "sourceOwner": "PolicyCampaignParticipant",
+      "owner": "PolicyCampaignParticipant",
       "sourceName": "RecordTrainingCompletion",
       "targetName": "RecordTrainingCompletion"
     },
@@ -299,7 +287,7 @@
         "recorded": "2026-10-29"
       },
       "reactor": "PolicyParticipantResultReactor",
-      "sourceOwner": "PolicyDistributionCampaign",
+      "sourceOwner": "PolicyCampaignParticipant",
       "sourceEvents": [
         "PolicyParticipantResultAdmitted"
       ],
@@ -311,6 +299,7 @@
       ],
       "effectKind": "apply_policy_participant_result",
       "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
+      "owner": "PolicyCampaignParticipant",
       "sourceName": "ApplyPolicyParticipantResult",
       "targetName": "ApplyPolicyParticipantResult"
     },
@@ -380,7 +369,7 @@
         "recorded": "2026-10-29"
       },
       "reactor": "CampaignClosurePolicyCampaignParticipantAuthorizationReactor",
-      "sourceOwner": "PolicyDistributionCampaign",
+      "sourceOwner": "PolicyCampaignParticipant",
       "sourceEvents": [
         "PolicyCampaignClosureAccepted"
       ],
@@ -390,6 +379,7 @@
       ],
       "effectKind": "authorize_policy_campaign_participant_campaign_closure_use",
       "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
+      "owner": "PolicyCampaignParticipant",
       "sourceName": "AuthorizePolicyCampaignParticipantCampaignClosureUse",
       "targetName": "AuthorizePolicyCampaignParticipantCampaignClosure"
     },
@@ -455,7 +445,7 @@
         "recorded": "2026-10-29"
       },
       "reactor": "CampaignClosurePolicyCampaignParticipantSettlementReactor",
-      "sourceOwner": "PolicyDistributionCampaign",
+      "sourceOwner": "PolicyCampaignParticipant",
       "sourceEvents": [
         "PolicyCampaignClosed",
         "PolicyCampaignClosureCanceled"
@@ -466,6 +456,7 @@
       ],
       "effectKind": "settle_policy_campaign_participant_campaign_closure_use",
       "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
+      "owner": "PolicyCampaignParticipant",
       "sourceName": "SettlePolicyCampaignParticipantCampaignClosureUse",
       "targetName": "ClosePolicyCampaignParticipantCampaignClosureAuthorization"
     }

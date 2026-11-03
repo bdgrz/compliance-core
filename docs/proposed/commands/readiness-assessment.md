@@ -1,5 +1,7 @@
 # ReadinessAssessment commands
 
+
+
 Selected command contracts: **1**. Complete selected contracts and companion source evidence: [owner command JSON](../data/commands/readiness-assessment.json).
 
 | Target command | Selected source name | Kind | Identity | Fields | HTTP routes |
@@ -15,7 +17,8 @@ Selected command contracts: **1**. Complete selected contracts and companion sou
 | Target command name | ComputeReadinessAssessment |
 | Selected source command name | ComputeReadinessAssessment |
 | Name decision | The selected source name is retained. |
-| Owner | ReadinessAssessment |
+| Target owner | ReadinessAssessment |
+| Selected source owner | ReadinessAssessment |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; internal; deterministic receiver identity derived from the admitted root fact, episode and generation: exact redelivery resolves the original result, a changed admission is a new identity |

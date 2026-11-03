@@ -1,5 +1,7 @@
 # ServiceIdentity commands
 
+
+
 Selected command contracts: **2**. Complete selected contracts and companion source evidence: [owner command JSON](../data/commands/service-identity.json).
 
 | Target command | Selected source name | Kind | Identity | Fields | HTTP routes |
@@ -16,7 +18,8 @@ Selected command contracts: **2**. Complete selected contracts and companion sou
 | Target command name | RecordServiceIdentity |
 | Selected source command name | RecordServiceIdentity |
 | Name decision | The selected source name is retained. |
-| Owner | ServiceIdentity |
+| Target owner | ServiceIdentity |
+| Selected source owner | ServiceIdentity |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | http |
 | Logical identity | ServiceIdentityId; Uuid; required=true; caller-supplied immutable creation identity: an exact retry with the same id and authored intent returns the original result; the same id with changed intent is refused; a different id is a different record |
@@ -71,7 +74,8 @@ Required tests: [Placeholder: required tests not recorded]
 | Target command name | ReviseServiceIdentity |
 | Selected source command name | ReviseServiceIdentity |
 | Name decision | The selected source name is retained. |
-| Owner | ServiceIdentity |
+| Target owner | ServiceIdentity |
+| Selected source owner | ServiceIdentity |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | command |
 | Logical identity | CommandId; Uuid; required=true; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |

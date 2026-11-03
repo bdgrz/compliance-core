@@ -65,7 +65,6 @@
         "condition": "always"
       },
       "recoveryContractSummary": "Replayed bootstrap allows existing role/team-definition conflicts as explicitly coded; other effects retry identical deterministic identities. Never manufacture a missing permission or membership result.",
-      "logicalPrerequisiteRuleGuard": null,
       "logicalPrerequisiteRule": "The source is a TenantRegistered fact for the tenant; the receiver defines only the fixed built-in role catalog IDs derived from that tenant id, and an already-defined identical role is an exact retry.",
       "prerequisiteRuleSource": "authored 2026-10-29 from reactor and target source"
     },
@@ -131,7 +130,6 @@
         "condition": "always"
       },
       "recoveryContractSummary": "Replayed bootstrap allows existing role/team-definition conflicts as explicitly coded; other effects retry identical deterministic identities. Never manufacture a missing permission or membership result.",
-      "logicalPrerequisiteRuleGuard": null,
       "logicalPrerequisiteRule": "The source is a TenantRegistered fact for the tenant; the receiver defines only built-in team IDs derived from that tenant id, and an already-defined identical team is an exact retry.",
       "prerequisiteRuleSource": "authored 2026-10-29 from reactor and target source"
     },
@@ -226,7 +224,6 @@
         "condition": "ownerBecomesAdministrator"
       },
       "recoveryContractSummary": "Replayed bootstrap allows existing role/team-definition conflicts as explicitly coded; other effects retry identical deterministic identities. Never manufacture a missing permission or membership result.",
-      "logicalPrerequisiteRuleGuard": null,
       "logicalPrerequisiteRule": "The source is the committed TenantRegistered; the owner is registered as a member of the new tenant only when the tenant's creator is the administrator or no first administrator email is named, and a deprovisioned prior episode would block until cleanup completes.",
       "prerequisiteRuleSource": "authored 2026-10-29 from reactor and target source"
     },
@@ -315,7 +312,6 @@
         ]
       },
       "recoveryContractSummary": "Replayed bootstrap allows existing role/team-definition conflicts as explicitly coded; other effects retry identical deterministic identities. Never manufacture a missing permission or membership result.",
-      "logicalPrerequisiteRuleGuard": null,
       "logicalPrerequisiteRule": "The source is a TenantRegistered fact; the receiver links the built-in team to its built-in role (Administrators to Tenant Administration, Power Users to Compliance Management, Standard Users to Compliance Participation, Viewers to Viewer) only when that tenant-derived team and role are defined and no active link already exists.",
       "prerequisiteRuleSource": "authored 2026-10-29 from reactor and target source"
     },
@@ -399,7 +395,6 @@
         ]
       },
       "recoveryContractSummary": "Replayed bootstrap allows existing role/team-definition conflicts as explicitly coded; other effects retry identical deterministic identities. Never manufacture a missing permission or membership result.",
-      "logicalPrerequisiteRuleGuard": null,
       "logicalPrerequisiteRule": "The source is a TenantRegistered fact; the receiver assigns each canonical built-in permission to its built-in role only when the role is defined and the normalized tenant/role/permission tuple has no active assignment.",
       "prerequisiteRuleSource": "authored 2026-10-29 from reactor and target source"
     },
@@ -499,7 +494,6 @@
         "activationTrigger": true
       },
       "recoveryContractSummary": "Replayed bootstrap allows existing role/team-definition conflicts as explicitly coded; other effects retry identical deterministic identities. Never manufacture a missing permission or membership result.",
-      "logicalPrerequisiteRuleGuard": null,
       "logicalPrerequisiteRule": "The source is a TenantRegistered fact where the creator is administrator (or no first administrator email exists); the receiver assigns the tenant owner's member to the Administrators team for the owner's currently registered membership episode, via the tenant-manager guard route.",
       "prerequisiteRuleSource": "authored 2026-10-29 from reactor and target source"
     }

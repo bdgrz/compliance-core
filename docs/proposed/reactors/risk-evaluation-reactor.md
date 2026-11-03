@@ -9,7 +9,7 @@ Selected choreography rows: **1**. Required proofs, recovery, effect identity, a
 
 | Row | Kind | Prerequisite facts | Command | Target owner | Emitted facts |
 | --- | --- | --- | --- | --- | --- |
-| X009 | planned_reaction | RiskAccepted, RiskAssessmentRecorded | RecordRiskReassessmentObligation | RiskGovernance | RiskReassessmentTriggered |
+| X009 | planned_reaction | RiskAccepted, RiskAssessmentRecorded | RequireRiskReassessment | RiskGovernance | RiskReassessmentTriggered |
 
 ## Selected row details
 
@@ -20,13 +20,13 @@ Selected choreography rows: **1**. Required proofs, recovery, effect identity, a
 | id | X009 |
 | kind | planned_reaction |
 | status | PLANNED_TARGET_DEFINITION_2026-10-29 |
-| sourceOwner | RiskEvaluation |
+| Source owner (target name) | RiskEvaluation (source: RiskEvaluation) |
 | logicalPrerequisiteFacts (target names) | RiskAccepted, RiskAssessmentRecorded |
 | logicalPrerequisiteRule | Planned: an acceptance expiry (RiskAccepted with an expiry reached) or a residual assessment above appetite (RiskAssessmentRecorded) creates the reassessment obligation on that risk's governance owner with the exact evaluation revision as reason, only once per semantic obligation. |
 | physicalRootEvents (target names) | RiskAccepted, RiskAssessmentRecorded |
 | originalAdmissionKinds (target names) | RiskAccepted |
-| Target command (selected source name: RecordRiskReassessmentObligation) | RecordRiskReassessmentObligation |
-| targetOwner | RiskGovernance |
+| Target command (selected source name: RecordRiskReassessmentObligation) | RequireRiskReassessment |
+| Target owner | RiskGovernance |
 | targetAuthorityKind | business_aggregate |
 | emittedSemanticFacts (target names) | RiskReassessmentTriggered |
 | emittedEventContracts | None listed |

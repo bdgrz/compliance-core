@@ -119,7 +119,7 @@ AuditorSampleSelectionIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T105](../reactors/auditor-sample-selection-materialization-reactor.md#t105) | emitted semantic fact | AuditorRequest | RecordAuditorSampleSelection | AuditorSampleSelection |
+| [T105](../reactors/record-auditor-sample-selection-reactor.md#t105) | emitted semantic fact | AuditorRequest | RecordAuditorSampleSelection | AuditorSampleSelection |
 
 
 

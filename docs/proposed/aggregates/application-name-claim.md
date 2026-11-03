@@ -5,6 +5,7 @@
 - Business aggregate: `true`
 - Selected status: `SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED`
 
+
 ## Identity and invariant
 
 **Selected identity:** Tenant + normalized application name or alias (one claim stream per normalized name, same scheme as LocationNameClaim); holder is the exact DeclaredApplication stream in the same tenant.
@@ -19,6 +20,10 @@
 
 **Lifecycle:** [Placeholder: a consolidated lifecycle sequence is not present in the selected owner record.]
 
+
+
+
+
 ## Commands
 
 | Command | Kind | Identity field |
@@ -30,21 +35,21 @@
 
 | Event | Discriminator | Version |
 | --- | --- | --- |
-| [ApplicationNameClaimed](../events/application-name-claim.md#applicationnameclaimed) | [Placeholder: discriminator not recorded] | null (recorded) |
-| [ApplicationNameReleased](../events/application-name-claim.md#applicationnamereleased) | [Placeholder: discriminator not recorded] | null (recorded) |
+| [ApplicationNameClaimed](../events/application-name-claim.md#applicationnameclaimed) | [Placeholder: discriminator not recorded] | [Placeholder: value not recorded] |
+| [ApplicationNameReleased](../events/application-name-claim.md#applicationnamereleased) | [Placeholder: discriminator not recorded] | [Placeholder: value not recorded] |
 
 ## Cross-owner flows
 
 | Row | Kind | Source owner | Target owner | Command |
 | --- | --- | --- | --- | --- |
-| [X000](../reactors/application-name-change-reactor.md#x000) | planned_reaction | DeclaredApplication | ApplicationNameClaim | ClaimApplicationName |
-| [X001](../reactors/application-name-change-reactor.md#x001) | planned_reaction | ApplicationNameClaim | DeclaredApplication | ApplyApplicationNameChange |
-| [X002](../reactors/application-name-change-reactor.md#x002) | planned_reaction | DeclaredApplication | ApplicationNameClaim | ReleaseApplicationName |
+| [X000](../reactors/keep-application-names-unique-reactor.md#x000) | planned_reaction | DeclaredApplication | ApplicationNameClaim | ClaimApplicationName |
+| [X001](../reactors/keep-application-names-unique-reactor.md#x001) | planned_reaction | ApplicationNameClaim | DeclaredApplication | ApplyApplicationNameChange |
+| [X002](../reactors/keep-application-names-unique-reactor.md#x002) | planned_reaction | DeclaredApplication | ApplicationNameClaim | ReleaseApplicationName |
 
 ## Product rules
 
-- **D05-09** — An application has one canonical name and zero or more aliases, and each normalized alias is unique within the tenant. Source: [m0-d05-application-inventory.md](../../product/decisions/m0-d05-application-inventory.md).
-- **D05-10** — Duplicate applications are resolved by an attributed merge that retires one record with a merged_into reference to the survivor. Source: [m0-d05-application-inventory.md](../../product/decisions/m0-d05-application-inventory.md).
+- **D05-09** — An application has one canonical name and zero or more aliases, and each normalized alias is unique within the tenant. Decision: [m0-d05-application-inventory.md](../decisions/m0-d05-application-inventory.md).
+- **D05-10** — Duplicate applications are resolved by an attributed merge that retires one record with a merged_into reference to the survivor. Decision: [m0-d05-application-inventory.md](../decisions/m0-d05-application-inventory.md).
 
 ## Adopted architecture decisions
 

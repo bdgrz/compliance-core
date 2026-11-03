@@ -5,6 +5,7 @@
 - Business aggregate: `true`
 - Selected status: `SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED`
 
+
 ## Identity and invariant
 
 **Selected identity:** Tenant / risk-evaluations / RiskId, with immutable ProgramId and exact method/risk version. Selected CommandId binds assessment/acceptance intent and expected evaluation revision.
@@ -18,6 +19,10 @@
 **Replay:** Current required authorization precedes replay; exact authorized retries resolve the original accepted result using the selected logical identity and immutable actor/intent/source binding. Fresh mutable feasibility, clock selection and body preparation cannot replace that original result. Expected revision is concurrency precondition, not a new identity.
 
 **Lifecycle:** [Placeholder: a consolidated lifecycle sequence is not present in the selected owner record.]
+
+
+
+
 
 ## Commands
 
@@ -39,18 +44,18 @@
 
 | Row | Kind | Source owner | Target owner | Command |
 | --- | --- | --- | --- | --- |
-| [X009](../reactors/risk-evaluation-reactor.md#x009) | planned_reaction | RiskEvaluation | RiskGovernance | RecordRiskReassessmentObligation |
+| [X009](../reactors/request-risk-reassessment-when-risk-changes-reactor.md#x009) | planned_reaction | RiskEvaluation | RiskGovernance | RequireRiskReassessment |
 
 ## Product rules
 
-- **D10-02** — A risk assessment records inherent or residual phase, likelihood 1 to 5, impact 1 to 5, assessor, and time against a specific method version; the score is derived as likelihood times impact and never user-entered. Source: [m0-d10-risk-method.md](../../product/decisions/m0-d10-risk-method.md).
-- **D10-03** — A residual risk assessment requires at least one control risk treatment or a non-mitigate treatment. Source: [m0-d10-risk-method.md](../../product/decisions/m0-d10-risk-method.md).
-- **D10-04** — A risk treatment is one of mitigate, accept, transfer, or avoid and carries a rationale. Source: [m0-d10-risk-method.md](../../product/decisions/m0-d10-risk-method.md).
-- **D10-05** — A residual score above the method version's appetite threshold is above appetite, and while the threshold is unset every risk is treated as above appetite for acceptance. Source: [m0-d10-risk-method.md](../../product/decisions/m0-d10-risk-method.md).
-- **D10-06** — A risk acceptance must reference the residual assessment, be time-bounded with expiry no later than 12 months after acceptance, and on expiry the risk returns to reassessment. Source: [m0-d10-risk-method.md](../../product/decisions/m0-d10-risk-method.md).
-- **D10-07** — The Compliance Lead may accept a risk only when its residual score is at or below a non-null appetite threshold; accepting a risk above appetite, or any acceptance while appetite is null, requires an executive approver. Source: [m0-d10-risk-method.md](../../product/decisions/m0-d10-risk-method.md).
-- **D10-08** — A risk acceptance is invalid when the approver is the risk owner unless a separation-of-duties exception exists. Source: [m0-d10-risk-method.md](../../product/decisions/m0-d10-risk-method.md).
-- **D22-07** — Risk assessment owns the externally sourced IncidentReference (source ID, occurrence time, summary, provenance); it can trigger reassessment but is not an incident workflow, and the later governed incident may correlate it without rewriting earlier risk history. Source: [m0-d22-canonical-ownership.md](../../product/decisions/m0-d22-canonical-ownership.md).
+- **D10-02** — A risk assessment records inherent or residual phase, likelihood 1 to 5, impact 1 to 5, assessor, and time against a specific method version; the score is derived as likelihood times impact and never user-entered. Decision: [m0-d10-risk-method.md](../decisions/m0-d10-risk-method.md).
+- **D10-03** — A residual risk assessment requires at least one control risk treatment or a non-mitigate treatment. Decision: [m0-d10-risk-method.md](../decisions/m0-d10-risk-method.md).
+- **D10-04** — A risk treatment is one of mitigate, accept, transfer, or avoid and carries a rationale. Decision: [m0-d10-risk-method.md](../decisions/m0-d10-risk-method.md).
+- **D10-05** — A residual score above the method version's appetite threshold is above appetite, and while the threshold is unset every risk is treated as above appetite for acceptance. Decision: [m0-d10-risk-method.md](../decisions/m0-d10-risk-method.md).
+- **D10-06** — A risk acceptance must reference the residual assessment, be time-bounded with expiry no later than 12 months after acceptance, and on expiry the risk returns to reassessment. Decision: [m0-d10-risk-method.md](../decisions/m0-d10-risk-method.md).
+- **D10-07** — The Compliance Lead may accept a risk only when its residual score is at or below a non-null appetite threshold; accepting a risk above appetite, or any acceptance while appetite is null, requires an executive approver. Decision: [m0-d10-risk-method.md](../decisions/m0-d10-risk-method.md).
+- **D10-08** — A risk acceptance is invalid when the approver is the risk owner unless a separation-of-duties exception exists. Decision: [m0-d10-risk-method.md](../decisions/m0-d10-risk-method.md).
+- **D22-07** — Risk assessment owns the externally sourced IncidentReference (source ID, occurrence time, summary, provenance); it can trigger reassessment but is not an incident workflow, and the later governed incident may correlate it without rewriting earlier risk history. Decision: [m0-d22-canonical-ownership.md](../decisions/m0-d22-canonical-ownership.md).
 
 ## Adopted architecture decisions
 

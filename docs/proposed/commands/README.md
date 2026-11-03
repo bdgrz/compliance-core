@@ -2,22 +2,6 @@
 
 Selected command contracts are grouped by their canonical owner.
 
-Current source write requests that are not yet represented in selected target contracts are documented in owner-page supplements and [cross-owner responsibility commands](responsibility-write-commands.md). These supplements distinguish implemented request contracts from approved target ownership.
-
-| Supplemental source owner | Requests |
-| --- | ---: |
-| [WorkDigestDispatch](work-digest-dispatch.md) | 1 |
-| [TypeIIPeriod](type-ii-period.md) | 1 |
-| [Responsibility commands](responsibility-write-commands.md) | 2 |
-| [WorkforceRosterSnapshotProcess](workforce-roster-snapshot-process.md) | 2 |
-| [WeeklyWorkDigest](weekly-work-digest.md) | 3 |
-| [AuditPopulationExportProcess](audit-population-export-process.md) | 1 |
-| [SystemDescriptionExportProcess](system-description-export-process.md) | 1 |
-| [AuditPackageBuildProcess](audit-package-build-process.md) | 1 |
-| [EmailChallengeDeliveryLedger](email-challenge-delivery-ledger.md) | 4 |
-| [IdentityRecoveryNoticeProcess](identity-recovery-notice-process.md) | 1 |
-| [TenantInvitationDeliveryProcess](tenant-invitation-delivery-process.md) | 3 |
-
 | Owner | Contracts | Classification |
 | --- | --- | --- |
 | [AccessExpectation](access-expectation.md) | 3 | business_aggregate |
@@ -49,7 +33,7 @@ Current source write requests that are not yet represented in selected target co
 | [AuditorRequest](auditor-request.md) | 11 | business_aggregate |
 | [AuditorResponse](auditor-response.md) | 8 | business_aggregate |
 | [AuditorSampleSelection](auditor-sample-selection.md) | 1 | business_aggregate |
-| [ClientExport](client-export.md) | 6 | business_aggregate |
+| [ClientExport](client-export.md) | 3 | business_aggregate |
 | [ClientIndependenceDecision](client-independence-decision.md) | 1 | immutable_business_artifact_or_decision |
 | [ClientService](client-service.md) | 3 | business_aggregate |
 | [ClientServiceIndependence](client-service-independence.md) | 6 | business_governor |
@@ -140,8 +124,8 @@ Current source write requests that are not yet represented in selected target co
 | [TenantIdentityProvider](tenant-identity-provider.md) | 5 | business_aggregate |
 | [TenantInvitation](tenant-invitation.md) | 4 | business_aggregate |
 | [TenantInvitationMailboxClaim](tenant-invitation-mailbox-claim.md) | 4 | business_identity_or_uniqueness_authority |
-| [TenantManagerGuard](tenant-manager-guard.md) | 2 | business_governor |
-| [TenantSlug](tenant-slug.md) | 2 | business_identity_or_uniqueness_authority |
+| [TenantAdministratorContinuity](tenant-administrator-continuity.md) | 2 | business_governor |
+| [WorkspaceWebAddress](workspace-web-address.md) | 2 | business_identity_or_uniqueness_authority |
 | [TrainingRequirement](training-requirement.md) | 2 | business_aggregate |
 | [TypeIIObservationCalendar](type-ii-observation-calendar.md) | 2 | business_governor |
 | [TypeIIPeriod](type-ii-period.md) | 10 | business_aggregate |
@@ -165,5 +149,4 @@ Current source write requests that are not yet represented in selected target co
 | [WorkDigestDispatch](work-digest-dispatch.md) | 0 | technical_process_or_storage_owner |
 | [WorkforceRosterSnapshotProcess](workforce-roster-snapshot-process.md) | 0 | technical_process |
 | [WorkDigestPreference](work-digest-preference.md) | 1 | technical_settings_state |
-
-Product command scope: [product-scope.md](product-scope.md).
+| [AttestEngagementRecordPackage](attest-engagement-record-package.md) | 3 | business_aggregate |

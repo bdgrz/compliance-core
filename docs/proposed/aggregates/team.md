@@ -5,6 +5,7 @@
 - Business aggregate: `true`
 - Selected status: `SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED`
 
+
 ## Identity and invariant
 
 **Selected identity:** Tenant + TeamId; TeamId is immutable creation identity. Selected mutations use CommandId and the exact team binding.
@@ -18,6 +19,10 @@
 **Replay:** Current required authorization precedes replay; exact authorized retries resolve the original accepted result using the selected logical identity and immutable actor/intent/source binding. Fresh mutable feasibility, clock selection and body preparation cannot replace that original result. Expected revision is concurrency precondition, not a new identity.
 
 **Lifecycle:** [Placeholder: a consolidated lifecycle sequence is not present in the selected owner record.]
+
+
+
+
 
 ## Commands
 
@@ -37,8 +42,8 @@
 
 | Row | Kind | Source owner | Target owner | Command |
 | --- | --- | --- | --- | --- |
-| [S010](../reactors/team-cleanup-reactor.md#s010) | business_receiver | Team | TeamMember | RemoveTeamMember |
-| [S012](../reactors/tenant-rbac-bootstrap-reactor.md#s012) | business_receiver | Tenant | Team | DefineTeam |
+| [S010](../reactors/remove-team-assignments-after-team-deletion-reactor.md#s010) | business_receiver | Team | TeamMember | RemoveTeamMember |
+| [S012](../reactors/set-up-starting-tenant-access-reactor.md#s012) | business_receiver | Tenant | Team | DefineTeam |
 
 ## Product rules
 

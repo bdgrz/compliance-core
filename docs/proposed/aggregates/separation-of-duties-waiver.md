@@ -5,6 +5,7 @@
 - Business aggregate: `true`
 - Selected status: `SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED`
 
+
 ## Identity and invariant
 
 **Selected identity:** Tenant + caller WaiverId; original approval scope/subject/revision remains immutable.
@@ -18,6 +19,10 @@
 **Replay:** Current required authorization precedes replay; exact authorized retries resolve the original accepted result using the selected logical identity and immutable actor/intent/source binding. Fresh mutable feasibility, clock selection and body preparation cannot replace that original result. Expected revision is concurrency precondition, not a new identity.
 
 **Lifecycle:** [Placeholder: a consolidated lifecycle sequence is not present in the selected owner record.]
+
+
+
+
 
 ## Commands
 
@@ -39,9 +44,9 @@
 
 ## Product rules
 
-- **D03-05** — Self-review and self-approval are blocked by default; the same member cannot review or approve a record they authored or own. Source: [m0-d03-roles-and-separation-of-duties.md](../../product/decisions/m0-d03-roles-and-separation-of-duties.md).
-- **D03-06** — An Org Admin may record a separation-of-duties waiver that is time-bound, reason-required, and scoped to a record type, recording scope, beneficiary, approver, rationale, and expiry. Source: [m0-d03-roles-and-separation-of-duties.md](../../product/decisions/m0-d03-roles-and-separation-of-duties.md).
-- **D03-07** — A separation-of-duties waiver must be approved by a second person who is an Org Admin and is not the member the waiver benefits; a sole Org Admin cannot waive their own conflict. Source: [m0-d03-roles-and-separation-of-duties.md](../../product/decisions/m0-d03-roles-and-separation-of-duties.md).
+- **D03-05** — Self-review and self-approval are blocked by default; the same member cannot review or approve a record they authored or own. Decision: [m0-d03-roles-and-separation-of-duties.md](../decisions/m0-d03-roles-and-separation-of-duties.md).
+- **D03-06** — An Org Admin may record a separation-of-duties waiver that is time-bound, reason-required, and scoped to a record type, recording scope, beneficiary, approver, rationale, and expiry. Decision: [m0-d03-roles-and-separation-of-duties.md](../decisions/m0-d03-roles-and-separation-of-duties.md).
+- **D03-07** — A separation-of-duties waiver must be approved by a second person who is an Org Admin and is not the member the waiver benefits; a sole Org Admin cannot waive their own conflict. Decision: [m0-d03-roles-and-separation-of-duties.md](../decisions/m0-d03-roles-and-separation-of-duties.md).
 
 ## Adopted architecture decisions
 

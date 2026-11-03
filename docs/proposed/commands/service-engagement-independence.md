@@ -1,5 +1,7 @@
 # ServiceEngagementIndependence commands
 
+
+
 Selected command contracts: **17**. Complete selected contracts and companion source evidence: [owner command JSON](../data/commands/service-engagement-independence.json).
 
 | Target command | Selected source name | Kind | Identity | Fields | HTTP routes |
@@ -19,7 +21,7 @@ Selected command contracts: **17**. Complete selected contracts and companion so
 | CompleteServiceEngagementAcceptance | CompleteServiceEngagementAcceptance | receiver | CommandId | 10 | [Placeholder: value not recorded] |
 | CompleteServiceEngagementStaffAssignment | CompleteServiceEngagementStaffAssignment | receiver | CommandId | 11 | [Placeholder: value not recorded] |
 | AuthorizeEngagementPracticeCommitments | AuthorizeEngagementPracticeCommitments | receiver | CommandId | 9 | [Placeholder: value not recorded] |
-| CloseEngagementPersonalDecision | SettleEngagementPersonalDecision | receiver | CommandId | 8 | [Placeholder: value not recorded] |
+| RecordEngagementPersonalDecision | SettleEngagementPersonalDecision | receiver | CommandId | 8 | [Placeholder: value not recorded] |
 | AuthorizeEngagementPersonalDecision | AuthorizeEngagementPersonalDecision | receiver | CommandId | 9 | [Placeholder: value not recorded] |
 
 ## Selected command details
@@ -31,7 +33,8 @@ Selected command contracts: **17**. Complete selected contracts and companion so
 | Target command name | AcceptServiceEngagement |
 | Selected source command name | AcceptServiceEngagement |
 | Name decision | The selected source name is retained. |
-| Owner | ServiceEngagementIndependence |
+| Target owner | ServiceEngagementIndependence |
+| Selected source owner | ServiceEngagementIndependence |
 | Contract record status | target_contract |
 | Kind | http |
 | Logical identity | CommandId; Uuid; required=true; client; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
@@ -43,7 +46,7 @@ Selected command contracts: **17**. Complete selected contracts and companion so
 | Contract changes | Add required CommandId., Rename ExpectedSequence to ExpectedRevision and compare the new target owner revision. |
 | Guard order | bind_required_ids, authenticate_authorize, canonicalize_authored_intent, resolve_native_operation_facts, compare_owner_episode_actor_kind_intent_original_revision, validate_new_owner_revision_and_source_permits, append_complete_concrete_attributed_batch |
 | Response contract | `{"mode":"async_fixed_ack","responseType":"OperationAcceptedResponse","firstHttpStatus":202,"terminalResultType":"ServiceEngagementAcceptanceView"}` |
-| Expected revision scope | `{"field":"ExpectedRevision","owner":"ServiceEngagementIndependence","counter":"logical ResourceRevision of this owner","nullableInternalRule":null}` |
+| Expected revision scope | `{"field":"ExpectedRevision","owner":"ServiceEngagementIndependence","counter":"logical ResourceRevision of this owner"}` |
 | Authorizer sources | src/Compliance.Core/Features/AccessControl/ServiceEngagementAcceptanceAuthorizer.cs |
 | Source contract | src/Compliance.Common/Features/AccessControl/AcceptServiceEngagement.cs |
 | Primary handler | AcceptServiceEngagementHandler |
@@ -82,7 +85,8 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Target command name | AmendServiceEngagement |
 | Selected source command name | AmendServiceEngagement |
 | Name decision | The selected source name is retained. |
-| Owner | ServiceEngagementIndependence |
+| Target owner | ServiceEngagementIndependence |
+| Selected source owner | ServiceEngagementIndependence |
 | Contract record status | target_contract |
 | Kind | http |
 | Logical identity | CommandId; Uuid; required=true; client; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
@@ -94,7 +98,7 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Contract changes | Add required CommandId., Rename ExpectedSequence to ExpectedRevision and compare the new target owner revision. |
 | Guard order | bind_required_ids, authenticate_authorize, canonicalize_authored_intent, resolve_native_operation_facts, compare_owner_episode_actor_kind_intent_original_revision, validate_new_owner_revision_and_source_permits, append_complete_concrete_attributed_batch |
 | Response contract | `{"mode":"immediate_original_result","responseType":"ServiceEngagementView","firstHttpStatus":200,"terminalResultType":"ServiceEngagementView"}` |
-| Expected revision scope | `{"field":"ExpectedRevision","owner":"ServiceEngagementIndependence","counter":"logical ResourceRevision of this owner","nullableInternalRule":null}` |
+| Expected revision scope | `{"field":"ExpectedRevision","owner":"ServiceEngagementIndependence","counter":"logical ResourceRevision of this owner"}` |
 | Authorizer sources | src/Compliance.Core/Features/AccessControl/ClientManagementMutationAuthorizer.cs, src/Compliance.Core/Features/AccessControl/IndependenceAdministrationAuthorizer.cs |
 | Source contract | src/Compliance.Common/Features/AccessControl/AmendServiceEngagement.cs |
 | Primary handler | AmendServiceEngagementHandler |
@@ -134,7 +138,8 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Target command name | AssignServiceEngagementStaff |
 | Selected source command name | AssignServiceEngagementStaff |
 | Name decision | The selected source name is retained. |
-| Owner | ServiceEngagementIndependence |
+| Target owner | ServiceEngagementIndependence |
+| Selected source owner | ServiceEngagementIndependence |
 | Contract record status | target_contract |
 | Kind | http |
 | Logical identity | CommandId; Uuid; required=true; client; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
@@ -146,7 +151,7 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Contract changes | Add required CommandId., Rename ExpectedSequence to ExpectedRevision and compare the new target owner revision., Positive actual-staff assignment acquires the same exact current service-epoch, partner authority and permanent staff/user practice commitments as acceptance before emitting ServiceEngagementStaffAssigned. |
 | Guard order | bind_required_ids, authenticate_authorize, canonicalize_authored_intent, resolve_native_operation_facts, compare_owner_episode_actor_kind_intent_original_revision, validate_new_owner_revision_and_source_permits, append_complete_concrete_attributed_batch |
 | Response contract | `{"mode":"async_fixed_ack","responseType":"OperationAcceptedResponse","firstHttpStatus":202,"terminalResultType":"ServiceEngagementAcceptanceView"}` |
-| Expected revision scope | `{"field":"ExpectedRevision","owner":"ServiceEngagementIndependence","counter":"logical ResourceRevision of this owner","nullableInternalRule":null}` |
+| Expected revision scope | `{"field":"ExpectedRevision","owner":"ServiceEngagementIndependence","counter":"logical ResourceRevision of this owner"}` |
 | Authorizer sources | src/Compliance.Core/Features/AccessControl/ProfessionalEngagementPartnerAuthorizer.cs |
 | Source contract | src/Compliance.Common/Features/AccessControl/AssignServiceEngagementStaff.cs |
 | Primary handler | AssignServiceEngagementStaffHandler |
@@ -187,7 +192,8 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Target command name | CloseServiceEngagement |
 | Selected source command name | CloseServiceEngagement |
 | Name decision | The selected source name is retained. |
-| Owner | ServiceEngagementIndependence |
+| Target owner | ServiceEngagementIndependence |
+| Selected source owner | ServiceEngagementIndependence |
 | Contract record status | target_contract |
 | Kind | http |
 | Logical identity | CommandId; Uuid; required=true; client; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
@@ -199,7 +205,7 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Contract changes | Add required CommandId., Rename ExpectedSequence to ExpectedRevision and compare the new target owner revision. |
 | Guard order | bind_required_ids, authenticate_authorize, canonicalize_authored_intent, resolve_native_operation_facts, compare_owner_episode_actor_kind_intent_original_revision, validate_new_owner_revision_and_source_permits, append_complete_concrete_attributed_batch |
 | Response contract | `{"mode":"immediate_original_result","responseType":"ServiceEngagementView","firstHttpStatus":200,"terminalResultType":"ServiceEngagementView"}` |
-| Expected revision scope | `{"field":"ExpectedRevision","owner":"ServiceEngagementIndependence","counter":"logical ResourceRevision of this owner","nullableInternalRule":null}` |
+| Expected revision scope | `{"field":"ExpectedRevision","owner":"ServiceEngagementIndependence","counter":"logical ResourceRevision of this owner"}` |
 | Authorizer sources | src/Compliance.Core/Features/AccessControl/ClientManagementMutationAuthorizer.cs, src/Compliance.Core/Features/AccessControl/IndependenceAdministrationAuthorizer.cs |
 | Source contract | src/Compliance.Common/Features/AccessControl/CloseServiceEngagement.cs |
 | Primary handler | CloseServiceEngagementHandler |
@@ -239,7 +245,8 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Target command name | CreateServiceEngagement |
 | Selected source command name | CreateServiceEngagement |
 | Name decision | The selected source name is retained. |
-| Owner | ServiceEngagementIndependence |
+| Target owner | ServiceEngagementIndependence |
+| Selected source owner | ServiceEngagementIndependence |
 | Contract record status | target_contract |
 | Kind | http |
 | Logical identity | EngagementId; Uuid; required=true; client; caller-supplied immutable creation identity: an exact retry with the same id and authored intent returns the original result; the same id with changed intent is refused; a different id is a different record |
@@ -290,7 +297,8 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Target command name | ProposeServiceEngagementStaff |
 | Selected source command name | ProposeServiceEngagementStaff |
 | Name decision | The selected source name is retained. |
-| Owner | ServiceEngagementIndependence |
+| Target owner | ServiceEngagementIndependence |
+| Selected source owner | ServiceEngagementIndependence |
 | Contract record status | target_contract |
 | Kind | http |
 | Logical identity | CommandId; Uuid; required=true; client; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
@@ -302,7 +310,7 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Contract changes | Add required CommandId., Rename ExpectedSequence to ExpectedRevision and compare the new target owner revision. |
 | Guard order | bind_required_ids, authenticate_authorize, canonicalize_authored_intent, resolve_native_operation_facts, compare_owner_episode_actor_kind_intent_original_revision, validate_new_owner_revision_and_source_permits, append_complete_concrete_attributed_batch |
 | Response contract | `{"mode":"immediate_original_result","responseType":"ServiceEngagementView","firstHttpStatus":200,"terminalResultType":"ServiceEngagementView"}` |
-| Expected revision scope | `{"field":"ExpectedRevision","owner":"ServiceEngagementIndependence","counter":"logical ResourceRevision of this owner","nullableInternalRule":null}` |
+| Expected revision scope | `{"field":"ExpectedRevision","owner":"ServiceEngagementIndependence","counter":"logical ResourceRevision of this owner"}` |
 | Authorizer sources | src/Compliance.Core/Features/AccessControl/ClientManagementMutationAuthorizer.cs, src/Compliance.Core/Features/AccessControl/IndependenceAdministrationAuthorizer.cs |
 | Source contract | src/Compliance.Common/Features/AccessControl/ProposeServiceEngagementStaff.cs |
 | Primary handler | ProposeServiceEngagementStaffHandler |
@@ -342,7 +350,8 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Target command name | RecordDirectoryIndependenceReevaluation |
 | Selected source command name | RecordDirectoryIndependenceReevaluation |
 | Name decision | The selected source name is retained. |
-| Owner | ServiceEngagementIndependence |
+| Target owner | ServiceEngagementIndependence |
+| Selected source owner | ServiceEngagementIndependence |
 | Contract record status | target_contract |
 | Kind | command |
 | Logical identity | CommandId; Uuid; required=true; source_event_effect; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
@@ -353,8 +362,8 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Policy preservation | All current source handler/aggregate validation rules and source test expectations apply, except the explicit contractChanges and boundary protocol. Lifetime caps and technical attempt events are removed with their structural replacement. |
 | Contract changes | Add required CommandId., Target one engagement acceptance pair; discovery/fan-out belongs to the reactor, not a tenant-wide mutation. |
 | Guard order | bind_required_ids, authenticate_authorize, canonicalize_authored_intent, resolve_native_operation_facts, compare_owner_episode_actor_kind_intent_original_revision, validate_new_owner_revision_and_source_permits, append_complete_concrete_attributed_batch |
-| Response contract | `{"mode":"internal","responseType":"Unit","firstHttpStatus":null,"terminalResultType":"Unit"}` |
-| Expected revision scope | `{"field":null,"owner":"ServiceEngagementIndependence","counter":"No primary caller ResourceRevision. Enforce required authored source/epoch/version tokens, immutable creation identity or trusted proof/generation as declared; append uses physical OCC."}` |
+| Response contract | `{"mode":"internal","responseType":"Unit","terminalResultType":"Unit"}` |
+| Expected revision scope | `{"owner":"ServiceEngagementIndependence","counter":"No primary caller ResourceRevision. Enforce required authored source/epoch/version tokens, immutable creation identity or trusted proof/generation as declared; append uses physical OCC."}` |
 | Authorizer sources | src/Compliance.Core/Features/AccessControl/RecordDirectoryIndependenceReevaluationAuthorizer.cs |
 | Source contract | src/Compliance.Core/Features/AccessControl/RecordDirectoryIndependenceReevaluation.cs |
 | Primary handler | RecordDirectoryIndependenceReevaluationHandler |
@@ -400,7 +409,8 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Target command name | RevokeServiceEngagementActualStaff |
 | Selected source command name | RevokeServiceEngagementActualStaff |
 | Name decision | The selected source name is retained. |
-| Owner | ServiceEngagementIndependence |
+| Target owner | ServiceEngagementIndependence |
+| Selected source owner | ServiceEngagementIndependence |
 | Contract record status | target_contract |
 | Kind | http |
 | Logical identity | CommandId; Uuid; required=true; client; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
@@ -412,7 +422,7 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Contract changes | Add required CommandId., Rename ExpectedSequence to ExpectedRevision and compare the new target owner revision. |
 | Guard order | bind_required_ids, authenticate_authorize, canonicalize_authored_intent, resolve_native_operation_facts, compare_owner_episode_actor_kind_intent_original_revision, validate_new_owner_revision_and_source_permits, append_complete_concrete_attributed_batch |
 | Response contract | `{"mode":"immediate_original_result","responseType":"ServiceEngagementAcceptanceView","firstHttpStatus":200,"terminalResultType":"ServiceEngagementAcceptanceView"}` |
-| Expected revision scope | `{"field":"ExpectedRevision","owner":"ServiceEngagementIndependence","counter":"logical ResourceRevision of this owner","nullableInternalRule":null}` |
+| Expected revision scope | `{"field":"ExpectedRevision","owner":"ServiceEngagementIndependence","counter":"logical ResourceRevision of this owner"}` |
 | Authorizer sources | src/Compliance.Core/Features/AccessControl/ClientManagementMutationAuthorizer.cs, src/Compliance.Core/Features/AccessControl/IndependenceAdministrationAuthorizer.cs |
 | Source contract | src/Compliance.Common/Features/AccessControl/RevokeServiceEngagementActualStaff.cs |
 | Primary handler | RevokeServiceEngagementActualStaffHandler |
@@ -453,7 +463,8 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Target command name | WithdrawServiceEngagementStaffProposal |
 | Selected source command name | WithdrawServiceEngagementStaffProposal |
 | Name decision | The selected source name is retained. |
-| Owner | ServiceEngagementIndependence |
+| Target owner | ServiceEngagementIndependence |
+| Selected source owner | ServiceEngagementIndependence |
 | Contract record status | target_contract |
 | Kind | http |
 | Logical identity | CommandId; Uuid; required=true; client; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
@@ -465,7 +476,7 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Contract changes | Add required CommandId., Rename ExpectedSequence to ExpectedRevision and compare the new target owner revision. |
 | Guard order | bind_required_ids, authenticate_authorize, canonicalize_authored_intent, resolve_native_operation_facts, compare_owner_episode_actor_kind_intent_original_revision, validate_new_owner_revision_and_source_permits, append_complete_concrete_attributed_batch |
 | Response contract | `{"mode":"immediate_original_result","responseType":"ServiceEngagementView","firstHttpStatus":200,"terminalResultType":"ServiceEngagementView"}` |
-| Expected revision scope | `{"field":"ExpectedRevision","owner":"ServiceEngagementIndependence","counter":"logical ResourceRevision of this owner","nullableInternalRule":null}` |
+| Expected revision scope | `{"field":"ExpectedRevision","owner":"ServiceEngagementIndependence","counter":"logical ResourceRevision of this owner"}` |
 | Authorizer sources | src/Compliance.Core/Features/AccessControl/ClientManagementMutationAuthorizer.cs, src/Compliance.Core/Features/AccessControl/IndependenceAdministrationAuthorizer.cs |
 | Source contract | src/Compliance.Common/Features/AccessControl/WithdrawServiceEngagementStaffProposal.cs |
 | Primary handler | WithdrawServiceEngagementStaffProposalHandler |
@@ -506,7 +517,8 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Target command name | RejectServiceEngagementAcceptance |
 | Selected source command name | RejectServiceEngagementAcceptance |
 | Name decision | The selected source name is retained. |
-| Owner | ServiceEngagementIndependence |
+| Target owner | ServiceEngagementIndependence |
+| Selected source owner | ServiceEngagementIndependence |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | abort |
 | Logical identity | CommandId; Uuid; required=true; abort receiver identity bound to the exact admitted operation and generation: exact redelivery resolves the original rejected result; an abort after a terminal outcome is a no-op |
@@ -555,7 +567,8 @@ Required tests: [Placeholder: required tests not recorded]
 | Target command name | RejectServiceEngagementStaffAssignment |
 | Selected source command name | RejectServiceEngagementStaffAssignment |
 | Name decision | The selected source name is retained. |
-| Owner | ServiceEngagementIndependence |
+| Target owner | ServiceEngagementIndependence |
+| Selected source owner | ServiceEngagementIndependence |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | abort |
 | Logical identity | CommandId; Uuid; required=true; abort receiver identity bound to the exact admitted operation and generation: exact redelivery resolves the original rejected result; an abort after a terminal outcome is a no-op |
@@ -604,7 +617,8 @@ Required tests: [Placeholder: required tests not recorded]
 | Target command name | CancelEngagementPersonalDecision |
 | Selected source command name | CancelEngagementPersonalDecision |
 | Name decision | The selected source name is retained. |
-| Owner | ServiceEngagementIndependence |
+| Target owner | ServiceEngagementIndependence |
+| Selected source owner | ServiceEngagementIndependence |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | abort |
 | Logical identity | CommandId; Uuid; required=true; abort receiver identity bound to the exact admitted operation and generation: exact redelivery resolves the original rejected result; an abort after a terminal outcome is a no-op |
@@ -652,7 +666,8 @@ Required tests: [Placeholder: required tests not recorded]
 | Target command name | CompleteServiceEngagementAcceptance |
 | Selected source command name | CompleteServiceEngagementAcceptance |
 | Name decision | The selected source name is retained. |
-| Owner | ServiceEngagementIndependence |
+| Target owner | ServiceEngagementIndependence |
+| Selected source owner | ServiceEngagementIndependence |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; reactor; deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result |
@@ -705,7 +720,8 @@ Required tests: [Placeholder: required tests not recorded]
 | Target command name | CompleteServiceEngagementStaffAssignment |
 | Selected source command name | CompleteServiceEngagementStaffAssignment |
 | Name decision | The selected source name is retained. |
-| Owner | ServiceEngagementIndependence |
+| Target owner | ServiceEngagementIndependence |
+| Selected source owner | ServiceEngagementIndependence |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; reactor; deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result |
@@ -759,7 +775,8 @@ Required tests: [Placeholder: required tests not recorded]
 | Target command name | AuthorizeEngagementPracticeCommitments |
 | Selected source command name | AuthorizeEngagementPracticeCommitments |
 | Name decision | The selected source name is retained. |
-| Owner | ServiceEngagementIndependence |
+| Target owner | ServiceEngagementIndependence |
+| Selected source owner | ServiceEngagementIndependence |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; reactor; deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result |
@@ -804,14 +821,15 @@ Existing tests: [Placeholder: existing tests not recorded]
 
 Required tests: [Placeholder: required tests not recorded]
 
-### CloseEngagementPersonalDecision
+### RecordEngagementPersonalDecision
 
 | Selected contract detail | Value |
 | --- | --- |
-| Target command name | CloseEngagementPersonalDecision |
+| Target command name | RecordEngagementPersonalDecision |
 | Selected source command name | SettleEngagementPersonalDecision |
-| Name decision | Closes the exact engagement personal decision after its authorization or cancellation. |
-| Owner | ServiceEngagementIndependence |
+| Name decision | Records the already authorized management acknowledgement or partner independence evaluation on the exact engagement. |
+| Target owner | ServiceEngagementIndependence |
+| Selected source owner | ServiceEngagementIndependence |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; reactor; deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result |
@@ -862,7 +880,8 @@ Required tests: [Placeholder: required tests not recorded]
 | Target command name | AuthorizeEngagementPersonalDecision |
 | Selected source command name | AuthorizeEngagementPersonalDecision |
 | Name decision | The selected source name is retained. |
-| Owner | ServiceEngagementIndependence |
+| Target owner | ServiceEngagementIndependence |
+| Selected source owner | ServiceEngagementIndependence |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; reactor; deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result |

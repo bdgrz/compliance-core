@@ -64,13 +64,9 @@
           "authorizationPolicy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/19",
-        "line": 1545,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      },
       "kind": "http",
+      "sourceOwner": "ProgramRollover",
+      "owner": "ProgramRollover",
       "sourceName": "ApproveProgramRollover",
       "targetName": "ApproveProgramRollover"
     },
@@ -134,14 +130,10 @@
           "authorizationPolicy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/96",
-        "line": 7132,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      },
       "semanticRule": "NextExaminationId is a required, nonempty successor identity, distinct from SourceExaminationId, frozen in the exact version and approval hash together with next period/plan IDs and dates.",
       "kind": "http",
+      "sourceOwner": "ProgramRollover",
+      "owner": "ProgramRollover",
       "sourceName": "ProposeProgramRollover",
       "targetName": "ProposeProgramRollover"
     },
@@ -200,8 +192,10 @@
       "targetStatus": "SELECTED_TARGET_ONLY_NO_ROUTE_AUTHORIZED",
       "semanticRule": "Internal process command; no public route. Atomically require status approved, exact ExpectedRevision, exact current ApprovedVersion/content SHA256 and latest actual ProgramRolloverApproved fact. Derive and copy immutable approval actor/role/time into ProgramRolloverExecutionClaimView; store CommandId and ClaimedAt; transition status to execution_claimed in one append. Exact retry only same command+tuple; reject all later revisions/rejections/claims. Event actor attribution retains the approving member; process identity is separately recorded in private process state.",
       "kind": "command",
+      "sourceOwner": "ProgramRollover",
+      "owner": "ProgramRollover",
       "sourceName": "ClaimProgramRolloverExecution",
-      "targetName": "ReserveProgramRolloverForExecution"
+      "targetName": "StartApprovedProgramRollover"
     }
   ],
   "sourceContractEvidence": []

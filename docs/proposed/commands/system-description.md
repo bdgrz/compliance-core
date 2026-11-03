@@ -1,5 +1,7 @@
 # SystemDescription commands
 
+
+
 Selected command contracts: **8**. Complete selected contracts and companion source evidence: [owner command JSON](../data/commands/system-description.json).
 
 | Target command | Selected source name | Kind | Identity | Fields | HTTP routes |
@@ -9,7 +11,7 @@ Selected command contracts: **8**. Complete selected contracts and companion sou
 | BindSystemDescriptionToExamination | BindSystemDescriptionToExamination | http | CommandId | 8 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/system-descriptions/{description_id}/bind-system-description-to-examination/{command_id} [ApiUser + existing request-scope authorizers] |
 | CreateSystemDescriptionDraft | CreateSystemDescriptionDraft | http | DescriptionId | 6 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/system-descriptions/{description_id}/create-system-description-draft [ApiUser + existing request-scope authorizers] |
 | ProposeSystemDescriptionSuccessor | ProposeSystemDescriptionSuccessor | http | CommandId | 6 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/system-descriptions/{description_id}/propose-system-description-successor/{command_id} [ApiUser + existing request-scope authorizers] |
-| RecordSystemDescriptionNoChangeDecision | RecordSystemDescriptionNoChangeDecision | http | CommandId | 8 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/system-descriptions/{description_id}/record-system-description-no-change-decision/{command_id} [ApiUser + existing request-scope authorizers] |
+| ConfirmSystemDescriptionUnchanged | RecordSystemDescriptionNoChangeDecision | http | CommandId | 8 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/system-descriptions/{description_id}/record-system-description-no-change-decision/{command_id} [ApiUser + existing request-scope authorizers] |
 | ReviewSystemDescription | ReviewSystemDescription | http | CommandId | 8 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/system-descriptions/{description_id}/review-system-description/{command_id} [ApiUser + existing request-scope authorizers] |
 | ReviseSystemDescriptionDraft | ReviseSystemDescriptionDraft | http | CommandId | 8 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/system-descriptions/{description_id}/revise-system-description-draft/{command_id} [ApiUser + existing request-scope authorizers] |
 
@@ -22,7 +24,8 @@ Selected command contracts: **8**. Complete selected contracts and companion sou
 | Target command name | ApproveSystemDescription |
 | Selected source command name | ApproveSystemDescription |
 | Name decision | The selected source name is retained. |
-| Owner | SystemDescription |
+| Target owner | SystemDescription |
+| Selected source owner | SystemDescription |
 | Contract record status | target_contract |
 | Kind | http |
 | Logical identity | CommandId; Uuid; required=true; client; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
@@ -34,7 +37,7 @@ Selected command contracts: **8**. Complete selected contracts and companion sou
 | Contract changes | Add required CommandId., Add required owner-local ExpectedRevision; business Version remains an exact content version, not owner OCC. |
 | Guard order | bind_required_ids, authenticate_authorize, canonicalize_authored_intent, resolve_native_operation_facts, compare_owner_episode_actor_kind_intent_original_revision, validate_new_owner_revision_and_source_permits, append_complete_concrete_attributed_batch |
 | Response contract | `{"mode":"immediate_original_result","responseType":"Unit","firstHttpStatus":200,"terminalResultType":"Unit"}` |
-| Expected revision scope | `{"field":"ExpectedRevision","owner":"SystemDescription","counter":"logical ResourceRevision of this owner","nullableInternalRule":null}` |
+| Expected revision scope | `{"field":"ExpectedRevision","owner":"SystemDescription","counter":"logical ResourceRevision of this owner"}` |
 | Authorizer sources | src/Compliance.Core/Features/AccessControl/ClientManagementMutationAuthorizer.cs, src/Compliance.Core/Features/Programs/ProgramManagementAuthorizer.cs |
 | Source contract | src/Compliance.Common/Features/SystemDescription/ApproveSystemDescription.cs |
 | Primary handler | ApproveSystemDescriptionHandler |
@@ -76,7 +79,8 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Target command name | BindSystemDescriptionSources |
 | Selected source command name | BindSystemDescriptionSources |
 | Name decision | The selected source name is retained. |
-| Owner | SystemDescription |
+| Target owner | SystemDescription |
+| Selected source owner | SystemDescription |
 | Contract record status | target_contract |
 | Kind | http |
 | Logical identity | CommandId; Uuid; required=true; client; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
@@ -88,7 +92,7 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Contract changes | Add required CommandId. |
 | Guard order | bind_required_ids, authenticate_authorize, canonicalize_authored_intent, resolve_native_operation_facts, compare_owner_episode_actor_kind_intent_original_revision, validate_new_owner_revision_and_source_permits, append_complete_concrete_attributed_batch |
 | Response contract | `{"mode":"immediate_original_result","responseType":"Unit","firstHttpStatus":200,"terminalResultType":"Unit"}` |
-| Expected revision scope | `{"field":"ExpectedRevision","owner":"SystemDescription","counter":"logical ResourceRevision of this owner","nullableInternalRule":null}` |
+| Expected revision scope | `{"field":"ExpectedRevision","owner":"SystemDescription","counter":"logical ResourceRevision of this owner"}` |
 | Authorizer sources | src/Compliance.Core/Features/AccessControl/ClientManagementMutationAuthorizer.cs, src/Compliance.Core/Features/Programs/ProgramManagementAuthorizer.cs |
 | Source contract | src/Compliance.Common/Features/SystemDescription/BindSystemDescriptionSources.cs |
 | Primary handler | BindSystemDescriptionSourcesHandler |
@@ -129,7 +133,8 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Target command name | BindSystemDescriptionToExamination |
 | Selected source command name | BindSystemDescriptionToExamination |
 | Name decision | The selected source name is retained. |
-| Owner | SystemDescription |
+| Target owner | SystemDescription |
+| Selected source owner | SystemDescription |
 | Contract record status | target_contract |
 | Kind | http |
 | Logical identity | CommandId; Uuid; required=true; client; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
@@ -141,7 +146,7 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Contract changes | Add required CommandId., Add required owner-local ExpectedRevision; business Version remains an exact content version, not owner OCC. |
 | Guard order | bind_required_ids, authenticate_authorize, canonicalize_authored_intent, resolve_native_operation_facts, compare_owner_episode_actor_kind_intent_original_revision, validate_new_owner_revision_and_source_permits, append_complete_concrete_attributed_batch |
 | Response contract | `{"mode":"immediate_original_result","responseType":"Unit","firstHttpStatus":200,"terminalResultType":"Unit"}` |
-| Expected revision scope | `{"field":"ExpectedRevision","owner":"SystemDescription","counter":"logical ResourceRevision of this owner","nullableInternalRule":null}` |
+| Expected revision scope | `{"field":"ExpectedRevision","owner":"SystemDescription","counter":"logical ResourceRevision of this owner"}` |
 | Authorizer sources | src/Compliance.Core/Features/AccessControl/ClientManagementMutationAuthorizer.cs, src/Compliance.Core/Features/Programs/ProgramManagementAuthorizer.cs |
 | Source contract | src/Compliance.Common/Features/SystemDescription/BindSystemDescriptionToExamination.cs |
 | Primary handler | BindSystemDescriptionToExaminationHandler |
@@ -184,7 +189,8 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Target command name | CreateSystemDescriptionDraft |
 | Selected source command name | CreateSystemDescriptionDraft |
 | Name decision | The selected source name is retained. |
-| Owner | SystemDescription |
+| Target owner | SystemDescription |
+| Selected source owner | SystemDescription |
 | Contract record status | target_contract |
 | Kind | http |
 | Logical identity | DescriptionId; Uuid; required=true; client; caller-supplied immutable creation identity: an exact retry with the same id and authored intent returns the original result; the same id with changed intent is refused; a different id is a different record |
@@ -196,7 +202,7 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Contract changes | None listed |
 | Guard order | bind_required_ids, authenticate_authorize, canonicalize_authored_intent, resolve_native_operation_facts, compare_owner_episode_actor_kind_intent_original_revision, validate_new_owner_revision_and_source_permits, append_complete_concrete_attributed_batch |
 | Response contract | `{"mode":"immediate_original_result","responseType":"Unit","firstHttpStatus":200,"terminalResultType":"Unit"}` |
-| Expected revision scope | `{"field":null,"owner":"SystemDescription","counter":"No primary caller ResourceRevision. Enforce required authored source/epoch/version tokens, immutable creation identity or trusted proof/generation as declared; append uses physical OCC."}` |
+| Expected revision scope | `{"owner":"SystemDescription","counter":"No primary caller ResourceRevision. Enforce required authored source/epoch/version tokens, immutable creation identity or trusted proof/generation as declared; append uses physical OCC."}` |
 | Authorizer sources | src/Compliance.Core/Features/AccessControl/ClientManagementMutationAuthorizer.cs, src/Compliance.Core/Features/Programs/ProgramManagementAuthorizer.cs |
 | Source contract | src/Compliance.Common/Features/SystemDescription/CreateSystemDescriptionDraft.cs |
 | Primary handler | CreateSystemDescriptionDraftHandler |
@@ -237,7 +243,8 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Target command name | ProposeSystemDescriptionSuccessor |
 | Selected source command name | ProposeSystemDescriptionSuccessor |
 | Name decision | The selected source name is retained. |
-| Owner | SystemDescription |
+| Target owner | SystemDescription |
+| Selected source owner | SystemDescription |
 | Contract record status | target_contract |
 | Kind | http |
 | Logical identity | CommandId; Uuid; required=true; client; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
@@ -249,7 +256,7 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Contract changes | Add required CommandId. |
 | Guard order | bind_required_ids, authenticate_authorize, canonicalize_authored_intent, resolve_native_operation_facts, compare_owner_episode_actor_kind_intent_original_revision, validate_new_owner_revision_and_source_permits, append_complete_concrete_attributed_batch |
 | Response contract | `{"mode":"immediate_original_result","responseType":"Unit","firstHttpStatus":200,"terminalResultType":"Unit"}` |
-| Expected revision scope | `{"field":"ExpectedRevision","owner":"SystemDescription","counter":"logical ResourceRevision of this owner","nullableInternalRule":null}` |
+| Expected revision scope | `{"field":"ExpectedRevision","owner":"SystemDescription","counter":"logical ResourceRevision of this owner"}` |
 | Authorizer sources | src/Compliance.Core/Features/AccessControl/ClientManagementMutationAuthorizer.cs, src/Compliance.Core/Features/Programs/ProgramManagementAuthorizer.cs |
 | Source contract | src/Compliance.Common/Features/SystemDescription/ProposeSystemDescriptionSuccessor.cs |
 | Primary handler | ProposeSystemDescriptionSuccessorHandler |
@@ -283,14 +290,15 @@ Existing tests: test/Compliance.Tests/Features/SystemDescription/SystemDescripti
 
 Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision, ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity, ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof, ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome
 
-### RecordSystemDescriptionNoChangeDecision
+### ConfirmSystemDescriptionUnchanged
 
 | Selected contract detail | Value |
 | --- | --- |
-| Target command name | RecordSystemDescriptionNoChangeDecision |
+| Target command name | ConfirmSystemDescriptionUnchanged |
 | Selected source command name | RecordSystemDescriptionNoChangeDecision |
-| Name decision | The selected source name is retained. |
-| Owner | SystemDescription |
+| Name decision | Confirms that the current system description remains accurate for the exact version and change review. |
+| Target owner | SystemDescription |
+| Selected source owner | SystemDescription |
 | Contract record status | target_contract |
 | Kind | http |
 | Logical identity | CommandId; Uuid; required=true; client; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
@@ -302,7 +310,7 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Contract changes | Add required CommandId., Add required owner-local ExpectedRevision; business Version remains an exact content version, not owner OCC. |
 | Guard order | bind_required_ids, authenticate_authorize, canonicalize_authored_intent, resolve_native_operation_facts, compare_owner_episode_actor_kind_intent_original_revision, validate_new_owner_revision_and_source_permits, append_complete_concrete_attributed_batch |
 | Response contract | `{"mode":"immediate_original_result","responseType":"Unit","firstHttpStatus":200,"terminalResultType":"Unit"}` |
-| Expected revision scope | `{"field":"ExpectedRevision","owner":"SystemDescription","counter":"logical ResourceRevision of this owner","nullableInternalRule":null}` |
+| Expected revision scope | `{"field":"ExpectedRevision","owner":"SystemDescription","counter":"logical ResourceRevision of this owner"}` |
 | Authorizer sources | src/Compliance.Core/Features/AccessControl/ClientManagementMutationAuthorizer.cs, src/Compliance.Core/Features/Programs/ProgramManagementAuthorizer.cs |
 | Source contract | src/Compliance.Common/Features/SystemDescription/RecordSystemDescriptionNoChangeDecision.cs |
 | Primary handler | RecordSystemDescriptionNoChangeDecisionHandler |
@@ -345,7 +353,8 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Target command name | ReviewSystemDescription |
 | Selected source command name | ReviewSystemDescription |
 | Name decision | The selected source name is retained. |
-| Owner | SystemDescription |
+| Target owner | SystemDescription |
+| Selected source owner | SystemDescription |
 | Contract record status | target_contract |
 | Kind | http |
 | Logical identity | CommandId; Uuid; required=true; client; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
@@ -357,7 +366,7 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Contract changes | Add required CommandId., Add required owner-local ExpectedRevision; business Version remains an exact content version, not owner OCC. |
 | Guard order | bind_required_ids, authenticate_authorize, canonicalize_authored_intent, resolve_native_operation_facts, compare_owner_episode_actor_kind_intent_original_revision, validate_new_owner_revision_and_source_permits, append_complete_concrete_attributed_batch |
 | Response contract | `{"mode":"immediate_original_result","responseType":"Unit","firstHttpStatus":200,"terminalResultType":"Unit"}` |
-| Expected revision scope | `{"field":"ExpectedRevision","owner":"SystemDescription","counter":"logical ResourceRevision of this owner","nullableInternalRule":null}` |
+| Expected revision scope | `{"field":"ExpectedRevision","owner":"SystemDescription","counter":"logical ResourceRevision of this owner"}` |
 | Authorizer sources | src/Compliance.Core/Features/AccessControl/ClientManagementMutationAuthorizer.cs, src/Compliance.Core/Features/Programs/ProgramManagementAuthorizer.cs |
 | Source contract | src/Compliance.Common/Features/SystemDescription/ReviewSystemDescription.cs |
 | Primary handler | ReviewSystemDescriptionHandler |
@@ -400,7 +409,8 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Target command name | ReviseSystemDescriptionDraft |
 | Selected source command name | ReviseSystemDescriptionDraft |
 | Name decision | The selected source name is retained. |
-| Owner | SystemDescription |
+| Target owner | SystemDescription |
+| Selected source owner | SystemDescription |
 | Contract record status | target_contract |
 | Kind | http |
 | Logical identity | CommandId; Uuid; required=true; client; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
@@ -412,7 +422,7 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Contract changes | Add required CommandId. |
 | Guard order | bind_required_ids, authenticate_authorize, canonicalize_authored_intent, resolve_native_operation_facts, compare_owner_episode_actor_kind_intent_original_revision, validate_new_owner_revision_and_source_permits, append_complete_concrete_attributed_batch |
 | Response contract | `{"mode":"immediate_original_result","responseType":"Unit","firstHttpStatus":200,"terminalResultType":"Unit"}` |
-| Expected revision scope | `{"field":"ExpectedRevision","owner":"SystemDescription","counter":"logical ResourceRevision of this owner","nullableInternalRule":null}` |
+| Expected revision scope | `{"field":"ExpectedRevision","owner":"SystemDescription","counter":"logical ResourceRevision of this owner"}` |
 | Authorizer sources | src/Compliance.Core/Features/AccessControl/ClientManagementMutationAuthorizer.cs, src/Compliance.Core/Features/Programs/ProgramManagementAuthorizer.cs |
 | Source contract | src/Compliance.Common/Features/SystemDescription/ReviseSystemDescriptionDraft.cs |
 | Primary handler | ReviseSystemDescriptionDraftHandler |

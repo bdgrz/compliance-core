@@ -4,14 +4,7 @@
   "baselineOwners": [],
   "declaredIdentity": "platform / challengeId",
   "invariant": "Immutable both-proof-verified candidate and preparation; complete protection proofs precede accepted exact swap. Preparation can reject/fence; accepted swap completes forward. Exact account, old/replacement identities and actor/proof provenance retained without bearer tokens.",
-  "sources": [
-    {
-      "path": "docs/product/audits/2026-10-23/target-owner-extensions.json",
-      "jsonPointer": "/owners/0",
-      "line": 4,
-      "sha256": "c0101f0c92d259872199b98a0dc32e6315b49f55c61b8085d62647b28cde4ef5"
-    }
-  ],
+  "sources": [],
   "baselineEvents": [
     "IdentityRecoveryPrepared",
     "IdentityRecoveryPreparationRejected",
@@ -54,15 +47,9 @@
           "required": true
         }
       ],
-      "responseContract": null,
-      "http": null,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/source-admission-contracts.json",
-        "jsonPointer": "/contracts/27",
-        "line": 1655,
-        "sha256": "f1d549ed0879c816cb26e86879f8fa658dab0a8acbf7c591e4d4aed40483f8ae"
-      },
-      "kind": "command"
+      "kind": "command",
+      "sourceOwner": "IdentityRecovery",
+      "owner": "IdentityRecovery"
     },
     {
       "command": "CompleteAcceptedIdentityRecovery",
@@ -145,10 +132,7 @@
       "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
       "handler": "CompleteAcceptedIdentityRecoveryHandler",
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "recorded": "2026-10-29"
-      }
+      "owner": "IdentityRecovery"
     },
     {
       "command": "MaterializeIdentityRecoveryPreparation",
@@ -224,7 +208,7 @@
         }
       ],
       "reactor": "IdentityRecoveryAcceptanceReactor",
-      "sourceOwner": "EmailAddress",
+      "sourceOwner": "IdentityRecovery",
       "sourceEvents": [
         "IdentityRecoveryChallengeClaimed"
       ],
@@ -236,10 +220,7 @@
       "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
       "handler": "MaterializeIdentityRecoveryPreparationHandler",
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "recorded": "2026-10-29"
-      }
+      "owner": "IdentityRecovery"
     },
     {
       "command": "AcceptProtectedIdentityRecovery",
@@ -312,10 +293,7 @@
       "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
       "handler": "AcceptProtectedIdentityRecoveryHandler",
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "recorded": "2026-10-29"
-      }
+      "owner": "IdentityRecovery"
     }
   ],
   "eventAuthority": "selected_final_event_catalog",
@@ -323,46 +301,22 @@
     {
       "event": "IdentityRecoveryAccepted",
       "discriminator": "bdgrz.identity-recovery.identity-recovery-accepted",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/163",
-        "line": 20475,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     },
     {
       "event": "IdentityRecoveryCompleted",
       "discriminator": "bdgrz.identity-recovery.identity-recovery-completed",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/167",
-        "line": 21128,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     },
     {
       "event": "IdentityRecoveryPreparationRejected",
       "discriminator": "bdgrz.identity-recovery.identity-recovery-preparation-rejected",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/168",
-        "line": 21317,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     },
     {
       "event": "IdentityRecoveryPrepared",
       "discriminator": "bdgrz.identity-recovery.identity-recovery-prepared",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/169",
-        "line": 21506,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     }
   ],
   "choreography": [
@@ -370,109 +324,55 @@
       "reactor": "IdentityRecoveryContinuationReactor",
       "sourceOwner": "IdentityRecovery",
       "targetOwner": "UserIdentity",
-      "command": "ProtectRecoveryIdentity",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "jsonPointer": "/reactors/41",
-        "line": 3479,
-        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
-      }
+      "command": "ProtectRecoveryIdentity"
     },
     {
       "reactor": "IdentityRecoveryReplacementReactor",
       "sourceOwner": "IdentityRecovery",
       "targetOwner": "UserIdentity",
-      "command": "RegisterRecoveredIdentity",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "jsonPointer": "/reactors/42",
-        "line": 3581,
-        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
-      }
+      "command": "RegisterRecoveredIdentity"
     },
     {
       "reactor": "IdentityRecoveryOldRevocationReactor",
       "sourceOwner": "IdentityRecovery",
       "targetOwner": "UserIdentity",
-      "command": "RevokeRecoveredOldIdentity",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "jsonPointer": "/reactors/43",
-        "line": 3673,
-        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
-      }
+      "command": "RevokeRecoveredOldIdentity"
     },
     {
       "reactor": "IdentityRecoveryCompletionReactor",
       "sourceOwner": "IdentityRecovery",
       "targetOwner": "IdentityRecovery",
-      "command": "CompleteAcceptedIdentityRecovery",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "jsonPointer": "/reactors/44",
-        "line": 3765,
-        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
-      }
+      "command": "CompleteAcceptedIdentityRecovery"
     },
     {
       "reactor": "IdentityRecoveryCompletionNoticeReactor",
       "sourceOwner": "IdentityRecovery",
       "targetOwner": "IdentityRecoveryNoticeProcess",
-      "command": "SendIdentityRecoveryNotice",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "jsonPointer": "/reactors/45",
-        "line": 3857,
-        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
-      }
+      "command": "SendIdentityRecoveryNotice"
     },
     {
       "reactor": "IdentityRecoveryAcceptanceReactor",
       "sourceOwner": "EmailAddress",
       "targetOwner": "IdentityRecovery",
-      "command": "MaterializeIdentityRecoveryPreparation",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "jsonPointer": "/reactors/56",
-        "line": 4798,
-        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
-      }
+      "command": "MaterializeIdentityRecoveryPreparation"
     },
     {
       "reactor": "IdentityRecoveryProtectionReleaseReactor",
       "sourceOwner": "IdentityRecovery",
       "targetOwner": "UserIdentity",
-      "command": "SettleRecoveryIdentityProtection",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "jsonPointer": "/reactors/57",
-        "line": 4895,
-        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
-      }
+      "command": "SettleRecoveryIdentityProtection"
     },
     {
       "reactor": "IdentityRecoveryEmailCompletionReactor",
       "sourceOwner": "IdentityRecovery",
       "targetOwner": "EmailAddress",
-      "command": "CompleteEmailRecoveryChallenge",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "jsonPointer": "/reactors/58",
-        "line": 4979,
-        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
-      }
+      "command": "CompleteEmailRecoveryChallenge"
     },
     {
       "reactor": "ProtectedIdentityRecoveryAcceptanceReactor",
       "sourceOwner": "IdentityRecovery",
       "targetOwner": "IdentityRecovery",
-      "command": "AcceptProtectedIdentityRecovery",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "jsonPointer": "/reactors/97",
-        "line": 8416,
-        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
-      }
+      "command": "AcceptProtectedIdentityRecovery"
     }
   ],
   "status": "SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED",
@@ -484,13 +384,7 @@
   "selectedLogicalIdentityBindings": [
     {
       "command": "RejectIdentityRecoveryPreparation",
-      "logicalIdentity": "CommandId",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/source-admission-contracts.json",
-        "jsonPointer": "/contracts/27",
-        "line": 1655,
-        "sha256": "f1d549ed0879c816cb26e86879f8fa658dab0a8acbf7c591e4d4aed40483f8ae"
-      }
+      "logicalIdentity": "CommandId"
     }
   ],
   "selectedReplayRule": "Current required authorization precedes replay; exact authorized retries resolve the original accepted result using the selected logical identity and immutable actor/intent/source binding. Fresh mutable feasibility, clock selection and body preparation cannot replace that original result. Expected revision is concurrency precondition, not a new identity.",
@@ -499,5 +393,6 @@
       "date": "2026-10-29",
       "previous": "platform / challengeId"
     }
-  ]
+  ],
+  "sourceOwner": "IdentityRecovery"
 }

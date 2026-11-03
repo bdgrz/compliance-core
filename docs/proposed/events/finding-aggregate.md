@@ -43,7 +43,6 @@ Canonical events: **8**. Complete canonical event and available schema records: 
 | Schema discriminator | bdgrz.finding-aggregate.corrective-action-admitted |
 | Schema discriminatorVersion | 1 |
 | Schema owner | FindingAggregate |
-| Schema existingContract | null (recorded) |
 | Schema status | selected target schema; implementation pending |
 | Schema reason | source command accepted result |
 | Schema changes | None listed |
@@ -110,7 +109,7 @@ ChildAdmissionIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T036](../reactors/corrective-action-materialization-reactor.md#t036) | physical root, logical prerequisite | FindingAggregate | CreateCorrectiveAction | CorrectiveAction |
+| [T036](../reactors/open-corrective-action-for-finding-reactor.md#t036) | physical root, logical prerequisite | FindingAggregate | CreateCorrectiveAction | CorrectiveAction |
 
 ### FindingAcceptanceLinked
 
@@ -319,7 +318,6 @@ ClosureIntent
 | Schema discriminator | bdgrz.finding-aggregate.finding-closure-accepted |
 | Schema discriminatorVersion | 1 |
 | Schema owner | FindingAggregate |
-| Schema existingContract | null (recorded) |
 | Schema status | selected target schema; implementation pending |
 | Schema reason | source command accepted result |
 | Schema changes | None listed |
@@ -389,7 +387,7 @@ ClosureIntent
 | [T037](../reactors/finding-closure-reactor.md#t037) | physical root, logical prerequisite | FindingAggregate | CompleteFindingClosure | FindingAggregate |
 | [T063](../reactors/finding-closure-reactor.md#t063) | physical root, logical prerequisite | FindingAggregate | AuthorizeCorrectiveActionFindingClosure | CorrectiveAction |
 | [T064](../reactors/finding-closure-reactor.md#t064) | physical root | FindingAggregate | CloseCorrectiveActionFindingClosureAuthorization | CorrectiveAction |
-| [A008](../reactors/unassigned-architecture-rows.md#a008) | physical root, logical prerequisite | FindingAggregate | AbortFindingClosure | FindingAggregate |
+| [A008](../reactors/unassigned-domain-choreography.md#a008) | physical root, logical prerequisite | FindingAggregate | AbortFindingClosure | FindingAggregate |
 
 ### FindingClosureCanceled
 
@@ -419,7 +417,6 @@ ClosureIntent
 | Schema discriminator | bdgrz.finding-aggregate.finding-closure-canceled |
 | Schema discriminatorVersion | 1 |
 | Schema owner | FindingAggregate |
-| Schema existingContract | null (recorded) |
 | Schema status | selected target schema; implementation pending |
 | Schema reason | source admission contract |
 | Schema changes | None listed |
@@ -487,7 +484,7 @@ ClosureIntent
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
 | [T064](../reactors/finding-closure-reactor.md#t064) | logical prerequisite | FindingAggregate | CloseCorrectiveActionFindingClosureAuthorization | CorrectiveAction |
-| [A008](../reactors/unassigned-architecture-rows.md#a008) | emitted semantic fact | FindingAggregate | AbortFindingClosure | FindingAggregate |
+| [A008](../reactors/unassigned-domain-choreography.md#a008) | emitted semantic fact | FindingAggregate | AbortFindingClosure | FindingAggregate |
 
 ### FindingRaised
 

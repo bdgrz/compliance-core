@@ -30,7 +30,6 @@
         "discriminator": "bdgrz.artifact-download-grant.artifact-download-grant-canceled",
         "discriminatorVersion": 1,
         "owner": "ArtifactDownloadGrant",
-        "existingContract": null,
         "status": "selected target schema; implementation pending",
         "reason": "source admission contract",
         "fields": [

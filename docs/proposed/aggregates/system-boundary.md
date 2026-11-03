@@ -5,6 +5,7 @@
 - Business aggregate: `true`
 - Selected status: `SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED`
 
+
 ## Identity and invariant
 
 **Selected identity:** Tenant + caller BoundaryId with exact immutable program scope and selected stable draft identities.
@@ -18,6 +19,10 @@
 **Replay:** Current required authorization precedes replay; exact authorized retries resolve the original accepted result using the selected logical identity and immutable actor/intent/source binding. Fresh mutable feasibility, clock selection and body preparation cannot replace that original result. Expected revision is concurrency precondition, not a new identity.
 
 **Lifecycle:** [Placeholder: a consolidated lifecycle sequence is not present in the selected owner record.]
+
+
+
+
 
 ## Commands
 
@@ -51,11 +56,11 @@
 
 ## Product rules
 
-- **D01-05** — A system boundary's Trust Services categories form a set of 1 to 5 distinct values drawn from security, availability, confidentiality, processing_integrity, and privacy, and the set must always contain security; boundary draft creation, revision, and successor proposal reject any other shape. Source: [m0-d01-program-targets.md](../../product/decisions/m0-d01-program-targets.md).
-- **D01-06** — Approving a system boundary draft re-validates it, so a draft recorded before the security rule existed cannot be approved without security, while earlier approved boundary versions remain readable history. Source: [m0-d01-program-targets.md](../../product/decisions/m0-d01-program-targets.md).
-- **D01-07** — Optional Trust Services categories are never inferred from a program name or target path; they must be recorded explicitly on the boundary, and if a selected category proves not applicable management revises the boundary through an attributed successor version. Source: [m0-d01-program-targets.md](../../product/decisions/m0-d01-program-targets.md).
-- **D01-09** — A system boundary may carry a typed, owned, unresolved service reference before the client service register exists, but it cannot claim a governed service identity from an arbitrary UUID; the governed service and its exact boundary relationship must be validated later. Source: [m0-d01-program-targets.md](../../product/decisions/m0-d01-program-targets.md).
-- **D22-09** — Cross-context references use tenant ID, stable record ID, and an exact version when a decision or snapshot relies on the record; before an owning inventory exists a boundary may keep a typed unresolved reference with owner and rationale. Source: [m0-d22-canonical-ownership.md](../../product/decisions/m0-d22-canonical-ownership.md).
+- **D01-05** — A system boundary's Trust Services categories form a set of 1 to 5 distinct values drawn from security, availability, confidentiality, processing_integrity, and privacy, and the set must always contain security; boundary draft creation, revision, and successor proposal reject any other shape. Decision: [m0-d01-program-targets.md](../decisions/m0-d01-program-targets.md).
+- **D01-06** — Approving a system boundary draft re-validates it, so a draft recorded before the security rule existed cannot be approved without security, while earlier approved boundary versions remain readable history. Decision: [m0-d01-program-targets.md](../decisions/m0-d01-program-targets.md).
+- **D01-07** — Optional Trust Services categories are never inferred from a program name or target path; they must be recorded explicitly on the boundary, and if a selected category proves not applicable management revises the boundary through an attributed successor version. Decision: [m0-d01-program-targets.md](../decisions/m0-d01-program-targets.md).
+- **D01-09** — A system boundary may carry a typed, owned, unresolved service reference before the client service register exists, but it cannot claim a governed service identity from an arbitrary UUID; the governed service and its exact boundary relationship must be validated later. Decision: [m0-d01-program-targets.md](../decisions/m0-d01-program-targets.md).
+- **D22-09** — Cross-context references use tenant ID, stable record ID, and an exact version when a decision or snapshot relies on the record; before an owning inventory exists a boundary may keep a typed unresolved reference with owner and rationale. Decision: [m0-d22-canonical-ownership.md](../decisions/m0-d22-canonical-ownership.md).
 
 ## Adopted architecture decisions
 

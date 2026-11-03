@@ -34,7 +34,6 @@
       "currentRegisteredRootTypes": [
         "AuditorResponseMaterializationReactor"
       ],
-      "plannedRootRole": null,
       "processes": [
         "IndependentChildMaterialization"
       ],

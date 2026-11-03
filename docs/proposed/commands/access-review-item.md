@@ -1,5 +1,7 @@
 # AccessReviewItem commands
 
+
+
 Selected command contracts: **12**. Complete selected contracts and companion source evidence: [owner command JSON](../data/commands/access-review-item.json).
 
 | Target command | Selected source name | Kind | Identity | Fields | HTTP routes |
@@ -26,7 +28,8 @@ Selected command contracts: **12**. Complete selected contracts and companion so
 | Target command name | ExemptAccessRemediation |
 | Selected source command name | ExemptAccessRemediation |
 | Name decision | The selected source name is retained. |
-| Owner | AccessReviewItem |
+| Target owner | AccessReviewItem |
+| Selected source owner | AccessReviewItem |
 | Contract record status | target_contract |
 | Kind | http |
 | Logical identity | CommandId; Uuid; required=true; client; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
@@ -38,7 +41,7 @@ Selected command contracts: **12**. Complete selected contracts and companion so
 | Contract changes | Add required CommandId. |
 | Guard order | bind_required_ids, authenticate_authorize, canonicalize_authored_intent, resolve_native_operation_facts, compare_owner_episode_actor_kind_intent_original_revision, validate_new_owner_revision_and_source_permits, append_complete_concrete_attributed_batch |
 | Response contract | `{"mode":"immediate_original_result","responseType":"AccessRemediationExceptionView","firstHttpStatus":200,"terminalResultType":"AccessRemediationExceptionView"}` |
-| Expected revision scope | `{"field":"ExpectedRevision","owner":"AccessReviewItem","counter":"logical ResourceRevision of this owner","nullableInternalRule":null}` |
+| Expected revision scope | `{"field":"ExpectedRevision","owner":"AccessReviewItem","counter":"logical ResourceRevision of this owner"}` |
 | Authorizer sources | src/Compliance.Core/Features/AccessReviews/AccessReviewAuthorizer.cs |
 | Source contract | src/Compliance.Common/Features/AccessReviews/ExemptAccessRemediation.cs |
 | Primary handler | ExemptAccessRemediationHandler |
@@ -80,7 +83,8 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Target command name | ReassignAccessReviewResponsibility |
 | Selected source command name | ReassignAccessReviewResponsibility |
 | Name decision | The selected source name is retained. |
-| Owner | AccessReviewItem |
+| Target owner | AccessReviewItem |
+| Selected source owner | AccessReviewItem |
 | Contract record status | target_contract |
 | Kind | http |
 | Logical identity | CommandId; Uuid; required=true; client; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
@@ -92,7 +96,7 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Contract changes | Add required CommandId. |
 | Guard order | bind_required_ids, authenticate_authorize, canonicalize_authored_intent, resolve_native_operation_facts, compare_owner_episode_actor_kind_intent_original_revision, validate_new_owner_revision_and_source_permits, append_complete_concrete_attributed_batch |
 | Response contract | `{"mode":"immediate_original_result","responseType":"AccessReviewResponsibilityReassignmentView","firstHttpStatus":200,"terminalResultType":"AccessReviewResponsibilityReassignmentView"}` |
-| Expected revision scope | `{"field":"ExpectedRevision","owner":"AccessReviewItem","counter":"logical ResourceRevision of this owner","nullableInternalRule":null}` |
+| Expected revision scope | `{"field":"ExpectedRevision","owner":"AccessReviewItem","counter":"logical ResourceRevision of this owner"}` |
 | Authorizer sources | src/Compliance.Core/Features/AccessReviews/AccessReviewAuthorizer.cs |
 | Source contract | src/Compliance.Common/Features/AccessReviews/ReassignAccessReviewResponsibility.cs |
 | Primary handler | ReassignAccessReviewResponsibilityHandler |
@@ -136,7 +140,8 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Target command name | RecordAccessDecision |
 | Selected source command name | RecordAccessDecision |
 | Name decision | The selected source name is retained. |
-| Owner | AccessReviewItem |
+| Target owner | AccessReviewItem |
+| Selected source owner | AccessReviewItem |
 | Contract record status | target_contract |
 | Kind | http |
 | Logical identity | CommandId; Uuid; required=true; client; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
@@ -148,7 +153,7 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Contract changes | Add required CommandId. |
 | Guard order | bind_required_ids, authenticate_authorize, canonicalize_authored_intent, resolve_native_operation_facts, compare_owner_episode_actor_kind_intent_original_revision, validate_new_owner_revision_and_source_permits, append_complete_concrete_attributed_batch |
 | Response contract | `{"mode":"immediate_original_result","responseType":"AccessDecisionView","firstHttpStatus":200,"terminalResultType":"AccessDecisionView"}` |
-| Expected revision scope | `{"field":"ExpectedRevision","owner":"AccessReviewItem","counter":"logical ResourceRevision of this owner","nullableInternalRule":null}` |
+| Expected revision scope | `{"field":"ExpectedRevision","owner":"AccessReviewItem","counter":"logical ResourceRevision of this owner"}` |
 | Authorizer sources | src/Compliance.Core/Features/AccessReviews/AccessReviewAuthorizer.cs |
 | Source contract | src/Compliance.Common/Features/AccessReviews/RecordAccessDecision.cs |
 | Primary handler | RecordAccessDecisionHandler |
@@ -191,7 +196,8 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Target command name | RecordAccessRemediationChange |
 | Selected source command name | RecordAccessRemediationChange |
 | Name decision | The selected source name is retained. |
-| Owner | AccessReviewItem |
+| Target owner | AccessReviewItem |
+| Selected source owner | AccessReviewItem |
 | Contract record status | target_contract |
 | Kind | http |
 | Logical identity | CommandId; Uuid; required=true; client; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
@@ -203,7 +209,7 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Contract changes | Add required CommandId. |
 | Guard order | bind_required_ids, authenticate_authorize, canonicalize_authored_intent, resolve_native_operation_facts, compare_owner_episode_actor_kind_intent_original_revision, validate_new_owner_revision_and_source_permits, append_complete_concrete_attributed_batch |
 | Response contract | `{"mode":"immediate_original_result","responseType":"AccessRemediationChangeView","firstHttpStatus":200,"terminalResultType":"AccessRemediationChangeView"}` |
-| Expected revision scope | `{"field":"ExpectedRevision","owner":"AccessReviewItem","counter":"logical ResourceRevision of this owner","nullableInternalRule":null}` |
+| Expected revision scope | `{"field":"ExpectedRevision","owner":"AccessReviewItem","counter":"logical ResourceRevision of this owner"}` |
 | Authorizer sources | src/Compliance.Core/Features/AccessReviews/AccessReviewAuthorizer.cs |
 | Source contract | src/Compliance.Common/Features/AccessReviews/RecordAccessRemediationChange.cs |
 | Primary handler | RecordAccessRemediationChangeHandler |
@@ -246,7 +252,8 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Target command name | VerifyAccessRemediation |
 | Selected source command name | VerifyAccessRemediation |
 | Name decision | The selected source name is retained. |
-| Owner | AccessReviewItem |
+| Target owner | AccessReviewItem |
+| Selected source owner | AccessReviewItem |
 | Contract record status | target_contract |
 | Kind | http |
 | Logical identity | CommandId; Uuid; required=true; client; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
@@ -258,7 +265,7 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Contract changes | Add required CommandId. |
 | Guard order | bind_required_ids, authenticate_authorize, canonicalize_authored_intent, resolve_native_operation_facts, compare_owner_episode_actor_kind_intent_original_revision, validate_new_owner_revision_and_source_permits, append_complete_concrete_attributed_batch |
 | Response contract | `{"mode":"immediate_original_result","responseType":"AccessRemediationVerificationView","firstHttpStatus":200,"terminalResultType":"AccessRemediationVerificationView"}` |
-| Expected revision scope | `{"field":"ExpectedRevision","owner":"AccessReviewItem","counter":"logical ResourceRevision of this owner","nullableInternalRule":null}` |
+| Expected revision scope | `{"field":"ExpectedRevision","owner":"AccessReviewItem","counter":"logical ResourceRevision of this owner"}` |
 | Authorizer sources | src/Compliance.Core/Features/AccessReviews/AccessReviewAuthorizer.cs |
 | Source contract | src/Compliance.Common/Features/AccessReviews/VerifyAccessRemediation.cs |
 | Primary handler | VerifyAccessRemediationHandler |
@@ -299,7 +306,8 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Target command name | OpenAccessReviewItem |
 | Selected source command name | MaterializeAccessReviewItem |
 | Name decision | Opens one assigned review item for each selected item and reviewer. |
-| Owner | AccessReviewItem |
+| Target owner | AccessReviewItem |
+| Selected source owner | AccessReviewItem |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; reactor; deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result |
@@ -351,7 +359,8 @@ Required tests: [Placeholder: required tests not recorded]
 | Target command name | ReserveAccessReviewItemDecision |
 | Selected source command name | ReserveAccessReviewItemDecision |
 | Name decision | The selected source name is retained. |
-| Owner | AccessReviewItem |
+| Target owner | AccessReviewItem |
+| Selected source owner | AccessReviewItem |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; reactor; deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result |
@@ -405,7 +414,8 @@ Required tests: [Placeholder: required tests not recorded]
 | Target command name | ApplyAccessReviewItemDecision |
 | Selected source command name | ApplyAccessReviewItemDecision |
 | Name decision | The selected source name is retained. |
-| Owner | AccessReviewItem |
+| Target owner | AccessReviewItem |
+| Selected source owner | AccessReviewItem |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; reactor; deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result |
@@ -458,7 +468,8 @@ Required tests: [Placeholder: required tests not recorded]
 | Target command name | CancelAccessReviewItemDecision |
 | Selected source command name | FenceAccessReviewItemDecision |
 | Name decision | Records cancellation of delayed decision application before item reservations are released. |
-| Owner | AccessReviewItem |
+| Target owner | AccessReviewItem |
+| Selected source owner | AccessReviewItem |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; reactor; deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result |
@@ -510,7 +521,8 @@ Required tests: [Placeholder: required tests not recorded]
 | Target command name | AuthorizeAccessReviewItemCampaignCompletion |
 | Selected source command name | AuthorizeAccessReviewItemCampaignCompletionUse |
 | Name decision | The command authorizes the named business action; the extra Use suffix describes the coordination mechanism. |
-| Owner | AccessReviewItem |
+| Target owner | AccessReviewItem |
+| Selected source owner | AccessReviewItem |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; reactor; deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result |
@@ -563,7 +575,8 @@ Required tests: [Placeholder: required tests not recorded]
 | Target command name | CloseAccessReviewItemCampaignCompletionAuthorization |
 | Selected source command name | SettleAccessReviewItemCampaignCompletionUse |
 | Name decision | The command ends the exact authorization after its business action or cancellation. |
-| Owner | AccessReviewItem |
+| Target owner | AccessReviewItem |
+| Selected source owner | AccessReviewItem |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; reactor; deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result |
@@ -616,7 +629,8 @@ Required tests: [Placeholder: required tests not recorded]
 | Target command name | CloseAccessReviewItemDecisionAuthorization |
 | Selected source command name | SettleAccessReviewItemDecision |
 | Name decision | Ends the exact item decision authorization after the batch is published or canceled. |
-| Owner | AccessReviewItem |
+| Target owner | AccessReviewItem |
+| Selected source owner | AccessReviewItem |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; reactor; deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result |

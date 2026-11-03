@@ -28,7 +28,6 @@
         "discriminator": "bdgrz.auditor-request.auditor-comment-admitted",
         "discriminatorVersion": 1,
         "owner": "AuditorRequest",
-        "existingContract": null,
         "status": "selected target schema; implementation pending",
         "reason": "source command accepted result",
         "fields": [
@@ -506,7 +505,6 @@
         "discriminator": "bdgrz.auditor-request.auditor-request-resolution-accepted",
         "discriminatorVersion": 1,
         "owner": "AuditorRequest",
-        "existingContract": null,
         "status": "selected target schema; implementation pending",
         "reason": "source command accepted result",
         "fields": [
@@ -689,7 +687,6 @@
         "discriminator": "bdgrz.auditor-request.auditor-request-resolution-canceled",
         "discriminatorVersion": 1,
         "owner": "AuditorRequest",
-        "existingContract": null,
         "status": "selected target schema; implementation pending",
         "reason": "source admission contract",
         "fields": [
@@ -1174,7 +1171,6 @@
         "discriminator": "bdgrz.auditor-request.auditor-response-admitted",
         "discriminatorVersion": 1,
         "owner": "AuditorRequest",
-        "existingContract": null,
         "status": "selected target schema; implementation pending",
         "reason": "source command accepted result",
         "fields": [
@@ -1355,7 +1351,6 @@
         "discriminator": "bdgrz.auditor-request.auditor-sample-selection-admitted",
         "discriminatorVersion": 1,
         "owner": "AuditorRequest",
-        "existingContract": null,
         "status": "selected target schema; implementation pending",
         "reason": "source command accepted result",
         "fields": [

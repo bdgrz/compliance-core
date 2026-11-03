@@ -20,11 +20,11 @@ Selected choreography rows: **1**. Required proofs, recovery, effect identity, a
 | id | S034 |
 | kind | business_receiver |
 | status | SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED |
-| sourceOwner | TeamMember |
+| Source owner (target name) | TeamMember (source: TeamMember) |
 | logicalPrerequisiteFacts (target names) | TeamMemberAssigned |
 | physicalRootEvents (target names) | TeamMemberAssigned |
 | Target command (selected source name: ActivateTenant) | ActivateTenant |
-| targetOwner | Tenant |
+| Target owner | Tenant |
 | targetAuthorityKind | business_aggregate |
 | emittedSemanticFacts (target names) | TenantActivated |
 | currentRegisteredRootTypes (target names) | TenantSelfServiceActivationReactor |
@@ -35,7 +35,6 @@ Selected choreography rows: **1**. Required proofs, recovery, effect identity, a
 | sourceOwners | TeamMember |
 | canonicalTargetOwner | Tenant |
 | recoveryContractSummary | Bounded TenantActivationPolicy retries for dependency lag. Exact native original result survives later tenant lifecycle changes. |
-| logicalPrerequisiteRuleGuard | null (recorded) |
 | logicalPrerequisiteRule | The source is TeamMemberAssigned to the canonical Administrators team for the tenant creator while the tenant still needs creator activation; ActivateTenant is accepted only if the creator is an active registered client-personnel member, the assignment is on the same membership episode, tenant membership is visible, and TenantAccess, TenantRbacManage and ProgramManage are all effective. |
 | prerequisiteRuleSource | authored 2026-10-29 from reactor and target source |
 

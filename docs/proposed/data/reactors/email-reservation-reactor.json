@@ -70,7 +70,6 @@
       ],
       "canonicalTargetOwner": "EmailAddress",
       "recoveryContractSummary": "At-least-once checkpoint replay resends the same source-derived command. Missing dependencies remain retryable; actual terminal/superseded episodes are skipped only with the owning proof.",
-      "logicalPrerequisiteRuleGuard": null,
       "logicalPrerequisiteRule": "A registered user with an email address reserves the normalized address once; if another user already owns it, the conflict is terminal for this registration.",
       "prerequisiteRuleSource": "authored 2026-10-29 from reactor and target source"
     }

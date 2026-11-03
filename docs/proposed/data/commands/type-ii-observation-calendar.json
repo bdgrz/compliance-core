@@ -59,7 +59,7 @@
         "recorded": "2026-10-29"
       },
       "reactor": "TypeIIPeriodRangeReactor",
-      "sourceOwner": "TypeIIPeriod",
+      "sourceOwner": "TypeIIObservationCalendar",
       "sourceEvents": [
         "TypeIIPeriodOpeningAccepted",
         "TypeIIPeriodAmendmentAccepted"
@@ -70,6 +70,7 @@
       ],
       "effectKind": "acquire_type_i_i_period_range",
       "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
+      "owner": "TypeIIObservationCalendar",
       "sourceName": "AcquireTypeIIPeriodRange",
       "targetName": "AcquireTypeIIPeriodRange"
     },
@@ -123,7 +124,7 @@
         "recorded": "2026-10-29"
       },
       "reactor": "TypeIIPeriodRangeReleaseReactor",
-      "sourceOwner": "TypeIIPeriod",
+      "sourceOwner": "TypeIIObservationCalendar",
       "sourceEvents": [
         "ObservationPeriodStarted",
         "ObservationPeriodAmended",
@@ -137,6 +138,7 @@
       ],
       "effectKind": "settle_type_i_i_period_range",
       "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
+      "owner": "TypeIIObservationCalendar",
       "sourceName": "SettleTypeIIPeriodRange",
       "targetName": "CloseTypeIIPeriodRangeReservation"
     }

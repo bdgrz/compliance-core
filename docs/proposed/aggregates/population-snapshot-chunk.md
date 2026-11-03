@@ -5,6 +5,7 @@
 - Business aggregate: `false`
 - Selected status: `SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED`
 
+
 ## Identity and invariant
 
 **Selected identity:** [Placeholder: selected target identity is not recorded.]
@@ -18,6 +19,10 @@
 **Replay:** [Placeholder: replay rule not recorded.]
 
 **Lifecycle:** [Placeholder: a consolidated lifecycle sequence is not present in the selected owner record.]
+
+
+
+
 
 ## Commands
 

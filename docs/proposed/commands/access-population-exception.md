@@ -1,5 +1,7 @@
 # AccessPopulationException commands
 
+
+
 Selected command contracts: **1**. Complete selected contracts and companion source evidence: [owner command JSON](../data/commands/access-population-exception.json).
 
 | Target command | Selected source name | Kind | Identity | Fields | HTTP routes |
@@ -15,7 +17,8 @@ Selected command contracts: **1**. Complete selected contracts and companion sou
 | Target command name | ExemptMissingAccessPopulation |
 | Selected source command name | ExemptMissingAccessPopulation |
 | Name decision | The selected source name is retained. |
-| Owner | AccessPopulationException |
+| Target owner | AccessPopulationException |
+| Selected source owner | AccessPopulationException |
 | Contract record status | target_contract |
 | Kind | http |
 | Logical identity | ExceptionId; Uuid; required=true; client; caller-supplied immutable creation identity: an exact retry with the same id and authored intent returns the original result; the same id with changed intent is refused; a different id is a different record |

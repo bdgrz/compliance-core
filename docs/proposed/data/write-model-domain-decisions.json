@@ -31,12 +31,7 @@
         "ArtifactLegalHoldReleased"
       ],
       "reactors": [],
-      "sources": [
-        "docs/product/decisions/m0-d12-policy-acknowledgement-training.md",
-        "docs/product/decisions/m0-d07-access-review-population.md",
-        "docs/product/decisions/m0-d16-evidence-handling.md",
-        "docs/product/definitive-aggregate-choreography/aggregates.json"
-      ]
+      "sources": []
     },
     {
       "id": "CRITERIA_EDITION_OWNER",
@@ -57,10 +52,7 @@
         "ProgramCriteriaEditionSelected"
       ],
       "reactors": [],
-      "sources": [
-        "docs/product/decisions/m0-d02-criteria-content.md",
-        "docs/product/definitive-aggregate-choreography/product-rule-traceability.json"
-      ]
+      "sources": []
     },
     {
       "id": "INVENTORY_LIFECYCLE_FACTS",
@@ -101,16 +93,7 @@
       "reactors": [
         "KeepLocationNamesUniqueReactor"
       ],
-      "sources": [
-        "docs/product/decisions/m0-d06-workforce-source.md",
-        "docs/product/decisions/m0-d08-technology-inventory.md",
-        "docs/product/decisions/m0-d22-canonical-ownership.md",
-        "docs/product/definitive-aggregate-choreography/service-identity-review-2026-10-27.md",
-        "docs/product/definitive-aggregate-choreography/person-review-2026-10-29.md",
-        "docs/product/definitive-aggregate-choreography/data-flow-review-2026-10-29.md",
-        "docs/product/definitive-aggregate-choreography/information-asset-review-2026-10-29.md",
-        "docs/product/definitive-aggregate-choreography/location-review-2026-10-27.md"
-      ]
+      "sources": []
     },
     {
       "id": "CLIENT_EXPORT_BUSINESS_OWNER",
@@ -143,11 +126,7 @@
         }
       ],
       "reactors": [],
-      "sources": [
-        "docs/product/decisions/m0-d16-evidence-handling.md",
-        "docs/product/definitive-aggregate-choreography/client-export-review-2026-10-29.md",
-        "docs/product/definitive-aggregate-choreography/aggregates.json"
-      ]
+      "sources": []
     },
     {
       "id": "ATTEST_ENGAGEMENT_RECORD_PACKAGE",
@@ -177,11 +156,7 @@
         "AttestEngagementRecordPackageDelivered"
       ],
       "reactors": [],
-      "sources": [
-        "docs/product/decisions/m0-d27-attest-scope.md",
-        "docs/product/definitive-aggregate-choreography/client-export-review-2026-10-29.md",
-        "docs/product/definitive-aggregate-choreography/aggregates.json"
-      ]
+      "sources": []
     }
   ],
   "ownerRules": {
@@ -257,8 +232,7 @@
     {
       "id": "OPEN_ResponseReceiptsInPayload",
       "status": "DEFERRED_TO_EVENT_CONTRACT_DETAILS",
-      "decision": "Whether a command's original response belongs in its business event or in a separate operation receipt does not change the business command, event meaning, or reactor reason. Keep the existing source contract unchanged in this pass.",
-      "source": "docs/product/definitive-aggregate-choreography/decisions.json"
+      "decision": "Whether a command's original response belongs in its business event or in a separate operation receipt does not change the business command, event meaning, or reactor reason. Keep the existing source contract unchanged in this pass."
     }
   ],
   "sourceEventDispositions": [
@@ -268,8 +242,7 @@
       "status": "SOURCE_COMPATIBILITY_EVIDENCE_NO_DIRECT_TARGET_EVENT_MAPPING",
       "targetOwner": "AttestEngagementRecordPackage",
       "relatedTargetEvent": "AttestEngagementRecordPackageDelivered",
-      "reason": "The source event records both delivered and not_delivered decisions for an M0-D27 engagement package on the ClientExport stream. The target separates the package from ClientExport and names successful delivery as AttestEngagementRecordPackageDelivered. Preserve the old discriminator and history as source evidence; define how both old outcomes map to the target before implementation.",
-      "source": "docs/product/definitive-aggregate-choreography/events.json"
+      "reason": "The source event records both delivered and not_delivered decisions for an M0-D27 engagement package on the ClientExport stream. The target separates the package from ClientExport and names successful delivery as AttestEngagementRecordPackageDelivered. Preserve the old discriminator and history as source evidence; define how both old outcomes map to the target before implementation."
     }
   ],
   "targetOwnerNameOverrides": [
@@ -301,7 +274,6 @@
       "businessAggregate": true,
       "sourceCapabilityArea": "AttestRecords",
       "baselineSourcePath": "src/Compliance.Common/Features/AttestRecords/Commands/RequestOwnAttestRecordPackage.cs",
-      "sourceReviewPath": "docs/product/definitive-aggregate-choreography/client-export-review-2026-10-29.md",
       "status": "PROPOSED_TARGET_OWNER_FROM_ACCEPTED_PRODUCT_RULE",
       "selectedIdentitySummary": "Tenant + ServiceEngagementId + PackageId. PackageId identifies the requested record package for the exact firm attest engagement.",
       "invariant": "The firm’s own attest engagement record is preserved by generating its exact record package and recording delivery into the firm’s audit software before engagement closure or client offboarding. ClientExport delivery cannot satisfy this obligation.",
@@ -342,11 +314,7 @@
           "reason": "The current event records both delivered and not_delivered outcomes for an M0-D27 package in ClientExport state. The proposed target only treats the successful delivery fact as satisfying the preservation rule. Define how old outcome history maps to the new package record before implementation."
         }
       ],
-      "sources": [
-        "docs/product/decisions/m0-d27-attest-scope.md",
-        "docs/product/definitive-aggregate-choreography/client-export-review-2026-10-29.md",
-        "docs/product/definitive-aggregate-choreography/aggregates.json"
-      ]
+      "sources": []
     }
   ]
 }

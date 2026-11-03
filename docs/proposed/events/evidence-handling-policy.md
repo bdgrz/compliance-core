@@ -4,8 +4,8 @@ Canonical events: **4**. Complete canonical event and available schema records: 
 
 | Target event | Selected source name | Kind | Adopted discriminator | Version | Schema fields | Meaning |
 | --- | --- | --- | --- | --- | --- | --- |
-| ArtifactHandlingDownloadAuthorized | ArtifactHandlingDownloadUseAuthorized | reservation | bdgrz.evidence-handling-policy.artifact-handling-download-use-authorized | 1 | 8 | null (recorded) |
-| ArtifactHandlingDownloadAuthorizationClosed | ArtifactHandlingDownloadUseSettled | reservation | bdgrz.evidence-handling-policy.artifact-handling-download-use-settled | 1 | 8 | null (recorded) |
+| ArtifactHandlingDownloadAuthorized | ArtifactHandlingDownloadUseAuthorized | reservation | bdgrz.evidence-handling-policy.artifact-handling-download-use-authorized | 1 | 8 | The evidence handling policy allowed one download under the artifact’s current classification and handling rules. |
+| ArtifactHandlingDownloadAuthorizationClosed | ArtifactHandlingDownloadUseSettled | reservation | bdgrz.evidence-handling-policy.artifact-handling-download-use-settled | 1 | 8 | The evidence handling policy closed permission for one exact download after the file was issued or the request was canceled. |
 | ArtifactHandlingPolicyAssigned | ArtifactHandlingPolicyAssigned | business | bdgrz.retention.artifact-handling-policy-assigned | 1 | [Placeholder: schema absent] | Records the ArtifactHandlingPolicyAssigned domain fact for one tenant-owned subject revision. |
 | ArtifactHandlingPolicyRevised | ArtifactHandlingPolicyRevised | business | bdgrz.retention.artifact-handling-policy-revised | 1 | [Placeholder: schema absent] | Records a changed, attributed handling classification for an exact artifact identity. |
 
@@ -17,7 +17,7 @@ Canonical events: **4**. Complete canonical event and available schema records: 
 | --- | --- |
 | Target event name | ArtifactHandlingDownloadAuthorized |
 | Selected source event name | ArtifactHandlingDownloadUseAuthorized |
-| Name decision | Authorization is already the completed fact; Use adds no stakeholder meaning. |
+| Name decision | Names the policy’s completed approval for one artifact download. |
 | Canonical semantic key | event:ArtifactHandlingDownloadUseAuthorized |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | ArtifactHandlingDownloadUseAuthorized |
@@ -27,8 +27,8 @@ Canonical events: **4**. Complete canonical event and available schema records: 
 | Source status | planned_no_source_type |
 | Adopted decision IDs | ARTIFACT_DOWNLOAD |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Target meaning | null (recorded) |
-| Selected source meaning | null (recorded) |
+| Target meaning | The evidence handling policy allowed one download under the artifact’s current classification and handling rules. |
+| Selected source meaning | [Placeholder: value not recorded] |
 | Meaning source | [Placeholder: value not recorded] |
 
 #### Selected schema and implementation evidence
@@ -39,7 +39,6 @@ Canonical events: **4**. Complete canonical event and available schema records: 
 | Schema discriminator | bdgrz.evidence-handling-policy.artifact-handling-download-use-authorized |
 | Schema discriminatorVersion | 1 |
 | Schema owner | EvidenceHandlingPolicy |
-| Schema existingContract | null (recorded) |
 | Schema status | selected target schema; implementation pending |
 | Schema reason | typed reactor receiver accepted business fact |
 | Schema changes | None listed |
@@ -102,7 +101,7 @@ SourceUseAuthorizationIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T100](../reactors/one-committed-evidence-artifact-download-requested-starter.md#t100) | emitted semantic fact | EvidenceArtifact | AuthorizeArtifactHandlingDownload | EvidenceHandlingPolicy |
+| [T100](../reactors/fulfill-authorized-artifact-download-request-reactor.md#t100) | emitted semantic fact | EvidenceArtifact | AuthorizeArtifactHandlingDownload | EvidenceHandlingPolicy |
 
 ### ArtifactHandlingDownloadAuthorizationClosed
 
@@ -110,7 +109,7 @@ SourceUseAuthorizationIntent
 | --- | --- |
 | Target event name | ArtifactHandlingDownloadAuthorizationClosed |
 | Selected source event name | ArtifactHandlingDownloadUseSettled |
-| Name decision | The exact authorization ended; the recorded outcome still distinguishes use, cancellation, or a late fence. |
+| Name decision | Names the completed closure of the policy’s exact download authorization. |
 | Canonical semantic key | event:ArtifactHandlingDownloadUseSettled |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | ArtifactHandlingDownloadUseSettled |
@@ -120,8 +119,8 @@ SourceUseAuthorizationIntent
 | Source status | planned_no_source_type |
 | Adopted decision IDs | ARTIFACT_DOWNLOAD |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Target meaning | null (recorded) |
-| Selected source meaning | null (recorded) |
+| Target meaning | The evidence handling policy closed permission for one exact download after the file was issued or the request was canceled. |
+| Selected source meaning | [Placeholder: value not recorded] |
 | Meaning source | [Placeholder: value not recorded] |
 
 #### Selected schema and implementation evidence
@@ -132,7 +131,6 @@ SourceUseAuthorizationIntent
 | Schema discriminator | bdgrz.evidence-handling-policy.artifact-handling-download-use-settled |
 | Schema discriminatorVersion | 1 |
 | Schema owner | EvidenceHandlingPolicy |
-| Schema existingContract | null (recorded) |
 | Schema status | selected target schema; implementation pending |
 | Schema reason | typed reactor receiver accepted business fact |
 | Schema changes | None listed |
@@ -195,7 +193,7 @@ SourceUseAuthorizationIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T103](../reactors/one-committed-evidence-artifact-download-requested-starter.md#t103) | emitted semantic fact | ArtifactDownloadGrant | CloseArtifactHandlingDownloadAuthorization | EvidenceHandlingPolicy |
+| [T103](../reactors/fulfill-authorized-artifact-download-request-reactor.md#t103) | emitted semantic fact | ArtifactDownloadGrant | CloseArtifactHandlingDownloadAuthorization | EvidenceHandlingPolicy |
 
 ### ArtifactHandlingPolicyAssigned
 

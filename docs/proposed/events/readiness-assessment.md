@@ -142,8 +142,8 @@ ReadinessRunIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T039](../reactors/readiness-run-reactor.md#t039) | logical prerequisite | ReadinessAssessment | AdoptReadinessAssessment | ProgramReadiness |
-| [T087](../reactors/readiness-run-reactor.md#t087) | emitted semantic fact | ProgramReadiness | ComputeReadinessAssessment | ReadinessAssessment |
+| [T039](../reactors/reassess-program-readiness-reactor.md#t039) | logical prerequisite | ReadinessAssessment | AdoptReadinessAssessment | ProgramReadiness |
+| [T087](../reactors/reassess-program-readiness-reactor.md#t087) | emitted semantic fact | ProgramReadiness | ComputeReadinessAssessment | ReadinessAssessment |
 
 
 

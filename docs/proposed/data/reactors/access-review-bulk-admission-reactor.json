@@ -28,7 +28,6 @@
       "currentRegisteredRootTypes": [
         "AccessReviewBulkAdmissionReactor"
       ],
-      "plannedRootRole": null,
       "processes": [
         "BulkAccessDecisionProcess"
       ],
@@ -94,7 +93,6 @@
       ],
       "canonicalTargetOwner": "AccessReviewItem",
       "logicalPrerequisiteRuleTemplate": "selected applicable typed variant/set; see required proof contract",
-      "prerequisiteRuleSource": "receiver guard from docs/product/audits/2026-10-23/target-reactor-contracts.json, lifted 2026-10-29",
       "recoveryContractSummary": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine."
     },
     {
@@ -122,7 +120,6 @@
       "currentRegisteredRootTypes": [
         "AccessReviewBulkAdmissionReactor"
       ],
-      "plannedRootRole": null,
       "processes": [
         "BulkAccessDecisionProcess"
       ],
@@ -197,7 +194,6 @@
       ],
       "canonicalTargetOwner": "AccessReviewItem",
       "logicalPrerequisiteRuleTemplate": "selected applicable typed variant/set; see required proof contract",
-      "prerequisiteRuleSource": "receiver guard from docs/product/audits/2026-10-23/target-reactor-contracts.json, lifted 2026-10-29",
       "recoveryContractSummary": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine."
     },
     {
@@ -225,7 +221,6 @@
       "currentRegisteredRootTypes": [
         "AccessReviewBulkAdmissionReactor"
       ],
-      "plannedRootRole": null,
       "processes": [
         "BulkAccessDecisionProcess"
       ],
@@ -301,7 +296,6 @@
       ],
       "canonicalTargetOwner": "AccessReviewDecisionBatch",
       "logicalPrerequisiteRuleTemplate": "selected applicable typed variant/set; see required proof contract",
-      "prerequisiteRuleSource": "receiver guard from docs/product/audits/2026-10-23/target-reactor-contracts.json, lifted 2026-10-29",
       "recoveryContractSummary": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine."
     },
     {
@@ -333,7 +327,6 @@
         "AccessReviewBulkAdmissionReactor",
         "AccessReviewBulkSettlementReactor"
       ],
-      "plannedRootRole": null,
       "processes": [
         "BulkAccessDecisionProcess"
       ],
@@ -400,7 +393,6 @@
       ],
       "canonicalTargetOwner": "AccessReviewItem",
       "logicalPrerequisiteRuleTemplate": "selected applicable typed variant/set; see required proof contract",
-      "prerequisiteRuleSource": "receiver guard from docs/product/audits/2026-10-23/target-reactor-contracts.json, lifted 2026-10-29",
       "recoveryContractSummary": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine."
     },
     {
@@ -428,7 +420,6 @@
       "currentRegisteredRootTypes": [
         "AccessReviewBulkAdmissionReactor"
       ],
-      "plannedRootRole": null,
       "processes": [
         "BulkAccessDecisionProcess"
       ],

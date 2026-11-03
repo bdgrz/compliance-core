@@ -53,13 +53,9 @@
         "terminalResultType": "Unit"
       },
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/25",
-        "line": 2005,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      },
       "kind": "command",
+      "sourceOwner": "EvidenceHandlingPolicy",
+      "owner": "EvidenceHandlingPolicy",
       "sourceName": "AssignArtifactHandlingPolicy",
       "targetName": "AssignArtifactHandlingPolicy"
     },
@@ -122,7 +118,7 @@
         }
       ],
       "reactor": "ArtifactHandlingDownloadUseReactor",
-      "sourceOwner": "EvidenceArtifact",
+      "sourceOwner": "EvidenceHandlingPolicy",
       "sourceEvents": [
         "EvidenceArtifactDownloadRequested"
       ],
@@ -134,10 +130,7 @@
       "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
       "handler": "AuthorizeArtifactHandlingDownloadUseHandler",
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "recorded": "2026-10-29"
-      },
+      "owner": "EvidenceHandlingPolicy",
       "sourceName": "AuthorizeArtifactHandlingDownloadUse",
       "targetName": "AuthorizeArtifactHandlingDownload"
     },
@@ -195,7 +188,7 @@
         }
       ],
       "reactor": "SettleArtifactHandlingDownloadUseReactor",
-      "sourceOwner": "ArtifactDownloadGrant",
+      "sourceOwner": "EvidenceHandlingPolicy",
       "sourceEvents": [
         "EvidenceArtifactDownloadIssued",
         "ArtifactDownloadGrantCanceled"
@@ -208,10 +201,7 @@
       "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
       "handler": "SettleArtifactHandlingDownloadUseHandler",
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "recorded": "2026-10-29"
-      },
+      "owner": "EvidenceHandlingPolicy",
       "sourceName": "SettleArtifactHandlingDownloadUse",
       "targetName": "CloseArtifactHandlingDownloadAuthorization"
     }

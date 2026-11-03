@@ -1,5 +1,7 @@
 # ProviderRiskAcceptance commands
 
+
+
 Selected command contracts: **1**. Complete selected contracts and companion source evidence: [owner command JSON](../data/commands/provider-risk-acceptance.json).
 
 | Target command | Selected source name | Kind | Identity | Fields | HTTP routes |
@@ -15,7 +17,8 @@ Selected command contracts: **1**. Complete selected contracts and companion sou
 | Target command name | LinkProviderRiskAcceptanceToGap |
 | Selected source command name | MaterializeProviderRiskAcceptanceLink |
 | Name decision | Links the exact active risk acceptance to the provider gap that admitted it. |
-| Owner | ProviderRiskAcceptance |
+| Target owner | ProviderRiskAcceptance |
+| Selected source owner | ProviderRiskAcceptance |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; internal; deterministic receiver identity derived from the admitted root fact, episode and generation: exact redelivery resolves the original result, a changed admission is a new identity |

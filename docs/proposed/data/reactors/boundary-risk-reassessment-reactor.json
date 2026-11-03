@@ -97,7 +97,6 @@
       ],
       "canonicalTargetOwner": "RiskGovernance",
       "recoveryContractSummary": "At-least-once checkpoint replay resends the same source-derived command. Missing dependencies remain retryable; actual terminal/superseded episodes are skipped only with the owning proof.",
-      "logicalPrerequisiteRuleGuard": null,
       "logicalPrerequisiteRule": "The source is BoundaryApproved for a successor boundary version (not the first approval of the boundary); a boundary-changed reassessment trigger is raised for each assessed risk of the program, and only if no trigger with the same deterministic id exists.",
       "prerequisiteRuleSource": "authored 2026-10-29 from reactor and target source"
     }

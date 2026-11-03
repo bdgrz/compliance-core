@@ -5,6 +5,7 @@
 - Business aggregate: `true`
 - Selected status: `SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED`
 
+
 ## Identity and invariant
 
 **Selected identity:** Tenant-scoped (tenantId, providerId, reportId); `ReportId` on `RecordAssuranceReport` is the caller-supplied immutable creation identity (exact immutable creation retry) so an exact retry resolves the original result and a different id is a different record; later mutations use CommandId bound to this identity and the expected revision.
@@ -18,6 +19,10 @@
 **Replay:** Current required authorization precedes replay; exact authorized retries resolve the original accepted result using the selected logical identity and immutable actor/intent/source binding. Fresh mutable feasibility, clock selection and body preparation cannot replace that original result. Expected revision is concurrency precondition, not a new identity.
 
 **Lifecycle:** [Placeholder: a consolidated lifecycle sequence is not present in the selected owner record.]
+
+
+
+
 
 ## Commands
 
@@ -41,12 +46,12 @@
 
 | Row | Kind | Source owner | Target owner | Command |
 | --- | --- | --- | --- | --- |
-| [T069](../reactors/provider-review-reactor.md#t069) | reaction_or_regular_process_stage | ProviderAssuranceReview | ProviderAssuranceReport | AuthorizeProviderAssuranceReportProviderReview |
-| [T070](../reactors/provider-review-reactor.md#t070) | reaction_or_regular_process_stage | ProviderAssuranceReview | ProviderAssuranceReport | CloseProviderAssuranceReportProviderReviewAuthorization |
+| [T069](../reactors/record-provider-assurance-report-review-reactor.md#t069) | reaction_or_regular_process_stage | ProviderAssuranceReview | ProviderAssuranceReport | AuthorizeProviderAssuranceReportProviderReview |
+| [T070](../reactors/record-provider-assurance-report-review-reactor.md#t070) | reaction_or_regular_process_stage | ProviderAssuranceReview | ProviderAssuranceReport | CloseProviderAssuranceReportProviderReviewAuthorization |
 
 ## Product rules
 
-- **D11-05** — An assurance report records kind, period or point-in-time date, issuing firm, opinion (unqualified, qualified, adverse, disclaimer), covered services, exceptions, relevant CUECs, coverage gaps, bridge letter when the report period ends before the need, and a governed artifact reference. Source: [m0-d11-vendors.md](../../product/decisions/m0-d11-vendors.md).
+- **D11-05** — An assurance report records kind, period or point-in-time date, issuing firm, opinion (unqualified, qualified, adverse, disclaimer), covered services, exceptions, relevant CUECs, coverage gaps, bridge letter when the report period ends before the need, and a governed artifact reference. Decision: [m0-d11-vendors.md](../decisions/m0-d11-vendors.md).
 
 ## Adopted architecture decisions
 

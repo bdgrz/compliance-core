@@ -1,5 +1,7 @@
 # Provider commands
 
+
+
 Selected command contracts: **4**. Complete selected contracts and companion source evidence: [owner command JSON](../data/commands/provider.json).
 
 | Target command | Selected source name | Kind | Identity | Fields | HTTP routes |
@@ -18,7 +20,8 @@ Selected command contracts: **4**. Complete selected contracts and companion sou
 | Target command name | RecordProvider |
 | Selected source command name | RecordProvider |
 | Name decision | The selected source name is retained. |
-| Owner | Provider |
+| Target owner | Provider |
+| Selected source owner | Provider |
 | Contract record status | target_contract |
 | Kind | http |
 | Logical identity | ProviderId; Uuid; required=true; client; caller-supplied immutable creation identity: an exact retry with the same id and authored intent returns the original result; the same id with changed intent is refused; a different id is a different record |
@@ -30,7 +33,7 @@ Selected command contracts: **4**. Complete selected contracts and companion sou
 | Contract changes | Add required ProviderId. |
 | Guard order | bind_required_ids, authenticate_authorize, canonicalize_authored_intent, resolve_native_operation_facts, compare_owner_episode_actor_kind_intent_original_revision, validate_new_owner_revision_and_source_permits, append_complete_concrete_attributed_batch |
 | Response contract | `{"mode":"async_fixed_ack","responseType":"OperationAcceptedResponse","firstHttpStatus":202,"terminalResultType":"ProviderRegistration"}` |
-| Expected revision scope | `{"field":null,"owner":"Provider","counter":"No primary caller ResourceRevision. Enforce required authored source/epoch/version tokens, immutable creation identity or trusted proof/generation as declared; append uses physical OCC."}` |
+| Expected revision scope | `{"owner":"Provider","counter":"No primary caller ResourceRevision. Enforce required authored source/epoch/version tokens, immutable creation identity or trusted proof/generation as declared; append uses physical OCC."}` |
 | Authorizer sources | src/Compliance.Core/Features/AccessControl/ClientManagementMutationAuthorizer.cs |
 | Source contract | src/Compliance.Common/Features/Providers/RecordProvider.cs |
 | Primary handler | RecordProviderHandler |
@@ -68,7 +71,8 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Target command name | ReviseProvider |
 | Selected source command name | ReviseProvider |
 | Name decision | The selected source name is retained. |
-| Owner | Provider |
+| Target owner | Provider |
+| Selected source owner | Provider |
 | Contract record status | target_contract |
 | Kind | http |
 | Logical identity | CommandId; Uuid; required=true; client; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
@@ -80,7 +84,7 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Contract changes | Add required CommandId. |
 | Guard order | bind_required_ids, authenticate_authorize, canonicalize_authored_intent, resolve_native_operation_facts, compare_owner_episode_actor_kind_intent_original_revision, validate_new_owner_revision_and_source_permits, append_complete_concrete_attributed_batch |
 | Response contract | `{"mode":"async_fixed_ack","responseType":"OperationAcceptedResponse","firstHttpStatus":202,"terminalResultType":"ProviderRegistration"}` |
-| Expected revision scope | `{"field":"ExpectedRevision","owner":"Provider","counter":"logical ResourceRevision of this owner","nullableInternalRule":null}` |
+| Expected revision scope | `{"field":"ExpectedRevision","owner":"Provider","counter":"logical ResourceRevision of this owner"}` |
 | Authorizer sources | src/Compliance.Core/Features/AccessControl/ClientManagementMutationAuthorizer.cs |
 | Source contract | src/Compliance.Common/Features/Providers/ReviseProvider.cs |
 | Primary handler | ReviseProviderHandler |
@@ -120,7 +124,8 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Target command name | CancelProviderChange |
 | Selected source command name | CancelProviderChange |
 | Name decision | The selected source name is retained. |
-| Owner | Provider |
+| Target owner | Provider |
+| Selected source owner | Provider |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | abort |
 | Logical identity | CommandId; Uuid; required=true; abort receiver identity bound to the exact admitted operation and generation: exact redelivery resolves the original rejected result; an abort after a terminal outcome is a no-op |
@@ -169,7 +174,8 @@ Required tests: [Placeholder: required tests not recorded]
 | Target command name | ApplyProviderChange |
 | Selected source command name | ApplyProviderChange |
 | Name decision | The selected source name is retained. |
-| Owner | Provider |
+| Target owner | Provider |
+| Selected source owner | Provider |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; reactor; deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result |

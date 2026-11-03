@@ -5,6 +5,7 @@
 - Business aggregate: `true`
 - Selected status: `SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED`
 
+
 ## Identity and invariant
 
 **Selected identity:** Tenant-scoped tenant / evaluationId; the identity is established by the admitting owner or reactor named in the choreography, never by a caller request key; mutations bind CommandId to this exact identity.
@@ -18,6 +19,10 @@
 **Replay:** Current required authorization precedes replay; exact authorized retries resolve the original accepted result using the selected logical identity and immutable actor/intent/source binding. Fresh mutable feasibility, clock selection and body preparation cannot replace that original result. Expected revision is concurrency precondition, not a new identity.
 
 **Lifecycle:** [Placeholder: a consolidated lifecycle sequence is not present in the selected owner record.]
+
+
+
+
 
 ## Commands
 
@@ -36,7 +41,7 @@
 
 | Row | Kind | Source owner | Target owner | Command |
 | --- | --- | --- | --- | --- |
-| [T109](../reactors/engagement-personal-decision-reactor.md#t109) | reaction_or_regular_process_stage | ServiceEngagementIndependence | PartnerIndependenceDecision | RecordPartnerIndependenceEvaluation |
+| [T109](../reactors/record-engagement-independence-decisions-reactor.md#t109) | reaction_or_regular_process_stage | ServiceEngagementIndependence | PartnerIndependenceDecision | RecordPartnerIndependenceEvaluation |
 
 ## Product rules
 
@@ -49,7 +54,7 @@
 ## Evidence and complete record
 
 - Baseline source: [Placeholder: source file is not present in this checkout]
-- Aggregate review: [partner-independence-decision-review-2026-10-29.md](../../product/definitive-aggregate-choreography/partner-independence-decision-review-2026-10-29.md)
+- Aggregate review: [Placeholder: no owner-specific review file is present]
 - Full selected record: [JSON](../data/aggregates/partner-independence-decision.json)
 
 > Target definition is separate from runtime qualification. Implementation status recorded by the source: `SEPARATE_VERIFICATION_REQUIRED_IMPLEMENTATION_HALTED`.

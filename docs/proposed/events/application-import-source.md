@@ -37,7 +37,6 @@ Canonical events: **2**. Complete canonical event and available schema records: 
 | Schema discriminator | bdgrz.application-import-source.application-import-source-admission-recorded |
 | Schema discriminatorVersion | 1 |
 | Schema owner | ApplicationImportSource |
-| Schema existingContract | null (recorded) |
 | Schema status | selected target schema; implementation pending |
 | Schema reason | typed reactor receiver accepted business fact |
 | Schema changes | None listed |
@@ -118,8 +117,8 @@ ImportFrozenPlanIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T014](../reactors/import-source-admission-reactor.md#t014) | emitted semantic fact | ApplicationImportBatch | ClaimApplicationImportSource | ApplicationImportSource |
-| [N000](../reactors/import-source-admission-reactor.md#n000) | logical prerequisite | ApplicationImportBatch | ExecuteApplicationImport | ApplicationImportBatch |
+| [T014](../reactors/apply-accepted-application-import-reactor.md#t014) | emitted semantic fact | ApplicationImportBatch | ClaimApplicationImportSource | ApplicationImportSource |
+| [N000](../reactors/apply-accepted-application-import-reactor.md#n000) | logical prerequisite | ApplicationImportBatch | ExecuteApplicationImport | ApplicationImportBatch |
 
 ### ApplicationImportSourceBatchCompleted
 
@@ -149,7 +148,6 @@ ImportFrozenPlanIntent
 | Schema discriminator | bdgrz.application-import-source.application-import-source-settled |
 | Schema discriminatorVersion | 1 |
 | Schema owner | ApplicationImportSource |
-| Schema existingContract | null (recorded) |
 | Schema status | selected target schema; implementation pending |
 | Schema reason | typed reactor receiver accepted business fact |
 | Schema changes | None listed |
@@ -230,7 +228,7 @@ ImportFrozenPlanIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T020](../reactors/import-source-admission-reactor.md#t020) | emitted semantic fact | ApplicationImportBatch | ReleaseApplicationImportSource | ApplicationImportSource |
+| [T020](../reactors/apply-accepted-application-import-reactor.md#t020) | emitted semantic fact | ApplicationImportBatch | ReleaseApplicationImportSource | ApplicationImportSource |
 
 
 

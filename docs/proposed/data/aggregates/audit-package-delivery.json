@@ -8,14 +8,7 @@
   "invariant": "One delivery authorization and terminal delivery for exact recipient/version.",
   "boundaryDecision": "selected_split",
   "mustPreserve": "No current aggregate should retain all build attempts or delivery history as command state.",
-  "sources": [
-    {
-      "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
-      "jsonPointer": "/splitOwners/9/targetOwners/2",
-      "line": 1112,
-      "sha256": "d349d94b7c43f4d82020ecf36bdacf1aff98bc6498e14993582f1c3164b21f19"
-    }
-  ],
+  "sources": [],
   "baselineSourcePath": "src/Compliance.Core/Features/AuditPackages/AuditPackage.cs",
   "baselineEvents": [
     "AuditPackageDelivered"
@@ -87,7 +80,7 @@
         "recorded": "2026-10-29"
       },
       "reactor": "AuditPackageDeliveryAdmissionReactor",
-      "sourceOwner": "AuditPackageManifest",
+      "sourceOwner": "AuditPackageDelivery",
       "sourceEvents": [
         "AuditPackageDeliveryAdmitted"
       ],
@@ -96,7 +89,8 @@
         "AuditPackageDelivered"
       ],
       "effectKind": "materialize_recorded_audit_package_delivery",
-      "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine."
+      "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
+      "owner": "AuditPackageDelivery"
     }
   ],
   "eventAuthority": "selected_final_event_catalog",
@@ -104,13 +98,7 @@
     {
       "event": "AuditPackageDelivered",
       "discriminator": "bdgrz.auditpackages.audit-package-delivered",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/76",
-        "line": 9280,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     }
   ],
   "choreography": [
@@ -118,13 +106,7 @@
       "reactor": "AuditPackageDeliveryAdmissionReactor",
       "sourceOwner": "AuditPackageManifest",
       "targetOwner": "AuditPackageDelivery",
-      "command": "MaterializeRecordedAuditPackageDelivery",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "jsonPointer": "/reactors/81",
-        "line": 6957,
-        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
-      }
+      "command": "MaterializeRecordedAuditPackageDelivery"
     }
   ],
   "status": "SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED",
@@ -135,5 +117,6 @@
   "baselineIdentityObservationOnly": true,
   "selectedLogicalIdentityBindings": [],
   "selectedReplayRule": "Current required authorization precedes replay; exact authorized retries resolve the original accepted result using the selected logical identity and immutable actor/intent/source binding. Fresh mutable feasibility, clock selection and body preparation cannot replace that original result. Expected revision is concurrency precondition, not a new identity.",
-  "commandNote": "Only owner write is the process-dispatched materialization. The user command is on the manifest owner."
+  "commandNote": "Only owner write is the process-dispatched materialization. The user command is on the manifest owner.",
+  "sourceOwner": "AuditPackageDelivery"
 }

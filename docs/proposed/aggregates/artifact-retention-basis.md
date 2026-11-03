@@ -5,6 +5,7 @@
 - Business aggregate: `true`
 - Selected status: `SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED`
 
+
 ## Identity and invariant
 
 **Selected identity:** Tenant-scoped artifactContentId; the identity is established by the admitting owner or reactor named in the choreography, never by a caller request key; mutations bind CommandId to this exact identity.
@@ -18,6 +19,10 @@
 **Replay:** Current required authorization precedes replay; exact authorized retries resolve the original accepted result using the selected logical identity and immutable actor/intent/source binding. Fresh mutable feasibility, clock selection and body preparation cannot replace that original result. Expected revision is concurrency precondition, not a new identity.
 
 **Lifecycle:** [Placeholder: a consolidated lifecycle sequence is not present in the selected owner record.]
+
+
+
+
 
 ## Commands
 
@@ -38,7 +43,7 @@
 
 ## Product rules
 
-- **D16-05** — Default evidence retention is 7 years after the end of the period the evidence supports; for point-in-time evidence the period end is its as-of date. Source: [m0-d16-evidence-handling.md](../../product/decisions/m0-d16-evidence-handling.md).
+- **D16-05** — Default evidence retention is 7 years after the end of the period the evidence supports; for point-in-time evidence the period end is its as-of date. Decision: [m0-d16-evidence-handling.md](../decisions/m0-d16-evidence-handling.md).
 
 ## Adopted architecture decisions
 
@@ -47,7 +52,7 @@
 ## Evidence and complete record
 
 - Baseline source: [Placeholder: source file is not present in this checkout]
-- Aggregate review: [artifact-retention-basis-review-2026-10-29.md](../../product/definitive-aggregate-choreography/artifact-retention-basis-review-2026-10-29.md)
+- Aggregate review: [Placeholder: no owner-specific review file is present]
 - Full selected record: [JSON](../data/aggregates/artifact-retention-basis.json)
 
 > Target definition is separate from runtime qualification. Implementation status recorded by the source: `SEPARATE_VERIFICATION_REQUIRED_IMPLEMENTATION_HALTED`.

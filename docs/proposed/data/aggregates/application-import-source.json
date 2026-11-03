@@ -10,12 +10,6 @@
   "mustPreserve": "Freeze complete rows and expected revisions. No partial batch visibility. Target owner replay uses accepted native facts without live coordinator lookup. Staged observation and execution share one ApplicationImportBatch revision; old ImportBatch is a cutover predecessor only.",
   "sources": [
     {
-      "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
-      "jsonPointer": "/splitOwners/7/targetOwners/0",
-      "line": 820,
-      "sha256": "d349d94b7c43f4d82020ecf36bdacf1aff98bc6498e14993582f1c3164b21f19"
-    },
-    {
       "path": "[Placeholder: source artifact was recorded outside this repository]",
       "jsonPointer": "/decisions/0",
       "sha256": "8fdaec764a3554f2ea470aba66f2ce0945a424adbeba7505684314655d62216f",
@@ -94,7 +88,7 @@
         "recorded": "2026-10-29"
       },
       "reactor": "ImportSourceAdmissionReactor",
-      "sourceOwner": "ApplicationImportBatch",
+      "sourceOwner": "ApplicationImportSource",
       "sourceEvents": [
         "ApplicationImportPlanSealed"
       ],
@@ -103,7 +97,8 @@
         "ApplicationImportSourceAdmissionRecorded"
       ],
       "effectKind": "claim_application_import_source",
-      "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine."
+      "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
+      "owner": "ApplicationImportSource"
     },
     {
       "command": "ReleaseApplicationImportSource",
@@ -155,7 +150,7 @@
         "recorded": "2026-10-29"
       },
       "reactor": "ImportSourceReleaseReactor",
-      "sourceOwner": "ApplicationImportBatch",
+      "sourceOwner": "ApplicationImportSource",
       "sourceEvents": [
         "ApplicationImportCommitted",
         "ApplicationImportCanceled",
@@ -166,7 +161,8 @@
         "ApplicationImportSourceSettled"
       ],
       "effectKind": "release_application_import_source",
-      "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine."
+      "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
+      "owner": "ApplicationImportSource"
     }
   ],
   "eventAuthority": "selected_final_event_catalog",
@@ -174,24 +170,12 @@
     {
       "event": "ApplicationImportSourceAdmissionRecorded",
       "discriminator": "bdgrz.application-import-source.application-import-source-admission-recorded",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/51",
-        "line": 6370,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     },
     {
       "event": "ApplicationImportSourceSettled",
       "discriminator": "bdgrz.application-import-source.application-import-source-settled",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/52",
-        "line": 6598,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     }
   ],
   "choreography": [
@@ -199,25 +183,13 @@
       "reactor": "ImportSourceAdmissionReactor",
       "sourceOwner": "ApplicationImportBatch",
       "targetOwner": "ApplicationImportSource",
-      "command": "ClaimApplicationImportSource",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "jsonPointer": "/reactors/14",
-        "line": 1209,
-        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
-      }
+      "command": "ClaimApplicationImportSource"
     },
     {
       "reactor": "ImportSourceReleaseReactor",
       "sourceOwner": "ApplicationImportBatch",
       "targetOwner": "ApplicationImportSource",
-      "command": "ReleaseApplicationImportSource",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "jsonPointer": "/reactors/20",
-        "line": 1717,
-        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
-      }
+      "command": "ReleaseApplicationImportSource"
     }
   ],
   "status": "SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED",
@@ -257,5 +229,6 @@
   "decidesCovers": [
     "D20-05"
   ],
-  "decidesAuthored": "2026-10-29"
+  "decidesAuthored": "2026-10-29",
+  "sourceOwner": "ApplicationImportSource"
 }

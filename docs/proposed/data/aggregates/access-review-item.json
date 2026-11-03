@@ -8,14 +8,7 @@
   "invariant": "One reviewer decision, reassignment, remediation verification, exception and history for one frozen item. A privileged entitlement item accepts only an individual named reviewer decision; bulk or delegated decisions are refused for privileged access (M0-D07 D07-09; source AccessReviewRules.cs)",
   "boundaryDecision": "selected_split",
   "mustPreserve": "Keep reviewer and remediation owner distinct per item unless exact waiver; no stale projected summary may satisfy completion.",
-  "sources": [
-    {
-      "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
-      "jsonPointer": "/splitOwners/4/targetOwners/1",
-      "line": 484,
-      "sha256": "d349d94b7c43f4d82020ecf36bdacf1aff98bc6498e14993582f1c3164b21f19"
-    }
-  ],
+  "sources": [],
   "baselineSourcePath": "src/Compliance.Core/Features/AccessReviews/AccessReviewCampaign.cs",
   "baselineEvents": [
     "AccessDecisionsRecorded",
@@ -90,13 +83,9 @@
           "policy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/55",
-        "line": 6535,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
-      "kind": "http"
+      "kind": "http",
+      "sourceOwner": "AccessReviewItem",
+      "owner": "AccessReviewItem"
     },
     {
       "command": "ReassignAccessReviewResponsibility",
@@ -167,13 +156,9 @@
           "policy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/86",
-        "line": 10047,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
-      "kind": "http"
+      "kind": "http",
+      "sourceOwner": "AccessReviewItem",
+      "owner": "AccessReviewItem"
     },
     {
       "command": "RecordAccessDecision",
@@ -239,13 +224,9 @@
           "policy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/88",
-        "line": 10281,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
-      "kind": "http"
+      "kind": "http",
+      "sourceOwner": "AccessReviewItem",
+      "owner": "AccessReviewItem"
     },
     {
       "command": "RecordAccessRemediationChange",
@@ -311,13 +292,9 @@
           "policy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/90",
-        "line": 10528,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
-      "kind": "http"
+      "kind": "http",
+      "sourceOwner": "AccessReviewItem",
+      "owner": "AccessReviewItem"
     },
     {
       "command": "VerifyAccessRemediation",
@@ -373,13 +350,9 @@
           "policy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/158",
-        "line": 18392,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
-      "kind": "http"
+      "kind": "http",
+      "sourceOwner": "AccessReviewItem",
+      "owner": "AccessReviewItem"
     },
     {
       "command": "MaterializeAccessReviewItem",
@@ -440,7 +413,7 @@
         }
       ],
       "reactor": "AccessReviewItemMaterializationReactor",
-      "sourceOwner": "AccessReviewCampaign",
+      "sourceOwner": "AccessReviewItem",
       "sourceEvents": [
         "AccessReviewCampaignLaunched"
       ],
@@ -452,10 +425,7 @@
       "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
       "handler": "MaterializeAccessReviewItemHandler",
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "recorded": "2026-10-29"
-      }
+      "owner": "AccessReviewItem"
     },
     {
       "command": "ReserveAccessReviewItemDecision",
@@ -526,7 +496,7 @@
         }
       ],
       "reactor": "AccessReviewBulkReservationReactor",
-      "sourceOwner": "AccessReviewDecisionBatch",
+      "sourceOwner": "AccessReviewItem",
       "sourceEvents": [
         "AccessReviewDecisionBatchAccepted"
       ],
@@ -538,10 +508,7 @@
       "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
       "handler": "ReserveAccessReviewItemDecisionHandler",
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "recorded": "2026-10-29"
-      }
+      "owner": "AccessReviewItem"
     },
     {
       "command": "ApplyAccessReviewItemDecision",
@@ -607,7 +574,7 @@
         }
       ],
       "reactor": "AccessReviewBulkApplicationReactor",
-      "sourceOwner": "AccessReviewDecisionBatch",
+      "sourceOwner": "AccessReviewItem",
       "sourceEvents": [
         "AccessReviewDecisionBatchAccepted"
       ],
@@ -619,10 +586,7 @@
       "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
       "handler": "ApplyAccessReviewItemDecisionHandler",
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "recorded": "2026-10-29"
-      }
+      "owner": "AccessReviewItem"
     },
     {
       "command": "FenceAccessReviewItemDecision",
@@ -683,7 +647,7 @@
         }
       ],
       "reactor": "AccessReviewBulkCancellationReactor",
-      "sourceOwner": "AccessReviewDecisionBatch",
+      "sourceOwner": "AccessReviewItem",
       "sourceEvents": [
         "AccessReviewDecisionBatchCancellationAccepted"
       ],
@@ -695,10 +659,7 @@
       "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
       "handler": "FenceAccessReviewItemDecisionHandler",
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "recorded": "2026-10-29"
-      }
+      "owner": "AccessReviewItem"
     },
     {
       "command": "AuthorizeAccessReviewItemCampaignCompletionUse",
@@ -764,7 +725,7 @@
         }
       ],
       "reactor": "CampaignCompletionAccessReviewItemAuthorizationReactor",
-      "sourceOwner": "AccessReviewCampaign",
+      "sourceOwner": "AccessReviewItem",
       "sourceEvents": [
         "AccessReviewCampaignCompletionAccepted"
       ],
@@ -776,10 +737,7 @@
       "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
       "handler": "AuthorizeAccessReviewItemCampaignCompletionUseHandler",
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "recorded": "2026-10-29"
-      }
+      "owner": "AccessReviewItem"
     },
     {
       "command": "SettleAccessReviewItemCampaignCompletionUse",
@@ -845,7 +803,7 @@
         }
       ],
       "reactor": "CampaignCompletionAccessReviewItemSettlementReactor",
-      "sourceOwner": "AccessReviewCampaign",
+      "sourceOwner": "AccessReviewItem",
       "sourceEvents": [
         "AccessReviewCampaignCompleted",
         "AccessReviewCampaignCompletionCanceled"
@@ -858,10 +816,7 @@
       "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
       "handler": "SettleAccessReviewItemCampaignCompletionUseHandler",
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "recorded": "2026-10-29"
-      }
+      "owner": "AccessReviewItem"
     },
     {
       "command": "SettleAccessReviewItemDecision",
@@ -922,7 +877,7 @@
         }
       ],
       "reactor": "AccessReviewBulkSettlementReactor",
-      "sourceOwner": "AccessReviewDecisionBatch",
+      "sourceOwner": "AccessReviewItem",
       "sourceEvents": [
         "AccessReviewDecisionBatchPublished",
         "AccessReviewDecisionBatchCanceled"
@@ -935,10 +890,7 @@
       "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
       "handler": "SettleAccessReviewItemDecisionHandler",
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "recorded": "2026-10-29"
-      }
+      "owner": "AccessReviewItem"
     }
   ],
   "eventAuthority": "selected_final_event_catalog",
@@ -946,123 +898,57 @@
     {
       "event": "AccessDecisionsRecorded",
       "discriminator": "bdgrz.access_review.decisions.recorded",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/0",
-        "line": 6,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     },
     {
       "event": "AccessRemediationChangeRecorded",
       "discriminator": "bdgrz.access_review.remediation.change_recorded",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/9",
-        "line": 728,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     },
     {
       "event": "AccessRemediationExceptionRecorded",
       "discriminator": "bdgrz.access_review.remediation.exception_recorded",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/10",
-        "line": 793,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     },
     {
       "event": "AccessRemediationVerified",
       "discriminator": "bdgrz.access_review.remediation.verified",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/11",
-        "line": 858,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     },
     {
       "event": "AccessReviewItemCampaignCompletionUseAuthorized",
       "discriminator": "bdgrz.access-review-item.access-review-item-campaign-completion-use-authorized",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/21",
-        "line": 2351,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     },
     {
       "event": "AccessReviewItemCampaignCompletionUseSettled",
       "discriminator": "bdgrz.access-review-item.access-review-item-campaign-completion-use-settled",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/22",
-        "line": 2487,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     },
     {
       "event": "AccessReviewItemDecisionAuthorized",
       "discriminator": "bdgrz.access-review-item.access-review-item-decision-authorized",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/23",
-        "line": 2623,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     },
     {
       "event": "AccessReviewItemDecisionCanceled",
       "discriminator": "bdgrz.access-review-item.access-review-item-decision-canceled",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/24",
-        "line": 2789,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     },
     {
       "event": "AccessReviewItemDecisionSettled",
       "discriminator": "bdgrz.access-review-item.access-review-item-decision-settled",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/25",
-        "line": 2955,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     },
     {
       "event": "AccessReviewItemOpened",
       "discriminator": "bdgrz.access-review-item.access-review-item-opened",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/26",
-        "line": 3121,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     },
     {
       "event": "AccessReviewResponsibilityReassigned",
       "discriminator": "bdgrz.access_review.responsibility.reassigned",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/27",
-        "line": 3287,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     }
   ],
   "choreography": [
@@ -1070,85 +956,43 @@
       "reactor": "AccessReviewItemMaterializationReactor",
       "sourceOwner": "AccessReviewCampaign",
       "targetOwner": "AccessReviewItem",
-      "command": "MaterializeAccessReviewItem",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "jsonPointer": "/reactors/8",
-        "line": 702,
-        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
-      }
+      "command": "MaterializeAccessReviewItem"
     },
     {
       "reactor": "AccessReviewBulkReservationReactor",
       "sourceOwner": "AccessReviewDecisionBatch",
       "targetOwner": "AccessReviewItem",
-      "command": "ReserveAccessReviewItemDecision",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "jsonPointer": "/reactors/9",
-        "line": 784,
-        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
-      }
+      "command": "ReserveAccessReviewItemDecision"
     },
     {
       "reactor": "AccessReviewBulkApplicationReactor",
       "sourceOwner": "AccessReviewDecisionBatch",
       "targetOwner": "AccessReviewItem",
-      "command": "ApplyAccessReviewItemDecision",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "jsonPointer": "/reactors/10",
-        "line": 876,
-        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
-      }
+      "command": "ApplyAccessReviewItemDecision"
     },
     {
       "reactor": "AccessReviewBulkCancellationReactor",
       "sourceOwner": "AccessReviewDecisionBatch",
       "targetOwner": "AccessReviewItem",
-      "command": "FenceAccessReviewItemDecision",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "jsonPointer": "/reactors/12",
-        "line": 1045,
-        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
-      }
+      "command": "FenceAccessReviewItemDecision"
     },
     {
       "reactor": "CampaignCompletionAccessReviewItemAuthorizationReactor",
       "sourceOwner": "AccessReviewCampaign",
       "targetOwner": "AccessReviewItem",
-      "command": "AuthorizeAccessReviewItemCampaignCompletionUse",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "jsonPointer": "/reactors/59",
-        "line": 5056,
-        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
-      }
+      "command": "AuthorizeAccessReviewItemCampaignCompletionUse"
     },
     {
       "reactor": "CampaignCompletionAccessReviewItemSettlementReactor",
       "sourceOwner": "AccessReviewCampaign",
       "targetOwner": "AccessReviewItem",
-      "command": "SettleAccessReviewItemCampaignCompletionUse",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "jsonPointer": "/reactors/60",
-        "line": 5143,
-        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
-      }
+      "command": "SettleAccessReviewItemCampaignCompletionUse"
     },
     {
       "reactor": "AccessReviewBulkSettlementReactor",
       "sourceOwner": "AccessReviewDecisionBatch",
       "targetOwner": "AccessReviewItem",
-      "command": "SettleAccessReviewItemDecision",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "jsonPointer": "/reactors/80",
-        "line": 6873,
-        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
-      }
+      "command": "SettleAccessReviewItemDecision"
     }
   ],
   "status": "SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED",
@@ -1166,12 +1010,6 @@
         "required": true,
         "origin": "client",
         "rule": "one immutable authored operation"
-      },
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/55",
-        "line": 6535,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       }
     },
     {
@@ -1182,12 +1020,6 @@
         "required": true,
         "origin": "client",
         "rule": "one immutable authored operation"
-      },
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/86",
-        "line": 10047,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       }
     },
     {
@@ -1198,12 +1030,6 @@
         "required": true,
         "origin": "client",
         "rule": "one immutable authored operation"
-      },
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/88",
-        "line": 10281,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       }
     },
     {
@@ -1214,12 +1040,6 @@
         "required": true,
         "origin": "client",
         "rule": "one immutable authored operation"
-      },
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/90",
-        "line": 10528,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       }
     },
     {
@@ -1230,12 +1050,6 @@
         "required": true,
         "origin": "client",
         "rule": "one immutable authored operation"
-      },
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/158",
-        "line": 18392,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       }
     }
   ],
@@ -1268,5 +1082,6 @@
   "decidesCovers": [
     "D07-11"
   ],
-  "decidesAuthored": "2026-10-29"
+  "decidesAuthored": "2026-10-29",
+  "sourceOwner": "AccessReviewItem"
 }

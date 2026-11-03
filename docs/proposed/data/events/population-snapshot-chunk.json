@@ -26,8 +26,8 @@
       "schema": null,
       "sourceName": "PopulationSnapshotChunkStored",
       "targetName": "PopulationSnapshotPartRecorded",
-      "nameDecision": "Names one ordered part of population data recorded before the complete snapshot is finalized.",
-      "targetMeaning": "One ordered storage chunk of a population snapshot's rows. Chunks are written before the snapshot's frozen manifest, so an interrupted freeze leaves no visible snapshot. ChunkSha256 is the population digest of this chunk's rows alone."
+      "nameDecision": "Names one group of population rows saved while the complete snapshot is assembled.",
+      "targetMeaning": "A group of population rows was saved for the snapshot. The full population is not available until all parts are finalized."
     }
   ]
 }

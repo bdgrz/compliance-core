@@ -21,11 +21,11 @@ Selected choreography rows: **2**. Required proofs, recovery, effect identity, a
 | id | S020 |
 | kind | business_receiver |
 | status | SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED |
-| sourceOwner | SystemDescription |
+| Source owner (target name) | SystemDescription (source: SystemDescription) |
 | logicalPrerequisiteFacts (target names) | SystemDescriptionApproved, SystemDescriptionNoChangeRecorded |
 | physicalRootEvents (target names) | SystemDescriptionApproved, SystemDescriptionNoChangeRecorded |
 | Target command (selected source name: RecordSignificantChangeSystemDescriptionDecision) | RecordSignificantChangeSystemDescriptionDecision |
-| targetOwner | SignificantChange |
+| Target owner | SignificantChange |
 | targetAuthorityKind | business_aggregate |
 | emittedSemanticFacts (target names) | SignificantChangeSystemDescriptionDecisionRecorded |
 | currentRegisteredRootTypes (target names) | UpdateSystemDescriptionAfterSignificantChangeReactor |
@@ -36,7 +36,6 @@ Selected choreography rows: **2**. Required proofs, recovery, effect identity, a
 | sourceOwners | SystemDescription |
 | canonicalTargetOwner | SignificantChange |
 | recoveryContractSummary | At-least-once checkpoint replay resends the same source-derived command. Missing dependencies remain retryable; actual terminal/superseded episodes are skipped only with the owning proof. |
-| logicalPrerequisiteRuleGuard | null (recorded) |
 | logicalPrerequisiteRule | The source is an approved system description or a recorded no-change decision for a change that still requires system-description review; the receiver records the decision only if it matches the current assessment (content version and hash), the correlated decision is not earlier than the assessment, all required follow-up work is already linked, and the decider is not the change assessor. |
 | prerequisiteRuleSource | authored 2026-10-29 from reactor and target source |
 
@@ -47,11 +46,11 @@ Selected choreography rows: **2**. Required proofs, recovery, effect identity, a
 | id | S021 |
 | kind | business_receiver |
 | status | SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED |
-| sourceOwner | SystemDescription |
+| Source owner (target name) | SystemDescription (source: SystemDescription) |
 | logicalPrerequisiteFacts (target names) | SystemDescriptionNoChangeRecorded |
 | physicalRootEvents (target names) | SystemDescriptionApproved, SystemDescriptionNoChangeRecorded |
 | Target command (selected source name: RecordComplianceIncidentSystemDescriptionDecision) | RecordComplianceIncidentSystemDescriptionDecision |
-| targetOwner | ComplianceIncident |
+| Target owner | ComplianceIncident |
 | targetAuthorityKind | business_aggregate |
 | emittedSemanticFacts (target names) | ComplianceIncidentSystemDescriptionDecisionRecorded |
 | currentRegisteredRootTypes (target names) | UpdateSystemDescriptionAfterSignificantChangeReactor |
@@ -62,7 +61,6 @@ Selected choreography rows: **2**. Required proofs, recovery, effect identity, a
 | sourceOwners | SystemDescription |
 | canonicalTargetOwner | ComplianceIncident |
 | recoveryContractSummary | At-least-once checkpoint replay resends the same source-derived command. Missing dependencies remain retryable; actual terminal/superseded episodes are skipped only with the owning proof. |
-| logicalPrerequisiteRuleGuard | null (recorded) |
 | logicalPrerequisiteRule | A no-change system-description decision must correlate to exactly one incident current-assessment (incident, version and hash) requiring system description review, and no change with the same ID; the incident records the decision once. |
 | prerequisiteRuleSource | authored 2026-10-29 from reactor and target source |
 

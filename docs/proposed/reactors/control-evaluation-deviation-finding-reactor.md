@@ -20,11 +20,11 @@ Selected choreography rows: **1**. Required proofs, recovery, effect identity, a
 | id | S001 |
 | kind | business_receiver |
 | status | SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED |
-| sourceOwner | ControlEvaluation |
+| Source owner (target name) | ControlEvaluation (source: ControlEvaluation) |
 | logicalPrerequisiteFacts (target names) | ControlEvaluationSubmitted |
 | physicalRootEvents (target names) | ControlEvaluationSubmitted |
 | Target command (selected source name: RaiseEvaluationDeviationFinding) | RaiseEvaluationDeviationFinding |
-| targetOwner | FindingAggregate |
+| Target owner | FindingAggregate |
 | targetAuthorityKind | business_aggregate |
 | emittedSemanticFacts (target names) | FindingRaised |
 | currentRegisteredRootTypes (target names) | ControlEvaluationDeviationFindingReactor |
@@ -35,7 +35,6 @@ Selected choreography rows: **1**. Required proofs, recovery, effect identity, a
 | sourceOwners | ControlEvaluation |
 | canonicalTargetOwner | FindingAggregate |
 | recoveryContractSummary | At-least-once checkpoint replay resends the same source-derived command. Missing dependencies remain retryable; actual terminal/superseded episodes are skipped only with the owning proof. |
-| logicalPrerequisiteRuleGuard | null (recorded) |
 | logicalPrerequisiteRule | The source is a committed ControlEvaluationSubmitted whose verified submission lists a deviation classified material; the finding id derives from the deviation, and the finding is raised only if that deviation is still the latest submitted material deviation with the same finding id and the control version's owner (or the evaluator) can be resolved as owner. |
 | prerequisiteRuleSource | authored 2026-10-29 from reactor and target source |
 

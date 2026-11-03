@@ -5,6 +5,7 @@
 - Business aggregate: `true`
 - Selected status: `SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED`
 
+
 ## Identity and invariant
 
 **Selected identity:** Deterministic tenant + program + commitment identity + control identity tuple (same scheme as RiskTreatmentAssertion); `LinkId` must equal that tuple; later commands use CommandId with the exact commitment version and control version.
@@ -19,6 +20,10 @@
 
 **Lifecycle:** [Placeholder: a consolidated lifecycle sequence is not present in the selected owner record.]
 
+
+
+
+
 ## Commands
 
 | Command | Kind | Identity field |
@@ -31,9 +36,9 @@
 
 | Event | Discriminator | Version |
 | --- | --- | --- |
-| [CommitmentControlLinkProposed](../events/commitment-control-link.md#commitmentcontrollinkproposed) | [Placeholder: discriminator not recorded] | null (recorded) |
-| [CommitmentControlLinkRetired](../events/commitment-control-link.md#commitmentcontrollinkretired) | [Placeholder: discriminator not recorded] | null (recorded) |
-| [CommitmentControlLinkReviewed](../events/commitment-control-link.md#commitmentcontrollinkreviewed) | [Placeholder: discriminator not recorded] | null (recorded) |
+| [CommitmentControlLinkProposed](../events/commitment-control-link.md#commitmentcontrollinkproposed) | [Placeholder: discriminator not recorded] | [Placeholder: value not recorded] |
+| [CommitmentControlLinkRetired](../events/commitment-control-link.md#commitmentcontrollinkretired) | [Placeholder: discriminator not recorded] | [Placeholder: value not recorded] |
+| [CommitmentControlLinkReviewed](../events/commitment-control-link.md#commitmentcontrollinkreviewed) | [Placeholder: discriminator not recorded] | [Placeholder: value not recorded] |
 
 ## Cross-owner flows
 
@@ -41,7 +46,7 @@
 
 ## Product rules
 
-- **D09-09** — Commitments and controls are linked many-to-many through versioned commitment-control links. Source: [m0-d09-commitments.md](../../product/decisions/m0-d09-commitments.md).
+- **D09-09** — Commitments and controls are linked many-to-many through versioned commitment-control links. Decision: [m0-d09-commitments.md](../decisions/m0-d09-commitments.md).
 
 ## Adopted architecture decisions
 

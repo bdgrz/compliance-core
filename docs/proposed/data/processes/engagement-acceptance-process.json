@@ -37,8 +37,7 @@
       "receivers": [
         "CompleteServiceEngagementAcceptance",
         "CompleteServiceEngagementStaffAssignment"
-      ],
-      "rule": null
+      ]
     },
     {
       "stage": "settle",

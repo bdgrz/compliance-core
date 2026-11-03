@@ -5,6 +5,7 @@
 - Business aggregate: `true`
 - Selected status: `SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED`
 
+
 ## Identity and invariant
 
 **Selected identity:** Tenant + GrantId; immutable grant identity and exact issuance episode. Mutations use the selected CommandId with the original grant and episode binding.
@@ -18,6 +19,10 @@
 **Replay:** Current required authorization precedes replay; exact authorized retries resolve the original accepted result using the selected logical identity and immutable actor/intent/source binding. Fresh mutable feasibility, clock selection and body preparation cannot replace that original result. Expected revision is concurrency precondition, not a new identity.
 
 **Lifecycle:** [Placeholder: a consolidated lifecycle sequence is not present in the selected owner record.]
+
+
+
+
 
 ## Commands
 
@@ -38,9 +43,9 @@
 
 | Row | Kind | Source owner | Target owner | Command |
 | --- | --- | --- | --- | --- |
-| [S005](../reactors/member-retirement-reactor.md#s005) | business_receiver | Member | AccessGrant | RemoveRetiredMemberAccessAndAssignments |
-| [S006](../reactors/retired-member-grant-reactor.md#s006) | business_receiver | AccessGrant | AccessGrant | RemoveRetiredMemberAccessAndAssignments |
-| [S028](../reactors/tenant-invitation-reactor.md#s028) | business_receiver | TenantInvitation | AccessGrant | ProvisionGuestProgramAccess |
+| [S005](../reactors/remove-member-assignments-and-access-after-membership-ends-reactor.md#s005) | business_receiver | Member | AccessGrant | RemoveRetiredMemberAccessAndAssignments |
+| [S006](../reactors/revoke-access-after-member-retirement-reactor.md#s006) | business_receiver | AccessGrant | AccessGrant | RemoveRetiredMemberAccessAndAssignments |
+| [S028](../reactors/activate-membership-after-invitation-acceptance-reactor.md#s028) | business_receiver | TenantInvitation | AccessGrant | ProvisionGuestProgramAccess |
 
 ## Product rules
 
@@ -53,7 +58,7 @@
 ## Evidence and complete record
 
 - Baseline source: [Placeholder: source file is not present in this checkout]
-- Aggregate review: [access-grant-review-2026-10-29.md](../../product/definitive-aggregate-choreography/access-grant-review-2026-10-29.md)
+- Aggregate review: [Placeholder: no owner-specific review file is present]
 - Full selected record: [JSON](../data/aggregates/access-grant.json)
 
 > Target definition is separate from runtime qualification. Implementation status recorded by the source: `SEPARATE_VERIFICATION_REQUIRED_IMPLEMENTATION_HALTED`.

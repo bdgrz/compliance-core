@@ -4,7 +4,7 @@ This is the requirement-backed read-layer plan for the committed product scope. 
 
 ## Existing inventory
 
-Before this backfill, the source inventory recorded **216 query contracts** and **436 models/supporting contracts**. The current source inventory contains **272 unique query contracts**. The 57 rows below are required read workflows, not a unique contract count; some workflows reuse query contracts that were already in the source inventory. The full, source-linked query list and feature-owned models are in the [component inventory](../product/component-inventory.md#existing-queries) and [model appendix](../product/component-inventory.md#existing-models-and-supporting-contracts). Source presence does not prove that a query is authorized, registered, projected, exposed, or satisfies its owning story. Reconcile by behavior before adding a new name.
+Before this backfill, the source inventory recorded **216 query contracts** and **436 models/supporting contracts**. The current source inventory contains **272 unique query contracts**. The 57 rows below are required read workflows, not a unique contract count; some workflows reuse query contracts that were already in the source inventory. The full, source-linked query list and feature-owned models are in the component inventory and model appendix. Source presence does not prove that a query is authorized, registered, projected, exposed, or satisfies its owning story. Reconcile by behavior before adding a new name.
 
 ## Current handler and HTTP gaps
 

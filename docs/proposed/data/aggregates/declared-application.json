@@ -8,14 +8,7 @@
   "invariant": "Application creation, metadata revision, retirement and import admission generation. Name and alias uniqueness is decided by ApplicationNameClaim, which the application must hold before using a name; a merge retires this application with a merged_into reference to the survivor (M0-D05 D05-10)",
   "boundaryDecision": "selected_split",
   "mustPreserve": "Retirement requires an approved successor for exact app revision; import holds block incompatible local change.",
-  "sources": [
-    {
-      "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
-      "jsonPointer": "/splitOwners/8/targetOwners/0",
-      "line": 937,
-      "sha256": "d349d94b7c43f4d82020ecf36bdacf1aff98bc6498e14993582f1c3164b21f19"
-    }
-  ],
+  "sources": [],
   "baselineSourcePath": "src/Compliance.Core/Features/Applications/DeclaredApplication.cs",
   "baselineEvents": [
     "ApplicationDeclared",
@@ -96,18 +89,11 @@
       "responseContract": {
         "mode": "internal",
         "responseType": "Unit",
-        "firstHttpStatus": null,
         "terminalResultType": "Unit"
       },
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/13",
-        "line": 1534,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
       "reactor": "ImportTargetApplicationReactor",
-      "sourceOwner": "ApplicationImportBatch",
+      "sourceOwner": "DeclaredApplication",
       "sourceEvents": [
         "ApplicationImportExecutionAuthorized"
       ],
@@ -117,7 +103,8 @@
       ],
       "effectKind": "apply_application_import_effect",
       "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
-      "kind": "receiver"
+      "kind": "receiver",
+      "owner": "DeclaredApplication"
     },
     {
       "command": "DeclareApplication",
@@ -198,13 +185,9 @@
           "policy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/48",
-        "line": 5715,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
-      "kind": "http"
+      "kind": "http",
+      "sourceOwner": "DeclaredApplication",
+      "owner": "DeclaredApplication"
     },
     {
       "command": "RetireApplication",
@@ -265,13 +248,9 @@
           "policy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/124",
-        "line": 14304,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
-      "kind": "http"
+      "kind": "http",
+      "sourceOwner": "DeclaredApplication",
+      "owner": "DeclaredApplication"
     },
     {
       "command": "ReviseApplication",
@@ -383,13 +362,9 @@
           "policy": "ApiUser + existing request-scope authorizers"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/136",
-        "line": 15765,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
-      "kind": "http"
+      "kind": "http",
+      "sourceOwner": "DeclaredApplication",
+      "owner": "DeclaredApplication"
     },
     {
       "command": "ReserveApplicationImportTarget",
@@ -455,7 +430,7 @@
         }
       ],
       "reactor": "ImportTargetReservationReactor",
-      "sourceOwner": "ApplicationImportBatch",
+      "sourceOwner": "DeclaredApplication",
       "sourceEvents": [
         "ApplicationImportExecutionAuthorized"
       ],
@@ -467,10 +442,7 @@
       "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
       "handler": "ReserveApplicationImportTargetHandler",
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "recorded": "2026-10-29"
-      }
+      "owner": "DeclaredApplication"
     },
     {
       "command": "FenceApplicationImportTarget",
@@ -531,7 +503,7 @@
         }
       ],
       "reactor": "ImportCancellationFenceReactor",
-      "sourceOwner": "ApplicationImportBatch",
+      "sourceOwner": "DeclaredApplication",
       "sourceEvents": [
         "ApplicationImportCancellationAccepted"
       ],
@@ -543,10 +515,7 @@
       "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
       "handler": "FenceApplicationImportTargetHandler",
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "recorded": "2026-10-29"
-      }
+      "owner": "DeclaredApplication"
     },
     {
       "command": "ReleaseApplicationImportTarget",
@@ -607,7 +576,7 @@
         }
       ],
       "reactor": "ImportTargetReleaseReactor",
-      "sourceOwner": "ApplicationImportBatch",
+      "sourceOwner": "DeclaredApplication",
       "sourceEvents": [
         "ApplicationImportCommitted",
         "ApplicationImportCanceled",
@@ -621,10 +590,7 @@
       "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
       "handler": "ReleaseApplicationImportTargetHandler",
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "recorded": "2026-10-29"
-      }
+      "owner": "DeclaredApplication"
     },
     {
       "command": "ApplyApplicationNameChange",
@@ -672,10 +638,8 @@
         }
       ],
       "http": [],
-      "source": {
-        "path": "docs/product/definitive-aggregate-choreography/choreography.json",
-        "recorded": "2026-10-29"
-      }
+      "sourceOwner": "DeclaredApplication",
+      "owner": "DeclaredApplication"
     }
   ],
   "eventAuthority": "selected_final_event_catalog",
@@ -683,79 +647,37 @@
     {
       "event": "ApplicationDeclared",
       "discriminator": "bdgrz.application.declared",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/40",
-        "line": 4518,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     },
     {
       "event": "ApplicationImportEffectCanceled",
       "discriminator": "bdgrz.declared-application.application-import-effect-canceled",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/44",
-        "line": 5356,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     },
     {
       "event": "ApplicationImportEffectPending",
       "discriminator": "bdgrz.application_import.effect_pending",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/45",
-        "line": 5502,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     },
     {
       "event": "ApplicationImportTargetAuthorized",
       "discriminator": "bdgrz.declared-application.application-import-target-authorized",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/54",
-        "line": 6921,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     },
     {
       "event": "ApplicationImportTargetSettled",
       "discriminator": "bdgrz.declared-application.application-import-target-settled",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/55",
-        "line": 7067,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     },
     {
       "event": "ApplicationRetired",
       "discriminator": "bdgrz.application.retired",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/59",
-        "line": 7451,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     },
     {
       "event": "ApplicationRevised",
       "discriminator": "bdgrz.application.revised",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/60",
-        "line": 7532,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     }
   ],
   "choreography": [
@@ -763,49 +685,25 @@
       "reactor": "ImportTargetReservationReactor",
       "sourceOwner": "ApplicationImportBatch",
       "targetOwner": "DeclaredApplication",
-      "command": "ReserveApplicationImportTarget",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "jsonPointer": "/reactors/15",
-        "line": 1296,
-        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
-      }
+      "command": "ReserveApplicationImportTarget"
     },
     {
       "reactor": "ImportTargetApplicationReactor",
       "sourceOwner": "ApplicationImportBatch",
       "targetOwner": "DeclaredApplication",
-      "command": "ApplyApplicationImportEffect",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "jsonPointer": "/reactors/16",
-        "line": 1383,
-        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
-      }
+      "command": "ApplyApplicationImportEffect"
     },
     {
       "reactor": "ImportCancellationFenceReactor",
       "sourceOwner": "ApplicationImportBatch",
       "targetOwner": "DeclaredApplication",
-      "command": "FenceApplicationImportTarget",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "jsonPointer": "/reactors/18",
-        "line": 1553,
-        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
-      }
+      "command": "FenceApplicationImportTarget"
     },
     {
       "reactor": "ImportTargetReleaseReactor",
       "sourceOwner": "ApplicationImportBatch",
       "targetOwner": "DeclaredApplication",
-      "command": "ReleaseApplicationImportTarget",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "jsonPointer": "/reactors/21",
-        "line": 1798,
-        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
-      }
+      "command": "ReleaseApplicationImportTarget"
     }
   ],
   "status": "SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED",
@@ -823,12 +721,6 @@
         "required": true,
         "origin": "source_event_effect",
         "rule": "UUIDv5(source eventId, length-prefixed effectKind + canonical target stream + source lifecycle episode); external process callback source is the immutable accepted business source event plus exact effect key, never attemptId."
-      },
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/13",
-        "line": 1534,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       }
     },
     {
@@ -839,12 +731,6 @@
         "required": true,
         "origin": "client",
         "rule": "exact immutable creation retry"
-      },
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/48",
-        "line": 5715,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       }
     },
     {
@@ -855,12 +741,6 @@
         "required": true,
         "origin": "client",
         "rule": "one immutable authored operation"
-      },
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/124",
-        "line": 14304,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       }
     },
     {
@@ -871,12 +751,6 @@
         "required": true,
         "origin": "client",
         "rule": "one immutable authored operation"
-      },
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/136",
-        "line": 15765,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       }
     }
   ],
@@ -910,5 +784,6 @@
     "D05-02",
     "D05-11"
   ],
-  "decidesAuthored": "2026-10-29"
+  "decidesAuthored": "2026-10-29",
+  "sourceOwner": "DeclaredApplication"
 }

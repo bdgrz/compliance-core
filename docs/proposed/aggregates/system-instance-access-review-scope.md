@@ -5,6 +5,7 @@
 - Business aggregate: `true`
 - Selected status: `SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED`
 
+
 ## Identity and invariant
 
 **Selected identity:** Tenant + SystemInstanceId in its existing access-review-scope address, with exact current instance version. Selected CommandId binds the decision and its exact scope/version/effective terms.
@@ -18,6 +19,10 @@
 **Replay:** Current required authorization precedes replay; exact authorized retries resolve the original accepted result using the selected logical identity and immutable actor/intent/source binding. Fresh mutable feasibility, clock selection and body preparation cannot replace that original result. Expected revision is concurrency precondition, not a new identity.
 
 **Lifecycle:** [Placeholder: a consolidated lifecycle sequence is not present in the selected owner record.]
+
+
+
+
 
 ## Commands
 
@@ -37,8 +42,8 @@
 
 ## Product rules
 
-- **D05-07** — An access-review scope decision (included or excluded) must be approved by the Compliance Lead and the approver may not be the access owner of that system instance. Source: [m0-d05-application-inventory.md](../../product/decisions/m0-d05-application-inventory.md).
-- **D05-08** — An access-review scope decision is effective-dated and references an exact system instance version; a new decision supersedes the previous one and never edits it. Source: [m0-d05-application-inventory.md](../../product/decisions/m0-d05-application-inventory.md).
+- **D05-07** — An access-review scope decision (included or excluded) must be approved by the Compliance Lead and the approver may not be the access owner of that system instance. Decision: [m0-d05-application-inventory.md](../decisions/m0-d05-application-inventory.md).
+- **D05-08** — An access-review scope decision is effective-dated and references an exact system instance version; a new decision supersedes the previous one and never edits it. Decision: [m0-d05-application-inventory.md](../decisions/m0-d05-application-inventory.md).
 
 ## Adopted architecture decisions
 

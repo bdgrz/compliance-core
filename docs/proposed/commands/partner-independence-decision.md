@@ -1,5 +1,7 @@
 # PartnerIndependenceDecision commands
 
+
+
 Selected command contracts: **2**. Complete selected contracts and companion source evidence: [owner command JSON](../data/commands/partner-independence-decision.json).
 
 | Target command | Selected source name | Kind | Identity | Fields | HTTP routes |
@@ -16,7 +18,8 @@ Selected command contracts: **2**. Complete selected contracts and companion sou
 | Target command name | RecordPartnerIndependenceEvaluation |
 | Selected source command name | MaterializePartnerIndependenceDecision |
 | Name decision | Records the partner evaluation against the exact engagement revision and service history. |
-| Owner | PartnerIndependenceDecision |
+| Target owner | PartnerIndependenceDecision |
+| Selected source owner | PartnerIndependenceDecision |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; internal; deterministic receiver identity derived from the admitted root fact, episode and generation: exact redelivery resolves the original result, a changed admission is a new identity |
@@ -68,7 +71,8 @@ Required tests: [Placeholder: required tests not recorded]
 | Target command name | SubmitPartnerIndependenceEvaluation |
 | Selected source command name | RecordPartnerIndependenceEvaluation |
 | Name decision | Names the partner's action to submit an independence evaluation with its exact engagement, service history, and rule version. |
-| Owner | PartnerIndependenceDecision |
+| Target owner | PartnerIndependenceDecision |
+| Selected source owner | PartnerIndependenceDecision |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | http |
 | Logical identity | EvaluationId; Uuid; required=true; client; caller-supplied immutable creation identity: an exact retry with the same id and authored intent returns the original result; the same id with changed intent is refused; a different id is a different record |

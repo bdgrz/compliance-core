@@ -5,6 +5,7 @@
 - Business aggregate: `true`
 - Selected status: `SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED`
 
+
 ## Identity and invariant
 
 **Selected identity:** Tenant-scoped (campaignId, personId); the identity is established by the admitting owner or reactor named in the choreography, never by a caller request key; mutations bind CommandId to this exact identity.
@@ -18,6 +19,10 @@
 **Replay:** Current required authorization precedes replay; exact authorized retries resolve the original accepted result using the selected logical identity and immutable actor/intent/source binding. Fresh mutable feasibility, clock selection and body preparation cannot replace that original result. Expected revision is concurrency precondition, not a new identity.
 
 **Lifecycle:** [Placeholder: a consolidated lifecycle sequence is not present in the selected owner record.]
+
+
+
+
 
 ## Commands
 
@@ -46,13 +51,13 @@
 | --- | --- | --- | --- | --- |
 | [T067](../reactors/policy-campaign-closure-reactor.md#t067) | reaction_or_regular_process_stage | PolicyDistributionCampaign | PolicyCampaignParticipant | AuthorizePolicyCampaignParticipantCampaignClosure |
 | [T068](../reactors/policy-campaign-closure-reactor.md#t068) | reaction_or_regular_process_stage | PolicyDistributionCampaign | PolicyCampaignParticipant | ClosePolicyCampaignParticipantCampaignClosureAuthorization |
-| [T076](../reactors/policy-participant-result-reactor.md#t076) | reaction_or_regular_process_stage | PolicyDistributionCampaign | PolicyCampaignParticipant | ApplyPolicyParticipantResult |
+| [T076](../reactors/record-policy-requirement-outcomes-reactor.md#t076) | reaction_or_regular_process_stage | PolicyDistributionCampaign | PolicyCampaignParticipant | ApplyPolicyParticipantResult |
 
 ## Product rules
 
-- **D12-06** — An acknowledgement records that the person read, understood, and agrees to comply with the exact policy version identified by version and content hash, and stores the exact text shown (the organization's text if an Org Admin replaced the default). Source: [m0-d12-policy-acknowledgement-training.md](../../product/decisions/m0-d12-policy-acknowledgement-training.md).
-- **D12-08** — An acknowledgement item is in exactly one state of pending, acknowledged, overdue, excepted, or removed. Source: [m0-d12-policy-acknowledgement-training.md](../../product/decisions/m0-d12-policy-acknowledgement-training.md).
-- **D12-07** — New joiners must acknowledge within 30 days of their start date; everyone else re-acknowledges annually and whenever a new major policy version is approved. Source: [m0-d12-policy-acknowledgement-training.md](../../product/decisions/m0-d12-policy-acknowledgement-training.md).
+- **D12-06** — An acknowledgement records that the person read, understood, and agrees to comply with the exact policy version identified by version and content hash, and stores the exact text shown (the organization's text if an Org Admin replaced the default). Decision: [m0-d12-policy-acknowledgement-training.md](../decisions/m0-d12-policy-acknowledgement-training.md).
+- **D12-08** — An acknowledgement item is in exactly one state of pending, acknowledged, overdue, excepted, or removed. Decision: [m0-d12-policy-acknowledgement-training.md](../decisions/m0-d12-policy-acknowledgement-training.md).
+- **D12-07** — New joiners must acknowledge within 30 days of their start date; everyone else re-acknowledges annually and whenever a new major policy version is approved. Decision: [m0-d12-policy-acknowledgement-training.md](../decisions/m0-d12-policy-acknowledgement-training.md).
 
 ## Adopted architecture decisions
 
@@ -61,7 +66,7 @@
 ## Evidence and complete record
 
 - Baseline source: [Placeholder: source file is not present in this checkout]
-- Aggregate review: [policy-campaign-participant-review-2026-10-29.md](../../product/definitive-aggregate-choreography/policy-campaign-participant-review-2026-10-29.md)
+- Aggregate review: [Placeholder: no owner-specific review file is present]
 - Full selected record: [JSON](../data/aggregates/policy-campaign-participant.json)
 
 > Target definition is separate from runtime qualification. Implementation status recorded by the source: `SEPARATE_VERIFICATION_REQUIRED_IMPLEMENTATION_HALTED`.

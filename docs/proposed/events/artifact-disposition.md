@@ -112,7 +112,7 @@ Canonical events: **3**. Complete canonical event and available schema records: 
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [X006](../reactors/artifact-legal-hold-reactor.md#x006) | emitted semantic fact | ArtifactLegalHold | StopArtifactDisposalForHold | ArtifactDisposition |
+| [X006](../reactors/protect-artifacts-under-legal-hold-reactor.md#x006) | emitted semantic fact | ArtifactLegalHold | StopArtifactDisposalForHold | ArtifactDisposition |
 
 
 

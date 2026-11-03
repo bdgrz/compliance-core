@@ -20,11 +20,11 @@ Selected choreography rows: **1**. Required proofs, recovery, effect identity, a
 | id | S002 |
 | kind | business_receiver |
 | status | SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED |
-| sourceOwner | ControlOccurrence |
+| Source owner (target name) | ControlOccurrence (source: ControlOccurrence) |
 | logicalPrerequisiteFacts (target names) | ControlOccurrenceAttested, ControlOccurrenceReviewed |
 | physicalRootEvents (target names) | ControlOccurrenceAttested, ControlOccurrenceReviewed |
 | Target command (selected source name: RaiseOccurrenceFinding) | RaiseOccurrenceFinding |
-| targetOwner | FindingAggregate |
+| Target owner | FindingAggregate |
 | targetAuthorityKind | business_aggregate |
 | emittedSemanticFacts (target names) | FindingRaised |
 | currentRegisteredRootTypes (target names) | ControlOccurrenceFindingReactor |
@@ -35,7 +35,6 @@ Selected choreography rows: **1**. Required proofs, recovery, effect identity, a
 | sourceOwners | ControlOccurrence |
 | canonicalTargetOwner | FindingAggregate |
 | recoveryContractSummary | At-least-once checkpoint replay resends the same source-derived command. Missing dependencies remain retryable; actual terminal/superseded episodes are skipped only with the owning proof. |
-| logicalPrerequisiteRuleGuard | null (recorded) |
 | logicalPrerequisiteRule | The source is a committed ControlOccurrenceAttested with a failed or skipped result, or a ControlOccurrenceReviewed with an action_requested outcome; each finding id derives from the attestation or decision and requested-action index, and the occurrence must still exist with at least one attestation for the finding to be raised. |
 | prerequisiteRuleSource | authored 2026-10-29 from reactor and target source |
 

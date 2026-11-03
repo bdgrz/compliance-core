@@ -20,11 +20,11 @@ Selected choreography rows: **1**. Required proofs, recovery, effect identity, a
 | id | S036 |
 | kind | business_receiver |
 | status | SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED |
-| sourceOwner | RiskMethod |
+| Source owner (target name) | RiskMethod (source: RiskMethod) |
 | logicalPrerequisiteFacts (target names) | RiskMethodVersionPublished |
 | physicalRootEvents (target names) | RiskMethodVersionPublished |
 | Target command (selected source name: RaiseRiskReassessmentTriggers) | RaiseRiskReassessmentTriggers |
-| targetOwner | RiskGovernance |
+| Target owner | RiskGovernance |
 | targetAuthorityKind | business_aggregate |
 | emittedSemanticFacts (target names) | RiskReassessmentTriggered |
 | currentRegisteredRootTypes (target names) | RiskMethodReassessmentReactor |
@@ -35,7 +35,6 @@ Selected choreography rows: **1**. Required proofs, recovery, effect identity, a
 | sourceOwners | RiskMethod |
 | canonicalTargetOwner | RiskGovernance |
 | recoveryContractSummary | At-least-once checkpoint replay resends the same source-derived command. Missing dependencies remain retryable; actual terminal/superseded episodes are skipped only with the owning proof. |
-| logicalPrerequisiteRuleGuard | null (recorded) |
 | logicalPrerequisiteRule | The source is RiskMethodVersionPublished with a version greater than one; a method-changed reassessment trigger is raised for each assessed risk of the program whose inherent method version differs from the new one, and only if no trigger with the same deterministic id exists. |
 | prerequisiteRuleSource | authored 2026-10-29 from reactor and target source |
 

@@ -571,7 +571,6 @@
   {
     "id": "OPEN_ResponseReceiptsInPayload",
     "status": "OPEN",
-    "choice": null,
     "rationale": "Whether FirstResponse/OperationResult belong inside the business event or in an operation receipt keyed by command identity is unsettled (0.57 vs 0.39, confidence 0.35). Revision-in-payload as metadata 0.68. No contract change adopted.",
     "date": "2026-10-29",
     "jev": {
@@ -595,7 +594,6 @@
   {
     "id": "OPEN_CriteriaEditionOwner",
     "status": "OPEN",
-    "choice": null,
     "rationale": "Whether a platform CriteriaEdition owner is needed for D02-01 is unsettled (0.62 at confidence 0.43).",
     "date": "2026-10-29",
     "jev": {
@@ -615,7 +613,6 @@
   {
     "id": "OPEN_LifecycleFactsOtherInventories",
     "status": "OPEN",
-    "choice": null,
     "rationale": "Distinct lifecycle facts for ServiceIdentity (0.67), Person (0.65), WorkRelationship, Location, DataFlow (0.60), TechnologyComponent (0.56), InformationAsset (0.54) are unsettled; generic revision facts stay.",
     "date": "2026-10-29",
     "jev": {
@@ -653,7 +650,6 @@
   {
     "id": "OPEN_ClientExportClassification",
     "status": "OPEN",
-    "choice": null,
     "rationale": "ClientExport reads as governor 0.50 / technical 0.38; classification unchanged.",
     "date": "2026-10-29",
     "jev": {
@@ -761,7 +757,6 @@
   {
     "id": "OPEN_CampaignNaturalKey",
     "status": "OPEN",
-    "choice": null,
     "rationale": "Whether a second open PolicyDistributionCampaign for the same policy version and roster snapshot is an error is leaning yes (0.65); if so Jev prefers an active-campaign claim owner (0.72). Access review campaign overlap is unsettled (0.49); duplicate legal holds leaning error (0.63). No owner added.",
     "date": "2026-10-29",
     "jev": {

@@ -198,7 +198,7 @@ ControlOccurrenceCreationIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T040](../reactors/control-occurrence-fan-out-reactor.md#t040) | emitted semantic fact | TypeIIPeriod | OpenDueControlOccurrence | ControlOccurrence |
+| [T040](../reactors/open-due-control-work-reactor.md#t040) | emitted semantic fact | TypeIIPeriod | OpenDueControlOccurrence | ControlOccurrence |
 
 ### ControlOccurrenceReviewed
 

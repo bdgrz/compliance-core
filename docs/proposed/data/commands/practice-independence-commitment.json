@@ -59,7 +59,7 @@
         "recorded": "2026-10-29"
       },
       "reactor": "EngagementPracticeReservationReactor",
-      "sourceOwner": "ServiceEngagementIndependence",
+      "sourceOwner": "PracticeIndependenceCommitment",
       "sourceEvents": [
         "ServiceEngagementAcceptanceRequested",
         "ServiceEngagementStaffAssignmentRequested"
@@ -70,6 +70,7 @@
       ],
       "effectKind": "reserve_practice_independence",
       "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
+      "owner": "PracticeIndependenceCommitment",
       "sourceName": "ReservePracticeIndependence",
       "targetName": "ReservePracticeIndependence"
     },
@@ -131,7 +132,7 @@
         "recorded": "2026-10-29"
       },
       "reactor": "EngagementPracticeCommitmentReactor",
-      "sourceOwner": "ServiceEngagementIndependence",
+      "sourceOwner": "PracticeIndependenceCommitment",
       "sourceEvents": [
         "EngagementPracticeCommitmentsAuthorized"
       ],
@@ -141,6 +142,7 @@
       ],
       "effectKind": "commit_practice_independence",
       "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
+      "owner": "PracticeIndependenceCommitment",
       "sourceName": "CommitPracticeIndependence",
       "targetName": "CommitPracticeIndependence"
     },
@@ -202,7 +204,7 @@
         "recorded": "2026-10-29"
       },
       "reactor": "EngagementPracticeReservationSettlementReactor",
-      "sourceOwner": "ServiceEngagementIndependence",
+      "sourceOwner": "PracticeIndependenceCommitment",
       "sourceEvents": [
         "ServiceEngagementAcceptanceRecorded",
         "ServiceEngagementStaffAssigned",
@@ -215,6 +217,7 @@
       ],
       "effectKind": "settle_practice_independence_reservation",
       "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
+      "owner": "PracticeIndependenceCommitment",
       "sourceName": "SettlePracticeIndependenceReservation",
       "targetName": "ClosePracticeIndependenceReservation"
     }

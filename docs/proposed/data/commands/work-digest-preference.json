@@ -33,12 +33,8 @@
         "terminalResultType": "WorkDigestPreferenceView"
       },
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/194",
-        "line": 14552,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      },
+      "sourceOwner": "WorkDigestPreference",
+      "owner": "WorkDigestPreference",
       "sourceName": "SetWorkDigestPreference",
       "targetName": "SetWorkDigestPreference"
     }

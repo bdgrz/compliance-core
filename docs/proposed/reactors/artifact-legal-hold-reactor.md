@@ -20,13 +20,13 @@ Selected choreography rows: **1**. Required proofs, recovery, effect identity, a
 | id | X006 |
 | kind | planned_reaction |
 | status | PLANNED_TARGET_DEFINITION_2026-10-29 |
-| sourceOwner | ArtifactLegalHold |
+| Source owner (target name) | ArtifactLegalHold (source: ArtifactLegalHold) |
 | logicalPrerequisiteFacts (target names) | ArtifactLegalHoldPlaced, ArtifactLegalHoldReleased |
 | logicalPrerequisiteRule | A placed hold on the exact artifact content fences any pending disposition (result blocked_by_hold); a release lets an approved disposition proceed only when no other legal or engagement hold remains. |
 | physicalRootEvents (target names) | ArtifactLegalHoldPlaced, ArtifactLegalHoldReleased |
 | originalAdmissionKinds (target names) | ArtifactLegalHoldPlaced |
 | Target command (selected source name: FenceArtifactDispositionForHold) | StopArtifactDisposalForHold |
-| targetOwner | ArtifactDisposition |
+| Target owner | ArtifactDisposition |
 | targetAuthorityKind | business_aggregate |
 | emittedSemanticFacts (target names) | ArtifactDispositionResultRecorded |
 | emittedEventContracts | None listed |

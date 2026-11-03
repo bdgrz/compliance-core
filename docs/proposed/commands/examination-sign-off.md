@@ -1,21 +1,24 @@
 # ExaminationSignOff commands
 
+
+
 Selected command contracts: **1**. Complete selected contracts and companion source evidence: [owner command JSON](../data/commands/examination-sign-off.json).
 
 | Target command | Selected source name | Kind | Identity | Fields | HTTP routes |
 | --- | --- | --- | --- | --- | --- |
-| RecordManagementExaminationReview | RecordManagementExaminationReview | http | SignOffId | 5 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/examinations/{examination_id}/management-reviews/{sign_off_id} |
+| SignOffExamination | RecordManagementExaminationReview | http | SignOffId | 5 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/examinations/{examination_id}/management-reviews/{sign_off_id} |
 
 ## Selected command details
 
-### RecordManagementExaminationReview
+### SignOffExamination
 
 | Selected contract detail | Value |
 | --- | --- |
-| Target command name | RecordManagementExaminationReview |
+| Target command name | SignOffExamination |
 | Selected source command name | RecordManagementExaminationReview |
-| Name decision | The selected source name is retained. |
-| Owner | ExaminationSignOff |
+| Name decision | Names management’s final sign-off on the exact examination package, assertion, representation letter, outcome, and unresolved items. |
+| Target owner | ExaminationSignOff |
+| Selected source owner | ExaminationSignOff |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | http |
 | Logical identity | SignOffId; Uuid; required=true; caller-supplied immutable creation identity: an exact retry with the same id and authored intent returns the original result; the same id with changed intent is refused; a different id is a different record |

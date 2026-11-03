@@ -37,7 +37,6 @@ Canonical events: **2**. Complete canonical event and available schema records: 
 | Schema discriminator | bdgrz.provider-name-claim.provider-name-claimed |
 | Schema discriminatorVersion | 1 |
 | Schema owner | ProviderNameClaim |
-| Schema existingContract | null (recorded) |
 | Schema status | selected target schema; implementation pending |
 | Schema reason | typed reactor receiver accepted business fact |
 | Schema changes | None listed |
@@ -106,8 +105,8 @@ RecordNameChangeIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T022](../reactors/provider-change-accepted-reactor.md#t022) | emitted semantic fact | Provider | ClaimProviderName | ProviderNameClaim |
-| [T023](../reactors/provider-change-accepted-reactor.md#t023) | logical prerequisite | ProviderNameClaim | ApplyProviderChange | Provider |
+| [T022](../reactors/keep-provider-names-unique-reactor.md#t022) | emitted semantic fact | Provider | ClaimProviderName | ProviderNameClaim |
+| [T023](../reactors/keep-provider-names-unique-reactor.md#t023) | logical prerequisite | ProviderNameClaim | ApplyProviderChange | Provider |
 
 ### ProviderNameReleased
 
@@ -137,7 +136,6 @@ RecordNameChangeIntent
 | Schema discriminator | bdgrz.provider-name-claim.provider-name-released |
 | Schema discriminatorVersion | 1 |
 | Schema owner | ProviderNameClaim |
-| Schema existingContract | null (recorded) |
 | Schema status | selected target schema; implementation pending |
 | Schema reason | typed reactor receiver accepted business fact |
 | Schema changes | None listed |
@@ -206,8 +204,8 @@ RecordNameChangeIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T024](../reactors/provider-change-accepted-reactor.md#t024) | emitted semantic fact | Provider | ReleaseProviderName | ProviderNameClaim |
-| [X003](../reactors/provider-change-accepted-reactor.md#x003) | emitted semantic fact | Provider | ReleaseProviderName | ProviderNameClaim |
+| [T024](../reactors/keep-provider-names-unique-reactor.md#t024) | emitted semantic fact | Provider | ReleaseProviderName | ProviderNameClaim |
+| [X003](../reactors/keep-provider-names-unique-reactor.md#x003) | emitted semantic fact | Provider | ReleaseProviderName | ProviderNameClaim |
 
 
 

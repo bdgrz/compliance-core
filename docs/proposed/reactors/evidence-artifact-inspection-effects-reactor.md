@@ -9,7 +9,7 @@ Selected choreography rows: **1**. Required proofs, recovery, effect identity, a
 
 | Row | Kind | Prerequisite facts | Command | Target owner | Emitted facts |
 | --- | --- | --- | --- | --- | --- |
-| S000 | external_storage_reconciliation | EvidenceArtifactInspected | null (recorded) | null (recorded) | None listed |
+| S000 | external_storage_reconciliation | EvidenceArtifactInspected | [Placeholder: value not recorded] | [Placeholder: value not recorded] | None listed |
 
 ## Selected row details
 
@@ -20,11 +20,9 @@ Selected choreography rows: **1**. Required proofs, recovery, effect identity, a
 | id | S000 |
 | kind | external_storage_reconciliation |
 | status | SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED |
-| sourceOwner | EvidenceArtifact |
+| Source owner (target name) | EvidenceArtifact (source: EvidenceArtifact) |
 | logicalPrerequisiteFacts (target names) | EvidenceArtifactInspected |
 | physicalRootEvents (target names) | EvidenceArtifactInspected |
-| receiverCommand | null (recorded) |
-| targetOwner | null (recorded) |
 | targetAuthorityKind | external_content_port |
 | emittedSemanticFacts (target names) | None listed |
 | currentRegisteredRootTypes (target names) | ApplyArtifactInspectionOutcomeReactor |
@@ -35,7 +33,6 @@ Selected choreography rows: **1**. Required proofs, recovery, effect identity, a
 | sourceOwners | EvidenceArtifact |
 | targetPort | IArtifactContentStore |
 | recoveryContractSummary | Storage operations are idempotently reconciled from current durable verdict; failures prevent checkpoint advance. No receiver command or new domain fact is emitted. |
-| logicalPrerequisiteRuleGuard | null (recorded) |
 | logicalPrerequisiteRule | The inspected artifact must be the exact tenant-registered artifact (same content hash and length) and still in the state the inspection result applies to; the effect only quarantines, deletes or releases per that result and never fabricates a domain verdict. |
 | prerequisiteRuleSource | authored 2026-10-29 from reactor and target source |
 

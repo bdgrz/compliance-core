@@ -28,8 +28,7 @@
       "receivers": [
         "MaterializeEngagementManagementAcknowledgement",
         "MaterializePartnerIndependenceDecision"
-      ],
-      "rule": null
+      ]
     },
     {
       "stage": "settle",
@@ -40,8 +39,7 @@
         "SettleIndependenceRuleCatalogEngagementUse",
         "SettleIndependenceRuleRatificationCatalogEngagementUse",
         "SettleEngagementPersonalDecision"
-      ],
-      "rule": null
+      ]
     }
   ],
   "abort": [

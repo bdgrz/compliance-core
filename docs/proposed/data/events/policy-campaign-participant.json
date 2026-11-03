@@ -464,7 +464,6 @@
         "discriminator": "bdgrz.policy-campaign-participant.policy-campaign-participant-campaign-closure-use-authorized",
         "discriminatorVersion": 1,
         "owner": "PolicyCampaignParticipant",
-        "existingContract": null,
         "status": "selected target schema; implementation pending",
         "reason": "typed reactor receiver accepted business fact",
         "fields": [
@@ -628,7 +627,6 @@
         "discriminator": "bdgrz.policy-campaign-participant.policy-campaign-participant-campaign-closure-use-settled",
         "discriminatorVersion": 1,
         "owner": "PolicyCampaignParticipant",
-        "existingContract": null,
         "status": "selected target schema; implementation pending",
         "reason": "typed reactor receiver accepted business fact",
         "fields": [

@@ -1,5 +1,7 @@
 # FirmStaffRecord commands
 
+
+
 Selected command contracts: **8**. Complete selected contracts and companion source evidence: [owner command JSON](../data/commands/firm-staff-record.json).
 
 | Target command | Selected source name | Kind | Identity | Fields | HTTP routes |
@@ -22,7 +24,8 @@ Selected command contracts: **8**. Complete selected contracts and companion sou
 | Target command name | RegisterFirmStaff |
 | Selected source command name | RegisterFirmStaff |
 | Name decision | The selected source name is retained. |
-| Owner | FirmStaffRecord |
+| Target owner | FirmStaffRecord |
+| Selected source owner | FirmStaffRecord |
 | Contract record status | target_contract |
 | Kind | http |
 | Logical identity | StaffMemberId; Uuid; required=true; client; caller-supplied immutable creation identity: an exact retry with the same id and authored intent returns the original result; the same id with changed intent is refused; a different id is a different record |
@@ -74,7 +77,8 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Target command name | SetFirmStaffStatus |
 | Selected source command name | SetFirmStaffStatus |
 | Name decision | The selected source name is retained. |
-| Owner | FirmStaffRecord |
+| Target owner | FirmStaffRecord |
+| Selected source owner | FirmStaffRecord |
 | Contract record status | target_contract |
 | Kind | http |
 | Logical identity | CommandId; Uuid; required=true; client; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
@@ -86,7 +90,7 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Contract changes | Add required CommandId., Rename ExpectedSequence to ExpectedRevision and compare the new target owner revision. |
 | Guard order | bind_required_ids, authenticate_authorize, canonicalize_authored_intent, resolve_native_operation_facts, compare_owner_episode_actor_kind_intent_original_revision, validate_new_owner_revision_and_source_permits, append_complete_concrete_attributed_batch |
 | Response contract | `{"mode":"immediate_original_result","responseType":"FirmStaffMemberView","firstHttpStatus":200,"terminalResultType":"FirmStaffMemberView"}` |
-| Expected revision scope | `{"field":"ExpectedRevision","owner":"FirmStaffRecord","counter":"logical ResourceRevision of this owner","nullableInternalRule":null}` |
+| Expected revision scope | `{"field":"ExpectedRevision","owner":"FirmStaffRecord","counter":"logical ResourceRevision of this owner"}` |
 | Authorizer sources | src/Compliance.Core/Features/AccessControl/FirmStaffAdministrationAuthorizer.cs |
 | Source contract | src/Compliance.Common/Features/AccessControl/SetFirmStaffStatus.cs |
 | Primary handler | SetFirmStaffStatusHandler |
@@ -126,7 +130,8 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Target command name | RejectFirmStaffRegistration |
 | Selected source command name | RejectFirmStaffRegistration |
 | Name decision | The selected source name is retained. |
-| Owner | FirmStaffRecord |
+| Target owner | FirmStaffRecord |
+| Selected source owner | FirmStaffRecord |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | abort |
 | Logical identity | CommandId; Uuid; required=true; abort receiver identity bound to the exact admitted operation and generation: exact redelivery resolves the original rejected result; an abort after a terminal outcome is a no-op |
@@ -175,7 +180,8 @@ Required tests: [Placeholder: required tests not recorded]
 | Target command name | CompleteFirmStaffRegistration |
 | Selected source command name | CompleteFirmStaffRegistration |
 | Name decision | The selected source name is retained. |
-| Owner | FirmStaffRecord |
+| Target owner | FirmStaffRecord |
+| Selected source owner | FirmStaffRecord |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; reactor; deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result |
@@ -227,7 +233,8 @@ Required tests: [Placeholder: required tests not recorded]
 | Target command name | AuthorizeFirmStaffRecordEngagement |
 | Selected source command name | AuthorizeFirmStaffRecordEngagementUse |
 | Name decision | The command authorizes the named business action; the extra Use suffix describes the coordination mechanism. |
-| Owner | FirmStaffRecord |
+| Target owner | FirmStaffRecord |
+| Selected source owner | FirmStaffRecord |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; reactor; deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result |
@@ -281,7 +288,8 @@ Required tests: [Placeholder: required tests not recorded]
 | Target command name | CloseFirmStaffRecordEngagementAuthorization |
 | Selected source command name | SettleFirmStaffRecordEngagementUse |
 | Name decision | The command ends the exact authorization after its business action or cancellation. |
-| Owner | FirmStaffRecord |
+| Target owner | FirmStaffRecord |
+| Selected source owner | FirmStaffRecord |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; reactor; deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result |
@@ -334,7 +342,8 @@ Required tests: [Placeholder: required tests not recorded]
 | Target command name | AuthorizeFirmStaffProfessionalDuty |
 | Selected source command name | AuthorizeFirmStaffProfessionalDutyUse |
 | Name decision | The command authorizes the named business action; the extra Use suffix describes the coordination mechanism. |
-| Owner | FirmStaffRecord |
+| Target owner | FirmStaffRecord |
+| Selected source owner | FirmStaffRecord |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; reactor; deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result |
@@ -388,7 +397,8 @@ Required tests: [Placeholder: required tests not recorded]
 | Target command name | CloseFirmStaffProfessionalDutyAuthorization |
 | Selected source command name | SettleFirmStaffProfessionalDutyUse |
 | Name decision | The command ends the exact authorization after its business action or cancellation. |
-| Owner | FirmStaffRecord |
+| Target owner | FirmStaffRecord |
+| Selected source owner | FirmStaffRecord |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; reactor; deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result |

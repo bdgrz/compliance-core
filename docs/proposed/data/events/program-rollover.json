@@ -20,7 +20,6 @@
         "adoptedDecisionIds": [],
         "schemaStatus": "retained_current_schema_native_qualification_required",
         "selectedTargetDisposition": "retired_from_business_owner_process_receipt_only",
-        "selectedTargetOwner": null,
         "targetStatus": "NOT_SELECTED_AS_A_DOMAIN_EVENT",
         "sourceStatus": "declared",
         "meaning": "Records the exact next period and approved plan created from a rollover.",
@@ -108,14 +107,13 @@
           "PROGRAM_ROLLOVER_EXECUTION"
         ],
         "schemaStatus": "NEW_SELECTED_TARGET_NO_IMPLEMENTATION_AUTHORIZED",
-        "sourceStatus": "planned_no_source_type",
-        "meaning": null
+        "sourceStatus": "planned_no_source_type"
       },
       "schema": null,
       "sourceName": "ProgramRolloverExecutionClaimed",
-      "targetName": "ProgramRolloverReservedForExecution",
-      "nameDecision": "Names the reservation of the exact approved rollover for one run without exposing the internal claim mechanism.",
-      "targetMeaning": "The exact independently approved rollover version and content were reserved for one run. The reservation prevents revision or rejection while the successor period is prepared."
+      "targetName": "ProgramRolloverStarted",
+      "nameDecision": "Names the start of approved rollover work after its successor plan is fixed.",
+      "targetMeaning": "The approved rollover began with its exact successor plan fixed for the work that follows."
     },
     {
       "canonical": {

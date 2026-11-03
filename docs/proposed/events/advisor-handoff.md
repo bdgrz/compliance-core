@@ -4,8 +4,8 @@ Canonical events: **8**. Complete canonical event and available schema records: 
 
 | Target event | Selected source name | Kind | Adopted discriminator | Version | Schema fields | Meaning |
 | --- | --- | --- | --- | --- | --- | --- |
-| AdvisorArtifactDownloadAuthorized | AdvisorArtifactDownloadUseAuthorized | reservation | bdgrz.advisor-handoff.advisor-artifact-download-use-authorized | 1 | 8 | null (recorded) |
-| AdvisorArtifactDownloadAuthorizationClosed | AdvisorArtifactDownloadUseSettled | reservation | bdgrz.advisor-handoff.advisor-artifact-download-use-settled | 1 | 8 | null (recorded) |
+| AdvisorArtifactDownloadAuthorized | AdvisorArtifactDownloadUseAuthorized | reservation | bdgrz.advisor-handoff.advisor-artifact-download-use-authorized | 1 | 8 | The handoff authorized one download of an artifact in its ready, active selection. The file is delivered only after a separate download grant is issued. |
+| AdvisorArtifactDownloadAuthorizationClosed | AdvisorArtifactDownloadUseSettled | reservation | bdgrz.advisor-handoff.advisor-artifact-download-use-settled | 1 | 8 | The handoff closed its temporary download authorization after the protected file was issued or the request was canceled. |
 | AdvisorFeedbackAdmitted | AdvisorFeedbackAdmitted | business | bdgrz.advisor-handoff.advisor-feedback-admitted | 1 | 8 | The handoff accepted one feedback contribution while it was ready, unrevoked and unclosed, on an exactly selected version. Intent is the frozen ChildAdmissionIntent that carries the complete contribution; the thread is materialized independently and the admission, not the materialization, is the authority. The logical id of Operation is the feedback id and Generation is the selection generation of the handoff at admission. |
 | AdvisorHandoffClosed | AdvisorHandoffClosed | business | bdgrz.advisor-handoff.closed | 2 | 10 | The handoff was closed; feedback admitted before the closure is still materialized. |
 | AdvisorHandoffCreated | AdvisorHandoffCreated | business | bdgrz.advisor-handoff.created | 2 | 12 | Opens one bounded advisor handoff. RecordVersionsManifest is the complete exact selection as verified content (AdvisorHandoffCreated.RecordVersionsManifest.v1); readers verify it before use. |
@@ -21,7 +21,7 @@ Canonical events: **8**. Complete canonical event and available schema records: 
 | --- | --- |
 | Target event name | AdvisorArtifactDownloadAuthorized |
 | Selected source event name | AdvisorArtifactDownloadUseAuthorized |
-| Name decision | Authorization is already the completed fact; Use adds no stakeholder meaning. |
+| Name decision | Names the handoff’s completed authorization for one selected artifact download. |
 | Canonical semantic key | event:AdvisorArtifactDownloadUseAuthorized |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | AdvisorArtifactDownloadUseAuthorized |
@@ -31,8 +31,8 @@ Canonical events: **8**. Complete canonical event and available schema records: 
 | Source status | planned_no_source_type |
 | Adopted decision IDs | ARTIFACT_DOWNLOAD |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Target meaning | null (recorded) |
-| Selected source meaning | null (recorded) |
+| Target meaning | The handoff authorized one download of an artifact in its ready, active selection. The file is delivered only after a separate download grant is issued. |
+| Selected source meaning | [Placeholder: value not recorded] |
 | Meaning source | [Placeholder: value not recorded] |
 
 #### Selected schema and implementation evidence
@@ -43,7 +43,6 @@ Canonical events: **8**. Complete canonical event and available schema records: 
 | Schema discriminator | bdgrz.advisor-handoff.advisor-artifact-download-use-authorized |
 | Schema discriminatorVersion | 1 |
 | Schema owner | AdvisorHandoff |
-| Schema existingContract | null (recorded) |
 | Schema status | selected target schema; implementation pending |
 | Schema reason | typed reactor receiver accepted business fact |
 | Schema changes | None listed |
@@ -106,7 +105,7 @@ SourceUseAuthorizationIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T099](../reactors/one-committed-evidence-artifact-download-requested-starter.md#t099) | emitted semantic fact | EvidenceArtifact | AuthorizeAdvisorArtifactDownload | AdvisorHandoff |
+| [T099](../reactors/fulfill-authorized-artifact-download-request-reactor.md#t099) | emitted semantic fact | EvidenceArtifact | AuthorizeAdvisorArtifactDownload | AdvisorHandoff |
 
 ### AdvisorArtifactDownloadAuthorizationClosed
 
@@ -114,7 +113,7 @@ SourceUseAuthorizationIntent
 | --- | --- |
 | Target event name | AdvisorArtifactDownloadAuthorizationClosed |
 | Selected source event name | AdvisorArtifactDownloadUseSettled |
-| Name decision | The exact authorization ended; the recorded outcome still distinguishes use, cancellation, or a late fence. |
+| Name decision | Names the completed closure of the handoff’s exact download authorization. |
 | Canonical semantic key | event:AdvisorArtifactDownloadUseSettled |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | AdvisorArtifactDownloadUseSettled |
@@ -124,8 +123,8 @@ SourceUseAuthorizationIntent
 | Source status | planned_no_source_type |
 | Adopted decision IDs | ARTIFACT_DOWNLOAD |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Target meaning | null (recorded) |
-| Selected source meaning | null (recorded) |
+| Target meaning | The handoff closed its temporary download authorization after the protected file was issued or the request was canceled. |
+| Selected source meaning | [Placeholder: value not recorded] |
 | Meaning source | [Placeholder: value not recorded] |
 
 #### Selected schema and implementation evidence
@@ -136,7 +135,6 @@ SourceUseAuthorizationIntent
 | Schema discriminator | bdgrz.advisor-handoff.advisor-artifact-download-use-settled |
 | Schema discriminatorVersion | 1 |
 | Schema owner | AdvisorHandoff |
-| Schema existingContract | null (recorded) |
 | Schema status | selected target schema; implementation pending |
 | Schema reason | typed reactor receiver accepted business fact |
 | Schema changes | None listed |
@@ -199,7 +197,7 @@ SourceUseAuthorizationIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T102](../reactors/one-committed-evidence-artifact-download-requested-starter.md#t102) | emitted semantic fact | ArtifactDownloadGrant | CloseAdvisorArtifactDownloadAuthorization | AdvisorHandoff |
+| [T102](../reactors/fulfill-authorized-artifact-download-request-reactor.md#t102) | emitted semantic fact | ArtifactDownloadGrant | CloseAdvisorArtifactDownloadAuthorization | AdvisorHandoff |
 
 ### AdvisorFeedbackAdmitted
 
@@ -229,7 +227,6 @@ SourceUseAuthorizationIntent
 | Schema discriminator | bdgrz.advisor-handoff.advisor-feedback-admitted |
 | Schema discriminatorVersion | 1 |
 | Schema owner | AdvisorHandoff |
-| Schema existingContract | null (recorded) |
 | Schema status | selected target schema; implementation pending |
 | Schema reason | source command accepted result |
 | Schema changes | None listed |
@@ -296,7 +293,7 @@ ChildAdmissionIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T013](../reactors/advisor-feedback-materialization-reactor.md#t013) | physical root, logical prerequisite | AdvisorHandoff | RecordAdvisorHandoffFeedback | AdvisorFeedbackThread |
+| [T013](../reactors/preserve-advisor-feedback-after-handoff-reactor.md#t013) | physical root, logical prerequisite | AdvisorHandoff | RecordAdvisorHandoffFeedback | AdvisorFeedbackThread |
 
 ### AdvisorHandoffClosed
 

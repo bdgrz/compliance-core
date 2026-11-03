@@ -8,14 +8,7 @@
   "invariant": "One stable grant identity has one immutable set of scope/principal/effective terms and, once revoked, can never be reissued.",
   "boundaryDecision": "retain",
   "boundaryRationale": "Splitting terms from revocation could permit reissue or activation with mismatched membership episode. No other grants need the same revision.",
-  "sources": [
-    {
-      "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
-      "jsonPointer": "/aggregates/0",
-      "line": 17,
-      "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
-    }
-  ],
+  "sources": [],
   "baselineSourcePath": "src/Compliance.Core/Features/AccessControl/AccessGrant.cs",
   "baselineEvents": [
     "AccessGrantIssued",
@@ -64,13 +57,9 @@
           "authorizationPolicy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/80",
-        "line": 5970,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      },
-      "kind": "http"
+      "kind": "http",
+      "sourceOwner": "AccessGrant",
+      "owner": "AccessGrant"
     },
     {
       "command": "ProvisionGuestProgramAccess",
@@ -134,18 +123,14 @@
         "terminalResultType": "Unit"
       },
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/99",
-        "line": 7346,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      },
       "kind": "command",
       "concurrencyGuard": {
         "rule": "creation_key_only",
         "jev": 0.96,
         "date": "2026-10-29"
-      }
+      },
+      "sourceOwner": "AccessGrant",
+      "owner": "AccessGrant"
     },
     {
       "command": "RevokeAccessGrant",
@@ -179,30 +164,20 @@
         "terminalResultType": "Unit"
       },
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/186",
-        "line": 14017,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      },
       "kind": "command",
       "concurrencyGuard": {
         "rule": "terminal_idempotent_no_guard",
         "jev": 0.97,
         "date": "2026-10-29"
-      }
+      },
+      "sourceOwner": "AccessGrant",
+      "owner": "AccessGrant"
     }
   ],
   "eventAuthority": "retained_baseline_business_facts_requires_schema_reconciliation",
   "events": [
     {
       "event": "AccessGrantIssued",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
-        "jsonPointer": "/aggregates/0",
-        "line": 17,
-        "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
-      },
       "baselineContract": {
         "event": "AccessGrantIssued",
         "emitters": [
@@ -237,12 +212,6 @@
     },
     {
       "event": "AccessGrantRevoked",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
-        "jsonPointer": "/aggregates/0",
-        "line": 17,
-        "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
-      },
       "baselineContract": {
         "event": "AccessGrantRevoked",
         "emitters": [
@@ -287,33 +256,15 @@
   "selectedLogicalIdentityBindings": [
     {
       "command": "GrantAccess",
-      "logicalIdentity": "GrantId",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/80",
-        "line": 5970,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      }
+      "logicalIdentity": "GrantId"
     },
     {
       "command": "ProvisionGuestProgramAccess",
-      "logicalIdentity": "CommandId",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/99",
-        "line": 7346,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      }
+      "logicalIdentity": "CommandId"
     },
     {
       "command": "RevokeAccessGrant",
-      "logicalIdentity": "CommandId",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/186",
-        "line": 14017,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      }
+      "logicalIdentity": "CommandId"
     }
   ],
   "selectedReplayRule": "Current required authorization precedes replay; exact authorized retries resolve the original accepted result using the selected logical identity and immutable actor/intent/source binding. Fresh mutable feasibility, clock selection and body preparation cannot replace that original result. Expected revision is concurrency precondition, not a new identity.",
@@ -322,5 +273,6 @@
   "decidesCovers": [
     "D03-03"
   ],
-  "decidesAuthored": "2026-10-29"
+  "decidesAuthored": "2026-10-29",
+  "sourceOwner": "AccessGrant"
 }

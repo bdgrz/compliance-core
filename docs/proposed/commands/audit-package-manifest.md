@@ -1,5 +1,7 @@
 # AuditPackageManifest commands
 
+
+
 Selected command contracts: **8**. Complete selected contracts and companion source evidence: [owner command JSON](../data/commands/audit-package-manifest.json).
 
 | Target command | Selected source name | Kind | Identity | Fields | HTTP routes |
@@ -22,7 +24,8 @@ Selected command contracts: **8**. Complete selected contracts and companion sou
 | Target command name | AmendAuditPackage |
 | Selected source command name | AmendAuditPackage |
 | Name decision | The selected source name is retained. |
-| Owner | AuditPackageManifest |
+| Target owner | AuditPackageManifest |
+| Selected source owner | AuditPackageManifest |
 | Contract record status | target_contract |
 | Kind | http |
 | Logical identity | CommandId; Uuid; required=true; client; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
@@ -34,7 +37,7 @@ Selected command contracts: **8**. Complete selected contracts and companion sou
 | Contract changes | Add required CommandId. |
 | Guard order | bind_required_ids, authenticate_authorize, canonicalize_authored_intent, resolve_native_operation_facts, compare_owner_episode_actor_kind_intent_original_revision, validate_new_owner_revision_and_source_permits, append_complete_concrete_attributed_batch |
 | Response contract | `{"mode":"immediate_original_result","responseType":"Unit","firstHttpStatus":200,"terminalResultType":"Unit"}` |
-| Expected revision scope | `{"field":"ExpectedRevision","owner":"AuditPackageManifest","counter":"logical ResourceRevision of this owner","nullableInternalRule":null}` |
+| Expected revision scope | `{"field":"ExpectedRevision","owner":"AuditPackageManifest","counter":"logical ResourceRevision of this owner"}` |
 | Authorizer sources | src/Compliance.Core/Features/AccessControl/ClientManagementMutationAuthorizer.cs, src/Compliance.Core/Features/Programs/ProgramManagementAuthorizer.cs |
 | Source contract | src/Compliance.Common/Features/AuditPackages/AmendAuditPackage.cs |
 | Primary handler | AmendAuditPackageHandler |
@@ -77,7 +80,8 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Target command name | ApproveAuditPackageDisclosure |
 | Selected source command name | ApproveAuditPackageDisclosure |
 | Name decision | The selected source name is retained. |
-| Owner | AuditPackageManifest |
+| Target owner | AuditPackageManifest |
+| Selected source owner | AuditPackageManifest |
 | Contract record status | target_contract |
 | Kind | http |
 | Logical identity | CommandId; Uuid; required=true; client; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
@@ -89,7 +93,7 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Contract changes | Add required CommandId., Add required owner-local ExpectedRevision; business Version remains an exact content version, not owner OCC. |
 | Guard order | bind_required_ids, authenticate_authorize, canonicalize_authored_intent, resolve_native_operation_facts, compare_owner_episode_actor_kind_intent_original_revision, validate_new_owner_revision_and_source_permits, append_complete_concrete_attributed_batch |
 | Response contract | `{"mode":"immediate_original_result","responseType":"Unit","firstHttpStatus":200,"terminalResultType":"Unit"}` |
-| Expected revision scope | `{"field":"ExpectedRevision","owner":"AuditPackageManifest","counter":"logical ResourceRevision of this owner","nullableInternalRule":null}` |
+| Expected revision scope | `{"field":"ExpectedRevision","owner":"AuditPackageManifest","counter":"logical ResourceRevision of this owner"}` |
 | Authorizer sources | src/Compliance.Core/Features/AccessControl/ClientManagementMutationAuthorizer.cs, src/Compliance.Core/Features/Programs/ProgramManagementAuthorizer.cs |
 | Source contract | src/Compliance.Common/Features/AuditPackages/ApproveAuditPackageDisclosure.cs |
 | Primary handler | ApproveAuditPackageDisclosureHandler |
@@ -133,7 +137,8 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Target command name | ApproveAuditPackageValidationOverride |
 | Selected source command name | ApproveAuditPackageValidationOverride |
 | Name decision | The selected source name is retained. |
-| Owner | AuditPackageManifest |
+| Target owner | AuditPackageManifest |
+| Selected source owner | AuditPackageManifest |
 | Contract record status | target_contract |
 | Kind | http |
 | Logical identity | CommandId; Uuid; required=true; client; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
@@ -145,7 +150,7 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Contract changes | Add required CommandId., Add required owner-local ExpectedRevision; business Version remains an exact content version, not owner OCC. |
 | Guard order | bind_required_ids, authenticate_authorize, canonicalize_authored_intent, resolve_native_operation_facts, compare_owner_episode_actor_kind_intent_original_revision, validate_new_owner_revision_and_source_permits, append_complete_concrete_attributed_batch |
 | Response contract | `{"mode":"immediate_original_result","responseType":"Unit","firstHttpStatus":200,"terminalResultType":"Unit"}` |
-| Expected revision scope | `{"field":"ExpectedRevision","owner":"AuditPackageManifest","counter":"logical ResourceRevision of this owner","nullableInternalRule":null}` |
+| Expected revision scope | `{"field":"ExpectedRevision","owner":"AuditPackageManifest","counter":"logical ResourceRevision of this owner"}` |
 | Authorizer sources | src/Compliance.Core/Features/AccessControl/ClientManagementMutationAuthorizer.cs, src/Compliance.Core/Features/Programs/ProgramManagementAuthorizer.cs |
 | Source contract | src/Compliance.Common/Features/AuditPackages/ApproveAuditPackageValidationOverride.cs |
 | Primary handler | ApproveAuditPackageValidationOverrideHandler |
@@ -188,7 +193,8 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Target command name | CreateAuditPackage |
 | Selected source command name | CreateAuditPackage |
 | Name decision | The selected source name is retained. |
-| Owner | AuditPackageManifest |
+| Target owner | AuditPackageManifest |
+| Selected source owner | AuditPackageManifest |
 | Contract record status | target_contract |
 | Kind | http |
 | Logical identity | PackageId; Uuid; required=true; client; caller-supplied immutable creation identity: an exact retry with the same id and authored intent returns the original result; the same id with changed intent is refused; a different id is a different record |
@@ -200,7 +206,7 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Contract changes | None listed |
 | Guard order | bind_required_ids, authenticate_authorize, canonicalize_authored_intent, resolve_native_operation_facts, compare_owner_episode_actor_kind_intent_original_revision, validate_new_owner_revision_and_source_permits, append_complete_concrete_attributed_batch |
 | Response contract | `{"mode":"immediate_original_result","responseType":"Unit","firstHttpStatus":200,"terminalResultType":"Unit"}` |
-| Expected revision scope | `{"field":null,"owner":"AuditPackageManifest","counter":"No primary caller ResourceRevision. Enforce required authored source/epoch/version tokens, immutable creation identity or trusted proof/generation as declared; append uses physical OCC."}` |
+| Expected revision scope | `{"owner":"AuditPackageManifest","counter":"No primary caller ResourceRevision. Enforce required authored source/epoch/version tokens, immutable creation identity or trusted proof/generation as declared; append uses physical OCC."}` |
 | Authorizer sources | src/Compliance.Core/Features/AccessControl/ClientManagementMutationAuthorizer.cs, src/Compliance.Core/Features/Programs/ProgramManagementAuthorizer.cs |
 | Source contract | src/Compliance.Common/Features/AuditPackages/CreateAuditPackage.cs |
 | Primary handler | CreateAuditPackageHandler |
@@ -239,7 +245,8 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Target command name | RecordAuditPackageBuildResult |
 | Selected source command name | RecordAuditPackageBuildResult |
 | Name decision | The selected source name is retained. |
-| Owner | AuditPackageManifest |
+| Target owner | AuditPackageManifest |
+| Selected source owner | AuditPackageManifest |
 | Contract record status | target_contract |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; source_event_effect; UUIDv5(source eventId, length-prefixed effectKind + canonical target stream + source lifecycle episode); external process callback source is the immutable accepted business source event plus exact effect key, never attemptId. |
@@ -250,7 +257,7 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Policy preservation | All current source handler/aggregate validation rules and source test expectations apply, except the explicit contractChanges and boundary protocol. Lifetime caps and technical attempt events are removed with their structural replacement. |
 | Contract changes | Add required CommandId., Use the exact trusted internal receiver signature from the reactor catalog; Source is concretely typed and carries the accepted business fact, never a process-stage pseudo-event., Use the exact trusted internal receiver signature from the reactor catalog; Source is concretely typed and carries the accepted business fact, never a process-stage pseudo-event. |
 | Guard order | bind_required_ids, authenticate_authorize, canonicalize_authored_intent, resolve_native_operation_facts, compare_owner_episode_actor_kind_intent_original_revision, validate_new_owner_revision_and_source_permits, append_complete_concrete_attributed_batch |
-| Response contract | `{"mode":"internal","responseType":"Unit","firstHttpStatus":null,"terminalResultType":"Unit"}` |
+| Response contract | `{"mode":"internal","responseType":"Unit","terminalResultType":"Unit"}` |
 | Expected revision scope | `{"field":"ExpectedRevision","owner":"AuditPackageManifest","counter":"logical ResourceRevision of this owner","nullableInternalRule":"Explicit null requires exact source authorization/generation and physical append OCC; never substitute current logical revision."}` |
 | Authorizer sources | src/Compliance.Core/Features/AuditPackages/RecordAuditPackageBuildResultAuthorizer.cs |
 | Source contract | src/Compliance.Common/Features/AuditPackages/RecordAuditPackageBuildResult.cs |
@@ -294,7 +301,8 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Target command name | ReportAuditPackageDelivery |
 | Selected source command name | RecordAuditPackageDelivery |
 | Name decision | Names the person's action to report when and to whom the selected audit package was delivered. |
-| Owner | AuditPackageManifest |
+| Target owner | AuditPackageManifest |
+| Selected source owner | AuditPackageManifest |
 | Contract record status | target_contract |
 | Kind | http |
 | Logical identity | DeliveryId; Uuid; required=true; client; Must equal existing UUIDv5(53cb20d6-01ef-5fd5-99b3-04087e39bf77, packageId + newline + packageVersion + newline + Clean(recipient) + newline + Clean(deliveryReference)); this identifies exact manual delivery recording. |
@@ -350,7 +358,8 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Target command name | RequestAuditPackageBuild |
 | Selected source command name | RequestAuditPackageBuild |
 | Name decision | The selected source name is retained. |
-| Owner | AuditPackageManifest |
+| Target owner | AuditPackageManifest |
+| Selected source owner | AuditPackageManifest |
 | Contract record status | target_contract |
 | Kind | http |
 | Logical identity | BuildKey; string; required=true; client; Required BuildKey with PackageId/PackageVersion. IIdentifiedRequest.RequestId = UUIDv5(698c0bb6-2dfc-58b3-b2fd-2f3dc04369f8, $"{PackageId}\n{PackageVersion}\n{BuildKey.Trim()}"); preserve existing token validation. |
@@ -405,7 +414,8 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Target command name | ValidateAuditPackage |
 | Selected source command name | ValidateAuditPackage |
 | Name decision | The selected source name is retained. |
-| Owner | AuditPackageManifest |
+| Target owner | AuditPackageManifest |
+| Selected source owner | AuditPackageManifest |
 | Contract record status | target_contract |
 | Kind | http |
 | Logical identity | CommandId; Uuid; required=true; client; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
@@ -417,7 +427,7 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Contract changes | Add required CommandId., Add required owner-local ExpectedRevision; business Version remains an exact content version, not owner OCC. |
 | Guard order | bind_required_ids, authenticate_authorize, canonicalize_authored_intent, resolve_native_operation_facts, compare_owner_episode_actor_kind_intent_original_revision, validate_new_owner_revision_and_source_permits, append_complete_concrete_attributed_batch |
 | Response contract | `{"mode":"immediate_original_result","responseType":"Unit","firstHttpStatus":200,"terminalResultType":"Unit"}` |
-| Expected revision scope | `{"field":"ExpectedRevision","owner":"AuditPackageManifest","counter":"logical ResourceRevision of this owner","nullableInternalRule":null}` |
+| Expected revision scope | `{"field":"ExpectedRevision","owner":"AuditPackageManifest","counter":"logical ResourceRevision of this owner"}` |
 | Authorizer sources | src/Compliance.Core/Features/AccessControl/ClientManagementMutationAuthorizer.cs, src/Compliance.Core/Features/Programs/ProgramManagementAuthorizer.cs |
 | Source contract | src/Compliance.Common/Features/AuditPackages/ValidateAuditPackage.cs |
 | Primary handler | ValidateAuditPackageHandler |

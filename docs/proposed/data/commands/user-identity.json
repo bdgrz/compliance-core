@@ -21,6 +21,8 @@
         "path": "src/Compliance.Core/Features/UserIdentities/Handlers/ContinueWithOidcProviderHandler.cs -> Services/UserIdentityContinuation.cs",
         "recorded": "2026-10-29"
       },
+      "sourceOwner": "UserIdentity",
+      "owner": "UserIdentity",
       "sourceName": "ContinueWithOidcProvider",
       "targetName": "ContinueSignInWithExternalProvider"
     },
@@ -49,6 +51,8 @@
         "path": "src/Compliance.Core/Features/UserIdentities/Handlers/ContinueWithDeveloperIdentityHandler.cs",
         "recorded": "2026-10-29"
       },
+      "sourceOwner": "UserIdentity",
+      "owner": "UserIdentity",
       "sourceName": "ContinueWithDeveloperIdentity",
       "targetName": "SignInWithDevelopmentAccount"
     },
@@ -72,6 +76,8 @@
         "path": "src/Compliance.Core/Features/UserIdentities/Handlers/LinkOidcProviderIdentityHandler.cs:32 (identity.Register)",
         "recorded": "2026-10-29"
       },
+      "sourceOwner": "UserIdentity",
+      "owner": "UserIdentity",
       "sourceName": "LinkOidcProviderIdentity",
       "targetName": "LinkExternalSignInToCurrentAccount"
     },
@@ -145,7 +151,7 @@
         "recorded": "2026-10-29"
       },
       "reactor": "IdentityRecoveryContinuationReactor",
-      "sourceOwner": "IdentityRecovery",
+      "sourceOwner": "UserIdentity",
       "sourceEvents": [
         "IdentityRecoveryPrepared"
       ],
@@ -155,6 +161,7 @@
       ],
       "effectKind": "protect_recovery_identity",
       "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
+      "owner": "UserIdentity",
       "sourceName": "ProtectRecoveryIdentity",
       "targetName": "ProtectRecoveryIdentity"
     },
@@ -212,7 +219,7 @@
         "recorded": "2026-10-29"
       },
       "reactor": "IdentityRecoveryProtectionReleaseReactor",
-      "sourceOwner": "IdentityRecovery",
+      "sourceOwner": "UserIdentity",
       "sourceEvents": [
         "IdentityRecoveryCompleted",
         "IdentityRecoveryPreparationRejected"
@@ -223,6 +230,7 @@
       ],
       "effectKind": "settle_recovery_identity_protection",
       "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
+      "owner": "UserIdentity",
       "sourceName": "SettleRecoveryIdentityProtection",
       "targetName": "EndRecoveryIdentityProtection"
     },
@@ -288,7 +296,7 @@
         "recorded": "2026-10-29"
       },
       "reactor": "IdentityRecoveryReplacementReactor",
-      "sourceOwner": "IdentityRecovery",
+      "sourceOwner": "UserIdentity",
       "sourceEvents": [
         "IdentityRecoveryAccepted"
       ],
@@ -298,6 +306,7 @@
       ],
       "effectKind": "register_recovered_identity",
       "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
+      "owner": "UserIdentity",
       "sourceName": "RegisterRecoveredIdentity",
       "targetName": "RegisterRecoveredIdentity"
     },
@@ -363,7 +372,7 @@
         "recorded": "2026-10-29"
       },
       "reactor": "IdentityRecoveryOldRevocationReactor",
-      "sourceOwner": "IdentityRecovery",
+      "sourceOwner": "UserIdentity",
       "sourceEvents": [
         "IdentityRecoveryAccepted"
       ],
@@ -373,6 +382,7 @@
       ],
       "effectKind": "revoke_recovered_old_identity",
       "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
+      "owner": "UserIdentity",
       "sourceName": "RevokeRecoveredOldIdentity",
       "targetName": "RevokeRecoveredOldIdentity"
     }

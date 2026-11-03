@@ -55,13 +55,9 @@
           "policy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/32",
-        "line": 3824,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
       "kind": "http",
+      "sourceOwner": "PolicyDistributionCampaign",
+      "owner": "PolicyDistributionCampaign",
       "sourceName": "CloseCampaign",
       "targetName": "CloseCampaign"
     },
@@ -129,13 +125,9 @@
           "policy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/65",
-        "line": 7626,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
       "kind": "http",
+      "sourceOwner": "PolicyDistributionCampaign",
+      "owner": "PolicyDistributionCampaign",
       "sourceName": "LaunchPolicyCampaign",
       "targetName": "LaunchPolicyCampaign"
     },
@@ -203,13 +195,9 @@
           "policy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/66",
-        "line": 7746,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
       "kind": "http",
+      "sourceOwner": "PolicyDistributionCampaign",
+      "owner": "PolicyDistributionCampaign",
       "sourceName": "LaunchTrainingCampaign",
       "targetName": "LaunchTrainingCampaign"
     },
@@ -267,13 +255,9 @@
           "policy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/87",
-        "line": 10172,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
       "kind": "http",
+      "sourceOwner": "PolicyDistributionCampaign",
+      "owner": "PolicyDistributionCampaign",
       "sourceName": "ReconcileCampaignAudience",
       "targetName": "ReconcileCampaignAudience"
     },
@@ -317,15 +301,9 @@
           "required": true
         }
       ],
-      "responseContract": null,
-      "http": null,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/source-admission-contracts.json",
-        "jsonPointer": "/contracts/18",
-        "line": 1133,
-        "sha256": "f1d549ed0879c816cb26e86879f8fa658dab0a8acbf7c591e4d4aed40483f8ae"
-      },
       "kind": "abort",
+      "sourceOwner": "PolicyDistributionCampaign",
+      "owner": "PolicyDistributionCampaign",
       "sourceName": "AbortPolicyCampaignClosure",
       "targetName": "AbortPolicyCampaignClosure"
     },
@@ -400,10 +378,7 @@
       "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
       "handler": "CompletePolicyCampaignClosureHandler",
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "recorded": "2026-10-29"
-      },
+      "owner": "PolicyDistributionCampaign",
       "sourceName": "CompletePolicyCampaignClosure",
       "targetName": "CompletePolicyCampaignClosure"
     }
@@ -764,8 +739,7 @@
       "expectedRevisionScope": {
         "field": "ExpectedRevision",
         "owner": "PolicyDistributionCampaign",
-        "counter": "logical ResourceRevision of this owner",
-        "nullableInternalRule": null
+        "counter": "logical ResourceRevision of this owner"
       }
     },
     {
@@ -883,7 +857,6 @@
         "terminalResultType": "CampaignRegistration"
       },
       "expectedRevisionScope": {
-        "field": null,
         "owner": "PolicyDistributionCampaign",
         "counter": "No primary caller ResourceRevision. Enforce required authored source/epoch/version tokens, immutable creation identity or trusted proof/generation as declared; append uses physical OCC."
       }
@@ -1000,7 +973,6 @@
         "terminalResultType": "CampaignRegistration"
       },
       "expectedRevisionScope": {
-        "field": null,
         "owner": "PolicyDistributionCampaign",
         "counter": "No primary caller ResourceRevision. Enforce required authored source/epoch/version tokens, immutable creation identity or trusted proof/generation as declared; append uses physical OCC."
       }
@@ -1110,8 +1082,7 @@
       "expectedRevisionScope": {
         "field": "ExpectedRevision",
         "owner": "PolicyDistributionCampaign",
-        "counter": "logical ResourceRevision of this owner",
-        "nullableInternalRule": null
+        "counter": "logical ResourceRevision of this owner"
       }
     },
     {

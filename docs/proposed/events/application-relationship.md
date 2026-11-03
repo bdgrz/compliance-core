@@ -195,7 +195,7 @@ Canonical events: **3**. Complete canonical event and available schema records: 
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [X005](../reactors/application-retirement-reactor.md#x005) | emitted semantic fact | DeclaredApplication | RemoveApplicationRelationship | ApplicationRelationship |
+| [X005](../reactors/remove-relationships-after-application-retirement-reactor.md#x005) | emitted semantic fact | DeclaredApplication | RemoveApplicationRelationship | ApplicationRelationship |
 
 
 

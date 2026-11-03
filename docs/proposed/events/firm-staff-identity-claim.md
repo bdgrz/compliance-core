@@ -36,7 +36,6 @@ Canonical events: **1**. Complete canonical event and available schema records: 
 | Schema discriminator | bdgrz.firm-staff-identity-claim.firm-staff-identity-claimed |
 | Schema discriminatorVersion | 1 |
 | Schema owner | FirmStaffIdentityClaim |
-| Schema existingContract | null (recorded) |
 | Schema status | selected target schema; implementation pending |
 | Schema reason | typed reactor receiver accepted business fact |
 | Schema changes | None listed |

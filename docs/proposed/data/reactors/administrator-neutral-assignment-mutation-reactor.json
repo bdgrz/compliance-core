@@ -30,7 +30,6 @@
       "currentRegisteredRootTypes": [
         "AdministratorNeutralAssignmentMutationReactor"
       ],
-      "plannedRootRole": null,
       "processes": [
         "AdministratorTransitionProcess"
       ],

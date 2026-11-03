@@ -5,6 +5,7 @@
 - Business aggregate: `true`
 - Selected status: `SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED`
 
+
 ## Identity and invariant
 
 **Selected identity:** Existing tenant-scoped UUIDv5 of normalized SourceWorkerId. Supplied RelationshipId must equal that unchanged algorithm; selected revisions use CommandId with exact person/membership/source-worker binding.
@@ -18,6 +19,10 @@
 **Replay:** Current required authorization precedes replay; exact authorized retries resolve the original accepted result using the selected logical identity and immutable actor/intent/source binding. Fresh mutable feasibility, clock selection and body preparation cannot replace that original result. Expected revision is concurrency precondition, not a new identity.
 
 **Lifecycle:** Allowed statuses are pending, active, on_leave, and ended. ReviseWorkRelationship records a status or terms change as WorkRelationshipRevised. Changes to people's work status follow comparison of accepted workforce roster versions. Changing this record alone does not grant or revoke platform or outside-service access.
+
+
+
+
 
 ## Commands
 
@@ -39,8 +44,8 @@
 
 ## Product rules
 
-- **D06-03** — A workforce person requires a stable worker identifier, display name, work email, worker type (employee, contractor, external collaborator), lifecycle status, start and end dates, direct manager, and department or team; a manual roster uses an organization-maintained worker identifier, and an external source identifier is provenance only. Source: [m0-d06-workforce-source.md](../../product/decisions/m0-d06-workforce-source.md).
-- **D06-06** — An external collaborator with access to a reviewed system must be recorded as a workforce person of type external collaborator with an accountable internal sponsor. Source: [m0-d06-workforce-source.md](../../product/decisions/m0-d06-workforce-source.md).
+- **D06-03** — A workforce person requires a stable worker identifier, display name, work email, worker type (employee, contractor, external collaborator), lifecycle status, start and end dates, direct manager, and department or team; a manual roster uses an organization-maintained worker identifier, and an external source identifier is provenance only. Decision: [m0-d06-workforce-source.md](../decisions/m0-d06-workforce-source.md).
+- **D06-06** — An external collaborator with access to a reviewed system must be recorded as a workforce person of type external collaborator with an accountable internal sponsor. Decision: [m0-d06-workforce-source.md](../decisions/m0-d06-workforce-source.md).
 
 ## Adopted architecture decisions
 

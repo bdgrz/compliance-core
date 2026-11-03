@@ -9,22 +9,19 @@
       "stage": "acquire",
       "receivers": [
         "AuthorizeProviderAssuranceReportProviderReviewUse"
-      ],
-      "rule": null
+      ]
     },
     {
       "stage": "complete",
       "receivers": [
         "CompleteProviderAssuranceReview"
-      ],
-      "rule": null
+      ]
     },
     {
       "stage": "settle",
       "receivers": [
         "SettleProviderAssuranceReportProviderReviewUse"
-      ],
-      "rule": null
+      ]
     }
   ],
   "abort": [

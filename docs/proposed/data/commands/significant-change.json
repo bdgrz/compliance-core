@@ -54,13 +54,9 @@
           "authorizationPolicy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/24",
-        "line": 1927,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      },
       "kind": "http",
+      "sourceOwner": "SignificantChange",
+      "owner": "SignificantChange",
       "sourceName": "AssessSignificantChange",
       "targetName": "AssessSignificantChange"
     },
@@ -112,12 +108,6 @@
         "terminalResultType": "Unit"
       },
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/85",
-        "line": 6355,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      },
       "kind": "command",
       "concurrencyGuard": {
         "rule": "require_expected_revision",
@@ -129,6 +119,8 @@
         },
         "date": "2026-10-29"
       },
+      "sourceOwner": "SignificantChange",
+      "owner": "SignificantChange",
       "sourceName": "LinkImpactReviewWork",
       "targetName": "LinkImpactReviewWork"
     },
@@ -169,13 +161,9 @@
         "terminalResultType": "Unit"
       },
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/128",
-        "line": 9624,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      },
       "kind": "creation",
+      "sourceOwner": "SignificantChange",
+      "owner": "SignificantChange",
       "sourceName": "RecordSignificantChange",
       "targetName": "RecordSignificantChange"
     },
@@ -252,12 +240,6 @@
         "terminalResultType": "Unit"
       },
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/129",
-        "line": 9683,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      },
       "kind": "command",
       "concurrencyGuard": {
         "rule": "require_expected_revision",
@@ -269,6 +251,8 @@
         },
         "date": "2026-10-29"
       },
+      "sourceOwner": "SignificantChange",
+      "owner": "SignificantChange",
       "sourceName": "RecordSignificantChangeSystemDescriptionDecision",
       "targetName": "RecordSignificantChangeSystemDescriptionDecision"
     },
@@ -330,13 +314,9 @@
           "authorizationPolicy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/182",
-        "line": 13652,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      },
       "kind": "http",
+      "sourceOwner": "SignificantChange",
+      "owner": "SignificantChange",
       "sourceName": "ReviseSignificantChange",
       "targetName": "ReviseSignificantChange"
     }

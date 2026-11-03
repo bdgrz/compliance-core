@@ -98,7 +98,6 @@
       ],
       "canonicalTargetOwner": "Member",
       "recoveryContractSummary": "Stable source-derived IDs; exact live-member/already-assigned conflict is explicitly accepted for the existing episode; activation uses bounded TenantActivationPolicy retries. Guest grant never broadens captured program scope.",
-      "logicalPrerequisiteRuleGuard": null,
       "logicalPrerequisiteRule": "The source is the committed TenantInvitationAccepted carrying the affiliation (client_personnel, firm_staff or guest) and for a guest a retained program scope manifest and finite end date not before acceptance; the member is registered with that affiliation only if the user has no live episode and any prior episode finished cleanup.",
       "prerequisiteRuleSource": "authored 2026-10-29 from reactor and target source"
     },
@@ -187,7 +186,6 @@
       ],
       "canonicalTargetOwner": "TeamMember",
       "recoveryContractSummary": "Stable source-derived IDs; exact live-member/already-assigned conflict is explicitly accepted for the existing episode; activation uses bounded TenantActivationPolicy retries. Guest grant never broadens captured program scope.",
-      "logicalPrerequisiteRuleGuard": null,
       "logicalPrerequisiteRule": "The source is the exact TenantInvitationAccepted; the receiver assigns the accepted user's member to the team for the accepted built-in role (or the Administrators team for an administrator offer) only for the membership episode the same acceptance registered.",
       "prerequisiteRuleSource": "authored 2026-10-29 from reactor and target source"
     },
@@ -267,7 +265,6 @@
       ],
       "canonicalTargetOwner": "AccessGrant",
       "recoveryContractSummary": "Stable source-derived IDs; exact live-member/already-assigned conflict is explicitly accepted for the existing episode; activation uses bounded TenantActivationPolicy retries. Guest grant never broadens captured program scope.",
-      "logicalPrerequisiteRuleGuard": null,
       "logicalPrerequisiteRule": "The accepted invitation must be a guest affiliation retaining a nonempty program manifest, inviter attribution and expiry on or after acceptance date; one guest-program grant is issued per manifest program for that user bounded by the expiry.",
       "prerequisiteRuleSource": "authored 2026-10-29 from reactor and target source"
     },
@@ -383,7 +380,6 @@
       ],
       "canonicalTargetOwner": "Tenant",
       "recoveryContractSummary": "Stable source-derived IDs; exact live-member/already-assigned conflict is explicitly accepted for the existing episode; activation uses bounded TenantActivationPolicy retries. Guest grant never broadens captured program scope.",
-      "logicalPrerequisiteRuleGuard": null,
       "logicalPrerequisiteRule": "The source is TenantInvitationAccepted for an administrator offer (first administrator); activation is accepted only if the invited user is the invited first-administrator email, a registered client-personnel member, assigned to the Administrators team on the same episode, with membership visible and TenantAccess, TenantRbacManage and ProgramManage all effective, and the tenant slug confirmed.",
       "prerequisiteRuleSource": "authored 2026-10-29 from reactor and target source"
     }

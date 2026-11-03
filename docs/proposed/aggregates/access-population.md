@@ -5,6 +5,7 @@
 - Business aggregate: `true`
 - Selected status: `SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED`
 
+
 ## Identity and invariant
 
 **Selected identity:** Tenant-scoped populationId; `PopulationId` on `OpenAccessPopulation` is the caller-supplied immutable creation identity (exact immutable creation retry) so an exact retry resolves the original result and a different id is a different record; later mutations use CommandId bound to this identity and the expected revision.
@@ -18,6 +19,10 @@
 **Replay:** Current required authorization precedes replay; exact authorized retries resolve the original accepted result using the selected logical identity and immutable actor/intent/source binding. Fresh mutable feasibility, clock selection and body preparation cannot replace that original result. Expected revision is concurrency precondition, not a new identity.
 
 **Lifecycle:** [Placeholder: a consolidated lifecycle sequence is not present in the selected owner record.]
+
+
+
+
 
 ## Commands
 
@@ -41,9 +46,9 @@
 
 ## Product rules
 
-- **D07-03** — Inherited access is never stored as an AccessAssignment; an assignment records only what the source asserts is granted directly to that principal within a snapshot. Source: [m0-d07-access-review-population.md](../../product/decisions/m0-d07-access-review-population.md).
-- **D07-04** — An AccessPopulationSnapshot records the exact system instance version, observation time, source (manual attestation until imports exist), and content hash, and is immutable once accepted. Source: [m0-d07-access-review-population.md](../../product/decisions/m0-d07-access-review-population.md).
-- **D07-05** — An account's provider subject identifier is unique per system instance. Source: [m0-d07-access-review-population.md](../../product/decisions/m0-d07-access-review-population.md).
+- **D07-03** — Inherited access is never stored as an AccessAssignment; an assignment records only what the source asserts is granted directly to that principal within a snapshot. Decision: [m0-d07-access-review-population.md](../decisions/m0-d07-access-review-population.md).
+- **D07-04** — An AccessPopulationSnapshot records the exact system instance version, observation time, source (manual attestation until imports exist), and content hash, and is immutable once accepted. Decision: [m0-d07-access-review-population.md](../decisions/m0-d07-access-review-population.md).
+- **D07-05** — An account's provider subject identifier is unique per system instance. Decision: [m0-d07-access-review-population.md](../decisions/m0-d07-access-review-population.md).
 
 ## Adopted architecture decisions
 
@@ -52,7 +57,7 @@
 ## Evidence and complete record
 
 - Baseline source: [Placeholder: source file is not present in this checkout]
-- Aggregate review: [access-population-review-2026-10-29.md](../../product/definitive-aggregate-choreography/access-population-review-2026-10-29.md)
+- Aggregate review: [Placeholder: no owner-specific review file is present]
 - Full selected record: [JSON](../data/aggregates/access-population.json)
 
 > Target definition is separate from runtime qualification. Implementation status recorded by the source: `SEPARATE_VERIFICATION_REQUIRED_IMPLEMENTATION_HALTED`.

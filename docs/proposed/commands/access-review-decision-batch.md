@@ -1,5 +1,7 @@
 # AccessReviewDecisionBatch commands
 
+
+
 Selected command contracts: **4**. Complete selected contracts and companion source evidence: [owner command JSON](../data/commands/access-review-decision-batch.json).
 
 | Target command | Selected source name | Kind | Identity | Fields | HTTP routes |
@@ -18,7 +20,8 @@ Selected command contracts: **4**. Complete selected contracts and companion sou
 | Target command name | CancelAccessReviewDecisionBatch |
 | Selected source command name | CancelAccessReviewDecisionBatch |
 | Name decision | The selected source name is retained. |
-| Owner | AccessReviewDecisionBatch |
+| Target owner | AccessReviewDecisionBatch |
+| Selected source owner | AccessReviewDecisionBatch |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | abort |
 | Logical identity | CommandId; Uuid; required=true; abort receiver identity bound to the exact admitted operation and generation: exact redelivery resolves the original rejected result; an abort after a terminal outcome is a no-op |
@@ -65,7 +68,8 @@ Required tests: [Placeholder: required tests not recorded]
 | Target command name | PublishAccessReviewDecisionBatch |
 | Selected source command name | PublishAccessReviewDecisionBatch |
 | Name decision | The selected source name is retained. |
-| Owner | AccessReviewDecisionBatch |
+| Target owner | AccessReviewDecisionBatch |
+| Selected source owner | AccessReviewDecisionBatch |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; reactor; deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result |
@@ -117,7 +121,8 @@ Required tests: [Placeholder: required tests not recorded]
 | Target command name | CompleteAccessReviewDecisionBatchCancellation |
 | Selected source command name | CompleteAccessReviewDecisionBatchCancellation |
 | Name decision | The selected source name is retained. |
-| Owner | AccessReviewDecisionBatch |
+| Target owner | AccessReviewDecisionBatch |
+| Selected source owner | AccessReviewDecisionBatch |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; reactor; deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result |
@@ -169,7 +174,8 @@ Required tests: [Placeholder: required tests not recorded]
 | Target command name | RecordAccessReviewDecisionBatch |
 | Selected source command name | MaterializeAccessReviewDecisionBatch |
 | Name decision | Records the already admitted exact bulk selection without rebuilding or changing it. |
-| Owner | AccessReviewDecisionBatch |
+| Target owner | AccessReviewDecisionBatch |
+| Selected source owner | AccessReviewDecisionBatch |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; reactor; deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result |

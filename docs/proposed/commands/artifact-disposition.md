@@ -1,5 +1,7 @@
 # ArtifactDisposition commands
 
+
+
 Selected command contracts: **4**. Complete selected contracts and companion source evidence: [owner command JSON](../data/commands/artifact-disposition.json).
 
 | Target command | Selected source name | Kind | Identity | Fields | HTTP routes |
@@ -18,7 +20,8 @@ Selected command contracts: **4**. Complete selected contracts and companion sou
 | Target command name | ApproveArtifactDisposition |
 | Selected source command name | ApproveArtifactDisposition |
 | Name decision | The selected source name is retained. |
-| Owner | ArtifactDisposition |
+| Target owner | ArtifactDisposition |
+| Selected source owner | ArtifactDisposition |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | command |
 | Logical identity | CommandId; Uuid; required=true; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
@@ -67,7 +70,8 @@ Required tests: [Placeholder: required tests not recorded]
 | Target command name | ExecuteArtifactDisposition |
 | Selected source command name | ExecuteArtifactDisposition |
 | Name decision | The selected source name is retained. |
-| Owner | ArtifactDisposition |
+| Target owner | ArtifactDisposition |
+| Selected source owner | ArtifactDisposition |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | command |
 | Logical identity | CommandId; Uuid; required=true; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
@@ -114,7 +118,8 @@ Required tests: [Placeholder: required tests not recorded]
 | Target command name | RecordArtifactDispositionResult |
 | Selected source command name | RecordArtifactDispositionResult |
 | Name decision | The selected source name is retained. |
-| Owner | ArtifactDisposition |
+| Target owner | ArtifactDisposition |
+| Selected source owner | ArtifactDisposition |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | command |
 | Logical identity | CommandId; Uuid; required=true; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
@@ -167,7 +172,8 @@ Required tests: [Placeholder: required tests not recorded]
 | Target command name | StopArtifactDisposalForHold |
 | Selected source command name | FenceArtifactDispositionForHold |
 | Name decision | Stops an approved disposal when a new legal or engagement hold applies before deletion finishes. |
-| Owner | ArtifactDisposition |
+| Target owner | ArtifactDisposition |
+| Selected source owner | ArtifactDisposition |
 | Contract record status | PLANNED |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; reactor; deterministic receiver identity derived from the admitted root fact, episode and generation: exact redelivery resolves the original result, a changed admission is a new identity |

@@ -44,12 +44,6 @@
         "terminalResultType": "Unit"
       },
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/16",
-        "line": 1295,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      },
       "kind": "command",
       "concurrencyGuard": {
         "rule": "require_expected_revision",
@@ -61,6 +55,8 @@
         },
         "date": "2026-10-29"
       },
+      "sourceOwner": "MethodologyTemplate",
+      "owner": "MethodologyTemplate",
       "sourceName": "ApproveMethodologyTemplateVersion",
       "targetName": "ApproveMethodologyTemplateVersion"
     },
@@ -96,13 +92,9 @@
         "terminalResultType": "Unit"
       },
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/52",
-        "line": 3923,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      },
       "kind": "creation",
+      "sourceOwner": "MethodologyTemplate",
+      "owner": "MethodologyTemplate",
       "sourceName": "CreateMethodologyTemplate",
       "targetName": "CreateMethodologyTemplate"
     },
@@ -148,13 +140,9 @@
         "terminalResultType": "Unit"
       },
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/157",
-        "line": 11624,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      },
       "kind": "command",
+      "sourceOwner": "MethodologyTemplate",
+      "owner": "MethodologyTemplate",
       "sourceName": "RetireMethodologyTemplate",
       "targetName": "RetireMethodologyTemplate"
     },
@@ -206,12 +194,6 @@
         "terminalResultType": "Unit"
       },
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/162",
-        "line": 12069,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      },
       "kind": "command",
       "concurrencyGuard": {
         "rule": "require_expected_revision",
@@ -223,6 +205,8 @@
         },
         "date": "2026-10-29"
       },
+      "sourceOwner": "MethodologyTemplate",
+      "owner": "MethodologyTemplate",
       "sourceName": "ReviewMethodologyTemplate",
       "targetName": "ReviewMethodologyTemplate"
     },
@@ -268,13 +252,9 @@
         "terminalResultType": "Unit"
       },
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/176",
-        "line": 13180,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      },
       "kind": "command",
+      "sourceOwner": "MethodologyTemplate",
+      "owner": "MethodologyTemplate",
       "sourceName": "ReviseMethodologyTemplateDraft",
       "targetName": "ReviseMethodologyTemplateDraft"
     }

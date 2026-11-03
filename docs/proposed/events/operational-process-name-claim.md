@@ -37,7 +37,6 @@ Canonical events: **2**. Complete canonical event and available schema records: 
 | Schema discriminator | bdgrz.operational-process-name-claim.operational-process-name-claimed |
 | Schema discriminatorVersion | 1 |
 | Schema owner | OperationalProcessNameClaim |
-| Schema existingContract | null (recorded) |
 | Schema status | selected target schema; implementation pending |
 | Schema reason | typed reactor receiver accepted business fact |
 | Schema changes | None listed |
@@ -106,8 +105,8 @@ RecordNameChangeIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T028](../reactors/operational-process-change-accepted-reactor.md#t028) | emitted semantic fact | OperationalProcess | ClaimOperationalProcessName | OperationalProcessNameClaim |
-| [T029](../reactors/operational-process-change-accepted-reactor.md#t029) | logical prerequisite | OperationalProcessNameClaim | ApplyOperationalProcessChange | OperationalProcess |
+| [T028](../reactors/keep-operational-process-names-unique-reactor.md#t028) | emitted semantic fact | OperationalProcess | ClaimOperationalProcessName | OperationalProcessNameClaim |
+| [T029](../reactors/keep-operational-process-names-unique-reactor.md#t029) | logical prerequisite | OperationalProcessNameClaim | ApplyOperationalProcessChange | OperationalProcess |
 
 ### OperationalProcessNameReleased
 
@@ -137,7 +136,6 @@ RecordNameChangeIntent
 | Schema discriminator | bdgrz.operational-process-name-claim.operational-process-name-released |
 | Schema discriminatorVersion | 1 |
 | Schema owner | OperationalProcessNameClaim |
-| Schema existingContract | null (recorded) |
 | Schema status | selected target schema; implementation pending |
 | Schema reason | typed reactor receiver accepted business fact |
 | Schema changes | None listed |
@@ -206,8 +204,8 @@ RecordNameChangeIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T030](../reactors/operational-process-change-accepted-reactor.md#t030) | emitted semantic fact | OperationalProcess | ReleaseOperationalProcessName | OperationalProcessNameClaim |
-| [X004](../reactors/operational-process-change-accepted-reactor.md#x004) | emitted semantic fact | OperationalProcess | ReleaseOperationalProcessName | OperationalProcessNameClaim |
+| [T030](../reactors/keep-operational-process-names-unique-reactor.md#t030) | emitted semantic fact | OperationalProcess | ReleaseOperationalProcessName | OperationalProcessNameClaim |
+| [X004](../reactors/keep-operational-process-names-unique-reactor.md#x004) | emitted semantic fact | OperationalProcess | ReleaseOperationalProcessName | OperationalProcessNameClaim |
 
 
 

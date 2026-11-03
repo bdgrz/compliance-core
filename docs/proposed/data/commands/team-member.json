@@ -56,14 +56,10 @@
         "method": "PUT",
         "path": "/api/v1/tenants/{tenant_id}/teams/{team_id}/members/{member_id}/{command_id}"
       },
-      "source": {
-        "path": "docs/product/audits/2026-10-23/source-admission-contracts.json",
-        "jsonPointer": "/contracts/9",
-        "line": 604,
-        "sha256": "f1d549ed0879c816cb26e86879f8fa658dab0a8acbf7c591e4d4aed40483f8ae"
-      },
       "attributionNote": "Moved from TenantManagerGuard on 2026-10-29: Only for the built-in Administrators team: the guard admits first (restoration/availability fact), then ApplyAdministratorAssignmentRestoration writes TeamMember. For every other team the handler is a direct NativeOperation<TeamMember> and never reads the guard. (source src/Compliance.Core/Features/AccessControl/Handlers/AssignTeamMemberHandler.cs)",
       "kind": "http",
+      "sourceOwner": "TeamMember",
+      "owner": "TeamMember",
       "sourceName": "AssignTeamMember",
       "targetName": "AssignTeamMember"
     },
@@ -122,14 +118,10 @@
         "method": "PUT",
         "path": "/api/v1/tenants/{tenant_id}/members/{member_id}/team-removals/{command_id}"
       },
-      "source": {
-        "path": "docs/product/audits/2026-10-23/source-admission-contracts.json",
-        "jsonPointer": "/contracts/7",
-        "line": 462,
-        "sha256": "f1d549ed0879c816cb26e86879f8fa658dab0a8acbf7c591e4d4aed40483f8ae"
-      },
       "attributionNote": "Moved from TenantManagerGuard on 2026-10-29: Only for the Administrators team: guard withdrawal first (reason RemovedFromAdministrators), then ApplyAdministratorAssignmentWithdrawal removes the assignment. Other teams: direct NativeOperation<TeamMember>. (source src/Compliance.Core/Features/AccessControl/Handlers/RemoveTeamMemberHandler.cs)",
       "kind": "http",
+      "sourceOwner": "TeamMember",
+      "owner": "TeamMember",
       "sourceName": "RemoveTeamMember",
       "targetName": "RemoveTeamMember"
     },
@@ -195,7 +187,7 @@
         "recorded": "2026-10-29"
       },
       "reactor": "AdministratorAssignmentRestorationReactor",
-      "sourceOwner": "TenantManagerGuard",
+      "sourceOwner": "TeamMember",
       "sourceEvents": [
         "TenantManagerRestorationAccepted"
       ],
@@ -205,6 +197,7 @@
       ],
       "effectKind": "claim_professional_assertion_identity",
       "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
+      "owner": "TeamMember",
       "sourceName": "ApplyAdministratorAssignmentRestoration",
       "targetName": "ApplyAdministratorAssignmentRestoration"
     },
@@ -266,7 +259,7 @@
         "recorded": "2026-10-29"
       },
       "reactor": "AdministratorAssignmentWithdrawalReactor",
-      "sourceOwner": "TenantManagerGuard",
+      "sourceOwner": "TeamMember",
       "sourceEvents": [
         "TenantManagerWithdrawalAccepted"
       ],
@@ -276,6 +269,7 @@
       ],
       "effectKind": "apply_administrator_assignment_withdrawal",
       "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
+      "owner": "TeamMember",
       "sourceName": "ApplyAdministratorAssignmentWithdrawal",
       "targetName": "ApplyAdministratorAssignmentWithdrawal"
     },
@@ -337,7 +331,7 @@
         "recorded": "2026-10-29"
       },
       "reactor": "AdministratorNeutralAssignmentMutationReactor",
-      "sourceOwner": "TenantManagerGuard",
+      "sourceOwner": "TeamMember",
       "sourceEvents": [
         "TenantManagerSourceMutationAdmitted"
       ],
@@ -347,6 +341,7 @@
       ],
       "effectKind": "apply_neutral_administrator_assignment_mutation",
       "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
+      "owner": "TeamMember",
       "sourceName": "ApplyNeutralAdministratorAssignmentMutation",
       "targetName": "RemoveAdministratorAssignment"
     },
@@ -413,6 +408,8 @@
         },
         "date": "2026-10-29"
       },
+      "sourceOwner": "TeamMember",
+      "owner": "TeamMember",
       "sourceName": "CleanupRetiredMembershipRelationship",
       "targetName": "RemoveRetiredMemberAccessAndAssignments"
     }

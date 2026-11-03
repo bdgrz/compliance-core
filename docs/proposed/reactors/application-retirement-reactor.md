@@ -20,13 +20,13 @@ Selected choreography rows: **1**. Required proofs, recovery, effect identity, a
 | id | X005 |
 | kind | planned_reaction |
 | status | PLANNED_TARGET_DEFINITION_2026-10-29 |
-| sourceOwner | DeclaredApplication |
+| Source owner (target name) | DeclaredApplication (source: DeclaredApplication) |
 | logicalPrerequisiteFacts (target names) | ApplicationRetired |
 | logicalPrerequisiteRule | For each active directed relationship with the retired application as source or target, remove it with the retirement as reason; tuple identity is never recycled. |
 | physicalRootEvents (target names) | ApplicationRetired |
 | originalAdmissionKinds (target names) | ApplicationRetired |
 | Target command (selected source name: RemoveApplicationRelationship) | RemoveApplicationRelationship |
-| targetOwner | ApplicationRelationship |
+| Target owner | ApplicationRelationship |
 | targetAuthorityKind | business_aggregate |
 | emittedSemanticFacts (target names) | ApplicationRelationshipRemoved |
 | emittedEventContracts | None listed |

@@ -8,14 +8,7 @@
   "invariant": "Permanent binding of signed assertion identity to digest, designation, canonical user and duty scope; claim identity cannot be recycled.",
   "boundaryDecision": "selected_split",
   "mustPreserve": "Exact predecessor, monotonically increasing authority revision, stable signed subject, valid staff source proof.",
-  "sources": [
-    {
-      "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
-      "jsonPointer": "/splitOwners/0/targetOwners/1",
-      "line": 39,
-      "sha256": "d349d94b7c43f4d82020ecf36bdacf1aff98bc6498e14993582f1c3164b21f19"
-    }
-  ],
+  "sources": [],
   "baselineSourcePath": "src/Compliance.Core/Features/AccessControl/FirmProfessionalDutyCatalog.cs",
   "baselineEvents": [],
   "preliminaryNewEvents": [
@@ -90,7 +83,7 @@
         "recorded": "2026-10-29"
       },
       "reactor": "ProfessionalAssertionClaimReactor",
-      "sourceOwner": "FirmProfessionalDutyDesignation",
+      "sourceOwner": "ProfessionalAssertionIdentityClaim",
       "sourceEvents": [
         "ProfessionalDutyChangeAccepted"
       ],
@@ -99,7 +92,8 @@
         "ProfessionalAssertionIdentityClaimed"
       ],
       "effectKind": "claim_professional_assertion_identity",
-      "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine."
+      "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
+      "owner": "ProfessionalAssertionIdentityClaim"
     }
   ],
   "eventAuthority": "selected_final_event_catalog",
@@ -107,13 +101,7 @@
     {
       "event": "ProfessionalAssertionIdentityClaimed",
       "discriminator": "bdgrz.professional-assertion-identity-claim.professional-assertion-identity-claimed",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/205",
-        "line": 27233,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     }
   ],
   "choreography": [
@@ -121,25 +109,13 @@
       "reactor": "ProfessionalAssertionClaimReactor",
       "sourceOwner": "FirmProfessionalDutyDesignation",
       "targetOwner": "ProfessionalAssertionIdentityClaim",
-      "command": "ClaimProfessionalAssertionIdentity",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "jsonPointer": "/reactors/0",
-        "line": 7,
-        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
-      }
+      "command": "ClaimProfessionalAssertionIdentity"
     },
     {
       "reactor": "ProfessionalDesignationApplicationReactor",
       "sourceOwner": "ProfessionalAssertionIdentityClaim",
       "targetOwner": "FirmProfessionalDutyDesignation",
-      "command": "ApplyProfessionalDutyChange",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "jsonPointer": "/reactors/1",
-        "line": 99,
-        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
-      }
+      "command": "ApplyProfessionalDutyChange"
     }
   ],
   "status": "SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED",
@@ -156,5 +132,6 @@
       "previous": "platform / assertionId"
     }
   ],
-  "commandNote": "Process-dispatched replay claim keyed by platform/assertionId."
+  "commandNote": "Process-dispatched replay claim keyed by platform/assertionId.",
+  "sourceOwner": "ProfessionalAssertionIdentityClaim"
 }

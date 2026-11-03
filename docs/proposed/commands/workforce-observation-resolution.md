@@ -1,5 +1,7 @@
 # WorkforceObservationResolution commands
 
+
+
 Selected command contracts: **1**. Complete selected contracts and companion source evidence: [owner command JSON](../data/commands/workforce-observation-resolution.json).
 
 | Target command | Selected source name | Kind | Identity | Fields | HTTP routes |
@@ -15,7 +17,8 @@ Selected command contracts: **1**. Complete selected contracts and companion sou
 | Target command name | ResolveWorkforceObservation |
 | Selected source command name | ResolveWorkforceObservation |
 | Name decision | The selected source name is retained. |
-| Owner | WorkforceObservationResolution |
+| Target owner | WorkforceObservationResolution |
+| Selected source owner | WorkforceObservationResolution |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | command |
 | Logical identity | CommandId; Uuid; required=true; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |

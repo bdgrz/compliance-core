@@ -5,6 +5,7 @@
 - Business aggregate: `true`
 - Selected status: `SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED`
 
+
 ## Identity and invariant
 
 **Selected identity:** Tenant-scoped tenant / engagementId; `EngagementId` on `CreateServiceEngagement` is the caller-supplied immutable creation identity (exact immutable creation retry) so an exact retry resolves the original result and a different id is a different record; later mutations use CommandId bound to this identity and the expected revision.
@@ -18,6 +19,10 @@
 **Replay:** Current required authorization precedes replay; exact authorized retries resolve the original accepted result using the selected logical identity and immutable actor/intent/source binding. Fresh mutable feasibility, clock selection and body preparation cannot replace that original result. Expected revision is concurrency precondition, not a new identity.
 
 **Lifecycle:** [Placeholder: a consolidated lifecycle sequence is not present in the selected owner record.]
+
+
+
+
 
 ## Commands
 
@@ -38,7 +43,7 @@
 | [CompleteServiceEngagementAcceptance](../commands/service-engagement-independence.md#completeserviceengagementacceptance) | receiver | CommandId |
 | [CompleteServiceEngagementStaffAssignment](../commands/service-engagement-independence.md#completeserviceengagementstaffassignment) | receiver | CommandId |
 | [AuthorizeEngagementPracticeCommitments](../commands/service-engagement-independence.md#authorizeengagementpracticecommitments) | receiver | CommandId |
-| [CloseEngagementPersonalDecision](../commands/service-engagement-independence.md#closeengagementpersonaldecision) | receiver | CommandId |
+| [RecordEngagementPersonalDecision](../commands/service-engagement-independence.md#recordengagementpersonaldecision) | receiver | CommandId |
 | [AuthorizeEngagementPersonalDecision](../commands/service-engagement-independence.md#authorizeengagementpersonaldecision) | receiver | CommandId |
 
 ## Events
@@ -82,24 +87,24 @@
 | [T094](../reactors/engagement-acceptance-reactor.md#t094) | reaction_or_regular_process_stage | ServiceEngagementIndependence | IndependenceRuleCatalog | CloseIndependenceRuleCatalogEngagementAuthorization |
 | [T095](../reactors/engagement-acceptance-reactor.md#t095) | reaction_or_regular_process_stage | ServiceEngagementIndependence | IndependenceRuleRatificationCatalog | AuthorizeIndependenceRuleRatificationCatalogEngagement |
 | [T096](../reactors/engagement-acceptance-reactor.md#t096) | reaction_or_regular_process_stage | ServiceEngagementIndependence | IndependenceRuleRatificationCatalog | CloseIndependenceRuleRatificationCatalogEngagementAuthorization |
-| [T107](../reactors/engagement-personal-decision-reactor.md#t107) | reaction_or_regular_process_stage | ServiceEngagementIndependence | ClientServiceIndependence | AuthorizeClientServicePersonalDecision |
-| [T108](../reactors/engagement-personal-decision-reactor.md#t108) | reaction_or_regular_process_stage | ServiceEngagementIndependence | EngagementManagementAcknowledgement | RecordEngagementManagementAcknowledgement |
-| [T109](../reactors/engagement-personal-decision-reactor.md#t109) | reaction_or_regular_process_stage | ServiceEngagementIndependence | PartnerIndependenceDecision | RecordPartnerIndependenceEvaluation |
-| [T110](../reactors/engagement-personal-decision-reactor.md#t110) | reaction_or_regular_process_stage | EngagementManagementAcknowledgement\|PartnerIndependenceDecision | ServiceEngagementIndependence | CloseEngagementPersonalDecision |
-| [T111](../reactors/engagement-personal-decision-reactor.md#t111) | reaction_or_regular_process_stage | ServiceEngagementIndependence | ClientServiceIndependence | CloseClientServicePersonalDecisionAuthorization |
-| [T112](../reactors/engagement-personal-decision-reactor.md#t112) | reaction_or_regular_process_stage | ServiceEngagementIndependence | ServiceEngagementIndependence | AuthorizeEngagementPersonalDecision |
-| [S017](../reactors/firm-staff-status-reevaluation-reactor.md#s017) | business_receiver | FirmStaffRecord | ServiceEngagementIndependence | RecordDirectoryIndependenceReevaluation |
-| [S018](../reactors/accepted-staff-directory-reconciliation-reactor.md#s018) | business_receiver | ServiceEngagementIndependence | ServiceEngagementIndependence | RecordDirectoryIndependenceReevaluation |
-| [A002](../reactors/unassigned-architecture-rows.md#a002) | process_abort_binding | ServiceEngagementIndependence | ServiceEngagementIndependence | RejectServiceEngagementAcceptance |
-| [A003](../reactors/unassigned-architecture-rows.md#a003) | process_abort_binding | ServiceEngagementIndependence | ServiceEngagementIndependence | RejectServiceEngagementStaffAssignment |
-| [A004](../reactors/unassigned-architecture-rows.md#a004) | process_abort_binding | ServiceEngagementIndependence | ServiceEngagementIndependence | CancelEngagementPersonalDecision |
+| [T107](../reactors/record-engagement-independence-decisions-reactor.md#t107) | reaction_or_regular_process_stage | ServiceEngagementIndependence | ClientServiceIndependence | AuthorizeClientServicePersonalDecision |
+| [T108](../reactors/record-engagement-independence-decisions-reactor.md#t108) | reaction_or_regular_process_stage | ServiceEngagementIndependence | EngagementManagementAcknowledgement | RecordEngagementManagementAcknowledgement |
+| [T109](../reactors/record-engagement-independence-decisions-reactor.md#t109) | reaction_or_regular_process_stage | ServiceEngagementIndependence | PartnerIndependenceDecision | RecordPartnerIndependenceEvaluation |
+| [T110](../reactors/record-engagement-independence-decisions-reactor.md#t110) | reaction_or_regular_process_stage | EngagementManagementAcknowledgement\|PartnerIndependenceDecision | ServiceEngagementIndependence | RecordEngagementPersonalDecision |
+| [T111](../reactors/record-engagement-independence-decisions-reactor.md#t111) | reaction_or_regular_process_stage | ServiceEngagementIndependence | ClientServiceIndependence | CloseClientServicePersonalDecisionAuthorization |
+| [T112](../reactors/record-engagement-independence-decisions-reactor.md#t112) | reaction_or_regular_process_stage | ServiceEngagementIndependence | ServiceEngagementIndependence | AuthorizeEngagementPersonalDecision |
+| [S017](../reactors/reassess-firm-staff-independence-after-changes-reactor.md#s017) | business_receiver | FirmStaffRecord | ServiceEngagementIndependence | RecordDirectoryIndependenceReevaluation |
+| [S018](../reactors/reassess-staff-independence-after-changes-reactor.md#s018) | business_receiver | ServiceEngagementIndependence | ServiceEngagementIndependence | RecordDirectoryIndependenceReevaluation |
+| [A002](../reactors/unassigned-domain-choreography.md#a002) | process_abort_binding | ServiceEngagementIndependence | ServiceEngagementIndependence | RejectServiceEngagementAcceptance |
+| [A003](../reactors/unassigned-domain-choreography.md#a003) | process_abort_binding | ServiceEngagementIndependence | ServiceEngagementIndependence | RejectServiceEngagementStaffAssignment |
+| [A004](../reactors/unassigned-domain-choreography.md#a004) | process_abort_binding | ServiceEngagementIndependence | ServiceEngagementIndependence | CancelEngagementPersonalDecision |
 
 ## Product rules
 
-- **D03-04** — Advisor and Attest roles are granted only through assignment to an accepted ServiceEngagement and never as a standing organization-wide grant. Source: [m0-d03-roles-and-separation-of-duties.md](../../product/decisions/m0-d03-roles-and-separation-of-duties.md).
-- **D23-12** — A firm ServiceEngagement and a client AuditEngagement are different records; references must name the kind and tenant and neither implies the other's authorization. Source: [m0-d23-assurance-vocabulary.md](../../product/decisions/m0-d23-assurance-vocabulary.md).
-- **D26-01** — No person may hold both an Advisor and an Attest assignment for the same client organization, at the same time or ever; the check covers the person's full assignment history for that client. Source: [m0-d26-independence.md](../../product/decisions/m0-d26-independence.md).
-- **D26-07** — An impaired IndependenceEvaluation result blocks acceptance of the attest engagement with no override. Source: [m0-d26-independence.md](../../product/decisions/m0-d26-independence.md).
+- **D03-04** — Advisor and Attest roles are granted only through assignment to an accepted ServiceEngagement and never as a standing organization-wide grant. Decision: [m0-d03-roles-and-separation-of-duties.md](../decisions/m0-d03-roles-and-separation-of-duties.md).
+- **D23-12** — A firm ServiceEngagement and a client AuditEngagement are different records; references must name the kind and tenant and neither implies the other's authorization. Decision: [m0-d23-assurance-vocabulary.md](../decisions/m0-d23-assurance-vocabulary.md).
+- **D26-01** — No person may hold both an Advisor and an Attest assignment for the same client organization, at the same time or ever; the check covers the person's full assignment history for that client. Decision: [m0-d26-independence.md](../decisions/m0-d26-independence.md).
+- **D26-07** — An impaired IndependenceEvaluation result blocks acceptance of the attest engagement with no override. Decision: [m0-d26-independence.md](../decisions/m0-d26-independence.md).
 
 ## Adopted architecture decisions
 
@@ -108,7 +113,7 @@
 ## Evidence and complete record
 
 - Baseline source: [Placeholder: source file is not present in this checkout]
-- Aggregate review: [service-engagement-independence-review-2026-10-29.md](../../product/definitive-aggregate-choreography/service-engagement-independence-review-2026-10-29.md)
+- Aggregate review: [Placeholder: no owner-specific review file is present]
 - Full selected record: [JSON](../data/aggregates/service-engagement-independence.json)
 
 > Target definition is separate from runtime qualification. Implementation status recorded by the source: `SEPARATE_VERIFICATION_REQUIRED_IMPLEMENTATION_HALTED`.

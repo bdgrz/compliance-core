@@ -28,7 +28,6 @@
         "discriminator": "bdgrz.provider-name-claim.provider-name-claimed",
         "discriminatorVersion": 1,
         "owner": "ProviderNameClaim",
-        "existingContract": null,
         "status": "selected target schema; implementation pending",
         "reason": "typed reactor receiver accepted business fact",
         "fields": [
@@ -219,7 +218,6 @@
         "discriminator": "bdgrz.provider-name-claim.provider-name-released",
         "discriminatorVersion": 1,
         "owner": "ProviderNameClaim",
-        "existingContract": null,
         "status": "selected target schema; implementation pending",
         "reason": "typed reactor receiver accepted business fact",
         "fields": [

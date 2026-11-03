@@ -205,7 +205,6 @@
         "discriminator": "bdgrz.firm-staff-record.firm-staff-professional-duty-use-authorized",
         "discriminatorVersion": 1,
         "owner": "FirmStaffRecord",
-        "existingContract": null,
         "status": "selected target schema; implementation pending",
         "reason": "Exact currently active canonical staff authority through designation recording",
         "fields": [
@@ -369,7 +368,6 @@
         "discriminator": "bdgrz.firm-staff-record.firm-staff-professional-duty-use-settled",
         "discriminatorVersion": 1,
         "owner": "FirmStaffRecord",
-        "existingContract": null,
         "status": "selected target schema; implementation pending",
         "reason": "Exact currently active canonical staff authority through designation recording",
         "fields": [
@@ -533,7 +531,6 @@
         "discriminator": "bdgrz.firm-staff-record.firm-staff-record-engagement-use-authorized",
         "discriminatorVersion": 1,
         "owner": "FirmStaffRecord",
-        "existingContract": null,
         "status": "selected target schema; implementation pending",
         "reason": "typed reactor receiver accepted business fact",
         "fields": [
@@ -697,7 +694,6 @@
         "discriminator": "bdgrz.firm-staff-record.firm-staff-record-engagement-use-settled",
         "discriminatorVersion": 1,
         "owner": "FirmStaffRecord",
-        "existingContract": null,
         "status": "selected target schema; implementation pending",
         "reason": "typed reactor receiver accepted business fact",
         "fields": [
@@ -860,7 +856,6 @@
         "discriminator": "bdgrz.firm-staff-record.firm-staff-registration-accepted",
         "discriminatorVersion": 1,
         "owner": "FirmStaffRecord",
-        "existingContract": null,
         "status": "selected target schema; implementation pending",
         "reason": "source command accepted result",
         "fields": [
@@ -1021,7 +1016,6 @@
         "discriminator": "bdgrz.firm-staff-record.firm-staff-registration-rejected",
         "discriminatorVersion": 1,
         "owner": "FirmStaffRecord",
-        "existingContract": null,
         "status": "selected target schema; implementation pending",
         "reason": "source admission contract",
         "fields": [

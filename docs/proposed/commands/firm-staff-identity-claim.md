@@ -1,5 +1,7 @@
 # FirmStaffIdentityClaim commands
 
+
+
 Selected command contracts: **1**. Complete selected contracts and companion source evidence: [owner command JSON](../data/commands/firm-staff-identity-claim.json).
 
 | Target command | Selected source name | Kind | Identity | Fields | HTTP routes |
@@ -15,7 +17,8 @@ Selected command contracts: **1**. Complete selected contracts and companion sou
 | Target command name | ClaimFirmStaffIdentity |
 | Selected source command name | ClaimFirmStaffIdentity |
 | Name decision | The selected source name is retained. |
-| Owner | FirmStaffIdentityClaim |
+| Target owner | FirmStaffIdentityClaim |
+| Selected source owner | FirmStaffIdentityClaim |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; internal; deterministic receiver identity derived from the admitted root fact, episode and generation: exact redelivery resolves the original result, a changed admission is a new identity |

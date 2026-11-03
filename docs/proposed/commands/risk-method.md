@@ -1,5 +1,7 @@
 # RiskMethod commands
 
+
+
 Selected command contracts: **1**. Complete selected contracts and companion source evidence: [owner command JSON](../data/commands/risk-method.json).
 
 | Target command | Selected source name | Kind | Identity | Fields | HTTP routes |
@@ -15,7 +17,8 @@ Selected command contracts: **1**. Complete selected contracts and companion sou
 | Target command name | PublishRiskMethodVersion |
 | Selected source command name | PublishRiskMethodVersion |
 | Name decision | The selected source name is retained. |
-| Owner | RiskMethod |
+| Target owner | RiskMethod |
+| Selected source owner | RiskMethod |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | http |
 | Logical identity | CommandId; Uuid; required=true; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |

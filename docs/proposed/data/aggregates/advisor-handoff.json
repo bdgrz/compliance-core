@@ -8,14 +8,7 @@
   "invariant": "Small selection, readiness, revocation/closure and admission-generation authority.",
   "boundaryDecision": "selected_split",
   "mustPreserve": "Feedback records exact selected source version and admitted generation; later selection makes it historical.",
-  "sources": [
-    {
-      "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
-      "jsonPointer": "/splitOwners/6/targetOwners/0",
-      "line": 691,
-      "sha256": "d349d94b7c43f4d82020ecf36bdacf1aff98bc6498e14993582f1c3164b21f19"
-    }
-  ],
+  "sources": [],
   "baselineSourcePath": "src/Compliance.Core/Features/AdvisorCollaboration/AdvisorHandoff.cs",
   "baselineEvents": [
     "AdvisorHandoffClosed",
@@ -85,13 +78,9 @@
           "policy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/31",
-        "line": 3713,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
-      "kind": "http"
+      "kind": "http",
+      "sourceOwner": "AdvisorHandoff",
+      "owner": "AdvisorHandoff"
     },
     {
       "command": "CreateAdvisorHandoff",
@@ -152,13 +141,9 @@
           "policy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/41",
-        "line": 4934,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
-      "kind": "http"
+      "kind": "http",
+      "sourceOwner": "AdvisorHandoff",
+      "owner": "AdvisorHandoff"
     },
     {
       "command": "MarkAdvisorHandoffReadyForReview",
@@ -209,13 +194,9 @@
           "policy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/69",
-        "line": 8101,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
-      "kind": "http"
+      "kind": "http",
+      "sourceOwner": "AdvisorHandoff",
+      "owner": "AdvisorHandoff"
     },
     {
       "command": "RecordAdvisorFeedback",
@@ -292,13 +273,9 @@
           "policy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/91",
-        "line": 10650,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
-      "kind": "http"
+      "kind": "http",
+      "sourceOwner": "AdvisorHandoff",
+      "owner": "AdvisorHandoff"
     },
     {
       "command": "ReviseAdvisorHandoffSelection",
@@ -359,13 +336,9 @@
           "policy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/135",
-        "line": 15649,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
-      "kind": "http"
+      "kind": "http",
+      "sourceOwner": "AdvisorHandoff",
+      "owner": "AdvisorHandoff"
     },
     {
       "command": "RevokeAdvisorHandoff",
@@ -421,13 +394,9 @@
           "policy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/147",
-        "line": 17154,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
-      "kind": "http"
+      "kind": "http",
+      "sourceOwner": "AdvisorHandoff",
+      "owner": "AdvisorHandoff"
     },
     {
       "command": "AuthorizeAdvisorArtifactDownloadUse",
@@ -493,7 +462,7 @@
         }
       ],
       "reactor": "AdvisorArtifactDownloadUseReactor",
-      "sourceOwner": "EvidenceArtifact",
+      "sourceOwner": "AdvisorHandoff",
       "sourceEvents": [
         "EvidenceArtifactDownloadRequested"
       ],
@@ -505,10 +474,7 @@
       "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
       "handler": "AuthorizeAdvisorArtifactDownloadUseHandler",
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "recorded": "2026-10-29"
-      }
+      "owner": "AdvisorHandoff"
     },
     {
       "command": "SettleAdvisorArtifactDownloadUse",
@@ -564,7 +530,7 @@
         }
       ],
       "reactor": "SettleAdvisorArtifactDownloadUseReactor",
-      "sourceOwner": "ArtifactDownloadGrant",
+      "sourceOwner": "AdvisorHandoff",
       "sourceEvents": [
         "EvidenceArtifactDownloadIssued",
         "ArtifactDownloadGrantCanceled"
@@ -577,10 +543,7 @@
       "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
       "handler": "SettleAdvisorArtifactDownloadUseHandler",
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "recorded": "2026-10-29"
-      }
+      "owner": "AdvisorHandoff"
     }
   ],
   "eventAuthority": "selected_final_event_catalog",
@@ -588,90 +551,42 @@
     {
       "event": "AdvisorArtifactDownloadUseAuthorized",
       "discriminator": "bdgrz.advisor-handoff.advisor-artifact-download-use-authorized",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/28",
-        "line": 3347,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     },
     {
       "event": "AdvisorArtifactDownloadUseSettled",
       "discriminator": "bdgrz.advisor-handoff.advisor-artifact-download-use-settled",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/29",
-        "line": 3483,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     },
     {
       "event": "AdvisorFeedbackAdmitted",
       "discriminator": "bdgrz.advisor-handoff.advisor-feedback-admitted",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/30",
-        "line": 3619,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     },
     {
       "event": "AdvisorHandoffClosed",
       "discriminator": "bdgrz.advisor-handoff.closed",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/35",
-        "line": 4160,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     },
     {
       "event": "AdvisorHandoffCreated",
       "discriminator": "bdgrz.advisor-handoff.created",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/36",
-        "line": 4226,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     },
     {
       "event": "AdvisorHandoffReadiedForReview",
       "discriminator": "bdgrz.advisor-handoff.readied-for-review",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/37",
-        "line": 4311,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     },
     {
       "event": "AdvisorHandoffRevoked",
       "discriminator": "bdgrz.advisor-handoff.revoked",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/38",
-        "line": 4372,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     },
     {
       "event": "AdvisorHandoffSelectionRevised",
       "discriminator": "bdgrz.advisor-handoff.selection-revised",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/39",
-        "line": 4438,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     }
   ],
   "choreography": [
@@ -679,37 +594,19 @@
       "reactor": "AdvisorFeedbackMaterializationReactor",
       "sourceOwner": "AdvisorHandoff",
       "targetOwner": "AdvisorFeedbackThread",
-      "command": "MaterializeAdvisorFeedback",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "jsonPointer": "/reactors/13",
-        "line": 1127,
-        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
-      }
+      "command": "MaterializeAdvisorFeedback"
     },
     {
       "reactor": "AdvisorArtifactDownloadUseReactor",
       "sourceOwner": "EvidenceArtifact",
       "targetOwner": "AdvisorHandoff",
-      "command": "AuthorizeAdvisorArtifactDownloadUse",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "jsonPointer": "/reactors/99",
-        "line": 8590,
-        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
-      }
+      "command": "AuthorizeAdvisorArtifactDownloadUse"
     },
     {
       "reactor": "SettleAdvisorArtifactDownloadUseReactor",
       "sourceOwner": "ArtifactDownloadGrant",
       "targetOwner": "AdvisorHandoff",
-      "command": "SettleAdvisorArtifactDownloadUse",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "jsonPointer": "/reactors/102",
-        "line": 8846,
-        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
-      }
+      "command": "SettleAdvisorArtifactDownloadUse"
     }
   ],
   "status": "SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED",
@@ -727,12 +624,6 @@
         "required": true,
         "origin": "client",
         "rule": "one immutable authored operation"
-      },
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/31",
-        "line": 3713,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       }
     },
     {
@@ -743,12 +634,6 @@
         "required": true,
         "origin": "client",
         "rule": "exact immutable creation retry"
-      },
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/41",
-        "line": 4934,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       }
     },
     {
@@ -759,12 +644,6 @@
         "required": true,
         "origin": "client",
         "rule": "one immutable authored operation"
-      },
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/69",
-        "line": 8101,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       }
     },
     {
@@ -775,12 +654,6 @@
         "required": true,
         "origin": "client",
         "rule": "exact immutable creation retry"
-      },
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/91",
-        "line": 10650,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       }
     },
     {
@@ -791,12 +664,6 @@
         "required": true,
         "origin": "client",
         "rule": "one immutable authored operation"
-      },
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/135",
-        "line": 15649,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       }
     },
     {
@@ -807,12 +674,6 @@
         "required": true,
         "origin": "client",
         "rule": "one immutable authored operation"
-      },
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/147",
-        "line": 17154,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       }
     }
   ],
@@ -840,5 +701,6 @@
     "D14-06",
     "D14-07"
   ],
-  "decidesAuthored": "2026-10-29"
+  "decidesAuthored": "2026-10-29",
+  "sourceOwner": "AdvisorHandoff"
 }

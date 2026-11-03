@@ -39,7 +39,6 @@ Canonical events: **4**. Complete canonical event and available schema records: 
 | Schema discriminator | bdgrz.access-review-decision-batch.access-review-decision-batch-accepted |
 | Schema discriminatorVersion | 1 |
 | Schema owner | AccessReviewDecisionBatch |
-| Schema existingContract | null (recorded) |
 | Schema status | selected target schema; implementation pending |
 | Schema reason | typed reactor receiver accepted business fact |
 | Schema changes | None listed |
@@ -108,10 +107,10 @@ BulkAccessDecisionIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T009](../reactors/access-review-bulk-admission-reactor.md#t009) | logical prerequisite | AccessReviewDecisionBatch | ReserveAccessReviewItemDecision | AccessReviewItem |
-| [T010](../reactors/access-review-bulk-admission-reactor.md#t010) | logical prerequisite | AccessReviewDecisionBatch | ApplyAccessReviewItemDecision | AccessReviewItem |
-| [T011](../reactors/access-review-bulk-admission-reactor.md#t011) | logical prerequisite | AccessReviewDecisionBatch | PublishAccessReviewDecisionBatch | AccessReviewDecisionBatch |
-| [T086](../reactors/access-review-bulk-admission-reactor.md#t086) | emitted semantic fact | AccessReviewCampaign | RecordAccessReviewDecisionBatch | AccessReviewDecisionBatch |
+| [T009](../reactors/publish-approved-access-review-decision-reactor.md#t009) | logical prerequisite | AccessReviewDecisionBatch | ReserveAccessReviewItemDecision | AccessReviewItem |
+| [T010](../reactors/publish-approved-access-review-decision-reactor.md#t010) | logical prerequisite | AccessReviewDecisionBatch | ApplyAccessReviewItemDecision | AccessReviewItem |
+| [T011](../reactors/publish-approved-access-review-decision-reactor.md#t011) | logical prerequisite | AccessReviewDecisionBatch | PublishAccessReviewDecisionBatch | AccessReviewDecisionBatch |
+| [T086](../reactors/publish-approved-access-review-decision-reactor.md#t086) | emitted semantic fact | AccessReviewCampaign | RecordAccessReviewDecisionBatch | AccessReviewDecisionBatch |
 
 ### AccessReviewDecisionBatchCanceled
 
@@ -141,7 +140,6 @@ BulkAccessDecisionIntent
 | Schema discriminator | bdgrz.access-review-decision-batch.access-review-decision-batch-canceled |
 | Schema discriminatorVersion | 1 |
 | Schema owner | AccessReviewDecisionBatch |
-| Schema existingContract | null (recorded) |
 | Schema status | selected target schema; implementation pending |
 | Schema reason | typed reactor receiver accepted business fact |
 | Schema changes | None listed |
@@ -210,8 +208,8 @@ BulkAccessDecisionIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T079](../reactors/access-review-bulk-cancellation-completion-reactor.md#t079) | emitted semantic fact | AccessReviewDecisionBatch | CompleteAccessReviewDecisionBatchCancellation | AccessReviewDecisionBatch |
-| [T080](../reactors/access-review-bulk-admission-reactor.md#t080) | physical root, logical prerequisite | AccessReviewDecisionBatch | CloseAccessReviewItemDecisionAuthorization | AccessReviewItem |
+| [T079](../reactors/complete-access-review-batch-cancellation-reactor.md#t079) | emitted semantic fact | AccessReviewDecisionBatch | CompleteAccessReviewDecisionBatchCancellation | AccessReviewDecisionBatch |
+| [T080](../reactors/publish-approved-access-review-decision-reactor.md#t080) | physical root, logical prerequisite | AccessReviewDecisionBatch | CloseAccessReviewItemDecisionAuthorization | AccessReviewItem |
 
 ### AccessReviewDecisionBatchCancellationAccepted
 
@@ -241,7 +239,6 @@ BulkAccessDecisionIntent
 | Schema discriminator | bdgrz.access-review-decision-batch.access-review-decision-batch-cancellation-accepted |
 | Schema discriminatorVersion | 1 |
 | Schema owner | AccessReviewDecisionBatch |
-| Schema existingContract | null (recorded) |
 | Schema status | selected target schema; implementation pending |
 | Schema reason | source admission contract |
 | Schema changes | None listed |
@@ -310,9 +307,9 @@ BulkAccessDecisionIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T012](../reactors/access-review-bulk-cancellation-reactor.md#t012) | physical root, logical prerequisite | AccessReviewDecisionBatch | CancelAccessReviewItemDecision | AccessReviewItem |
-| [T079](../reactors/access-review-bulk-cancellation-completion-reactor.md#t079) | physical root, logical prerequisite | AccessReviewDecisionBatch | CompleteAccessReviewDecisionBatchCancellation | AccessReviewDecisionBatch |
-| [A005](../reactors/unassigned-architecture-rows.md#a005) | emitted semantic fact | AccessReviewCampaign | CancelAccessReviewDecisionBatch | AccessReviewDecisionBatch |
+| [T012](../reactors/cancel-unpublished-access-review-decisions-reactor.md#t012) | physical root, logical prerequisite | AccessReviewDecisionBatch | CancelAccessReviewItemDecision | AccessReviewItem |
+| [T079](../reactors/complete-access-review-batch-cancellation-reactor.md#t079) | physical root, logical prerequisite | AccessReviewDecisionBatch | CompleteAccessReviewDecisionBatchCancellation | AccessReviewDecisionBatch |
+| [A005](../reactors/unassigned-domain-choreography.md#a005) | emitted semantic fact | AccessReviewCampaign | CancelAccessReviewDecisionBatch | AccessReviewDecisionBatch |
 
 ### AccessReviewDecisionBatchPublished
 
@@ -342,7 +339,6 @@ BulkAccessDecisionIntent
 | Schema discriminator | bdgrz.access-review-decision-batch.access-review-decision-batch-published |
 | Schema discriminatorVersion | 1 |
 | Schema owner | AccessReviewDecisionBatch |
-| Schema existingContract | null (recorded) |
 | Schema status | selected target schema; implementation pending |
 | Schema reason | typed reactor receiver accepted business fact |
 | Schema changes | None listed |
@@ -411,8 +407,8 @@ BulkAccessDecisionIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T011](../reactors/access-review-bulk-admission-reactor.md#t011) | emitted semantic fact | AccessReviewDecisionBatch | PublishAccessReviewDecisionBatch | AccessReviewDecisionBatch |
-| [T080](../reactors/access-review-bulk-admission-reactor.md#t080) | physical root, logical prerequisite | AccessReviewDecisionBatch | CloseAccessReviewItemDecisionAuthorization | AccessReviewItem |
+| [T011](../reactors/publish-approved-access-review-decision-reactor.md#t011) | emitted semantic fact | AccessReviewDecisionBatch | PublishAccessReviewDecisionBatch | AccessReviewDecisionBatch |
+| [T080](../reactors/publish-approved-access-review-decision-reactor.md#t080) | physical root, logical prerequisite | AccessReviewDecisionBatch | CloseAccessReviewItemDecisionAuthorization | AccessReviewItem |
 
 
 

@@ -1,5 +1,7 @@
 # EvidenceRequest commands
 
+
+
 Selected command contracts: **5**. Complete selected contracts and companion source evidence: [owner command JSON](../data/commands/evidence-request.json).
 
 | Target command | Selected source name | Kind | Identity | Fields | HTTP routes |
@@ -19,7 +21,8 @@ Selected command contracts: **5**. Complete selected contracts and companion sou
 | Target command name | CancelEvidenceRequest |
 | Selected source command name | CancelEvidenceRequest |
 | Name decision | The selected source name is retained. |
-| Owner | EvidenceRequest |
+| Target owner | EvidenceRequest |
+| Selected source owner | EvidenceRequest |
 | Contract record status | target_contract |
 | Kind | http |
 | Logical identity | CommandId; Uuid; required=true; client; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
@@ -31,7 +34,7 @@ Selected command contracts: **5**. Complete selected contracts and companion sou
 | Contract changes | Add required CommandId. |
 | Guard order | bind_required_ids, authenticate_authorize, canonicalize_authored_intent, resolve_native_operation_facts, compare_owner_episode_actor_kind_intent_original_revision, validate_new_owner_revision_and_source_permits, append_complete_concrete_attributed_batch |
 | Response contract | `{"mode":"immediate_original_result","responseType":"EvidenceRequestView","firstHttpStatus":200,"terminalResultType":"EvidenceRequestView"}` |
-| Expected revision scope | `{"field":"ExpectedRevision","owner":"EvidenceRequest","counter":"logical ResourceRevision of this owner","nullableInternalRule":null}` |
+| Expected revision scope | `{"field":"ExpectedRevision","owner":"EvidenceRequest","counter":"logical ResourceRevision of this owner"}` |
 | Authorizer sources | src/Compliance.Core/Features/AccessControl/ClientManagementMutationAuthorizer.cs, src/Compliance.Core/Features/Programs/ProgramManagementAuthorizer.cs |
 | Source contract | src/Compliance.Common/Features/Evidence/CancelEvidenceRequest.cs |
 | Primary handler | CancelEvidenceRequestHandler |
@@ -72,7 +75,8 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Target command name | FulfilEvidenceRequest |
 | Selected source command name | FulfilEvidenceRequest |
 | Name decision | The selected source name is retained. |
-| Owner | EvidenceRequest |
+| Target owner | EvidenceRequest |
+| Selected source owner | EvidenceRequest |
 | Contract record status | target_contract |
 | Kind | http |
 | Logical identity | CommandId; Uuid; required=true; client; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
@@ -84,7 +88,7 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Contract changes | Add required CommandId. |
 | Guard order | bind_required_ids, authenticate_authorize, canonicalize_authored_intent, resolve_native_operation_facts, compare_owner_episode_actor_kind_intent_original_revision, validate_new_owner_revision_and_source_permits, append_complete_concrete_attributed_batch |
 | Response contract | `{"mode":"immediate_original_result","responseType":"EvidenceRequestView","firstHttpStatus":200,"terminalResultType":"EvidenceRequestView"}` |
-| Expected revision scope | `{"field":"ExpectedRevision","owner":"EvidenceRequest","counter":"logical ResourceRevision of this owner","nullableInternalRule":null}` |
+| Expected revision scope | `{"field":"ExpectedRevision","owner":"EvidenceRequest","counter":"logical ResourceRevision of this owner"}` |
 | Authorizer sources | src/Compliance.Core/Features/AccessControl/ClientManagementMutationAuthorizer.cs, src/Compliance.Core/Features/Programs/ProgramManagementAuthorizer.cs |
 | Source contract | src/Compliance.Common/Features/Evidence/FulfilEvidenceRequest.cs |
 | Primary handler | FulfilEvidenceRequestHandler |
@@ -125,7 +129,8 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Target command name | OpenEvidenceRequest |
 | Selected source command name | OpenEvidenceRequest |
 | Name decision | The selected source name is retained. |
-| Owner | EvidenceRequest |
+| Target owner | EvidenceRequest |
+| Selected source owner | EvidenceRequest |
 | Contract record status | target_contract |
 | Kind | http |
 | Logical identity | EvidenceRequestId; Uuid; required=true; client; caller-supplied immutable creation identity: an exact retry with the same id and authored intent returns the original result; the same id with changed intent is refused; a different id is a different record |
@@ -137,7 +142,7 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Contract changes | Add required EvidenceRequestId. |
 | Guard order | bind_required_ids, authenticate_authorize, canonicalize_authored_intent, resolve_native_operation_facts, compare_owner_episode_actor_kind_intent_original_revision, validate_new_owner_revision_and_source_permits, append_complete_concrete_attributed_batch |
 | Response contract | `{"mode":"immediate_original_result","responseType":"EvidenceRequestView","firstHttpStatus":200,"terminalResultType":"EvidenceRequestView"}` |
-| Expected revision scope | `{"field":null,"owner":"EvidenceRequest","counter":"No primary caller ResourceRevision. Enforce required authored source/epoch/version tokens, immutable creation identity or trusted proof/generation as declared; append uses physical OCC."}` |
+| Expected revision scope | `{"owner":"EvidenceRequest","counter":"No primary caller ResourceRevision. Enforce required authored source/epoch/version tokens, immutable creation identity or trusted proof/generation as declared; append uses physical OCC."}` |
 | Authorizer sources | src/Compliance.Core/Features/AccessControl/ClientManagementMutationAuthorizer.cs, src/Compliance.Core/Features/Programs/ProgramManagementAuthorizer.cs |
 | Source contract | src/Compliance.Common/Features/Evidence/OpenEvidenceRequest.cs |
 | Primary handler | OpenEvidenceRequestHandler |
@@ -180,7 +185,8 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 | Target command name | AuthorizeEvidenceRequestActionCompletion |
 | Selected source command name | AuthorizeEvidenceRequestActionCompletionUse |
 | Name decision | The command authorizes the named business action; the extra Use suffix describes the coordination mechanism. |
-| Owner | EvidenceRequest |
+| Target owner | EvidenceRequest |
+| Selected source owner | EvidenceRequest |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; reactor; deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result |
@@ -233,7 +239,8 @@ Required tests: [Placeholder: required tests not recorded]
 | Target command name | CloseEvidenceRequestActionCompletionAuthorization |
 | Selected source command name | SettleEvidenceRequestActionCompletionUse |
 | Name decision | The command ends the exact authorization after its business action or cancellation. |
-| Owner | EvidenceRequest |
+| Target owner | EvidenceRequest |
+| Selected source owner | EvidenceRequest |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; reactor; deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result |

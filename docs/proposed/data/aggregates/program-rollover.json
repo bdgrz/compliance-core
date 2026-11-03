@@ -8,14 +8,7 @@
   "invariant": "One exact carry-forward proposal version, including the exact successor examination, plan and period identities, requires independent approval and an atomic execution claim before successor writes; the claim pins that version against revision. The recoverable private process coordinates existing source owners and stores exact completion proof.",
   "boundaryDecision": "process",
   "boundaryRationale": "ProgramRollover owns the approved carry-forward intent and pins NextExaminationId, NextTypeIIPlanId and NextPeriodId. An atomic execution claim closes the revise-versus-execute race. Private ProgramRolloverExecutionProcess coordinates the existing readiness, examination, Type I baseline/outcome, system description, TypeIIPlan and TypeIIPeriod owner lifecycles without owning their facts; it stores exact successor receipts. Prior proposal history and successor acknowledgements are not business aggregate state.",
-  "sources": [
-    {
-      "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
-      "jsonPointer": "/aggregates/62",
-      "line": 40066,
-      "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
-    }
-  ],
+  "sources": [],
   "baselineSourcePath": "src/Compliance.Core/Features/Programs/ProgramRollover.cs",
   "baselineEvents": [
     "ProgramNextPeriodCreated",
@@ -92,13 +85,9 @@
           "authorizationPolicy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/19",
-        "line": 1545,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      },
-      "kind": "http"
+      "kind": "http",
+      "sourceOwner": "ProgramRollover",
+      "owner": "ProgramRollover"
     },
     {
       "command": "ProposeProgramRollover",
@@ -160,14 +149,10 @@
           "authorizationPolicy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/96",
-        "line": 7132,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      },
       "semanticRule": "NextExaminationId is a required, nonempty successor identity, distinct from SourceExaminationId, frozen in the exact version and approval hash together with next period/plan IDs and dates.",
-      "kind": "http"
+      "kind": "http",
+      "sourceOwner": "ProgramRollover",
+      "owner": "ProgramRollover"
     },
     {
       "command": "ClaimProgramRolloverExecution",
@@ -223,19 +208,15 @@
       "http": [],
       "targetStatus": "SELECTED_TARGET_ONLY_NO_ROUTE_AUTHORIZED",
       "semanticRule": "Internal process command; no public route. Atomically require status approved, exact ExpectedRevision, exact current ApprovedVersion/content SHA256 and latest actual ProgramRolloverApproved fact. Derive and copy immutable approval actor/role/time into ProgramRolloverExecutionClaimView; store CommandId and ClaimedAt; transition status to execution_claimed in one append. Exact retry only same command+tuple; reject all later revisions/rejections/claims. Event actor attribution retains the approving member; process identity is separately recorded in private process state.",
-      "kind": "command"
+      "kind": "command",
+      "sourceOwner": "ProgramRollover",
+      "owner": "ProgramRollover"
     }
   ],
   "eventAuthority": "retained_baseline_business_facts_requires_schema_reconciliation",
   "events": [
     {
       "event": "ProgramRolloverApproved",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
-        "jsonPointer": "/aggregates/62",
-        "line": 40066,
-        "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
-      },
       "baselineContract": {
         "event": "ProgramRolloverApproved",
         "emitters": [
@@ -280,12 +261,6 @@
     },
     {
       "event": "ProgramRolloverDecisionRecorded",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
-        "jsonPointer": "/aggregates/62",
-        "line": 40066,
-        "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
-      },
       "baselineContract": {
         "event": "ProgramRolloverDecisionRecorded",
         "emitters": [
@@ -330,12 +305,6 @@
     },
     {
       "event": "ProgramRolloverProposed",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
-        "jsonPointer": "/aggregates/62",
-        "line": 40066,
-        "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
-      },
       "baselineContract": {
         "event": "ProgramRolloverProposed",
         "emitters": [
@@ -380,12 +349,6 @@
     },
     {
       "event": "ProgramRolloverRevised",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
-        "jsonPointer": "/aggregates/62",
-        "line": 40066,
-        "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
-      },
       "baselineContract": {
         "event": "ProgramRolloverRevised",
         "emitters": [
@@ -471,23 +434,11 @@
   "selectedLogicalIdentityBindings": [
     {
       "command": "ApproveProgramRollover",
-      "logicalIdentity": "CommandId",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/19",
-        "line": 1545,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      }
+      "logicalIdentity": "CommandId"
     },
     {
       "command": "ProposeProgramRollover",
-      "logicalIdentity": "RolloverId",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/96",
-        "line": 7132,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      }
+      "logicalIdentity": "RolloverId"
     }
   ],
   "selectedReplayRule": "Current required authorization precedes replay; exact authorized retries resolve the original accepted result using the selected logical identity and immutable actor/intent/source binding. Fresh mutable feasibility, clock selection and body preparation cannot replace that original result. Expected revision is concurrency precondition, not a new identity.",
@@ -501,12 +452,6 @@
   "selectedEventContracts": [
     {
       "event": "ProgramRolloverProposed",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
-        "jsonPointer": "/aggregates/62",
-        "line": 40066,
-        "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
-      },
       "baselineContract": {
         "event": "ProgramRolloverProposed",
         "emitters": [
@@ -601,5 +546,6 @@
       "NextExaminationId is used by CreateExaminationEngagement and every successor Type I proof.",
       "Successor examination and Type II plan period dates equal the approved NextPeriodStart/NextPeriodEnd."
     ]
-  }
+  },
+  "sourceOwner": "ProgramRollover"
 }

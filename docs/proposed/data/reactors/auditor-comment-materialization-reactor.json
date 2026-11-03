@@ -34,7 +34,6 @@
       "currentRegisteredRootTypes": [
         "AuditorCommentMaterializationReactor"
       ],
-      "plannedRootRole": null,
       "processes": [
         "IndependentChildMaterialization"
       ],

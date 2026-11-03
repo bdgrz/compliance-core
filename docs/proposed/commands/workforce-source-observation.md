@@ -1,5 +1,7 @@
 # WorkforceSourceObservation commands
 
+
+
 Selected command contracts: **2**. Complete selected contracts and companion source evidence: [owner command JSON](../data/commands/workforce-source-observation.json).
 
 | Target command | Selected source name | Kind | Identity | Fields | HTTP routes |
@@ -16,7 +18,8 @@ Selected command contracts: **2**. Complete selected contracts and companion sou
 | Target command name | ReconcileWorkforceSourceObservation |
 | Selected source command name | ReconcileWorkforceSourceObservation |
 | Name decision | The selected source name is retained. |
-| Owner | WorkforceSourceObservation |
+| Target owner | WorkforceSourceObservation |
+| Selected source owner | WorkforceSourceObservation |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | command |
 | Logical identity | CommandId; Uuid; required=true; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
@@ -66,7 +69,8 @@ Required tests: [Placeholder: required tests not recorded]
 | Target command name | RecordWorkforceSourceObservation |
 | Selected source command name | RecordWorkforceSourceObservation |
 | Name decision | The selected source name is retained. |
-| Owner | WorkforceSourceObservation |
+| Target owner | WorkforceSourceObservation |
+| Selected source owner | WorkforceSourceObservation |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | http |
 | Logical identity | ObservationId; Uuid; required=true; deterministic receiver identity derived from the admitted root fact, episode and generation: exact redelivery resolves the original result, a changed admission is a new identity |

@@ -231,7 +231,6 @@
         "discriminator": "bdgrz.risk-treatment-action.risk-treatment-action-completion-review-accepted",
         "discriminatorVersion": 1,
         "owner": "RiskTreatmentAction",
-        "existingContract": null,
         "status": "selected target schema; implementation pending",
         "reason": "source command accepted result",
         "fields": [
@@ -398,7 +397,6 @@
         "discriminator": "bdgrz.risk-treatment-action.risk-treatment-action-completion-review-canceled",
         "discriminatorVersion": 1,
         "owner": "RiskTreatmentAction",
-        "existingContract": null,
         "status": "selected target schema; implementation pending",
         "reason": "source admission contract",
         "fields": [

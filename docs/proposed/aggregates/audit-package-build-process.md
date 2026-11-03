@@ -5,6 +5,7 @@
 - Business aggregate: `false`
 - Selected status: `SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED`
 
+
 ## Identity and invariant
 
 **Selected identity:** [Placeholder: selected target identity is not recorded.]
@@ -19,6 +20,10 @@
 
 **Lifecycle:** [Placeholder: a consolidated lifecycle sequence is not present in the selected owner record.]
 
+
+
+
+
 ## Commands
 
 [Placeholder: no selected commands are listed for this owner.]
@@ -31,8 +36,8 @@
 
 | Row | Kind | Source owner | Target owner | Command |
 | --- | --- | --- | --- | --- |
-| [T031](../reactors/audit-package-build-process-reactor.md#t031) | reaction_or_regular_process_stage | AuditPackageManifest | AuditPackageBuildProcess | StartAuditPackageBuild |
-| [T032](../reactors/audit-package-build-process-reactor.md#t032) | reaction_or_regular_process_stage | AuditPackageBuildProcess | AuditPackageManifest | RecordAuditPackageBuildResult |
+| [T031](../reactors/build-audit-package-for-review-reactor.md#t031) | reaction_or_regular_process_stage | AuditPackageManifest | AuditPackageBuildProcess | StartAuditPackageBuild |
+| [T032](../reactors/build-audit-package-for-review-reactor.md#t032) | reaction_or_regular_process_stage | AuditPackageBuildProcess | AuditPackageManifest | RecordAuditPackageBuildResult |
 
 ## Product rules
 

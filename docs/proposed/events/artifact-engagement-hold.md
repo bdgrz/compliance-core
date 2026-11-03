@@ -78,7 +78,7 @@ Canonical events: **3**. Complete canonical event and available schema records: 
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [X007](../reactors/client-export-delivery-reactor.md#x007) | emitted semantic fact | ClientExport | RecordEngagementPackageDelivery | ArtifactEngagementHold |
+| [X007](../reactors/keep-engagement-evidence-protected-after-delivery-reactor.md#x007) | emitted semantic fact | ClientExport | RecordEngagementPackageDelivery | ArtifactEngagementHold |
 
 ### EngagementReportIssued
 

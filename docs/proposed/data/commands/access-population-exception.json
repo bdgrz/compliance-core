@@ -60,13 +60,9 @@
           "policy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/56",
-        "line": 6651,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
       "kind": "http",
+      "sourceOwner": "AccessPopulationException",
+      "owner": "AccessPopulationException",
       "sourceName": "ExemptMissingAccessPopulation",
       "targetName": "ExemptMissingAccessPopulation"
     }

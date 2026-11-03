@@ -80,13 +80,9 @@
           "policy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/8",
-        "line": 907,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
       "kind": "http",
+      "sourceOwner": "RiskTreatmentAction",
+      "owner": "RiskTreatmentAction",
       "sourceName": "AddRiskTreatmentAction",
       "targetName": "AddRiskTreatmentAction"
     },
@@ -149,13 +145,9 @@
           "policy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/29",
-        "line": 3464,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
       "kind": "http",
+      "sourceOwner": "RiskTreatmentAction",
+      "owner": "RiskTreatmentAction",
       "sourceName": "CancelRiskTreatmentAction",
       "targetName": "CancelRiskTreatmentAction"
     },
@@ -228,13 +220,9 @@
           "policy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/133",
-        "line": 15402,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
       "kind": "http",
+      "sourceOwner": "RiskTreatmentAction",
+      "owner": "RiskTreatmentAction",
       "sourceName": "ReviewRiskTreatmentActionCompletion",
       "targetName": "ReviewRiskTreatmentActionCompletion"
     },
@@ -322,13 +310,9 @@
           "policy": "ApiUser + existing request-scope authorizers"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/144",
-        "line": 16786,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
       "kind": "http",
+      "sourceOwner": "RiskTreatmentAction",
+      "owner": "RiskTreatmentAction",
       "sourceName": "ReviseRiskTreatmentAction",
       "targetName": "ReviseRiskTreatmentAction"
     },
@@ -396,13 +380,9 @@
           "policy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/156",
-        "line": 18156,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
       "kind": "http",
+      "sourceOwner": "RiskTreatmentAction",
+      "owner": "RiskTreatmentAction",
       "sourceName": "SubmitRiskTreatmentActionCompletion",
       "targetName": "SubmitRiskTreatmentActionCompletion"
     },
@@ -446,15 +426,9 @@
           "required": true
         }
       ],
-      "responseContract": null,
-      "http": null,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/source-admission-contracts.json",
-        "jsonPointer": "/contracts/20",
-        "line": 1249,
-        "sha256": "f1d549ed0879c816cb26e86879f8fa658dab0a8acbf7c591e4d4aed40483f8ae"
-      },
       "kind": "abort",
+      "sourceOwner": "RiskTreatmentAction",
+      "owner": "RiskTreatmentAction",
       "sourceName": "AbortRiskTreatmentActionReview",
       "targetName": "AbortRiskTreatmentActionReview"
     },
@@ -529,10 +503,7 @@
       "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
       "handler": "CompleteRiskTreatmentActionReviewHandler",
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "recorded": "2026-10-29"
-      },
+      "owner": "RiskTreatmentAction",
       "sourceName": "CompleteRiskTreatmentActionReview",
       "targetName": "CompleteRiskTreatmentActionReview"
     }
@@ -781,8 +752,7 @@
       "expectedRevisionScope": {
         "field": "ExpectedRevision",
         "owner": "RiskTreatmentAction",
-        "counter": "logical ResourceRevision of this owner",
-        "nullableInternalRule": null
+        "counter": "logical ResourceRevision of this owner"
       }
     },
     {
@@ -907,8 +877,7 @@
       "expectedRevisionScope": {
         "field": "ExpectedRevision",
         "owner": "RiskTreatmentAction",
-        "counter": "logical ResourceRevision of this owner",
-        "nullableInternalRule": null
+        "counter": "logical ResourceRevision of this owner"
       }
     },
     {
@@ -1047,8 +1016,7 @@
       "expectedRevisionScope": {
         "field": "ExpectedRevision",
         "owner": "RiskTreatmentAction",
-        "counter": "logical ResourceRevision of this owner",
-        "nullableInternalRule": null
+        "counter": "logical ResourceRevision of this owner"
       }
     },
     {
@@ -1167,8 +1135,7 @@
       "expectedRevisionScope": {
         "field": "ExpectedRevision",
         "owner": "RiskTreatmentAction",
-        "counter": "logical ResourceRevision of this owner",
-        "nullableInternalRule": null
+        "counter": "logical ResourceRevision of this owner"
       }
     }
   ]

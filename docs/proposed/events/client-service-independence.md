@@ -41,7 +41,6 @@ Canonical events: **6**. Complete canonical event and available schema records: 
 | Schema discriminator | bdgrz.client-service-independence.client-independence-evaluation-admitted |
 | Schema discriminatorVersion | 1 |
 | Schema owner | ClientServiceIndependence |
-| Schema existingContract | null (recorded) |
 | Schema status | selected target schema; implementation pending |
 | Schema reason | source command accepted result |
 | Schema changes | None listed |
@@ -114,7 +113,7 @@ ClientIndependencePreviewIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T106](../reactors/client-independence-preview-reactor.md#t106) | physical root, logical prerequisite | ClientServiceIndependence | RecordClientIndependenceEvaluation | ClientIndependenceDecision |
+| [T106](../reactors/evaluate-client-independence-for-acceptance-reactor.md#t106) | physical root, logical prerequisite | ClientServiceIndependence | RecordClientIndependenceEvaluation | ClientIndependenceDecision |
 
 ### ClientServicePersonalDecisionAuthorized
 
@@ -144,7 +143,6 @@ ClientIndependencePreviewIntent
 | Schema discriminator | bdgrz.client-service-independence.client-service-personal-decision-use-authorized |
 | Schema discriminatorVersion | 1 |
 | Schema owner | ClientServiceIndependence |
-| Schema existingContract | null (recorded) |
 | Schema status | selected target schema; implementation pending |
 | Schema reason | typed reactor receiver accepted business fact |
 | Schema changes | None listed |
@@ -207,7 +205,7 @@ SourceUseAuthorizationIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T107](../reactors/engagement-personal-decision-reactor.md#t107) | emitted semantic fact | ServiceEngagementIndependence | AuthorizeClientServicePersonalDecision | ClientServiceIndependence |
+| [T107](../reactors/record-engagement-independence-decisions-reactor.md#t107) | emitted semantic fact | ServiceEngagementIndependence | AuthorizeClientServicePersonalDecision | ClientServiceIndependence |
 
 ### ClientServicePersonalDecisionAuthorizationClosed
 
@@ -237,7 +235,6 @@ SourceUseAuthorizationIntent
 | Schema discriminator | bdgrz.client-service-independence.client-service-personal-decision-use-settled |
 | Schema discriminatorVersion | 1 |
 | Schema owner | ClientServiceIndependence |
-| Schema existingContract | null (recorded) |
 | Schema status | selected target schema; implementation pending |
 | Schema reason | typed reactor receiver accepted business fact |
 | Schema changes | None listed |
@@ -300,7 +297,7 @@ SourceUseAuthorizationIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T111](../reactors/engagement-personal-decision-reactor.md#t111) | emitted semantic fact | ServiceEngagementIndependence | CloseClientServicePersonalDecisionAuthorization | ClientServiceIndependence |
+| [T111](../reactors/record-engagement-independence-decisions-reactor.md#t111) | emitted semantic fact | ServiceEngagementIndependence | CloseClientServicePersonalDecisionAuthorization | ClientServiceIndependence |
 
 ### EngagementServiceHistoryReserved
 
@@ -330,7 +327,6 @@ SourceUseAuthorizationIntent
 | Schema discriminator | bdgrz.client-service-independence.engagement-service-epoch-authorized |
 | Schema discriminatorVersion | 1 |
 | Schema owner | ClientServiceIndependence |
-| Schema existingContract | null (recorded) |
 | Schema status | selected target schema; implementation pending |
 | Schema reason | typed reactor receiver accepted business fact |
 | Schema changes | None listed |
@@ -437,7 +433,6 @@ EngagementIndependenceIntent
 | Schema discriminator | bdgrz.client-service-independence.engagement-service-epoch-settled |
 | Schema discriminatorVersion | 1 |
 | Schema owner | ClientServiceIndependence |
-| Schema existingContract | null (recorded) |
 | Schema status | selected target schema; implementation pending |
 | Schema reason | typed reactor receiver accepted business fact |
 | Schema changes | None listed |

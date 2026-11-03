@@ -1,5 +1,7 @@
 # PopulationSnapshot commands
 
+
+
 Selected command contracts: **1**. Complete selected contracts and companion source evidence: [owner command JSON](../data/commands/population-snapshot.json).
 
 | Target command | Selected source name | Kind | Identity | Fields | HTTP routes |
@@ -15,7 +17,8 @@ Selected command contracts: **1**. Complete selected contracts and companion sou
 | Target command name | FinalizePopulationSnapshot |
 | Selected source command name | FreezePopulationSnapshot |
 | Name decision | Finalizes the complete ordered population as the immutable snapshot used by later compliance work. |
-| Owner | PopulationSnapshot |
+| Target owner | PopulationSnapshot |
+| Selected source owner | PopulationSnapshot |
 | Contract record status | PLANNED |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; reactor; deterministic receiver identity derived from the admitting owner fact, episode and generation; exact redelivery resolves the original result |

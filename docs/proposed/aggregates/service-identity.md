@@ -5,6 +5,7 @@
 - Business aggregate: `true`
 - Selected status: `SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED`
 
+
 ## Identity and invariant
 
 **Selected identity:** Tenant + caller ServiceIdentityId; creation uses that identity and revisions use caller CommandId.
@@ -18,6 +19,10 @@
 **Replay:** Current required authorization precedes replay; exact authorized retries resolve the original accepted result using the selected logical identity and immutable actor/intent/source binding. Fresh mutable feasibility, clock selection and body preparation cannot replace that original result. Expected revision is concurrency precondition, not a new identity.
 
 **Lifecycle:** A service identity can be active, disabled, or retired. RecordServiceIdentity creates it; ReviseServiceIdentity changes its details or status and records ServiceIdentityRevised. Retiring it does not automatically change access at an outside service. If its owner relationship ends or its review date passes, it appears as work that needs a new owner or review.
+
+
+
+
 
 ## Commands
 
@@ -39,8 +44,8 @@
 
 ## Product rules
 
-- **D06-08** — Every non-human identity (ServiceIdentity) has exactly one accountable owner, either a person or a team, plus an approved purpose and a review date no more than one year in the future. Source: [m0-d06-workforce-source.md](../../product/decisions/m0-d06-workforce-source.md).
-- **D22-03** — ServiceIdentity (non-human identity) is owned by workforce assurance with an accountable owner relationship; a group or role never becomes a non-human identity. Source: [m0-d22-canonical-ownership.md](../../product/decisions/m0-d22-canonical-ownership.md).
+- **D06-08** — Every non-human identity (ServiceIdentity) has exactly one accountable owner, either a person or a team, plus an approved purpose and a review date no more than one year in the future. Decision: [m0-d06-workforce-source.md](../decisions/m0-d06-workforce-source.md).
+- **D22-03** — ServiceIdentity (non-human identity) is owned by workforce assurance with an accountable owner relationship; a group or role never becomes a non-human identity. Decision: [m0-d22-canonical-ownership.md](../decisions/m0-d22-canonical-ownership.md).
 
 ## Adopted architecture decisions
 
@@ -49,7 +54,7 @@
 ## Evidence and complete record
 
 - Baseline source: [Placeholder: source file is not present in this checkout]
-- Aggregate review: [service-identity-review-2026-10-27.md](../../product/definitive-aggregate-choreography/service-identity-review-2026-10-27.md)
+- Aggregate review: [Placeholder: no owner-specific review file is present]
 - Full selected record: [JSON](../data/aggregates/service-identity.json)
 
 > Target definition is separate from runtime qualification. Implementation status recorded by the source: `SEPARATE_VERIFICATION_REQUIRED_IMPLEMENTATION_HALTED`.

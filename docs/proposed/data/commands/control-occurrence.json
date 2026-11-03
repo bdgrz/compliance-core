@@ -95,13 +95,9 @@
           "policy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/24",
-        "line": 2859,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
       "kind": "http",
+      "sourceOwner": "ControlOccurrence",
+      "owner": "ControlOccurrence",
       "sourceName": "AttestControlOccurrence",
       "targetName": "AttestControlOccurrence"
     },
@@ -204,13 +200,9 @@
           "policy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/39",
-        "line": 4630,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
       "kind": "http",
+      "sourceOwner": "ControlOccurrence",
+      "owner": "ControlOccurrence",
       "sourceName": "CorrectControlAttestation",
       "targetName": "CorrectControlAttestation"
     },
@@ -278,13 +270,9 @@
           "policy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/72",
-        "line": 8333,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
       "kind": "http",
+      "sourceOwner": "ControlOccurrence",
+      "owner": "ControlOccurrence",
       "sourceName": "OpenControlOccurrence",
       "targetName": "OpenControlOccurrence"
     },
@@ -367,13 +355,9 @@
           "policy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/130",
-        "line": 15018,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
       "kind": "http",
+      "sourceOwner": "ControlOccurrence",
+      "owner": "ControlOccurrence",
       "sourceName": "ReviewControlOccurrence",
       "targetName": "ReviewControlOccurrence"
     },
@@ -446,7 +430,7 @@
         }
       ],
       "reactor": "ControlOccurrenceMaterializationReactor",
-      "sourceOwner": "TypeIIPeriod",
+      "sourceOwner": "ControlOccurrence",
       "sourceEvents": [
         "DueControlOccurrencesGenerated"
       ],
@@ -458,10 +442,7 @@
       "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
       "handler": "MaterializeControlOccurrenceHandler",
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "recorded": "2026-10-29"
-      },
+      "owner": "ControlOccurrence",
       "sourceName": "MaterializeControlOccurrence",
       "targetName": "OpenDueControlOccurrence"
     }
@@ -615,8 +596,7 @@
       "expectedRevisionScope": {
         "field": "ExpectedRevision",
         "owner": "ControlOccurrence",
-        "counter": "logical ResourceRevision of this owner",
-        "nullableInternalRule": null
+        "counter": "logical ResourceRevision of this owner"
       }
     },
     {
@@ -774,8 +754,7 @@
       "expectedRevisionScope": {
         "field": "ExpectedRevision",
         "owner": "ControlOccurrence",
-        "counter": "logical ResourceRevision of this owner",
-        "nullableInternalRule": null
+        "counter": "logical ResourceRevision of this owner"
       }
     },
     {
@@ -900,8 +879,7 @@
       "expectedRevisionScope": {
         "field": "ExpectedRevision",
         "owner": "ControlOccurrence",
-        "counter": "logical ResourceRevision of this owner",
-        "nullableInternalRule": null
+        "counter": "logical ResourceRevision of this owner"
       }
     },
     {
@@ -1036,8 +1014,7 @@
       "expectedRevisionScope": {
         "field": "ExpectedRevision",
         "owner": "ControlOccurrence",
-        "counter": "logical ResourceRevision of this owner",
-        "nullableInternalRule": null
+        "counter": "logical ResourceRevision of this owner"
       }
     }
   ]

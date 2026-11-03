@@ -22,15 +22,13 @@
         ],
         "schemaStatus": "selected_complete_schema",
         "sourceStatus": "planned_no_source_type",
-        "emissionKindNote": "Owner-held reservation or its settlement: authoritative for the owner invariant (the reducer must refuse conflicting commands while held) but not a business decision in its own right. Adopted 2026-10-29 (decision EV-D06).",
-        "meaning": null
+        "emissionKindNote": "Owner-held reservation or its settlement: authoritative for the owner invariant (the reducer must refuse conflicting commands while held) but not a business decision in its own right. Adopted 2026-10-29 (decision EV-D06)."
       },
       "schema": {
         "event": "AdvisorArtifactDownloadUseAuthorized",
         "discriminator": "bdgrz.advisor-handoff.advisor-artifact-download-use-authorized",
         "discriminatorVersion": 1,
         "owner": "AdvisorHandoff",
-        "existingContract": null,
         "status": "selected target schema; implementation pending",
         "reason": "typed reactor receiver accepted business fact",
         "fields": [
@@ -163,8 +161,8 @@
       },
       "sourceName": "AdvisorArtifactDownloadUseAuthorized",
       "targetName": "AdvisorArtifactDownloadAuthorized",
-      "nameDecision": "Authorization is already the completed fact; Use adds no stakeholder meaning.",
-      "targetMeaning": null
+      "nameDecision": "Names the handoff’s completed authorization for one selected artifact download.",
+      "targetMeaning": "The handoff authorized one download of an artifact in its ready, active selection. The file is delivered only after a separate download grant is issued."
     },
     {
       "canonical": {
@@ -187,15 +185,13 @@
         ],
         "schemaStatus": "selected_complete_schema",
         "sourceStatus": "planned_no_source_type",
-        "emissionKindNote": "Owner-held reservation or its settlement: authoritative for the owner invariant (the reducer must refuse conflicting commands while held) but not a business decision in its own right. Adopted 2026-10-29 (decision EV-D06).",
-        "meaning": null
+        "emissionKindNote": "Owner-held reservation or its settlement: authoritative for the owner invariant (the reducer must refuse conflicting commands while held) but not a business decision in its own right. Adopted 2026-10-29 (decision EV-D06)."
       },
       "schema": {
         "event": "AdvisorArtifactDownloadUseSettled",
         "discriminator": "bdgrz.advisor-handoff.advisor-artifact-download-use-settled",
         "discriminatorVersion": 1,
         "owner": "AdvisorHandoff",
-        "existingContract": null,
         "status": "selected target schema; implementation pending",
         "reason": "typed reactor receiver accepted business fact",
         "fields": [
@@ -328,8 +324,8 @@
       },
       "sourceName": "AdvisorArtifactDownloadUseSettled",
       "targetName": "AdvisorArtifactDownloadAuthorizationClosed",
-      "nameDecision": "The exact authorization ended; the recorded outcome still distinguishes use, cancellation, or a late fence.",
-      "targetMeaning": null
+      "nameDecision": "Names the completed closure of the handoff’s exact download authorization.",
+      "targetMeaning": "The handoff closed its temporary download authorization after the protected file was issued or the request was canceled."
     },
     {
       "canonical": {
@@ -358,7 +354,6 @@
         "discriminator": "bdgrz.advisor-handoff.advisor-feedback-admitted",
         "discriminatorVersion": 1,
         "owner": "AdvisorHandoff",
-        "existingContract": null,
         "status": "selected target schema; implementation pending",
         "reason": "source command accepted result",
         "fields": [

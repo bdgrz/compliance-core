@@ -31,15 +31,9 @@
           "required": true
         }
       ],
-      "responseContract": null,
-      "http": null,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/source-admission-contracts.json",
-        "jsonPointer": "/contracts/10",
-        "line": 679,
-        "sha256": "f1d549ed0879c816cb26e86879f8fa658dab0a8acbf7c591e4d4aed40483f8ae"
-      },
       "kind": "abort",
+      "sourceOwner": "AccessReviewDecisionBatch",
+      "owner": "AccessReviewDecisionBatch",
       "sourceName": "CancelAccessReviewDecisionBatch",
       "targetName": "CancelAccessReviewDecisionBatch"
     },
@@ -114,10 +108,7 @@
       "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
       "handler": "PublishAccessReviewDecisionBatchHandler",
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "recorded": "2026-10-29"
-      },
+      "owner": "AccessReviewDecisionBatch",
       "sourceName": "PublishAccessReviewDecisionBatch",
       "targetName": "PublishAccessReviewDecisionBatch"
     },
@@ -192,10 +183,7 @@
       "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
       "handler": "CompleteAccessReviewDecisionBatchCancellationHandler",
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "recorded": "2026-10-29"
-      },
+      "owner": "AccessReviewDecisionBatch",
       "sourceName": "CompleteAccessReviewDecisionBatchCancellation",
       "targetName": "CompleteAccessReviewDecisionBatchCancellation"
     },
@@ -258,7 +246,7 @@
         }
       ],
       "reactor": "AccessReviewDecisionBatchAdmissionReactor",
-      "sourceOwner": "AccessReviewCampaign",
+      "sourceOwner": "AccessReviewDecisionBatch",
       "sourceEvents": [
         "AccessReviewDecisionBatchAdmitted"
       ],
@@ -270,10 +258,7 @@
       "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
       "handler": "MaterializeAccessReviewDecisionBatchHandler",
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "recorded": "2026-10-29"
-      },
+      "owner": "AccessReviewDecisionBatch",
       "sourceName": "MaterializeAccessReviewDecisionBatch",
       "targetName": "RecordAccessReviewDecisionBatch"
     }

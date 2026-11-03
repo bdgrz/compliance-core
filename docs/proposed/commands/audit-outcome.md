@@ -1,5 +1,7 @@
 # AuditOutcome commands
 
+
+
 Selected command contracts: **1**. Complete selected contracts and companion source evidence: [owner command JSON](../data/commands/audit-outcome.json).
 
 | Target command | Selected source name | Kind | Identity | Fields | HTTP routes |
@@ -15,7 +17,8 @@ Selected command contracts: **1**. Complete selected contracts and companion sou
 | Target command name | RecordExaminationOutcome |
 | Selected source command name | RecordExaminationOutcome |
 | Name decision | The selected source name is retained. |
-| Owner | AuditOutcome |
+| Target owner | AuditOutcome |
+| Selected source owner | AuditOutcome |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | http |
 | Logical identity | OutcomeId; Uuid; required=true; caller-supplied immutable creation identity: an exact retry with the same id and authored intent returns the original result; the same id with changed intent is refused; a different id is a different record |

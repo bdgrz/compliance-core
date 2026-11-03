@@ -1,5 +1,7 @@
 # SignificantChange commands
 
+
+
 Selected command contracts: **5**. Complete selected contracts and companion source evidence: [owner command JSON](../data/commands/significant-change.json).
 
 | Target command | Selected source name | Kind | Identity | Fields | HTTP routes |
@@ -19,7 +21,8 @@ Selected command contracts: **5**. Complete selected contracts and companion sou
 | Target command name | AssessSignificantChange |
 | Selected source command name | AssessSignificantChange |
 | Name decision | The selected source name is retained. |
-| Owner | SignificantChange |
+| Target owner | SignificantChange |
+| Selected source owner | SignificantChange |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | http |
 | Logical identity | CommandId; Uuid; required=true; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
@@ -70,7 +73,8 @@ Required tests: [Placeholder: required tests not recorded]
 | Target command name | LinkImpactReviewWork |
 | Selected source command name | LinkImpactReviewWork |
 | Name decision | The selected source name is retained. |
-| Owner | SignificantChange |
+| Target owner | SignificantChange |
+| Selected source owner | SignificantChange |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | command |
 | Logical identity | CommandId; Uuid; required=true; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
@@ -119,7 +123,8 @@ Required tests: [Placeholder: required tests not recorded]
 | Target command name | RecordSignificantChange |
 | Selected source command name | RecordSignificantChange |
 | Name decision | The selected source name is retained. |
-| Owner | SignificantChange |
+| Target owner | SignificantChange |
+| Selected source owner | SignificantChange |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | creation |
 | Logical identity | ChangeId; Uuid; required=true; caller-supplied immutable creation identity: an exact retry with the same id and authored intent returns the original result; the same id with changed intent is refused; a different id is a different record |
@@ -166,7 +171,8 @@ Required tests: [Placeholder: required tests not recorded]
 | Target command name | RecordSignificantChangeSystemDescriptionDecision |
 | Selected source command name | RecordSignificantChangeSystemDescriptionDecision |
 | Name decision | The selected source name is retained. |
-| Owner | SignificantChange |
+| Target owner | SignificantChange |
+| Selected source owner | SignificantChange |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | command |
 | Logical identity | CommandId; Uuid; required=true; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
@@ -220,7 +226,8 @@ Required tests: [Placeholder: required tests not recorded]
 | Target command name | ReviseSignificantChange |
 | Selected source command name | ReviseSignificantChange |
 | Name decision | The selected source name is retained. |
-| Owner | SignificantChange |
+| Target owner | SignificantChange |
+| Selected source owner | SignificantChange |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | http |
 | Logical identity | CommandId; Uuid; required=true; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |

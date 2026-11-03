@@ -28,7 +28,6 @@
         "discriminator": "bdgrz.program-readiness.readiness-assessment-adopted",
         "discriminatorVersion": 1,
         "owner": "ProgramReadiness",
-        "existingContract": null,
         "status": "selected target schema; implementation pending",
         "reason": "typed reactor receiver accepted business fact",
         "fields": [
@@ -221,7 +220,6 @@
         "discriminator": "bdgrz.program-readiness.readiness-assessment-requested",
         "discriminatorVersion": 1,
         "owner": "ProgramReadiness",
-        "existingContract": null,
         "status": "selected target schema; implementation pending",
         "reason": "source command accepted result",
         "fields": [
@@ -414,7 +412,6 @@
         "discriminator": "bdgrz.program-readiness.readiness-decision-accepted",
         "discriminatorVersion": 1,
         "owner": "ProgramReadiness",
-        "existingContract": null,
         "status": "selected target schema; implementation pending",
         "reason": "source command accepted result",
         "fields": [
@@ -641,7 +638,6 @@
         "discriminator": "bdgrz.program-readiness.readiness-decision-canceled",
         "discriminatorVersion": 1,
         "owner": "ProgramReadiness",
-        "existingContract": null,
         "status": "selected target schema; implementation pending",
         "reason": "source admission contract",
         "fields": [
@@ -1118,7 +1114,6 @@
         "discriminator": "bdgrz.program-readiness.type-i-entry-decision-accepted",
         "discriminatorVersion": 1,
         "owner": "ProgramReadiness",
-        "existingContract": null,
         "status": "selected target schema; implementation pending",
         "reason": "source command accepted result",
         "fields": [

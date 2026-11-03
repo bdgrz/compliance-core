@@ -81,7 +81,6 @@
       ],
       "canonicalTargetOwner": "ServiceEngagementIndependence",
       "recoveryContractSummary": "At-least-once checkpoint replay resends the same source-derived command. Missing dependencies remain retryable; actual terminal/superseded episodes are skipped only with the owning proof.",
-      "logicalPrerequisiteRuleGuard": null,
       "logicalPrerequisiteRule": "The source is a newly recorded ServiceEngagementAcceptanceRecorded or ServiceEngagementStaffAssigned; every earlier directory status change for each assigned staff member that postdates the recorded directory staff revision yields a denial-only receipt against that exact pair; the receipt never reactivates acceptance.",
       "prerequisiteRuleSource": "authored 2026-10-29 from reactor and target source"
     }

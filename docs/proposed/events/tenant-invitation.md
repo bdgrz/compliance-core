@@ -82,10 +82,10 @@ Canonical events: **2**. Complete canonical event and available schema records: 
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [S026](../reactors/tenant-invitation-reactor.md#s026) | physical root, logical prerequisite | TenantInvitation | RegisterMember | Member |
-| [S027](../reactors/tenant-invitation-reactor.md#s027) | physical root, logical prerequisite | TenantInvitation | AssignTeamMember | TeamMember |
-| [S028](../reactors/tenant-invitation-reactor.md#s028) | physical root, logical prerequisite | TenantInvitation | ProvisionGuestProgramAccess | AccessGrant |
-| [S029](../reactors/tenant-invitation-reactor.md#s029) | physical root, logical prerequisite | TenantInvitation | ActivateTenant | Tenant |
+| [S026](../reactors/activate-membership-after-invitation-acceptance-reactor.md#s026) | physical root, logical prerequisite | TenantInvitation | RegisterMember | Member |
+| [S027](../reactors/activate-membership-after-invitation-acceptance-reactor.md#s027) | physical root, logical prerequisite | TenantInvitation | AssignTeamMember | TeamMember |
+| [S028](../reactors/activate-membership-after-invitation-acceptance-reactor.md#s028) | physical root, logical prerequisite | TenantInvitation | ProvisionGuestProgramAccess | AccessGrant |
+| [S029](../reactors/activate-membership-after-invitation-acceptance-reactor.md#s029) | physical root, logical prerequisite | TenantInvitation | ActivateTenant | Tenant |
 
 ### TenantMemberInvited
 
@@ -163,10 +163,10 @@ Canonical events: **2**. Complete canonical event and available schema records: 
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T117](../reactors/tenant-invitation-delivery-process-reactor.md#t117) | physical root, logical prerequisite | TenantInvitation | SendTenantInvitation | TenantInvitationDeliveryProcess |
-| [T118](../reactors/tenant-invitation-delivery-process-reactor.md#t118) | physical root, logical prerequisite | TenantInvitation | RecordTenantInvitationDeliverySent | TenantInvitationDeliveryProcess |
-| [T119](../reactors/tenant-invitation-delivery-process-reactor.md#t119) | physical root, logical prerequisite | TenantInvitation | RecordTenantInvitationDeliveryFailed | TenantInvitationDeliveryProcess |
-| [S031](../reactors/tenant-registration-reactor.md#s031) | emitted semantic fact | Tenant | InviteTenantMember | TenantInvitation |
+| [T117](../reactors/invite-member-to-join-tenant-reactor.md#t117) | physical root, logical prerequisite | TenantInvitation | SendTenantInvitation | TenantInvitationDeliveryProcess |
+| [T118](../reactors/invite-member-to-join-tenant-reactor.md#t118) | physical root, logical prerequisite | TenantInvitation | RecordTenantInvitationDeliverySent | TenantInvitationDeliveryProcess |
+| [T119](../reactors/invite-member-to-join-tenant-reactor.md#t119) | physical root, logical prerequisite | TenantInvitation | RecordTenantInvitationDeliveryFailed | TenantInvitationDeliveryProcess |
+| [S031](../reactors/establish-tenant-and-invite-owner-reactor.md#s031) | emitted semantic fact | Tenant | InviteTenantMember | TenantInvitation |
 
 
 

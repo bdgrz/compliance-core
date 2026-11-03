@@ -8,14 +8,7 @@
   "invariant": "Authored independence rules advance consecutively and cannot falsely claim professional ratification. A rule change publishes a new consecutive rule-set version; evaluations keep the rule-set version they were made under and are never rewritten (M0-D26 D26-05; Jev 0.97)",
   "boundaryDecision": "narrow",
   "boundaryRationale": "Global version allocation/current activation requires atomic sequence; historical documents do not need retained command-state list.",
-  "sources": [
-    {
-      "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
-      "jsonPointer": "/aggregates/45",
-      "line": 31997,
-      "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
-    }
-  ],
+  "sources": [],
   "baselineSourcePath": "src/Compliance.Core/Features/AccessControl/IndependenceRuleCatalog.cs",
   "baselineEvents": [
     "IndependenceRulesRevised"
@@ -57,13 +50,9 @@
         "terminalResultType": "IndependenceRuleVersionView"
       },
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/174",
-        "line": 13033,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      },
-      "kind": "command"
+      "kind": "command",
+      "sourceOwner": "IndependenceRuleCatalog",
+      "owner": "IndependenceRuleCatalog"
     },
     {
       "command": "AuthorizeIndependenceRuleCatalogEngagementUse",
@@ -134,7 +123,7 @@
         }
       ],
       "reactor": "EngagementIndependenceRuleCatalogUseReactor",
-      "sourceOwner": "ServiceEngagementIndependence",
+      "sourceOwner": "IndependenceRuleCatalog",
       "sourceEvents": [
         "ServiceEngagementAcceptanceRequested",
         "ServiceEngagementStaffAssignmentRequested",
@@ -148,10 +137,7 @@
       "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
       "handler": "AuthorizeIndependenceRuleCatalogEngagementUseHandler",
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "recorded": "2026-10-29"
-      }
+      "owner": "IndependenceRuleCatalog"
     },
     {
       "command": "SettleIndependenceRuleCatalogEngagementUse",
@@ -217,7 +203,7 @@
         }
       ],
       "reactor": "EngagementIndependenceRuleCatalogUseSettlementReactor",
-      "sourceOwner": "ServiceEngagementIndependence",
+      "sourceOwner": "IndependenceRuleCatalog",
       "sourceEvents": [
         "EngagementPracticeCommitmentsAuthorized",
         "ServiceEngagementAcceptanceRejected",
@@ -233,10 +219,7 @@
       "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
       "handler": "SettleIndependenceRuleCatalogEngagementUseHandler",
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "recorded": "2026-10-29"
-      }
+      "owner": "IndependenceRuleCatalog"
     }
   ],
   "eventAuthority": "selected_final_event_catalog",
@@ -244,24 +227,12 @@
     {
       "event": "IndependenceRuleCatalogEngagementUseAuthorized",
       "discriminator": "bdgrz.independence-rule-catalog.independence-rule-catalog-engagement-use-authorized",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/170",
-        "line": 21695,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     },
     {
       "event": "IndependenceRuleCatalogEngagementUseSettled",
       "discriminator": "bdgrz.independence-rule-catalog.independence-rule-catalog-engagement-use-settled",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/171",
-        "line": 21831,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     }
   ],
   "choreography": [
@@ -269,25 +240,13 @@
       "reactor": "EngagementIndependenceRuleCatalogUseReactor",
       "sourceOwner": "ServiceEngagementIndependence",
       "targetOwner": "IndependenceRuleCatalog",
-      "command": "AuthorizeIndependenceRuleCatalogEngagementUse",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "jsonPointer": "/reactors/93",
-        "line": 8030,
-        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
-      }
+      "command": "AuthorizeIndependenceRuleCatalogEngagementUse"
     },
     {
       "reactor": "EngagementIndependenceRuleCatalogUseSettlementReactor",
       "sourceOwner": "ServiceEngagementIndependence",
       "targetOwner": "IndependenceRuleCatalog",
-      "command": "SettleIndependenceRuleCatalogEngagementUse",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "jsonPointer": "/reactors/94",
-        "line": 8127,
-        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
-      }
+      "command": "SettleIndependenceRuleCatalogEngagementUse"
     }
   ],
   "status": "SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED",
@@ -300,13 +259,7 @@
   "selectedLogicalIdentityBindings": [
     {
       "command": "ReviseIndependenceRules",
-      "logicalIdentity": "CommandId",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/174",
-        "line": 13033,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      }
+      "logicalIdentity": "CommandId"
     }
   ],
   "selectedReplayRule": "Current required authorization precedes replay; exact authorized retries resolve the original accepted result using the selected logical identity and immutable actor/intent/source binding. Fresh mutable feasibility, clock selection and body preparation cannot replace that original result. Expected revision is concurrency precondition, not a new identity.",
@@ -327,5 +280,6 @@
   "decidesCovers": [
     "D26-05"
   ],
-  "decidesAuthored": "2026-10-29"
+  "decidesAuthored": "2026-10-29",
+  "sourceOwner": "IndependenceRuleCatalog"
 }

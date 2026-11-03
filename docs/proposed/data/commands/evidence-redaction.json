@@ -59,13 +59,9 @@
           "authorizationPolicy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/14",
-        "line": 1138,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      },
       "kind": "http",
+      "sourceOwner": "EvidenceRedaction",
+      "owner": "EvidenceRedaction",
       "sourceName": "ApproveEvidenceRedaction",
       "targetName": "ApproveEvidenceRedaction"
     },
@@ -132,13 +128,9 @@
           "authorizationPolicy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/89",
-        "line": 6574,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      },
       "kind": "http",
+      "sourceOwner": "EvidenceRedaction",
+      "owner": "EvidenceRedaction",
       "sourceName": "PrepareEvidenceRedaction",
       "targetName": "PrepareEvidenceRedaction"
     }

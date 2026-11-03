@@ -5,6 +5,7 @@
 - Business aggregate: `true`
 - Selected status: `SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED`
 
+
 ## Identity and invariant
 
 **Selected identity:** Tenant-scoped (tenantId, programId, findingId); `FindingId` on `RaiseFinding` is the caller-supplied immutable creation identity (exact immutable creation retry) so an exact retry resolves the original result and a different id is a different record; later mutations use CommandId bound to this identity and the expected revision.
@@ -18,6 +19,10 @@
 **Replay:** Current required authorization precedes replay; exact authorized retries resolve the original accepted result using the selected logical identity and immutable actor/intent/source binding. Fresh mutable feasibility, clock selection and body preparation cannot replace that original result. Expected revision is concurrency precondition, not a new identity.
 
 **Lifecycle:** [Placeholder: a consolidated lifecycle sequence is not present in the selected owner record.]
+
+
+
+
 
 ## Commands
 
@@ -51,18 +56,18 @@
 
 | Row | Kind | Source owner | Target owner | Command |
 | --- | --- | --- | --- | --- |
-| [T036](../reactors/corrective-action-materialization-reactor.md#t036) | reaction_or_regular_process_stage | FindingAggregate | CorrectiveAction | CreateCorrectiveAction |
+| [T036](../reactors/open-corrective-action-for-finding-reactor.md#t036) | reaction_or_regular_process_stage | FindingAggregate | CorrectiveAction | CreateCorrectiveAction |
 | [T037](../reactors/finding-closure-reactor.md#t037) | reaction_or_regular_process_stage | FindingAggregate | FindingAggregate | CompleteFindingClosure |
 | [T063](../reactors/finding-closure-reactor.md#t063) | reaction_or_regular_process_stage | FindingAggregate | CorrectiveAction | AuthorizeCorrectiveActionFindingClosure |
 | [T064](../reactors/finding-closure-reactor.md#t064) | reaction_or_regular_process_stage | FindingAggregate | CorrectiveAction | CloseCorrectiveActionFindingClosureAuthorization |
 | [S001](../reactors/control-evaluation-deviation-finding-reactor.md#s001) | business_receiver | ControlEvaluation | FindingAggregate | RaiseEvaluationDeviationFinding |
 | [S002](../reactors/control-occurrence-finding-reactor.md#s002) | business_receiver | ControlOccurrence | FindingAggregate | RaiseOccurrenceFinding |
-| [A008](../reactors/unassigned-architecture-rows.md#a008) | process_abort_binding | FindingAggregate | FindingAggregate | AbortFindingClosure |
+| [A008](../reactors/unassigned-domain-choreography.md#a008) | process_abort_binding | FindingAggregate | FindingAggregate | AbortFindingClosure |
 
 ## Product rules
 
-- **D15-03** — The finding remains the authority for required closure evidence, verification rationale, program-management permission, and separation of duties; the work queue never infers or grants a separation-of-duties exception or waiver. Source: [m0-d15-work-queue.md](../../product/decisions/m0-d15-work-queue.md).
-- **D23-01** — Gap (readiness unmet rule for an exact assessment and as-of time), ProviderCoverageGap, ControlEvaluationDeviation, and Finding are distinct records; none silently changes into another or closes merely because a linked record changes state, and conversion to a Finding preserves source text, provenance, and links. Source: [m0-d23-assurance-vocabulary.md](../../product/decisions/m0-d23-assurance-vocabulary.md).
+- **D15-03** — The finding remains the authority for required closure evidence, verification rationale, program-management permission, and separation of duties; the work queue never infers or grants a separation-of-duties exception or waiver. Decision: [m0-d15-work-queue.md](../decisions/m0-d15-work-queue.md).
+- **D23-01** — Gap (readiness unmet rule for an exact assessment and as-of time), ProviderCoverageGap, ControlEvaluationDeviation, and Finding are distinct records; none silently changes into another or closes merely because a linked record changes state, and conversion to a Finding preserves source text, provenance, and links. Decision: [m0-d23-assurance-vocabulary.md](../decisions/m0-d23-assurance-vocabulary.md).
 
 ## Adopted architecture decisions
 
@@ -71,7 +76,7 @@
 ## Evidence and complete record
 
 - Baseline source: [Placeholder: source file is not present in this checkout]
-- Aggregate review: [finding-aggregate-review-2026-10-29.md](../../product/definitive-aggregate-choreography/finding-aggregate-review-2026-10-29.md)
+- Aggregate review: [Placeholder: no owner-specific review file is present]
 - Full selected record: [JSON](../data/aggregates/finding-aggregate.json)
 
 > Target definition is separate from runtime qualification. Implementation status recorded by the source: `SEPARATE_VERIFICATION_REQUIRED_IMPLEMENTATION_HALTED`.

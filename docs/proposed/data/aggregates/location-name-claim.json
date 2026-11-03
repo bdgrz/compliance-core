@@ -8,14 +8,7 @@
   "invariant": "Authoritative active-name uniqueness claim.",
   "boundaryDecision": "selected_split",
   "mustPreserve": "Kind is immutable; only active same-kind names are unique.",
-  "sources": [
-    {
-      "path": "docs/product/audits/2026-10-23/aggregate-split-targets.json",
-      "jsonPointer": "/splitOwners/26/targetOwners/1",
-      "line": 2849,
-      "sha256": "d349d94b7c43f4d82020ecf36bdacf1aff98bc6498e14993582f1c3164b21f19"
-    }
-  ],
+  "sources": [],
   "baselineSourcePath": "src/Compliance.Core/Features/TechnologyInventory/LocationRegister.cs",
   "baselineEvents": [],
   "preliminaryNewEvents": [
@@ -86,7 +79,7 @@
         "recorded": "2026-10-29"
       },
       "reactor": "LocationNameClaimReactor",
-      "sourceOwner": "Location",
+      "sourceOwner": "LocationNameClaim",
       "sourceEvents": [
         "LocationChangeAccepted"
       ],
@@ -95,7 +88,8 @@
         "LocationNameClaimed"
       ],
       "effectKind": "claim_location_name",
-      "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine."
+      "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
+      "owner": "LocationNameClaim"
     },
     {
       "command": "ReleaseLocationName",
@@ -151,7 +145,7 @@
         "recorded": "2026-10-29"
       },
       "reactor": "LocationOldNameReleaseReactor",
-      "sourceOwner": "Location",
+      "sourceOwner": "LocationNameClaim",
       "sourceEvents": [
         "LocationRevisionRecorded",
         "LocationChangeCanceled"
@@ -161,7 +155,8 @@
         "LocationNameReleased"
       ],
       "effectKind": "release_location_name",
-      "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine."
+      "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
+      "owner": "LocationNameClaim"
     }
   ],
   "eventAuthority": "selected_final_event_catalog",
@@ -169,24 +164,12 @@
     {
       "event": "LocationNameClaimed",
       "discriminator": "bdgrz.location-name-claim.location-name-claimed",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/176",
-        "line": 22567,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     },
     {
       "event": "LocationNameReleased",
       "discriminator": "bdgrz.location-name-claim.location-name-released",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/177",
-        "line": 22731,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     }
   ],
   "choreography": [
@@ -194,37 +177,19 @@
       "reactor": "LocationNameClaimReactor",
       "sourceOwner": "Location",
       "targetOwner": "LocationNameClaim",
-      "command": "ClaimLocationName",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "jsonPointer": "/reactors/25",
-        "line": 2135,
-        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
-      }
+      "command": "ClaimLocationName"
     },
     {
       "reactor": "LocationChangeApplicationReactor",
       "sourceOwner": "LocationNameClaim",
       "targetOwner": "Location",
-      "command": "ApplyLocationChange",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "jsonPointer": "/reactors/26",
-        "line": 2222,
-        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
-      }
+      "command": "ApplyLocationChange"
     },
     {
       "reactor": "LocationOldNameReleaseReactor",
       "sourceOwner": "Location",
       "targetOwner": "LocationNameClaim",
-      "command": "ReleaseLocationName",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "jsonPointer": "/reactors/27",
-        "line": 2299,
-        "sha256": "d08fb0d827200188d54838927ce060984b9ba0f7b182a7cd02799728b37c81fa"
-      }
+      "command": "ReleaseLocationName"
     }
   ],
   "status": "SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED",
@@ -235,5 +200,6 @@
   "baselineIdentityObservationOnly": true,
   "selectedLogicalIdentityBindings": [],
   "selectedReplayRule": "Current required authorization precedes replay; exact authorized retries resolve the original accepted result using the selected logical identity and immutable actor/intent/source binding. Fresh mutable feasibility, clock selection and body preparation cannot replace that original result. Expected revision is concurrency precondition, not a new identity.",
-  "commandNote": "Source field is SourceFactProof<LocationChangeAccepted> (Release uses ReleaseLocationNameSourceProof). Implements INamedRecordReceiver; no HTTP command."
+  "commandNote": "Source field is SourceFactProof<LocationChangeAccepted> (Release uses ReleaseLocationNameSourceProof). Implements INamedRecordReceiver; no HTTP command.",
+  "sourceOwner": "LocationNameClaim"
 }

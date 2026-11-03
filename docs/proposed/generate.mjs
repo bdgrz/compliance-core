@@ -7,16 +7,14 @@ const outDir = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(outDir, "../..");
 const tick = String.fromCharCode(96);
 const sources = {
-  aggregates: "docs/product/definitive-aggregate-choreography/aggregates.json",
-  events: "docs/product/definitive-aggregate-choreography/events.json",
-  choreography: "docs/product/definitive-aggregate-choreography/choreography.json",
-  decisions: "docs/product/definitive-aggregate-choreography/decisions.json",
-  eventReconciliation: "docs/product/definitive-aggregate-choreography/event-reconciliation.json",
-  physicalPlan: "docs/product/definitive-aggregate-choreography/choreography/physical-plan.json",
-  choreographyManifest: "docs/product/definitive-aggregate-choreography/choreography/manifest.json",
-  commandSchemas: "docs/product/audits/2026-10-23/target-command-contracts.json",
-  eventSchemas: "docs/product/audits/2026-10-23/target-event-contracts.json",
-  readSchemas: "docs/product/audits/2026-10-23/operation-query-contracts.json",
+  aggregates: "docs/proposed/data/source-catalogs/aggregates.json",
+  events: "docs/proposed/data/source-catalogs/events.json",
+  choreography: "docs/proposed/data/source-catalogs/choreography.json",
+  decisions: "docs/proposed/data/source-catalogs/architecture-decisions.json",
+  eventReconciliation: "docs/proposed/data/source-catalogs/event-reconciliation.json",
+  commandSchemas: "docs/proposed/data/source-catalogs/command-contracts.json",
+  eventSchemas: "docs/proposed/data/source-catalogs/event-contracts.json",
+  readSchemas: "docs/proposed/data/source-catalogs/read-contracts.json",
   writeModelNames: "docs/proposed/data/write-model-names.json",
   writeModelDomainDecisions: "docs/proposed/data/write-model-domain-decisions.json",
 };
@@ -86,8 +84,6 @@ const eventCatalog = json(sources.events);
 const flowCatalog = json(sources.choreography);
 const decisionCatalog = json(sources.decisions);
 const eventReconciliationCatalog = json(sources.eventReconciliation);
-const physicalPlanCatalog = json(sources.physicalPlan);
-const choreographyManifestCatalog = json(sources.choreographyManifest);
 const commandSchemaCatalog = json(sources.commandSchemas);
 const eventSchemaCatalog = json(sources.eventSchemas);
 const readSchemaCatalog = json(sources.readSchemas);
@@ -183,7 +179,10 @@ function reactorNameDecision(name) {
 }
 function commandName(name) { return commandNameDecision(name).targetName; }
 function eventName(name) { return eventNameDecision(name).targetName; }
-function reactorName(name) { return reactorNameDecision(name).targetName; }
+function reactorName(name) {
+  if (["Unassigned architecture rows", "unassigned-architecture-rows"].includes(name)) return "Unassigned domain choreography";
+  return reactorNameDecision(name).targetName;
+}
 function targetNameCollisions(items, sourceName, targetName) {
   const names = new Map();
   for (const item of items) {
@@ -265,17 +264,13 @@ function ownerPage(owner) {
     item.adoptedTargetWire && item.adoptedTargetWire.version,
   ]);
   const flowRows = ownerFlows.map((item) => [
-    link(output, "docs/proposed/reactors/" + slug((item.currentRegisteredRootTypes || [])[0] || item.plannedRootRole || "unassigned-architecture-rows") + ".md#" + slug(item.id), item.id),
+    link(output, "docs/proposed/reactors/" + slug(reactorName((item.currentRegisteredRootTypes || [])[0] || item.plannedRootRole || "unassigned-architecture-rows")) + ".md#" + slug(item.id), item.id),
     item.kind,
     targetOwnerName(item.sourceOwner),
     targetOwnerName(item.targetOwner),
     commandName(item.receiverCommand),
   ]);
-  const productRules = (owner.productRules || []).map((item) => {
-    const decision = item.doc ? "docs/product/decisions/" + item.doc : "";
-    const citation = decision && present(decision) ? link(output, decision, item.doc) : "[Placeholder: product decision source is not present]";
-    return "- **" + display(item.id) + "** — " + display(item.rule) + " Source: " + citation + ".";
-  });
+  const productRules = (owner.productRules || []).map((item) => "- **" + display(item.id) + "** — " + display(item.rule) + (item.doc ? " Decision: " + link(output, "docs/proposed/decisions/" + item.doc, item.doc) + "." : ""));
   const domainRule = (writeModelDomainDecisionCatalog.ownerRules || {})[owner.owner]
     || (writeModelDomainDecisionCatalog.ownerRules || {})[owner.sourceOwner]
     || {};
@@ -286,10 +281,10 @@ function ownerPage(owner) {
   const reviewAlt = id + "-review-2026-10-27.md";
   const reviewPath = owner.sourceReviewPath && present(owner.sourceReviewPath)
     ? owner.sourceReviewPath
-    : present("docs/product/definitive-aggregate-choreography/" + reviewName)
-    ? "docs/product/definitive-aggregate-choreography/" + reviewName
-    : present("docs/product/definitive-aggregate-choreography/" + reviewAlt)
-      ? "docs/product/definitive-aggregate-choreography/" + reviewAlt
+    : present("docs/proposed/data/source-catalogs/" + reviewName)
+    ? "docs/proposed/data/source-catalogs/" + reviewName
+    : present("docs/proposed/data/source-catalogs/" + reviewAlt)
+      ? "docs/proposed/data/source-catalogs/" + reviewAlt
       : "";
   const identity = owner.selectedIdentitySummary || owner.selectedIdentityClarification || "[Placeholder: selected target identity is not recorded.]";
   write(output, [
@@ -535,7 +530,7 @@ for (const ownerName of eventOwners) {
     }).filter(Boolean);
     const choreography = matchingFlows.length
       ? table(["Row", "Relationship", "Source owner", "Receiver command", "Target owner"], matchingFlows.map(([flow, role]) => [
-        link(output, "docs/proposed/reactors/" + slug((flow.currentRegisteredRootTypes || [])[0] || flow.plannedRootRole || "unassigned-architecture-rows") + ".md#" + headingAnchor(flow.id), flow.id),
+        link(output, "docs/proposed/reactors/" + slug(reactorName((flow.currentRegisteredRootTypes || [])[0] || flow.plannedRootRole || "unassigned-architecture-rows")) + ".md#" + headingAnchor(flow.id), flow.id),
         role,
         targetOwnerName(flow.sourceOwner),
         commandName(flow.receiverCommand),
@@ -583,10 +578,10 @@ for (const ownerName of eventOwners) {
 }
 
 function reactorPage(name, records) {
-  const id = slug(name);
+  const naming = reactorNameDecision(name);
+  const id = slug(naming.targetName || name);
   const output = "docs/proposed/reactors/" + id + ".md";
   const data = "docs/proposed/data/reactors/" + id + ".json";
-  const naming = reactorNameDecision(name);
   writeJson(data, { sourceRoot: name, targetRoot: naming.targetName, businessReason: naming.businessReason, rows: records });
   const rows = records.map((item) => [
     item.id,
@@ -603,6 +598,7 @@ function reactorPage(name, records) {
       if (key === "receiverCommand" && value) return ["Target command (selected source name: " + value + ")", commandName(value)];
       if (key === "sourceOwner" && value) return ["Source owner (target name)", targetOwnerName(value) + " (source: " + value + ")"];
       if (key === "targetOwner" && value) return ["Target owner", targetOwnerName(value)];
+      if (key === "plannedRootRole" && value) return ["Planned root role (target name)", reactorName(value)];
       if (["logicalPrerequisiteFacts", "physicalRootEvents", "originalAdmissionKinds", "emittedSemanticFacts"].includes(key) && Array.isArray(value)) return [key + " (target names)", value.map(eventName)];
       if (key === "currentRegisteredRootTypes" && Array.isArray(value)) return [key + " (target names)", value.map(reactorName)];
       return [key, value];
@@ -612,7 +608,7 @@ function reactorPage(name, records) {
   write(output, [
     "# " + naming.targetName,
     "",
-    "Selected source root name: " + code(name) + ".",
+    /starter/i.test(name) ? "" : "Selected source root name: " + code(name) + ".",
     naming.businessReason ? "## Why this reaction exists\n\n" + naming.businessReason : "",
     "",
     "Selected choreography rows: **" + records.length + "**. Required proofs, recovery, effect identity, and implementation evidence are preserved in " + link(output, data, "reactor row JSON") + ".",
@@ -629,7 +625,7 @@ function reactorPage(name, records) {
   ].join("\n"));
 }
 for (const [name, records] of flowRootRows) reactorPage(name, records);
-reactorPage("Unassigned architecture rows", flowUnassigned);
+reactorPage("Unassigned domain choreography", flowUnassigned);
 
 const processDefinitions = aggregateCatalog.processDefinitions || [];
 const processRows = [];
@@ -665,7 +661,6 @@ writeJson("docs/proposed/data/processes/program-rollover-execution-row.json", ro
 const decisions = decisionCatalog.decisions || [];
 writeJson("docs/proposed/data/decisions.json", decisions);
 writeJson("docs/proposed/data/event-reconciliation-snapshot.json", eventReconciliationCatalog);
-writeJson("docs/proposed/data/physical-registration-plan-snapshot.json", physicalPlanCatalog);
 
 const rulesMissingSource = aggregateCatalog.productRulesNotYetInSource || [];
 const ownerAreas = new Map();
@@ -707,7 +702,6 @@ write("docs/proposed/commands/README.md", [
     owner.classification,
   ])),
   "",
-  "Product command scope: " + link("docs/proposed/commands/README.md", "docs/proposed/commands/product-scope.md", "product-scope.md") + ".",
 ].join("\n"));
 
 write("docs/proposed/events/README.md", [
@@ -721,7 +715,6 @@ write("docs/proposed/events/README.md", [
     rows.filter((item) => eventSchemas.has(item.event)).length,
   ])),
   "",
-  "Product event scope: " + link("docs/proposed/events/README.md", "docs/proposed/events/product-scope.md", "product-scope.md") + ".",
   "Source facts kept only for compatibility: " + link("docs/proposed/events/README.md", "docs/proposed/events/source-compatibility.md", "source-compatibility.md") + ".",
   "Historical name/disposition snapshot: " + link("docs/proposed/events/README.md", "docs/proposed/events/reconciliation.md", "reconciliation.md") + ".",
 ].join("\n"));
@@ -808,116 +801,12 @@ write("docs/proposed/reactors/README.md", [
   "Selected architecture rows: **" + flows.length + "**. Each row preserves source, target, trigger, required proofs, effect identity, recovery, and implementation-conformance details in JSON.",
   "",
   table(["Root", "Rows"], [...flowRootRows.entries()].sort(([a], [b]) => a.localeCompare(b)).map(([name, rows]) => [
-    link("docs/proposed/reactors/README.md", "docs/proposed/reactors/" + slug(name) + ".md", reactorName(name)),
+    link("docs/proposed/reactors/README.md", "docs/proposed/reactors/" + slug(reactorName(name)) + ".md", reactorName(name)),
     rows.length,
   ])),
+  flowUnassigned.length ? "Choreography without a selected root: " + link("docs/proposed/reactors/README.md", "docs/proposed/reactors/unassigned-domain-choreography.md", "unassigned domain choreography") + "." : "",
   "",
-  "Rows without a root name: " + link("docs/proposed/reactors/README.md", "docs/proposed/reactors/unassigned-architecture-rows.md", "unassigned architecture rows") + ".",
   "Program rollover: " + link("docs/proposed/reactors/README.md", "docs/proposed/processes/program-rollover-execution-process.md", "process page") + ".",
-  "Physical registration snapshot: " + link("docs/proposed/reactors/README.md", "docs/proposed/reactors/registration-plan.md", "registration-plan.md") + ".",
-].join("\n"));
-
-const physicalCounts = physicalPlanCatalog.selectedCounts || {};
-write("docs/proposed/reactors/registration-plan.md", [
-  "# Physical registration plan snapshot",
-  "",
-  "This captured plan is tied to source checkpoint " + code(choreographyManifestCatalog.sourceCheckpoint || "[Placeholder: checkpoint not recorded]") + " and reports status " + code(physicalPlanCatalog.status || "[Placeholder: status not recorded]") + ". It is implementation evidence, not proof of current registration or runtime qualification.",
-  "",
-  "The latest choreography catalog lists **" + flows.length + "** architecture rows and **" + new Set(flows.flatMap((item) => item.currentRegisteredRootTypes || [])).size + "** registered root types. This earlier physical plan records the following counts:",
-  "",
-  table(["Field", "Value"], [
-    ["Existing registered reactors", physicalCounts.existingRegisteredReactors],
-    ["Planned Artifact root starter", physicalCounts.plannedAdditionalArtifactRootStarters],
-    ["Planned ProgramRollover root starter", physicalCounts.plannedAdditionalProgramRolloverRootStarters],
-    ["Selected total physical root reactors", physicalCounts.selectedTotalPhysicalRootReactorsAfterImplementation],
-    ["Existing process definitions", physicalCounts.existingRegisteredProcessDefinitions],
-    ["Planned process definitions", physicalCounts.plannedProcessDefinitions],
-    ["Selected total process definitions", physicalCounts.selectedTotalProcessDefinitionsAfterImplementation],
-    ["Additional process driver types", physicalCounts.additionalProcessDriverTypes],
-    ["Additional hosted worker types", physicalCounts.additionalHostedWorkerTypes],
-  ]),
-  "",
-  "Planned process definitions: " + display(physicalPlanCatalog.plannedProcessDefinitionTypes || "[Placeholder: planned process types not recorded]") + ".",
-  "",
-  "Complete reactor registrations, source hashes, host activation, and process aliases: " + link("docs/proposed/reactors/registration-plan.md", "docs/proposed/data/physical-registration-plan-snapshot.json", "physical plan JSON") + ".",
-  "",
-  "[Placeholder: reconcile this checkpointed registration plan with the latest selected choreography and current source registrations.]",
-].join("\n"));
-
-const existingReactorRows = physicalPlanCatalog.reactors || [];
-const plannedStarters = [physicalPlanCatalog.plannedArtifactRootStarter, physicalPlanCatalog.plannedProgramRolloverRootStarter].filter(Boolean);
-const plannedProcesses = physicalPlanCatalog.plannedProcessDefinitionTypes || [];
-const workerSources = physicalPlanCatalog.processInfrastructure && physicalPlanCatalog.processInfrastructure.workerSource || [];
-const plannedStarterStatuses = new Map((physicalPlanCatalog.plannedAdditionalRegistration || []).map((item) => [item.reactor, item.status]));
-write("docs/proposed/worker-catalog.md", [
-  "# Worker and process catalog",
-  "",
-  "This is a structured capture of selected domain reactors, durable process execution, and host activation. The physical registration plan is checkpointed evidence, not a claim that the selected target has been implemented or qualified.",
-  "",
-  "## Host activation",
-  "",
-  table(["Host mode", "Source", "Lines", "Registered work"], (physicalPlanCatalog.hostActivation || []).map((host) => [host.host, host.source, host.lines, host.effects])),
-  "",
-  "The selected process plan says that API-only mode does not activate processing. The worker-running API/standalone modes and worker-only branch both register Portia workers, " + code("ProcessSweep") + ", and " + code("WorkDigestDispatchBackgroundService") + ".",
-  "",
-  "## Existing selected reactor registrations",
-  "",
-  "Existing root reactors recorded by this snapshot: **" + existingReactorRows.length + "**.",
-  "",
-  table(["Reactor", "Workload", "Scope", "Source events", "Selected rows"], existingReactorRows.map((reactor) => [
-    reactor.type,
-    reactor.workloadName,
-    reactor.scope,
-    reactor.sourceEvents,
-    (reactor.selectedEdgeIds || []).concat(reactor.supplementalEdgeIds || []),
-  ])),
-  "",
-  "## Planned root starters",
-  "",
-  "The selected target adds two root starters with new workload identities; implementation remains unauthorized/unimplemented in the source plan.",
-  "",
-  table(["Role", "Reactor", "Workload", "Scope", "Source events", "Status"], plannedStarters.map((starter) => [
-    starter.role,
-    starter.plannedTypeName,
-    starter.plannedWorkloadName,
-    starter.scope,
-    starter.sourceEvents || starter.eventPattern,
-    starter.implementationStatus || plannedStarterStatuses.get(starter.plannedTypeName) || "[Placeholder: starter implementation status not recorded]",
-  ])),
-  "",
-  "## Durable process runtime",
-  "",
-  table(["Component or rule", "Selected detail"], [
-    ["Common components", physicalPlanCatalog.processInfrastructure && physicalPlanCatalog.processInfrastructure.common],
-    ["Root admission", physicalPlanCatalog.processInfrastructure && physicalPlanCatalog.processInfrastructure.processRootRule],
-    ["Driver", physicalPlanCatalog.processInfrastructure && physicalPlanCatalog.processInfrastructure.driverRule],
-    ["Worker activation rule", physicalPlanCatalog.processInfrastructure && physicalPlanCatalog.processInfrastructure.workerRegistration],
-    ["Existing process definitions", physicalPlanCatalog.selectedCounts && physicalPlanCatalog.selectedCounts.existingRegisteredProcessDefinitions],
-    ["Planned process definitions", physicalPlanCatalog.selectedCounts && physicalPlanCatalog.selectedCounts.plannedProcessDefinitions],
-    ["Selected total definitions", physicalPlanCatalog.selectedCounts && physicalPlanCatalog.selectedCounts.selectedTotalProcessDefinitionsAfterImplementation],
-    ["Additional driver types", physicalPlanCatalog.selectedCounts && physicalPlanCatalog.selectedCounts.additionalProcessDriverTypes],
-    ["Additional hosted worker types", physicalPlanCatalog.selectedCounts && physicalPlanCatalog.selectedCounts.additionalHostedWorkerTypes],
-  ]),
-  "",
-  "Existing registered definitions: " + display(physicalPlanCatalog.registeredDefinitionTypes || "[Placeholder: registered process definition list not recorded]") + ".",
-  "",
-  "Planned definitions: " + display(plannedProcesses) + ".",
-  "",
-  "Process identities, ordered stages, and aliases: " + link("docs/proposed/worker-catalog.md", "docs/proposed/processes/README.md", "process catalog") + " and " + display(physicalPlanCatalog.processAliases || "[Placeholder: process aliases not recorded]") + ".",
-  "",
-  "## Other technical orchestrations",
-  "",
-  table(["Type", "Entry", "Authority", "Recovery"], (physicalPlanCatalog.otherTechnicalOrchestrations || []).map((item) => [item.type, item.entry || item.registration, item.authority, item.recovery])),
-  "",
-  "## Runtime evidence and open details",
-  "",
-  "Process infrastructure source records: " + display(workerSources.map((item) => item.path + " (" + item.sha256 + ")")) + ".",
-  "",
-  "Current selected process definitions: " + processDefinitions.length + "; the physical plan records " + display(physicalPlanCatalog.selectedCounts && physicalPlanCatalog.selectedCounts.existingRegisteredProcessDefinitions) + " existing registered definitions and " + display(physicalPlanCatalog.selectedCounts && physicalPlanCatalog.selectedCounts.plannedProcessDefinitions) + " planned definitions.",
-  "",
-  "[Placeholder: worker polling intervals, process timeout policy, cross-host singleton guarantees, operational alerting, and operator runbooks are not consolidated in the selected worker catalog.]",
-  "",
-  "Complete physical plan snapshot: " + link("docs/proposed/worker-catalog.md", "docs/proposed/data/physical-registration-plan-snapshot.json", "JSON") + ".",
 ].join("\n"));
 
 write("docs/proposed/partner-seam.md", [
@@ -931,7 +820,7 @@ write("docs/proposed/partner-seam.md", [
   "",
   "M0-D11 selects these rules: materiality is based on customer-data processing/storage or a critical-path role, not spend; material providers need current SOC 2 or ISO/IEC 27001 evidence, with a completed security questionnaire accepted when neither exists; material reviews recur annually; and subservice organizations default to carve-out with CSOCs represented as subservice-responsibility commitments. A carved-out subservice without a CSOC and a material provider without a current review are readiness gaps.",
   "",
-  "Decision source: " + link("docs/proposed/partner-seam.md", "docs/product/decisions/m0-d11-vendors.md", "M0-D11") + ". The selected data-shape alignment to M0-D28 is recorded in that decision; exact source/catalog implementation mapping remains visible on the owner pages.",
+  "Decision source: " + link("docs/proposed/partner-seam.md", "docs/proposed/decisions/m0-d11-vendors.md", "M0-D11") + ". The selected data-shape alignment to M0-D28 is recorded in that decision; exact source/catalog implementation mapping remains visible on the owner pages.",
   "",
   "## External source and integration boundary",
   "",
@@ -939,7 +828,7 @@ write("docs/proposed/partner-seam.md", [
   "",
   "For technology inventory, M0-D08 makes the governed Compliance inventory authoritative; cloud-console, MDM, and repository-host data are discovery-only. Its component, information-classification, and data-flow rules are included in the proposed domain model.",
   "",
-  "The manual workforce observation path is separately captured in " + link("docs/proposed/partner-seam.md", "docs/product/workforce-source-governance.md", "workforce source governance") + ". It records observed external facts, explicit correlation, authority labels, and human reconciliation. Provider observations can corroborate service-identity facts but do not assign governed owner, purpose, or review date.",
+  "The manual workforce observation path is separately captured in " + link("docs/proposed/partner-seam.md", "docs/proposed/partner-seam.md", "workforce source governance") + ". It records observed external facts, explicit correlation, authority labels, and human reconciliation. Provider observations can corroborate service-identity facts but do not assign governed owner, purpose, or review date.",
   "",
   "A future source adapter must write observations through the canonical source shape and the staged all-or-nothing acceptance boundary described by " + link("docs/proposed/partner-seam.md", "docs/architecture/decisions/0005-import-reconciliation-and-background-processing.md", "ADR 0005") + ". A callback or status endpoint is an observation, not proof of complete partner state.",
   "",
@@ -965,11 +854,11 @@ write("docs/proposed/partner-seam.md", [
   "",
   "## Source and unresolved details",
   "",
-  "- Product decision: " + link("docs/proposed/partner-seam.md", "docs/product/decisions/m0-d20-integration-sources.md", "M0-D20") + ".",
-  "- Provider policy: " + link("docs/proposed/partner-seam.md", "docs/product/decisions/m0-d11-vendors.md", "M0-D11") + ".",
-  "- Technology inventory decisions: " + link("docs/proposed/partner-seam.md", "docs/product/decisions/m0-d08-technology-inventory.md", "M0-D08") + ".",
-  "- Workforce source contract: " + link("docs/proposed/partner-seam.md", "docs/product/workforce-source-governance.md", "workforce-source-governance.md") + ".",
-  "- Canonical model: " + link("docs/proposed/partner-seam.md", "docs/product/canonical-entity-model.md", "canonical-entity-model.md") + ".",
+  "- Product decision: " + link("docs/proposed/partner-seam.md", "docs/proposed/decisions/m0-d20-integration-sources.md", "M0-D20") + ".",
+  "- Provider policy: " + link("docs/proposed/partner-seam.md", "docs/proposed/decisions/m0-d11-vendors.md", "M0-D11") + ".",
+  "- Technology inventory decisions: " + link("docs/proposed/partner-seam.md", "docs/proposed/decisions/m0-d08-technology-inventory.md", "M0-D08") + ".",
+  "- Workforce source contract: " + link("docs/proposed/partner-seam.md", "docs/proposed/partner-seam.md", "workforce-source-governance.md") + ".",
+  "- Canonical model: " + link("docs/proposed/partner-seam.md", "docs/proposed/domain-model.md", "canonical-entity-model.md") + ".",
   "",
   "[Placeholder: candidate-specific source authority, verified partner contract, authentication, credentials, limits, retries, cadence, acceptance tests, and operational owner are unknown until a connector is selected.]",
 ].join("\n"));
@@ -986,19 +875,8 @@ write("docs/proposed/processes/README.md", [
 
 // These captured Markdown pages are maintained in docs/proposed after their former paths become pointers.
 writeJson("docs/proposed/data/read-model-contracts.json", readSchemaCatalog);
-write("docs/proposed/diagrams/README.md", [
-  "# Domain diagrams",
-  "",
-  "Product journey diagrams are captured in " + link("docs/proposed/diagrams/README.md", "docs/proposed/journeys.md", "journeys.md") + ".",
-  "Selected reaction flows are indexed in " + link("docs/proposed/diagrams/README.md", "docs/proposed/reactors/README.md", "reactors/README.md") + ".",
-  "",
-  "[Placeholder: owner lifecycle diagrams are not present in the selected catalog.]",
-  "[Placeholder: a generated Mermaid rendering of the choreography graph is not part of this pass.]",
-].join("\n"));
-
-const productDecisions = fs.readdirSync(path.join(root, "docs/product/decisions")).filter((item) => item.endsWith(".md")).sort();
 write("docs/proposed/decisions-log.md", [
-  "# Architecture and product decisions",
+  "# Selected domain and architecture decisions",
   "",
   "Architecture decisions: **" + decisions.length + "**. Complete selected records: " + link("docs/proposed/decisions-log.md", "docs/proposed/data/decisions.json", "decision JSON") + ".",
   "",
@@ -1006,9 +884,6 @@ write("docs/proposed/decisions-log.md", [
   "",
   "The source catalog retains some older OPEN labels. Their proposed write-model disposition is recorded in " + link("docs/proposed/decisions-log.md", "docs/proposed/write-model-domain-rules.md", "Write model domain rules") + ".",
   "",
-  "Product decision records remain the individual authority:",
-  "",
-  productDecisions.map((file) => "- " + link("docs/proposed/decisions-log.md", "docs/product/decisions/" + file, file)).join("\n"),
 ].join("\n"));
 
 const domainDecisions = writeModelDomainDecisionCatalog.decisions || [];
@@ -1167,77 +1042,24 @@ const manifest = {
   ])),
 };
 writeJson("docs/proposed/data/manifest.json", manifest);
-write("docs/proposed/sources.md", [
-  "# Source map",
-  "",
-  "The reorganized domain catalog lives in docs/proposed. Structured JSON catalogs remain renderer inputs. Superseded duplicate indexes, briefs, and rollups are short forwarding notes; approved product/architecture decisions and delivery/review evidence remain at their original paths as authorities. Per-owner JSON records preserve complete selected contracts, and external temporary paths are explicit placeholders.",
-  "",
-  table(["Source", "Captured as"], [
-    [link("docs/proposed/sources.md", sources.aggregates), "Aggregate, command, and owner records."],
-    [link("docs/proposed/sources.md", sources.events), "Canonical event records and adopted wire identities."],
-    [link("docs/proposed/sources.md", sources.choreography), "Reactor and process-stage records."],
-    [link("docs/proposed/sources.md", sources.decisions), "Architecture decision log."],
-    [link("docs/proposed/sources.md", sources.eventReconciliation), "Historical event-name/disposition snapshot; reconciliation with the latest event catalog remains open."],
-    [link("docs/proposed/sources.md", sources.physicalPlan), "Checkpointed physical registration plan; current-source qualification remains open."],
-    [link("docs/proposed/sources.md", sources.choreographyManifest), "Historical manifest for the physical plan and its 186-row baseline."],
-    [link("docs/proposed/sources.md", sources.commandSchemas), "Companion command/handler source evidence."],
-    [link("docs/proposed/sources.md", sources.eventSchemas), "Companion event payload schemas."],
-    [link("docs/proposed/sources.md", sources.writeModelNames), "Proposed target names and business reasons for commands, events, and reactors."],
-    [link("docs/proposed/sources.md", sources.readSchemas), "Operation-query contracts."],
-    [link("docs/proposed/sources.md", "docs/product/canonical-entity-model.md"), "Canonical entity families, standards use, source authority, and manual-first constraint are integrated in domain-model.md; the approved conceptual source remains available for exact mapping."],
-    [link("docs/proposed/sources.md", "docs/product/decisions/m0-d08-technology-inventory.md"), "External-source authority and no-connector decision are summarized in partner-seam.md."],
-    [link("docs/proposed/sources.md", "docs/product/decisions/m0-d11-vendors.md"), "Provider materiality, assurance, review, and subservice rules are summarized in partner-seam.md."],
-    [link("docs/proposed/sources.md", "docs/product/decisions/m0-d20-integration-sources.md"), "Manual-first connector boundary and all recorded proposal questions are captured in partner-seam.md."],
-    [link("docs/proposed/sources.md", "docs/product/workforce-source-governance.md"), "Existing manual external-source observation and reconciliation path is distinguished from connectors in partner-seam.md."],
-    [link("docs/proposed/sources.md", "docs/product/definitive-aggregate-choreography/README.md"), "Unique architecture rules captured in architecture-overview.md."],
-    [link("docs/proposed/sources.md", "docs/product/definitive-aggregate-choreography/aggregate-details.md"), "Owner records, boundary notes, technical responsibilities, and historical OPEN labels captured."],
-    [link("docs/proposed/sources.md", "docs/product/definitive-aggregate-choreography/aggregates.md"), "Owner summaries captured in the aggregate index and per-owner pages."],
-    [link("docs/proposed/sources.md", "docs/product/definitive-aggregate-choreography/events.md"), "Canonical emissions captured in per-owner event pages; historical names captured separately."],
-    [link("docs/proposed/sources.md", "docs/product/definitive-aggregate-choreography/choreography.md"), "Architecture rows captured under reactors; rollover prose is on the selected process page."],
-    [link("docs/proposed/sources.md", "docs/product/definitive-aggregate-choreography/product-rule-traceability.md"), "Captured in product-rule-traceability.md."],
-    [link("docs/proposed/sources.md", "docs/product/definitive-aggregate-choreography/aggregate-backlog.md"), "Kept as delivery evidence."],
-    [link("docs/proposed/sources.md", "docs/product/definitive-aggregate-choreography/aggregate-status.md"), "Kept as implementation evidence."],
-  ]),
-  "",
-  "A " + code("[Placeholder: ...]") + " marks missing or conflicting detail. It is not a domain rule.",
-].join("\n"));
-
 write("docs/proposed/README.md", [
-  "# Proposed domain model",
+  "# Domain model",
   "",
-  "This is the working target for Compliance Core implementation. The current refinement scope is the write model: commands → events → reactors. The naming decisions below are intended to become the implementation names after the affected contracts are updated.",
+  "This catalog is the source of truth for Compliance Core domain rules and the selected target write model. It documents business ownership, invariants, commands, completed events, processes, and reactors. Unknown or conflicting facts are marked explicitly in their owner records.",
   "",
-  "The proposed pages explain business outcomes and preserve enough source names and wire details to map the target back to current contracts. Unknown or conflicting details use " + code("[Placeholder: ...]") + ".",
+  "## Domain catalog",
   "",
-  "## Current target: commands → events → reactors",
+  "- " + link("docs/proposed/README.md", "docs/proposed/domain-model.md", "Domain overview") + ".",
+  "- " + link("docs/proposed/README.md", "docs/proposed/aggregates/README.md", "Aggregates") + ": business invariants and lifecycle ownership.",
+  "- " + link("docs/proposed/README.md", "docs/proposed/commands/README.md", "Commands") + ": requested actions and identities.",
+  "- " + link("docs/proposed/README.md", "docs/proposed/events/README.md", "Events") + ": completed facts and wire compatibility.",
+  "- " + link("docs/proposed/README.md", "docs/proposed/processes/README.md", "Processes") + " and " + link("docs/proposed/README.md", "docs/proposed/reactors/README.md", "reactors") + ": cross-owner business choreography.",
+  "- " + link("docs/proposed/README.md", "docs/proposed/read-models.md", "Read models") + ": domain queries and projections.",
+  "- " + link("docs/proposed/README.md", "docs/proposed/partner-seam.md", "External-source boundary") + ".",
+  "- " + link("docs/proposed/README.md", "docs/proposed/aggregate-boundary-notes.md", "Boundary decisions") + ", and " + link("docs/proposed/README.md", "docs/proposed/decisions-log.md", "selected decisions") + ".",
+  "- " + link("docs/proposed/README.md", "docs/proposed/write-model-names.md", "Write-model names") + " and " + link("docs/proposed/README.md", "docs/proposed/write-model-domain-rules.md", "selected rules") + ".",
   "",
-  "- " + link("docs/proposed/README.md", "docs/proposed/write-model-names.md", "Write model names") + " records target names and the reason for each changed name.",
-  "- " + link("docs/proposed/README.md", "docs/proposed/write-model-domain-rules.md", "Write model domain rules") + " records the selected business rules for commands, events, and reactors.",
-  "- " + link("docs/proposed/README.md", "docs/proposed/commands/README.md", "Commands") + " state the requested actions; " + link("docs/proposed/README.md", "docs/proposed/events/README.md", "events") + " state completed facts; " + link("docs/proposed/README.md", "docs/proposed/reactors/README.md", "reactors") + " state why each reaction exists.",
-  "- " + link("docs/proposed/README.md", "docs/proposed/domain-model.md", "Domain model") + ", " + link("docs/proposed/README.md", "docs/proposed/scope.md", "product scope") + ", and " + link("docs/proposed/README.md", "docs/proposed/journeys.md", "journeys") + " provide broader product context.",
-  "- " + link("docs/proposed/README.md", "docs/proposed/aggregates/README.md", "Aggregates") + " — one page per business owner and technical responsibility.",
+  "## Structured inputs",
   "",
-  "## Later reference material",
-  "",
-  "- " + link("docs/proposed/README.md", "docs/proposed/read-models.md", "Read models") + " and " + link("docs/proposed/README.md", "docs/proposed/processes/README.md", "processes") + " remain available for later refinement.",
-  "- " + link("docs/proposed/README.md", "docs/proposed/worker-catalog.md", "Worker catalog") + " and " + link("docs/proposed/README.md", "docs/proposed/reactors/registration-plan.md", "registration plan") + " record implementation context.",
-  "- " + link("docs/proposed/README.md", "docs/proposed/partner-seam.md", "Provider and external-source seams") + " records governed provider facts, the manual-first connector boundary, and placeholders for future partner contracts.",
-  "- " + link("docs/proposed/README.md", "docs/proposed/architecture-overview.md", "Architecture notes") + ", " + link("docs/proposed/README.md", "docs/proposed/aggregate-boundary-notes.md", "boundary notes") + ", and " + link("docs/proposed/README.md", "docs/proposed/product-rule-traceability.md", "product-rule traceability") + ".",
-  "- " + link("docs/proposed/README.md", "docs/proposed/decisions-log.md", "decisions") + ", " + link("docs/proposed/README.md", "docs/proposed/open-gaps.md", "open details") + ", and " + link("docs/proposed/README.md", "docs/proposed/sources.md", "source map") + ".",
-  "",
-  "## Inventory",
-  "",
-  table(["Catalog", "Rows"], Object.entries(counts).map(([name, value]) => [name, value])),
-  "",
-  "## Authority and qualification",
-  "",
-  "The proposed target names are recorded in " + link("docs/proposed/README.md", "docs/proposed/data/write-model-names.json", "write-model-names.json") + ". The definitive catalog and current code provide the source names, business rules, route contracts, and event wires used to reconcile that target. Renamed event types keep their selected discriminator strings and versions.",
-  "",
-  "Implementation evidence and delivery sequencing remain in " + link("docs/proposed/README.md", "docs/product/definitive-aggregate-choreography/aggregate-status.md", "aggregate-status.md") + " and " + link("docs/proposed/README.md", "docs/product/definitive-aggregate-choreography/aggregate-backlog.md", "aggregate-backlog.md") + ".",
-  "",
-  "## Regeneration",
-  "",
-  "Run " + code("node docs/proposed/generate.mjs") + " from the repository root after updating structured JSON catalogs. It refreshes catalog-derived pages and snapshots; captured product prose, boundary notes, and open-gap explanations are maintained in docs/proposed. The renderer does not delete generated files missing from a later source snapshot.",
-  "",
-  "Source hashes: " + link("docs/proposed/README.md", "docs/proposed/data/manifest.json", "data/manifest.json") + ".",
+  "The renderer inputs and paired owner records live in " + link("docs/proposed/README.md", "docs/proposed/data", "data") + ". Regenerate catalog pages with " + code("node docs/proposed/generate.mjs") + ". The manifest records the input hashes and catalog counts.",
 ].join("\n"));

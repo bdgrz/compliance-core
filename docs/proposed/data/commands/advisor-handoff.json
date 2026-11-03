@@ -55,13 +55,9 @@
           "policy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/31",
-        "line": 3713,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
       "kind": "http",
+      "sourceOwner": "AdvisorHandoff",
+      "owner": "AdvisorHandoff",
       "sourceName": "CloseAdvisorHandoff",
       "targetName": "CloseAdvisorHandoff"
     },
@@ -124,13 +120,9 @@
           "policy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/41",
-        "line": 4934,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
       "kind": "http",
+      "sourceOwner": "AdvisorHandoff",
+      "owner": "AdvisorHandoff",
       "sourceName": "CreateAdvisorHandoff",
       "targetName": "CreateAdvisorHandoff"
     },
@@ -183,13 +175,9 @@
           "policy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/69",
-        "line": 8101,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
       "kind": "http",
+      "sourceOwner": "AdvisorHandoff",
+      "owner": "AdvisorHandoff",
       "sourceName": "MarkAdvisorHandoffReadyForReview",
       "targetName": "MarkAdvisorHandoffReadyForReview"
     },
@@ -268,13 +256,9 @@
           "policy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/91",
-        "line": 10650,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
       "kind": "http",
+      "sourceOwner": "AdvisorHandoff",
+      "owner": "AdvisorHandoff",
       "sourceName": "RecordAdvisorFeedback",
       "targetName": "SubmitAdvisorFeedback"
     },
@@ -337,13 +321,9 @@
           "policy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/135",
-        "line": 15649,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
       "kind": "http",
+      "sourceOwner": "AdvisorHandoff",
+      "owner": "AdvisorHandoff",
       "sourceName": "ReviseAdvisorHandoffSelection",
       "targetName": "ReviseAdvisorHandoffSelection"
     },
@@ -401,13 +381,9 @@
           "policy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/147",
-        "line": 17154,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
       "kind": "http",
+      "sourceOwner": "AdvisorHandoff",
+      "owner": "AdvisorHandoff",
       "sourceName": "RevokeAdvisorHandoff",
       "targetName": "RevokeAdvisorHandoff"
     },
@@ -475,7 +451,7 @@
         }
       ],
       "reactor": "AdvisorArtifactDownloadUseReactor",
-      "sourceOwner": "EvidenceArtifact",
+      "sourceOwner": "AdvisorHandoff",
       "sourceEvents": [
         "EvidenceArtifactDownloadRequested"
       ],
@@ -487,10 +463,7 @@
       "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
       "handler": "AuthorizeAdvisorArtifactDownloadUseHandler",
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "recorded": "2026-10-29"
-      },
+      "owner": "AdvisorHandoff",
       "sourceName": "AuthorizeAdvisorArtifactDownloadUse",
       "targetName": "AuthorizeAdvisorArtifactDownload"
     },
@@ -548,7 +521,7 @@
         }
       ],
       "reactor": "SettleAdvisorArtifactDownloadUseReactor",
-      "sourceOwner": "ArtifactDownloadGrant",
+      "sourceOwner": "AdvisorHandoff",
       "sourceEvents": [
         "EvidenceArtifactDownloadIssued",
         "ArtifactDownloadGrantCanceled"
@@ -561,10 +534,7 @@
       "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
       "handler": "SettleAdvisorArtifactDownloadUseHandler",
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
-        "recorded": "2026-10-29"
-      },
+      "owner": "AdvisorHandoff",
       "sourceName": "SettleAdvisorArtifactDownloadUse",
       "targetName": "CloseAdvisorArtifactDownloadAuthorization"
     }
@@ -677,8 +647,7 @@
       "expectedRevisionScope": {
         "field": "ExpectedRevision",
         "owner": "AdvisorHandoff",
-        "counter": "logical ResourceRevision of this owner",
-        "nullableInternalRule": null
+        "counter": "logical ResourceRevision of this owner"
       }
     },
     {
@@ -798,8 +767,7 @@
       "expectedRevisionScope": {
         "field": "ExpectedRevision",
         "owner": "AdvisorFeedbackThread",
-        "counter": "logical ResourceRevision of this owner",
-        "nullableInternalRule": null
+        "counter": "logical ResourceRevision of this owner"
       }
     },
     {
@@ -910,7 +878,6 @@
         "terminalResultType": "Unit"
       },
       "expectedRevisionScope": {
-        "field": null,
         "owner": "AdvisorHandoff",
         "counter": "No primary caller ResourceRevision. Enforce required authored source/epoch/version tokens, immutable creation identity or trusted proof/generation as declared; append uses physical OCC."
       }
@@ -1017,8 +984,7 @@
       "expectedRevisionScope": {
         "field": "ExpectedRevision",
         "owner": "AdvisorHandoff",
-        "counter": "logical ResourceRevision of this owner",
-        "nullableInternalRule": null
+        "counter": "logical ResourceRevision of this owner"
       }
     },
     {
@@ -1261,8 +1227,7 @@
       "expectedRevisionScope": {
         "field": "ExpectedRevision",
         "owner": "AdvisorFeedbackThread",
-        "counter": "logical ResourceRevision of this owner",
-        "nullableInternalRule": null
+        "counter": "logical ResourceRevision of this owner"
       }
     },
     {
@@ -1377,8 +1342,7 @@
       "expectedRevisionScope": {
         "field": "ExpectedRevision",
         "owner": "AdvisorFeedbackThread",
-        "counter": "logical ResourceRevision of this owner",
-        "nullableInternalRule": null
+        "counter": "logical ResourceRevision of this owner"
       }
     },
     {
@@ -1493,8 +1457,7 @@
       "expectedRevisionScope": {
         "field": "ExpectedRevision",
         "owner": "AdvisorHandoff",
-        "counter": "logical ResourceRevision of this owner",
-        "nullableInternalRule": null
+        "counter": "logical ResourceRevision of this owner"
       }
     },
     {
@@ -1604,8 +1567,7 @@
       "expectedRevisionScope": {
         "field": "ExpectedRevision",
         "owner": "AdvisorHandoff",
-        "counter": "logical ResourceRevision of this owner",
-        "nullableInternalRule": null
+        "counter": "logical ResourceRevision of this owner"
       }
     }
   ]

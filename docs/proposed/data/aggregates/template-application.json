@@ -8,14 +8,7 @@
   "invariant": "One application pins exact published template provenance, fixed planned tenant draft identities and completion state; one pending later-version adoption proposal receives one immutable disposition before next successor.",
   "boundaryDecision": "process",
   "boundaryRationale": "All-drafts-created is technical orchestration; each draft has own lifecycle in its real owner and needs no lifetime copy in parent domain state. Pending successor/version ordering requires compact admission owner if decisions split.",
-  "sources": [
-    {
-      "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
-      "jsonPointer": "/aggregates/84",
-      "line": 52143,
-      "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
-    }
-  ],
+  "sources": [],
   "baselineSourcePath": "src/Compliance.Core/Features/MethodologyTemplates/TemplateApplication.cs",
   "baselineEvents": [
     "MethodologyTemplateApplied",
@@ -70,13 +63,9 @@
         "terminalResultType": "Unit"
       },
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/8",
-        "line": 643,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      },
-      "kind": "creation"
+      "kind": "creation",
+      "sourceOwner": "TemplateApplication",
+      "owner": "TemplateApplication"
     },
     {
       "command": "ProposeTemplateSuccessorAdoption",
@@ -135,13 +124,9 @@
         "terminalResultType": "Unit"
       },
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/97",
-        "line": 7196,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      },
-      "kind": "command"
+      "kind": "command",
+      "sourceOwner": "TemplateApplication",
+      "owner": "TemplateApplication"
     },
     {
       "command": "RecordTemplateSuccessorDisposition",
@@ -205,25 +190,15 @@
         "terminalResultType": "Unit"
       },
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/131",
-        "line": 9869,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      },
-      "kind": "command"
+      "kind": "command",
+      "sourceOwner": "TemplateApplication",
+      "owner": "TemplateApplication"
     }
   ],
   "eventAuthority": "retained_baseline_business_facts_requires_schema_reconciliation",
   "events": [
     {
       "event": "MethodologyTemplateApplied",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
-        "jsonPointer": "/aggregates/84",
-        "line": 52143,
-        "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
-      },
       "baselineContract": {
         "event": "MethodologyTemplateApplied",
         "emitters": [
@@ -268,12 +243,6 @@
     },
     {
       "event": "TemplateApplicationDraftCreated",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
-        "jsonPointer": "/aggregates/84",
-        "line": 52143,
-        "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
-      },
       "baselineContract": {
         "event": "TemplateApplicationDraftCreated",
         "emitters": [
@@ -318,12 +287,6 @@
     },
     {
       "event": "TemplateSuccessorAdoptionProposed",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
-        "jsonPointer": "/aggregates/84",
-        "line": 52143,
-        "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
-      },
       "baselineContract": {
         "event": "TemplateSuccessorAdoptionProposed",
         "emitters": [
@@ -368,12 +331,6 @@
     },
     {
       "event": "TemplateSuccessorDispositionRecorded",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
-        "jsonPointer": "/aggregates/84",
-        "line": 52143,
-        "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
-      },
       "baselineContract": {
         "event": "TemplateSuccessorDispositionRecorded",
         "emitters": [
@@ -428,34 +385,17 @@
   "selectedLogicalIdentityBindings": [
     {
       "command": "ApplyMethodologyTemplate",
-      "logicalIdentity": "ApplicationKey",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/8",
-        "line": 643,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      }
+      "logicalIdentity": "ApplicationKey"
     },
     {
       "command": "ProposeTemplateSuccessorAdoption",
-      "logicalIdentity": "CommandId",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/97",
-        "line": 7196,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      }
+      "logicalIdentity": "CommandId"
     },
     {
       "command": "RecordTemplateSuccessorDisposition",
-      "logicalIdentity": "CommandId",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/131",
-        "line": 9869,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      }
+      "logicalIdentity": "CommandId"
     }
   ],
-  "selectedReplayRule": "Current required authorization precedes replay; exact authorized retries resolve the original accepted result using the selected logical identity and immutable actor/intent/source binding. Fresh mutable feasibility, clock selection and body preparation cannot replace that original result. Expected revision is concurrency precondition, not a new identity."
+  "selectedReplayRule": "Current required authorization precedes replay; exact authorized retries resolve the original accepted result using the selected logical identity and immutable actor/intent/source binding. Fresh mutable feasibility, clock selection and body preparation cannot replace that original result. Expected revision is concurrency precondition, not a new identity.",
+  "sourceOwner": "TemplateApplication"
 }

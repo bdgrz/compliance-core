@@ -16,8 +16,7 @@
       "stage": "complete",
       "receivers": [
         "CompleteFirmStaffRegistration"
-      ],
-      "rule": null
+      ]
     }
   ],
   "abort": [

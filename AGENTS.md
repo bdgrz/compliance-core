@@ -47,13 +47,13 @@ TYPESAFE_API_KEY="$(tr -d '[:space:]' < "$HOME/.config/typesafe/jev.key")" node 
 TYPESAFE_API_KEY="$(tr -d '[:space:]' < "$HOME/.config/typesafe/jev.key")" node scripts/backlog-jev.mjs api-gap "<client API need> :: <current workaround>"
 ```
 
-Run `triage` to select and group work, `criteria` before closing an issue, and `preflight` on the proposed PR head. Treat model probabilities as review signals: verify them against issue text, recorded dependencies, decisions, code, unit tests, and CI. Record newly discovered blockers in GitHub before proceeding. Backend API gaps belong in this repository; client implementation belongs in the web or mobile repository that owns the experience. Link cross-repository issues and coordinate contract compatibility instead of combining code from multiple repositories into one PR. See `docs/product/delivery-cycle.md` for backlog queue rules.
+Run `triage` to select and group work, `criteria` before closing an issue, and `preflight` on the proposed PR head. Treat model probabilities as review signals: verify them against issue text, recorded dependencies, decisions, code, unit tests, and CI. Record newly discovered blockers in GitHub before proceeding. Backend API gaps belong in this repository; client implementation belongs in the web or mobile repository that owns the experience. Link cross-repository issues and coordinate contract compatibility instead of combining code from multiple repositories into one PR. Use the linked GitHub issue and project fields as the source of truth for backlog state.
 
 ## Aggregate Implementation Workflow
 
 Aggregate work follows the repo skills in `.agents/skills/` (also linked from `.claude/skills/`):
 
-- `aggregate-implementation-jev`: one aggregate at a time, invariant-first. Qualify identity, the named invariant, lifecycle and the keep/split/reactor decision before coding; write behavioral RED tests; make the smallest change to GREEN; review with Jev; record evidence in the aggregate's review file and `docs/product/definitive-aggregate-choreography/aggregate-backlog.md`.
+- `aggregate-implementation-jev`: one aggregate at a time, invariant-first. Qualify identity, the named invariant, lifecycle and the keep/split/reactor decision before coding; write behavioral RED tests; make the smallest change to GREEN; review with Jev; record evidence in the aggregate's review file and `docs/proposed/README.md`.
 - `aggregate-batch-workflow`: a fast, parallel multi-agent session over several independent aggregates. It needs explicit user opt-in ("batch", "fan out"). Agents implement and Jev-review without building; the coordinator then applies shared-file event changes as the single writer, builds once, tests, formats changed files, records evidence, and commits one aggregate at a time with explicit paths.
 - `jev-prioritization`: how to ask Jev for ranking or design judgment calls beyond `scripts/backlog-jev.mjs`.
 

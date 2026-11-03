@@ -118,7 +118,7 @@ ClientIndependencePreviewIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T106](../reactors/client-independence-preview-reactor.md#t106) | emitted semantic fact | ClientServiceIndependence | RecordClientIndependenceEvaluation | ClientIndependenceDecision |
+| [T106](../reactors/evaluate-client-independence-for-acceptance-reactor.md#t106) | emitted semantic fact | ClientServiceIndependence | RecordClientIndependenceEvaluation | ClientIndependenceDecision |
 
 
 

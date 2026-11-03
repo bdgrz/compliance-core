@@ -80,7 +80,7 @@ Canonical events: **7**. Complete canonical event and available schema records: 
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [X000](../reactors/application-name-change-reactor.md#x000) | physical root, logical prerequisite | DeclaredApplication | ClaimApplicationName | ApplicationNameClaim |
+| [X000](../reactors/keep-application-names-unique-reactor.md#x000) | physical root, logical prerequisite | DeclaredApplication | ClaimApplicationName | ApplicationNameClaim |
 
 ### ApplicationImportChangesBlockedAfterCancellation
 
@@ -110,7 +110,6 @@ Canonical events: **7**. Complete canonical event and available schema records: 
 | Schema discriminator | bdgrz.declared-application.application-import-effect-canceled |
 | Schema discriminatorVersion | 1 |
 | Schema owner | DeclaredApplication |
-| Schema existingContract | null (recorded) |
 | Schema status | selected target schema; implementation pending |
 | Schema reason | typed reactor receiver accepted business fact |
 | Schema changes | None listed |
@@ -175,7 +174,7 @@ ImportTargetGroupIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T018](../reactors/import-cancellation-reactor.md#t018) | emitted semantic fact | ApplicationImportBatch | BlockCanceledApplicationImportChanges | DeclaredApplication |
+| [T018](../reactors/cancel-application-import-reactor.md#t018) | emitted semantic fact | ApplicationImportBatch | BlockCanceledApplicationImportChanges | DeclaredApplication |
 
 ### ApplicationImportChangeProvisionallyApplied
 
@@ -273,7 +272,7 @@ ImportTargetGroupIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T016](../reactors/import-source-admission-reactor.md#t016) | emitted semantic fact | ApplicationImportBatch | ApplyApplicationImportChange | DeclaredApplication |
+| [T016](../reactors/apply-accepted-application-import-reactor.md#t016) | emitted semantic fact | ApplicationImportBatch | ApplyApplicationImportChange | DeclaredApplication |
 
 ### ApplicationImportTargetAuthorized
 
@@ -303,7 +302,6 @@ ImportTargetGroupIntent
 | Schema discriminator | bdgrz.declared-application.application-import-target-authorized |
 | Schema discriminatorVersion | 1 |
 | Schema owner | DeclaredApplication |
-| Schema existingContract | null (recorded) |
 | Schema status | selected target schema; implementation pending |
 | Schema reason | typed reactor receiver accepted business fact |
 | Schema changes | None listed |
@@ -368,7 +366,7 @@ ImportTargetGroupIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T015](../reactors/import-source-admission-reactor.md#t015) | emitted semantic fact | ApplicationImportBatch | ReserveApplicationImportTarget | DeclaredApplication |
+| [T015](../reactors/apply-accepted-application-import-reactor.md#t015) | emitted semantic fact | ApplicationImportBatch | ReserveApplicationImportTarget | DeclaredApplication |
 
 ### ApplicationImportTargetHoldEnded
 
@@ -398,7 +396,6 @@ ImportTargetGroupIntent
 | Schema discriminator | bdgrz.declared-application.application-import-target-settled |
 | Schema discriminatorVersion | 1 |
 | Schema owner | DeclaredApplication |
-| Schema existingContract | null (recorded) |
 | Schema status | selected target schema; implementation pending |
 | Schema reason | typed reactor receiver accepted business fact |
 | Schema changes | None listed |
@@ -463,7 +460,7 @@ ImportTargetGroupIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T021](../reactors/import-source-admission-reactor.md#t021) | emitted semantic fact | ApplicationImportBatch | ReleaseApplicationImportTarget | DeclaredApplication |
+| [T021](../reactors/apply-accepted-application-import-reactor.md#t021) | emitted semantic fact | ApplicationImportBatch | ReleaseApplicationImportTarget | DeclaredApplication |
 
 ### ApplicationRetired
 
@@ -527,8 +524,8 @@ ImportTargetGroupIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [X002](../reactors/application-name-change-reactor.md#x002) | physical root, logical prerequisite | DeclaredApplication | ReleaseApplicationName | ApplicationNameClaim |
-| [X005](../reactors/application-retirement-reactor.md#x005) | physical root, logical prerequisite | DeclaredApplication | RemoveApplicationRelationship | ApplicationRelationship |
+| [X002](../reactors/keep-application-names-unique-reactor.md#x002) | physical root, logical prerequisite | DeclaredApplication | ReleaseApplicationName | ApplicationNameClaim |
+| [X005](../reactors/remove-relationships-after-application-retirement-reactor.md#x005) | physical root, logical prerequisite | DeclaredApplication | RemoveApplicationRelationship | ApplicationRelationship |
 
 ### ApplicationRevised
 
@@ -597,9 +594,9 @@ ImportTargetGroupIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [X000](../reactors/application-name-change-reactor.md#x000) | physical root, logical prerequisite | DeclaredApplication | ClaimApplicationName | ApplicationNameClaim |
-| [X001](../reactors/application-name-change-reactor.md#x001) | emitted semantic fact | ApplicationNameClaim | ApplyApplicationNameChange | DeclaredApplication |
-| [X002](../reactors/application-name-change-reactor.md#x002) | physical root, logical prerequisite | DeclaredApplication | ReleaseApplicationName | ApplicationNameClaim |
+| [X000](../reactors/keep-application-names-unique-reactor.md#x000) | physical root, logical prerequisite | DeclaredApplication | ClaimApplicationName | ApplicationNameClaim |
+| [X001](../reactors/keep-application-names-unique-reactor.md#x001) | emitted semantic fact | ApplicationNameClaim | ApplyApplicationNameChange | DeclaredApplication |
+| [X002](../reactors/keep-application-names-unique-reactor.md#x002) | physical root, logical prerequisite | DeclaredApplication | ReleaseApplicationName | ApplicationNameClaim |
 
 
 ## Wire/schema version discrepancies

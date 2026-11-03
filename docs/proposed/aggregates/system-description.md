@@ -5,6 +5,7 @@
 - Business aggregate: `true`
 - Selected status: `SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED`
 
+
 ## Identity and invariant
 
 **Selected identity:** Tenant-scoped (tenantId, programId, descriptionId); `DescriptionId` on `CreateSystemDescriptionDraft` is the caller-supplied immutable creation identity (exact immutable creation retry) so an exact retry resolves the original result and a different id is a different record; later mutations use CommandId bound to this identity and the expected revision.
@@ -19,6 +20,10 @@
 
 **Lifecycle:** [Placeholder: a consolidated lifecycle sequence is not present in the selected owner record.]
 
+
+
+
+
 ## Commands
 
 | Command | Kind | Identity field |
@@ -28,7 +33,7 @@
 | [BindSystemDescriptionToExamination](../commands/system-description.md#bindsystemdescriptiontoexamination) | http | CommandId |
 | [CreateSystemDescriptionDraft](../commands/system-description.md#createsystemdescriptiondraft) | http | DescriptionId |
 | [ProposeSystemDescriptionSuccessor](../commands/system-description.md#proposesystemdescriptionsuccessor) | http | CommandId |
-| [RecordSystemDescriptionNoChangeDecision](../commands/system-description.md#recordsystemdescriptionnochangedecision) | http | CommandId |
+| [ConfirmSystemDescriptionUnchanged](../commands/system-description.md#confirmsystemdescriptionunchanged) | http | CommandId |
 | [ReviewSystemDescription](../commands/system-description.md#reviewsystemdescription) | http | CommandId |
 | [ReviseSystemDescriptionDraft](../commands/system-description.md#revisesystemdescriptiondraft) | http | CommandId |
 
@@ -49,8 +54,8 @@
 
 | Row | Kind | Source owner | Target owner | Command |
 | --- | --- | --- | --- | --- |
-| [S020](../reactors/system-description-decision-reactor.md#s020) | business_receiver | SystemDescription | SignificantChange | RecordSignificantChangeSystemDescriptionDecision |
-| [S021](../reactors/system-description-decision-reactor.md#s021) | business_receiver | SystemDescription | ComplianceIncident | RecordComplianceIncidentSystemDescriptionDecision |
+| [S020](../reactors/update-system-description-after-significant-change-reactor.md#s020) | business_receiver | SystemDescription | SignificantChange | RecordSignificantChangeSystemDescriptionDecision |
+| [S021](../reactors/update-system-description-after-significant-change-reactor.md#s021) | business_receiver | SystemDescription | ComplianceIncident | RecordComplianceIncidentSystemDescriptionDecision |
 
 ## Product rules
 
@@ -63,7 +68,7 @@
 ## Evidence and complete record
 
 - Baseline source: [Placeholder: source file is not present in this checkout]
-- Aggregate review: [system-description-review-2026-10-29.md](../../product/definitive-aggregate-choreography/system-description-review-2026-10-29.md)
+- Aggregate review: [Placeholder: no owner-specific review file is present]
 - Full selected record: [JSON](../data/aggregates/system-description.json)
 
 > Target definition is separate from runtime qualification. Implementation status recorded by the source: `SEPARATE_VERIFICATION_REQUIRED_IMPLEMENTATION_HALTED`.

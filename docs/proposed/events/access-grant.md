@@ -43,8 +43,8 @@ Canonical events: **2**. Complete canonical event and available schema records: 
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [S006](../reactors/retired-member-grant-reactor.md#s006) | physical root, logical prerequisite | AccessGrant | RemoveRetiredMemberAccessAndAssignments | AccessGrant |
-| [S028](../reactors/tenant-invitation-reactor.md#s028) | emitted semantic fact | TenantInvitation | ProvisionGuestProgramAccess | AccessGrant |
+| [S006](../reactors/revoke-access-after-member-retirement-reactor.md#s006) | physical root, logical prerequisite | AccessGrant | RemoveRetiredMemberAccessAndAssignments | AccessGrant |
+| [S028](../reactors/activate-membership-after-invitation-acceptance-reactor.md#s028) | emitted semantic fact | TenantInvitation | ProvisionGuestProgramAccess | AccessGrant |
 
 ### AccessGrantRevoked
 
@@ -80,8 +80,8 @@ Canonical events: **2**. Complete canonical event and available schema records: 
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [S005](../reactors/member-retirement-reactor.md#s005) | emitted semantic fact | Member | RemoveRetiredMemberAccessAndAssignments | AccessGrant |
-| [S006](../reactors/retired-member-grant-reactor.md#s006) | emitted semantic fact | AccessGrant | RemoveRetiredMemberAccessAndAssignments | AccessGrant |
+| [S005](../reactors/remove-member-assignments-and-access-after-membership-ends-reactor.md#s005) | emitted semantic fact | Member | RemoveRetiredMemberAccessAndAssignments | AccessGrant |
+| [S006](../reactors/revoke-access-after-member-retirement-reactor.md#s006) | emitted semantic fact | AccessGrant | RemoveRetiredMemberAccessAndAssignments | AccessGrant |
 
 
 

@@ -8,14 +8,7 @@
   "invariant": "Only immutable proposed deidentified record that receives independent approved review then acceptance by a third platform operator becomes shareable; tenant/source lineage stays in tenant-owned stream.",
   "boundaryDecision": "retain",
   "boundaryRationale": "These three irreversible decisions jointly authorize sharing one content capsule; separating author/review/acceptance without exact value/version gate would leak unapproved content. No retained child roster.",
-  "sources": [
-    {
-      "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
-      "jsonPointer": "/aggregates/54",
-      "line": 35121,
-      "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
-    }
-  ],
+  "sources": [],
   "baselineSourcePath": "src/Compliance.Core/Features/MethodologyTemplates/MethodologyTemplateContribution.cs",
   "baselineEvents": [
     "MethodologyTemplateContributionAccepted",
@@ -64,12 +57,6 @@
         "terminalResultType": "Unit"
       },
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/1",
-        "line": 105,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      },
       "kind": "command",
       "concurrencyGuard": {
         "rule": "process_reply_bound_by_operation",
@@ -80,7 +67,9 @@
           "process_reply": 0.79
         },
         "date": "2026-10-29"
-      }
+      },
+      "sourceOwner": "MethodologyTemplateContribution",
+      "owner": "MethodologyTemplateContribution"
     },
     {
       "command": "ProposeDeidentifiedTemplateContribution",
@@ -129,13 +118,9 @@
         "terminalResultType": "Unit"
       },
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/93",
-        "line": 6909,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      },
-      "kind": "creation"
+      "kind": "creation",
+      "sourceOwner": "MethodologyTemplateContribution",
+      "owner": "MethodologyTemplateContribution"
     },
     {
       "command": "ReviewTemplateContribution",
@@ -185,12 +170,6 @@
         "terminalResultType": "Unit"
       },
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/164",
-        "line": 12223,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      },
       "kind": "command",
       "concurrencyGuard": {
         "rule": "require_expected_revision",
@@ -201,19 +180,15 @@
           "process_reply": 0.64
         },
         "date": "2026-10-29"
-      }
+      },
+      "sourceOwner": "MethodologyTemplateContribution",
+      "owner": "MethodologyTemplateContribution"
     }
   ],
   "eventAuthority": "retained_baseline_business_facts_requires_schema_reconciliation",
   "events": [
     {
       "event": "MethodologyTemplateContributionAccepted",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
-        "jsonPointer": "/aggregates/54",
-        "line": 35121,
-        "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
-      },
       "baselineContract": {
         "event": "MethodologyTemplateContributionAccepted",
         "emitters": [
@@ -258,12 +233,6 @@
     },
     {
       "event": "MethodologyTemplateContributionProposed",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
-        "jsonPointer": "/aggregates/54",
-        "line": 35121,
-        "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
-      },
       "baselineContract": {
         "event": "MethodologyTemplateContributionProposed",
         "emitters": [
@@ -308,12 +277,6 @@
     },
     {
       "event": "MethodologyTemplateContributionReviewed",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
-        "jsonPointer": "/aggregates/54",
-        "line": 35121,
-        "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
-      },
       "baselineContract": {
         "event": "MethodologyTemplateContributionReviewed",
         "emitters": [
@@ -368,33 +331,15 @@
   "selectedLogicalIdentityBindings": [
     {
       "command": "AcceptTemplateContribution",
-      "logicalIdentity": "CommandId",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/1",
-        "line": 105,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      }
+      "logicalIdentity": "CommandId"
     },
     {
       "command": "ProposeDeidentifiedTemplateContribution",
-      "logicalIdentity": "ContributionId",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/93",
-        "line": 6909,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      }
+      "logicalIdentity": "ContributionId"
     },
     {
       "command": "ReviewTemplateContribution",
-      "logicalIdentity": "CommandId",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/164",
-        "line": 12223,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      }
+      "logicalIdentity": "CommandId"
     }
   ],
   "selectedReplayRule": "Current required authorization precedes replay; exact authorized retries resolve the original accepted result using the selected logical identity and immutable actor/intent/source binding. Fresh mutable feasibility, clock selection and body preparation cannot replace that original result. Expected revision is concurrency precondition, not a new identity.",
@@ -403,5 +348,6 @@
   "decidesCovers": [
     "D25-02"
   ],
-  "decidesAuthored": "2026-10-29"
+  "decidesAuthored": "2026-10-29",
+  "sourceOwner": "MethodologyTemplateContribution"
 }

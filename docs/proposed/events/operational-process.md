@@ -6,7 +6,7 @@ Canonical events: **4**. Complete canonical event and available schema records: 
 | --- | --- | --- | --- | --- | --- | --- |
 | OperationalProcessChangeAccepted | OperationalProcessChangeAccepted | business | bdgrz.operational-process.operational-process-change-accepted | 1 | 8 | The operational process record accepted a complete change: its normalized content and claim keys are frozen in the intent and the name-change process continues from this fact. |
 | OperationalProcessChangeCanceled | OperationalProcessChangeCanceled | business | bdgrz.operational-process.operational-process-change-canceled | 1 | 8 | The pending operational process change was canceled after a definite failure; it fences the local apply before any newly acquired claim is released. |
-| OperationalProcessRetired | OperationalProcessRetired | business | null (recorded) | null (recorded) | [Placeholder: schema absent] | An operational process was retired from the inventory; it can no longer be cited by new boundary or description content, and its governed name is released. |
+| OperationalProcessRetired | OperationalProcessRetired | business | [Placeholder: value not recorded] | [Placeholder: value not recorded] | [Placeholder: schema absent] | An operational process was retired from the inventory; it can no longer be cited by new boundary or description content, and its governed name is released. |
 | OperationalProcessRevisionRecorded | OperationalProcessRevisionRecorded | business | bdgrz.inventory.operational_process.revision_recorded | 1 | 10 | Applies one complete, attributed operational process change after its active name was claimed; revision 1 creates it. The complete normalized OperationalProcessContent is the content behind ContentContent. |
 
 ## Event details
@@ -39,7 +39,6 @@ Canonical events: **4**. Complete canonical event and available schema records: 
 | Schema discriminator | bdgrz.operational-process.operational-process-change-accepted |
 | Schema discriminatorVersion | 1 |
 | Schema owner | OperationalProcess |
-| Schema existingContract | null (recorded) |
 | Schema status | selected target schema; implementation pending |
 | Schema reason | source command accepted result |
 | Schema changes | None listed |
@@ -108,10 +107,10 @@ RecordNameChangeIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T028](../reactors/operational-process-change-accepted-reactor.md#t028) | physical root, logical prerequisite | OperationalProcess | ClaimOperationalProcessName | OperationalProcessNameClaim |
-| [T029](../reactors/operational-process-change-accepted-reactor.md#t029) | physical root | OperationalProcessNameClaim | ApplyOperationalProcessChange | OperationalProcess |
-| [T030](../reactors/operational-process-change-accepted-reactor.md#t030) | physical root | OperationalProcess | ReleaseOperationalProcessName | OperationalProcessNameClaim |
-| [A016](../reactors/unassigned-architecture-rows.md#a016) | physical root, logical prerequisite | OperationalProcess | CancelOperationalProcessChange | OperationalProcess |
+| [T028](../reactors/keep-operational-process-names-unique-reactor.md#t028) | physical root, logical prerequisite | OperationalProcess | ClaimOperationalProcessName | OperationalProcessNameClaim |
+| [T029](../reactors/keep-operational-process-names-unique-reactor.md#t029) | physical root | OperationalProcessNameClaim | ApplyOperationalProcessChange | OperationalProcess |
+| [T030](../reactors/keep-operational-process-names-unique-reactor.md#t030) | physical root | OperationalProcess | ReleaseOperationalProcessName | OperationalProcessNameClaim |
+| [A016](../reactors/unassigned-domain-choreography.md#a016) | physical root, logical prerequisite | OperationalProcess | CancelOperationalProcessChange | OperationalProcess |
 
 ### OperationalProcessChangeCanceled
 
@@ -141,7 +140,6 @@ RecordNameChangeIntent
 | Schema discriminator | bdgrz.operational-process.operational-process-change-canceled |
 | Schema discriminatorVersion | 1 |
 | Schema owner | OperationalProcess |
-| Schema existingContract | null (recorded) |
 | Schema status | selected target schema; implementation pending |
 | Schema reason | source admission contract |
 | Schema changes | None listed |
@@ -210,8 +208,8 @@ RecordNameChangeIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T030](../reactors/operational-process-change-accepted-reactor.md#t030) | logical prerequisite | OperationalProcess | ReleaseOperationalProcessName | OperationalProcessNameClaim |
-| [A016](../reactors/unassigned-architecture-rows.md#a016) | emitted semantic fact | OperationalProcess | CancelOperationalProcessChange | OperationalProcess |
+| [T030](../reactors/keep-operational-process-names-unique-reactor.md#t030) | logical prerequisite | OperationalProcess | ReleaseOperationalProcessName | OperationalProcessNameClaim |
+| [A016](../reactors/unassigned-domain-choreography.md#a016) | emitted semantic fact | OperationalProcess | CancelOperationalProcessChange | OperationalProcess |
 
 ### OperationalProcessRetired
 
@@ -223,7 +221,7 @@ RecordNameChangeIntent
 | Canonical semantic key | event:OperationalProcessRetired |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | OperationalProcessRetired |
-| Adopted wire | null (recorded) |
+| Adopted wire | [Placeholder: value not recorded] |
 | Wire qualification | Planned; no declared record yet. Today the transition is a Lifecycle value inside the generic revision fact. |
 | Schema status | planned_schema |
 | Source status | planned_no_source_type |
@@ -247,7 +245,7 @@ RecordNameChangeIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [X004](../reactors/operational-process-change-accepted-reactor.md#x004) | physical root, logical prerequisite | OperationalProcess | ReleaseOperationalProcessName | OperationalProcessNameClaim |
+| [X004](../reactors/keep-operational-process-names-unique-reactor.md#x004) | physical root, logical prerequisite | OperationalProcess | ReleaseOperationalProcessName | OperationalProcessNameClaim |
 
 ### OperationalProcessRevisionRecorded
 
@@ -357,8 +355,8 @@ RecordNameChangeIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T029](../reactors/operational-process-change-accepted-reactor.md#t029) | emitted semantic fact | OperationalProcessNameClaim | ApplyOperationalProcessChange | OperationalProcess |
-| [T030](../reactors/operational-process-change-accepted-reactor.md#t030) | logical prerequisite | OperationalProcess | ReleaseOperationalProcessName | OperationalProcessNameClaim |
+| [T029](../reactors/keep-operational-process-names-unique-reactor.md#t029) | emitted semantic fact | OperationalProcessNameClaim | ApplyOperationalProcessChange | OperationalProcess |
+| [T030](../reactors/keep-operational-process-names-unique-reactor.md#t030) | logical prerequisite | OperationalProcess | ReleaseOperationalProcessName | OperationalProcessNameClaim |
 
 
 

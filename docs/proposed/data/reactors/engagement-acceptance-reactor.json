@@ -31,7 +31,6 @@
       "currentRegisteredRootTypes": [
         "EngagementAcceptanceReactor"
       ],
-      "plannedRootRole": null,
       "processes": [
         "EngagementAcceptanceProcess"
       ],
@@ -99,7 +98,6 @@
       ],
       "canonicalTargetOwner": "ClientServiceIndependence",
       "logicalPrerequisiteRuleTemplate": "selected applicable typed variant/set; see required proof contract",
-      "prerequisiteRuleSource": "receiver guard from docs/product/audits/2026-10-23/target-reactor-contracts.json, lifted 2026-10-29",
       "recoveryContractSummary": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine."
     },
     {
@@ -129,7 +127,6 @@
       "currentRegisteredRootTypes": [
         "EngagementAcceptanceReactor"
       ],
-      "plannedRootRole": null,
       "processes": [
         "EngagementAcceptanceProcess"
       ],
@@ -196,7 +193,6 @@
       ],
       "canonicalTargetOwner": "PracticeIndependenceCommitment",
       "logicalPrerequisiteRuleTemplate": "selected applicable typed variant/set; see required proof contract",
-      "prerequisiteRuleSource": "receiver guard from docs/product/audits/2026-10-23/target-reactor-contracts.json, lifted 2026-10-29",
       "recoveryContractSummary": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine."
     },
     {
@@ -226,7 +222,6 @@
       "currentRegisteredRootTypes": [
         "EngagementAcceptanceReactor"
       ],
-      "plannedRootRole": null,
       "processes": [
         "EngagementAcceptanceProcess"
       ],
@@ -272,7 +267,6 @@
           "stageProofs": "Each required stage proof (grant, hold, review, or terminal fact) is materialised from the actual committed fact and its full immutable selection; counts, checkpoints and stage order are not accepted as proof."
         },
         "stageProofStatus": "specified",
-        "stageProofRationale": null,
         "stageProofSource": "authored 2026-10-29 from reactor and target source"
       },
       "effectIdentity": {
@@ -339,7 +333,6 @@
       "currentRegisteredRootTypes": [
         "EngagementAcceptanceReactor"
       ],
-      "plannedRootRole": null,
       "processes": [
         "EngagementAcceptanceProcess"
       ],
@@ -409,7 +402,6 @@
       ],
       "canonicalTargetOwner": "ClientServiceIndependence",
       "logicalPrerequisiteRuleTemplate": "selected applicable typed variant/set; see required proof contract",
-      "prerequisiteRuleSource": "receiver guard from docs/product/audits/2026-10-23/target-reactor-contracts.json, lifted 2026-10-29",
       "recoveryContractSummary": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine."
     },
     {
@@ -439,7 +431,6 @@
       "currentRegisteredRootTypes": [
         "EngagementAcceptanceReactor"
       ],
-      "plannedRootRole": null,
       "processes": [
         "EngagementAcceptanceProcess"
       ],
@@ -485,7 +476,6 @@
           "stageProofs": "Each required stage proof (grant, hold, review, or terminal fact) is materialised from the actual committed fact and its full immutable selection; counts, checkpoints and stage order are not accepted as proof."
         },
         "stageProofStatus": "specified",
-        "stageProofRationale": null,
         "stageProofSource": "authored 2026-10-29 from reactor and target source"
       },
       "effectIdentity": {
@@ -550,7 +540,6 @@
       "currentRegisteredRootTypes": [
         "EngagementAcceptanceReactor"
       ],
-      "plannedRootRole": null,
       "processes": [
         "EngagementAcceptanceProcess"
       ],
@@ -681,7 +670,6 @@
       "currentRegisteredRootTypes": [
         "EngagementAcceptanceReactor"
       ],
-      "plannedRootRole": null,
       "processes": [
         "EngagementAcceptanceProcess"
       ],
@@ -753,7 +741,6 @@
       ],
       "canonicalTargetOwner": "ServiceEngagementIndependence",
       "logicalPrerequisiteRuleTemplate": "selected applicable typed variant/set; see required proof contract",
-      "prerequisiteRuleSource": "receiver guard from docs/product/audits/2026-10-23/target-reactor-contracts.json, lifted 2026-10-29",
       "recoveryContractSummary": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine."
     },
     {
@@ -786,7 +773,6 @@
       "currentRegisteredRootTypes": [
         "EngagementAcceptanceReactor"
       ],
-      "plannedRootRole": null,
       "processes": [
         "EngagementAcceptanceProcess"
       ],
@@ -841,7 +827,6 @@
           "stageProofs": "Each required stage proof (grant, hold, review, or terminal fact) is materialised from the actual committed fact and its full immutable selection; counts, checkpoints and stage order are not accepted as proof."
         },
         "stageProofStatus": "specified",
-        "stageProofRationale": null,
         "stageProofSource": "authored 2026-10-29 from reactor and target source"
       },
       "effectIdentity": {
@@ -910,7 +895,6 @@
         "EngagementAcceptanceReactor",
         "EngagementPersonalDecisionReactor"
       ],
-      "plannedRootRole": null,
       "processes": [
         "EngagementAcceptanceProcess",
         "EngagementPersonalDecisionProcess"
@@ -1062,7 +1046,6 @@
         "EngagementAcceptanceReactor",
         "EngagementPersonalDecisionReactor"
       ],
-      "plannedRootRole": null,
       "processes": [
         "EngagementAcceptanceProcess",
         "EngagementPersonalDecisionProcess"
@@ -1201,7 +1184,6 @@
         "EngagementAcceptanceReactor",
         "EngagementPersonalDecisionReactor"
       ],
-      "plannedRootRole": null,
       "processes": [
         "EngagementAcceptanceProcess",
         "EngagementPersonalDecisionProcess"
@@ -1344,7 +1326,6 @@
         "EngagementAcceptanceReactor",
         "EngagementPersonalDecisionReactor"
       ],
-      "plannedRootRole": null,
       "processes": [
         "EngagementAcceptanceProcess",
         "EngagementPersonalDecisionProcess"
@@ -1483,7 +1464,6 @@
         "EngagementAcceptanceReactor",
         "EngagementPersonalDecisionReactor"
       ],
-      "plannedRootRole": null,
       "processes": [
         "EngagementAcceptanceProcess",
         "EngagementPersonalDecisionProcess"
@@ -1617,7 +1597,6 @@
         "EngagementAcceptanceReactor",
         "EngagementPersonalDecisionReactor"
       ],
-      "plannedRootRole": null,
       "processes": [
         "EngagementAcceptanceProcess",
         "EngagementPersonalDecisionProcess"
@@ -1756,7 +1735,6 @@
         "EngagementAcceptanceReactor",
         "EngagementPersonalDecisionReactor"
       ],
-      "plannedRootRole": null,
       "processes": [
         "EngagementAcceptanceProcess",
         "EngagementPersonalDecisionProcess"
@@ -1890,7 +1868,6 @@
         "EngagementAcceptanceReactor",
         "EngagementPersonalDecisionReactor"
       ],
-      "plannedRootRole": null,
       "processes": [
         "EngagementAcceptanceProcess",
         "EngagementPersonalDecisionProcess"

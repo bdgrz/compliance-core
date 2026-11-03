@@ -149,7 +149,6 @@ ClosureIntent
 | Schema discriminator | bdgrz.access-review-campaign.access-review-campaign-completion-accepted |
 | Schema discriminatorVersion | 1 |
 | Schema owner | AccessReviewCampaign |
-| Schema existingContract | null (recorded) |
 | Schema status | selected target schema; implementation pending |
 | Schema reason | source command accepted result |
 | Schema changes | None listed |
@@ -219,7 +218,7 @@ ClosureIntent
 | [T059](../reactors/access-review-completion-reactor.md#t059) | physical root, logical prerequisite | AccessReviewCampaign | AuthorizeAccessReviewItemCampaignCompletion | AccessReviewItem |
 | [T060](../reactors/access-review-completion-reactor.md#t060) | physical root | AccessReviewCampaign | CloseAccessReviewItemCampaignCompletionAuthorization | AccessReviewItem |
 | [T073](../reactors/access-review-completion-reactor.md#t073) | physical root, logical prerequisite | AccessReviewCampaign | CompleteAccessReviewCampaignClosure | AccessReviewCampaign |
-| [A006](../reactors/unassigned-architecture-rows.md#a006) | physical root, logical prerequisite | AccessReviewCampaign | AbortAccessReviewCampaignCompletion | AccessReviewCampaign |
+| [A006](../reactors/unassigned-domain-choreography.md#a006) | physical root, logical prerequisite | AccessReviewCampaign | AbortAccessReviewCampaignCompletion | AccessReviewCampaign |
 
 ### AccessReviewCampaignCompletionCanceled
 
@@ -249,7 +248,6 @@ ClosureIntent
 | Schema discriminator | bdgrz.access-review-campaign.access-review-campaign-completion-canceled |
 | Schema discriminatorVersion | 1 |
 | Schema owner | AccessReviewCampaign |
-| Schema existingContract | null (recorded) |
 | Schema status | selected target schema; implementation pending |
 | Schema reason | source admission contract |
 | Schema changes | None listed |
@@ -317,7 +315,7 @@ ClosureIntent
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
 | [T060](../reactors/access-review-completion-reactor.md#t060) | physical root, logical prerequisite | AccessReviewCampaign | CloseAccessReviewItemCampaignCompletionAuthorization | AccessReviewItem |
-| [A006](../reactors/unassigned-architecture-rows.md#a006) | emitted semantic fact | AccessReviewCampaign | AbortAccessReviewCampaignCompletion | AccessReviewCampaign |
+| [A006](../reactors/unassigned-domain-choreography.md#a006) | emitted semantic fact | AccessReviewCampaign | AbortAccessReviewCampaignCompletion | AccessReviewCampaign |
 
 ### AccessReviewCampaignLaunched
 
@@ -403,7 +401,7 @@ ClosureIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T008](../reactors/access-review-launch-fan-out-reactor.md#t008) | physical root, logical prerequisite | AccessReviewCampaign | OpenAccessReviewItem | AccessReviewItem |
+| [T008](../reactors/open-access-review-work-reactor.md#t008) | physical root, logical prerequisite | AccessReviewCampaign | OpenAccessReviewItem | AccessReviewItem |
 
 ### AccessReviewDecisionBatchAdmitted
 
@@ -433,7 +431,6 @@ ClosureIntent
 | Schema discriminator | bdgrz.access-review-campaign.access-review-decision-batch-admitted |
 | Schema discriminatorVersion | 1 |
 | Schema owner | AccessReviewCampaign |
-| Schema existingContract | null (recorded) |
 | Schema status | selected target schema; implementation pending |
 | Schema reason | source command accepted result |
 | Schema changes | None listed |
@@ -502,12 +499,12 @@ BulkAccessDecisionIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T009](../reactors/access-review-bulk-admission-reactor.md#t009) | physical root | AccessReviewDecisionBatch | ReserveAccessReviewItemDecision | AccessReviewItem |
-| [T010](../reactors/access-review-bulk-admission-reactor.md#t010) | physical root | AccessReviewDecisionBatch | ApplyAccessReviewItemDecision | AccessReviewItem |
-| [T011](../reactors/access-review-bulk-admission-reactor.md#t011) | physical root | AccessReviewDecisionBatch | PublishAccessReviewDecisionBatch | AccessReviewDecisionBatch |
-| [T080](../reactors/access-review-bulk-admission-reactor.md#t080) | physical root | AccessReviewDecisionBatch | CloseAccessReviewItemDecisionAuthorization | AccessReviewItem |
-| [T086](../reactors/access-review-bulk-admission-reactor.md#t086) | physical root, logical prerequisite | AccessReviewCampaign | RecordAccessReviewDecisionBatch | AccessReviewDecisionBatch |
-| [A005](../reactors/unassigned-architecture-rows.md#a005) | physical root, logical prerequisite | AccessReviewCampaign | CancelAccessReviewDecisionBatch | AccessReviewDecisionBatch |
+| [T009](../reactors/publish-approved-access-review-decision-reactor.md#t009) | physical root | AccessReviewDecisionBatch | ReserveAccessReviewItemDecision | AccessReviewItem |
+| [T010](../reactors/publish-approved-access-review-decision-reactor.md#t010) | physical root | AccessReviewDecisionBatch | ApplyAccessReviewItemDecision | AccessReviewItem |
+| [T011](../reactors/publish-approved-access-review-decision-reactor.md#t011) | physical root | AccessReviewDecisionBatch | PublishAccessReviewDecisionBatch | AccessReviewDecisionBatch |
+| [T080](../reactors/publish-approved-access-review-decision-reactor.md#t080) | physical root | AccessReviewDecisionBatch | CloseAccessReviewItemDecisionAuthorization | AccessReviewItem |
+| [T086](../reactors/publish-approved-access-review-decision-reactor.md#t086) | physical root, logical prerequisite | AccessReviewCampaign | RecordAccessReviewDecisionBatch | AccessReviewDecisionBatch |
+| [A005](../reactors/unassigned-domain-choreography.md#a005) | physical root, logical prerequisite | AccessReviewCampaign | CancelAccessReviewDecisionBatch | AccessReviewDecisionBatch |
 
 
 ## Wire/schema version discrepancies

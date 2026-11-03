@@ -8,14 +8,7 @@
   "invariant": "Connection enables only with successful test of current credential epoch; rotation invalidates pending/old result; disabled connection stays terminal.",
   "boundaryDecision": "narrow",
   "boundaryRationale": "Credential epoch and activation decision must remain authoritative together. Test attempt lifecycle/history can be separate via explicit admission/epoch proof.",
-  "sources": [
-    {
-      "path": "docs/product/audits/2026-10-23/aggregate-contract-catalog.json",
-      "jsonPointer": "/aggregates/86",
-      "line": 53842,
-      "sha256": "9bcc52523c0043ee6c8d6d3df82b6e23f895317b4c256341647f7a3c0c8ca304"
-    }
-  ],
+  "sources": [],
   "baselineSourcePath": "src/Compliance.Core/Features/UserIdentities/TenantIdentityProvider.cs",
   "baselineEvents": [
     "TenantIdentityProviderConfigured",
@@ -92,13 +85,9 @@
           "authorizationPolicy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/40",
-        "line": 3158,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      },
-      "kind": "http"
+      "kind": "http",
+      "sourceOwner": "TenantIdentityProvider",
+      "owner": "TenantIdentityProvider"
     },
     {
       "command": "DisableTenantIdentityProvider",
@@ -148,13 +137,9 @@
           "authorizationPolicy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/67",
-        "line": 5045,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      },
-      "kind": "http"
+      "kind": "http",
+      "sourceOwner": "TenantIdentityProvider",
+      "owner": "TenantIdentityProvider"
     },
     {
       "command": "RecordTenantIdentityProviderTestResult",
@@ -208,13 +193,9 @@
         "terminalResultType": "Unit"
       },
       "http": [],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/132",
-        "line": 9955,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      },
-      "kind": "command"
+      "kind": "command",
+      "sourceOwner": "TenantIdentityProvider",
+      "owner": "TenantIdentityProvider"
     },
     {
       "command": "RotateTenantIdentityProviderCredentials",
@@ -269,13 +250,9 @@
           "authorizationPolicy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/190",
-        "line": 14298,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      },
-      "kind": "http"
+      "kind": "http",
+      "sourceOwner": "TenantIdentityProvider",
+      "owner": "TenantIdentityProvider"
     },
     {
       "command": "TestTenantIdentityProvider",
@@ -320,13 +297,9 @@
           "authorizationPolicy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/199",
-        "line": 14910,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      },
-      "kind": "http"
+      "kind": "http",
+      "sourceOwner": "TenantIdentityProvider",
+      "owner": "TenantIdentityProvider"
     }
   ],
   "eventAuthority": "selected_final_event_catalog",
@@ -334,57 +307,27 @@
     {
       "event": "TenantIdentityProviderConfigured",
       "discriminator": "bdgrz.useridentities.tenant-identity-provider-configured",
-      "discriminatorVersion": 2,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/290",
-        "line": 39477,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 2
     },
     {
       "event": "TenantIdentityProviderCredentialsRotated",
       "discriminator": "bdgrz.useridentities.tenant-identity-provider-credentials-rotated",
-      "discriminatorVersion": 2,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/291",
-        "line": 39553,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 2
     },
     {
       "event": "TenantIdentityProviderTestRequested",
       "discriminator": "bdgrz.user-identities.tenant-identity-provider-test-requested",
-      "discriminatorVersion": 1,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/292",
-        "line": 39624,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 1
     },
     {
       "event": "TenantIdentityProviderTested",
       "discriminator": "bdgrz.useridentities.tenant-identity-provider-tested",
-      "discriminatorVersion": 3,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/293",
-        "line": 39690,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 3
     },
     {
       "event": "TenantIdentityProviderDisabled",
       "discriminator": "bdgrz.useridentities.tenant-identity-provider-disabled",
-      "discriminatorVersion": 2,
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-event-contracts.json",
-        "jsonPointer": "/events/294",
-        "line": 39756,
-        "sha256": "fa311a2cc28c03498b62a797c9587c8eb42f6c61847ffcbebb4384bba04c0d6f"
-      }
+      "discriminatorVersion": 2
     }
   ],
   "choreography": [],
@@ -398,54 +341,25 @@
   "selectedLogicalIdentityBindings": [
     {
       "command": "ConfigureTenantIdentityProvider",
-      "logicalIdentity": "CommandId",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/40",
-        "line": 3158,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      }
+      "logicalIdentity": "CommandId"
     },
     {
       "command": "DisableTenantIdentityProvider",
-      "logicalIdentity": "CommandId",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/67",
-        "line": 5045,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      }
+      "logicalIdentity": "CommandId"
     },
     {
       "command": "RecordTenantIdentityProviderTestResult",
-      "logicalIdentity": "CommandId",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/132",
-        "line": 9955,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      }
+      "logicalIdentity": "CommandId"
     },
     {
       "command": "RotateTenantIdentityProviderCredentials",
-      "logicalIdentity": "CommandId",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/190",
-        "line": 14298,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      }
+      "logicalIdentity": "CommandId"
     },
     {
       "command": "TestTenantIdentityProvider",
-      "logicalIdentity": "TestKey",
-      "source": {
-        "path": "docs/product/audits/2026-10-23/remaining-command-identities.json",
-        "jsonPointer": "/contracts/199",
-        "line": 14910,
-        "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      }
+      "logicalIdentity": "TestKey"
     }
   ],
-  "selectedReplayRule": "Current required authorization precedes replay; exact authorized retries resolve the original accepted result using the selected logical identity and immutable actor/intent/source binding. Fresh mutable feasibility, clock selection and body preparation cannot replace that original result. Expected revision is concurrency precondition, not a new identity."
+  "selectedReplayRule": "Current required authorization precedes replay; exact authorized retries resolve the original accepted result using the selected logical identity and immutable actor/intent/source binding. Fresh mutable feasibility, clock selection and body preparation cannot replace that original result. Expected revision is concurrency precondition, not a new identity.",
+  "sourceOwner": "TenantIdentityProvider"
 }

@@ -51,17 +51,12 @@
       "http": [
         {
           "method": "PUT",
-          "path": "/api/v1/tenants/{tenant_id}/applications/{application_id}/relationships/{relationship_id}",
-          "policy": null
+          "path": "/api/v1/tenants/{tenant_id}/applications/{application_id}/relationships/{relationship_id}"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/6",
-        "line": 674,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
       "kind": "http",
+      "sourceOwner": "ApplicationRelationship",
+      "owner": "ApplicationRelationship",
       "sourceName": "AddApplicationRelationship",
       "targetName": "AddApplicationRelationship"
     },
@@ -129,13 +124,9 @@
           "policy": "ComplianceAuthorizationPolicies.ApiUser"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/15",
-        "line": 1778,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
       "kind": "http",
+      "sourceOwner": "ApplicationRelationship",
+      "owner": "ApplicationRelationship",
       "sourceName": "ApproveApplicationSuccessor",
       "targetName": "ApproveApplicationSuccessor"
     },
@@ -193,13 +184,9 @@
           "authorizationPolicy": "existing application management authorization"
         }
       ],
-      "source": {
-        "path": "docs/product/audits/2026-10-23/target-command-contracts.json",
-        "jsonPointer": "/commands/116",
-        "line": 13494,
-        "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
-      },
       "kind": "http",
+      "sourceOwner": "ApplicationRelationship",
+      "owner": "ApplicationRelationship",
       "sourceName": "RemoveApplicationRelationship",
       "targetName": "RemoveApplicationRelationship"
     }
@@ -263,8 +250,7 @@
       "http": [
         {
           "method": "PUT",
-          "path": "/api/v1/tenants/{tenant_id}/applications/{application_id}/relationships/{relationship_id}",
-          "policy": null
+          "path": "/api/v1/tenants/{tenant_id}/applications/{application_id}/relationships/{relationship_id}"
         }
       ],
       "mcp": false,
@@ -314,8 +300,7 @@
       "expectedRevisionScope": {
         "field": "ExpectedRevision",
         "owner": "ApplicationRelationship",
-        "counter": "logical ResourceRevision of this owner",
-        "nullableInternalRule": null
+        "counter": "logical ResourceRevision of this owner"
       }
     },
     {
@@ -437,8 +422,7 @@
       "expectedRevisionScope": {
         "field": "ExpectedRevision",
         "owner": "ApplicationRelationship",
-        "counter": "logical ResourceRevision of this owner",
-        "nullableInternalRule": null
+        "counter": "logical ResourceRevision of this owner"
       }
     },
     {
@@ -551,8 +535,7 @@
       "expectedRevisionScope": {
         "field": "ExpectedRevision",
         "owner": "ApplicationRelationship",
-        "counter": "logical ResourceRevision of this owner",
-        "nullableInternalRule": null
+        "counter": "logical ResourceRevision of this owner"
       }
     }
   ]

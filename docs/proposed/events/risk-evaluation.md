@@ -44,7 +44,7 @@ Canonical events: **3**. Complete canonical event and available schema records: 
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [X009](../reactors/risk-evaluation-reactor.md#x009) | physical root, logical prerequisite | RiskEvaluation | RecordRiskReassessmentObligation | RiskGovernance |
+| [X009](../reactors/request-risk-reassessment-when-risk-changes-reactor.md#x009) | physical root, logical prerequisite | RiskEvaluation | RequireRiskReassessment | RiskGovernance |
 
 ### RiskAssessmentRecorded
 
@@ -80,7 +80,7 @@ Canonical events: **3**. Complete canonical event and available schema records: 
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [X009](../reactors/risk-evaluation-reactor.md#x009) | physical root, logical prerequisite | RiskEvaluation | RecordRiskReassessmentObligation | RiskGovernance |
+| [X009](../reactors/request-risk-reassessment-when-risk-changes-reactor.md#x009) | physical root, logical prerequisite | RiskEvaluation | RequireRiskReassessment | RiskGovernance |
 
 ### RiskTreatmentChosen
 

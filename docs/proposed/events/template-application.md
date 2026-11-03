@@ -7,7 +7,7 @@ Canonical events: **4**. Complete canonical event and available schema records: 
 | MethodologyTemplateApplied | MethodologyTemplateApplied | business | bdgrz.methodologytemplates.methodology-template-applied | 3 | [Placeholder: schema absent] | A methodology template was applied to a program by a named member, recording the template version and content the program now follows. |
 | TemplateApplicationDraftCreated | TemplateApplicationDraftCreated | business | bdgrz.methodologytemplates.template-application-draft-created | 1 | [Placeholder: schema absent] | Records an owning-workflow record creation receipt that remains a draft. |
 | TemplateSuccessorAdoptionProposed | TemplateSuccessorAdoptionProposed | business | bdgrz.methodologytemplates.template-successor-adoption-proposed | 3 | [Placeholder: schema absent] | Adoption of a newer successor of an applied methodology template was proposed for a program by a named member, awaiting a disposition. |
-| TemplateSuccessorDispositionRecorded | TemplateSuccessorDispositionRecorded | business | bdgrz.methodologytemplates.template-successor-disposition-recorded | 3 | [Placeholder: schema absent] | A decision on a proposed adoption of a methodology template successor was recorded for a program by a named member. |
+| TemplateUpdateDecisionRecorded | TemplateSuccessorDispositionRecorded | business | bdgrz.methodologytemplates.template-successor-disposition-recorded | 3 | [Placeholder: schema absent] | A named program member recorded whether the application would adopt the proposed new template version. |
 
 ## Event details
 
@@ -113,13 +113,13 @@ Canonical events: **4**. Complete canonical event and available schema records: 
 
 [Placeholder: no selected choreography row names this event as root, prerequisite, or emitted fact.]
 
-### TemplateSuccessorDispositionRecorded
+### TemplateUpdateDecisionRecorded
 
 | Canonical event detail | Value |
 | --- | --- |
-| Target event name | TemplateSuccessorDispositionRecorded |
+| Target event name | TemplateUpdateDecisionRecorded |
 | Selected source event name | TemplateSuccessorDispositionRecorded |
-| Name decision | The selected source name is retained. |
+| Name decision | Names the recorded decision about whether this application adopts the proposed new template version. |
 | Canonical semantic key | event:TemplateSuccessorDispositionRecorded |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | TemplateSuccessorDispositionRecorded |
@@ -129,7 +129,7 @@ Canonical events: **4**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Target meaning | A decision on a proposed adoption of a methodology template successor was recorded for a program by a named member. |
+| Target meaning | A named program member recorded whether the application would adopt the proposed new template version. |
 | Selected source meaning | A decision on a proposed adoption of a methodology template successor was recorded for a program by a named member. |
 | Meaning source | authored 2026-10-29 from src/Compliance.Common/Features/MethodologyTemplates/Events/TemplateSuccessorDispositionRecorded.cs |
 

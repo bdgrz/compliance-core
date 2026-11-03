@@ -170,7 +170,6 @@ Canonical events: **7**. Complete canonical event and available schema records: 
 | Schema discriminator | bdgrz.risk-treatment-action.risk-treatment-action-completion-review-accepted |
 | Schema discriminatorVersion | 1 |
 | Schema owner | RiskTreatmentAction |
-| Schema existingContract | null (recorded) |
 | Schema status | selected target schema; implementation pending |
 | Schema reason | source command accepted result |
 | Schema changes | None listed |
@@ -236,7 +235,7 @@ RiskActionCompletionReviewIntent
 | [T071](../reactors/risk-action-completion-review-reactor.md#t071) | physical root, logical prerequisite | RiskTreatmentAction | AuthorizeEvidenceRequestActionCompletion | EvidenceRequest |
 | [T072](../reactors/risk-action-completion-review-reactor.md#t072) | physical root | RiskTreatmentAction | CloseEvidenceRequestActionCompletionAuthorization | EvidenceRequest |
 | [T078](../reactors/risk-action-completion-review-reactor.md#t078) | physical root, logical prerequisite | RiskTreatmentAction | CompleteRiskTreatmentActionReview | RiskTreatmentAction |
-| [A012](../reactors/unassigned-architecture-rows.md#a012) | physical root, logical prerequisite | RiskTreatmentAction | AbortRiskTreatmentActionReview | RiskTreatmentAction |
+| [A012](../reactors/unassigned-domain-choreography.md#a012) | physical root, logical prerequisite | RiskTreatmentAction | AbortRiskTreatmentActionReview | RiskTreatmentAction |
 
 ### RiskTreatmentActionCompletionReviewCanceled
 
@@ -266,7 +265,6 @@ RiskActionCompletionReviewIntent
 | Schema discriminator | bdgrz.risk-treatment-action.risk-treatment-action-completion-review-canceled |
 | Schema discriminatorVersion | 1 |
 | Schema owner | RiskTreatmentAction |
-| Schema existingContract | null (recorded) |
 | Schema status | selected target schema; implementation pending |
 | Schema reason | source admission contract |
 | Schema changes | None listed |
@@ -330,7 +328,7 @@ RiskActionCompletionReviewIntent
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
 | [T072](../reactors/risk-action-completion-review-reactor.md#t072) | logical prerequisite | RiskTreatmentAction | CloseEvidenceRequestActionCompletionAuthorization | EvidenceRequest |
-| [A012](../reactors/unassigned-architecture-rows.md#a012) | emitted semantic fact | RiskTreatmentAction | AbortRiskTreatmentActionReview | RiskTreatmentAction |
+| [A012](../reactors/unassigned-domain-choreography.md#a012) | emitted semantic fact | RiskTreatmentAction | AbortRiskTreatmentActionReview | RiskTreatmentAction |
 
 ### RiskTreatmentActionCompletionReviewed
 

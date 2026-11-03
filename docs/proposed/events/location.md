@@ -38,7 +38,6 @@ Canonical events: **3**. Complete canonical event and available schema records: 
 | Schema discriminator | bdgrz.location.location-change-accepted |
 | Schema discriminatorVersion | 1 |
 | Schema owner | Location |
-| Schema existingContract | null (recorded) |
 | Schema status | selected target schema; implementation pending |
 | Schema reason | source command accepted result |
 | Schema changes | None listed |
@@ -107,10 +106,10 @@ RecordNameChangeIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T025](../reactors/location-change-accepted-reactor.md#t025) | physical root, logical prerequisite | Location | ClaimLocationName | LocationNameClaim |
-| [T026](../reactors/location-change-accepted-reactor.md#t026) | physical root | LocationNameClaim | ApplyLocationChange | Location |
-| [T027](../reactors/location-change-accepted-reactor.md#t027) | physical root | Location | ReleaseLocationName | LocationNameClaim |
-| [A015](../reactors/unassigned-architecture-rows.md#a015) | physical root, logical prerequisite | Location | CancelLocationChange | Location |
+| [T025](../reactors/keep-location-names-unique-reactor.md#t025) | physical root, logical prerequisite | Location | ClaimLocationName | LocationNameClaim |
+| [T026](../reactors/keep-location-names-unique-reactor.md#t026) | physical root | LocationNameClaim | ApplyLocationChange | Location |
+| [T027](../reactors/keep-location-names-unique-reactor.md#t027) | physical root | Location | ReleaseLocationName | LocationNameClaim |
+| [A015](../reactors/unassigned-domain-choreography.md#a015) | physical root, logical prerequisite | Location | CancelLocationChange | Location |
 
 ### LocationChangeCanceled
 
@@ -140,7 +139,6 @@ RecordNameChangeIntent
 | Schema discriminator | bdgrz.location.location-change-canceled |
 | Schema discriminatorVersion | 1 |
 | Schema owner | Location |
-| Schema existingContract | null (recorded) |
 | Schema status | selected target schema; implementation pending |
 | Schema reason | source admission contract |
 | Schema changes | None listed |
@@ -209,8 +207,8 @@ RecordNameChangeIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T027](../reactors/location-change-accepted-reactor.md#t027) | logical prerequisite | Location | ReleaseLocationName | LocationNameClaim |
-| [A015](../reactors/unassigned-architecture-rows.md#a015) | emitted semantic fact | Location | CancelLocationChange | Location |
+| [T027](../reactors/keep-location-names-unique-reactor.md#t027) | logical prerequisite | Location | ReleaseLocationName | LocationNameClaim |
+| [A015](../reactors/unassigned-domain-choreography.md#a015) | emitted semantic fact | Location | CancelLocationChange | Location |
 
 ### LocationRevisionRecorded
 
@@ -320,8 +318,8 @@ RecordNameChangeIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T026](../reactors/location-change-accepted-reactor.md#t026) | emitted semantic fact | LocationNameClaim | ApplyLocationChange | Location |
-| [T027](../reactors/location-change-accepted-reactor.md#t027) | logical prerequisite | Location | ReleaseLocationName | LocationNameClaim |
+| [T026](../reactors/keep-location-names-unique-reactor.md#t026) | emitted semantic fact | LocationNameClaim | ApplyLocationChange | Location |
+| [T027](../reactors/keep-location-names-unique-reactor.md#t027) | logical prerequisite | Location | ReleaseLocationName | LocationNameClaim |
 
 
 
