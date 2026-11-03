@@ -38,31 +38,64 @@ significant change or incident touches what it says (M0-D17, M0-D21).
 **Identity:** `TenantId` + `ProgramId`.
 
 **Invariant:** one program has one line of approved description versions and at
-most one draft. A draft becomes a version only when every section has content,
-every citation names an existing record version in the program, and a Compliance
-Lead who authored no revision of the draft approves it
-([CV-06](conventions.md#guards-and-reviews)). Versions never change.
+most one open draft. The line starts each draft, so a second draft can never
+open, and it records a version only from its open draft's approval. Versions
+never change.
+
+- The line grows by a few events per drafting cycle; each draft's revisions and
+  reviews live in its own `SystemDescriptionDraft` stream
+  ([CV-13](conventions.md#stream-growth), SD-04).
 
 ```mermaid
 stateDiagram-v2
     [*] --> no_draft
     no_draft --> drafting: StartSystemDescriptionDraft
-    drafting --> drafting: ReviseSystemDescriptionDraft / ReviewSystemDescriptionDraft (return)
-    drafting --> no_draft: ReviewSystemDescriptionDraft (approve) / DiscardSystemDescriptionDraft
+    drafting --> no_draft: RecordSystemDescriptionVersion / CloseSystemDescriptionDraft
 ```
 
 | Command | Who | Accepts when | Emits |
 | --- | --- | --- | --- |
 | StartSystemDescriptionDraft | Compliance Lead or Contributor | Program active; no open draft; starts from the current version (or empty for the first) | SystemDescriptionDraftStarted |
-| ReviseSystemDescriptionDraft | Compliance Lead or Contributor | Draft open; names the current draft revision | SystemDescriptionDraftRevised |
-| ReviewSystemDescriptionDraft | Compliance Lead who authored no revision, or covered by a waiver | Draft open; reviews the current revision; approval rules above hold | SystemDescriptionVersionApproved or SystemDescriptionDraftReturned |
-| DiscardSystemDescriptionDraft | Compliance Lead | Draft open; reason given | SystemDescriptionDraftDiscarded |
+| RecordSystemDescriptionVersion | Reactor on SystemDescriptionDraftApproved | The draft is the open one; a repeat is a no-op | SystemDescriptionVersionApproved |
+| CloseSystemDescriptionDraft | Reactor on SystemDescriptionDraftDiscarded | The draft is the open one; a repeat is a no-op | SystemDescriptionDraftClosed |
 
 | Event | Carries |
 | --- | --- |
 | SystemDescriptionDraftStarted | tenant, program, draft, based on version, started by |
+| SystemDescriptionVersionApproved | tenant, program, version, draft, draft revision, as-of date, sections with content hash and citations, sections changed from the previous version, reviewer, waiver (if any) |
+| SystemDescriptionDraftClosed | tenant, program, draft, reason |
+
+### SystemDescriptionDraft
+
+**Identity:** `TenantId` + `ProgramId` + `DraftId`, opened only by the line's
+`SystemDescriptionDraftStarted`.
+
+**Invariant:** one draft is approved only when every section has content, every
+citation names an existing record version in the program, and a Compliance Lead
+who authored no revision of it approves it
+([CV-06](conventions.md#guards-and-reviews)). An approved or discarded draft
+accepts nothing further.
+
+```mermaid
+stateDiagram-v2
+    [*] --> open: OpenSystemDescriptionDraft
+    open --> open: ReviseSystemDescriptionDraft / ReviewSystemDescriptionDraft (return)
+    open --> approved: ReviewSystemDescriptionDraft (approve)
+    open --> discarded: DiscardSystemDescriptionDraft
+```
+
+| Command | Who | Accepts when | Emits |
+| --- | --- | --- | --- |
+| OpenSystemDescriptionDraft | Reactor on SystemDescriptionDraftStarted | New; a repeat is a no-op; copies the based-on version's sections | SystemDescriptionDraftOpened |
+| ReviseSystemDescriptionDraft | Compliance Lead or Contributor | Open; names the current revision | SystemDescriptionDraftRevised |
+| ReviewSystemDescriptionDraft | Compliance Lead who authored no revision, or covered by a waiver | Open; reviews the current revision; approval rules above hold | SystemDescriptionDraftApproved or SystemDescriptionDraftReturned |
+| DiscardSystemDescriptionDraft | Compliance Lead | Open; reason given | SystemDescriptionDraftDiscarded |
+
+| Event | Carries |
+| --- | --- |
+| SystemDescriptionDraftOpened | tenant, program, draft, based on version |
 | SystemDescriptionDraftRevised | tenant, program, draft, revision, changed sections with content and citations, as-of date, revised by |
-| SystemDescriptionVersionApproved | tenant, program, version, draft revision, as-of date, sections with content hash and citations, sections changed from the previous version, reviewer, waiver (if any) |
+| SystemDescriptionDraftApproved | tenant, program, draft, revision, as-of date, sections with content hash and citations, reviewer, waiver (if any) |
 | SystemDescriptionDraftReturned | tenant, program, draft, revision, comments, reviewer |
 | SystemDescriptionDraftDiscarded | tenant, program, draft, reason, discarded by |
 
@@ -112,9 +145,12 @@ Diagrams follow [CV-01](conventions.md#flow-diagrams).
 ```mermaid
 flowchart LR
     C1[/StartSystemDescriptionDraft/] --> E1([SystemDescriptionDraftStarted])
-    E1 -. checks .-> C2[/ReviseSystemDescriptionDraft/] --> E2([SystemDescriptionDraftRevised])
+    E1 --> R1{{"Open the draft (ID from the start)"}} --> C5[/OpenSystemDescriptionDraft/] --> E5([SystemDescriptionDraftOpened])
+    E5 -. checks .-> C2[/ReviseSystemDescriptionDraft/] --> E2([SystemDescriptionDraftRevised])
     X1[[Cited records: versions exist in the program]] -. checks .-> C3
-    E2 -. "reviewer authored none" .-> C3[/ReviewSystemDescriptionDraft/] --> E3([SystemDescriptionVersionApproved])
+    E2 -. "reviewer authored none" .-> C3[/ReviewSystemDescriptionDraft/] --> E4([SystemDescriptionDraftApproved])
+    E4 --> R2{{Record the version}} --> C4[/RecordSystemDescriptionVersion/] --> E3([SystemDescriptionVersionApproved])
+    C6[/DiscardSystemDescriptionDraft/] --> E6([SystemDescriptionDraftDiscarded]) --> R3{{Close the draft}} --> C7[/CloseSystemDescriptionDraft/] --> E7([SystemDescriptionDraftClosed])
 ```
 
 ### Section reviews
@@ -145,6 +181,7 @@ Cases required by [CV-12](conventions.md#guards-and-reviews).
 | A version is approved before a section review opens | The review stays open; only a version approved after it opened, or a no-change rationale, resolves it |
 | A section review opens while period close is being approved | Close relied on the reviews it saw; a review dated in the period that opens later is a late significant item in Examinations |
 | `SystemDescriptionVersionApproved` delivered twice | Resolving an already resolved review is a no-op |
+| `SystemDescriptionDraftApproved` delivered twice | `RecordSystemDescriptionVersion` repeat is a no-op; one draft gives one version |
 
 ## Decisions
 
@@ -156,6 +193,7 @@ Anything in between is settled by common sense, with the reasoning stated.
 | SD-01 | Approving a version resolves only the reviews of sections whose content changed; an unchanged flagged section needs an explicit no-change decision. | 0.55. Common sense: each flagged section then gets a deliberate look, which is what M0-D21 asks for. |
 | SD-02 | A no-change decision is made by someone other than the item's assessor. | 0.70. Common sense: the assessor already judged the item; a second person judges the description. |
 | SD-03 | Section reviews are their own small records, not part of the description. | One record for draft, versions and flags: 0.59. Common sense: small independent aggregates; a review is opened and resolved independently of drafting. |
+| SD-04 | The program's description is a version line that starts each draft and records each version; every draft's revisions and reviews live in a per-draft stream. | 0.85 ([CV-13](conventions.md#stream-growth)). One open draft enforced by the line: 0.46; common sense: the line decides each start in its own stream. |
 
 ## Open questions
 
@@ -165,7 +203,7 @@ None at this time.
 
 | Old owner | Becomes |
 | --- | --- |
-| SystemDescription | SystemDescription and SectionReview |
+| SystemDescription | SystemDescription (version line), SystemDescriptionDraft (SD-04) and SectionReview |
 | `BindSystemDescriptionSources` | Citations on each section of the draft |
 | `BindSystemDescriptionToExamination` | Removed: the examination's package names the approved version (Auditor collaboration) |
 | `ConfirmSystemDescriptionUnchanged`, SystemDescriptionDecisionReactor | `RecordSectionNoChange` |

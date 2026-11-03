@@ -123,7 +123,7 @@ never changes; a correction is a new population that names the one it supersedes
   and records a content hash.
 - Rows are entered as row files stored by content hash; events carry each file's
   hash and row count, never the rows, so the stream stays small however large the
-  population is (EA-12).
+  population is (EA-12, [CV-13](conventions.md#stream-growth)).
 
 ```mermaid
 stateDiagram-v2

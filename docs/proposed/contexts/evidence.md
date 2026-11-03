@@ -55,7 +55,7 @@ rescan. Disposal is final and keeps a tombstone (M0-D16).
 - A redacted derivative names its original; the original keeps its own retention
   and access rules.
 - Disposal is decided by Retention's hold register (RT-06). This context removes
-  the content only for an `ArtifactDisposalAuthorized` it names, and does not
+  the content only for an artifact a `DispositionDecided` authorizes, and does not
   re-read holds or dates.
 - Downloads by the organization's members are audit-log entries checked by
   authorization. A download by anyone else is a disclosure (EV-03).
@@ -79,7 +79,7 @@ stateDiagram-v2
 | RecordArtifactInspection | Inspection service | Pending inspection | EvidenceArtifactInspectedClean, EvidenceArtifactQuarantined or EvidenceArtifactRejected |
 | ReleaseArtifactQuarantine | Org Admin | Quarantined; clean rescan referenced; reason given | EvidenceArtifactQuarantineReleased |
 | ChangeArtifactHandlingClass | Compliance Lead | Not rejected or disposed; class differs; rationale given | ArtifactHandlingClassChanged |
-| DisposeArtifact | Reactor on ArtifactDisposalAuthorized (Retention hold register) | Available or quarantined; names the authorization; a repeat is a no-op | EvidenceArtifactDisposed |
+| DisposeArtifact | Reactor on DispositionDecided (Retention hold register), for each authorized artifact | Available or quarantined; names the decision; a repeat is a no-op | EvidenceArtifactDisposed |
 
 | Event | Carries |
 | --- | --- |

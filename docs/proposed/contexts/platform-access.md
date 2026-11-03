@@ -43,6 +43,7 @@ the firm-staff directory, and per-organization sign-in connections.
 | Team | A named group of members. Teams are assigned roles, and teams can hold responsibilities. Names need not be unique. |
 | Role assignment | One role given to one team at one scope: the whole organization, a program, an engagement, or a deliberately shared resource. |
 | Administrators team | The built-in team that permanently holds Org Admin at organization scope. |
+| Primary Org Admin | One of the one or two members designated to keep the organization administrable. A primary holds Org Admin by the designation, cannot be suspended or deprovisioned, and is released only after a replacement is designated. |
 | Platform operator | Platform super administrator. Sees tenant metadata only. |
 | Firm staff member | A platform user in the firm-staff directory, with one practice: `advisory` or `attest`. |
 
@@ -74,8 +75,8 @@ stateDiagram-v2
 ```
 
 - A registered organization becomes active when its first slug is
-  confirmed. The creator is already its first Org Admin on the Administrators team, so
-  activation waits for nothing else.
+  confirmed. The creator is already its first Org Admin on the Administrators team and
+  is designated its first primary, so activation waits for nothing else.
 - When the first slug is rejected, the organization stays registered and the
   creator requests another slug. This is the one command anyone can issue in a
   registered organization (PA-21).
@@ -177,11 +178,9 @@ starts a new episode.
   team. Advisor and Attest come only from engagement assignment.
 - Self-suspension and self-deprovisioning are refused. Each change records actor,
   time and reason.
-- Suspending or deprovisioning an Org Admin takes effect only after the
-  `OrgAdminRoster` releases them, and the roster refuses the last one (PA-04,
-  PA-27). For this rule an Org Admin is an active, non-guest member of the
-  Administrators team; Org Admin held through another team gives permission but
-  does not count (PA-23).
+- A member marked primary cannot be suspended or deprovisioned; they are
+  released from `PrimaryOrgAdmins` after a replacement is designated (PA-27).
+  Other Org Admins, however they hold the role, need no check (PA-23).
 
 ```mermaid
 stateDiagram-v2
@@ -196,9 +195,11 @@ stateDiagram-v2
 | Command | Who | Accepts when | Emits |
 | --- | --- | --- | --- |
 | RegisterMember | Reactor | No current episode | MemberRegistered |
-| SuspendMember | Org Admin, or reactor on OrgAdminReleased | Active; not self; an Org Admin needs a roster release for this suspension | MemberSuspended |
+| SuspendMember | Org Admin | Active; not self; not marked primary | MemberSuspended |
 | ReinstateMember | Org Admin | Suspended | MemberReinstated |
-| DeprovisionMember | Org Admin, or reactor on OrgAdminReleased | Active or suspended; not self; an Org Admin needs a roster release for this deprovisioning | MemberDeprovisioned |
+| DeprovisionMember | Org Admin | Active or suspended; not self; not marked primary | MemberDeprovisioned |
+| MarkMemberPrimary | Reactor on PrimaryOrgAdminDesignationRequested | Active and not a guest; a repeat is a no-op | MemberMarkedPrimary or MemberPrimaryMarkRefused |
+| UnmarkMemberPrimary | Reactor on PrimaryOrgAdminReleased | Marked; a repeat is a no-op | MemberPrimaryMarkRemoved |
 
 | Event | Carries |
 | --- | --- |
@@ -206,6 +207,9 @@ stateDiagram-v2
 | MemberSuspended | tenant, user, episode, actor, reason |
 | MemberReinstated | tenant, user, episode, actor, reason |
 | MemberDeprovisioned | tenant, user, episode, actor, reason |
+| MemberMarkedPrimary | tenant, user, episode |
+| MemberPrimaryMarkRefused | tenant, user, reason (`not_active` or `guest`) |
+| MemberPrimaryMarkRemoved | tenant, user, episode |
 
 ### Team
 
@@ -236,48 +240,64 @@ ID in every organization.
 **Invariant:** one member is on one team, or is not. A repeat assignment is a
 no-op.
 
-- Removing an Org Admin from the Administrators team needs a roster release
-  (PA-27).
 - Only a non-guest member can be put on the Administrators team.
 - A team membership counts only while the member's episode is active (PA-09).
 
 | Command | Who | Accepts when | Emits |
 | --- | --- | --- | --- |
 | AssignTeamMember | Org Admin or reactor | Team active; not on the team; not a guest when the team is Administrators | TeamMemberAssigned |
-| RemoveTeamMember | Org Admin or reactor | On the team; for Administrators, a roster release for this removal or for the user's deprovisioning | TeamMemberRemoved |
+| RemoveTeamMember | Org Admin or reactor | On the team | TeamMemberRemoved |
 
 | Event | Carries |
 | --- | --- |
 | TeamMemberAssigned | tenant, team, user, episode, assigned by |
 | TeamMemberRemoved | tenant, team, user, removed by |
 
-### OrgAdminRoster
+### PrimaryOrgAdmins
 
 **Identity:** `TenantId`.
 
-**Invariant:** the organization always keeps at least one active Org Admin. The
-roster holds who counts (active, non-guest members of the Administrators team)
-and admits each suspension, deprovisioning or removal from the team before it
-takes effect, refusing the last one. Both answers are recorded
-([CV-10](conventions.md#reactors), PA-27, CV-11).
+**Invariant:** the organization always has one or two primary Org Admins (PA-27,
+CV-11). A primary holds Org Admin through the designation itself, and their own
+membership refuses suspension and deprovisioning while they are primary, so the
+organization never loses its last Org Admin. To remove a primary, a replacement
+is designated first: a primary is released only while another primary is fully
+designated.
 
-- Additions arrive by reaction and only ever raise the count. A release whose
-  action never happens leaves the count lower than reality, which can only refuse
-  more; an Org Admin cancels such a release.
+- The organization's creator becomes the first primary when it is created.
+- Designation has two steps. This record holds a seat for the request, the
+  person's `Member` record accepts the primary mark (active, non-guest) or
+  refuses it, and the outcome is recorded here ([CV-10](conventions.md#reactors)).
+  A pending designation counts toward the two seats but never toward the one that
+  must remain.
+- A release is recorded here first; the mark is then removed from the member.
+  Until it is, the released person stays protected, which is harmless.
+- The stream grows only when primaries change. Ordinary Org Admins come and go
+  through the Administrators team without touching it
+  ([CV-13](conventions.md#stream-growth)).
 - Offboarding is exempt: a completed offboarding ends every membership.
+
+```mermaid
+stateDiagram-v2
+    [*] --> one: DesignatePrimaryOrgAdmin (creator)
+    one --> one_pending: DesignatePrimaryOrgAdmin
+    one_pending --> two: RecordPrimaryMarkOutcome (accepted)
+    one_pending --> one: RecordPrimaryMarkOutcome (refused)
+    two --> one: ReleasePrimaryOrgAdmin
+```
 
 | Command | Who | Accepts when | Emits |
 | --- | --- | --- | --- |
-| AddOrgAdmin | Reactor on TeamMemberAssigned (Administrators) or MemberReinstated (on Administrators) | Not counted; a repeat is a no-op | OrgAdminAdded |
-| ReleaseOrgAdmin | Org Admin, not self | Counted; intent (`suspend`, `deprovision` or `remove_from_administrators`) and reason given; always answers | OrgAdminReleased or OrgAdminReleaseRefused (last Org Admin) |
-| CancelOrgAdminRelease | Org Admin | Released, and the action did not happen | OrgAdminRestored |
+| DesignatePrimaryOrgAdmin | Org Admin; reactor on MemberRegistered (origin `tenant_creation`) for the creator | Fewer than two primaries, counting a pending one; not already primary; a repeat is a no-op | PrimaryOrgAdminDesignationRequested |
+| RecordPrimaryMarkOutcome | Reactor on MemberMarkedPrimary or MemberPrimaryMarkRefused | Designation pending; a repeat is a no-op | PrimaryOrgAdminDesignated or PrimaryOrgAdminDesignationRefused |
+| ReleasePrimaryOrgAdmin | Org Admin, including the primary themself | Primary; another primary fully designated; reason given | PrimaryOrgAdminReleased |
 
 | Event | Carries |
 | --- | --- |
-| OrgAdminAdded | tenant, user |
-| OrgAdminReleased | tenant, user, intent, reason, released by |
-| OrgAdminReleaseRefused | tenant, user, intent, reason (`last_org_admin`), requested by |
-| OrgAdminRestored | tenant, user, cancelled release, by |
+| PrimaryOrgAdminDesignationRequested | tenant, user, requested by |
+| PrimaryOrgAdminDesignated | tenant, user |
+| PrimaryOrgAdminDesignationRefused | tenant, user, reason (`not_active` or `guest`) |
+| PrimaryOrgAdminReleased | tenant, user, replaced by, reason, released by |
 
 ### TeamRole
 
@@ -513,6 +533,7 @@ flowchart LR
     E8 --> R7{{Give it Org Admin}} --> C8[/AssignRoleToTeam/] --> E9([RoleAssignedToTeam])
     E1 --> R1{{Register creator}} --> C2[/RegisterMember/] --> E2([MemberRegistered])
     E2 --> R9{{Put creator on Administrators}} --> C10[/AssignTeamMember/] --> E11([TeamMemberAssigned])
+    E2 --> R10{{Make creator primary}} --> C12[/DesignatePrimaryOrgAdmin/] --> E13([PrimaryOrgAdminDesignationRequested])
     E1 --> R2{{Claim slug}} --> C3[/ClaimTenantSlug/]
     C3 --> E3([TenantSlugClaimed])
     C3 --> E4([TenantSlugClaimDenied])
@@ -602,6 +623,23 @@ flowchart LR
 Access stops at MemberDeprovisioned, because team memberships count only while
 the episode is active. Removing them is housekeeping.
 
+### Primary Org Admins
+
+```mermaid
+flowchart LR
+    C1[/DesignatePrimaryOrgAdmin/] --> E1([PrimaryOrgAdminDesignationRequested])
+    E1 --> R1{{Mark the member}} --> C2[/MarkMemberPrimary/]
+    C2 --> E2([MemberMarkedPrimary])
+    C2 --> E3([MemberPrimaryMarkRefused])
+    E2 --> R2{{Record outcome}} --> C3[/RecordPrimaryMarkOutcome/]
+    E3 --> R2
+    C3 --> E4([PrimaryOrgAdminDesignated])
+    C3 --> E5([PrimaryOrgAdminDesignationRefused])
+    E4 -. "replacement in place" .-> C4[/ReleasePrimaryOrgAdmin/] --> E6([PrimaryOrgAdminReleased])
+    E6 --> R3{{Unmark the member}} --> C5[/UnmarkMemberPrimary/] --> E7([MemberPrimaryMarkRemoved])
+    E2 -. "marked: refused" .-> X1[/SuspendMember, DeprovisionMember/]
+```
+
 ### Role or team deleted
 
 ```mermaid
@@ -648,7 +686,8 @@ when every one of these holds:
    - a role assigned to an active team they are on, with an active role and a
      scope that covers the target (a wider scope covers the narrower ones inside
      it); for a guest, the target is also inside one of their programs;
-   - their engagement role (Advisor or Attest).
+   - their engagement role (Advisor or Attest);
+   - being a primary Org Admin, which gives Org Admin at organization scope.
 4. Separation of duties: self-review and self-approval are refused unless an
    approved, unexpired waiver covers the record type, scope and beneficiary.
 5. Independence walls from Firm services still apply.
@@ -662,9 +701,11 @@ Cases required by [CV-12](conventions.md#guards-and-reviews).
 
 | Case | Outcome |
 | --- | --- |
-| Two Org Admins each try to remove the other, the only two, at the same moment | The roster releases whichever arrives first and refuses the other (`last_org_admin`) |
-| A release is granted but the suspension then fails | The roster undercounts, which only refuses more; an Org Admin cancels the release |
-| `TeamMemberAssigned` for Administrators delivered twice | `AddOrgAdmin` repeat is a no-op |
+| Both primaries are released at the same moment | `PrimaryOrgAdmins` orders them; the second is refused because no other primary would remain |
+| A member is suspended while being designated primary | Their `Member` record orders the two: suspended first refuses the mark, and the designation is recorded refused; marked first refuses the suspension |
+| A release is recorded but the mark is not yet removed | The person stays protected a little longer; harmless |
+| An organization adds 100 Org Admins and removes 99 | No events on `PrimaryOrgAdmins`; only the members' and teams' own records change |
+| `PrimaryOrgAdminDesignationRequested` delivered twice | `MarkMemberPrimary` repeat is a no-op |
 | Two operators revoke each other at once | `PlatformOperators` orders them; the second revocation is refused |
 
 ## Decisions
@@ -677,7 +718,7 @@ anything between is left open.
 | PA-01 | Roles are aggregates that each organization manages. Teams hold members and are assigned roles, and a member gets client permissions only through their teams. There are no direct member grants, so `AccessGrant` is removed. | Product owner, 2026-11-03. This supersedes M0-D03's fixed catalog and "custom roles are out of scope". |
 | PA-02 | A team role assignment names its scope: organization, program, engagement or shared resource. | Scope fits team role assignments: 0.77, adopted because the M0-D03 scope hierarchy needs a place to live once grants go through teams. |
 | PA-03 | A guest's programs are recorded on the membership and limit whatever their teams give them. | Guest capped by programs: 0.95. M0-D03. |
-| PA-04 | Small independent aggregates: `TenantInvitation`, `Member`, `Team` and `TeamMember`, alongside `Role`, `RolePermission` and `TeamRole`. The organization always keeps an active Org Admin, decided by the `OrgAdminRoster` (PA-27). The built-in Administrators team permanently holds Org Admin and cannot be deleted. | Product owner, 2026-11-03: "each of these things is a small independent thing". The last-admin rule moved to the roster after the Portia guidelines review. |
+| PA-04 | Small independent aggregates: `TenantInvitation`, `Member`, `Team` and `TeamMember`, alongside `Role`, `RolePermission` and `TeamRole`. The organization always keeps one or two primary Org Admins, decided by `PrimaryOrgAdmins` (PA-27). The built-in Administrators team permanently holds Org Admin and cannot be deleted. | Product owner, 2026-11-03: "each of these things is a small independent thing". The last-admin rule moved to the primary Org Admins after the Portia guidelines review. |
 | PA-05 | Self-service creation registers the creator as a member and puts them on the Administrators team. There is no first-owner invitation, and activation waits only for the slug. | First administrator invited by email: 0.05. M0-D25. |
 | PA-06 | The firm-staff directory has one entry per platform user, keyed by `UserId`. `FirmStaffIdentityClaim` is not needed. | One entry per user: 0.80. M0-D25. |
 | PA-07 | Engagement authorization and professional-duty facts move from the firm-staff record to Firm services. | Ownership table in [domain-model.md](../domain-model.md). |
@@ -696,11 +737,11 @@ anything between is left open.
 | PA-20 | One `PlatformOperators` record holds the operator set, so the last-operator rule is decided in one stream. | An advisory last-admin or last-operator check: 0.11 (no). Reverses the earlier one-aggregate-per-user choice after the Portia guidelines review (CV-11). |
 | PA-21 | A tenant whose first slug is rejected stays registered, and its creator requests another slug. `RequestTenantSlugChange` accepts in `registered` or `active`, and authorization lets the creator issue it while registered. | Flow audit 2026-11-03 (B1): without it a rejected first slug strands the organization. Creator-only change while registered: 0.75; common sense, since the alternative is a dead end. |
 | PA-22 | Inviting a user with a current episode, active or suspended, is refused; a suspended member returns by reinstatement. | Flow audit B3: otherwise an accepted invitation dead-ends at `RegisterMember`. 0.60. Common sense: suspension is a deliberate Org Admin decision, and an invitation must not undo it. |
-| PA-23 | For the last-Org-Admin rule, only active members of the Administrators team count. Org Admin held through another team gives permission but never counts, so deleting that team or removing its role needs no check. | Flow audit B2. Jev near-even on both this (0.52) and restricting Org Admin to the Administrators team (sound 0.57, harm 0.68). Common sense: the three existing guards cover every way to leave the Administrators team's active members, and organizations keep the freedom to grant Org Admin elsewhere. |
+| PA-23 | Only primary Org Admins are protected. Every other Org Admin, on the Administrators team or holding the role through another team, can be suspended, deprovisioned or removed with no check. | Flow audit B2, revised by PA-27. Common sense: the guarantee lives entirely in the primaries, so no other path needs a guard. |
 | PA-24 | Withdrawn. The last-Org-Admin and last-operator rules are now decided authoritatively (PA-20, PA-27), so simultaneous removals cannot both pass. | Advisory check with repair: 0.11 (no). |
 | PA-25 | The organization's globally unique short name is the `TenantSlug` aggregate, and its commands and events say slug (`ClaimTenantSlug`, `TenantSlugClaimed`, and so on). `WorkspaceWebAddress` was a longer rename of the same thing. | Product owner, 2026-11-03: slug is the common term. |
 | PA-26 | Completing offboarding is refused while any of the firm's service engagements with the tenant is accepted and not closed. Proposing, accepting and assigning need an active tenant. | Flow audit G1. 0.79; common sense: offboarding already forbids new active service. |
-| PA-27 | One `OrgAdminRoster` per organization admits each suspension, deprovisioning or Administrators-team removal of an Org Admin and refuses the last one; the member or team command takes effect only with that release. | Roster admitting removals: 0.71. Advisory check: 0.11 (no). |
+| PA-27 | Every organization has one or two primary Org Admins. A primary holds Org Admin by designation, their membership refuses suspension and deprovisioning, and they are released only after a replacement is fully designated. | Product owner, 2026-11-03: "at any given point the org must have 1 primary org admin, and up to 2" and "if you remove a primary org admin you must replace them first". Sound guarantee: 0.63. Org Admin by designation rather than the Administrators team: 0.51; common sense: the protection then lives on one record, the member's. A roster of every Org Admin was rejected because its stream grows with all admin churn and aggregates are replayed in full. Advisory check: 0.11 (no). |
 
 ## Open questions
 
@@ -715,7 +756,8 @@ The generated pages for these owners were deleted when this context was locked.
 | --- | --- |
 | Tenant | Tenant |
 | TenantSlug, WorkspaceWebAddress | TenantSlug (one aggregate; WorkspaceWebAddress was a rename, PA-25) |
-| Member | Member |
+| Member | Member, with the primary mark (PA-27) |
+| OrgAdminRoster (proposed in the Portia review) | PrimaryOrgAdmins (PA-27) |
 | TenantInvitation, TenantInvitationMailboxClaim | TenantInvitation, keyed by tenant and email (one pending offer per email: Jev 0.80) |
 | TenantAdministratorContinuity, TenantManagerGuard | Removed; last-admin check on Member and TeamMember commands (PA-04) |
 | TenantInvitationDeliveryProcess | Technical invitation email delivery |

@@ -34,7 +34,7 @@ flowchart LR
   record stays visibly pending.
 - **CV-10** When a reaction asks an owner to accept or refuse part of a larger
   operation, the owner records its answer as a fact either way (for example
-  `ArtifactDisposalAuthorized` or `ArtifactDisposalRefused`), and the
+  `DispositionDecided`, listing what it authorized and refused), and the
   coordinating record records each outcome. Where the owner's command simply
   refuses, the reaction records that refusal on the coordinating record instead.
   Pending, accepted and refused are always distinguishable; a refusal is never
@@ -79,6 +79,37 @@ flowchart LR
   that the gap blocks says so in its guard. Recording the truth is never refused
   to keep a rule green.
 
+## Stream growth
+
+Portia loads an aggregate by replaying its whole stream; there are no aggregate
+snapshots. A stream that grows without bound slows every command on it for the
+life of the record, and a wide record (one per tenant, program or platform) puts
+every user of that scope behind it.
+
+- **CV-13** A stream grows only with the business occasions of the one thing it
+  identifies: never per artifact, row, participant, delivery item, member churn
+  or sync. Before giving a long-lived or wide record a growing list, find the
+  real invariant, keep only that on the record, and move the volume into
+  short-lived or per-item streams. The patterns in use:
+  - **Protect a seat, not a roster.** Guard the few members the rule needs,
+    on their own records ([Platform access](platform-access.md) `PrimaryOrgAdmins`).
+  - **Decide a batch in one event.** One decision per disposition or delivery,
+    listing its items ([Retention](retention.md) `HoldRegister`).
+  - **One stream per draft.** A long-lived line keeps its versions and the
+    one-open-draft rule; each draft's revisions and reviews live in a per-draft
+    stream ([System description](system-description.md),
+    [Firm methodology](firm-methodology.md)).
+  - **One stream per run.** Per-item outcomes of one application or campaign
+    live on a record for that run, not on the record that lasts for life
+    ([Firm methodology](firm-methodology.md) `TemplateVersionApplication`).
+  - **Content by hash.** Bulk rows are stored as files; events carry the hash
+    and counts ([External access governance](external-access-governance.md)
+    `AccessPopulation`).
+
+  A record whose growth is bounded by people revising that one record, such as a
+  control or a policy with its proposals, meets the rule. Every wide record
+  states its expected growth.
+
 ## Evidence
 
 | Rule | Jev (`jev-1.14.0`, 2026-11-03) |
@@ -89,3 +120,4 @@ flowchart LR
 | CV-08 | Record an impairing service and show a gap rather than refuse it: 0.89. |
 | CV-10 | Record an owner's refusal as a fact on the coordinating record: 0.90. |
 | CV-05, CV-11 | Advisory uniqueness for display names, owned identifiers for audit-facing codes: 0.75. Advisory last-Org-Admin check: 0.11 (no). Commitment identifiers need an owner: 0.92. Adopted from the Portia domain guidelines review, 2026-11-03. |
+| CV-13 | Splitting a per-program system description into a version line plus per-draft streams: 0.85. Splitting a single control's drafts: 0.28 (not needed). A line that starts each draft enforces one open draft: 0.46; common sense: the start is decided in the line's own stream. Adopted from the product owner, 2026-11-03: "anytime we start creating potential for unbounded streams we need to look to minimize the blast radius and protect the real invariant". |

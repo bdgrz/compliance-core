@@ -72,18 +72,20 @@ commits first wins, and a hold is never refused (RT-06, CV-11).
 - **Legal holds.** Each covers the whole organization or a listed set of
   artifacts, from placement until an Org Admin releases it. Holds are
   independent: releasing one never releases another (RT-02).
-- **Engagement holds.** One per examination. The register adds each artifact
-  disclosed for the examination to the hold's coverage as the disclosure is
-  recorded. The hold is released by the engagement partner when our firm is the
+- **Engagement holds.** One per examination. The register adds the artifacts
+  of each delivery or firm-staff download for the examination to the hold's
+  coverage, once per delivery, not once per artifact (RT-08). The hold is released by the engagement partner when our firm is the
   auditor, or by an Org Admin for an external auditor, and only once the report
   was issued more than one year ago and, for our firm, the attest record package
   is delivered (M0-D16, M0-D27, RT-03).
-- **Authorization.** Each artifact of an approved disposition is authorized or
-  refused here, and both answers are recorded ([CV-10](conventions.md#reactors)).
-  Authorization is refused while a hold covers the artifact or its retention date
-  (read as advice) has not passed.
-- A small organization has a handful of holds and a few dispositions a year, so
-  one stream is not a bottleneck (RT-06).
+- **Authorization.** The register answers each approved disposition in one
+  recorded decision that lists the authorized artifacts and the refused ones
+  with their reasons ([CV-10](conventions.md#reactors), RT-08). An artifact is
+  refused while a hold covers it or its retention date (read as advice) has not
+  passed.
+- The stream grows only with holds, auditor deliveries and dispositions: a few
+  dozen events a year, never one per artifact, so it stays short enough to
+  replay for the organization's life ([CV-13](conventions.md#stream-growth), RT-06, RT-08).
 
 | Command | Who | Accepts when | Emits |
 | --- | --- | --- | --- |
@@ -91,11 +93,11 @@ commits first wins, and a hold is never refused (RT-06, CV-11).
 | ChangeLegalHoldScope | Org Admin | Active; reason given | LegalHoldScopeChanged |
 | ReleaseLegalHold | Org Admin | Active; reason given | LegalHoldReleased |
 | PlaceEngagementHold | Reactor on ArtifactDisclosed naming an examination | No hold for the examination; a repeat is a no-op | EngagementHoldPlaced |
-| CoverDisclosedArtifact | Reactor on ArtifactDisclosed naming an examination | Hold for the examination active; a repeat is a no-op | EngagementHoldCoverageAdded |
+| CoverDeliveredArtifacts | Reactor on ArtifactDisclosed naming an examination, grouped by its delivery or download | Hold for the examination active; artifacts already covered are skipped; a repeat for the delivery is a no-op | EngagementHoldCoverageAdded |
 | RecordEngagementReportIssued | Reactor on AuditOutcomeRecorded | Hold active; a reissue moves the date later only | EngagementReportIssueRecorded |
 | RecordEngagementPackageDelivered | Reactor on AttestEngagementRecordPackageDelivered | Hold active; our firm is the auditor | EngagementPackageDeliveryRecorded |
 | ReleaseEngagementHold | Engagement partner (our firm), or Org Admin (external auditor) | Active; report issued more than a year ago; package delivered when our firm is the auditor | EngagementHoldReleased |
-| AuthorizeArtifactDisposal | Reactor on ArtifactDispositionApproved | Always answers; a repeat for the same disposition and artifact is a no-op | ArtifactDisposalAuthorized or ArtifactDisposalRefused |
+| DecideDisposition | Reactor on ArtifactDispositionApproved | Always answers for every listed artifact; a repeat for the disposition is a no-op | DispositionDecided |
 
 | Event | Carries |
 | --- | --- |
@@ -103,12 +105,11 @@ commits first wins, and a hold is never refused (RT-06, CV-11).
 | LegalHoldScopeChanged | tenant, hold, previous scope, new scope, reason, changed by |
 | LegalHoldReleased | tenant, hold, reason, released by |
 | EngagementHoldPlaced | tenant, examination, auditor kind, engagement (if our firm) |
-| EngagementHoldCoverageAdded | tenant, examination, artifact, disclosure |
+| EngagementHoldCoverageAdded | tenant, examination, delivery or download, artifacts newly covered |
 | EngagementReportIssueRecorded | tenant, examination, outcome, issued at |
 | EngagementPackageDeliveryRecorded | tenant, examination, package, delivered at |
 | EngagementHoldReleased | tenant, examination, released by |
-| ArtifactDisposalAuthorized | tenant, disposition, artifact, retained until (as read) |
-| ArtifactDisposalRefused | tenant, disposition, artifact, reason (`held` with the holds, or `retention_not_elapsed`) |
+| DispositionDecided | tenant, disposition, authorized artifacts (each with retained until, as read), refused artifacts (each with reason: `held` with the holds, or `retention_not_elapsed`) |
 
 ### ArtifactDisposition
 
@@ -132,7 +133,7 @@ stateDiagram-v2
 | Command | Who | Accepts when | Emits |
 | --- | --- | --- | --- |
 | ApproveArtifactDisposition | Org Admin; platform operator after offboarding | `DispositionId` is new; every artifact eligible (advice); rationale given | ArtifactDispositionApproved |
-| RecordArtifactDisposalOutcome | Reactor on ArtifactDisposalRefused, EvidenceArtifactDisposed, or ArtifactRetentionExtended after disposal | Artifact listed; a repeat is a no-op | ArtifactDisposalOutcomeRecorded, and ArtifactDispositionCompleted with the last outcome |
+| RecordArtifactDisposalOutcome | Reactor on DispositionDecided (each refused artifact), EvidenceArtifactDisposed, or ArtifactRetentionExtended after disposal | Artifact listed; a repeat is a no-op | ArtifactDisposalOutcomeRecorded, and ArtifactDispositionCompleted with the last outcome |
 
 | Event | Carries |
 | --- | --- |
@@ -159,9 +160,9 @@ flowchart LR
 ```mermaid
 flowchart LR
     C1[/PlaceLegalHold/] --> E1([LegalHoldPlaced])
-    X1[[Evidence: ArtifactDisclosed for an examination]] --> R1{{"Place hold, add coverage (IDs from examination and artifact)"}}
+    X1[[Evidence: ArtifactDisclosed for an examination]] --> R1{{"Place hold, add coverage (IDs from examination and delivery)"}}
     R1 --> C2[/PlaceEngagementHold/] --> E2([EngagementHoldPlaced])
-    R1 --> C3[/CoverDisclosedArtifact/] --> E3([EngagementHoldCoverageAdded])
+    R1 --> C3[/CoverDeliveredArtifacts/] --> E3([EngagementHoldCoverageAdded])
     X2[[Examinations: AuditOutcomeRecorded]] --> R2{{Record issue date}} --> C4[/RecordEngagementReportIssued/] --> E4([EngagementReportIssueRecorded])
     X3[[Firm services: AttestEngagementRecordPackageDelivered]] --> R3{{Record delivery}} --> C5[/RecordEngagementPackageDelivered/] --> E5([EngagementPackageDeliveryRecorded])
     E4 -. "issued over a year ago" .-> C6[/ReleaseEngagementHold/]
@@ -177,11 +178,9 @@ All of these commands are on the one `HoldRegister` stream.
 flowchart LR
     RD([Retention date passed]) -. "advice" .-> C1
     C1[/ApproveArtifactDisposition/] --> E1([ArtifactDispositionApproved])
-    E1 --> R1{{"Ask the register per artifact (ID from disposition and artifact)"}} --> C2[/AuthorizeArtifactDisposal/]
-    C2 --> E2([ArtifactDisposalAuthorized])
-    C2 --> E3([ArtifactDisposalRefused])
-    E2 --> R2{{Remove content}} --> X1[[Evidence: DisposeArtifact]] --> E4([EvidenceArtifactDisposed])
-    E3 --> R3{{Record outcome}} --> C3[/RecordArtifactDisposalOutcome/]
+    E1 --> R1{{"Ask the register (ID from disposition)"}} --> C2[/DecideDisposition/] --> E2([DispositionDecided])
+    E2 --> R2{{"Remove each authorized artifact"}} --> X1[[Evidence: DisposeArtifact]] --> E4([EvidenceArtifactDisposed])
+    E2 --> R3{{"Record each refused artifact"}} --> C3[/RecordArtifactDisposalOutcome/]
     E4 --> R3
     C3 --> E5([ArtifactDisposalOutcomeRecorded])
     C3 --> E6([ArtifactDispositionCompleted])
@@ -209,9 +208,10 @@ Cases required by [CV-12](conventions.md#guards-and-reviews).
 | Disposition approved as eligible; a legal hold is placed before the register answers | The register refuses that artifact (`held`); the disposition records `refused` |
 | Disposal authorized; a hold is placed afterwards | The authorization committed first and stands, and the content is removed. The hold's coverage shows the artifact as already authorized for disposal |
 | Retention extended after authorization | The content is removed; the disposition records `disposed_before_extension` (RT-07) |
-| `ArtifactDispositionApproved` delivered twice | Each repeated `AuthorizeArtifactDisposal` is a no-op (ID from disposition and artifact) |
+| `ArtifactDispositionApproved` delivered twice | The repeated `DecideDisposition` is a no-op (ID from the disposition) |
 | Evidence removal still retrying | The disposition stays `approved` with the artifact pending; an operational alert shows the failing reactor (CV-03) |
-| Artifact disclosed for an examination while its disposal is in flight | Whichever reaches the register first wins; coverage added after authorization is shown on the hold |
+| Artifact disclosed for an examination while its disposal is in flight | Whichever reaches the register first wins; coverage added after the decision is shown on the hold |
+| Many artifacts delivered to the auditor at once | One coverage event for the delivery; the register's stream does not grow per artifact |
 
 ## Decisions
 
@@ -227,6 +227,7 @@ Anything in between is settled by common sense, with the reasoning stated.
 | RT-05 | A disposition completes only from each artifact's recorded outcome; artifacts the register refuses are recorded and shown. | 0.88. CV-12. |
 | RT-06 | One hold register per organization owns every hold and the final authorization of each disposal. | Register: 0.82. Acceptable bottleneck: 0.77. Fanning holds out to each artifact and accepting the window: 0.29. A recoverable grace period instead: 0.15. Replaces the separate `LegalHold` and `EngagementHold` aggregates. |
 | RT-07 | The retention date is advice to the register; an extension after authorization is recorded as `disposed_before_extension`. | Reserving on the retention record first: 0.33. Common sense: the date only moves later, extensions of long-expired evidence are rare, and holds are the legal protection. |
+| RT-08 | The register records coverage once per delivery and decides a whole disposition in one event, so its stream grows with business occasions, not with artifacts. | One decision per disposition: 0.69. Yearly register streams carrying holds forward: 0.23 (no). Common sense: with no aggregate snapshots, a stream that grows per artifact would slow every hold decision for the organization's life. |
 
 ## Open questions
 
@@ -240,5 +241,5 @@ None at this time.
 | ArtifactLegalHold, LegalHold | HoldRegister legal holds (RT-02, RT-06) |
 | ArtifactEngagementHold, EngagementHold | HoldRegister engagement holds (RT-03, RT-06) |
 | ArtifactDisposition | ArtifactDisposition (approval and outcomes; removal is `DisposeArtifact` in Evidence) |
-| ArtifactLegalHoldReactor, ProtectArtifactsUnderLegalHoldReactor | `AuthorizeArtifactDisposal` on the register |
+| ArtifactLegalHoldReactor, ProtectArtifactsUnderLegalHoldReactor | `DecideDisposition` on the register |
 | KeepEngagementEvidenceProtectedAfterDeliveryReactor | HoldRegister engagement hold reactions |

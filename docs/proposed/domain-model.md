@@ -26,6 +26,9 @@ rules and the map between contexts.
   Only platform-level content (criteria editions, methodology templates, the
   firm-staff directory and the operator roster) exists outside a tenant, and it
   never contains client data (M0-D25).
+- Every stream stays short enough to replay for the life of its record: a wide
+  or long-lived record keeps only its real invariant, and volume lives in
+  per-item or per-draft streams ([CV-13](contexts/conventions.md#stream-growth)).
 - One small aggregate per domain noun, named in the product's terms. Rules that
   span aggregates are current-state checks
   ([conventions](contexts/conventions.md)).
@@ -52,7 +55,7 @@ Client organization (tenant) and membership
 
 | Context | Owns |
 | --- | --- |
-| [Platform access](contexts/platform-access.md) | Tenants and their slugs, invitations, members, teams, roles, the Org Admin roster, platform users, sign-in identities, the platform operators record, firm staff, separation-of-duties waivers |
+| [Platform access](contexts/platform-access.md) | Tenants and their slugs, invitations, members, teams, roles, primary Org Admins, platform users, sign-in identities, the platform operators record, firm staff, separation-of-duties waivers |
 | [Firm services](contexts/firm-services.md) | Service engagements, staff assignments, client practice compartments, nonattest service records, independence rule sets and evaluations, partner designations, attest record packages |
 | [Firm methodology](contexts/firm-methodology.md) | Platform-level methodology templates and their application to programs |
 | [Program and scope](contexts/program-and-scope.md) | Programs, stages, target dates, system boundaries, client services |
