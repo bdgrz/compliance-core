@@ -51,7 +51,9 @@
         "line": 220,
         "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       },
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "AcceptServiceEngagement",
+      "targetName": "AcceptServiceEngagement"
     },
     {
       "command": "AmendServiceEngagement",
@@ -108,7 +110,9 @@
         "line": 1311,
         "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       },
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "AmendServiceEngagement",
+      "targetName": "AmendServiceEngagement"
     },
     {
       "command": "AssignServiceEngagementStaff",
@@ -170,7 +174,9 @@
         "line": 2748,
         "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       },
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "AssignServiceEngagementStaff",
+      "targetName": "AssignServiceEngagementStaff"
     },
     {
       "command": "CloseServiceEngagement",
@@ -227,7 +233,9 @@
         "line": 4169,
         "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       },
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "CloseServiceEngagement",
+      "targetName": "CloseServiceEngagement"
     },
     {
       "command": "CreateServiceEngagement",
@@ -279,7 +287,9 @@
         "line": 5257,
         "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       },
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "CreateServiceEngagement",
+      "targetName": "CreateServiceEngagement"
     },
     {
       "command": "ProposeServiceEngagementStaff",
@@ -336,7 +346,9 @@
         "line": 9468,
         "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       },
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "ProposeServiceEngagementStaff",
+      "targetName": "ProposeServiceEngagementStaff"
     },
     {
       "command": "RecordDirectoryIndependenceReevaluation",
@@ -437,7 +449,9 @@
           "process_reply": 0.79
         },
         "date": "2026-10-29"
-      }
+      },
+      "sourceName": "RecordDirectoryIndependenceReevaluation",
+      "targetName": "RecordDirectoryIndependenceReevaluation"
     },
     {
       "command": "RevokeServiceEngagementActualStaff",
@@ -499,7 +513,9 @@
         "line": 17365,
         "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       },
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "RevokeServiceEngagementActualStaff",
+      "targetName": "RevokeServiceEngagementActualStaff"
     },
     {
       "command": "WithdrawServiceEngagementStaffProposal",
@@ -561,7 +577,9 @@
         "line": 18612,
         "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       },
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "WithdrawServiceEngagementStaffProposal",
+      "targetName": "WithdrawServiceEngagementStaffProposal"
     },
     {
       "command": "RejectServiceEngagementAcceptance",
@@ -611,7 +629,9 @@
         "line": 1539,
         "sha256": "f1d549ed0879c816cb26e86879f8fa658dab0a8acbf7c591e4d4aed40483f8ae"
       },
-      "kind": "abort"
+      "kind": "abort",
+      "sourceName": "RejectServiceEngagementAcceptance",
+      "targetName": "RejectServiceEngagementAcceptance"
     },
     {
       "command": "RejectServiceEngagementStaffAssignment",
@@ -661,7 +681,9 @@
         "line": 1597,
         "sha256": "f1d549ed0879c816cb26e86879f8fa658dab0a8acbf7c591e4d4aed40483f8ae"
       },
-      "kind": "abort"
+      "kind": "abort",
+      "sourceName": "RejectServiceEngagementStaffAssignment",
+      "targetName": "RejectServiceEngagementStaffAssignment"
     },
     {
       "command": "CancelEngagementPersonalDecision",
@@ -706,7 +728,9 @@
         "line": 1754,
         "sha256": "f1d549ed0879c816cb26e86879f8fa658dab0a8acbf7c591e4d4aed40483f8ae"
       },
-      "kind": "abort"
+      "kind": "abort",
+      "sourceName": "CancelEngagementPersonalDecision",
+      "targetName": "CancelEngagementPersonalDecision"
     },
     {
       "command": "CompleteServiceEngagementAcceptance",
@@ -787,7 +811,9 @@
       "source": {
         "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
         "recorded": "2026-10-29"
-      }
+      },
+      "sourceName": "CompleteServiceEngagementAcceptance",
+      "targetName": "CompleteServiceEngagementAcceptance"
     },
     {
       "command": "CompleteServiceEngagementStaffAssignment",
@@ -873,7 +899,9 @@
       "source": {
         "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
         "recorded": "2026-10-29"
-      }
+      },
+      "sourceName": "CompleteServiceEngagementStaffAssignment",
+      "targetName": "CompleteServiceEngagementStaffAssignment"
     },
     {
       "command": "AuthorizeEngagementPracticeCommitments",
@@ -950,7 +978,9 @@
       "source": {
         "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
         "recorded": "2026-10-29"
-      }
+      },
+      "sourceName": "AuthorizeEngagementPracticeCommitments",
+      "targetName": "AuthorizeEngagementPracticeCommitments"
     },
     {
       "command": "SettleEngagementPersonalDecision",
@@ -1022,7 +1052,9 @@
       "source": {
         "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
         "recorded": "2026-10-29"
-      }
+      },
+      "sourceName": "SettleEngagementPersonalDecision",
+      "targetName": "CloseEngagementPersonalDecision"
     },
     {
       "command": "AuthorizeEngagementPersonalDecision",
@@ -1098,7 +1130,9 @@
       "source": {
         "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
         "recorded": "2026-10-29"
-      }
+      },
+      "sourceName": "AuthorizeEngagementPersonalDecision",
+      "targetName": "AuthorizeEngagementPersonalDecision"
     }
   ],
   "sourceContractEvidence": [

@@ -1,5 +1,7 @@
 {
-  "root": "TenantInvitationDeliveryProcessReactor",
+  "sourceRoot": "TenantInvitationDeliveryProcessReactor",
+  "targetRoot": "InviteMemberToJoinTenantReactor",
+  "businessReason": "Send the invitation that lets an invited member join the tenant.",
   "rows": [
     {
       "id": "T117",

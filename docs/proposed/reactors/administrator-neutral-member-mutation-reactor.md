@@ -1,10 +1,15 @@
-# AdministratorNeutralMemberMutationReactor
+# ApplyAcceptedMemberStatusChangeReactor
+
+Selected source root name: `AdministratorNeutralMemberMutationReactor`.
+## Why this reaction exists
+
+Apply an admitted suspension, deprovisioning, or reinstatement to the exact member episode.
 
 Selected choreography rows: **1**. Required proofs, recovery, effect identity, and implementation evidence are preserved in [reactor row JSON](../data/reactors/administrator-neutral-member-mutation-reactor.json).
 
 | Row | Kind | Prerequisite facts | Command | Target owner | Emitted facts |
 | --- | --- | --- | --- | --- | --- |
-| T048 | reaction_or_regular_process_stage | TenantManagerSourceMutationAdmitted | ApplyNeutralMemberSourceMutation | Member | MemberSuspended, MemberDeprovisioned, MemberReinstated |
+| T048 | reaction_or_regular_process_stage | TenantManagerMemberChangeAccepted | ApplyMemberStatusChange | Member | MemberSuspended, MemberDeprovisioned, MemberReinstated |
 
 ## Selected row details
 
@@ -16,16 +21,16 @@ Selected choreography rows: **1**. Required proofs, recovery, effect identity, a
 | kind | reaction_or_regular_process_stage |
 | status | SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED |
 | sourceOwner | TenantManagerGuard |
-| logicalPrerequisiteFacts | TenantManagerSourceMutationAdmitted |
+| logicalPrerequisiteFacts (target names) | TenantManagerMemberChangeAccepted |
 | logicalPrerequisiteRule | The source is TenantManagerSourceMutationAdmitted, a guard fact that admitted an original suspend, deprovision or reinstate of a non-administrator member as neutral; the mutation is applied with the original authority and authored revision only if the member is the same registered live episode and the command kind equals the admitted command kind. |
-| physicalRootEvents | TenantManagerSourceMutationAdmitted |
-| originalAdmissionKinds | TenantManagerWithdrawalAccepted, TenantManagerRestorationAccepted, TenantManagerSourceMutationAdmitted |
-| receiverCommand | ApplyNeutralMemberSourceMutation |
+| physicalRootEvents (target names) | TenantManagerMemberChangeAccepted |
+| originalAdmissionKinds (target names) | TenantManagerWithdrawalAccepted, TenantManagerRestorationAccepted, TenantManagerMemberChangeAccepted |
+| Target command (selected source name: ApplyNeutralMemberSourceMutation) | ApplyMemberStatusChange |
 | targetOwner | Member |
 | targetAuthorityKind | business_aggregate |
-| emittedSemanticFacts | MemberSuspended, MemberDeprovisioned, MemberReinstated |
+| emittedSemanticFacts (target names) | MemberSuspended, MemberDeprovisioned, MemberReinstated |
 | emittedEventContracts | None listed |
-| currentRegisteredRootTypes | AdministratorNeutralMemberMutationReactor |
+| currentRegisteredRootTypes (target names) | ApplyAcceptedMemberStatusChangeReactor |
 | plannedRootRole | null (recorded) |
 | processes | AdministratorTransitionProcess |
 | requiredProofContract | `{"canonicalCarrier":"original admitted root reference + required independently verified typed stage/terminal proof sets","admissionReferenceFactKinds":["TenantManagerWithdrawalAccepted","TenantManagerRestorationAccepted","TenantManagerSourceMutationAdmitted"],"admissionReferenceRole":"original business admission/first-owner fact, distinct from subscription trigger and intermediate/terminal prerequisites","verification":{"admission":"AdmissionReference is a locator only. Resolve and independently verify actual typed admitted fact, exact owner/tenant/program, saved metadata and physical/hydrated cut, original root/episode/actor/intent and immutable content.","stageAndTerminal":"Materialize each required typed stage/terminal proof from actual committed facts and full required immutable selections; prove complete grant/fence/provisional/child sets, not counts/checkpoints. Guard sets are not weakened by carrier choice.","earlyReplay":"If native receipt binding does not cover a supplied/interpreted command term, bind that term through the required actual typed proof/body before early replay. Exact receipt cannot bypass proof manifest or source tuple guards.","resultAndRecovery":"Current public authorization precedes replay. Original result/receipt and unknown-append recovery stay exact; requested cancellation propagates. Unavailable proof/content remains transient; corruption/changed intent is permanent; no inferred absence/release.","implementationStatus":"Installed pointer/handler/process presence is not proof of conformance. Field/wire migration and required behavioral tests remain separately verifiable implementation work."},"requiredTypedStageProofSets":[{"factKinds":["TenantManagerSourceMutationAdmitted"],"role":"Guard fact admitting a neutral member mutation with its generation and intent","quantifier":"exactly_one","condition":"","requiredVerification":"Resolve the actual saved fact and its full immutable selection; verify the typed payload and the exact admission, root, target, generation, actor and intent binding. A pointer, checkpoint or stage order alone is not authority."},{"factKinds":["MemberRegistered"],"role":"The named member episode is the current registered episode","quantifier":"exactly_one","condition":"","requiredVerification":"Resolve the actual saved fact and its full immutable selection; verify the typed payload and the exact admission, root, target, generation, actor and intent binding. A pointer, checkpoint or stage order alone is not authority."},{"factKinds":["MemberSuspended","MemberDeprovisioned","MemberReinstated"],"role":"The target state allows the mutation at the authored expected revision","quantifier":"none_outstanding","condition":"Suspend needs live, reinstate needs suspended, deprovision needs live or suspended","requiredVerification":"Resolve the actual saved fact and its full immutable selection; verify the typed payload and the exact admission, root, target, generation, actor and intent binding. A pointer, checkpoint or stage order alone is not authority."}],"pinnedSourceRequirements":"Every exact source owner/event/content revision and complete immutable manifest required by intendedProofGate remains mandatory; no absent optional source is fabricated.","proofGate":"Exact operation/generation and guard admission proving this member episode has no contribution and no pending registration/withdrawal. Applies the original Member source fact unchanged (suspend, deprovision or reinstate) with the authored ExpectedMemberRevision; the guard fact exists only so a concurrent administrator registration for the same episode is serialized. Never registers or releases availability.","requiredLogicalPrerequisiteProofs":"Every applicable logical prerequisite is independently verified as an actual typed saved fact (or actual technical proof where explicitly technical); a terminal proof may establish an earlier stage only through a verified native chain that includes that required typed stage. Stage order/checkpoint alone never substitutes.","prerequisiteVerification":{"admission":"The receiver resolves the original admitted root fact by its exact owner, tenant, episode, actor and immutable intent, and verifies the saved fact and content hash before acting; a reference alone grants nothing.","stageProofs":"Each required stage proof (grant, hold, review, or terminal fact) is materialised from the actual committed fact and its full immutable selection; counts, checkpoints and stage order are not accepted as proof."},"stageProofStatus":"specified","stageProofRationale":"","stageProofSource":"authored 2026-10-29 from reactor and target source"}` |

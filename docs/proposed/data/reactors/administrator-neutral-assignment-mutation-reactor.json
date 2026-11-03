@@ -1,5 +1,7 @@
 {
-  "root": "AdministratorNeutralAssignmentMutationReactor",
+  "sourceRoot": "AdministratorNeutralAssignmentMutationReactor",
+  "targetRoot": "RemoveUnneededAdministratorAssignmentReactor",
+  "businessReason": "Remove an initial administrator assignment only when the member never became active or no longer contributes.",
   "rows": [
     {
       "id": "T049",

@@ -186,7 +186,11 @@
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "resolvedIntentSchema": "ChildAdmissionIntent",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "AuditResponseDraftCreated",
+      "targetName": "AuditResponseDraftCreated",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "The materialization of an admitted response draft on its own owner, at revision one. Change repeats the frozen ChildAdmissionIntent the request accepted; the response never loads the live request. The actor is the original author of the draft."
     },
     {
       "canonical": {
@@ -281,7 +285,11 @@
         "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "AuditResponseDraftRevised",
+      "targetName": "AuditResponseDraftRevised",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "A draft or rejected response was revised into the next draft version. Change is the complete AuditorResponseVersionView of that version."
     },
     {
       "canonical": {
@@ -376,7 +384,11 @@
         "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "AuditorResponseDelivered",
+      "targetName": "AuditorResponseDelivered",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "The exact version of a response was intentionally delivered. Change is the AuditorResponseDeliveryView; the delivery is immutable."
     },
     {
       "canonical": {
@@ -471,7 +483,11 @@
         "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "AuditorResponseDisclosureReviewed",
+      "targetName": "AuditorResponseDisclosureReviewed",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "The independent disclosure review of the exact submitted version. Change is the AuditorResponseReviewView; Outcome is approved or rejected."
     },
     {
       "canonical": {
@@ -566,7 +582,11 @@
         "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "AuditorResponseDispositionRecorded",
+      "targetName": "AuditorResponseDispositionRecorded",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "The external disposition of the exact delivered version. Change is the AuditorResponseDispositionView; the disposition is immutable."
     },
     {
       "canonical": {
@@ -726,7 +746,11 @@
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "resolvedIntentSchema": "SourceUseAuthorizationIntent",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "AuditorResponseRequestResolutionUseAuthorized",
+      "targetName": "AuditorResponseRequestResolutionAuthorized",
+      "nameDecision": "Authorization is already the completed fact; Use adds no stakeholder meaning.",
+      "targetMeaning": "A response with an accepted external disposition is held for a request resolution. The use does not advance the public response revision: Revision is the held revision and Generation the request generation the resolution seals."
     },
     {
       "canonical": {
@@ -886,7 +910,11 @@
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "resolvedIntentSchema": "SourceUseAuthorizationIntent",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "AuditorResponseRequestResolutionUseSettled",
+      "targetName": "AuditorResponseRequestResolutionAuthorizationClosed",
+      "nameDecision": "The exact authorization ended; the recorded outcome still distinguishes use, cancellation, or a late fence.",
+      "targetMeaning": "A request-resolution use of a response ended. Disposition repeats the disposition of the settlement intent so the response can install the closed-parent fence from its own ordered stream: a SourceUseSettlementDisposition.ParentClosed settlement keeps the response under the resolved request generation, and releasing the temporary use never restores an unrestricted writable response."
     },
     {
       "canonical": {
@@ -981,7 +1009,11 @@
         "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "AuditorResponseSubmitted",
+      "targetName": "AuditorResponseSubmitted",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "The exact draft version of a response was submitted. Change is the AuditorResponseSubmissionView and Version the business version it submitted."
     }
   ]
 }

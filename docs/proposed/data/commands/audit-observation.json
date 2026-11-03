@@ -39,7 +39,9 @@
         "path": "src/Compliance.Core/Features/Examinations/Aggregates/AuditObservation.cs",
         "method": "Record",
         "recorded": "2026-10-29"
-      }
+      },
+      "sourceName": "RecordAuditObservation",
+      "targetName": "RecordAuditObservation"
     },
     {
       "command": "CorrectAuditObservation",
@@ -87,7 +89,9 @@
         "path": "src/Compliance.Core/Features/Examinations/Aggregates/AuditObservation.cs",
         "method": "Correct",
         "recorded": "2026-10-29"
-      }
+      },
+      "sourceName": "CorrectAuditObservation",
+      "targetName": "CorrectAuditObservation"
     },
     {
       "command": "RecordAuditObservationManagementResponse",
@@ -131,7 +135,9 @@
         "path": "src/Compliance.Core/Features/Examinations/Aggregates/AuditObservation.cs",
         "method": "RecordManagementResponse",
         "recorded": "2026-10-29"
-      }
+      },
+      "sourceName": "RecordAuditObservationManagementResponse",
+      "targetName": "RecordAuditObservationManagementResponse"
     },
     {
       "command": "LinkAuditObservationFinding",
@@ -171,7 +177,9 @@
         "path": "src/Compliance.Core/Features/Examinations/Aggregates/AuditObservation.cs",
         "method": "LinkFinding",
         "recorded": "2026-10-29"
-      }
+      },
+      "sourceName": "LinkAuditObservationFinding",
+      "targetName": "LinkAuditObservationFinding"
     }
   ],
   "sourceContractEvidence": []

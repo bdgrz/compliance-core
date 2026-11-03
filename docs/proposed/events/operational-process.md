@@ -2,12 +2,12 @@
 
 Canonical events: **4**. Complete canonical event and available schema records: [owner event JSON](../data/events/operational-process.json).
 
-| Event | Kind | Adopted discriminator | Version | Schema fields | Meaning |
-| --- | --- | --- | --- | --- | --- |
-| OperationalProcessChangeAccepted | business | bdgrz.operational-process.operational-process-change-accepted | 1 | 8 | The operational process record accepted a complete change: its normalized content and claim keys are frozen in the intent and the name-change process continues from this fact. |
-| OperationalProcessChangeCanceled | business | bdgrz.operational-process.operational-process-change-canceled | 1 | 8 | The pending operational process change was canceled after a definite failure; it fences the local apply before any newly acquired claim is released. |
-| OperationalProcessRetired | business | null (recorded) | null (recorded) | [Placeholder: schema absent] | An operational process was retired from the inventory; it can no longer be cited by new boundary or description content, and its governed name is released. |
-| OperationalProcessRevisionRecorded | business | bdgrz.inventory.operational_process.revision_recorded | 1 | 10 | Applies one complete, attributed operational process change after its active name was claimed; revision 1 creates it. The complete normalized OperationalProcessContent is the content behind ContentContent. |
+| Target event | Selected source name | Kind | Adopted discriminator | Version | Schema fields | Meaning |
+| --- | --- | --- | --- | --- | --- | --- |
+| OperationalProcessChangeAccepted | OperationalProcessChangeAccepted | business | bdgrz.operational-process.operational-process-change-accepted | 1 | 8 | The operational process record accepted a complete change: its normalized content and claim keys are frozen in the intent and the name-change process continues from this fact. |
+| OperationalProcessChangeCanceled | OperationalProcessChangeCanceled | business | bdgrz.operational-process.operational-process-change-canceled | 1 | 8 | The pending operational process change was canceled after a definite failure; it fences the local apply before any newly acquired claim is released. |
+| OperationalProcessRetired | OperationalProcessRetired | business | null (recorded) | null (recorded) | [Placeholder: schema absent] | An operational process was retired from the inventory; it can no longer be cited by new boundary or description content, and its governed name is released. |
+| OperationalProcessRevisionRecorded | OperationalProcessRevisionRecorded | business | bdgrz.inventory.operational_process.revision_recorded | 1 | 10 | Applies one complete, attributed operational process change after its active name was claimed; revision 1 creates it. The complete normalized OperationalProcessContent is the content behind ContentContent. |
 
 ## Event details
 
@@ -15,6 +15,9 @@ Canonical events: **4**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | OperationalProcessChangeAccepted |
+| Selected source event name | OperationalProcessChangeAccepted |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:OperationalProcessChangeAccepted |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | OperationalProcessChangeAccepted |
@@ -24,7 +27,8 @@ Canonical events: **4**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | The operational process record accepted a complete change: its normalized content and claim keys are frozen in the intent and the name-change process continues from this fact. |
+| Target meaning | The operational process record accepted a complete change: its normalized content and claim keys are frozen in the intent and the name-change process continues from this fact. |
+| Selected source meaning | The operational process record accepted a complete change: its normalized content and claim keys are frozen in the intent and the name-change process continues from this fact. |
 | Meaning source | record summary in src/Compliance.Common/Features/TechnologyInventory/Events/OperationalProcessChangeAccepted.cs |
 
 #### Selected schema and implementation evidence
@@ -113,6 +117,9 @@ RecordNameChangeIntent
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | OperationalProcessChangeCanceled |
+| Selected source event name | OperationalProcessChangeCanceled |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:OperationalProcessChangeCanceled |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | OperationalProcessChangeCanceled |
@@ -122,7 +129,8 @@ RecordNameChangeIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | The pending operational process change was canceled after a definite failure; it fences the local apply before any newly acquired claim is released. |
+| Target meaning | The pending operational process change was canceled after a definite failure; it fences the local apply before any newly acquired claim is released. |
+| Selected source meaning | The pending operational process change was canceled after a definite failure; it fences the local apply before any newly acquired claim is released. |
 | Meaning source | record summary in src/Compliance.Common/Features/TechnologyInventory/Events/OperationalProcessChangeCanceled.cs |
 
 #### Selected schema and implementation evidence
@@ -209,6 +217,9 @@ RecordNameChangeIntent
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | OperationalProcessRetired |
+| Selected source event name | OperationalProcessRetired |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:OperationalProcessRetired |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | OperationalProcessRetired |
@@ -218,7 +229,8 @@ RecordNameChangeIntent
 | Source status | planned_no_source_type |
 | Adopted decision IDs | EV-D07 |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | An operational process was retired from the inventory; it can no longer be cited by new boundary or description content, and its governed name is released. |
+| Target meaning | An operational process was retired from the inventory; it can no longer be cited by new boundary or description content, and its governed name is released. |
+| Selected source meaning | An operational process was retired from the inventory; it can no longer be cited by new boundary or description content, and its governed name is released. |
 | Meaning source | authored 2026-10-29 |
 
 #### Schema
@@ -241,6 +253,9 @@ RecordNameChangeIntent
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | OperationalProcessRevisionRecorded |
+| Selected source event name | OperationalProcessRevisionRecorded |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:OperationalProcessRevisionRecorded |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | OperationalProcessRevisionRecorded |
@@ -250,7 +265,8 @@ RecordNameChangeIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | Applies one complete, attributed operational process change after its active name was claimed; revision 1 creates it. The complete normalized OperationalProcessContent is the content behind ContentContent. |
+| Target meaning | Applies one complete, attributed operational process change after its active name was claimed; revision 1 creates it. The complete normalized OperationalProcessContent is the content behind ContentContent. |
+| Selected source meaning | Applies one complete, attributed operational process change after its active name was claimed; revision 1 creates it. The complete normalized OperationalProcessContent is the content behind ContentContent. |
 | Meaning source | record summary in src/Compliance.Common/Features/TechnologyInventory/Events/OperationalProcessRevisionRecorded.cs |
 
 #### Selected schema and implementation evidence

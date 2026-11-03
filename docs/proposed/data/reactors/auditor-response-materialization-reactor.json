@@ -1,5 +1,7 @@
 {
-  "root": "AuditorResponseMaterializationReactor",
+  "sourceRoot": "AuditorResponseMaterializationReactor",
+  "targetRoot": "PreserveAuditorResponseDraftAfterRequestReactor",
+  "businessReason": "Keep an accepted auditor response draft even if the request later closes.",
   "rows": [
     {
       "id": "T033",

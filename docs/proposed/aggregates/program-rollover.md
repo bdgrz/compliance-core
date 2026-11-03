@@ -25,7 +25,7 @@
 | --- | --- | --- |
 | [ApproveProgramRollover](../commands/program-rollover.md#approveprogramrollover) | http | CommandId |
 | [ProposeProgramRollover](../commands/program-rollover.md#proposeprogramrollover) | http | RolloverId |
-| [ClaimProgramRolloverExecution](../commands/program-rollover.md#claimprogramrolloverexecution) | command | CommandId |
+| [ReserveProgramRolloverForExecution](../commands/program-rollover.md#reserveprogramrolloverforexecution) | command | CommandId |
 
 ## Events
 
@@ -34,7 +34,7 @@
 | [ProgramNextPeriodCreated](../events/program-rollover.md#programnextperiodcreated) | bdgrz.programs.program-next-period-created | 1 |
 | [ProgramRolloverApproved](../events/program-rollover.md#programrolloverapproved) | bdgrz.programs.program-rollover-approved | 2 |
 | [ProgramRolloverDecisionRecorded](../events/program-rollover.md#programrolloverdecisionrecorded) | bdgrz.programs.program-rollover-decision-recorded | 1 |
-| [ProgramRolloverExecutionClaimed](../events/program-rollover.md#programrolloverexecutionclaimed) | bdgrz.programs.program-rollover-execution-claimed | 1 |
+| [ProgramRolloverReservedForExecution](../events/program-rollover.md#programrolloverreservedforexecution) | bdgrz.programs.program-rollover-execution-claimed | 1 |
 | [ProgramRolloverProposed](../events/program-rollover.md#programrolloverproposed) | bdgrz.programs.program-rollover-proposed | 2 |
 | [ProgramRolloverRevised](../events/program-rollover.md#programrolloverrevised) | bdgrz.programs.program-rollover-revised | 1 |
 

@@ -23,7 +23,11 @@
         "meaning": "A role was assigned to a team by a named actor, so members of the team gain the role's permissions.",
         "meaningSource": "authored 2026-10-29 from src/Compliance.Common/Features/AccessControl/Events/TeamRoleAssigned.cs"
       },
-      "schema": null
+      "schema": null,
+      "sourceName": "TeamRoleAssigned",
+      "targetName": "TeamRoleAssigned",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "A role was assigned to a team by a named actor, so members of the team gain the role's permissions."
     },
     {
       "canonical": {
@@ -47,7 +51,11 @@
         "meaning": "A role was removed from a team by a named actor, ending the assignment episode so team members lose the role's permissions.",
         "meaningSource": "authored 2026-10-29 from src/Compliance.Common/Features/AccessControl/Events/TeamRoleRemoved.cs"
       },
-      "schema": null
+      "schema": null,
+      "sourceName": "TeamRoleRemoved",
+      "targetName": "TeamRoleRemoved",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "A role was removed from a team by a named actor, ending the assignment episode so team members lose the role's permissions."
     }
   ]
 }

@@ -1,5 +1,3 @@
-> Captured from `docs/product/command-list.md`; internal links have been rebased.
-
 # System command list
 
 The source-backed command plan for the product features we have committed to support. Existing commands are listed separately from required additions. Each addition is grounded in the linked P0/P1 feature requirements or an accepted M0 decision. Names describe distinct durable intents; projections, previews, reads, and derived calculations are not commands. Worker and scheduler commands are labeled as internal. P2 hypotheses and scope without accepted requirements are excluded from the required list.

@@ -2,9 +2,9 @@
 
 Canonical events: **1**. Complete canonical event and available schema records: [owner event JSON](../data/events/control-evaluation-plan.json).
 
-| Event | Kind | Adopted discriminator | Version | Schema fields | Meaning |
-| --- | --- | --- | --- | --- | --- |
-| ControlEvaluationPlanVersionDefined | business | bdgrz.control.evaluation.plan.version-defined | 2 | [Placeholder: schema absent] | One complete immutable plan version accepted on its control's plan line. |
+| Target event | Selected source name | Kind | Adopted discriminator | Version | Schema fields | Meaning |
+| --- | --- | --- | --- | --- | --- | --- |
+| ControlEvaluationPlanVersionDefined | ControlEvaluationPlanVersionDefined | business | bdgrz.control.evaluation.plan.version-defined | 2 | [Placeholder: schema absent] | One complete immutable plan version accepted on its control's plan line. |
 
 ## Event details
 
@@ -12,6 +12,9 @@ Canonical events: **1**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | ControlEvaluationPlanVersionDefined |
+| Selected source event name | ControlEvaluationPlanVersionDefined |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:ControlEvaluationPlanVersionDefined |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | ControlEvaluationPlanVersionDefined |
@@ -21,7 +24,8 @@ Canonical events: **1**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | One complete immutable plan version accepted on its control's plan line. |
+| Target meaning | One complete immutable plan version accepted on its control's plan line. |
+| Selected source meaning | One complete immutable plan version accepted on its control's plan line. |
 | Meaning source | record summary in src/Compliance.Common/Features/Evaluations/Events/ControlEvaluationPlanVersionDefined.cs |
 
 #### Schema

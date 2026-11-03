@@ -23,7 +23,11 @@
         "meaning": "A program snapshot of a stated kind was frozen with its complete source manifest and content hash, optionally amending an earlier snapshot, and can no longer change.",
         "meaningSource": "authored 2026-10-29 from src/Compliance.Common/Features/Snapshots/Events/SnapshotFrozen.cs"
       },
-      "schema": null
+      "schema": null,
+      "sourceName": "SnapshotFrozen",
+      "targetName": "SnapshotFinalized",
+      "nameDecision": "Names the complete, immutable snapshot after it can no longer change.",
+      "targetMeaning": "A program snapshot of a stated kind was frozen with its complete source manifest and content hash, optionally amending an earlier snapshot, and can no longer change."
     }
   ]
 }

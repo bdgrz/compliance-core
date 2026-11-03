@@ -76,7 +76,9 @@
         "line": 10791,
         "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       },
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "RecordArtifactRetentionBasis",
+      "targetName": "RecordArtifactRetentionBasis"
     }
   ],
   "sourceContractEvidence": [

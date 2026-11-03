@@ -2,14 +2,14 @@
 
 Selected command contracts: **6**. Complete selected contracts and companion source evidence: [owner command JSON](../data/commands/policy-campaign-participant.json).
 
-| Command | Kind | Identity | Fields | HTTP routes |
-| --- | --- | --- | --- | --- |
-| AcknowledgePolicy | http | CommandId | 9 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/campaigns/{campaign_id}/acknowledgements/{command_id} [ComplianceAuthorizationPolicies.ApiUser] |
-| ApproveCampaignWaiver | http | CommandId | 8 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/campaigns/{campaign_id}/waivers/{command_id} [ComplianceAuthorizationPolicies.ApiUser] |
-| RecordTrainingCompletion | http | CommandId | 10 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/campaigns/{campaign_id}/completions/{command_id} [ComplianceAuthorizationPolicies.ApiUser] |
-| ApplyPolicyParticipantResult | receiver | CommandId | 10 | [Placeholder: value not recorded] |
-| AuthorizePolicyCampaignParticipantCampaignClosureUse | receiver | CommandId | 12 | [Placeholder: value not recorded] |
-| SettlePolicyCampaignParticipantCampaignClosureUse | receiver | CommandId | 11 | [Placeholder: value not recorded] |
+| Target command | Selected source name | Kind | Identity | Fields | HTTP routes |
+| --- | --- | --- | --- | --- | --- |
+| AcknowledgePolicy | AcknowledgePolicy | http | CommandId | 9 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/campaigns/{campaign_id}/acknowledgements/{command_id} [ComplianceAuthorizationPolicies.ApiUser] |
+| ApproveCampaignWaiver | ApproveCampaignWaiver | http | CommandId | 8 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/campaigns/{campaign_id}/waivers/{command_id} [ComplianceAuthorizationPolicies.ApiUser] |
+| RecordTrainingCompletion | RecordTrainingCompletion | http | CommandId | 10 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/campaigns/{campaign_id}/completions/{command_id} [ComplianceAuthorizationPolicies.ApiUser] |
+| ApplyPolicyParticipantResult | ApplyPolicyParticipantResult | receiver | CommandId | 10 | [Placeholder: value not recorded] |
+| AuthorizePolicyCampaignParticipantCampaignClosure | AuthorizePolicyCampaignParticipantCampaignClosureUse | receiver | CommandId | 12 | [Placeholder: value not recorded] |
+| ClosePolicyCampaignParticipantCampaignClosureAuthorization | SettlePolicyCampaignParticipantCampaignClosureUse | receiver | CommandId | 11 | [Placeholder: value not recorded] |
 
 ## Selected command details
 
@@ -17,13 +17,16 @@ Selected command contracts: **6**. Complete selected contracts and companion sou
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | AcknowledgePolicy |
+| Selected source command name | AcknowledgePolicy |
+| Name decision | The selected source name is retained. |
 | Owner | PolicyCampaignParticipant |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | http |
 | Logical identity | CommandId; Uuid; required=true; client; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
 | Entry point | [Placeholder: value not recorded] |
 | MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | [Placeholder: value not recorded] |
+| Selected semantic events | None listed |
 | Protocols | [Placeholder: value not recorded] |
 | Policy preservation | [Placeholder: value not recorded] |
 | Contract changes | [Placeholder: value not recorded] |
@@ -68,13 +71,16 @@ Required tests: [Placeholder: required tests not recorded]
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | ApproveCampaignWaiver |
+| Selected source command name | ApproveCampaignWaiver |
+| Name decision | The selected source name is retained. |
 | Owner | PolicyCampaignParticipant |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | http |
 | Logical identity | CommandId; Uuid; required=true; client; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
 | Entry point | [Placeholder: value not recorded] |
 | MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | [Placeholder: value not recorded] |
+| Selected semantic events | None listed |
 | Protocols | [Placeholder: value not recorded] |
 | Policy preservation | [Placeholder: value not recorded] |
 | Contract changes | [Placeholder: value not recorded] |
@@ -118,13 +124,16 @@ Required tests: [Placeholder: required tests not recorded]
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | RecordTrainingCompletion |
+| Selected source command name | RecordTrainingCompletion |
+| Name decision | The selected source name is retained. |
 | Owner | PolicyCampaignParticipant |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | http |
 | Logical identity | CommandId; Uuid; required=true; client; deterministic receiver identity derived from the admitted root fact, episode and generation: exact redelivery resolves the original result, a changed admission is a new identity |
 | Entry point | [Placeholder: value not recorded] |
 | MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | [Placeholder: value not recorded] |
+| Selected semantic events | None listed |
 | Protocols | [Placeholder: value not recorded] |
 | Policy preservation | [Placeholder: value not recorded] |
 | Contract changes | [Placeholder: value not recorded] |
@@ -170,13 +179,16 @@ Required tests: [Placeholder: required tests not recorded]
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | ApplyPolicyParticipantResult |
+| Selected source command name | ApplyPolicyParticipantResult |
+| Name decision | The selected source name is retained. |
 | Owner | PolicyCampaignParticipant |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; internal; deterministic receiver identity derived from the admitted root fact, episode and generation: exact redelivery resolves the original result, a changed admission is a new identity |
 | Entry point | [Placeholder: value not recorded] |
 | MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | [Placeholder: value not recorded] |
+| Selected semantic events | None listed |
 | Protocols | [Placeholder: value not recorded] |
 | Policy preservation | [Placeholder: value not recorded] |
 | Contract changes | [Placeholder: value not recorded] |
@@ -216,17 +228,20 @@ Existing tests: [Placeholder: existing tests not recorded]
 
 Required tests: [Placeholder: required tests not recorded]
 
-### AuthorizePolicyCampaignParticipantCampaignClosureUse
+### AuthorizePolicyCampaignParticipantCampaignClosure
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | AuthorizePolicyCampaignParticipantCampaignClosure |
+| Selected source command name | AuthorizePolicyCampaignParticipantCampaignClosureUse |
+| Name decision | The command authorizes the named business action; the extra Use suffix describes the coordination mechanism. |
 | Owner | PolicyCampaignParticipant |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; internal; deterministic receiver identity derived from the admitted root fact, episode and generation: exact redelivery resolves the original result, a changed admission is a new identity |
 | Entry point | [Placeholder: value not recorded] |
 | MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | [Placeholder: value not recorded] |
+| Selected semantic events | None listed |
 | Protocols | [Placeholder: value not recorded] |
 | Policy preservation | [Placeholder: value not recorded] |
 | Contract changes | [Placeholder: value not recorded] |
@@ -268,17 +283,20 @@ Existing tests: [Placeholder: existing tests not recorded]
 
 Required tests: [Placeholder: required tests not recorded]
 
-### SettlePolicyCampaignParticipantCampaignClosureUse
+### ClosePolicyCampaignParticipantCampaignClosureAuthorization
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | ClosePolicyCampaignParticipantCampaignClosureAuthorization |
+| Selected source command name | SettlePolicyCampaignParticipantCampaignClosureUse |
+| Name decision | The command ends the exact authorization after its business action or cancellation. |
 | Owner | PolicyCampaignParticipant |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; internal; deterministic receiver identity derived from the admitted root fact, episode and generation: exact redelivery resolves the original result, a changed admission is a new identity |
 | Entry point | [Placeholder: value not recorded] |
 | MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | [Placeholder: value not recorded] |
+| Selected semantic events | None listed |
 | Protocols | [Placeholder: value not recorded] |
 | Policy preservation | [Placeholder: value not recorded] |
 | Contract changes | [Placeholder: value not recorded] |

@@ -25,31 +25,31 @@
 | --- | --- | --- |
 | [EvaluateClientIndependence](../commands/client-service-independence.md#evaluateclientindependence) | http | EvaluationId |
 | [RecordNonattestService](../commands/client-service-independence.md#recordnonattestservice) | http | ServiceRecordId |
-| [AcquireEngagementServiceEpoch](../commands/client-service-independence.md#acquireengagementserviceepoch) | receiver | CommandId |
-| [ReleaseEngagementServiceEpoch](../commands/client-service-independence.md#releaseengagementserviceepoch) | receiver | CommandId |
-| [AuthorizeClientServicePersonalDecisionUse](../commands/client-service-independence.md#authorizeclientservicepersonaldecisionuse) | receiver | CommandId |
-| [SettleClientServicePersonalDecisionUse](../commands/client-service-independence.md#settleclientservicepersonaldecisionuse) | receiver | CommandId |
+| [ReserveEngagementServiceHistory](../commands/client-service-independence.md#reserveengagementservicehistory) | receiver | CommandId |
+| [ReleaseEngagementServiceHistoryReservation](../commands/client-service-independence.md#releaseengagementservicehistoryreservation) | receiver | CommandId |
+| [AuthorizeClientServicePersonalDecision](../commands/client-service-independence.md#authorizeclientservicepersonaldecision) | receiver | CommandId |
+| [CloseClientServicePersonalDecisionAuthorization](../commands/client-service-independence.md#closeclientservicepersonaldecisionauthorization) | receiver | CommandId |
 
 ## Events
 
 | Event | Discriminator | Version |
 | --- | --- | --- |
 | [ClientIndependenceEvaluationAdmitted](../events/client-service-independence.md#clientindependenceevaluationadmitted) | bdgrz.client-service-independence.client-independence-evaluation-admitted | 1 |
-| [ClientServicePersonalDecisionUseAuthorized](../events/client-service-independence.md#clientservicepersonaldecisionuseauthorized) | bdgrz.client-service-independence.client-service-personal-decision-use-authorized | 1 |
-| [ClientServicePersonalDecisionUseSettled](../events/client-service-independence.md#clientservicepersonaldecisionusesettled) | bdgrz.client-service-independence.client-service-personal-decision-use-settled | 1 |
-| [EngagementServiceEpochAuthorized](../events/client-service-independence.md#engagementserviceepochauthorized) | bdgrz.client-service-independence.engagement-service-epoch-authorized | 1 |
-| [EngagementServiceEpochSettled](../events/client-service-independence.md#engagementserviceepochsettled) | bdgrz.client-service-independence.engagement-service-epoch-settled | 1 |
+| [ClientServicePersonalDecisionAuthorized](../events/client-service-independence.md#clientservicepersonaldecisionauthorized) | bdgrz.client-service-independence.client-service-personal-decision-use-authorized | 1 |
+| [ClientServicePersonalDecisionAuthorizationClosed](../events/client-service-independence.md#clientservicepersonaldecisionauthorizationclosed) | bdgrz.client-service-independence.client-service-personal-decision-use-settled | 1 |
+| [EngagementServiceHistoryReserved](../events/client-service-independence.md#engagementservicehistoryreserved) | bdgrz.client-service-independence.engagement-service-epoch-authorized | 1 |
+| [EngagementServiceHistoryReservationEnded](../events/client-service-independence.md#engagementservicehistoryreservationended) | bdgrz.client-service-independence.engagement-service-epoch-settled | 1 |
 | [NonattestServiceRecorded](../events/client-service-independence.md#nonattestservicerecorded) | bdgrz.independence.service.recorded | 1 |
 
 ## Cross-owner flows
 
 | Row | Kind | Source owner | Target owner | Command |
 | --- | --- | --- | --- | --- |
-| [T004](../reactors/engagement-acceptance-reactor.md#t004) | reaction_or_regular_process_stage | ServiceEngagementIndependence | ClientServiceIndependence | AcquireEngagementServiceEpoch |
-| [T007](../reactors/engagement-acceptance-reactor.md#t007) | reaction_or_regular_process_stage | ServiceEngagementIndependence | ClientServiceIndependence | ReleaseEngagementServiceEpoch |
-| [T106](../reactors/client-independence-preview-reactor.md#t106) | reaction_or_regular_process_stage | ClientServiceIndependence | ClientIndependenceDecision | MaterializeClientIndependencePreview |
-| [T107](../reactors/engagement-personal-decision-reactor.md#t107) | reaction_or_regular_process_stage | ServiceEngagementIndependence | ClientServiceIndependence | AuthorizeClientServicePersonalDecisionUse |
-| [T111](../reactors/engagement-personal-decision-reactor.md#t111) | reaction_or_regular_process_stage | ServiceEngagementIndependence | ClientServiceIndependence | SettleClientServicePersonalDecisionUse |
+| [T004](../reactors/engagement-acceptance-reactor.md#t004) | reaction_or_regular_process_stage | ServiceEngagementIndependence | ClientServiceIndependence | ReserveEngagementServiceHistory |
+| [T007](../reactors/engagement-acceptance-reactor.md#t007) | reaction_or_regular_process_stage | ServiceEngagementIndependence | ClientServiceIndependence | ReleaseEngagementServiceHistoryReservation |
+| [T106](../reactors/client-independence-preview-reactor.md#t106) | reaction_or_regular_process_stage | ClientServiceIndependence | ClientIndependenceDecision | RecordClientIndependenceEvaluation |
+| [T107](../reactors/engagement-personal-decision-reactor.md#t107) | reaction_or_regular_process_stage | ServiceEngagementIndependence | ClientServiceIndependence | AuthorizeClientServicePersonalDecision |
+| [T111](../reactors/engagement-personal-decision-reactor.md#t111) | reaction_or_regular_process_stage | ServiceEngagementIndependence | ClientServiceIndependence | CloseClientServicePersonalDecisionAuthorization |
 
 ## Product rules
 

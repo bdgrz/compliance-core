@@ -27,15 +27,15 @@
 | [RevokeFirmProfessionalDutyDesignation](../commands/firm-professional-duty-designation.md#revokefirmprofessionaldutydesignation) | http | AssertionId |
 | [RejectProfessionalDutyChange](../commands/firm-professional-duty-designation.md#rejectprofessionaldutychange) | abort | CommandId |
 | [ApplyProfessionalDutyChange](../commands/firm-professional-duty-designation.md#applyprofessionaldutychange) | receiver | CommandId |
-| [AuthorizeFirmProfessionalDutyDesignationEngagementUse](../commands/firm-professional-duty-designation.md#authorizefirmprofessionaldutydesignationengagementuse) | receiver | CommandId |
-| [SettleFirmProfessionalDutyDesignationEngagementUse](../commands/firm-professional-duty-designation.md#settlefirmprofessionaldutydesignationengagementuse) | receiver | CommandId |
+| [AuthorizeFirmProfessionalDutyDesignationEngagement](../commands/firm-professional-duty-designation.md#authorizefirmprofessionaldutydesignationengagement) | receiver | CommandId |
+| [CloseFirmProfessionalDutyDesignationEngagementAuthorization](../commands/firm-professional-duty-designation.md#closefirmprofessionaldutydesignationengagementauthorization) | receiver | CommandId |
 
 ## Events
 
 | Event | Discriminator | Version |
 | --- | --- | --- |
-| [FirmProfessionalDutyDesignationEngagementUseAuthorized](../events/firm-professional-duty-designation.md#firmprofessionaldutydesignationengagementuseauthorized) | bdgrz.firm-professional-duty-designation.firm-professional-duty-designation-engagement-use-authorized | 1 |
-| [FirmProfessionalDutyDesignationEngagementUseSettled](../events/firm-professional-duty-designation.md#firmprofessionaldutydesignationengagementusesettled) | bdgrz.firm-professional-duty-designation.firm-professional-duty-designation-engagement-use-settled | 1 |
+| [FirmProfessionalDutyDesignationEngagementAuthorized](../events/firm-professional-duty-designation.md#firmprofessionaldutydesignationengagementauthorized) | bdgrz.firm-professional-duty-designation.firm-professional-duty-designation-engagement-use-authorized | 1 |
+| [FirmProfessionalDutyDesignationEngagementAuthorizationClosed](../events/firm-professional-duty-designation.md#firmprofessionaldutydesignationengagementauthorizationclosed) | bdgrz.firm-professional-duty-designation.firm-professional-duty-designation-engagement-use-settled | 1 |
 | [FirmProfessionalDutyDesignationRecorded](../events/firm-professional-duty-designation.md#firmprofessionaldutydesignationrecorded) | bdgrz.firm.professional-duty.designation-recorded | 1 |
 | [FirmProfessionalDutyDesignationRevoked](../events/firm-professional-duty-designation.md#firmprofessionaldutydesignationrevoked) | bdgrz.firm.professional-duty.designation-revoked | 1 |
 | [ProfessionalDutyChangeAccepted](../events/firm-professional-duty-designation.md#professionaldutychangeaccepted) | bdgrz.firm-professional-duty-designation.professional-duty-change-accepted | 1 |
@@ -47,10 +47,10 @@
 | --- | --- | --- | --- | --- |
 | [T000](../reactors/professional-duty-change-reactor.md#t000) | reaction_or_regular_process_stage | FirmProfessionalDutyDesignation | ProfessionalAssertionIdentityClaim | ClaimProfessionalAssertionIdentity |
 | [T001](../reactors/professional-duty-change-reactor.md#t001) | reaction_or_regular_process_stage | ProfessionalAssertionIdentityClaim | FirmProfessionalDutyDesignation | ApplyProfessionalDutyChange |
-| [T091](../reactors/engagement-acceptance-reactor.md#t091) | reaction_or_regular_process_stage | ServiceEngagementIndependence | FirmProfessionalDutyDesignation | AuthorizeFirmProfessionalDutyDesignationEngagementUse |
-| [T092](../reactors/engagement-acceptance-reactor.md#t092) | reaction_or_regular_process_stage | ServiceEngagementIndependence | FirmProfessionalDutyDesignation | SettleFirmProfessionalDutyDesignationEngagementUse |
-| [T113](../reactors/professional-duty-change-reactor.md#t113) | reaction_or_regular_process_stage | FirmProfessionalDutyDesignation | FirmStaffRecord | AuthorizeFirmStaffProfessionalDutyUse |
-| [T114](../reactors/professional-duty-change-reactor.md#t114) | reaction_or_regular_process_stage | FirmProfessionalDutyDesignation | FirmStaffRecord | SettleFirmStaffProfessionalDutyUse |
+| [T091](../reactors/engagement-acceptance-reactor.md#t091) | reaction_or_regular_process_stage | ServiceEngagementIndependence | FirmProfessionalDutyDesignation | AuthorizeFirmProfessionalDutyDesignationEngagement |
+| [T092](../reactors/engagement-acceptance-reactor.md#t092) | reaction_or_regular_process_stage | ServiceEngagementIndependence | FirmProfessionalDutyDesignation | CloseFirmProfessionalDutyDesignationEngagementAuthorization |
+| [T113](../reactors/professional-duty-change-reactor.md#t113) | reaction_or_regular_process_stage | FirmProfessionalDutyDesignation | FirmStaffRecord | AuthorizeFirmStaffProfessionalDuty |
+| [T114](../reactors/professional-duty-change-reactor.md#t114) | reaction_or_regular_process_stage | FirmProfessionalDutyDesignation | FirmStaffRecord | CloseFirmStaffProfessionalDutyAuthorization |
 | [A000](../reactors/unassigned-architecture-rows.md#a000) | process_abort_binding | FirmProfessionalDutyDesignation | FirmProfessionalDutyDesignation | RejectProfessionalDutyChange |
 
 ## Product rules

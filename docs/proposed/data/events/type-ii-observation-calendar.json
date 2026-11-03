@@ -191,7 +191,11 @@
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "resolvedIntentSchema": "TypeIIRangeIntent",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "TypeIIPeriodRangeAuthorized",
+      "targetName": "TypeIIPeriodDateRangeReserved",
+      "nameDecision": "Names the reserved observation dates before a Type II period opening or amendment.",
+      "targetMeaning": "The calendar holds the new range of one opening or amendment. The calendar's own reservation generation is the number of authorizations up to and including this fact. PriorOperationId names the live reservation an amendment replaces; that reservation stays held until the amendment is applied. The range and period remain on the native fact; Header and CurrentAuthority bind the compact live authority and linked terminal history."
     },
     {
       "canonical": {
@@ -383,7 +387,11 @@
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "resolvedIntentSchema": "TypeIIRangeIntent",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "TypeIIPeriodRangeSettled",
+      "targetName": "TypeIIPeriodDateRangeReservationEnded",
+      "nameDecision": "Names the end of the exact date reservation after acceptance, replacement, or cancellation.",
+      "targetMeaning": "The calendar settled exactly one reservation, TargetOperationId, and for an applied amendment also released the replaced ReleasedOperationId. A settlement before any authorization fences the reservation so a late acquisition is refused."
     }
   ]
 }

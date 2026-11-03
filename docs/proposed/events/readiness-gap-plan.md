@@ -2,12 +2,12 @@
 
 Canonical events: **4**. Complete canonical event and available schema records: [owner event JSON](../data/events/readiness-gap-plan.json).
 
-| Event | Kind | Adopted discriminator | Version | Schema fields | Meaning |
-| --- | --- | --- | --- | --- | --- |
-| ReadinessGapAnnotated | business | bdgrz.readiness.gap.annotated | 1 | 7 | Advisor feedback was recorded on a gap as the root native fact of its operation. Revision is the gap plan revision at the annotation, which an annotation never advances. |
-| ReadinessGapPlanReadinessDecisionUseAuthorized | reservation | bdgrz.readiness-gap-plan.readiness-gap-plan-readiness-decision-use-authorized | 1 | 8 | The exact gap plan is held for a readiness decision. The use does not advance the gap plan revision: Revision is the held revision, and Generation is the adoption generation the decision seals. |
-| ReadinessGapPlanReadinessDecisionUseSettled | reservation | bdgrz.readiness-gap-plan.readiness-gap-plan-readiness-decision-use-settled | 1 | 8 | A readiness decision use of a gap plan ended: released after the irreversible decision, or cleared after the decision was canceled. A settlement before any grant fences the key so a delayed acquisition cannot recreate the authority. The disposition is recorded in the settlement intent. |
-| ReadinessGapPlanned | business | bdgrz.readiness.gap.planned | 1 | 7 | A gap plan was recorded as the root native fact of its operation. Revision is the gap plan revision after this plan and PlanContent the complete ReadinessGapPlanView. |
+| Target event | Selected source name | Kind | Adopted discriminator | Version | Schema fields | Meaning |
+| --- | --- | --- | --- | --- | --- | --- |
+| ReadinessGapAnnotated | ReadinessGapAnnotated | business | bdgrz.readiness.gap.annotated | 1 | 7 | Advisor feedback was recorded on a gap as the root native fact of its operation. Revision is the gap plan revision at the annotation, which an annotation never advances. |
+| ReadinessGapPlanReadinessDecisionAuthorized | ReadinessGapPlanReadinessDecisionUseAuthorized | reservation | bdgrz.readiness-gap-plan.readiness-gap-plan-readiness-decision-use-authorized | 1 | 8 | The exact gap plan is held for a readiness decision. The use does not advance the gap plan revision: Revision is the held revision, and Generation is the adoption generation the decision seals. |
+| ReadinessGapPlanReadinessDecisionAuthorizationClosed | ReadinessGapPlanReadinessDecisionUseSettled | reservation | bdgrz.readiness-gap-plan.readiness-gap-plan-readiness-decision-use-settled | 1 | 8 | A readiness decision use of a gap plan ended: released after the irreversible decision, or cleared after the decision was canceled. A settlement before any grant fences the key so a delayed acquisition cannot recreate the authority. The disposition is recorded in the settlement intent. |
+| ReadinessGapPlanned | ReadinessGapPlanned | business | bdgrz.readiness.gap.planned | 1 | 7 | A gap plan was recorded as the root native fact of its operation. Revision is the gap plan revision after this plan and PlanContent the complete ReadinessGapPlanView. |
 
 ## Event details
 
@@ -15,6 +15,9 @@ Canonical events: **4**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | ReadinessGapAnnotated |
+| Selected source event name | ReadinessGapAnnotated |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:ReadinessGapAnnotated |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | ReadinessGapAnnotated |
@@ -24,7 +27,8 @@ Canonical events: **4**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | Advisor feedback was recorded on a gap as the root native fact of its operation. Revision is the gap plan revision at the annotation, which an annotation never advances. |
+| Target meaning | Advisor feedback was recorded on a gap as the root native fact of its operation. Revision is the gap plan revision at the annotation, which an annotation never advances. |
+| Selected source meaning | Advisor feedback was recorded on a gap as the root native fact of its operation. Revision is the gap plan revision at the annotation, which an annotation never advances. |
 | Meaning source | record summary in src/Compliance.Common/Features/Readiness/Events/ReadinessGapAnnotated.cs |
 
 #### Selected schema and implementation evidence
@@ -73,10 +77,13 @@ Canonical events: **4**. Complete canonical event and available schema records: 
 
 [Placeholder: no selected choreography row names this event as root, prerequisite, or emitted fact.]
 
-### ReadinessGapPlanReadinessDecisionUseAuthorized
+### ReadinessGapPlanReadinessDecisionAuthorized
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | ReadinessGapPlanReadinessDecisionAuthorized |
+| Selected source event name | ReadinessGapPlanReadinessDecisionUseAuthorized |
+| Name decision | Authorization is already the completed fact; Use adds no stakeholder meaning. |
 | Canonical semantic key | event:ReadinessGapPlanReadinessDecisionUseAuthorized |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | ReadinessGapPlanReadinessDecisionUseAuthorized |
@@ -86,7 +93,8 @@ Canonical events: **4**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | The exact gap plan is held for a readiness decision. The use does not advance the gap plan revision: Revision is the held revision, and Generation is the adoption generation the decision seals. |
+| Target meaning | The exact gap plan is held for a readiness decision. The use does not advance the gap plan revision: Revision is the held revision, and Generation is the adoption generation the decision seals. |
+| Selected source meaning | The exact gap plan is held for a readiness decision. The use does not advance the gap plan revision: Revision is the held revision, and Generation is the adoption generation the decision seals. |
 | Meaning source | record summary in src/Compliance.Common/Features/Readiness/Events/ReadinessGapPlanReadinessDecisionUseAuthorized.cs |
 
 #### Selected schema and implementation evidence
@@ -160,12 +168,15 @@ SourceUseAuthorizationIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T065](../reactors/readiness-decision-reactor.md#t065) | emitted semantic fact | ProgramReadiness | AuthorizeReadinessGapPlanReadinessDecisionUse | ReadinessGapPlan |
+| [T065](../reactors/readiness-decision-reactor.md#t065) | emitted semantic fact | ProgramReadiness | AuthorizeReadinessGapPlanReadinessDecision | ReadinessGapPlan |
 
-### ReadinessGapPlanReadinessDecisionUseSettled
+### ReadinessGapPlanReadinessDecisionAuthorizationClosed
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | ReadinessGapPlanReadinessDecisionAuthorizationClosed |
+| Selected source event name | ReadinessGapPlanReadinessDecisionUseSettled |
+| Name decision | The exact authorization ended; the recorded outcome still distinguishes use, cancellation, or a late fence. |
 | Canonical semantic key | event:ReadinessGapPlanReadinessDecisionUseSettled |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | ReadinessGapPlanReadinessDecisionUseSettled |
@@ -175,7 +186,8 @@ SourceUseAuthorizationIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | A readiness decision use of a gap plan ended: released after the irreversible decision, or cleared after the decision was canceled. A settlement before any grant fences the key so a delayed acquisition cannot recreate the authority. The disposition is recorded in the settlement intent. |
+| Target meaning | A readiness decision use of a gap plan ended: released after the irreversible decision, or cleared after the decision was canceled. A settlement before any grant fences the key so a delayed acquisition cannot recreate the authority. The disposition is recorded in the settlement intent. |
+| Selected source meaning | A readiness decision use of a gap plan ended: released after the irreversible decision, or cleared after the decision was canceled. A settlement before any grant fences the key so a delayed acquisition cannot recreate the authority. The disposition is recorded in the settlement intent. |
 | Meaning source | record summary in src/Compliance.Common/Features/Readiness/Events/ReadinessGapPlanReadinessDecisionUseSettled.cs |
 
 #### Selected schema and implementation evidence
@@ -249,12 +261,15 @@ SourceUseAuthorizationIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T066](../reactors/readiness-decision-reactor.md#t066) | emitted semantic fact | ProgramReadiness | SettleReadinessGapPlanReadinessDecisionUse | ReadinessGapPlan |
+| [T066](../reactors/readiness-decision-reactor.md#t066) | emitted semantic fact | ProgramReadiness | CloseReadinessGapPlanReadinessDecisionAuthorization | ReadinessGapPlan |
 
 ### ReadinessGapPlanned
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | ReadinessGapPlanned |
+| Selected source event name | ReadinessGapPlanned |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:ReadinessGapPlanned |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | ReadinessGapPlanned |
@@ -264,7 +279,8 @@ SourceUseAuthorizationIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | A gap plan was recorded as the root native fact of its operation. Revision is the gap plan revision after this plan and PlanContent the complete ReadinessGapPlanView. |
+| Target meaning | A gap plan was recorded as the root native fact of its operation. Revision is the gap plan revision after this plan and PlanContent the complete ReadinessGapPlanView. |
+| Selected source meaning | A gap plan was recorded as the root native fact of its operation. Revision is the gap plan revision after this plan and PlanContent the complete ReadinessGapPlanView. |
 | Meaning source | record summary in src/Compliance.Common/Features/Readiness/Events/ReadinessGapPlanned.cs |
 
 #### Selected schema and implementation evidence

@@ -2,14 +2,14 @@
 
 Canonical events: **6**. Complete canonical event and available schema records: [owner event JSON](../data/events/client-service-independence.json).
 
-| Event | Kind | Adopted discriminator | Version | Schema fields | Meaning |
-| --- | --- | --- | --- | --- | --- |
-| ClientIndependenceEvaluationAdmitted | business | bdgrz.client-service-independence.client-independence-evaluation-admitted | 1 | 8 | The root native acceptance of a client independence preview on the service-epoch owner. It freezes the complete preview intent at Revision, the service epoch at admission, and does not advance the epoch. The preview itself is materialized later by ClientIndependencePreviewProcess. |
-| ClientServicePersonalDecisionUseAuthorized | reservation | bdgrz.client-service-independence.client-service-personal-decision-use-authorized | 1 | 8 | Holds the exact complete service history and epoch a personal decision relies on; the use does not advance the public revision, so Revision is the held revision. |
-| ClientServicePersonalDecisionUseSettled | reservation | bdgrz.client-service-independence.client-service-personal-decision-use-settled | 1 | 8 | The use of the client service history ended after the irreversible personal decision or after cancellation. A settlement before any grant fences the key against late acquisition. |
-| EngagementServiceEpochAuthorized | reservation | bdgrz.client-service-independence.engagement-service-epoch-authorized | 1 | 8 | The client's complete service history at its current epoch was held for an engagement acceptance or staff assignment to rely on, and while held no further services may be added. |
-| EngagementServiceEpochSettled | reservation | bdgrz.client-service-independence.engagement-service-epoch-settled | 1 | 8 | The hold of the service epoch ended after the operation recorded its terminal fact. A settlement before any grant fences the key against late acquisition. Permanent practice commitments are never affected. |
-| NonattestServiceRecorded | business | bdgrz.independence.service.recorded | 1 | 7 | One nonattest service appended to the complete history of a client. The complete NonattestServiceView is immutable content; Revision is the service epoch after this service. The service record identity is OperationId. |
+| Target event | Selected source name | Kind | Adopted discriminator | Version | Schema fields | Meaning |
+| --- | --- | --- | --- | --- | --- | --- |
+| ClientIndependenceEvaluationAdmitted | ClientIndependenceEvaluationAdmitted | business | bdgrz.client-service-independence.client-independence-evaluation-admitted | 1 | 8 | The root native acceptance of a client independence preview on the service-epoch owner. It freezes the complete preview intent at Revision, the service epoch at admission, and does not advance the epoch. The preview itself is materialized later by ClientIndependencePreviewProcess. |
+| ClientServicePersonalDecisionAuthorized | ClientServicePersonalDecisionUseAuthorized | reservation | bdgrz.client-service-independence.client-service-personal-decision-use-authorized | 1 | 8 | Holds the exact complete service history and epoch a personal decision relies on; the use does not advance the public revision, so Revision is the held revision. |
+| ClientServicePersonalDecisionAuthorizationClosed | ClientServicePersonalDecisionUseSettled | reservation | bdgrz.client-service-independence.client-service-personal-decision-use-settled | 1 | 8 | The use of the client service history ended after the irreversible personal decision or after cancellation. A settlement before any grant fences the key against late acquisition. |
+| EngagementServiceHistoryReserved | EngagementServiceEpochAuthorized | reservation | bdgrz.client-service-independence.engagement-service-epoch-authorized | 1 | 8 | The client's complete service history at its current epoch was held for an engagement acceptance or staff assignment to rely on, and while held no further services may be added. |
+| EngagementServiceHistoryReservationEnded | EngagementServiceEpochSettled | reservation | bdgrz.client-service-independence.engagement-service-epoch-settled | 1 | 8 | The hold of the service epoch ended after the operation recorded its terminal fact. A settlement before any grant fences the key against late acquisition. Permanent practice commitments are never affected. |
+| NonattestServiceRecorded | NonattestServiceRecorded | business | bdgrz.independence.service.recorded | 1 | 7 | One nonattest service appended to the complete history of a client. The complete NonattestServiceView is immutable content; Revision is the service epoch after this service. The service record identity is OperationId. |
 
 ## Event details
 
@@ -17,6 +17,9 @@ Canonical events: **6**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | ClientIndependenceEvaluationAdmitted |
+| Selected source event name | ClientIndependenceEvaluationAdmitted |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:ClientIndependenceEvaluationAdmitted |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | ClientIndependenceEvaluationAdmitted |
@@ -26,7 +29,8 @@ Canonical events: **6**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | The root native acceptance of a client independence preview on the service-epoch owner. It freezes the complete preview intent at Revision, the service epoch at admission, and does not advance the epoch. The preview itself is materialized later by ClientIndependencePreviewProcess. |
+| Target meaning | The root native acceptance of a client independence preview on the service-epoch owner. It freezes the complete preview intent at Revision, the service epoch at admission, and does not advance the epoch. The preview itself is materialized later by ClientIndependencePreviewProcess. |
+| Selected source meaning | The root native acceptance of a client independence preview on the service-epoch owner. It freezes the complete preview intent at Revision, the service epoch at admission, and does not advance the epoch. The preview itself is materialized later by ClientIndependencePreviewProcess. |
 | Meaning source | record summary in src/Compliance.Common/Features/AccessControl/Events/ClientIndependenceEvaluationAdmitted.cs |
 
 #### Selected schema and implementation evidence
@@ -110,12 +114,15 @@ ClientIndependencePreviewIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T106](../reactors/client-independence-preview-reactor.md#t106) | physical root, logical prerequisite | ClientServiceIndependence | MaterializeClientIndependencePreview | ClientIndependenceDecision |
+| [T106](../reactors/client-independence-preview-reactor.md#t106) | physical root, logical prerequisite | ClientServiceIndependence | RecordClientIndependenceEvaluation | ClientIndependenceDecision |
 
-### ClientServicePersonalDecisionUseAuthorized
+### ClientServicePersonalDecisionAuthorized
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | ClientServicePersonalDecisionAuthorized |
+| Selected source event name | ClientServicePersonalDecisionUseAuthorized |
+| Name decision | Authorization is already the completed fact; Use adds no stakeholder meaning. |
 | Canonical semantic key | event:ClientServicePersonalDecisionUseAuthorized |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | ClientServicePersonalDecisionUseAuthorized |
@@ -125,7 +132,8 @@ ClientIndependencePreviewIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | Holds the exact complete service history and epoch a personal decision relies on; the use does not advance the public revision, so Revision is the held revision. |
+| Target meaning | Holds the exact complete service history and epoch a personal decision relies on; the use does not advance the public revision, so Revision is the held revision. |
+| Selected source meaning | Holds the exact complete service history and epoch a personal decision relies on; the use does not advance the public revision, so Revision is the held revision. |
 | Meaning source | record summary in src/Compliance.Common/Features/AccessControl/Events/ClientServicePersonalDecisionUseAuthorized.cs |
 
 #### Selected schema and implementation evidence
@@ -199,12 +207,15 @@ SourceUseAuthorizationIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T107](../reactors/engagement-personal-decision-reactor.md#t107) | emitted semantic fact | ServiceEngagementIndependence | AuthorizeClientServicePersonalDecisionUse | ClientServiceIndependence |
+| [T107](../reactors/engagement-personal-decision-reactor.md#t107) | emitted semantic fact | ServiceEngagementIndependence | AuthorizeClientServicePersonalDecision | ClientServiceIndependence |
 
-### ClientServicePersonalDecisionUseSettled
+### ClientServicePersonalDecisionAuthorizationClosed
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | ClientServicePersonalDecisionAuthorizationClosed |
+| Selected source event name | ClientServicePersonalDecisionUseSettled |
+| Name decision | The exact authorization ended; the recorded outcome still distinguishes use, cancellation, or a late fence. |
 | Canonical semantic key | event:ClientServicePersonalDecisionUseSettled |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | ClientServicePersonalDecisionUseSettled |
@@ -214,7 +225,8 @@ SourceUseAuthorizationIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | The use of the client service history ended after the irreversible personal decision or after cancellation. A settlement before any grant fences the key against late acquisition. |
+| Target meaning | The use of the client service history ended after the irreversible personal decision or after cancellation. A settlement before any grant fences the key against late acquisition. |
+| Selected source meaning | The use of the client service history ended after the irreversible personal decision or after cancellation. A settlement before any grant fences the key against late acquisition. |
 | Meaning source | record summary in src/Compliance.Common/Features/AccessControl/Events/ClientServicePersonalDecisionUseSettled.cs |
 
 #### Selected schema and implementation evidence
@@ -288,12 +300,15 @@ SourceUseAuthorizationIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T111](../reactors/engagement-personal-decision-reactor.md#t111) | emitted semantic fact | ServiceEngagementIndependence | SettleClientServicePersonalDecisionUse | ClientServiceIndependence |
+| [T111](../reactors/engagement-personal-decision-reactor.md#t111) | emitted semantic fact | ServiceEngagementIndependence | CloseClientServicePersonalDecisionAuthorization | ClientServiceIndependence |
 
-### EngagementServiceEpochAuthorized
+### EngagementServiceHistoryReserved
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | EngagementServiceHistoryReserved |
+| Selected source event name | EngagementServiceEpochAuthorized |
+| Name decision | Names the exact service-history hold while the engagement decision is made. |
 | Canonical semantic key | event:EngagementServiceEpochAuthorized |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | EngagementServiceEpochAuthorized |
@@ -303,7 +318,8 @@ SourceUseAuthorizationIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | The client's complete service history at its current epoch was held for an engagement acceptance or staff assignment to rely on, and while held no further services may be added. |
+| Target meaning | The client's complete service history at its current epoch was held for an engagement acceptance or staff assignment to rely on, and while held no further services may be added. |
+| Selected source meaning | The client's complete service history at its current epoch was held for an engagement acceptance or staff assignment to rely on, and while held no further services may be added. |
 | Meaning source | authored 2026-10-29 from src/Compliance.Common/Features/AccessControl/Events/EngagementServiceEpochAuthorized.cs |
 
 #### Selected schema and implementation evidence
@@ -391,12 +407,15 @@ EngagementIndependenceIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T004](../reactors/engagement-acceptance-reactor.md#t004) | emitted semantic fact | ServiceEngagementIndependence | AcquireEngagementServiceEpoch | ClientServiceIndependence |
+| [T004](../reactors/engagement-acceptance-reactor.md#t004) | emitted semantic fact | ServiceEngagementIndependence | ReserveEngagementServiceHistory | ClientServiceIndependence |
 
-### EngagementServiceEpochSettled
+### EngagementServiceHistoryReservationEnded
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | EngagementServiceHistoryReservationEnded |
+| Selected source event name | EngagementServiceEpochSettled |
+| Name decision | Names the end of the temporary service-history hold after decision or cancellation. |
 | Canonical semantic key | event:EngagementServiceEpochSettled |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | EngagementServiceEpochSettled |
@@ -406,7 +425,8 @@ EngagementIndependenceIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | The hold of the service epoch ended after the operation recorded its terminal fact. A settlement before any grant fences the key against late acquisition. Permanent practice commitments are never affected. |
+| Target meaning | The hold of the service epoch ended after the operation recorded its terminal fact. A settlement before any grant fences the key against late acquisition. Permanent practice commitments are never affected. |
+| Selected source meaning | The hold of the service epoch ended after the operation recorded its terminal fact. A settlement before any grant fences the key against late acquisition. Permanent practice commitments are never affected. |
 | Meaning source | record summary in src/Compliance.Common/Features/AccessControl/Events/EngagementServiceEpochSettled.cs |
 
 #### Selected schema and implementation evidence
@@ -494,12 +514,15 @@ EngagementIndependenceIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T007](../reactors/engagement-acceptance-reactor.md#t007) | emitted semantic fact | ServiceEngagementIndependence | ReleaseEngagementServiceEpoch | ClientServiceIndependence |
+| [T007](../reactors/engagement-acceptance-reactor.md#t007) | emitted semantic fact | ServiceEngagementIndependence | ReleaseEngagementServiceHistoryReservation | ClientServiceIndependence |
 
 ### NonattestServiceRecorded
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | NonattestServiceRecorded |
+| Selected source event name | NonattestServiceRecorded |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:NonattestServiceRecorded |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | NonattestServiceRecorded |
@@ -509,7 +532,8 @@ EngagementIndependenceIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | One nonattest service appended to the complete history of a client. The complete NonattestServiceView is immutable content; Revision is the service epoch after this service. The service record identity is OperationId. |
+| Target meaning | One nonattest service appended to the complete history of a client. The complete NonattestServiceView is immutable content; Revision is the service epoch after this service. The service record identity is OperationId. |
+| Selected source meaning | One nonattest service appended to the complete history of a client. The complete NonattestServiceView is immutable content; Revision is the service epoch after this service. The service record identity is OperationId. |
 | Meaning source | record summary in src/Compliance.Common/Features/AccessControl/Events/NonattestServiceRecorded.cs |
 
 #### Selected schema and implementation evidence

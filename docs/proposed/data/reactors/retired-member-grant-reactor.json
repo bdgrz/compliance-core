@@ -1,5 +1,7 @@
 {
-  "root": "RetiredMemberGrantReactor",
+  "sourceRoot": "RetiredMemberGrantReactor",
+  "targetRoot": "RevokeAccessAfterMemberRetirementReactor",
+  "businessReason": "Keep tenant access tied to a live membership: revoke any access grant made for a membership episode after that episode ends.",
   "rows": [
     {
       "id": "S006",

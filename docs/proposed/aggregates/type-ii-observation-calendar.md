@@ -24,14 +24,14 @@
 | Command | Kind | Identity field |
 | --- | --- | --- |
 | [AcquireTypeIIPeriodRange](../commands/type-ii-observation-calendar.md#acquiretypeiiperiodrange) | receiver | CommandId |
-| [SettleTypeIIPeriodRange](../commands/type-ii-observation-calendar.md#settletypeiiperiodrange) | reactor | CommandId |
+| [CloseTypeIIPeriodRangeReservation](../commands/type-ii-observation-calendar.md#closetypeiiperiodrangereservation) | reactor | CommandId |
 
 ## Events
 
 | Event | Discriminator | Version |
 | --- | --- | --- |
-| [TypeIIPeriodRangeAuthorized](../events/type-ii-observation-calendar.md#typeiiperiodrangeauthorized) | bdgrz.type-ii-observation-calendar.type-ii-period-range-authorized | 2 |
-| [TypeIIPeriodRangeSettled](../events/type-ii-observation-calendar.md#typeiiperiodrangesettled) | bdgrz.type-ii-observation-calendar.type-ii-period-range-settled | 2 |
+| [TypeIIPeriodDateRangeReserved](../events/type-ii-observation-calendar.md#typeiiperioddaterangereserved) | bdgrz.type-ii-observation-calendar.type-ii-period-range-authorized | 2 |
+| [TypeIIPeriodDateRangeReservationEnded](../events/type-ii-observation-calendar.md#typeiiperioddaterangereservationended) | bdgrz.type-ii-observation-calendar.type-ii-period-range-settled | 2 |
 
 ## Cross-owner flows
 
@@ -39,7 +39,7 @@
 | --- | --- | --- | --- | --- |
 | [T053](../reactors/type-ii-range-reactor.md#t053) | reaction_or_regular_process_stage | TypeIIPeriod | TypeIIObservationCalendar | AcquireTypeIIPeriodRange |
 | [T054](../reactors/type-ii-range-reactor.md#t054) | reaction_or_regular_process_stage | TypeIIObservationCalendar | TypeIIPeriod | ApplyTypeIIPeriodRange |
-| [T055](../reactors/type-ii-range-reactor.md#t055) | reaction_or_regular_process_stage | TypeIIPeriod | TypeIIObservationCalendar | SettleTypeIIPeriodRange |
+| [T055](../reactors/type-ii-range-reactor.md#t055) | reaction_or_regular_process_stage | TypeIIPeriod | TypeIIObservationCalendar | CloseTypeIIPeriodRangeReservation |
 
 ## Product rules
 

@@ -27,8 +27,8 @@
 | [ApproveCampaignWaiver](../commands/policy-campaign-participant.md#approvecampaignwaiver) | http | CommandId |
 | [RecordTrainingCompletion](../commands/policy-campaign-participant.md#recordtrainingcompletion) | http | CommandId |
 | [ApplyPolicyParticipantResult](../commands/policy-campaign-participant.md#applypolicyparticipantresult) | receiver | CommandId |
-| [AuthorizePolicyCampaignParticipantCampaignClosureUse](../commands/policy-campaign-participant.md#authorizepolicycampaignparticipantcampaignclosureuse) | receiver | CommandId |
-| [SettlePolicyCampaignParticipantCampaignClosureUse](../commands/policy-campaign-participant.md#settlepolicycampaignparticipantcampaignclosureuse) | receiver | CommandId |
+| [AuthorizePolicyCampaignParticipantCampaignClosure](../commands/policy-campaign-participant.md#authorizepolicycampaignparticipantcampaignclosure) | receiver | CommandId |
+| [ClosePolicyCampaignParticipantCampaignClosureAuthorization](../commands/policy-campaign-participant.md#closepolicycampaignparticipantcampaignclosureauthorization) | receiver | CommandId |
 
 ## Events
 
@@ -36,16 +36,16 @@
 | --- | --- | --- |
 | [CampaignWaiverApproved](../events/policy-campaign-participant.md#campaignwaiverapproved) | bdgrz.policy_campaign.waiver.approved | 2 |
 | [PolicyAcknowledgementRecorded](../events/policy-campaign-participant.md#policyacknowledgementrecorded) | bdgrz.policy.acknowledgement.recorded | 2 |
-| [PolicyCampaignParticipantCampaignClosureUseAuthorized](../events/policy-campaign-participant.md#policycampaignparticipantcampaignclosureuseauthorized) | bdgrz.policy-campaign-participant.policy-campaign-participant-campaign-closure-use-authorized | 1 |
-| [PolicyCampaignParticipantCampaignClosureUseSettled](../events/policy-campaign-participant.md#policycampaignparticipantcampaignclosureusesettled) | bdgrz.policy-campaign-participant.policy-campaign-participant-campaign-closure-use-settled | 1 |
+| [PolicyCampaignParticipantCampaignClosureAuthorized](../events/policy-campaign-participant.md#policycampaignparticipantcampaignclosureauthorized) | bdgrz.policy-campaign-participant.policy-campaign-participant-campaign-closure-use-authorized | 1 |
+| [PolicyCampaignParticipantCampaignClosureAuthorizationClosed](../events/policy-campaign-participant.md#policycampaignparticipantcampaignclosureauthorizationclosed) | bdgrz.policy-campaign-participant.policy-campaign-participant-campaign-closure-use-settled | 1 |
 | [TrainingCompletionRecorded](../events/policy-campaign-participant.md#trainingcompletionrecorded) | bdgrz.training_completion.recorded | 2 |
 
 ## Cross-owner flows
 
 | Row | Kind | Source owner | Target owner | Command |
 | --- | --- | --- | --- | --- |
-| [T067](../reactors/policy-campaign-closure-reactor.md#t067) | reaction_or_regular_process_stage | PolicyDistributionCampaign | PolicyCampaignParticipant | AuthorizePolicyCampaignParticipantCampaignClosureUse |
-| [T068](../reactors/policy-campaign-closure-reactor.md#t068) | reaction_or_regular_process_stage | PolicyDistributionCampaign | PolicyCampaignParticipant | SettlePolicyCampaignParticipantCampaignClosureUse |
+| [T067](../reactors/policy-campaign-closure-reactor.md#t067) | reaction_or_regular_process_stage | PolicyDistributionCampaign | PolicyCampaignParticipant | AuthorizePolicyCampaignParticipantCampaignClosure |
+| [T068](../reactors/policy-campaign-closure-reactor.md#t068) | reaction_or_regular_process_stage | PolicyDistributionCampaign | PolicyCampaignParticipant | ClosePolicyCampaignParticipantCampaignClosureAuthorization |
 | [T076](../reactors/policy-participant-result-reactor.md#t076) | reaction_or_regular_process_stage | PolicyDistributionCampaign | PolicyCampaignParticipant | ApplyPolicyParticipantResult |
 
 ## Product rules

@@ -37,12 +37,12 @@
 | Event | Discriminator | Version |
 | --- | --- | --- |
 | [SystemDescriptionApproved](../events/system-description.md#systemdescriptionapproved) | bdgrz.systemdescription.system-description-approved | 2 |
-| [SystemDescriptionBound](../events/system-description.md#systemdescriptionbound) | bdgrz.systemdescription.system-description-bound | 2 |
+| [SystemDescriptionLinkedToExamination](../events/system-description.md#systemdescriptionlinkedtoexamination) | bdgrz.systemdescription.system-description-bound | 2 |
 | [SystemDescriptionDraftCreated](../events/system-description.md#systemdescriptiondraftcreated) | bdgrz.systemdescription.system-description-draft-created | 2 |
 | [SystemDescriptionDraftRevised](../events/system-description.md#systemdescriptiondraftrevised) | bdgrz.systemdescription.system-description-draft-revised | 2 |
 | [SystemDescriptionNoChangeRecorded](../events/system-description.md#systemdescriptionnochangerecorded) | bdgrz.systemdescription.system-description-no-change-recorded | 2 |
 | [SystemDescriptionReviewed](../events/system-description.md#systemdescriptionreviewed) | bdgrz.systemdescription.system-description-reviewed | 2 |
-| [SystemDescriptionSourcesBound](../events/system-description.md#systemdescriptionsourcesbound) | bdgrz.systemdescription.system-description-sources-bound | 2 |
+| [SystemDescriptionSourcesRecorded](../events/system-description.md#systemdescriptionsourcesrecorded) | bdgrz.systemdescription.system-description-sources-bound | 2 |
 | [SystemDescriptionSuccessorProposed](../events/system-description.md#systemdescriptionsuccessorproposed) | bdgrz.systemdescription.system-description-successor-proposed | 2 |
 
 ## Cross-owner flows

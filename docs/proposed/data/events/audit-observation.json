@@ -23,7 +23,11 @@
         "meaning": "Retains a received auditor correction while preserving its predecessor in source history.",
         "meaningSource": "record summary in src/Compliance.Common/Features/Examinations/Events/AuditObservationCorrected.cs"
       },
-      "schema": null
+      "schema": null,
+      "sourceName": "AuditObservationCorrected",
+      "targetName": "AuditObservationCorrected",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "Retains a received auditor correction while preserving its predecessor in source history."
     },
     {
       "canonical": {
@@ -47,7 +51,11 @@
         "meaning": "Links an exact finding source revision without taking ownership of its remediation.",
         "meaningSource": "record summary in src/Compliance.Common/Features/Examinations/Events/AuditObservationFindingLinked.cs"
       },
-      "schema": null
+      "schema": null,
+      "sourceName": "AuditObservationFindingLinked",
+      "targetName": "AuditObservationFindingLinked",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "Links an exact finding source revision without taking ownership of its remediation."
     },
     {
       "canonical": {
@@ -71,7 +79,11 @@
         "meaning": "Retains management's response separately from the externally authored wording.",
         "meaningSource": "record summary in src/Compliance.Common/Features/Examinations/Events/AuditObservationManagementResponseRecorded.cs"
       },
-      "schema": null
+      "schema": null,
+      "sourceName": "AuditObservationManagementResponseRecorded",
+      "targetName": "AuditObservationManagementResponseRecorded",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "Retains management's response separately from the externally authored wording."
     },
     {
       "canonical": {
@@ -95,7 +107,11 @@
         "meaning": "Retains received auditor wording and its exact source provenance.",
         "meaningSource": "record summary in src/Compliance.Common/Features/Examinations/Events/AuditObservationRecorded.cs"
       },
-      "schema": null
+      "schema": null,
+      "sourceName": "AuditObservationRecorded",
+      "targetName": "AuditObservationRecorded",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "Retains received auditor wording and its exact source provenance."
     }
   ]
 }

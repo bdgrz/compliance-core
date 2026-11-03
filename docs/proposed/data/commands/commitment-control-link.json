@@ -50,7 +50,9 @@
       "source": {
         "path": "docs/product/definitive-aggregate-choreography/choreography.json",
         "recorded": "2026-10-29"
-      }
+      },
+      "sourceName": "ProposeCommitmentControlLink",
+      "targetName": "ProposeCommitmentControlLink"
     },
     {
       "command": "ReviewCommitmentControlLink",
@@ -97,7 +99,9 @@
       "source": {
         "path": "docs/product/definitive-aggregate-choreography/choreography.json",
         "recorded": "2026-10-29"
-      }
+      },
+      "sourceName": "ReviewCommitmentControlLink",
+      "targetName": "ReviewCommitmentControlLink"
     },
     {
       "command": "RetireCommitmentControlLink",
@@ -136,7 +140,9 @@
       "source": {
         "path": "docs/product/definitive-aggregate-choreography/choreography.json",
         "recorded": "2026-10-29"
-      }
+      },
+      "sourceName": "RetireCommitmentControlLink",
+      "targetName": "RetireCommitmentControlLink"
     }
   ],
   "sourceContractEvidence": []

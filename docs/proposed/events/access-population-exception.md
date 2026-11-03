@@ -2,9 +2,9 @@
 
 Canonical events: **1**. Complete canonical event and available schema records: [owner event JSON](../data/events/access-population-exception.json).
 
-| Event | Kind | Adopted discriminator | Version | Schema fields | Meaning |
-| --- | --- | --- | --- | --- | --- |
-| AccessPopulationExceptionRecorded | business | bdgrz.access_population.exception_recorded | 2 | 7 | An expiring exception was approved for a system instance whose user population could not be supplied, recorded as the first revision of that exception. |
+| Target event | Selected source name | Kind | Adopted discriminator | Version | Schema fields | Meaning |
+| --- | --- | --- | --- | --- | --- | --- |
+| AccessPopulationExceptionRecorded | AccessPopulationExceptionRecorded | business | bdgrz.access_population.exception_recorded | 2 | 7 | An expiring exception was approved for a system instance whose user population could not be supplied, recorded as the first revision of that exception. |
 
 ## Event details
 
@@ -12,6 +12,9 @@ Canonical events: **1**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | AccessPopulationExceptionRecorded |
+| Selected source event name | AccessPopulationExceptionRecorded |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:AccessPopulationExceptionRecorded |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | AccessPopulationExceptionRecorded |
@@ -21,7 +24,8 @@ Canonical events: **1**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | `{"discriminator":"bdgrz.access_population.exception_recorded","version":1}` |
-| Meaning | An expiring exception was approved for a system instance whose user population could not be supplied, recorded as the first revision of that exception. |
+| Target meaning | An expiring exception was approved for a system instance whose user population could not be supplied, recorded as the first revision of that exception. |
+| Selected source meaning | An expiring exception was approved for a system instance whose user population could not be supplied, recorded as the first revision of that exception. |
 | Meaning source | authored 2026-10-29 from src/Compliance.Common/Features/AccessReviews/Events/AccessPopulationExceptionRecorded.cs |
 
 #### Selected schema and implementation evidence

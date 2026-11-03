@@ -11,13 +11,13 @@
 
 **Invariant:** One tenant inventory identity has one record kind and one revisioned information classification/retention/owner/lifecycle record.
 
-**Additional decision rule:** Each asset carries exactly one classification level from public, internal, confidential, or restricted plus a retention reference; a missing or second classification is refused.
+**Additional decision rule:** Each asset carries exactly one classification level from public, internal, confidential, or restricted plus a retention reference; a missing or second classification is refused. Each information asset has one classification, a retention rule, a responsible owner, and a status. The DataFlow record separately says which protections apply to information it carries.
 
 **Must preserve:** [Placeholder: preservation rule not recorded.]
 
 **Replay:** Current required authorization precedes replay; exact authorized retries resolve the original accepted result using the selected logical identity and immutable actor/intent/source binding. Fresh mutable feasibility, clock selection and body preparation cannot replace that original result. Expected revision is concurrency precondition, not a new identity.
 
-**Lifecycle:** [Placeholder: a consolidated lifecycle sequence is not present in the selected owner record.]
+**Lifecycle:** A new asset is active. ReviseInformationAsset may set it to active or retired. Retirement keeps the same identity and retention history. Reactivation is allowed. Changing asset status does not delete or change its data flows.
 
 ## Commands
 

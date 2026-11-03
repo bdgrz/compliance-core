@@ -1,5 +1,3 @@
-> Captured from `docs/product/product-brief.md`; internal links have been rebased.
-
 # Compliance product brief
 
 Status: accepted product direction, updated 2026-10-04

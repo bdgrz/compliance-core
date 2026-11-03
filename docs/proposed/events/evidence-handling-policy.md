@@ -2,19 +2,22 @@
 
 Canonical events: **4**. Complete canonical event and available schema records: [owner event JSON](../data/events/evidence-handling-policy.json).
 
-| Event | Kind | Adopted discriminator | Version | Schema fields | Meaning |
-| --- | --- | --- | --- | --- | --- |
-| ArtifactHandlingDownloadUseAuthorized | reservation | bdgrz.evidence-handling-policy.artifact-handling-download-use-authorized | 1 | 8 | null (recorded) |
-| ArtifactHandlingDownloadUseSettled | reservation | bdgrz.evidence-handling-policy.artifact-handling-download-use-settled | 1 | 8 | null (recorded) |
-| ArtifactHandlingPolicyAssigned | business | bdgrz.retention.artifact-handling-policy-assigned | 1 | [Placeholder: schema absent] | Records the ArtifactHandlingPolicyAssigned domain fact for one tenant-owned subject revision. |
-| ArtifactHandlingPolicyRevised | business | bdgrz.retention.artifact-handling-policy-revised | 1 | [Placeholder: schema absent] | Records a changed, attributed handling classification for an exact artifact identity. |
+| Target event | Selected source name | Kind | Adopted discriminator | Version | Schema fields | Meaning |
+| --- | --- | --- | --- | --- | --- | --- |
+| ArtifactHandlingDownloadAuthorized | ArtifactHandlingDownloadUseAuthorized | reservation | bdgrz.evidence-handling-policy.artifact-handling-download-use-authorized | 1 | 8 | null (recorded) |
+| ArtifactHandlingDownloadAuthorizationClosed | ArtifactHandlingDownloadUseSettled | reservation | bdgrz.evidence-handling-policy.artifact-handling-download-use-settled | 1 | 8 | null (recorded) |
+| ArtifactHandlingPolicyAssigned | ArtifactHandlingPolicyAssigned | business | bdgrz.retention.artifact-handling-policy-assigned | 1 | [Placeholder: schema absent] | Records the ArtifactHandlingPolicyAssigned domain fact for one tenant-owned subject revision. |
+| ArtifactHandlingPolicyRevised | ArtifactHandlingPolicyRevised | business | bdgrz.retention.artifact-handling-policy-revised | 1 | [Placeholder: schema absent] | Records a changed, attributed handling classification for an exact artifact identity. |
 
 ## Event details
 
-### ArtifactHandlingDownloadUseAuthorized
+### ArtifactHandlingDownloadAuthorized
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | ArtifactHandlingDownloadAuthorized |
+| Selected source event name | ArtifactHandlingDownloadUseAuthorized |
+| Name decision | Authorization is already the completed fact; Use adds no stakeholder meaning. |
 | Canonical semantic key | event:ArtifactHandlingDownloadUseAuthorized |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | ArtifactHandlingDownloadUseAuthorized |
@@ -24,7 +27,8 @@ Canonical events: **4**. Complete canonical event and available schema records: 
 | Source status | planned_no_source_type |
 | Adopted decision IDs | ARTIFACT_DOWNLOAD |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | null (recorded) |
+| Target meaning | null (recorded) |
+| Selected source meaning | null (recorded) |
 | Meaning source | [Placeholder: value not recorded] |
 
 #### Selected schema and implementation evidence
@@ -98,12 +102,15 @@ SourceUseAuthorizationIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T100](../reactors/one-committed-evidence-artifact-download-requested-starter.md#t100) | emitted semantic fact | EvidenceArtifact | AuthorizeArtifactHandlingDownloadUse | EvidenceHandlingPolicy |
+| [T100](../reactors/one-committed-evidence-artifact-download-requested-starter.md#t100) | emitted semantic fact | EvidenceArtifact | AuthorizeArtifactHandlingDownload | EvidenceHandlingPolicy |
 
-### ArtifactHandlingDownloadUseSettled
+### ArtifactHandlingDownloadAuthorizationClosed
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | ArtifactHandlingDownloadAuthorizationClosed |
+| Selected source event name | ArtifactHandlingDownloadUseSettled |
+| Name decision | The exact authorization ended; the recorded outcome still distinguishes use, cancellation, or a late fence. |
 | Canonical semantic key | event:ArtifactHandlingDownloadUseSettled |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | ArtifactHandlingDownloadUseSettled |
@@ -113,7 +120,8 @@ SourceUseAuthorizationIntent
 | Source status | planned_no_source_type |
 | Adopted decision IDs | ARTIFACT_DOWNLOAD |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | null (recorded) |
+| Target meaning | null (recorded) |
+| Selected source meaning | null (recorded) |
 | Meaning source | [Placeholder: value not recorded] |
 
 #### Selected schema and implementation evidence
@@ -187,12 +195,15 @@ SourceUseAuthorizationIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T103](../reactors/one-committed-evidence-artifact-download-requested-starter.md#t103) | emitted semantic fact | ArtifactDownloadGrant | SettleArtifactHandlingDownloadUse | EvidenceHandlingPolicy |
+| [T103](../reactors/one-committed-evidence-artifact-download-requested-starter.md#t103) | emitted semantic fact | ArtifactDownloadGrant | CloseArtifactHandlingDownloadAuthorization | EvidenceHandlingPolicy |
 
 ### ArtifactHandlingPolicyAssigned
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | ArtifactHandlingPolicyAssigned |
+| Selected source event name | ArtifactHandlingPolicyAssigned |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:ArtifactHandlingPolicyAssigned |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | ArtifactHandlingPolicyAssigned |
@@ -202,7 +213,8 @@ SourceUseAuthorizationIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | Records the ArtifactHandlingPolicyAssigned domain fact for one tenant-owned subject revision. |
+| Target meaning | Records the ArtifactHandlingPolicyAssigned domain fact for one tenant-owned subject revision. |
+| Selected source meaning | Records the ArtifactHandlingPolicyAssigned domain fact for one tenant-owned subject revision. |
 | Meaning source | record summary in src/Compliance.Common/Features/Retention/Events/ArtifactHandlingPolicyAssigned.cs |
 
 #### Schema
@@ -223,6 +235,9 @@ SourceUseAuthorizationIntent
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | ArtifactHandlingPolicyRevised |
+| Selected source event name | ArtifactHandlingPolicyRevised |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:ArtifactHandlingPolicyRevised |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | ArtifactHandlingPolicyRevised |
@@ -232,7 +247,8 @@ SourceUseAuthorizationIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | Records a changed, attributed handling classification for an exact artifact identity. |
+| Target meaning | Records a changed, attributed handling classification for an exact artifact identity. |
+| Selected source meaning | Records a changed, attributed handling classification for an exact artifact identity. |
 | Meaning source | record summary in src/Compliance.Common/Features/Retention/Events/ArtifactHandlingPolicyRevised.cs |
 
 #### Schema

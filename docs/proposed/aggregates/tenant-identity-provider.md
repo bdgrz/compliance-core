@@ -23,11 +23,11 @@
 
 | Command | Kind | Identity field |
 | --- | --- | --- |
-| [ConfigureTenantIdentityProvider](../commands/tenant-identity-provider.md#configuretenantidentityprovider) | http | CommandId |
-| [DisableTenantIdentityProvider](../commands/tenant-identity-provider.md#disabletenantidentityprovider) | http | CommandId |
-| [RecordTenantIdentityProviderTestResult](../commands/tenant-identity-provider.md#recordtenantidentityprovidertestresult) | command | CommandId |
-| [RotateTenantIdentityProviderCredentials](../commands/tenant-identity-provider.md#rotatetenantidentityprovidercredentials) | http | CommandId |
-| [TestTenantIdentityProvider](../commands/tenant-identity-provider.md#testtenantidentityprovider) | http | TestKey |
+| [ConfigureTenantSignInConnection](../commands/tenant-identity-provider.md#configuretenantsigninconnection) | http | CommandId |
+| [DisableTenantSignInConnection](../commands/tenant-identity-provider.md#disabletenantsigninconnection) | http | CommandId |
+| [RecordSignInConnectionTestResult](../commands/tenant-identity-provider.md#recordsigninconnectiontestresult) | command | CommandId |
+| [RotateTenantSignInCredentials](../commands/tenant-identity-provider.md#rotatetenantsignincredentials) | http | CommandId |
+| [TestTenantSignInConnection](../commands/tenant-identity-provider.md#testtenantsigninconnection) | http | TestKey |
 
 ## Events
 

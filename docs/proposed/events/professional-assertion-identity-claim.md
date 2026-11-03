@@ -2,9 +2,9 @@
 
 Canonical events: **1**. Complete canonical event and available schema records: [owner event JSON](../data/events/professional-assertion-identity-claim.json).
 
-| Event | Kind | Adopted discriminator | Version | Schema fields | Meaning |
-| --- | --- | --- | --- | --- | --- |
-| ProfessionalAssertionIdentityClaimed | business | bdgrz.professional-assertion-identity-claim.professional-assertion-identity-claimed | 1 | 8 | The permanent claim of one signed assertion identity by one professional-duty change. The complete verified tuple is the frozen intent the fact points to; the claim is never released. |
+| Target event | Selected source name | Kind | Adopted discriminator | Version | Schema fields | Meaning |
+| --- | --- | --- | --- | --- | --- | --- |
+| ProfessionalAssertionIdentityClaimed | ProfessionalAssertionIdentityClaimed | business | bdgrz.professional-assertion-identity-claim.professional-assertion-identity-claimed | 1 | 8 | The permanent claim of one signed assertion identity by one professional-duty change. The complete verified tuple is the frozen intent the fact points to; the claim is never released. |
 
 ## Event details
 
@@ -12,6 +12,9 @@ Canonical events: **1**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | ProfessionalAssertionIdentityClaimed |
+| Selected source event name | ProfessionalAssertionIdentityClaimed |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:ProfessionalAssertionIdentityClaimed |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | ProfessionalAssertionIdentityClaimed |
@@ -21,7 +24,8 @@ Canonical events: **1**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | The permanent claim of one signed assertion identity by one professional-duty change. The complete verified tuple is the frozen intent the fact points to; the claim is never released. |
+| Target meaning | The permanent claim of one signed assertion identity by one professional-duty change. The complete verified tuple is the frozen intent the fact points to; the claim is never released. |
+| Selected source meaning | The permanent claim of one signed assertion identity by one professional-duty change. The complete verified tuple is the frozen intent the fact points to; the claim is never released. |
 | Meaning source | record summary in src/Compliance.Common/Features/AccessControl/Events/ProfessionalAssertionIdentityClaimed.cs |
 
 #### Selected schema and implementation evidence

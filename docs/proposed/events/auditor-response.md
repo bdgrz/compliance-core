@@ -2,16 +2,16 @@
 
 Canonical events: **8**. Complete canonical event and available schema records: [owner event JSON](../data/events/auditor-response.json).
 
-| Event | Kind | Adopted discriminator | Version | Schema fields | Meaning |
-| --- | --- | --- | --- | --- | --- |
-| AuditResponseDraftCreated | business | bdgrz.auditorrequests.audit-response-draft-created | 1 | 9 | The materialization of an admitted response draft on its own owner, at revision one. Change repeats the frozen ChildAdmissionIntent the request accepted; the response never loads the live request. The actor is the original author of the draft. |
-| AuditResponseDraftRevised | business | bdgrz.auditorrequests.audit-response-draft-revised | 1 | 9 | A draft or rejected response was revised into the next draft version. Change is the complete AuditorResponseVersionView of that version. |
-| AuditorResponseDelivered | business | bdgrz.auditorrequests.auditor-response-delivered | 1 | 9 | The exact version of a response was intentionally delivered. Change is the AuditorResponseDeliveryView; the delivery is immutable. |
-| AuditorResponseDisclosureReviewed | business | bdgrz.auditorrequests.auditor-response-disclosure-reviewed | 1 | 9 | The independent disclosure review of the exact submitted version. Change is the AuditorResponseReviewView; Outcome is approved or rejected. |
-| AuditorResponseDispositionRecorded | business | bdgrz.auditorrequests.auditor-response-disposition-recorded | 1 | 9 | The external disposition of the exact delivered version. Change is the AuditorResponseDispositionView; the disposition is immutable. |
-| AuditorResponseRequestResolutionUseAuthorized | reservation | bdgrz.auditor-response.auditor-response-request-resolution-use-authorized | 1 | 8 | A response with an accepted external disposition is held for a request resolution. The use does not advance the public response revision: Revision is the held revision and Generation the request generation the resolution seals. |
-| AuditorResponseRequestResolutionUseSettled | reservation | bdgrz.auditor-response.auditor-response-request-resolution-use-settled | 1 | 8 | A request-resolution use of a response ended. Disposition repeats the disposition of the settlement intent so the response can install the closed-parent fence from its own ordered stream: a SourceUseSettlementDisposition.ParentClosed settlement keeps the response under the resolved request generation, and releasing the temporary use never restores an unrestricted writable response. |
-| AuditorResponseSubmitted | business | bdgrz.auditorrequests.auditor-response-submitted | 1 | 9 | The exact draft version of a response was submitted. Change is the AuditorResponseSubmissionView and Version the business version it submitted. |
+| Target event | Selected source name | Kind | Adopted discriminator | Version | Schema fields | Meaning |
+| --- | --- | --- | --- | --- | --- | --- |
+| AuditResponseDraftCreated | AuditResponseDraftCreated | business | bdgrz.auditorrequests.audit-response-draft-created | 1 | 9 | The materialization of an admitted response draft on its own owner, at revision one. Change repeats the frozen ChildAdmissionIntent the request accepted; the response never loads the live request. The actor is the original author of the draft. |
+| AuditResponseDraftRevised | AuditResponseDraftRevised | business | bdgrz.auditorrequests.audit-response-draft-revised | 1 | 9 | A draft or rejected response was revised into the next draft version. Change is the complete AuditorResponseVersionView of that version. |
+| AuditorResponseDelivered | AuditorResponseDelivered | business | bdgrz.auditorrequests.auditor-response-delivered | 1 | 9 | The exact version of a response was intentionally delivered. Change is the AuditorResponseDeliveryView; the delivery is immutable. |
+| AuditorResponseDisclosureReviewed | AuditorResponseDisclosureReviewed | business | bdgrz.auditorrequests.auditor-response-disclosure-reviewed | 1 | 9 | The independent disclosure review of the exact submitted version. Change is the AuditorResponseReviewView; Outcome is approved or rejected. |
+| AuditorResponseDispositionRecorded | AuditorResponseDispositionRecorded | business | bdgrz.auditorrequests.auditor-response-disposition-recorded | 1 | 9 | The external disposition of the exact delivered version. Change is the AuditorResponseDispositionView; the disposition is immutable. |
+| AuditorResponseRequestResolutionAuthorized | AuditorResponseRequestResolutionUseAuthorized | reservation | bdgrz.auditor-response.auditor-response-request-resolution-use-authorized | 1 | 8 | A response with an accepted external disposition is held for a request resolution. The use does not advance the public response revision: Revision is the held revision and Generation the request generation the resolution seals. |
+| AuditorResponseRequestResolutionAuthorizationClosed | AuditorResponseRequestResolutionUseSettled | reservation | bdgrz.auditor-response.auditor-response-request-resolution-use-settled | 1 | 8 | A request-resolution use of a response ended. Disposition repeats the disposition of the settlement intent so the response can install the closed-parent fence from its own ordered stream: a SourceUseSettlementDisposition.ParentClosed settlement keeps the response under the resolved request generation, and releasing the temporary use never restores an unrestricted writable response. |
+| AuditorResponseSubmitted | AuditorResponseSubmitted | business | bdgrz.auditorrequests.auditor-response-submitted | 1 | 9 | The exact draft version of a response was submitted. Change is the AuditorResponseSubmissionView and Version the business version it submitted. |
 
 ## Event details
 
@@ -19,6 +19,9 @@ Canonical events: **8**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | AuditResponseDraftCreated |
+| Selected source event name | AuditResponseDraftCreated |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:AuditResponseDraftCreated |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | AuditResponseDraftCreated |
@@ -28,7 +31,8 @@ Canonical events: **8**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | The materialization of an admitted response draft on its own owner, at revision one. Change repeats the frozen ChildAdmissionIntent the request accepted; the response never loads the live request. The actor is the original author of the draft. |
+| Target meaning | The materialization of an admitted response draft on its own owner, at revision one. Change repeats the frozen ChildAdmissionIntent the request accepted; the response never loads the live request. The actor is the original author of the draft. |
+| Selected source meaning | The materialization of an admitted response draft on its own owner, at revision one. Change repeats the frozen ChildAdmissionIntent the request accepted; the response never loads the live request. The actor is the original author of the draft. |
 | Meaning source | record summary in src/Compliance.Common/Features/AuditorRequests/Events/AuditResponseDraftCreated.cs |
 
 #### Selected schema and implementation evidence
@@ -108,12 +112,15 @@ ChildAdmissionIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T033](../reactors/auditor-response-materialization-reactor.md#t033) | emitted semantic fact | AuditorRequest | MaterializeAuditorResponse | AuditorResponse |
+| [T033](../reactors/auditor-response-materialization-reactor.md#t033) | emitted semantic fact | AuditorRequest | CreateAuditorResponseDraft | AuditorResponse |
 
 ### AuditResponseDraftRevised
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | AuditResponseDraftRevised |
+| Selected source event name | AuditResponseDraftRevised |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:AuditResponseDraftRevised |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | AuditResponseDraftRevised |
@@ -123,7 +130,8 @@ ChildAdmissionIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | A draft or rejected response was revised into the next draft version. Change is the complete AuditorResponseVersionView of that version. |
+| Target meaning | A draft or rejected response was revised into the next draft version. Change is the complete AuditorResponseVersionView of that version. |
+| Selected source meaning | A draft or rejected response was revised into the next draft version. Change is the complete AuditorResponseVersionView of that version. |
 | Meaning source | record summary in src/Compliance.Common/Features/AuditorRequests/Events/AuditResponseDraftRevised.cs |
 
 #### Selected schema and implementation evidence
@@ -178,6 +186,9 @@ ChildAdmissionIntent
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | AuditorResponseDelivered |
+| Selected source event name | AuditorResponseDelivered |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:AuditorResponseDelivered |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | AuditorResponseDelivered |
@@ -187,7 +198,8 @@ ChildAdmissionIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | The exact version of a response was intentionally delivered. Change is the AuditorResponseDeliveryView; the delivery is immutable. |
+| Target meaning | The exact version of a response was intentionally delivered. Change is the AuditorResponseDeliveryView; the delivery is immutable. |
+| Selected source meaning | The exact version of a response was intentionally delivered. Change is the AuditorResponseDeliveryView; the delivery is immutable. |
 | Meaning source | record summary in src/Compliance.Common/Features/AuditorRequests/Events/AuditorResponseDelivered.cs |
 
 #### Selected schema and implementation evidence
@@ -242,6 +254,9 @@ ChildAdmissionIntent
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | AuditorResponseDisclosureReviewed |
+| Selected source event name | AuditorResponseDisclosureReviewed |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:AuditorResponseDisclosureReviewed |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | AuditorResponseDisclosureReviewed |
@@ -251,7 +266,8 @@ ChildAdmissionIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | The independent disclosure review of the exact submitted version. Change is the AuditorResponseReviewView; Outcome is approved or rejected. |
+| Target meaning | The independent disclosure review of the exact submitted version. Change is the AuditorResponseReviewView; Outcome is approved or rejected. |
+| Selected source meaning | The independent disclosure review of the exact submitted version. Change is the AuditorResponseReviewView; Outcome is approved or rejected. |
 | Meaning source | record summary in src/Compliance.Common/Features/AuditorRequests/Events/AuditorResponseDisclosureReviewed.cs |
 
 #### Selected schema and implementation evidence
@@ -306,6 +322,9 @@ ChildAdmissionIntent
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | AuditorResponseDispositionRecorded |
+| Selected source event name | AuditorResponseDispositionRecorded |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:AuditorResponseDispositionRecorded |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | AuditorResponseDispositionRecorded |
@@ -315,7 +334,8 @@ ChildAdmissionIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | The external disposition of the exact delivered version. Change is the AuditorResponseDispositionView; the disposition is immutable. |
+| Target meaning | The external disposition of the exact delivered version. Change is the AuditorResponseDispositionView; the disposition is immutable. |
+| Selected source meaning | The external disposition of the exact delivered version. Change is the AuditorResponseDispositionView; the disposition is immutable. |
 | Meaning source | record summary in src/Compliance.Common/Features/AuditorRequests/Events/AuditorResponseDispositionRecorded.cs |
 
 #### Selected schema and implementation evidence
@@ -366,10 +386,13 @@ ChildAdmissionIntent
 
 [Placeholder: no selected choreography row names this event as root, prerequisite, or emitted fact.]
 
-### AuditorResponseRequestResolutionUseAuthorized
+### AuditorResponseRequestResolutionAuthorized
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | AuditorResponseRequestResolutionAuthorized |
+| Selected source event name | AuditorResponseRequestResolutionUseAuthorized |
+| Name decision | Authorization is already the completed fact; Use adds no stakeholder meaning. |
 | Canonical semantic key | event:AuditorResponseRequestResolutionUseAuthorized |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | AuditorResponseRequestResolutionUseAuthorized |
@@ -379,7 +402,8 @@ ChildAdmissionIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | A response with an accepted external disposition is held for a request resolution. The use does not advance the public response revision: Revision is the held revision and Generation the request generation the resolution seals. |
+| Target meaning | A response with an accepted external disposition is held for a request resolution. The use does not advance the public response revision: Revision is the held revision and Generation the request generation the resolution seals. |
+| Selected source meaning | A response with an accepted external disposition is held for a request resolution. The use does not advance the public response revision: Revision is the held revision and Generation the request generation the resolution seals. |
 | Meaning source | record summary in src/Compliance.Common/Features/AuditorRequests/Events/AuditorResponseRequestResolutionUseAuthorized.cs |
 
 #### Selected schema and implementation evidence
@@ -453,12 +477,15 @@ SourceUseAuthorizationIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T061](../reactors/auditor-request-resolution-reactor.md#t061) | emitted semantic fact | AuditorRequest | AuthorizeAuditorResponseRequestResolutionUse | AuditorResponse |
+| [T061](../reactors/auditor-request-resolution-reactor.md#t061) | emitted semantic fact | AuditorRequest | AuthorizeAuditorResponseRequestResolution | AuditorResponse |
 
-### AuditorResponseRequestResolutionUseSettled
+### AuditorResponseRequestResolutionAuthorizationClosed
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | AuditorResponseRequestResolutionAuthorizationClosed |
+| Selected source event name | AuditorResponseRequestResolutionUseSettled |
+| Name decision | The exact authorization ended; the recorded outcome still distinguishes use, cancellation, or a late fence. |
 | Canonical semantic key | event:AuditorResponseRequestResolutionUseSettled |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | AuditorResponseRequestResolutionUseSettled |
@@ -468,7 +495,8 @@ SourceUseAuthorizationIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | A request-resolution use of a response ended. Disposition repeats the disposition of the settlement intent so the response can install the closed-parent fence from its own ordered stream: a SourceUseSettlementDisposition.ParentClosed settlement keeps the response under the resolved request generation, and releasing the temporary use never restores an unrestricted writable response. |
+| Target meaning | A request-resolution use of a response ended. Disposition repeats the disposition of the settlement intent so the response can install the closed-parent fence from its own ordered stream: a SourceUseSettlementDisposition.ParentClosed settlement keeps the response under the resolved request generation, and releasing the temporary use never restores an unrestricted writable response. |
+| Selected source meaning | A request-resolution use of a response ended. Disposition repeats the disposition of the settlement intent so the response can install the closed-parent fence from its own ordered stream: a SourceUseSettlementDisposition.ParentClosed settlement keeps the response under the resolved request generation, and releasing the temporary use never restores an unrestricted writable response. |
 | Meaning source | record summary in src/Compliance.Common/Features/AuditorRequests/Events/AuditorResponseRequestResolutionUseSettled.cs |
 
 #### Selected schema and implementation evidence
@@ -542,12 +570,15 @@ SourceUseAuthorizationIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T062](../reactors/auditor-request-resolution-reactor.md#t062) | emitted semantic fact | AuditorRequest | SettleAuditorResponseRequestResolutionUse | AuditorResponse |
+| [T062](../reactors/auditor-request-resolution-reactor.md#t062) | emitted semantic fact | AuditorRequest | CloseAuditorResponseRequestResolutionAuthorization | AuditorResponse |
 
 ### AuditorResponseSubmitted
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | AuditorResponseSubmitted |
+| Selected source event name | AuditorResponseSubmitted |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:AuditorResponseSubmitted |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | AuditorResponseSubmitted |
@@ -557,7 +588,8 @@ SourceUseAuthorizationIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | The exact draft version of a response was submitted. Change is the AuditorResponseSubmissionView and Version the business version it submitted. |
+| Target meaning | The exact draft version of a response was submitted. Change is the AuditorResponseSubmissionView and Version the business version it submitted. |
+| Selected source meaning | The exact draft version of a response was submitted. Change is the AuditorResponseSubmissionView and Version the business version it submitted. |
 | Meaning source | record summary in src/Compliance.Common/Features/AuditorRequests/Events/AuditorResponseSubmitted.cs |
 
 #### Selected schema and implementation evidence

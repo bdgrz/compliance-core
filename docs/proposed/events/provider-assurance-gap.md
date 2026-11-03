@@ -2,11 +2,11 @@
 
 Canonical events: **3**. Complete canonical event and available schema records: [owner event JSON](../data/events/provider-assurance-gap.json).
 
-| Event | Kind | Adopted discriminator | Version | Schema fields | Meaning |
-| --- | --- | --- | --- | --- | --- |
-| ProviderCoverageGapClosed | business | bdgrz.provider.coverage_gap.closed | 1 | 11 | The open provider coverage gap was closed once, against a newer or different source. The complete ProviderCoverageGapClosureContent is immutable content. A closure never erases an already admitted risk link. |
-| ProviderCoverageGapRecorded | business | bdgrz.provider.coverage_gap.recorded | 1 | 11 | A provider coverage gap was recorded as the first revision of its own owner. The complete ProviderCoverageGapContent is immutable content; RequestId is the gap id. |
-| ProviderCoverageGapRiskAcceptanceAdmitted | business | bdgrz.provider-assurance-gap.provider-coverage-gap-risk-acceptance-admitted | 1 | 8 | A risk acceptance link was admitted on the open gap at its expected revision. Revision is the gap revision this admission produced; OperationProvenance.Episode carries the admitted RiskId:AcceptanceId pair, which the gap serializes for uniqueness. Intent is the frozen ProviderRiskLinkIntent. |
+| Target event | Selected source name | Kind | Adopted discriminator | Version | Schema fields | Meaning |
+| --- | --- | --- | --- | --- | --- | --- |
+| ProviderCoverageGapClosed | ProviderCoverageGapClosed | business | bdgrz.provider.coverage_gap.closed | 1 | 11 | The open provider coverage gap was closed once, against a newer or different source. The complete ProviderCoverageGapClosureContent is immutable content. A closure never erases an already admitted risk link. |
+| ProviderCoverageGapRecorded | ProviderCoverageGapRecorded | business | bdgrz.provider.coverage_gap.recorded | 1 | 11 | A provider coverage gap was recorded as the first revision of its own owner. The complete ProviderCoverageGapContent is immutable content; RequestId is the gap id. |
+| ProviderCoverageGapRiskAcceptanceAdmitted | ProviderCoverageGapRiskAcceptanceAdmitted | business | bdgrz.provider-assurance-gap.provider-coverage-gap-risk-acceptance-admitted | 1 | 8 | A risk acceptance link was admitted on the open gap at its expected revision. Revision is the gap revision this admission produced; OperationProvenance.Episode carries the admitted RiskId:AcceptanceId pair, which the gap serializes for uniqueness. Intent is the frozen ProviderRiskLinkIntent. |
 
 ## Event details
 
@@ -14,6 +14,9 @@ Canonical events: **3**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | ProviderCoverageGapClosed |
+| Selected source event name | ProviderCoverageGapClosed |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:ProviderCoverageGapClosed |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | ProviderCoverageGapClosed |
@@ -23,7 +26,8 @@ Canonical events: **3**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | The open provider coverage gap was closed once, against a newer or different source. The complete ProviderCoverageGapClosureContent is immutable content. A closure never erases an already admitted risk link. |
+| Target meaning | The open provider coverage gap was closed once, against a newer or different source. The complete ProviderCoverageGapClosureContent is immutable content. A closure never erases an already admitted risk link. |
+| Selected source meaning | The open provider coverage gap was closed once, against a newer or different source. The complete ProviderCoverageGapClosureContent is immutable content. A closure never erases an already admitted risk link. |
 | Meaning source | record summary in src/Compliance.Common/Features/Providers/Events/ProviderCoverageGapClosed.cs |
 
 #### Selected schema and implementation evidence
@@ -80,6 +84,9 @@ Canonical events: **3**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | ProviderCoverageGapRecorded |
+| Selected source event name | ProviderCoverageGapRecorded |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:ProviderCoverageGapRecorded |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | ProviderCoverageGapRecorded |
@@ -89,7 +96,8 @@ Canonical events: **3**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | A provider coverage gap was recorded as the first revision of its own owner. The complete ProviderCoverageGapContent is immutable content; RequestId is the gap id. |
+| Target meaning | A provider coverage gap was recorded as the first revision of its own owner. The complete ProviderCoverageGapContent is immutable content; RequestId is the gap id. |
+| Selected source meaning | A provider coverage gap was recorded as the first revision of its own owner. The complete ProviderCoverageGapContent is immutable content; RequestId is the gap id. |
 | Meaning source | record summary in src/Compliance.Common/Features/Providers/Events/ProviderCoverageGapRecorded.cs |
 
 #### Selected schema and implementation evidence
@@ -146,6 +154,9 @@ Canonical events: **3**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | ProviderCoverageGapRiskAcceptanceAdmitted |
+| Selected source event name | ProviderCoverageGapRiskAcceptanceAdmitted |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:ProviderCoverageGapRiskAcceptanceAdmitted |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | ProviderCoverageGapRiskAcceptanceAdmitted |
@@ -155,7 +166,8 @@ Canonical events: **3**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | A risk acceptance link was admitted on the open gap at its expected revision. Revision is the gap revision this admission produced; OperationProvenance.Episode carries the admitted RiskId:AcceptanceId pair, which the gap serializes for uniqueness. Intent is the frozen ProviderRiskLinkIntent. |
+| Target meaning | A risk acceptance link was admitted on the open gap at its expected revision. Revision is the gap revision this admission produced; OperationProvenance.Episode carries the admitted RiskId:AcceptanceId pair, which the gap serializes for uniqueness. Intent is the frozen ProviderRiskLinkIntent. |
+| Selected source meaning | A risk acceptance link was admitted on the open gap at its expected revision. Revision is the gap revision this admission produced; OperationProvenance.Episode carries the admitted RiskId:AcceptanceId pair, which the gap serializes for uniqueness. Intent is the frozen ProviderRiskLinkIntent. |
 | Meaning source | record summary in src/Compliance.Common/Features/Providers/Events/ProviderCoverageGapRiskAcceptanceAdmitted.cs |
 
 #### Selected schema and implementation evidence
@@ -243,7 +255,7 @@ ProviderRiskLinkIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T088](../reactors/provider-risk-acceptance-link-reactor.md#t088) | physical root, logical prerequisite | ProviderAssuranceGap | MaterializeProviderRiskAcceptanceLink | ProviderRiskAcceptance |
+| [T088](../reactors/provider-risk-acceptance-link-reactor.md#t088) | physical root, logical prerequisite | ProviderAssuranceGap | LinkProviderRiskAcceptanceToGap | ProviderRiskAcceptance |
 
 
 

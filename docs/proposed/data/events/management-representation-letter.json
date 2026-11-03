@@ -23,7 +23,11 @@
         "meaning": "A named executive signed the management representation letter, retaining their signed letter artifact; once every required signer has signed the letter is final.",
         "meaningSource": "authored 2026-10-29 from src/Compliance.Common/Features/Examinations/Events/ManagementRepresentationLetterSigned.cs"
       },
-      "schema": null
+      "schema": null,
+      "sourceName": "ManagementRepresentationLetterSigned",
+      "targetName": "ManagementRepresentationLetterSigned",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "A named executive signed the management representation letter, retaining their signed letter artifact; once every required signer has signed the letter is final."
     },
     {
       "canonical": {
@@ -47,7 +51,11 @@
         "meaning": "Records an externally sourced representation letter and its required signers.",
         "meaningSource": "record summary in src/Compliance.Common/Features/Examinations/Events/RepresentationLetterRecorded.cs"
       },
-      "schema": null
+      "schema": null,
+      "sourceName": "RepresentationLetterRecorded",
+      "targetName": "RepresentationLetterRecorded",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "Records an externally sourced representation letter and its required signers."
     }
   ]
 }

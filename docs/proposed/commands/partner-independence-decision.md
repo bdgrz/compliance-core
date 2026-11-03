@@ -2,24 +2,27 @@
 
 Selected command contracts: **2**. Complete selected contracts and companion source evidence: [owner command JSON](../data/commands/partner-independence-decision.json).
 
-| Command | Kind | Identity | Fields | HTTP routes |
-| --- | --- | --- | --- | --- |
-| MaterializePartnerIndependenceDecision | receiver | CommandId | 9 | [Placeholder: value not recorded] |
-| RecordPartnerIndependenceEvaluation | http | EvaluationId | 9 | PUT /api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/partner-evaluations/{evaluation_id} [ComplianceAuthorizationPolicies.ApiUser] |
+| Target command | Selected source name | Kind | Identity | Fields | HTTP routes |
+| --- | --- | --- | --- | --- | --- |
+| RecordPartnerIndependenceEvaluation | MaterializePartnerIndependenceDecision | receiver | CommandId | 9 | [Placeholder: value not recorded] |
+| SubmitPartnerIndependenceEvaluation | RecordPartnerIndependenceEvaluation | http | EvaluationId | 9 | PUT /api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/partner-evaluations/{evaluation_id} [ComplianceAuthorizationPolicies.ApiUser] |
 
 ## Selected command details
 
-### MaterializePartnerIndependenceDecision
+### RecordPartnerIndependenceEvaluation
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | RecordPartnerIndependenceEvaluation |
+| Selected source command name | MaterializePartnerIndependenceDecision |
+| Name decision | Records the partner evaluation against the exact engagement revision and service history. |
 | Owner | PartnerIndependenceDecision |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; internal; deterministic receiver identity derived from the admitted root fact, episode and generation: exact redelivery resolves the original result, a changed admission is a new identity |
 | Entry point | [Placeholder: value not recorded] |
 | MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | [Placeholder: value not recorded] |
+| Selected semantic events | None listed |
 | Protocols | [Placeholder: value not recorded] |
 | Policy preservation | [Placeholder: value not recorded] |
 | Contract changes | [Placeholder: value not recorded] |
@@ -58,17 +61,20 @@ Existing tests: [Placeholder: existing tests not recorded]
 
 Required tests: [Placeholder: required tests not recorded]
 
-### RecordPartnerIndependenceEvaluation
+### SubmitPartnerIndependenceEvaluation
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | SubmitPartnerIndependenceEvaluation |
+| Selected source command name | RecordPartnerIndependenceEvaluation |
+| Name decision | Names the partner's action to submit an independence evaluation with its exact engagement, service history, and rule version. |
 | Owner | PartnerIndependenceDecision |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | http |
 | Logical identity | EvaluationId; Uuid; required=true; client; caller-supplied immutable creation identity: an exact retry with the same id and authored intent returns the original result; the same id with changed intent is refused; a different id is a different record |
 | Entry point | [Placeholder: value not recorded] |
 | MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | [Placeholder: value not recorded] |
+| Selected semantic events | None listed |
 | Protocols | [Placeholder: value not recorded] |
 | Policy preservation | [Placeholder: value not recorded] |
 | Contract changes | [Placeholder: value not recorded] |

@@ -71,7 +71,9 @@
         "line": 5466,
         "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       },
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "DecideReadiness",
+      "targetName": "DecideReadiness"
     },
     {
       "command": "DecideTypeIEntry",
@@ -148,7 +150,9 @@
         "line": 5587,
         "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       },
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "DecideTypeIEntry",
+      "targetName": "DecideTypeIEntry"
     },
     {
       "command": "RunReadinessAssessment",
@@ -205,7 +209,9 @@
         "line": 17477,
         "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       },
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "RunReadinessAssessment",
+      "targetName": "RunReadinessAssessment"
     },
     {
       "command": "AbortReadinessDecision",
@@ -255,7 +261,9 @@
         "line": 1075,
         "sha256": "f1d549ed0879c816cb26e86879f8fa658dab0a8acbf7c591e4d4aed40483f8ae"
       },
-      "kind": "abort"
+      "kind": "abort",
+      "sourceName": "AbortReadinessDecision",
+      "targetName": "AbortReadinessDecision"
     },
     {
       "command": "AdoptReadinessAssessment",
@@ -341,7 +349,9 @@
       "source": {
         "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
         "recorded": "2026-10-29"
-      }
+      },
+      "sourceName": "AdoptReadinessAssessment",
+      "targetName": "AdoptReadinessAssessment"
     },
     {
       "command": "CompleteReadinessDecision",
@@ -417,7 +427,9 @@
       "source": {
         "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
         "recorded": "2026-10-29"
-      }
+      },
+      "sourceName": "CompleteReadinessDecision",
+      "targetName": "CompleteReadinessDecision"
     },
     {
       "command": "CompleteTypeIEntryDecision",
@@ -493,7 +505,9 @@
       "source": {
         "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
         "recorded": "2026-10-29"
-      }
+      },
+      "sourceName": "CompleteTypeIEntryDecision",
+      "targetName": "CompleteTypeIEntryDecision"
     }
   ],
   "sourceContractEvidence": [

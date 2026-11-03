@@ -23,7 +23,11 @@
         "meaning": "A service identity was recorded in the tenant's workforce with its terms by a named actor.",
         "meaningSource": "authored 2026-10-29 from src/Compliance.Common/Features/Workforce/Events/ServiceIdentityRecorded.cs"
       },
-      "schema": null
+      "schema": null,
+      "sourceName": "ServiceIdentityRecorded",
+      "targetName": "ServiceIdentityRecorded",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "A service identity was recorded in the tenant's workforce with its terms by a named actor."
     },
     {
       "canonical": {
@@ -47,7 +51,11 @@
         "meaning": "A recorded service identity's terms were revised by a named actor, producing its next revision.",
         "meaningSource": "authored 2026-10-29 from src/Compliance.Common/Features/Workforce/Events/ServiceIdentityRevised.cs"
       },
-      "schema": null
+      "schema": null,
+      "sourceName": "ServiceIdentityRevised",
+      "targetName": "ServiceIdentityRevised",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "A recorded service identity's terms were revised by a named actor, producing its next revision."
     }
   ]
 }

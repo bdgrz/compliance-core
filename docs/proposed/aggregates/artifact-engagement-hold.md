@@ -24,9 +24,9 @@
 | Command | Kind | Identity field |
 | --- | --- | --- |
 | [PlaceArtifactEngagementHold](../commands/artifact-engagement-hold.md#placeartifactengagementhold) | creation | HoldId |
-| [RecordEngagementReportIssued](../commands/artifact-engagement-hold.md#recordengagementreportissued) | command | CommandId |
+| [RecordEngagementReportIssuance](../commands/artifact-engagement-hold.md#recordengagementreportissuance) | command | CommandId |
 | [ReleaseArtifactEngagementHold](../commands/artifact-engagement-hold.md#releaseartifactengagementhold) | command | CommandId |
-| [RecordEngagementPackageDelivered](../commands/artifact-engagement-hold.md#recordengagementpackagedelivered) | receiver | CommandId |
+| [RecordEngagementPackageDelivery](../commands/artifact-engagement-hold.md#recordengagementpackagedelivery) | receiver | CommandId |
 
 ## Events
 
@@ -40,7 +40,7 @@
 
 | Row | Kind | Source owner | Target owner | Command |
 | --- | --- | --- | --- | --- |
-| [X007](../reactors/client-export-delivery-reactor.md#x007) | planned_reaction | ClientExport | ArtifactEngagementHold | RecordEngagementPackageDelivered |
+| [X007](../reactors/client-export-delivery-reactor.md#x007) | planned_reaction | ClientExport | ArtifactEngagementHold | RecordEngagementPackageDelivery |
 
 ## Product rules
 

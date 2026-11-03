@@ -2,11 +2,11 @@
 
 Canonical events: **3**. Complete canonical event and available schema records: [owner event JSON](../data/events/client-service.json).
 
-| Event | Kind | Adopted discriminator | Version | Schema fields | Meaning |
-| --- | --- | --- | --- | --- | --- |
-| ClientServiceCreated | business | bdgrz.client-service.created | 2 | [Placeholder: schema absent] | A client service was created under its owning program, recorded as the service's first revision. |
-| ClientServiceRetired | business | bdgrz.client-service.retired | 2 | [Placeholder: schema absent] | A client service of a program was retired with a retirement record, ending the service while keeping its last content. |
-| ClientServiceRevised | business | bdgrz.client-service.revised | 2 | [Placeholder: schema absent] | The content of a client service under a program was revised, recorded as the service's next revision. |
+| Target event | Selected source name | Kind | Adopted discriminator | Version | Schema fields | Meaning |
+| --- | --- | --- | --- | --- | --- | --- |
+| ClientServiceCreated | ClientServiceCreated | business | bdgrz.client-service.created | 2 | [Placeholder: schema absent] | A client service was created under its owning program, recorded as the service's first revision. |
+| ClientServiceRetired | ClientServiceRetired | business | bdgrz.client-service.retired | 2 | [Placeholder: schema absent] | A client service of a program was retired with a retirement record, ending the service while keeping its last content. |
+| ClientServiceRevised | ClientServiceRevised | business | bdgrz.client-service.revised | 2 | [Placeholder: schema absent] | The content of a client service under a program was revised, recorded as the service's next revision. |
 
 ## Event details
 
@@ -14,6 +14,9 @@ Canonical events: **3**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | ClientServiceCreated |
+| Selected source event name | ClientServiceCreated |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:ClientServiceCreated |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | ClientServiceCreated |
@@ -23,7 +26,8 @@ Canonical events: **3**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | `{"discriminator":"bdgrz.client-service.created","version":1}` |
-| Meaning | A client service was created under its owning program, recorded as the service's first revision. |
+| Target meaning | A client service was created under its owning program, recorded as the service's first revision. |
+| Selected source meaning | A client service was created under its owning program, recorded as the service's first revision. |
 | Meaning source | authored 2026-10-29 from src/Compliance.Common/Features/Programs/Events/ClientServiceCreated.cs |
 
 #### Schema
@@ -44,6 +48,9 @@ Canonical events: **3**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | ClientServiceRetired |
+| Selected source event name | ClientServiceRetired |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:ClientServiceRetired |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | ClientServiceRetired |
@@ -53,7 +60,8 @@ Canonical events: **3**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | `{"discriminator":"bdgrz.client-service.retired","version":1}` |
-| Meaning | A client service of a program was retired with a retirement record, ending the service while keeping its last content. |
+| Target meaning | A client service of a program was retired with a retirement record, ending the service while keeping its last content. |
+| Selected source meaning | A client service of a program was retired with a retirement record, ending the service while keeping its last content. |
 | Meaning source | authored 2026-10-29 from src/Compliance.Common/Features/Programs/Events/ClientServiceRetired.cs |
 
 #### Schema
@@ -74,6 +82,9 @@ Canonical events: **3**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | ClientServiceRevised |
+| Selected source event name | ClientServiceRevised |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:ClientServiceRevised |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | ClientServiceRevised |
@@ -83,7 +94,8 @@ Canonical events: **3**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | `{"discriminator":"bdgrz.client-service.revised","version":1}` |
-| Meaning | The content of a client service under a program was revised, recorded as the service's next revision. |
+| Target meaning | The content of a client service under a program was revised, recorded as the service's next revision. |
+| Selected source meaning | The content of a client service under a program was revised, recorded as the service's next revision. |
 | Meaning source | authored 2026-10-29 from src/Compliance.Common/Features/Programs/Events/ClientServiceRevised.cs |
 
 #### Schema

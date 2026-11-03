@@ -77,7 +77,9 @@
         "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       },
       "attributionNote": "Moved from PolicyDistributionCampaign on 2026-10-29: PolicyDistributionCampaign is the admission owner: it freezes the complete result as PolicyParticipantResultAdmitted at ExpectedCampaignRevision (via PolicyParticipantAdmission) with a fixed 202; it is not the owner of the participant fact. The root fact starts IndependentChildMaterialization, which sends ApplyPolicyParticipantResult to PolicyCampaignParticipant (events PolicyAcknowledgementRecorded / TrainingCompletionRecorded / CampaignWaiverApproved).  (source src/Compliance.Core/Features/PolicyDistribution/Handlers/AcknowledgePolicyHandler.cs; Handlers/ApplyPolicyParticipantResultHandler.cs)",
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "AcknowledgePolicy",
+      "targetName": "AcknowledgePolicy"
     },
     {
       "command": "ApproveCampaignWaiver",
@@ -150,7 +152,9 @@
         "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       },
       "attributionNote": "Moved from PolicyDistributionCampaign on 2026-10-29: PolicyDistributionCampaign is the admission owner: it freezes the complete result as PolicyParticipantResultAdmitted at ExpectedCampaignRevision (via PolicyParticipantAdmission) with a fixed 202; it is not the owner of the participant fact. The root fact starts IndependentChildMaterialization, which sends ApplyPolicyParticipantResult to PolicyCampaignParticipant (events PolicyAcknowledgementRecorded / TrainingCompletionRecorded / CampaignWaiverApproved).  (source src/Compliance.Core/Features/PolicyDistribution/Handlers/ApproveCampaignWaiverHandler.cs; Handlers/ApplyPolicyParticipantResultHandler.cs)",
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "ApproveCampaignWaiver",
+      "targetName": "ApproveCampaignWaiver"
     },
     {
       "command": "RecordTrainingCompletion",
@@ -233,7 +237,9 @@
         "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       },
       "attributionNote": "Moved from PolicyDistributionCampaign on 2026-10-29: PolicyDistributionCampaign is the admission owner: it freezes the complete result as PolicyParticipantResultAdmitted at ExpectedCampaignRevision (via PolicyParticipantAdmission) with a fixed 202; it is not the owner of the participant fact. The root fact starts IndependentChildMaterialization, which sends ApplyPolicyParticipantResult to PolicyCampaignParticipant (events PolicyAcknowledgementRecorded / TrainingCompletionRecorded / CampaignWaiverApproved).  (source src/Compliance.Core/Features/PolicyDistribution/Handlers/RecordTrainingCompletionHandler.cs; Handlers/ApplyPolicyParticipantResultHandler.cs)",
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "RecordTrainingCompletion",
+      "targetName": "RecordTrainingCompletion"
     },
     {
       "command": "ApplyPolicyParticipantResult",
@@ -304,7 +310,9 @@
         "CampaignWaiverApproved"
       ],
       "effectKind": "apply_policy_participant_result",
-      "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine."
+      "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
+      "sourceName": "ApplyPolicyParticipantResult",
+      "targetName": "ApplyPolicyParticipantResult"
     },
     {
       "command": "AuthorizePolicyCampaignParticipantCampaignClosureUse",
@@ -381,7 +389,9 @@
         "PolicyCampaignParticipantCampaignClosureUseAuthorized"
       ],
       "effectKind": "authorize_policy_campaign_participant_campaign_closure_use",
-      "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine."
+      "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
+      "sourceName": "AuthorizePolicyCampaignParticipantCampaignClosureUse",
+      "targetName": "AuthorizePolicyCampaignParticipantCampaignClosure"
     },
     {
       "command": "SettlePolicyCampaignParticipantCampaignClosureUse",
@@ -455,7 +465,9 @@
         "PolicyCampaignParticipantCampaignClosureUseSettled"
       ],
       "effectKind": "settle_policy_campaign_participant_campaign_closure_use",
-      "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine."
+      "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
+      "sourceName": "SettlePolicyCampaignParticipantCampaignClosureUse",
+      "targetName": "ClosePolicyCampaignParticipantCampaignClosureAuthorization"
     }
   ],
   "sourceContractEvidence": []

@@ -2,10 +2,10 @@
 
 Canonical events: **2**. Complete canonical event and available schema records: [owner event JSON](../data/events/separation-of-duties-waiver.json).
 
-| Event | Kind | Adopted discriminator | Version | Schema fields | Meaning |
-| --- | --- | --- | --- | --- | --- |
-| SeparationOfDutiesWaiverApproved | business | bdgrz.sod-waiver.approved | 1 | [Placeholder: schema absent] | A separation-of-duties waiver was approved by an Org Admin other than its beneficiary within its approval window, allowing the beneficiary to act in the waived scope. |
-| SeparationOfDutiesWaiverRecorded | business | bdgrz.sod-waiver.recorded | 1 | [Placeholder: schema absent] | A separation-of-duties waiver was requested for a scoped record, naming its beneficiary, requester, rationale and expiry, and awaits approval by a different Org Admin. |
+| Target event | Selected source name | Kind | Adopted discriminator | Version | Schema fields | Meaning |
+| --- | --- | --- | --- | --- | --- | --- |
+| SeparationOfDutiesWaiverApproved | SeparationOfDutiesWaiverApproved | business | bdgrz.sod-waiver.approved | 1 | [Placeholder: schema absent] | A separation-of-duties waiver was approved by an Org Admin other than its beneficiary within its approval window, allowing the beneficiary to act in the waived scope. |
+| SeparationOfDutiesWaiverRecorded | SeparationOfDutiesWaiverRecorded | business | bdgrz.sod-waiver.recorded | 1 | [Placeholder: schema absent] | A separation-of-duties waiver was requested for a scoped record, naming its beneficiary, requester, rationale and expiry, and awaits approval by a different Org Admin. |
 
 ## Event details
 
@@ -13,6 +13,9 @@ Canonical events: **2**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | SeparationOfDutiesWaiverApproved |
+| Selected source event name | SeparationOfDutiesWaiverApproved |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:SeparationOfDutiesWaiverApproved |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | SeparationOfDutiesWaiverApproved |
@@ -22,7 +25,8 @@ Canonical events: **2**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | A separation-of-duties waiver was approved by an Org Admin other than its beneficiary within its approval window, allowing the beneficiary to act in the waived scope. |
+| Target meaning | A separation-of-duties waiver was approved by an Org Admin other than its beneficiary within its approval window, allowing the beneficiary to act in the waived scope. |
+| Selected source meaning | A separation-of-duties waiver was approved by an Org Admin other than its beneficiary within its approval window, allowing the beneficiary to act in the waived scope. |
 | Meaning source | authored 2026-10-29 from src/Compliance.Common/Features/AccessControl/Events/SeparationOfDutiesWaiverApproved.cs |
 
 #### Schema
@@ -43,6 +47,9 @@ Canonical events: **2**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | SeparationOfDutiesWaiverRecorded |
+| Selected source event name | SeparationOfDutiesWaiverRecorded |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:SeparationOfDutiesWaiverRecorded |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | SeparationOfDutiesWaiverRecorded |
@@ -52,7 +59,8 @@ Canonical events: **2**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | A separation-of-duties waiver was requested for a scoped record, naming its beneficiary, requester, rationale and expiry, and awaits approval by a different Org Admin. |
+| Target meaning | A separation-of-duties waiver was requested for a scoped record, naming its beneficiary, requester, rationale and expiry, and awaits approval by a different Org Admin. |
+| Selected source meaning | A separation-of-duties waiver was requested for a scoped record, naming its beneficiary, requester, rationale and expiry, and awaits approval by a different Org Admin. |
 | Meaning source | authored 2026-10-29 from src/Compliance.Common/Features/AccessControl/Events/SeparationOfDutiesWaiverRecorded.cs |
 
 #### Schema

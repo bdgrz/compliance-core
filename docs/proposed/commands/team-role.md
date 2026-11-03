@@ -2,10 +2,10 @@
 
 Selected command contracts: **2**. Complete selected contracts and companion source evidence: [owner command JSON](../data/commands/team-role.json).
 
-| Command | Kind | Identity | Fields | HTTP routes |
-| --- | --- | --- | --- | --- |
-| AssignTeamRole | command | CommandId | 5 | [Placeholder: value not recorded] |
-| RemoveTeamRole | command | CommandId | 6 | [Placeholder: value not recorded] |
+| Target command | Selected source name | Kind | Identity | Fields | HTTP routes |
+| --- | --- | --- | --- | --- | --- |
+| AssignTeamRole | AssignTeamRole | command | CommandId | 5 | [Placeholder: value not recorded] |
+| RemoveTeamRole | RemoveTeamRole | command | CommandId | 6 | [Placeholder: value not recorded] |
 
 ## Selected command details
 
@@ -13,13 +13,16 @@ Selected command contracts: **2**. Complete selected contracts and companion sou
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | AssignTeamRole |
+| Selected source command name | AssignTeamRole |
+| Name decision | The selected source name is retained. |
 | Owner | TeamRole |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | command |
 | Logical identity | CommandId; Uuid; required=true; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
 | Entry point | [Placeholder: value not recorded] |
 | MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | [Placeholder: value not recorded] |
+| Selected semantic events | None listed |
 | Protocols | [Placeholder: value not recorded] |
 | Policy preservation | [Placeholder: value not recorded] |
 | Contract changes | [Placeholder: value not recorded] |
@@ -58,13 +61,16 @@ Required tests: [Placeholder: required tests not recorded]
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | RemoveTeamRole |
+| Selected source command name | RemoveTeamRole |
+| Name decision | The selected source name is retained. |
 | Owner | TeamRole |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | command |
 | Logical identity | CommandId; Uuid; required=true; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
 | Entry point | [Placeholder: value not recorded] |
 | MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | [Placeholder: value not recorded] |
+| Selected semantic events | None listed |
 | Protocols | [Placeholder: value not recorded] |
 | Policy preservation | [Placeholder: value not recorded] |
 | Contract changes | [Placeholder: value not recorded] |

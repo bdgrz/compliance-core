@@ -2,11 +2,11 @@
 
 Canonical events: **3**. Complete canonical event and available schema records: [owner event JSON](../data/events/artifact-disclosure.json).
 
-| Event | Kind | Adopted discriminator | Version | Schema fields | Meaning |
-| --- | --- | --- | --- | --- | --- |
-| ArtifactDisclosureApproved | business | bdgrz.retention.artifact-disclosure-approved | 1 | [Placeholder: schema absent] | Records the ArtifactDisclosureApproved domain fact for one tenant-owned subject revision. |
-| ArtifactDisclosureDelivered | business | bdgrz.retention.artifact-disclosure-delivered | 1 | [Placeholder: schema absent] | Records the ArtifactDisclosureDelivered domain fact for one tenant-owned subject revision. |
-| ArtifactDisclosureRevoked | business | bdgrz.retention.artifact-disclosure-revoked | 1 | [Placeholder: schema absent] | Records the ArtifactDisclosureRevoked domain fact for one tenant-owned subject revision. |
+| Target event | Selected source name | Kind | Adopted discriminator | Version | Schema fields | Meaning |
+| --- | --- | --- | --- | --- | --- | --- |
+| ArtifactDisclosureApproved | ArtifactDisclosureApproved | business | bdgrz.retention.artifact-disclosure-approved | 1 | [Placeholder: schema absent] | Records the ArtifactDisclosureApproved domain fact for one tenant-owned subject revision. |
+| ArtifactDisclosureDelivered | ArtifactDisclosureDelivered | business | bdgrz.retention.artifact-disclosure-delivered | 1 | [Placeholder: schema absent] | Records the ArtifactDisclosureDelivered domain fact for one tenant-owned subject revision. |
+| ArtifactDisclosureRevoked | ArtifactDisclosureRevoked | business | bdgrz.retention.artifact-disclosure-revoked | 1 | [Placeholder: schema absent] | Records the ArtifactDisclosureRevoked domain fact for one tenant-owned subject revision. |
 
 ## Event details
 
@@ -14,6 +14,9 @@ Canonical events: **3**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | ArtifactDisclosureApproved |
+| Selected source event name | ArtifactDisclosureApproved |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:ArtifactDisclosureApproved |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | ArtifactDisclosureApproved |
@@ -23,7 +26,8 @@ Canonical events: **3**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | Records the ArtifactDisclosureApproved domain fact for one tenant-owned subject revision. |
+| Target meaning | Records the ArtifactDisclosureApproved domain fact for one tenant-owned subject revision. |
+| Selected source meaning | Records the ArtifactDisclosureApproved domain fact for one tenant-owned subject revision. |
 | Meaning source | record summary in src/Compliance.Common/Features/Retention/Events/ArtifactDisclosureApproved.cs |
 
 #### Schema
@@ -44,6 +48,9 @@ Canonical events: **3**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | ArtifactDisclosureDelivered |
+| Selected source event name | ArtifactDisclosureDelivered |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:ArtifactDisclosureDelivered |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | ArtifactDisclosureDelivered |
@@ -53,7 +60,8 @@ Canonical events: **3**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | Records the ArtifactDisclosureDelivered domain fact for one tenant-owned subject revision. |
+| Target meaning | Records the ArtifactDisclosureDelivered domain fact for one tenant-owned subject revision. |
+| Selected source meaning | Records the ArtifactDisclosureDelivered domain fact for one tenant-owned subject revision. |
 | Meaning source | record summary in src/Compliance.Common/Features/Retention/Events/ArtifactDisclosureDelivered.cs |
 
 #### Schema
@@ -74,6 +82,9 @@ Canonical events: **3**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | ArtifactDisclosureRevoked |
+| Selected source event name | ArtifactDisclosureRevoked |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:ArtifactDisclosureRevoked |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | ArtifactDisclosureRevoked |
@@ -83,7 +94,8 @@ Canonical events: **3**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | Records the ArtifactDisclosureRevoked domain fact for one tenant-owned subject revision. |
+| Target meaning | Records the ArtifactDisclosureRevoked domain fact for one tenant-owned subject revision. |
+| Selected source meaning | Records the ArtifactDisclosureRevoked domain fact for one tenant-owned subject revision. |
 | Meaning source | record summary in src/Compliance.Common/Features/Retention/Events/ArtifactDisclosureRevoked.cs |
 
 #### Schema

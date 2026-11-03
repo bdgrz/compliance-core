@@ -2,9 +2,9 @@
 
 Canonical events: **1**. Complete canonical event and available schema records: [owner event JSON](../data/events/access-principal-classification.json).
 
-| Event | Kind | Adopted discriminator | Version | Schema fields | Meaning |
-| --- | --- | --- | --- | --- | --- |
-| AccessPrincipalClassified | business | bdgrz.access_population.principal_classified | 2 | 7 | An explicit classification decision for one exact accepted principal; earlier decisions remain in history. The decision number is the position of this fact in the principal's own stream. DecisionContent is the complete AccessPrincipalClassificationView. |
+| Target event | Selected source name | Kind | Adopted discriminator | Version | Schema fields | Meaning |
+| --- | --- | --- | --- | --- | --- | --- |
+| AccessPrincipalClassified | AccessPrincipalClassified | business | bdgrz.access_population.principal_classified | 2 | 7 | An explicit classification decision for one exact accepted principal; earlier decisions remain in history. The decision number is the position of this fact in the principal's own stream. DecisionContent is the complete AccessPrincipalClassificationView. |
 
 ## Event details
 
@@ -12,6 +12,9 @@ Canonical events: **1**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | AccessPrincipalClassified |
+| Selected source event name | AccessPrincipalClassified |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:AccessPrincipalClassified |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | AccessPrincipalClassified |
@@ -21,7 +24,8 @@ Canonical events: **1**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | `{"discriminator":"bdgrz.access_population.principal_classified","version":1}` |
-| Meaning | An explicit classification decision for one exact accepted principal; earlier decisions remain in history. The decision number is the position of this fact in the principal's own stream. DecisionContent is the complete AccessPrincipalClassificationView. |
+| Target meaning | An explicit classification decision for one exact accepted principal; earlier decisions remain in history. The decision number is the position of this fact in the principal's own stream. DecisionContent is the complete AccessPrincipalClassificationView. |
+| Selected source meaning | An explicit classification decision for one exact accepted principal; earlier decisions remain in history. The decision number is the position of this fact in the principal's own stream. DecisionContent is the complete AccessPrincipalClassificationView. |
 | Meaning source | record summary in src/Compliance.Common/Features/AccessReviews/Events/AccessPrincipalClassified.cs |
 
 #### Selected schema and implementation evidence

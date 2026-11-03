@@ -38,7 +38,9 @@
         "jsonPointer": "/contracts/194",
         "line": 14552,
         "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
-      }
+      },
+      "sourceName": "SetWorkDigestPreference",
+      "targetName": "SetWorkDigestPreference"
     }
   ],
   "sourceContractEvidence": []

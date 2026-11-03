@@ -1,5 +1,7 @@
 {
-  "root": "AccessReviewBulkCancellationReactor",
+  "sourceRoot": "AccessReviewBulkCancellationReactor",
+  "targetRoot": "CancelUnpublishedAccessReviewDecisionsReactor",
+  "businessReason": "Cancel delayed item decisions before their reservations are released; published decisions recover forward.",
   "rows": [
     {
       "id": "T012",

@@ -23,7 +23,11 @@
         "meaning": "One immutable method publication, with its original operation and result.",
         "meaningSource": "record summary in src/Compliance.Common/Features/Risks/Events/RiskMethodVersionPublished.cs"
       },
-      "schema": null
+      "schema": null,
+      "sourceName": "RiskMethodVersionPublished",
+      "targetName": "RiskMethodVersionPublished",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "One immutable method publication, with its original operation and result."
     }
   ]
 }

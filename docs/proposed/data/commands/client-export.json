@@ -59,7 +59,9 @@
         "line": 8119,
         "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
       },
-      "kind": "command"
+      "kind": "command",
+      "sourceName": "RecordClientExportBuildResult",
+      "targetName": "RecordClientExportBuildResult"
     },
     {
       "command": "RecordClientExportDelivery",
@@ -119,7 +121,9 @@
         "line": 8195,
         "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
       },
-      "kind": "command"
+      "kind": "command",
+      "sourceName": "RecordClientExportDelivery",
+      "targetName": "RecordClientExportDelivery"
     },
     {
       "command": "RecordOwnAttestRecordDelivery",
@@ -195,7 +199,9 @@
           "process_reply": 0.51
         },
         "date": "2026-10-29"
-      }
+      },
+      "sourceName": "RecordOwnAttestRecordDelivery",
+      "targetName": "RecordOwnAttestRecordDelivery"
     },
     {
       "command": "RecordOwnAttestRecordPackageResult",
@@ -271,7 +277,9 @@
           "process_reply": 0.69
         },
         "date": "2026-10-29"
-      }
+      },
+      "sourceName": "RecordOwnAttestRecordPackageResult",
+      "targetName": "RecordOwnAttestRecordPackageResult"
     },
     {
       "command": "RequestClientExport",
@@ -321,7 +329,9 @@
         "line": 11080,
         "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
       },
-      "kind": "creation"
+      "kind": "creation",
+      "sourceName": "RequestClientExport",
+      "targetName": "RequestClientExport"
     },
     {
       "command": "RequestOwnAttestRecordPackage",
@@ -366,7 +376,9 @@
         "line": 11135,
         "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
       },
-      "kind": "creation"
+      "kind": "creation",
+      "sourceName": "RequestOwnAttestRecordPackage",
+      "targetName": "RequestOwnAttestRecordPackage"
     }
   ],
   "sourceContractEvidence": []

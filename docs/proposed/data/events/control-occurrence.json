@@ -96,7 +96,11 @@
         "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "ControlOccurrenceAttested",
+      "targetName": "ControlOccurrenceAttested",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "One attestation version of an occurrence. The complete ControlAttestationView is verified immutable content, so a large evidence list is never an event-size rejection."
     },
     {
       "canonical": {
@@ -392,7 +396,11 @@
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "resolvedIntentSchema": "ControlOccurrenceCreationIntent",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "ControlOccurrenceOpened",
+      "targetName": "ControlOccurrenceOpened",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "The one materialization of a control occurrence for its business window. CreationIntent is the complete frozen creation intent; Intent repeats the reference the opening operation accepted. A direct opening carries the first response; a materialization receiver fact does not."
     },
     {
       "canonical": {
@@ -489,7 +497,11 @@
         "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "ControlOccurrenceReviewed",
+      "targetName": "ControlOccurrenceReviewed",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "The independent review decision on one exact attestation version. The complete ControlOccurrenceReviewView is verified immutable content."
     }
   ]
 }

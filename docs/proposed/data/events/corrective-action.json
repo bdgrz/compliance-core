@@ -198,7 +198,11 @@
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "resolvedIntentSchema": "ChildAdmissionIntent",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "CorrectiveActionAddedV2",
+      "targetName": "CorrectiveActionAdded",
+      "nameDecision": "Names the creation of the admitted corrective action without exposing the implementation version suffix.",
+      "targetMeaning": "The materialization of an admitted corrective action on its own owner, at revision one. The complete CorrectiveActionView is verified content and Intent repeats the admission intent the finding accepted."
     },
     {
       "canonical": {
@@ -320,7 +324,11 @@
         "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "CorrectiveActionCompletedV2",
+      "targetName": "CorrectiveActionCompleted",
+      "nameDecision": "Names the completed corrective action without exposing the implementation version suffix.",
+      "targetMeaning": "The completion of one corrective action on its own owner. EvidenceManifest is the complete evidence list as verified immutable content, with every item and its order preserved."
     },
     {
       "canonical": {
@@ -480,7 +488,11 @@
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "resolvedIntentSchema": "SourceUseAuthorizationIntent",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "CorrectiveActionFindingClosureUseAuthorized",
+      "targetName": "CorrectiveActionFindingClosureAuthorized",
+      "nameDecision": "Authorization is already the completed fact; Use adds no stakeholder meaning.",
+      "targetMeaning": "A completed corrective action is held for a finding closure. The use does not advance the public action revision: Revision is the held revision, and Generation is the finding generation the closure seals."
     },
     {
       "canonical": {
@@ -640,7 +652,11 @@
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "resolvedIntentSchema": "SourceUseAuthorizationIntent",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "CorrectiveActionFindingClosureUseSettled",
+      "targetName": "CorrectiveActionFindingClosureAuthorizationClosed",
+      "nameDecision": "The exact authorization ended; the recorded outcome still distinguishes use, cancellation, or a late fence.",
+      "targetMeaning": "A finding-closure use of a corrective action ended. Disposition repeats the disposition of the settlement intent so the owner can install the closed-parent fence from its own ordered stream: a SourceUseSettlementDisposition.ParentClosed settlement keeps the action under the closed finding generation, and releasing the temporary use never restores an unrestricted writable action."
     }
   ]
 }

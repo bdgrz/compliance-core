@@ -2,11 +2,11 @@
 
 Canonical events: **3**. Complete canonical event and available schema records: [owner event JSON](../data/events/risk-treatment-assertion.json).
 
-| Event | Kind | Adopted discriminator | Version | Schema fields | Meaning |
-| --- | --- | --- | --- | --- | --- |
-| RiskControlTreatmentProposed | business | bdgrz.risk.control_treatment.proposed | 2 | 9 | A control treatment assertion was proposed on the (risk, control) line. TreatmentContent is the complete proposed RiskControlTreatmentView; the logical id of the operation is the treatment id. |
-| RiskControlTreatmentRetired | business | bdgrz.risk.control_treatment.retired | 2 | 11 | An accepted control treatment assertion was withdrawn; its history is kept. |
-| RiskControlTreatmentReviewed | business | bdgrz.risk.control_treatment.reviewed | 2 | 14 | An independent reviewer accepted or rejected the pending control treatment assertion of the line. |
+| Target event | Selected source name | Kind | Adopted discriminator | Version | Schema fields | Meaning |
+| --- | --- | --- | --- | --- | --- | --- |
+| RiskControlTreatmentProposed | RiskControlTreatmentProposed | business | bdgrz.risk.control_treatment.proposed | 2 | 9 | A control treatment assertion was proposed on the (risk, control) line. TreatmentContent is the complete proposed RiskControlTreatmentView; the logical id of the operation is the treatment id. |
+| RiskControlTreatmentRetired | RiskControlTreatmentRetired | business | bdgrz.risk.control_treatment.retired | 2 | 11 | An accepted control treatment assertion was withdrawn; its history is kept. |
+| RiskControlTreatmentReviewed | RiskControlTreatmentReviewed | business | bdgrz.risk.control_treatment.reviewed | 2 | 14 | An independent reviewer accepted or rejected the pending control treatment assertion of the line. |
 
 ## Event details
 
@@ -14,6 +14,9 @@ Canonical events: **3**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | RiskControlTreatmentProposed |
+| Selected source event name | RiskControlTreatmentProposed |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:RiskControlTreatmentProposed |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | RiskControlTreatmentProposed |
@@ -23,7 +26,8 @@ Canonical events: **3**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | `{"discriminator":"bdgrz.risk.control_treatment.proposed","version":1}` |
-| Meaning | A control treatment assertion was proposed on the (risk, control) line. TreatmentContent is the complete proposed RiskControlTreatmentView; the logical id of the operation is the treatment id. |
+| Target meaning | A control treatment assertion was proposed on the (risk, control) line. TreatmentContent is the complete proposed RiskControlTreatmentView; the logical id of the operation is the treatment id. |
+| Selected source meaning | A control treatment assertion was proposed on the (risk, control) line. TreatmentContent is the complete proposed RiskControlTreatmentView; the logical id of the operation is the treatment id. |
 | Meaning source | record summary in src/Compliance.Common/Features/Risks/Events/RiskControlTreatmentProposed.cs |
 
 #### Selected schema and implementation evidence
@@ -78,6 +82,9 @@ Canonical events: **3**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | RiskControlTreatmentRetired |
+| Selected source event name | RiskControlTreatmentRetired |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:RiskControlTreatmentRetired |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | RiskControlTreatmentRetired |
@@ -87,7 +94,8 @@ Canonical events: **3**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | `{"discriminator":"bdgrz.risk.control_treatment.retired","version":1}` |
-| Meaning | An accepted control treatment assertion was withdrawn; its history is kept. |
+| Target meaning | An accepted control treatment assertion was withdrawn; its history is kept. |
+| Selected source meaning | An accepted control treatment assertion was withdrawn; its history is kept. |
 | Meaning source | record summary in src/Compliance.Common/Features/Risks/Events/RiskControlTreatmentRetired.cs |
 
 #### Selected schema and implementation evidence
@@ -134,6 +142,9 @@ Canonical events: **3**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | RiskControlTreatmentReviewed |
+| Selected source event name | RiskControlTreatmentReviewed |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:RiskControlTreatmentReviewed |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | RiskControlTreatmentReviewed |
@@ -143,7 +154,8 @@ Canonical events: **3**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | `{"discriminator":"bdgrz.risk.control_treatment.reviewed","version":1}` |
-| Meaning | An independent reviewer accepted or rejected the pending control treatment assertion of the line. |
+| Target meaning | An independent reviewer accepted or rejected the pending control treatment assertion of the line. |
+| Selected source meaning | An independent reviewer accepted or rejected the pending control treatment assertion of the line. |
 | Meaning source | record summary in src/Compliance.Common/Features/Risks/Events/RiskControlTreatmentReviewed.cs |
 
 #### Selected schema and implementation evidence

@@ -1,5 +1,7 @@
 {
-  "root": "AccessReviewCompletionReactor",
+  "sourceRoot": "AccessReviewCompletionReactor",
+  "targetRoot": "AccessReviewCompletionReactor",
+  "businessReason": "Complete the campaign only after each selected item has completed or been canceled and its exact authorization has ended.",
   "rows": [
     {
       "id": "T059",

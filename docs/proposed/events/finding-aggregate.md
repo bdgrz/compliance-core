@@ -2,16 +2,16 @@
 
 Canonical events: **8**. Complete canonical event and available schema records: [owner event JSON](../data/events/finding-aggregate.json).
 
-| Event | Kind | Adopted discriminator | Version | Schema fields | Meaning |
-| --- | --- | --- | --- | --- | --- |
-| CorrectiveActionAdmitted | business | bdgrz.finding-aggregate.corrective-action-admitted | 1 | 8 | The finding accepted one corrective action for the current finding generation. Intent is the frozen ChildAdmissionIntent that carries the complete action; the action owner is materialized independently and the admission, not the materialization, is the authority. The logical id of Operation is the action id. |
-| FindingAcceptanceLinkedV2 | business | bdgrz.finding.acceptance.linked | 3 | 9 | A risk acceptance or waiver linked to the finding; the complete FindingAcceptanceView is verified content. |
-| FindingClosedV2 | business | bdgrz.finding.closed | 3 | 12 | The finding closed. ClosureContent is the complete FindingClosureView and ActionCompletionProofs the complete manifest of the held completion facts of every admitted action of FindingGeneration. |
-| FindingClosureAccepted | business | bdgrz.finding-aggregate.finding-closure-accepted | 1 | 8 | The root native acceptance of a closure decision. It seals action admission for Generation and references the frozen ClosureIntent; the finding only closes once FindingClosedV2 follows. |
-| FindingClosureCanceled | business | bdgrz.finding-aggregate.finding-closure-canceled | 1 | 8 | A pending closure ended before it closed the finding. The fact is the local receiver fence: a delayed CompleteFindingClosure sees it and does nothing, and only then are the action uses settled. SourceProofs is the failure proof. |
-| FindingRaisedV2 | business | bdgrz.finding.raised | 3 | 20 | The root native fact of a finding. LinksManifest is the complete original link list as verified immutable content, so a large list is never an event-size rejection. |
-| FindingReopenedV2 | business | bdgrz.finding.reopened | 3 | 11 | A closed finding was reopened. The finding advances to the next generation; admitted actions and their history are kept, and a closure accepted for an earlier generation can no longer close it. |
-| FindingRevisedV2 | business | bdgrz.finding.revised | 3 | 16 | An attributable severity, ownership, due-date, scope or root-cause change. |
+| Target event | Selected source name | Kind | Adopted discriminator | Version | Schema fields | Meaning |
+| --- | --- | --- | --- | --- | --- | --- |
+| CorrectiveActionAdmitted | CorrectiveActionAdmitted | business | bdgrz.finding-aggregate.corrective-action-admitted | 1 | 8 | The finding accepted one corrective action for the current finding generation. Intent is the frozen ChildAdmissionIntent that carries the complete action; the action owner is materialized independently and the admission, not the materialization, is the authority. The logical id of Operation is the action id. |
+| FindingAcceptanceLinked | FindingAcceptanceLinkedV2 | business | bdgrz.finding.acceptance.linked | 3 | 9 | A risk acceptance or waiver linked to the finding; the complete FindingAcceptanceView is verified content. |
+| FindingClosed | FindingClosedV2 | business | bdgrz.finding.closed | 3 | 12 | The finding closed. ClosureContent is the complete FindingClosureView and ActionCompletionProofs the complete manifest of the held completion facts of every admitted action of FindingGeneration. |
+| FindingClosureAccepted | FindingClosureAccepted | business | bdgrz.finding-aggregate.finding-closure-accepted | 1 | 8 | The root native acceptance of a closure decision. It seals action admission for Generation and references the frozen ClosureIntent; the finding only closes once FindingClosedV2 follows. |
+| FindingClosureCanceled | FindingClosureCanceled | business | bdgrz.finding-aggregate.finding-closure-canceled | 1 | 8 | A pending closure ended before it closed the finding. The fact is the local receiver fence: a delayed CompleteFindingClosure sees it and does nothing, and only then are the action uses settled. SourceProofs is the failure proof. |
+| FindingRaised | FindingRaisedV2 | business | bdgrz.finding.raised | 3 | 20 | The root native fact of a finding. LinksManifest is the complete original link list as verified immutable content, so a large list is never an event-size rejection. |
+| FindingReopened | FindingReopenedV2 | business | bdgrz.finding.reopened | 3 | 11 | A closed finding was reopened. The finding advances to the next generation; admitted actions and their history are kept, and a closure accepted for an earlier generation can no longer close it. |
+| FindingRevised | FindingRevisedV2 | business | bdgrz.finding.revised | 3 | 16 | An attributable severity, ownership, due-date, scope or root-cause change. |
 
 ## Event details
 
@@ -19,6 +19,9 @@ Canonical events: **8**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | CorrectiveActionAdmitted |
+| Selected source event name | CorrectiveActionAdmitted |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:CorrectiveActionAdmitted |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | CorrectiveActionAdmitted |
@@ -28,7 +31,8 @@ Canonical events: **8**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | The finding accepted one corrective action for the current finding generation. Intent is the frozen ChildAdmissionIntent that carries the complete action; the action owner is materialized independently and the admission, not the materialization, is the authority. The logical id of Operation is the action id. |
+| Target meaning | The finding accepted one corrective action for the current finding generation. Intent is the frozen ChildAdmissionIntent that carries the complete action; the action owner is materialized independently and the admission, not the materialization, is the authority. The logical id of Operation is the action id. |
+| Selected source meaning | The finding accepted one corrective action for the current finding generation. Intent is the frozen ChildAdmissionIntent that carries the complete action; the action owner is materialized independently and the admission, not the materialization, is the authority. The logical id of Operation is the action id. |
 | Meaning source | record summary in src/Compliance.Common/Features/Remediation/Events/CorrectiveActionAdmitted.cs |
 
 #### Selected schema and implementation evidence
@@ -106,12 +110,15 @@ ChildAdmissionIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T036](../reactors/corrective-action-materialization-reactor.md#t036) | physical root, logical prerequisite | FindingAggregate | MaterializeCorrectiveAction | CorrectiveAction |
+| [T036](../reactors/corrective-action-materialization-reactor.md#t036) | physical root, logical prerequisite | FindingAggregate | CreateCorrectiveAction | CorrectiveAction |
 
-### FindingAcceptanceLinkedV2
+### FindingAcceptanceLinked
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | FindingAcceptanceLinked |
+| Selected source event name | FindingAcceptanceLinkedV2 |
+| Name decision | Names the completed link between the finding and its risk acceptance or waiver without exposing the implementation version suffix. |
 | Canonical semantic key | event:FindingAcceptanceLinked |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | FindingAcceptanceLinkedV2 |
@@ -121,7 +128,8 @@ ChildAdmissionIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | `{"discriminator":"bdgrz.finding.acceptance.linked","version":1}` |
-| Meaning | A risk acceptance or waiver linked to the finding; the complete FindingAcceptanceView is verified content. |
+| Target meaning | A risk acceptance or waiver linked to the finding; the complete FindingAcceptanceView is verified content. |
+| Selected source meaning | A risk acceptance or waiver linked to the finding; the complete FindingAcceptanceView is verified content. |
 | Meaning source | record summary in src/Compliance.Common/Features/Remediation/Events/FindingAcceptanceLinkedV2.cs |
 
 #### Selected schema and implementation evidence
@@ -172,10 +180,13 @@ ChildAdmissionIntent
 
 [Placeholder: no selected choreography row names this event as root, prerequisite, or emitted fact.]
 
-### FindingClosedV2
+### FindingClosed
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | FindingClosed |
+| Selected source event name | FindingClosedV2 |
+| Name decision | Names the completed closure of the finding without exposing the implementation version suffix. |
 | Canonical semantic key | event:FindingClosed |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | FindingClosedV2 |
@@ -185,7 +196,8 @@ ChildAdmissionIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | `{"discriminator":"bdgrz.finding.closed","version":1}` |
-| Meaning | The finding closed. ClosureContent is the complete FindingClosureView and ActionCompletionProofs the complete manifest of the held completion facts of every admitted action of FindingGeneration. |
+| Target meaning | The finding closed. ClosureContent is the complete FindingClosureView and ActionCompletionProofs the complete manifest of the held completion facts of every admitted action of FindingGeneration. |
+| Selected source meaning | The finding closed. ClosureContent is the complete FindingClosureView and ActionCompletionProofs the complete manifest of the held completion facts of every admitted action of FindingGeneration. |
 | Meaning source | record summary in src/Compliance.Common/Features/Remediation/Events/FindingClosedV2.cs |
 
 #### Selected schema and implementation evidence
@@ -277,12 +289,15 @@ ClosureIntent
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
 | [T037](../reactors/finding-closure-reactor.md#t037) | emitted semantic fact | FindingAggregate | CompleteFindingClosure | FindingAggregate |
-| [T064](../reactors/finding-closure-reactor.md#t064) | logical prerequisite | FindingAggregate | SettleCorrectiveActionFindingClosureUse | CorrectiveAction |
+| [T064](../reactors/finding-closure-reactor.md#t064) | logical prerequisite | FindingAggregate | CloseCorrectiveActionFindingClosureAuthorization | CorrectiveAction |
 
 ### FindingClosureAccepted
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | FindingClosureAccepted |
+| Selected source event name | FindingClosureAccepted |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:FindingClosureAccepted |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | FindingClosureAccepted |
@@ -292,7 +307,8 @@ ClosureIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | The root native acceptance of a closure decision. It seals action admission for Generation and references the frozen ClosureIntent; the finding only closes once FindingClosedV2 follows. |
+| Target meaning | The root native acceptance of a closure decision. It seals action admission for Generation and references the frozen ClosureIntent; the finding only closes once FindingClosedV2 follows. |
+| Selected source meaning | The root native acceptance of a closure decision. It seals action admission for Generation and references the frozen ClosureIntent; the finding only closes once FindingClosedV2 follows. |
 | Meaning source | record summary in src/Compliance.Common/Features/Remediation/Events/FindingClosureAccepted.cs |
 
 #### Selected schema and implementation evidence
@@ -371,14 +387,17 @@ ClosureIntent
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
 | [T037](../reactors/finding-closure-reactor.md#t037) | physical root, logical prerequisite | FindingAggregate | CompleteFindingClosure | FindingAggregate |
-| [T063](../reactors/finding-closure-reactor.md#t063) | physical root, logical prerequisite | FindingAggregate | AuthorizeCorrectiveActionFindingClosureUse | CorrectiveAction |
-| [T064](../reactors/finding-closure-reactor.md#t064) | physical root | FindingAggregate | SettleCorrectiveActionFindingClosureUse | CorrectiveAction |
+| [T063](../reactors/finding-closure-reactor.md#t063) | physical root, logical prerequisite | FindingAggregate | AuthorizeCorrectiveActionFindingClosure | CorrectiveAction |
+| [T064](../reactors/finding-closure-reactor.md#t064) | physical root | FindingAggregate | CloseCorrectiveActionFindingClosureAuthorization | CorrectiveAction |
 | [A008](../reactors/unassigned-architecture-rows.md#a008) | physical root, logical prerequisite | FindingAggregate | AbortFindingClosure | FindingAggregate |
 
 ### FindingClosureCanceled
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | FindingClosureCanceled |
+| Selected source event name | FindingClosureCanceled |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:FindingClosureCanceled |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | FindingClosureCanceled |
@@ -388,7 +407,8 @@ ClosureIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | A pending closure ended before it closed the finding. The fact is the local receiver fence: a delayed CompleteFindingClosure sees it and does nothing, and only then are the action uses settled. SourceProofs is the failure proof. |
+| Target meaning | A pending closure ended before it closed the finding. The fact is the local receiver fence: a delayed CompleteFindingClosure sees it and does nothing, and only then are the action uses settled. SourceProofs is the failure proof. |
+| Selected source meaning | A pending closure ended before it closed the finding. The fact is the local receiver fence: a delayed CompleteFindingClosure sees it and does nothing, and only then are the action uses settled. SourceProofs is the failure proof. |
 | Meaning source | record summary in src/Compliance.Common/Features/Remediation/Events/FindingClosureCanceled.cs |
 
 #### Selected schema and implementation evidence
@@ -466,13 +486,16 @@ ClosureIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T064](../reactors/finding-closure-reactor.md#t064) | logical prerequisite | FindingAggregate | SettleCorrectiveActionFindingClosureUse | CorrectiveAction |
+| [T064](../reactors/finding-closure-reactor.md#t064) | logical prerequisite | FindingAggregate | CloseCorrectiveActionFindingClosureAuthorization | CorrectiveAction |
 | [A008](../reactors/unassigned-architecture-rows.md#a008) | emitted semantic fact | FindingAggregate | AbortFindingClosure | FindingAggregate |
 
-### FindingRaisedV2
+### FindingRaised
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | FindingRaised |
+| Selected source event name | FindingRaisedV2 |
+| Name decision | Names the creation of the finding without exposing the implementation version suffix. |
 | Canonical semantic key | event:FindingRaised |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | FindingRaisedV2 |
@@ -482,7 +505,8 @@ ClosureIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | `{"discriminator":"bdgrz.finding.raised","version":1}` |
-| Meaning | The root native fact of a finding. LinksManifest is the complete original link list as verified immutable content, so a large list is never an event-size rejection. |
+| Target meaning | The root native fact of a finding. LinksManifest is the complete original link list as verified immutable content, so a large list is never an event-size rejection. |
+| Selected source meaning | The root native fact of a finding. LinksManifest is the complete original link list as verified immutable content, so a large list is never an event-size rejection. |
 | Meaning source | record summary in src/Compliance.Common/Features/Remediation/Events/FindingRaisedV2.cs |
 
 #### Selected schema and implementation evidence
@@ -547,10 +571,13 @@ ClosureIntent
 | [S001](../reactors/control-evaluation-deviation-finding-reactor.md#s001) | emitted semantic fact | ControlEvaluation | RaiseEvaluationDeviationFinding | FindingAggregate |
 | [S002](../reactors/control-occurrence-finding-reactor.md#s002) | emitted semantic fact | ControlOccurrence | RaiseOccurrenceFinding | FindingAggregate |
 
-### FindingReopenedV2
+### FindingReopened
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | FindingReopened |
+| Selected source event name | FindingReopenedV2 |
+| Name decision | Names the reopening of the finding without exposing the implementation version suffix. |
 | Canonical semantic key | event:FindingReopened |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | FindingReopenedV2 |
@@ -560,7 +587,8 @@ ClosureIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | `{"discriminator":"bdgrz.finding.reopened","version":1}` |
-| Meaning | A closed finding was reopened. The finding advances to the next generation; admitted actions and their history are kept, and a closure accepted for an earlier generation can no longer close it. |
+| Target meaning | A closed finding was reopened. The finding advances to the next generation; admitted actions and their history are kept, and a closure accepted for an earlier generation can no longer close it. |
+| Selected source meaning | A closed finding was reopened. The finding advances to the next generation; admitted actions and their history are kept, and a closure accepted for an earlier generation can no longer close it. |
 | Meaning source | record summary in src/Compliance.Common/Features/Remediation/Events/FindingReopenedV2.cs |
 
 #### Selected schema and implementation evidence
@@ -603,10 +631,13 @@ ClosureIntent
 
 [Placeholder: no selected choreography row names this event as root, prerequisite, or emitted fact.]
 
-### FindingRevisedV2
+### FindingRevised
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | FindingRevised |
+| Selected source event name | FindingRevisedV2 |
+| Name decision | Names the completed revision of the finding without exposing the implementation version suffix. |
 | Canonical semantic key | event:FindingRevised |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | FindingRevisedV2 |
@@ -616,7 +647,8 @@ ClosureIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | `{"discriminator":"bdgrz.finding.revised","version":1}` |
-| Meaning | An attributable severity, ownership, due-date, scope or root-cause change. |
+| Target meaning | An attributable severity, ownership, due-date, scope or root-cause change. |
+| Selected source meaning | An attributable severity, ownership, due-date, scope or root-cause change. |
 | Meaning source | record summary in src/Compliance.Common/Features/Remediation/Events/FindingRevisedV2.cs |
 
 #### Selected schema and implementation evidence

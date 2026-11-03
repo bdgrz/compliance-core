@@ -23,7 +23,11 @@
         "meaning": "The impact of a compliance incident was assessed by a named member, becoming the incident's current assessment.",
         "meaningSource": "authored 2026-10-29 from src/Compliance.Common/Features/Incidents/Events/ComplianceIncidentImpactAssessed.cs"
       },
-      "schema": null
+      "schema": null,
+      "sourceName": "ComplianceIncidentImpactAssessed",
+      "targetName": "ComplianceIncidentImpactAssessed",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "The impact of a compliance incident was assessed by a named member, becoming the incident's current assessment."
     },
     {
       "canonical": {
@@ -47,7 +51,11 @@
         "meaning": "A compliance incident was recorded for a program by a named member as the incident's first revision.",
         "meaningSource": "authored 2026-10-29 from src/Compliance.Common/Features/Incidents/Events/ComplianceIncidentRecorded.cs"
       },
-      "schema": null
+      "schema": null,
+      "sourceName": "ComplianceIncidentRecorded",
+      "targetName": "ComplianceIncidentRecorded",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "A compliance incident was recorded for a program by a named member as the incident's first revision."
     },
     {
       "canonical": {
@@ -71,7 +79,11 @@
         "meaning": "A recorded compliance incident was revised by a named member, changing its content at the next revision.",
         "meaningSource": "authored 2026-10-29 from src/Compliance.Common/Features/Incidents/Events/ComplianceIncidentRevised.cs"
       },
-      "schema": null
+      "schema": null,
+      "sourceName": "ComplianceIncidentRevised",
+      "targetName": "ComplianceIncidentRevised",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "A recorded compliance incident was revised by a named member, changing its content at the next revision."
     },
     {
       "canonical": {
@@ -95,7 +107,11 @@
         "meaning": "A decision was recorded on whether a compliance incident requires a change to the system description, made by a named member.",
         "meaningSource": "authored 2026-10-29 from src/Compliance.Common/Features/Incidents/Events/ComplianceIncidentSystemDescriptionDecisionRecorded.cs"
       },
-      "schema": null
+      "schema": null,
+      "sourceName": "ComplianceIncidentSystemDescriptionDecisionRecorded",
+      "targetName": "ComplianceIncidentSystemDescriptionDecisionRecorded",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "A decision was recorded on whether a compliance incident requires a change to the system description, made by a named member."
     },
     {
       "canonical": {
@@ -119,7 +135,11 @@
         "meaning": "The resolution of a compliance incident was recorded by a named member, closing the incident.",
         "meaningSource": "authored 2026-10-29 from src/Compliance.Common/Features/Incidents/Events/IncidentResolutionRecorded.cs"
       },
-      "schema": null
+      "schema": null,
+      "sourceName": "IncidentResolutionRecorded",
+      "targetName": "IncidentResolutionRecorded",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "The resolution of a compliance incident was recorded by a named member, closing the incident."
     }
   ]
 }

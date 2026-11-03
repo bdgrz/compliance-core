@@ -2,30 +2,33 @@
 
 Selected command contracts: **8**. Complete selected contracts and companion source evidence: [owner command JSON](../data/commands/declared-application.json).
 
-| Command | Kind | Identity | Fields | HTTP routes |
-| --- | --- | --- | --- | --- |
-| ApplyApplicationImportEffect | receiver | CommandId | 10 | [Placeholder: value not recorded] |
-| DeclareApplication | http | ApplicationId | 11 | PUT /api/v1/tenants/{tenant_id}/applications/{application_id} [ComplianceAuthorizationPolicies.ApiUser] |
-| RetireApplication | http | CommandId | 7 | PUT /api/v1/tenants/{tenant_id}/applications/{application_id}/retirements/{command_id} [ComplianceAuthorizationPolicies.ApiUser] |
-| ReviseApplication | http | CommandId | 16 | PUT /api/v1/tenants/{tenant_id}/applications/revise-application/{command_id} [ApiUser + existing request-scope authorizers] |
-| ReserveApplicationImportTarget | receiver | CommandId | 10 | [Placeholder: value not recorded] |
-| FenceApplicationImportTarget | receiver | CommandId | 9 | [Placeholder: value not recorded] |
-| ReleaseApplicationImportTarget | receiver | CommandId | 9 | [Placeholder: value not recorded] |
-| ApplyApplicationNameChange | receiver | CommandId | 8 | [Placeholder: value not recorded] |
+| Target command | Selected source name | Kind | Identity | Fields | HTTP routes |
+| --- | --- | --- | --- | --- | --- |
+| ApplyApplicationImportChange | ApplyApplicationImportEffect | receiver | CommandId | 10 | [Placeholder: value not recorded] |
+| DeclareApplication | DeclareApplication | http | ApplicationId | 11 | PUT /api/v1/tenants/{tenant_id}/applications/{application_id} [ComplianceAuthorizationPolicies.ApiUser] |
+| RetireApplication | RetireApplication | http | CommandId | 7 | PUT /api/v1/tenants/{tenant_id}/applications/{application_id}/retirements/{command_id} [ComplianceAuthorizationPolicies.ApiUser] |
+| ReviseApplication | ReviseApplication | http | CommandId | 16 | PUT /api/v1/tenants/{tenant_id}/applications/revise-application/{command_id} [ApiUser + existing request-scope authorizers] |
+| ReserveApplicationImportTarget | ReserveApplicationImportTarget | receiver | CommandId | 10 | [Placeholder: value not recorded] |
+| BlockCanceledApplicationImportChanges | FenceApplicationImportTarget | receiver | CommandId | 9 | [Placeholder: value not recorded] |
+| ReleaseApplicationImportTarget | ReleaseApplicationImportTarget | receiver | CommandId | 9 | [Placeholder: value not recorded] |
+| ApplyApplicationNameChange | ApplyApplicationNameChange | receiver | CommandId | 8 | [Placeholder: value not recorded] |
 
 ## Selected command details
 
-### ApplyApplicationImportEffect
+### ApplyApplicationImportChange
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | ApplyApplicationImportChange |
+| Selected source command name | ApplyApplicationImportEffect |
+| Name decision | Applies the exact frozen import change provisionally while the full batch remains unpublished. |
 | Owner | DeclaredApplication |
 | Contract record status | target_contract |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; source_event_effect; UUIDv5(source eventId, length-prefixed effectKind + canonical target stream + source lifecycle episode); external process callback source is the immutable accepted business source event plus exact effect key, never attemptId. |
 | Entry point | internal_trusted_command |
 | MCP | false |
-| Selected semantic events | ApplicationImportEffectPending |
+| Selected semantic events | ApplicationImportChangeProvisionallyApplied |
 | Protocols | Application identity, relationships and import holds |
 | Policy preservation | All current source handler/aggregate validation rules and source test expectations apply, except the explicit contractChanges and boundary protocol. Lifetime caps and technical attempt events are removed with their structural replacement. |
 | Contract changes | Add required CommandId., Use the exact trusted internal receiver signature from the reactor catalog; Source is concretely typed and carries the accepted business fact, never a process-stage pseudo-event., Use the exact trusted internal receiver signature from the reactor catalog; Source is concretely typed and carries the accepted business fact, never a process-stage pseudo-event. |
@@ -71,6 +74,9 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | DeclareApplication |
+| Selected source command name | DeclareApplication |
+| Name decision | The selected source name is retained. |
 | Owner | DeclaredApplication |
 | Contract record status | target_contract |
 | Kind | http |
@@ -126,6 +132,9 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | RetireApplication |
+| Selected source command name | RetireApplication |
+| Name decision | The selected source name is retained. |
 | Owner | DeclaredApplication |
 | Contract record status | target_contract |
 | Kind | http |
@@ -177,6 +186,9 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | ReviseApplication |
+| Selected source command name | ReviseApplication |
+| Name decision | The selected source name is retained. |
 | Owner | DeclaredApplication |
 | Contract record status | target_contract |
 | Kind | http |
@@ -237,13 +249,16 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | ReserveApplicationImportTarget |
+| Selected source command name | ReserveApplicationImportTarget |
+| Name decision | The selected source name is retained. |
 | Owner | DeclaredApplication |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; reactor; deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result |
 | Entry point | [Placeholder: value not recorded] |
 | MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | [Placeholder: value not recorded] |
+| Selected semantic events | None listed |
 | Protocols | [Placeholder: value not recorded] |
 | Policy preservation | [Placeholder: value not recorded] |
 | Contract changes | [Placeholder: value not recorded] |
@@ -283,17 +298,20 @@ Existing tests: [Placeholder: existing tests not recorded]
 
 Required tests: [Placeholder: required tests not recorded]
 
-### FenceApplicationImportTarget
+### BlockCanceledApplicationImportChanges
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | BlockCanceledApplicationImportChanges |
+| Selected source command name | FenceApplicationImportTarget |
+| Name decision | Blocks delayed changes from a canceled import batch from reaching the application. |
 | Owner | DeclaredApplication |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; reactor; deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result |
 | Entry point | [Placeholder: value not recorded] |
 | MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | [Placeholder: value not recorded] |
+| Selected semantic events | None listed |
 | Protocols | [Placeholder: value not recorded] |
 | Policy preservation | [Placeholder: value not recorded] |
 | Contract changes | [Placeholder: value not recorded] |
@@ -336,13 +354,16 @@ Required tests: [Placeholder: required tests not recorded]
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | ReleaseApplicationImportTarget |
+| Selected source command name | ReleaseApplicationImportTarget |
+| Name decision | The selected source name is retained. |
 | Owner | DeclaredApplication |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; reactor; deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result |
 | Entry point | [Placeholder: value not recorded] |
 | MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | [Placeholder: value not recorded] |
+| Selected semantic events | None listed |
 | Protocols | [Placeholder: value not recorded] |
 | Policy preservation | [Placeholder: value not recorded] |
 | Contract changes | [Placeholder: value not recorded] |
@@ -385,13 +406,16 @@ Required tests: [Placeholder: required tests not recorded]
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | ApplyApplicationNameChange |
+| Selected source command name | ApplyApplicationNameChange |
+| Name decision | The selected source name is retained. |
 | Owner | DeclaredApplication |
 | Contract record status | PLANNED |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; reactor; deterministic receiver identity derived from the admitted root fact, episode and generation: exact redelivery resolves the original result, a changed admission is a new identity |
 | Entry point | [Placeholder: value not recorded] |
 | MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | [Placeholder: value not recorded] |
+| Selected semantic events | None listed |
 | Protocols | [Placeholder: value not recorded] |
 | Policy preservation | [Placeholder: value not recorded] |
 | Contract changes | [Placeholder: value not recorded] |
@@ -432,7 +456,7 @@ Required tests: [Placeholder: required tests not recorded]
 
 ## Source contracts
 
-| Command | Handler | Registered | Entry point |
+| Selected source command | Handler | Registered | Entry point |
 | --- | --- | --- | --- |
 | AddApplicationRelationship | AddApplicationRelationshipHandler | true | authorized_http |
 | ApplyApplicationImportEffect | ApplyApplicationImportEffectHandler | true | internal_trusted_command |

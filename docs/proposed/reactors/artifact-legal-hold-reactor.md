@@ -1,10 +1,15 @@
-# ArtifactLegalHoldReactor
+# ProtectArtifactsUnderLegalHoldReactor
+
+Selected source root name: `ArtifactLegalHoldReactor`.
+## Why this reaction exists
+
+Stop an approved artifact disposal while a legal hold applies and allow it to proceed only after all holds are clear.
 
 Selected choreography rows: **1**. Required proofs, recovery, effect identity, and implementation evidence are preserved in [reactor row JSON](../data/reactors/artifact-legal-hold-reactor.json).
 
 | Row | Kind | Prerequisite facts | Command | Target owner | Emitted facts |
 | --- | --- | --- | --- | --- | --- |
-| X006 | planned_reaction | ArtifactLegalHoldPlaced, ArtifactLegalHoldReleased | FenceArtifactDispositionForHold | ArtifactDisposition | ArtifactDispositionResultRecorded |
+| X006 | planned_reaction | ArtifactLegalHoldPlaced, ArtifactLegalHoldReleased | StopArtifactDisposalForHold | ArtifactDisposition | ArtifactDispositionResultRecorded |
 
 ## Selected row details
 
@@ -16,16 +21,16 @@ Selected choreography rows: **1**. Required proofs, recovery, effect identity, a
 | kind | planned_reaction |
 | status | PLANNED_TARGET_DEFINITION_2026-10-29 |
 | sourceOwner | ArtifactLegalHold |
-| logicalPrerequisiteFacts | ArtifactLegalHoldPlaced, ArtifactLegalHoldReleased |
+| logicalPrerequisiteFacts (target names) | ArtifactLegalHoldPlaced, ArtifactLegalHoldReleased |
 | logicalPrerequisiteRule | A placed hold on the exact artifact content fences any pending disposition (result blocked_by_hold); a release lets an approved disposition proceed only when no other legal or engagement hold remains. |
-| physicalRootEvents | ArtifactLegalHoldPlaced, ArtifactLegalHoldReleased |
-| originalAdmissionKinds | ArtifactLegalHoldPlaced |
-| receiverCommand | FenceArtifactDispositionForHold |
+| physicalRootEvents (target names) | ArtifactLegalHoldPlaced, ArtifactLegalHoldReleased |
+| originalAdmissionKinds (target names) | ArtifactLegalHoldPlaced |
+| Target command (selected source name: FenceArtifactDispositionForHold) | StopArtifactDisposalForHold |
 | targetOwner | ArtifactDisposition |
 | targetAuthorityKind | business_aggregate |
-| emittedSemanticFacts | ArtifactDispositionResultRecorded |
+| emittedSemanticFacts (target names) | ArtifactDispositionResultRecorded |
 | emittedEventContracts | None listed |
-| currentRegisteredRootTypes | None listed |
+| currentRegisteredRootTypes (target names) | None listed |
 | plannedRootRole | ArtifactLegalHoldReactor |
 | processes | ArtifactHoldFenceProcess |
 | requiredProofContract | `{"canonicalCarrier":"original admitted root reference + required independently verified typed stage/terminal proof sets","admissionReferenceFactKinds":["LocationChangeAccepted"],"admissionReferenceRole":"original business admission/first-owner fact, distinct from subscription trigger and intermediate/terminal prerequisites","verification":{"admission":"AdmissionReference is a locator only. Resolve and independently verify actual typed admitted fact, exact owner/tenant/program, saved metadata and physical/hydrated cut, original root/episode/actor/intent and immutable content.","stageAndTerminal":"Materialize each required typed stage/terminal proof from actual committed facts and full required immutable selections; prove complete grant/fence/provisional/child sets, not counts/checkpoints. Guard sets are not weakened by carrier choice.","earlyReplay":"If native receipt binding does not cover a supplied/interpreted command term, bind that term through the required actual typed proof/body before early replay. Exact receipt cannot bypass proof manifest or source tuple guards.","resultAndRecovery":"Current public authorization precedes replay. Original result/receipt and unknown-append recovery stay exact; requested cancellation propagates. Unavailable proof/content remains transient; corruption/changed intent is permanent; no inferred absence/release.","implementationStatus":"Installed pointer/handler/process presence is not proof of conformance. Field/wire migration and required behavioral tests remain separately verifiable implementation work."},"requiredTypedStageProofSets":[{"factKinds":["ArtifactDispositionApproved"],"role":"Pending approved disposition for the exact artifact content being fenced","quantifier":"exactly_one","condition":"always","requiredVerification":"Resolve the actual saved fact and its full immutable selection; verify the typed payload and the exact admission, root, target, generation, actor and intent binding. A pointer, checkpoint or stage order alone is not authority."},{"factKinds":["ArtifactLegalHoldPlaced"],"role":"Legal hold bound to the artifact","quantifier":"at_least_one","condition":"fence on placement","requiredVerification":"Resolve the actual saved fact and its full immutable selection; verify the typed payload and the exact admission, root, target, generation, actor and intent binding. A pointer, checkpoint or stage order alone is not authority."},{"factKinds":["ArtifactLegalHoldReleased"],"role":"Releases of legal holds on the artifact","quantifier":"all_of_selection","condition":"on release: every legal hold on the artifact must be released","requiredVerification":"Resolve the actual saved fact and its full immutable selection; verify the typed payload and the exact admission, root, target, generation, actor and intent binding. A pointer, checkpoint or stage order alone is not authority."},{"factKinds":["ArtifactEngagementHoldPlaced"],"role":"Engagement holds binding the artifact","quantifier":"none_outstanding","condition":"on release: no engagement hold still active","requiredVerification":"Resolve the actual saved fact and its full immutable selection; verify the typed payload and the exact admission, root, target, generation, actor and intent binding. A pointer, checkpoint or stage order alone is not authority."},{"factKinds":["ArtifactDispositionResultRecorded"],"role":"No terminal disposed result already","quantifier":"none_outstanding","condition":"always","requiredVerification":"Resolve the actual saved fact and its full immutable selection; verify the typed payload and the exact admission, root, target, generation, actor and intent binding. A pointer, checkpoint or stage order alone is not authority."}],"pinnedSourceRequirements":"Every exact source owner/event/content revision and complete immutable manifest required by intendedProofGate remains mandatory; no absent optional source is fabricated.","proofGate":"A placed hold fences any pending disposition of the exact artifact content (result recorded as blocked_by_hold); a release lets an approved disposition proceed only when no other hold or engagement hold remains.","requiredLogicalPrerequisiteProofs":"Every applicable logical prerequisite is independently verified as an actual typed saved fact (or actual technical proof where explicitly technical); a terminal proof may establish an earlier stage only through a verified native chain that includes that required typed stage. Stage order/checkpoint alone never substitutes.","prerequisiteVerification":{"admission":"The receiver resolves the original admitted root fact by its exact owner, tenant, episode, actor and immutable intent, and verifies the saved fact and content hash before acting; a reference alone grants nothing.","stageProofs":"Each required stage proof (grant, hold, review, or terminal fact) is materialised from the actual committed fact and its full immutable selection; counts, checkpoints and stage order are not accepted as proof."},"stageProofStatus":"specified","stageProofRationale":"","stageProofSource":"authored 2026-10-29 from reactor and target source"}` |

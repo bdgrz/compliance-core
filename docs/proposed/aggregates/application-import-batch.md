@@ -25,7 +25,7 @@
 | --- | --- | --- |
 | [AcceptApplicationImport](../commands/application-import-batch.md#acceptapplicationimport) | http | CommandId |
 | [CancelApplicationImport](../commands/application-import-batch.md#cancelapplicationimport) | http | CommandId |
-| [CorrelateApplicationImportRow](../commands/application-import-batch.md#correlateapplicationimportrow) | http | CommandId |
+| [RecordApplicationImportRowChoice](../commands/application-import-batch.md#recordapplicationimportrowchoice) | http | CommandId |
 | [ExecuteApplicationImport](../commands/application-import-batch.md#executeapplicationimport) | command | CommandId |
 | [FreezeApplicationImportOmissionProposal](../commands/application-import-batch.md#freezeapplicationimportomissionproposal) | http | CommandId |
 | [StageApplicationImport](../commands/application-import-batch.md#stageapplicationimport) | http | SubmissionId |
@@ -41,10 +41,10 @@
 | [ApplicationImportCommitted](../events/application-import-batch.md#applicationimportcommitted) | bdgrz.application_import.committed | 2 |
 | [ApplicationImportExecutionAuthorized](../events/application-import-batch.md#applicationimportexecutionauthorized) | bdgrz.application_import.execution_authorized | 1 |
 | [ApplicationImportFailed](../events/application-import-batch.md#applicationimportfailed) | bdgrz.application_import.failed | 2 |
-| [ApplicationImportPlanSealed](../events/application-import-batch.md#applicationimportplansealed) | bdgrz.application_import.plan_sealed | 2 |
-| [ApplicationImportRetirementProposalSealed](../events/application-import-batch.md#applicationimportretirementproposalsealed) | bdgrz.application_import.retirement_proposal_sealed | 2 |
-| [ApplicationImportRowCorrelated](../events/application-import-batch.md#applicationimportrowcorrelated) | bdgrz.application_import.row_correlated | 2 |
-| [ApplicationImportStaged](../events/application-import-batch.md#applicationimportstaged) | bdgrz.application_import.staged | 2 |
+| [ApplicationImportPlanAccepted](../events/application-import-batch.md#applicationimportplanaccepted) | bdgrz.application_import.plan_sealed | 2 |
+| [ApplicationImportRetirementProposalFinalized](../events/application-import-batch.md#applicationimportretirementproposalfinalized) | bdgrz.application_import.retirement_proposal_sealed | 2 |
+| [ApplicationImportRowChoiceRecorded](../events/application-import-batch.md#applicationimportrowchoicerecorded) | bdgrz.application_import.row_correlated | 2 |
+| [ApplicationImportPrepared](../events/application-import-batch.md#applicationimportprepared) | bdgrz.application_import.staged | 2 |
 
 ## Cross-owner flows
 
@@ -52,9 +52,9 @@
 | --- | --- | --- | --- | --- |
 | [T014](../reactors/import-source-admission-reactor.md#t014) | reaction_or_regular_process_stage | ApplicationImportBatch | ApplicationImportSource | ClaimApplicationImportSource |
 | [T015](../reactors/import-source-admission-reactor.md#t015) | reaction_or_regular_process_stage | ApplicationImportBatch | DeclaredApplication | ReserveApplicationImportTarget |
-| [T016](../reactors/import-source-admission-reactor.md#t016) | reaction_or_regular_process_stage | ApplicationImportBatch | DeclaredApplication | ApplyApplicationImportEffect |
+| [T016](../reactors/import-source-admission-reactor.md#t016) | reaction_or_regular_process_stage | ApplicationImportBatch | DeclaredApplication | ApplyApplicationImportChange |
 | [T017](../reactors/import-source-admission-reactor.md#t017) | reaction_or_regular_process_stage | ApplicationImportBatch | ApplicationImportBatch | CommitApplicationImportBatch |
-| [T018](../reactors/import-cancellation-reactor.md#t018) | reaction_or_regular_process_stage | ApplicationImportBatch | DeclaredApplication | FenceApplicationImportTarget |
+| [T018](../reactors/import-cancellation-reactor.md#t018) | reaction_or_regular_process_stage | ApplicationImportBatch | DeclaredApplication | BlockCanceledApplicationImportChanges |
 | [T019](../reactors/import-cancellation-reactor.md#t019) | reaction_or_regular_process_stage | ApplicationImportBatch | ApplicationImportBatch | CompleteApplicationImportCancellation |
 | [T020](../reactors/import-source-admission-reactor.md#t020) | reaction_or_regular_process_stage | ApplicationImportBatch | ApplicationImportSource | ReleaseApplicationImportSource |
 | [T021](../reactors/import-source-admission-reactor.md#t021) | reaction_or_regular_process_stage | ApplicationImportBatch | DeclaredApplication | ReleaseApplicationImportTarget |

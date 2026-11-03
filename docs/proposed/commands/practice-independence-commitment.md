@@ -2,11 +2,11 @@
 
 Selected command contracts: **3**. Complete selected contracts and companion source evidence: [owner command JSON](../data/commands/practice-independence-commitment.json).
 
-| Command | Kind | Identity | Fields | HTTP routes |
-| --- | --- | --- | --- | --- |
-| ReservePracticeIndependence | receiver | CommandId | 10 | [Placeholder: value not recorded] |
-| CommitPracticeIndependence | receiver | CommandId | 10 | [Placeholder: value not recorded] |
-| SettlePracticeIndependenceReservation | receiver | CommandId | 10 | [Placeholder: value not recorded] |
+| Target command | Selected source name | Kind | Identity | Fields | HTTP routes |
+| --- | --- | --- | --- | --- | --- |
+| ReservePracticeIndependence | ReservePracticeIndependence | receiver | CommandId | 10 | [Placeholder: value not recorded] |
+| CommitPracticeIndependence | CommitPracticeIndependence | receiver | CommandId | 10 | [Placeholder: value not recorded] |
+| ClosePracticeIndependenceReservation | SettlePracticeIndependenceReservation | receiver | CommandId | 10 | [Placeholder: value not recorded] |
 
 ## Selected command details
 
@@ -14,13 +14,16 @@ Selected command contracts: **3**. Complete selected contracts and companion sou
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | ReservePracticeIndependence |
+| Selected source command name | ReservePracticeIndependence |
+| Name decision | The selected source name is retained. |
 | Owner | PracticeIndependenceCommitment |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; internal; deterministic receiver identity derived from the admitted root fact, episode and generation: exact redelivery resolves the original result, a changed admission is a new identity |
 | Entry point | [Placeholder: value not recorded] |
 | MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | [Placeholder: value not recorded] |
+| Selected semantic events | None listed |
 | Protocols | [Placeholder: value not recorded] |
 | Policy preservation | [Placeholder: value not recorded] |
 | Contract changes | [Placeholder: value not recorded] |
@@ -64,13 +67,16 @@ Required tests: [Placeholder: required tests not recorded]
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | CommitPracticeIndependence |
+| Selected source command name | CommitPracticeIndependence |
+| Name decision | The selected source name is retained. |
 | Owner | PracticeIndependenceCommitment |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; internal; deterministic receiver identity derived from the admitted root fact, episode and generation: exact redelivery resolves the original result, a changed admission is a new identity |
 | Entry point | [Placeholder: value not recorded] |
 | MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | [Placeholder: value not recorded] |
+| Selected semantic events | None listed |
 | Protocols | [Placeholder: value not recorded] |
 | Policy preservation | [Placeholder: value not recorded] |
 | Contract changes | [Placeholder: value not recorded] |
@@ -110,17 +116,20 @@ Existing tests: [Placeholder: existing tests not recorded]
 
 Required tests: [Placeholder: required tests not recorded]
 
-### SettlePracticeIndependenceReservation
+### ClosePracticeIndependenceReservation
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | ClosePracticeIndependenceReservation |
+| Selected source command name | SettlePracticeIndependenceReservation |
+| Name decision | Ends the temporary practice reservation after commitment or cancellation. |
 | Owner | PracticeIndependenceCommitment |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; internal; deterministic receiver identity derived from the admitted root fact, episode and generation: exact redelivery resolves the original result, a changed admission is a new identity |
 | Entry point | [Placeholder: value not recorded] |
 | MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | [Placeholder: value not recorded] |
+| Selected semantic events | None listed |
 | Protocols | [Placeholder: value not recorded] |
 | Policy preservation | [Placeholder: value not recorded] |
 | Contract changes | [Placeholder: value not recorded] |

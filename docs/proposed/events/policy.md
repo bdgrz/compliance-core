@@ -2,16 +2,16 @@
 
 Canonical events: **8**. Complete canonical event and available schema records: [owner event JSON](../data/events/policy.json).
 
-| Event | Kind | Adopted discriminator | Version | Schema fields | Meaning |
-| --- | --- | --- | --- | --- | --- |
-| PolicyApproved | business | bdgrz.policy.approved | 2 | [Placeholder: schema absent] | Activates the exact reviewed draft revision as an immutable version identified by ContentSha256. A major version requires every audience to re-acknowledge. |
-| PolicyDraftCreated | business | bdgrz.policy.draft.created | 2 | [Placeholder: schema absent] | A policy draft was created for a program with its identifier and authored content by a named member, awaiting review. |
-| PolicyDraftDiscarded | business | bdgrz.policy.draft.discarded | 2 | [Placeholder: schema absent] | A policy draft was discarded with a stated rationale by a named actor, ending it without approval. |
-| PolicyDraftRevised | business | bdgrz.policy.draft.revised | 2 | [Placeholder: schema absent] | A new draft revision. PredecessorVersion is set when the revision opens a successor draft from that approved version. |
-| PolicyPeriodicReviewConfirmed | business | bdgrz.policy.periodic_review.confirmed | 2 | [Placeholder: schema absent] | A periodic review that confirmed the current version without changing it. |
-| PolicyRetired | business | bdgrz.policy.retired | 2 | [Placeholder: schema absent] | An approved policy version was retired effective until a stated date, on the strength of an accepted retirement review and a stated rationale. |
-| PolicyRetirementProposed | business | bdgrz.policy.retirement.proposed | 2 | [Placeholder: schema absent] | Retirement of a policy version effective until a stated date was proposed with a rationale by a named member, awaiting review. |
-| PolicyReviewed | business | bdgrz.policy.reviewed | 2 | [Placeholder: schema absent] | A policy draft revision was reviewed with a decision outcome and rationale by a named reviewer. |
+| Target event | Selected source name | Kind | Adopted discriminator | Version | Schema fields | Meaning |
+| --- | --- | --- | --- | --- | --- | --- |
+| PolicyApproved | PolicyApproved | business | bdgrz.policy.approved | 2 | [Placeholder: schema absent] | Activates the exact reviewed draft revision as an immutable version identified by ContentSha256. A major version requires every audience to re-acknowledge. |
+| PolicyDraftCreated | PolicyDraftCreated | business | bdgrz.policy.draft.created | 2 | [Placeholder: schema absent] | A policy draft was created for a program with its identifier and authored content by a named member, awaiting review. |
+| PolicyDraftDiscarded | PolicyDraftDiscarded | business | bdgrz.policy.draft.discarded | 2 | [Placeholder: schema absent] | A policy draft was discarded with a stated rationale by a named actor, ending it without approval. |
+| PolicyDraftRevised | PolicyDraftRevised | business | bdgrz.policy.draft.revised | 2 | [Placeholder: schema absent] | A new draft revision. PredecessorVersion is set when the revision opens a successor draft from that approved version. |
+| PolicyPeriodicReviewConfirmed | PolicyPeriodicReviewConfirmed | business | bdgrz.policy.periodic_review.confirmed | 2 | [Placeholder: schema absent] | A periodic review that confirmed the current version without changing it. |
+| PolicyRetired | PolicyRetired | business | bdgrz.policy.retired | 2 | [Placeholder: schema absent] | An approved policy version was retired effective until a stated date, on the strength of an accepted retirement review and a stated rationale. |
+| PolicyRetirementProposed | PolicyRetirementProposed | business | bdgrz.policy.retirement.proposed | 2 | [Placeholder: schema absent] | Retirement of a policy version effective until a stated date was proposed with a rationale by a named member, awaiting review. |
+| PolicyReviewed | PolicyReviewed | business | bdgrz.policy.reviewed | 2 | [Placeholder: schema absent] | A policy draft revision was reviewed with a decision outcome and rationale by a named reviewer. |
 
 ## Event details
 
@@ -19,6 +19,9 @@ Canonical events: **8**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | PolicyApproved |
+| Selected source event name | PolicyApproved |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:PolicyApproved |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | PolicyApproved |
@@ -28,7 +31,8 @@ Canonical events: **8**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | Activates the exact reviewed draft revision as an immutable version identified by ContentSha256. A major version requires every audience to re-acknowledge. |
+| Target meaning | Activates the exact reviewed draft revision as an immutable version identified by ContentSha256. A major version requires every audience to re-acknowledge. |
+| Selected source meaning | Activates the exact reviewed draft revision as an immutable version identified by ContentSha256. A major version requires every audience to re-acknowledge. |
 | Meaning source | record summary in src/Compliance.Common/Features/Policies/Events/PolicyApproved.cs |
 
 #### Schema
@@ -49,6 +53,9 @@ Canonical events: **8**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | PolicyDraftCreated |
+| Selected source event name | PolicyDraftCreated |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:PolicyDraftCreated |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | PolicyDraftCreated |
@@ -58,7 +65,8 @@ Canonical events: **8**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | A policy draft was created for a program with its identifier and authored content by a named member, awaiting review. |
+| Target meaning | A policy draft was created for a program with its identifier and authored content by a named member, awaiting review. |
+| Selected source meaning | A policy draft was created for a program with its identifier and authored content by a named member, awaiting review. |
 | Meaning source | authored 2026-10-29 from src/Compliance.Common/Features/Policies/Events/PolicyDraftCreated.cs |
 
 #### Schema
@@ -79,6 +87,9 @@ Canonical events: **8**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | PolicyDraftDiscarded |
+| Selected source event name | PolicyDraftDiscarded |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:PolicyDraftDiscarded |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | PolicyDraftDiscarded |
@@ -88,7 +99,8 @@ Canonical events: **8**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | A policy draft was discarded with a stated rationale by a named actor, ending it without approval. |
+| Target meaning | A policy draft was discarded with a stated rationale by a named actor, ending it without approval. |
+| Selected source meaning | A policy draft was discarded with a stated rationale by a named actor, ending it without approval. |
 | Meaning source | authored 2026-10-29 from src/Compliance.Common/Features/Policies/Events/PolicyDraftDiscarded.cs |
 
 #### Schema
@@ -109,6 +121,9 @@ Canonical events: **8**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | PolicyDraftRevised |
+| Selected source event name | PolicyDraftRevised |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:PolicyDraftRevised |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | PolicyDraftRevised |
@@ -118,7 +133,8 @@ Canonical events: **8**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | A new draft revision. PredecessorVersion is set when the revision opens a successor draft from that approved version. |
+| Target meaning | A new draft revision. PredecessorVersion is set when the revision opens a successor draft from that approved version. |
+| Selected source meaning | A new draft revision. PredecessorVersion is set when the revision opens a successor draft from that approved version. |
 | Meaning source | record summary in src/Compliance.Common/Features/Policies/Events/PolicyDraftRevised.cs |
 
 #### Schema
@@ -139,6 +155,9 @@ Canonical events: **8**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | PolicyPeriodicReviewConfirmed |
+| Selected source event name | PolicyPeriodicReviewConfirmed |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:PolicyPeriodicReviewConfirmed |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | PolicyPeriodicReviewConfirmed |
@@ -148,7 +167,8 @@ Canonical events: **8**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | A periodic review that confirmed the current version without changing it. |
+| Target meaning | A periodic review that confirmed the current version without changing it. |
+| Selected source meaning | A periodic review that confirmed the current version without changing it. |
 | Meaning source | record summary in src/Compliance.Common/Features/Policies/Events/PolicyPeriodicReviewConfirmed.cs |
 
 #### Schema
@@ -169,6 +189,9 @@ Canonical events: **8**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | PolicyRetired |
+| Selected source event name | PolicyRetired |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:PolicyRetired |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | PolicyRetired |
@@ -178,7 +201,8 @@ Canonical events: **8**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | An approved policy version was retired effective until a stated date, on the strength of an accepted retirement review and a stated rationale. |
+| Target meaning | An approved policy version was retired effective until a stated date, on the strength of an accepted retirement review and a stated rationale. |
+| Selected source meaning | An approved policy version was retired effective until a stated date, on the strength of an accepted retirement review and a stated rationale. |
 | Meaning source | authored 2026-10-29 from src/Compliance.Common/Features/Policies/Events/PolicyRetired.cs |
 
 #### Schema
@@ -199,6 +223,9 @@ Canonical events: **8**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | PolicyRetirementProposed |
+| Selected source event name | PolicyRetirementProposed |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:PolicyRetirementProposed |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | PolicyRetirementProposed |
@@ -208,7 +235,8 @@ Canonical events: **8**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | Retirement of a policy version effective until a stated date was proposed with a rationale by a named member, awaiting review. |
+| Target meaning | Retirement of a policy version effective until a stated date was proposed with a rationale by a named member, awaiting review. |
+| Selected source meaning | Retirement of a policy version effective until a stated date was proposed with a rationale by a named member, awaiting review. |
 | Meaning source | authored 2026-10-29 from src/Compliance.Common/Features/Policies/Events/PolicyRetirementProposed.cs |
 
 #### Schema
@@ -229,6 +257,9 @@ Canonical events: **8**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | PolicyReviewed |
+| Selected source event name | PolicyReviewed |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:PolicyReviewed |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | PolicyReviewed |
@@ -238,7 +269,8 @@ Canonical events: **8**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | A policy draft revision was reviewed with a decision outcome and rationale by a named reviewer. |
+| Target meaning | A policy draft revision was reviewed with a decision outcome and rationale by a named reviewer. |
+| Selected source meaning | A policy draft revision was reviewed with a decision outcome and rationale by a named reviewer. |
 | Meaning source | authored 2026-10-29 from src/Compliance.Common/Features/Policies/Events/PolicyReviewed.cs |
 
 #### Schema

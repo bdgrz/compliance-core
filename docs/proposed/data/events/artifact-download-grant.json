@@ -223,7 +223,11 @@
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "resolvedIntentSchema": "EvidenceDownloadIntent",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "ArtifactDownloadGrantCanceled",
+      "targetName": "ArtifactDownloadGrantCanceled",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "An artifact download grant was canceled before its source use was settled, so the grant can never be issued or used to download the artifact."
     },
     {
       "canonical": {
@@ -478,7 +482,11 @@
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "resolvedIntentSchema": "EvidenceDownloadIntent",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "EvidenceArtifactDownloadIssued",
+      "targetName": "EvidenceArtifactDownloadIssued",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "Records the receiving grant for one protected evidence artifact download."
     }
   ]
 }

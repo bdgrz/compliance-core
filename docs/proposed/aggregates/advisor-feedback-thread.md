@@ -26,7 +26,7 @@
 | [CorrectAdvisorFeedback](../commands/advisor-feedback-thread.md#correctadvisorfeedback) | http | CorrectionId |
 | [ResolveAdvisorFeedback](../commands/advisor-feedback-thread.md#resolveadvisorfeedback) | http | CommandId |
 | [RespondToAdvisorFeedback](../commands/advisor-feedback-thread.md#respondtoadvisorfeedback) | http | CommandId |
-| [MaterializeAdvisorFeedback](../commands/advisor-feedback-thread.md#materializeadvisorfeedback) | receiver | CommandId |
+| [RecordAdvisorHandoffFeedback](../commands/advisor-feedback-thread.md#recordadvisorhandofffeedback) | receiver | CommandId |
 
 ## Events
 
@@ -41,7 +41,7 @@
 
 | Row | Kind | Source owner | Target owner | Command |
 | --- | --- | --- | --- | --- |
-| [T013](../reactors/advisor-feedback-materialization-reactor.md#t013) | reaction_or_regular_process_stage | AdvisorHandoff | AdvisorFeedbackThread | MaterializeAdvisorFeedback |
+| [T013](../reactors/advisor-feedback-materialization-reactor.md#t013) | reaction_or_regular_process_stage | AdvisorHandoff | AdvisorFeedbackThread | RecordAdvisorHandoffFeedback |
 
 ## Product rules
 

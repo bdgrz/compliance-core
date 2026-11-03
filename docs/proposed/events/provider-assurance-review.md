@@ -2,11 +2,11 @@
 
 Canonical events: **3**. Complete canonical event and available schema records: [owner event JSON](../data/events/provider-assurance-review.json).
 
-| Event | Kind | Adopted discriminator | Version | Schema fields | Meaning |
-| --- | --- | --- | --- | --- | --- |
-| ProviderReviewCanceled | business | bdgrz.provider-assurance-review.provider-review-canceled | 1 | 8 | A pending provider assurance review was canceled before being recorded because its source was proven permanently mismatched, so the review can no longer be recorded. |
-| ProviderReviewRecorded | business | bdgrz.provider.review.recorded | 1 | 14 | The admitted review was recorded as an immutable fact once its report use was held. The complete ProviderReviewContent is immutable content; the provider revision and materiality are the observed historical facts of the recording. |
-| ProviderReviewRequested | business | bdgrz.provider-assurance-review.provider-review-requested | 1 | 8 | A provider assurance review was admitted for one provider against its frozen review intent, permitting the review result to be recorded. |
+| Target event | Selected source name | Kind | Adopted discriminator | Version | Schema fields | Meaning |
+| --- | --- | --- | --- | --- | --- | --- |
+| ProviderReviewCanceled | ProviderReviewCanceled | business | bdgrz.provider-assurance-review.provider-review-canceled | 1 | 8 | A pending provider assurance review was canceled before being recorded because its source was proven permanently mismatched, so the review can no longer be recorded. |
+| ProviderReviewRecorded | ProviderReviewRecorded | business | bdgrz.provider.review.recorded | 1 | 14 | The admitted review was recorded as an immutable fact once its report use was held. The complete ProviderReviewContent is immutable content; the provider revision and materiality are the observed historical facts of the recording. |
+| ProviderReviewRequested | ProviderReviewRequested | business | bdgrz.provider-assurance-review.provider-review-requested | 1 | 8 | A provider assurance review was admitted for one provider against its frozen review intent, permitting the review result to be recorded. |
 
 ## Event details
 
@@ -14,6 +14,9 @@ Canonical events: **3**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | ProviderReviewCanceled |
+| Selected source event name | ProviderReviewCanceled |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:ProviderReviewCanceled |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | ProviderReviewCanceled |
@@ -23,7 +26,8 @@ Canonical events: **3**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | A pending provider assurance review was canceled before being recorded because its source was proven permanently mismatched, so the review can no longer be recorded. |
+| Target meaning | A pending provider assurance review was canceled before being recorded because its source was proven permanently mismatched, so the review can no longer be recorded. |
+| Selected source meaning | A pending provider assurance review was canceled before being recorded because its source was proven permanently mismatched, so the review can no longer be recorded. |
 | Meaning source | authored 2026-10-29 from src/Compliance.Common/Features/Providers/Events/ProviderReviewCanceled.cs |
 
 #### Selected schema and implementation evidence
@@ -99,13 +103,16 @@ ProviderReviewIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T070](../reactors/provider-review-reactor.md#t070) | logical prerequisite | ProviderAssuranceReview | SettleProviderAssuranceReportProviderReviewUse | ProviderAssuranceReport |
+| [T070](../reactors/provider-review-reactor.md#t070) | logical prerequisite | ProviderAssuranceReview | CloseProviderAssuranceReportProviderReviewAuthorization | ProviderAssuranceReport |
 | [A011](../reactors/unassigned-architecture-rows.md#a011) | emitted semantic fact | ProviderAssuranceReview | AbortProviderReview | ProviderAssuranceReview |
 
 ### ProviderReviewRecorded
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | ProviderReviewRecorded |
+| Selected source event name | ProviderReviewRecorded |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:ProviderReviewRecorded |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | ProviderReviewRecorded |
@@ -115,7 +122,8 @@ ProviderReviewIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | The admitted review was recorded as an immutable fact once its report use was held. The complete ProviderReviewContent is immutable content; the provider revision and materiality are the observed historical facts of the recording. |
+| Target meaning | The admitted review was recorded as an immutable fact once its report use was held. The complete ProviderReviewContent is immutable content; the provider revision and materiality are the observed historical facts of the recording. |
+| Selected source meaning | The admitted review was recorded as an immutable fact once its report use was held. The complete ProviderReviewContent is immutable content; the provider revision and materiality are the observed historical facts of the recording. |
 | Meaning source | record summary in src/Compliance.Common/Features/Providers/Events/ProviderReviewRecorded.cs |
 
 #### Selected schema and implementation evidence
@@ -206,13 +214,16 @@ ProviderReviewIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T070](../reactors/provider-review-reactor.md#t070) | logical prerequisite | ProviderAssuranceReview | SettleProviderAssuranceReportProviderReviewUse | ProviderAssuranceReport |
+| [T070](../reactors/provider-review-reactor.md#t070) | logical prerequisite | ProviderAssuranceReview | CloseProviderAssuranceReportProviderReviewAuthorization | ProviderAssuranceReport |
 | [T077](../reactors/provider-review-reactor.md#t077) | emitted semantic fact | ProviderAssuranceReview | CompleteProviderAssuranceReview | ProviderAssuranceReview |
 
 ### ProviderReviewRequested
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | ProviderReviewRequested |
+| Selected source event name | ProviderReviewRequested |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:ProviderReviewRequested |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | ProviderReviewRequested |
@@ -222,7 +233,8 @@ ProviderReviewIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | A provider assurance review was admitted for one provider against its frozen review intent, permitting the review result to be recorded. |
+| Target meaning | A provider assurance review was admitted for one provider against its frozen review intent, permitting the review result to be recorded. |
+| Selected source meaning | A provider assurance review was admitted for one provider against its frozen review intent, permitting the review result to be recorded. |
 | Meaning source | authored 2026-10-29 from src/Compliance.Common/Features/Providers/Events/ProviderReviewRequested.cs |
 
 #### Selected schema and implementation evidence
@@ -298,8 +310,8 @@ ProviderReviewIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T069](../reactors/provider-review-reactor.md#t069) | physical root, logical prerequisite | ProviderAssuranceReview | AuthorizeProviderAssuranceReportProviderReviewUse | ProviderAssuranceReport |
-| [T070](../reactors/provider-review-reactor.md#t070) | physical root | ProviderAssuranceReview | SettleProviderAssuranceReportProviderReviewUse | ProviderAssuranceReport |
+| [T069](../reactors/provider-review-reactor.md#t069) | physical root, logical prerequisite | ProviderAssuranceReview | AuthorizeProviderAssuranceReportProviderReview | ProviderAssuranceReport |
+| [T070](../reactors/provider-review-reactor.md#t070) | physical root | ProviderAssuranceReview | CloseProviderAssuranceReportProviderReviewAuthorization | ProviderAssuranceReport |
 | [T077](../reactors/provider-review-reactor.md#t077) | physical root, logical prerequisite | ProviderAssuranceReview | CompleteProviderAssuranceReview | ProviderAssuranceReview |
 | [A011](../reactors/unassigned-architecture-rows.md#a011) | physical root, logical prerequisite | ProviderAssuranceReview | AbortProviderReview | ProviderAssuranceReview |
 

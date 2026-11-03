@@ -2,9 +2,9 @@
 
 Selected command contracts: **1**. Complete selected contracts and companion source evidence: [owner command JSON](../data/commands/criteria-text-overlay.json).
 
-| Command | Kind | Identity | Fields | HTTP routes |
-| --- | --- | --- | --- | --- |
-| SetCriteriaTextOverlay | http | CommandId | 6 | PUT /api/v1/tenants/{tenant_id}/criteria-editions/{edition_id}/overlays/set-criteria-text-overlay/{command_id} [ApiUser + existing request-scope authorizers] |
+| Target command | Selected source name | Kind | Identity | Fields | HTTP routes |
+| --- | --- | --- | --- | --- | --- |
+| SetCriteriaTextOverlay | SetCriteriaTextOverlay | http | CommandId | 6 | PUT /api/v1/tenants/{tenant_id}/criteria-editions/{edition_id}/overlays/set-criteria-text-overlay/{command_id} [ApiUser + existing request-scope authorizers] |
 
 ## Selected command details
 
@@ -12,6 +12,9 @@ Selected command contracts: **1**. Complete selected contracts and companion sou
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | SetCriteriaTextOverlay |
+| Selected source command name | SetCriteriaTextOverlay |
+| Name decision | The selected source name is retained. |
 | Owner | CriteriaTextOverlay |
 | Contract record status | target_contract |
 | Kind | http |
@@ -61,7 +64,7 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 
 ## Source contracts
 
-| Command | Handler | Registered | Entry point |
+| Selected source command | Handler | Registered | Entry point |
 | --- | --- | --- | --- |
 | SetCriteriaTextOverlay | SetCriteriaTextOverlayHandler | true | authorized_http_and_mcp |
 

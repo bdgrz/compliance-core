@@ -2,12 +2,12 @@
 
 Selected command contracts: **4**. Complete selected contracts and companion source evidence: [owner command JSON](../data/commands/artifact-engagement-hold.json).
 
-| Command | Kind | Identity | Fields | HTTP routes |
-| --- | --- | --- | --- | --- |
-| PlaceArtifactEngagementHold | creation | HoldId | 7 | [Placeholder: value not recorded] |
-| RecordEngagementReportIssued | command | CommandId | 8 | [Placeholder: value not recorded] |
-| ReleaseArtifactEngagementHold | command | CommandId | 6 | [Placeholder: value not recorded] |
-| RecordEngagementPackageDelivered | receiver | CommandId | 9 | [Placeholder: value not recorded] |
+| Target command | Selected source name | Kind | Identity | Fields | HTTP routes |
+| --- | --- | --- | --- | --- | --- |
+| PlaceArtifactEngagementHold | PlaceArtifactEngagementHold | creation | HoldId | 7 | [Placeholder: value not recorded] |
+| RecordEngagementReportIssuance | RecordEngagementReportIssued | command | CommandId | 8 | [Placeholder: value not recorded] |
+| ReleaseArtifactEngagementHold | ReleaseArtifactEngagementHold | command | CommandId | 6 | [Placeholder: value not recorded] |
+| RecordEngagementPackageDelivery | RecordEngagementPackageDelivered | receiver | CommandId | 9 | [Placeholder: value not recorded] |
 
 ## Selected command details
 
@@ -15,13 +15,16 @@ Selected command contracts: **4**. Complete selected contracts and companion sou
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | PlaceArtifactEngagementHold |
+| Selected source command name | PlaceArtifactEngagementHold |
+| Name decision | The selected source name is retained. |
 | Owner | ArtifactEngagementHold |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | creation |
 | Logical identity | HoldId; Uuid; required=true; caller-supplied immutable creation identity: an exact retry with the same id and authored intent returns the original result; the same id with changed intent is refused; a different id is a different record |
 | Entry point | [Placeholder: value not recorded] |
 | MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | [Placeholder: value not recorded] |
+| Selected semantic events | None listed |
 | Protocols | [Placeholder: value not recorded] |
 | Policy preservation | [Placeholder: value not recorded] |
 | Contract changes | [Placeholder: value not recorded] |
@@ -58,17 +61,20 @@ Existing tests: [Placeholder: existing tests not recorded]
 
 Required tests: [Placeholder: required tests not recorded]
 
-### RecordEngagementReportIssued
+### RecordEngagementReportIssuance
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | RecordEngagementReportIssuance |
+| Selected source command name | RecordEngagementReportIssued |
+| Name decision | Records the exact auditor report and issue date that start the evidence preservation period. |
 | Owner | ArtifactEngagementHold |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | command |
 | Logical identity | CommandId; Uuid; required=true; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
 | Entry point | [Placeholder: value not recorded] |
 | MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | [Placeholder: value not recorded] |
+| Selected semantic events | None listed |
 | Protocols | [Placeholder: value not recorded] |
 | Policy preservation | [Placeholder: value not recorded] |
 | Contract changes | [Placeholder: value not recorded] |
@@ -110,13 +116,16 @@ Required tests: [Placeholder: required tests not recorded]
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | ReleaseArtifactEngagementHold |
+| Selected source command name | ReleaseArtifactEngagementHold |
+| Name decision | The selected source name is retained. |
 | Owner | ArtifactEngagementHold |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | command |
 | Logical identity | CommandId; Uuid; required=true; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
 | Entry point | [Placeholder: value not recorded] |
 | MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | [Placeholder: value not recorded] |
+| Selected semantic events | None listed |
 | Protocols | [Placeholder: value not recorded] |
 | Policy preservation | [Placeholder: value not recorded] |
 | Contract changes | [Placeholder: value not recorded] |
@@ -152,17 +161,20 @@ Existing tests: [Placeholder: existing tests not recorded]
 
 Required tests: [Placeholder: required tests not recorded]
 
-### RecordEngagementPackageDelivered
+### RecordEngagementPackageDelivery
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | RecordEngagementPackageDelivery |
+| Selected source command name | RecordEngagementPackageDelivered |
+| Name decision | Records delivery of the exact engagement package before its preservation hold can be released. |
 | Owner | ArtifactEngagementHold |
 | Contract record status | PLANNED |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; reactor; deterministic receiver identity derived from the admitted root fact, episode and generation: exact redelivery resolves the original result, a changed admission is a new identity |
 | Entry point | [Placeholder: value not recorded] |
 | MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | [Placeholder: value not recorded] |
+| Selected semantic events | None listed |
 | Protocols | [Placeholder: value not recorded] |
 | Policy preservation | [Placeholder: value not recorded] |
 | Contract changes | [Placeholder: value not recorded] |

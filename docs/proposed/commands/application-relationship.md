@@ -2,11 +2,11 @@
 
 Selected command contracts: **3**. Complete selected contracts and companion source evidence: [owner command JSON](../data/commands/application-relationship.json).
 
-| Command | Kind | Identity | Fields | HTTP routes |
-| --- | --- | --- | --- | --- |
-| AddApplicationRelationship | http | RelationshipId | 6 | PUT /api/v1/tenants/{tenant_id}/applications/{application_id}/relationships/{relationship_id} |
-| ApproveApplicationSuccessor | http | CommandId | 8 | PUT /api/v1/tenants/{tenant_id}/applications/{predecessor_application_id}/successors/{successor_application_id}/approval/{command_id} [ComplianceAuthorizationPolicies.ApiUser] |
-| RemoveApplicationRelationship | http | CommandId | 6 | PUT /api/v1/tenants/{tenant_id}/applications/{application_id}/relationships/{relationship_id}/removals/{command_id} |
+| Target command | Selected source name | Kind | Identity | Fields | HTTP routes |
+| --- | --- | --- | --- | --- | --- |
+| AddApplicationRelationship | AddApplicationRelationship | http | RelationshipId | 6 | PUT /api/v1/tenants/{tenant_id}/applications/{application_id}/relationships/{relationship_id} |
+| ApproveApplicationSuccessor | ApproveApplicationSuccessor | http | CommandId | 8 | PUT /api/v1/tenants/{tenant_id}/applications/{predecessor_application_id}/successors/{successor_application_id}/approval/{command_id} [ComplianceAuthorizationPolicies.ApiUser] |
+| RemoveApplicationRelationship | RemoveApplicationRelationship | http | CommandId | 6 | PUT /api/v1/tenants/{tenant_id}/applications/{application_id}/relationships/{relationship_id}/removals/{command_id} |
 
 ## Selected command details
 
@@ -14,6 +14,9 @@ Selected command contracts: **3**. Complete selected contracts and companion sou
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | AddApplicationRelationship |
+| Selected source command name | AddApplicationRelationship |
+| Name decision | The selected source name is retained. |
 | Owner | ApplicationRelationship |
 | Contract record status | target_contract |
 | Kind | http |
@@ -64,6 +67,9 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | ApproveApplicationSuccessor |
+| Selected source command name | ApproveApplicationSuccessor |
+| Name decision | The selected source name is retained. |
 | Owner | ApplicationRelationship |
 | Contract record status | target_contract |
 | Kind | http |
@@ -116,6 +122,9 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | RemoveApplicationRelationship |
+| Selected source command name | RemoveApplicationRelationship |
+| Name decision | The selected source name is retained. |
 | Owner | ApplicationRelationship |
 | Contract record status | target_contract |
 | Kind | http |
@@ -165,7 +174,7 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 
 ## Source contracts
 
-| Command | Handler | Registered | Entry point |
+| Selected source command | Handler | Registered | Entry point |
 | --- | --- | --- | --- |
 | AddApplicationRelationship | AddApplicationRelationshipHandler | true | authorized_http |
 | ApproveApplicationSuccessor | ApproveApplicationSuccessorHandler | true | personal_http |

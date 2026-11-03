@@ -39,8 +39,8 @@
 
 | Row | Kind | Source owner | Target owner | Command |
 | --- | --- | --- | --- | --- |
-| [T069](../reactors/provider-review-reactor.md#t069) | reaction_or_regular_process_stage | ProviderAssuranceReview | ProviderAssuranceReport | AuthorizeProviderAssuranceReportProviderReviewUse |
-| [T070](../reactors/provider-review-reactor.md#t070) | reaction_or_regular_process_stage | ProviderAssuranceReview | ProviderAssuranceReport | SettleProviderAssuranceReportProviderReviewUse |
+| [T069](../reactors/provider-review-reactor.md#t069) | reaction_or_regular_process_stage | ProviderAssuranceReview | ProviderAssuranceReport | AuthorizeProviderAssuranceReportProviderReview |
+| [T070](../reactors/provider-review-reactor.md#t070) | reaction_or_regular_process_stage | ProviderAssuranceReview | ProviderAssuranceReport | CloseProviderAssuranceReportProviderReviewAuthorization |
 | [T077](../reactors/provider-review-reactor.md#t077) | reaction_or_regular_process_stage | ProviderAssuranceReview | ProviderAssuranceReview | CompleteProviderAssuranceReview |
 | [A011](../reactors/unassigned-architecture-rows.md#a011) | process_abort_binding | ProviderAssuranceReview | ProviderAssuranceReview | AbortProviderReview |
 

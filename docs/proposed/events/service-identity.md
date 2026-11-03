@@ -2,10 +2,10 @@
 
 Canonical events: **2**. Complete canonical event and available schema records: [owner event JSON](../data/events/service-identity.json).
 
-| Event | Kind | Adopted discriminator | Version | Schema fields | Meaning |
-| --- | --- | --- | --- | --- | --- |
-| ServiceIdentityRecorded | business | bdgrz.workforce.service-identity.recorded | 1 | [Placeholder: schema absent] | A service identity was recorded in the tenant's workforce with its terms by a named actor. |
-| ServiceIdentityRevised | business | bdgrz.workforce.service-identity.revised | 1 | [Placeholder: schema absent] | A recorded service identity's terms were revised by a named actor, producing its next revision. |
+| Target event | Selected source name | Kind | Adopted discriminator | Version | Schema fields | Meaning |
+| --- | --- | --- | --- | --- | --- | --- |
+| ServiceIdentityRecorded | ServiceIdentityRecorded | business | bdgrz.workforce.service-identity.recorded | 1 | [Placeholder: schema absent] | A service identity was recorded in the tenant's workforce with its terms by a named actor. |
+| ServiceIdentityRevised | ServiceIdentityRevised | business | bdgrz.workforce.service-identity.revised | 1 | [Placeholder: schema absent] | A recorded service identity's terms were revised by a named actor, producing its next revision. |
 
 ## Event details
 
@@ -13,6 +13,9 @@ Canonical events: **2**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | ServiceIdentityRecorded |
+| Selected source event name | ServiceIdentityRecorded |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:ServiceIdentityRecorded |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | ServiceIdentityRecorded |
@@ -22,7 +25,8 @@ Canonical events: **2**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | A service identity was recorded in the tenant's workforce with its terms by a named actor. |
+| Target meaning | A service identity was recorded in the tenant's workforce with its terms by a named actor. |
+| Selected source meaning | A service identity was recorded in the tenant's workforce with its terms by a named actor. |
 | Meaning source | authored 2026-10-29 from src/Compliance.Common/Features/Workforce/Events/ServiceIdentityRecorded.cs |
 
 #### Schema
@@ -43,6 +47,9 @@ Canonical events: **2**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | ServiceIdentityRevised |
+| Selected source event name | ServiceIdentityRevised |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:ServiceIdentityRevised |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | ServiceIdentityRevised |
@@ -52,7 +59,8 @@ Canonical events: **2**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | A recorded service identity's terms were revised by a named actor, producing its next revision. |
+| Target meaning | A recorded service identity's terms were revised by a named actor, producing its next revision. |
+| Selected source meaning | A recorded service identity's terms were revised by a named actor, producing its next revision. |
 | Meaning source | authored 2026-10-29 from src/Compliance.Common/Features/Workforce/Events/ServiceIdentityRevised.cs |
 
 #### Schema

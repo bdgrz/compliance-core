@@ -1,5 +1,7 @@
 {
-  "root": "Unassigned architecture rows",
+  "sourceRoot": "Unassigned architecture rows",
+  "targetRoot": "Unassigned architecture rows",
+  "businessReason": "",
   "rows": [
     {
       "id": "A000",

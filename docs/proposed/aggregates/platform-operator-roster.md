@@ -25,7 +25,7 @@
 | --- | --- | --- |
 | [GrantPlatformOperator](../commands/platform-operator-roster.md#grantplatformoperator) | command | CommandId |
 | [RevokePlatformOperator](../commands/platform-operator-roster.md#revokeplatformoperator) | command | CommandId |
-| [SeedPlatformOperatorRoster](../commands/platform-operator-roster.md#seedplatformoperatorroster) | creation | RosterId |
+| [CreatePlatformOperatorRoster](../commands/platform-operator-roster.md#createplatformoperatorroster) | creation | RosterId |
 
 ## Events
 
@@ -33,7 +33,7 @@
 | --- | --- | --- |
 | [PlatformOperatorGranted](../events/platform-operator-roster.md#platformoperatorgranted) | bdgrz.platform.operator.granted | 1 |
 | [PlatformOperatorRevoked](../events/platform-operator-roster.md#platformoperatorrevoked) | bdgrz.platform.operator.revoked | 1 |
-| [PlatformOperatorRosterSeeded](../events/platform-operator-roster.md#platformoperatorrosterseeded) | bdgrz.platform.operator-roster.seeded | 1 |
+| [PlatformOperatorRosterCreated](../events/platform-operator-roster.md#platformoperatorrostercreated) | bdgrz.platform.operator-roster.seeded | 1 |
 
 ## Cross-owner flows
 

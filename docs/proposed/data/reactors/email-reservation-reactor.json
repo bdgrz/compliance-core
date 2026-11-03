@@ -1,5 +1,7 @@
 {
-  "root": "EmailReservationReactor",
+  "sourceRoot": "EmailReservationReactor",
+  "targetRoot": "KeepTenantEmailAddressesUniqueReactor",
+  "businessReason": "Reserve the normalized email address so two tenant identities cannot claim the same address.",
   "rows": [
     {
       "id": "S035",

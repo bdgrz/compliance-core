@@ -2,13 +2,13 @@
 
 Canonical events: **5**. Complete canonical event and available schema records: [owner event JSON](../data/events/compliance-incident.json).
 
-| Event | Kind | Adopted discriminator | Version | Schema fields | Meaning |
-| --- | --- | --- | --- | --- | --- |
-| ComplianceIncidentImpactAssessed | business | bdgrz.incidents.compliance-incident-impact-assessed | 3 | [Placeholder: schema absent] | The impact of a compliance incident was assessed by a named member, becoming the incident's current assessment. |
-| ComplianceIncidentRecorded | business | bdgrz.incidents.compliance-incident-recorded | 3 | [Placeholder: schema absent] | A compliance incident was recorded for a program by a named member as the incident's first revision. |
-| ComplianceIncidentRevised | business | bdgrz.incidents.compliance-incident-revised | 3 | [Placeholder: schema absent] | A recorded compliance incident was revised by a named member, changing its content at the next revision. |
-| ComplianceIncidentSystemDescriptionDecisionRecorded | business | bdgrz.incidents.compliance-incident-system-description-decision-recorded | 3 | [Placeholder: schema absent] | A decision was recorded on whether a compliance incident requires a change to the system description, made by a named member. |
-| IncidentResolutionRecorded | business | bdgrz.incidents.incident-resolution-recorded | 3 | [Placeholder: schema absent] | The resolution of a compliance incident was recorded by a named member, closing the incident. |
+| Target event | Selected source name | Kind | Adopted discriminator | Version | Schema fields | Meaning |
+| --- | --- | --- | --- | --- | --- | --- |
+| ComplianceIncidentImpactAssessed | ComplianceIncidentImpactAssessed | business | bdgrz.incidents.compliance-incident-impact-assessed | 3 | [Placeholder: schema absent] | The impact of a compliance incident was assessed by a named member, becoming the incident's current assessment. |
+| ComplianceIncidentRecorded | ComplianceIncidentRecorded | business | bdgrz.incidents.compliance-incident-recorded | 3 | [Placeholder: schema absent] | A compliance incident was recorded for a program by a named member as the incident's first revision. |
+| ComplianceIncidentRevised | ComplianceIncidentRevised | business | bdgrz.incidents.compliance-incident-revised | 3 | [Placeholder: schema absent] | A recorded compliance incident was revised by a named member, changing its content at the next revision. |
+| ComplianceIncidentSystemDescriptionDecisionRecorded | ComplianceIncidentSystemDescriptionDecisionRecorded | business | bdgrz.incidents.compliance-incident-system-description-decision-recorded | 3 | [Placeholder: schema absent] | A decision was recorded on whether a compliance incident requires a change to the system description, made by a named member. |
+| IncidentResolutionRecorded | IncidentResolutionRecorded | business | bdgrz.incidents.incident-resolution-recorded | 3 | [Placeholder: schema absent] | The resolution of a compliance incident was recorded by a named member, closing the incident. |
 
 ## Event details
 
@@ -16,6 +16,9 @@ Canonical events: **5**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | ComplianceIncidentImpactAssessed |
+| Selected source event name | ComplianceIncidentImpactAssessed |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:ComplianceIncidentImpactAssessed |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | ComplianceIncidentImpactAssessed |
@@ -25,7 +28,8 @@ Canonical events: **5**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | The impact of a compliance incident was assessed by a named member, becoming the incident's current assessment. |
+| Target meaning | The impact of a compliance incident was assessed by a named member, becoming the incident's current assessment. |
+| Selected source meaning | The impact of a compliance incident was assessed by a named member, becoming the incident's current assessment. |
 | Meaning source | authored 2026-10-29 from src/Compliance.Common/Features/Incidents/Events/ComplianceIncidentImpactAssessed.cs |
 
 #### Schema
@@ -46,6 +50,9 @@ Canonical events: **5**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | ComplianceIncidentRecorded |
+| Selected source event name | ComplianceIncidentRecorded |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:ComplianceIncidentRecorded |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | ComplianceIncidentRecorded |
@@ -55,7 +62,8 @@ Canonical events: **5**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | A compliance incident was recorded for a program by a named member as the incident's first revision. |
+| Target meaning | A compliance incident was recorded for a program by a named member as the incident's first revision. |
+| Selected source meaning | A compliance incident was recorded for a program by a named member as the incident's first revision. |
 | Meaning source | authored 2026-10-29 from src/Compliance.Common/Features/Incidents/Events/ComplianceIncidentRecorded.cs |
 
 #### Schema
@@ -76,6 +84,9 @@ Canonical events: **5**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | ComplianceIncidentRevised |
+| Selected source event name | ComplianceIncidentRevised |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:ComplianceIncidentRevised |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | ComplianceIncidentRevised |
@@ -85,7 +96,8 @@ Canonical events: **5**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | A recorded compliance incident was revised by a named member, changing its content at the next revision. |
+| Target meaning | A recorded compliance incident was revised by a named member, changing its content at the next revision. |
+| Selected source meaning | A recorded compliance incident was revised by a named member, changing its content at the next revision. |
 | Meaning source | authored 2026-10-29 from src/Compliance.Common/Features/Incidents/Events/ComplianceIncidentRevised.cs |
 
 #### Schema
@@ -106,6 +118,9 @@ Canonical events: **5**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | ComplianceIncidentSystemDescriptionDecisionRecorded |
+| Selected source event name | ComplianceIncidentSystemDescriptionDecisionRecorded |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:ComplianceIncidentSystemDescriptionDecisionRecorded |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | ComplianceIncidentSystemDescriptionDecisionRecorded |
@@ -115,7 +130,8 @@ Canonical events: **5**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | A decision was recorded on whether a compliance incident requires a change to the system description, made by a named member. |
+| Target meaning | A decision was recorded on whether a compliance incident requires a change to the system description, made by a named member. |
+| Selected source meaning | A decision was recorded on whether a compliance incident requires a change to the system description, made by a named member. |
 | Meaning source | authored 2026-10-29 from src/Compliance.Common/Features/Incidents/Events/ComplianceIncidentSystemDescriptionDecisionRecorded.cs |
 
 #### Schema
@@ -138,6 +154,9 @@ Canonical events: **5**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | IncidentResolutionRecorded |
+| Selected source event name | IncidentResolutionRecorded |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:IncidentResolutionRecorded |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | IncidentResolutionRecorded |
@@ -147,7 +166,8 @@ Canonical events: **5**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | The resolution of a compliance incident was recorded by a named member, closing the incident. |
+| Target meaning | The resolution of a compliance incident was recorded by a named member, closing the incident. |
+| Selected source meaning | The resolution of a compliance incident was recorded by a named member, closing the incident. |
 | Meaning source | authored 2026-10-29 from src/Compliance.Common/Features/Incidents/Events/IncidentResolutionRecorded.cs |
 
 #### Schema

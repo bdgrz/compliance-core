@@ -2,19 +2,22 @@
 
 Canonical events: **4**. Complete canonical event and available schema records: [owner event JSON](../data/events/work-digest-dispatch.json).
 
-| Event | Kind | Adopted discriminator | Version | Schema fields | Meaning |
-| --- | --- | --- | --- | --- | --- |
-| WorkDigestDispatchAttemptStarted | technical | bdgrz.work.digest_dispatch.attempt_started | 1 | [Placeholder: schema absent] | null (recorded) |
-| WorkDigestDispatchOutcomeRecorded | technical | bdgrz.work.digest_dispatch.outcome_recorded | 1 | [Placeholder: schema absent] | null (recorded) |
-| WorkDigestDispatchScheduled | technical | bdgrz.work.digest_dispatch.scheduled | 1 | [Placeholder: schema absent] | null (recorded) |
-| WorkDigestUnknownRetryAuthorized | technical | bdgrz.work.digest_dispatch.unknown_retry_authorized | 2 | [Placeholder: schema absent] | A native operator admission bound to its exact unknown attempt and immutable original result. |
+| Target event | Selected source name | Kind | Adopted discriminator | Version | Schema fields | Meaning |
+| --- | --- | --- | --- | --- | --- | --- |
+| WorkDigestDeliveryAttemptStarted | WorkDigestDispatchAttemptStarted | technical | bdgrz.work.digest_dispatch.attempt_started | 1 | [Placeholder: schema absent] | null (recorded) |
+| WorkDigestDeliveryOutcomeRecorded | WorkDigestDispatchOutcomeRecorded | technical | bdgrz.work.digest_dispatch.outcome_recorded | 1 | [Placeholder: schema absent] | null (recorded) |
+| WorkDigestDeliveryScheduled | WorkDigestDispatchScheduled | technical | bdgrz.work.digest_dispatch.scheduled | 1 | [Placeholder: schema absent] | null (recorded) |
+| WorkDigestRetryApprovedAfterUnknownDelivery | WorkDigestUnknownRetryAuthorized | technical | bdgrz.work.digest_dispatch.unknown_retry_authorized | 2 | [Placeholder: schema absent] | A native operator admission bound to its exact unknown attempt and immutable original result. |
 
 ## Event details
 
-### WorkDigestDispatchAttemptStarted
+### WorkDigestDeliveryAttemptStarted
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | WorkDigestDeliveryAttemptStarted |
+| Selected source event name | WorkDigestDispatchAttemptStarted |
+| Name decision | Names the start of one scheduled digest delivery attempt without using the transport term dispatch. |
 | Canonical semantic key | event:WorkDigestDispatchAttemptStarted |
 | Owner selection | exact declared technical/storage owner |
 | Target concrete type | WorkDigestDispatchAttemptStarted |
@@ -24,7 +27,8 @@ Canonical events: **4**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | null (recorded) |
+| Target meaning | null (recorded) |
+| Selected source meaning | null (recorded) |
 | Meaning source | [Placeholder: value not recorded] |
 
 #### Schema
@@ -41,10 +45,13 @@ Canonical events: **4**. Complete canonical event and available schema records: 
 
 [Placeholder: no selected choreography row names this event as root, prerequisite, or emitted fact.]
 
-### WorkDigestDispatchOutcomeRecorded
+### WorkDigestDeliveryOutcomeRecorded
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | WorkDigestDeliveryOutcomeRecorded |
+| Selected source event name | WorkDigestDispatchOutcomeRecorded |
+| Name decision | Names the recorded result of one work digest delivery attempt. |
 | Canonical semantic key | event:WorkDigestDispatchOutcomeRecorded |
 | Owner selection | exact declared technical/storage owner |
 | Target concrete type | WorkDigestDispatchOutcomeRecorded |
@@ -54,7 +61,8 @@ Canonical events: **4**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | null (recorded) |
+| Target meaning | null (recorded) |
+| Selected source meaning | null (recorded) |
 | Meaning source | [Placeholder: value not recorded] |
 
 #### Schema
@@ -71,10 +79,13 @@ Canonical events: **4**. Complete canonical event and available schema records: 
 
 [Placeholder: no selected choreography row names this event as root, prerequisite, or emitted fact.]
 
-### WorkDigestDispatchScheduled
+### WorkDigestDeliveryScheduled
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | WorkDigestDeliveryScheduled |
+| Selected source event name | WorkDigestDispatchScheduled |
+| Name decision | Names the scheduled work digest delivery time. |
 | Canonical semantic key | event:WorkDigestDispatchScheduled |
 | Owner selection | exact declared technical/storage owner |
 | Target concrete type | WorkDigestDispatchScheduled |
@@ -84,7 +95,8 @@ Canonical events: **4**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | null (recorded) |
+| Target meaning | null (recorded) |
+| Selected source meaning | null (recorded) |
 | Meaning source | [Placeholder: value not recorded] |
 
 #### Schema
@@ -101,10 +113,13 @@ Canonical events: **4**. Complete canonical event and available schema records: 
 
 [Placeholder: no selected choreography row names this event as root, prerequisite, or emitted fact.]
 
-### WorkDigestUnknownRetryAuthorized
+### WorkDigestRetryApprovedAfterUnknownDelivery
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | WorkDigestRetryApprovedAfterUnknownDelivery |
+| Selected source event name | WorkDigestUnknownRetryAuthorized |
+| Name decision | Names the operator's approval to retry a weekly digest when its prior delivery result could not be confirmed. |
 | Canonical semantic key | event:WorkDigestUnknownRetryAuthorized |
 | Owner selection | exact declared technical/storage owner |
 | Target concrete type | WorkDigestUnknownRetryAuthorized |
@@ -114,7 +129,8 @@ Canonical events: **4**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | A native operator admission bound to its exact unknown attempt and immutable original result. |
+| Target meaning | A native operator admission bound to its exact unknown attempt and immutable original result. |
+| Selected source meaning | A native operator admission bound to its exact unknown attempt and immutable original result. |
 | Meaning source | record summary in src/Compliance.Common/Features/Work/Events/WorkDigestUnknownRetryAuthorized.cs |
 
 #### Schema

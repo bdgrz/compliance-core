@@ -1,20 +1,24 @@
 # Proposed domain model
 
-A structured, source-backed capture of the Compliance Core domain. This first pass mechanically reorganizes domain, owner, command, event, choreography, process, read-model, and decision information already in the repository. It adds no domain rules.
+This is the working target for Compliance Core implementation. The current refinement scope is the write model: commands → events → reactors. The naming decisions below are intended to become the implementation names after the affected contracts are updated.
 
-Unknown or conflicting details use `[Placeholder: ...]`. Complete selected per-owner records are under data/; paths outside this checkout are replaced by explicit placeholders.
+The proposed pages explain business outcomes and preserve enough source names and wire details to map the target back to current contracts. Unknown or conflicting details use `[Placeholder: ...]`.
 
-## Start here
+## Current target: commands → events → reactors
 
-- [Domain model](domain-model.md), [product scope](scope.md), and [journeys](journeys.md).
+- [Write model names](write-model-names.md) records target names and the reason for each changed name.
+- [Write model domain rules](write-model-domain-rules.md) records the selected business rules for commands, events, and reactors.
+- [Commands](commands/README.md) state the requested actions; [events](events/README.md) state completed facts; [reactors](reactors/README.md) state why each reaction exists.
+- [Domain model](domain-model.md), [product scope](scope.md), and [journeys](journeys.md) provide broader product context.
 - [Aggregates](aggregates/README.md) — one page per business owner and technical responsibility.
-- [Commands](commands/README.md) and [events](events/README.md).
-- [Reactors](reactors/README.md), [processes](processes/README.md), and the [worker catalog](worker-catalog.md); [registration plan](reactors/registration-plan.md).
+
+## Later reference material
+
+- [Read models](read-models.md) and [processes](processes/README.md) remain available for later refinement.
+- [Worker catalog](worker-catalog.md) and [registration plan](reactors/registration-plan.md) record implementation context.
 - [Provider and external-source seams](partner-seam.md) records governed provider facts, the manual-first connector boundary, and placeholders for future partner contracts.
 - [Architecture notes](architecture-overview.md), [boundary notes](aggregate-boundary-notes.md), and [product-rule traceability](product-rule-traceability.md).
-- [Read models](read-models.md), [decisions](decisions-log.md), and [open details](open-gaps.md).
-- [Jev naming review](naming-review.md) records an advisory first pass over aggregate, responsibility, command, and event names.
-- [Source map](sources.md).
+- [decisions](decisions-log.md), [open details](open-gaps.md), and [source map](sources.md).
 
 ## Inventory
 
@@ -27,13 +31,16 @@ Unknown or conflicting details use `[Placeholder: ...]`. Complete selected per-o
 | targetEventSchemas | 295 |
 | choreographyRows | 196 |
 | registeredRootTypes | 65 |
+| namedReactorRoots | 72 |
+| targetCommandNames | 503 |
+| targetEventNames | 501 |
 | processDefinitions | 30 |
 | architectureDecisions | 35 |
-| productRulesNotYetInSource | 77 |
+| productRulesNeedingImplementationEvidence | 77 |
 
 ## Authority and qualification
 
-The definitive aggregate/choreography catalog remains the selected target architecture. This documentation reorganizes it for navigation. Target selection, source presence, or catalog completeness does not prove producer/receiver delivery, persistence, replay, recovery, or runtime qualification.
+The proposed target names are recorded in [write-model-names.json](data/write-model-names.json). The definitive catalog and current code provide the source names, business rules, route contracts, and event wires used to reconcile that target. Renamed event types keep their selected discriminator strings and versions.
 
 Implementation evidence and delivery sequencing remain in [aggregate-status.md](../product/definitive-aggregate-choreography/aggregate-status.md) and [aggregate-backlog.md](../product/definitive-aggregate-choreography/aggregate-backlog.md).
 

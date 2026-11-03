@@ -59,7 +59,9 @@
         "line": 7798,
         "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
       },
-      "kind": "command"
+      "kind": "command",
+      "sourceName": "ReconcileWorkforceSourceObservation",
+      "targetName": "ReconcileWorkforceSourceObservation"
     },
     {
       "command": "RecordWorkforceSourceObservation",
@@ -130,7 +132,9 @@
         "line": 10229,
         "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
       },
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "RecordWorkforceSourceObservation",
+      "targetName": "RecordWorkforceSourceObservation"
     }
   ],
   "sourceContractEvidence": []

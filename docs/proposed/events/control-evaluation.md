@@ -2,13 +2,13 @@
 
 Canonical events: **5**. Complete canonical event and available schema records: [owner event JSON](../data/events/control-evaluation.json).
 
-| Event | Kind | Adopted discriminator | Version | Schema fields | Meaning |
-| --- | --- | --- | --- | --- | --- |
-| ControlEvaluationDeviationDisposed | business | bdgrz.control.evaluation.deviation_disposed | 2 | 12 | The disposition of one minor deviation of one evaluation. |
-| ControlEvaluationReviewed | business | bdgrz.control.evaluation.reviewed | 2 | 9 | The independent review decision on the submitted round. Decision (accepted, rejected or changes_requested) decides the lifecycle of the evaluation; the complete decision is verified immutable content. |
-| ControlEvaluationStarted | business | bdgrz.control.evaluation.started | 2 | 15 | The start of one evaluation, which is its own owner stream. The frozen procedure and the retested deviation ids are verified immutable content, so nothing is truncated. A retest names the accepted review fact of its predecessor in RetestPredecessor; the predecessor itself is never written. |
-| ControlEvaluationStepRecorded | business | bdgrz.control.evaluation.step_recorded | 2 | 11 | A step result of one evaluation. The result with its complete inspected items and the deviation it raised, if any, are verified immutable content. |
-| ControlEvaluationSubmitted | business | bdgrz.control.evaluation.submitted | 2 | 9 | One submitted round of one evaluation. The complete submission, with the exact step results and deviations it rests on, is verified immutable content. |
+| Target event | Selected source name | Kind | Adopted discriminator | Version | Schema fields | Meaning |
+| --- | --- | --- | --- | --- | --- | --- |
+| ControlEvaluationDeviationDisposed | ControlEvaluationDeviationDisposed | business | bdgrz.control.evaluation.deviation_disposed | 2 | 12 | The disposition of one minor deviation of one evaluation. |
+| ControlEvaluationReviewed | ControlEvaluationReviewed | business | bdgrz.control.evaluation.reviewed | 2 | 9 | The independent review decision on the submitted round. Decision (accepted, rejected or changes_requested) decides the lifecycle of the evaluation; the complete decision is verified immutable content. |
+| ControlEvaluationStarted | ControlEvaluationStarted | business | bdgrz.control.evaluation.started | 2 | 15 | The start of one evaluation, which is its own owner stream. The frozen procedure and the retested deviation ids are verified immutable content, so nothing is truncated. A retest names the accepted review fact of its predecessor in RetestPredecessor; the predecessor itself is never written. |
+| ControlEvaluationStepRecorded | ControlEvaluationStepRecorded | business | bdgrz.control.evaluation.step_recorded | 2 | 11 | A step result of one evaluation. The result with its complete inspected items and the deviation it raised, if any, are verified immutable content. |
+| ControlEvaluationSubmitted | ControlEvaluationSubmitted | business | bdgrz.control.evaluation.submitted | 2 | 9 | One submitted round of one evaluation. The complete submission, with the exact step results and deviations it rests on, is verified immutable content. |
 
 ## Event details
 
@@ -16,6 +16,9 @@ Canonical events: **5**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | ControlEvaluationDeviationDisposed |
+| Selected source event name | ControlEvaluationDeviationDisposed |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:ControlEvaluationDeviationDisposed |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | ControlEvaluationDeviationDisposed |
@@ -25,7 +28,8 @@ Canonical events: **5**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | `{"discriminator":"bdgrz.control.evaluation.deviation_disposed","version":1}` |
-| Meaning | The disposition of one minor deviation of one evaluation. |
+| Target meaning | The disposition of one minor deviation of one evaluation. |
+| Selected source meaning | The disposition of one minor deviation of one evaluation. |
 | Meaning source | record summary in src/Compliance.Common/Features/Evaluations/Events/ControlEvaluationDeviationDisposed.cs |
 
 #### Selected schema and implementation evidence
@@ -73,6 +77,9 @@ Canonical events: **5**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | ControlEvaluationReviewed |
+| Selected source event name | ControlEvaluationReviewed |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:ControlEvaluationReviewed |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | ControlEvaluationReviewed |
@@ -82,7 +89,8 @@ Canonical events: **5**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | `{"discriminator":"bdgrz.control.evaluation.reviewed","version":1}` |
-| Meaning | The independent review decision on the submitted round. Decision (accepted, rejected or changes_requested) decides the lifecycle of the evaluation; the complete decision is verified immutable content. |
+| Target meaning | The independent review decision on the submitted round. Decision (accepted, rejected or changes_requested) decides the lifecycle of the evaluation; the complete decision is verified immutable content. |
+| Selected source meaning | The independent review decision on the submitted round. Decision (accepted, rejected or changes_requested) decides the lifecycle of the evaluation; the complete decision is verified immutable content. |
 | Meaning source | record summary in src/Compliance.Common/Features/Evaluations/Events/ControlEvaluationReviewed.cs |
 
 #### Selected schema and implementation evidence
@@ -137,6 +145,9 @@ Canonical events: **5**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | ControlEvaluationStarted |
+| Selected source event name | ControlEvaluationStarted |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:ControlEvaluationStarted |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | ControlEvaluationStarted |
@@ -146,7 +157,8 @@ Canonical events: **5**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | `{"discriminator":"bdgrz.control.evaluation.started","version":1}` |
-| Meaning | The start of one evaluation, which is its own owner stream. The frozen procedure and the retested deviation ids are verified immutable content, so nothing is truncated. A retest names the accepted review fact of its predecessor in RetestPredecessor; the predecessor itself is never written. |
+| Target meaning | The start of one evaluation, which is its own owner stream. The frozen procedure and the retested deviation ids are verified immutable content, so nothing is truncated. A retest names the accepted review fact of its predecessor in RetestPredecessor; the predecessor itself is never written. |
+| Selected source meaning | The start of one evaluation, which is its own owner stream. The frozen procedure and the retested deviation ids are verified immutable content, so nothing is truncated. A retest names the accepted review fact of its predecessor in RetestPredecessor; the predecessor itself is never written. |
 | Meaning source | record summary in src/Compliance.Common/Features/Evaluations/Events/ControlEvaluationStarted.cs |
 
 #### Selected schema and implementation evidence
@@ -216,6 +228,9 @@ Canonical events: **5**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | ControlEvaluationStepRecorded |
+| Selected source event name | ControlEvaluationStepRecorded |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:ControlEvaluationStepRecorded |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | ControlEvaluationStepRecorded |
@@ -225,7 +240,8 @@ Canonical events: **5**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | `{"discriminator":"bdgrz.control.evaluation.step_recorded","version":1}` |
-| Meaning | A step result of one evaluation. The result with its complete inspected items and the deviation it raised, if any, are verified immutable content. |
+| Target meaning | A step result of one evaluation. The result with its complete inspected items and the deviation it raised, if any, are verified immutable content. |
+| Selected source meaning | A step result of one evaluation. The result with its complete inspected items and the deviation it raised, if any, are verified immutable content. |
 | Meaning source | record summary in src/Compliance.Common/Features/Evaluations/Events/ControlEvaluationStepRecorded.cs |
 
 #### Selected schema and implementation evidence
@@ -291,6 +307,9 @@ Canonical events: **5**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | ControlEvaluationSubmitted |
+| Selected source event name | ControlEvaluationSubmitted |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:ControlEvaluationSubmitted |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | ControlEvaluationSubmitted |
@@ -300,7 +319,8 @@ Canonical events: **5**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | `{"discriminator":"bdgrz.control.evaluation.submitted","version":1}` |
-| Meaning | One submitted round of one evaluation. The complete submission, with the exact step results and deviations it rests on, is verified immutable content. |
+| Target meaning | One submitted round of one evaluation. The complete submission, with the exact step results and deviations it rests on, is verified immutable content. |
+| Selected source meaning | One submitted round of one evaluation. The complete submission, with the exact step results and deviations it rests on, is verified immutable content. |
 | Meaning source | record summary in src/Compliance.Common/Features/Evaluations/Events/ControlEvaluationSubmitted.cs |
 
 #### Selected schema and implementation evidence

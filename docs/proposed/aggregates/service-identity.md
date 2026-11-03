@@ -11,13 +11,13 @@
 
 **Invariant:** One governed nonhuman identity has exactly one accountable person/team owner, approved purpose, valid lifecycle/expiry and review date within one year.
 
-**Additional decision rule:** Owner kind is a person or a team and never free text or a group or role converted into a non-human identity; identity kind is workload, service, automation, bot or integration, lifecycle is active, disabled or retired, and an active identity cannot already be expired. A shared account additionally requires an accountable owner person and a shared justification and is never treated as human.
+**Additional decision rule:** Owner kind is a person or a team and never free text or a group or role converted into a non-human identity; identity kind is workload, service, automation, bot or integration, lifecycle is active, disabled or retired, and an active identity cannot already be expired. A shared account additionally requires an accountable owner person and a shared justification and is never treated as human. Each service identity has one accountable person or team, an approved purpose, and a review date no more than one year away.
 
 **Must preserve:** [Placeholder: preservation rule not recorded.]
 
 **Replay:** Current required authorization precedes replay; exact authorized retries resolve the original accepted result using the selected logical identity and immutable actor/intent/source binding. Fresh mutable feasibility, clock selection and body preparation cannot replace that original result. Expected revision is concurrency precondition, not a new identity.
 
-**Lifecycle:** [Placeholder: a consolidated lifecycle sequence is not present in the selected owner record.]
+**Lifecycle:** A service identity can be active, disabled, or retired. RecordServiceIdentity creates it; ReviseServiceIdentity changes its details or status and records ServiceIdentityRevised. Retiring it does not automatically change access at an outside service. If its owner relationship ends or its review date passes, it appears as work that needs a new owner or review.
 
 ## Commands
 

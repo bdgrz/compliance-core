@@ -2,9 +2,9 @@
 
 Canonical events: **1**. Complete canonical event and available schema records: [owner event JSON](../data/events/workforce-observation-resolution.json).
 
-| Event | Kind | Adopted discriminator | Version | Schema fields | Meaning |
-| --- | --- | --- | --- | --- | --- |
-| WorkforceObservationResolved | business | bdgrz.workforce.observation.resolved | 1 | [Placeholder: schema absent] | A workforce observation was closed as resolved or dismissed with a note by a named actor. |
+| Target event | Selected source name | Kind | Adopted discriminator | Version | Schema fields | Meaning |
+| --- | --- | --- | --- | --- | --- | --- |
+| WorkforceObservationResolved | WorkforceObservationResolved | business | bdgrz.workforce.observation.resolved | 1 | [Placeholder: schema absent] | A workforce observation was closed as resolved or dismissed with a note by a named actor. |
 
 ## Event details
 
@@ -12,6 +12,9 @@ Canonical events: **1**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | WorkforceObservationResolved |
+| Selected source event name | WorkforceObservationResolved |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:WorkforceObservationResolved |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | WorkforceObservationResolved |
@@ -21,7 +24,8 @@ Canonical events: **1**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | A workforce observation was closed as resolved or dismissed with a note by a named actor. |
+| Target meaning | A workforce observation was closed as resolved or dismissed with a note by a named actor. |
+| Selected source meaning | A workforce observation was closed as resolved or dismissed with a note by a named actor. |
 | Meaning source | authored 2026-10-29 from src/Compliance.Common/Features/Workforce/Events/WorkforceObservationResolved.cs |
 
 #### Schema

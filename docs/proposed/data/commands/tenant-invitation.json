@@ -51,7 +51,9 @@
         "line": 321,
         "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       },
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "AcceptTenantInvitation",
+      "targetName": "AcceptTenantInvitation"
     },
     {
       "command": "InviteGuestConsultant",
@@ -108,7 +110,9 @@
         "line": 7203,
         "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       },
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "InviteGuestConsultant",
+      "targetName": "InviteGuestConsultant"
     },
     {
       "command": "InviteOrganizationMember",
@@ -160,7 +164,9 @@
         "line": 7307,
         "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       },
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "InviteOrganizationMember",
+      "targetName": "InviteOrganizationMember"
     },
     {
       "command": "InviteTenantMember",
@@ -217,7 +223,9 @@
         "line": 7405,
         "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       },
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "InviteTenantMember",
+      "targetName": "InviteTenantMember"
     }
   ],
   "sourceContractEvidence": [

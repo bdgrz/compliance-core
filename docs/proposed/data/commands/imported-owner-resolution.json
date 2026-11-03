@@ -46,7 +46,9 @@
       "source": {
         "path": "docs/product/definitive-aggregate-choreography/choreography.json",
         "recorded": "2026-10-29"
-      }
+      },
+      "sourceName": "RecordImportedOwnerResolution",
+      "targetName": "RecordImportedOwnerResolution"
     }
   ],
   "sourceContractEvidence": []

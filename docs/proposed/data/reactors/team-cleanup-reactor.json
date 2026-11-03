@@ -1,5 +1,7 @@
 {
-  "root": "TeamCleanupReactor",
+  "sourceRoot": "TeamCleanupReactor",
+  "targetRoot": "RemoveTeamAssignmentsAfterTeamDeletionReactor",
+  "businessReason": "Make sure deleting a team also ends each person’s membership in it.",
   "rows": [
     {
       "id": "S010",

@@ -2,25 +2,28 @@
 
 Selected command contracts: **3**. Complete selected contracts and companion source evidence: [owner command JSON](../data/commands/person.json).
 
-| Command | Kind | Identity | Fields | HTTP routes |
-| --- | --- | --- | --- | --- |
-| CorrelatePersonMembership | command | CommandId | 5 | [Placeholder: value not recorded] |
-| RecordPerson | http | PersonId | 5 | PUT /api/v1/tenants/{tenant_id}/people/{person_id} |
-| RevisePerson | command | CommandId | 7 | [Placeholder: value not recorded] |
+| Target command | Selected source name | Kind | Identity | Fields | HTTP routes |
+| --- | --- | --- | --- | --- | --- |
+| SetPersonTenantMemberLink | CorrelatePersonMembership | command | CommandId | 5 | [Placeholder: value not recorded] |
+| RecordPerson | RecordPerson | http | PersonId | 5 | PUT /api/v1/tenants/{tenant_id}/people/{person_id} |
+| RevisePerson | RevisePerson | command | CommandId | 7 | [Placeholder: value not recorded] |
 
 ## Selected command details
 
-### CorrelatePersonMembership
+### SetPersonTenantMemberLink
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | SetPersonTenantMemberLink |
+| Selected source command name | CorrelatePersonMembership |
+| Name decision | Links a workforce person to one tenant member or clears the link without changing access. |
 | Owner | Person |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | command |
 | Logical identity | CommandId; Uuid; required=true; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
 | Entry point | [Placeholder: value not recorded] |
 | MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | [Placeholder: value not recorded] |
+| Selected semantic events | None listed |
 | Protocols | [Placeholder: value not recorded] |
 | Policy preservation | [Placeholder: value not recorded] |
 | Contract changes | [Placeholder: value not recorded] |
@@ -59,13 +62,16 @@ Required tests: [Placeholder: required tests not recorded]
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | RecordPerson |
+| Selected source command name | RecordPerson |
+| Name decision | The selected source name is retained. |
 | Owner | Person |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | http |
 | Logical identity | PersonId; Uuid; required=true; caller-supplied immutable creation identity: an exact retry with the same id and authored intent returns the original result; the same id with changed intent is refused; a different id is a different record |
 | Entry point | [Placeholder: value not recorded] |
 | MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | [Placeholder: value not recorded] |
+| Selected semantic events | None listed |
 | Protocols | [Placeholder: value not recorded] |
 | Policy preservation | [Placeholder: value not recorded] |
 | Contract changes | [Placeholder: value not recorded] |
@@ -106,13 +112,16 @@ Required tests: [Placeholder: required tests not recorded]
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | RevisePerson |
+| Selected source command name | RevisePerson |
+| Name decision | The selected source name is retained. |
 | Owner | Person |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | command |
 | Logical identity | CommandId; Uuid; required=true; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
 | Entry point | [Placeholder: value not recorded] |
 | MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | [Placeholder: value not recorded] |
+| Selected semantic events | None listed |
 | Protocols | [Placeholder: value not recorded] |
 | Policy preservation | [Placeholder: value not recorded] |
 | Contract changes | [Placeholder: value not recorded] |

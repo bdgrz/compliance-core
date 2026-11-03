@@ -1,5 +1,7 @@
 {
-  "root": "AuditorSampleSelectionMaterializationReactor",
+  "sourceRoot": "AuditorSampleSelectionMaterializationReactor",
+  "targetRoot": "RecordAuditorSampleSelectionReactor",
+  "businessReason": "Record the exact complete sample admitted for an open auditor request.",
   "rows": [
     {
       "id": "T105",

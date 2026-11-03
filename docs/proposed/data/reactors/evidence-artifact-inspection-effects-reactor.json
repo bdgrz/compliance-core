@@ -1,5 +1,7 @@
 {
-  "root": "EvidenceArtifactInspectionEffectsReactor",
+  "sourceRoot": "EvidenceArtifactInspectionEffectsReactor",
+  "targetRoot": "ApplyArtifactInspectionOutcomeReactor",
+  "businessReason": "Protect users from unsafe evidence by applying the inspector's decision to the registered artifact before it can be used or downloaded.",
   "rows": [
     {
       "id": "S000",

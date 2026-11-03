@@ -2,13 +2,13 @@
 
 Selected command contracts: **5**. Complete selected contracts and companion source evidence: [owner command JSON](../data/commands/significant-change.json).
 
-| Command | Kind | Identity | Fields | HTTP routes |
-| --- | --- | --- | --- | --- |
-| AssessSignificantChange | http | CommandId | 6 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/significant-changes/{change_id}/assessments/{command_id} |
-| LinkImpactReviewWork | command | CommandId | 6 | [Placeholder: value not recorded] |
-| RecordSignificantChange | creation | ChangeId | 4 | [Placeholder: value not recorded] |
-| RecordSignificantChangeSystemDescriptionDecision | command | CommandId | 11 | [Placeholder: value not recorded] |
-| ReviseSignificantChange | http | CommandId | 7 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/significant-changes/{change_id}/revisions/{command_id} |
+| Target command | Selected source name | Kind | Identity | Fields | HTTP routes |
+| --- | --- | --- | --- | --- | --- |
+| AssessSignificantChange | AssessSignificantChange | http | CommandId | 6 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/significant-changes/{change_id}/assessments/{command_id} |
+| LinkImpactReviewWork | LinkImpactReviewWork | command | CommandId | 6 | [Placeholder: value not recorded] |
+| RecordSignificantChange | RecordSignificantChange | creation | ChangeId | 4 | [Placeholder: value not recorded] |
+| RecordSignificantChangeSystemDescriptionDecision | RecordSignificantChangeSystemDescriptionDecision | command | CommandId | 11 | [Placeholder: value not recorded] |
+| ReviseSignificantChange | ReviseSignificantChange | http | CommandId | 7 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/significant-changes/{change_id}/revisions/{command_id} |
 
 ## Selected command details
 
@@ -16,13 +16,16 @@ Selected command contracts: **5**. Complete selected contracts and companion sou
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | AssessSignificantChange |
+| Selected source command name | AssessSignificantChange |
+| Name decision | The selected source name is retained. |
 | Owner | SignificantChange |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | http |
 | Logical identity | CommandId; Uuid; required=true; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
 | Entry point | [Placeholder: value not recorded] |
 | MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | [Placeholder: value not recorded] |
+| Selected semantic events | None listed |
 | Protocols | [Placeholder: value not recorded] |
 | Policy preservation | [Placeholder: value not recorded] |
 | Contract changes | [Placeholder: value not recorded] |
@@ -64,13 +67,16 @@ Required tests: [Placeholder: required tests not recorded]
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | LinkImpactReviewWork |
+| Selected source command name | LinkImpactReviewWork |
+| Name decision | The selected source name is retained. |
 | Owner | SignificantChange |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | command |
 | Logical identity | CommandId; Uuid; required=true; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
 | Entry point | [Placeholder: value not recorded] |
 | MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | [Placeholder: value not recorded] |
+| Selected semantic events | None listed |
 | Protocols | [Placeholder: value not recorded] |
 | Policy preservation | [Placeholder: value not recorded] |
 | Contract changes | [Placeholder: value not recorded] |
@@ -110,13 +116,16 @@ Required tests: [Placeholder: required tests not recorded]
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | RecordSignificantChange |
+| Selected source command name | RecordSignificantChange |
+| Name decision | The selected source name is retained. |
 | Owner | SignificantChange |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | creation |
 | Logical identity | ChangeId; Uuid; required=true; caller-supplied immutable creation identity: an exact retry with the same id and authored intent returns the original result; the same id with changed intent is refused; a different id is a different record |
 | Entry point | [Placeholder: value not recorded] |
 | MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | [Placeholder: value not recorded] |
+| Selected semantic events | None listed |
 | Protocols | [Placeholder: value not recorded] |
 | Policy preservation | [Placeholder: value not recorded] |
 | Contract changes | [Placeholder: value not recorded] |
@@ -154,13 +163,16 @@ Required tests: [Placeholder: required tests not recorded]
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | RecordSignificantChangeSystemDescriptionDecision |
+| Selected source command name | RecordSignificantChangeSystemDescriptionDecision |
+| Name decision | The selected source name is retained. |
 | Owner | SignificantChange |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | command |
 | Logical identity | CommandId; Uuid; required=true; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
 | Entry point | [Placeholder: value not recorded] |
 | MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | [Placeholder: value not recorded] |
+| Selected semantic events | None listed |
 | Protocols | [Placeholder: value not recorded] |
 | Policy preservation | [Placeholder: value not recorded] |
 | Contract changes | [Placeholder: value not recorded] |
@@ -205,13 +217,16 @@ Required tests: [Placeholder: required tests not recorded]
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | ReviseSignificantChange |
+| Selected source command name | ReviseSignificantChange |
+| Name decision | The selected source name is retained. |
 | Owner | SignificantChange |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | http |
 | Logical identity | CommandId; Uuid; required=true; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
 | Entry point | [Placeholder: value not recorded] |
 | MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | [Placeholder: value not recorded] |
+| Selected semantic events | None listed |
 | Protocols | [Placeholder: value not recorded] |
 | Policy preservation | [Placeholder: value not recorded] |
 | Contract changes | [Placeholder: value not recorded] |

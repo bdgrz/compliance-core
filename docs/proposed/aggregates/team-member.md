@@ -27,8 +27,8 @@
 | [RemoveTeamMember](../commands/team-member.md#removeteammember) | http | CommandId |
 | [ApplyAdministratorAssignmentRestoration](../commands/team-member.md#applyadministratorassignmentrestoration) | receiver | CommandId |
 | [ApplyAdministratorAssignmentWithdrawal](../commands/team-member.md#applyadministratorassignmentwithdrawal) | receiver | CommandId |
-| [ApplyNeutralAdministratorAssignmentMutation](../commands/team-member.md#applyneutraladministratorassignmentmutation) | receiver | CommandId |
-| [CleanupRetiredMembershipRelationship](../commands/team-member.md#cleanupretiredmembershiprelationship) | reactor | CommandId |
+| [RemoveAdministratorAssignment](../commands/team-member.md#removeadministratorassignment) | receiver | CommandId |
+| [RemoveRetiredMemberAccessAndAssignments](../commands/team-member.md#removeretiredmemberaccessandassignments) | reactor | CommandId |
 
 ## Events
 
@@ -42,10 +42,10 @@
 | Row | Kind | Source owner | Target owner | Command |
 | --- | --- | --- | --- | --- |
 | [T047](../reactors/administrator-assignment-withdrawal-reactor.md#t047) | reaction_or_regular_process_stage | TenantManagerGuard | TeamMember | ApplyAdministratorAssignmentWithdrawal |
-| [T049](../reactors/administrator-neutral-assignment-mutation-reactor.md#t049) | reaction_or_regular_process_stage | TenantManagerGuard | TeamMember | ApplyNeutralAdministratorAssignmentMutation |
+| [T049](../reactors/administrator-neutral-assignment-mutation-reactor.md#t049) | reaction_or_regular_process_stage | TenantManagerGuard | TeamMember | RemoveAdministratorAssignment |
 | [T098](../reactors/administrator-assignment-restoration-reactor.md#t098) | reaction_or_regular_process_stage | TenantManagerGuard | TeamMember | ApplyAdministratorAssignmentRestoration |
-| [S004](../reactors/member-retirement-reactor.md#s004) | business_receiver | Member | TeamMember | CleanupRetiredMembershipRelationship |
-| [S007](../reactors/retired-team-assignment-reactor.md#s007) | business_receiver | TeamMember | TeamMember | CleanupRetiredMembershipRelationship |
+| [S004](../reactors/member-retirement-reactor.md#s004) | business_receiver | Member | TeamMember | RemoveRetiredMemberAccessAndAssignments |
+| [S007](../reactors/retired-team-assignment-reactor.md#s007) | business_receiver | TeamMember | TeamMember | RemoveRetiredMemberAccessAndAssignments |
 | [S010](../reactors/team-cleanup-reactor.md#s010) | business_receiver | Team | TeamMember | RemoveTeamMember |
 | [S016](../reactors/tenant-rbac-bootstrap-reactor.md#s016) | business_receiver | Tenant | TeamMember | AssignTeamMember |
 | [S027](../reactors/tenant-invitation-reactor.md#s027) | business_receiver | TenantInvitation | TeamMember | AssignTeamMember |

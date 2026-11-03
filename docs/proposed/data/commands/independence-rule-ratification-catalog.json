@@ -70,7 +70,9 @@
         "line": 7586,
         "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
       },
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "RatifyIndependenceRuleVersion",
+      "targetName": "RatifyIndependenceRuleVersion"
     },
     {
       "command": "AuthorizeIndependenceRuleRatificationCatalogEngagementUse",
@@ -158,7 +160,9 @@
       "source": {
         "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
         "recorded": "2026-10-29"
-      }
+      },
+      "sourceName": "AuthorizeIndependenceRuleRatificationCatalogEngagementUse",
+      "targetName": "AuthorizeIndependenceRuleRatificationCatalogEngagement"
     },
     {
       "command": "SettleIndependenceRuleRatificationCatalogEngagementUse",
@@ -243,7 +247,9 @@
       "source": {
         "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
         "recorded": "2026-10-29"
-      }
+      },
+      "sourceName": "SettleIndependenceRuleRatificationCatalogEngagementUse",
+      "targetName": "CloseIndependenceRuleRatificationCatalogEngagementAuthorization"
     }
   ],
   "sourceContractEvidence": []

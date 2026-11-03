@@ -39,22 +39,22 @@
 | Event | Discriminator | Version |
 | --- | --- | --- |
 | [CorrectiveActionAdmitted](../events/finding-aggregate.md#correctiveactionadmitted) | bdgrz.finding-aggregate.corrective-action-admitted | 1 |
-| [FindingAcceptanceLinkedV2](../events/finding-aggregate.md#findingacceptancelinkedv2) | bdgrz.finding.acceptance.linked | 3 |
-| [FindingClosedV2](../events/finding-aggregate.md#findingclosedv2) | bdgrz.finding.closed | 3 |
+| [FindingAcceptanceLinked](../events/finding-aggregate.md#findingacceptancelinked) | bdgrz.finding.acceptance.linked | 3 |
+| [FindingClosed](../events/finding-aggregate.md#findingclosed) | bdgrz.finding.closed | 3 |
 | [FindingClosureAccepted](../events/finding-aggregate.md#findingclosureaccepted) | bdgrz.finding-aggregate.finding-closure-accepted | 1 |
 | [FindingClosureCanceled](../events/finding-aggregate.md#findingclosurecanceled) | bdgrz.finding-aggregate.finding-closure-canceled | 1 |
-| [FindingRaisedV2](../events/finding-aggregate.md#findingraisedv2) | bdgrz.finding.raised | 3 |
-| [FindingReopenedV2](../events/finding-aggregate.md#findingreopenedv2) | bdgrz.finding.reopened | 3 |
-| [FindingRevisedV2](../events/finding-aggregate.md#findingrevisedv2) | bdgrz.finding.revised | 3 |
+| [FindingRaised](../events/finding-aggregate.md#findingraised) | bdgrz.finding.raised | 3 |
+| [FindingReopened](../events/finding-aggregate.md#findingreopened) | bdgrz.finding.reopened | 3 |
+| [FindingRevised](../events/finding-aggregate.md#findingrevised) | bdgrz.finding.revised | 3 |
 
 ## Cross-owner flows
 
 | Row | Kind | Source owner | Target owner | Command |
 | --- | --- | --- | --- | --- |
-| [T036](../reactors/corrective-action-materialization-reactor.md#t036) | reaction_or_regular_process_stage | FindingAggregate | CorrectiveAction | MaterializeCorrectiveAction |
+| [T036](../reactors/corrective-action-materialization-reactor.md#t036) | reaction_or_regular_process_stage | FindingAggregate | CorrectiveAction | CreateCorrectiveAction |
 | [T037](../reactors/finding-closure-reactor.md#t037) | reaction_or_regular_process_stage | FindingAggregate | FindingAggregate | CompleteFindingClosure |
-| [T063](../reactors/finding-closure-reactor.md#t063) | reaction_or_regular_process_stage | FindingAggregate | CorrectiveAction | AuthorizeCorrectiveActionFindingClosureUse |
-| [T064](../reactors/finding-closure-reactor.md#t064) | reaction_or_regular_process_stage | FindingAggregate | CorrectiveAction | SettleCorrectiveActionFindingClosureUse |
+| [T063](../reactors/finding-closure-reactor.md#t063) | reaction_or_regular_process_stage | FindingAggregate | CorrectiveAction | AuthorizeCorrectiveActionFindingClosure |
+| [T064](../reactors/finding-closure-reactor.md#t064) | reaction_or_regular_process_stage | FindingAggregate | CorrectiveAction | CloseCorrectiveActionFindingClosureAuthorization |
 | [S001](../reactors/control-evaluation-deviation-finding-reactor.md#s001) | business_receiver | ControlEvaluation | FindingAggregate | RaiseEvaluationDeviationFinding |
 | [S002](../reactors/control-occurrence-finding-reactor.md#s002) | business_receiver | ControlOccurrence | FindingAggregate | RaiseOccurrenceFinding |
 | [A008](../reactors/unassigned-architecture-rows.md#a008) | process_abort_binding | FindingAggregate | FindingAggregate | AbortFindingClosure |

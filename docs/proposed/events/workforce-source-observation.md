@@ -2,10 +2,10 @@
 
 Canonical events: **2**. Complete canonical event and available schema records: [owner event JSON](../data/events/workforce-source-observation.json).
 
-| Event | Kind | Adopted discriminator | Version | Schema fields | Meaning |
-| --- | --- | --- | --- | --- | --- |
-| WorkforceSourceObserved | business | bdgrz.workforce.source.observed | 1 | [Placeholder: schema absent] | An HRIS, identity provider or provider system's record revision was observed against a target person, work relationship or service identity, capturing the source facts seen at that time. |
-| WorkforceSourceReconciled | business | bdgrz.workforce.source.reconciled | 1 | [Placeholder: schema absent] | A workforce source observation was reconciled by a named decision to accept or dismiss it with a note, settling any conflict with the canonical workforce record. |
+| Target event | Selected source name | Kind | Adopted discriminator | Version | Schema fields | Meaning |
+| --- | --- | --- | --- | --- | --- | --- |
+| WorkforceSourceObserved | WorkforceSourceObserved | business | bdgrz.workforce.source.observed | 1 | [Placeholder: schema absent] | An HRIS, identity provider or provider system's record revision was observed against a target person, work relationship or service identity, capturing the source facts seen at that time. |
+| WorkforceSourceReconciled | WorkforceSourceReconciled | business | bdgrz.workforce.source.reconciled | 1 | [Placeholder: schema absent] | A workforce source observation was reconciled by a named decision to accept or dismiss it with a note, settling any conflict with the canonical workforce record. |
 
 ## Event details
 
@@ -13,6 +13,9 @@ Canonical events: **2**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | WorkforceSourceObserved |
+| Selected source event name | WorkforceSourceObserved |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:WorkforceSourceObserved |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | WorkforceSourceObserved |
@@ -22,7 +25,8 @@ Canonical events: **2**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | An HRIS, identity provider or provider system's record revision was observed against a target person, work relationship or service identity, capturing the source facts seen at that time. |
+| Target meaning | An HRIS, identity provider or provider system's record revision was observed against a target person, work relationship or service identity, capturing the source facts seen at that time. |
+| Selected source meaning | An HRIS, identity provider or provider system's record revision was observed against a target person, work relationship or service identity, capturing the source facts seen at that time. |
 | Meaning source | authored 2026-10-29 from src/Compliance.Common/Features/Workforce/Events/WorkforceSourceObserved.cs |
 
 #### Schema
@@ -43,6 +47,9 @@ Canonical events: **2**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | WorkforceSourceReconciled |
+| Selected source event name | WorkforceSourceReconciled |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:WorkforceSourceReconciled |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | WorkforceSourceReconciled |
@@ -52,7 +59,8 @@ Canonical events: **2**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | A workforce source observation was reconciled by a named decision to accept or dismiss it with a note, settling any conflict with the canonical workforce record. |
+| Target meaning | A workforce source observation was reconciled by a named decision to accept or dismiss it with a note, settling any conflict with the canonical workforce record. |
+| Selected source meaning | A workforce source observation was reconciled by a named decision to accept or dismiss it with a note, settling any conflict with the canonical workforce record. |
 | Meaning source | authored 2026-10-29 from src/Compliance.Common/Features/Workforce/Events/WorkforceSourceReconciled.cs |
 
 #### Schema

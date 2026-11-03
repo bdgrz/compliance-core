@@ -2,9 +2,9 @@
 
 Canonical events: **1**. Complete canonical event and available schema records: [owner event JSON](../data/events/provider-risk-acceptance.json).
 
-| Event | Kind | Adopted discriminator | Version | Schema fields | Meaning |
-| --- | --- | --- | --- | --- | --- |
-| ProviderCoverageGapRiskAcceptanceLinked | business | bdgrz.provider.coverage_gap.risk_acceptance_linked | 1 | 10 | The immutable accepted-risk link materialized from its admission. It belongs only to the link id, never changes the gap, and keeps the admission revision and instant even if the gap later closes or the acceptance expires. AcceptanceContent is the ProviderCoverageGapRiskAcceptanceView. |
+| Target event | Selected source name | Kind | Adopted discriminator | Version | Schema fields | Meaning |
+| --- | --- | --- | --- | --- | --- | --- |
+| ProviderCoverageGapRiskAcceptanceLinked | ProviderCoverageGapRiskAcceptanceLinked | business | bdgrz.provider.coverage_gap.risk_acceptance_linked | 1 | 10 | The immutable accepted-risk link materialized from its admission. It belongs only to the link id, never changes the gap, and keeps the admission revision and instant even if the gap later closes or the acceptance expires. AcceptanceContent is the ProviderCoverageGapRiskAcceptanceView. |
 
 ## Event details
 
@@ -12,6 +12,9 @@ Canonical events: **1**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | ProviderCoverageGapRiskAcceptanceLinked |
+| Selected source event name | ProviderCoverageGapRiskAcceptanceLinked |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:ProviderCoverageGapRiskAcceptanceLinked |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | ProviderCoverageGapRiskAcceptanceLinked |
@@ -21,7 +24,8 @@ Canonical events: **1**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | The immutable accepted-risk link materialized from its admission. It belongs only to the link id, never changes the gap, and keeps the admission revision and instant even if the gap later closes or the acceptance expires. AcceptanceContent is the ProviderCoverageGapRiskAcceptanceView. |
+| Target meaning | The immutable accepted-risk link materialized from its admission. It belongs only to the link id, never changes the gap, and keeps the admission revision and instant even if the gap later closes or the acceptance expires. AcceptanceContent is the ProviderCoverageGapRiskAcceptanceView. |
+| Selected source meaning | The immutable accepted-risk link materialized from its admission. It belongs only to the link id, never changes the gap, and keeps the admission revision and instant even if the gap later closes or the acceptance expires. AcceptanceContent is the ProviderCoverageGapRiskAcceptanceView. |
 | Meaning source | record summary in src/Compliance.Common/Features/Providers/Events/ProviderCoverageGapRiskAcceptanceLinked.cs |
 
 #### Selected schema and implementation evidence
@@ -120,7 +124,7 @@ ProviderRiskLinkIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T088](../reactors/provider-risk-acceptance-link-reactor.md#t088) | emitted semantic fact | ProviderAssuranceGap | MaterializeProviderRiskAcceptanceLink | ProviderRiskAcceptance |
+| [T088](../reactors/provider-risk-acceptance-link-reactor.md#t088) | emitted semantic fact | ProviderAssuranceGap | LinkProviderRiskAcceptanceToGap | ProviderRiskAcceptance |
 
 
 

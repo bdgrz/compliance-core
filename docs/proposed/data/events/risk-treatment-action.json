@@ -91,7 +91,11 @@
         "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "RiskTreatmentActionAdded",
+      "targetName": "RiskTreatmentActionAdded",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "Accountable treatment work was added to the risk. ActionContent is the complete open RiskTreatmentActionView; the logical id of the operation is the action id and the revision is one."
     },
     {
       "canonical": {
@@ -194,7 +198,11 @@
         "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "RiskTreatmentActionCancelled",
+      "targetName": "RiskTreatmentActionCancelled",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "Unfinished treatment work was canceled while its history is retained."
     },
     {
       "canonical": {
@@ -357,7 +365,11 @@
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "resolvedIntentSchema": "RiskActionCompletionReviewIntent",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "RiskTreatmentActionCompletionReviewAccepted",
+      "targetName": "RiskTreatmentActionCompletionReviewAccepted",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "The root native acceptance of a completion review. It seals the exact submission for Generation, which is the submission ordinal of the action, and references the frozen RiskActionCompletionReviewIntent; the action only completes or reopens once RiskTreatmentActionCompletionReviewed follows."
     },
     {
       "canonical": {
@@ -520,7 +532,11 @@
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "resolvedIntentSchema": "RiskActionCompletionReviewIntent",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "RiskTreatmentActionCompletionReviewCanceled",
+      "targetName": "RiskTreatmentActionCompletionReviewCanceled",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "A pending completion review ended before it recorded its decision. The fact is the local receiver fence: a delayed CompleteRiskTreatmentActionReview sees it and does nothing, and only then are the evidence uses settled. SourceProofs is the failure proof."
     },
     {
       "canonical": {
@@ -722,7 +738,11 @@
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "resolvedIntentSchema": "RiskActionCompletionReviewIntent",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "RiskTreatmentActionCompletionReviewed",
+      "targetName": "RiskTreatmentActionCompletionReviewed",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "The decision of a completion review, appended by RiskActionCompletionReviewProcess once every cited evidence request is held. Intent is the frozen RiskActionCompletionReviewIntent."
     },
     {
       "canonical": {
@@ -844,7 +864,11 @@
         "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "RiskTreatmentActionCompletionSubmitted",
+      "targetName": "RiskTreatmentActionCompletionSubmitted",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "Treatment work was reported done. EvidenceRequestIdsManifest is the complete ordered list of the fulfilled evidence requests the submission rests on; the logical id of the operation is the submission id."
     },
     {
       "canonical": {
@@ -986,7 +1010,11 @@
         "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "RiskTreatmentActionRevised",
+      "targetName": "RiskTreatmentActionRevised",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "Open treatment work was revised. EvidenceRequestIdsManifest is the complete ordered list of cited evidence request ids."
     }
   ]
 }

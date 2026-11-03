@@ -2,14 +2,14 @@
 
 Selected command contracts: **6**. Complete selected contracts and companion source evidence: [owner command JSON](../data/commands/policy-distribution-campaign.json).
 
-| Command | Kind | Identity | Fields | HTTP routes |
-| --- | --- | --- | --- | --- |
-| CloseCampaign | http | CommandId | 6 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/campaigns/{campaign_id}/closure/{command_id} [ComplianceAuthorizationPolicies.ApiUser] |
-| LaunchPolicyCampaign | http | CampaignId | 8 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/policy-campaigns/{campaign_id} [ComplianceAuthorizationPolicies.ApiUser] |
-| LaunchTrainingCampaign | http | CampaignId | 8 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/training-campaigns/{campaign_id} [ComplianceAuthorizationPolicies.ApiUser] |
-| ReconcileCampaignAudience | http | CommandId | 6 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/campaigns/{campaign_id}/reconciliations/{command_id} [ComplianceAuthorizationPolicies.ApiUser] |
-| AbortPolicyCampaignClosure | abort | CommandId | 6 | [Placeholder: route/channel not recorded] |
-| CompletePolicyCampaignClosure | receiver | CommandId | 9 | [Placeholder: value not recorded] |
+| Target command | Selected source name | Kind | Identity | Fields | HTTP routes |
+| --- | --- | --- | --- | --- | --- |
+| CloseCampaign | CloseCampaign | http | CommandId | 6 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/campaigns/{campaign_id}/closure/{command_id} [ComplianceAuthorizationPolicies.ApiUser] |
+| LaunchPolicyCampaign | LaunchPolicyCampaign | http | CampaignId | 8 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/policy-campaigns/{campaign_id} [ComplianceAuthorizationPolicies.ApiUser] |
+| LaunchTrainingCampaign | LaunchTrainingCampaign | http | CampaignId | 8 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/training-campaigns/{campaign_id} [ComplianceAuthorizationPolicies.ApiUser] |
+| ReconcileCampaignAudience | ReconcileCampaignAudience | http | CommandId | 6 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/campaigns/{campaign_id}/reconciliations/{command_id} [ComplianceAuthorizationPolicies.ApiUser] |
+| AbortPolicyCampaignClosure | AbortPolicyCampaignClosure | abort | CommandId | 6 | [Placeholder: route/channel not recorded] |
+| CompletePolicyCampaignClosure | CompletePolicyCampaignClosure | receiver | CommandId | 9 | [Placeholder: value not recorded] |
 
 ## Selected command details
 
@@ -17,6 +17,9 @@ Selected command contracts: **6**. Complete selected contracts and companion sou
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | CloseCampaign |
+| Selected source command name | CloseCampaign |
+| Name decision | The selected source name is retained. |
 | Owner | PolicyDistributionCampaign |
 | Contract record status | target_contract |
 | Kind | http |
@@ -67,6 +70,9 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | LaunchPolicyCampaign |
+| Selected source command name | LaunchPolicyCampaign |
+| Name decision | The selected source name is retained. |
 | Owner | PolicyDistributionCampaign |
 | Contract record status | target_contract |
 | Kind | http |
@@ -119,6 +125,9 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | LaunchTrainingCampaign |
+| Selected source command name | LaunchTrainingCampaign |
+| Name decision | The selected source name is retained. |
 | Owner | PolicyDistributionCampaign |
 | Contract record status | target_contract |
 | Kind | http |
@@ -171,6 +180,9 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | ReconcileCampaignAudience |
+| Selected source command name | ReconcileCampaignAudience |
+| Name decision | The selected source name is retained. |
 | Owner | PolicyDistributionCampaign |
 | Contract record status | target_contract |
 | Kind | http |
@@ -221,13 +233,16 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | AbortPolicyCampaignClosure |
+| Selected source command name | AbortPolicyCampaignClosure |
+| Name decision | The selected source name is retained. |
 | Owner | PolicyDistributionCampaign |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | abort |
 | Logical identity | CommandId; Uuid; required=true; abort receiver identity bound to the exact admitted operation and generation: exact redelivery resolves the original rejected result; an abort after a terminal outcome is a no-op |
 | Entry point | [Placeholder: value not recorded] |
 | MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | [Placeholder: value not recorded] |
+| Selected semantic events | None listed |
 | Protocols | [Placeholder: value not recorded] |
 | Policy preservation | [Placeholder: value not recorded] |
 | Contract changes | [Placeholder: value not recorded] |
@@ -267,13 +282,16 @@ Required tests: [Placeholder: required tests not recorded]
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | CompletePolicyCampaignClosure |
+| Selected source command name | CompletePolicyCampaignClosure |
+| Name decision | The selected source name is retained. |
 | Owner | PolicyDistributionCampaign |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; reactor; deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result |
 | Entry point | [Placeholder: value not recorded] |
 | MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | [Placeholder: value not recorded] |
+| Selected semantic events | None listed |
 | Protocols | [Placeholder: value not recorded] |
 | Policy preservation | [Placeholder: value not recorded] |
 | Contract changes | [Placeholder: value not recorded] |
@@ -315,7 +333,7 @@ Required tests: [Placeholder: required tests not recorded]
 
 ## Source contracts
 
-| Command | Handler | Registered | Entry point |
+| Selected source command | Handler | Registered | Entry point |
 | --- | --- | --- | --- |
 | AcknowledgePolicy | AcknowledgePolicyHandler | true | personal_http |
 | ApproveCampaignWaiver | ApproveCampaignWaiverHandler | true | personal_http |

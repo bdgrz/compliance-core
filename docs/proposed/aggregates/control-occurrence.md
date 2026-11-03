@@ -27,7 +27,7 @@
 | [CorrectControlAttestation](../commands/control-occurrence.md#correctcontrolattestation) | http | CommandId |
 | [OpenControlOccurrence](../commands/control-occurrence.md#opencontroloccurrence) | http | CommandId |
 | [ReviewControlOccurrence](../commands/control-occurrence.md#reviewcontroloccurrence) | http | CommandId |
-| [MaterializeControlOccurrence](../commands/control-occurrence.md#materializecontroloccurrence) | receiver | CommandId |
+| [OpenDueControlOccurrence](../commands/control-occurrence.md#openduecontroloccurrence) | receiver | CommandId |
 
 ## Events
 
@@ -41,7 +41,7 @@
 
 | Row | Kind | Source owner | Target owner | Command |
 | --- | --- | --- | --- | --- |
-| [T040](../reactors/control-occurrence-fan-out-reactor.md#t040) | reaction_or_regular_process_stage | TypeIIPeriod | ControlOccurrence | MaterializeControlOccurrence |
+| [T040](../reactors/control-occurrence-fan-out-reactor.md#t040) | reaction_or_regular_process_stage | TypeIIPeriod | ControlOccurrence | OpenDueControlOccurrence |
 | [S002](../reactors/control-occurrence-finding-reactor.md#s002) | business_receiver | ControlOccurrence | FindingAggregate | RaiseOccurrenceFinding |
 
 ## Product rules

@@ -1,5 +1,7 @@
 {
-  "root": "ApplicationNameChangeReactor",
+  "sourceRoot": "ApplicationNameChangeReactor",
+  "targetRoot": "KeepApplicationNamesUniqueReactor",
+  "businessReason": "Keep every application name and alias unique while names are changed or an application is retired.",
   "rows": [
     {
       "id": "X000",

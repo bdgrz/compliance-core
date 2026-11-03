@@ -23,7 +23,11 @@
         "meaning": "Records the exact accepted contribution content without copying a retained read snapshot.",
         "meaningSource": "record summary in src/Compliance.Common/Features/MethodologyTemplates/Events/MethodologyTemplateContributionAccepted.cs"
       },
-      "schema": null
+      "schema": null,
+      "sourceName": "MethodologyTemplateContributionAccepted",
+      "targetName": "MethodologyTemplateContributionAccepted",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "Records the exact accepted contribution content without copying a retained read snapshot."
     },
     {
       "canonical": {
@@ -47,7 +51,11 @@
         "meaning": "Records the exact proposed contribution content without copying a retained read snapshot.",
         "meaningSource": "record summary in src/Compliance.Common/Features/MethodologyTemplates/Events/MethodologyTemplateContributionProposed.cs"
       },
-      "schema": null
+      "schema": null,
+      "sourceName": "MethodologyTemplateContributionProposed",
+      "targetName": "MethodologyTemplateContributionProposed",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "Records the exact proposed contribution content without copying a retained read snapshot."
     },
     {
       "canonical": {
@@ -71,7 +79,11 @@
         "meaning": "Records the exact reviewed contribution content without copying a retained read snapshot.",
         "meaningSource": "record summary in src/Compliance.Common/Features/MethodologyTemplates/Events/MethodologyTemplateContributionReviewed.cs"
       },
-      "schema": null
+      "schema": null,
+      "sourceName": "MethodologyTemplateContributionReviewed",
+      "targetName": "MethodologyTemplateContributionReviewed",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "Records the exact reviewed contribution content without copying a retained read snapshot."
     }
   ]
 }

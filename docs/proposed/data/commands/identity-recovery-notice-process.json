@@ -1,5 +1,72 @@
 {
   "owner": "IdentityRecoveryNoticeProcess",
   "selectedContracts": [],
-  "sourceContractEvidence": []
+  "sourceContractEvidence": [],
+  "supplementalSourceWriteRequests": [
+    {
+      "command": "SendIdentityRecoveryNotice",
+      "owner": "IdentityRecoveryNoticeProcess",
+      "classification": "implemented_source_write_not_in_selected_per_command_contracts",
+      "sourcePath": "src/Compliance.Common/Features/UserIdentities/Commands/SendIdentityRecoveryNotice.cs",
+      "sourceDescription": "[Placeholder: source summary not recorded]",
+      "discriminator": {
+        "name": "bdgrz.identity-recovery.send-notice",
+        "version": 1
+      },
+      "requestFields": [
+        {
+          "name": "CommandId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Source",
+          "type": "SourceFactProof<IdentityRecoveryCompleted>",
+          "required": true
+        },
+        {
+          "name": "Target",
+          "type": "EventStreamAddress",
+          "required": true
+        },
+        {
+          "name": "OperationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Generation",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "ExpectedRevision",
+          "type": "long?",
+          "required": true
+        },
+        {
+          "name": "Intent",
+          "type": "ImmutableContentRef",
+          "required": true
+        },
+        {
+          "name": "ChallengeId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Recipient",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "responseType": "ReceiverOutcome",
+      "requestInterfaces": [
+        "IIdentityRecoveryStepReceiver"
+      ],
+      "handlerSource": "src/Compliance.Core/Features/UserIdentities/Handlers/SendIdentityRecoveryNoticeHandler.cs",
+      "httpRoutes": [],
+      "contractNotes": "No HTTP route is recorded in the source request contract. Internal process and receiver commands are invoked by their owning workflow."
+    }
+  ]
 }

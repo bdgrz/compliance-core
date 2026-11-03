@@ -2,10 +2,10 @@
 
 Selected command contracts: **2**. Complete selected contracts and companion source evidence: [owner command JSON](../data/commands/operational-process-name-claim.json).
 
-| Command | Kind | Identity | Fields | HTTP routes |
-| --- | --- | --- | --- | --- |
-| ClaimOperationalProcessName | receiver | CommandId | 10 | [Placeholder: value not recorded] |
-| ReleaseOperationalProcessName | receiver | CommandId | 9 | [Placeholder: value not recorded] |
+| Target command | Selected source name | Kind | Identity | Fields | HTTP routes |
+| --- | --- | --- | --- | --- | --- |
+| ClaimOperationalProcessName | ClaimOperationalProcessName | receiver | CommandId | 10 | [Placeholder: value not recorded] |
+| ReleaseOperationalProcessName | ReleaseOperationalProcessName | receiver | CommandId | 9 | [Placeholder: value not recorded] |
 
 ## Selected command details
 
@@ -13,13 +13,16 @@ Selected command contracts: **2**. Complete selected contracts and companion sou
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | ClaimOperationalProcessName |
+| Selected source command name | ClaimOperationalProcessName |
+| Name decision | The selected source name is retained. |
 | Owner | OperationalProcessNameClaim |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; internal; deterministic receiver identity derived from the admitted root fact, episode and generation: exact redelivery resolves the original result, a changed admission is a new identity |
 | Entry point | [Placeholder: value not recorded] |
 | MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | [Placeholder: value not recorded] |
+| Selected semantic events | None listed |
 | Protocols | [Placeholder: value not recorded] |
 | Policy preservation | [Placeholder: value not recorded] |
 | Contract changes | [Placeholder: value not recorded] |
@@ -63,13 +66,16 @@ Required tests: [Placeholder: required tests not recorded]
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | ReleaseOperationalProcessName |
+| Selected source command name | ReleaseOperationalProcessName |
+| Name decision | The selected source name is retained. |
 | Owner | OperationalProcessNameClaim |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; internal; deterministic receiver identity derived from the admitted root fact, episode and generation: exact redelivery resolves the original result, a changed admission is a new identity |
 | Entry point | [Placeholder: value not recorded] |
 | MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | [Placeholder: value not recorded] |
+| Selected semantic events | None listed |
 | Protocols | [Placeholder: value not recorded] |
 | Policy preservation | [Placeholder: value not recorded] |
 | Contract changes | [Placeholder: value not recorded] |

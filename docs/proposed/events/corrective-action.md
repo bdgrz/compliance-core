@@ -2,19 +2,22 @@
 
 Canonical events: **4**. Complete canonical event and available schema records: [owner event JSON](../data/events/corrective-action.json).
 
-| Event | Kind | Adopted discriminator | Version | Schema fields | Meaning |
-| --- | --- | --- | --- | --- | --- |
-| CorrectiveActionAddedV2 | business | bdgrz.finding.corrective_action.added | 3 | 10 | The materialization of an admitted corrective action on its own owner, at revision one. The complete CorrectiveActionView is verified content and Intent repeats the admission intent the finding accepted. |
-| CorrectiveActionCompletedV2 | business | bdgrz.finding.corrective_action.completed | 3 | 14 | The completion of one corrective action on its own owner. EvidenceManifest is the complete evidence list as verified immutable content, with every item and its order preserved. |
-| CorrectiveActionFindingClosureUseAuthorized | reservation | bdgrz.corrective-action.corrective-action-finding-closure-use-authorized | 1 | 8 | A completed corrective action is held for a finding closure. The use does not advance the public action revision: Revision is the held revision, and Generation is the finding generation the closure seals. |
-| CorrectiveActionFindingClosureUseSettled | reservation | bdgrz.corrective-action.corrective-action-finding-closure-use-settled | 1 | 8 | A finding-closure use of a corrective action ended. Disposition repeats the disposition of the settlement intent so the owner can install the closed-parent fence from its own ordered stream: a SourceUseSettlementDisposition.ParentClosed settlement keeps the action under the closed finding generation, and releasing the temporary use never restores an unrestricted writable action. |
+| Target event | Selected source name | Kind | Adopted discriminator | Version | Schema fields | Meaning |
+| --- | --- | --- | --- | --- | --- | --- |
+| CorrectiveActionAdded | CorrectiveActionAddedV2 | business | bdgrz.finding.corrective_action.added | 3 | 10 | The materialization of an admitted corrective action on its own owner, at revision one. The complete CorrectiveActionView is verified content and Intent repeats the admission intent the finding accepted. |
+| CorrectiveActionCompleted | CorrectiveActionCompletedV2 | business | bdgrz.finding.corrective_action.completed | 3 | 14 | The completion of one corrective action on its own owner. EvidenceManifest is the complete evidence list as verified immutable content, with every item and its order preserved. |
+| CorrectiveActionFindingClosureAuthorized | CorrectiveActionFindingClosureUseAuthorized | reservation | bdgrz.corrective-action.corrective-action-finding-closure-use-authorized | 1 | 8 | A completed corrective action is held for a finding closure. The use does not advance the public action revision: Revision is the held revision, and Generation is the finding generation the closure seals. |
+| CorrectiveActionFindingClosureAuthorizationClosed | CorrectiveActionFindingClosureUseSettled | reservation | bdgrz.corrective-action.corrective-action-finding-closure-use-settled | 1 | 8 | A finding-closure use of a corrective action ended. Disposition repeats the disposition of the settlement intent so the owner can install the closed-parent fence from its own ordered stream: a SourceUseSettlementDisposition.ParentClosed settlement keeps the action under the closed finding generation, and releasing the temporary use never restores an unrestricted writable action. |
 
 ## Event details
 
-### CorrectiveActionAddedV2
+### CorrectiveActionAdded
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | CorrectiveActionAdded |
+| Selected source event name | CorrectiveActionAddedV2 |
+| Name decision | Names the creation of the admitted corrective action without exposing the implementation version suffix. |
 | Canonical semantic key | event:CorrectiveActionAdded |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | CorrectiveActionAddedV2 |
@@ -24,7 +27,8 @@ Canonical events: **4**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | `{"discriminator":"bdgrz.finding.corrective_action.added","version":1}` |
-| Meaning | The materialization of an admitted corrective action on its own owner, at revision one. The complete CorrectiveActionView is verified content and Intent repeats the admission intent the finding accepted. |
+| Target meaning | The materialization of an admitted corrective action on its own owner, at revision one. The complete CorrectiveActionView is verified content and Intent repeats the admission intent the finding accepted. |
+| Selected source meaning | The materialization of an admitted corrective action on its own owner, at revision one. The complete CorrectiveActionView is verified content and Intent repeats the admission intent the finding accepted. |
 | Meaning source | record summary in src/Compliance.Common/Features/Remediation/Events/CorrectiveActionAddedV2.cs |
 
 #### Selected schema and implementation evidence
@@ -113,12 +117,15 @@ ChildAdmissionIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T036](../reactors/corrective-action-materialization-reactor.md#t036) | emitted semantic fact | FindingAggregate | MaterializeCorrectiveAction | CorrectiveAction |
+| [T036](../reactors/corrective-action-materialization-reactor.md#t036) | emitted semantic fact | FindingAggregate | CreateCorrectiveAction | CorrectiveAction |
 
-### CorrectiveActionCompletedV2
+### CorrectiveActionCompleted
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | CorrectiveActionCompleted |
+| Selected source event name | CorrectiveActionCompletedV2 |
+| Name decision | Names the completed corrective action without exposing the implementation version suffix. |
 | Canonical semantic key | event:CorrectiveActionCompleted |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | CorrectiveActionCompletedV2 |
@@ -128,7 +135,8 @@ ChildAdmissionIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | `{"discriminator":"bdgrz.finding.corrective_action.completed","version":1}` |
-| Meaning | The completion of one corrective action on its own owner. EvidenceManifest is the complete evidence list as verified immutable content, with every item and its order preserved. |
+| Target meaning | The completion of one corrective action on its own owner. EvidenceManifest is the complete evidence list as verified immutable content, with every item and its order preserved. |
+| Selected source meaning | The completion of one corrective action on its own owner. EvidenceManifest is the complete evidence list as verified immutable content, with every item and its order preserved. |
 | Meaning source | record summary in src/Compliance.Common/Features/Remediation/Events/CorrectiveActionCompletedV2.cs |
 
 #### Selected schema and implementation evidence
@@ -184,10 +192,13 @@ ChildAdmissionIntent
 
 [Placeholder: no selected choreography row names this event as root, prerequisite, or emitted fact.]
 
-### CorrectiveActionFindingClosureUseAuthorized
+### CorrectiveActionFindingClosureAuthorized
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | CorrectiveActionFindingClosureAuthorized |
+| Selected source event name | CorrectiveActionFindingClosureUseAuthorized |
+| Name decision | Authorization is already the completed fact; Use adds no stakeholder meaning. |
 | Canonical semantic key | event:CorrectiveActionFindingClosureUseAuthorized |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | CorrectiveActionFindingClosureUseAuthorized |
@@ -197,7 +208,8 @@ ChildAdmissionIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | A completed corrective action is held for a finding closure. The use does not advance the public action revision: Revision is the held revision, and Generation is the finding generation the closure seals. |
+| Target meaning | A completed corrective action is held for a finding closure. The use does not advance the public action revision: Revision is the held revision, and Generation is the finding generation the closure seals. |
+| Selected source meaning | A completed corrective action is held for a finding closure. The use does not advance the public action revision: Revision is the held revision, and Generation is the finding generation the closure seals. |
 | Meaning source | record summary in src/Compliance.Common/Features/Remediation/Events/CorrectiveActionFindingClosureUseAuthorized.cs |
 
 #### Selected schema and implementation evidence
@@ -271,12 +283,15 @@ SourceUseAuthorizationIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T063](../reactors/finding-closure-reactor.md#t063) | emitted semantic fact | FindingAggregate | AuthorizeCorrectiveActionFindingClosureUse | CorrectiveAction |
+| [T063](../reactors/finding-closure-reactor.md#t063) | emitted semantic fact | FindingAggregate | AuthorizeCorrectiveActionFindingClosure | CorrectiveAction |
 
-### CorrectiveActionFindingClosureUseSettled
+### CorrectiveActionFindingClosureAuthorizationClosed
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | CorrectiveActionFindingClosureAuthorizationClosed |
+| Selected source event name | CorrectiveActionFindingClosureUseSettled |
+| Name decision | The exact authorization ended; the recorded outcome still distinguishes use, cancellation, or a late fence. |
 | Canonical semantic key | event:CorrectiveActionFindingClosureUseSettled |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | CorrectiveActionFindingClosureUseSettled |
@@ -286,7 +301,8 @@ SourceUseAuthorizationIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | A finding-closure use of a corrective action ended. Disposition repeats the disposition of the settlement intent so the owner can install the closed-parent fence from its own ordered stream: a SourceUseSettlementDisposition.ParentClosed settlement keeps the action under the closed finding generation, and releasing the temporary use never restores an unrestricted writable action. |
+| Target meaning | A finding-closure use of a corrective action ended. Disposition repeats the disposition of the settlement intent so the owner can install the closed-parent fence from its own ordered stream: a SourceUseSettlementDisposition.ParentClosed settlement keeps the action under the closed finding generation, and releasing the temporary use never restores an unrestricted writable action. |
+| Selected source meaning | A finding-closure use of a corrective action ended. Disposition repeats the disposition of the settlement intent so the owner can install the closed-parent fence from its own ordered stream: a SourceUseSettlementDisposition.ParentClosed settlement keeps the action under the closed finding generation, and releasing the temporary use never restores an unrestricted writable action. |
 | Meaning source | record summary in src/Compliance.Common/Features/Remediation/Events/CorrectiveActionFindingClosureUseSettled.cs |
 
 #### Selected schema and implementation evidence
@@ -360,7 +376,7 @@ SourceUseAuthorizationIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T064](../reactors/finding-closure-reactor.md#t064) | emitted semantic fact | FindingAggregate | SettleCorrectiveActionFindingClosureUse | CorrectiveAction |
+| [T064](../reactors/finding-closure-reactor.md#t064) | emitted semantic fact | FindingAggregate | CloseCorrectiveActionFindingClosureAuthorization | CorrectiveAction |
 
 
 ## Wire/schema version discrepancies

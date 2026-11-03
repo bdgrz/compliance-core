@@ -2,19 +2,19 @@
 
 Canonical events: **11**. Complete canonical event and available schema records: [owner event JSON](../data/events/type-ii-period.json).
 
-| Event | Kind | Adopted discriminator | Version | Schema fields | Meaning |
-| --- | --- | --- | --- | --- | --- |
-| DueControlOccurrencesGenerated | business | bdgrz.operations.due-control-occurrences-generated | 1 | 13 | The recurring control occurrences falling due in a Type II period through a stated date were selected as one complete set for a generation key, so each is generated once. |
-| ObservationPeriodAmended | business | bdgrz.operations.observation-period-amended | 1 | 11 | The observation period of a Type II examination was amended by a named member under an authorized calendar, recorded as the period's next revision. |
-| ObservationPeriodCloseFrozen | business | bdgrz.auditpopulations.observation-period-close-frozen | 1 | 11 | The close of a Type II observation period was frozen against the exact admitted calendar intent, fixing the end of the period under examination. |
-| ObservationPeriodCloseProposed | business | bdgrz.auditpopulations.observation-period-close-proposed | 4 | [Placeholder: schema absent] | Closing a Type II observation period was proposed by a named member after validation of the period, awaiting approval. |
-| ObservationPeriodStarted | business | bdgrz.operations.observation-period-started | 1 | 11 | A Type II observation period was started by a named member under an authorized calendar, beginning the window over which controls are examined. |
-| TypeIIPeriodAmendmentAccepted | business | bdgrz.type-ii-period.type-ii-period-amendment-accepted | 1 | 8 | The root native acceptance of a period amendment. Both the old and the new range are frozen in the intent; the range of the period only changes once ObservationPeriodAmended follows. |
-| TypeIIPeriodAmendmentCanceled | business | bdgrz.type-ii-period.type-ii-period-amendment-canceled | 1 | 8 | A pending amendment ended before it applied, by explicit cancellation or by a proven calendar conflict. The fact is the local receiver fence: a delayed apply sees it and does nothing, and only then is the pending calendar reservation released. |
-| TypeIIPeriodCloseAmended | business | bdgrz.auditpopulations.type-i-i-period-close-amended | 3 | [Placeholder: schema absent] | The recorded close of a Type II period was amended by a named member under the exact admitted calendar intent, replacing the prior close. |
-| TypeIIPeriodCloseApproved | business | bdgrz.auditpopulations.type-i-i-period-close-approved | 3 | [Placeholder: schema absent] | The proposed close of a Type II period was approved by a named member, closing the observation period. |
-| TypeIIPeriodOpeningAccepted | business | bdgrz.type-ii-period.type-ii-period-opening-accepted | 1 | 8 | The root native acceptance of a period opening. The complete opening intent is persisted here before the calendar is touched; the period only exists once ObservationPeriodStarted follows. |
-| TypeIIPeriodOpeningRejected | business | bdgrz.type-ii-period.type-ii-period-opening-rejected | 1 | 8 | A pending opening was rejected because the calendar proved its range conflicts. The rejection fences a delayed apply; the same period identity is never reopened with changed intent. |
+| Target event | Selected source name | Kind | Adopted discriminator | Version | Schema fields | Meaning |
+| --- | --- | --- | --- | --- | --- | --- |
+| DueControlOccurrencesGenerated | DueControlOccurrencesGenerated | business | bdgrz.operations.due-control-occurrences-generated | 1 | 13 | The recurring control occurrences falling due in a Type II period through a stated date were selected as one complete set for a generation key, so each is generated once. |
+| ObservationPeriodAmended | ObservationPeriodAmended | business | bdgrz.operations.observation-period-amended | 1 | 11 | The observation period of a Type II examination was amended by a named member under an authorized calendar, recorded as the period's next revision. |
+| ObservationPeriodCloseFrozen | ObservationPeriodCloseFrozen | business | bdgrz.auditpopulations.observation-period-close-frozen | 1 | 11 | The close of a Type II observation period was frozen against the exact admitted calendar intent, fixing the end of the period under examination. |
+| ObservationPeriodCloseProposed | ObservationPeriodCloseProposed | business | bdgrz.auditpopulations.observation-period-close-proposed | 4 | [Placeholder: schema absent] | Closing a Type II observation period was proposed by a named member after validation of the period, awaiting approval. |
+| ObservationPeriodStarted | ObservationPeriodStarted | business | bdgrz.operations.observation-period-started | 1 | 11 | A Type II observation period was started by a named member under an authorized calendar, beginning the window over which controls are examined. |
+| TypeIIPeriodAmendmentAccepted | TypeIIPeriodAmendmentAccepted | business | bdgrz.type-ii-period.type-ii-period-amendment-accepted | 1 | 8 | The root native acceptance of a period amendment. Both the old and the new range are frozen in the intent; the range of the period only changes once ObservationPeriodAmended follows. |
+| TypeIIPeriodAmendmentCanceled | TypeIIPeriodAmendmentCanceled | business | bdgrz.type-ii-period.type-ii-period-amendment-canceled | 1 | 8 | A pending amendment ended before it applied, by explicit cancellation or by a proven calendar conflict. The fact is the local receiver fence: a delayed apply sees it and does nothing, and only then is the pending calendar reservation released. |
+| TypeIIPeriodCloseAmended | TypeIIPeriodCloseAmended | business | bdgrz.auditpopulations.type-i-i-period-close-amended | 3 | [Placeholder: schema absent] | The recorded close of a Type II period was amended by a named member under the exact admitted calendar intent, replacing the prior close. |
+| TypeIIPeriodCloseApproved | TypeIIPeriodCloseApproved | business | bdgrz.auditpopulations.type-i-i-period-close-approved | 3 | [Placeholder: schema absent] | The proposed close of a Type II period was approved by a named member, closing the observation period. |
+| TypeIIPeriodOpeningAccepted | TypeIIPeriodOpeningAccepted | business | bdgrz.type-ii-period.type-ii-period-opening-accepted | 1 | 8 | The root native acceptance of a period opening. The complete opening intent is persisted here before the calendar is touched; the period only exists once ObservationPeriodStarted follows. |
+| TypeIIPeriodOpeningRejected | TypeIIPeriodOpeningRejected | business | bdgrz.type-ii-period.type-ii-period-opening-rejected | 1 | 8 | A pending opening was rejected because the calendar proved its range conflicts. The rejection fences a delayed apply; the same period identity is never reopened with changed intent. |
 
 ## Event details
 
@@ -22,6 +22,9 @@ Canonical events: **11**. Complete canonical event and available schema records:
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | DueControlOccurrencesGenerated |
+| Selected source event name | DueControlOccurrencesGenerated |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:DueControlOccurrencesGenerated |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | DueControlOccurrencesGenerated |
@@ -31,7 +34,8 @@ Canonical events: **11**. Complete canonical event and available schema records:
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | The recurring control occurrences falling due in a Type II period through a stated date were selected as one complete set for a generation key, so each is generated once. |
+| Target meaning | The recurring control occurrences falling due in a Type II period through a stated date were selected as one complete set for a generation key, so each is generated once. |
+| Selected source meaning | The recurring control occurrences falling due in a Type II period through a stated date were selected as one complete set for a generation key, so each is generated once. |
 | Meaning source | authored 2026-10-29 from src/Compliance.Common/Features/Operations/Events/DueControlOccurrencesGenerated.cs |
 
 #### Selected schema and implementation evidence
@@ -86,12 +90,15 @@ Canonical events: **11**. Complete canonical event and available schema records:
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T040](../reactors/control-occurrence-fan-out-reactor.md#t040) | physical root, logical prerequisite | TypeIIPeriod | MaterializeControlOccurrence | ControlOccurrence |
+| [T040](../reactors/control-occurrence-fan-out-reactor.md#t040) | physical root, logical prerequisite | TypeIIPeriod | OpenDueControlOccurrence | ControlOccurrence |
 
 ### ObservationPeriodAmended
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | ObservationPeriodAmended |
+| Selected source event name | ObservationPeriodAmended |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:ObservationPeriodAmended |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | ObservationPeriodAmended |
@@ -101,7 +108,8 @@ Canonical events: **11**. Complete canonical event and available schema records:
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | The observation period of a Type II examination was amended by a named member under an authorized calendar, recorded as the period's next revision. |
+| Target meaning | The observation period of a Type II examination was amended by a named member under an authorized calendar, recorded as the period's next revision. |
+| Selected source meaning | The observation period of a Type II examination was amended by a named member under an authorized calendar, recorded as the period's next revision. |
 | Meaning source | authored 2026-10-29 from src/Compliance.Common/Features/Operations/Events/ObservationPeriodAmended.cs |
 
 #### Selected schema and implementation evidence
@@ -186,12 +194,15 @@ TypeIIRangeIntent
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
 | [T054](../reactors/type-ii-range-reactor.md#t054) | emitted semantic fact | TypeIIObservationCalendar | ApplyTypeIIPeriodRange | TypeIIPeriod |
-| [T055](../reactors/type-ii-range-reactor.md#t055) | logical prerequisite | TypeIIPeriod | SettleTypeIIPeriodRange | TypeIIObservationCalendar |
+| [T055](../reactors/type-ii-range-reactor.md#t055) | logical prerequisite | TypeIIPeriod | CloseTypeIIPeriodRangeReservation | TypeIIObservationCalendar |
 
 ### ObservationPeriodCloseFrozen
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | ObservationPeriodCloseFrozen |
+| Selected source event name | ObservationPeriodCloseFrozen |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:ObservationPeriodCloseFrozen |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | ObservationPeriodCloseFrozen |
@@ -201,7 +212,8 @@ TypeIIRangeIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | The close of a Type II observation period was frozen against the exact admitted calendar intent, fixing the end of the period under examination. |
+| Target meaning | The close of a Type II observation period was frozen against the exact admitted calendar intent, fixing the end of the period under examination. |
+| Selected source meaning | The close of a Type II observation period was frozen against the exact admitted calendar intent, fixing the end of the period under examination. |
 | Meaning source | authored 2026-10-29 from src/Compliance.Common/Features/AuditPopulations/Events/ObservationPeriodCloseFrozen.cs |
 
 #### Selected schema and implementation evidence
@@ -254,12 +266,15 @@ TypeIIRangeIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T055](../reactors/type-ii-range-reactor.md#t055) | physical root, logical prerequisite | TypeIIPeriod | SettleTypeIIPeriodRange | TypeIIObservationCalendar |
+| [T055](../reactors/type-ii-range-reactor.md#t055) | physical root, logical prerequisite | TypeIIPeriod | CloseTypeIIPeriodRangeReservation | TypeIIObservationCalendar |
 
 ### ObservationPeriodCloseProposed
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | ObservationPeriodCloseProposed |
+| Selected source event name | ObservationPeriodCloseProposed |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:ObservationPeriodCloseProposed |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | ObservationPeriodCloseProposed |
@@ -269,7 +284,8 @@ TypeIIRangeIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | Closing a Type II observation period was proposed by a named member after validation of the period, awaiting approval. |
+| Target meaning | Closing a Type II observation period was proposed by a named member after validation of the period, awaiting approval. |
+| Selected source meaning | Closing a Type II observation period was proposed by a named member after validation of the period, awaiting approval. |
 | Meaning source | authored 2026-10-29 from src/Compliance.Common/Features/AuditPopulations/Events/ObservationPeriodCloseProposed.cs |
 
 #### Schema
@@ -290,6 +306,9 @@ TypeIIRangeIntent
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | ObservationPeriodStarted |
+| Selected source event name | ObservationPeriodStarted |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:ObservationPeriodStarted |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | ObservationPeriodStarted |
@@ -299,7 +318,8 @@ TypeIIRangeIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | A Type II observation period was started by a named member under an authorized calendar, beginning the window over which controls are examined. |
+| Target meaning | A Type II observation period was started by a named member under an authorized calendar, beginning the window over which controls are examined. |
+| Selected source meaning | A Type II observation period was started by a named member under an authorized calendar, beginning the window over which controls are examined. |
 | Meaning source | authored 2026-10-29 from src/Compliance.Common/Features/Operations/Events/ObservationPeriodStarted.cs |
 
 #### Selected schema and implementation evidence
@@ -384,12 +404,15 @@ TypeIIRangeIntent
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
 | [T054](../reactors/type-ii-range-reactor.md#t054) | emitted semantic fact | TypeIIObservationCalendar | ApplyTypeIIPeriodRange | TypeIIPeriod |
-| [T055](../reactors/type-ii-range-reactor.md#t055) | logical prerequisite | TypeIIPeriod | SettleTypeIIPeriodRange | TypeIIObservationCalendar |
+| [T055](../reactors/type-ii-range-reactor.md#t055) | logical prerequisite | TypeIIPeriod | CloseTypeIIPeriodRangeReservation | TypeIIObservationCalendar |
 
 ### TypeIIPeriodAmendmentAccepted
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | TypeIIPeriodAmendmentAccepted |
+| Selected source event name | TypeIIPeriodAmendmentAccepted |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:TypeIIPeriodAmendmentAccepted |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | TypeIIPeriodAmendmentAccepted |
@@ -399,7 +422,8 @@ TypeIIRangeIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | `{"discriminator":"bdgrz.type-i-i-period.type-i-i-period-amendment-accepted","version":1}` |
-| Meaning | The root native acceptance of a period amendment. Both the old and the new range are frozen in the intent; the range of the period only changes once ObservationPeriodAmended follows. |
+| Target meaning | The root native acceptance of a period amendment. Both the old and the new range are frozen in the intent; the range of the period only changes once ObservationPeriodAmended follows. |
+| Selected source meaning | The root native acceptance of a period amendment. Both the old and the new range are frozen in the intent; the range of the period only changes once ObservationPeriodAmended follows. |
 | Meaning source | record summary in src/Compliance.Common/Features/Operations/Events/TypeIIPeriodAmendmentAccepted.cs |
 
 #### Selected schema and implementation evidence
@@ -481,7 +505,7 @@ TypeIIRangeIntent
 | --- | --- | --- | --- | --- |
 | [T053](../reactors/type-ii-range-reactor.md#t053) | physical root, logical prerequisite | TypeIIPeriod | AcquireTypeIIPeriodRange | TypeIIObservationCalendar |
 | [T054](../reactors/type-ii-range-reactor.md#t054) | physical root | TypeIIObservationCalendar | ApplyTypeIIPeriodRange | TypeIIPeriod |
-| [T055](../reactors/type-ii-range-reactor.md#t055) | physical root | TypeIIPeriod | SettleTypeIIPeriodRange | TypeIIObservationCalendar |
+| [T055](../reactors/type-ii-range-reactor.md#t055) | physical root | TypeIIPeriod | CloseTypeIIPeriodRangeReservation | TypeIIObservationCalendar |
 | [A018](../reactors/unassigned-architecture-rows.md#a018) | physical root, logical prerequisite | TypeIIPeriod | RejectTypeIIPeriodOpening | TypeIIPeriod |
 | [A019](../reactors/unassigned-architecture-rows.md#a019) | physical root, logical prerequisite | TypeIIPeriod | RejectTypeIIPeriodAmendment | TypeIIPeriod |
 | [A020](../reactors/unassigned-architecture-rows.md#a020) | physical root, logical prerequisite | TypeIIPeriod | CancelTypeIIPeriodAmendment | TypeIIPeriod |
@@ -490,6 +514,9 @@ TypeIIRangeIntent
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | TypeIIPeriodAmendmentCanceled |
+| Selected source event name | TypeIIPeriodAmendmentCanceled |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:TypeIIPeriodAmendmentCanceled |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | TypeIIPeriodAmendmentCanceled |
@@ -499,7 +526,8 @@ TypeIIRangeIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | `{"discriminator":"bdgrz.type-i-i-period.type-i-i-period-amendment-canceled","version":1}` |
-| Meaning | A pending amendment ended before it applied, by explicit cancellation or by a proven calendar conflict. The fact is the local receiver fence: a delayed apply sees it and does nothing, and only then is the pending calendar reservation released. |
+| Target meaning | A pending amendment ended before it applied, by explicit cancellation or by a proven calendar conflict. The fact is the local receiver fence: a delayed apply sees it and does nothing, and only then is the pending calendar reservation released. |
+| Selected source meaning | A pending amendment ended before it applied, by explicit cancellation or by a proven calendar conflict. The fact is the local receiver fence: a delayed apply sees it and does nothing, and only then is the pending calendar reservation released. |
 | Meaning source | record summary in src/Compliance.Common/Features/Operations/Events/TypeIIPeriodAmendmentCanceled.cs |
 
 #### Selected schema and implementation evidence
@@ -579,7 +607,7 @@ TypeIIRangeIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T055](../reactors/type-ii-range-reactor.md#t055) | physical root, logical prerequisite | TypeIIPeriod | SettleTypeIIPeriodRange | TypeIIObservationCalendar |
+| [T055](../reactors/type-ii-range-reactor.md#t055) | physical root, logical prerequisite | TypeIIPeriod | CloseTypeIIPeriodRangeReservation | TypeIIObservationCalendar |
 | [A019](../reactors/unassigned-architecture-rows.md#a019) | emitted semantic fact | TypeIIPeriod | RejectTypeIIPeriodAmendment | TypeIIPeriod |
 | [A020](../reactors/unassigned-architecture-rows.md#a020) | emitted semantic fact | TypeIIPeriod | CancelTypeIIPeriodAmendment | TypeIIPeriod |
 
@@ -587,6 +615,9 @@ TypeIIRangeIntent
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | TypeIIPeriodCloseAmended |
+| Selected source event name | TypeIIPeriodCloseAmended |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:TypeIIPeriodCloseAmended |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | TypeIIPeriodCloseAmended |
@@ -596,7 +627,8 @@ TypeIIRangeIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | The recorded close of a Type II period was amended by a named member under the exact admitted calendar intent, replacing the prior close. |
+| Target meaning | The recorded close of a Type II period was amended by a named member under the exact admitted calendar intent, replacing the prior close. |
+| Selected source meaning | The recorded close of a Type II period was amended by a named member under the exact admitted calendar intent, replacing the prior close. |
 | Meaning source | authored 2026-10-29 from src/Compliance.Common/Features/AuditPopulations/Events/TypeIIPeriodCloseAmended.cs |
 
 #### Schema
@@ -617,6 +649,9 @@ TypeIIRangeIntent
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | TypeIIPeriodCloseApproved |
+| Selected source event name | TypeIIPeriodCloseApproved |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:TypeIIPeriodCloseApproved |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | TypeIIPeriodCloseApproved |
@@ -626,7 +661,8 @@ TypeIIRangeIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | The proposed close of a Type II period was approved by a named member, closing the observation period. |
+| Target meaning | The proposed close of a Type II period was approved by a named member, closing the observation period. |
+| Selected source meaning | The proposed close of a Type II period was approved by a named member, closing the observation period. |
 | Meaning source | authored 2026-10-29 from src/Compliance.Common/Features/AuditPopulations/Events/TypeIIPeriodCloseApproved.cs |
 
 #### Schema
@@ -647,6 +683,9 @@ TypeIIRangeIntent
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | TypeIIPeriodOpeningAccepted |
+| Selected source event name | TypeIIPeriodOpeningAccepted |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:TypeIIPeriodOpeningAccepted |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | TypeIIPeriodOpeningAccepted |
@@ -656,7 +695,8 @@ TypeIIRangeIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | `{"discriminator":"bdgrz.type-i-i-period.type-i-i-period-opening-accepted","version":1}` |
-| Meaning | The root native acceptance of a period opening. The complete opening intent is persisted here before the calendar is touched; the period only exists once ObservationPeriodStarted follows. |
+| Target meaning | The root native acceptance of a period opening. The complete opening intent is persisted here before the calendar is touched; the period only exists once ObservationPeriodStarted follows. |
+| Selected source meaning | The root native acceptance of a period opening. The complete opening intent is persisted here before the calendar is touched; the period only exists once ObservationPeriodStarted follows. |
 | Meaning source | record summary in src/Compliance.Common/Features/Operations/Events/TypeIIPeriodOpeningAccepted.cs |
 
 #### Selected schema and implementation evidence
@@ -738,7 +778,7 @@ TypeIIRangeIntent
 | --- | --- | --- | --- | --- |
 | [T053](../reactors/type-ii-range-reactor.md#t053) | physical root, logical prerequisite | TypeIIPeriod | AcquireTypeIIPeriodRange | TypeIIObservationCalendar |
 | [T054](../reactors/type-ii-range-reactor.md#t054) | physical root | TypeIIObservationCalendar | ApplyTypeIIPeriodRange | TypeIIPeriod |
-| [T055](../reactors/type-ii-range-reactor.md#t055) | physical root | TypeIIPeriod | SettleTypeIIPeriodRange | TypeIIObservationCalendar |
+| [T055](../reactors/type-ii-range-reactor.md#t055) | physical root | TypeIIPeriod | CloseTypeIIPeriodRangeReservation | TypeIIObservationCalendar |
 | [A018](../reactors/unassigned-architecture-rows.md#a018) | physical root, logical prerequisite | TypeIIPeriod | RejectTypeIIPeriodOpening | TypeIIPeriod |
 | [A019](../reactors/unassigned-architecture-rows.md#a019) | physical root, logical prerequisite | TypeIIPeriod | RejectTypeIIPeriodAmendment | TypeIIPeriod |
 | [A020](../reactors/unassigned-architecture-rows.md#a020) | physical root, logical prerequisite | TypeIIPeriod | CancelTypeIIPeriodAmendment | TypeIIPeriod |
@@ -747,6 +787,9 @@ TypeIIRangeIntent
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | TypeIIPeriodOpeningRejected |
+| Selected source event name | TypeIIPeriodOpeningRejected |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:TypeIIPeriodOpeningRejected |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | TypeIIPeriodOpeningRejected |
@@ -756,7 +799,8 @@ TypeIIRangeIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | `{"discriminator":"bdgrz.type-i-i-period.type-i-i-period-opening-rejected","version":1}` |
-| Meaning | A pending opening was rejected because the calendar proved its range conflicts. The rejection fences a delayed apply; the same period identity is never reopened with changed intent. |
+| Target meaning | A pending opening was rejected because the calendar proved its range conflicts. The rejection fences a delayed apply; the same period identity is never reopened with changed intent. |
+| Selected source meaning | A pending opening was rejected because the calendar proved its range conflicts. The rejection fences a delayed apply; the same period identity is never reopened with changed intent. |
 | Meaning source | record summary in src/Compliance.Common/Features/Operations/Events/TypeIIPeriodOpeningRejected.cs |
 
 #### Selected schema and implementation evidence
@@ -836,7 +880,7 @@ TypeIIRangeIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T055](../reactors/type-ii-range-reactor.md#t055) | physical root, logical prerequisite | TypeIIPeriod | SettleTypeIIPeriodRange | TypeIIObservationCalendar |
+| [T055](../reactors/type-ii-range-reactor.md#t055) | physical root, logical prerequisite | TypeIIPeriod | CloseTypeIIPeriodRangeReservation | TypeIIObservationCalendar |
 | [A018](../reactors/unassigned-architecture-rows.md#a018) | emitted semantic fact | TypeIIPeriod | RejectTypeIIPeriodOpening | TypeIIPeriod |
 
 

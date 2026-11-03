@@ -23,7 +23,11 @@
         "meaning": "A named member accepted a risk as it currently stands without further treatment.",
         "meaningSource": "authored 2026-10-29 from src/Compliance.Common/Features/Risks/Events/RiskAccepted.cs"
       },
-      "schema": null
+      "schema": null,
+      "sourceName": "RiskAccepted",
+      "targetName": "RiskAccepted",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "A named member accepted a risk as it currently stands without further treatment."
     },
     {
       "canonical": {
@@ -47,7 +51,11 @@
         "meaning": "An assessment of a risk's likelihood and impact was recorded by a named member as the risk's current assessment.",
         "meaningSource": "authored 2026-10-29 from src/Compliance.Common/Features/Risks/Events/RiskAssessmentRecorded.cs"
       },
-      "schema": null
+      "schema": null,
+      "sourceName": "RiskAssessmentRecorded",
+      "targetName": "RiskAssessmentRecorded",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "An assessment of a risk's likelihood and impact was recorded by a named member as the risk's current assessment."
     },
     {
       "canonical": {
@@ -71,7 +79,11 @@
         "meaning": "A treatment approach was chosen for a risk by a named member, recorded against the risk's current assessment.",
         "meaningSource": "authored 2026-10-29 from src/Compliance.Common/Features/Risks/Events/RiskTreatmentChosen.cs"
       },
-      "schema": null
+      "schema": null,
+      "sourceName": "RiskTreatmentChosen",
+      "targetName": "RiskTreatmentChosen",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "A treatment approach was chosen for a risk by a named member, recorded against the risk's current assessment."
     }
   ]
 }

@@ -82,7 +82,11 @@
         "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "ReadinessGapAnnotated",
+      "targetName": "ReadinessGapAnnotated",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "Advisor feedback was recorded on a gap as the root native fact of its operation. Revision is the gap plan revision at the annotation, which an annotation never advances."
     },
     {
       "canonical": {
@@ -242,7 +246,11 @@
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "resolvedIntentSchema": "SourceUseAuthorizationIntent",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "ReadinessGapPlanReadinessDecisionUseAuthorized",
+      "targetName": "ReadinessGapPlanReadinessDecisionAuthorized",
+      "nameDecision": "Authorization is already the completed fact; Use adds no stakeholder meaning.",
+      "targetMeaning": "The exact gap plan is held for a readiness decision. The use does not advance the gap plan revision: Revision is the held revision, and Generation is the adoption generation the decision seals."
     },
     {
       "canonical": {
@@ -402,7 +410,11 @@
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "resolvedIntentSchema": "SourceUseAuthorizationIntent",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "ReadinessGapPlanReadinessDecisionUseSettled",
+      "targetName": "ReadinessGapPlanReadinessDecisionAuthorizationClosed",
+      "nameDecision": "The exact authorization ended; the recorded outcome still distinguishes use, cancellation, or a late fence.",
+      "targetMeaning": "A readiness decision use of a gap plan ended: released after the irreversible decision, or cleared after the decision was canceled. A settlement before any grant fences the key so a delayed acquisition cannot recreate the authority. The disposition is recorded in the settlement intent."
     },
     {
       "canonical": {
@@ -485,7 +497,11 @@
         "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "ReadinessGapPlanned",
+      "targetName": "ReadinessGapPlanned",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "A gap plan was recorded as the root native fact of its operation. Revision is the gap plan revision after this plan and PlanContent the complete ReadinessGapPlanView."
     }
   ]
 }

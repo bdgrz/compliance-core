@@ -25,8 +25,8 @@
 | --- | --- | --- |
 | [RecordAssuranceReport](../commands/provider-assurance-report.md#recordassurancereport) | http | ReportId |
 | [ReviseAssuranceReport](../commands/provider-assurance-report.md#reviseassurancereport) | http | CommandId |
-| [AuthorizeProviderAssuranceReportProviderReviewUse](../commands/provider-assurance-report.md#authorizeproviderassurancereportproviderreviewuse) | receiver | CommandId |
-| [SettleProviderAssuranceReportProviderReviewUse](../commands/provider-assurance-report.md#settleproviderassurancereportproviderreviewuse) | receiver | CommandId |
+| [AuthorizeProviderAssuranceReportProviderReview](../commands/provider-assurance-report.md#authorizeproviderassurancereportproviderreview) | receiver | CommandId |
+| [CloseProviderAssuranceReportProviderReviewAuthorization](../commands/provider-assurance-report.md#closeproviderassurancereportproviderreviewauthorization) | receiver | CommandId |
 
 ## Events
 
@@ -34,15 +34,15 @@
 | --- | --- | --- |
 | [AssuranceReportRecorded](../events/provider-assurance-report.md#assurancereportrecorded) | bdgrz.provider.assurance_report.recorded | 1 |
 | [AssuranceReportRevised](../events/provider-assurance-report.md#assurancereportrevised) | bdgrz.provider.assurance_report.revised | 1 |
-| [ProviderAssuranceReportProviderReviewUseAuthorized](../events/provider-assurance-report.md#providerassurancereportproviderreviewuseauthorized) | bdgrz.provider-assurance-report.provider-assurance-report-provider-review-use-authorized | 1 |
-| [ProviderAssuranceReportProviderReviewUseSettled](../events/provider-assurance-report.md#providerassurancereportproviderreviewusesettled) | bdgrz.provider-assurance-report.provider-assurance-report-provider-review-use-settled | 1 |
+| [ProviderAssuranceReportProviderReviewAuthorized](../events/provider-assurance-report.md#providerassurancereportproviderreviewauthorized) | bdgrz.provider-assurance-report.provider-assurance-report-provider-review-use-authorized | 1 |
+| [ProviderAssuranceReportProviderReviewAuthorizationClosed](../events/provider-assurance-report.md#providerassurancereportproviderreviewauthorizationclosed) | bdgrz.provider-assurance-report.provider-assurance-report-provider-review-use-settled | 1 |
 
 ## Cross-owner flows
 
 | Row | Kind | Source owner | Target owner | Command |
 | --- | --- | --- | --- | --- |
-| [T069](../reactors/provider-review-reactor.md#t069) | reaction_or_regular_process_stage | ProviderAssuranceReview | ProviderAssuranceReport | AuthorizeProviderAssuranceReportProviderReviewUse |
-| [T070](../reactors/provider-review-reactor.md#t070) | reaction_or_regular_process_stage | ProviderAssuranceReview | ProviderAssuranceReport | SettleProviderAssuranceReportProviderReviewUse |
+| [T069](../reactors/provider-review-reactor.md#t069) | reaction_or_regular_process_stage | ProviderAssuranceReview | ProviderAssuranceReport | AuthorizeProviderAssuranceReportProviderReview |
+| [T070](../reactors/provider-review-reactor.md#t070) | reaction_or_regular_process_stage | ProviderAssuranceReview | ProviderAssuranceReport | CloseProviderAssuranceReportProviderReviewAuthorization |
 
 ## Product rules
 

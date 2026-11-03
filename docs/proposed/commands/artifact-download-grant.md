@@ -2,10 +2,10 @@
 
 Selected command contracts: **2**. Complete selected contracts and companion source evidence: [owner command JSON](../data/commands/artifact-download-grant.json).
 
-| Command | Kind | Identity | Fields | HTTP routes |
-| --- | --- | --- | --- | --- |
-| CancelProtectedArtifactDownloadGrant | abort | CommandId | 5 | [Placeholder: route/channel not recorded] |
-| IssueProtectedArtifactDownloadGrant | receiver | CommandId | 10 | [Placeholder: value not recorded] |
+| Target command | Selected source name | Kind | Identity | Fields | HTTP routes |
+| --- | --- | --- | --- | --- | --- |
+| CancelProtectedArtifactDownloadGrant | CancelProtectedArtifactDownloadGrant | abort | CommandId | 5 | [Placeholder: route/channel not recorded] |
+| IssueProtectedArtifactDownloadGrant | IssueProtectedArtifactDownloadGrant | receiver | CommandId | 10 | [Placeholder: value not recorded] |
 
 ## Selected command details
 
@@ -13,13 +13,16 @@ Selected command contracts: **2**. Complete selected contracts and companion sou
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | CancelProtectedArtifactDownloadGrant |
+| Selected source command name | CancelProtectedArtifactDownloadGrant |
+| Name decision | The selected source name is retained. |
 | Owner | ArtifactDownloadGrant |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | abort |
 | Logical identity | CommandId; Uuid; required=true; abort receiver identity bound to the exact admitted operation and generation: exact redelivery resolves the original rejected result; an abort after a terminal outcome is a no-op |
 | Entry point | [Placeholder: value not recorded] |
 | MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | [Placeholder: value not recorded] |
+| Selected semantic events | None listed |
 | Protocols | [Placeholder: value not recorded] |
 | Policy preservation | [Placeholder: value not recorded] |
 | Contract changes | [Placeholder: value not recorded] |
@@ -58,13 +61,16 @@ Required tests: [Placeholder: required tests not recorded]
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | IssueProtectedArtifactDownloadGrant |
+| Selected source command name | IssueProtectedArtifactDownloadGrant |
+| Name decision | The selected source name is retained. |
 | Owner | ArtifactDownloadGrant |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; reactor; deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result |
 | Entry point | [Placeholder: value not recorded] |
 | MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | [Placeholder: value not recorded] |
+| Selected semantic events | None listed |
 | Protocols | [Placeholder: value not recorded] |
 | Policy preservation | [Placeholder: value not recorded] |
 | Contract changes | [Placeholder: value not recorded] |

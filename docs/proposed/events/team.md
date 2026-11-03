@@ -2,10 +2,10 @@
 
 Canonical events: **2**. Complete canonical event and available schema records: [owner event JSON](../data/events/team.json).
 
-| Event | Kind | Adopted discriminator | Version | Schema fields | Meaning |
-| --- | --- | --- | --- | --- | --- |
-| TeamDefined | business | bdgrz.rbac.team.defined | 1 | [Placeholder: schema absent] | A team was defined. The fact is the native acceptance of the logical operation that created it. |
-| TeamDeleted | business | bdgrz.rbac.team.deleted | 1 | [Placeholder: schema absent] | A team was deleted. The fact is the native acceptance of the deletion and the source of team cleanup. |
+| Target event | Selected source name | Kind | Adopted discriminator | Version | Schema fields | Meaning |
+| --- | --- | --- | --- | --- | --- | --- |
+| TeamDefined | TeamDefined | business | bdgrz.rbac.team.defined | 1 | [Placeholder: schema absent] | A team was defined. The fact is the native acceptance of the logical operation that created it. |
+| TeamDeleted | TeamDeleted | business | bdgrz.rbac.team.deleted | 1 | [Placeholder: schema absent] | A team was deleted. The fact is the native acceptance of the deletion and the source of team cleanup. |
 
 ## Event details
 
@@ -13,6 +13,9 @@ Canonical events: **2**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | TeamDefined |
+| Selected source event name | TeamDefined |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:TeamDefined |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | TeamDefined |
@@ -22,7 +25,8 @@ Canonical events: **2**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | A team was defined. The fact is the native acceptance of the logical operation that created it. |
+| Target meaning | A team was defined. The fact is the native acceptance of the logical operation that created it. |
+| Selected source meaning | A team was defined. The fact is the native acceptance of the logical operation that created it. |
 | Meaning source | record summary in src/Compliance.Common/Features/AccessControl/Events/TeamDefined.cs |
 
 #### Schema
@@ -45,6 +49,9 @@ Canonical events: **2**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | TeamDeleted |
+| Selected source event name | TeamDeleted |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:TeamDeleted |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | TeamDeleted |
@@ -54,7 +61,8 @@ Canonical events: **2**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | A team was deleted. The fact is the native acceptance of the deletion and the source of team cleanup. |
+| Target meaning | A team was deleted. The fact is the native acceptance of the deletion and the source of team cleanup. |
+| Selected source meaning | A team was deleted. The fact is the native acceptance of the deletion and the source of team cleanup. |
 | Meaning source | record summary in src/Compliance.Common/Features/AccessControl/Events/TeamDeleted.cs |
 
 #### Schema

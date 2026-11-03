@@ -1,5 +1,7 @@
 {
-  "root": "PolicyCampaignClosureReactor",
+  "sourceRoot": "PolicyCampaignClosureReactor",
+  "targetRoot": "PolicyCampaignClosureReactor",
+  "businessReason": "Close each participant's policy work only after the campaign has its exact terminal result.",
   "rows": [
     {
       "id": "T038",

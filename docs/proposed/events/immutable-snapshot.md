@@ -2,16 +2,19 @@
 
 Canonical events: **1**. Complete canonical event and available schema records: [owner event JSON](../data/events/immutable-snapshot.json).
 
-| Event | Kind | Adopted discriminator | Version | Schema fields | Meaning |
-| --- | --- | --- | --- | --- | --- |
-| SnapshotFrozen | business | bdgrz.snapshot.frozen | 1 | [Placeholder: schema absent] | A program snapshot of a stated kind was frozen with its complete source manifest and content hash, optionally amending an earlier snapshot, and can no longer change. |
+| Target event | Selected source name | Kind | Adopted discriminator | Version | Schema fields | Meaning |
+| --- | --- | --- | --- | --- | --- | --- |
+| SnapshotFinalized | SnapshotFrozen | business | bdgrz.snapshot.frozen | 1 | [Placeholder: schema absent] | A program snapshot of a stated kind was frozen with its complete source manifest and content hash, optionally amending an earlier snapshot, and can no longer change. |
 
 ## Event details
 
-### SnapshotFrozen
+### SnapshotFinalized
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | SnapshotFinalized |
+| Selected source event name | SnapshotFrozen |
+| Name decision | Names the complete, immutable snapshot after it can no longer change. |
 | Canonical semantic key | event:SnapshotFrozen |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | SnapshotFrozen |
@@ -21,7 +24,8 @@ Canonical events: **1**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | A program snapshot of a stated kind was frozen with its complete source manifest and content hash, optionally amending an earlier snapshot, and can no longer change. |
+| Target meaning | A program snapshot of a stated kind was frozen with its complete source manifest and content hash, optionally amending an earlier snapshot, and can no longer change. |
+| Selected source meaning | A program snapshot of a stated kind was frozen with its complete source manifest and content hash, optionally amending an earlier snapshot, and can no longer change. |
 | Meaning source | authored 2026-10-29 from src/Compliance.Common/Features/Snapshots/Events/SnapshotFrozen.cs |
 
 #### Schema

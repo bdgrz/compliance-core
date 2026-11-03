@@ -1,5 +1,7 @@
 {
-  "root": "ClientExportDeliveryReactor",
+  "sourceRoot": "ClientExportDeliveryReactor",
+  "targetRoot": "KeepEngagementEvidenceProtectedAfterDeliveryReactor",
+  "businessReason": "Record package delivery on the engagement hold so evidence remains protected for the required period.",
   "rows": [
     {
       "id": "X007",

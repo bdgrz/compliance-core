@@ -1,5 +1,7 @@
 {
-  "root": "TypeIIRangeReleaseReactor",
+  "sourceRoot": "TypeIIRangeReleaseReactor",
+  "targetRoot": "ReleaseTypeIIPeriodDateReservationReactor",
+  "businessReason": "Release the exact old or closed observation dates after a period ends or its change is canceled.",
   "rows": [
     {
       "id": "T055",

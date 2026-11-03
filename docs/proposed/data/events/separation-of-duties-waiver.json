@@ -23,7 +23,11 @@
         "meaning": "A separation-of-duties waiver was approved by an Org Admin other than its beneficiary within its approval window, allowing the beneficiary to act in the waived scope.",
         "meaningSource": "authored 2026-10-29 from src/Compliance.Common/Features/AccessControl/Events/SeparationOfDutiesWaiverApproved.cs"
       },
-      "schema": null
+      "schema": null,
+      "sourceName": "SeparationOfDutiesWaiverApproved",
+      "targetName": "SeparationOfDutiesWaiverApproved",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "A separation-of-duties waiver was approved by an Org Admin other than its beneficiary within its approval window, allowing the beneficiary to act in the waived scope."
     },
     {
       "canonical": {
@@ -47,7 +51,11 @@
         "meaning": "A separation-of-duties waiver was requested for a scoped record, naming its beneficiary, requester, rationale and expiry, and awaits approval by a different Org Admin.",
         "meaningSource": "authored 2026-10-29 from src/Compliance.Common/Features/AccessControl/Events/SeparationOfDutiesWaiverRecorded.cs"
       },
-      "schema": null
+      "schema": null,
+      "sourceName": "SeparationOfDutiesWaiverRecorded",
+      "targetName": "SeparationOfDutiesWaiverRecorded",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "A separation-of-duties waiver was requested for a scoped record, naming its beneficiary, requester, rationale and expiry, and awaits approval by a different Org Admin."
     }
   ]
 }

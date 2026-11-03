@@ -2,19 +2,19 @@
 
 Selected command contracts: **11**. Complete selected contracts and companion source evidence: [owner command JSON](../data/commands/auditor-request.json).
 
-| Command | Kind | Identity | Fields | HTTP routes |
-| --- | --- | --- | --- | --- |
-| AmendSampleSelection | http | SelectionId | 14 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/auditor-requests/{auditor_request_id}/sample-selections/amend-sample-selection/{selection_id} [ApiUser + existing request-scope authorizers] |
-| AssignAuditorRequest | http | CommandId | 8 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/auditor-requests/{request_id}/assign-auditor-request/{command_id} [ApiUser + existing request-scope authorizers] |
-| CreateAuditResponseDraft | http | ResponseId | 7 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/auditor-requests/{request_id}/create-audit-response-draft/{response_id} [ApiUser + existing request-scope authorizers] |
-| RecordAuditorRequest | http | RequestId | 11 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/auditor-requests/{request_id}/record-auditor-request [ApiUser + existing request-scope authorizers] |
-| RecordAuditorRequestComment | http | CommentId | 7 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/auditor-requests/{request_id}/record-auditor-request-comment/{comment_id} [ApiUser + existing request-scope authorizers] |
-| RecordSampleSelection | http | SelectionId | 12 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/auditor-requests/{auditor_request_id}/sample-selections/record-sample-selection/{selection_id} [ApiUser + existing request-scope authorizers] |
-| ReopenAuditorRequest | http | CommandId | 6 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/auditor-requests/{request_id}/reopen-auditor-request/{command_id} [ApiUser + existing request-scope authorizers] |
-| ResolveAuditorRequest | http | CommandId | 7 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/auditor-requests/{request_id}/resolve-auditor-request/{command_id} [ApiUser + existing request-scope authorizers] |
-| ReviseAuditorRequest | http | CommandId | 10 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/auditor-requests/{request_id}/revise-auditor-request/{command_id} [ApiUser + existing request-scope authorizers] |
-| AbortAuditorRequestResolution | abort | CommandId | 6 | [Placeholder: route/channel not recorded] |
-| CompleteAuditorRequestResolution | receiver | CommandId | 9 | [Placeholder: value not recorded] |
+| Target command | Selected source name | Kind | Identity | Fields | HTTP routes |
+| --- | --- | --- | --- | --- | --- |
+| AmendSampleSelection | AmendSampleSelection | http | SelectionId | 14 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/auditor-requests/{auditor_request_id}/sample-selections/amend-sample-selection/{selection_id} [ApiUser + existing request-scope authorizers] |
+| AssignAuditorRequest | AssignAuditorRequest | http | CommandId | 8 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/auditor-requests/{request_id}/assign-auditor-request/{command_id} [ApiUser + existing request-scope authorizers] |
+| CreateAuditResponseDraft | CreateAuditResponseDraft | http | ResponseId | 7 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/auditor-requests/{request_id}/create-audit-response-draft/{response_id} [ApiUser + existing request-scope authorizers] |
+| RecordAuditorRequest | RecordAuditorRequest | http | RequestId | 11 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/auditor-requests/{request_id}/record-auditor-request [ApiUser + existing request-scope authorizers] |
+| RecordAuditorRequestComment | RecordAuditorRequestComment | http | CommentId | 7 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/auditor-requests/{request_id}/record-auditor-request-comment/{comment_id} [ApiUser + existing request-scope authorizers] |
+| RecordSampleSelection | RecordSampleSelection | http | SelectionId | 12 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/auditor-requests/{auditor_request_id}/sample-selections/record-sample-selection/{selection_id} [ApiUser + existing request-scope authorizers] |
+| ReopenAuditorRequest | ReopenAuditorRequest | http | CommandId | 6 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/auditor-requests/{request_id}/reopen-auditor-request/{command_id} [ApiUser + existing request-scope authorizers] |
+| ResolveAuditorRequest | ResolveAuditorRequest | http | CommandId | 7 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/auditor-requests/{request_id}/resolve-auditor-request/{command_id} [ApiUser + existing request-scope authorizers] |
+| ReviseAuditorRequest | ReviseAuditorRequest | http | CommandId | 10 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/auditor-requests/{request_id}/revise-auditor-request/{command_id} [ApiUser + existing request-scope authorizers] |
+| AbortAuditorRequestResolution | AbortAuditorRequestResolution | abort | CommandId | 6 | [Placeholder: route/channel not recorded] |
+| CompleteAuditorRequestResolution | CompleteAuditorRequestResolution | receiver | CommandId | 9 | [Placeholder: value not recorded] |
 
 ## Selected command details
 
@@ -22,6 +22,9 @@ Selected command contracts: **11**. Complete selected contracts and companion so
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | AmendSampleSelection |
+| Selected source command name | AmendSampleSelection |
+| Name decision | The selected source name is retained. |
 | Owner | AuditorRequest |
 | Contract record status | target_contract |
 | Kind | http |
@@ -80,6 +83,9 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | AssignAuditorRequest |
+| Selected source command name | AssignAuditorRequest |
+| Name decision | The selected source name is retained. |
 | Owner | AuditorRequest |
 | Contract record status | target_contract |
 | Kind | http |
@@ -132,6 +138,9 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | CreateAuditResponseDraft |
+| Selected source command name | CreateAuditResponseDraft |
+| Name decision | The selected source name is retained. |
 | Owner | AuditorRequest |
 | Contract record status | target_contract |
 | Kind | http |
@@ -183,6 +192,9 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | RecordAuditorRequest |
+| Selected source command name | RecordAuditorRequest |
+| Name decision | The selected source name is retained. |
 | Owner | AuditorRequest |
 | Contract record status | target_contract |
 | Kind | http |
@@ -238,6 +250,9 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | RecordAuditorRequestComment |
+| Selected source command name | RecordAuditorRequestComment |
+| Name decision | The selected source name is retained. |
 | Owner | AuditorRequest |
 | Contract record status | target_contract |
 | Kind | http |
@@ -289,6 +304,9 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | RecordSampleSelection |
+| Selected source command name | RecordSampleSelection |
+| Name decision | The selected source name is retained. |
 | Owner | AuditorRequest |
 | Contract record status | target_contract |
 | Kind | http |
@@ -345,6 +363,9 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | ReopenAuditorRequest |
+| Selected source command name | ReopenAuditorRequest |
+| Name decision | The selected source name is retained. |
 | Owner | AuditorRequest |
 | Contract record status | target_contract |
 | Kind | http |
@@ -395,6 +416,9 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | ResolveAuditorRequest |
+| Selected source command name | ResolveAuditorRequest |
+| Name decision | The selected source name is retained. |
 | Owner | AuditorRequest |
 | Contract record status | target_contract |
 | Kind | http |
@@ -446,6 +470,9 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | ReviseAuditorRequest |
+| Selected source command name | ReviseAuditorRequest |
+| Name decision | The selected source name is retained. |
 | Owner | AuditorRequest |
 | Contract record status | target_contract |
 | Kind | http |
@@ -500,13 +527,16 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | AbortAuditorRequestResolution |
+| Selected source command name | AbortAuditorRequestResolution |
+| Name decision | The selected source name is retained. |
 | Owner | AuditorRequest |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | abort |
 | Logical identity | CommandId; Uuid; required=true; abort receiver identity bound to the exact admitted operation and generation: exact redelivery resolves the original rejected result; an abort after a terminal outcome is a no-op |
 | Entry point | [Placeholder: value not recorded] |
 | MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | [Placeholder: value not recorded] |
+| Selected semantic events | None listed |
 | Protocols | [Placeholder: value not recorded] |
 | Policy preservation | [Placeholder: value not recorded] |
 | Contract changes | [Placeholder: value not recorded] |
@@ -546,13 +576,16 @@ Required tests: [Placeholder: required tests not recorded]
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | CompleteAuditorRequestResolution |
+| Selected source command name | CompleteAuditorRequestResolution |
+| Name decision | The selected source name is retained. |
 | Owner | AuditorRequest |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; reactor; deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result |
 | Entry point | [Placeholder: value not recorded] |
 | MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | [Placeholder: value not recorded] |
+| Selected semantic events | None listed |
 | Protocols | [Placeholder: value not recorded] |
 | Policy preservation | [Placeholder: value not recorded] |
 | Contract changes | [Placeholder: value not recorded] |
@@ -594,7 +627,7 @@ Required tests: [Placeholder: required tests not recorded]
 
 ## Source contracts
 
-| Command | Handler | Registered | Entry point |
+| Selected source command | Handler | Registered | Entry point |
 | --- | --- | --- | --- |
 | AmendSampleSelection | AmendSampleSelectionHandler | true | authorized_http |
 | AssignAuditorRequest | AssignAuditorRequestHandler | true | authorized_http |

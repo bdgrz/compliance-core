@@ -2,10 +2,10 @@
 
 Selected command contracts: **2**. Complete selected contracts and companion source evidence: [owner command JSON](../data/commands/training-requirement.json).
 
-| Command | Kind | Identity | Fields | HTTP routes |
-| --- | --- | --- | --- | --- |
-| DefineTrainingRequirement | http | RequirementId | 5 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/training-requirements/{requirement_id} [ComplianceAuthorizationPolicies.ApiUser] |
-| ReviseTrainingRequirement | http | CommandId | 6 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/training-requirements/revise-training-requirement/{command_id} [ApiUser + existing request-scope authorizers] |
+| Target command | Selected source name | Kind | Identity | Fields | HTTP routes |
+| --- | --- | --- | --- | --- | --- |
+| DefineTrainingRequirement | DefineTrainingRequirement | http | RequirementId | 5 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/training-requirements/{requirement_id} [ComplianceAuthorizationPolicies.ApiUser] |
+| ReviseTrainingRequirement | ReviseTrainingRequirement | http | CommandId | 6 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/training-requirements/revise-training-requirement/{command_id} [ApiUser + existing request-scope authorizers] |
 
 ## Selected command details
 
@@ -13,6 +13,9 @@ Selected command contracts: **2**. Complete selected contracts and companion sou
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | DefineTrainingRequirement |
+| Selected source command name | DefineTrainingRequirement |
+| Name decision | The selected source name is retained. |
 | Owner | TrainingRequirement |
 | Contract record status | target_contract |
 | Kind | http |
@@ -62,6 +65,9 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | ReviseTrainingRequirement |
+| Selected source command name | ReviseTrainingRequirement |
+| Name decision | The selected source name is retained. |
 | Owner | TrainingRequirement |
 | Contract record status | target_contract |
 | Kind | http |
@@ -111,7 +117,7 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 
 ## Source contracts
 
-| Command | Handler | Registered | Entry point |
+| Selected source command | Handler | Registered | Entry point |
 | --- | --- | --- | --- |
 | DefineTrainingRequirement | DefineTrainingRequirementHandler | true | authorized_http_and_mcp |
 | ReviseTrainingRequirement | ReviseTrainingRequirementHandler | true | authorized_http_and_mcp |

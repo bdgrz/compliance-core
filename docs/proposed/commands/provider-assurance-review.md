@@ -2,11 +2,11 @@
 
 Selected command contracts: **3**. Complete selected contracts and companion source evidence: [owner command JSON](../data/commands/provider-assurance-review.json).
 
-| Command | Kind | Identity | Fields | HTTP routes |
-| --- | --- | --- | --- | --- |
-| RecordProviderReview | http | ReviewId | 4 | PUT /api/v1/tenants/{tenant_id}/providers/{provider_id}/reviews/{review_id} [ComplianceAuthorizationPolicies.ApiUser] |
-| AbortProviderReview | abort | CommandId | 6 | [Placeholder: route/channel not recorded] |
-| CompleteProviderAssuranceReview | receiver | CommandId | 9 | [Placeholder: value not recorded] |
+| Target command | Selected source name | Kind | Identity | Fields | HTTP routes |
+| --- | --- | --- | --- | --- | --- |
+| RecordProviderReview | RecordProviderReview | http | ReviewId | 4 | PUT /api/v1/tenants/{tenant_id}/providers/{provider_id}/reviews/{review_id} [ComplianceAuthorizationPolicies.ApiUser] |
+| AbortProviderReview | AbortProviderReview | abort | CommandId | 6 | [Placeholder: route/channel not recorded] |
+| CompleteProviderAssuranceReview | CompleteProviderAssuranceReview | receiver | CommandId | 9 | [Placeholder: value not recorded] |
 
 ## Selected command details
 
@@ -14,6 +14,9 @@ Selected command contracts: **3**. Complete selected contracts and companion sou
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | RecordProviderReview |
+| Selected source command name | RecordProviderReview |
+| Name decision | The selected source name is retained. |
 | Owner | ProviderAssuranceReview |
 | Contract record status | target_contract |
 | Kind | http |
@@ -62,13 +65,16 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | AbortProviderReview |
+| Selected source command name | AbortProviderReview |
+| Name decision | The selected source name is retained. |
 | Owner | ProviderAssuranceReview |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | abort |
 | Logical identity | CommandId; Uuid; required=true; abort receiver identity bound to the exact admitted operation and generation: exact redelivery resolves the original rejected result; an abort after a terminal outcome is a no-op |
 | Entry point | [Placeholder: value not recorded] |
 | MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | [Placeholder: value not recorded] |
+| Selected semantic events | None listed |
 | Protocols | [Placeholder: value not recorded] |
 | Policy preservation | [Placeholder: value not recorded] |
 | Contract changes | [Placeholder: value not recorded] |
@@ -108,13 +114,16 @@ Required tests: [Placeholder: required tests not recorded]
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | CompleteProviderAssuranceReview |
+| Selected source command name | CompleteProviderAssuranceReview |
+| Name decision | The selected source name is retained. |
 | Owner | ProviderAssuranceReview |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; reactor; deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result |
 | Entry point | [Placeholder: value not recorded] |
 | MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | [Placeholder: value not recorded] |
+| Selected semantic events | None listed |
 | Protocols | [Placeholder: value not recorded] |
 | Policy preservation | [Placeholder: value not recorded] |
 | Contract changes | [Placeholder: value not recorded] |
@@ -156,7 +165,7 @@ Required tests: [Placeholder: required tests not recorded]
 
 ## Source contracts
 
-| Command | Handler | Registered | Entry point |
+| Selected source command | Handler | Registered | Entry point |
 | --- | --- | --- | --- |
 | RecordProviderReview | RecordProviderReviewHandler | true | personal_http |
 

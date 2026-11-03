@@ -65,7 +65,9 @@
           "process_reply": 0.3
         },
         "date": "2026-10-29"
-      }
+      },
+      "sourceName": "ResolveWorkforceObservation",
+      "targetName": "ResolveWorkforceObservation"
     }
   ],
   "sourceContractEvidence": []

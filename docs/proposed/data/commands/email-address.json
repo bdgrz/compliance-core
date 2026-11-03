@@ -50,7 +50,9 @@
         "line": 2961,
         "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
       },
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "CompleteEmailChallenge",
+      "targetName": "CompleteEmailChallenge"
     },
     {
       "command": "IssueEmailChallenge",
@@ -96,7 +98,9 @@
         "line": 6186,
         "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
       },
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "IssueEmailChallenge",
+      "targetName": "IssueEmailChallenge"
     },
     {
       "command": "ReserveEmail",
@@ -147,7 +151,9 @@
         "line": 11238,
         "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
       },
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "ReserveEmail",
+      "targetName": "ReserveEmail"
     },
     {
       "command": "CompleteIdentityRecovery",
@@ -195,7 +201,9 @@
         "line": 4,
         "sha256": "f1d549ed0879c816cb26e86879f8fa658dab0a8acbf7c591e4d4aed40483f8ae"
       },
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "CompleteIdentityRecovery",
+      "targetName": "CompleteIdentityRecovery"
     },
     {
       "command": "StartIdentityRecovery",
@@ -233,7 +241,9 @@
         "line": 60,
         "sha256": "f1d549ed0879c816cb26e86879f8fa658dab0a8acbf7c591e4d4aed40483f8ae"
       },
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "StartIdentityRecovery",
+      "targetName": "StartIdentityRecovery"
     },
     {
       "command": "CompleteEmailRecoveryChallenge",
@@ -304,7 +314,9 @@
       "source": {
         "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
         "recorded": "2026-10-29"
-      }
+      },
+      "sourceName": "CompleteEmailRecoveryChallenge",
+      "targetName": "CompleteEmailRecoveryChallenge"
     }
   ],
   "sourceContractEvidence": []

@@ -1,4 +1,9 @@
-# AccessReviewBulkCancellationCompletionReactor
+# CompleteAccessReviewBatchCancellationReactor
+
+Selected source root name: `AccessReviewBulkCancellationCompletionReactor`.
+## Why this reaction exists
+
+Keep canceled bulk decisions from changing access later by finishing cancellation only after every reviewed item is protected.
 
 Selected choreography rows: **1**. Required proofs, recovery, effect identity, and implementation evidence are preserved in [reactor row JSON](../data/reactors/access-review-bulk-cancellation-completion-reactor.json).
 
@@ -16,16 +21,16 @@ Selected choreography rows: **1**. Required proofs, recovery, effect identity, a
 | kind | reaction_or_regular_process_stage |
 | status | SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED |
 | sourceOwner | AccessReviewDecisionBatch |
-| logicalPrerequisiteFacts | AccessReviewDecisionBatchCancellationAccepted |
+| logicalPrerequisiteFacts (target names) | AccessReviewDecisionBatchCancellationAccepted |
 | logicalPrerequisiteRule | All selected items receiver-fenced including not-yet-reserved targets, no batch publication. |
-| physicalRootEvents | AccessReviewDecisionBatchCancellationAccepted |
-| originalAdmissionKinds | AccessReviewDecisionBatchAdmitted |
-| receiverCommand | CompleteAccessReviewDecisionBatchCancellation |
+| physicalRootEvents (target names) | AccessReviewDecisionBatchCancellationAccepted |
+| originalAdmissionKinds (target names) | AccessReviewDecisionBatchAdmitted |
+| Target command (selected source name: CompleteAccessReviewDecisionBatchCancellation) | CompleteAccessReviewDecisionBatchCancellation |
 | targetOwner | AccessReviewDecisionBatch |
 | targetAuthorityKind | business_aggregate |
-| emittedSemanticFacts | AccessReviewDecisionBatchCanceled |
+| emittedSemanticFacts (target names) | AccessReviewDecisionBatchCanceled |
 | emittedEventContracts | None listed |
-| currentRegisteredRootTypes | AccessReviewBulkCancellationCompletionReactor |
+| currentRegisteredRootTypes (target names) | CompleteAccessReviewBatchCancellationReactor |
 | plannedRootRole | null (recorded) |
 | processes | BulkAccessDecisionProcess |
 | requiredProofContract | `{"canonicalCarrier":"original admitted root reference + required independently verified typed stage/terminal proof sets","admissionReferenceFactKinds":["AccessReviewDecisionBatchAdmitted"],"admissionReferenceRole":"original business admission/first-owner fact, distinct from subscription trigger and intermediate/terminal prerequisites","verification":{"admission":"AdmissionReference is a locator only. Resolve and independently verify actual typed admitted fact, exact owner/tenant/program, saved metadata and physical/hydrated cut, original root/episode/actor/intent and immutable content.","stageAndTerminal":"Materialize each required typed stage/terminal proof from actual committed facts and full required immutable selections; prove complete grant/fence/provisional/child sets, not counts/checkpoints. Guard sets are not weakened by carrier choice.","earlyReplay":"If native receipt binding does not cover a supplied/interpreted command term, bind that term through the required actual typed proof/body before early replay. Exact receipt cannot bypass proof manifest or source tuple guards.","resultAndRecovery":"Current public authorization precedes replay. Original result/receipt and unknown-append recovery stay exact; requested cancellation propagates. Unavailable proof/content remains transient; corruption/changed intent is permanent; no inferred absence/release.","implementationStatus":"Installed pointer/handler/process presence is not proof of conformance. Field/wire migration and required behavioral tests remain separately verifiable implementation work."},"requiredTypedStageProofSets":[{"factKinds":["AccessReviewDecisionBatchCancellationAccepted"],"role":"actual cancellation acceptance fence","quantifier":"exactly_one_selected_variant","condition":"always","requiredVerification":"Resolve actual saved owner/source fact and full metadata/cut, verify typed payload/immutable content and exact admission/root/target/generation/actor/intent binding. Pointer, checkpoint and stage order alone are not authority."},{"factKinds":["AccessReviewItemDecisionCanceled"],"role":"complete cancellation-fence proofs for every selected item, including never-held items","quantifier":"all_frozen_targets","condition":"always","requiredVerification":"Resolve actual saved owner/source fact and full metadata/cut, verify typed payload/immutable content and exact admission/root/target/generation/actor/intent binding. Pointer, checkpoint and stage order alone are not authority."}],"pinnedSourceRequirements":"Every exact source owner/event/content revision and complete immutable manifest required by intendedProofGate remains mandatory; no absent optional source is fabricated.","proofGate":"All selected items receiver-fenced including not-yet-reserved targets, no batch publication.","requiredLogicalPrerequisiteProofs":"Every applicable logical prerequisite is independently verified as an actual typed saved fact (or actual technical proof where explicitly technical); a terminal proof may establish an earlier stage only through a verified native chain that includes that required typed stage. Stage order/checkpoint alone never substitutes.","prerequisiteVerification":{"admission":"The receiver resolves the original admitted root fact by its exact owner, tenant, episode, actor and immutable intent, and verifies the saved fact and content hash before acting; a reference alone grants nothing.","stageProofs":"Each required stage proof (grant, hold, review, or terminal fact) is materialised from the actual committed fact and its full immutable selection; counts, checkpoints and stage order are not accepted as proof."}}` |

@@ -1,5 +1,3 @@
-> Captured from `docs/product/domain-model.md`; internal links have been rebased.
-
 # Compliance domain model
 
 Status: accepted product and domain contract, updated 2026-10-04

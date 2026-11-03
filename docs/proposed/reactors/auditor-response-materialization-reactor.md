@@ -1,10 +1,15 @@
-# AuditorResponseMaterializationReactor
+# PreserveAuditorResponseDraftAfterRequestReactor
+
+Selected source root name: `AuditorResponseMaterializationReactor`.
+## Why this reaction exists
+
+Keep an accepted auditor response draft even if the request later closes.
 
 Selected choreography rows: **1**. Required proofs, recovery, effect identity, and implementation evidence are preserved in [reactor row JSON](../data/reactors/auditor-response-materialization-reactor.json).
 
 | Row | Kind | Prerequisite facts | Command | Target owner | Emitted facts |
 | --- | --- | --- | --- | --- | --- |
-| T033 | reaction_or_regular_process_stage | AuditorResponseAdmitted | MaterializeAuditorResponse | AuditorResponse | AuditResponseDraftCreated |
+| T033 | reaction_or_regular_process_stage | AuditorResponseAdmitted | CreateAuditorResponseDraft | AuditorResponse | AuditResponseDraftCreated |
 
 ## Selected row details
 
@@ -16,16 +21,16 @@ Selected choreography rows: **1**. Required proofs, recovery, effect identity, a
 | kind | reaction_or_regular_process_stage |
 | status | SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED |
 | sourceOwner | AuditorRequest |
-| logicalPrerequisiteFacts | AuditorResponseAdmitted |
+| logicalPrerequisiteFacts (target names) | AuditorResponseAdmitted |
 | logicalPrerequisiteRule | The admitted initial draft and request generation are complete; the response is created from it even if the request has since closed. |
-| physicalRootEvents | AuditorResponseAdmitted |
-| originalAdmissionKinds | AdvisorFeedbackAdmitted, AuditorResponseAdmitted, AuditorCommentAdmitted, CorrectiveActionAdmitted, AuditorSampleSelectionAdmitted, ProviderCoverageGapRiskAcceptanceAdmitted, PolicyParticipantResultAdmitted |
-| receiverCommand | MaterializeAuditorResponse |
+| physicalRootEvents (target names) | AuditorResponseAdmitted |
+| originalAdmissionKinds (target names) | AdvisorFeedbackAdmitted, AuditorResponseAdmitted, AuditorCommentAdmitted, CorrectiveActionAdmitted, AuditorSampleSelectionAdmitted, ProviderCoverageGapRiskAcceptanceAdmitted, PolicyParticipantResultAdmitted |
+| Target command (selected source name: MaterializeAuditorResponse) | CreateAuditorResponseDraft |
 | targetOwner | AuditorResponse |
 | targetAuthorityKind | business_aggregate |
-| emittedSemanticFacts | AuditResponseDraftCreated |
+| emittedSemanticFacts (target names) | AuditResponseDraftCreated |
 | emittedEventContracts | None listed |
-| currentRegisteredRootTypes | AuditorResponseMaterializationReactor |
+| currentRegisteredRootTypes (target names) | PreserveAuditorResponseDraftAfterRequestReactor |
 | plannedRootRole | null (recorded) |
 | processes | IndependentChildMaterialization |
 | requiredProofContract | `{"canonicalCarrier":"original admitted root reference + required independently verified typed stage/terminal proof sets","admissionReferenceFactKinds":["AdvisorFeedbackAdmitted","AuditorResponseAdmitted","AuditorCommentAdmitted","CorrectiveActionAdmitted","AuditorSampleSelectionAdmitted","ProviderCoverageGapRiskAcceptanceAdmitted","PolicyParticipantResultAdmitted"],"admissionReferenceRole":"original business admission/first-owner fact, distinct from subscription trigger and intermediate/terminal prerequisites","verification":{"admission":"AdmissionReference is a locator only. Resolve and independently verify actual typed admitted fact, exact owner/tenant/program, saved metadata and physical/hydrated cut, original root/episode/actor/intent and immutable content.","stageAndTerminal":"Materialize each required typed stage/terminal proof from actual committed facts and full required immutable selections; prove complete grant/fence/provisional/child sets, not counts/checkpoints. Guard sets are not weakened by carrier choice.","earlyReplay":"If native receipt binding does not cover a supplied/interpreted command term, bind that term through the required actual typed proof/body before early replay. Exact receipt cannot bypass proof manifest or source tuple guards.","resultAndRecovery":"Current public authorization precedes replay. Original result/receipt and unknown-append recovery stay exact; requested cancellation propagates. Unavailable proof/content remains transient; corruption/changed intent is permanent; no inferred absence/release.","implementationStatus":"Installed pointer/handler/process presence is not proof of conformance. Field/wire migration and required behavioral tests remain separately verifiable implementation work."},"requiredTypedStageProofSets":[{"factKinds":["AuditorRequestRecorded"],"role":"Parent request and generation","quantifier":"exactly_one","condition":"always","requiredVerification":"Resolve the actual saved fact and its full immutable selection; verify the typed payload and the exact admission, root, target, generation, actor and intent binding. A pointer, checkpoint or stage order alone is not authority."},{"factKinds":["AuditResponseDraftCreated"],"role":"Draft not already created","quantifier":"none_outstanding","condition":"always","requiredVerification":"Resolve the actual saved fact and its full immutable selection; verify the typed payload and the exact admission, root, target, generation, actor and intent binding. A pointer, checkpoint or stage order alone is not authority."}],"pinnedSourceRequirements":"Every exact source owner/event/content revision and complete immutable manifest required by intendedProofGate remains mandatory; no absent optional source is fabricated.","proofGate":"Complete admitted initial draft and request generation; later request closure cannot discard admitted work.","requiredLogicalPrerequisiteProofs":"Every applicable logical prerequisite is independently verified as an actual typed saved fact (or actual technical proof where explicitly technical); a terminal proof may establish an earlier stage only through a verified native chain that includes that required typed stage. Stage order/checkpoint alone never substitutes.","prerequisiteVerification":{"admission":"The receiver resolves the original admitted root fact by its exact owner, tenant, episode, actor and immutable intent, and verifies the saved fact and content hash before acting; a reference alone grants nothing.","stageProofs":"Each required stage proof (grant, hold, review, or terminal fact) is materialised from the actual committed fact and its full immutable selection; counts, checkpoints and stage order are not accepted as proof."},"stageProofStatus":"specified","stageProofRationale":"","stageProofSource":"authored 2026-10-29 from reactor and target source"}` |

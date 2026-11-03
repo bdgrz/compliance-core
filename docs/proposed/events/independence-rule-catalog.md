@@ -2,18 +2,21 @@
 
 Canonical events: **3**. Complete canonical event and available schema records: [owner event JSON](../data/events/independence-rule-catalog.json).
 
-| Event | Kind | Adopted discriminator | Version | Schema fields | Meaning |
-| --- | --- | --- | --- | --- | --- |
-| IndependenceRuleCatalogEngagementUseAuthorized | reservation | bdgrz.independence-rule-catalog.independence-rule-catalog-engagement-use-authorized | 1 | 8 | The exact revised independence rule catalog version a partner evaluation relies on was held for the engagement; it does not publish the catalog and blocks revision until the use settles. |
-| IndependenceRuleCatalogEngagementUseSettled | reservation | bdgrz.independence-rule-catalog.independence-rule-catalog-engagement-use-settled | 1 | 8 | The use of the draft rule catalog ended after the irreversible personal decision or after cancellation. A settlement before any grant fences the key against late acquisition. |
-| IndependenceRulesRevised | business | bdgrz.independence.rules.revised | 2 | [Placeholder: schema absent] | The independence rule catalog was revised with new rule content, becoming the next draft version of the catalog. |
+| Target event | Selected source name | Kind | Adopted discriminator | Version | Schema fields | Meaning |
+| --- | --- | --- | --- | --- | --- | --- |
+| IndependenceRuleCatalogEngagementAuthorized | IndependenceRuleCatalogEngagementUseAuthorized | reservation | bdgrz.independence-rule-catalog.independence-rule-catalog-engagement-use-authorized | 1 | 8 | The exact revised independence rule catalog version a partner evaluation relies on was held for the engagement; it does not publish the catalog and blocks revision until the use settles. |
+| IndependenceRuleCatalogEngagementAuthorizationClosed | IndependenceRuleCatalogEngagementUseSettled | reservation | bdgrz.independence-rule-catalog.independence-rule-catalog-engagement-use-settled | 1 | 8 | The use of the draft rule catalog ended after the irreversible personal decision or after cancellation. A settlement before any grant fences the key against late acquisition. |
+| IndependenceRulesRevised | IndependenceRulesRevised | business | bdgrz.independence.rules.revised | 2 | [Placeholder: schema absent] | The independence rule catalog was revised with new rule content, becoming the next draft version of the catalog. |
 
 ## Event details
 
-### IndependenceRuleCatalogEngagementUseAuthorized
+### IndependenceRuleCatalogEngagementAuthorized
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | IndependenceRuleCatalogEngagementAuthorized |
+| Selected source event name | IndependenceRuleCatalogEngagementUseAuthorized |
+| Name decision | Authorization is already the completed fact; Use adds no stakeholder meaning. |
 | Canonical semantic key | event:IndependenceRuleCatalogEngagementUseAuthorized |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | IndependenceRuleCatalogEngagementUseAuthorized |
@@ -23,7 +26,8 @@ Canonical events: **3**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | The exact revised independence rule catalog version a partner evaluation relies on was held for the engagement; it does not publish the catalog and blocks revision until the use settles. |
+| Target meaning | The exact revised independence rule catalog version a partner evaluation relies on was held for the engagement; it does not publish the catalog and blocks revision until the use settles. |
+| Selected source meaning | The exact revised independence rule catalog version a partner evaluation relies on was held for the engagement; it does not publish the catalog and blocks revision until the use settles. |
 | Meaning source | authored 2026-10-29 from src/Compliance.Common/Features/AccessControl/Events/IndependenceRuleCatalogEngagementUseAuthorized.cs |
 
 #### Selected schema and implementation evidence
@@ -97,12 +101,15 @@ SourceUseAuthorizationIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T093](../reactors/engagement-acceptance-reactor.md#t093) | emitted semantic fact | ServiceEngagementIndependence | AuthorizeIndependenceRuleCatalogEngagementUse | IndependenceRuleCatalog |
+| [T093](../reactors/engagement-acceptance-reactor.md#t093) | emitted semantic fact | ServiceEngagementIndependence | AuthorizeIndependenceRuleCatalogEngagement | IndependenceRuleCatalog |
 
-### IndependenceRuleCatalogEngagementUseSettled
+### IndependenceRuleCatalogEngagementAuthorizationClosed
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | IndependenceRuleCatalogEngagementAuthorizationClosed |
+| Selected source event name | IndependenceRuleCatalogEngagementUseSettled |
+| Name decision | The exact authorization ended; the recorded outcome still distinguishes use, cancellation, or a late fence. |
 | Canonical semantic key | event:IndependenceRuleCatalogEngagementUseSettled |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | IndependenceRuleCatalogEngagementUseSettled |
@@ -112,7 +119,8 @@ SourceUseAuthorizationIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | The use of the draft rule catalog ended after the irreversible personal decision or after cancellation. A settlement before any grant fences the key against late acquisition. |
+| Target meaning | The use of the draft rule catalog ended after the irreversible personal decision or after cancellation. A settlement before any grant fences the key against late acquisition. |
+| Selected source meaning | The use of the draft rule catalog ended after the irreversible personal decision or after cancellation. A settlement before any grant fences the key against late acquisition. |
 | Meaning source | record summary in src/Compliance.Common/Features/AccessControl/Events/IndependenceRuleCatalogEngagementUseSettled.cs |
 
 #### Selected schema and implementation evidence
@@ -186,12 +194,15 @@ SourceUseAuthorizationIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T094](../reactors/engagement-acceptance-reactor.md#t094) | emitted semantic fact | ServiceEngagementIndependence | SettleIndependenceRuleCatalogEngagementUse | IndependenceRuleCatalog |
+| [T094](../reactors/engagement-acceptance-reactor.md#t094) | emitted semantic fact | ServiceEngagementIndependence | CloseIndependenceRuleCatalogEngagementAuthorization | IndependenceRuleCatalog |
 
 ### IndependenceRulesRevised
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | IndependenceRulesRevised |
+| Selected source event name | IndependenceRulesRevised |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:IndependenceRulesRevised |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | IndependenceRulesRevised |
@@ -201,7 +212,8 @@ SourceUseAuthorizationIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | The independence rule catalog was revised with new rule content, becoming the next draft version of the catalog. |
+| Target meaning | The independence rule catalog was revised with new rule content, becoming the next draft version of the catalog. |
+| Selected source meaning | The independence rule catalog was revised with new rule content, becoming the next draft version of the catalog. |
 | Meaning source | authored 2026-10-29 from src/Compliance.Common/Features/AccessControl/Events/IndependenceRulesRevised.cs |
 
 #### Schema

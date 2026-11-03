@@ -2,11 +2,11 @@
 
 Selected command contracts: **3**. Complete selected contracts and companion source evidence: [owner command JSON](../data/commands/independence-rule-catalog.json).
 
-| Command | Kind | Identity | Fields | HTTP routes |
-| --- | --- | --- | --- | --- |
-| ReviseIndependenceRules | command | CommandId | 3 | [Placeholder: value not recorded] |
-| AuthorizeIndependenceRuleCatalogEngagementUse | receiver | CommandId | 11 | [Placeholder: value not recorded] |
-| SettleIndependenceRuleCatalogEngagementUse | receiver | CommandId | 10 | [Placeholder: value not recorded] |
+| Target command | Selected source name | Kind | Identity | Fields | HTTP routes |
+| --- | --- | --- | --- | --- | --- |
+| ReviseIndependenceRules | ReviseIndependenceRules | command | CommandId | 3 | [Placeholder: value not recorded] |
+| AuthorizeIndependenceRuleCatalogEngagement | AuthorizeIndependenceRuleCatalogEngagementUse | receiver | CommandId | 11 | [Placeholder: value not recorded] |
+| CloseIndependenceRuleCatalogEngagementAuthorization | SettleIndependenceRuleCatalogEngagementUse | receiver | CommandId | 10 | [Placeholder: value not recorded] |
 
 ## Selected command details
 
@@ -14,13 +14,16 @@ Selected command contracts: **3**. Complete selected contracts and companion sou
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | ReviseIndependenceRules |
+| Selected source command name | ReviseIndependenceRules |
+| Name decision | The selected source name is retained. |
 | Owner | IndependenceRuleCatalog |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | command |
 | Logical identity | CommandId; Uuid; required=true; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
 | Entry point | [Placeholder: value not recorded] |
 | MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | [Placeholder: value not recorded] |
+| Selected semantic events | None listed |
 | Protocols | [Placeholder: value not recorded] |
 | Policy preservation | [Placeholder: value not recorded] |
 | Contract changes | [Placeholder: value not recorded] |
@@ -53,17 +56,20 @@ Existing tests: [Placeholder: existing tests not recorded]
 
 Required tests: [Placeholder: required tests not recorded]
 
-### AuthorizeIndependenceRuleCatalogEngagementUse
+### AuthorizeIndependenceRuleCatalogEngagement
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | AuthorizeIndependenceRuleCatalogEngagement |
+| Selected source command name | AuthorizeIndependenceRuleCatalogEngagementUse |
+| Name decision | The command authorizes the named business action; the extra Use suffix describes the coordination mechanism. |
 | Owner | IndependenceRuleCatalog |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; reactor; deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result |
 | Entry point | [Placeholder: value not recorded] |
 | MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | [Placeholder: value not recorded] |
+| Selected semantic events | None listed |
 | Protocols | [Placeholder: value not recorded] |
 | Policy preservation | [Placeholder: value not recorded] |
 | Contract changes | [Placeholder: value not recorded] |
@@ -104,17 +110,20 @@ Existing tests: [Placeholder: existing tests not recorded]
 
 Required tests: [Placeholder: required tests not recorded]
 
-### SettleIndependenceRuleCatalogEngagementUse
+### CloseIndependenceRuleCatalogEngagementAuthorization
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | CloseIndependenceRuleCatalogEngagementAuthorization |
+| Selected source command name | SettleIndependenceRuleCatalogEngagementUse |
+| Name decision | The command ends the exact authorization after its business action or cancellation. |
 | Owner | IndependenceRuleCatalog |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; reactor; deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result |
 | Entry point | [Placeholder: value not recorded] |
 | MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | [Placeholder: value not recorded] |
+| Selected semantic events | None listed |
 | Protocols | [Placeholder: value not recorded] |
 | Policy preservation | [Placeholder: value not recorded] |
 | Contract changes | [Placeholder: value not recorded] |

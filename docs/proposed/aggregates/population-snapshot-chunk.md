@@ -27,7 +27,7 @@
 
 | Event | Discriminator | Version |
 | --- | --- | --- |
-| [PopulationSnapshotChunkStored](../events/population-snapshot-chunk.md#populationsnapshotchunkstored) | bdgrz.snapshot.population.chunk_stored | 1 |
+| [PopulationSnapshotPartRecorded](../events/population-snapshot-chunk.md#populationsnapshotpartrecorded) | bdgrz.snapshot.population.chunk_stored | 1 |
 
 ## Cross-owner flows
 

@@ -2,10 +2,10 @@
 
 Canonical events: **2**. Complete canonical event and available schema records: [owner event JSON](../data/events/risk-draft.json).
 
-| Event | Kind | Adopted discriminator | Version | Schema fields | Meaning |
-| --- | --- | --- | --- | --- | --- |
-| RiskDraftCreated | business | bdgrz.risk.draft.created | 2 | [Placeholder: schema absent] | A risk draft was created in a program with its authored content by a named member, awaiting evaluation. |
-| RiskDraftRevised | business | bdgrz.risk.draft.revised | 2 | [Placeholder: schema absent] | A risk draft's authored content was revised by a named member, producing the draft's next revision. |
+| Target event | Selected source name | Kind | Adopted discriminator | Version | Schema fields | Meaning |
+| --- | --- | --- | --- | --- | --- | --- |
+| RiskDraftCreated | RiskDraftCreated | business | bdgrz.risk.draft.created | 2 | [Placeholder: schema absent] | A risk draft was created in a program with its authored content by a named member, awaiting evaluation. |
+| RiskDraftRevised | RiskDraftRevised | business | bdgrz.risk.draft.revised | 2 | [Placeholder: schema absent] | A risk draft's authored content was revised by a named member, producing the draft's next revision. |
 
 ## Event details
 
@@ -13,6 +13,9 @@ Canonical events: **2**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | RiskDraftCreated |
+| Selected source event name | RiskDraftCreated |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:RiskDraftCreated |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | RiskDraftCreated |
@@ -22,7 +25,8 @@ Canonical events: **2**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | A risk draft was created in a program with its authored content by a named member, awaiting evaluation. |
+| Target meaning | A risk draft was created in a program with its authored content by a named member, awaiting evaluation. |
+| Selected source meaning | A risk draft was created in a program with its authored content by a named member, awaiting evaluation. |
 | Meaning source | authored 2026-10-29 from src/Compliance.Common/Features/Risks/Events/RiskDraftCreated.cs |
 
 #### Schema
@@ -43,6 +47,9 @@ Canonical events: **2**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | RiskDraftRevised |
+| Selected source event name | RiskDraftRevised |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:RiskDraftRevised |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | RiskDraftRevised |
@@ -52,7 +59,8 @@ Canonical events: **2**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | A risk draft's authored content was revised by a named member, producing the draft's next revision. |
+| Target meaning | A risk draft's authored content was revised by a named member, producing the draft's next revision. |
+| Selected source meaning | A risk draft's authored content was revised by a named member, producing the draft's next revision. |
 | Meaning source | authored 2026-10-29 from src/Compliance.Common/Features/Risks/Events/RiskDraftRevised.cs |
 
 #### Schema

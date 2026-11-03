@@ -2,14 +2,14 @@
 
 Selected command contracts: **6**. Complete selected contracts and companion source evidence: [owner command JSON](../data/commands/client-service-independence.json).
 
-| Command | Kind | Identity | Fields | HTTP routes |
-| --- | --- | --- | --- | --- |
-| EvaluateClientIndependence | http | EvaluationId | 5 | PUT /api/v1/tenants/{tenant_id}/client-independence-evaluations/evaluate-client-independence/{evaluation_id} [ApiUser + existing request-scope authorizers] |
-| RecordNonattestService | http | ServiceRecordId | 4 | PUT /api/v1/tenants/{tenant_id}/nonattest-services/record-nonattest-service/{service_record_id} [ApiUser + existing request-scope authorizers] |
-| AcquireEngagementServiceEpoch | receiver | CommandId | 9 | [Placeholder: value not recorded] |
-| ReleaseEngagementServiceEpoch | receiver | CommandId | 9 | [Placeholder: value not recorded] |
-| AuthorizeClientServicePersonalDecisionUse | receiver | CommandId | 9 | [Placeholder: value not recorded] |
-| SettleClientServicePersonalDecisionUse | receiver | CommandId | 8 | [Placeholder: value not recorded] |
+| Target command | Selected source name | Kind | Identity | Fields | HTTP routes |
+| --- | --- | --- | --- | --- | --- |
+| EvaluateClientIndependence | EvaluateClientIndependence | http | EvaluationId | 5 | PUT /api/v1/tenants/{tenant_id}/client-independence-evaluations/evaluate-client-independence/{evaluation_id} [ApiUser + existing request-scope authorizers] |
+| RecordNonattestService | RecordNonattestService | http | ServiceRecordId | 4 | PUT /api/v1/tenants/{tenant_id}/nonattest-services/record-nonattest-service/{service_record_id} [ApiUser + existing request-scope authorizers] |
+| ReserveEngagementServiceHistory | AcquireEngagementServiceEpoch | receiver | CommandId | 9 | [Placeholder: value not recorded] |
+| ReleaseEngagementServiceHistoryReservation | ReleaseEngagementServiceEpoch | receiver | CommandId | 9 | [Placeholder: value not recorded] |
+| AuthorizeClientServicePersonalDecision | AuthorizeClientServicePersonalDecisionUse | receiver | CommandId | 9 | [Placeholder: value not recorded] |
+| CloseClientServicePersonalDecisionAuthorization | SettleClientServicePersonalDecisionUse | receiver | CommandId | 8 | [Placeholder: value not recorded] |
 
 ## Selected command details
 
@@ -17,6 +17,9 @@ Selected command contracts: **6**. Complete selected contracts and companion sou
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | EvaluateClientIndependence |
+| Selected source command name | EvaluateClientIndependence |
+| Name decision | The selected source name is retained. |
 | Owner | ClientServiceIndependence |
 | Contract record status | target_contract |
 | Kind | http |
@@ -66,6 +69,9 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | RecordNonattestService |
+| Selected source command name | RecordNonattestService |
+| Name decision | The selected source name is retained. |
 | Owner | ClientServiceIndependence |
 | Contract record status | target_contract |
 | Kind | http |
@@ -110,17 +116,20 @@ Existing tests: test/Compliance.Tests/Features/AccessControl/AttestServiceEngage
 
 Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision, ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity, ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof, ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome
 
-### AcquireEngagementServiceEpoch
+### ReserveEngagementServiceHistory
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | ReserveEngagementServiceHistory |
+| Selected source command name | AcquireEngagementServiceEpoch |
+| Name decision | Holds the exact service history stable while an engagement acceptance or assignment decision is made. |
 | Owner | ClientServiceIndependence |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; reactor; deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result |
 | Entry point | [Placeholder: value not recorded] |
 | MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | [Placeholder: value not recorded] |
+| Selected semantic events | None listed |
 | Protocols | [Placeholder: value not recorded] |
 | Policy preservation | [Placeholder: value not recorded] |
 | Contract changes | [Placeholder: value not recorded] |
@@ -159,17 +168,20 @@ Existing tests: [Placeholder: existing tests not recorded]
 
 Required tests: [Placeholder: required tests not recorded]
 
-### ReleaseEngagementServiceEpoch
+### ReleaseEngagementServiceHistoryReservation
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | ReleaseEngagementServiceHistoryReservation |
+| Selected source command name | ReleaseEngagementServiceEpoch |
+| Name decision | Ends the exact temporary service-history hold after the decision or cancellation. |
 | Owner | ClientServiceIndependence |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; reactor; deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result |
 | Entry point | [Placeholder: value not recorded] |
 | MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | [Placeholder: value not recorded] |
+| Selected semantic events | None listed |
 | Protocols | [Placeholder: value not recorded] |
 | Policy preservation | [Placeholder: value not recorded] |
 | Contract changes | [Placeholder: value not recorded] |
@@ -208,17 +220,20 @@ Existing tests: [Placeholder: existing tests not recorded]
 
 Required tests: [Placeholder: required tests not recorded]
 
-### AuthorizeClientServicePersonalDecisionUse
+### AuthorizeClientServicePersonalDecision
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | AuthorizeClientServicePersonalDecision |
+| Selected source command name | AuthorizeClientServicePersonalDecisionUse |
+| Name decision | The command authorizes the named business action; the extra Use suffix describes the coordination mechanism. |
 | Owner | ClientServiceIndependence |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; reactor; deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result |
 | Entry point | [Placeholder: value not recorded] |
 | MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | [Placeholder: value not recorded] |
+| Selected semantic events | None listed |
 | Protocols | [Placeholder: value not recorded] |
 | Policy preservation | [Placeholder: value not recorded] |
 | Contract changes | [Placeholder: value not recorded] |
@@ -257,17 +272,20 @@ Existing tests: [Placeholder: existing tests not recorded]
 
 Required tests: [Placeholder: required tests not recorded]
 
-### SettleClientServicePersonalDecisionUse
+### CloseClientServicePersonalDecisionAuthorization
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | CloseClientServicePersonalDecisionAuthorization |
+| Selected source command name | SettleClientServicePersonalDecisionUse |
+| Name decision | The command ends the exact authorization after its business action or cancellation. |
 | Owner | ClientServiceIndependence |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; reactor; deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result |
 | Entry point | [Placeholder: value not recorded] |
 | MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | [Placeholder: value not recorded] |
+| Selected semantic events | None listed |
 | Protocols | [Placeholder: value not recorded] |
 | Policy preservation | [Placeholder: value not recorded] |
 | Contract changes | [Placeholder: value not recorded] |
@@ -308,7 +326,7 @@ Required tests: [Placeholder: required tests not recorded]
 
 ## Source contracts
 
-| Command | Handler | Registered | Entry point |
+| Selected source command | Handler | Registered | Entry point |
 | --- | --- | --- | --- |
 | EvaluateClientIndependence | EvaluateClientIndependenceHandler | true | authorized_http_and_mcp |
 | RecordNonattestService | RecordNonattestServiceHandler | true | authorized_http_and_mcp |

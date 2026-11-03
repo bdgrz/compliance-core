@@ -2,12 +2,12 @@
 
 Selected command contracts: **4**. Complete selected contracts and companion source evidence: [owner command JSON](../data/commands/corrective-action.json).
 
-| Command | Kind | Identity | Fields | HTTP routes |
-| --- | --- | --- | --- | --- |
-| CompleteCorrectiveAction | http | CommandId | 8 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/findings/{finding_id}/corrective-actions/{action_id}/completions/{command_id} [ComplianceAuthorizationPolicies.ApiUser] |
-| MaterializeCorrectiveAction | receiver | CommandId | 9 | [Placeholder: value not recorded] |
-| AuthorizeCorrectiveActionFindingClosureUse | receiver | CommandId | 10 | [Placeholder: value not recorded] |
-| SettleCorrectiveActionFindingClosureUse | receiver | CommandId | 10 | [Placeholder: value not recorded] |
+| Target command | Selected source name | Kind | Identity | Fields | HTTP routes |
+| --- | --- | --- | --- | --- | --- |
+| CompleteCorrectiveAction | CompleteCorrectiveAction | http | CommandId | 8 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/findings/{finding_id}/corrective-actions/{action_id}/completions/{command_id} [ComplianceAuthorizationPolicies.ApiUser] |
+| CreateCorrectiveAction | MaterializeCorrectiveAction | receiver | CommandId | 9 | [Placeholder: value not recorded] |
+| AuthorizeCorrectiveActionFindingClosure | AuthorizeCorrectiveActionFindingClosureUse | receiver | CommandId | 10 | [Placeholder: value not recorded] |
+| CloseCorrectiveActionFindingClosureAuthorization | SettleCorrectiveActionFindingClosureUse | receiver | CommandId | 10 | [Placeholder: value not recorded] |
 
 ## Selected command details
 
@@ -15,13 +15,16 @@ Selected command contracts: **4**. Complete selected contracts and companion sou
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | CompleteCorrectiveAction |
+| Selected source command name | CompleteCorrectiveAction |
+| Name decision | The selected source name is retained. |
 | Owner | CorrectiveAction |
 | Contract record status | target_contract |
 | Kind | http |
 | Logical identity | CommandId; Uuid; required=true; client; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
 | Entry point | authorized_http |
 | MCP | false |
-| Selected semantic events | CorrectiveActionCompletedV2 |
+| Selected semantic events | CorrectiveActionCompleted |
 | Protocols | Action admission and finding closure |
 | Policy preservation | All current source handler/aggregate validation rules and source test expectations apply, except the explicit contractChanges and boundary protocol. Lifetime caps and technical attempt events are removed with their structural replacement. |
 | Contract changes | Add required CommandId. |
@@ -63,17 +66,20 @@ Existing tests: test/Compliance.Tests/Features/AccessControl/AttestManagementWri
 
 Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision, ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity, ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof, ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome
 
-### MaterializeCorrectiveAction
+### CreateCorrectiveAction
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | CreateCorrectiveAction |
+| Selected source command name | MaterializeCorrectiveAction |
+| Name decision | Creates accepted corrective work with its own lifecycle, even if the finding later closes. |
 | Owner | CorrectiveAction |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; reactor; deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result |
 | Entry point | [Placeholder: value not recorded] |
 | MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | [Placeholder: value not recorded] |
+| Selected semantic events | None listed |
 | Protocols | [Placeholder: value not recorded] |
 | Policy preservation | [Placeholder: value not recorded] |
 | Contract changes | [Placeholder: value not recorded] |
@@ -112,17 +118,20 @@ Existing tests: [Placeholder: existing tests not recorded]
 
 Required tests: [Placeholder: required tests not recorded]
 
-### AuthorizeCorrectiveActionFindingClosureUse
+### AuthorizeCorrectiveActionFindingClosure
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | AuthorizeCorrectiveActionFindingClosure |
+| Selected source command name | AuthorizeCorrectiveActionFindingClosureUse |
+| Name decision | The command authorizes the named business action; the extra Use suffix describes the coordination mechanism. |
 | Owner | CorrectiveAction |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; reactor; deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result |
 | Entry point | [Placeholder: value not recorded] |
 | MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | [Placeholder: value not recorded] |
+| Selected semantic events | None listed |
 | Protocols | [Placeholder: value not recorded] |
 | Policy preservation | [Placeholder: value not recorded] |
 | Contract changes | [Placeholder: value not recorded] |
@@ -162,17 +171,20 @@ Existing tests: [Placeholder: existing tests not recorded]
 
 Required tests: [Placeholder: required tests not recorded]
 
-### SettleCorrectiveActionFindingClosureUse
+### CloseCorrectiveActionFindingClosureAuthorization
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | CloseCorrectiveActionFindingClosureAuthorization |
+| Selected source command name | SettleCorrectiveActionFindingClosureUse |
+| Name decision | The command ends the exact authorization after its business action or cancellation. |
 | Owner | CorrectiveAction |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; reactor; deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result |
 | Entry point | [Placeholder: value not recorded] |
 | MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | [Placeholder: value not recorded] |
+| Selected semantic events | None listed |
 | Protocols | [Placeholder: value not recorded] |
 | Policy preservation | [Placeholder: value not recorded] |
 | Contract changes | [Placeholder: value not recorded] |
@@ -215,7 +227,7 @@ Required tests: [Placeholder: required tests not recorded]
 
 ## Source contracts
 
-| Command | Handler | Registered | Entry point |
+| Selected source command | Handler | Registered | Entry point |
 | --- | --- | --- | --- |
 | CompleteCorrectiveAction | CompleteCorrectiveActionHandler | true | authorized_http |
 

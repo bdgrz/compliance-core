@@ -2,15 +2,15 @@
 
 Canonical events: **7**. Complete canonical event and available schema records: [owner event JSON](../data/events/policy-distribution-campaign.json).
 
-| Event | Kind | Adopted discriminator | Version | Schema fields | Meaning |
-| --- | --- | --- | --- | --- | --- |
-| PolicyCampaignAudienceAmended | business | bdgrz.policy_campaign.audience.amended | 2 | 13 | A policy distribution campaign's audience was reconciled against a later roster snapshot, adding or removing recipients without editing the frozen launch audience. |
-| PolicyCampaignAudienceFrozen | business | bdgrz.policy_campaign.audience.frozen | 2 | 7 | The complete frozen launch audience. EntriesManifest holds every CampaignAudienceEntry in canonical person order, with no count cap. |
-| PolicyCampaignClosed | business | bdgrz.policy_campaign.closed | 2 | 13 | The terminal closure of a campaign, appended by the closure process after every admitted participant result was applied and every participant use was held. TotalsContent is the complete CampaignTotalsView; ParticipantProofs the complete participant proof list. |
-| PolicyCampaignClosureAccepted | business | bdgrz.policy-distribution-campaign.policy-campaign-closure-accepted | 1 | 8 | The root native acceptance of a campaign closure. It seals result admission on the open generation and freezes the complete admitted participant results and the exact participant uses to hold. |
-| PolicyCampaignClosureCanceled | business | bdgrz.policy-distribution-campaign.policy-campaign-closure-canceled | 1 | 8 | The pending closure can definitely never complete. The cancellation fences every delayed local finalization of the generation and reopens result admission on the next generation. |
-| PolicyCampaignLaunched | business | bdgrz.policy_campaign.launched | 2 | 19 | Launches a campaign bound to exact material and a frozen roster snapshot. The audience itself follows as one PolicyCampaignAudienceFrozen fact in the same batch. AudienceTeamsManifest is the complete original list of team names. |
-| PolicyParticipantResultAdmitted | business | bdgrz.policy-distribution-campaign.policy-participant-result-admitted | 1 | 8 | The campaign admitted one complete participant result on its open generation. The campaign's logical revision advances to Revision; the participant applies the result afterwards from the frozen ChildAdmissionIntent. The root fact carries the original 202 acknowledgment. |
+| Target event | Selected source name | Kind | Adopted discriminator | Version | Schema fields | Meaning |
+| --- | --- | --- | --- | --- | --- | --- |
+| PolicyCampaignAudienceAmended | PolicyCampaignAudienceAmended | business | bdgrz.policy_campaign.audience.amended | 2 | 13 | A policy distribution campaign's audience was reconciled against a later roster snapshot, adding or removing recipients without editing the frozen launch audience. |
+| PolicyCampaignAudienceFrozen | PolicyCampaignAudienceFrozen | business | bdgrz.policy_campaign.audience.frozen | 2 | 7 | The complete frozen launch audience. EntriesManifest holds every CampaignAudienceEntry in canonical person order, with no count cap. |
+| PolicyCampaignClosed | PolicyCampaignClosed | business | bdgrz.policy_campaign.closed | 2 | 13 | The terminal closure of a campaign, appended by the closure process after every admitted participant result was applied and every participant use was held. TotalsContent is the complete CampaignTotalsView; ParticipantProofs the complete participant proof list. |
+| PolicyCampaignClosureAccepted | PolicyCampaignClosureAccepted | business | bdgrz.policy-distribution-campaign.policy-campaign-closure-accepted | 1 | 8 | The root native acceptance of a campaign closure. It seals result admission on the open generation and freezes the complete admitted participant results and the exact participant uses to hold. |
+| PolicyCampaignClosureCanceled | PolicyCampaignClosureCanceled | business | bdgrz.policy-distribution-campaign.policy-campaign-closure-canceled | 1 | 8 | The pending closure can definitely never complete. The cancellation fences every delayed local finalization of the generation and reopens result admission on the next generation. |
+| PolicyCampaignLaunched | PolicyCampaignLaunched | business | bdgrz.policy_campaign.launched | 2 | 19 | Launches a campaign bound to exact material and a frozen roster snapshot. The audience itself follows as one PolicyCampaignAudienceFrozen fact in the same batch. AudienceTeamsManifest is the complete original list of team names. |
+| PolicyParticipantResultAdmitted | PolicyParticipantResultAdmitted | business | bdgrz.policy-distribution-campaign.policy-participant-result-admitted | 1 | 8 | The campaign admitted one complete participant result on its open generation. The campaign's logical revision advances to Revision; the participant applies the result afterwards from the frozen ChildAdmissionIntent. The root fact carries the original 202 acknowledgment. |
 
 ## Event details
 
@@ -18,6 +18,9 @@ Canonical events: **7**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | PolicyCampaignAudienceAmended |
+| Selected source event name | PolicyCampaignAudienceAmended |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:PolicyCampaignAudienceAmended |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | PolicyCampaignAudienceAmended |
@@ -27,7 +30,8 @@ Canonical events: **7**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | `{"discriminator":"bdgrz.policy_campaign.audience.amended","version":1}` |
-| Meaning | A policy distribution campaign's audience was reconciled against a later roster snapshot, adding or removing recipients without editing the frozen launch audience. |
+| Target meaning | A policy distribution campaign's audience was reconciled against a later roster snapshot, adding or removing recipients without editing the frozen launch audience. |
+| Selected source meaning | A policy distribution campaign's audience was reconciled against a later roster snapshot, adding or removing recipients without editing the frozen launch audience. |
 | Meaning source | authored 2026-10-29 from src/Compliance.Common/Features/PolicyDistribution/Events/PolicyCampaignAudienceAmended.cs |
 
 #### Selected schema and implementation evidence
@@ -86,6 +90,9 @@ Canonical events: **7**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | PolicyCampaignAudienceFrozen |
+| Selected source event name | PolicyCampaignAudienceFrozen |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:PolicyCampaignAudienceFrozen |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | PolicyCampaignAudienceFrozen |
@@ -95,7 +102,8 @@ Canonical events: **7**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | `{"discriminator":"bdgrz.policy_campaign.audience.frozen","version":1}` |
-| Meaning | The complete frozen launch audience. EntriesManifest holds every CampaignAudienceEntry in canonical person order, with no count cap. |
+| Target meaning | The complete frozen launch audience. EntriesManifest holds every CampaignAudienceEntry in canonical person order, with no count cap. |
+| Selected source meaning | The complete frozen launch audience. EntriesManifest holds every CampaignAudienceEntry in canonical person order, with no count cap. |
 | Meaning source | record summary in src/Compliance.Common/Features/PolicyDistribution/Events/PolicyCampaignAudienceFrozen.cs |
 
 #### Selected schema and implementation evidence
@@ -148,6 +156,9 @@ Canonical events: **7**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | PolicyCampaignClosed |
+| Selected source event name | PolicyCampaignClosed |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:PolicyCampaignClosed |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | PolicyCampaignClosed |
@@ -157,7 +168,8 @@ Canonical events: **7**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | `{"discriminator":"bdgrz.policy_campaign.closed","version":1}` |
-| Meaning | The terminal closure of a campaign, appended by the closure process after every admitted participant result was applied and every participant use was held. TotalsContent is the complete CampaignTotalsView; ParticipantProofs the complete participant proof list. |
+| Target meaning | The terminal closure of a campaign, appended by the closure process after every admitted participant result was applied and every participant use was held. TotalsContent is the complete CampaignTotalsView; ParticipantProofs the complete participant proof list. |
+| Selected source meaning | The terminal closure of a campaign, appended by the closure process after every admitted participant result was applied and every participant use was held. TotalsContent is the complete CampaignTotalsView; ParticipantProofs the complete participant proof list. |
 | Meaning source | record summary in src/Compliance.Common/Features/PolicyDistribution/Events/PolicyCampaignClosed.cs |
 
 #### Selected schema and implementation evidence
@@ -250,12 +262,15 @@ ClosureIntent
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
 | [T038](../reactors/policy-campaign-closure-reactor.md#t038) | emitted semantic fact | PolicyDistributionCampaign | CompletePolicyCampaignClosure | PolicyDistributionCampaign |
-| [T068](../reactors/policy-campaign-closure-reactor.md#t068) | logical prerequisite | PolicyDistributionCampaign | SettlePolicyCampaignParticipantCampaignClosureUse | PolicyCampaignParticipant |
+| [T068](../reactors/policy-campaign-closure-reactor.md#t068) | logical prerequisite | PolicyDistributionCampaign | ClosePolicyCampaignParticipantCampaignClosureAuthorization | PolicyCampaignParticipant |
 
 ### PolicyCampaignClosureAccepted
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | PolicyCampaignClosureAccepted |
+| Selected source event name | PolicyCampaignClosureAccepted |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:PolicyCampaignClosureAccepted |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | PolicyCampaignClosureAccepted |
@@ -265,7 +280,8 @@ ClosureIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | The root native acceptance of a campaign closure. It seals result admission on the open generation and freezes the complete admitted participant results and the exact participant uses to hold. |
+| Target meaning | The root native acceptance of a campaign closure. It seals result admission on the open generation and freezes the complete admitted participant results and the exact participant uses to hold. |
+| Selected source meaning | The root native acceptance of a campaign closure. It seals result admission on the open generation and freezes the complete admitted participant results and the exact participant uses to hold. |
 | Meaning source | record summary in src/Compliance.Common/Features/PolicyDistribution/Events/PolicyCampaignClosureAccepted.cs |
 
 #### Selected schema and implementation evidence
@@ -344,14 +360,17 @@ ClosureIntent
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
 | [T038](../reactors/policy-campaign-closure-reactor.md#t038) | physical root, logical prerequisite | PolicyDistributionCampaign | CompletePolicyCampaignClosure | PolicyDistributionCampaign |
-| [T067](../reactors/policy-campaign-closure-reactor.md#t067) | physical root, logical prerequisite | PolicyDistributionCampaign | AuthorizePolicyCampaignParticipantCampaignClosureUse | PolicyCampaignParticipant |
-| [T068](../reactors/policy-campaign-closure-reactor.md#t068) | physical root | PolicyDistributionCampaign | SettlePolicyCampaignParticipantCampaignClosureUse | PolicyCampaignParticipant |
+| [T067](../reactors/policy-campaign-closure-reactor.md#t067) | physical root, logical prerequisite | PolicyDistributionCampaign | AuthorizePolicyCampaignParticipantCampaignClosure | PolicyCampaignParticipant |
+| [T068](../reactors/policy-campaign-closure-reactor.md#t068) | physical root | PolicyDistributionCampaign | ClosePolicyCampaignParticipantCampaignClosureAuthorization | PolicyCampaignParticipant |
 | [A010](../reactors/unassigned-architecture-rows.md#a010) | physical root, logical prerequisite | PolicyDistributionCampaign | AbortPolicyCampaignClosure | PolicyDistributionCampaign |
 
 ### PolicyCampaignClosureCanceled
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | PolicyCampaignClosureCanceled |
+| Selected source event name | PolicyCampaignClosureCanceled |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:PolicyCampaignClosureCanceled |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | PolicyCampaignClosureCanceled |
@@ -361,7 +380,8 @@ ClosureIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | The pending closure can definitely never complete. The cancellation fences every delayed local finalization of the generation and reopens result admission on the next generation. |
+| Target meaning | The pending closure can definitely never complete. The cancellation fences every delayed local finalization of the generation and reopens result admission on the next generation. |
+| Selected source meaning | The pending closure can definitely never complete. The cancellation fences every delayed local finalization of the generation and reopens result admission on the next generation. |
 | Meaning source | record summary in src/Compliance.Common/Features/PolicyDistribution/Events/PolicyCampaignClosureCanceled.cs |
 
 #### Selected schema and implementation evidence
@@ -439,13 +459,16 @@ ClosureIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T068](../reactors/policy-campaign-closure-reactor.md#t068) | logical prerequisite | PolicyDistributionCampaign | SettlePolicyCampaignParticipantCampaignClosureUse | PolicyCampaignParticipant |
+| [T068](../reactors/policy-campaign-closure-reactor.md#t068) | logical prerequisite | PolicyDistributionCampaign | ClosePolicyCampaignParticipantCampaignClosureAuthorization | PolicyCampaignParticipant |
 | [A010](../reactors/unassigned-architecture-rows.md#a010) | emitted semantic fact | PolicyDistributionCampaign | AbortPolicyCampaignClosure | PolicyDistributionCampaign |
 
 ### PolicyCampaignLaunched
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | PolicyCampaignLaunched |
+| Selected source event name | PolicyCampaignLaunched |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:PolicyCampaignLaunched |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | PolicyCampaignLaunched |
@@ -455,7 +478,8 @@ ClosureIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | `{"discriminator":"bdgrz.policy_campaign.launched","version":1}` |
-| Meaning | Launches a campaign bound to exact material and a frozen roster snapshot. The audience itself follows as one PolicyCampaignAudienceFrozen fact in the same batch. AudienceTeamsManifest is the complete original list of team names. |
+| Target meaning | Launches a campaign bound to exact material and a frozen roster snapshot. The audience itself follows as one PolicyCampaignAudienceFrozen fact in the same batch. AudienceTeamsManifest is the complete original list of team names. |
+| Selected source meaning | Launches a campaign bound to exact material and a frozen roster snapshot. The audience itself follows as one PolicyCampaignAudienceFrozen fact in the same batch. AudienceTeamsManifest is the complete original list of team names. |
 | Meaning source | record summary in src/Compliance.Common/Features/PolicyDistribution/Events/PolicyCampaignLaunched.cs |
 
 #### Selected schema and implementation evidence
@@ -520,6 +544,9 @@ ClosureIntent
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | PolicyParticipantResultAdmitted |
+| Selected source event name | PolicyParticipantResultAdmitted |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:PolicyParticipantResultAdmitted |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | PolicyParticipantResultAdmitted |
@@ -529,7 +556,8 @@ ClosureIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | The campaign admitted one complete participant result on its open generation. The campaign's logical revision advances to Revision; the participant applies the result afterwards from the frozen ChildAdmissionIntent. The root fact carries the original 202 acknowledgment. |
+| Target meaning | The campaign admitted one complete participant result on its open generation. The campaign's logical revision advances to Revision; the participant applies the result afterwards from the frozen ChildAdmissionIntent. The root fact carries the original 202 acknowledgment. |
+| Selected source meaning | The campaign admitted one complete participant result on its open generation. The campaign's logical revision advances to Revision; the participant applies the result afterwards from the frozen ChildAdmissionIntent. The root fact carries the original 202 acknowledgment. |
 | Meaning source | record summary in src/Compliance.Common/Features/PolicyDistribution/Events/PolicyParticipantResultAdmitted.cs |
 
 #### Selected schema and implementation evidence

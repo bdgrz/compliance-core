@@ -2,10 +2,10 @@
 
 Canonical events: **2**. Complete canonical event and available schema records: [owner event JSON](../data/events/application-name-claim.json).
 
-| Event | Kind | Adopted discriminator | Version | Schema fields | Meaning |
-| --- | --- | --- | --- | --- | --- |
-| ApplicationNameClaimed | business | null (recorded) | null (recorded) | [Placeholder: schema absent] | A normalized application name or alias was claimed for one declared application in the tenant; no other active application may hold it. |
-| ApplicationNameReleased | business | null (recorded) | null (recorded) | [Placeholder: schema absent] | A previously claimed application name or alias was released because the holder was retired, renamed, or merged into another application. |
+| Target event | Selected source name | Kind | Adopted discriminator | Version | Schema fields | Meaning |
+| --- | --- | --- | --- | --- | --- | --- |
+| ApplicationNameClaimed | ApplicationNameClaimed | business | null (recorded) | null (recorded) | [Placeholder: schema absent] | A normalized application name or alias was claimed for one declared application in the tenant; no other active application may hold it. |
+| ApplicationNameReleased | ApplicationNameReleased | business | null (recorded) | null (recorded) | [Placeholder: schema absent] | A previously claimed application name or alias was released because the holder was retired, renamed, or merged into another application. |
 
 ## Event details
 
@@ -13,6 +13,9 @@ Canonical events: **2**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | ApplicationNameClaimed |
+| Selected source event name | ApplicationNameClaimed |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:ApplicationNameClaimed |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | ApplicationNameClaimed |
@@ -22,7 +25,8 @@ Canonical events: **2**. Complete canonical event and available schema records: 
 | Source status | planned_no_source_type |
 | Adopted decision IDs | OWNER_ApplicationNameClaim |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | A normalized application name or alias was claimed for one declared application in the tenant; no other active application may hold it. |
+| Target meaning | A normalized application name or alias was claimed for one declared application in the tenant; no other active application may hold it. |
+| Selected source meaning | A normalized application name or alias was claimed for one declared application in the tenant; no other active application may hold it. |
 | Meaning source | authored 2026-10-29 |
 
 #### Schema
@@ -46,6 +50,9 @@ Canonical events: **2**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | ApplicationNameReleased |
+| Selected source event name | ApplicationNameReleased |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:ApplicationNameReleased |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | ApplicationNameReleased |
@@ -55,7 +62,8 @@ Canonical events: **2**. Complete canonical event and available schema records: 
 | Source status | planned_no_source_type |
 | Adopted decision IDs | OWNER_ApplicationNameClaim |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | A previously claimed application name or alias was released because the holder was retired, renamed, or merged into another application. |
+| Target meaning | A previously claimed application name or alias was released because the holder was retired, renamed, or merged into another application. |
+| Selected source meaning | A previously claimed application name or alias was released because the holder was retired, renamed, or merged into another application. |
 | Meaning source | authored 2026-10-29 |
 
 #### Schema

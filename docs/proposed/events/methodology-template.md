@@ -2,13 +2,13 @@
 
 Canonical events: **5**. Complete canonical event and available schema records: [owner event JSON](../data/events/methodology-template.json).
 
-| Event | Kind | Adopted discriminator | Version | Schema fields | Meaning |
-| --- | --- | --- | --- | --- | --- |
-| MethodologyTemplateCreated | business | bdgrz.methodologytemplates.methodology-template-created | 3 | [Placeholder: schema absent] | A methodology template was created with its first authored version by a named author, awaiting review and publication. |
-| MethodologyTemplateDraftReviewed | business | bdgrz.methodologytemplates.methodology-template-draft-reviewed | 3 | [Placeholder: schema absent] | A compact native MethodologyTemplateDraftReviewed delta; authored bodies and historical versions are immutable content. |
-| MethodologyTemplateDraftRevised | business | bdgrz.methodologytemplates.methodology-template-draft-revised | 3 | [Placeholder: schema absent] | A compact native MethodologyTemplateDraftRevised delta; authored bodies and historical versions are immutable content. |
-| MethodologyTemplateRetired | business | bdgrz.methodologytemplates.methodology-template-retired | 3 | [Placeholder: schema absent] | An active published methodology template was retired by a named member, ending its availability while its historical versions remain. |
-| MethodologyTemplateVersionPublished | business | bdgrz.methodologytemplates.methodology-template-version-published | 3 | [Placeholder: schema absent] | A compact native MethodologyTemplateVersionPublished delta; authored bodies and historical versions are immutable content. |
+| Target event | Selected source name | Kind | Adopted discriminator | Version | Schema fields | Meaning |
+| --- | --- | --- | --- | --- | --- | --- |
+| MethodologyTemplateCreated | MethodologyTemplateCreated | business | bdgrz.methodologytemplates.methodology-template-created | 3 | [Placeholder: schema absent] | A methodology template was created with its first authored version by a named author, awaiting review and publication. |
+| MethodologyTemplateDraftReviewed | MethodologyTemplateDraftReviewed | business | bdgrz.methodologytemplates.methodology-template-draft-reviewed | 3 | [Placeholder: schema absent] | A compact native MethodologyTemplateDraftReviewed delta; authored bodies and historical versions are immutable content. |
+| MethodologyTemplateDraftRevised | MethodologyTemplateDraftRevised | business | bdgrz.methodologytemplates.methodology-template-draft-revised | 3 | [Placeholder: schema absent] | A compact native MethodologyTemplateDraftRevised delta; authored bodies and historical versions are immutable content. |
+| MethodologyTemplateRetired | MethodologyTemplateRetired | business | bdgrz.methodologytemplates.methodology-template-retired | 3 | [Placeholder: schema absent] | An active published methodology template was retired by a named member, ending its availability while its historical versions remain. |
+| MethodologyTemplateVersionPublished | MethodologyTemplateVersionPublished | business | bdgrz.methodologytemplates.methodology-template-version-published | 3 | [Placeholder: schema absent] | A compact native MethodologyTemplateVersionPublished delta; authored bodies and historical versions are immutable content. |
 
 ## Event details
 
@@ -16,6 +16,9 @@ Canonical events: **5**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | MethodologyTemplateCreated |
+| Selected source event name | MethodologyTemplateCreated |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:MethodologyTemplateCreated |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | MethodologyTemplateCreated |
@@ -25,7 +28,8 @@ Canonical events: **5**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | A methodology template was created with its first authored version by a named author, awaiting review and publication. |
+| Target meaning | A methodology template was created with its first authored version by a named author, awaiting review and publication. |
+| Selected source meaning | A methodology template was created with its first authored version by a named author, awaiting review and publication. |
 | Meaning source | authored 2026-10-29 from src/Compliance.Common/Features/MethodologyTemplates/Events/MethodologyTemplateCreated.cs |
 
 #### Schema
@@ -46,6 +50,9 @@ Canonical events: **5**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | MethodologyTemplateDraftReviewed |
+| Selected source event name | MethodologyTemplateDraftReviewed |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:MethodologyTemplateDraftReviewed |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | MethodologyTemplateDraftReviewed |
@@ -55,7 +62,8 @@ Canonical events: **5**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | A compact native MethodologyTemplateDraftReviewed delta; authored bodies and historical versions are immutable content. |
+| Target meaning | A compact native MethodologyTemplateDraftReviewed delta; authored bodies and historical versions are immutable content. |
+| Selected source meaning | A compact native MethodologyTemplateDraftReviewed delta; authored bodies and historical versions are immutable content. |
 | Meaning source | record summary in src/Compliance.Common/Features/MethodologyTemplates/Events/MethodologyTemplateDraftReviewed.cs |
 
 #### Schema
@@ -76,6 +84,9 @@ Canonical events: **5**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | MethodologyTemplateDraftRevised |
+| Selected source event name | MethodologyTemplateDraftRevised |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:MethodologyTemplateDraftRevised |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | MethodologyTemplateDraftRevised |
@@ -85,7 +96,8 @@ Canonical events: **5**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | A compact native MethodologyTemplateDraftRevised delta; authored bodies and historical versions are immutable content. |
+| Target meaning | A compact native MethodologyTemplateDraftRevised delta; authored bodies and historical versions are immutable content. |
+| Selected source meaning | A compact native MethodologyTemplateDraftRevised delta; authored bodies and historical versions are immutable content. |
 | Meaning source | record summary in src/Compliance.Common/Features/MethodologyTemplates/Events/MethodologyTemplateDraftRevised.cs |
 
 #### Schema
@@ -106,6 +118,9 @@ Canonical events: **5**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | MethodologyTemplateRetired |
+| Selected source event name | MethodologyTemplateRetired |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:MethodologyTemplateRetired |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | MethodologyTemplateRetired |
@@ -115,7 +130,8 @@ Canonical events: **5**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | An active published methodology template was retired by a named member, ending its availability while its historical versions remain. |
+| Target meaning | An active published methodology template was retired by a named member, ending its availability while its historical versions remain. |
+| Selected source meaning | An active published methodology template was retired by a named member, ending its availability while its historical versions remain. |
 | Meaning source | authored 2026-10-29 from src/Compliance.Common/Features/MethodologyTemplates/Events/MethodologyTemplateRetired.cs |
 
 #### Schema
@@ -136,6 +152,9 @@ Canonical events: **5**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | MethodologyTemplateVersionPublished |
+| Selected source event name | MethodologyTemplateVersionPublished |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:MethodologyTemplateVersionPublished |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | MethodologyTemplateVersionPublished |
@@ -145,7 +164,8 @@ Canonical events: **5**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | A compact native MethodologyTemplateVersionPublished delta; authored bodies and historical versions are immutable content. |
+| Target meaning | A compact native MethodologyTemplateVersionPublished delta; authored bodies and historical versions are immutable content. |
+| Selected source meaning | A compact native MethodologyTemplateVersionPublished delta; authored bodies and historical versions are immutable content. |
 | Meaning source | record summary in src/Compliance.Common/Features/MethodologyTemplates/Events/MethodologyTemplateVersionPublished.cs |
 
 #### Schema

@@ -23,7 +23,11 @@
         "meaning": "Native personal approval of an exact preparation and observed available derivative.",
         "meaningSource": "record summary in src/Compliance.Common/Features/Evidence/Events/EvidenceRedactionApprovedV2.cs"
       },
-      "schema": null
+      "schema": null,
+      "sourceName": "EvidenceRedactionApprovedV2",
+      "targetName": "EvidenceRedactionApproved",
+      "nameDecision": "Names the personal approval of the exact evidence redaction without exposing the implementation version suffix.",
+      "targetMeaning": "Native personal approval of an exact preparation and observed available derivative."
     },
     {
       "canonical": {
@@ -47,7 +51,11 @@
         "meaning": "Native preparation with exact source qualification and frozen original result; occupied inline v1 remains legacy.",
         "meaningSource": "record summary in src/Compliance.Common/Features/Evidence/Events/EvidenceRedactionPreparedV2.cs"
       },
-      "schema": null
+      "schema": null,
+      "sourceName": "EvidenceRedactionPreparedV2",
+      "targetName": "EvidenceRedactionPrepared",
+      "nameDecision": "Names the prepared evidence redaction and its exact source without exposing the implementation version suffix.",
+      "targetMeaning": "Native preparation with exact source qualification and frozen original result; occupied inline v1 remains legacy."
     }
   ]
 }

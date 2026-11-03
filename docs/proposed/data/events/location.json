@@ -186,7 +186,11 @@
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "resolvedIntentSchema": "RecordNameChangeIntent",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "LocationChangeAccepted",
+      "targetName": "LocationChangeAccepted",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "The location record accepted a complete change: its normalized content and claim keys are frozen in the intent and the name-change process continues from this fact."
     },
     {
       "canonical": {
@@ -373,7 +377,11 @@
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "resolvedIntentSchema": "RecordNameChangeIntent",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "LocationChangeCanceled",
+      "targetName": "LocationChangeCanceled",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "The pending location change was canceled after a definite failure; it fences the local apply before any newly acquired claim is released."
     },
     {
       "canonical": {
@@ -578,7 +586,11 @@
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "resolvedIntentSchema": "RecordNameChangeIntent",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "LocationRevisionRecorded",
+      "targetName": "LocationRevisionRecorded",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "Applies one complete, attributed location change after its active name was claimed; revision 1 creates it. The complete normalized LocationContent is the content behind ContentContent."
     }
   ]
 }

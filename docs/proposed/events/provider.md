@@ -2,13 +2,13 @@
 
 Canonical events: **5**. Complete canonical event and available schema records: [owner event JSON](../data/events/provider.json).
 
-| Event | Kind | Adopted discriminator | Version | Schema fields | Meaning |
-| --- | --- | --- | --- | --- | --- |
-| ProviderChangeAccepted | business | bdgrz.provider.provider-change-accepted | 1 | 8 | The provider record accepted a complete change: its normalized content and claim keys are frozen in the intent and the name-change process continues from this fact. |
-| ProviderChangeCanceled | business | bdgrz.provider.provider-change-canceled | 1 | 8 | The pending provider change was canceled after a definite failure; it fences the local apply before any newly acquired claim is released. |
-| ProviderRecorded | business | bdgrz.provider.recorded | 1 | 10 | The creating change of a provider was applied after its governed name was claimed. The complete normalized ProviderContent is the content behind ContentContent. |
-| ProviderRetired | business | null (recorded) | null (recorded) | [Placeholder: schema absent] | A provider was retired from the tenant register; it can no longer be referenced by new scope, flows, or assurance reviews, and its governed name is released. |
-| ProviderRevised | business | bdgrz.provider.revised | 1 | 11 | A later change of a provider was applied after the names it needs were claimed. The complete normalized ProviderContent is the content behind ContentContent. |
+| Target event | Selected source name | Kind | Adopted discriminator | Version | Schema fields | Meaning |
+| --- | --- | --- | --- | --- | --- | --- |
+| ProviderChangeAccepted | ProviderChangeAccepted | business | bdgrz.provider.provider-change-accepted | 1 | 8 | The provider record accepted a complete change: its normalized content and claim keys are frozen in the intent and the name-change process continues from this fact. |
+| ProviderChangeCanceled | ProviderChangeCanceled | business | bdgrz.provider.provider-change-canceled | 1 | 8 | The pending provider change was canceled after a definite failure; it fences the local apply before any newly acquired claim is released. |
+| ProviderRecorded | ProviderRecorded | business | bdgrz.provider.recorded | 1 | 10 | The creating change of a provider was applied after its governed name was claimed. The complete normalized ProviderContent is the content behind ContentContent. |
+| ProviderRetired | ProviderRetired | business | null (recorded) | null (recorded) | [Placeholder: schema absent] | A provider was retired from the tenant register; it can no longer be referenced by new scope, flows, or assurance reviews, and its governed name is released. |
+| ProviderRevised | ProviderRevised | business | bdgrz.provider.revised | 1 | 11 | A later change of a provider was applied after the names it needs were claimed. The complete normalized ProviderContent is the content behind ContentContent. |
 
 ## Event details
 
@@ -16,6 +16,9 @@ Canonical events: **5**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | ProviderChangeAccepted |
+| Selected source event name | ProviderChangeAccepted |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:ProviderChangeAccepted |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | ProviderChangeAccepted |
@@ -25,7 +28,8 @@ Canonical events: **5**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | The provider record accepted a complete change: its normalized content and claim keys are frozen in the intent and the name-change process continues from this fact. |
+| Target meaning | The provider record accepted a complete change: its normalized content and claim keys are frozen in the intent and the name-change process continues from this fact. |
+| Selected source meaning | The provider record accepted a complete change: its normalized content and claim keys are frozen in the intent and the name-change process continues from this fact. |
 | Meaning source | record summary in src/Compliance.Common/Features/Providers/Events/ProviderChangeAccepted.cs |
 
 #### Selected schema and implementation evidence
@@ -114,6 +118,9 @@ RecordNameChangeIntent
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | ProviderChangeCanceled |
+| Selected source event name | ProviderChangeCanceled |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:ProviderChangeCanceled |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | ProviderChangeCanceled |
@@ -123,7 +130,8 @@ RecordNameChangeIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | The pending provider change was canceled after a definite failure; it fences the local apply before any newly acquired claim is released. |
+| Target meaning | The pending provider change was canceled after a definite failure; it fences the local apply before any newly acquired claim is released. |
+| Selected source meaning | The pending provider change was canceled after a definite failure; it fences the local apply before any newly acquired claim is released. |
 | Meaning source | record summary in src/Compliance.Common/Features/Providers/Events/ProviderChangeCanceled.cs |
 
 #### Selected schema and implementation evidence
@@ -210,6 +218,9 @@ RecordNameChangeIntent
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | ProviderRecorded |
+| Selected source event name | ProviderRecorded |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:ProviderRecorded |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | ProviderRecorded |
@@ -219,7 +230,8 @@ RecordNameChangeIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | The creating change of a provider was applied after its governed name was claimed. The complete normalized ProviderContent is the content behind ContentContent. |
+| Target meaning | The creating change of a provider was applied after its governed name was claimed. The complete normalized ProviderContent is the content behind ContentContent. |
+| Selected source meaning | The creating change of a provider was applied after its governed name was claimed. The complete normalized ProviderContent is the content behind ContentContent. |
 | Meaning source | record summary in src/Compliance.Common/Features/Providers/Events/ProviderRecorded.cs |
 
 #### Selected schema and implementation evidence
@@ -317,6 +329,9 @@ RecordNameChangeIntent
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | ProviderRetired |
+| Selected source event name | ProviderRetired |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:ProviderRetired |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | ProviderRetired |
@@ -326,7 +341,8 @@ RecordNameChangeIntent
 | Source status | planned_no_source_type |
 | Adopted decision IDs | EV-D07 |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | A provider was retired from the tenant register; it can no longer be referenced by new scope, flows, or assurance reviews, and its governed name is released. |
+| Target meaning | A provider was retired from the tenant register; it can no longer be referenced by new scope, flows, or assurance reviews, and its governed name is released. |
+| Selected source meaning | A provider was retired from the tenant register; it can no longer be referenced by new scope, flows, or assurance reviews, and its governed name is released. |
 | Meaning source | authored 2026-10-29 |
 
 #### Schema
@@ -349,6 +365,9 @@ RecordNameChangeIntent
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | ProviderRevised |
+| Selected source event name | ProviderRevised |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:ProviderRevised |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | ProviderRevised |
@@ -358,7 +377,8 @@ RecordNameChangeIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | A later change of a provider was applied after the names it needs were claimed. The complete normalized ProviderContent is the content behind ContentContent. |
+| Target meaning | A later change of a provider was applied after the names it needs were claimed. The complete normalized ProviderContent is the content behind ContentContent. |
+| Selected source meaning | A later change of a provider was applied after the names it needs were claimed. The complete normalized ProviderContent is the content behind ContentContent. |
 | Meaning source | record summary in src/Compliance.Common/Features/Providers/Events/ProviderRevised.cs |
 
 #### Selected schema and implementation evidence

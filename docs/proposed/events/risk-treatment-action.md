@@ -2,15 +2,15 @@
 
 Canonical events: **7**. Complete canonical event and available schema records: [owner event JSON](../data/events/risk-treatment-action.json).
 
-| Event | Kind | Adopted discriminator | Version | Schema fields | Meaning |
-| --- | --- | --- | --- | --- | --- |
-| RiskTreatmentActionAdded | business | bdgrz.risk.treatment_action.added | 2 | 8 | Accountable treatment work was added to the risk. ActionContent is the complete open RiskTreatmentActionView; the logical id of the operation is the action id and the revision is one. |
-| RiskTreatmentActionCancelled | business | bdgrz.risk.treatment_action.cancelled | 2 | 12 | Unfinished treatment work was canceled while its history is retained. |
-| RiskTreatmentActionCompletionReviewAccepted | business | bdgrz.risk-treatment-action.risk-treatment-action-completion-review-accepted | 1 | 8 | The root native acceptance of a completion review. It seals the exact submission for Generation, which is the submission ordinal of the action, and references the frozen RiskActionCompletionReviewIntent; the action only completes or reopens once RiskTreatmentActionCompletionReviewed follows. |
-| RiskTreatmentActionCompletionReviewCanceled | business | bdgrz.risk-treatment-action.risk-treatment-action-completion-review-canceled | 1 | 8 | A pending completion review ended before it recorded its decision. The fact is the local receiver fence: a delayed CompleteRiskTreatmentActionReview sees it and does nothing, and only then are the evidence uses settled. SourceProofs is the failure proof. |
-| RiskTreatmentActionCompletionReviewed | business | bdgrz.risk.treatment_action.completion_reviewed | 2 | 15 | The decision of a completion review, appended by RiskActionCompletionReviewProcess once every cited evidence request is held. Intent is the frozen RiskActionCompletionReviewIntent. |
-| RiskTreatmentActionCompletionSubmitted | business | bdgrz.risk.treatment_action.completion_submitted | 2 | 14 | Treatment work was reported done. EvidenceRequestIdsManifest is the complete ordered list of the fulfilled evidence requests the submission rests on; the logical id of the operation is the submission id. |
-| RiskTreatmentActionRevised | business | bdgrz.risk.treatment_action.revised | 2 | 18 | Open treatment work was revised. EvidenceRequestIdsManifest is the complete ordered list of cited evidence request ids. |
+| Target event | Selected source name | Kind | Adopted discriminator | Version | Schema fields | Meaning |
+| --- | --- | --- | --- | --- | --- | --- |
+| RiskTreatmentActionAdded | RiskTreatmentActionAdded | business | bdgrz.risk.treatment_action.added | 2 | 8 | Accountable treatment work was added to the risk. ActionContent is the complete open RiskTreatmentActionView; the logical id of the operation is the action id and the revision is one. |
+| RiskTreatmentActionCancelled | RiskTreatmentActionCancelled | business | bdgrz.risk.treatment_action.cancelled | 2 | 12 | Unfinished treatment work was canceled while its history is retained. |
+| RiskTreatmentActionCompletionReviewAccepted | RiskTreatmentActionCompletionReviewAccepted | business | bdgrz.risk-treatment-action.risk-treatment-action-completion-review-accepted | 1 | 8 | The root native acceptance of a completion review. It seals the exact submission for Generation, which is the submission ordinal of the action, and references the frozen RiskActionCompletionReviewIntent; the action only completes or reopens once RiskTreatmentActionCompletionReviewed follows. |
+| RiskTreatmentActionCompletionReviewCanceled | RiskTreatmentActionCompletionReviewCanceled | business | bdgrz.risk-treatment-action.risk-treatment-action-completion-review-canceled | 1 | 8 | A pending completion review ended before it recorded its decision. The fact is the local receiver fence: a delayed CompleteRiskTreatmentActionReview sees it and does nothing, and only then are the evidence uses settled. SourceProofs is the failure proof. |
+| RiskTreatmentActionCompletionReviewed | RiskTreatmentActionCompletionReviewed | business | bdgrz.risk.treatment_action.completion_reviewed | 2 | 15 | The decision of a completion review, appended by RiskActionCompletionReviewProcess once every cited evidence request is held. Intent is the frozen RiskActionCompletionReviewIntent. |
+| RiskTreatmentActionCompletionSubmitted | RiskTreatmentActionCompletionSubmitted | business | bdgrz.risk.treatment_action.completion_submitted | 2 | 14 | Treatment work was reported done. EvidenceRequestIdsManifest is the complete ordered list of the fulfilled evidence requests the submission rests on; the logical id of the operation is the submission id. |
+| RiskTreatmentActionRevised | RiskTreatmentActionRevised | business | bdgrz.risk.treatment_action.revised | 2 | 18 | Open treatment work was revised. EvidenceRequestIdsManifest is the complete ordered list of cited evidence request ids. |
 
 ## Event details
 
@@ -18,6 +18,9 @@ Canonical events: **7**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | RiskTreatmentActionAdded |
+| Selected source event name | RiskTreatmentActionAdded |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:RiskTreatmentActionAdded |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | RiskTreatmentActionAdded |
@@ -27,7 +30,8 @@ Canonical events: **7**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | `{"discriminator":"bdgrz.risk.treatment_action.added","version":1}` |
-| Meaning | Accountable treatment work was added to the risk. ActionContent is the complete open RiskTreatmentActionView; the logical id of the operation is the action id and the revision is one. |
+| Target meaning | Accountable treatment work was added to the risk. ActionContent is the complete open RiskTreatmentActionView; the logical id of the operation is the action id and the revision is one. |
+| Selected source meaning | Accountable treatment work was added to the risk. ActionContent is the complete open RiskTreatmentActionView; the logical id of the operation is the action id and the revision is one. |
 | Meaning source | record summary in src/Compliance.Common/Features/Risks/Events/RiskTreatmentActionAdded.cs |
 
 #### Selected schema and implementation evidence
@@ -81,6 +85,9 @@ Canonical events: **7**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | RiskTreatmentActionCancelled |
+| Selected source event name | RiskTreatmentActionCancelled |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:RiskTreatmentActionCancelled |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | RiskTreatmentActionCancelled |
@@ -90,7 +97,8 @@ Canonical events: **7**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | `{"discriminator":"bdgrz.risk.treatment_action.cancelled","version":1}` |
-| Meaning | Unfinished treatment work was canceled while its history is retained. |
+| Target meaning | Unfinished treatment work was canceled while its history is retained. |
+| Selected source meaning | Unfinished treatment work was canceled while its history is retained. |
 | Meaning source | record summary in src/Compliance.Common/Features/Risks/Events/RiskTreatmentActionCancelled.cs |
 
 #### Selected schema and implementation evidence
@@ -138,6 +146,9 @@ Canonical events: **7**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | RiskTreatmentActionCompletionReviewAccepted |
+| Selected source event name | RiskTreatmentActionCompletionReviewAccepted |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:RiskTreatmentActionCompletionReviewAccepted |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | RiskTreatmentActionCompletionReviewAccepted |
@@ -147,7 +158,8 @@ Canonical events: **7**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | The root native acceptance of a completion review. It seals the exact submission for Generation, which is the submission ordinal of the action, and references the frozen RiskActionCompletionReviewIntent; the action only completes or reopens once RiskTreatmentActionCompletionReviewed follows. |
+| Target meaning | The root native acceptance of a completion review. It seals the exact submission for Generation, which is the submission ordinal of the action, and references the frozen RiskActionCompletionReviewIntent; the action only completes or reopens once RiskTreatmentActionCompletionReviewed follows. |
+| Selected source meaning | The root native acceptance of a completion review. It seals the exact submission for Generation, which is the submission ordinal of the action, and references the frozen RiskActionCompletionReviewIntent; the action only completes or reopens once RiskTreatmentActionCompletionReviewed follows. |
 | Meaning source | record summary in src/Compliance.Common/Features/Risks/Events/RiskTreatmentActionCompletionReviewAccepted.cs |
 
 #### Selected schema and implementation evidence
@@ -221,8 +233,8 @@ RiskActionCompletionReviewIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T071](../reactors/risk-action-completion-review-reactor.md#t071) | physical root, logical prerequisite | RiskTreatmentAction | AuthorizeEvidenceRequestActionCompletionUse | EvidenceRequest |
-| [T072](../reactors/risk-action-completion-review-reactor.md#t072) | physical root | RiskTreatmentAction | SettleEvidenceRequestActionCompletionUse | EvidenceRequest |
+| [T071](../reactors/risk-action-completion-review-reactor.md#t071) | physical root, logical prerequisite | RiskTreatmentAction | AuthorizeEvidenceRequestActionCompletion | EvidenceRequest |
+| [T072](../reactors/risk-action-completion-review-reactor.md#t072) | physical root | RiskTreatmentAction | CloseEvidenceRequestActionCompletionAuthorization | EvidenceRequest |
 | [T078](../reactors/risk-action-completion-review-reactor.md#t078) | physical root, logical prerequisite | RiskTreatmentAction | CompleteRiskTreatmentActionReview | RiskTreatmentAction |
 | [A012](../reactors/unassigned-architecture-rows.md#a012) | physical root, logical prerequisite | RiskTreatmentAction | AbortRiskTreatmentActionReview | RiskTreatmentAction |
 
@@ -230,6 +242,9 @@ RiskActionCompletionReviewIntent
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | RiskTreatmentActionCompletionReviewCanceled |
+| Selected source event name | RiskTreatmentActionCompletionReviewCanceled |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:RiskTreatmentActionCompletionReviewCanceled |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | RiskTreatmentActionCompletionReviewCanceled |
@@ -239,7 +254,8 @@ RiskActionCompletionReviewIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | A pending completion review ended before it recorded its decision. The fact is the local receiver fence: a delayed CompleteRiskTreatmentActionReview sees it and does nothing, and only then are the evidence uses settled. SourceProofs is the failure proof. |
+| Target meaning | A pending completion review ended before it recorded its decision. The fact is the local receiver fence: a delayed CompleteRiskTreatmentActionReview sees it and does nothing, and only then are the evidence uses settled. SourceProofs is the failure proof. |
+| Selected source meaning | A pending completion review ended before it recorded its decision. The fact is the local receiver fence: a delayed CompleteRiskTreatmentActionReview sees it and does nothing, and only then are the evidence uses settled. SourceProofs is the failure proof. |
 | Meaning source | record summary in src/Compliance.Common/Features/Risks/Events/RiskTreatmentActionCompletionReviewCanceled.cs |
 
 #### Selected schema and implementation evidence
@@ -313,13 +329,16 @@ RiskActionCompletionReviewIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T072](../reactors/risk-action-completion-review-reactor.md#t072) | logical prerequisite | RiskTreatmentAction | SettleEvidenceRequestActionCompletionUse | EvidenceRequest |
+| [T072](../reactors/risk-action-completion-review-reactor.md#t072) | logical prerequisite | RiskTreatmentAction | CloseEvidenceRequestActionCompletionAuthorization | EvidenceRequest |
 | [A012](../reactors/unassigned-architecture-rows.md#a012) | emitted semantic fact | RiskTreatmentAction | AbortRiskTreatmentActionReview | RiskTreatmentAction |
 
 ### RiskTreatmentActionCompletionReviewed
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | RiskTreatmentActionCompletionReviewed |
+| Selected source event name | RiskTreatmentActionCompletionReviewed |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:RiskTreatmentActionCompletionReviewed |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | RiskTreatmentActionCompletionReviewed |
@@ -329,7 +348,8 @@ RiskActionCompletionReviewIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | `{"discriminator":"bdgrz.risk.treatment_action.completion_reviewed","version":1}` |
-| Meaning | The decision of a completion review, appended by RiskActionCompletionReviewProcess once every cited evidence request is held. Intent is the frozen RiskActionCompletionReviewIntent. |
+| Target meaning | The decision of a completion review, appended by RiskActionCompletionReviewProcess once every cited evidence request is held. Intent is the frozen RiskActionCompletionReviewIntent. |
+| Selected source meaning | The decision of a completion review, appended by RiskActionCompletionReviewProcess once every cited evidence request is held. Intent is the frozen RiskActionCompletionReviewIntent. |
 | Meaning source | record summary in src/Compliance.Common/Features/Risks/Events/RiskTreatmentActionCompletionReviewed.cs |
 
 #### Selected schema and implementation evidence
@@ -410,13 +430,16 @@ RiskActionCompletionReviewIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T072](../reactors/risk-action-completion-review-reactor.md#t072) | logical prerequisite | RiskTreatmentAction | SettleEvidenceRequestActionCompletionUse | EvidenceRequest |
+| [T072](../reactors/risk-action-completion-review-reactor.md#t072) | logical prerequisite | RiskTreatmentAction | CloseEvidenceRequestActionCompletionAuthorization | EvidenceRequest |
 | [T078](../reactors/risk-action-completion-review-reactor.md#t078) | emitted semantic fact | RiskTreatmentAction | CompleteRiskTreatmentActionReview | RiskTreatmentAction |
 
 ### RiskTreatmentActionCompletionSubmitted
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | RiskTreatmentActionCompletionSubmitted |
+| Selected source event name | RiskTreatmentActionCompletionSubmitted |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:RiskTreatmentActionCompletionSubmitted |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | RiskTreatmentActionCompletionSubmitted |
@@ -426,7 +449,8 @@ RiskActionCompletionReviewIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | `{"discriminator":"bdgrz.risk.treatment_action.completion_submitted","version":1}` |
-| Meaning | Treatment work was reported done. EvidenceRequestIdsManifest is the complete ordered list of the fulfilled evidence requests the submission rests on; the logical id of the operation is the submission id. |
+| Target meaning | Treatment work was reported done. EvidenceRequestIdsManifest is the complete ordered list of the fulfilled evidence requests the submission rests on; the logical id of the operation is the submission id. |
+| Selected source meaning | Treatment work was reported done. EvidenceRequestIdsManifest is the complete ordered list of the fulfilled evidence requests the submission rests on; the logical id of the operation is the submission id. |
 | Meaning source | record summary in src/Compliance.Common/Features/Risks/Events/RiskTreatmentActionCompletionSubmitted.cs |
 
 #### Selected schema and implementation evidence
@@ -486,6 +510,9 @@ RiskActionCompletionReviewIntent
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | RiskTreatmentActionRevised |
+| Selected source event name | RiskTreatmentActionRevised |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:RiskTreatmentActionRevised |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | RiskTreatmentActionRevised |
@@ -495,7 +522,8 @@ RiskActionCompletionReviewIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | `{"discriminator":"bdgrz.risk.treatment_action.revised","version":1}` |
-| Meaning | Open treatment work was revised. EvidenceRequestIdsManifest is the complete ordered list of cited evidence request ids. |
+| Target meaning | Open treatment work was revised. EvidenceRequestIdsManifest is the complete ordered list of cited evidence request ids. |
+| Selected source meaning | Open treatment work was revised. EvidenceRequestIdsManifest is the complete ordered list of cited evidence request ids. |
 | Meaning source | record summary in src/Compliance.Common/Features/Risks/Events/RiskTreatmentActionRevised.cs |
 
 #### Selected schema and implementation evidence

@@ -2,13 +2,13 @@
 
 Selected command contracts: **5**. Complete selected contracts and companion source evidence: [owner command JSON](../data/commands/control-evaluation.json).
 
-| Command | Kind | Identity | Fields | HTTP routes |
-| --- | --- | --- | --- | --- |
-| DisposeControlEvaluationDeviation | http | CommandId | 10 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/evaluations/{evaluation_id}/deviations/{deviation_id}/dispositions/{command_id} [ComplianceAuthorizationPolicies.ApiUser] |
-| RecordControlEvaluationStep | http | CommandId | 12 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/evaluations/{evaluation_id}/steps/{step_id}/results/{command_id} [ComplianceAuthorizationPolicies.ApiUser] |
-| ReviewControlEvaluation | http | CommandId | 9 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/evaluations/{evaluation_id}/reviews/{command_id} [ComplianceAuthorizationPolicies.ApiUser] |
-| StartControlEvaluation | http | EvaluationId | 6 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/evaluations/{evaluation_id} [ComplianceAuthorizationPolicies.ApiUser] |
-| SubmitControlEvaluation | http | CommandId | 7 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/evaluations/{evaluation_id}/submissions/{command_id} [ComplianceAuthorizationPolicies.ApiUser] |
+| Target command | Selected source name | Kind | Identity | Fields | HTTP routes |
+| --- | --- | --- | --- | --- | --- |
+| DisposeControlEvaluationDeviation | DisposeControlEvaluationDeviation | http | CommandId | 10 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/evaluations/{evaluation_id}/deviations/{deviation_id}/dispositions/{command_id} [ComplianceAuthorizationPolicies.ApiUser] |
+| RecordControlEvaluationStep | RecordControlEvaluationStep | http | CommandId | 12 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/evaluations/{evaluation_id}/steps/{step_id}/results/{command_id} [ComplianceAuthorizationPolicies.ApiUser] |
+| ReviewControlEvaluation | ReviewControlEvaluation | http | CommandId | 9 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/evaluations/{evaluation_id}/reviews/{command_id} [ComplianceAuthorizationPolicies.ApiUser] |
+| StartControlEvaluation | StartControlEvaluation | http | EvaluationId | 6 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/evaluations/{evaluation_id} [ComplianceAuthorizationPolicies.ApiUser] |
+| SubmitControlEvaluation | SubmitControlEvaluation | http | CommandId | 7 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/evaluations/{evaluation_id}/submissions/{command_id} [ComplianceAuthorizationPolicies.ApiUser] |
 
 ## Selected command details
 
@@ -16,6 +16,9 @@ Selected command contracts: **5**. Complete selected contracts and companion sou
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | DisposeControlEvaluationDeviation |
+| Selected source command name | DisposeControlEvaluationDeviation |
+| Name decision | The selected source name is retained. |
 | Owner | ControlEvaluation |
 | Contract record status | target_contract |
 | Kind | http |
@@ -70,6 +73,9 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | RecordControlEvaluationStep |
+| Selected source command name | RecordControlEvaluationStep |
+| Name decision | The selected source name is retained. |
 | Owner | ControlEvaluation |
 | Contract record status | target_contract |
 | Kind | http |
@@ -126,6 +132,9 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | ReviewControlEvaluation |
+| Selected source command name | ReviewControlEvaluation |
+| Name decision | The selected source name is retained. |
 | Owner | ControlEvaluation |
 | Contract record status | target_contract |
 | Kind | http |
@@ -179,6 +188,9 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | StartControlEvaluation |
+| Selected source command name | StartControlEvaluation |
+| Name decision | The selected source name is retained. |
 | Owner | ControlEvaluation |
 | Contract record status | target_contract |
 | Kind | http |
@@ -229,6 +241,9 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | SubmitControlEvaluation |
+| Selected source command name | SubmitControlEvaluation |
+| Name decision | The selected source name is retained. |
 | Owner | ControlEvaluation |
 | Contract record status | target_contract |
 | Kind | http |
@@ -279,7 +294,7 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 
 ## Source contracts
 
-| Command | Handler | Registered | Entry point |
+| Selected source command | Handler | Registered | Entry point |
 | --- | --- | --- | --- |
 | DisposeControlEvaluationDeviation | DisposeControlEvaluationDeviationHandler | true | authorized_http_and_mcp |
 | RecordControlEvaluationStep | RecordControlEvaluationStepHandler | true | authorized_http_and_mcp |

@@ -2,9 +2,9 @@
 
 Canonical events: **1**. Complete canonical event and available schema records: [owner event JSON](../data/events/readiness-assessment.json).
 
-| Event | Kind | Adopted discriminator | Version | Schema fields | Meaning |
-| --- | --- | --- | --- | --- | --- |
-| ReadinessAssessmentRecorded | business | bdgrz.readiness.assessment.recorded | 1 | 18 | The immutable result of computing one readiness assessment from its frozen inputs, at the assessment owner's own revision one. Each manifest is the complete original collection; Intent is the frozen ReadinessRunIntent the computation used and nothing else. |
+| Target event | Selected source name | Kind | Adopted discriminator | Version | Schema fields | Meaning |
+| --- | --- | --- | --- | --- | --- | --- |
+| ReadinessAssessmentRecorded | ReadinessAssessmentRecorded | business | bdgrz.readiness.assessment.recorded | 1 | 18 | The immutable result of computing one readiness assessment from its frozen inputs, at the assessment owner's own revision one. Each manifest is the complete original collection; Intent is the frozen ReadinessRunIntent the computation used and nothing else. |
 
 ## Event details
 
@@ -12,6 +12,9 @@ Canonical events: **1**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | ReadinessAssessmentRecorded |
+| Selected source event name | ReadinessAssessmentRecorded |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:ReadinessAssessmentRecorded |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | ReadinessAssessmentRecorded |
@@ -21,7 +24,8 @@ Canonical events: **1**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | The immutable result of computing one readiness assessment from its frozen inputs, at the assessment owner's own revision one. Each manifest is the complete original collection; Intent is the frozen ReadinessRunIntent the computation used and nothing else. |
+| Target meaning | The immutable result of computing one readiness assessment from its frozen inputs, at the assessment owner's own revision one. Each manifest is the complete original collection; Intent is the frozen ReadinessRunIntent the computation used and nothing else. |
+| Selected source meaning | The immutable result of computing one readiness assessment from its frozen inputs, at the assessment owner's own revision one. Each manifest is the complete original collection; Intent is the frozen ReadinessRunIntent the computation used and nothing else. |
 | Meaning source | record summary in src/Compliance.Common/Features/Readiness/Events/ReadinessAssessmentRecorded.cs |
 
 #### Selected schema and implementation evidence

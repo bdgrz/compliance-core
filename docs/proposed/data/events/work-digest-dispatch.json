@@ -22,7 +22,11 @@
         "sourceStatus": "declared",
         "meaning": null
       },
-      "schema": null
+      "schema": null,
+      "sourceName": "WorkDigestDispatchAttemptStarted",
+      "targetName": "WorkDigestDeliveryAttemptStarted",
+      "nameDecision": "Names the start of one scheduled digest delivery attempt without using the transport term dispatch.",
+      "targetMeaning": null
     },
     {
       "canonical": {
@@ -45,7 +49,11 @@
         "sourceStatus": "declared",
         "meaning": null
       },
-      "schema": null
+      "schema": null,
+      "sourceName": "WorkDigestDispatchOutcomeRecorded",
+      "targetName": "WorkDigestDeliveryOutcomeRecorded",
+      "nameDecision": "Names the recorded result of one work digest delivery attempt.",
+      "targetMeaning": null
     },
     {
       "canonical": {
@@ -68,7 +76,11 @@
         "sourceStatus": "declared",
         "meaning": null
       },
-      "schema": null
+      "schema": null,
+      "sourceName": "WorkDigestDispatchScheduled",
+      "targetName": "WorkDigestDeliveryScheduled",
+      "nameDecision": "Names the scheduled work digest delivery time.",
+      "targetMeaning": null
     },
     {
       "canonical": {
@@ -92,7 +104,11 @@
         "meaning": "A native operator admission bound to its exact unknown attempt and immutable original result.",
         "meaningSource": "record summary in src/Compliance.Common/Features/Work/Events/WorkDigestUnknownRetryAuthorized.cs"
       },
-      "schema": null
+      "schema": null,
+      "sourceName": "WorkDigestUnknownRetryAuthorized",
+      "targetName": "WorkDigestRetryApprovedAfterUnknownDelivery",
+      "nameDecision": "Names the operator's approval to retry a weekly digest when its prior delivery result could not be confirmed.",
+      "targetMeaning": "A native operator admission bound to its exact unknown attempt and immutable original result."
     }
   ]
 }

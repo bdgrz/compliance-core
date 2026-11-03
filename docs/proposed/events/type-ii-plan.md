@@ -2,12 +2,12 @@
 
 Canonical events: **4**. Complete canonical event and available schema records: [owner event JSON](../data/events/type-ii-plan.json).
 
-| Event | Kind | Adopted discriminator | Version | Schema fields | Meaning |
-| --- | --- | --- | --- | --- | --- |
-| TypeIIPlanApproved | business | bdgrz.examinations.type-i-i-plan-approved | 2 | [Placeholder: schema absent] | Records independent executive approval of the reviewed Type II plan version. |
-| TypeIIPlanProposed | business | bdgrz.examinations.type-i-i-plan-proposed | 2 | [Placeholder: schema absent] | Creates a versioned Type II operating plan with exact source and control bindings. |
-| TypeIIPlanReviewed | business | bdgrz.examinations.type-i-i-plan-reviewed | 1 | [Placeholder: schema absent] | Records the independent review of the current Type II plan version. |
-| TypeIIPlanRevised | business | bdgrz.examinations.type-i-i-plan-revised | 1 | [Placeholder: schema absent] | Appends a revised immutable Type II plan after a review requests changes. |
+| Target event | Selected source name | Kind | Adopted discriminator | Version | Schema fields | Meaning |
+| --- | --- | --- | --- | --- | --- | --- |
+| TypeIIPlanApproved | TypeIIPlanApproved | business | bdgrz.examinations.type-i-i-plan-approved | 2 | [Placeholder: schema absent] | Records independent executive approval of the reviewed Type II plan version. |
+| TypeIIPlanProposed | TypeIIPlanProposed | business | bdgrz.examinations.type-i-i-plan-proposed | 2 | [Placeholder: schema absent] | Creates a versioned Type II operating plan with exact source and control bindings. |
+| TypeIIPlanReviewed | TypeIIPlanReviewed | business | bdgrz.examinations.type-i-i-plan-reviewed | 1 | [Placeholder: schema absent] | Records the independent review of the current Type II plan version. |
+| TypeIIPlanRevised | TypeIIPlanRevised | business | bdgrz.examinations.type-i-i-plan-revised | 1 | [Placeholder: schema absent] | Appends a revised immutable Type II plan after a review requests changes. |
 
 ## Event details
 
@@ -15,6 +15,9 @@ Canonical events: **4**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | TypeIIPlanApproved |
+| Selected source event name | TypeIIPlanApproved |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:TypeIIPlanApproved |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | TypeIIPlanApproved |
@@ -24,7 +27,8 @@ Canonical events: **4**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | Records independent executive approval of the reviewed Type II plan version. |
+| Target meaning | Records independent executive approval of the reviewed Type II plan version. |
+| Selected source meaning | Records independent executive approval of the reviewed Type II plan version. |
 | Meaning source | record summary in src/Compliance.Common/Features/Examinations/Events/TypeIIPlanApproved.cs |
 
 #### Schema
@@ -45,6 +49,9 @@ Canonical events: **4**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | TypeIIPlanProposed |
+| Selected source event name | TypeIIPlanProposed |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:TypeIIPlanProposed |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | TypeIIPlanProposed |
@@ -54,7 +61,8 @@ Canonical events: **4**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | Creates a versioned Type II operating plan with exact source and control bindings. |
+| Target meaning | Creates a versioned Type II operating plan with exact source and control bindings. |
+| Selected source meaning | Creates a versioned Type II operating plan with exact source and control bindings. |
 | Meaning source | record summary in src/Compliance.Common/Features/Examinations/Events/TypeIIPlanProposed.cs |
 
 #### Schema
@@ -75,6 +83,9 @@ Canonical events: **4**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | TypeIIPlanReviewed |
+| Selected source event name | TypeIIPlanReviewed |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:TypeIIPlanReviewed |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | TypeIIPlanReviewed |
@@ -84,7 +95,8 @@ Canonical events: **4**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | Records the independent review of the current Type II plan version. |
+| Target meaning | Records the independent review of the current Type II plan version. |
+| Selected source meaning | Records the independent review of the current Type II plan version. |
 | Meaning source | record summary in src/Compliance.Common/Features/Examinations/Events/TypeIIPlanReviewed.cs |
 
 #### Schema
@@ -105,6 +117,9 @@ Canonical events: **4**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | TypeIIPlanRevised |
+| Selected source event name | TypeIIPlanRevised |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:TypeIIPlanRevised |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | TypeIIPlanRevised |
@@ -114,7 +129,8 @@ Canonical events: **4**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | Appends a revised immutable Type II plan after a review requests changes. |
+| Target meaning | Appends a revised immutable Type II plan after a review requests changes. |
+| Selected source meaning | Appends a revised immutable Type II plan after a review requests changes. |
 | Meaning source | record summary in src/Compliance.Common/Features/Examinations/Events/TypeIIPlanRevised.cs |
 
 #### Schema

@@ -2,11 +2,11 @@
 
 Canonical events: **3**. Complete canonical event and available schema records: [owner event JSON](../data/events/declared-system-instance.json).
 
-| Event | Kind | Adopted discriminator | Version | Schema fields | Meaning |
-| --- | --- | --- | --- | --- | --- |
-| SystemInstanceRegistered | business | bdgrz.system_instance.registered | 1 | [Placeholder: schema absent] | A system instance of an application was registered with its name, kind and access boundary reference by a named member, as its first revision. |
-| SystemInstanceRetired | business | bdgrz.system_instance.retired | 1 | [Placeholder: schema absent] | An effective-dated instance retirement. Scope decisions and history remain. |
-| SystemInstanceRevised | business | bdgrz.applications.system-instance-revised | 1 | [Placeholder: schema absent] | Records the SystemInstanceRevised domain fact for one tenant-owned subject revision. |
+| Target event | Selected source name | Kind | Adopted discriminator | Version | Schema fields | Meaning |
+| --- | --- | --- | --- | --- | --- | --- |
+| SystemInstanceRegistered | SystemInstanceRegistered | business | bdgrz.system_instance.registered | 1 | [Placeholder: schema absent] | A system instance of an application was registered with its name, kind and access boundary reference by a named member, as its first revision. |
+| SystemInstanceRetired | SystemInstanceRetired | business | bdgrz.system_instance.retired | 1 | [Placeholder: schema absent] | An effective-dated instance retirement. Scope decisions and history remain. |
+| SystemInstanceRevised | SystemInstanceRevised | business | bdgrz.applications.system-instance-revised | 1 | [Placeholder: schema absent] | Records the SystemInstanceRevised domain fact for one tenant-owned subject revision. |
 
 ## Event details
 
@@ -14,6 +14,9 @@ Canonical events: **3**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | SystemInstanceRegistered |
+| Selected source event name | SystemInstanceRegistered |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:SystemInstanceRegistered |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | SystemInstanceRegistered |
@@ -23,7 +26,8 @@ Canonical events: **3**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | A system instance of an application was registered with its name, kind and access boundary reference by a named member, as its first revision. |
+| Target meaning | A system instance of an application was registered with its name, kind and access boundary reference by a named member, as its first revision. |
+| Selected source meaning | A system instance of an application was registered with its name, kind and access boundary reference by a named member, as its first revision. |
 | Meaning source | authored 2026-10-29 from src/Compliance.Common/Features/Applications/Events/SystemInstanceRegistered.cs |
 
 #### Schema
@@ -44,6 +48,9 @@ Canonical events: **3**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | SystemInstanceRetired |
+| Selected source event name | SystemInstanceRetired |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:SystemInstanceRetired |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | SystemInstanceRetired |
@@ -53,7 +60,8 @@ Canonical events: **3**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | An effective-dated instance retirement. Scope decisions and history remain. |
+| Target meaning | An effective-dated instance retirement. Scope decisions and history remain. |
+| Selected source meaning | An effective-dated instance retirement. Scope decisions and history remain. |
 | Meaning source | record summary in src/Compliance.Common/Features/Applications/Events/SystemInstanceRetired.cs |
 
 #### Schema
@@ -74,6 +82,9 @@ Canonical events: **3**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | SystemInstanceRevised |
+| Selected source event name | SystemInstanceRevised |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:SystemInstanceRevised |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | SystemInstanceRevised |
@@ -83,7 +94,8 @@ Canonical events: **3**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | Records the SystemInstanceRevised domain fact for one tenant-owned subject revision. |
+| Target meaning | Records the SystemInstanceRevised domain fact for one tenant-owned subject revision. |
+| Selected source meaning | Records the SystemInstanceRevised domain fact for one tenant-owned subject revision. |
 | Meaning source | record summary in src/Compliance.Common/Features/Applications/Events/SystemInstanceRevised.cs |
 
 #### Schema

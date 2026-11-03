@@ -23,7 +23,11 @@
         "meaning": "An existing read-only program ledger prefix was sealed into immutable per-item history before its first native write.",
         "meaningSource": "record summary in src/Compliance.Common/Features/Work/Events/WorkAssignmentLegacyHistoryImported.cs"
       },
-      "schema": null
+      "schema": null,
+      "sourceName": "WorkAssignmentLegacyHistoryImported",
+      "targetName": "WorkAssignmentLegacyHistoryImported",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "An existing read-only program ledger prefix was sealed into immutable per-item history before its first native write."
     },
     {
       "canonical": {
@@ -47,7 +51,11 @@
         "meaning": "A work item's accountability was escalated, recording its current assignee and that it is escalated, as the next revision of its assignment.",
         "meaningSource": "authored 2026-10-29 from src/Compliance.Common/Features/Work/Events/WorkItemAssignmentEscalated.cs"
       },
-      "schema": null
+      "schema": null,
+      "sourceName": "WorkItemAssignmentEscalated",
+      "targetName": "WorkItemAssignmentEscalated",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "A work item's accountability was escalated, recording its current assignee and that it is escalated, as the next revision of its assignment."
     },
     {
       "canonical": {
@@ -71,7 +79,11 @@
         "meaning": "A work item was assigned to a member, or left unassigned, recorded as the next revision of its assignment without escalation.",
         "meaningSource": "authored 2026-10-29 from src/Compliance.Common/Features/Work/Events/WorkItemAssignmentRecorded.cs"
       },
-      "schema": null
+      "schema": null,
+      "sourceName": "WorkItemAssignmentRecorded",
+      "targetName": "WorkItemAssignmentRecorded",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "A work item was assigned to a member, or left unassigned, recorded as the next revision of its assignment without escalation."
     }
   ]
 }

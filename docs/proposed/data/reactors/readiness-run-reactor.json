@@ -1,5 +1,7 @@
 {
-  "root": "ReadinessRunReactor",
+  "sourceRoot": "ReadinessRunReactor",
+  "targetRoot": "ReassessProgramReadinessReactor",
+  "businessReason": "Update current program readiness from the exact frozen assessment.",
   "rows": [
     {
       "id": "T039",

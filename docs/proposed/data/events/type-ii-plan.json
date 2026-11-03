@@ -23,7 +23,11 @@
         "meaning": "Records independent executive approval of the reviewed Type II plan version.",
         "meaningSource": "record summary in src/Compliance.Common/Features/Examinations/Events/TypeIIPlanApproved.cs"
       },
-      "schema": null
+      "schema": null,
+      "sourceName": "TypeIIPlanApproved",
+      "targetName": "TypeIIPlanApproved",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "Records independent executive approval of the reviewed Type II plan version."
     },
     {
       "canonical": {
@@ -47,7 +51,11 @@
         "meaning": "Creates a versioned Type II operating plan with exact source and control bindings.",
         "meaningSource": "record summary in src/Compliance.Common/Features/Examinations/Events/TypeIIPlanProposed.cs"
       },
-      "schema": null
+      "schema": null,
+      "sourceName": "TypeIIPlanProposed",
+      "targetName": "TypeIIPlanProposed",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "Creates a versioned Type II operating plan with exact source and control bindings."
     },
     {
       "canonical": {
@@ -71,7 +79,11 @@
         "meaning": "Records the independent review of the current Type II plan version.",
         "meaningSource": "record summary in src/Compliance.Common/Features/Examinations/Events/TypeIIPlanReviewed.cs"
       },
-      "schema": null
+      "schema": null,
+      "sourceName": "TypeIIPlanReviewed",
+      "targetName": "TypeIIPlanReviewed",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "Records the independent review of the current Type II plan version."
     },
     {
       "canonical": {
@@ -95,7 +107,11 @@
         "meaning": "Appends a revised immutable Type II plan after a review requests changes.",
         "meaningSource": "record summary in src/Compliance.Common/Features/Examinations/Events/TypeIIPlanRevised.cs"
       },
-      "schema": null
+      "schema": null,
+      "sourceName": "TypeIIPlanRevised",
+      "targetName": "TypeIIPlanRevised",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "Appends a revised immutable Type II plan after a review requests changes."
     }
   ]
 }

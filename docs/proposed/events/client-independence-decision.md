@@ -2,9 +2,9 @@
 
 Canonical events: **1**. Complete canonical event and available schema records: [owner event JSON](../data/events/client-independence-decision.json).
 
-| Event | Kind | Adopted discriminator | Version | Schema fields | Meaning |
-| --- | --- | --- | --- | --- | --- |
-| ClientIndependenceEvaluated | business | bdgrz.independence.evaluated | 1 | 8 | The immutable historical preview of one admitted evaluation, materialized from the frozen intent only. The complete IndependenceEvaluationView is immutable content; the preview never grants production acceptance. The evaluation identity is OperationId. |
+| Target event | Selected source name | Kind | Adopted discriminator | Version | Schema fields | Meaning |
+| --- | --- | --- | --- | --- | --- | --- |
+| ClientIndependenceEvaluated | ClientIndependenceEvaluated | business | bdgrz.independence.evaluated | 1 | 8 | The immutable historical preview of one admitted evaluation, materialized from the frozen intent only. The complete IndependenceEvaluationView is immutable content; the preview never grants production acceptance. The evaluation identity is OperationId. |
 
 ## Event details
 
@@ -12,6 +12,9 @@ Canonical events: **1**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | ClientIndependenceEvaluated |
+| Selected source event name | ClientIndependenceEvaluated |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:ClientIndependenceEvaluated |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | ClientIndependenceEvaluated |
@@ -21,7 +24,8 @@ Canonical events: **1**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | The immutable historical preview of one admitted evaluation, materialized from the frozen intent only. The complete IndependenceEvaluationView is immutable content; the preview never grants production acceptance. The evaluation identity is OperationId. |
+| Target meaning | The immutable historical preview of one admitted evaluation, materialized from the frozen intent only. The complete IndependenceEvaluationView is immutable content; the preview never grants production acceptance. The evaluation identity is OperationId. |
+| Selected source meaning | The immutable historical preview of one admitted evaluation, materialized from the frozen intent only. The complete IndependenceEvaluationView is immutable content; the preview never grants production acceptance. The evaluation identity is OperationId. |
 | Meaning source | record summary in src/Compliance.Common/Features/AccessControl/Events/ClientIndependenceEvaluated.cs |
 
 #### Selected schema and implementation evidence
@@ -114,7 +118,7 @@ ClientIndependencePreviewIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T106](../reactors/client-independence-preview-reactor.md#t106) | emitted semantic fact | ClientServiceIndependence | MaterializeClientIndependencePreview | ClientIndependenceDecision |
+| [T106](../reactors/client-independence-preview-reactor.md#t106) | emitted semantic fact | ClientServiceIndependence | RecordClientIndependenceEvaluation | ClientIndependenceDecision |
 
 
 

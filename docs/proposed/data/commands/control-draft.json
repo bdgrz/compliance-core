@@ -80,7 +80,9 @@
         "line": 1039,
         "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
       },
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "ApproveControl",
+      "targetName": "ApproveControl"
     },
     {
       "command": "CreateControlDraft",
@@ -136,7 +138,9 @@
         "line": 3763,
         "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
       },
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "CreateControlDraft",
+      "targetName": "CreateControlDraft"
     },
     {
       "command": "DesignateControlOwnerPerson",
@@ -196,7 +200,9 @@
         "line": 4967,
         "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
       },
-      "kind": "command"
+      "kind": "command",
+      "sourceName": "DesignateControlOwnerPerson",
+      "targetName": "DesignateControlOwnerPerson"
     },
     {
       "command": "DiscardControlDraft",
@@ -257,7 +263,9 @@
         "line": 5192,
         "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
       },
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "DiscardControlDraft",
+      "targetName": "DiscardControlDraft"
     },
     {
       "command": "ProposeControlRetirement",
@@ -328,7 +336,9 @@
         "line": 6737,
         "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
       },
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "ProposeControlRetirement",
+      "targetName": "ProposeControlRetirement"
     },
     {
       "command": "ProposeControlSuccessor",
@@ -394,7 +404,9 @@
         "line": 6826,
         "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
       },
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "ProposeControlSuccessor",
+      "targetName": "ProposeControlSuccessor"
     },
     {
       "command": "RetireControl",
@@ -470,7 +482,9 @@
         "line": 11531,
         "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
       },
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "RetireControl",
+      "targetName": "RetireControl"
     },
     {
       "command": "ReviewControl",
@@ -541,7 +555,9 @@
         "line": 11979,
         "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
       },
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "ReviewControl",
+      "targetName": "ReviewControl"
     },
     {
       "command": "ReviseControlDraft",
@@ -596,7 +612,9 @@
         "line": 12747,
         "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
       },
-      "kind": "command"
+      "kind": "command",
+      "sourceName": "ReviseControlDraft",
+      "targetName": "ReviseControlDraft"
     },
     {
       "command": "WithdrawControlProposal",
@@ -657,7 +675,9 @@
         "line": 14975,
         "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
       },
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "WithdrawControlProposal",
+      "targetName": "WithdrawControlProposal"
     }
   ],
   "sourceContractEvidence": []

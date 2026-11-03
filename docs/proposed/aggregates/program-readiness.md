@@ -48,8 +48,8 @@
 | Row | Kind | Source owner | Target owner | Command |
 | --- | --- | --- | --- | --- |
 | [T039](../reactors/readiness-run-reactor.md#t039) | reaction_or_regular_process_stage | ReadinessAssessment | ProgramReadiness | AdoptReadinessAssessment |
-| [T065](../reactors/readiness-decision-reactor.md#t065) | reaction_or_regular_process_stage | ProgramReadiness | ReadinessGapPlan | AuthorizeReadinessGapPlanReadinessDecisionUse |
-| [T066](../reactors/readiness-decision-reactor.md#t066) | reaction_or_regular_process_stage | ProgramReadiness | ReadinessGapPlan | SettleReadinessGapPlanReadinessDecisionUse |
+| [T065](../reactors/readiness-decision-reactor.md#t065) | reaction_or_regular_process_stage | ProgramReadiness | ReadinessGapPlan | AuthorizeReadinessGapPlanReadinessDecision |
+| [T066](../reactors/readiness-decision-reactor.md#t066) | reaction_or_regular_process_stage | ProgramReadiness | ReadinessGapPlan | CloseReadinessGapPlanReadinessDecisionAuthorization |
 | [T074](../reactors/readiness-decision-reactor.md#t074) | reaction_or_regular_process_stage | ProgramReadiness | ProgramReadiness | CompleteReadinessDecision |
 | [T075](../reactors/readiness-decision-reactor.md#t075) | reaction_or_regular_process_stage | ProgramReadiness | ProgramReadiness | CompleteTypeIEntryDecision |
 | [T087](../reactors/readiness-run-reactor.md#t087) | reaction_or_regular_process_stage | ProgramReadiness | ReadinessAssessment | ComputeReadinessAssessment |

@@ -23,7 +23,7 @@
 
 | Command | Kind | Identity field |
 | --- | --- | --- |
-| [MaterializeClientIndependencePreview](../commands/client-independence-decision.md#materializeclientindependencepreview) | receiver | CommandId |
+| [RecordClientIndependenceEvaluation](../commands/client-independence-decision.md#recordclientindependenceevaluation) | receiver | CommandId |
 
 ## Events
 
@@ -35,7 +35,7 @@
 
 | Row | Kind | Source owner | Target owner | Command |
 | --- | --- | --- | --- | --- |
-| [T106](../reactors/client-independence-preview-reactor.md#t106) | reaction_or_regular_process_stage | ClientServiceIndependence | ClientIndependenceDecision | MaterializeClientIndependencePreview |
+| [T106](../reactors/client-independence-preview-reactor.md#t106) | reaction_or_regular_process_stage | ClientServiceIndependence | ClientIndependenceDecision | RecordClientIndependenceEvaluation |
 
 ## Product rules
 

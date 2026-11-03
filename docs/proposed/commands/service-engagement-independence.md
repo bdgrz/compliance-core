@@ -2,25 +2,25 @@
 
 Selected command contracts: **17**. Complete selected contracts and companion source evidence: [owner command JSON](../data/commands/service-engagement-independence.json).
 
-| Command | Kind | Identity | Fields | HTTP routes |
-| --- | --- | --- | --- | --- |
-| AcceptServiceEngagement | http | CommandId | 4 | PUT /api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/acceptance/{command_id} [ComplianceAuthorizationPolicies.ApiUser] |
-| AmendServiceEngagement | http | CommandId | 5 | PUT /api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/amend-service-engagement/{command_id} [ApiUser + existing request-scope authorizers] |
-| AssignServiceEngagementStaff | http | CommandId | 6 | PUT /api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/actual-assignments/{staff_member_id}/{command_id} [ComplianceAuthorizationPolicies.ApiUser] |
-| CloseServiceEngagement | http | CommandId | 5 | PUT /api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/closure/{command_id} [ComplianceAuthorizationPolicies.ApiUser] |
-| CreateServiceEngagement | http | EngagementId | 4 | PUT /api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/create-service-engagement [ApiUser + existing request-scope authorizers] |
-| ProposeServiceEngagementStaff | http | CommandId | 5 | PUT /api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/propose-service-engagement-staff/{command_id} [ApiUser + existing request-scope authorizers] |
-| RecordDirectoryIndependenceReevaluation | command | CommandId | 13 | [Placeholder: value not recorded] |
-| RevokeServiceEngagementActualStaff | http | CommandId | 6 | PUT /api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/actual-assignments/{staff_member_id}/revocations/{command_id} [ComplianceAuthorizationPolicies.ApiUser] |
-| WithdrawServiceEngagementStaffProposal | http | CommandId | 6 | PUT /api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/staff-proposals/{staff_member_id}/withdrawals/{command_id} [ComplianceAuthorizationPolicies.ApiUser] |
-| RejectServiceEngagementAcceptance | abort | CommandId | 6 | [Placeholder: route/channel not recorded] |
-| RejectServiceEngagementStaffAssignment | abort | CommandId | 6 | [Placeholder: route/channel not recorded] |
-| CancelEngagementPersonalDecision | abort | CommandId | 5 | [Placeholder: route/channel not recorded] |
-| CompleteServiceEngagementAcceptance | receiver | CommandId | 10 | [Placeholder: value not recorded] |
-| CompleteServiceEngagementStaffAssignment | receiver | CommandId | 11 | [Placeholder: value not recorded] |
-| AuthorizeEngagementPracticeCommitments | receiver | CommandId | 9 | [Placeholder: value not recorded] |
-| SettleEngagementPersonalDecision | receiver | CommandId | 8 | [Placeholder: value not recorded] |
-| AuthorizeEngagementPersonalDecision | receiver | CommandId | 9 | [Placeholder: value not recorded] |
+| Target command | Selected source name | Kind | Identity | Fields | HTTP routes |
+| --- | --- | --- | --- | --- | --- |
+| AcceptServiceEngagement | AcceptServiceEngagement | http | CommandId | 4 | PUT /api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/acceptance/{command_id} [ComplianceAuthorizationPolicies.ApiUser] |
+| AmendServiceEngagement | AmendServiceEngagement | http | CommandId | 5 | PUT /api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/amend-service-engagement/{command_id} [ApiUser + existing request-scope authorizers] |
+| AssignServiceEngagementStaff | AssignServiceEngagementStaff | http | CommandId | 6 | PUT /api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/actual-assignments/{staff_member_id}/{command_id} [ComplianceAuthorizationPolicies.ApiUser] |
+| CloseServiceEngagement | CloseServiceEngagement | http | CommandId | 5 | PUT /api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/closure/{command_id} [ComplianceAuthorizationPolicies.ApiUser] |
+| CreateServiceEngagement | CreateServiceEngagement | http | EngagementId | 4 | PUT /api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/create-service-engagement [ApiUser + existing request-scope authorizers] |
+| ProposeServiceEngagementStaff | ProposeServiceEngagementStaff | http | CommandId | 5 | PUT /api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/propose-service-engagement-staff/{command_id} [ApiUser + existing request-scope authorizers] |
+| RecordDirectoryIndependenceReevaluation | RecordDirectoryIndependenceReevaluation | command | CommandId | 13 | [Placeholder: value not recorded] |
+| RevokeServiceEngagementActualStaff | RevokeServiceEngagementActualStaff | http | CommandId | 6 | PUT /api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/actual-assignments/{staff_member_id}/revocations/{command_id} [ComplianceAuthorizationPolicies.ApiUser] |
+| WithdrawServiceEngagementStaffProposal | WithdrawServiceEngagementStaffProposal | http | CommandId | 6 | PUT /api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/staff-proposals/{staff_member_id}/withdrawals/{command_id} [ComplianceAuthorizationPolicies.ApiUser] |
+| RejectServiceEngagementAcceptance | RejectServiceEngagementAcceptance | abort | CommandId | 6 | [Placeholder: route/channel not recorded] |
+| RejectServiceEngagementStaffAssignment | RejectServiceEngagementStaffAssignment | abort | CommandId | 6 | [Placeholder: route/channel not recorded] |
+| CancelEngagementPersonalDecision | CancelEngagementPersonalDecision | abort | CommandId | 5 | [Placeholder: route/channel not recorded] |
+| CompleteServiceEngagementAcceptance | CompleteServiceEngagementAcceptance | receiver | CommandId | 10 | [Placeholder: value not recorded] |
+| CompleteServiceEngagementStaffAssignment | CompleteServiceEngagementStaffAssignment | receiver | CommandId | 11 | [Placeholder: value not recorded] |
+| AuthorizeEngagementPracticeCommitments | AuthorizeEngagementPracticeCommitments | receiver | CommandId | 9 | [Placeholder: value not recorded] |
+| CloseEngagementPersonalDecision | SettleEngagementPersonalDecision | receiver | CommandId | 8 | [Placeholder: value not recorded] |
+| AuthorizeEngagementPersonalDecision | AuthorizeEngagementPersonalDecision | receiver | CommandId | 9 | [Placeholder: value not recorded] |
 
 ## Selected command details
 
@@ -28,6 +28,9 @@ Selected command contracts: **17**. Complete selected contracts and companion so
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | AcceptServiceEngagement |
+| Selected source command name | AcceptServiceEngagement |
+| Name decision | The selected source name is retained. |
 | Owner | ServiceEngagementIndependence |
 | Contract record status | target_contract |
 | Kind | http |
@@ -76,6 +79,9 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | AmendServiceEngagement |
+| Selected source command name | AmendServiceEngagement |
+| Name decision | The selected source name is retained. |
 | Owner | ServiceEngagementIndependence |
 | Contract record status | target_contract |
 | Kind | http |
@@ -125,6 +131,9 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | AssignServiceEngagementStaff |
+| Selected source command name | AssignServiceEngagementStaff |
+| Name decision | The selected source name is retained. |
 | Owner | ServiceEngagementIndependence |
 | Contract record status | target_contract |
 | Kind | http |
@@ -175,6 +184,9 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | CloseServiceEngagement |
+| Selected source command name | CloseServiceEngagement |
+| Name decision | The selected source name is retained. |
 | Owner | ServiceEngagementIndependence |
 | Contract record status | target_contract |
 | Kind | http |
@@ -224,6 +236,9 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | CreateServiceEngagement |
+| Selected source command name | CreateServiceEngagement |
+| Name decision | The selected source name is retained. |
 | Owner | ServiceEngagementIndependence |
 | Contract record status | target_contract |
 | Kind | http |
@@ -272,6 +287,9 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | ProposeServiceEngagementStaff |
+| Selected source command name | ProposeServiceEngagementStaff |
+| Name decision | The selected source name is retained. |
 | Owner | ServiceEngagementIndependence |
 | Contract record status | target_contract |
 | Kind | http |
@@ -321,6 +339,9 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | RecordDirectoryIndependenceReevaluation |
+| Selected source command name | RecordDirectoryIndependenceReevaluation |
+| Name decision | The selected source name is retained. |
 | Owner | ServiceEngagementIndependence |
 | Contract record status | target_contract |
 | Kind | command |
@@ -376,6 +397,9 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | RevokeServiceEngagementActualStaff |
+| Selected source command name | RevokeServiceEngagementActualStaff |
+| Name decision | The selected source name is retained. |
 | Owner | ServiceEngagementIndependence |
 | Contract record status | target_contract |
 | Kind | http |
@@ -426,6 +450,9 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | WithdrawServiceEngagementStaffProposal |
+| Selected source command name | WithdrawServiceEngagementStaffProposal |
+| Name decision | The selected source name is retained. |
 | Owner | ServiceEngagementIndependence |
 | Contract record status | target_contract |
 | Kind | http |
@@ -476,13 +503,16 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | RejectServiceEngagementAcceptance |
+| Selected source command name | RejectServiceEngagementAcceptance |
+| Name decision | The selected source name is retained. |
 | Owner | ServiceEngagementIndependence |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | abort |
 | Logical identity | CommandId; Uuid; required=true; abort receiver identity bound to the exact admitted operation and generation: exact redelivery resolves the original rejected result; an abort after a terminal outcome is a no-op |
 | Entry point | [Placeholder: value not recorded] |
 | MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | [Placeholder: value not recorded] |
+| Selected semantic events | None listed |
 | Protocols | [Placeholder: value not recorded] |
 | Policy preservation | [Placeholder: value not recorded] |
 | Contract changes | [Placeholder: value not recorded] |
@@ -522,13 +552,16 @@ Required tests: [Placeholder: required tests not recorded]
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | RejectServiceEngagementStaffAssignment |
+| Selected source command name | RejectServiceEngagementStaffAssignment |
+| Name decision | The selected source name is retained. |
 | Owner | ServiceEngagementIndependence |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | abort |
 | Logical identity | CommandId; Uuid; required=true; abort receiver identity bound to the exact admitted operation and generation: exact redelivery resolves the original rejected result; an abort after a terminal outcome is a no-op |
 | Entry point | [Placeholder: value not recorded] |
 | MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | [Placeholder: value not recorded] |
+| Selected semantic events | None listed |
 | Protocols | [Placeholder: value not recorded] |
 | Policy preservation | [Placeholder: value not recorded] |
 | Contract changes | [Placeholder: value not recorded] |
@@ -568,13 +601,16 @@ Required tests: [Placeholder: required tests not recorded]
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | CancelEngagementPersonalDecision |
+| Selected source command name | CancelEngagementPersonalDecision |
+| Name decision | The selected source name is retained. |
 | Owner | ServiceEngagementIndependence |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | abort |
 | Logical identity | CommandId; Uuid; required=true; abort receiver identity bound to the exact admitted operation and generation: exact redelivery resolves the original rejected result; an abort after a terminal outcome is a no-op |
 | Entry point | [Placeholder: value not recorded] |
 | MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | [Placeholder: value not recorded] |
+| Selected semantic events | None listed |
 | Protocols | [Placeholder: value not recorded] |
 | Policy preservation | [Placeholder: value not recorded] |
 | Contract changes | [Placeholder: value not recorded] |
@@ -613,13 +649,16 @@ Required tests: [Placeholder: required tests not recorded]
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | CompleteServiceEngagementAcceptance |
+| Selected source command name | CompleteServiceEngagementAcceptance |
+| Name decision | The selected source name is retained. |
 | Owner | ServiceEngagementIndependence |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; reactor; deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result |
 | Entry point | [Placeholder: value not recorded] |
 | MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | [Placeholder: value not recorded] |
+| Selected semantic events | None listed |
 | Protocols | [Placeholder: value not recorded] |
 | Policy preservation | [Placeholder: value not recorded] |
 | Contract changes | [Placeholder: value not recorded] |
@@ -663,13 +702,16 @@ Required tests: [Placeholder: required tests not recorded]
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | CompleteServiceEngagementStaffAssignment |
+| Selected source command name | CompleteServiceEngagementStaffAssignment |
+| Name decision | The selected source name is retained. |
 | Owner | ServiceEngagementIndependence |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; reactor; deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result |
 | Entry point | [Placeholder: value not recorded] |
 | MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | [Placeholder: value not recorded] |
+| Selected semantic events | None listed |
 | Protocols | [Placeholder: value not recorded] |
 | Policy preservation | [Placeholder: value not recorded] |
 | Contract changes | [Placeholder: value not recorded] |
@@ -714,13 +756,16 @@ Required tests: [Placeholder: required tests not recorded]
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | AuthorizeEngagementPracticeCommitments |
+| Selected source command name | AuthorizeEngagementPracticeCommitments |
+| Name decision | The selected source name is retained. |
 | Owner | ServiceEngagementIndependence |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; reactor; deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result |
 | Entry point | [Placeholder: value not recorded] |
 | MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | [Placeholder: value not recorded] |
+| Selected semantic events | None listed |
 | Protocols | [Placeholder: value not recorded] |
 | Policy preservation | [Placeholder: value not recorded] |
 | Contract changes | [Placeholder: value not recorded] |
@@ -759,17 +804,20 @@ Existing tests: [Placeholder: existing tests not recorded]
 
 Required tests: [Placeholder: required tests not recorded]
 
-### SettleEngagementPersonalDecision
+### CloseEngagementPersonalDecision
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | CloseEngagementPersonalDecision |
+| Selected source command name | SettleEngagementPersonalDecision |
+| Name decision | Closes the exact engagement personal decision after its authorization or cancellation. |
 | Owner | ServiceEngagementIndependence |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; reactor; deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result |
 | Entry point | [Placeholder: value not recorded] |
 | MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | [Placeholder: value not recorded] |
+| Selected semantic events | None listed |
 | Protocols | [Placeholder: value not recorded] |
 | Policy preservation | [Placeholder: value not recorded] |
 | Contract changes | [Placeholder: value not recorded] |
@@ -811,13 +859,16 @@ Required tests: [Placeholder: required tests not recorded]
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | AuthorizeEngagementPersonalDecision |
+| Selected source command name | AuthorizeEngagementPersonalDecision |
+| Name decision | The selected source name is retained. |
 | Owner | ServiceEngagementIndependence |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; reactor; deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result |
 | Entry point | [Placeholder: value not recorded] |
 | MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | [Placeholder: value not recorded] |
+| Selected semantic events | None listed |
 | Protocols | [Placeholder: value not recorded] |
 | Policy preservation | [Placeholder: value not recorded] |
 | Contract changes | [Placeholder: value not recorded] |
@@ -859,7 +910,7 @@ Required tests: [Placeholder: required tests not recorded]
 
 ## Source contracts
 
-| Command | Handler | Registered | Entry point |
+| Selected source command | Handler | Registered | Entry point |
 | --- | --- | --- | --- |
 | AcceptServiceEngagement | AcceptServiceEngagementHandler | true | personal_http |
 | AcknowledgeEngagementManagement | AcknowledgeEngagementManagementHandler | true | personal_http |

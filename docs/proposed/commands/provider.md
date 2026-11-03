@@ -2,12 +2,12 @@
 
 Selected command contracts: **4**. Complete selected contracts and companion source evidence: [owner command JSON](../data/commands/provider.json).
 
-| Command | Kind | Identity | Fields | HTTP routes |
-| --- | --- | --- | --- | --- |
-| RecordProvider | http | ProviderId | 3 | PUT /api/v1/tenants/{tenant_id}/providers/{provider_id} [ComplianceAuthorizationPolicies.ApiUser] |
-| ReviseProvider | http | CommandId | 5 | PUT /api/v1/tenants/{tenant_id}/providers/revise-provider/{command_id} [ApiUser + existing request-scope authorizers] |
-| CancelProviderChange | abort | CommandId | 6 | [Placeholder: route/channel not recorded] |
-| ApplyProviderChange | receiver | CommandId | 8 | [Placeholder: value not recorded] |
+| Target command | Selected source name | Kind | Identity | Fields | HTTP routes |
+| --- | --- | --- | --- | --- | --- |
+| RecordProvider | RecordProvider | http | ProviderId | 3 | PUT /api/v1/tenants/{tenant_id}/providers/{provider_id} [ComplianceAuthorizationPolicies.ApiUser] |
+| ReviseProvider | ReviseProvider | http | CommandId | 5 | PUT /api/v1/tenants/{tenant_id}/providers/revise-provider/{command_id} [ApiUser + existing request-scope authorizers] |
+| CancelProviderChange | CancelProviderChange | abort | CommandId | 6 | [Placeholder: route/channel not recorded] |
+| ApplyProviderChange | ApplyProviderChange | receiver | CommandId | 8 | [Placeholder: value not recorded] |
 
 ## Selected command details
 
@@ -15,6 +15,9 @@ Selected command contracts: **4**. Complete selected contracts and companion sou
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | RecordProvider |
+| Selected source command name | RecordProvider |
+| Name decision | The selected source name is retained. |
 | Owner | Provider |
 | Contract record status | target_contract |
 | Kind | http |
@@ -62,6 +65,9 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | ReviseProvider |
+| Selected source command name | ReviseProvider |
+| Name decision | The selected source name is retained. |
 | Owner | Provider |
 | Contract record status | target_contract |
 | Kind | http |
@@ -111,13 +117,16 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | CancelProviderChange |
+| Selected source command name | CancelProviderChange |
+| Name decision | The selected source name is retained. |
 | Owner | Provider |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | abort |
 | Logical identity | CommandId; Uuid; required=true; abort receiver identity bound to the exact admitted operation and generation: exact redelivery resolves the original rejected result; an abort after a terminal outcome is a no-op |
 | Entry point | [Placeholder: value not recorded] |
 | MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | [Placeholder: value not recorded] |
+| Selected semantic events | None listed |
 | Protocols | [Placeholder: value not recorded] |
 | Policy preservation | [Placeholder: value not recorded] |
 | Contract changes | [Placeholder: value not recorded] |
@@ -157,13 +166,16 @@ Required tests: [Placeholder: required tests not recorded]
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | ApplyProviderChange |
+| Selected source command name | ApplyProviderChange |
+| Name decision | The selected source name is retained. |
 | Owner | Provider |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; reactor; deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result |
 | Entry point | [Placeholder: value not recorded] |
 | MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | [Placeholder: value not recorded] |
+| Selected semantic events | None listed |
 | Protocols | [Placeholder: value not recorded] |
 | Policy preservation | [Placeholder: value not recorded] |
 | Contract changes | [Placeholder: value not recorded] |
@@ -204,7 +216,7 @@ Required tests: [Placeholder: required tests not recorded]
 
 ## Source contracts
 
-| Command | Handler | Registered | Entry point |
+| Selected source command | Handler | Registered | Entry point |
 | --- | --- | --- | --- |
 | RecordProvider | RecordProviderHandler | true | authorized_http_and_mcp |
 | ReviseProvider | ReviseProviderHandler | true | authorized_http_and_mcp |

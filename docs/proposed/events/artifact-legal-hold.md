@@ -2,10 +2,10 @@
 
 Canonical events: **2**. Complete canonical event and available schema records: [owner event JSON](../data/events/artifact-legal-hold.json).
 
-| Event | Kind | Adopted discriminator | Version | Schema fields | Meaning |
-| --- | --- | --- | --- | --- | --- |
-| ArtifactLegalHoldPlaced | business | bdgrz.artifact_retention.legal_hold_placed | 1 | 10 | A legal hold was placed on a retained artifact source with a stated reason by a named actor, blocking its disposal until the hold is released. |
-| ArtifactLegalHoldReleased | business | bdgrz.artifact_retention.legal_hold_released | 1 | 10 | A previously placed legal hold on a retained artifact source was released with a stated reason, allowing the artifact to be disposed once its retention period ends. |
+| Target event | Selected source name | Kind | Adopted discriminator | Version | Schema fields | Meaning |
+| --- | --- | --- | --- | --- | --- | --- |
+| ArtifactLegalHoldPlaced | ArtifactLegalHoldPlaced | business | bdgrz.artifact_retention.legal_hold_placed | 1 | 10 | A legal hold was placed on a retained artifact source with a stated reason by a named actor, blocking its disposal until the hold is released. |
+| ArtifactLegalHoldReleased | ArtifactLegalHoldReleased | business | bdgrz.artifact_retention.legal_hold_released | 1 | 10 | A previously placed legal hold on a retained artifact source was released with a stated reason, allowing the artifact to be disposed once its retention period ends. |
 
 ## Event details
 
@@ -13,6 +13,9 @@ Canonical events: **2**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | ArtifactLegalHoldPlaced |
+| Selected source event name | ArtifactLegalHoldPlaced |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:ArtifactLegalHoldPlaced |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | ArtifactLegalHoldPlaced |
@@ -22,7 +25,8 @@ Canonical events: **2**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | A legal hold was placed on a retained artifact source with a stated reason by a named actor, blocking its disposal until the hold is released. |
+| Target meaning | A legal hold was placed on a retained artifact source with a stated reason by a named actor, blocking its disposal until the hold is released. |
+| Selected source meaning | A legal hold was placed on a retained artifact source with a stated reason by a named actor, blocking its disposal until the hold is released. |
 | Meaning source | authored 2026-10-29 from src/Compliance.Common/Features/Retention/Events/ArtifactLegalHoldPlaced.cs |
 
 #### Selected schema and implementation evidence
@@ -64,12 +68,15 @@ Canonical events: **2**. Complete canonical event and available schema records: 
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [X006](../reactors/artifact-legal-hold-reactor.md#x006) | physical root, logical prerequisite | ArtifactLegalHold | FenceArtifactDispositionForHold | ArtifactDisposition |
+| [X006](../reactors/artifact-legal-hold-reactor.md#x006) | physical root, logical prerequisite | ArtifactLegalHold | StopArtifactDisposalForHold | ArtifactDisposition |
 
 ### ArtifactLegalHoldReleased
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | ArtifactLegalHoldReleased |
+| Selected source event name | ArtifactLegalHoldReleased |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:ArtifactLegalHoldReleased |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | ArtifactLegalHoldReleased |
@@ -79,7 +86,8 @@ Canonical events: **2**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | A previously placed legal hold on a retained artifact source was released with a stated reason, allowing the artifact to be disposed once its retention period ends. |
+| Target meaning | A previously placed legal hold on a retained artifact source was released with a stated reason, allowing the artifact to be disposed once its retention period ends. |
+| Selected source meaning | A previously placed legal hold on a retained artifact source was released with a stated reason, allowing the artifact to be disposed once its retention period ends. |
 | Meaning source | authored 2026-10-29 from src/Compliance.Common/Features/Retention/Events/ArtifactLegalHoldReleased.cs |
 
 #### Selected schema and implementation evidence
@@ -121,7 +129,7 @@ Canonical events: **2**. Complete canonical event and available schema records: 
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [X006](../reactors/artifact-legal-hold-reactor.md#x006) | physical root, logical prerequisite | ArtifactLegalHold | FenceArtifactDispositionForHold | ArtifactDisposition |
+| [X006](../reactors/artifact-legal-hold-reactor.md#x006) | physical root, logical prerequisite | ArtifactLegalHold | StopArtifactDisposalForHold | ArtifactDisposition |
 
 
 

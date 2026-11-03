@@ -25,24 +25,24 @@
 | --- | --- | --- |
 | [AnnotateReadinessGap](../commands/readiness-gap-plan.md#annotatereadinessgap) | http | CommandId |
 | [PlanReadinessGap](../commands/readiness-gap-plan.md#planreadinessgap) | http | CommandId |
-| [AuthorizeReadinessGapPlanReadinessDecisionUse](../commands/readiness-gap-plan.md#authorizereadinessgapplanreadinessdecisionuse) | receiver | CommandId |
-| [SettleReadinessGapPlanReadinessDecisionUse](../commands/readiness-gap-plan.md#settlereadinessgapplanreadinessdecisionuse) | receiver | CommandId |
+| [AuthorizeReadinessGapPlanReadinessDecision](../commands/readiness-gap-plan.md#authorizereadinessgapplanreadinessdecision) | receiver | CommandId |
+| [CloseReadinessGapPlanReadinessDecisionAuthorization](../commands/readiness-gap-plan.md#closereadinessgapplanreadinessdecisionauthorization) | receiver | CommandId |
 
 ## Events
 
 | Event | Discriminator | Version |
 | --- | --- | --- |
 | [ReadinessGapAnnotated](../events/readiness-gap-plan.md#readinessgapannotated) | bdgrz.readiness.gap.annotated | 1 |
-| [ReadinessGapPlanReadinessDecisionUseAuthorized](../events/readiness-gap-plan.md#readinessgapplanreadinessdecisionuseauthorized) | bdgrz.readiness-gap-plan.readiness-gap-plan-readiness-decision-use-authorized | 1 |
-| [ReadinessGapPlanReadinessDecisionUseSettled](../events/readiness-gap-plan.md#readinessgapplanreadinessdecisionusesettled) | bdgrz.readiness-gap-plan.readiness-gap-plan-readiness-decision-use-settled | 1 |
+| [ReadinessGapPlanReadinessDecisionAuthorized](../events/readiness-gap-plan.md#readinessgapplanreadinessdecisionauthorized) | bdgrz.readiness-gap-plan.readiness-gap-plan-readiness-decision-use-authorized | 1 |
+| [ReadinessGapPlanReadinessDecisionAuthorizationClosed](../events/readiness-gap-plan.md#readinessgapplanreadinessdecisionauthorizationclosed) | bdgrz.readiness-gap-plan.readiness-gap-plan-readiness-decision-use-settled | 1 |
 | [ReadinessGapPlanned](../events/readiness-gap-plan.md#readinessgapplanned) | bdgrz.readiness.gap.planned | 1 |
 
 ## Cross-owner flows
 
 | Row | Kind | Source owner | Target owner | Command |
 | --- | --- | --- | --- | --- |
-| [T065](../reactors/readiness-decision-reactor.md#t065) | reaction_or_regular_process_stage | ProgramReadiness | ReadinessGapPlan | AuthorizeReadinessGapPlanReadinessDecisionUse |
-| [T066](../reactors/readiness-decision-reactor.md#t066) | reaction_or_regular_process_stage | ProgramReadiness | ReadinessGapPlan | SettleReadinessGapPlanReadinessDecisionUse |
+| [T065](../reactors/readiness-decision-reactor.md#t065) | reaction_or_regular_process_stage | ProgramReadiness | ReadinessGapPlan | AuthorizeReadinessGapPlanReadinessDecision |
+| [T066](../reactors/readiness-decision-reactor.md#t066) | reaction_or_regular_process_stage | ProgramReadiness | ReadinessGapPlan | CloseReadinessGapPlanReadinessDecisionAuthorization |
 
 ## Product rules
 

@@ -2,13 +2,13 @@
 
 Canonical events: **5**. Complete canonical event and available schema records: [owner event JSON](../data/events/tenant-identity-provider.json).
 
-| Event | Kind | Adopted discriminator | Version | Schema fields | Meaning |
-| --- | --- | --- | --- | --- | --- |
-| TenantIdentityProviderConfigured | business | bdgrz.useridentities.tenant-identity-provider-configured | 2 | 12 | The native acceptance of ConfigureTenantIdentityProvider: public OIDC configuration and a reference to the protected content that holds the secret-store pointer, never the pointer itself. |
-| TenantIdentityProviderCredentialsRotated | business | bdgrz.useridentities.tenant-identity-provider-credentials-rotated | 2 | 11 | The native acceptance of RotateTenantIdentityProviderCredentials: a new credential epoch whose secret-store pointer lives in protected content, and a forced fresh connection test. |
-| TenantIdentityProviderDisabled | business | bdgrz.useridentities.tenant-identity-provider-disabled | 2 | 9 | The native acceptance of DisableTenantIdentityProvider; a disabled connection stays terminal. |
-| TenantIdentityProviderTestRequested | business | bdgrz.user-identities.tenant-identity-provider-test-requested | 1 | 10 | The native acceptance of TestTenantIdentityProvider: a request to test one exact credential epoch. |
-| TenantIdentityProviderTested | business | bdgrz.useridentities.tenant-identity-provider-tested | 3 | 10 | The native acceptance of RecordTenantIdentityProviderTestResult: a bounded safe test result for the exact request event and credential epoch. Provider tokens and response bodies are never persisted. |
+| Target event | Selected source name | Kind | Adopted discriminator | Version | Schema fields | Meaning |
+| --- | --- | --- | --- | --- | --- | --- |
+| TenantIdentityProviderConfigured | TenantIdentityProviderConfigured | business | bdgrz.useridentities.tenant-identity-provider-configured | 2 | 12 | The native acceptance of ConfigureTenantIdentityProvider: public OIDC configuration and a reference to the protected content that holds the secret-store pointer, never the pointer itself. |
+| TenantIdentityProviderCredentialsRotated | TenantIdentityProviderCredentialsRotated | business | bdgrz.useridentities.tenant-identity-provider-credentials-rotated | 2 | 11 | The native acceptance of RotateTenantIdentityProviderCredentials: a new credential epoch whose secret-store pointer lives in protected content, and a forced fresh connection test. |
+| TenantIdentityProviderDisabled | TenantIdentityProviderDisabled | business | bdgrz.useridentities.tenant-identity-provider-disabled | 2 | 9 | The native acceptance of DisableTenantIdentityProvider; a disabled connection stays terminal. |
+| TenantIdentityProviderTestRequested | TenantIdentityProviderTestRequested | business | bdgrz.user-identities.tenant-identity-provider-test-requested | 1 | 10 | The native acceptance of TestTenantIdentityProvider: a request to test one exact credential epoch. |
+| TenantIdentityProviderTested | TenantIdentityProviderTested | business | bdgrz.useridentities.tenant-identity-provider-tested | 3 | 10 | The native acceptance of RecordTenantIdentityProviderTestResult: a bounded safe test result for the exact request event and credential epoch. Provider tokens and response bodies are never persisted. |
 
 ## Event details
 
@@ -16,6 +16,9 @@ Canonical events: **5**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | TenantIdentityProviderConfigured |
+| Selected source event name | TenantIdentityProviderConfigured |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:TenantIdentityProviderConfigured |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | TenantIdentityProviderConfigured |
@@ -25,7 +28,8 @@ Canonical events: **5**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | The native acceptance of ConfigureTenantIdentityProvider: public OIDC configuration and a reference to the protected content that holds the secret-store pointer, never the pointer itself. |
+| Target meaning | The native acceptance of ConfigureTenantIdentityProvider: public OIDC configuration and a reference to the protected content that holds the secret-store pointer, never the pointer itself. |
+| Selected source meaning | The native acceptance of ConfigureTenantIdentityProvider: public OIDC configuration and a reference to the protected content that holds the secret-store pointer, never the pointer itself. |
 | Meaning source | record summary in src/Compliance.Common/Features/UserIdentities/Events/TenantIdentityProviderConfigured.cs |
 
 #### Selected schema and implementation evidence
@@ -73,6 +77,9 @@ Canonical events: **5**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | TenantIdentityProviderCredentialsRotated |
+| Selected source event name | TenantIdentityProviderCredentialsRotated |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:TenantIdentityProviderCredentialsRotated |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | TenantIdentityProviderCredentialsRotated |
@@ -82,7 +89,8 @@ Canonical events: **5**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | The native acceptance of RotateTenantIdentityProviderCredentials: a new credential epoch whose secret-store pointer lives in protected content, and a forced fresh connection test. |
+| Target meaning | The native acceptance of RotateTenantIdentityProviderCredentials: a new credential epoch whose secret-store pointer lives in protected content, and a forced fresh connection test. |
+| Selected source meaning | The native acceptance of RotateTenantIdentityProviderCredentials: a new credential epoch whose secret-store pointer lives in protected content, and a forced fresh connection test. |
 | Meaning source | record summary in src/Compliance.Common/Features/UserIdentities/Events/TenantIdentityProviderCredentialsRotated.cs |
 
 #### Selected schema and implementation evidence
@@ -129,6 +137,9 @@ Canonical events: **5**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | TenantIdentityProviderDisabled |
+| Selected source event name | TenantIdentityProviderDisabled |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:TenantIdentityProviderDisabled |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | TenantIdentityProviderDisabled |
@@ -138,7 +149,8 @@ Canonical events: **5**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | The native acceptance of DisableTenantIdentityProvider; a disabled connection stays terminal. |
+| Target meaning | The native acceptance of DisableTenantIdentityProvider; a disabled connection stays terminal. |
+| Selected source meaning | The native acceptance of DisableTenantIdentityProvider; a disabled connection stays terminal. |
 | Meaning source | record summary in src/Compliance.Common/Features/UserIdentities/Events/TenantIdentityProviderDisabled.cs |
 
 #### Selected schema and implementation evidence
@@ -183,6 +195,9 @@ Canonical events: **5**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | TenantIdentityProviderTestRequested |
+| Selected source event name | TenantIdentityProviderTestRequested |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:TenantIdentityProviderTestRequested |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | TenantIdentityProviderTestRequested |
@@ -192,7 +207,8 @@ Canonical events: **5**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | The native acceptance of TestTenantIdentityProvider: a request to test one exact credential epoch. |
+| Target meaning | The native acceptance of TestTenantIdentityProvider: a request to test one exact credential epoch. |
+| Selected source meaning | The native acceptance of TestTenantIdentityProvider: a request to test one exact credential epoch. |
 | Meaning source | record summary in src/Compliance.Common/Features/UserIdentities/Events/TenantIdentityProviderTestRequested.cs |
 
 #### Selected schema and implementation evidence
@@ -238,6 +254,9 @@ Canonical events: **5**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | TenantIdentityProviderTested |
+| Selected source event name | TenantIdentityProviderTested |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:TenantIdentityProviderTested |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | TenantIdentityProviderTested |
@@ -247,7 +266,8 @@ Canonical events: **5**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | The native acceptance of RecordTenantIdentityProviderTestResult: a bounded safe test result for the exact request event and credential epoch. Provider tokens and response bodies are never persisted. |
+| Target meaning | The native acceptance of RecordTenantIdentityProviderTestResult: a bounded safe test result for the exact request event and credential epoch. Provider tokens and response bodies are never persisted. |
+| Selected source meaning | The native acceptance of RecordTenantIdentityProviderTestResult: a bounded safe test result for the exact request event and credential epoch. Provider tokens and response bodies are never persisted. |
 | Meaning source | record summary in src/Compliance.Common/Features/UserIdentities/Events/TenantIdentityProviderTested.cs |
 
 #### Selected schema and implementation evidence

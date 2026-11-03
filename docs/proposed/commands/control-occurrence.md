@@ -2,13 +2,13 @@
 
 Selected command contracts: **5**. Complete selected contracts and companion source evidence: [owner command JSON](../data/commands/control-occurrence.json).
 
-| Command | Kind | Identity | Fields | HTTP routes |
-| --- | --- | --- | --- | --- |
-| AttestControlOccurrence | http | CommandId | 14 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/occurrences/{occurrence_id}/attestations/{command_id} [ComplianceAuthorizationPolicies.ApiUser] |
-| CorrectControlAttestation | http | CommandId | 15 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/occurrences/{occurrence_id}/corrections/{command_id} [ComplianceAuthorizationPolicies.ApiUser] |
-| OpenControlOccurrence | http | CommandId | 8 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/occurrences/{command_id} [ComplianceAuthorizationPolicies.ApiUser] |
-| ReviewControlOccurrence | http | CommandId | 11 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/occurrences/{occurrence_id}/reviews/{command_id} [ComplianceAuthorizationPolicies.ApiUser] |
-| MaterializeControlOccurrence | receiver | CommandId | 11 | [Placeholder: value not recorded] |
+| Target command | Selected source name | Kind | Identity | Fields | HTTP routes |
+| --- | --- | --- | --- | --- | --- |
+| AttestControlOccurrence | AttestControlOccurrence | http | CommandId | 14 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/occurrences/{occurrence_id}/attestations/{command_id} [ComplianceAuthorizationPolicies.ApiUser] |
+| CorrectControlAttestation | CorrectControlAttestation | http | CommandId | 15 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/occurrences/{occurrence_id}/corrections/{command_id} [ComplianceAuthorizationPolicies.ApiUser] |
+| OpenControlOccurrence | OpenControlOccurrence | http | CommandId | 8 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/occurrences/{command_id} [ComplianceAuthorizationPolicies.ApiUser] |
+| ReviewControlOccurrence | ReviewControlOccurrence | http | CommandId | 11 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/occurrences/{occurrence_id}/reviews/{command_id} [ComplianceAuthorizationPolicies.ApiUser] |
+| OpenDueControlOccurrence | MaterializeControlOccurrence | receiver | CommandId | 11 | [Placeholder: value not recorded] |
 
 ## Selected command details
 
@@ -16,6 +16,9 @@ Selected command contracts: **5**. Complete selected contracts and companion sou
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | AttestControlOccurrence |
+| Selected source command name | AttestControlOccurrence |
+| Name decision | The selected source name is retained. |
 | Owner | ControlOccurrence |
 | Contract record status | target_contract |
 | Kind | http |
@@ -74,6 +77,9 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | CorrectControlAttestation |
+| Selected source command name | CorrectControlAttestation |
+| Name decision | The selected source name is retained. |
 | Owner | ControlOccurrence |
 | Contract record status | target_contract |
 | Kind | http |
@@ -133,6 +139,9 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | OpenControlOccurrence |
+| Selected source command name | OpenControlOccurrence |
+| Name decision | The selected source name is retained. |
 | Owner | ControlOccurrence |
 | Contract record status | target_contract |
 | Kind | http |
@@ -185,6 +194,9 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | ReviewControlOccurrence |
+| Selected source command name | ReviewControlOccurrence |
+| Name decision | The selected source name is retained. |
 | Owner | ControlOccurrence |
 | Contract record status | target_contract |
 | Kind | http |
@@ -236,17 +248,20 @@ Existing tests: test/Compliance.Tests/Features/AccessControl/AttestManagementWri
 
 Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision, ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity, ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof, ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome
 
-### MaterializeControlOccurrence
+### OpenDueControlOccurrence
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | OpenDueControlOccurrence |
+| Selected source command name | MaterializeControlOccurrence |
+| Name decision | Opens the due control work item for its exact period, plan, owner, and reviewer. |
 | Owner | ControlOccurrence |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; reactor; deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result |
 | Entry point | [Placeholder: value not recorded] |
 | MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | [Placeholder: value not recorded] |
+| Selected semantic events | None listed |
 | Protocols | [Placeholder: value not recorded] |
 | Policy preservation | [Placeholder: value not recorded] |
 | Contract changes | [Placeholder: value not recorded] |
@@ -290,7 +305,7 @@ Required tests: [Placeholder: required tests not recorded]
 
 ## Source contracts
 
-| Command | Handler | Registered | Entry point |
+| Selected source command | Handler | Registered | Entry point |
 | --- | --- | --- | --- |
 | AttestControlOccurrence | AttestControlOccurrenceHandler | true | personal_http |
 | CorrectControlAttestation | CorrectControlAttestationHandler | true | personal_http |

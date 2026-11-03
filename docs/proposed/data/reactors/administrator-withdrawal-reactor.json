@@ -1,5 +1,7 @@
 {
-  "root": "AdministratorWithdrawalReactor",
+  "sourceRoot": "AdministratorWithdrawalReactor",
+  "targetRoot": "AdministratorWithdrawalReactor",
+  "businessReason": "Suspend or deprovision the exact member episode after an accepted administrator withdrawal.",
   "rows": [
     {
       "id": "T046",

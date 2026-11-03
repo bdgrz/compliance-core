@@ -23,7 +23,11 @@
         "meaning": "A methodology template was created with its first authored version by a named author, awaiting review and publication.",
         "meaningSource": "authored 2026-10-29 from src/Compliance.Common/Features/MethodologyTemplates/Events/MethodologyTemplateCreated.cs"
       },
-      "schema": null
+      "schema": null,
+      "sourceName": "MethodologyTemplateCreated",
+      "targetName": "MethodologyTemplateCreated",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "A methodology template was created with its first authored version by a named author, awaiting review and publication."
     },
     {
       "canonical": {
@@ -47,7 +51,11 @@
         "meaning": "A compact native MethodologyTemplateDraftReviewed delta; authored bodies and historical versions are immutable content.",
         "meaningSource": "record summary in src/Compliance.Common/Features/MethodologyTemplates/Events/MethodologyTemplateDraftReviewed.cs"
       },
-      "schema": null
+      "schema": null,
+      "sourceName": "MethodologyTemplateDraftReviewed",
+      "targetName": "MethodologyTemplateDraftReviewed",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "A compact native MethodologyTemplateDraftReviewed delta; authored bodies and historical versions are immutable content."
     },
     {
       "canonical": {
@@ -71,7 +79,11 @@
         "meaning": "A compact native MethodologyTemplateDraftRevised delta; authored bodies and historical versions are immutable content.",
         "meaningSource": "record summary in src/Compliance.Common/Features/MethodologyTemplates/Events/MethodologyTemplateDraftRevised.cs"
       },
-      "schema": null
+      "schema": null,
+      "sourceName": "MethodologyTemplateDraftRevised",
+      "targetName": "MethodologyTemplateDraftRevised",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "A compact native MethodologyTemplateDraftRevised delta; authored bodies and historical versions are immutable content."
     },
     {
       "canonical": {
@@ -95,7 +107,11 @@
         "meaning": "An active published methodology template was retired by a named member, ending its availability while its historical versions remain.",
         "meaningSource": "authored 2026-10-29 from src/Compliance.Common/Features/MethodologyTemplates/Events/MethodologyTemplateRetired.cs"
       },
-      "schema": null
+      "schema": null,
+      "sourceName": "MethodologyTemplateRetired",
+      "targetName": "MethodologyTemplateRetired",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "An active published methodology template was retired by a named member, ending its availability while its historical versions remain."
     },
     {
       "canonical": {
@@ -119,7 +135,11 @@
         "meaning": "A compact native MethodologyTemplateVersionPublished delta; authored bodies and historical versions are immutable content.",
         "meaningSource": "record summary in src/Compliance.Common/Features/MethodologyTemplates/Events/MethodologyTemplateVersionPublished.cs"
       },
-      "schema": null
+      "schema": null,
+      "sourceName": "MethodologyTemplateVersionPublished",
+      "targetName": "MethodologyTemplateVersionPublished",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "A compact native MethodologyTemplateVersionPublished delta; authored bodies and historical versions are immutable content."
     }
   ]
 }

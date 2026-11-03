@@ -69,7 +69,9 @@
         "TypeIIPeriodRangeAuthorized"
       ],
       "effectKind": "acquire_type_i_i_period_range",
-      "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine."
+      "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
+      "sourceName": "AcquireTypeIIPeriodRange",
+      "targetName": "AcquireTypeIIPeriodRange"
     },
     {
       "command": "SettleTypeIIPeriodRange",
@@ -134,7 +136,9 @@
         "TypeIIPeriodRangeSettled"
       ],
       "effectKind": "settle_type_i_i_period_range",
-      "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine."
+      "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
+      "sourceName": "SettleTypeIIPeriodRange",
+      "targetName": "CloseTypeIIPeriodRangeReservation"
     }
   ],
   "sourceContractEvidence": []

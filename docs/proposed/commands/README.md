@@ -2,6 +2,22 @@
 
 Selected command contracts are grouped by their canonical owner.
 
+Current source write requests that are not yet represented in selected target contracts are documented in owner-page supplements and [cross-owner responsibility commands](responsibility-write-commands.md). These supplements distinguish implemented request contracts from approved target ownership.
+
+| Supplemental source owner | Requests |
+| --- | ---: |
+| [WorkDigestDispatch](work-digest-dispatch.md) | 1 |
+| [TypeIIPeriod](type-ii-period.md) | 1 |
+| [Responsibility commands](responsibility-write-commands.md) | 2 |
+| [WorkforceRosterSnapshotProcess](workforce-roster-snapshot-process.md) | 2 |
+| [WeeklyWorkDigest](weekly-work-digest.md) | 3 |
+| [AuditPopulationExportProcess](audit-population-export-process.md) | 1 |
+| [SystemDescriptionExportProcess](system-description-export-process.md) | 1 |
+| [AuditPackageBuildProcess](audit-package-build-process.md) | 1 |
+| [EmailChallengeDeliveryLedger](email-challenge-delivery-ledger.md) | 4 |
+| [IdentityRecoveryNoticeProcess](identity-recovery-notice-process.md) | 1 |
+| [TenantInvitationDeliveryProcess](tenant-invitation-delivery-process.md) | 3 |
+
 | Owner | Contracts | Classification |
 | --- | --- | --- |
 | [AccessExpectation](access-expectation.md) | 3 | business_aggregate |

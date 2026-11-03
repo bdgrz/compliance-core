@@ -23,7 +23,11 @@
         "meaning": "Activates the exact reviewed draft revision as an immutable version identified by ContentSha256. A major version requires every audience to re-acknowledge.",
         "meaningSource": "record summary in src/Compliance.Common/Features/Policies/Events/PolicyApproved.cs"
       },
-      "schema": null
+      "schema": null,
+      "sourceName": "PolicyApproved",
+      "targetName": "PolicyApproved",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "Activates the exact reviewed draft revision as an immutable version identified by ContentSha256. A major version requires every audience to re-acknowledge."
     },
     {
       "canonical": {
@@ -47,7 +51,11 @@
         "meaning": "A policy draft was created for a program with its identifier and authored content by a named member, awaiting review.",
         "meaningSource": "authored 2026-10-29 from src/Compliance.Common/Features/Policies/Events/PolicyDraftCreated.cs"
       },
-      "schema": null
+      "schema": null,
+      "sourceName": "PolicyDraftCreated",
+      "targetName": "PolicyDraftCreated",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "A policy draft was created for a program with its identifier and authored content by a named member, awaiting review."
     },
     {
       "canonical": {
@@ -71,7 +79,11 @@
         "meaning": "A policy draft was discarded with a stated rationale by a named actor, ending it without approval.",
         "meaningSource": "authored 2026-10-29 from src/Compliance.Common/Features/Policies/Events/PolicyDraftDiscarded.cs"
       },
-      "schema": null
+      "schema": null,
+      "sourceName": "PolicyDraftDiscarded",
+      "targetName": "PolicyDraftDiscarded",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "A policy draft was discarded with a stated rationale by a named actor, ending it without approval."
     },
     {
       "canonical": {
@@ -95,7 +107,11 @@
         "meaning": "A new draft revision. PredecessorVersion is set when the revision opens a successor draft from that approved version.",
         "meaningSource": "record summary in src/Compliance.Common/Features/Policies/Events/PolicyDraftRevised.cs"
       },
-      "schema": null
+      "schema": null,
+      "sourceName": "PolicyDraftRevised",
+      "targetName": "PolicyDraftRevised",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "A new draft revision. PredecessorVersion is set when the revision opens a successor draft from that approved version."
     },
     {
       "canonical": {
@@ -119,7 +135,11 @@
         "meaning": "A periodic review that confirmed the current version without changing it.",
         "meaningSource": "record summary in src/Compliance.Common/Features/Policies/Events/PolicyPeriodicReviewConfirmed.cs"
       },
-      "schema": null
+      "schema": null,
+      "sourceName": "PolicyPeriodicReviewConfirmed",
+      "targetName": "PolicyPeriodicReviewConfirmed",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "A periodic review that confirmed the current version without changing it."
     },
     {
       "canonical": {
@@ -143,7 +163,11 @@
         "meaning": "An approved policy version was retired effective until a stated date, on the strength of an accepted retirement review and a stated rationale.",
         "meaningSource": "authored 2026-10-29 from src/Compliance.Common/Features/Policies/Events/PolicyRetired.cs"
       },
-      "schema": null
+      "schema": null,
+      "sourceName": "PolicyRetired",
+      "targetName": "PolicyRetired",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "An approved policy version was retired effective until a stated date, on the strength of an accepted retirement review and a stated rationale."
     },
     {
       "canonical": {
@@ -167,7 +191,11 @@
         "meaning": "Retirement of a policy version effective until a stated date was proposed with a rationale by a named member, awaiting review.",
         "meaningSource": "authored 2026-10-29 from src/Compliance.Common/Features/Policies/Events/PolicyRetirementProposed.cs"
       },
-      "schema": null
+      "schema": null,
+      "sourceName": "PolicyRetirementProposed",
+      "targetName": "PolicyRetirementProposed",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "Retirement of a policy version effective until a stated date was proposed with a rationale by a named member, awaiting review."
     },
     {
       "canonical": {
@@ -191,7 +219,11 @@
         "meaning": "A policy draft revision was reviewed with a decision outcome and rationale by a named reviewer.",
         "meaningSource": "authored 2026-10-29 from src/Compliance.Common/Features/Policies/Events/PolicyReviewed.cs"
       },
-      "schema": null
+      "schema": null,
+      "sourceName": "PolicyReviewed",
+      "targetName": "PolicyReviewed",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "A policy draft revision was reviewed with a decision outcome and rationale by a named reviewer."
     }
   ]
 }

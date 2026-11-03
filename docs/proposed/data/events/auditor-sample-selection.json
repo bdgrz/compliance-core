@@ -260,7 +260,11 @@
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "resolvedIntentSchema": "AuditorSampleSelectionIntent",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "SampleSelectionRecorded",
+      "targetName": "SampleSelectionRecorded",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "The materialization of an admitted sample selection on its own owner, at revision one. Change repeats the frozen AuditorSampleSelectionIntent, so the selection never rereads the request or the latest population."
     }
   ]
 }

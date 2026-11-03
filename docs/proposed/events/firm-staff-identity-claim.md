@@ -2,9 +2,9 @@
 
 Canonical events: **1**. Complete canonical event and available schema records: [owner event JSON](../data/events/firm-staff-identity-claim.json).
 
-| Event | Kind | Adopted discriminator | Version | Schema fields | Meaning |
-| --- | --- | --- | --- | --- | --- |
-| FirmStaffIdentityClaimed | business | bdgrz.firm-staff-identity-claim.firm-staff-identity-claimed | 1 | 8 | The permanent claim of one canonical user by one staff record. The claiming staff member is the root operation id of Operation; the claim is never released. |
+| Target event | Selected source name | Kind | Adopted discriminator | Version | Schema fields | Meaning |
+| --- | --- | --- | --- | --- | --- | --- |
+| FirmStaffIdentityClaimed | FirmStaffIdentityClaimed | business | bdgrz.firm-staff-identity-claim.firm-staff-identity-claimed | 1 | 8 | The permanent claim of one canonical user by one staff record. The claiming staff member is the root operation id of Operation; the claim is never released. |
 
 ## Event details
 
@@ -12,6 +12,9 @@ Canonical events: **1**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | FirmStaffIdentityClaimed |
+| Selected source event name | FirmStaffIdentityClaimed |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:FirmStaffIdentityClaimed |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | FirmStaffIdentityClaimed |
@@ -21,7 +24,8 @@ Canonical events: **1**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | The permanent claim of one canonical user by one staff record. The claiming staff member is the root operation id of Operation; the claim is never released. |
+| Target meaning | The permanent claim of one canonical user by one staff record. The claiming staff member is the root operation id of Operation; the claim is never released. |
+| Selected source meaning | The permanent claim of one canonical user by one staff record. The claiming staff member is the root operation id of Operation; the claim is never released. |
 | Meaning source | record summary in src/Compliance.Common/Features/AccessControl/Events/FirmStaffIdentityClaimed.cs |
 
 #### Selected schema and implementation evidence

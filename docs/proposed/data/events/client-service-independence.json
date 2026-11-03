@@ -212,7 +212,11 @@
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "resolvedIntentSchema": "ClientIndependencePreviewIntent",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "ClientIndependenceEvaluationAdmitted",
+      "targetName": "ClientIndependenceEvaluationAdmitted",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "The root native acceptance of a client independence preview on the service-epoch owner. It freezes the complete preview intent at Revision, the service epoch at admission, and does not advance the epoch. The preview itself is materialized later by ClientIndependencePreviewProcess."
     },
     {
       "canonical": {
@@ -372,7 +376,11 @@
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "resolvedIntentSchema": "SourceUseAuthorizationIntent",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "ClientServicePersonalDecisionUseAuthorized",
+      "targetName": "ClientServicePersonalDecisionAuthorized",
+      "nameDecision": "Authorization is already the completed fact; Use adds no stakeholder meaning.",
+      "targetMeaning": "Holds the exact complete service history and epoch a personal decision relies on; the use does not advance the public revision, so Revision is the held revision."
     },
     {
       "canonical": {
@@ -532,7 +540,11 @@
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "resolvedIntentSchema": "SourceUseAuthorizationIntent",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "ClientServicePersonalDecisionUseSettled",
+      "targetName": "ClientServicePersonalDecisionAuthorizationClosed",
+      "nameDecision": "The exact authorization ended; the recorded outcome still distinguishes use, cancellation, or a late fence.",
+      "targetMeaning": "The use of the client service history ended after the irreversible personal decision or after cancellation. A settlement before any grant fences the key against late acquisition."
     },
     {
       "canonical": {
@@ -764,7 +776,11 @@
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "resolvedIntentSchema": "EngagementIndependenceIntent",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "EngagementServiceEpochAuthorized",
+      "targetName": "EngagementServiceHistoryReserved",
+      "nameDecision": "Names the exact service-history hold while the engagement decision is made.",
+      "targetMeaning": "The client's complete service history at its current epoch was held for an engagement acceptance or staff assignment to rely on, and while held no further services may be added."
     },
     {
       "canonical": {
@@ -996,7 +1012,11 @@
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "resolvedIntentSchema": "EngagementIndependenceIntent",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "EngagementServiceEpochSettled",
+      "targetName": "EngagementServiceHistoryReservationEnded",
+      "nameDecision": "Names the end of the temporary service-history hold after decision or cancellation.",
+      "targetMeaning": "The hold of the service epoch ended after the operation recorded its terminal fact. A settlement before any grant fences the key against late acquisition. Permanent practice commitments are never affected."
     },
     {
       "canonical": {
@@ -1080,7 +1100,11 @@
         "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "NonattestServiceRecorded",
+      "targetName": "NonattestServiceRecorded",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "One nonattest service appended to the complete history of a client. The complete NonattestServiceView is immutable content; Revision is the service epoch after this service. The service record identity is OperationId."
     }
   ]
 }

@@ -1,5 +1,7 @@
 {
-  "root": "one new committed execution-claim starter",
+  "sourceRoot": "one new committed execution-claim starter",
+  "targetRoot": "StartApprovedProgramRolloverReactor",
+  "businessReason": "Start successor-period work only after the exact approved rollover has been reserved for one execution.",
   "rows": [
     {
       "id": "R000",

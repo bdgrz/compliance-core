@@ -23,7 +23,11 @@
         "meaning": "An attributable immutable personal scope decision at the exact named instance revision.",
         "meaningSource": "record summary in src/Compliance.Common/Features/Applications/Events/AccessReviewScopeDecided.cs"
       },
-      "schema": null
+      "schema": null,
+      "sourceName": "AccessReviewScopeDecided",
+      "targetName": "AccessReviewScopeDecided",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "An attributable immutable personal scope decision at the exact named instance revision."
     }
   ]
 }

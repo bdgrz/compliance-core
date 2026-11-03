@@ -1,5 +1,7 @@
 {
-  "root": "AuditPackageDeliveryAdmissionReactor",
+  "sourceRoot": "AuditPackageDeliveryAdmissionReactor",
+  "targetRoot": "RecordAuditPackageDeliveryReactor",
+  "businessReason": "Record delivery of the exact approved package to its named recipient.",
   "rows": [
     {
       "id": "T081",

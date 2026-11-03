@@ -2,18 +2,21 @@
 
 Canonical events: **3**. Complete canonical event and available schema records: [owner event JSON](../data/events/independence-rule-ratification-catalog.json).
 
-| Event | Kind | Adopted discriminator | Version | Schema fields | Meaning |
-| --- | --- | --- | --- | --- | --- |
-| IndependenceRuleRatificationCatalogEngagementUseAuthorized | reservation | bdgrz.independence-rule-ratification-catalog.independence-rule-ratification-catalog-engagement-use-authorized | 1 | 8 | The exact ratification of an independence rule version that a partner evaluation relies on was held for the engagement; the hold blocks changes to that ratification until the use settles. |
-| IndependenceRuleRatificationCatalogEngagementUseSettled | reservation | bdgrz.independence-rule-ratification-catalog.independence-rule-ratification-catalog-engagement-use-settled | 1 | 8 | The use of the ratification catalog ended after the irreversible personal decision or after cancellation. A settlement before any grant fences the key against late acquisition. |
-| IndependenceRuleRatificationRecorded | business | bdgrz.independence.rules.ratification-recorded | 2 | [Placeholder: schema absent] | A named rule ratifier personally ratified a version of the independence rules, making that version the ratified catalog. |
+| Target event | Selected source name | Kind | Adopted discriminator | Version | Schema fields | Meaning |
+| --- | --- | --- | --- | --- | --- | --- |
+| IndependenceRuleRatificationCatalogEngagementAuthorized | IndependenceRuleRatificationCatalogEngagementUseAuthorized | reservation | bdgrz.independence-rule-ratification-catalog.independence-rule-ratification-catalog-engagement-use-authorized | 1 | 8 | The exact ratification of an independence rule version that a partner evaluation relies on was held for the engagement; the hold blocks changes to that ratification until the use settles. |
+| IndependenceRuleRatificationCatalogEngagementAuthorizationClosed | IndependenceRuleRatificationCatalogEngagementUseSettled | reservation | bdgrz.independence-rule-ratification-catalog.independence-rule-ratification-catalog-engagement-use-settled | 1 | 8 | The use of the ratification catalog ended after the irreversible personal decision or after cancellation. A settlement before any grant fences the key against late acquisition. |
+| IndependenceRuleRatificationRecorded | IndependenceRuleRatificationRecorded | business | bdgrz.independence.rules.ratification-recorded | 2 | [Placeholder: schema absent] | A named rule ratifier personally ratified a version of the independence rules, making that version the ratified catalog. |
 
 ## Event details
 
-### IndependenceRuleRatificationCatalogEngagementUseAuthorized
+### IndependenceRuleRatificationCatalogEngagementAuthorized
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | IndependenceRuleRatificationCatalogEngagementAuthorized |
+| Selected source event name | IndependenceRuleRatificationCatalogEngagementUseAuthorized |
+| Name decision | Authorization is already the completed fact; Use adds no stakeholder meaning. |
 | Canonical semantic key | event:IndependenceRuleRatificationCatalogEngagementUseAuthorized |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | IndependenceRuleRatificationCatalogEngagementUseAuthorized |
@@ -23,7 +26,8 @@ Canonical events: **3**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | The exact ratification of an independence rule version that a partner evaluation relies on was held for the engagement; the hold blocks changes to that ratification until the use settles. |
+| Target meaning | The exact ratification of an independence rule version that a partner evaluation relies on was held for the engagement; the hold blocks changes to that ratification until the use settles. |
+| Selected source meaning | The exact ratification of an independence rule version that a partner evaluation relies on was held for the engagement; the hold blocks changes to that ratification until the use settles. |
 | Meaning source | authored 2026-10-29 from src/Compliance.Common/Features/AccessControl/Events/IndependenceRuleRatificationCatalogEngagementUseAuthorized.cs |
 
 #### Selected schema and implementation evidence
@@ -97,12 +101,15 @@ SourceUseAuthorizationIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T095](../reactors/engagement-acceptance-reactor.md#t095) | emitted semantic fact | ServiceEngagementIndependence | AuthorizeIndependenceRuleRatificationCatalogEngagementUse | IndependenceRuleRatificationCatalog |
+| [T095](../reactors/engagement-acceptance-reactor.md#t095) | emitted semantic fact | ServiceEngagementIndependence | AuthorizeIndependenceRuleRatificationCatalogEngagement | IndependenceRuleRatificationCatalog |
 
-### IndependenceRuleRatificationCatalogEngagementUseSettled
+### IndependenceRuleRatificationCatalogEngagementAuthorizationClosed
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | IndependenceRuleRatificationCatalogEngagementAuthorizationClosed |
+| Selected source event name | IndependenceRuleRatificationCatalogEngagementUseSettled |
+| Name decision | The exact authorization ended; the recorded outcome still distinguishes use, cancellation, or a late fence. |
 | Canonical semantic key | event:IndependenceRuleRatificationCatalogEngagementUseSettled |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | IndependenceRuleRatificationCatalogEngagementUseSettled |
@@ -112,7 +119,8 @@ SourceUseAuthorizationIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | The use of the ratification catalog ended after the irreversible personal decision or after cancellation. A settlement before any grant fences the key against late acquisition. |
+| Target meaning | The use of the ratification catalog ended after the irreversible personal decision or after cancellation. A settlement before any grant fences the key against late acquisition. |
+| Selected source meaning | The use of the ratification catalog ended after the irreversible personal decision or after cancellation. A settlement before any grant fences the key against late acquisition. |
 | Meaning source | record summary in src/Compliance.Common/Features/AccessControl/Events/IndependenceRuleRatificationCatalogEngagementUseSettled.cs |
 
 #### Selected schema and implementation evidence
@@ -186,12 +194,15 @@ SourceUseAuthorizationIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T096](../reactors/engagement-acceptance-reactor.md#t096) | emitted semantic fact | ServiceEngagementIndependence | SettleIndependenceRuleRatificationCatalogEngagementUse | IndependenceRuleRatificationCatalog |
+| [T096](../reactors/engagement-acceptance-reactor.md#t096) | emitted semantic fact | ServiceEngagementIndependence | CloseIndependenceRuleRatificationCatalogEngagementAuthorization | IndependenceRuleRatificationCatalog |
 
 ### IndependenceRuleRatificationRecorded
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | IndependenceRuleRatificationRecorded |
+| Selected source event name | IndependenceRuleRatificationRecorded |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:IndependenceRuleRatificationRecorded |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | IndependenceRuleRatificationRecorded |
@@ -201,7 +212,8 @@ SourceUseAuthorizationIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | A named rule ratifier personally ratified a version of the independence rules, making that version the ratified catalog. |
+| Target meaning | A named rule ratifier personally ratified a version of the independence rules, making that version the ratified catalog. |
+| Selected source meaning | A named rule ratifier personally ratified a version of the independence rules, making that version the ratified catalog. |
 | Meaning source | authored 2026-10-29 from src/Compliance.Common/Features/AccessControl/Events/IndependenceRuleRatificationRecorded.cs |
 
 #### Schema

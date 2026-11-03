@@ -2,12 +2,12 @@
 
 Canonical events: **4**. Complete canonical event and available schema records: [owner event JSON](../data/events/advisor-feedback-thread.json).
 
-| Event | Kind | Adopted discriminator | Version | Schema fields | Meaning |
-| --- | --- | --- | --- | --- | --- |
-| AdvisorFeedbackCorrected | business | bdgrz.advisor-feedback.corrected | 2 | 12 | A linked correction was appended to a feedback thread; the original contribution is preserved. |
-| AdvisorFeedbackRecorded | business | bdgrz.advisor-feedback.recorded | 2 | 14 | The feedback thread was materialized from an admitted contribution, at thread revision one. Intent repeats the admission intent the handoff accepted; the author and instant are the original actor and the admission instant. |
-| AdvisorFeedbackResolved | business | bdgrz.advisor-feedback.resolved | 1 | 9 | The client resolved a feedback thread. |
-| AdvisorFeedbackResponded | business | bdgrz.advisor-feedback.responded | 2 | 10 | The client responded on a feedback thread. |
+| Target event | Selected source name | Kind | Adopted discriminator | Version | Schema fields | Meaning |
+| --- | --- | --- | --- | --- | --- | --- |
+| AdvisorFeedbackCorrected | AdvisorFeedbackCorrected | business | bdgrz.advisor-feedback.corrected | 2 | 12 | A linked correction was appended to a feedback thread; the original contribution is preserved. |
+| AdvisorFeedbackRecorded | AdvisorFeedbackRecorded | business | bdgrz.advisor-feedback.recorded | 2 | 14 | The feedback thread was materialized from an admitted contribution, at thread revision one. Intent repeats the admission intent the handoff accepted; the author and instant are the original actor and the admission instant. |
+| AdvisorFeedbackResolved | AdvisorFeedbackResolved | business | bdgrz.advisor-feedback.resolved | 1 | 9 | The client resolved a feedback thread. |
+| AdvisorFeedbackResponded | AdvisorFeedbackResponded | business | bdgrz.advisor-feedback.responded | 2 | 10 | The client responded on a feedback thread. |
 
 ## Event details
 
@@ -15,6 +15,9 @@ Canonical events: **4**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | AdvisorFeedbackCorrected |
+| Selected source event name | AdvisorFeedbackCorrected |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:AdvisorFeedbackCorrected |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | AdvisorFeedbackCorrected |
@@ -24,7 +27,8 @@ Canonical events: **4**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | `{"discriminator":"bdgrz.advisor-feedback.corrected","version":1}` |
-| Meaning | A linked correction was appended to a feedback thread; the original contribution is preserved. |
+| Target meaning | A linked correction was appended to a feedback thread; the original contribution is preserved. |
+| Selected source meaning | A linked correction was appended to a feedback thread; the original contribution is preserved. |
 | Meaning source | record summary in src/Compliance.Common/Features/AdvisorCollaboration/Events/AdvisorFeedbackCorrected.cs |
 
 #### Selected schema and implementation evidence
@@ -72,6 +76,9 @@ Canonical events: **4**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | AdvisorFeedbackRecorded |
+| Selected source event name | AdvisorFeedbackRecorded |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:AdvisorFeedbackRecorded |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | AdvisorFeedbackRecorded |
@@ -81,7 +88,8 @@ Canonical events: **4**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | `{"discriminator":"bdgrz.advisor-feedback.recorded","version":1}` |
-| Meaning | The feedback thread was materialized from an admitted contribution, at thread revision one. Intent repeats the admission intent the handoff accepted; the author and instant are the original actor and the admission instant. |
+| Target meaning | The feedback thread was materialized from an admitted contribution, at thread revision one. Intent repeats the admission intent the handoff accepted; the author and instant are the original actor and the admission instant. |
+| Selected source meaning | The feedback thread was materialized from an admitted contribution, at thread revision one. Intent repeats the admission intent the handoff accepted; the author and instant are the original actor and the admission instant. |
 | Meaning source | record summary in src/Compliance.Common/Features/AdvisorCollaboration/Events/AdvisorFeedbackRecorded.cs |
 
 #### Selected schema and implementation evidence
@@ -165,12 +173,15 @@ ChildAdmissionIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T013](../reactors/advisor-feedback-materialization-reactor.md#t013) | emitted semantic fact | AdvisorHandoff | MaterializeAdvisorFeedback | AdvisorFeedbackThread |
+| [T013](../reactors/advisor-feedback-materialization-reactor.md#t013) | emitted semantic fact | AdvisorHandoff | RecordAdvisorHandoffFeedback | AdvisorFeedbackThread |
 
 ### AdvisorFeedbackResolved
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | AdvisorFeedbackResolved |
+| Selected source event name | AdvisorFeedbackResolved |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:AdvisorFeedbackResolved |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | AdvisorFeedbackResolved |
@@ -180,7 +191,8 @@ ChildAdmissionIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | The client resolved a feedback thread. |
+| Target meaning | The client resolved a feedback thread. |
+| Selected source meaning | The client resolved a feedback thread. |
 | Meaning source | record summary in src/Compliance.Common/Features/AdvisorCollaboration/Events/AdvisorFeedbackResolved.cs |
 
 #### Selected schema and implementation evidence
@@ -225,6 +237,9 @@ ChildAdmissionIntent
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | AdvisorFeedbackResponded |
+| Selected source event name | AdvisorFeedbackResponded |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:AdvisorFeedbackResponded |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | AdvisorFeedbackResponded |
@@ -234,7 +249,8 @@ ChildAdmissionIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | `{"discriminator":"bdgrz.advisor-feedback.responded","version":1}` |
-| Meaning | The client responded on a feedback thread. |
+| Target meaning | The client responded on a feedback thread. |
+| Selected source meaning | The client responded on a feedback thread. |
 | Meaning source | record summary in src/Compliance.Common/Features/AdvisorCollaboration/Events/AdvisorFeedbackResponded.cs |
 
 #### Selected schema and implementation evidence

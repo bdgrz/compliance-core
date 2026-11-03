@@ -188,7 +188,11 @@
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "resolvedIntentSchema": "BulkAccessDecisionIntent",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "AccessReviewDecisionBatchAccepted",
+      "targetName": "AccessReviewDecisionBatchAccepted",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "The batch owner materialized the admitted batch at logical revision zero from the exact admitted BulkAccessDecisionIntent. Nothing is reconstructed from current campaign or item state."
     },
     {
       "canonical": {
@@ -377,7 +381,11 @@
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "resolvedIntentSchema": "BulkAccessDecisionIntent",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "AccessReviewDecisionBatchCanceled",
+      "targetName": "AccessReviewDecisionBatchCanceled",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "Every selected item was fenced and the batch is canceled; no decision of it is ever published. SourceProofs is the complete set of BulkItemFenceProof."
     },
     {
       "canonical": {
@@ -566,7 +574,11 @@
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "resolvedIntentSchema": "BulkAccessDecisionIntent",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "AccessReviewDecisionBatchCancellationAccepted",
+      "targetName": "AccessReviewDecisionBatchCancellationAccepted",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "The batch accepted a cancellation before any irreversible publication. From this fact every selected item is fenced against delayed holds and applies before any hold is released. SourceProofs is the failure proof."
     },
     {
       "canonical": {
@@ -755,7 +767,11 @@
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "resolvedIntentSchema": "BulkAccessDecisionIntent",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "AccessReviewDecisionBatchPublished",
+      "targetName": "AccessReviewDecisionBatchPublished",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "Every selected item held its provisional decision and the batch published all of them as one fact. SourceProofs is the complete set of BulkItemDecisionProof (exact item event and position); OperationResult is the terminal BulkAccessDecisionResult."
     }
   ]
 }

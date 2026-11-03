@@ -64,7 +64,11 @@
         "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "EmailAddressReserved",
+      "targetName": "EmailAddressReserved",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "The native acceptance of ReserveEmail, the first reservation of the address."
     },
     {
       "canonical": {
@@ -133,7 +137,11 @@
         "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "EmailAddressVerified",
+      "targetName": "EmailAddressVerified",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "The native acceptance of CompleteEmailChallenge; the bearer token never enters the fact."
     },
     {
       "canonical": {
@@ -217,7 +225,11 @@
         "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "EmailChallengeIssued",
+      "targetName": "EmailChallengeIssued",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "The native acceptance of IssueEmailChallenge. It carries the hash of the bearer token, never the token; delivery of the token to the mailbox is a technical effect of the email challenge delivery process and leaves no fact on the address stream."
     },
     {
       "canonical": {
@@ -449,7 +461,11 @@
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "resolvedIntentSchema": "IdentityRecoveryIntent",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "IdentityRecoveryChallengeClaimed",
+      "targetName": "IdentityRecoveryChallengeClaimed",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "Consumes an email proof challenge for one old and one replacement identity and freezes the exact candidate. It is the native acceptance of CompleteIdentityRecovery; the proofs are retained as non-bearer provenance."
     },
     {
       "canonical": {
@@ -666,7 +682,11 @@
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "resolvedIntentSchema": "IdentityRecoveryIntent",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "IdentityRecoveryChallengeCompleted",
+      "targetName": "IdentityRecoveryChallengeCompleted",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "Completes the original email challenge of a finished recovery; a newer challenge slot is never cleared."
     },
     {
       "canonical": {
@@ -750,7 +770,11 @@
         "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "IdentityRecoveryChallengeIssued",
+      "targetName": "IdentityRecoveryChallengeIssued",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "A recovery challenge was issued to a verified email address for a user, valid until its expiry, so the holder of that address can complete identity recovery."
     }
   ]
 }

@@ -49,7 +49,9 @@
         "line": 643,
         "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
       },
-      "kind": "creation"
+      "kind": "creation",
+      "sourceName": "ApplyMethodologyTemplate",
+      "targetName": "ApplyMethodologyTemplate"
     },
     {
       "command": "ProposeTemplateSuccessorAdoption",
@@ -114,7 +116,9 @@
         "line": 7196,
         "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
       },
-      "kind": "command"
+      "kind": "command",
+      "sourceName": "ProposeTemplateSuccessorAdoption",
+      "targetName": "ProposeTemplateSuccessorAdoption"
     },
     {
       "command": "RecordTemplateSuccessorDisposition",
@@ -184,7 +188,9 @@
         "line": 9869,
         "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
       },
-      "kind": "command"
+      "kind": "command",
+      "sourceName": "RecordTemplateSuccessorDisposition",
+      "targetName": "RecordTemplateSuccessorDisposition"
     }
   ],
   "sourceContractEvidence": []

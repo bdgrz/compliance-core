@@ -26,15 +26,15 @@
 | [CancelEvidenceRequest](../commands/evidence-request.md#cancelevidencerequest) | http | CommandId |
 | [FulfilEvidenceRequest](../commands/evidence-request.md#fulfilevidencerequest) | http | CommandId |
 | [OpenEvidenceRequest](../commands/evidence-request.md#openevidencerequest) | http | EvidenceRequestId |
-| [AuthorizeEvidenceRequestActionCompletionUse](../commands/evidence-request.md#authorizeevidencerequestactioncompletionuse) | receiver | CommandId |
-| [SettleEvidenceRequestActionCompletionUse](../commands/evidence-request.md#settleevidencerequestactioncompletionuse) | receiver | CommandId |
+| [AuthorizeEvidenceRequestActionCompletion](../commands/evidence-request.md#authorizeevidencerequestactioncompletion) | receiver | CommandId |
+| [CloseEvidenceRequestActionCompletionAuthorization](../commands/evidence-request.md#closeevidencerequestactioncompletionauthorization) | receiver | CommandId |
 
 ## Events
 
 | Event | Discriminator | Version |
 | --- | --- | --- |
-| [EvidenceRequestActionCompletionUseAuthorized](../events/evidence-request.md#evidencerequestactioncompletionuseauthorized) | bdgrz.evidence-request.evidence-request-action-completion-use-authorized | 1 |
-| [EvidenceRequestActionCompletionUseSettled](../events/evidence-request.md#evidencerequestactioncompletionusesettled) | bdgrz.evidence-request.evidence-request-action-completion-use-settled | 1 |
+| [EvidenceRequestActionCompletionAuthorized](../events/evidence-request.md#evidencerequestactioncompletionauthorized) | bdgrz.evidence-request.evidence-request-action-completion-use-authorized | 1 |
+| [EvidenceRequestActionCompletionAuthorizationClosed](../events/evidence-request.md#evidencerequestactioncompletionauthorizationclosed) | bdgrz.evidence-request.evidence-request-action-completion-use-settled | 1 |
 | [EvidenceRequestCancelled](../events/evidence-request.md#evidencerequestcancelled) | bdgrz.evidence.request.cancelled | 2 |
 | [EvidenceRequestFulfilled](../events/evidence-request.md#evidencerequestfulfilled) | bdgrz.evidence.request.fulfilled | 2 |
 | [EvidenceRequestOpened](../events/evidence-request.md#evidencerequestopened) | bdgrz.evidence.request.opened | 2 |
@@ -43,8 +43,8 @@
 
 | Row | Kind | Source owner | Target owner | Command |
 | --- | --- | --- | --- | --- |
-| [T071](../reactors/risk-action-completion-review-reactor.md#t071) | reaction_or_regular_process_stage | RiskTreatmentAction | EvidenceRequest | AuthorizeEvidenceRequestActionCompletionUse |
-| [T072](../reactors/risk-action-completion-review-reactor.md#t072) | reaction_or_regular_process_stage | RiskTreatmentAction | EvidenceRequest | SettleEvidenceRequestActionCompletionUse |
+| [T071](../reactors/risk-action-completion-review-reactor.md#t071) | reaction_or_regular_process_stage | RiskTreatmentAction | EvidenceRequest | AuthorizeEvidenceRequestActionCompletion |
+| [T072](../reactors/risk-action-completion-review-reactor.md#t072) | reaction_or_regular_process_stage | RiskTreatmentAction | EvidenceRequest | CloseEvidenceRequestActionCompletionAuthorization |
 
 ## Product rules
 

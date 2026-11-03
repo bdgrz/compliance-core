@@ -211,7 +211,11 @@
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "resolvedIntentSchema": "IdentityRecoveryIntent",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "IdentityRecoveryAccepted",
+      "targetName": "IdentityRecoveryAccepted",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "The recovery owner accepted the swap after both identity slots were protected. An accepted swap completes forward and can no longer be rejected."
     },
     {
       "canonical": {
@@ -423,7 +427,11 @@
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "resolvedIntentSchema": "IdentityRecoveryIntent",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "IdentityRecoveryCompleted",
+      "targetName": "IdentityRecoveryCompleted",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "The accepted swap finished: the replacement is registered and the old identity revoked to it."
     },
     {
       "canonical": {
@@ -635,7 +643,11 @@
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "resolvedIntentSchema": "IdentityRecoveryIntent",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "IdentityRecoveryPreparationRejected",
+      "targetName": "IdentityRecoveryPreparationRejected",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "A definite competing association rejected the preparation before acceptance. It fences delayed protection and acceptance."
     },
     {
       "canonical": {
@@ -847,7 +859,11 @@
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "resolvedIntentSchema": "IdentityRecoveryIntent",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "IdentityRecoveryPrepared",
+      "targetName": "IdentityRecoveryPrepared",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "The recovery owner froze the exact both-proof-verified candidate from the claimed challenge. This is a preparation, not an accepted swap."
     }
   ]
 }

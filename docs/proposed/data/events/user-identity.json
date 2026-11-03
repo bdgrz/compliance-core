@@ -207,7 +207,11 @@
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "resolvedIntentSchema": "IdentityRecoveryIntent",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "RecoveryIdentityProtected",
+      "targetName": "RecoveryIdentityProtected",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "A provider identity was protected for one recovery challenge; until that protection is settled, no other account can associate the same provider identity."
     },
     {
       "canonical": {
@@ -415,7 +419,11 @@
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "resolvedIntentSchema": "IdentityRecoveryIntent",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "RecoveryIdentityProtectionSettled",
+      "targetName": "RecoveryIdentityProtectionEnded",
+      "nameDecision": "Names the end of protection for the exact recovery identity slot, including when protection never began.",
+      "targetMeaning": "The protection of one slot for one recovery challenge is settled. A slot that was never protected is settled too, which fences a delayed protection for the same challenge."
     },
     {
       "canonical": {
@@ -439,7 +447,11 @@
         "meaning": "Audits successful authentication through a registered provider identity.",
         "meaningSource": "record summary in src/Compliance.Common/Features/UserIdentities/Events/UserIdentityAuthenticated.cs"
       },
-      "schema": null
+      "schema": null,
+      "sourceName": "UserIdentityAuthenticated",
+      "targetName": "UserIdentityAuthenticated",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "Audits successful authentication through a registered provider identity."
     },
     {
       "canonical": {
@@ -463,7 +475,11 @@
         "meaning": "Audited provider display text admitted at the proven identity revision; never identity or authority.",
         "meaningSource": "record summary in src/Compliance.Common/Features/UserIdentities/Events/UserIdentityProfileObserved.cs"
       },
-      "schema": null
+      "schema": null,
+      "sourceName": "UserIdentityProfileObserved",
+      "targetName": "UserIdentityProfileObserved",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "Audited provider display text admitted at the proven identity revision; never identity or authority."
     },
     {
       "canonical": {
@@ -675,7 +691,11 @@
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "resolvedIntentSchema": "IdentityRecoveryIntent",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "UserIdentityRegistered",
+      "targetName": "UserIdentityRegistered",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "Records the provider-neutral identity linked to a platform user. A registration caused by an identity recovery names the recovery challenge and carries the receiver's operation provenance and frozen intent."
     },
     {
       "canonical": {
@@ -887,7 +907,11 @@
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "resolvedIntentSchema": "IdentityRecoveryIntent",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "UserIdentityRevoked",
+      "targetName": "UserIdentityRevoked",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "Records replacement of a provider identity while preserving its platform user. A revocation caused by an identity recovery names the recovery challenge and carries the receiver's provenance and frozen intent."
     }
   ]
 }

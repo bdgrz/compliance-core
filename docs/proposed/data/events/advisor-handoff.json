@@ -160,7 +160,11 @@
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "resolvedIntentSchema": "SourceUseAuthorizationIntent",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "AdvisorArtifactDownloadUseAuthorized",
+      "targetName": "AdvisorArtifactDownloadAuthorized",
+      "nameDecision": "Authorization is already the completed fact; Use adds no stakeholder meaning.",
+      "targetMeaning": null
     },
     {
       "canonical": {
@@ -321,7 +325,11 @@
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "resolvedIntentSchema": "SourceUseAuthorizationIntent",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "AdvisorArtifactDownloadUseSettled",
+      "targetName": "AdvisorArtifactDownloadAuthorizationClosed",
+      "nameDecision": "The exact authorization ended; the recorded outcome still distinguishes use, cancellation, or a late fence.",
+      "targetMeaning": null
     },
     {
       "canonical": {
@@ -498,7 +506,11 @@
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "resolvedIntentSchema": "ChildAdmissionIntent",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "AdvisorFeedbackAdmitted",
+      "targetName": "AdvisorFeedbackAdmitted",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "The handoff accepted one feedback contribution while it was ready, unrevoked and unclosed, on an exactly selected version. Intent is the frozen ChildAdmissionIntent that carries the complete contribution; the thread is materialized independently and the admission, not the materialization, is the authority. The logical id of Operation is the feedback id and Generation is the selection generation of the handoff at admission."
     },
     {
       "canonical": {
@@ -591,7 +603,11 @@
         "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "AdvisorHandoffClosed",
+      "targetName": "AdvisorHandoffClosed",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "The handoff was closed; feedback admitted before the closure is still materialized."
     },
     {
       "canonical": {
@@ -703,7 +719,11 @@
         "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "AdvisorHandoffCreated",
+      "targetName": "AdvisorHandoffCreated",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "Opens one bounded advisor handoff. RecordVersionsManifest is the complete exact selection as verified content (AdvisorHandoffCreated.RecordVersionsManifest.v1); readers verify it before use."
     },
     {
       "canonical": {
@@ -787,7 +807,11 @@
         "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "AdvisorHandoffReadiedForReview",
+      "targetName": "AdvisorHandoffOpenedForReview",
+      "nameDecision": "Names the completed opening of the handoff to its assigned advisor for review.",
+      "targetMeaning": "The handoff was opened to the assigned advisor for review."
     },
     {
       "canonical": {
@@ -880,7 +904,11 @@
         "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "AdvisorHandoffRevoked",
+      "targetName": "AdvisorHandoffRevoked",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "The handoff was revoked; feedback admitted before the revocation is still materialized."
     },
     {
       "canonical": {
@@ -987,7 +1015,11 @@
         "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "AdvisorHandoffSelectionRevised",
+      "targetName": "AdvisorHandoffSelectionRevised",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "Replaces the selected versions of an open handoff and advances its selection generation. RecordVersionsManifest is the complete exact selection as verified content (AdvisorHandoffSelectionRevised.RecordVersionsManifest.v1)."
     }
   ]
 }

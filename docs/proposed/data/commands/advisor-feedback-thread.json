@@ -71,7 +71,9 @@
         "line": 4509,
         "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       },
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "CorrectAdvisorFeedback",
+      "targetName": "CorrectAdvisorFeedback"
     },
     {
       "command": "ResolveAdvisorFeedback",
@@ -133,7 +135,9 @@
         "line": 13958,
         "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       },
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "ResolveAdvisorFeedback",
+      "targetName": "ResolveAdvisorFeedback"
     },
     {
       "command": "RespondToAdvisorFeedback",
@@ -200,7 +204,9 @@
         "line": 14188,
         "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       },
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "RespondToAdvisorFeedback",
+      "targetName": "RespondToAdvisorFeedback"
     },
     {
       "command": "MaterializeAdvisorFeedback",
@@ -276,7 +282,9 @@
       "source": {
         "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
         "recorded": "2026-10-29"
-      }
+      },
+      "sourceName": "MaterializeAdvisorFeedback",
+      "targetName": "RecordAdvisorHandoffFeedback"
     }
   ],
   "sourceContractEvidence": [

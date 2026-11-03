@@ -65,7 +65,9 @@
         "line": 2351,
         "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
       },
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "AssignWorkItem",
+      "targetName": "AssignWorkItem"
     },
     {
       "command": "ClaimWorkItem",
@@ -121,7 +123,9 @@
         "line": 2728,
         "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
       },
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "ClaimWorkItem",
+      "targetName": "ClaimWorkItem"
     },
     {
       "command": "DelegateWorkItem",
@@ -187,7 +191,9 @@
         "line": 4688,
         "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
       },
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "DelegateWorkItem",
+      "targetName": "DelegateWorkItem"
     },
     {
       "command": "EscalateWorkItem",
@@ -248,7 +254,9 @@
         "line": 5344,
         "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
       },
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "EscalateWorkItem",
+      "targetName": "EscalateWorkItem"
     }
   ],
   "sourceContractEvidence": []

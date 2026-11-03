@@ -2,11 +2,11 @@
 
 Selected command contracts: **3**. Complete selected contracts and companion source evidence: [owner command JSON](../data/commands/criterion-applicability.json).
 
-| Command | Kind | Identity | Fields | HTTP routes |
-| --- | --- | --- | --- | --- |
-| ProposeCriterionNotApplicable | http | DecisionId | 7 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/criterion-applicability/{decision_id} [ComplianceAuthorizationPolicies.ApiUser] |
-| ReviewCriterionApplicability | http | CommandId | 8 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/criterion-applicability/{decision_id}/reviews/{command_id} [ComplianceAuthorizationPolicies.ApiUser] |
-| WithdrawCriterionNotApplicable | http | CommandId | 6 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/criterion-applicability/{decision_id}/withdrawals/{command_id} [ComplianceAuthorizationPolicies.ApiUser] |
+| Target command | Selected source name | Kind | Identity | Fields | HTTP routes |
+| --- | --- | --- | --- | --- | --- |
+| ProposeCriterionNotApplicable | ProposeCriterionNotApplicable | http | DecisionId | 7 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/criterion-applicability/{decision_id} [ComplianceAuthorizationPolicies.ApiUser] |
+| ReviewCriterionApplicability | ReviewCriterionApplicability | http | CommandId | 8 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/criterion-applicability/{decision_id}/reviews/{command_id} [ComplianceAuthorizationPolicies.ApiUser] |
+| WithdrawCriterionNotApplicable | WithdrawCriterionNotApplicable | http | CommandId | 6 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/criterion-applicability/{decision_id}/withdrawals/{command_id} [ComplianceAuthorizationPolicies.ApiUser] |
 
 ## Selected command details
 
@@ -14,6 +14,9 @@ Selected command contracts: **3**. Complete selected contracts and companion sou
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | ProposeCriterionNotApplicable |
+| Selected source command name | ProposeCriterionNotApplicable |
+| Name decision | The selected source name is retained. |
 | Owner | CriterionApplicability |
 | Contract record status | target_contract |
 | Kind | http |
@@ -65,6 +68,9 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | ReviewCriterionApplicability |
+| Selected source command name | ReviewCriterionApplicability |
+| Name decision | The selected source name is retained. |
 | Owner | CriterionApplicability |
 | Contract record status | target_contract |
 | Kind | http |
@@ -117,6 +123,9 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | WithdrawCriterionNotApplicable |
+| Selected source command name | WithdrawCriterionNotApplicable |
+| Name decision | The selected source name is retained. |
 | Owner | CriterionApplicability |
 | Contract record status | target_contract |
 | Kind | http |
@@ -166,7 +175,7 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 
 ## Source contracts
 
-| Command | Handler | Registered | Entry point |
+| Selected source command | Handler | Registered | Entry point |
 | --- | --- | --- | --- |
 | ProposeCriterionNotApplicable | ProposeCriterionNotApplicableHandler | true | personal_http |
 | ReviewCriterionApplicability | ReviewCriterionApplicabilityHandler | true | personal_http |

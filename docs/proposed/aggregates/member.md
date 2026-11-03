@@ -29,14 +29,14 @@
 | [DeprovisionMember](../commands/member.md#deprovisionmember) | http | CommandId |
 | [ReinstateMember](../commands/member.md#reinstatemember) | http | CommandId |
 | [ApplyMemberWithdrawal](../commands/member.md#applymemberwithdrawal) | receiver | CommandId |
-| [ApplyNeutralMemberSourceMutation](../commands/member.md#applyneutralmembersourcemutation) | receiver | CommandId |
+| [ApplyMemberStatusChange](../commands/member.md#applymemberstatuschange) | receiver | CommandId |
 | [ApplyMemberRestoration](../commands/member.md#applymemberrestoration) | receiver | CommandId |
 
 ## Events
 
 | Event | Discriminator | Version |
 | --- | --- | --- |
-| [MemberDeprovisionCleanupCompleted](../events/member.md#memberdeprovisioncleanupcompleted) | bdgrz.rbac.member.deprovision_cleanup_completed | 2 |
+| [MemberAccessAndAssignmentsRemoved](../events/member.md#memberaccessandassignmentsremoved) | bdgrz.rbac.member.deprovision_cleanup_completed | 2 |
 | [MemberDeprovisioned](../events/member.md#memberdeprovisioned) | bdgrz.rbac.member.deprovisioned | 2 |
 | [MemberRegistered](../events/member.md#memberregistered) | bdgrz.rbac.member.registered | 1 |
 | [MemberReinstated](../events/member.md#memberreinstated) | bdgrz.rbac.member.reinstated | 1 |
@@ -47,11 +47,11 @@
 | Row | Kind | Source owner | Target owner | Command |
 | --- | --- | --- | --- | --- |
 | [T046](../reactors/administrator-withdrawal-reactor.md#t046) | reaction_or_regular_process_stage | TenantManagerGuard | Member | ApplyMemberWithdrawal |
-| [T048](../reactors/administrator-neutral-member-mutation-reactor.md#t048) | reaction_or_regular_process_stage | TenantManagerGuard | Member | ApplyNeutralMemberSourceMutation |
+| [T048](../reactors/administrator-neutral-member-mutation-reactor.md#t048) | reaction_or_regular_process_stage | TenantManagerGuard | Member | ApplyMemberStatusChange |
 | [T051](../reactors/administrator-restoration-reactor.md#t051) | reaction_or_regular_process_stage | TenantManagerGuard | Member | ApplyMemberRestoration |
 | [S003](../reactors/member-retirement-reactor.md#s003) | business_receiver | Member | Member | CompleteMemberRetirement |
-| [S004](../reactors/member-retirement-reactor.md#s004) | business_receiver | Member | TeamMember | CleanupRetiredMembershipRelationship |
-| [S005](../reactors/member-retirement-reactor.md#s005) | business_receiver | Member | AccessGrant | CleanupRetiredMembershipRelationship |
+| [S004](../reactors/member-retirement-reactor.md#s004) | business_receiver | Member | TeamMember | RemoveRetiredMemberAccessAndAssignments |
+| [S005](../reactors/member-retirement-reactor.md#s005) | business_receiver | Member | AccessGrant | RemoveRetiredMemberAccessAndAssignments |
 | [S013](../reactors/tenant-rbac-bootstrap-reactor.md#s013) | business_receiver | Tenant | Member | RegisterMember |
 | [S026](../reactors/tenant-invitation-reactor.md#s026) | business_receiver | TenantInvitation | Member | RegisterMember |
 

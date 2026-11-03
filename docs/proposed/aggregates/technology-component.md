@@ -11,13 +11,13 @@
 
 **Invariant:** One tenant inventory identity has exactly one record kind; a component keeps immutable category/system-instance binding, cloud account keyed to its unique instance, and category-specific valid content/lifecycle.
 
-**Additional decision rule:** Inventory is at account and environment granularity with categories cloud_account, environment, network, data_store, repository and endpoint_class, never per resource; each component carries a governed name, owner, environment reference, location reference and lifecycle. A cloud_account component shares its SystemInstance identity one-to-one, and an endpoint_class holds a count and management source, never individual devices.
+**Additional decision rule:** Inventory is at account and environment granularity with categories cloud_account, environment, network, data_store, repository and endpoint_class, never per resource; each component carries a governed name, owner, environment reference, location reference and lifecycle. A cloud_account component shares its SystemInstance identity one-to-one, and an endpoint_class holds a count and management source, never individual devices. Keep one record for each governed technology component at the level it is managed. A cloud account belongs to exactly one system instance. Endpoint categories are recorded by count and management source.
 
 **Must preserve:** [Placeholder: preservation rule not recorded.]
 
 **Replay:** Current required authorization precedes replay; exact authorized retries resolve the original accepted result using the selected logical identity and immutable actor/intent/source binding. Fresh mutable feasibility, clock selection and body preparation cannot replace that original result. Expected revision is concurrency precondition, not a new identity.
 
-**Lifecycle:** [Placeholder: a consolidated lifecycle sequence is not present in the selected owner record.]
+**Lifecycle:** A new component is active. ReviseTechnologyComponent may set it to active or retired. Retirement keeps the same component identity and historical references. This change alone does not change the system instance or access.
 
 ## Commands
 

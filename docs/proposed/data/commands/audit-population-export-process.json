@@ -108,5 +108,60 @@
         "counter": "No primary caller ResourceRevision. Enforce required authored source/epoch/version tokens, immutable creation identity or trusted proof/generation as declared; append uses physical OCC."
       }
     }
+  ],
+  "supplementalSourceWriteRequests": [
+    {
+      "command": "GenerateAuditPopulationExport",
+      "owner": "AuditPopulationExportProcess",
+      "classification": "implemented_source_write_not_in_selected_per_command_contracts",
+      "sourcePath": "src/Compliance.Common/Features/AuditPopulations/Commands/GenerateAuditPopulationExport.cs",
+      "sourceDescription": "[Placeholder: source summary not recorded]",
+      "discriminator": {
+        "name": "bdgrz.audit-populations.generate-audit-population-export",
+        "version": 2
+      },
+      "requestFields": [
+        {
+          "name": "TenantId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "ProgramId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "PopulationId",
+          "type": "Uuid",
+          "required": true
+        },
+        {
+          "name": "Version",
+          "type": "long",
+          "required": true
+        },
+        {
+          "name": "Format",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "ExportKey",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "responseType": "AuditPopulationExportReceipt",
+      "requestInterfaces": [
+        "IRequest",
+        "IProgramScopedRequest",
+        "IClientManagementMutationRequest",
+        "ICallable"
+      ],
+      "handlerSource": "src/Compliance.Core/Features/AuditPopulations/Handlers/GenerateAuditPopulationExportHandler.cs",
+      "httpRoutes": [],
+      "contractNotes": "No HTTP route is recorded in the source request contract. Internal process and receiver commands are invoked by their owning workflow."
+    }
   ]
 }

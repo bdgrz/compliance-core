@@ -102,7 +102,11 @@
         "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "ControlEvaluationDeviationDisposed",
+      "targetName": "ControlEvaluationDeviationDisposed",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "The disposition of one minor deviation of one evaluation."
     },
     {
       "canonical": {
@@ -199,7 +203,11 @@
         "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "ControlEvaluationReviewed",
+      "targetName": "ControlEvaluationReviewed",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "The independent review decision on the submitted round. Decision (accepted, rejected or changes_requested) decides the lifecycle of the evaluation; the complete decision is verified immutable content."
     },
     {
       "canonical": {
@@ -333,7 +341,11 @@
         "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "ControlEvaluationStarted",
+      "targetName": "ControlEvaluationStarted",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "The start of one evaluation, which is its own owner stream. The frozen procedure and the retested deviation ids are verified immutable content, so nothing is truncated. A retest names the accepted review fact of its predecessor in RetestPredecessor; the predecessor itself is never written."
     },
     {
       "canonical": {
@@ -447,7 +459,11 @@
         "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "ControlEvaluationStepRecorded",
+      "targetName": "ControlEvaluationStepRecorded",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "A step result of one evaluation. The result with its complete inspected items and the deviation it raised, if any, are verified immutable content."
     },
     {
       "canonical": {
@@ -544,7 +560,11 @@
         "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "ControlEvaluationSubmitted",
+      "targetName": "ControlEvaluationSubmitted",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "One submitted round of one evaluation. The complete submission, with the exact step results and deviations it rests on, is verified immutable content."
     }
   ]
 }

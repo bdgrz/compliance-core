@@ -1,5 +1,7 @@
 {
-  "root": "one committed EvidenceArtifactDownloadRequested starter",
+  "sourceRoot": "one committed EvidenceArtifactDownloadRequested starter",
+  "targetRoot": "FulfillAuthorizedArtifactDownloadRequestReactor",
+  "businessReason": "Let people download evidence only when the artifact is available, its handling rules allow the download, and consultant access has the required advisor approval.",
   "rows": [
     {
       "id": "T099",

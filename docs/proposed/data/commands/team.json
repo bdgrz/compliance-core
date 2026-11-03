@@ -45,7 +45,9 @@
         "line": 4626,
         "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
       },
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "DefineTeam",
+      "targetName": "DefineTeam"
     },
     {
       "command": "DeleteTeam",
@@ -90,7 +92,9 @@
         "rule": "terminal_idempotent_no_guard",
         "jev": 0.87,
         "date": "2026-10-29"
-      }
+      },
+      "sourceName": "DeleteTeam",
+      "targetName": "DeleteTeam"
     }
   ],
   "sourceContractEvidence": []

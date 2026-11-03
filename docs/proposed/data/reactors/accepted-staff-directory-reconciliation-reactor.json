@@ -1,5 +1,7 @@
 {
-  "root": "AcceptedStaffDirectoryReconciliationReactor",
+  "sourceRoot": "AcceptedStaffDirectoryReconciliationReactor",
+  "targetRoot": "ReassessStaffIndependenceAfterChangesReactor",
+  "businessReason": "Prevent a client service from relying on an independence decision after a staff member's status or assignment has changed.",
   "rows": [
     {
       "id": "S018",

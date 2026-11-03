@@ -56,7 +56,9 @@
         "line": 8,
         "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       },
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "AcceptAccessPopulation",
+      "targetName": "AcceptAccessPopulation"
     },
     {
       "command": "OpenAccessPopulation",
@@ -123,7 +125,9 @@
         "line": 8216,
         "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       },
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "OpenAccessPopulation",
+      "targetName": "OpenAccessPopulation"
     },
     {
       "command": "RecordAccessPopulationFacts",
@@ -195,7 +199,9 @@
         "line": 10406,
         "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       },
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "RecordAccessPopulationFacts",
+      "targetName": "RecordAccessPopulationFacts"
     }
   ],
   "sourceContractEvidence": [

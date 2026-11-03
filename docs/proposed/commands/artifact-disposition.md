@@ -2,12 +2,12 @@
 
 Selected command contracts: **4**. Complete selected contracts and companion source evidence: [owner command JSON](../data/commands/artifact-disposition.json).
 
-| Command | Kind | Identity | Fields | HTTP routes |
-| --- | --- | --- | --- | --- |
-| ApproveArtifactDisposition | command | CommandId | 6 | [Placeholder: value not recorded] |
-| ExecuteArtifactDisposition | command | CommandId | 4 | [Placeholder: value not recorded] |
-| RecordArtifactDispositionResult | command | CommandId | 10 | [Placeholder: value not recorded] |
-| FenceArtifactDispositionForHold | receiver | CommandId | 8 | [Placeholder: value not recorded] |
+| Target command | Selected source name | Kind | Identity | Fields | HTTP routes |
+| --- | --- | --- | --- | --- | --- |
+| ApproveArtifactDisposition | ApproveArtifactDisposition | command | CommandId | 6 | [Placeholder: value not recorded] |
+| ExecuteArtifactDisposition | ExecuteArtifactDisposition | command | CommandId | 4 | [Placeholder: value not recorded] |
+| RecordArtifactDispositionResult | RecordArtifactDispositionResult | command | CommandId | 10 | [Placeholder: value not recorded] |
+| StopArtifactDisposalForHold | FenceArtifactDispositionForHold | receiver | CommandId | 8 | [Placeholder: value not recorded] |
 
 ## Selected command details
 
@@ -15,13 +15,16 @@ Selected command contracts: **4**. Complete selected contracts and companion sou
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | ApproveArtifactDisposition |
+| Selected source command name | ApproveArtifactDisposition |
+| Name decision | The selected source name is retained. |
 | Owner | ArtifactDisposition |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | command |
 | Logical identity | CommandId; Uuid; required=true; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
 | Entry point | [Placeholder: value not recorded] |
 | MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | [Placeholder: value not recorded] |
+| Selected semantic events | None listed |
 | Protocols | [Placeholder: value not recorded] |
 | Policy preservation | [Placeholder: value not recorded] |
 | Contract changes | [Placeholder: value not recorded] |
@@ -61,13 +64,16 @@ Required tests: [Placeholder: required tests not recorded]
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | ExecuteArtifactDisposition |
+| Selected source command name | ExecuteArtifactDisposition |
+| Name decision | The selected source name is retained. |
 | Owner | ArtifactDisposition |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | command |
 | Logical identity | CommandId; Uuid; required=true; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
 | Entry point | [Placeholder: value not recorded] |
 | MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | [Placeholder: value not recorded] |
+| Selected semantic events | None listed |
 | Protocols | [Placeholder: value not recorded] |
 | Policy preservation | [Placeholder: value not recorded] |
 | Contract changes | [Placeholder: value not recorded] |
@@ -105,13 +111,16 @@ Required tests: [Placeholder: required tests not recorded]
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | RecordArtifactDispositionResult |
+| Selected source command name | RecordArtifactDispositionResult |
+| Name decision | The selected source name is retained. |
 | Owner | ArtifactDisposition |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | command |
 | Logical identity | CommandId; Uuid; required=true; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
 | Entry point | [Placeholder: value not recorded] |
 | MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | [Placeholder: value not recorded] |
+| Selected semantic events | None listed |
 | Protocols | [Placeholder: value not recorded] |
 | Policy preservation | [Placeholder: value not recorded] |
 | Contract changes | [Placeholder: value not recorded] |
@@ -151,17 +160,20 @@ Existing tests: [Placeholder: existing tests not recorded]
 
 Required tests: [Placeholder: required tests not recorded]
 
-### FenceArtifactDispositionForHold
+### StopArtifactDisposalForHold
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | StopArtifactDisposalForHold |
+| Selected source command name | FenceArtifactDispositionForHold |
+| Name decision | Stops an approved disposal when a new legal or engagement hold applies before deletion finishes. |
 | Owner | ArtifactDisposition |
 | Contract record status | PLANNED |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; reactor; deterministic receiver identity derived from the admitted root fact, episode and generation: exact redelivery resolves the original result, a changed admission is a new identity |
 | Entry point | [Placeholder: value not recorded] |
 | MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | [Placeholder: value not recorded] |
+| Selected semantic events | None listed |
 | Protocols | [Placeholder: value not recorded] |
 | Policy preservation | [Placeholder: value not recorded] |
 | Contract changes | [Placeholder: value not recorded] |

@@ -23,7 +23,11 @@
         "meaning": "Records the EvidenceSupportLinked domain fact for one tenant-owned subject revision.",
         "meaningSource": "record summary in src/Compliance.Common/Features/Evidence/Events/EvidenceSupportLinked.cs"
       },
-      "schema": null
+      "schema": null,
+      "sourceName": "EvidenceSupportLinked",
+      "targetName": "EvidenceSupportLinked",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "Records the EvidenceSupportLinked domain fact for one tenant-owned subject revision."
     }
   ]
 }

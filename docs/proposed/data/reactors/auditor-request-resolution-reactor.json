@@ -1,5 +1,7 @@
 {
-  "root": "AuditorRequestResolutionReactor",
+  "sourceRoot": "AuditorRequestResolutionReactor",
+  "targetRoot": "AuditorRequestResolutionReactor",
+  "businessReason": "Resolve an auditor request only after admitted response work is preserved and later edits are fenced.",
   "rows": [
     {
       "id": "T035",

@@ -65,7 +65,9 @@
           "process_reply": 0.6
         },
         "date": "2026-10-29"
-      }
+      },
+      "sourceName": "CompleteMemberRetirement",
+      "targetName": "CompleteMemberRetirement"
     },
     {
       "command": "RegisterMember",
@@ -120,7 +122,9 @@
         "rule": "creation_key_only",
         "jev": 0.84,
         "date": "2026-10-29"
-      }
+      },
+      "sourceName": "RegisterMember",
+      "targetName": "RegisterMember"
     },
     {
       "command": "SuspendMember",
@@ -179,7 +183,9 @@
         "sha256": "f1d549ed0879c816cb26e86879f8fa658dab0a8acbf7c591e4d4aed40483f8ae"
       },
       "attributionNote": "Moved from TenantManagerGuard on 2026-10-29: TenantManagerGuard appends an admission fact first (route always); then AdministratorTransitionProcess applies to Member. Fact is TenantManagerWithdrawalAccepted when the episode contributes administrator availability or has a pending registration, otherwise TenantManagerSourceMutationAdmitted (neutral). Applied by ApplyMemberWithdrawal (WithdrawalKind=suspend) or ApplyNeutralMemberSourceMutation, which call Member.Suspend. (source src/Compliance.Core/Features/AccessControl/Handlers/SuspendMemberHandler.cs; Handlers/ApplyMemberWithdrawalHandler.cs; Handlers/ApplyNeutralMemberSourceMutationHandler.cs)",
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "SuspendMember",
+      "targetName": "SuspendMember"
     },
     {
       "command": "DeprovisionMember",
@@ -238,7 +244,9 @@
         "sha256": "f1d549ed0879c816cb26e86879f8fa658dab0a8acbf7c591e4d4aed40483f8ae"
       },
       "attributionNote": "Moved from TenantManagerGuard on 2026-10-29: TenantManagerGuard appends an admission fact first (route always); then AdministratorTransitionProcess applies to Member. Always a guard fact (withdrawal or neutral); then Member.Deprovision via ApplyMemberWithdrawal (WithdrawalKind=deprovision) / ApplyNeutralMemberSourceMutation; MemberRetirementReactor cleans up authority afterwards. (source src/Compliance.Core/Features/AccessControl/Handlers/DeprovisionMemberHandler.cs; Handlers/ApplyMemberWithdrawalHandler.cs)",
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "DeprovisionMember",
+      "targetName": "DeprovisionMember"
     },
     {
       "command": "ReinstateMember",
@@ -292,7 +300,9 @@
         "sha256": "f1d549ed0879c816cb26e86879f8fa658dab0a8acbf7c591e4d4aed40483f8ae"
       },
       "attributionNote": "Moved from TenantManagerGuard on 2026-10-29: TenantManagerGuard appends an admission fact first (route always); then AdministratorTransitionProcess applies to Member. Fact is TenantManagerRestorationAccepted when the episode contributes administrator availability, otherwise neutral; waits behind any unfinished suspension of the same episode. Applied by ApplyMemberRestoration / ApplyNeutralMemberSourceMutation -> Member.Reinstate. (source src/Compliance.Core/Features/AccessControl/Handlers/ReinstateMemberHandler.cs; Handlers/ApplyMemberRestorationHandler.cs)",
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "ReinstateMember",
+      "targetName": "ReinstateMember"
     },
     {
       "command": "ApplyMemberWithdrawal",
@@ -374,7 +384,9 @@
       "source": {
         "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
         "recorded": "2026-10-29"
-      }
+      },
+      "sourceName": "ApplyMemberWithdrawal",
+      "targetName": "ApplyMemberWithdrawal"
     },
     {
       "command": "ApplyNeutralMemberSourceMutation",
@@ -457,7 +469,9 @@
       "source": {
         "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
         "recorded": "2026-10-29"
-      }
+      },
+      "sourceName": "ApplyNeutralMemberSourceMutation",
+      "targetName": "ApplyMemberStatusChange"
     },
     {
       "command": "ApplyMemberRestoration",
@@ -533,7 +547,9 @@
       "source": {
         "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
         "recorded": "2026-10-29"
-      }
+      },
+      "sourceName": "ApplyMemberRestoration",
+      "targetName": "ApplyMemberRestoration"
     }
   ],
   "sourceContractEvidence": []

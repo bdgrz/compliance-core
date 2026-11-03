@@ -60,7 +60,9 @@
           "process_reply": 0.11
         },
         "date": "2026-10-29"
-      }
+      },
+      "sourceName": "ApproveMethodologyTemplateVersion",
+      "targetName": "ApproveMethodologyTemplateVersion"
     },
     {
       "command": "CreateMethodologyTemplate",
@@ -100,7 +102,9 @@
         "line": 3923,
         "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
       },
-      "kind": "creation"
+      "kind": "creation",
+      "sourceName": "CreateMethodologyTemplate",
+      "targetName": "CreateMethodologyTemplate"
     },
     {
       "command": "RetireMethodologyTemplate",
@@ -150,7 +154,9 @@
         "line": 11624,
         "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
       },
-      "kind": "command"
+      "kind": "command",
+      "sourceName": "RetireMethodologyTemplate",
+      "targetName": "RetireMethodologyTemplate"
     },
     {
       "command": "ReviewMethodologyTemplate",
@@ -216,7 +222,9 @@
           "process_reply": 0.14
         },
         "date": "2026-10-29"
-      }
+      },
+      "sourceName": "ReviewMethodologyTemplate",
+      "targetName": "ReviewMethodologyTemplate"
     },
     {
       "command": "ReviseMethodologyTemplateDraft",
@@ -266,7 +274,9 @@
         "line": 13180,
         "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
       },
-      "kind": "command"
+      "kind": "command",
+      "sourceName": "ReviseMethodologyTemplateDraft",
+      "targetName": "ReviseMethodologyTemplateDraft"
     }
   ],
   "sourceContractEvidence": []

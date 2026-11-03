@@ -1,10 +1,15 @@
-# AccessReviewCompletionSettlementReactor
+# ApplyAccessReviewCampaignOutcomeToItemsReactor
+
+Selected source root name: `AccessReviewCompletionSettlementReactor`.
+## Why this reaction exists
+
+Keep each access review item consistent with the campaign's final outcome so completed or canceled work cannot continue on its own.
 
 Selected choreography rows: **1**. Required proofs, recovery, effect identity, and implementation evidence are preserved in [reactor row JSON](../data/reactors/access-review-completion-settlement-reactor.json).
 
 | Row | Kind | Prerequisite facts | Command | Target owner | Emitted facts |
 | --- | --- | --- | --- | --- | --- |
-| T060 | reaction_or_regular_process_stage | AccessReviewCampaignCompleted, AccessReviewCampaignCompletionCanceled | SettleAccessReviewItemCampaignCompletionUse | AccessReviewItem | AccessReviewItemCampaignCompletionUseSettled |
+| T060 | reaction_or_regular_process_stage | AccessReviewCampaignCompleted, AccessReviewCampaignCompletionCanceled | CloseAccessReviewItemCampaignCompletionAuthorization | AccessReviewItem | AccessReviewItemCampaignCompletionAuthorizationClosed |
 
 ## Selected row details
 
@@ -16,16 +21,16 @@ Selected choreography rows: **1**. Required proofs, recovery, effect identity, a
 | kind | reaction_or_regular_process_stage |
 | status | SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED |
 | sourceOwner | AccessReviewCampaign |
-| logicalPrerequisiteFacts | AccessReviewCampaignCompleted, AccessReviewCampaignCompletionCanceled |
+| logicalPrerequisiteFacts (target names) | AccessReviewCampaignCompleted, AccessReviewCampaignCompletionCanceled |
 | logicalPrerequisiteRule | Exact terminal parent decision or receiver-fenced cancellation proof; settle only the matching operation/generation, never release because of time/missing read. A canceled parent fences local completion; record terminal source-use settlement even when acquire has not yet arrived, so delayed acquisition cannot recreate authority. Derive Disposition from the proven terminal source: parent_closed installs its generation closure fence, canceled clears only this use after parent fence, irreversible_decision releases the pinned source after historical decision. Never clear a use into an unrestricted writable child after parent closure. |
-| physicalRootEvents | AccessReviewCampaignCompletionAccepted, AccessReviewCampaignCompletionCanceled |
-| originalAdmissionKinds | AccessReviewCampaignCompletionAccepted |
-| receiverCommand | SettleAccessReviewItemCampaignCompletionUse |
+| physicalRootEvents (target names) | AccessReviewCampaignCompletionAccepted, AccessReviewCampaignCompletionCanceled |
+| originalAdmissionKinds (target names) | AccessReviewCampaignCompletionAccepted |
+| Target command (selected source name: SettleAccessReviewItemCampaignCompletionUse) | CloseAccessReviewItemCampaignCompletionAuthorization |
 | targetOwner | AccessReviewItem |
 | targetAuthorityKind | business_aggregate |
-| emittedSemanticFacts | AccessReviewItemCampaignCompletionUseSettled |
+| emittedSemanticFacts (target names) | AccessReviewItemCampaignCompletionAuthorizationClosed |
 | emittedEventContracts | None listed |
-| currentRegisteredRootTypes | AccessReviewCompletionReactor, AccessReviewCompletionSettlementReactor |
+| currentRegisteredRootTypes (target names) | AccessReviewCompletionReactor, ApplyAccessReviewCampaignOutcomeToItemsReactor |
 | plannedRootRole | null (recorded) |
 | processes | AccessReviewCampaignCompletionProcess |
 | requiredProofContract | `{"canonicalCarrier":"original admitted root reference + required independently verified typed stage/terminal proof sets","admissionReferenceFactKinds":["AccessReviewCampaignCompletionAccepted"],"admissionReferenceRole":"original business admission/first-owner fact, distinct from subscription trigger and intermediate/terminal prerequisites","verification":{"admission":"AdmissionReference is a locator only. Resolve and independently verify actual typed admitted fact, exact owner/tenant/program, saved metadata and physical/hydrated cut, original root/episode/actor/intent and immutable content.","stageAndTerminal":"Materialize each required typed stage/terminal proof from actual committed facts and full required immutable selections; prove complete grant/fence/provisional/child sets, not counts/checkpoints. Guard sets are not weakened by carrier choice.","earlyReplay":"If native receipt binding does not cover a supplied/interpreted command term, bind that term through the required actual typed proof/body before early replay. Exact receipt cannot bypass proof manifest or source tuple guards.","resultAndRecovery":"Current public authorization precedes replay. Original result/receipt and unknown-append recovery stay exact; requested cancellation propagates. Unavailable proof/content remains transient; corruption/changed intent is permanent; no inferred absence/release.","implementationStatus":"Installed pointer/handler/process presence is not proof of conformance. Field/wire migration and required behavioral tests remain separately verifiable implementation work."},"requiredTypedStageProofSets":[{"factKinds":["AccessReviewCampaignCompleted","AccessReviewCampaignCompletionCanceled"],"role":"actual closed/canceled completion authority, including recovery reactor path","quantifier":"exactly_one_selected_variant","condition":"always","requiredVerification":"Resolve actual saved owner/source fact and full metadata/cut, verify typed payload/immutable content and exact admission/root/target/generation/actor/intent binding. Pointer, checkpoint and stage order alone are not authority."}],"pinnedSourceRequirements":"Every exact source owner/event/content revision and complete immutable manifest required by intendedProofGate remains mandatory; no absent optional source is fabricated.","proofGate":"Exact terminal parent decision or receiver-fenced cancellation proof; settle only the matching operation/generation, never release because of time/missing read. A canceled parent fences local completion; record terminal source-use settlement even when acquire has not yet arrived, so delayed acquisition cannot recreate authority. Derive Disposition from the proven terminal source: parent_closed installs its generation closure fence, canceled clears only this use after parent fence, irreversible_decision releases the pinned source after historical decision. Never clear a use into an unrestricted writable child after parent closure.","requiredLogicalPrerequisiteProofs":"Every applicable logical prerequisite is independently verified as an actual typed saved fact (or actual technical proof where explicitly technical); a terminal proof may establish an earlier stage only through a verified native chain that includes that required typed stage. Stage order/checkpoint alone never substitutes.","prerequisiteVerification":{"admission":"The receiver resolves the original admitted root fact by its exact owner, tenant, episode, actor and immutable intent, and verifies the saved fact and content hash before acting; a reference alone grants nothing.","stageProofs":"Each required stage proof (grant, hold, review, or terminal fact) is materialised from the actual committed fact and its full immutable selection; counts, checkpoints and stage order are not accepted as proof."}}` |

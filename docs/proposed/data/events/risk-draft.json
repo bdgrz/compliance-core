@@ -23,7 +23,11 @@
         "meaning": "A risk draft was created in a program with its authored content by a named member, awaiting evaluation.",
         "meaningSource": "authored 2026-10-29 from src/Compliance.Common/Features/Risks/Events/RiskDraftCreated.cs"
       },
-      "schema": null
+      "schema": null,
+      "sourceName": "RiskDraftCreated",
+      "targetName": "RiskDraftCreated",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "A risk draft was created in a program with its authored content by a named member, awaiting evaluation."
     },
     {
       "canonical": {
@@ -47,7 +51,11 @@
         "meaning": "A risk draft's authored content was revised by a named member, producing the draft's next revision.",
         "meaningSource": "authored 2026-10-29 from src/Compliance.Common/Features/Risks/Events/RiskDraftRevised.cs"
       },
-      "schema": null
+      "schema": null,
+      "sourceName": "RiskDraftRevised",
+      "targetName": "RiskDraftRevised",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "A risk draft's authored content was revised by a named member, producing the draft's next revision."
     }
   ]
 }

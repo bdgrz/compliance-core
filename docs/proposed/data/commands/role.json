@@ -45,7 +45,9 @@
         "line": 4565,
         "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
       },
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "DefineRole",
+      "targetName": "DefineRole"
     },
     {
       "command": "DeleteRole",
@@ -90,7 +92,9 @@
         "rule": "terminal_idempotent_no_guard",
         "jev": 0.85,
         "date": "2026-10-29"
-      }
+      },
+      "sourceName": "DeleteRole",
+      "targetName": "DeleteRole"
     },
     {
       "command": "RenameRole",
@@ -146,7 +150,9 @@
         "rule": "require_expected_revision",
         "jev": 0.98,
         "date": "2026-10-29"
-      }
+      },
+      "sourceName": "RenameRole",
+      "targetName": "RenameRole"
     }
   ],
   "sourceContractEvidence": []

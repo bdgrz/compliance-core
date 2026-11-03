@@ -132,7 +132,11 @@
         "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "ControlCriterionMappingProposed",
+      "targetName": "ControlCriterionMappingProposed",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "A control version was proposed as satisfying a criterion of a criteria edition within a program, recorded as a mapping version by a named member, awaiting review."
     },
     {
       "canonical": {
@@ -235,7 +239,11 @@
         "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "ControlCriterionMappingRetired",
+      "targetName": "ControlCriterionMappingRetired",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "A control-to-criterion mapping was retired by a named actor, so the control no longer counts as satisfying that criterion from this version."
     },
     {
       "canonical": {
@@ -353,7 +361,11 @@
         "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "ControlCriterionMappingReviewed",
+      "targetName": "ControlCriterionMappingReviewed",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "A proposed control-to-criterion mapping version was reviewed with a decision outcome by a named reviewer, optionally under a separation-of-duties waiver."
     }
   ]
 }

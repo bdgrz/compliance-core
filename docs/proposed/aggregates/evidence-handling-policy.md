@@ -24,15 +24,15 @@
 | Command | Kind | Identity field |
 | --- | --- | --- |
 | [AssignArtifactHandlingPolicy](../commands/evidence-handling-policy.md#assignartifacthandlingpolicy) | command | CommandId |
-| [AuthorizeArtifactHandlingDownloadUse](../commands/evidence-handling-policy.md#authorizeartifacthandlingdownloaduse) | receiver | CommandId |
-| [SettleArtifactHandlingDownloadUse](../commands/evidence-handling-policy.md#settleartifacthandlingdownloaduse) | receiver | CommandId |
+| [AuthorizeArtifactHandlingDownload](../commands/evidence-handling-policy.md#authorizeartifacthandlingdownload) | receiver | CommandId |
+| [CloseArtifactHandlingDownloadAuthorization](../commands/evidence-handling-policy.md#closeartifacthandlingdownloadauthorization) | receiver | CommandId |
 
 ## Events
 
 | Event | Discriminator | Version |
 | --- | --- | --- |
-| [ArtifactHandlingDownloadUseAuthorized](../events/evidence-handling-policy.md#artifacthandlingdownloaduseauthorized) | bdgrz.evidence-handling-policy.artifact-handling-download-use-authorized | 1 |
-| [ArtifactHandlingDownloadUseSettled](../events/evidence-handling-policy.md#artifacthandlingdownloadusesettled) | bdgrz.evidence-handling-policy.artifact-handling-download-use-settled | 1 |
+| [ArtifactHandlingDownloadAuthorized](../events/evidence-handling-policy.md#artifacthandlingdownloadauthorized) | bdgrz.evidence-handling-policy.artifact-handling-download-use-authorized | 1 |
+| [ArtifactHandlingDownloadAuthorizationClosed](../events/evidence-handling-policy.md#artifacthandlingdownloadauthorizationclosed) | bdgrz.evidence-handling-policy.artifact-handling-download-use-settled | 1 |
 | [ArtifactHandlingPolicyAssigned](../events/evidence-handling-policy.md#artifacthandlingpolicyassigned) | bdgrz.retention.artifact-handling-policy-assigned | 1 |
 | [ArtifactHandlingPolicyRevised](../events/evidence-handling-policy.md#artifacthandlingpolicyrevised) | bdgrz.retention.artifact-handling-policy-revised | 1 |
 
@@ -40,8 +40,8 @@
 
 | Row | Kind | Source owner | Target owner | Command |
 | --- | --- | --- | --- | --- |
-| [T100](../reactors/one-committed-evidence-artifact-download-requested-starter.md#t100) | reaction_or_regular_process_stage | EvidenceArtifact | EvidenceHandlingPolicy | AuthorizeArtifactHandlingDownloadUse |
-| [T103](../reactors/one-committed-evidence-artifact-download-requested-starter.md#t103) | reaction_or_regular_process_stage | ArtifactDownloadGrant | EvidenceHandlingPolicy | SettleArtifactHandlingDownloadUse |
+| [T100](../reactors/one-committed-evidence-artifact-download-requested-starter.md#t100) | reaction_or_regular_process_stage | EvidenceArtifact | EvidenceHandlingPolicy | AuthorizeArtifactHandlingDownload |
+| [T103](../reactors/one-committed-evidence-artifact-download-requested-starter.md#t103) | reaction_or_regular_process_stage | ArtifactDownloadGrant | EvidenceHandlingPolicy | CloseArtifactHandlingDownloadAuthorization |
 
 ## Product rules
 

@@ -2,10 +2,10 @@
 
 Canonical events: **2**. Complete canonical event and available schema records: [owner event JSON](../data/events/operational-process-name-claim.json).
 
-| Event | Kind | Adopted discriminator | Version | Schema fields | Meaning |
-| --- | --- | --- | --- | --- | --- |
-| OperationalProcessNameClaimed | business | bdgrz.operational-process-name-claim.operational-process-name-claimed | 1 | 8 | The name claim is held by the operational process record and change generation named by this fact. |
-| OperationalProcessNameReleased | business | bdgrz.operational-process-name-claim.operational-process-name-released | 1 | 8 | The name claim was released by the operational process record and change generation that held it. |
+| Target event | Selected source name | Kind | Adopted discriminator | Version | Schema fields | Meaning |
+| --- | --- | --- | --- | --- | --- | --- |
+| OperationalProcessNameClaimed | OperationalProcessNameClaimed | business | bdgrz.operational-process-name-claim.operational-process-name-claimed | 1 | 8 | The name claim is held by the operational process record and change generation named by this fact. |
+| OperationalProcessNameReleased | OperationalProcessNameReleased | business | bdgrz.operational-process-name-claim.operational-process-name-released | 1 | 8 | The name claim was released by the operational process record and change generation that held it. |
 
 ## Event details
 
@@ -13,6 +13,9 @@ Canonical events: **2**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | OperationalProcessNameClaimed |
+| Selected source event name | OperationalProcessNameClaimed |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:OperationalProcessNameClaimed |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | OperationalProcessNameClaimed |
@@ -22,7 +25,8 @@ Canonical events: **2**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | The name claim is held by the operational process record and change generation named by this fact. |
+| Target meaning | The name claim is held by the operational process record and change generation named by this fact. |
+| Selected source meaning | The name claim is held by the operational process record and change generation named by this fact. |
 | Meaning source | record summary in src/Compliance.Common/Features/TechnologyInventory/Events/OperationalProcessNameClaimed.cs |
 
 #### Selected schema and implementation evidence
@@ -109,6 +113,9 @@ RecordNameChangeIntent
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | OperationalProcessNameReleased |
+| Selected source event name | OperationalProcessNameReleased |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:OperationalProcessNameReleased |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | OperationalProcessNameReleased |
@@ -118,7 +125,8 @@ RecordNameChangeIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | The name claim was released by the operational process record and change generation that held it. |
+| Target meaning | The name claim was released by the operational process record and change generation that held it. |
+| Selected source meaning | The name claim was released by the operational process record and change generation that held it. |
 | Meaning source | record summary in src/Compliance.Common/Features/TechnologyInventory/Events/OperationalProcessNameReleased.cs |
 
 #### Selected schema and implementation evidence

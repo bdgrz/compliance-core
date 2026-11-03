@@ -2,12 +2,12 @@
 
 Canonical events: **4**. Complete canonical event and available schema records: [owner event JSON](../data/events/audit-observation.json).
 
-| Event | Kind | Adopted discriminator | Version | Schema fields | Meaning |
-| --- | --- | --- | --- | --- | --- |
-| AuditObservationCorrected | business | bdgrz.examinations.audit-observation-corrected | 1 | [Placeholder: schema absent] | Retains a received auditor correction while preserving its predecessor in source history. |
-| AuditObservationFindingLinked | business | bdgrz.examinations.audit-observation-finding-linked | 2 | [Placeholder: schema absent] | Links an exact finding source revision without taking ownership of its remediation. |
-| AuditObservationManagementResponseRecorded | business | bdgrz.examinations.audit-observation-management-response-recorded | 1 | [Placeholder: schema absent] | Retains management's response separately from the externally authored wording. |
-| AuditObservationRecorded | business | bdgrz.examinations.audit-observation-recorded | 2 | [Placeholder: schema absent] | Retains received auditor wording and its exact source provenance. |
+| Target event | Selected source name | Kind | Adopted discriminator | Version | Schema fields | Meaning |
+| --- | --- | --- | --- | --- | --- | --- |
+| AuditObservationCorrected | AuditObservationCorrected | business | bdgrz.examinations.audit-observation-corrected | 1 | [Placeholder: schema absent] | Retains a received auditor correction while preserving its predecessor in source history. |
+| AuditObservationFindingLinked | AuditObservationFindingLinked | business | bdgrz.examinations.audit-observation-finding-linked | 2 | [Placeholder: schema absent] | Links an exact finding source revision without taking ownership of its remediation. |
+| AuditObservationManagementResponseRecorded | AuditObservationManagementResponseRecorded | business | bdgrz.examinations.audit-observation-management-response-recorded | 1 | [Placeholder: schema absent] | Retains management's response separately from the externally authored wording. |
+| AuditObservationRecorded | AuditObservationRecorded | business | bdgrz.examinations.audit-observation-recorded | 2 | [Placeholder: schema absent] | Retains received auditor wording and its exact source provenance. |
 
 ## Event details
 
@@ -15,6 +15,9 @@ Canonical events: **4**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | AuditObservationCorrected |
+| Selected source event name | AuditObservationCorrected |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:AuditObservationCorrected |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | AuditObservationCorrected |
@@ -24,7 +27,8 @@ Canonical events: **4**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | Retains a received auditor correction while preserving its predecessor in source history. |
+| Target meaning | Retains a received auditor correction while preserving its predecessor in source history. |
+| Selected source meaning | Retains a received auditor correction while preserving its predecessor in source history. |
 | Meaning source | record summary in src/Compliance.Common/Features/Examinations/Events/AuditObservationCorrected.cs |
 
 #### Schema
@@ -45,6 +49,9 @@ Canonical events: **4**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | AuditObservationFindingLinked |
+| Selected source event name | AuditObservationFindingLinked |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:AuditObservationFindingLinked |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | AuditObservationFindingLinked |
@@ -54,7 +61,8 @@ Canonical events: **4**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | Links an exact finding source revision without taking ownership of its remediation. |
+| Target meaning | Links an exact finding source revision without taking ownership of its remediation. |
+| Selected source meaning | Links an exact finding source revision without taking ownership of its remediation. |
 | Meaning source | record summary in src/Compliance.Common/Features/Examinations/Events/AuditObservationFindingLinked.cs |
 
 #### Schema
@@ -75,6 +83,9 @@ Canonical events: **4**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | AuditObservationManagementResponseRecorded |
+| Selected source event name | AuditObservationManagementResponseRecorded |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:AuditObservationManagementResponseRecorded |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | AuditObservationManagementResponseRecorded |
@@ -84,7 +95,8 @@ Canonical events: **4**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | Retains management's response separately from the externally authored wording. |
+| Target meaning | Retains management's response separately from the externally authored wording. |
+| Selected source meaning | Retains management's response separately from the externally authored wording. |
 | Meaning source | record summary in src/Compliance.Common/Features/Examinations/Events/AuditObservationManagementResponseRecorded.cs |
 
 #### Schema
@@ -105,6 +117,9 @@ Canonical events: **4**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | AuditObservationRecorded |
+| Selected source event name | AuditObservationRecorded |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:AuditObservationRecorded |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | AuditObservationRecorded |
@@ -114,7 +129,8 @@ Canonical events: **4**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | Retains received auditor wording and its exact source provenance. |
+| Target meaning | Retains received auditor wording and its exact source provenance. |
+| Selected source meaning | Retains received auditor wording and its exact source provenance. |
 | Meaning source | record summary in src/Compliance.Common/Features/Examinations/Events/AuditObservationRecorded.cs |
 
 #### Schema

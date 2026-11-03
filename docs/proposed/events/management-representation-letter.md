@@ -2,10 +2,10 @@
 
 Canonical events: **2**. Complete canonical event and available schema records: [owner event JSON](../data/events/management-representation-letter.json).
 
-| Event | Kind | Adopted discriminator | Version | Schema fields | Meaning |
-| --- | --- | --- | --- | --- | --- |
-| ManagementRepresentationLetterSigned | business | bdgrz.examinations.management-representation-letter-signed | 1 | [Placeholder: schema absent] | A named executive signed the management representation letter, retaining their signed letter artifact; once every required signer has signed the letter is final. |
-| RepresentationLetterRecorded | business | bdgrz.examinations.representation-letter-recorded | 2 | [Placeholder: schema absent] | Records an externally sourced representation letter and its required signers. |
+| Target event | Selected source name | Kind | Adopted discriminator | Version | Schema fields | Meaning |
+| --- | --- | --- | --- | --- | --- | --- |
+| ManagementRepresentationLetterSigned | ManagementRepresentationLetterSigned | business | bdgrz.examinations.management-representation-letter-signed | 1 | [Placeholder: schema absent] | A named executive signed the management representation letter, retaining their signed letter artifact; once every required signer has signed the letter is final. |
+| RepresentationLetterRecorded | RepresentationLetterRecorded | business | bdgrz.examinations.representation-letter-recorded | 2 | [Placeholder: schema absent] | Records an externally sourced representation letter and its required signers. |
 
 ## Event details
 
@@ -13,6 +13,9 @@ Canonical events: **2**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | ManagementRepresentationLetterSigned |
+| Selected source event name | ManagementRepresentationLetterSigned |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:ManagementRepresentationLetterSigned |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | ManagementRepresentationLetterSigned |
@@ -22,7 +25,8 @@ Canonical events: **2**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | A named executive signed the management representation letter, retaining their signed letter artifact; once every required signer has signed the letter is final. |
+| Target meaning | A named executive signed the management representation letter, retaining their signed letter artifact; once every required signer has signed the letter is final. |
+| Selected source meaning | A named executive signed the management representation letter, retaining their signed letter artifact; once every required signer has signed the letter is final. |
 | Meaning source | authored 2026-10-29 from src/Compliance.Common/Features/Examinations/Events/ManagementRepresentationLetterSigned.cs |
 
 #### Schema
@@ -45,6 +49,9 @@ Canonical events: **2**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | RepresentationLetterRecorded |
+| Selected source event name | RepresentationLetterRecorded |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:RepresentationLetterRecorded |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | RepresentationLetterRecorded |
@@ -54,7 +61,8 @@ Canonical events: **2**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | Records an externally sourced representation letter and its required signers. |
+| Target meaning | Records an externally sourced representation letter and its required signers. |
+| Selected source meaning | Records an externally sourced representation letter and its required signers. |
 | Meaning source | record summary in src/Compliance.Common/Features/Examinations/Events/RepresentationLetterRecorded.cs |
 
 #### Schema

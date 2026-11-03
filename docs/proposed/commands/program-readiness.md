@@ -2,15 +2,15 @@
 
 Selected command contracts: **7**. Complete selected contracts and companion source evidence: [owner command JSON](../data/commands/program-readiness.json).
 
-| Command | Kind | Identity | Fields | HTTP routes |
-| --- | --- | --- | --- | --- |
-| DecideReadiness | http | CommandId | 8 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/readiness/assessments/{assessment_id}/decision/{command_id} [ComplianceAuthorizationPolicies.ApiUser] |
-| DecideTypeIEntry | http | CommandId | 9 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/readiness/assessments/{assessment_id}/type-i-entry-decision/{command_id} [ComplianceAuthorizationPolicies.ApiUser] |
-| RunReadinessAssessment | http | AssessmentId | 5 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/readiness/assessments/{assessment_id} [ComplianceAuthorizationPolicies.ApiUser] |
-| AbortReadinessDecision | abort | CommandId | 6 | [Placeholder: route/channel not recorded] |
-| AdoptReadinessAssessment | receiver | CommandId | 11 | [Placeholder: value not recorded] |
-| CompleteReadinessDecision | receiver | CommandId | 9 | [Placeholder: value not recorded] |
-| CompleteTypeIEntryDecision | receiver | CommandId | 9 | [Placeholder: value not recorded] |
+| Target command | Selected source name | Kind | Identity | Fields | HTTP routes |
+| --- | --- | --- | --- | --- | --- |
+| DecideReadiness | DecideReadiness | http | CommandId | 8 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/readiness/assessments/{assessment_id}/decision/{command_id} [ComplianceAuthorizationPolicies.ApiUser] |
+| DecideTypeIEntry | DecideTypeIEntry | http | CommandId | 9 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/readiness/assessments/{assessment_id}/type-i-entry-decision/{command_id} [ComplianceAuthorizationPolicies.ApiUser] |
+| RunReadinessAssessment | RunReadinessAssessment | http | AssessmentId | 5 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/readiness/assessments/{assessment_id} [ComplianceAuthorizationPolicies.ApiUser] |
+| AbortReadinessDecision | AbortReadinessDecision | abort | CommandId | 6 | [Placeholder: route/channel not recorded] |
+| AdoptReadinessAssessment | AdoptReadinessAssessment | receiver | CommandId | 11 | [Placeholder: value not recorded] |
+| CompleteReadinessDecision | CompleteReadinessDecision | receiver | CommandId | 9 | [Placeholder: value not recorded] |
+| CompleteTypeIEntryDecision | CompleteTypeIEntryDecision | receiver | CommandId | 9 | [Placeholder: value not recorded] |
 
 ## Selected command details
 
@@ -18,6 +18,9 @@ Selected command contracts: **7**. Complete selected contracts and companion sou
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | DecideReadiness |
+| Selected source command name | DecideReadiness |
+| Name decision | The selected source name is retained. |
 | Owner | ProgramReadiness |
 | Contract record status | target_contract |
 | Kind | http |
@@ -70,6 +73,9 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | DecideTypeIEntry |
+| Selected source command name | DecideTypeIEntry |
+| Name decision | The selected source name is retained. |
 | Owner | ProgramReadiness |
 | Contract record status | target_contract |
 | Kind | http |
@@ -123,6 +129,9 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | RunReadinessAssessment |
+| Selected source command name | RunReadinessAssessment |
+| Name decision | The selected source name is retained. |
 | Owner | ProgramReadiness |
 | Contract record status | target_contract |
 | Kind | http |
@@ -172,13 +181,16 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | AbortReadinessDecision |
+| Selected source command name | AbortReadinessDecision |
+| Name decision | The selected source name is retained. |
 | Owner | ProgramReadiness |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | abort |
 | Logical identity | CommandId; Uuid; required=true; abort receiver identity bound to the exact admitted operation and generation: exact redelivery resolves the original rejected result; an abort after a terminal outcome is a no-op |
 | Entry point | [Placeholder: value not recorded] |
 | MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | [Placeholder: value not recorded] |
+| Selected semantic events | None listed |
 | Protocols | [Placeholder: value not recorded] |
 | Policy preservation | [Placeholder: value not recorded] |
 | Contract changes | [Placeholder: value not recorded] |
@@ -218,13 +230,16 @@ Required tests: [Placeholder: required tests not recorded]
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | AdoptReadinessAssessment |
+| Selected source command name | AdoptReadinessAssessment |
+| Name decision | The selected source name is retained. |
 | Owner | ProgramReadiness |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; reactor; deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result |
 | Entry point | [Placeholder: value not recorded] |
 | MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | [Placeholder: value not recorded] |
+| Selected semantic events | None listed |
 | Protocols | [Placeholder: value not recorded] |
 | Policy preservation | [Placeholder: value not recorded] |
 | Contract changes | [Placeholder: value not recorded] |
@@ -269,13 +284,16 @@ Required tests: [Placeholder: required tests not recorded]
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | CompleteReadinessDecision |
+| Selected source command name | CompleteReadinessDecision |
+| Name decision | The selected source name is retained. |
 | Owner | ProgramReadiness |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; reactor; deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result |
 | Entry point | [Placeholder: value not recorded] |
 | MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | [Placeholder: value not recorded] |
+| Selected semantic events | None listed |
 | Protocols | [Placeholder: value not recorded] |
 | Policy preservation | [Placeholder: value not recorded] |
 | Contract changes | [Placeholder: value not recorded] |
@@ -318,13 +336,16 @@ Required tests: [Placeholder: required tests not recorded]
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | CompleteTypeIEntryDecision |
+| Selected source command name | CompleteTypeIEntryDecision |
+| Name decision | The selected source name is retained. |
 | Owner | ProgramReadiness |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; reactor; deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result |
 | Entry point | [Placeholder: value not recorded] |
 | MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | [Placeholder: value not recorded] |
+| Selected semantic events | None listed |
 | Protocols | [Placeholder: value not recorded] |
 | Policy preservation | [Placeholder: value not recorded] |
 | Contract changes | [Placeholder: value not recorded] |
@@ -366,7 +387,7 @@ Required tests: [Placeholder: required tests not recorded]
 
 ## Source contracts
 
-| Command | Handler | Registered | Entry point |
+| Selected source command | Handler | Registered | Entry point |
 | --- | --- | --- | --- |
 | DecideReadiness | DecideReadinessHandler | true | personal_http |
 | DecideTypeIEntry | DecideTypeIEntryHandler | true | personal_http |

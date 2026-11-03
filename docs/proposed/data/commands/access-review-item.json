@@ -66,7 +66,9 @@
         "line": 6535,
         "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       },
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "ExemptAccessRemediation",
+      "targetName": "ExemptAccessRemediation"
     },
     {
       "command": "ReassignAccessReviewResponsibility",
@@ -143,7 +145,9 @@
         "line": 10047,
         "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       },
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "ReassignAccessReviewResponsibility",
+      "targetName": "ReassignAccessReviewResponsibility"
     },
     {
       "command": "RecordAccessDecision",
@@ -215,7 +219,9 @@
         "line": 10281,
         "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       },
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "RecordAccessDecision",
+      "targetName": "RecordAccessDecision"
     },
     {
       "command": "RecordAccessRemediationChange",
@@ -287,7 +293,9 @@
         "line": 10528,
         "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       },
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "RecordAccessRemediationChange",
+      "targetName": "RecordAccessRemediationChange"
     },
     {
       "command": "VerifyAccessRemediation",
@@ -349,7 +357,9 @@
         "line": 18392,
         "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       },
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "VerifyAccessRemediation",
+      "targetName": "VerifyAccessRemediation"
     },
     {
       "command": "MaterializeAccessReviewItem",
@@ -425,7 +435,9 @@
       "source": {
         "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
         "recorded": "2026-10-29"
-      }
+      },
+      "sourceName": "MaterializeAccessReviewItem",
+      "targetName": "OpenAccessReviewItem"
     },
     {
       "command": "ReserveAccessReviewItemDecision",
@@ -511,7 +523,9 @@
       "source": {
         "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
         "recorded": "2026-10-29"
-      }
+      },
+      "sourceName": "ReserveAccessReviewItemDecision",
+      "targetName": "ReserveAccessReviewItemDecision"
     },
     {
       "command": "ApplyAccessReviewItemDecision",
@@ -592,7 +606,9 @@
       "source": {
         "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
         "recorded": "2026-10-29"
-      }
+      },
+      "sourceName": "ApplyAccessReviewItemDecision",
+      "targetName": "ApplyAccessReviewItemDecision"
     },
     {
       "command": "FenceAccessReviewItemDecision",
@@ -668,7 +684,9 @@
       "source": {
         "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
         "recorded": "2026-10-29"
-      }
+      },
+      "sourceName": "FenceAccessReviewItemDecision",
+      "targetName": "CancelAccessReviewItemDecision"
     },
     {
       "command": "AuthorizeAccessReviewItemCampaignCompletionUse",
@@ -749,7 +767,9 @@
       "source": {
         "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
         "recorded": "2026-10-29"
-      }
+      },
+      "sourceName": "AuthorizeAccessReviewItemCampaignCompletionUse",
+      "targetName": "AuthorizeAccessReviewItemCampaignCompletion"
     },
     {
       "command": "SettleAccessReviewItemCampaignCompletionUse",
@@ -831,7 +851,9 @@
       "source": {
         "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
         "recorded": "2026-10-29"
-      }
+      },
+      "sourceName": "SettleAccessReviewItemCampaignCompletionUse",
+      "targetName": "CloseAccessReviewItemCampaignCompletionAuthorization"
     },
     {
       "command": "SettleAccessReviewItemDecision",
@@ -908,7 +930,9 @@
       "source": {
         "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
         "recorded": "2026-10-29"
-      }
+      },
+      "sourceName": "SettleAccessReviewItemDecision",
+      "targetName": "CloseAccessReviewItemDecisionAuthorization"
     }
   ],
   "sourceContractEvidence": [

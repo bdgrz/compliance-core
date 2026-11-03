@@ -2,9 +2,9 @@
 
 Canonical events: **1**. Complete canonical event and available schema records: [owner event JSON](../data/events/criteria-text-overlay.json).
 
-| Event | Kind | Adopted discriminator | Version | Schema fields | Meaning |
-| --- | --- | --- | --- | --- | --- |
-| CriteriaTextOverlayEntryRevised | business | bdgrz.criteria-overlay.entry-revised | 2 | 11 | One revision of the licensed text overlay of one criterion. The logical id of Operation is the command id, and its actor and acceptance time are the attribution of the revision; the complete supplied content is verified immutable content, so the license and text stay exact however large the text is. |
+| Target event | Selected source name | Kind | Adopted discriminator | Version | Schema fields | Meaning |
+| --- | --- | --- | --- | --- | --- | --- |
+| CriteriaTextOverlayEntryRevised | CriteriaTextOverlayEntryRevised | business | bdgrz.criteria-overlay.entry-revised | 2 | 11 | One revision of the licensed text overlay of one criterion. The logical id of Operation is the command id, and its actor and acceptance time are the attribution of the revision; the complete supplied content is verified immutable content, so the license and text stay exact however large the text is. |
 
 ## Event details
 
@@ -12,6 +12,9 @@ Canonical events: **1**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | CriteriaTextOverlayEntryRevised |
+| Selected source event name | CriteriaTextOverlayEntryRevised |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:CriteriaTextOverlayEntryRevised |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | CriteriaTextOverlayEntryRevised |
@@ -21,7 +24,8 @@ Canonical events: **1**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | `{"discriminator":"bdgrz.criteria-overlay.entry-revised","version":1}` |
-| Meaning | One revision of the licensed text overlay of one criterion. The logical id of Operation is the command id, and its actor and acceptance time are the attribution of the revision; the complete supplied content is verified immutable content, so the license and text stay exact however large the text is. |
+| Target meaning | One revision of the licensed text overlay of one criterion. The logical id of Operation is the command id, and its actor and acceptance time are the attribution of the revision; the complete supplied content is verified immutable content, so the license and text stay exact however large the text is. |
+| Selected source meaning | One revision of the licensed text overlay of one criterion. The logical id of Operation is the command id, and its actor and acceptance time are the attribution of the revision; the complete supplied content is verified immutable content, so the license and text stay exact however large the text is. |
 | Meaning source | record summary in src/Compliance.Common/Features/Criteria/Events/CriteriaTextOverlayEntryRevised.cs |
 
 #### Selected schema and implementation evidence

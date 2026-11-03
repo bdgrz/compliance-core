@@ -2,15 +2,15 @@
 
 Canonical events: **7**. Complete canonical event and available schema records: [owner event JSON](../data/events/program-readiness.json).
 
-| Event | Kind | Adopted discriminator | Version | Schema fields | Meaning |
-| --- | --- | --- | --- | --- | --- |
-| ReadinessAssessmentAdopted | business | bdgrz.program-readiness.readiness-assessment-adopted | 1 | 8 | The exact computed assessment became the latest of the program. Generation is the pending adoption generation the run reserved; Operation.RootOperationId is the assessment identity. SourceProofs holds the request and recorded-assessment proofs, and OperationResult the original registration with the program revision after this adoption. |
-| ReadinessAssessmentRequested | business | bdgrz.program-readiness.readiness-assessment-requested | 1 | 8 | The root native acceptance of a readiness run. It reserves the one pending latest-adoption generation Generation and references the frozen ReadinessRunIntent with its complete input snapshot; the assessment is only the latest once ReadinessAssessmentAdopted follows. |
-| ReadinessDecisionAccepted | business | bdgrz.program-readiness.readiness-decision-accepted | 1 | 8 | A management readiness decision for a program was accepted, sealing the latest adoption generation and the gap plans it relies on. |
-| ReadinessDecisionCanceled | business | bdgrz.program-readiness.readiness-decision-canceled | 1 | 8 | A pending decision ended before it was recorded. The fact is the local receiver fence: a delayed completion sees it and does nothing, and only then are the gap plan uses settled. SourceProofs is the failure proof. |
-| ReadinessDecisionRecorded | business | bdgrz.readiness.decision.recorded | 1 | 11 | The management readiness decision was recorded once every gap plan was held. DecisionContent is the complete ReadinessDecisionView, DecisionProofs the complete manifest of the held gap plan proofs, and OperationResult the original typed result of the decision command. |
-| TypeIEntryDecisionAccepted | business | bdgrz.program-readiness.type-i-entry-decision-accepted | 1 | 8 | A decision to enter a Type I examination was accepted for a program, sealing the latest adoption generation and the gap plans it relies on. |
-| TypeIEntryDecisionRecorded | business | bdgrz.readiness.type_i_entry.decided | 1 | 11 | The Type I entry decision was recorded once every gap plan was held. DecisionContent is the complete TypeIEntryDecisionView with its frozen unresolved items, DecisionProofs the complete manifest of the held gap plan proofs, and OperationResult the original typed result of the command. |
+| Target event | Selected source name | Kind | Adopted discriminator | Version | Schema fields | Meaning |
+| --- | --- | --- | --- | --- | --- | --- |
+| ReadinessAssessmentAdopted | ReadinessAssessmentAdopted | business | bdgrz.program-readiness.readiness-assessment-adopted | 1 | 8 | The exact computed assessment became the latest of the program. Generation is the pending adoption generation the run reserved; Operation.RootOperationId is the assessment identity. SourceProofs holds the request and recorded-assessment proofs, and OperationResult the original registration with the program revision after this adoption. |
+| ReadinessAssessmentRequested | ReadinessAssessmentRequested | business | bdgrz.program-readiness.readiness-assessment-requested | 1 | 8 | The root native acceptance of a readiness run. It reserves the one pending latest-adoption generation Generation and references the frozen ReadinessRunIntent with its complete input snapshot; the assessment is only the latest once ReadinessAssessmentAdopted follows. |
+| ReadinessDecisionAccepted | ReadinessDecisionAccepted | business | bdgrz.program-readiness.readiness-decision-accepted | 1 | 8 | A management readiness decision for a program was accepted, sealing the latest adoption generation and the gap plans it relies on. |
+| ReadinessDecisionCanceled | ReadinessDecisionCanceled | business | bdgrz.program-readiness.readiness-decision-canceled | 1 | 8 | A pending decision ended before it was recorded. The fact is the local receiver fence: a delayed completion sees it and does nothing, and only then are the gap plan uses settled. SourceProofs is the failure proof. |
+| ReadinessDecisionRecorded | ReadinessDecisionRecorded | business | bdgrz.readiness.decision.recorded | 1 | 11 | The management readiness decision was recorded once every gap plan was held. DecisionContent is the complete ReadinessDecisionView, DecisionProofs the complete manifest of the held gap plan proofs, and OperationResult the original typed result of the decision command. |
+| TypeIEntryDecisionAccepted | TypeIEntryDecisionAccepted | business | bdgrz.program-readiness.type-i-entry-decision-accepted | 1 | 8 | A decision to enter a Type I examination was accepted for a program, sealing the latest adoption generation and the gap plans it relies on. |
+| TypeIEntryDecisionRecorded | TypeIEntryDecisionRecorded | business | bdgrz.readiness.type_i_entry.decided | 1 | 11 | The Type I entry decision was recorded once every gap plan was held. DecisionContent is the complete TypeIEntryDecisionView with its frozen unresolved items, DecisionProofs the complete manifest of the held gap plan proofs, and OperationResult the original typed result of the command. |
 
 ## Event details
 
@@ -18,6 +18,9 @@ Canonical events: **7**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | ReadinessAssessmentAdopted |
+| Selected source event name | ReadinessAssessmentAdopted |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:ReadinessAssessmentAdopted |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | ReadinessAssessmentAdopted |
@@ -27,7 +30,8 @@ Canonical events: **7**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | The exact computed assessment became the latest of the program. Generation is the pending adoption generation the run reserved; Operation.RootOperationId is the assessment identity. SourceProofs holds the request and recorded-assessment proofs, and OperationResult the original registration with the program revision after this adoption. |
+| Target meaning | The exact computed assessment became the latest of the program. Generation is the pending adoption generation the run reserved; Operation.RootOperationId is the assessment identity. SourceProofs holds the request and recorded-assessment proofs, and OperationResult the original registration with the program revision after this adoption. |
+| Selected source meaning | The exact computed assessment became the latest of the program. Generation is the pending adoption generation the run reserved; Operation.RootOperationId is the assessment identity. SourceProofs holds the request and recorded-assessment proofs, and OperationResult the original registration with the program revision after this adoption. |
 | Meaning source | record summary in src/Compliance.Common/Features/Readiness/Events/ReadinessAssessmentAdopted.cs |
 
 #### Selected schema and implementation evidence
@@ -113,6 +117,9 @@ ReadinessRunIntent
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | ReadinessAssessmentRequested |
+| Selected source event name | ReadinessAssessmentRequested |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:ReadinessAssessmentRequested |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | ReadinessAssessmentRequested |
@@ -122,7 +129,8 @@ ReadinessRunIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | The root native acceptance of a readiness run. It reserves the one pending latest-adoption generation Generation and references the frozen ReadinessRunIntent with its complete input snapshot; the assessment is only the latest once ReadinessAssessmentAdopted follows. |
+| Target meaning | The root native acceptance of a readiness run. It reserves the one pending latest-adoption generation Generation and references the frozen ReadinessRunIntent with its complete input snapshot; the assessment is only the latest once ReadinessAssessmentAdopted follows. |
+| Selected source meaning | The root native acceptance of a readiness run. It reserves the one pending latest-adoption generation Generation and references the frozen ReadinessRunIntent with its complete input snapshot; the assessment is only the latest once ReadinessAssessmentAdopted follows. |
 | Meaning source | record summary in src/Compliance.Common/Features/Readiness/Events/ReadinessAssessmentRequested.cs |
 
 #### Selected schema and implementation evidence
@@ -209,6 +217,9 @@ ReadinessRunIntent
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | ReadinessDecisionAccepted |
+| Selected source event name | ReadinessDecisionAccepted |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:ReadinessDecisionAccepted |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | ReadinessDecisionAccepted |
@@ -218,7 +229,8 @@ ReadinessRunIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | A management readiness decision for a program was accepted, sealing the latest adoption generation and the gap plans it relies on. |
+| Target meaning | A management readiness decision for a program was accepted, sealing the latest adoption generation and the gap plans it relies on. |
+| Selected source meaning | A management readiness decision for a program was accepted, sealing the latest adoption generation and the gap plans it relies on. |
 | Meaning source | authored 2026-10-29 from src/Compliance.Common/Features/Readiness/Events/ReadinessDecisionAccepted.cs |
 
 #### Selected schema and implementation evidence
@@ -304,8 +316,8 @@ ReadinessDecisionIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T065](../reactors/readiness-decision-reactor.md#t065) | physical root, logical prerequisite | ProgramReadiness | AuthorizeReadinessGapPlanReadinessDecisionUse | ReadinessGapPlan |
-| [T066](../reactors/readiness-decision-reactor.md#t066) | physical root | ProgramReadiness | SettleReadinessGapPlanReadinessDecisionUse | ReadinessGapPlan |
+| [T065](../reactors/readiness-decision-reactor.md#t065) | physical root, logical prerequisite | ProgramReadiness | AuthorizeReadinessGapPlanReadinessDecision | ReadinessGapPlan |
+| [T066](../reactors/readiness-decision-reactor.md#t066) | physical root | ProgramReadiness | CloseReadinessGapPlanReadinessDecisionAuthorization | ReadinessGapPlan |
 | [T074](../reactors/readiness-decision-reactor.md#t074) | physical root, logical prerequisite | ProgramReadiness | CompleteReadinessDecision | ProgramReadiness |
 | [T075](../reactors/readiness-decision-reactor.md#t075) | physical root | ProgramReadiness | CompleteTypeIEntryDecision | ProgramReadiness |
 | [A009](../reactors/unassigned-architecture-rows.md#a009) | physical root, logical prerequisite | ProgramReadiness | AbortReadinessDecision | ProgramReadiness |
@@ -314,6 +326,9 @@ ReadinessDecisionIntent
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | ReadinessDecisionCanceled |
+| Selected source event name | ReadinessDecisionCanceled |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:ReadinessDecisionCanceled |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | ReadinessDecisionCanceled |
@@ -323,7 +338,8 @@ ReadinessDecisionIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | A pending decision ended before it was recorded. The fact is the local receiver fence: a delayed completion sees it and does nothing, and only then are the gap plan uses settled. SourceProofs is the failure proof. |
+| Target meaning | A pending decision ended before it was recorded. The fact is the local receiver fence: a delayed completion sees it and does nothing, and only then are the gap plan uses settled. SourceProofs is the failure proof. |
+| Selected source meaning | A pending decision ended before it was recorded. The fact is the local receiver fence: a delayed completion sees it and does nothing, and only then are the gap plan uses settled. SourceProofs is the failure proof. |
 | Meaning source | record summary in src/Compliance.Common/Features/Readiness/Events/ReadinessDecisionCanceled.cs |
 
 #### Selected schema and implementation evidence
@@ -409,13 +425,16 @@ ReadinessDecisionIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T066](../reactors/readiness-decision-reactor.md#t066) | logical prerequisite | ProgramReadiness | SettleReadinessGapPlanReadinessDecisionUse | ReadinessGapPlan |
+| [T066](../reactors/readiness-decision-reactor.md#t066) | logical prerequisite | ProgramReadiness | CloseReadinessGapPlanReadinessDecisionAuthorization | ReadinessGapPlan |
 | [A009](../reactors/unassigned-architecture-rows.md#a009) | emitted semantic fact | ProgramReadiness | AbortReadinessDecision | ProgramReadiness |
 
 ### ReadinessDecisionRecorded
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | ReadinessDecisionRecorded |
+| Selected source event name | ReadinessDecisionRecorded |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:ReadinessDecisionRecorded |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | ReadinessDecisionRecorded |
@@ -425,7 +444,8 @@ ReadinessDecisionIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | The management readiness decision was recorded once every gap plan was held. DecisionContent is the complete ReadinessDecisionView, DecisionProofs the complete manifest of the held gap plan proofs, and OperationResult the original typed result of the decision command. |
+| Target meaning | The management readiness decision was recorded once every gap plan was held. DecisionContent is the complete ReadinessDecisionView, DecisionProofs the complete manifest of the held gap plan proofs, and OperationResult the original typed result of the decision command. |
+| Selected source meaning | The management readiness decision was recorded once every gap plan was held. DecisionContent is the complete ReadinessDecisionView, DecisionProofs the complete manifest of the held gap plan proofs, and OperationResult the original typed result of the decision command. |
 | Meaning source | record summary in src/Compliance.Common/Features/Readiness/Events/ReadinessDecisionRecorded.cs |
 
 #### Selected schema and implementation evidence
@@ -523,13 +543,16 @@ ReadinessDecisionIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T066](../reactors/readiness-decision-reactor.md#t066) | logical prerequisite | ProgramReadiness | SettleReadinessGapPlanReadinessDecisionUse | ReadinessGapPlan |
+| [T066](../reactors/readiness-decision-reactor.md#t066) | logical prerequisite | ProgramReadiness | CloseReadinessGapPlanReadinessDecisionAuthorization | ReadinessGapPlan |
 | [T074](../reactors/readiness-decision-reactor.md#t074) | emitted semantic fact | ProgramReadiness | CompleteReadinessDecision | ProgramReadiness |
 
 ### TypeIEntryDecisionAccepted
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | TypeIEntryDecisionAccepted |
+| Selected source event name | TypeIEntryDecisionAccepted |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:TypeIEntryDecisionAccepted |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | TypeIEntryDecisionAccepted |
@@ -539,7 +562,8 @@ ReadinessDecisionIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | A decision to enter a Type I examination was accepted for a program, sealing the latest adoption generation and the gap plans it relies on. |
+| Target meaning | A decision to enter a Type I examination was accepted for a program, sealing the latest adoption generation and the gap plans it relies on. |
+| Selected source meaning | A decision to enter a Type I examination was accepted for a program, sealing the latest adoption generation and the gap plans it relies on. |
 | Meaning source | authored 2026-10-29 from src/Compliance.Common/Features/Readiness/Events/TypeIEntryDecisionAccepted.cs |
 
 #### Selected schema and implementation evidence
@@ -625,8 +649,8 @@ ReadinessDecisionIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T065](../reactors/readiness-decision-reactor.md#t065) | physical root, logical prerequisite | ProgramReadiness | AuthorizeReadinessGapPlanReadinessDecisionUse | ReadinessGapPlan |
-| [T066](../reactors/readiness-decision-reactor.md#t066) | physical root | ProgramReadiness | SettleReadinessGapPlanReadinessDecisionUse | ReadinessGapPlan |
+| [T065](../reactors/readiness-decision-reactor.md#t065) | physical root, logical prerequisite | ProgramReadiness | AuthorizeReadinessGapPlanReadinessDecision | ReadinessGapPlan |
+| [T066](../reactors/readiness-decision-reactor.md#t066) | physical root | ProgramReadiness | CloseReadinessGapPlanReadinessDecisionAuthorization | ReadinessGapPlan |
 | [T074](../reactors/readiness-decision-reactor.md#t074) | physical root | ProgramReadiness | CompleteReadinessDecision | ProgramReadiness |
 | [T075](../reactors/readiness-decision-reactor.md#t075) | physical root, logical prerequisite | ProgramReadiness | CompleteTypeIEntryDecision | ProgramReadiness |
 | [A009](../reactors/unassigned-architecture-rows.md#a009) | physical root, logical prerequisite | ProgramReadiness | AbortReadinessDecision | ProgramReadiness |
@@ -635,6 +659,9 @@ ReadinessDecisionIntent
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | TypeIEntryDecisionRecorded |
+| Selected source event name | TypeIEntryDecisionRecorded |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:TypeIEntryDecisionRecorded |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | TypeIEntryDecisionRecorded |
@@ -644,7 +671,8 @@ ReadinessDecisionIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | The Type I entry decision was recorded once every gap plan was held. DecisionContent is the complete TypeIEntryDecisionView with its frozen unresolved items, DecisionProofs the complete manifest of the held gap plan proofs, and OperationResult the original typed result of the command. |
+| Target meaning | The Type I entry decision was recorded once every gap plan was held. DecisionContent is the complete TypeIEntryDecisionView with its frozen unresolved items, DecisionProofs the complete manifest of the held gap plan proofs, and OperationResult the original typed result of the command. |
+| Selected source meaning | The Type I entry decision was recorded once every gap plan was held. DecisionContent is the complete TypeIEntryDecisionView with its frozen unresolved items, DecisionProofs the complete manifest of the held gap plan proofs, and OperationResult the original typed result of the command. |
 | Meaning source | record summary in src/Compliance.Common/Features/Readiness/Events/TypeIEntryDecisionRecorded.cs |
 
 #### Selected schema and implementation evidence
@@ -742,7 +770,7 @@ ReadinessDecisionIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T066](../reactors/readiness-decision-reactor.md#t066) | logical prerequisite | ProgramReadiness | SettleReadinessGapPlanReadinessDecisionUse | ReadinessGapPlan |
+| [T066](../reactors/readiness-decision-reactor.md#t066) | logical prerequisite | ProgramReadiness | CloseReadinessGapPlanReadinessDecisionAuthorization | ReadinessGapPlan |
 | [T075](../reactors/readiness-decision-reactor.md#t075) | emitted semantic fact | ProgramReadiness | CompleteTypeIEntryDecision | ProgramReadiness |
 
 

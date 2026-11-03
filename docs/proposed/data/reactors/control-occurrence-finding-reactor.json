@@ -1,5 +1,7 @@
 {
-  "root": "ControlOccurrenceFindingReactor",
+  "sourceRoot": "ControlOccurrenceFindingReactor",
+  "targetRoot": "ControlOccurrenceFindingReactor",
+  "businessReason": "Raise a finding from a control occurrence that did not meet its required result.",
   "rows": [
     {
       "id": "S002",

@@ -2,11 +2,11 @@
 
 Canonical events: **3**. Complete canonical event and available schema records: [owner event JSON](../data/events/access-expectation.json).
 
-| Event | Kind | Adopted discriminator | Version | Schema fields | Meaning |
-| --- | --- | --- | --- | --- | --- |
-| AccessExpectationApproved | business | bdgrz.access_expectation.approved | 2 | 10 | A proposed expectation was approved. |
-| AccessExpectationExceptionRecorded | business | bdgrz.access_expectation.exception_recorded | 2 | 7 | An expiring exception to an approved expectation was approved. The logical id of Operation is the command id, which is also the exception id; the complete AccessExpectationExceptionView is verified immutable content. |
-| AccessExpectationProposed | business | bdgrz.access_expectation.proposed | 2 | 8 | An expectation version was proposed on its expectation line. The logical id of Operation is the expectation id; the complete AccessExpectationView is verified immutable content. |
+| Target event | Selected source name | Kind | Adopted discriminator | Version | Schema fields | Meaning |
+| --- | --- | --- | --- | --- | --- | --- |
+| AccessExpectationApproved | AccessExpectationApproved | business | bdgrz.access_expectation.approved | 2 | 10 | A proposed expectation was approved. |
+| AccessExpectationExceptionRecorded | AccessExpectationExceptionRecorded | business | bdgrz.access_expectation.exception_recorded | 2 | 7 | An expiring exception to an approved expectation was approved. The logical id of Operation is the command id, which is also the exception id; the complete AccessExpectationExceptionView is verified immutable content. |
+| AccessExpectationProposed | AccessExpectationProposed | business | bdgrz.access_expectation.proposed | 2 | 8 | An expectation version was proposed on its expectation line. The logical id of Operation is the expectation id; the complete AccessExpectationView is verified immutable content. |
 
 ## Event details
 
@@ -14,6 +14,9 @@ Canonical events: **3**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | AccessExpectationApproved |
+| Selected source event name | AccessExpectationApproved |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:AccessExpectationApproved |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | AccessExpectationApproved |
@@ -23,7 +26,8 @@ Canonical events: **3**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | `{"discriminator":"bdgrz.access_expectation.approved","version":1}` |
-| Meaning | A proposed expectation was approved. |
+| Target meaning | A proposed expectation was approved. |
+| Selected source meaning | A proposed expectation was approved. |
 | Meaning source | record summary in src/Compliance.Common/Features/AccessReviews/Events/AccessExpectationApproved.cs |
 
 #### Selected schema and implementation evidence
@@ -69,6 +73,9 @@ Canonical events: **3**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | AccessExpectationExceptionRecorded |
+| Selected source event name | AccessExpectationExceptionRecorded |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:AccessExpectationExceptionRecorded |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | AccessExpectationExceptionRecorded |
@@ -78,7 +85,8 @@ Canonical events: **3**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | `{"discriminator":"bdgrz.access_expectation.exception_recorded","version":1}` |
-| Meaning | An expiring exception to an approved expectation was approved. The logical id of Operation is the command id, which is also the exception id; the complete AccessExpectationExceptionView is verified immutable content. |
+| Target meaning | An expiring exception to an approved expectation was approved. The logical id of Operation is the command id, which is also the exception id; the complete AccessExpectationExceptionView is verified immutable content. |
+| Selected source meaning | An expiring exception to an approved expectation was approved. The logical id of Operation is the command id, which is also the exception id; the complete AccessExpectationExceptionView is verified immutable content. |
 | Meaning source | record summary in src/Compliance.Common/Features/AccessReviews/Events/AccessExpectationExceptionRecorded.cs |
 
 #### Selected schema and implementation evidence
@@ -131,6 +139,9 @@ Canonical events: **3**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | AccessExpectationProposed |
+| Selected source event name | AccessExpectationProposed |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:AccessExpectationProposed |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | AccessExpectationProposed |
@@ -140,7 +151,8 @@ Canonical events: **3**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | `{"discriminator":"bdgrz.access_expectation.proposed","version":1}` |
-| Meaning | An expectation version was proposed on its expectation line. The logical id of Operation is the expectation id; the complete AccessExpectationView is verified immutable content. |
+| Target meaning | An expectation version was proposed on its expectation line. The logical id of Operation is the expectation id; the complete AccessExpectationView is verified immutable content. |
+| Selected source meaning | An expectation version was proposed on its expectation line. The logical id of Operation is the expectation id; the complete AccessExpectationView is verified immutable content. |
 | Meaning source | record summary in src/Compliance.Common/Features/AccessReviews/Events/AccessExpectationProposed.cs |
 
 #### Selected schema and implementation evidence

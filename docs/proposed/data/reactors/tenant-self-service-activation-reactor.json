@@ -1,5 +1,7 @@
 {
-  "root": "TenantSelfServiceActivationReactor",
+  "sourceRoot": "TenantSelfServiceActivationReactor",
+  "targetRoot": "TenantSelfServiceActivationReactor",
+  "businessReason": "Make the organization usable after its owner has joined the Administrators team and has the access needed to manage it.",
   "rows": [
     {
       "id": "S034",

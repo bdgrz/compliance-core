@@ -2,11 +2,11 @@
 
 Canonical events: **3**. Complete canonical event and available schema records: [owner event JSON](../data/events/platform-operator-roster.json).
 
-| Event | Kind | Adopted discriminator | Version | Schema fields | Meaning |
-| --- | --- | --- | --- | --- | --- |
-| PlatformOperatorGranted | business | bdgrz.platform.operator.granted | 1 | [Placeholder: schema absent] | Platform operator authority was granted to a user by a named actor with a stated reason. |
-| PlatformOperatorRevoked | business | bdgrz.platform.operator.revoked | 1 | [Placeholder: schema absent] | A user's platform operator authority was revoked by a named actor with a stated reason, ending the access that assignment gave. |
-| PlatformOperatorRosterSeeded | business | bdgrz.platform.operator-roster.seeded | 1 | [Placeholder: schema absent] | The platform operator roster was initialised with its starting set of operator users by a named actor. |
+| Target event | Selected source name | Kind | Adopted discriminator | Version | Schema fields | Meaning |
+| --- | --- | --- | --- | --- | --- | --- |
+| PlatformOperatorGranted | PlatformOperatorGranted | business | bdgrz.platform.operator.granted | 1 | [Placeholder: schema absent] | Platform operator authority was granted to a user by a named actor with a stated reason. |
+| PlatformOperatorRevoked | PlatformOperatorRevoked | business | bdgrz.platform.operator.revoked | 1 | [Placeholder: schema absent] | A user's platform operator authority was revoked by a named actor with a stated reason, ending the access that assignment gave. |
+| PlatformOperatorRosterCreated | PlatformOperatorRosterSeeded | business | bdgrz.platform.operator-roster.seeded | 1 | [Placeholder: schema absent] | The platform operator roster was initialised with its starting set of operator users by a named actor. |
 
 ## Event details
 
@@ -14,6 +14,9 @@ Canonical events: **3**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | PlatformOperatorGranted |
+| Selected source event name | PlatformOperatorGranted |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:PlatformOperatorGranted |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | PlatformOperatorGranted |
@@ -23,7 +26,8 @@ Canonical events: **3**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | Platform operator authority was granted to a user by a named actor with a stated reason. |
+| Target meaning | Platform operator authority was granted to a user by a named actor with a stated reason. |
+| Selected source meaning | Platform operator authority was granted to a user by a named actor with a stated reason. |
 | Meaning source | authored 2026-10-29 from src/Compliance.Common/Features/Tenants/Events/PlatformOperatorGranted.cs |
 
 #### Schema
@@ -44,6 +48,9 @@ Canonical events: **3**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | PlatformOperatorRevoked |
+| Selected source event name | PlatformOperatorRevoked |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:PlatformOperatorRevoked |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | PlatformOperatorRevoked |
@@ -53,7 +60,8 @@ Canonical events: **3**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | A user's platform operator authority was revoked by a named actor with a stated reason, ending the access that assignment gave. |
+| Target meaning | A user's platform operator authority was revoked by a named actor with a stated reason, ending the access that assignment gave. |
+| Selected source meaning | A user's platform operator authority was revoked by a named actor with a stated reason, ending the access that assignment gave. |
 | Meaning source | authored 2026-10-29 from src/Compliance.Common/Features/Tenants/Events/PlatformOperatorRevoked.cs |
 
 #### Schema
@@ -70,10 +78,13 @@ Canonical events: **3**. Complete canonical event and available schema records: 
 
 [Placeholder: no selected choreography row names this event as root, prerequisite, or emitted fact.]
 
-### PlatformOperatorRosterSeeded
+### PlatformOperatorRosterCreated
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | PlatformOperatorRosterCreated |
+| Selected source event name | PlatformOperatorRosterSeeded |
+| Name decision | Names the completed creation of the roster's initial set of operator users. |
 | Canonical semantic key | event:PlatformOperatorRosterSeeded |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | PlatformOperatorRosterSeeded |
@@ -83,7 +94,8 @@ Canonical events: **3**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | The platform operator roster was initialised with its starting set of operator users by a named actor. |
+| Target meaning | The platform operator roster was initialised with its starting set of operator users by a named actor. |
+| Selected source meaning | The platform operator roster was initialised with its starting set of operator users by a named actor. |
 | Meaning source | authored 2026-10-29 from src/Compliance.Common/Features/Tenants/Events/PlatformOperatorRosterSeeded.cs |
 
 #### Schema

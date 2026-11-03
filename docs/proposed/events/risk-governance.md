@@ -2,10 +2,10 @@
 
 Canonical events: **2**. Complete canonical event and available schema records: [owner event JSON](../data/events/risk-governance.json).
 
-| Event | Kind | Adopted discriminator | Version | Schema fields | Meaning |
-| --- | --- | --- | --- | --- | --- |
-| RiskOwnerAssigned | business | bdgrz.risk.owner.assigned | 2 | 8 | A governed workforce person became the risk owner. OwnerContent is the complete RiskOwnerView. |
-| RiskReassessmentTriggered | business | bdgrz.risk.reassessment.triggered | 2 | 8 | A durable reassessment trigger was raised for the risk. TriggerContent is the complete RiskReassessmentTriggerView. |
+| Target event | Selected source name | Kind | Adopted discriminator | Version | Schema fields | Meaning |
+| --- | --- | --- | --- | --- | --- | --- |
+| RiskOwnerAssigned | RiskOwnerAssigned | business | bdgrz.risk.owner.assigned | 2 | 8 | A governed workforce person became the risk owner. OwnerContent is the complete RiskOwnerView. |
+| RiskReassessmentTriggered | RiskReassessmentTriggered | business | bdgrz.risk.reassessment.triggered | 2 | 8 | A durable reassessment trigger was raised for the risk. TriggerContent is the complete RiskReassessmentTriggerView. |
 
 ## Event details
 
@@ -13,6 +13,9 @@ Canonical events: **2**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | RiskOwnerAssigned |
+| Selected source event name | RiskOwnerAssigned |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:RiskOwnerAssigned |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | RiskOwnerAssigned |
@@ -22,7 +25,8 @@ Canonical events: **2**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | `{"discriminator":"bdgrz.risk.owner.assigned","version":1}` |
-| Meaning | A governed workforce person became the risk owner. OwnerContent is the complete RiskOwnerView. |
+| Target meaning | A governed workforce person became the risk owner. OwnerContent is the complete RiskOwnerView. |
+| Selected source meaning | A governed workforce person became the risk owner. OwnerContent is the complete RiskOwnerView. |
 | Meaning source | record summary in src/Compliance.Common/Features/Risks/Events/RiskOwnerAssigned.cs |
 
 #### Selected schema and implementation evidence
@@ -76,6 +80,9 @@ Canonical events: **2**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | RiskReassessmentTriggered |
+| Selected source event name | RiskReassessmentTriggered |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:RiskReassessmentTriggered |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | RiskReassessmentTriggered |
@@ -85,7 +92,8 @@ Canonical events: **2**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | `{"discriminator":"bdgrz.risk.reassessment.triggered","version":1}` |
-| Meaning | A durable reassessment trigger was raised for the risk. TriggerContent is the complete RiskReassessmentTriggerView. |
+| Target meaning | A durable reassessment trigger was raised for the risk. TriggerContent is the complete RiskReassessmentTriggerView. |
+| Selected source meaning | A durable reassessment trigger was raised for the risk. TriggerContent is the complete RiskReassessmentTriggerView. |
 | Meaning source | record summary in src/Compliance.Common/Features/Risks/Events/RiskReassessmentTriggered.cs |
 
 #### Selected schema and implementation evidence

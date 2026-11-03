@@ -2,10 +2,10 @@
 
 Selected command contracts: **2**. Complete selected contracts and companion source evidence: [owner command JSON](../data/commands/type-ii-observation-calendar.json).
 
-| Command | Kind | Identity | Fields | HTTP routes |
-| --- | --- | --- | --- | --- |
-| AcquireTypeIIPeriodRange | receiver | CommandId | 10 | [Placeholder: value not recorded] |
-| SettleTypeIIPeriodRange | reactor | CommandId | 8 | [Placeholder: value not recorded] |
+| Target command | Selected source name | Kind | Identity | Fields | HTTP routes |
+| --- | --- | --- | --- | --- | --- |
+| AcquireTypeIIPeriodRange | AcquireTypeIIPeriodRange | receiver | CommandId | 10 | [Placeholder: value not recorded] |
+| CloseTypeIIPeriodRangeReservation | SettleTypeIIPeriodRange | reactor | CommandId | 8 | [Placeholder: value not recorded] |
 
 ## Selected command details
 
@@ -13,13 +13,16 @@ Selected command contracts: **2**. Complete selected contracts and companion sou
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | AcquireTypeIIPeriodRange |
+| Selected source command name | AcquireTypeIIPeriodRange |
+| Name decision | The selected source name is retained. |
 | Owner | TypeIIObservationCalendar |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; internal; deterministic receiver identity derived from the admitted root fact, episode and generation: exact redelivery resolves the original result, a changed admission is a new identity |
 | Entry point | [Placeholder: value not recorded] |
 | MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | [Placeholder: value not recorded] |
+| Selected semantic events | None listed |
 | Protocols | [Placeholder: value not recorded] |
 | Policy preservation | [Placeholder: value not recorded] |
 | Contract changes | [Placeholder: value not recorded] |
@@ -59,17 +62,20 @@ Existing tests: [Placeholder: existing tests not recorded]
 
 Required tests: [Placeholder: required tests not recorded]
 
-### SettleTypeIIPeriodRange
+### CloseTypeIIPeriodRangeReservation
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | CloseTypeIIPeriodRangeReservation |
+| Selected source command name | SettleTypeIIPeriodRange |
+| Name decision | Ends the exact Type II date reservation after acceptance, replacement, or cancellation. |
 | Owner | TypeIIObservationCalendar |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | reactor |
 | Logical identity | CommandId; Uuid; required=true; internal; deterministic receiver identity derived from the admitted root fact, episode and generation: exact redelivery resolves the original result, a changed admission is a new identity |
 | Entry point | [Placeholder: value not recorded] |
 | MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | [Placeholder: value not recorded] |
+| Selected semantic events | None listed |
 | Protocols | [Placeholder: value not recorded] |
 | Policy preservation | [Placeholder: value not recorded] |
 | Contract changes | [Placeholder: value not recorded] |

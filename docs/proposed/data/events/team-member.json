@@ -208,7 +208,11 @@
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "resolvedIntentSchema": "AdministratorTransitionIntent",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "TeamMemberAssigned",
+      "targetName": "TeamMemberAssigned",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "A member was assigned to a team for one membership episode. The fact is the native acceptance of the logical CommandId on the team-member stream."
     },
     {
       "canonical": {
@@ -431,7 +435,11 @@
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "resolvedIntentSchema": "AdministratorTransitionIntent",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "TeamMemberRemoved",
+      "targetName": "TeamMemberRemoved",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "A member's team assignment ended. The fact is the native acceptance of the logical CommandId on the team-member stream; a retirement removal carries the termination event that proves the closed membership episode."
     }
   ]
 }

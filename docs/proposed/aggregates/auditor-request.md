@@ -54,12 +54,12 @@
 
 | Row | Kind | Source owner | Target owner | Command |
 | --- | --- | --- | --- | --- |
-| [T033](../reactors/auditor-response-materialization-reactor.md#t033) | reaction_or_regular_process_stage | AuditorRequest | AuditorResponse | MaterializeAuditorResponse |
-| [T034](../reactors/auditor-comment-materialization-reactor.md#t034) | reaction_or_regular_process_stage | AuditorRequest | AuditorFeedbackThread | MaterializeAuditorComment |
+| [T033](../reactors/auditor-response-materialization-reactor.md#t033) | reaction_or_regular_process_stage | AuditorRequest | AuditorResponse | CreateAuditorResponseDraft |
+| [T034](../reactors/auditor-comment-materialization-reactor.md#t034) | reaction_or_regular_process_stage | AuditorRequest | AuditorFeedbackThread | RecordAuditorComment |
 | [T035](../reactors/auditor-request-resolution-reactor.md#t035) | reaction_or_regular_process_stage | AuditorRequest | AuditorRequest | CompleteAuditorRequestResolution |
-| [T061](../reactors/auditor-request-resolution-reactor.md#t061) | reaction_or_regular_process_stage | AuditorRequest | AuditorResponse | AuthorizeAuditorResponseRequestResolutionUse |
-| [T062](../reactors/auditor-request-resolution-reactor.md#t062) | reaction_or_regular_process_stage | AuditorRequest | AuditorResponse | SettleAuditorResponseRequestResolutionUse |
-| [T105](../reactors/auditor-sample-selection-materialization-reactor.md#t105) | reaction_or_regular_process_stage | AuditorRequest | AuditorSampleSelection | MaterializeAuditorSampleSelection |
+| [T061](../reactors/auditor-request-resolution-reactor.md#t061) | reaction_or_regular_process_stage | AuditorRequest | AuditorResponse | AuthorizeAuditorResponseRequestResolution |
+| [T062](../reactors/auditor-request-resolution-reactor.md#t062) | reaction_or_regular_process_stage | AuditorRequest | AuditorResponse | CloseAuditorResponseRequestResolutionAuthorization |
+| [T105](../reactors/auditor-sample-selection-materialization-reactor.md#t105) | reaction_or_regular_process_stage | AuditorRequest | AuditorSampleSelection | RecordAuditorSampleSelection |
 | [A007](../reactors/unassigned-architecture-rows.md#a007) | process_abort_binding | AuditorRequest | AuditorRequest | AbortAuditorRequestResolution |
 
 ## Product rules

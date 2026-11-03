@@ -23,7 +23,11 @@
         "meaning": "Activates an immutable control version from one exact reviewed draft revision.",
         "meaningSource": "record summary in src/Compliance.Common/Features/Controls/Events/ControlApproved.cs"
       },
-      "schema": null
+      "schema": null,
+      "sourceName": "ControlApproved",
+      "targetName": "ControlApproved",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "Activates an immutable control version from one exact reviewed draft revision."
     },
     {
       "canonical": {
@@ -47,7 +51,11 @@
         "meaning": "A control draft was created in a program with its identifier and authored content by a named member, awaiting review.",
         "meaningSource": "authored 2026-10-29 from src/Compliance.Common/Features/Controls/Events/ControlDraftCreated.cs"
       },
-      "schema": null
+      "schema": null,
+      "sourceName": "ControlDraftCreated",
+      "targetName": "ControlDraftCreated",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "A control draft was created in a program with its identifier and authored content by a named member, awaiting review."
     },
     {
       "canonical": {
@@ -71,7 +79,11 @@
         "meaning": "A control draft was discarded with a stated rationale by a named member, ending it without approval.",
         "meaningSource": "authored 2026-10-29 from src/Compliance.Common/Features/Controls/Events/ControlDraftDiscarded.cs"
       },
-      "schema": null
+      "schema": null,
+      "sourceName": "ControlDraftDiscarded",
+      "targetName": "ControlDraftDiscarded",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "A control draft was discarded with a stated rationale by a named member, ending it without approval."
     },
     {
       "canonical": {
@@ -95,7 +107,11 @@
         "meaning": "A control draft's authored content was revised by a named member, producing the draft's next revision for review.",
         "meaningSource": "authored 2026-10-29 from src/Compliance.Common/Features/Controls/Events/ControlDraftRevised.cs"
       },
-      "schema": null
+      "schema": null,
+      "sourceName": "ControlDraftRevised",
+      "targetName": "ControlDraftRevised",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "A control draft's authored content was revised by a named member, producing the draft's next revision for review."
     },
     {
       "canonical": {
@@ -119,7 +135,11 @@
         "meaning": "Designates, or clears with a null PersonId, the governed workforce person who owns one exact pending control revision. The person need not sign in. The signed-in recording actor is kept separate, and CorrelatedMemberId is snapshotted only to apply owner-based separation of duties; it never grants access.",
         "meaningSource": "record summary in src/Compliance.Common/Features/Controls/Events/ControlOwnerPersonDesignated.cs"
       },
-      "schema": null
+      "schema": null,
+      "sourceName": "ControlOwnerPersonDesignated",
+      "targetName": "ControlOwnerPersonDesignated",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "Designates, or clears with a null PersonId, the governed workforce person who owns one exact pending control revision. The person need not sign in. The signed-in recording actor is kept separate, and CorrelatedMemberId is snapshotted only to apply owner-based separation of duties; it never grants access."
     },
     {
       "canonical": {
@@ -143,7 +163,11 @@
         "meaning": "Withdraws a pending successor draft or retirement proposal at its exact revision. The current approved version stays effective; the ControlDraftRevised raised in the same commit restores its content on a new revision so stale decisions cannot apply.",
         "meaningSource": "record summary in src/Compliance.Common/Features/Controls/Events/ControlProposalWithdrawn.cs"
       },
-      "schema": null
+      "schema": null,
+      "sourceName": "ControlProposalWithdrawn",
+      "targetName": "ControlProposalWithdrawn",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "Withdraws a pending successor draft or retirement proposal at its exact revision. The current approved version stays effective; the ControlDraftRevised raised in the same commit restores its content on a new revision so stale decisions cannot apply."
     },
     {
       "canonical": {
@@ -167,7 +191,11 @@
         "meaning": "Ends future use of one exact approved control version. Prior versions, decisions, and relationships are retained and stay readable.",
         "meaningSource": "record summary in src/Compliance.Common/Features/Controls/Events/ControlRetired.cs"
       },
-      "schema": null
+      "schema": null,
+      "sourceName": "ControlRetired",
+      "targetName": "ControlRetired",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "Ends future use of one exact approved control version. Prior versions, decisions, and relationships are retained and stay readable."
     },
     {
       "canonical": {
@@ -191,7 +219,11 @@
         "meaning": "Proposes ending future use of one exact approved control version.",
         "meaningSource": "record summary in src/Compliance.Common/Features/Controls/Events/ControlRetirementProposed.cs"
       },
-      "schema": null
+      "schema": null,
+      "sourceName": "ControlRetirementProposed",
+      "targetName": "ControlRetirementProposed",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "Proposes ending future use of one exact approved control version."
     },
     {
       "canonical": {
@@ -215,7 +247,11 @@
         "meaning": "A control version was reviewed with a decision outcome and rationale by a named reviewer, recorded against the exact draft revision reviewed.",
         "meaningSource": "authored 2026-10-29 from src/Compliance.Common/Features/Controls/Events/ControlReviewed.cs"
       },
-      "schema": null
+      "schema": null,
+      "sourceName": "ControlReviewed",
+      "targetName": "ControlReviewed",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "A control version was reviewed with a decision outcome and rationale by a named reviewer, recorded against the exact draft revision reviewed."
     },
     {
       "canonical": {
@@ -239,7 +275,11 @@
         "meaning": "A successor version line was opened for a control from one exact approved predecessor version by a named member, with the successor's content to be authored separately.",
         "meaningSource": "authored 2026-10-29 from src/Compliance.Common/Features/Controls/Events/ControlSuccessorProposed.cs"
       },
-      "schema": null
+      "schema": null,
+      "sourceName": "ControlSuccessorProposed",
+      "targetName": "ControlSuccessorProposed",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "A successor version line was opened for a control from one exact approved predecessor version by a named member, with the successor's content to be authored separately."
     },
     {
       "canonical": {
@@ -265,7 +305,11 @@
         "meaning": "A member was assigned a responsibility type over a scoped record for an effective period by a named assigner, together with any separation-of-duties waivers that allowed it.",
         "meaningSource": "authored 2026-10-29 from src/Compliance.Common/Features/Responsibilities/Events/ResponsibilityAssigned.cs"
       },
-      "schema": null
+      "schema": null,
+      "sourceName": "ResponsibilityAssigned",
+      "targetName": "ResponsibilityAssigned",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "A member was assigned a responsibility type over a scoped record for an effective period by a named assigner, together with any separation-of-duties waivers that allowed it."
     },
     {
       "canonical": {
@@ -291,7 +335,11 @@
         "meaning": "A member's responsibility assignment over a scoped record was revoked with a stated reason by a named member, removing the authority it granted.",
         "meaningSource": "authored 2026-10-29 from src/Compliance.Common/Features/Responsibilities/Events/ResponsibilityRevoked.cs"
       },
-      "schema": null
+      "schema": null,
+      "sourceName": "ResponsibilityRevoked",
+      "targetName": "ResponsibilityRevoked",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "A member's responsibility assignment over a scoped record was revoked with a stated reason by a named member, removing the authority it granted."
     }
   ]
 }

@@ -1,4 +1,9 @@
-# ApplicationRetirementReactor
+# RemoveRelationshipsAfterApplicationRetirementReactor
+
+Selected source root name: `ApplicationRetirementReactor`.
+## Why this reaction exists
+
+Remove active application relationships when the exact application is retired or merged.
 
 Selected choreography rows: **1**. Required proofs, recovery, effect identity, and implementation evidence are preserved in [reactor row JSON](../data/reactors/application-retirement-reactor.json).
 
@@ -16,16 +21,16 @@ Selected choreography rows: **1**. Required proofs, recovery, effect identity, a
 | kind | planned_reaction |
 | status | PLANNED_TARGET_DEFINITION_2026-10-29 |
 | sourceOwner | DeclaredApplication |
-| logicalPrerequisiteFacts | ApplicationRetired |
+| logicalPrerequisiteFacts (target names) | ApplicationRetired |
 | logicalPrerequisiteRule | For each active directed relationship with the retired application as source or target, remove it with the retirement as reason; tuple identity is never recycled. |
-| physicalRootEvents | ApplicationRetired |
-| originalAdmissionKinds | ApplicationRetired |
-| receiverCommand | RemoveApplicationRelationship |
+| physicalRootEvents (target names) | ApplicationRetired |
+| originalAdmissionKinds (target names) | ApplicationRetired |
+| Target command (selected source name: RemoveApplicationRelationship) | RemoveApplicationRelationship |
 | targetOwner | ApplicationRelationship |
 | targetAuthorityKind | business_aggregate |
-| emittedSemanticFacts | ApplicationRelationshipRemoved |
+| emittedSemanticFacts (target names) | ApplicationRelationshipRemoved |
 | emittedEventContracts | None listed |
-| currentRegisteredRootTypes | None listed |
+| currentRegisteredRootTypes (target names) | None listed |
 | plannedRootRole | ApplicationRetirementReactor |
 | processes | ApplicationRetirementProcess |
 | requiredProofContract | `{"canonicalCarrier":"original admitted root reference + required independently verified typed stage/terminal proof sets","admissionReferenceFactKinds":["LocationChangeAccepted"],"admissionReferenceRole":"original business admission/first-owner fact, distinct from subscription trigger and intermediate/terminal prerequisites","verification":{"admission":"AdmissionReference is a locator only. Resolve and independently verify actual typed admitted fact, exact owner/tenant/program, saved metadata and physical/hydrated cut, original root/episode/actor/intent and immutable content.","stageAndTerminal":"Materialize each required typed stage/terminal proof from actual committed facts and full required immutable selections; prove complete grant/fence/provisional/child sets, not counts/checkpoints. Guard sets are not weakened by carrier choice.","earlyReplay":"If native receipt binding does not cover a supplied/interpreted command term, bind that term through the required actual typed proof/body before early replay. Exact receipt cannot bypass proof manifest or source tuple guards.","resultAndRecovery":"Current public authorization precedes replay. Original result/receipt and unknown-append recovery stay exact; requested cancellation propagates. Unavailable proof/content remains transient; corruption/changed intent is permanent; no inferred absence/release.","implementationStatus":"Installed pointer/handler/process presence is not proof of conformance. Field/wire migration and required behavioral tests remain separately verifiable implementation work."},"requiredTypedStageProofSets":[{"factKinds":["ApplicationRelationshipAdded"],"role":"Relationship exists and is active","quantifier":"all_of_selection","condition":"every active relationship touching the retired application","requiredVerification":"Resolve the actual saved fact and its full immutable selection; verify the typed payload and the exact admission, root, target, generation, actor and intent binding. A pointer, checkpoint or stage order alone is not authority."},{"factKinds":["ApplicationRelationshipRemoved"],"role":"Not already removed","quantifier":"none_outstanding","condition":"always","requiredVerification":"Resolve the actual saved fact and its full immutable selection; verify the typed payload and the exact admission, root, target, generation, actor and intent binding. A pointer, checkpoint or stage order alone is not authority."}],"pinnedSourceRequirements":"Every exact source owner/event/content revision and complete immutable manifest required by intendedProofGate remains mandatory; no absent optional source is fabricated.","proofGate":"For each active directed relationship whose source or target is the retired application, remove it with the retirement as attributed reason; identity is never recycled.","requiredLogicalPrerequisiteProofs":"Every applicable logical prerequisite is independently verified as an actual typed saved fact (or actual technical proof where explicitly technical); a terminal proof may establish an earlier stage only through a verified native chain that includes that required typed stage. Stage order/checkpoint alone never substitutes.","prerequisiteVerification":{"admission":"The receiver resolves the original admitted root fact by its exact owner, tenant, episode, actor and immutable intent, and verifies the saved fact and content hash before acting; a reference alone grants nothing.","stageProofs":"Each required stage proof (grant, hold, review, or terminal fact) is materialised from the actual committed fact and its full immutable selection; counts, checkpoints and stage order are not accepted as proof."},"stageProofStatus":"specified","stageProofRationale":"","stageProofSource":"authored 2026-10-29 from reactor and target source"}` |

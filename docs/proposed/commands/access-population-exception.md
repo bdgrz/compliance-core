@@ -2,9 +2,9 @@
 
 Selected command contracts: **1**. Complete selected contracts and companion source evidence: [owner command JSON](../data/commands/access-population-exception.json).
 
-| Command | Kind | Identity | Fields | HTTP routes |
-| --- | --- | --- | --- | --- |
-| ExemptMissingAccessPopulation | http | ExceptionId | 7 | PUT /api/v1/tenants/{tenant_id}/applications/{application_id}/system-instances/{system_instance_id}/access-population-exceptions/{exception_id} [ComplianceAuthorizationPolicies.ApiUser] |
+| Target command | Selected source name | Kind | Identity | Fields | HTTP routes |
+| --- | --- | --- | --- | --- | --- |
+| ExemptMissingAccessPopulation | ExemptMissingAccessPopulation | http | ExceptionId | 7 | PUT /api/v1/tenants/{tenant_id}/applications/{application_id}/system-instances/{system_instance_id}/access-population-exceptions/{exception_id} [ComplianceAuthorizationPolicies.ApiUser] |
 
 ## Selected command details
 
@@ -12,6 +12,9 @@ Selected command contracts: **1**. Complete selected contracts and companion sou
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | ExemptMissingAccessPopulation |
+| Selected source command name | ExemptMissingAccessPopulation |
+| Name decision | The selected source name is retained. |
 | Owner | AccessPopulationException |
 | Contract record status | target_contract |
 | Kind | http |
@@ -62,7 +65,7 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 
 ## Source contracts
 
-| Command | Handler | Registered | Entry point |
+| Selected source command | Handler | Registered | Entry point |
 | --- | --- | --- | --- |
 | ExemptMissingAccessPopulation | ExemptMissingAccessPopulationHandler | true | personal_http |
 

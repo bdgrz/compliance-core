@@ -2,9 +2,9 @@
 
 Selected command contracts: **1**. Complete selected contracts and companion source evidence: [owner command JSON](../data/commands/examination-sign-off.json).
 
-| Command | Kind | Identity | Fields | HTTP routes |
-| --- | --- | --- | --- | --- |
-| RecordManagementExaminationReview | http | SignOffId | 5 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/examinations/{examination_id}/management-reviews/{sign_off_id} |
+| Target command | Selected source name | Kind | Identity | Fields | HTTP routes |
+| --- | --- | --- | --- | --- | --- |
+| RecordManagementExaminationReview | RecordManagementExaminationReview | http | SignOffId | 5 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/examinations/{examination_id}/management-reviews/{sign_off_id} |
 
 ## Selected command details
 
@@ -12,13 +12,16 @@ Selected command contracts: **1**. Complete selected contracts and companion sou
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | RecordManagementExaminationReview |
+| Selected source command name | RecordManagementExaminationReview |
+| Name decision | The selected source name is retained. |
 | Owner | ExaminationSignOff |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | http |
 | Logical identity | SignOffId; Uuid; required=true; caller-supplied immutable creation identity: an exact retry with the same id and authored intent returns the original result; the same id with changed intent is refused; a different id is a different record |
 | Entry point | [Placeholder: value not recorded] |
 | MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | [Placeholder: value not recorded] |
+| Selected semantic events | None listed |
 | Protocols | [Placeholder: value not recorded] |
 | Policy preservation | [Placeholder: value not recorded] |
 | Contract changes | [Placeholder: value not recorded] |

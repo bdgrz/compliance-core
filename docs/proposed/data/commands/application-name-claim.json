@@ -54,7 +54,9 @@
       "source": {
         "path": "docs/product/definitive-aggregate-choreography/choreography.json",
         "recorded": "2026-10-29"
-      }
+      },
+      "sourceName": "ClaimApplicationName",
+      "targetName": "ClaimApplicationName"
     },
     {
       "command": "ReleaseApplicationName",
@@ -105,7 +107,9 @@
       "source": {
         "path": "docs/product/definitive-aggregate-choreography/choreography.json",
         "recorded": "2026-10-29"
-      }
+      },
+      "sourceName": "ReleaseApplicationName",
+      "targetName": "ReleaseApplicationName"
     }
   ],
   "sourceContractEvidence": []

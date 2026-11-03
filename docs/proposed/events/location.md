@@ -2,11 +2,11 @@
 
 Canonical events: **3**. Complete canonical event and available schema records: [owner event JSON](../data/events/location.json).
 
-| Event | Kind | Adopted discriminator | Version | Schema fields | Meaning |
-| --- | --- | --- | --- | --- | --- |
-| LocationChangeAccepted | business | bdgrz.location.location-change-accepted | 1 | 8 | The location record accepted a complete change: its normalized content and claim keys are frozen in the intent and the name-change process continues from this fact. |
-| LocationChangeCanceled | business | bdgrz.location.location-change-canceled | 1 | 8 | The pending location change was canceled after a definite failure; it fences the local apply before any newly acquired claim is released. |
-| LocationRevisionRecorded | business | bdgrz.inventory.location.revision_recorded | 1 | 10 | Applies one complete, attributed location change after its active name was claimed; revision 1 creates it. The complete normalized LocationContent is the content behind ContentContent. |
+| Target event | Selected source name | Kind | Adopted discriminator | Version | Schema fields | Meaning |
+| --- | --- | --- | --- | --- | --- | --- |
+| LocationChangeAccepted | LocationChangeAccepted | business | bdgrz.location.location-change-accepted | 1 | 8 | The location record accepted a complete change: its normalized content and claim keys are frozen in the intent and the name-change process continues from this fact. |
+| LocationChangeCanceled | LocationChangeCanceled | business | bdgrz.location.location-change-canceled | 1 | 8 | The pending location change was canceled after a definite failure; it fences the local apply before any newly acquired claim is released. |
+| LocationRevisionRecorded | LocationRevisionRecorded | business | bdgrz.inventory.location.revision_recorded | 1 | 10 | Applies one complete, attributed location change after its active name was claimed; revision 1 creates it. The complete normalized LocationContent is the content behind ContentContent. |
 
 ## Event details
 
@@ -14,6 +14,9 @@ Canonical events: **3**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | LocationChangeAccepted |
+| Selected source event name | LocationChangeAccepted |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:LocationChangeAccepted |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | LocationChangeAccepted |
@@ -23,7 +26,8 @@ Canonical events: **3**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | The location record accepted a complete change: its normalized content and claim keys are frozen in the intent and the name-change process continues from this fact. |
+| Target meaning | The location record accepted a complete change: its normalized content and claim keys are frozen in the intent and the name-change process continues from this fact. |
+| Selected source meaning | The location record accepted a complete change: its normalized content and claim keys are frozen in the intent and the name-change process continues from this fact. |
 | Meaning source | record summary in src/Compliance.Common/Features/TechnologyInventory/Events/LocationChangeAccepted.cs |
 
 #### Selected schema and implementation evidence
@@ -112,6 +116,9 @@ RecordNameChangeIntent
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | LocationChangeCanceled |
+| Selected source event name | LocationChangeCanceled |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:LocationChangeCanceled |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | LocationChangeCanceled |
@@ -121,7 +128,8 @@ RecordNameChangeIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | The pending location change was canceled after a definite failure; it fences the local apply before any newly acquired claim is released. |
+| Target meaning | The pending location change was canceled after a definite failure; it fences the local apply before any newly acquired claim is released. |
+| Selected source meaning | The pending location change was canceled after a definite failure; it fences the local apply before any newly acquired claim is released. |
 | Meaning source | record summary in src/Compliance.Common/Features/TechnologyInventory/Events/LocationChangeCanceled.cs |
 
 #### Selected schema and implementation evidence
@@ -208,6 +216,9 @@ RecordNameChangeIntent
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | LocationRevisionRecorded |
+| Selected source event name | LocationRevisionRecorded |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:LocationRevisionRecorded |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | LocationRevisionRecorded |
@@ -217,7 +228,8 @@ RecordNameChangeIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | Applies one complete, attributed location change after its active name was claimed; revision 1 creates it. The complete normalized LocationContent is the content behind ContentContent. |
+| Target meaning | Applies one complete, attributed location change after its active name was claimed; revision 1 creates it. The complete normalized LocationContent is the content behind ContentContent. |
+| Selected source meaning | Applies one complete, attributed location change after its active name was claimed; revision 1 creates it. The complete normalized LocationContent is the content behind ContentContent. |
 | Meaning source | record summary in src/Compliance.Common/Features/TechnologyInventory/Events/LocationRevisionRecorded.cs |
 
 #### Selected schema and implementation evidence

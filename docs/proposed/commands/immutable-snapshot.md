@@ -2,10 +2,10 @@
 
 Selected command contracts: **2**. Complete selected contracts and companion source evidence: [owner command JSON](../data/commands/immutable-snapshot.json).
 
-| Command | Kind | Identity | Fields | HTTP routes |
-| --- | --- | --- | --- | --- |
-| AmendProgramScopeSnapshot | http | CommandId | 9 | PUT /api/v1/tenants/{tenant_id}/scope-snapshots/{snapshot_id}/amendments/{command_id} |
-| FreezeProgramScopeSnapshot | http | SnapshotId | 6 | PUT /api/v1/tenants/{tenant_id}/scope-snapshots/{snapshot_id} |
+| Target command | Selected source name | Kind | Identity | Fields | HTTP routes |
+| --- | --- | --- | --- | --- | --- |
+| AmendProgramScopeSnapshot | AmendProgramScopeSnapshot | http | CommandId | 9 | PUT /api/v1/tenants/{tenant_id}/scope-snapshots/{snapshot_id}/amendments/{command_id} |
+| FinalizeProgramScopeSnapshot | FreezeProgramScopeSnapshot | http | SnapshotId | 6 | PUT /api/v1/tenants/{tenant_id}/scope-snapshots/{snapshot_id} |
 
 ## Selected command details
 
@@ -13,13 +13,16 @@ Selected command contracts: **2**. Complete selected contracts and companion sou
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | AmendProgramScopeSnapshot |
+| Selected source command name | AmendProgramScopeSnapshot |
+| Name decision | The selected source name is retained. |
 | Owner | ImmutableSnapshot |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | http |
 | Logical identity | CommandId; Uuid; required=true; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
 | Entry point | [Placeholder: value not recorded] |
 | MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | [Placeholder: value not recorded] |
+| Selected semantic events | None listed |
 | Protocols | [Placeholder: value not recorded] |
 | Policy preservation | [Placeholder: value not recorded] |
 | Contract changes | [Placeholder: value not recorded] |
@@ -60,17 +63,20 @@ Existing tests: [Placeholder: existing tests not recorded]
 
 Required tests: [Placeholder: required tests not recorded]
 
-### FreezeProgramScopeSnapshot
+### FinalizeProgramScopeSnapshot
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | FinalizeProgramScopeSnapshot |
+| Selected source command name | FreezeProgramScopeSnapshot |
+| Name decision | Finalizes the exact approved program scope as an immutable snapshot for later compliance work. |
 | Owner | ImmutableSnapshot |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | http |
 | Logical identity | SnapshotId; Uuid; required=true; caller-supplied immutable creation identity: an exact retry with the same id and authored intent returns the original result; the same id with changed intent is refused; a different id is a different record |
 | Entry point | [Placeholder: value not recorded] |
 | MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | [Placeholder: value not recorded] |
+| Selected semantic events | None listed |
 | Protocols | [Placeholder: value not recorded] |
 | Policy preservation | [Placeholder: value not recorded] |
 | Contract changes | [Placeholder: value not recorded] |

@@ -2,9 +2,9 @@
 
 Selected command contracts: **1**. Complete selected contracts and companion source evidence: [owner command JSON](../data/commands/audit-outcome.json).
 
-| Command | Kind | Identity | Fields | HTTP routes |
-| --- | --- | --- | --- | --- |
-| RecordExaminationOutcome | http | OutcomeId | 11 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/examinations/{examination_id}/outcomes/{outcome_id} |
+| Target command | Selected source name | Kind | Identity | Fields | HTTP routes |
+| --- | --- | --- | --- | --- | --- |
+| RecordExaminationOutcome | RecordExaminationOutcome | http | OutcomeId | 11 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/examinations/{examination_id}/outcomes/{outcome_id} |
 
 ## Selected command details
 
@@ -12,13 +12,16 @@ Selected command contracts: **1**. Complete selected contracts and companion sou
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | RecordExaminationOutcome |
+| Selected source command name | RecordExaminationOutcome |
+| Name decision | The selected source name is retained. |
 | Owner | AuditOutcome |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | http |
 | Logical identity | OutcomeId; Uuid; required=true; caller-supplied immutable creation identity: an exact retry with the same id and authored intent returns the original result; the same id with changed intent is refused; a different id is a different record |
 | Entry point | [Placeholder: value not recorded] |
 | MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | [Placeholder: value not recorded] |
+| Selected semantic events | None listed |
 | Protocols | [Placeholder: value not recorded] |
 | Policy preservation | [Placeholder: value not recorded] |
 | Contract changes | [Placeholder: value not recorded] |

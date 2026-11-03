@@ -11,13 +11,13 @@
 
 **Invariant:** Frozen campaign snapshot, generation, and compact completion gate.
 
-**Additional decision rule:** [Placeholder: no owner-specific decision rule is recorded.]
+**Additional decision rule:** Each campaign has its own CampaignId. A second campaign may use the same population snapshot; no rule prohibits overlapping campaigns.
 
 **Must preserve:** Keep reviewer and remediation owner distinct per item unless exact waiver; no stale projected summary may satisfy completion.
 
 **Replay:** Current required authorization precedes replay; exact authorized retries resolve the original accepted result using the selected logical identity and immutable actor/intent/source binding. Fresh mutable feasibility, clock selection and body preparation cannot replace that original result. Expected revision is concurrency precondition, not a new identity.
 
-**Lifecycle:** [Placeholder: a consolidated lifecycle sequence is not present in the selected owner record.]
+**Lifecycle:** Each campaign keeps its own saved population, completion decision, and closure. Completing one campaign does not close or change another.
 
 ## Commands
 
@@ -43,11 +43,11 @@
 
 | Row | Kind | Source owner | Target owner | Command |
 | --- | --- | --- | --- | --- |
-| [T008](../reactors/access-review-launch-fan-out-reactor.md#t008) | reaction_or_regular_process_stage | AccessReviewCampaign | AccessReviewItem | MaterializeAccessReviewItem |
-| [T059](../reactors/access-review-completion-reactor.md#t059) | reaction_or_regular_process_stage | AccessReviewCampaign | AccessReviewItem | AuthorizeAccessReviewItemCampaignCompletionUse |
-| [T060](../reactors/access-review-completion-reactor.md#t060) | reaction_or_regular_process_stage | AccessReviewCampaign | AccessReviewItem | SettleAccessReviewItemCampaignCompletionUse |
+| [T008](../reactors/access-review-launch-fan-out-reactor.md#t008) | reaction_or_regular_process_stage | AccessReviewCampaign | AccessReviewItem | OpenAccessReviewItem |
+| [T059](../reactors/access-review-completion-reactor.md#t059) | reaction_or_regular_process_stage | AccessReviewCampaign | AccessReviewItem | AuthorizeAccessReviewItemCampaignCompletion |
+| [T060](../reactors/access-review-completion-reactor.md#t060) | reaction_or_regular_process_stage | AccessReviewCampaign | AccessReviewItem | CloseAccessReviewItemCampaignCompletionAuthorization |
 | [T073](../reactors/access-review-completion-reactor.md#t073) | reaction_or_regular_process_stage | AccessReviewCampaign | AccessReviewCampaign | CompleteAccessReviewCampaignClosure |
-| [T086](../reactors/access-review-bulk-admission-reactor.md#t086) | reaction_or_regular_process_stage | AccessReviewCampaign | AccessReviewDecisionBatch | MaterializeAccessReviewDecisionBatch |
+| [T086](../reactors/access-review-bulk-admission-reactor.md#t086) | reaction_or_regular_process_stage | AccessReviewCampaign | AccessReviewDecisionBatch | RecordAccessReviewDecisionBatch |
 | [A005](../reactors/unassigned-architecture-rows.md#a005) | process_abort_binding | AccessReviewCampaign | AccessReviewDecisionBatch | CancelAccessReviewDecisionBatch |
 | [A006](../reactors/unassigned-architecture-rows.md#a006) | process_abort_binding | AccessReviewCampaign | AccessReviewCampaign | AbortAccessReviewCampaignCompletion |
 

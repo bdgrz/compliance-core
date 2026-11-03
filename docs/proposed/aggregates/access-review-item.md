@@ -28,13 +28,13 @@
 | [RecordAccessDecision](../commands/access-review-item.md#recordaccessdecision) | http | CommandId |
 | [RecordAccessRemediationChange](../commands/access-review-item.md#recordaccessremediationchange) | http | CommandId |
 | [VerifyAccessRemediation](../commands/access-review-item.md#verifyaccessremediation) | http | CommandId |
-| [MaterializeAccessReviewItem](../commands/access-review-item.md#materializeaccessreviewitem) | receiver | CommandId |
+| [OpenAccessReviewItem](../commands/access-review-item.md#openaccessreviewitem) | receiver | CommandId |
 | [ReserveAccessReviewItemDecision](../commands/access-review-item.md#reserveaccessreviewitemdecision) | receiver | CommandId |
 | [ApplyAccessReviewItemDecision](../commands/access-review-item.md#applyaccessreviewitemdecision) | receiver | CommandId |
-| [FenceAccessReviewItemDecision](../commands/access-review-item.md#fenceaccessreviewitemdecision) | receiver | CommandId |
-| [AuthorizeAccessReviewItemCampaignCompletionUse](../commands/access-review-item.md#authorizeaccessreviewitemcampaigncompletionuse) | receiver | CommandId |
-| [SettleAccessReviewItemCampaignCompletionUse](../commands/access-review-item.md#settleaccessreviewitemcampaigncompletionuse) | receiver | CommandId |
-| [SettleAccessReviewItemDecision](../commands/access-review-item.md#settleaccessreviewitemdecision) | receiver | CommandId |
+| [CancelAccessReviewItemDecision](../commands/access-review-item.md#cancelaccessreviewitemdecision) | receiver | CommandId |
+| [AuthorizeAccessReviewItemCampaignCompletion](../commands/access-review-item.md#authorizeaccessreviewitemcampaigncompletion) | receiver | CommandId |
+| [CloseAccessReviewItemCampaignCompletionAuthorization](../commands/access-review-item.md#closeaccessreviewitemcampaigncompletionauthorization) | receiver | CommandId |
+| [CloseAccessReviewItemDecisionAuthorization](../commands/access-review-item.md#closeaccessreviewitemdecisionauthorization) | receiver | CommandId |
 
 ## Events
 
@@ -44,11 +44,11 @@
 | [AccessRemediationChangeRecorded](../events/access-review-item.md#accessremediationchangerecorded) | bdgrz.access_review.remediation.change_recorded | 2 |
 | [AccessRemediationExceptionRecorded](../events/access-review-item.md#accessremediationexceptionrecorded) | bdgrz.access_review.remediation.exception_recorded | 2 |
 | [AccessRemediationVerified](../events/access-review-item.md#accessremediationverified) | bdgrz.access_review.remediation.verified | 2 |
-| [AccessReviewItemCampaignCompletionUseAuthorized](../events/access-review-item.md#accessreviewitemcampaigncompletionuseauthorized) | bdgrz.access-review-item.access-review-item-campaign-completion-use-authorized | 1 |
-| [AccessReviewItemCampaignCompletionUseSettled](../events/access-review-item.md#accessreviewitemcampaigncompletionusesettled) | bdgrz.access-review-item.access-review-item-campaign-completion-use-settled | 1 |
+| [AccessReviewItemCampaignCompletionAuthorized](../events/access-review-item.md#accessreviewitemcampaigncompletionauthorized) | bdgrz.access-review-item.access-review-item-campaign-completion-use-authorized | 1 |
+| [AccessReviewItemCampaignCompletionAuthorizationClosed](../events/access-review-item.md#accessreviewitemcampaigncompletionauthorizationclosed) | bdgrz.access-review-item.access-review-item-campaign-completion-use-settled | 1 |
 | [AccessReviewItemDecisionAuthorized](../events/access-review-item.md#accessreviewitemdecisionauthorized) | bdgrz.access-review-item.access-review-item-decision-authorized | 1 |
 | [AccessReviewItemDecisionCanceled](../events/access-review-item.md#accessreviewitemdecisioncanceled) | bdgrz.access-review-item.access-review-item-decision-canceled | 1 |
-| [AccessReviewItemDecisionSettled](../events/access-review-item.md#accessreviewitemdecisionsettled) | bdgrz.access-review-item.access-review-item-decision-settled | 1 |
+| [AccessReviewItemDecisionAuthorizationClosed](../events/access-review-item.md#accessreviewitemdecisionauthorizationclosed) | bdgrz.access-review-item.access-review-item-decision-settled | 1 |
 | [AccessReviewItemOpened](../events/access-review-item.md#accessreviewitemopened) | bdgrz.access-review-item.access-review-item-opened | 1 |
 | [AccessReviewResponsibilityReassigned](../events/access-review-item.md#accessreviewresponsibilityreassigned) | bdgrz.access_review.responsibility.reassigned | 2 |
 
@@ -56,13 +56,13 @@
 
 | Row | Kind | Source owner | Target owner | Command |
 | --- | --- | --- | --- | --- |
-| [T008](../reactors/access-review-launch-fan-out-reactor.md#t008) | reaction_or_regular_process_stage | AccessReviewCampaign | AccessReviewItem | MaterializeAccessReviewItem |
+| [T008](../reactors/access-review-launch-fan-out-reactor.md#t008) | reaction_or_regular_process_stage | AccessReviewCampaign | AccessReviewItem | OpenAccessReviewItem |
 | [T009](../reactors/access-review-bulk-admission-reactor.md#t009) | reaction_or_regular_process_stage | AccessReviewDecisionBatch | AccessReviewItem | ReserveAccessReviewItemDecision |
 | [T010](../reactors/access-review-bulk-admission-reactor.md#t010) | reaction_or_regular_process_stage | AccessReviewDecisionBatch | AccessReviewItem | ApplyAccessReviewItemDecision |
-| [T012](../reactors/access-review-bulk-cancellation-reactor.md#t012) | reaction_or_regular_process_stage | AccessReviewDecisionBatch | AccessReviewItem | FenceAccessReviewItemDecision |
-| [T059](../reactors/access-review-completion-reactor.md#t059) | reaction_or_regular_process_stage | AccessReviewCampaign | AccessReviewItem | AuthorizeAccessReviewItemCampaignCompletionUse |
-| [T060](../reactors/access-review-completion-reactor.md#t060) | reaction_or_regular_process_stage | AccessReviewCampaign | AccessReviewItem | SettleAccessReviewItemCampaignCompletionUse |
-| [T080](../reactors/access-review-bulk-admission-reactor.md#t080) | reaction_or_regular_process_stage | AccessReviewDecisionBatch | AccessReviewItem | SettleAccessReviewItemDecision |
+| [T012](../reactors/access-review-bulk-cancellation-reactor.md#t012) | reaction_or_regular_process_stage | AccessReviewDecisionBatch | AccessReviewItem | CancelAccessReviewItemDecision |
+| [T059](../reactors/access-review-completion-reactor.md#t059) | reaction_or_regular_process_stage | AccessReviewCampaign | AccessReviewItem | AuthorizeAccessReviewItemCampaignCompletion |
+| [T060](../reactors/access-review-completion-reactor.md#t060) | reaction_or_regular_process_stage | AccessReviewCampaign | AccessReviewItem | CloseAccessReviewItemCampaignCompletionAuthorization |
+| [T080](../reactors/access-review-bulk-admission-reactor.md#t080) | reaction_or_regular_process_stage | AccessReviewDecisionBatch | AccessReviewItem | CloseAccessReviewItemDecisionAuthorization |
 
 ## Product rules
 

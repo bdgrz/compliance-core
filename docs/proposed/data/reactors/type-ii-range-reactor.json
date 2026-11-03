@@ -1,5 +1,7 @@
 {
-  "root": "TypeIIRangeReactor",
+  "sourceRoot": "TypeIIRangeReactor",
+  "targetRoot": "ReserveAcceptedTypeIIPeriodDatesReactor",
+  "businessReason": "Reserve non-overlapping observation dates and apply only the exact accepted range.",
   "rows": [
     {
       "id": "T053",

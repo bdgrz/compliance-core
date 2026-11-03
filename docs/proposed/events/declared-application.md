@@ -2,15 +2,15 @@
 
 Canonical events: **7**. Complete canonical event and available schema records: [owner event JSON](../data/events/declared-application.json).
 
-| Event | Kind | Adopted discriminator | Version | Schema fields | Meaning |
-| --- | --- | --- | --- | --- | --- |
-| ApplicationDeclared | business | bdgrz.application.declared | 1 | 17 | An application was declared for the tenant with its name, purpose and owner reference by a named member, as the application's first revision. |
-| ApplicationImportEffectCanceled | business | bdgrz.declared_application.import_effect_canceled | 1 | 8 | An import batch was fenced on its target application after cancellation, even if it never held the application, so any delayed reservation or application of that batch is refused. |
-| ApplicationImportEffectPending | reservation | bdgrz.application_import.effect_pending | 2 | 11 | One frozen import row's change to an application was provisionally applied while the batch holds the application, pending the batch's final settlement; it is not yet a published revision. |
-| ApplicationImportTargetAuthorized | reservation | bdgrz.declared_application.import_target_authorized | 1 | 8 | The target application grants the exclusive hold of one batch group. Revision is the published content revision at the hold, which a hold never advances; the group's frozen baseline and candidate revisions are carried so the hold rebuilds from the ordered stream alone. |
-| ApplicationImportTargetSettled | reservation | bdgrz.declared_application.import_target_settled | 1 | 8 | The target hold ends with the batch's exact terminal fact. A published disposition promotes the frozen candidate to the application's content without a second revision increment; a canceled or failed disposition discards it. Revision is the published content revision after the settlement. |
-| ApplicationRetired | business | bdgrz.application.retired | 1 | 13 | An application was retired effective on a stated date with a reason, optionally merged into a successor application; its history, instances and snapshot references remain. |
-| ApplicationRevised | business | bdgrz.application.revised | 1 | 18 | A declared application's name, purpose or owner reference was revised by a named member, recorded as the application's next revision. |
+| Target event | Selected source name | Kind | Adopted discriminator | Version | Schema fields | Meaning |
+| --- | --- | --- | --- | --- | --- | --- |
+| ApplicationDeclared | ApplicationDeclared | business | bdgrz.application.declared | 1 | 17 | An application was declared for the tenant with its name, purpose and owner reference by a named member, as the application's first revision. |
+| ApplicationImportChangesBlockedAfterCancellation | ApplicationImportEffectCanceled | business | bdgrz.declared_application.import_effect_canceled | 1 | 8 | An import batch was fenced on its target application after cancellation, even if it never held the application, so any delayed reservation or application of that batch is refused. |
+| ApplicationImportChangeProvisionallyApplied | ApplicationImportEffectPending | reservation | bdgrz.application_import.effect_pending | 2 | 11 | One frozen import row's change to an application was provisionally applied while the batch holds the application, pending the batch's final settlement; it is not yet a published revision. |
+| ApplicationImportTargetAuthorized | ApplicationImportTargetAuthorized | reservation | bdgrz.declared_application.import_target_authorized | 1 | 8 | The target application grants the exclusive hold of one batch group. Revision is the published content revision at the hold, which a hold never advances; the group's frozen baseline and candidate revisions are carried so the hold rebuilds from the ordered stream alone. |
+| ApplicationImportTargetHoldEnded | ApplicationImportTargetSettled | reservation | bdgrz.declared_application.import_target_settled | 1 | 8 | The target hold ends with the batch's exact terminal fact. A published disposition promotes the frozen candidate to the application's content without a second revision increment; a canceled or failed disposition discards it. Revision is the published content revision after the settlement. |
+| ApplicationRetired | ApplicationRetired | business | bdgrz.application.retired | 1 | 13 | An application was retired effective on a stated date with a reason, optionally merged into a successor application; its history, instances and snapshot references remain. |
+| ApplicationRevised | ApplicationRevised | business | bdgrz.application.revised | 1 | 18 | A declared application's name, purpose or owner reference was revised by a named member, recorded as the application's next revision. |
 
 ## Event details
 
@@ -18,6 +18,9 @@ Canonical events: **7**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | ApplicationDeclared |
+| Selected source event name | ApplicationDeclared |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:ApplicationDeclared |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | ApplicationDeclared |
@@ -27,7 +30,8 @@ Canonical events: **7**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | An application was declared for the tenant with its name, purpose and owner reference by a named member, as the application's first revision. |
+| Target meaning | An application was declared for the tenant with its name, purpose and owner reference by a named member, as the application's first revision. |
+| Selected source meaning | An application was declared for the tenant with its name, purpose and owner reference by a named member, as the application's first revision. |
 | Meaning source | authored 2026-10-29 from src/Compliance.Common/Features/Applications/Events/ApplicationDeclared.cs |
 
 #### Selected schema and implementation evidence
@@ -78,10 +82,13 @@ Canonical events: **7**. Complete canonical event and available schema records: 
 | --- | --- | --- | --- | --- |
 | [X000](../reactors/application-name-change-reactor.md#x000) | physical root, logical prerequisite | DeclaredApplication | ClaimApplicationName | ApplicationNameClaim |
 
-### ApplicationImportEffectCanceled
+### ApplicationImportChangesBlockedAfterCancellation
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | ApplicationImportChangesBlockedAfterCancellation |
+| Selected source event name | ApplicationImportEffectCanceled |
+| Name decision | Names the protection that prevents a canceled import batch from changing this application after cancellation. |
 | Canonical semantic key | event:ApplicationImportEffectCanceled |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | ApplicationImportEffectCanceled |
@@ -91,7 +98,8 @@ Canonical events: **7**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | `{"discriminator":"bdgrz.declared-application.application-import-effect-canceled","version":1}` |
-| Meaning | An import batch was fenced on its target application after cancellation, even if it never held the application, so any delayed reservation or application of that batch is refused. |
+| Target meaning | An import batch was fenced on its target application after cancellation, even if it never held the application, so any delayed reservation or application of that batch is refused. |
+| Selected source meaning | An import batch was fenced on its target application after cancellation, even if it never held the application, so any delayed reservation or application of that batch is refused. |
 | Meaning source | authored 2026-10-29 from src/Compliance.Common/Features/Applications/Events/ApplicationImportEffectCanceled.cs |
 
 #### Selected schema and implementation evidence
@@ -167,12 +175,15 @@ ImportTargetGroupIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T018](../reactors/import-cancellation-reactor.md#t018) | emitted semantic fact | ApplicationImportBatch | FenceApplicationImportTarget | DeclaredApplication |
+| [T018](../reactors/import-cancellation-reactor.md#t018) | emitted semantic fact | ApplicationImportBatch | BlockCanceledApplicationImportChanges | DeclaredApplication |
 
-### ApplicationImportEffectPending
+### ApplicationImportChangeProvisionallyApplied
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | ApplicationImportChangeProvisionallyApplied |
+| Selected source event name | ApplicationImportEffectPending |
+| Name decision | Names the exact change applied provisionally while the import batch awaits its final result. |
 | Canonical semantic key | event:ApplicationImportEffectPending |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | ApplicationImportEffectPending |
@@ -182,7 +193,8 @@ ImportTargetGroupIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | `{"discriminator":"bdgrz.application_import.effect_pending","version":1}` |
-| Meaning | One frozen import row's change to an application was provisionally applied while the batch holds the application, pending the batch's final settlement; it is not yet a published revision. |
+| Target meaning | One frozen import row's change to an application was provisionally applied while the batch holds the application, pending the batch's final settlement; it is not yet a published revision. |
+| Selected source meaning | One frozen import row's change to an application was provisionally applied while the batch holds the application, pending the batch's final settlement; it is not yet a published revision. |
 | Meaning source | authored 2026-10-29 from src/Compliance.Common/Features/Applications/Events/ApplicationImportEffectPending.cs |
 
 #### Selected schema and implementation evidence
@@ -261,12 +273,15 @@ ImportTargetGroupIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T016](../reactors/import-source-admission-reactor.md#t016) | emitted semantic fact | ApplicationImportBatch | ApplyApplicationImportEffect | DeclaredApplication |
+| [T016](../reactors/import-source-admission-reactor.md#t016) | emitted semantic fact | ApplicationImportBatch | ApplyApplicationImportChange | DeclaredApplication |
 
 ### ApplicationImportTargetAuthorized
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | ApplicationImportTargetAuthorized |
+| Selected source event name | ApplicationImportTargetAuthorized |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:ApplicationImportTargetAuthorized |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | ApplicationImportTargetAuthorized |
@@ -276,7 +291,8 @@ ImportTargetGroupIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | `{"discriminator":"bdgrz.declared-application.application-import-target-authorized","version":1}` |
-| Meaning | The target application grants the exclusive hold of one batch group. Revision is the published content revision at the hold, which a hold never advances; the group's frozen baseline and candidate revisions are carried so the hold rebuilds from the ordered stream alone. |
+| Target meaning | The target application grants the exclusive hold of one batch group. Revision is the published content revision at the hold, which a hold never advances; the group's frozen baseline and candidate revisions are carried so the hold rebuilds from the ordered stream alone. |
+| Selected source meaning | The target application grants the exclusive hold of one batch group. Revision is the published content revision at the hold, which a hold never advances; the group's frozen baseline and candidate revisions are carried so the hold rebuilds from the ordered stream alone. |
 | Meaning source | record summary in src/Compliance.Common/Features/Applications/Events/ApplicationImportTargetAuthorized.cs |
 
 #### Selected schema and implementation evidence
@@ -354,10 +370,13 @@ ImportTargetGroupIntent
 | --- | --- | --- | --- | --- |
 | [T015](../reactors/import-source-admission-reactor.md#t015) | emitted semantic fact | ApplicationImportBatch | ReserveApplicationImportTarget | DeclaredApplication |
 
-### ApplicationImportTargetSettled
+### ApplicationImportTargetHoldEnded
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | ApplicationImportTargetHoldEnded |
+| Selected source event name | ApplicationImportTargetSettled |
+| Name decision | Names the end of the exact application hold; the payload preserves whether publication, cancellation, or failure ended it. |
 | Canonical semantic key | event:ApplicationImportTargetSettled |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | ApplicationImportTargetSettled |
@@ -367,7 +386,8 @@ ImportTargetGroupIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | `{"discriminator":"bdgrz.declared-application.application-import-target-settled","version":1}` |
-| Meaning | The target hold ends with the batch's exact terminal fact. A published disposition promotes the frozen candidate to the application's content without a second revision increment; a canceled or failed disposition discards it. Revision is the published content revision after the settlement. |
+| Target meaning | The target hold ends with the batch's exact terminal fact. A published disposition promotes the frozen candidate to the application's content without a second revision increment; a canceled or failed disposition discards it. Revision is the published content revision after the settlement. |
+| Selected source meaning | The target hold ends with the batch's exact terminal fact. A published disposition promotes the frozen candidate to the application's content without a second revision increment; a canceled or failed disposition discards it. Revision is the published content revision after the settlement. |
 | Meaning source | record summary in src/Compliance.Common/Features/Applications/Events/ApplicationImportTargetSettled.cs |
 
 #### Selected schema and implementation evidence
@@ -449,6 +469,9 @@ ImportTargetGroupIntent
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | ApplicationRetired |
+| Selected source event name | ApplicationRetired |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:ApplicationRetired |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | ApplicationRetired |
@@ -458,7 +481,8 @@ ImportTargetGroupIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | An application was retired effective on a stated date with a reason, optionally merged into a successor application; its history, instances and snapshot references remain. |
+| Target meaning | An application was retired effective on a stated date with a reason, optionally merged into a successor application; its history, instances and snapshot references remain. |
+| Selected source meaning | An application was retired effective on a stated date with a reason, optionally merged into a successor application; its history, instances and snapshot references remain. |
 | Meaning source | authored 2026-10-29 from src/Compliance.Common/Features/Applications/Events/ApplicationRetired.cs |
 
 #### Selected schema and implementation evidence
@@ -510,6 +534,9 @@ ImportTargetGroupIntent
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | ApplicationRevised |
+| Selected source event name | ApplicationRevised |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:ApplicationRevised |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | ApplicationRevised |
@@ -519,7 +546,8 @@ ImportTargetGroupIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | A declared application's name, purpose or owner reference was revised by a named member, recorded as the application's next revision. |
+| Target meaning | A declared application's name, purpose or owner reference was revised by a named member, recorded as the application's next revision. |
+| Selected source meaning | A declared application's name, purpose or owner reference was revised by a named member, recorded as the application's next revision. |
 | Meaning source | authored 2026-10-29 from src/Compliance.Common/Features/Applications/Events/ApplicationRevised.cs |
 
 #### Selected schema and implementation evidence

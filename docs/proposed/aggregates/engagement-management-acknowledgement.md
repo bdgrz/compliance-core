@@ -23,7 +23,7 @@
 
 | Command | Kind | Identity field |
 | --- | --- | --- |
-| [MaterializeEngagementManagementAcknowledgement](../commands/engagement-management-acknowledgement.md#materializeengagementmanagementacknowledgement) | receiver | CommandId |
+| [RecordEngagementManagementAcknowledgement](../commands/engagement-management-acknowledgement.md#recordengagementmanagementacknowledgement) | receiver | CommandId |
 | [AcknowledgeEngagementManagement](../commands/engagement-management-acknowledgement.md#acknowledgeengagementmanagement) | http | AcknowledgementId |
 
 ## Events
@@ -36,7 +36,7 @@
 
 | Row | Kind | Source owner | Target owner | Command |
 | --- | --- | --- | --- | --- |
-| [T108](../reactors/engagement-personal-decision-reactor.md#t108) | reaction_or_regular_process_stage | ServiceEngagementIndependence | EngagementManagementAcknowledgement | MaterializeEngagementManagementAcknowledgement |
+| [T108](../reactors/engagement-personal-decision-reactor.md#t108) | reaction_or_regular_process_stage | ServiceEngagementIndependence | EngagementManagementAcknowledgement | RecordEngagementManagementAcknowledgement |
 
 ## Product rules
 

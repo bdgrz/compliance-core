@@ -176,7 +176,11 @@
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "resolvedIntentSchema": "ChildAdmissionIntent",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "CorrectiveActionAdmitted",
+      "targetName": "CorrectiveActionAdmitted",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "The finding accepted one corrective action for the current finding generation. Intent is the frozen ChildAdmissionIntent that carries the complete action; the action owner is materialized independently and the admission, not the materialization, is the authority. The logical id of Operation is the action id."
     },
     {
       "canonical": {
@@ -273,7 +277,11 @@
         "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "FindingAcceptanceLinkedV2",
+      "targetName": "FindingAcceptanceLinked",
+      "nameDecision": "Names the completed link between the finding and its risk acceptance or waiver without exposing the implementation version suffix.",
+      "targetMeaning": "A risk acceptance or waiver linked to the finding; the complete FindingAcceptanceView is verified content."
     },
     {
       "canonical": {
@@ -484,7 +492,11 @@
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "resolvedIntentSchema": "ClosureIntent",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "FindingClosedV2",
+      "targetName": "FindingClosed",
+      "nameDecision": "Names the completed closure of the finding without exposing the implementation version suffix.",
+      "targetMeaning": "The finding closed. ClosureContent is the complete FindingClosureView and ActionCompletionProofs the complete manifest of the held completion facts of every admitted action of FindingGeneration."
     },
     {
       "canonical": {
@@ -663,7 +675,11 @@
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "resolvedIntentSchema": "ClosureIntent",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "FindingClosureAccepted",
+      "targetName": "FindingClosureAccepted",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "The root native acceptance of a closure decision. It seals action admission for Generation and references the frozen ClosureIntent; the finding only closes once FindingClosedV2 follows."
     },
     {
       "canonical": {
@@ -842,7 +858,11 @@
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "resolvedIntentSchema": "ClosureIntent",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "FindingClosureCanceled",
+      "targetName": "FindingClosureCanceled",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "A pending closure ended before it closed the finding. The fact is the local receiver fence: a delayed CompleteFindingClosure sees it and does nothing, and only then are the action uses settled. SourceProofs is the failure proof."
     },
     {
       "canonical": {
@@ -994,7 +1014,11 @@
         "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "FindingRaisedV2",
+      "targetName": "FindingRaised",
+      "nameDecision": "Names the creation of the finding without exposing the implementation version suffix.",
+      "targetMeaning": "The root native fact of a finding. LinksManifest is the complete original link list as verified immutable content, so a large list is never an event-size rejection."
     },
     {
       "canonical": {
@@ -1092,7 +1116,11 @@
         "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "FindingReopenedV2",
+      "targetName": "FindingReopened",
+      "nameDecision": "Names the reopening of the finding without exposing the implementation version suffix.",
+      "targetMeaning": "A closed finding was reopened. The finding advances to the next generation; admitted actions and their history are kept, and a closure accepted for an earlier generation can no longer close it."
     },
     {
       "canonical": {
@@ -1215,7 +1243,11 @@
         "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "FindingRevisedV2",
+      "targetName": "FindingRevised",
+      "nameDecision": "Names the completed revision of the finding without exposing the implementation version suffix.",
+      "targetMeaning": "An attributable severity, ownership, due-date, scope or root-cause change."
     }
   ]
 }

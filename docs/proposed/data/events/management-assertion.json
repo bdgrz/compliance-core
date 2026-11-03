@@ -23,7 +23,11 @@
         "meaning": "Records an independent management decision on one exact assertion version.",
         "meaningSource": "record summary in src/Compliance.Common/Features/Examinations/Events/ManagementAssertionApproved.cs"
       },
-      "schema": null
+      "schema": null,
+      "sourceName": "ManagementAssertionApproved",
+      "targetName": "ManagementAssertionApproved",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "Records an independent management decision on one exact assertion version."
     },
     {
       "canonical": {
@@ -47,7 +51,11 @@
         "meaning": "Creates a versioned assertion and records its exact input bindings and wording.",
         "meaningSource": "record summary in src/Compliance.Common/Features/Examinations/Events/ManagementAssertionRecorded.cs"
       },
-      "schema": null
+      "schema": null,
+      "sourceName": "ManagementAssertionRecorded",
+      "targetName": "ManagementAssertionRecorded",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "Creates a versioned assertion and records its exact input bindings and wording."
     },
     {
       "canonical": {
@@ -71,7 +79,11 @@
         "meaning": "Appends a new immutable wording and input binding to a management assertion.",
         "meaningSource": "record summary in src/Compliance.Common/Features/Examinations/Events/ManagementAssertionRevised.cs"
       },
-      "schema": null
+      "schema": null,
+      "sourceName": "ManagementAssertionRevised",
+      "targetName": "ManagementAssertionRevised",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "Appends a new immutable wording and input binding to a management assertion."
     }
   ]
 }

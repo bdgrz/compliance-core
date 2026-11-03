@@ -1,5 +1,7 @@
 {
-  "root": "AccessReviewCompletionSettlementReactor",
+  "sourceRoot": "AccessReviewCompletionSettlementReactor",
+  "targetRoot": "ApplyAccessReviewCampaignOutcomeToItemsReactor",
+  "businessReason": "Keep each access review item consistent with the campaign's final outcome so completed or canceled work cannot continue on its own.",
   "rows": [
     {
       "id": "T060",

@@ -30,7 +30,7 @@
 | Event | Discriminator | Version |
 | --- | --- | --- |
 | [ArtifactRetentionBasisRecorded](../events/artifact-retention-basis.md#artifactretentionbasisrecorded) | bdgrz.artifact_retention.basis_recorded | 1 |
-| [ArtifactRetentionBound](../events/artifact-retention-basis.md#artifactretentionbound) | bdgrz.artifact_retention.bound | 1 |
+| [ArtifactRetentionPeriodSet](../events/artifact-retention-basis.md#artifactretentionperiodset) | bdgrz.artifact_retention.bound | 1 |
 
 ## Cross-owner flows
 

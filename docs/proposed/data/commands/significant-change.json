@@ -60,7 +60,9 @@
         "line": 1927,
         "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
       },
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "AssessSignificantChange",
+      "targetName": "AssessSignificantChange"
     },
     {
       "command": "LinkImpactReviewWork",
@@ -126,7 +128,9 @@
           "process_reply": 0.11
         },
         "date": "2026-10-29"
-      }
+      },
+      "sourceName": "LinkImpactReviewWork",
+      "targetName": "LinkImpactReviewWork"
     },
     {
       "command": "RecordSignificantChange",
@@ -171,7 +175,9 @@
         "line": 9624,
         "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
       },
-      "kind": "creation"
+      "kind": "creation",
+      "sourceName": "RecordSignificantChange",
+      "targetName": "RecordSignificantChange"
     },
     {
       "command": "RecordSignificantChangeSystemDescriptionDecision",
@@ -262,7 +268,9 @@
           "process_reply": 0.14
         },
         "date": "2026-10-29"
-      }
+      },
+      "sourceName": "RecordSignificantChangeSystemDescriptionDecision",
+      "targetName": "RecordSignificantChangeSystemDescriptionDecision"
     },
     {
       "command": "ReviseSignificantChange",
@@ -328,7 +336,9 @@
         "line": 13652,
         "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
       },
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "ReviseSignificantChange",
+      "targetName": "ReviseSignificantChange"
     }
   ],
   "sourceContractEvidence": []

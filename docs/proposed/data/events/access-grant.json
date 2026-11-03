@@ -23,7 +23,11 @@
         "meaning": "A role grant was issued to a principal for a scope, with its source and effective period, optionally tied to the membership episode that gave rise to it.",
         "meaningSource": "authored 2026-10-29 from src/Compliance.Common/Features/AccessControl/Events/AccessGrantIssued.cs"
       },
-      "schema": null
+      "schema": null,
+      "sourceName": "AccessGrantIssued",
+      "targetName": "AccessGrantIssued",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "A role grant was issued to a principal for a scope, with its source and effective period, optionally tied to the membership episode that gave rise to it."
     },
     {
       "canonical": {
@@ -47,7 +51,11 @@
         "meaning": "An issued access grant was revoked by a named actor at a recorded time, ending the access it conferred.",
         "meaningSource": "authored 2026-10-29 from src/Compliance.Common/Features/AccessControl/Events/AccessGrantRevoked.cs"
       },
-      "schema": null
+      "schema": null,
+      "sourceName": "AccessGrantRevoked",
+      "targetName": "AccessGrantRevoked",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "An issued access grant was revoked by a named actor at a recorded time, ending the access it conferred."
     }
   ]
 }

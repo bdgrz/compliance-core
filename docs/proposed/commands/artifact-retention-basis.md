@@ -2,9 +2,9 @@
 
 Selected command contracts: **1**. Complete selected contracts and companion source evidence: [owner command JSON](../data/commands/artifact-retention-basis.json).
 
-| Command | Kind | Identity | Fields | HTTP routes |
-| --- | --- | --- | --- | --- |
-| RecordArtifactRetentionBasis | http | CommandId | 9 | PUT /api/v1/tenants/{tenant_id}/artifact-retention/{source_kind}/{source_id}/basis/{command_id} [ComplianceAuthorizationPolicies.ApiUser] |
+| Target command | Selected source name | Kind | Identity | Fields | HTTP routes |
+| --- | --- | --- | --- | --- | --- |
+| RecordArtifactRetentionBasis | RecordArtifactRetentionBasis | http | CommandId | 9 | PUT /api/v1/tenants/{tenant_id}/artifact-retention/{source_kind}/{source_id}/basis/{command_id} [ComplianceAuthorizationPolicies.ApiUser] |
 
 ## Selected command details
 
@@ -12,6 +12,9 @@ Selected command contracts: **1**. Complete selected contracts and companion sou
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | RecordArtifactRetentionBasis |
+| Selected source command name | RecordArtifactRetentionBasis |
+| Name decision | The selected source name is retained. |
 | Owner | ArtifactRetentionBasis |
 | Contract record status | target_contract |
 | Kind | http |
@@ -64,7 +67,7 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 
 ## Source contracts
 
-| Command | Handler | Registered | Entry point |
+| Selected source command | Handler | Registered | Entry point |
 | --- | --- | --- | --- |
 | RecordArtifactRetentionBasis | RecordArtifactRetentionBasisHandler | true | authorized_http |
 

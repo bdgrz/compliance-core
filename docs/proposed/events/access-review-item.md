@@ -2,19 +2,19 @@
 
 Canonical events: **11**. Complete canonical event and available schema records: [owner event JSON](../data/events/access-review-item.json).
 
-| Event | Kind | Adopted discriminator | Version | Schema fields | Meaning |
-| --- | --- | --- | --- | --- | --- |
-| AccessDecisionsRecorded | business | bdgrz.access_review.decisions.recorded | 2 | 10 | The reviewer's decision on one item. DecisionsManifest is the complete original decision collection as verified content. A decision that belongs to a bulk batch names it in DecisionBatchId and stays hidden until the batch publishes (PublicationRequired); a single decision names no batch and is visible at once. |
-| AccessRemediationChangeRecorded | business | bdgrz.access_review.remediation.change_recorded | 2 | 8 | A provider-side change was reported; the complete change is verified content. |
-| AccessRemediationExceptionRecorded | business | bdgrz.access_review.remediation.exception_recorded | 2 | 8 | An exception to verified remediation was approved; the complete exception is verified content. |
-| AccessRemediationVerified | business | bdgrz.access_review.remediation.verified | 2 | 8 | A later accepted population verified the remediation; the complete verification is verified content. |
-| AccessReviewItemCampaignCompletionUseAuthorized | reservation | bdgrz.access-review-item.access-review-item-campaign-completion-use-authorized | 1 | 8 | The exact pinned head of one item is held for a campaign completion. The use does not advance the item's public revision; Revision is the held revision. |
-| AccessReviewItemCampaignCompletionUseSettled | reservation | bdgrz.access-review-item.access-review-item-campaign-completion-use-settled | 1 | 8 | The campaign completion use of one item ended. Disposition is the one the verified terminal campaign fact requires: parent_closed keeps the item closed against every later change (the closure fence), canceled clears only this use after the parent cancellation fence. A settlement before any grant fences the key against late acquisition. |
-| AccessReviewItemDecisionAuthorized | reservation | bdgrz.access-review-item.access-review-item-decision-authorized | 1 | 8 | The exact frozen head of one item is held for a bulk decision batch. The use does not advance the item's revision; Revision is the held revision. The item refuses every other change while the use is held. |
-| AccessReviewItemDecisionCanceled | business | bdgrz.access-review-item.access-review-item-decision-canceled | 1 | 8 | A review item was fenced against a canceled bulk decision batch, so a delayed hold or application of that batch's decision can no longer change the item. |
-| AccessReviewItemDecisionSettled | reservation | bdgrz.access-review-item.access-review-item-decision-settled | 1 | 8 | The bulk decision use of one item ended. Disposition is the one the verified terminal batch fact requires: irreversible_decision after the batch published, which makes the item's provisional decision of the batch visible, or canceled after the item fence, which keeps it hidden forever. A settlement before any hold fences the key against a late hold. |
-| AccessReviewItemOpened | business | bdgrz.access-review-item.access-review-item-opened | 1 | 8 | One frozen item was materialized from the launch manifest of its campaign. The item's logical revision is 1. Intent is the frozen AccessReviewItemCreationIntent. |
-| AccessReviewResponsibilityReassigned | business | bdgrz.access_review.responsibility.reassigned | 2 | 7 | A campaign responsibility was changed after its launch-frozen owner lost eligibility. |
+| Target event | Selected source name | Kind | Adopted discriminator | Version | Schema fields | Meaning |
+| --- | --- | --- | --- | --- | --- | --- |
+| AccessDecisionsRecorded | AccessDecisionsRecorded | business | bdgrz.access_review.decisions.recorded | 2 | 10 | The reviewer's decision on one item. DecisionsManifest is the complete original decision collection as verified content. A decision that belongs to a bulk batch names it in DecisionBatchId and stays hidden until the batch publishes (PublicationRequired); a single decision names no batch and is visible at once. |
+| AccessRemediationChangeRecorded | AccessRemediationChangeRecorded | business | bdgrz.access_review.remediation.change_recorded | 2 | 8 | A provider-side change was reported; the complete change is verified content. |
+| AccessRemediationExceptionRecorded | AccessRemediationExceptionRecorded | business | bdgrz.access_review.remediation.exception_recorded | 2 | 8 | An exception to verified remediation was approved; the complete exception is verified content. |
+| AccessRemediationVerified | AccessRemediationVerified | business | bdgrz.access_review.remediation.verified | 2 | 8 | A later accepted population verified the remediation; the complete verification is verified content. |
+| AccessReviewItemCampaignCompletionAuthorized | AccessReviewItemCampaignCompletionUseAuthorized | reservation | bdgrz.access-review-item.access-review-item-campaign-completion-use-authorized | 1 | 8 | The exact pinned head of one item is held for a campaign completion. The use does not advance the item's public revision; Revision is the held revision. |
+| AccessReviewItemCampaignCompletionAuthorizationClosed | AccessReviewItemCampaignCompletionUseSettled | reservation | bdgrz.access-review-item.access-review-item-campaign-completion-use-settled | 1 | 8 | The campaign completion use of one item ended. Disposition is the one the verified terminal campaign fact requires: parent_closed keeps the item closed against every later change (the closure fence), canceled clears only this use after the parent cancellation fence. A settlement before any grant fences the key against late acquisition. |
+| AccessReviewItemDecisionAuthorized | AccessReviewItemDecisionAuthorized | reservation | bdgrz.access-review-item.access-review-item-decision-authorized | 1 | 8 | The exact frozen head of one item is held for a bulk decision batch. The use does not advance the item's revision; Revision is the held revision. The item refuses every other change while the use is held. |
+| AccessReviewItemDecisionCanceled | AccessReviewItemDecisionCanceled | business | bdgrz.access-review-item.access-review-item-decision-canceled | 1 | 8 | A review item was fenced against a canceled bulk decision batch, so a delayed hold or application of that batch's decision can no longer change the item. |
+| AccessReviewItemDecisionAuthorizationClosed | AccessReviewItemDecisionSettled | reservation | bdgrz.access-review-item.access-review-item-decision-settled | 1 | 8 | The bulk decision use of one item ended. Disposition is the one the verified terminal batch fact requires: irreversible_decision after the batch published, which makes the item's provisional decision of the batch visible, or canceled after the item fence, which keeps it hidden forever. A settlement before any hold fences the key against a late hold. |
+| AccessReviewItemOpened | AccessReviewItemOpened | business | bdgrz.access-review-item.access-review-item-opened | 1 | 8 | One frozen item was materialized from the launch manifest of its campaign. The item's logical revision is 1. Intent is the frozen AccessReviewItemCreationIntent. |
+| AccessReviewResponsibilityReassigned | AccessReviewResponsibilityReassigned | business | bdgrz.access_review.responsibility.reassigned | 2 | 7 | A campaign responsibility was changed after its launch-frozen owner lost eligibility. |
 
 ## Event details
 
@@ -22,6 +22,9 @@ Canonical events: **11**. Complete canonical event and available schema records:
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | AccessDecisionsRecorded |
+| Selected source event name | AccessDecisionsRecorded |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:AccessDecisionsRecorded |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | AccessDecisionsRecorded |
@@ -31,7 +34,8 @@ Canonical events: **11**. Complete canonical event and available schema records:
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | `{"discriminator":"bdgrz.access_review.decisions.recorded","version":1}` |
-| Meaning | The reviewer's decision on one item. DecisionsManifest is the complete original decision collection as verified content. A decision that belongs to a bulk batch names it in DecisionBatchId and stays hidden until the batch publishes (PublicationRequired); a single decision names no batch and is visible at once. |
+| Target meaning | The reviewer's decision on one item. DecisionsManifest is the complete original decision collection as verified content. A decision that belongs to a bulk batch names it in DecisionBatchId and stays hidden until the batch publishes (PublicationRequired); a single decision names no batch and is visible at once. |
+| Selected source meaning | The reviewer's decision on one item. DecisionsManifest is the complete original decision collection as verified content. A decision that belongs to a bulk batch names it in DecisionBatchId and stays hidden until the batch publishes (PublicationRequired); a single decision names no batch and is visible at once. |
 | Meaning source | record summary in src/Compliance.Common/Features/AccessReviews/Events/AccessDecisionsRecorded.cs |
 
 #### Selected schema and implementation evidence
@@ -128,6 +132,9 @@ BulkAccessDecisionIntent
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | AccessRemediationChangeRecorded |
+| Selected source event name | AccessRemediationChangeRecorded |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:AccessRemediationChangeRecorded |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | AccessRemediationChangeRecorded |
@@ -137,7 +144,8 @@ BulkAccessDecisionIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | `{"discriminator":"bdgrz.access_review.remediation.change_recorded","version":1}` |
-| Meaning | A provider-side change was reported; the complete change is verified content. |
+| Target meaning | A provider-side change was reported; the complete change is verified content. |
+| Selected source meaning | A provider-side change was reported; the complete change is verified content. |
 | Meaning source | record summary in src/Compliance.Common/Features/AccessReviews/Events/AccessRemediationChangeRecorded.cs |
 
 #### Selected schema and implementation evidence
@@ -191,6 +199,9 @@ BulkAccessDecisionIntent
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | AccessRemediationExceptionRecorded |
+| Selected source event name | AccessRemediationExceptionRecorded |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:AccessRemediationExceptionRecorded |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | AccessRemediationExceptionRecorded |
@@ -200,7 +211,8 @@ BulkAccessDecisionIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | `{"discriminator":"bdgrz.access_review.remediation.exception_recorded","version":1}` |
-| Meaning | An exception to verified remediation was approved; the complete exception is verified content. |
+| Target meaning | An exception to verified remediation was approved; the complete exception is verified content. |
+| Selected source meaning | An exception to verified remediation was approved; the complete exception is verified content. |
 | Meaning source | record summary in src/Compliance.Common/Features/AccessReviews/Events/AccessRemediationExceptionRecorded.cs |
 
 #### Selected schema and implementation evidence
@@ -254,6 +266,9 @@ BulkAccessDecisionIntent
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | AccessRemediationVerified |
+| Selected source event name | AccessRemediationVerified |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:AccessRemediationVerified |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | AccessRemediationVerified |
@@ -263,7 +278,8 @@ BulkAccessDecisionIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | `{"discriminator":"bdgrz.access_review.remediation.verified","version":1}` |
-| Meaning | A later accepted population verified the remediation; the complete verification is verified content. |
+| Target meaning | A later accepted population verified the remediation; the complete verification is verified content. |
+| Selected source meaning | A later accepted population verified the remediation; the complete verification is verified content. |
 | Meaning source | record summary in src/Compliance.Common/Features/AccessReviews/Events/AccessRemediationVerified.cs |
 
 #### Selected schema and implementation evidence
@@ -313,10 +329,13 @@ BulkAccessDecisionIntent
 
 [Placeholder: no selected choreography row names this event as root, prerequisite, or emitted fact.]
 
-### AccessReviewItemCampaignCompletionUseAuthorized
+### AccessReviewItemCampaignCompletionAuthorized
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | AccessReviewItemCampaignCompletionAuthorized |
+| Selected source event name | AccessReviewItemCampaignCompletionUseAuthorized |
+| Name decision | Authorization is already the completed fact; Use adds no stakeholder meaning. |
 | Canonical semantic key | event:AccessReviewItemCampaignCompletionUseAuthorized |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | AccessReviewItemCampaignCompletionUseAuthorized |
@@ -326,7 +345,8 @@ BulkAccessDecisionIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | The exact pinned head of one item is held for a campaign completion. The use does not advance the item's public revision; Revision is the held revision. |
+| Target meaning | The exact pinned head of one item is held for a campaign completion. The use does not advance the item's public revision; Revision is the held revision. |
+| Selected source meaning | The exact pinned head of one item is held for a campaign completion. The use does not advance the item's public revision; Revision is the held revision. |
 | Meaning source | record summary in src/Compliance.Common/Features/AccessReviews/Events/AccessReviewItemCampaignCompletionUseAuthorized.cs |
 
 #### Selected schema and implementation evidence
@@ -400,12 +420,15 @@ SourceUseAuthorizationIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T059](../reactors/access-review-completion-reactor.md#t059) | emitted semantic fact | AccessReviewCampaign | AuthorizeAccessReviewItemCampaignCompletionUse | AccessReviewItem |
+| [T059](../reactors/access-review-completion-reactor.md#t059) | emitted semantic fact | AccessReviewCampaign | AuthorizeAccessReviewItemCampaignCompletion | AccessReviewItem |
 
-### AccessReviewItemCampaignCompletionUseSettled
+### AccessReviewItemCampaignCompletionAuthorizationClosed
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | AccessReviewItemCampaignCompletionAuthorizationClosed |
+| Selected source event name | AccessReviewItemCampaignCompletionUseSettled |
+| Name decision | The exact authorization ended; the recorded outcome still distinguishes use, cancellation, or a late fence. |
 | Canonical semantic key | event:AccessReviewItemCampaignCompletionUseSettled |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | AccessReviewItemCampaignCompletionUseSettled |
@@ -415,7 +438,8 @@ SourceUseAuthorizationIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | The campaign completion use of one item ended. Disposition is the one the verified terminal campaign fact requires: parent_closed keeps the item closed against every later change (the closure fence), canceled clears only this use after the parent cancellation fence. A settlement before any grant fences the key against late acquisition. |
+| Target meaning | The campaign completion use of one item ended. Disposition is the one the verified terminal campaign fact requires: parent_closed keeps the item closed against every later change (the closure fence), canceled clears only this use after the parent cancellation fence. A settlement before any grant fences the key against late acquisition. |
+| Selected source meaning | The campaign completion use of one item ended. Disposition is the one the verified terminal campaign fact requires: parent_closed keeps the item closed against every later change (the closure fence), canceled clears only this use after the parent cancellation fence. A settlement before any grant fences the key against late acquisition. |
 | Meaning source | record summary in src/Compliance.Common/Features/AccessReviews/Events/AccessReviewItemCampaignCompletionUseSettled.cs |
 
 #### Selected schema and implementation evidence
@@ -489,12 +513,15 @@ SourceUseAuthorizationIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T060](../reactors/access-review-completion-reactor.md#t060) | emitted semantic fact | AccessReviewCampaign | SettleAccessReviewItemCampaignCompletionUse | AccessReviewItem |
+| [T060](../reactors/access-review-completion-reactor.md#t060) | emitted semantic fact | AccessReviewCampaign | CloseAccessReviewItemCampaignCompletionAuthorization | AccessReviewItem |
 
 ### AccessReviewItemDecisionAuthorized
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | AccessReviewItemDecisionAuthorized |
+| Selected source event name | AccessReviewItemDecisionAuthorized |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:AccessReviewItemDecisionAuthorized |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | AccessReviewItemDecisionAuthorized |
@@ -504,7 +531,8 @@ SourceUseAuthorizationIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | The exact frozen head of one item is held for a bulk decision batch. The use does not advance the item's revision; Revision is the held revision. The item refuses every other change while the use is held. |
+| Target meaning | The exact frozen head of one item is held for a bulk decision batch. The use does not advance the item's revision; Revision is the held revision. The item refuses every other change while the use is held. |
+| Selected source meaning | The exact frozen head of one item is held for a bulk decision batch. The use does not advance the item's revision; Revision is the held revision. The item refuses every other change while the use is held. |
 | Meaning source | record summary in src/Compliance.Common/Features/AccessReviews/Events/AccessReviewItemDecisionAuthorized.cs |
 
 #### Selected schema and implementation evidence
@@ -590,6 +618,9 @@ BulkAccessDecisionIntent
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | AccessReviewItemDecisionCanceled |
+| Selected source event name | AccessReviewItemDecisionCanceled |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:AccessReviewItemDecisionCanceled |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | AccessReviewItemDecisionCanceled |
@@ -599,7 +630,8 @@ BulkAccessDecisionIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | A review item was fenced against a canceled bulk decision batch, so a delayed hold or application of that batch's decision can no longer change the item. |
+| Target meaning | A review item was fenced against a canceled bulk decision batch, so a delayed hold or application of that batch's decision can no longer change the item. |
+| Selected source meaning | A review item was fenced against a canceled bulk decision batch, so a delayed hold or application of that batch's decision can no longer change the item. |
 | Meaning source | authored 2026-10-29 from src/Compliance.Common/Features/AccessReviews/Events/AccessReviewItemDecisionCanceled.cs |
 
 #### Selected schema and implementation evidence
@@ -679,12 +711,15 @@ BulkAccessDecisionIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T012](../reactors/access-review-bulk-cancellation-reactor.md#t012) | emitted semantic fact | AccessReviewDecisionBatch | FenceAccessReviewItemDecision | AccessReviewItem |
+| [T012](../reactors/access-review-bulk-cancellation-reactor.md#t012) | emitted semantic fact | AccessReviewDecisionBatch | CancelAccessReviewItemDecision | AccessReviewItem |
 
-### AccessReviewItemDecisionSettled
+### AccessReviewItemDecisionAuthorizationClosed
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | AccessReviewItemDecisionAuthorizationClosed |
+| Selected source event name | AccessReviewItemDecisionSettled |
+| Name decision | Names the end of the exact authorization after publication or cancellation; the payload preserves which outcome occurred. |
 | Canonical semantic key | event:AccessReviewItemDecisionSettled |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | AccessReviewItemDecisionSettled |
@@ -694,7 +729,8 @@ BulkAccessDecisionIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | The bulk decision use of one item ended. Disposition is the one the verified terminal batch fact requires: irreversible_decision after the batch published, which makes the item's provisional decision of the batch visible, or canceled after the item fence, which keeps it hidden forever. A settlement before any hold fences the key against a late hold. |
+| Target meaning | The bulk decision use of one item ended. Disposition is the one the verified terminal batch fact requires: irreversible_decision after the batch published, which makes the item's provisional decision of the batch visible, or canceled after the item fence, which keeps it hidden forever. A settlement before any hold fences the key against a late hold. |
+| Selected source meaning | The bulk decision use of one item ended. Disposition is the one the verified terminal batch fact requires: irreversible_decision after the batch published, which makes the item's provisional decision of the batch visible, or canceled after the item fence, which keeps it hidden forever. A settlement before any hold fences the key against a late hold. |
 | Meaning source | record summary in src/Compliance.Common/Features/AccessReviews/Events/AccessReviewItemDecisionSettled.cs |
 
 #### Selected schema and implementation evidence
@@ -774,12 +810,15 @@ BulkAccessDecisionIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T080](../reactors/access-review-bulk-admission-reactor.md#t080) | emitted semantic fact | AccessReviewDecisionBatch | SettleAccessReviewItemDecision | AccessReviewItem |
+| [T080](../reactors/access-review-bulk-admission-reactor.md#t080) | emitted semantic fact | AccessReviewDecisionBatch | CloseAccessReviewItemDecisionAuthorization | AccessReviewItem |
 
 ### AccessReviewItemOpened
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | AccessReviewItemOpened |
+| Selected source event name | AccessReviewItemOpened |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:AccessReviewItemOpened |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | AccessReviewItemOpened |
@@ -789,7 +828,8 @@ BulkAccessDecisionIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | One frozen item was materialized from the launch manifest of its campaign. The item's logical revision is 1. Intent is the frozen AccessReviewItemCreationIntent. |
+| Target meaning | One frozen item was materialized from the launch manifest of its campaign. The item's logical revision is 1. Intent is the frozen AccessReviewItemCreationIntent. |
+| Selected source meaning | One frozen item was materialized from the launch manifest of its campaign. The item's logical revision is 1. Intent is the frozen AccessReviewItemCreationIntent. |
 | Meaning source | record summary in src/Compliance.Common/Features/AccessReviews/Events/AccessReviewItemOpened.cs |
 
 #### Selected schema and implementation evidence
@@ -869,12 +909,15 @@ AccessReviewItemCreationIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T008](../reactors/access-review-launch-fan-out-reactor.md#t008) | emitted semantic fact | AccessReviewCampaign | MaterializeAccessReviewItem | AccessReviewItem |
+| [T008](../reactors/access-review-launch-fan-out-reactor.md#t008) | emitted semantic fact | AccessReviewCampaign | OpenAccessReviewItem | AccessReviewItem |
 
 ### AccessReviewResponsibilityReassigned
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | AccessReviewResponsibilityReassigned |
+| Selected source event name | AccessReviewResponsibilityReassigned |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:AccessReviewResponsibilityReassigned |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | AccessReviewResponsibilityReassigned |
@@ -884,7 +927,8 @@ AccessReviewItemCreationIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | `{"discriminator":"bdgrz.access_review.responsibility.reassigned","version":1}` |
-| Meaning | A campaign responsibility was changed after its launch-frozen owner lost eligibility. |
+| Target meaning | A campaign responsibility was changed after its launch-frozen owner lost eligibility. |
+| Selected source meaning | A campaign responsibility was changed after its launch-frozen owner lost eligibility. |
 | Meaning source | record summary in src/Compliance.Common/Features/AccessReviews/Events/AccessReviewResponsibilityReassigned.cs |
 
 #### Selected schema and implementation evidence

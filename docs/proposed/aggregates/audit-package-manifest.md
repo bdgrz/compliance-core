@@ -28,7 +28,7 @@
 | [ApproveAuditPackageValidationOverride](../commands/audit-package-manifest.md#approveauditpackagevalidationoverride) | http | CommandId |
 | [CreateAuditPackage](../commands/audit-package-manifest.md#createauditpackage) | http | PackageId |
 | [RecordAuditPackageBuildResult](../commands/audit-package-manifest.md#recordauditpackagebuildresult) | receiver | CommandId |
-| [RecordAuditPackageDelivery](../commands/audit-package-manifest.md#recordauditpackagedelivery) | http | DeliveryId |
+| [ReportAuditPackageDelivery](../commands/audit-package-manifest.md#reportauditpackagedelivery) | http | DeliveryId |
 | [RequestAuditPackageBuild](../commands/audit-package-manifest.md#requestauditpackagebuild) | http | BuildKey |
 | [ValidateAuditPackage](../commands/audit-package-manifest.md#validateauditpackage) | http | CommandId |
 
@@ -51,7 +51,7 @@
 | --- | --- | --- | --- | --- |
 | [T031](../reactors/audit-package-build-process-reactor.md#t031) | reaction_or_regular_process_stage | AuditPackageManifest | AuditPackageBuildProcess | StartAuditPackageBuild |
 | [T032](../reactors/audit-package-build-process-reactor.md#t032) | reaction_or_regular_process_stage | AuditPackageBuildProcess | AuditPackageManifest | RecordAuditPackageBuildResult |
-| [T081](../reactors/audit-package-delivery-admission-reactor.md#t081) | reaction_or_regular_process_stage | AuditPackageManifest | AuditPackageDelivery | MaterializeRecordedAuditPackageDelivery |
+| [T081](../reactors/audit-package-delivery-admission-reactor.md#t081) | reaction_or_regular_process_stage | AuditPackageManifest | AuditPackageDelivery | RecordAuditPackageDelivery |
 
 ## Product rules
 

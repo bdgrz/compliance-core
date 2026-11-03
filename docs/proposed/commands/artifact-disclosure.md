@@ -2,11 +2,11 @@
 
 Selected command contracts: **3**. Complete selected contracts and companion source evidence: [owner command JSON](../data/commands/artifact-disclosure.json).
 
-| Command | Kind | Identity | Fields | HTTP routes |
-| --- | --- | --- | --- | --- |
-| ApproveArtifactDisclosure | command | CommandId | 9 | [Placeholder: value not recorded] |
-| RecordArtifactDisclosureDelivery | command | CommandId | 7 | [Placeholder: value not recorded] |
-| RevokeArtifactDisclosure | command | CommandId | 6 | [Placeholder: value not recorded] |
+| Target command | Selected source name | Kind | Identity | Fields | HTTP routes |
+| --- | --- | --- | --- | --- | --- |
+| ApproveArtifactDisclosure | ApproveArtifactDisclosure | command | CommandId | 9 | [Placeholder: value not recorded] |
+| RecordArtifactDisclosureDelivery | RecordArtifactDisclosureDelivery | command | CommandId | 7 | [Placeholder: value not recorded] |
+| RevokeArtifactDisclosure | RevokeArtifactDisclosure | command | CommandId | 6 | [Placeholder: value not recorded] |
 
 ## Selected command details
 
@@ -14,13 +14,16 @@ Selected command contracts: **3**. Complete selected contracts and companion sou
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | ApproveArtifactDisclosure |
+| Selected source command name | ApproveArtifactDisclosure |
+| Name decision | The selected source name is retained. |
 | Owner | ArtifactDisclosure |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | command |
 | Logical identity | CommandId; Uuid; required=true; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
 | Entry point | [Placeholder: value not recorded] |
 | MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | [Placeholder: value not recorded] |
+| Selected semantic events | None listed |
 | Protocols | [Placeholder: value not recorded] |
 | Policy preservation | [Placeholder: value not recorded] |
 | Contract changes | [Placeholder: value not recorded] |
@@ -63,13 +66,16 @@ Required tests: [Placeholder: required tests not recorded]
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | RecordArtifactDisclosureDelivery |
+| Selected source command name | RecordArtifactDisclosureDelivery |
+| Name decision | The selected source name is retained. |
 | Owner | ArtifactDisclosure |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | command |
 | Logical identity | CommandId; Uuid; required=true; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
 | Entry point | [Placeholder: value not recorded] |
 | MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | [Placeholder: value not recorded] |
+| Selected semantic events | None listed |
 | Protocols | [Placeholder: value not recorded] |
 | Policy preservation | [Placeholder: value not recorded] |
 | Contract changes | [Placeholder: value not recorded] |
@@ -110,13 +116,16 @@ Required tests: [Placeholder: required tests not recorded]
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | RevokeArtifactDisclosure |
+| Selected source command name | RevokeArtifactDisclosure |
+| Name decision | The selected source name is retained. |
 | Owner | ArtifactDisclosure |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | command |
 | Logical identity | CommandId; Uuid; required=true; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
 | Entry point | [Placeholder: value not recorded] |
 | MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | [Placeholder: value not recorded] |
+| Selected semantic events | None listed |
 | Protocols | [Placeholder: value not recorded] |
 | Policy preservation | [Placeholder: value not recorded] |
 | Contract changes | [Placeholder: value not recorded] |

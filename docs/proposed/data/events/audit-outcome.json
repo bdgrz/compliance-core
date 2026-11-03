@@ -23,7 +23,11 @@
         "meaning": "Retains an externally supplied conclusion and exact issued-report provenance.",
         "meaningSource": "record summary in src/Compliance.Common/Features/Examinations/Events/AuditOutcomeRecorded.cs"
       },
-      "schema": null
+      "schema": null,
+      "sourceName": "AuditOutcomeRecorded",
+      "targetName": "AuditOutcomeRecorded",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "Retains an externally supplied conclusion and exact issued-report provenance."
     }
   ]
 }

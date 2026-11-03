@@ -2,11 +2,11 @@
 
 Selected command contracts: **3**. Complete selected contracts and companion source evidence: [owner command JSON](../data/commands/access-population.json).
 
-| Command | Kind | Identity | Fields | HTTP routes |
-| --- | --- | --- | --- | --- |
-| AcceptAccessPopulation | http | CommandId | 5 | PUT /api/v1/tenants/{tenant_id}/access-populations/{population_id}/acceptance/{command_id} [ComplianceAuthorizationPolicies.ApiUser] |
-| OpenAccessPopulation | http | PopulationId | 7 | PUT /api/v1/tenants/{tenant_id}/access-populations/{population_id} [ComplianceAuthorizationPolicies.ApiUser] |
-| RecordAccessPopulationFacts | http | CommandId | 8 | PUT /api/v1/tenants/{tenant_id}/access-populations/record-access-population-facts/{command_id} [ApiUser + existing request-scope authorizers] |
+| Target command | Selected source name | Kind | Identity | Fields | HTTP routes |
+| --- | --- | --- | --- | --- | --- |
+| AcceptAccessPopulation | AcceptAccessPopulation | http | CommandId | 5 | PUT /api/v1/tenants/{tenant_id}/access-populations/{population_id}/acceptance/{command_id} [ComplianceAuthorizationPolicies.ApiUser] |
+| OpenAccessPopulation | OpenAccessPopulation | http | PopulationId | 7 | PUT /api/v1/tenants/{tenant_id}/access-populations/{population_id} [ComplianceAuthorizationPolicies.ApiUser] |
+| RecordAccessPopulationFacts | RecordAccessPopulationFacts | http | CommandId | 8 | PUT /api/v1/tenants/{tenant_id}/access-populations/record-access-population-facts/{command_id} [ApiUser + existing request-scope authorizers] |
 
 ## Selected command details
 
@@ -14,6 +14,9 @@ Selected command contracts: **3**. Complete selected contracts and companion sou
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | AcceptAccessPopulation |
+| Selected source command name | AcceptAccessPopulation |
+| Name decision | The selected source name is retained. |
 | Owner | AccessPopulation |
 | Contract record status | target_contract |
 | Kind | http |
@@ -63,6 +66,9 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | OpenAccessPopulation |
+| Selected source command name | OpenAccessPopulation |
+| Name decision | The selected source name is retained. |
 | Owner | AccessPopulation |
 | Contract record status | target_contract |
 | Kind | http |
@@ -114,6 +120,9 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | RecordAccessPopulationFacts |
+| Selected source command name | RecordAccessPopulationFacts |
+| Name decision | The selected source name is retained. |
 | Owner | AccessPopulation |
 | Contract record status | target_contract |
 | Kind | http |
@@ -165,7 +174,7 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 
 ## Source contracts
 
-| Command | Handler | Registered | Entry point |
+| Selected source command | Handler | Registered | Entry point |
 | --- | --- | --- | --- |
 | AcceptAccessPopulation | AcceptAccessPopulationHandler | true | personal_http |
 | ClassifyAccessPrincipal | ClassifyAccessPrincipalHandler | true | authorized_http_and_mcp |

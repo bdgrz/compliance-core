@@ -56,7 +56,9 @@
         "line": 6215,
         "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       },
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "EvaluateClientIndependence",
+      "targetName": "EvaluateClientIndependence"
     },
     {
       "command": "RecordNonattestService",
@@ -108,7 +110,9 @@
         "line": 12249,
         "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       },
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "RecordNonattestService",
+      "targetName": "RecordNonattestService"
     },
     {
       "command": "AcquireEngagementServiceEpoch",
@@ -185,7 +189,9 @@
       "source": {
         "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
         "recorded": "2026-10-29"
-      }
+      },
+      "sourceName": "AcquireEngagementServiceEpoch",
+      "targetName": "ReserveEngagementServiceHistory"
     },
     {
       "command": "ReleaseEngagementServiceEpoch",
@@ -264,7 +270,9 @@
       "source": {
         "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
         "recorded": "2026-10-29"
-      }
+      },
+      "sourceName": "ReleaseEngagementServiceEpoch",
+      "targetName": "ReleaseEngagementServiceHistoryReservation"
     },
     {
       "command": "AuthorizeClientServicePersonalDecisionUse",
@@ -340,7 +348,9 @@
       "source": {
         "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
         "recorded": "2026-10-29"
-      }
+      },
+      "sourceName": "AuthorizeClientServicePersonalDecisionUse",
+      "targetName": "AuthorizeClientServicePersonalDecision"
     },
     {
       "command": "SettleClientServicePersonalDecisionUse",
@@ -412,7 +422,9 @@
       "source": {
         "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
         "recorded": "2026-10-29"
-      }
+      },
+      "sourceName": "SettleClientServicePersonalDecisionUse",
+      "targetName": "CloseClientServicePersonalDecisionAuthorization"
     }
   ],
   "sourceContractEvidence": [

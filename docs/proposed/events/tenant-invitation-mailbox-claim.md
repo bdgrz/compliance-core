@@ -2,10 +2,10 @@
 
 Canonical events: **2**. Complete canonical event and available schema records: [owner event JSON](../data/events/tenant-invitation-mailbox-claim.json).
 
-| Event | Kind | Adopted discriminator | Version | Schema fields | Meaning |
-| --- | --- | --- | --- | --- | --- |
-| TenantInvitationMailboxClaimed | business | bdgrz.tenant-invitation-mailbox.claimed | 1 | [Placeholder: schema absent] | One invitation holds the tenant mailbox as its single pending invitation. The generation increases with every claim and is state, never part of the stream key. |
-| TenantInvitationMailboxReleased | business | bdgrz.tenant-invitation-mailbox.released | 1 | [Placeholder: schema absent] | The invitation that held the mailbox in Generation no longer does, which lets a later invitation claim it. A release names the exact invitation and generation it ends. |
+| Target event | Selected source name | Kind | Adopted discriminator | Version | Schema fields | Meaning |
+| --- | --- | --- | --- | --- | --- | --- |
+| TenantInvitationMailboxClaimed | TenantInvitationMailboxClaimed | business | bdgrz.tenant-invitation-mailbox.claimed | 1 | [Placeholder: schema absent] | One invitation holds the tenant mailbox as its single pending invitation. The generation increases with every claim and is state, never part of the stream key. |
+| TenantInvitationMailboxReleased | TenantInvitationMailboxReleased | business | bdgrz.tenant-invitation-mailbox.released | 1 | [Placeholder: schema absent] | The invitation that held the mailbox in Generation no longer does, which lets a later invitation claim it. A release names the exact invitation and generation it ends. |
 
 ## Event details
 
@@ -13,6 +13,9 @@ Canonical events: **2**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | TenantInvitationMailboxClaimed |
+| Selected source event name | TenantInvitationMailboxClaimed |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:TenantInvitationMailboxClaimed |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | TenantInvitationMailboxClaimed |
@@ -22,7 +25,8 @@ Canonical events: **2**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | One invitation holds the tenant mailbox as its single pending invitation. The generation increases with every claim and is state, never part of the stream key. |
+| Target meaning | One invitation holds the tenant mailbox as its single pending invitation. The generation increases with every claim and is state, never part of the stream key. |
+| Selected source meaning | One invitation holds the tenant mailbox as its single pending invitation. The generation increases with every claim and is state, never part of the stream key. |
 | Meaning source | record summary in src/Compliance.Common/Features/Tenants/Events/TenantInvitationMailboxClaimed.cs |
 
 #### Schema
@@ -43,6 +47,9 @@ Canonical events: **2**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | TenantInvitationMailboxReleased |
+| Selected source event name | TenantInvitationMailboxReleased |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:TenantInvitationMailboxReleased |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | TenantInvitationMailboxReleased |
@@ -52,7 +59,8 @@ Canonical events: **2**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | The invitation that held the mailbox in Generation no longer does, which lets a later invitation claim it. A release names the exact invitation and generation it ends. |
+| Target meaning | The invitation that held the mailbox in Generation no longer does, which lets a later invitation claim it. A release names the exact invitation and generation it ends. |
+| Selected source meaning | The invitation that held the mailbox in Generation no longer does, which lets a later invitation claim it. A release names the exact invitation and generation it ends. |
 | Meaning source | record summary in src/Compliance.Common/Features/Tenants/Events/TenantInvitationMailboxReleased.cs |
 
 #### Schema

@@ -2,9 +2,9 @@
 
 Canonical events: **1**. Complete canonical event and available schema records: [owner event JSON](../data/events/audit-package-delivery.json).
 
-| Event | Kind | Adopted discriminator | Version | Schema fields | Meaning |
-| --- | --- | --- | --- | --- | --- |
-| AuditPackageDelivered | business | bdgrz.auditpackages.audit-package-delivered | 1 | 9 | The independently materialized historical handoff with its immutable original terminal result. |
+| Target event | Selected source name | Kind | Adopted discriminator | Version | Schema fields | Meaning |
+| --- | --- | --- | --- | --- | --- | --- |
+| AuditPackageDelivered | AuditPackageDelivered | business | bdgrz.auditpackages.audit-package-delivered | 1 | 9 | The independently materialized historical handoff with its immutable original terminal result. |
 
 ## Event details
 
@@ -12,6 +12,9 @@ Canonical events: **1**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | AuditPackageDelivered |
+| Selected source event name | AuditPackageDelivered |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:AuditPackageDelivered |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | AuditPackageDelivered |
@@ -21,7 +24,8 @@ Canonical events: **1**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | The independently materialized historical handoff with its immutable original terminal result. |
+| Target meaning | The independently materialized historical handoff with its immutable original terminal result. |
+| Selected source meaning | The independently materialized historical handoff with its immutable original terminal result. |
 | Meaning source | record summary in src/Compliance.Common/Features/AuditPackages/Events/AuditPackageDelivered.cs |
 
 #### Selected schema and implementation evidence
@@ -115,7 +119,7 @@ PackageDeliveryRecordingIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T081](../reactors/audit-package-delivery-admission-reactor.md#t081) | emitted semantic fact | AuditPackageManifest | MaterializeRecordedAuditPackageDelivery | AuditPackageDelivery |
+| [T081](../reactors/audit-package-delivery-admission-reactor.md#t081) | emitted semantic fact | AuditPackageManifest | RecordAuditPackageDelivery | AuditPackageDelivery |
 
 
 

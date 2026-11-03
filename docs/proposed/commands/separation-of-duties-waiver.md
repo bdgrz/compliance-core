@@ -2,10 +2,10 @@
 
 Selected command contracts: **2**. Complete selected contracts and companion source evidence: [owner command JSON](../data/commands/separation-of-duties-waiver.json).
 
-| Command | Kind | Identity | Fields | HTTP routes |
-| --- | --- | --- | --- | --- |
-| ApproveSeparationOfDutiesWaiver | http | CommandId | 4 | PUT /api/v1/tenants/{tenant_id}/separation-of-duties-waivers/{waiver_id}/approvals/{command_id} |
-| RecordSeparationOfDutiesWaiver | http | WaiverId | 6 | PUT /api/v1/tenants/{tenant_id}/separation-of-duties-waivers/{waiver_id} |
+| Target command | Selected source name | Kind | Identity | Fields | HTTP routes |
+| --- | --- | --- | --- | --- | --- |
+| ApproveSeparationOfDutiesWaiver | ApproveSeparationOfDutiesWaiver | http | CommandId | 4 | PUT /api/v1/tenants/{tenant_id}/separation-of-duties-waivers/{waiver_id}/approvals/{command_id} |
+| RecordSeparationOfDutiesWaiver | RecordSeparationOfDutiesWaiver | http | WaiverId | 6 | PUT /api/v1/tenants/{tenant_id}/separation-of-duties-waivers/{waiver_id} |
 
 ## Selected command details
 
@@ -13,13 +13,16 @@ Selected command contracts: **2**. Complete selected contracts and companion sou
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | ApproveSeparationOfDutiesWaiver |
+| Selected source command name | ApproveSeparationOfDutiesWaiver |
+| Name decision | The selected source name is retained. |
 | Owner | SeparationOfDutiesWaiver |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | http |
 | Logical identity | CommandId; Uuid; required=true; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
 | Entry point | [Placeholder: value not recorded] |
 | MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | [Placeholder: value not recorded] |
+| Selected semantic events | None listed |
 | Protocols | [Placeholder: value not recorded] |
 | Policy preservation | [Placeholder: value not recorded] |
 | Contract changes | [Placeholder: value not recorded] |
@@ -59,13 +62,16 @@ Required tests: [Placeholder: required tests not recorded]
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | RecordSeparationOfDutiesWaiver |
+| Selected source command name | RecordSeparationOfDutiesWaiver |
+| Name decision | The selected source name is retained. |
 | Owner | SeparationOfDutiesWaiver |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | http |
 | Logical identity | WaiverId; Uuid; required=true; caller-supplied immutable creation identity: an exact retry with the same id and authored intent returns the original result; the same id with changed intent is refused; a different id is a different record |
 | Entry point | [Placeholder: value not recorded] |
 | MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | [Placeholder: value not recorded] |
+| Selected semantic events | None listed |
 | Protocols | [Placeholder: value not recorded] |
 | Policy preservation | [Placeholder: value not recorded] |
 | Contract changes | [Placeholder: value not recorded] |

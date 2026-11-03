@@ -66,7 +66,9 @@
         "line": 9229,
         "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       },
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "ProposeCriterionNotApplicable",
+      "targetName": "ProposeCriterionNotApplicable"
     },
     {
       "command": "ReviewCriterionApplicability",
@@ -138,7 +140,9 @@
         "line": 15154,
         "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       },
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "ReviewCriterionApplicability",
+      "targetName": "ReviewCriterionApplicability"
     },
     {
       "command": "WithdrawCriterionNotApplicable",
@@ -200,7 +204,9 @@
         "line": 18502,
         "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       },
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "WithdrawCriterionNotApplicable",
+      "targetName": "WithdrawCriterionNotApplicable"
     }
   ],
   "sourceContractEvidence": [

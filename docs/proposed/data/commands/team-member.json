@@ -63,7 +63,9 @@
         "sha256": "f1d549ed0879c816cb26e86879f8fa658dab0a8acbf7c591e4d4aed40483f8ae"
       },
       "attributionNote": "Moved from TenantManagerGuard on 2026-10-29: Only for the built-in Administrators team: the guard admits first (restoration/availability fact), then ApplyAdministratorAssignmentRestoration writes TeamMember. For every other team the handler is a direct NativeOperation<TeamMember> and never reads the guard. (source src/Compliance.Core/Features/AccessControl/Handlers/AssignTeamMemberHandler.cs)",
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "AssignTeamMember",
+      "targetName": "AssignTeamMember"
     },
     {
       "command": "RemoveTeamMember",
@@ -127,7 +129,9 @@
         "sha256": "f1d549ed0879c816cb26e86879f8fa658dab0a8acbf7c591e4d4aed40483f8ae"
       },
       "attributionNote": "Moved from TenantManagerGuard on 2026-10-29: Only for the Administrators team: guard withdrawal first (reason RemovedFromAdministrators), then ApplyAdministratorAssignmentWithdrawal removes the assignment. Other teams: direct NativeOperation<TeamMember>. (source src/Compliance.Core/Features/AccessControl/Handlers/RemoveTeamMemberHandler.cs)",
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "RemoveTeamMember",
+      "targetName": "RemoveTeamMember"
     },
     {
       "command": "ApplyAdministratorAssignmentRestoration",
@@ -200,7 +204,9 @@
         "TeamMemberAssigned"
       ],
       "effectKind": "claim_professional_assertion_identity",
-      "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine."
+      "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
+      "sourceName": "ApplyAdministratorAssignmentRestoration",
+      "targetName": "ApplyAdministratorAssignmentRestoration"
     },
     {
       "command": "ApplyAdministratorAssignmentWithdrawal",
@@ -269,7 +275,9 @@
         "TeamMemberRemoved"
       ],
       "effectKind": "apply_administrator_assignment_withdrawal",
-      "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine."
+      "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
+      "sourceName": "ApplyAdministratorAssignmentWithdrawal",
+      "targetName": "ApplyAdministratorAssignmentWithdrawal"
     },
     {
       "command": "ApplyNeutralAdministratorAssignmentMutation",
@@ -338,7 +346,9 @@
         "TeamMemberRemoved"
       ],
       "effectKind": "apply_neutral_administrator_assignment_mutation",
-      "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine."
+      "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
+      "sourceName": "ApplyNeutralAdministratorAssignmentMutation",
+      "targetName": "RemoveAdministratorAssignment"
     },
     {
       "command": "CleanupRetiredMembershipRelationship",
@@ -402,7 +412,9 @@
           "process_reply": 0.8
         },
         "date": "2026-10-29"
-      }
+      },
+      "sourceName": "CleanupRetiredMembershipRelationship",
+      "targetName": "RemoveRetiredMemberAccessAndAssignments"
     }
   ],
   "sourceContractEvidence": []

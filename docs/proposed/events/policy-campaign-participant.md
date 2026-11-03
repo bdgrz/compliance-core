@@ -2,13 +2,13 @@
 
 Canonical events: **5**. Complete canonical event and available schema records: [owner event JSON](../data/events/policy-campaign-participant.json).
 
-| Event | Kind | Adopted discriminator | Version | Schema fields | Meaning |
-| --- | --- | --- | --- | --- | --- |
-| CampaignWaiverApproved | business | bdgrz.policy_campaign.waiver.approved | 2 | 13 | A bounded exception that counts the person as excepted until it expires, applied to the participant owner. |
-| PolicyAcknowledgementRecorded | business | bdgrz.policy.acknowledgement.recorded | 2 | 16 | A person's acknowledgement of the exact policy version, hash, and text shown, applied to the participant owner of (CampaignId, PersonId). Performer is the workforce person; Recorder is the member who recorded it, which differs only when a member records it for a non-member. |
-| PolicyCampaignParticipantCampaignClosureUseAuthorized | reservation | bdgrz.policy-campaign-participant.policy-campaign-participant-campaign-closure-use-authorized | 1 | 8 | The participant's applied results are held for the campaign closure. The use does not advance the public participant revision; Revision is the held revision. |
-| PolicyCampaignParticipantCampaignClosureUseSettled | reservation | bdgrz.policy-campaign-participant.policy-campaign-participant-campaign-closure-use-settled | 1 | 8 | The participant's closure use ended with the campaign's terminal fact. A settlement before any grant fences the key, so a delayed acquisition is refused. |
-| TrainingCompletionRecorded | business | bdgrz.training_completion.recorded | 2 | 15 | A reviewed completion observation from manual evidence or an lms_export row, applied to the participant owner. The evidence reference names the source artifact. |
+| Target event | Selected source name | Kind | Adopted discriminator | Version | Schema fields | Meaning |
+| --- | --- | --- | --- | --- | --- | --- |
+| CampaignWaiverApproved | CampaignWaiverApproved | business | bdgrz.policy_campaign.waiver.approved | 2 | 13 | A bounded exception that counts the person as excepted until it expires, applied to the participant owner. |
+| PolicyAcknowledgementRecorded | PolicyAcknowledgementRecorded | business | bdgrz.policy.acknowledgement.recorded | 2 | 16 | A person's acknowledgement of the exact policy version, hash, and text shown, applied to the participant owner of (CampaignId, PersonId). Performer is the workforce person; Recorder is the member who recorded it, which differs only when a member records it for a non-member. |
+| PolicyCampaignParticipantCampaignClosureAuthorized | PolicyCampaignParticipantCampaignClosureUseAuthorized | reservation | bdgrz.policy-campaign-participant.policy-campaign-participant-campaign-closure-use-authorized | 1 | 8 | The participant's applied results are held for the campaign closure. The use does not advance the public participant revision; Revision is the held revision. |
+| PolicyCampaignParticipantCampaignClosureAuthorizationClosed | PolicyCampaignParticipantCampaignClosureUseSettled | reservation | bdgrz.policy-campaign-participant.policy-campaign-participant-campaign-closure-use-settled | 1 | 8 | The participant's closure use ended with the campaign's terminal fact. A settlement before any grant fences the key, so a delayed acquisition is refused. |
+| TrainingCompletionRecorded | TrainingCompletionRecorded | business | bdgrz.training_completion.recorded | 2 | 15 | A reviewed completion observation from manual evidence or an lms_export row, applied to the participant owner. The evidence reference names the source artifact. |
 
 ## Event details
 
@@ -16,6 +16,9 @@ Canonical events: **5**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | CampaignWaiverApproved |
+| Selected source event name | CampaignWaiverApproved |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:CampaignWaiverApproved |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | CampaignWaiverApproved |
@@ -25,7 +28,8 @@ Canonical events: **5**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | `{"discriminator":"bdgrz.policy_campaign.waiver.approved","version":1}` |
-| Meaning | A bounded exception that counts the person as excepted until it expires, applied to the participant owner. |
+| Target meaning | A bounded exception that counts the person as excepted until it expires, applied to the participant owner. |
+| Selected source meaning | A bounded exception that counts the person as excepted until it expires, applied to the participant owner. |
 | Meaning source | record summary in src/Compliance.Common/Features/PolicyDistribution/Events/CampaignWaiverApproved.cs |
 
 #### Selected schema and implementation evidence
@@ -114,6 +118,9 @@ ChildAdmissionIntent
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | PolicyAcknowledgementRecorded |
+| Selected source event name | PolicyAcknowledgementRecorded |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:PolicyAcknowledgementRecorded |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | PolicyAcknowledgementRecorded |
@@ -123,7 +130,8 @@ ChildAdmissionIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | `{"discriminator":"bdgrz.policy.acknowledgement.recorded","version":1}` |
-| Meaning | A person's acknowledgement of the exact policy version, hash, and text shown, applied to the participant owner of (CampaignId, PersonId). Performer is the workforce person; Recorder is the member who recorded it, which differs only when a member records it for a non-member. |
+| Target meaning | A person's acknowledgement of the exact policy version, hash, and text shown, applied to the participant owner of (CampaignId, PersonId). Performer is the workforce person; Recorder is the member who recorded it, which differs only when a member records it for a non-member. |
+| Selected source meaning | A person's acknowledgement of the exact policy version, hash, and text shown, applied to the participant owner of (CampaignId, PersonId). Performer is the workforce person; Recorder is the member who recorded it, which differs only when a member records it for a non-member. |
 | Meaning source | record summary in src/Compliance.Common/Features/PolicyDistribution/Events/PolicyAcknowledgementRecorded.cs |
 
 #### Selected schema and implementation evidence
@@ -211,10 +219,13 @@ ChildAdmissionIntent
 | --- | --- | --- | --- | --- |
 | [T076](../reactors/policy-participant-result-reactor.md#t076) | emitted semantic fact | PolicyDistributionCampaign | ApplyPolicyParticipantResult | PolicyCampaignParticipant |
 
-### PolicyCampaignParticipantCampaignClosureUseAuthorized
+### PolicyCampaignParticipantCampaignClosureAuthorized
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | PolicyCampaignParticipantCampaignClosureAuthorized |
+| Selected source event name | PolicyCampaignParticipantCampaignClosureUseAuthorized |
+| Name decision | Authorization is already the completed fact; Use adds no stakeholder meaning. |
 | Canonical semantic key | event:PolicyCampaignParticipantCampaignClosureUseAuthorized |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | PolicyCampaignParticipantCampaignClosureUseAuthorized |
@@ -224,7 +235,8 @@ ChildAdmissionIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | The participant's applied results are held for the campaign closure. The use does not advance the public participant revision; Revision is the held revision. |
+| Target meaning | The participant's applied results are held for the campaign closure. The use does not advance the public participant revision; Revision is the held revision. |
+| Selected source meaning | The participant's applied results are held for the campaign closure. The use does not advance the public participant revision; Revision is the held revision. |
 | Meaning source | record summary in src/Compliance.Common/Features/PolicyDistribution/Events/PolicyCampaignParticipantCampaignClosureUseAuthorized.cs |
 
 #### Selected schema and implementation evidence
@@ -298,12 +310,15 @@ SourceUseAuthorizationIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T067](../reactors/policy-campaign-closure-reactor.md#t067) | emitted semantic fact | PolicyDistributionCampaign | AuthorizePolicyCampaignParticipantCampaignClosureUse | PolicyCampaignParticipant |
+| [T067](../reactors/policy-campaign-closure-reactor.md#t067) | emitted semantic fact | PolicyDistributionCampaign | AuthorizePolicyCampaignParticipantCampaignClosure | PolicyCampaignParticipant |
 
-### PolicyCampaignParticipantCampaignClosureUseSettled
+### PolicyCampaignParticipantCampaignClosureAuthorizationClosed
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | PolicyCampaignParticipantCampaignClosureAuthorizationClosed |
+| Selected source event name | PolicyCampaignParticipantCampaignClosureUseSettled |
+| Name decision | The exact authorization ended; the recorded outcome still distinguishes use, cancellation, or a late fence. |
 | Canonical semantic key | event:PolicyCampaignParticipantCampaignClosureUseSettled |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | PolicyCampaignParticipantCampaignClosureUseSettled |
@@ -313,7 +328,8 @@ SourceUseAuthorizationIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | The participant's closure use ended with the campaign's terminal fact. A settlement before any grant fences the key, so a delayed acquisition is refused. |
+| Target meaning | The participant's closure use ended with the campaign's terminal fact. A settlement before any grant fences the key, so a delayed acquisition is refused. |
+| Selected source meaning | The participant's closure use ended with the campaign's terminal fact. A settlement before any grant fences the key, so a delayed acquisition is refused. |
 | Meaning source | record summary in src/Compliance.Common/Features/PolicyDistribution/Events/PolicyCampaignParticipantCampaignClosureUseSettled.cs |
 
 #### Selected schema and implementation evidence
@@ -387,12 +403,15 @@ SourceUseAuthorizationIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T068](../reactors/policy-campaign-closure-reactor.md#t068) | emitted semantic fact | PolicyDistributionCampaign | SettlePolicyCampaignParticipantCampaignClosureUse | PolicyCampaignParticipant |
+| [T068](../reactors/policy-campaign-closure-reactor.md#t068) | emitted semantic fact | PolicyDistributionCampaign | ClosePolicyCampaignParticipantCampaignClosureAuthorization | PolicyCampaignParticipant |
 
 ### TrainingCompletionRecorded
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | TrainingCompletionRecorded |
+| Selected source event name | TrainingCompletionRecorded |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:TrainingCompletionRecorded |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | TrainingCompletionRecorded |
@@ -402,7 +421,8 @@ SourceUseAuthorizationIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | `{"discriminator":"bdgrz.training_completion.recorded","version":1}` |
-| Meaning | A reviewed completion observation from manual evidence or an lms_export row, applied to the participant owner. The evidence reference names the source artifact. |
+| Target meaning | A reviewed completion observation from manual evidence or an lms_export row, applied to the participant owner. The evidence reference names the source artifact. |
+| Selected source meaning | A reviewed completion observation from manual evidence or an lms_export row, applied to the participant owner. The evidence reference names the source artifact. |
 | Meaning source | record summary in src/Compliance.Common/Features/PolicyDistribution/Events/TrainingCompletionRecorded.cs |
 
 #### Selected schema and implementation evidence

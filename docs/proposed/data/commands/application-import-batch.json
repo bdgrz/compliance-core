@@ -51,7 +51,9 @@
         "line": 115,
         "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       },
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "AcceptApplicationImport",
+      "targetName": "AcceptApplicationImport"
     },
     {
       "command": "CancelApplicationImport",
@@ -108,7 +110,9 @@
         "line": 3242,
         "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       },
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "CancelApplicationImport",
+      "targetName": "CancelApplicationImport"
     },
     {
       "command": "CorrelateApplicationImportRow",
@@ -185,7 +189,9 @@
         "line": 4789,
         "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       },
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "CorrelateApplicationImportRow",
+      "targetName": "RecordApplicationImportRowChoice"
     },
     {
       "command": "ExecuteApplicationImport",
@@ -242,7 +248,9 @@
           "process_reply": 0.57
         },
         "date": "2026-10-29"
-      }
+      },
+      "sourceName": "ExecuteApplicationImport",
+      "targetName": "ExecuteApplicationImport"
     },
     {
       "command": "FreezeApplicationImportOmissionProposal",
@@ -309,7 +317,9 @@
         "line": 6765,
         "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       },
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "FreezeApplicationImportOmissionProposal",
+      "targetName": "FreezeApplicationImportOmissionProposal"
     },
     {
       "command": "StageApplicationImport",
@@ -370,7 +380,9 @@
         "line": 14687,
         "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
       },
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "StageApplicationImport",
+      "targetName": "StageApplicationImport"
     },
     {
       "command": "CommitApplicationImportBatch",
@@ -446,7 +458,9 @@
       "source": {
         "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
         "recorded": "2026-10-29"
-      }
+      },
+      "sourceName": "CommitApplicationImportBatch",
+      "targetName": "CommitApplicationImportBatch"
     },
     {
       "command": "CompleteApplicationImportCancellation",
@@ -522,7 +536,9 @@
       "source": {
         "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
         "recorded": "2026-10-29"
-      }
+      },
+      "sourceName": "CompleteApplicationImportCancellation",
+      "targetName": "CompleteApplicationImportCancellation"
     }
   ],
   "sourceContractEvidence": [

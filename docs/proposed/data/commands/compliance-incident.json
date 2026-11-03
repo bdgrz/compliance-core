@@ -54,7 +54,9 @@
         "line": 1856,
         "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
       },
-      "kind": "command"
+      "kind": "command",
+      "sourceName": "AssessComplianceIncident",
+      "targetName": "AssessComplianceIncident"
     },
     {
       "command": "RecordComplianceIncident",
@@ -99,7 +101,9 @@
         "line": 8271,
         "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
       },
-      "kind": "creation"
+      "kind": "creation",
+      "sourceName": "RecordComplianceIncident",
+      "targetName": "RecordComplianceIncident"
     },
     {
       "command": "RecordComplianceIncidentResolution",
@@ -154,7 +158,9 @@
         "line": 8329,
         "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
       },
-      "kind": "command"
+      "kind": "command",
+      "sourceName": "RecordComplianceIncidentResolution",
+      "targetName": "RecordComplianceIncidentResolution"
     },
     {
       "command": "RecordComplianceIncidentSystemDescriptionDecision",
@@ -240,7 +246,9 @@
           "process_reply": 0.15
         },
         "date": "2026-10-29"
-      }
+      },
+      "sourceName": "RecordComplianceIncidentSystemDescriptionDecision",
+      "targetName": "RecordComplianceIncidentSystemDescriptionDecision"
     },
     {
       "command": "ReviseComplianceIncident",
@@ -300,7 +308,9 @@
         "line": 12671,
         "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
       },
-      "kind": "command"
+      "kind": "command",
+      "sourceName": "ReviseComplianceIncident",
+      "targetName": "ReviseComplianceIncident"
     }
   ],
   "sourceContractEvidence": []

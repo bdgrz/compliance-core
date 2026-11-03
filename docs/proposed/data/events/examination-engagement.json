@@ -23,7 +23,11 @@
         "meaning": "An examination engagement was opened for a program with its engagement type, system boundary and optional Type I baseline, as the engagement's first revision.",
         "meaningSource": "authored 2026-10-29 from src/Compliance.Common/Features/Examinations/Events/ExaminationEngagementOpened.cs"
       },
-      "schema": null
+      "schema": null,
+      "sourceName": "ExaminationEngagementOpened",
+      "targetName": "ExaminationEngagementOpened",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "An examination engagement was opened for a program with its engagement type, system boundary and optional Type I baseline, as the engagement's first revision."
     },
     {
       "canonical": {
@@ -47,7 +51,11 @@
         "meaning": "An examination engagement's terms were revised by a named member, recorded as the engagement's next revision.",
         "meaningSource": "authored 2026-10-29 from src/Compliance.Common/Features/Examinations/Events/ExaminationEngagementRevised.cs"
       },
-      "schema": null
+      "schema": null,
+      "sourceName": "ExaminationEngagementRevised",
+      "targetName": "ExaminationEngagementRevised",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "An examination engagement's terms were revised by a named member, recorded as the engagement's next revision."
     },
     {
       "canonical": {
@@ -71,7 +79,11 @@
         "meaning": "The frozen Type I baseline of an examination engagement was amended by a named member, recorded as a new baseline revision.",
         "meaningSource": "authored 2026-10-29 from src/Compliance.Common/Features/Examinations/Events/TypeIBaselineAmended.cs"
       },
-      "schema": null
+      "schema": null,
+      "sourceName": "TypeIBaselineAmended",
+      "targetName": "TypeIBaselineAmended",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "The frozen Type I baseline of an examination engagement was amended by a named member, recorded as a new baseline revision."
     },
     {
       "canonical": {
@@ -95,7 +107,11 @@
         "meaning": "The Type I baseline of an examination engagement was frozen at its current boundary, fixing the point-in-time position the engagement is measured against.",
         "meaningSource": "authored 2026-10-29 from src/Compliance.Common/Features/Examinations/Events/TypeIBaselineFrozen.cs"
       },
-      "schema": null
+      "schema": null,
+      "sourceName": "TypeIBaselineFrozen",
+      "targetName": "TypeIBaselineFrozen",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "The Type I baseline of an examination engagement was frozen at its current boundary, fixing the point-in-time position the engagement is measured against."
     }
   ]
 }

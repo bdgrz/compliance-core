@@ -2,15 +2,15 @@
 
 Canonical events: **7**. Complete canonical event and available schema records: [owner event JSON](../data/events/commitment-draft.json).
 
-| Event | Kind | Adopted discriminator | Version | Schema fields | Meaning |
-| --- | --- | --- | --- | --- | --- |
-| CommitmentApproved | business | bdgrz.commitment.approved | 2 | [Placeholder: schema absent] | A commitment draft was approved as a numbered commitment version effective from a stated date, on an accepted review, by a named approver, with any separation-of-duties waiver. |
-| CommitmentDraftCreated | business | bdgrz.commitment.draft.created | 2 | [Placeholder: schema absent] | A commitment draft was created for a program service with its kind, identifier, content and source reference by a named member. |
-| CommitmentDraftRevised | business | bdgrz.commitment.draft.revised | 2 | [Placeholder: schema absent] | A pending commitment draft was revised with new content and source reference by a named member, starting a new draft revision awaiting review. |
-| CommitmentRetired | business | bdgrz.commitments.commitment-retired | 2 | [Placeholder: schema absent] | An approved commitment was retired effective on a stated date by a named actor, ending it for obligations from that date. |
-| CommitmentReviewed | business | bdgrz.commitment.reviewed | 2 | [Placeholder: schema absent] | A commitment draft revision was reviewed with a decision outcome, either accepting it with applicability, version and effective date or requesting changes, by a named reviewer. |
-| ResponsibilityAssigned | business | bdgrz.responsibility.assigned | 1 | [Placeholder: schema absent] | A member was assigned a responsibility type over a scoped record for an effective period by a named assigner, together with any separation-of-duties waivers that allowed it. |
-| ResponsibilityRevoked | business | bdgrz.responsibility.revoked | 1 | [Placeholder: schema absent] | A member's responsibility assignment over a scoped record was revoked with a stated reason by a named member, removing the authority it granted. |
+| Target event | Selected source name | Kind | Adopted discriminator | Version | Schema fields | Meaning |
+| --- | --- | --- | --- | --- | --- | --- |
+| CommitmentApproved | CommitmentApproved | business | bdgrz.commitment.approved | 2 | [Placeholder: schema absent] | A commitment draft was approved as a numbered commitment version effective from a stated date, on an accepted review, by a named approver, with any separation-of-duties waiver. |
+| CommitmentDraftCreated | CommitmentDraftCreated | business | bdgrz.commitment.draft.created | 2 | [Placeholder: schema absent] | A commitment draft was created for a program service with its kind, identifier, content and source reference by a named member. |
+| CommitmentDraftRevised | CommitmentDraftRevised | business | bdgrz.commitment.draft.revised | 2 | [Placeholder: schema absent] | A pending commitment draft was revised with new content and source reference by a named member, starting a new draft revision awaiting review. |
+| CommitmentRetired | CommitmentRetired | business | bdgrz.commitments.commitment-retired | 2 | [Placeholder: schema absent] | An approved commitment was retired effective on a stated date by a named actor, ending it for obligations from that date. |
+| CommitmentReviewed | CommitmentReviewed | business | bdgrz.commitment.reviewed | 2 | [Placeholder: schema absent] | A commitment draft revision was reviewed with a decision outcome, either accepting it with applicability, version and effective date or requesting changes, by a named reviewer. |
+| ResponsibilityAssigned | ResponsibilityAssigned | business | bdgrz.responsibility.assigned | 1 | [Placeholder: schema absent] | A member was assigned a responsibility type over a scoped record for an effective period by a named assigner, together with any separation-of-duties waivers that allowed it. |
+| ResponsibilityRevoked | ResponsibilityRevoked | business | bdgrz.responsibility.revoked | 1 | [Placeholder: schema absent] | A member's responsibility assignment over a scoped record was revoked with a stated reason by a named member, removing the authority it granted. |
 
 ## Event details
 
@@ -18,6 +18,9 @@ Canonical events: **7**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | CommitmentApproved |
+| Selected source event name | CommitmentApproved |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:CommitmentApproved |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | CommitmentApproved |
@@ -27,7 +30,8 @@ Canonical events: **7**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | A commitment draft was approved as a numbered commitment version effective from a stated date, on an accepted review, by a named approver, with any separation-of-duties waiver. |
+| Target meaning | A commitment draft was approved as a numbered commitment version effective from a stated date, on an accepted review, by a named approver, with any separation-of-duties waiver. |
+| Selected source meaning | A commitment draft was approved as a numbered commitment version effective from a stated date, on an accepted review, by a named approver, with any separation-of-duties waiver. |
 | Meaning source | authored 2026-10-29 from src/Compliance.Common/Features/Commitments/Events/CommitmentApproved.cs |
 
 #### Schema
@@ -48,6 +52,9 @@ Canonical events: **7**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | CommitmentDraftCreated |
+| Selected source event name | CommitmentDraftCreated |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:CommitmentDraftCreated |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | CommitmentDraftCreated |
@@ -57,7 +64,8 @@ Canonical events: **7**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | A commitment draft was created for a program service with its kind, identifier, content and source reference by a named member. |
+| Target meaning | A commitment draft was created for a program service with its kind, identifier, content and source reference by a named member. |
+| Selected source meaning | A commitment draft was created for a program service with its kind, identifier, content and source reference by a named member. |
 | Meaning source | authored 2026-10-29 from src/Compliance.Common/Features/Commitments/Events/CommitmentDraftCreated.cs |
 
 #### Schema
@@ -78,6 +86,9 @@ Canonical events: **7**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | CommitmentDraftRevised |
+| Selected source event name | CommitmentDraftRevised |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:CommitmentDraftRevised |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | CommitmentDraftRevised |
@@ -87,7 +98,8 @@ Canonical events: **7**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | A pending commitment draft was revised with new content and source reference by a named member, starting a new draft revision awaiting review. |
+| Target meaning | A pending commitment draft was revised with new content and source reference by a named member, starting a new draft revision awaiting review. |
+| Selected source meaning | A pending commitment draft was revised with new content and source reference by a named member, starting a new draft revision awaiting review. |
 | Meaning source | authored 2026-10-29 from src/Compliance.Common/Features/Commitments/Events/CommitmentDraftRevised.cs |
 
 #### Schema
@@ -108,6 +120,9 @@ Canonical events: **7**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | CommitmentRetired |
+| Selected source event name | CommitmentRetired |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:CommitmentRetired |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | CommitmentRetired |
@@ -117,7 +132,8 @@ Canonical events: **7**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | An approved commitment was retired effective on a stated date by a named actor, ending it for obligations from that date. |
+| Target meaning | An approved commitment was retired effective on a stated date by a named actor, ending it for obligations from that date. |
+| Selected source meaning | An approved commitment was retired effective on a stated date by a named actor, ending it for obligations from that date. |
 | Meaning source | authored 2026-10-29 from src/Compliance.Common/Features/Commitments/Events/CommitmentRetired.cs |
 
 #### Schema
@@ -138,6 +154,9 @@ Canonical events: **7**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | CommitmentReviewed |
+| Selected source event name | CommitmentReviewed |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:CommitmentReviewed |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | CommitmentReviewed |
@@ -147,7 +166,8 @@ Canonical events: **7**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | A commitment draft revision was reviewed with a decision outcome, either accepting it with applicability, version and effective date or requesting changes, by a named reviewer. |
+| Target meaning | A commitment draft revision was reviewed with a decision outcome, either accepting it with applicability, version and effective date or requesting changes, by a named reviewer. |
+| Selected source meaning | A commitment draft revision was reviewed with a decision outcome, either accepting it with applicability, version and effective date or requesting changes, by a named reviewer. |
 | Meaning source | authored 2026-10-29 from src/Compliance.Common/Features/Commitments/Events/CommitmentReviewed.cs |
 
 #### Schema
@@ -168,6 +188,9 @@ Canonical events: **7**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | ResponsibilityAssigned |
+| Selected source event name | ResponsibilityAssigned |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:ResponsibilityAssigned |
 | Owner selection | ResponsibilityScope.RecordType/RecordId + exact owner authority header selects one of three listed scope owners |
 | Target concrete type | ResponsibilityAssigned |
@@ -177,7 +200,8 @@ Canonical events: **7**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | A member was assigned a responsibility type over a scoped record for an effective period by a named assigner, together with any separation-of-duties waivers that allowed it. |
+| Target meaning | A member was assigned a responsibility type over a scoped record for an effective period by a named assigner, together with any separation-of-duties waivers that allowed it. |
+| Selected source meaning | A member was assigned a responsibility type over a scoped record for an effective period by a named assigner, together with any separation-of-duties waivers that allowed it. |
 | Meaning source | authored 2026-10-29 from src/Compliance.Common/Features/Responsibilities/Events/ResponsibilityAssigned.cs |
 
 #### Schema
@@ -198,6 +222,9 @@ Canonical events: **7**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | ResponsibilityRevoked |
+| Selected source event name | ResponsibilityRevoked |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:ResponsibilityRevoked |
 | Owner selection | ResponsibilityScope.RecordType/RecordId + exact owner authority header selects one of three listed scope owners |
 | Target concrete type | ResponsibilityRevoked |
@@ -207,7 +234,8 @@ Canonical events: **7**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | A member's responsibility assignment over a scoped record was revoked with a stated reason by a named member, removing the authority it granted. |
+| Target meaning | A member's responsibility assignment over a scoped record was revoked with a stated reason by a named member, removing the authority it granted. |
+| Selected source meaning | A member's responsibility assignment over a scoped record was revoked with a stated reason by a named member, removing the authority it granted. |
 | Meaning source | authored 2026-10-29 from src/Compliance.Common/Features/Responsibilities/Events/ResponsibilityRevoked.cs |
 
 #### Schema

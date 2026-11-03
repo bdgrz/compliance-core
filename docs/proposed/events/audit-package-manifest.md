@@ -2,16 +2,16 @@
 
 Canonical events: **8**. Complete canonical event and available schema records: [owner event JSON](../data/events/audit-package-manifest.json).
 
-| Event | Kind | Adopted discriminator | Version | Schema fields | Meaning |
-| --- | --- | --- | --- | --- | --- |
-| AuditPackageAmended | business | bdgrz.auditpackages.audit-package-amended | 1 | 9 | An audit package was amended into its next manifest version by an accepted change, which may follow a frozen version without altering the earlier version. |
-| AuditPackageBuildRequested | business | bdgrz.auditpackages.audit-package-build-requested | 1 | 9 | A build of the archive for one exact manifest version of an audit package was admitted, binding the build to that version and permitting the builder to report a result. |
-| AuditPackageBuilt | business | bdgrz.auditpackages.audit-package-built | 1 | 9 | The archive for an audit package version was built and its verified output recorded, answering the admitted build request for that exact version. |
-| AuditPackageCreated | business | bdgrz.auditpackages.audit-package-created | 1 | 9 | An audit package was created for a program as its first manifest version. |
-| AuditPackageDeliveryAdmitted | business | bdgrz.audit-package-manifest.audit-package-delivery-admitted | 1 | 8 | Freezes an exact personal external-handoff attestation before independent historical materialization. |
-| AuditPackageDisclosureApproved | business | bdgrz.auditpackages.audit-package-disclosure-approved | 1 | 9 | Disclosure of one audit package manifest version to its recipients was approved, permitting that version to be admitted for delivery. |
-| AuditPackageValidated | business | bdgrz.auditpackages.audit-package-validated | 1 | 9 | The outcome of validating one audit package manifest version was recorded against that version. |
-| AuditPackageValidationOverrideApproved | business | bdgrz.auditpackages.audit-package-validation-override-approved | 1 | 9 | An approver overrode the validation findings for one audit package manifest version, allowing that version to proceed despite them. |
+| Target event | Selected source name | Kind | Adopted discriminator | Version | Schema fields | Meaning |
+| --- | --- | --- | --- | --- | --- | --- |
+| AuditPackageAmended | AuditPackageAmended | business | bdgrz.auditpackages.audit-package-amended | 1 | 9 | An audit package was amended into its next manifest version by an accepted change, which may follow a frozen version without altering the earlier version. |
+| AuditPackageBuildRequested | AuditPackageBuildRequested | business | bdgrz.auditpackages.audit-package-build-requested | 1 | 9 | A build of the archive for one exact manifest version of an audit package was admitted, binding the build to that version and permitting the builder to report a result. |
+| AuditPackageBuilt | AuditPackageBuilt | business | bdgrz.auditpackages.audit-package-built | 1 | 9 | The archive for an audit package version was built and its verified output recorded, answering the admitted build request for that exact version. |
+| AuditPackageCreated | AuditPackageCreated | business | bdgrz.auditpackages.audit-package-created | 1 | 9 | An audit package was created for a program as its first manifest version. |
+| AuditPackageDeliveryAdmitted | AuditPackageDeliveryAdmitted | business | bdgrz.audit-package-manifest.audit-package-delivery-admitted | 1 | 8 | Freezes an exact personal external-handoff attestation before independent historical materialization. |
+| AuditPackageDisclosureApproved | AuditPackageDisclosureApproved | business | bdgrz.auditpackages.audit-package-disclosure-approved | 1 | 9 | Disclosure of one audit package manifest version to its recipients was approved, permitting that version to be admitted for delivery. |
+| AuditPackageValidated | AuditPackageValidated | business | bdgrz.auditpackages.audit-package-validated | 1 | 9 | The outcome of validating one audit package manifest version was recorded against that version. |
+| AuditPackageValidationOverrideApproved | AuditPackageValidationOverrideApproved | business | bdgrz.auditpackages.audit-package-validation-override-approved | 1 | 9 | An approver overrode the validation findings for one audit package manifest version, allowing that version to proceed despite them. |
 
 ## Event details
 
@@ -19,6 +19,9 @@ Canonical events: **8**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | AuditPackageAmended |
+| Selected source event name | AuditPackageAmended |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:AuditPackageAmended |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | AuditPackageAmended |
@@ -28,7 +31,8 @@ Canonical events: **8**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | An audit package was amended into its next manifest version by an accepted change, which may follow a frozen version without altering the earlier version. |
+| Target meaning | An audit package was amended into its next manifest version by an accepted change, which may follow a frozen version without altering the earlier version. |
+| Selected source meaning | An audit package was amended into its next manifest version by an accepted change, which may follow a frozen version without altering the earlier version. |
 | Meaning source | authored 2026-10-29 from src/Compliance.Common/Features/AuditPackages/Events/AuditPackageAmended.cs |
 
 #### Selected schema and implementation evidence
@@ -83,6 +87,9 @@ Canonical events: **8**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | AuditPackageBuildRequested |
+| Selected source event name | AuditPackageBuildRequested |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:AuditPackageBuildRequested |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | AuditPackageBuildRequested |
@@ -92,7 +99,8 @@ Canonical events: **8**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | A build of the archive for one exact manifest version of an audit package was admitted, binding the build to that version and permitting the builder to report a result. |
+| Target meaning | A build of the archive for one exact manifest version of an audit package was admitted, binding the build to that version and permitting the builder to report a result. |
+| Selected source meaning | A build of the archive for one exact manifest version of an audit package was admitted, binding the build to that version and permitting the builder to report a result. |
 | Meaning source | authored 2026-10-29 from src/Compliance.Common/Features/AuditPackages/Events/AuditPackageBuildRequested.cs |
 
 #### Selected schema and implementation evidence
@@ -185,6 +193,9 @@ PackageBuildIntent
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | AuditPackageBuilt |
+| Selected source event name | AuditPackageBuilt |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:AuditPackageBuilt |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | AuditPackageBuilt |
@@ -194,7 +205,8 @@ PackageBuildIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | The archive for an audit package version was built and its verified output recorded, answering the admitted build request for that exact version. |
+| Target meaning | The archive for an audit package version was built and its verified output recorded, answering the admitted build request for that exact version. |
+| Selected source meaning | The archive for an audit package version was built and its verified output recorded, answering the admitted build request for that exact version. |
 | Meaning source | authored 2026-10-29 from src/Compliance.Common/Features/AuditPackages/Events/AuditPackageBuilt.cs |
 
 #### Selected schema and implementation evidence
@@ -286,6 +298,9 @@ PackageBuildIntent
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | AuditPackageCreated |
+| Selected source event name | AuditPackageCreated |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:AuditPackageCreated |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | AuditPackageCreated |
@@ -295,7 +310,8 @@ PackageBuildIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | An audit package was created for a program as its first manifest version. |
+| Target meaning | An audit package was created for a program as its first manifest version. |
+| Selected source meaning | An audit package was created for a program as its first manifest version. |
 | Meaning source | authored 2026-10-29 from src/Compliance.Common/Features/AuditPackages/Events/AuditPackageCreated.cs |
 
 #### Selected schema and implementation evidence
@@ -350,6 +366,9 @@ PackageBuildIntent
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | AuditPackageDeliveryAdmitted |
+| Selected source event name | AuditPackageDeliveryAdmitted |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:AuditPackageDeliveryAdmitted |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | AuditPackageDeliveryAdmitted |
@@ -359,7 +378,8 @@ PackageBuildIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | Freezes an exact personal external-handoff attestation before independent historical materialization. |
+| Target meaning | Freezes an exact personal external-handoff attestation before independent historical materialization. |
+| Selected source meaning | Freezes an exact personal external-handoff attestation before independent historical materialization. |
 | Meaning source | record summary in src/Compliance.Common/Features/AuditPackages/Events/AuditPackageDeliveryAdmitted.cs |
 
 #### Selected schema and implementation evidence
@@ -451,12 +471,15 @@ PackageDeliveryRecordingIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T081](../reactors/audit-package-delivery-admission-reactor.md#t081) | physical root, logical prerequisite | AuditPackageManifest | MaterializeRecordedAuditPackageDelivery | AuditPackageDelivery |
+| [T081](../reactors/audit-package-delivery-admission-reactor.md#t081) | physical root, logical prerequisite | AuditPackageManifest | RecordAuditPackageDelivery | AuditPackageDelivery |
 
 ### AuditPackageDisclosureApproved
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | AuditPackageDisclosureApproved |
+| Selected source event name | AuditPackageDisclosureApproved |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:AuditPackageDisclosureApproved |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | AuditPackageDisclosureApproved |
@@ -466,7 +489,8 @@ PackageDeliveryRecordingIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | Disclosure of one audit package manifest version to its recipients was approved, permitting that version to be admitted for delivery. |
+| Target meaning | Disclosure of one audit package manifest version to its recipients was approved, permitting that version to be admitted for delivery. |
+| Selected source meaning | Disclosure of one audit package manifest version to its recipients was approved, permitting that version to be admitted for delivery. |
 | Meaning source | authored 2026-10-29 from src/Compliance.Common/Features/AuditPackages/Events/AuditPackageDisclosureApproved.cs |
 
 #### Selected schema and implementation evidence
@@ -521,6 +545,9 @@ PackageDeliveryRecordingIntent
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | AuditPackageValidated |
+| Selected source event name | AuditPackageValidated |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:AuditPackageValidated |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | AuditPackageValidated |
@@ -530,7 +557,8 @@ PackageDeliveryRecordingIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | The outcome of validating one audit package manifest version was recorded against that version. |
+| Target meaning | The outcome of validating one audit package manifest version was recorded against that version. |
+| Selected source meaning | The outcome of validating one audit package manifest version was recorded against that version. |
 | Meaning source | authored 2026-10-29 from src/Compliance.Common/Features/AuditPackages/Events/AuditPackageValidated.cs |
 
 #### Selected schema and implementation evidence
@@ -585,6 +613,9 @@ PackageDeliveryRecordingIntent
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | AuditPackageValidationOverrideApproved |
+| Selected source event name | AuditPackageValidationOverrideApproved |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:AuditPackageValidationOverrideApproved |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | AuditPackageValidationOverrideApproved |
@@ -594,7 +625,8 @@ PackageDeliveryRecordingIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | An approver overrode the validation findings for one audit package manifest version, allowing that version to proceed despite them. |
+| Target meaning | An approver overrode the validation findings for one audit package manifest version, allowing that version to proceed despite them. |
+| Selected source meaning | An approver overrode the validation findings for one audit package manifest version, allowing that version to proceed despite them. |
 | Meaning source | authored 2026-10-29 from src/Compliance.Common/Features/AuditPackages/Events/AuditPackageValidationOverrideApproved.cs |
 
 #### Selected schema and implementation evidence

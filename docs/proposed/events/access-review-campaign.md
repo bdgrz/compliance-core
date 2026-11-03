@@ -2,13 +2,13 @@
 
 Canonical events: **5**. Complete canonical event and available schema records: [owner event JSON](../data/events/access-review-campaign.json).
 
-| Event | Kind | Adopted discriminator | Version | Schema fields | Meaning |
-| --- | --- | --- | --- | --- | --- |
-| AccessReviewCampaignCompleted | business | bdgrz.access_review.campaign.completed | 2 | 10 | The campaign was completed with its final immutable snapshot, after every item was held and its exact decision, remediation and exception proof was verified. ItemCompletionProofs is the complete proof set; OperationResult is the original typed completion result. |
-| AccessReviewCampaignCompletionAccepted | business | bdgrz.access-review-campaign.access-review-campaign-completion-accepted | 1 | 8 | The campaign admitted the owner's completion: the exact campaign revision, the frozen ClosureIntent (the attestation, the complete drained item selection and the pinned head of every item) and the original 202 acknowledgment. The completion process holds every item from it. |
-| AccessReviewCampaignCompletionCanceled | business | bdgrz.access-review-campaign.access-review-campaign-completion-canceled | 1 | 8 | The pending completion of an access review campaign was canceled with a failure proof, so any delayed attempt to close that completion is refused and the campaign stays open. |
-| AccessReviewCampaignLaunched | business | bdgrz.access_review.campaign.launched | 2 | 16 | A campaign was launched with its frozen population, reviewers, instructions, and deadline. The reviewers and the complete item list are verified immutable content, so a campaign of any size is one bounded fact. ItemIntentManifest holds the frozen creation intent of every item in canonical item order; the launch fan-out materializes each item from it. The campaign's logical revision is 1 after launch. |
-| AccessReviewDecisionBatchAdmitted | business | bdgrz.access-review-campaign.access-review-decision-batch-admitted | 1 | 8 | The campaign admitted a complete bulk decision: the exact campaign revision, the frozen BulkAccessDecisionIntent (the preview token, the immutable selection with each item's frozen head and the shared decision and rationale) and the original 202 acknowledgment. The batch is created from this fact at its own revision zero, and a campaign completion drains it before it holds any item. |
+| Target event | Selected source name | Kind | Adopted discriminator | Version | Schema fields | Meaning |
+| --- | --- | --- | --- | --- | --- | --- |
+| AccessReviewCampaignCompleted | AccessReviewCampaignCompleted | business | bdgrz.access_review.campaign.completed | 2 | 10 | The campaign was completed with its final immutable snapshot, after every item was held and its exact decision, remediation and exception proof was verified. ItemCompletionProofs is the complete proof set; OperationResult is the original typed completion result. |
+| AccessReviewCampaignCompletionAccepted | AccessReviewCampaignCompletionAccepted | business | bdgrz.access-review-campaign.access-review-campaign-completion-accepted | 1 | 8 | The campaign admitted the owner's completion: the exact campaign revision, the frozen ClosureIntent (the attestation, the complete drained item selection and the pinned head of every item) and the original 202 acknowledgment. The completion process holds every item from it. |
+| AccessReviewCampaignCompletionCanceled | AccessReviewCampaignCompletionCanceled | business | bdgrz.access-review-campaign.access-review-campaign-completion-canceled | 1 | 8 | The pending completion of an access review campaign was canceled with a failure proof, so any delayed attempt to close that completion is refused and the campaign stays open. |
+| AccessReviewCampaignLaunched | AccessReviewCampaignLaunched | business | bdgrz.access_review.campaign.launched | 2 | 16 | A campaign was launched with its frozen population, reviewers, instructions, and deadline. The reviewers and the complete item list are verified immutable content, so a campaign of any size is one bounded fact. ItemIntentManifest holds the frozen creation intent of every item in canonical item order; the launch fan-out materializes each item from it. The campaign's logical revision is 1 after launch. |
+| AccessReviewDecisionBatchAdmitted | AccessReviewDecisionBatchAdmitted | business | bdgrz.access-review-campaign.access-review-decision-batch-admitted | 1 | 8 | The campaign admitted a complete bulk decision: the exact campaign revision, the frozen BulkAccessDecisionIntent (the preview token, the immutable selection with each item's frozen head and the shared decision and rationale) and the original 202 acknowledgment. The batch is created from this fact at its own revision zero, and a campaign completion drains it before it holds any item. |
 
 ## Event details
 
@@ -16,6 +16,9 @@ Canonical events: **5**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | AccessReviewCampaignCompleted |
+| Selected source event name | AccessReviewCampaignCompleted |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:AccessReviewCampaignCompleted |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | AccessReviewCampaignCompleted |
@@ -25,7 +28,8 @@ Canonical events: **5**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | `{"discriminator":"bdgrz.access_review.campaign.completed","version":1}` |
-| Meaning | The campaign was completed with its final immutable snapshot, after every item was held and its exact decision, remediation and exception proof was verified. ItemCompletionProofs is the complete proof set; OperationResult is the original typed completion result. |
+| Target meaning | The campaign was completed with its final immutable snapshot, after every item was held and its exact decision, remediation and exception proof was verified. ItemCompletionProofs is the complete proof set; OperationResult is the original typed completion result. |
+| Selected source meaning | The campaign was completed with its final immutable snapshot, after every item was held and its exact decision, remediation and exception proof was verified. ItemCompletionProofs is the complete proof set; OperationResult is the original typed completion result. |
 | Meaning source | record summary in src/Compliance.Common/Features/AccessReviews/Events/AccessReviewCampaignCompleted.cs |
 
 #### Selected schema and implementation evidence
@@ -114,13 +118,16 @@ ClosureIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T060](../reactors/access-review-completion-reactor.md#t060) | logical prerequisite | AccessReviewCampaign | SettleAccessReviewItemCampaignCompletionUse | AccessReviewItem |
+| [T060](../reactors/access-review-completion-reactor.md#t060) | logical prerequisite | AccessReviewCampaign | CloseAccessReviewItemCampaignCompletionAuthorization | AccessReviewItem |
 | [T073](../reactors/access-review-completion-reactor.md#t073) | emitted semantic fact | AccessReviewCampaign | CompleteAccessReviewCampaignClosure | AccessReviewCampaign |
 
 ### AccessReviewCampaignCompletionAccepted
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | AccessReviewCampaignCompletionAccepted |
+| Selected source event name | AccessReviewCampaignCompletionAccepted |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:AccessReviewCampaignCompletionAccepted |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | AccessReviewCampaignCompletionAccepted |
@@ -130,7 +137,8 @@ ClosureIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | The campaign admitted the owner's completion: the exact campaign revision, the frozen ClosureIntent (the attestation, the complete drained item selection and the pinned head of every item) and the original 202 acknowledgment. The completion process holds every item from it. |
+| Target meaning | The campaign admitted the owner's completion: the exact campaign revision, the frozen ClosureIntent (the attestation, the complete drained item selection and the pinned head of every item) and the original 202 acknowledgment. The completion process holds every item from it. |
+| Selected source meaning | The campaign admitted the owner's completion: the exact campaign revision, the frozen ClosureIntent (the attestation, the complete drained item selection and the pinned head of every item) and the original 202 acknowledgment. The completion process holds every item from it. |
 | Meaning source | record summary in src/Compliance.Common/Features/AccessReviews/Events/AccessReviewCampaignCompletionAccepted.cs |
 
 #### Selected schema and implementation evidence
@@ -208,8 +216,8 @@ ClosureIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T059](../reactors/access-review-completion-reactor.md#t059) | physical root, logical prerequisite | AccessReviewCampaign | AuthorizeAccessReviewItemCampaignCompletionUse | AccessReviewItem |
-| [T060](../reactors/access-review-completion-reactor.md#t060) | physical root | AccessReviewCampaign | SettleAccessReviewItemCampaignCompletionUse | AccessReviewItem |
+| [T059](../reactors/access-review-completion-reactor.md#t059) | physical root, logical prerequisite | AccessReviewCampaign | AuthorizeAccessReviewItemCampaignCompletion | AccessReviewItem |
+| [T060](../reactors/access-review-completion-reactor.md#t060) | physical root | AccessReviewCampaign | CloseAccessReviewItemCampaignCompletionAuthorization | AccessReviewItem |
 | [T073](../reactors/access-review-completion-reactor.md#t073) | physical root, logical prerequisite | AccessReviewCampaign | CompleteAccessReviewCampaignClosure | AccessReviewCampaign |
 | [A006](../reactors/unassigned-architecture-rows.md#a006) | physical root, logical prerequisite | AccessReviewCampaign | AbortAccessReviewCampaignCompletion | AccessReviewCampaign |
 
@@ -217,6 +225,9 @@ ClosureIntent
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | AccessReviewCampaignCompletionCanceled |
+| Selected source event name | AccessReviewCampaignCompletionCanceled |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:AccessReviewCampaignCompletionCanceled |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | AccessReviewCampaignCompletionCanceled |
@@ -226,7 +237,8 @@ ClosureIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | The pending completion of an access review campaign was canceled with a failure proof, so any delayed attempt to close that completion is refused and the campaign stays open. |
+| Target meaning | The pending completion of an access review campaign was canceled with a failure proof, so any delayed attempt to close that completion is refused and the campaign stays open. |
+| Selected source meaning | The pending completion of an access review campaign was canceled with a failure proof, so any delayed attempt to close that completion is refused and the campaign stays open. |
 | Meaning source | authored 2026-10-29 from src/Compliance.Common/Features/AccessReviews/Events/AccessReviewCampaignCompletionCanceled.cs |
 
 #### Selected schema and implementation evidence
@@ -304,13 +316,16 @@ ClosureIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T060](../reactors/access-review-completion-reactor.md#t060) | physical root, logical prerequisite | AccessReviewCampaign | SettleAccessReviewItemCampaignCompletionUse | AccessReviewItem |
+| [T060](../reactors/access-review-completion-reactor.md#t060) | physical root, logical prerequisite | AccessReviewCampaign | CloseAccessReviewItemCampaignCompletionAuthorization | AccessReviewItem |
 | [A006](../reactors/unassigned-architecture-rows.md#a006) | emitted semantic fact | AccessReviewCampaign | AbortAccessReviewCampaignCompletion | AccessReviewCampaign |
 
 ### AccessReviewCampaignLaunched
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | AccessReviewCampaignLaunched |
+| Selected source event name | AccessReviewCampaignLaunched |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:AccessReviewCampaignLaunched |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | AccessReviewCampaignLaunched |
@@ -320,7 +335,8 @@ ClosureIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | `{"discriminator":"bdgrz.access_review.campaign.launched","version":1}` |
-| Meaning | A campaign was launched with its frozen population, reviewers, instructions, and deadline. The reviewers and the complete item list are verified immutable content, so a campaign of any size is one bounded fact. ItemIntentManifest holds the frozen creation intent of every item in canonical item order; the launch fan-out materializes each item from it. The campaign's logical revision is 1 after launch. |
+| Target meaning | A campaign was launched with its frozen population, reviewers, instructions, and deadline. The reviewers and the complete item list are verified immutable content, so a campaign of any size is one bounded fact. ItemIntentManifest holds the frozen creation intent of every item in canonical item order; the launch fan-out materializes each item from it. The campaign's logical revision is 1 after launch. |
+| Selected source meaning | A campaign was launched with its frozen population, reviewers, instructions, and deadline. The reviewers and the complete item list are verified immutable content, so a campaign of any size is one bounded fact. ItemIntentManifest holds the frozen creation intent of every item in canonical item order; the launch fan-out materializes each item from it. The campaign's logical revision is 1 after launch. |
 | Meaning source | record summary in src/Compliance.Common/Features/AccessReviews/Events/AccessReviewCampaignLaunched.cs |
 
 #### Selected schema and implementation evidence
@@ -387,12 +403,15 @@ ClosureIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T008](../reactors/access-review-launch-fan-out-reactor.md#t008) | physical root, logical prerequisite | AccessReviewCampaign | MaterializeAccessReviewItem | AccessReviewItem |
+| [T008](../reactors/access-review-launch-fan-out-reactor.md#t008) | physical root, logical prerequisite | AccessReviewCampaign | OpenAccessReviewItem | AccessReviewItem |
 
 ### AccessReviewDecisionBatchAdmitted
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | AccessReviewDecisionBatchAdmitted |
+| Selected source event name | AccessReviewDecisionBatchAdmitted |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:AccessReviewDecisionBatchAdmitted |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | AccessReviewDecisionBatchAdmitted |
@@ -402,7 +421,8 @@ ClosureIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | The campaign admitted a complete bulk decision: the exact campaign revision, the frozen BulkAccessDecisionIntent (the preview token, the immutable selection with each item's frozen head and the shared decision and rationale) and the original 202 acknowledgment. The batch is created from this fact at its own revision zero, and a campaign completion drains it before it holds any item. |
+| Target meaning | The campaign admitted a complete bulk decision: the exact campaign revision, the frozen BulkAccessDecisionIntent (the preview token, the immutable selection with each item's frozen head and the shared decision and rationale) and the original 202 acknowledgment. The batch is created from this fact at its own revision zero, and a campaign completion drains it before it holds any item. |
+| Selected source meaning | The campaign admitted a complete bulk decision: the exact campaign revision, the frozen BulkAccessDecisionIntent (the preview token, the immutable selection with each item's frozen head and the shared decision and rationale) and the original 202 acknowledgment. The batch is created from this fact at its own revision zero, and a campaign completion drains it before it holds any item. |
 | Meaning source | record summary in src/Compliance.Common/Features/AccessReviews/Events/AccessReviewDecisionBatchAdmitted.cs |
 
 #### Selected schema and implementation evidence
@@ -485,8 +505,8 @@ BulkAccessDecisionIntent
 | [T009](../reactors/access-review-bulk-admission-reactor.md#t009) | physical root | AccessReviewDecisionBatch | ReserveAccessReviewItemDecision | AccessReviewItem |
 | [T010](../reactors/access-review-bulk-admission-reactor.md#t010) | physical root | AccessReviewDecisionBatch | ApplyAccessReviewItemDecision | AccessReviewItem |
 | [T011](../reactors/access-review-bulk-admission-reactor.md#t011) | physical root | AccessReviewDecisionBatch | PublishAccessReviewDecisionBatch | AccessReviewDecisionBatch |
-| [T080](../reactors/access-review-bulk-admission-reactor.md#t080) | physical root | AccessReviewDecisionBatch | SettleAccessReviewItemDecision | AccessReviewItem |
-| [T086](../reactors/access-review-bulk-admission-reactor.md#t086) | physical root, logical prerequisite | AccessReviewCampaign | MaterializeAccessReviewDecisionBatch | AccessReviewDecisionBatch |
+| [T080](../reactors/access-review-bulk-admission-reactor.md#t080) | physical root | AccessReviewDecisionBatch | CloseAccessReviewItemDecisionAuthorization | AccessReviewItem |
+| [T086](../reactors/access-review-bulk-admission-reactor.md#t086) | physical root, logical prerequisite | AccessReviewCampaign | RecordAccessReviewDecisionBatch | AccessReviewDecisionBatch |
 | [A005](../reactors/unassigned-architecture-rows.md#a005) | physical root, logical prerequisite | AccessReviewCampaign | CancelAccessReviewDecisionBatch | AccessReviewDecisionBatch |
 
 

@@ -11,13 +11,13 @@
 
 **Invariant:** Immutable policy/material version and frozen audience plus closure generation. The campaign admits every participant result against its frozen audience, so its stream grows with the audience for the campaign's bounded life; this is accepted (Jev keep_per_child_admission 1.00) and must not be reduced to a projection check
 
-**Additional decision rule:** Audience is always workforce people from the roster, never platform members and never inferred from application access, team membership, or IdP. core_security is every in-scope employee and contractor with access to in-scope systems or data; role_targeted is people whose roster team is named on the version. Roster changes add attributed amendments (person, reason joiner/mover_in/mover_out/leaver, roster observation, time); launch audience plus amendments is the evidence population, joiners due within 30 days of start, and a leaver moves to removed in open campaigns keeping history.
+**Additional decision rule:** Audience is always workforce people from the roster, never platform members and never inferred from application access, team membership, or IdP. core_security is every in-scope employee and contractor with access to in-scope systems or data; role_targeted is people whose roster team is named on the version. Roster changes add attributed amendments (person, reason joiner/mover_in/mover_out/leaver, roster observation, time); launch audience plus amendments is the evidence population, joiners due within 30 days of start, and a leaver moves to removed in open campaigns keeping history. Each campaign has its own CampaignId. A second campaign may use the same policy version and roster snapshot; no rule prohibits it.
 
 **Must preserve:** Every result binds the accepted campaign version/hash and included participant; after close, no result accepted.
 
 **Replay:** Current required authorization precedes replay; exact authorized retries resolve the original accepted result using the selected logical identity and immutable actor/intent/source binding. Fresh mutable feasibility, clock selection and body preparation cannot replace that original result. Expected revision is concurrency precondition, not a new identity.
 
-**Lifecycle:** [Placeholder: a consolidated lifecycle sequence is not present in the selected owner record.]
+**Lifecycle:** At launch, the campaign saves the roster it covers. Later roster changes are recorded as amendments. Results can be added only while the campaign is open. An accepted closure stops results until that closure is canceled or completed.
 
 ## Commands
 
@@ -47,8 +47,8 @@
 | Row | Kind | Source owner | Target owner | Command |
 | --- | --- | --- | --- | --- |
 | [T038](../reactors/policy-campaign-closure-reactor.md#t038) | reaction_or_regular_process_stage | PolicyDistributionCampaign | PolicyDistributionCampaign | CompletePolicyCampaignClosure |
-| [T067](../reactors/policy-campaign-closure-reactor.md#t067) | reaction_or_regular_process_stage | PolicyDistributionCampaign | PolicyCampaignParticipant | AuthorizePolicyCampaignParticipantCampaignClosureUse |
-| [T068](../reactors/policy-campaign-closure-reactor.md#t068) | reaction_or_regular_process_stage | PolicyDistributionCampaign | PolicyCampaignParticipant | SettlePolicyCampaignParticipantCampaignClosureUse |
+| [T067](../reactors/policy-campaign-closure-reactor.md#t067) | reaction_or_regular_process_stage | PolicyDistributionCampaign | PolicyCampaignParticipant | AuthorizePolicyCampaignParticipantCampaignClosure |
+| [T068](../reactors/policy-campaign-closure-reactor.md#t068) | reaction_or_regular_process_stage | PolicyDistributionCampaign | PolicyCampaignParticipant | ClosePolicyCampaignParticipantCampaignClosureAuthorization |
 | [T076](../reactors/policy-participant-result-reactor.md#t076) | reaction_or_regular_process_stage | PolicyDistributionCampaign | PolicyCampaignParticipant | ApplyPolicyParticipantResult |
 | [A010](../reactors/unassigned-architecture-rows.md#a010) | process_abort_binding | PolicyDistributionCampaign | PolicyDistributionCampaign | AbortPolicyCampaignClosure |
 

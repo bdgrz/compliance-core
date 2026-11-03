@@ -2,16 +2,16 @@
 
 Canonical events: **8**. Complete canonical event and available schema records: [owner event JSON](../data/events/system-boundary.json).
 
-| Event | Kind | Adopted discriminator | Version | Schema fields | Meaning |
-| --- | --- | --- | --- | --- | --- |
-| BoundaryApproved | business | bdgrz.boundary.approved | 2 | [Placeholder: schema absent] | A system boundary draft version was approved as the boundary effective from a stated date, on the strength of an accepted review and by a named approver. |
-| BoundaryDraftCreated | business | bdgrz.boundary.draft.created | 2 | [Placeholder: schema absent] | A system boundary draft was created for a program with its authored content by a named author, awaiting review. |
-| BoundaryDraftDiscarded | business | bdgrz.boundary.draft.discarded | 2 | [Placeholder: schema absent] | A system boundary draft version was discarded by a named member, ending it without approval. |
-| BoundaryDraftRevised | business | bdgrz.boundary.draft.revised | 2 | [Placeholder: schema absent] | A system boundary draft version's content was revised by a named author, producing its next draft revision for review. |
-| BoundaryReviewed | business | bdgrz.boundary.reviewed | 2 | [Placeholder: schema absent] | A system boundary draft revision was reviewed with a decision outcome by a named reviewer, optionally under a separation-of-duties waiver. |
-| BoundarySuccessorProposed | business | bdgrz.boundary.successor.proposed | 2 | [Placeholder: schema absent] | A successor draft version of a system boundary was proposed from one exact approved predecessor version, with new content by a named author. |
-| ResponsibilityAssigned | business | bdgrz.responsibility.assigned | 1 | [Placeholder: schema absent] | A member was assigned a responsibility type over a scoped record for an effective period by a named assigner, together with any separation-of-duties waivers that allowed it. |
-| ResponsibilityRevoked | business | bdgrz.responsibility.revoked | 1 | [Placeholder: schema absent] | A member's responsibility assignment over a scoped record was revoked with a stated reason by a named member, removing the authority it granted. |
+| Target event | Selected source name | Kind | Adopted discriminator | Version | Schema fields | Meaning |
+| --- | --- | --- | --- | --- | --- | --- |
+| BoundaryApproved | BoundaryApproved | business | bdgrz.boundary.approved | 2 | [Placeholder: schema absent] | A system boundary draft version was approved as the boundary effective from a stated date, on the strength of an accepted review and by a named approver. |
+| BoundaryDraftCreated | BoundaryDraftCreated | business | bdgrz.boundary.draft.created | 2 | [Placeholder: schema absent] | A system boundary draft was created for a program with its authored content by a named author, awaiting review. |
+| BoundaryDraftDiscarded | BoundaryDraftDiscarded | business | bdgrz.boundary.draft.discarded | 2 | [Placeholder: schema absent] | A system boundary draft version was discarded by a named member, ending it without approval. |
+| BoundaryDraftRevised | BoundaryDraftRevised | business | bdgrz.boundary.draft.revised | 2 | [Placeholder: schema absent] | A system boundary draft version's content was revised by a named author, producing its next draft revision for review. |
+| BoundaryReviewed | BoundaryReviewed | business | bdgrz.boundary.reviewed | 2 | [Placeholder: schema absent] | A system boundary draft revision was reviewed with a decision outcome by a named reviewer, optionally under a separation-of-duties waiver. |
+| BoundarySuccessorProposed | BoundarySuccessorProposed | business | bdgrz.boundary.successor.proposed | 2 | [Placeholder: schema absent] | A successor draft version of a system boundary was proposed from one exact approved predecessor version, with new content by a named author. |
+| ResponsibilityAssigned | ResponsibilityAssigned | business | bdgrz.responsibility.assigned | 1 | [Placeholder: schema absent] | A member was assigned a responsibility type over a scoped record for an effective period by a named assigner, together with any separation-of-duties waivers that allowed it. |
+| ResponsibilityRevoked | ResponsibilityRevoked | business | bdgrz.responsibility.revoked | 1 | [Placeholder: schema absent] | A member's responsibility assignment over a scoped record was revoked with a stated reason by a named member, removing the authority it granted. |
 
 ## Event details
 
@@ -19,6 +19,9 @@ Canonical events: **8**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | BoundaryApproved |
+| Selected source event name | BoundaryApproved |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:BoundaryApproved |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | BoundaryApproved |
@@ -28,7 +31,8 @@ Canonical events: **8**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | A system boundary draft version was approved as the boundary effective from a stated date, on the strength of an accepted review and by a named approver. |
+| Target meaning | A system boundary draft version was approved as the boundary effective from a stated date, on the strength of an accepted review and by a named approver. |
+| Selected source meaning | A system boundary draft version was approved as the boundary effective from a stated date, on the strength of an accepted review and by a named approver. |
 | Meaning source | authored 2026-10-29 from src/Compliance.Common/Features/Boundaries/Events/BoundaryApproved.cs |
 
 #### Schema
@@ -51,6 +55,9 @@ Canonical events: **8**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | BoundaryDraftCreated |
+| Selected source event name | BoundaryDraftCreated |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:BoundaryDraftCreated |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | BoundaryDraftCreated |
@@ -60,7 +67,8 @@ Canonical events: **8**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | A system boundary draft was created for a program with its authored content by a named author, awaiting review. |
+| Target meaning | A system boundary draft was created for a program with its authored content by a named author, awaiting review. |
+| Selected source meaning | A system boundary draft was created for a program with its authored content by a named author, awaiting review. |
 | Meaning source | authored 2026-10-29 from src/Compliance.Common/Features/Boundaries/Events/BoundaryDraftCreated.cs |
 
 #### Schema
@@ -81,6 +89,9 @@ Canonical events: **8**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | BoundaryDraftDiscarded |
+| Selected source event name | BoundaryDraftDiscarded |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:BoundaryDraftDiscarded |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | BoundaryDraftDiscarded |
@@ -90,7 +101,8 @@ Canonical events: **8**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | A system boundary draft version was discarded by a named member, ending it without approval. |
+| Target meaning | A system boundary draft version was discarded by a named member, ending it without approval. |
+| Selected source meaning | A system boundary draft version was discarded by a named member, ending it without approval. |
 | Meaning source | authored 2026-10-29 from src/Compliance.Common/Features/Boundaries/Events/BoundaryDraftDiscarded.cs |
 
 #### Schema
@@ -111,6 +123,9 @@ Canonical events: **8**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | BoundaryDraftRevised |
+| Selected source event name | BoundaryDraftRevised |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:BoundaryDraftRevised |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | BoundaryDraftRevised |
@@ -120,7 +135,8 @@ Canonical events: **8**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | A system boundary draft version's content was revised by a named author, producing its next draft revision for review. |
+| Target meaning | A system boundary draft version's content was revised by a named author, producing its next draft revision for review. |
+| Selected source meaning | A system boundary draft version's content was revised by a named author, producing its next draft revision for review. |
 | Meaning source | authored 2026-10-29 from src/Compliance.Common/Features/Boundaries/Events/BoundaryDraftRevised.cs |
 
 #### Schema
@@ -141,6 +157,9 @@ Canonical events: **8**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | BoundaryReviewed |
+| Selected source event name | BoundaryReviewed |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:BoundaryReviewed |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | BoundaryReviewed |
@@ -150,7 +169,8 @@ Canonical events: **8**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | A system boundary draft revision was reviewed with a decision outcome by a named reviewer, optionally under a separation-of-duties waiver. |
+| Target meaning | A system boundary draft revision was reviewed with a decision outcome by a named reviewer, optionally under a separation-of-duties waiver. |
+| Selected source meaning | A system boundary draft revision was reviewed with a decision outcome by a named reviewer, optionally under a separation-of-duties waiver. |
 | Meaning source | authored 2026-10-29 from src/Compliance.Common/Features/Boundaries/Events/BoundaryReviewed.cs |
 
 #### Schema
@@ -171,6 +191,9 @@ Canonical events: **8**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | BoundarySuccessorProposed |
+| Selected source event name | BoundarySuccessorProposed |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:BoundarySuccessorProposed |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | BoundarySuccessorProposed |
@@ -180,7 +203,8 @@ Canonical events: **8**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | A successor draft version of a system boundary was proposed from one exact approved predecessor version, with new content by a named author. |
+| Target meaning | A successor draft version of a system boundary was proposed from one exact approved predecessor version, with new content by a named author. |
+| Selected source meaning | A successor draft version of a system boundary was proposed from one exact approved predecessor version, with new content by a named author. |
 | Meaning source | authored 2026-10-29 from src/Compliance.Common/Features/Boundaries/Events/BoundarySuccessorProposed.cs |
 
 #### Schema
@@ -201,6 +225,9 @@ Canonical events: **8**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | ResponsibilityAssigned |
+| Selected source event name | ResponsibilityAssigned |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:ResponsibilityAssigned |
 | Owner selection | ResponsibilityScope.RecordType/RecordId + exact owner authority header selects one of three listed scope owners |
 | Target concrete type | ResponsibilityAssigned |
@@ -210,7 +237,8 @@ Canonical events: **8**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | A member was assigned a responsibility type over a scoped record for an effective period by a named assigner, together with any separation-of-duties waivers that allowed it. |
+| Target meaning | A member was assigned a responsibility type over a scoped record for an effective period by a named assigner, together with any separation-of-duties waivers that allowed it. |
+| Selected source meaning | A member was assigned a responsibility type over a scoped record for an effective period by a named assigner, together with any separation-of-duties waivers that allowed it. |
 | Meaning source | authored 2026-10-29 from src/Compliance.Common/Features/Responsibilities/Events/ResponsibilityAssigned.cs |
 
 #### Schema
@@ -231,6 +259,9 @@ Canonical events: **8**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | ResponsibilityRevoked |
+| Selected source event name | ResponsibilityRevoked |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:ResponsibilityRevoked |
 | Owner selection | ResponsibilityScope.RecordType/RecordId + exact owner authority header selects one of three listed scope owners |
 | Target concrete type | ResponsibilityRevoked |
@@ -240,7 +271,8 @@ Canonical events: **8**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | A member's responsibility assignment over a scoped record was revoked with a stated reason by a named member, removing the authority it granted. |
+| Target meaning | A member's responsibility assignment over a scoped record was revoked with a stated reason by a named member, removing the authority it granted. |
+| Selected source meaning | A member's responsibility assignment over a scoped record was revoked with a stated reason by a named member, removing the authority it granted. |
 | Meaning source | authored 2026-10-29 from src/Compliance.Common/Features/Responsibilities/Events/ResponsibilityRevoked.cs |
 
 #### Schema

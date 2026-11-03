@@ -2,12 +2,12 @@
 
 Canonical events: **4**. Complete canonical event and available schema records: [owner event JSON](../data/events/examination-engagement.json).
 
-| Event | Kind | Adopted discriminator | Version | Schema fields | Meaning |
-| --- | --- | --- | --- | --- | --- |
-| ExaminationEngagementOpened | business | bdgrz.examinations.examination-engagement-opened | 2 | [Placeholder: schema absent] | An examination engagement was opened for a program with its engagement type, system boundary and optional Type I baseline, as the engagement's first revision. |
-| ExaminationEngagementRevised | business | bdgrz.examinations.examination-engagement-revised | 2 | [Placeholder: schema absent] | An examination engagement's terms were revised by a named member, recorded as the engagement's next revision. |
-| TypeIBaselineAmended | business | bdgrz.examinations.type-i-baseline-amended | 2 | [Placeholder: schema absent] | The frozen Type I baseline of an examination engagement was amended by a named member, recorded as a new baseline revision. |
-| TypeIBaselineFrozen | business | bdgrz.examinations.type-i-baseline-frozen | 2 | [Placeholder: schema absent] | The Type I baseline of an examination engagement was frozen at its current boundary, fixing the point-in-time position the engagement is measured against. |
+| Target event | Selected source name | Kind | Adopted discriminator | Version | Schema fields | Meaning |
+| --- | --- | --- | --- | --- | --- | --- |
+| ExaminationEngagementOpened | ExaminationEngagementOpened | business | bdgrz.examinations.examination-engagement-opened | 2 | [Placeholder: schema absent] | An examination engagement was opened for a program with its engagement type, system boundary and optional Type I baseline, as the engagement's first revision. |
+| ExaminationEngagementRevised | ExaminationEngagementRevised | business | bdgrz.examinations.examination-engagement-revised | 2 | [Placeholder: schema absent] | An examination engagement's terms were revised by a named member, recorded as the engagement's next revision. |
+| TypeIBaselineAmended | TypeIBaselineAmended | business | bdgrz.examinations.type-i-baseline-amended | 2 | [Placeholder: schema absent] | The frozen Type I baseline of an examination engagement was amended by a named member, recorded as a new baseline revision. |
+| TypeIBaselineFrozen | TypeIBaselineFrozen | business | bdgrz.examinations.type-i-baseline-frozen | 2 | [Placeholder: schema absent] | The Type I baseline of an examination engagement was frozen at its current boundary, fixing the point-in-time position the engagement is measured against. |
 
 ## Event details
 
@@ -15,6 +15,9 @@ Canonical events: **4**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | ExaminationEngagementOpened |
+| Selected source event name | ExaminationEngagementOpened |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:ExaminationEngagementOpened |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | ExaminationEngagementOpened |
@@ -24,7 +27,8 @@ Canonical events: **4**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | An examination engagement was opened for a program with its engagement type, system boundary and optional Type I baseline, as the engagement's first revision. |
+| Target meaning | An examination engagement was opened for a program with its engagement type, system boundary and optional Type I baseline, as the engagement's first revision. |
+| Selected source meaning | An examination engagement was opened for a program with its engagement type, system boundary and optional Type I baseline, as the engagement's first revision. |
 | Meaning source | authored 2026-10-29 from src/Compliance.Common/Features/Examinations/Events/ExaminationEngagementOpened.cs |
 
 #### Schema
@@ -45,6 +49,9 @@ Canonical events: **4**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | ExaminationEngagementRevised |
+| Selected source event name | ExaminationEngagementRevised |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:ExaminationEngagementRevised |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | ExaminationEngagementRevised |
@@ -54,7 +61,8 @@ Canonical events: **4**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | An examination engagement's terms were revised by a named member, recorded as the engagement's next revision. |
+| Target meaning | An examination engagement's terms were revised by a named member, recorded as the engagement's next revision. |
+| Selected source meaning | An examination engagement's terms were revised by a named member, recorded as the engagement's next revision. |
 | Meaning source | authored 2026-10-29 from src/Compliance.Common/Features/Examinations/Events/ExaminationEngagementRevised.cs |
 
 #### Schema
@@ -75,6 +83,9 @@ Canonical events: **4**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | TypeIBaselineAmended |
+| Selected source event name | TypeIBaselineAmended |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:TypeIBaselineAmended |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | TypeIBaselineAmended |
@@ -84,7 +95,8 @@ Canonical events: **4**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | The frozen Type I baseline of an examination engagement was amended by a named member, recorded as a new baseline revision. |
+| Target meaning | The frozen Type I baseline of an examination engagement was amended by a named member, recorded as a new baseline revision. |
+| Selected source meaning | The frozen Type I baseline of an examination engagement was amended by a named member, recorded as a new baseline revision. |
 | Meaning source | authored 2026-10-29 from src/Compliance.Common/Features/Examinations/Events/TypeIBaselineAmended.cs |
 
 #### Schema
@@ -105,6 +117,9 @@ Canonical events: **4**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | TypeIBaselineFrozen |
+| Selected source event name | TypeIBaselineFrozen |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:TypeIBaselineFrozen |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | TypeIBaselineFrozen |
@@ -114,7 +129,8 @@ Canonical events: **4**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | The Type I baseline of an examination engagement was frozen at its current boundary, fixing the point-in-time position the engagement is measured against. |
+| Target meaning | The Type I baseline of an examination engagement was frozen at its current boundary, fixing the point-in-time position the engagement is measured against. |
+| Selected source meaning | The Type I baseline of an examination engagement was frozen at its current boundary, fixing the point-in-time position the engagement is measured against. |
 | Meaning source | authored 2026-10-29 from src/Compliance.Common/Features/Examinations/Events/TypeIBaselineFrozen.cs |
 
 #### Schema

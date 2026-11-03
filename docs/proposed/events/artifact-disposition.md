@@ -2,11 +2,11 @@
 
 Canonical events: **3**. Complete canonical event and available schema records: [owner event JSON](../data/events/artifact-disposition.json).
 
-| Event | Kind | Adopted discriminator | Version | Schema fields | Meaning |
-| --- | --- | --- | --- | --- | --- |
-| ArtifactDispositionApproved | business | bdgrz.retention.artifact-disposition-approved | 1 | [Placeholder: schema absent] | Records the ArtifactDispositionApproved domain fact for one tenant-owned subject revision. |
-| ArtifactDispositionExecutionRequested | business | bdgrz.retention.artifact-disposition-execution-requested | 1 | [Placeholder: schema absent] | Records the ArtifactDispositionExecutionRequested domain fact for one tenant-owned subject revision. |
-| ArtifactDispositionResultRecorded | business | bdgrz.retention.artifact-disposition-result-recorded | 1 | [Placeholder: schema absent] | Records the ArtifactDispositionResultRecorded domain fact for one tenant-owned subject revision. |
+| Target event | Selected source name | Kind | Adopted discriminator | Version | Schema fields | Meaning |
+| --- | --- | --- | --- | --- | --- | --- |
+| ArtifactDispositionApproved | ArtifactDispositionApproved | business | bdgrz.retention.artifact-disposition-approved | 1 | [Placeholder: schema absent] | Records the ArtifactDispositionApproved domain fact for one tenant-owned subject revision. |
+| ArtifactDispositionExecutionRequested | ArtifactDispositionExecutionRequested | business | bdgrz.retention.artifact-disposition-execution-requested | 1 | [Placeholder: schema absent] | Records the ArtifactDispositionExecutionRequested domain fact for one tenant-owned subject revision. |
+| ArtifactDispositionResultRecorded | ArtifactDispositionResultRecorded | business | bdgrz.retention.artifact-disposition-result-recorded | 1 | [Placeholder: schema absent] | Records the ArtifactDispositionResultRecorded domain fact for one tenant-owned subject revision. |
 
 ## Event details
 
@@ -14,6 +14,9 @@ Canonical events: **3**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | ArtifactDispositionApproved |
+| Selected source event name | ArtifactDispositionApproved |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:ArtifactDispositionApproved |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | ArtifactDispositionApproved |
@@ -23,7 +26,8 @@ Canonical events: **3**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | Records the ArtifactDispositionApproved domain fact for one tenant-owned subject revision. |
+| Target meaning | Records the ArtifactDispositionApproved domain fact for one tenant-owned subject revision. |
+| Selected source meaning | Records the ArtifactDispositionApproved domain fact for one tenant-owned subject revision. |
 | Meaning source | record summary in src/Compliance.Common/Features/Retention/Events/ArtifactDispositionApproved.cs |
 
 #### Schema
@@ -44,6 +48,9 @@ Canonical events: **3**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | ArtifactDispositionExecutionRequested |
+| Selected source event name | ArtifactDispositionExecutionRequested |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:ArtifactDispositionExecutionRequested |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | ArtifactDispositionExecutionRequested |
@@ -53,7 +60,8 @@ Canonical events: **3**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | Records the ArtifactDispositionExecutionRequested domain fact for one tenant-owned subject revision. |
+| Target meaning | Records the ArtifactDispositionExecutionRequested domain fact for one tenant-owned subject revision. |
+| Selected source meaning | Records the ArtifactDispositionExecutionRequested domain fact for one tenant-owned subject revision. |
 | Meaning source | record summary in src/Compliance.Common/Features/Retention/Events/ArtifactDispositionExecutionRequested.cs |
 
 #### Schema
@@ -74,6 +82,9 @@ Canonical events: **3**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | ArtifactDispositionResultRecorded |
+| Selected source event name | ArtifactDispositionResultRecorded |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:ArtifactDispositionResultRecorded |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | ArtifactDispositionResultRecorded |
@@ -83,7 +94,8 @@ Canonical events: **3**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | Records the ArtifactDispositionResultRecorded domain fact for one tenant-owned subject revision. |
+| Target meaning | Records the ArtifactDispositionResultRecorded domain fact for one tenant-owned subject revision. |
+| Selected source meaning | Records the ArtifactDispositionResultRecorded domain fact for one tenant-owned subject revision. |
 | Meaning source | record summary in src/Compliance.Common/Features/Retention/Events/ArtifactDispositionResultRecorded.cs |
 
 #### Schema
@@ -100,7 +112,7 @@ Canonical events: **3**. Complete canonical event and available schema records: 
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [X006](../reactors/artifact-legal-hold-reactor.md#x006) | emitted semantic fact | ArtifactLegalHold | FenceArtifactDispositionForHold | ArtifactDisposition |
+| [X006](../reactors/artifact-legal-hold-reactor.md#x006) | emitted semantic fact | ArtifactLegalHold | StopArtifactDisposalForHold | ArtifactDisposition |
 
 
 

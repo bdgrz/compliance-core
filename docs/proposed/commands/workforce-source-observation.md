@@ -2,10 +2,10 @@
 
 Selected command contracts: **2**. Complete selected contracts and companion source evidence: [owner command JSON](../data/commands/workforce-source-observation.json).
 
-| Command | Kind | Identity | Fields | HTTP routes |
-| --- | --- | --- | --- | --- |
-| ReconcileWorkforceSourceObservation | command | CommandId | 7 | [Placeholder: value not recorded] |
-| RecordWorkforceSourceObservation | http | ObservationId | 8 | PUT /api/v1/tenants/{tenant_id}/workforce-source-observations/{observation_id} |
+| Target command | Selected source name | Kind | Identity | Fields | HTTP routes |
+| --- | --- | --- | --- | --- | --- |
+| ReconcileWorkforceSourceObservation | ReconcileWorkforceSourceObservation | command | CommandId | 7 | [Placeholder: value not recorded] |
+| RecordWorkforceSourceObservation | RecordWorkforceSourceObservation | http | ObservationId | 8 | PUT /api/v1/tenants/{tenant_id}/workforce-source-observations/{observation_id} |
 
 ## Selected command details
 
@@ -13,13 +13,16 @@ Selected command contracts: **2**. Complete selected contracts and companion sou
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | ReconcileWorkforceSourceObservation |
+| Selected source command name | ReconcileWorkforceSourceObservation |
+| Name decision | The selected source name is retained. |
 | Owner | WorkforceSourceObservation |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | command |
 | Logical identity | CommandId; Uuid; required=true; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
 | Entry point | [Placeholder: value not recorded] |
 | MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | [Placeholder: value not recorded] |
+| Selected semantic events | None listed |
 | Protocols | [Placeholder: value not recorded] |
 | Policy preservation | [Placeholder: value not recorded] |
 | Contract changes | [Placeholder: value not recorded] |
@@ -60,13 +63,16 @@ Required tests: [Placeholder: required tests not recorded]
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | RecordWorkforceSourceObservation |
+| Selected source command name | RecordWorkforceSourceObservation |
+| Name decision | The selected source name is retained. |
 | Owner | WorkforceSourceObservation |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | http |
 | Logical identity | ObservationId; Uuid; required=true; deterministic receiver identity derived from the admitted root fact, episode and generation: exact redelivery resolves the original result, a changed admission is a new identity |
 | Entry point | [Placeholder: value not recorded] |
 | MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | [Placeholder: value not recorded] |
+| Selected semantic events | None listed |
 | Protocols | [Placeholder: value not recorded] |
 | Policy preservation | [Placeholder: value not recorded] |
 | Contract changes | [Placeholder: value not recorded] |

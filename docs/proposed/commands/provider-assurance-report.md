@@ -2,12 +2,12 @@
 
 Selected command contracts: **4**. Complete selected contracts and companion source evidence: [owner command JSON](../data/commands/provider-assurance-report.json).
 
-| Command | Kind | Identity | Fields | HTTP routes |
-| --- | --- | --- | --- | --- |
-| RecordAssuranceReport | http | ReportId | 4 | PUT /api/v1/tenants/{tenant_id}/providers/{provider_id}/assurance-reports/{report_id} [ComplianceAuthorizationPolicies.ApiUser] |
-| ReviseAssuranceReport | http | CommandId | 6 | PUT /api/v1/tenants/{tenant_id}/providers/{provider_id}/assurance-reports/revise-assurance-report/{command_id} [ApiUser + existing request-scope authorizers] |
-| AuthorizeProviderAssuranceReportProviderReviewUse | receiver | CommandId | 10 | [Placeholder: value not recorded] |
-| SettleProviderAssuranceReportProviderReviewUse | receiver | CommandId | 10 | [Placeholder: value not recorded] |
+| Target command | Selected source name | Kind | Identity | Fields | HTTP routes |
+| --- | --- | --- | --- | --- | --- |
+| RecordAssuranceReport | RecordAssuranceReport | http | ReportId | 4 | PUT /api/v1/tenants/{tenant_id}/providers/{provider_id}/assurance-reports/{report_id} [ComplianceAuthorizationPolicies.ApiUser] |
+| ReviseAssuranceReport | ReviseAssuranceReport | http | CommandId | 6 | PUT /api/v1/tenants/{tenant_id}/providers/{provider_id}/assurance-reports/revise-assurance-report/{command_id} [ApiUser + existing request-scope authorizers] |
+| AuthorizeProviderAssuranceReportProviderReview | AuthorizeProviderAssuranceReportProviderReviewUse | receiver | CommandId | 10 | [Placeholder: value not recorded] |
+| CloseProviderAssuranceReportProviderReviewAuthorization | SettleProviderAssuranceReportProviderReviewUse | receiver | CommandId | 10 | [Placeholder: value not recorded] |
 
 ## Selected command details
 
@@ -15,6 +15,9 @@ Selected command contracts: **4**. Complete selected contracts and companion sou
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | RecordAssuranceReport |
+| Selected source command name | RecordAssuranceReport |
+| Name decision | The selected source name is retained. |
 | Owner | ProviderAssuranceReport |
 | Contract record status | target_contract |
 | Kind | http |
@@ -63,6 +66,9 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | ReviseAssuranceReport |
+| Selected source command name | ReviseAssuranceReport |
+| Name decision | The selected source name is retained. |
 | Owner | ProviderAssuranceReport |
 | Contract record status | target_contract |
 | Kind | http |
@@ -109,17 +115,20 @@ Existing tests: test/Compliance.Tests/Features/Providers/PersonalProviderReviewT
 
 Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision, ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity, ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof, ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome
 
-### AuthorizeProviderAssuranceReportProviderReviewUse
+### AuthorizeProviderAssuranceReportProviderReview
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | AuthorizeProviderAssuranceReportProviderReview |
+| Selected source command name | AuthorizeProviderAssuranceReportProviderReviewUse |
+| Name decision | The command authorizes the named business action; the extra Use suffix describes the coordination mechanism. |
 | Owner | ProviderAssuranceReport |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; reactor; deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result |
 | Entry point | [Placeholder: value not recorded] |
 | MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | [Placeholder: value not recorded] |
+| Selected semantic events | None listed |
 | Protocols | [Placeholder: value not recorded] |
 | Policy preservation | [Placeholder: value not recorded] |
 | Contract changes | [Placeholder: value not recorded] |
@@ -159,17 +168,20 @@ Existing tests: [Placeholder: existing tests not recorded]
 
 Required tests: [Placeholder: required tests not recorded]
 
-### SettleProviderAssuranceReportProviderReviewUse
+### CloseProviderAssuranceReportProviderReviewAuthorization
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | CloseProviderAssuranceReportProviderReviewAuthorization |
+| Selected source command name | SettleProviderAssuranceReportProviderReviewUse |
+| Name decision | The command ends the exact authorization after its business action or cancellation. |
 | Owner | ProviderAssuranceReport |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; reactor; deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result |
 | Entry point | [Placeholder: value not recorded] |
 | MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | [Placeholder: value not recorded] |
+| Selected semantic events | None listed |
 | Protocols | [Placeholder: value not recorded] |
 | Policy preservation | [Placeholder: value not recorded] |
 | Contract changes | [Placeholder: value not recorded] |
@@ -212,7 +224,7 @@ Required tests: [Placeholder: required tests not recorded]
 
 ## Source contracts
 
-| Command | Handler | Registered | Entry point |
+| Selected source command | Handler | Registered | Entry point |
 | --- | --- | --- | --- |
 | RecordAssuranceReport | RecordAssuranceReportHandler | true | authorized_http_and_mcp |
 | ReviseAssuranceReport | ReviseAssuranceReportHandler | true | authorized_http_and_mcp |

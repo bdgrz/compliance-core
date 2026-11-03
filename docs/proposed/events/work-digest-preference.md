@@ -2,9 +2,9 @@
 
 Canonical events: **1**. Complete canonical event and available schema records: [owner event JSON](../data/events/work-digest-preference.json).
 
-| Event | Kind | Adopted discriminator | Version | Schema fields | Meaning |
-| --- | --- | --- | --- | --- | --- |
-| WorkDigestPreferenceRecorded | technical | bdgrz.work.digest_preference.recorded | 1 | [Placeholder: schema absent] | A member's authored preference receipt, including an accepted no-change decision. |
+| Target event | Selected source name | Kind | Adopted discriminator | Version | Schema fields | Meaning |
+| --- | --- | --- | --- | --- | --- | --- |
+| WorkDigestPreferenceRecorded | WorkDigestPreferenceRecorded | technical | bdgrz.work.digest_preference.recorded | 1 | [Placeholder: schema absent] | A member's authored preference receipt, including an accepted no-change decision. |
 
 ## Event details
 
@@ -12,6 +12,9 @@ Canonical events: **1**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | WorkDigestPreferenceRecorded |
+| Selected source event name | WorkDigestPreferenceRecorded |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:WorkDigestPreferenceRecorded |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | WorkDigestPreferenceRecorded |
@@ -21,7 +24,8 @@ Canonical events: **1**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | EV_D05 |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | A member's authored preference receipt, including an accepted no-change decision. |
+| Target meaning | A member's authored preference receipt, including an accepted no-change decision. |
+| Selected source meaning | A member's authored preference receipt, including an accepted no-change decision. |
 | Meaning source | record summary in src/Compliance.Common/Features/Work/Events/WorkDigestPreferenceRecorded.cs |
 
 #### Schema

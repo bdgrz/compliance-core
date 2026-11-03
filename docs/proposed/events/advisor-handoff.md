@@ -2,23 +2,26 @@
 
 Canonical events: **8**. Complete canonical event and available schema records: [owner event JSON](../data/events/advisor-handoff.json).
 
-| Event | Kind | Adopted discriminator | Version | Schema fields | Meaning |
-| --- | --- | --- | --- | --- | --- |
-| AdvisorArtifactDownloadUseAuthorized | reservation | bdgrz.advisor-handoff.advisor-artifact-download-use-authorized | 1 | 8 | null (recorded) |
-| AdvisorArtifactDownloadUseSettled | reservation | bdgrz.advisor-handoff.advisor-artifact-download-use-settled | 1 | 8 | null (recorded) |
-| AdvisorFeedbackAdmitted | business | bdgrz.advisor-handoff.advisor-feedback-admitted | 1 | 8 | The handoff accepted one feedback contribution while it was ready, unrevoked and unclosed, on an exactly selected version. Intent is the frozen ChildAdmissionIntent that carries the complete contribution; the thread is materialized independently and the admission, not the materialization, is the authority. The logical id of Operation is the feedback id and Generation is the selection generation of the handoff at admission. |
-| AdvisorHandoffClosed | business | bdgrz.advisor-handoff.closed | 2 | 10 | The handoff was closed; feedback admitted before the closure is still materialized. |
-| AdvisorHandoffCreated | business | bdgrz.advisor-handoff.created | 2 | 12 | Opens one bounded advisor handoff. RecordVersionsManifest is the complete exact selection as verified content (AdvisorHandoffCreated.RecordVersionsManifest.v1); readers verify it before use. |
-| AdvisorHandoffReadiedForReview | business | bdgrz.advisor-handoff.readied-for-review | 1 | 9 | The handoff was opened to the assigned advisor for review. |
-| AdvisorHandoffRevoked | business | bdgrz.advisor-handoff.revoked | 2 | 10 | The handoff was revoked; feedback admitted before the revocation is still materialized. |
-| AdvisorHandoffSelectionRevised | business | bdgrz.advisor-handoff.selection-revised | 2 | 11 | Replaces the selected versions of an open handoff and advances its selection generation. RecordVersionsManifest is the complete exact selection as verified content (AdvisorHandoffSelectionRevised.RecordVersionsManifest.v1). |
+| Target event | Selected source name | Kind | Adopted discriminator | Version | Schema fields | Meaning |
+| --- | --- | --- | --- | --- | --- | --- |
+| AdvisorArtifactDownloadAuthorized | AdvisorArtifactDownloadUseAuthorized | reservation | bdgrz.advisor-handoff.advisor-artifact-download-use-authorized | 1 | 8 | null (recorded) |
+| AdvisorArtifactDownloadAuthorizationClosed | AdvisorArtifactDownloadUseSettled | reservation | bdgrz.advisor-handoff.advisor-artifact-download-use-settled | 1 | 8 | null (recorded) |
+| AdvisorFeedbackAdmitted | AdvisorFeedbackAdmitted | business | bdgrz.advisor-handoff.advisor-feedback-admitted | 1 | 8 | The handoff accepted one feedback contribution while it was ready, unrevoked and unclosed, on an exactly selected version. Intent is the frozen ChildAdmissionIntent that carries the complete contribution; the thread is materialized independently and the admission, not the materialization, is the authority. The logical id of Operation is the feedback id and Generation is the selection generation of the handoff at admission. |
+| AdvisorHandoffClosed | AdvisorHandoffClosed | business | bdgrz.advisor-handoff.closed | 2 | 10 | The handoff was closed; feedback admitted before the closure is still materialized. |
+| AdvisorHandoffCreated | AdvisorHandoffCreated | business | bdgrz.advisor-handoff.created | 2 | 12 | Opens one bounded advisor handoff. RecordVersionsManifest is the complete exact selection as verified content (AdvisorHandoffCreated.RecordVersionsManifest.v1); readers verify it before use. |
+| AdvisorHandoffOpenedForReview | AdvisorHandoffReadiedForReview | business | bdgrz.advisor-handoff.readied-for-review | 1 | 9 | The handoff was opened to the assigned advisor for review. |
+| AdvisorHandoffRevoked | AdvisorHandoffRevoked | business | bdgrz.advisor-handoff.revoked | 2 | 10 | The handoff was revoked; feedback admitted before the revocation is still materialized. |
+| AdvisorHandoffSelectionRevised | AdvisorHandoffSelectionRevised | business | bdgrz.advisor-handoff.selection-revised | 2 | 11 | Replaces the selected versions of an open handoff and advances its selection generation. RecordVersionsManifest is the complete exact selection as verified content (AdvisorHandoffSelectionRevised.RecordVersionsManifest.v1). |
 
 ## Event details
 
-### AdvisorArtifactDownloadUseAuthorized
+### AdvisorArtifactDownloadAuthorized
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | AdvisorArtifactDownloadAuthorized |
+| Selected source event name | AdvisorArtifactDownloadUseAuthorized |
+| Name decision | Authorization is already the completed fact; Use adds no stakeholder meaning. |
 | Canonical semantic key | event:AdvisorArtifactDownloadUseAuthorized |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | AdvisorArtifactDownloadUseAuthorized |
@@ -28,7 +31,8 @@ Canonical events: **8**. Complete canonical event and available schema records: 
 | Source status | planned_no_source_type |
 | Adopted decision IDs | ARTIFACT_DOWNLOAD |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | null (recorded) |
+| Target meaning | null (recorded) |
+| Selected source meaning | null (recorded) |
 | Meaning source | [Placeholder: value not recorded] |
 
 #### Selected schema and implementation evidence
@@ -102,12 +106,15 @@ SourceUseAuthorizationIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T099](../reactors/one-committed-evidence-artifact-download-requested-starter.md#t099) | emitted semantic fact | EvidenceArtifact | AuthorizeAdvisorArtifactDownloadUse | AdvisorHandoff |
+| [T099](../reactors/one-committed-evidence-artifact-download-requested-starter.md#t099) | emitted semantic fact | EvidenceArtifact | AuthorizeAdvisorArtifactDownload | AdvisorHandoff |
 
-### AdvisorArtifactDownloadUseSettled
+### AdvisorArtifactDownloadAuthorizationClosed
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | AdvisorArtifactDownloadAuthorizationClosed |
+| Selected source event name | AdvisorArtifactDownloadUseSettled |
+| Name decision | The exact authorization ended; the recorded outcome still distinguishes use, cancellation, or a late fence. |
 | Canonical semantic key | event:AdvisorArtifactDownloadUseSettled |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | AdvisorArtifactDownloadUseSettled |
@@ -117,7 +124,8 @@ SourceUseAuthorizationIntent
 | Source status | planned_no_source_type |
 | Adopted decision IDs | ARTIFACT_DOWNLOAD |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | null (recorded) |
+| Target meaning | null (recorded) |
+| Selected source meaning | null (recorded) |
 | Meaning source | [Placeholder: value not recorded] |
 
 #### Selected schema and implementation evidence
@@ -191,12 +199,15 @@ SourceUseAuthorizationIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T102](../reactors/one-committed-evidence-artifact-download-requested-starter.md#t102) | emitted semantic fact | ArtifactDownloadGrant | SettleAdvisorArtifactDownloadUse | AdvisorHandoff |
+| [T102](../reactors/one-committed-evidence-artifact-download-requested-starter.md#t102) | emitted semantic fact | ArtifactDownloadGrant | CloseAdvisorArtifactDownloadAuthorization | AdvisorHandoff |
 
 ### AdvisorFeedbackAdmitted
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | AdvisorFeedbackAdmitted |
+| Selected source event name | AdvisorFeedbackAdmitted |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:AdvisorFeedbackAdmitted |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | AdvisorFeedbackAdmitted |
@@ -206,7 +217,8 @@ SourceUseAuthorizationIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | The handoff accepted one feedback contribution while it was ready, unrevoked and unclosed, on an exactly selected version. Intent is the frozen ChildAdmissionIntent that carries the complete contribution; the thread is materialized independently and the admission, not the materialization, is the authority. The logical id of Operation is the feedback id and Generation is the selection generation of the handoff at admission. |
+| Target meaning | The handoff accepted one feedback contribution while it was ready, unrevoked and unclosed, on an exactly selected version. Intent is the frozen ChildAdmissionIntent that carries the complete contribution; the thread is materialized independently and the admission, not the materialization, is the authority. The logical id of Operation is the feedback id and Generation is the selection generation of the handoff at admission. |
+| Selected source meaning | The handoff accepted one feedback contribution while it was ready, unrevoked and unclosed, on an exactly selected version. Intent is the frozen ChildAdmissionIntent that carries the complete contribution; the thread is materialized independently and the admission, not the materialization, is the authority. The logical id of Operation is the feedback id and Generation is the selection generation of the handoff at admission. |
 | Meaning source | record summary in src/Compliance.Common/Features/AdvisorCollaboration/Events/AdvisorFeedbackAdmitted.cs |
 
 #### Selected schema and implementation evidence
@@ -284,12 +296,15 @@ ChildAdmissionIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T013](../reactors/advisor-feedback-materialization-reactor.md#t013) | physical root, logical prerequisite | AdvisorHandoff | MaterializeAdvisorFeedback | AdvisorFeedbackThread |
+| [T013](../reactors/advisor-feedback-materialization-reactor.md#t013) | physical root, logical prerequisite | AdvisorHandoff | RecordAdvisorHandoffFeedback | AdvisorFeedbackThread |
 
 ### AdvisorHandoffClosed
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | AdvisorHandoffClosed |
+| Selected source event name | AdvisorHandoffClosed |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:AdvisorHandoffClosed |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | AdvisorHandoffClosed |
@@ -299,7 +314,8 @@ ChildAdmissionIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | `{"discriminator":"bdgrz.advisor-handoff.closed","version":1}` |
-| Meaning | The handoff was closed; feedback admitted before the closure is still materialized. |
+| Target meaning | The handoff was closed; feedback admitted before the closure is still materialized. |
+| Selected source meaning | The handoff was closed; feedback admitted before the closure is still materialized. |
 | Meaning source | record summary in src/Compliance.Common/Features/AdvisorCollaboration/Events/AdvisorHandoffClosed.cs |
 
 #### Selected schema and implementation evidence
@@ -345,6 +361,9 @@ ChildAdmissionIntent
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | AdvisorHandoffCreated |
+| Selected source event name | AdvisorHandoffCreated |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:AdvisorHandoffCreated |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | AdvisorHandoffCreated |
@@ -354,7 +373,8 @@ ChildAdmissionIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | `{"discriminator":"bdgrz.advisor-handoff.created","version":1}` |
-| Meaning | Opens one bounded advisor handoff. RecordVersionsManifest is the complete exact selection as verified content (AdvisorHandoffCreated.RecordVersionsManifest.v1); readers verify it before use. |
+| Target meaning | Opens one bounded advisor handoff. RecordVersionsManifest is the complete exact selection as verified content (AdvisorHandoffCreated.RecordVersionsManifest.v1); readers verify it before use. |
+| Selected source meaning | Opens one bounded advisor handoff. RecordVersionsManifest is the complete exact selection as verified content (AdvisorHandoffCreated.RecordVersionsManifest.v1); readers verify it before use. |
 | Meaning source | record summary in src/Compliance.Common/Features/AdvisorCollaboration/Events/AdvisorHandoffCreated.cs |
 
 #### Selected schema and implementation evidence
@@ -408,10 +428,13 @@ ChildAdmissionIntent
 
 [Placeholder: no selected choreography row names this event as root, prerequisite, or emitted fact.]
 
-### AdvisorHandoffReadiedForReview
+### AdvisorHandoffOpenedForReview
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | AdvisorHandoffOpenedForReview |
+| Selected source event name | AdvisorHandoffReadiedForReview |
+| Name decision | Names the completed opening of the handoff to its assigned advisor for review. |
 | Canonical semantic key | event:AdvisorHandoffReadiedForReview |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | AdvisorHandoffReadiedForReview |
@@ -421,7 +444,8 @@ ChildAdmissionIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | The handoff was opened to the assigned advisor for review. |
+| Target meaning | The handoff was opened to the assigned advisor for review. |
+| Selected source meaning | The handoff was opened to the assigned advisor for review. |
 | Meaning source | record summary in src/Compliance.Common/Features/AdvisorCollaboration/Events/AdvisorHandoffReadiedForReview.cs |
 
 #### Selected schema and implementation evidence
@@ -466,6 +490,9 @@ ChildAdmissionIntent
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | AdvisorHandoffRevoked |
+| Selected source event name | AdvisorHandoffRevoked |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:AdvisorHandoffRevoked |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | AdvisorHandoffRevoked |
@@ -475,7 +502,8 @@ ChildAdmissionIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | `{"discriminator":"bdgrz.advisor-handoff.revoked","version":1}` |
-| Meaning | The handoff was revoked; feedback admitted before the revocation is still materialized. |
+| Target meaning | The handoff was revoked; feedback admitted before the revocation is still materialized. |
+| Selected source meaning | The handoff was revoked; feedback admitted before the revocation is still materialized. |
 | Meaning source | record summary in src/Compliance.Common/Features/AdvisorCollaboration/Events/AdvisorHandoffRevoked.cs |
 
 #### Selected schema and implementation evidence
@@ -521,6 +549,9 @@ ChildAdmissionIntent
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | AdvisorHandoffSelectionRevised |
+| Selected source event name | AdvisorHandoffSelectionRevised |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:AdvisorHandoffSelectionRevised |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | AdvisorHandoffSelectionRevised |
@@ -530,7 +561,8 @@ ChildAdmissionIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | `{"discriminator":"bdgrz.advisor-handoff.selection-revised","version":1}` |
-| Meaning | Replaces the selected versions of an open handoff and advances its selection generation. RecordVersionsManifest is the complete exact selection as verified content (AdvisorHandoffSelectionRevised.RecordVersionsManifest.v1). |
+| Target meaning | Replaces the selected versions of an open handoff and advances its selection generation. RecordVersionsManifest is the complete exact selection as verified content (AdvisorHandoffSelectionRevised.RecordVersionsManifest.v1). |
+| Selected source meaning | Replaces the selected versions of an open handoff and advances its selection generation. RecordVersionsManifest is the complete exact selection as verified content (AdvisorHandoffSelectionRevised.RecordVersionsManifest.v1). |
 | Meaning source | record summary in src/Compliance.Common/Features/AdvisorCollaboration/Events/AdvisorHandoffSelectionRevised.cs |
 
 #### Selected schema and implementation evidence

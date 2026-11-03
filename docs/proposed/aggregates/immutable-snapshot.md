@@ -24,13 +24,13 @@
 | Command | Kind | Identity field |
 | --- | --- | --- |
 | [AmendProgramScopeSnapshot](../commands/immutable-snapshot.md#amendprogramscopesnapshot) | http | CommandId |
-| [FreezeProgramScopeSnapshot](../commands/immutable-snapshot.md#freezeprogramscopesnapshot) | http | SnapshotId |
+| [FinalizeProgramScopeSnapshot](../commands/immutable-snapshot.md#finalizeprogramscopesnapshot) | http | SnapshotId |
 
 ## Events
 
 | Event | Discriminator | Version |
 | --- | --- | --- |
-| [SnapshotFrozen](../events/immutable-snapshot.md#snapshotfrozen) | bdgrz.snapshot.frozen | 1 |
+| [SnapshotFinalized](../events/immutable-snapshot.md#snapshotfinalized) | bdgrz.snapshot.frozen | 1 |
 
 ## Cross-owner flows
 

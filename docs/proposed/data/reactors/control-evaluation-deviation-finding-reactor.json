@@ -1,5 +1,7 @@
 {
-  "root": "ControlEvaluationDeviationFindingReactor",
+  "sourceRoot": "ControlEvaluationDeviationFindingReactor",
+  "targetRoot": "ControlEvaluationDeviationFindingReactor",
+  "businessReason": "Make each material control failure visible for investigation and remediation rather than leaving it only in the evaluation.",
   "rows": [
     {
       "id": "S001",

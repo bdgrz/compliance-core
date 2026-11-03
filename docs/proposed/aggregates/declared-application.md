@@ -23,12 +23,12 @@
 
 | Command | Kind | Identity field |
 | --- | --- | --- |
-| [ApplyApplicationImportEffect](../commands/declared-application.md#applyapplicationimporteffect) | receiver | CommandId |
+| [ApplyApplicationImportChange](../commands/declared-application.md#applyapplicationimportchange) | receiver | CommandId |
 | [DeclareApplication](../commands/declared-application.md#declareapplication) | http | ApplicationId |
 | [RetireApplication](../commands/declared-application.md#retireapplication) | http | CommandId |
 | [ReviseApplication](../commands/declared-application.md#reviseapplication) | http | CommandId |
 | [ReserveApplicationImportTarget](../commands/declared-application.md#reserveapplicationimporttarget) | receiver | CommandId |
-| [FenceApplicationImportTarget](../commands/declared-application.md#fenceapplicationimporttarget) | receiver | CommandId |
+| [BlockCanceledApplicationImportChanges](../commands/declared-application.md#blockcanceledapplicationimportchanges) | receiver | CommandId |
 | [ReleaseApplicationImportTarget](../commands/declared-application.md#releaseapplicationimporttarget) | receiver | CommandId |
 | [ApplyApplicationNameChange](../commands/declared-application.md#applyapplicationnamechange) | receiver | CommandId |
 
@@ -37,10 +37,10 @@
 | Event | Discriminator | Version |
 | --- | --- | --- |
 | [ApplicationDeclared](../events/declared-application.md#applicationdeclared) | bdgrz.application.declared | 1 |
-| [ApplicationImportEffectCanceled](../events/declared-application.md#applicationimporteffectcanceled) | bdgrz.declared_application.import_effect_canceled | 1 |
-| [ApplicationImportEffectPending](../events/declared-application.md#applicationimporteffectpending) | bdgrz.application_import.effect_pending | 2 |
+| [ApplicationImportChangesBlockedAfterCancellation](../events/declared-application.md#applicationimportchangesblockedaftercancellation) | bdgrz.declared_application.import_effect_canceled | 1 |
+| [ApplicationImportChangeProvisionallyApplied](../events/declared-application.md#applicationimportchangeprovisionallyapplied) | bdgrz.application_import.effect_pending | 2 |
 | [ApplicationImportTargetAuthorized](../events/declared-application.md#applicationimporttargetauthorized) | bdgrz.declared_application.import_target_authorized | 1 |
-| [ApplicationImportTargetSettled](../events/declared-application.md#applicationimporttargetsettled) | bdgrz.declared_application.import_target_settled | 1 |
+| [ApplicationImportTargetHoldEnded](../events/declared-application.md#applicationimporttargetholdended) | bdgrz.declared_application.import_target_settled | 1 |
 | [ApplicationRetired](../events/declared-application.md#applicationretired) | bdgrz.application.retired | 1 |
 | [ApplicationRevised](../events/declared-application.md#applicationrevised) | bdgrz.application.revised | 1 |
 
@@ -49,8 +49,8 @@
 | Row | Kind | Source owner | Target owner | Command |
 | --- | --- | --- | --- | --- |
 | [T015](../reactors/import-source-admission-reactor.md#t015) | reaction_or_regular_process_stage | ApplicationImportBatch | DeclaredApplication | ReserveApplicationImportTarget |
-| [T016](../reactors/import-source-admission-reactor.md#t016) | reaction_or_regular_process_stage | ApplicationImportBatch | DeclaredApplication | ApplyApplicationImportEffect |
-| [T018](../reactors/import-cancellation-reactor.md#t018) | reaction_or_regular_process_stage | ApplicationImportBatch | DeclaredApplication | FenceApplicationImportTarget |
+| [T016](../reactors/import-source-admission-reactor.md#t016) | reaction_or_regular_process_stage | ApplicationImportBatch | DeclaredApplication | ApplyApplicationImportChange |
+| [T018](../reactors/import-cancellation-reactor.md#t018) | reaction_or_regular_process_stage | ApplicationImportBatch | DeclaredApplication | BlockCanceledApplicationImportChanges |
 | [T021](../reactors/import-source-admission-reactor.md#t021) | reaction_or_regular_process_stage | ApplicationImportBatch | DeclaredApplication | ReleaseApplicationImportTarget |
 | [X000](../reactors/application-name-change-reactor.md#x000) | planned_reaction | DeclaredApplication | ApplicationNameClaim | ClaimApplicationName |
 | [X001](../reactors/application-name-change-reactor.md#x001) | planned_reaction | ApplicationNameClaim | DeclaredApplication | ApplyApplicationNameChange |

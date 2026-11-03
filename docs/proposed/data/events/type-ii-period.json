@@ -112,7 +112,11 @@
         "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "DueControlOccurrencesGenerated",
+      "targetName": "DueControlOccurrencesGenerated",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "The recurring control occurrences falling due in a Type II period through a stated date were selected as one complete set for a generation key, so each is generated once."
     },
     {
       "canonical": {
@@ -319,7 +323,11 @@
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "resolvedIntentSchema": "TypeIIRangeIntent",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "ObservationPeriodAmended",
+      "targetName": "ObservationPeriodAmended",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "The observation period of a Type II examination was amended by a named member under an authorized calendar, recorded as the period's next revision."
     },
     {
       "canonical": {
@@ -424,7 +432,11 @@
         "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "ObservationPeriodCloseFrozen",
+      "targetName": "ObservationPeriodCloseFrozen",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "The close of a Type II observation period was frozen against the exact admitted calendar intent, fixing the end of the period under examination."
     },
     {
       "canonical": {
@@ -448,7 +460,11 @@
         "meaning": "Closing a Type II observation period was proposed by a named member after validation of the period, awaiting approval.",
         "meaningSource": "authored 2026-10-29 from src/Compliance.Common/Features/AuditPopulations/Events/ObservationPeriodCloseProposed.cs"
       },
-      "schema": null
+      "schema": null,
+      "sourceName": "ObservationPeriodCloseProposed",
+      "targetName": "ObservationPeriodCloseProposed",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "Closing a Type II observation period was proposed by a named member after validation of the period, awaiting approval."
     },
     {
       "canonical": {
@@ -655,7 +671,11 @@
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "resolvedIntentSchema": "TypeIIRangeIntent",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "ObservationPeriodStarted",
+      "targetName": "ObservationPeriodStarted",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "A Type II observation period was started by a named member under an authorized calendar, beginning the window over which controls are examined."
     },
     {
       "canonical": {
@@ -846,7 +866,11 @@
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "resolvedIntentSchema": "TypeIIRangeIntent",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "TypeIIPeriodAmendmentAccepted",
+      "targetName": "TypeIIPeriodAmendmentAccepted",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "The root native acceptance of a period amendment. Both the old and the new range are frozen in the intent; the range of the period only changes once ObservationPeriodAmended follows."
     },
     {
       "canonical": {
@@ -1037,7 +1061,11 @@
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "resolvedIntentSchema": "TypeIIRangeIntent",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "TypeIIPeriodAmendmentCanceled",
+      "targetName": "TypeIIPeriodAmendmentCanceled",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "A pending amendment ended before it applied, by explicit cancellation or by a proven calendar conflict. The fact is the local receiver fence: a delayed apply sees it and does nothing, and only then is the pending calendar reservation released."
     },
     {
       "canonical": {
@@ -1061,7 +1089,11 @@
         "meaning": "The recorded close of a Type II period was amended by a named member under the exact admitted calendar intent, replacing the prior close.",
         "meaningSource": "authored 2026-10-29 from src/Compliance.Common/Features/AuditPopulations/Events/TypeIIPeriodCloseAmended.cs"
       },
-      "schema": null
+      "schema": null,
+      "sourceName": "TypeIIPeriodCloseAmended",
+      "targetName": "TypeIIPeriodCloseAmended",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "The recorded close of a Type II period was amended by a named member under the exact admitted calendar intent, replacing the prior close."
     },
     {
       "canonical": {
@@ -1085,7 +1117,11 @@
         "meaning": "The proposed close of a Type II period was approved by a named member, closing the observation period.",
         "meaningSource": "authored 2026-10-29 from src/Compliance.Common/Features/AuditPopulations/Events/TypeIIPeriodCloseApproved.cs"
       },
-      "schema": null
+      "schema": null,
+      "sourceName": "TypeIIPeriodCloseApproved",
+      "targetName": "TypeIIPeriodCloseApproved",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "The proposed close of a Type II period was approved by a named member, closing the observation period."
     },
     {
       "canonical": {
@@ -1276,7 +1312,11 @@
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "resolvedIntentSchema": "TypeIIRangeIntent",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "TypeIIPeriodOpeningAccepted",
+      "targetName": "TypeIIPeriodOpeningAccepted",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "The root native acceptance of a period opening. The complete opening intent is persisted here before the calendar is touched; the period only exists once ObservationPeriodStarted follows."
     },
     {
       "canonical": {
@@ -1467,7 +1507,11 @@
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "resolvedIntentSchema": "TypeIIRangeIntent",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "TypeIIPeriodOpeningRejected",
+      "targetName": "TypeIIPeriodOpeningRejected",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "A pending opening was rejected because the calendar proved its range conflicts. The rejection fences a delayed apply; the same period identity is never reopened with changed intent."
     }
   ]
 }

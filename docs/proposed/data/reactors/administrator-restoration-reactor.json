@@ -1,5 +1,7 @@
 {
-  "root": "AdministratorRestorationReactor",
+  "sourceRoot": "AdministratorRestorationReactor",
+  "targetRoot": "AdministratorRestorationReactor",
+  "businessReason": "Reinstate the exact member episode after an accepted administrator restoration.",
   "rows": [
     {
       "id": "T051",

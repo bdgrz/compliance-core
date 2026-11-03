@@ -2,17 +2,17 @@
 
 Canonical events: **9**. Complete canonical event and available schema records: [owner event JSON](../data/events/application-import-batch.json).
 
-| Event | Kind | Adopted discriminator | Version | Schema fields | Meaning |
-| --- | --- | --- | --- | --- | --- |
-| ApplicationImportCanceled | business | bdgrz.application_import.canceled | 2 | 11 | The batch is canceled: every target was fenced and nothing was published. |
-| ApplicationImportCancellationAccepted | business | bdgrz.application_import.cancellation_accepted | 1 | 8 | The root native acceptance of a cancellation. It is the batch-local fence: a later commit of the batch is refused. Every target is then fenced before any hold is released. |
-| ApplicationImportCommitted | business | bdgrz.application_import.committed | 2 | 14 | The one publication fact of a batch: every target is published together. EffectsManifest lists the native proof of every frozen row; FrozenRows is the complete frozen row list. SourceGeneration is the source revision the plan was frozen against. |
-| ApplicationImportExecutionAuthorized | reservation | bdgrz.application_import.execution_authorized | 1 | 8 | The batch authorizes execution after its source claim: the target reservations, applications and publication are driven by this fact. It carries the sealed plan's intent unchanged. |
-| ApplicationImportFailed | business | bdgrz.application_import.failed | 2 | 12 | A terminal failure of a batch. Existing native business fact, rehomed on the batch. |
-| ApplicationImportPlanSealed | business | bdgrz.application_import.plan_sealed | 2 | 12 | The root native acceptance of a batch plan. FrozenPlan is the complete ImportFrozenPlanIntent: every row, target group and source claim, the actors, counts, digest and source cut. It is the root of ApplicationImportExecutionProcess. |
-| ApplicationImportRetirementProposalSealed | business | bdgrz.application_import.retirement_proposal_sealed | 2 | 7 | The preparer's omission proposal, sealed with its complete immutable content. It is never authority to retire: acceptance still requires current impact evidence. |
-| ApplicationImportRowCorrelated | business | bdgrz.application_import.row_correlated | 2 | 17 | A personal link-existing or create-new decision for one staged row. |
-| ApplicationImportStaged | business | bdgrz.application_import.staged | 2 | 14 | The immutable staged observation of a source and the root native acceptance of its submission. The complete row content is the immutable RowsManifest; RowCount and InvalidCount summarize it for readers. |
+| Target event | Selected source name | Kind | Adopted discriminator | Version | Schema fields | Meaning |
+| --- | --- | --- | --- | --- | --- | --- |
+| ApplicationImportCanceled | ApplicationImportCanceled | business | bdgrz.application_import.canceled | 2 | 11 | The batch is canceled: every target was fenced and nothing was published. |
+| ApplicationImportCancellationAccepted | ApplicationImportCancellationAccepted | business | bdgrz.application_import.cancellation_accepted | 1 | 8 | The root native acceptance of a cancellation. It is the batch-local fence: a later commit of the batch is refused. Every target is then fenced before any hold is released. |
+| ApplicationImportCommitted | ApplicationImportCommitted | business | bdgrz.application_import.committed | 2 | 14 | The one publication fact of a batch: every target is published together. EffectsManifest lists the native proof of every frozen row; FrozenRows is the complete frozen row list. SourceGeneration is the source revision the plan was frozen against. |
+| ApplicationImportExecutionAuthorized | ApplicationImportExecutionAuthorized | reservation | bdgrz.application_import.execution_authorized | 1 | 8 | The batch authorizes execution after its source claim: the target reservations, applications and publication are driven by this fact. It carries the sealed plan's intent unchanged. |
+| ApplicationImportFailed | ApplicationImportFailed | business | bdgrz.application_import.failed | 2 | 12 | A terminal failure of a batch. Existing native business fact, rehomed on the batch. |
+| ApplicationImportPlanAccepted | ApplicationImportPlanSealed | business | bdgrz.application_import.plan_sealed | 2 | 12 | The root native acceptance of a batch plan. FrozenPlan is the complete ImportFrozenPlanIntent: every row, target group and source claim, the actors, counts, digest and source cut. It is the root of ApplicationImportExecutionProcess. |
+| ApplicationImportRetirementProposalFinalized | ApplicationImportRetirementProposalSealed | business | bdgrz.application_import.retirement_proposal_sealed | 2 | 7 | The preparer's omission proposal, sealed with its complete immutable content. It is never authority to retire: acceptance still requires current impact evidence. |
+| ApplicationImportRowChoiceRecorded | ApplicationImportRowCorrelated | business | bdgrz.application_import.row_correlated | 2 | 17 | A personal link-existing or create-new decision for one staged row. |
+| ApplicationImportPrepared | ApplicationImportStaged | business | bdgrz.application_import.staged | 2 | 14 | The immutable staged observation of a source and the root native acceptance of its submission. The complete row content is the immutable RowsManifest; RowCount and InvalidCount summarize it for readers. |
 
 ## Event details
 
@@ -20,6 +20,9 @@ Canonical events: **9**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | ApplicationImportCanceled |
+| Selected source event name | ApplicationImportCanceled |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:ApplicationImportCanceled |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | ApplicationImportCanceled |
@@ -29,7 +32,8 @@ Canonical events: **9**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | `{"discriminator":"bdgrz.application_import.canceled","version":1}` |
-| Meaning | The batch is canceled: every target was fenced and nothing was published. |
+| Target meaning | The batch is canceled: every target was fenced and nothing was published. |
+| Selected source meaning | The batch is canceled: every target was fenced and nothing was published. |
 | Meaning source | record summary in src/Compliance.Common/Features/Applications/Events/ApplicationImportCanceled.cs |
 
 #### Selected schema and implementation evidence
@@ -132,6 +136,9 @@ ImportFrozenPlanIntent
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | ApplicationImportCancellationAccepted |
+| Selected source event name | ApplicationImportCancellationAccepted |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:ApplicationImportCancellationAccepted |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | ApplicationImportCancellationAccepted |
@@ -141,7 +148,8 @@ ImportFrozenPlanIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | `{"discriminator":"bdgrz.application-import-batch.application-import-cancellation-accepted","version":1}` |
-| Meaning | The root native acceptance of a cancellation. It is the batch-local fence: a later commit of the batch is refused. Every target is then fenced before any hold is released. |
+| Target meaning | The root native acceptance of a cancellation. It is the batch-local fence: a later commit of the batch is refused. Every target is then fenced before any hold is released. |
+| Selected source meaning | The root native acceptance of a cancellation. It is the batch-local fence: a later commit of the batch is refused. Every target is then fenced before any hold is released. |
 | Meaning source | record summary in src/Compliance.Common/Features/Applications/Events/ApplicationImportCancellationAccepted.cs |
 
 #### Selected schema and implementation evidence
@@ -233,7 +241,7 @@ ImportFrozenPlanIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T018](../reactors/import-cancellation-reactor.md#t018) | physical root, logical prerequisite | ApplicationImportBatch | FenceApplicationImportTarget | DeclaredApplication |
+| [T018](../reactors/import-cancellation-reactor.md#t018) | physical root, logical prerequisite | ApplicationImportBatch | BlockCanceledApplicationImportChanges | DeclaredApplication |
 | [T019](../reactors/import-cancellation-reactor.md#t019) | physical root, logical prerequisite | ApplicationImportBatch | CompleteApplicationImportCancellation | ApplicationImportBatch |
 | [T020](../reactors/import-source-admission-reactor.md#t020) | physical root | ApplicationImportBatch | ReleaseApplicationImportSource | ApplicationImportSource |
 | [T021](../reactors/import-source-admission-reactor.md#t021) | physical root | ApplicationImportBatch | ReleaseApplicationImportTarget | DeclaredApplication |
@@ -243,6 +251,9 @@ ImportFrozenPlanIntent
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | ApplicationImportCommitted |
+| Selected source event name | ApplicationImportCommitted |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:ApplicationImportCommitted |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | ApplicationImportCommitted |
@@ -252,7 +263,8 @@ ImportFrozenPlanIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | `{"discriminator":"bdgrz.application_import.committed","version":1}` |
-| Meaning | The one publication fact of a batch: every target is published together. EffectsManifest lists the native proof of every frozen row; FrozenRows is the complete frozen row list. SourceGeneration is the source revision the plan was frozen against. |
+| Target meaning | The one publication fact of a batch: every target is published together. EffectsManifest lists the native proof of every frozen row; FrozenRows is the complete frozen row list. SourceGeneration is the source revision the plan was frozen against. |
+| Selected source meaning | The one publication fact of a batch: every target is published together. EffectsManifest lists the native proof of every frozen row; FrozenRows is the complete frozen row list. SourceGeneration is the source revision the plan was frozen against. |
 | Meaning source | record summary in src/Compliance.Common/Features/Applications/Events/ApplicationImportCommitted.cs |
 
 #### Selected schema and implementation evidence
@@ -367,6 +379,9 @@ ImportFrozenPlanIntent
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | ApplicationImportExecutionAuthorized |
+| Selected source event name | ApplicationImportExecutionAuthorized |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:ApplicationImportExecutionAuthorized |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | ApplicationImportExecutionAuthorized |
@@ -376,7 +391,8 @@ ImportFrozenPlanIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | `{"discriminator":"bdgrz.application-import-batch.application-import-execution-authorized","version":1}` |
-| Meaning | The batch authorizes execution after its source claim: the target reservations, applications and publication are driven by this fact. It carries the sealed plan's intent unchanged. |
+| Target meaning | The batch authorizes execution after its source claim: the target reservations, applications and publication are driven by this fact. It carries the sealed plan's intent unchanged. |
+| Selected source meaning | The batch authorizes execution after its source claim: the target reservations, applications and publication are driven by this fact. It carries the sealed plan's intent unchanged. |
 | Meaning source | record summary in src/Compliance.Common/Features/Applications/Events/ApplicationImportExecutionAuthorized.cs |
 
 #### Selected schema and implementation evidence
@@ -469,7 +485,7 @@ ImportFrozenPlanIntent
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
 | [T015](../reactors/import-source-admission-reactor.md#t015) | logical prerequisite | ApplicationImportBatch | ReserveApplicationImportTarget | DeclaredApplication |
-| [T016](../reactors/import-source-admission-reactor.md#t016) | logical prerequisite | ApplicationImportBatch | ApplyApplicationImportEffect | DeclaredApplication |
+| [T016](../reactors/import-source-admission-reactor.md#t016) | logical prerequisite | ApplicationImportBatch | ApplyApplicationImportChange | DeclaredApplication |
 | [T017](../reactors/import-source-admission-reactor.md#t017) | logical prerequisite | ApplicationImportBatch | CommitApplicationImportBatch | ApplicationImportBatch |
 | [N000](../reactors/import-source-admission-reactor.md#n000) | emitted semantic fact | ApplicationImportBatch | ExecuteApplicationImport | ApplicationImportBatch |
 
@@ -477,6 +493,9 @@ ImportFrozenPlanIntent
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | ApplicationImportFailed |
+| Selected source event name | ApplicationImportFailed |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:ApplicationImportFailed |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | ApplicationImportFailed |
@@ -486,7 +505,8 @@ ImportFrozenPlanIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | `{"discriminator":"bdgrz.application_import.failed","version":1}` |
-| Meaning | A terminal failure of a batch. Existing native business fact, rehomed on the batch. |
+| Target meaning | A terminal failure of a batch. Existing native business fact, rehomed on the batch. |
+| Selected source meaning | A terminal failure of a batch. Existing native business fact, rehomed on the batch. |
 | Meaning source | record summary in src/Compliance.Common/Features/Applications/Events/ApplicationImportFailed.cs |
 
 #### Selected schema and implementation evidence
@@ -533,10 +553,13 @@ ImportFrozenPlanIntent
 | [T020](../reactors/import-source-admission-reactor.md#t020) | logical prerequisite | ApplicationImportBatch | ReleaseApplicationImportSource | ApplicationImportSource |
 | [T021](../reactors/import-source-admission-reactor.md#t021) | logical prerequisite | ApplicationImportBatch | ReleaseApplicationImportTarget | DeclaredApplication |
 
-### ApplicationImportPlanSealed
+### ApplicationImportPlanAccepted
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | ApplicationImportPlanAccepted |
+| Selected source event name | ApplicationImportPlanSealed |
+| Name decision | Names acceptance of the complete frozen import plan that starts import execution. |
 | Canonical semantic key | event:ApplicationImportPlanSealed |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | ApplicationImportPlanSealed |
@@ -546,7 +569,8 @@ ImportFrozenPlanIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | `{"discriminator":"bdgrz.application_import.plan_sealed","version":1}` |
-| Meaning | The root native acceptance of a batch plan. FrozenPlan is the complete ImportFrozenPlanIntent: every row, target group and source claim, the actors, counts, digest and source cut. It is the root of ApplicationImportExecutionProcess. |
+| Target meaning | The root native acceptance of a batch plan. FrozenPlan is the complete ImportFrozenPlanIntent: every row, target group and source claim, the actors, counts, digest and source cut. It is the root of ApplicationImportExecutionProcess. |
+| Selected source meaning | The root native acceptance of a batch plan. FrozenPlan is the complete ImportFrozenPlanIntent: every row, target group and source claim, the actors, counts, digest and source cut. It is the root of ApplicationImportExecutionProcess. |
 | Meaning source | record summary in src/Compliance.Common/Features/Applications/Events/ApplicationImportPlanSealed.cs |
 
 #### Selected schema and implementation evidence
@@ -644,17 +668,20 @@ ImportFrozenPlanIntent
 | --- | --- | --- | --- | --- |
 | [T014](../reactors/import-source-admission-reactor.md#t014) | physical root, logical prerequisite | ApplicationImportBatch | ClaimApplicationImportSource | ApplicationImportSource |
 | [T015](../reactors/import-source-admission-reactor.md#t015) | physical root | ApplicationImportBatch | ReserveApplicationImportTarget | DeclaredApplication |
-| [T016](../reactors/import-source-admission-reactor.md#t016) | physical root | ApplicationImportBatch | ApplyApplicationImportEffect | DeclaredApplication |
+| [T016](../reactors/import-source-admission-reactor.md#t016) | physical root | ApplicationImportBatch | ApplyApplicationImportChange | DeclaredApplication |
 | [T017](../reactors/import-source-admission-reactor.md#t017) | physical root | ApplicationImportBatch | CommitApplicationImportBatch | ApplicationImportBatch |
 | [T020](../reactors/import-source-admission-reactor.md#t020) | physical root | ApplicationImportBatch | ReleaseApplicationImportSource | ApplicationImportSource |
 | [T021](../reactors/import-source-admission-reactor.md#t021) | physical root | ApplicationImportBatch | ReleaseApplicationImportTarget | DeclaredApplication |
 | [N000](../reactors/import-source-admission-reactor.md#n000) | physical root, logical prerequisite | ApplicationImportBatch | ExecuteApplicationImport | ApplicationImportBatch |
 | [A013](../reactors/unassigned-architecture-rows.md#a013) | physical root, logical prerequisite | ApplicationImportBatch | CancelApplicationImport | ApplicationImportBatch |
 
-### ApplicationImportRetirementProposalSealed
+### ApplicationImportRetirementProposalFinalized
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | ApplicationImportRetirementProposalFinalized |
+| Selected source event name | ApplicationImportRetirementProposalSealed |
+| Name decision | Names the complete frozen omission proposal and does not imply authority to retire an application. |
 | Canonical semantic key | event:ApplicationImportRetirementProposalSealed |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | ApplicationImportRetirementProposalSealed |
@@ -664,7 +691,8 @@ ImportFrozenPlanIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | `{"discriminator":"bdgrz.application_import.retirement_proposal_sealed","version":1}` |
-| Meaning | The preparer's omission proposal, sealed with its complete immutable content. It is never authority to retire: acceptance still requires current impact evidence. |
+| Target meaning | The preparer's omission proposal, sealed with its complete immutable content. It is never authority to retire: acceptance still requires current impact evidence. |
+| Selected source meaning | The preparer's omission proposal, sealed with its complete immutable content. It is never authority to retire: acceptance still requires current impact evidence. |
 | Meaning source | record summary in src/Compliance.Common/Features/Applications/Events/ApplicationImportRetirementProposalSealed.cs |
 
 #### Selected schema and implementation evidence
@@ -703,10 +731,13 @@ ImportFrozenPlanIntent
 
 [Placeholder: no selected choreography row names this event as root, prerequisite, or emitted fact.]
 
-### ApplicationImportRowCorrelated
+### ApplicationImportRowChoiceRecorded
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | ApplicationImportRowChoiceRecorded |
+| Selected source event name | ApplicationImportRowCorrelated |
+| Name decision | Names the person's recorded link-existing or create-new choice for one staged row. |
 | Canonical semantic key | event:ApplicationImportRowCorrelated |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | ApplicationImportRowCorrelated |
@@ -716,7 +747,8 @@ ImportFrozenPlanIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | `{"discriminator":"bdgrz.application_import.row_correlated","version":1}` |
-| Meaning | A personal link-existing or create-new decision for one staged row. |
+| Target meaning | A personal link-existing or create-new decision for one staged row. |
+| Selected source meaning | A personal link-existing or create-new decision for one staged row. |
 | Meaning source | record summary in src/Compliance.Common/Features/Applications/Events/ApplicationImportRowCorrelated.cs |
 
 #### Selected schema and implementation evidence
@@ -765,10 +797,13 @@ ImportFrozenPlanIntent
 
 [Placeholder: no selected choreography row names this event as root, prerequisite, or emitted fact.]
 
-### ApplicationImportStaged
+### ApplicationImportPrepared
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | ApplicationImportPrepared |
+| Selected source event name | ApplicationImportStaged |
+| Name decision | Names the immutable source observation and complete rows submitted for an import batch. |
 | Canonical semantic key | event:ApplicationImportStaged |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | ApplicationImportStaged |
@@ -778,7 +813,8 @@ ImportFrozenPlanIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | `{"discriminator":"bdgrz.application_import.staged","version":1}` |
-| Meaning | The immutable staged observation of a source and the root native acceptance of its submission. The complete row content is the immutable RowsManifest; RowCount and InvalidCount summarize it for readers. |
+| Target meaning | The immutable staged observation of a source and the root native acceptance of its submission. The complete row content is the immutable RowsManifest; RowCount and InvalidCount summarize it for readers. |
+| Selected source meaning | The immutable staged observation of a source and the root native acceptance of its submission. The complete row content is the immutable RowsManifest; RowCount and InvalidCount summarize it for readers. |
 | Meaning source | record summary in src/Compliance.Common/Features/Applications/Events/ApplicationImportStaged.cs |
 
 #### Selected schema and implementation evidence

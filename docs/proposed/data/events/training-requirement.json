@@ -116,7 +116,11 @@
         "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "TrainingRequirementDefined",
+      "targetName": "TrainingRequirementDefined",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "Defines a requirement's first version or an immutable successor version. ContentContent is the complete TrainingRequirementContent; DefineRequestId is the logical operation identity that defined this version."
     }
   ]
 }

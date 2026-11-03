@@ -33,7 +33,7 @@
 | [TenantManagerRestorationAccepted](../events/tenant-manager-guard.md#tenantmanagerrestorationaccepted) | bdgrz.tenant-manager-guard.tenant-manager-restoration-accepted | 2 |
 | [TenantManagerRestorationCompleted](../events/tenant-manager-guard.md#tenantmanagerrestorationcompleted) | bdgrz.tenant-manager-guard.tenant-manager-restoration-completed | 2 |
 | [TenantManagerRestored](../events/tenant-manager-guard.md#tenantmanagerrestored) | bdgrz.rbac.manager_guard.restored | 2 |
-| [TenantManagerSourceMutationAdmitted](../events/tenant-manager-guard.md#tenantmanagersourcemutationadmitted) | bdgrz.tenant-manager-guard.tenant-manager-source-mutation-admitted | 2 |
+| [TenantManagerMemberChangeAccepted](../events/tenant-manager-guard.md#tenantmanagermemberchangeaccepted) | bdgrz.tenant-manager-guard.tenant-manager-source-mutation-admitted | 2 |
 | [TenantManagerWithdrawalAccepted](../events/tenant-manager-guard.md#tenantmanagerwithdrawalaccepted) | bdgrz.tenant-manager-guard.tenant-manager-withdrawal-accepted | 2 |
 | [TenantManagerWithdrawalCompleted](../events/tenant-manager-guard.md#tenantmanagerwithdrawalcompleted) | bdgrz.tenant-manager-guard.tenant-manager-withdrawal-completed | 2 |
 
@@ -43,8 +43,8 @@
 | --- | --- | --- | --- | --- |
 | [T046](../reactors/administrator-withdrawal-reactor.md#t046) | reaction_or_regular_process_stage | TenantManagerGuard | Member | ApplyMemberWithdrawal |
 | [T047](../reactors/administrator-assignment-withdrawal-reactor.md#t047) | reaction_or_regular_process_stage | TenantManagerGuard | TeamMember | ApplyAdministratorAssignmentWithdrawal |
-| [T048](../reactors/administrator-neutral-member-mutation-reactor.md#t048) | reaction_or_regular_process_stage | TenantManagerGuard | Member | ApplyNeutralMemberSourceMutation |
-| [T049](../reactors/administrator-neutral-assignment-mutation-reactor.md#t049) | reaction_or_regular_process_stage | TenantManagerGuard | TeamMember | ApplyNeutralAdministratorAssignmentMutation |
+| [T048](../reactors/administrator-neutral-member-mutation-reactor.md#t048) | reaction_or_regular_process_stage | TenantManagerGuard | Member | ApplyMemberStatusChange |
+| [T049](../reactors/administrator-neutral-assignment-mutation-reactor.md#t049) | reaction_or_regular_process_stage | TenantManagerGuard | TeamMember | RemoveAdministratorAssignment |
 | [T050](../reactors/administrator-withdrawal-reactor.md#t050) | reaction_or_regular_process_stage | Member\|TeamMember | TenantManagerGuard | CompleteAdministratorWithdrawal |
 | [T051](../reactors/administrator-restoration-reactor.md#t051) | reaction_or_regular_process_stage | TenantManagerGuard | Member | ApplyMemberRestoration |
 | [T052](../reactors/administrator-restoration-reactor.md#t052) | reaction_or_regular_process_stage | Member\|TeamMember | TenantManagerGuard | CompleteAdministratorRestoration |

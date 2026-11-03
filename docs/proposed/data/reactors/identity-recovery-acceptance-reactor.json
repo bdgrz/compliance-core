@@ -1,5 +1,7 @@
 {
-  "root": "IdentityRecoveryAcceptanceReactor",
+  "sourceRoot": "IdentityRecoveryAcceptanceReactor",
+  "targetRoot": "CompleteAccountRecoveryReactor",
+  "businessReason": "Complete verified account recovery, register the recovered identity, revoke the old identity when required, and send notice.",
   "rows": [
     {
       "id": "T041",

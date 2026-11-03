@@ -26,7 +26,11 @@
         "meaningSource": "record summary in src/Compliance.Common/Features/Work/Events/WorkDigestPreferenceRecorded.cs",
         "emissionKindNote": "Owner reclassified as technical settings state on 2026-10-29; emission retained for WeeklyWorkDigest scheduling input."
       },
-      "schema": null
+      "schema": null,
+      "sourceName": "WorkDigestPreferenceRecorded",
+      "targetName": "WorkDigestPreferenceRecorded",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "A member's authored preference receipt, including an accepted no-change decision."
     }
   ]
 }

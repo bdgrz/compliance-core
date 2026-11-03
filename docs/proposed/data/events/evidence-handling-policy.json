@@ -160,7 +160,11 @@
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "resolvedIntentSchema": "SourceUseAuthorizationIntent",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "ArtifactHandlingDownloadUseAuthorized",
+      "targetName": "ArtifactHandlingDownloadAuthorized",
+      "nameDecision": "Authorization is already the completed fact; Use adds no stakeholder meaning.",
+      "targetMeaning": null
     },
     {
       "canonical": {
@@ -321,7 +325,11 @@
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "resolvedIntentSchema": "SourceUseAuthorizationIntent",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "ArtifactHandlingDownloadUseSettled",
+      "targetName": "ArtifactHandlingDownloadAuthorizationClosed",
+      "nameDecision": "The exact authorization ended; the recorded outcome still distinguishes use, cancellation, or a late fence.",
+      "targetMeaning": null
     },
     {
       "canonical": {
@@ -345,7 +353,11 @@
         "meaning": "Records the ArtifactHandlingPolicyAssigned domain fact for one tenant-owned subject revision.",
         "meaningSource": "record summary in src/Compliance.Common/Features/Retention/Events/ArtifactHandlingPolicyAssigned.cs"
       },
-      "schema": null
+      "schema": null,
+      "sourceName": "ArtifactHandlingPolicyAssigned",
+      "targetName": "ArtifactHandlingPolicyAssigned",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "Records the ArtifactHandlingPolicyAssigned domain fact for one tenant-owned subject revision."
     },
     {
       "canonical": {
@@ -369,7 +381,11 @@
         "meaning": "Records a changed, attributed handling classification for an exact artifact identity.",
         "meaningSource": "record summary in src/Compliance.Common/Features/Retention/Events/ArtifactHandlingPolicyRevised.cs"
       },
-      "schema": null
+      "schema": null,
+      "sourceName": "ArtifactHandlingPolicyRevised",
+      "targetName": "ArtifactHandlingPolicyRevised",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "Records a changed, attributed handling classification for an exact artifact identity."
     }
   ]
 }

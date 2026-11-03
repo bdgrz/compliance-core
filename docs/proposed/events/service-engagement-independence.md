@@ -2,24 +2,24 @@
 
 Canonical events: **16**. Complete canonical event and available schema records: [owner event JSON](../data/events/service-engagement-independence.json).
 
-| Event | Kind | Adopted discriminator | Version | Schema fields | Meaning |
-| --- | --- | --- | --- | --- | --- |
-| AssignmentIndependenceReevaluated | business | bdgrz.independence.assignment-reevaluated | 1 | 6 | A lifecycle change prompted a reassessment of an engagement staff assignment's independence, retained as a receipt that blocks production acceptance and never refreshes the earlier acceptance. |
-| DirectoryIndependenceReevaluated | business | bdgrz.independence.directory-reevaluated | 1 | 6 | A denial-only receipt that one accepted staff member's directory record changed after the acceptance. The complete original DirectoryIndependenceReevaluationView is immutable content; the receipt never reactivates an old acceptance. Revision is the engagement revision after it. |
-| EngagementPersonalDecisionAdmitted | business | bdgrz.service-engagement-independence.engagement-personal-decision-admitted | 1 | 8 | The root native acceptance of a personal engagement decision on the engagement owner. It freezes the complete decision intent at Revision, the engagement content revision at admission, and pins that content until the decision is materialized or canceled. It does not advance the engagement revision. |
-| EngagementPersonalDecisionAuthorized | reservation | bdgrz.service-engagement-independence.engagement-personal-decision-authorized | 1 | 10 | The irreversible authorization of a personal engagement decision, appended only after every required source use was acquired. DecisionAt is the server-frozen decision instant that every temporal validity interval is judged at; the child decision materializes from this fact and nothing earlier. |
-| EngagementPersonalDecisionCanceled | business | bdgrz.service-engagement-independence.engagement-personal-decision-canceled | 1 | 8 | The decision was canceled before authorization: it fences authorization and releases the engagement content pin. An authorized decision recovers forward and is never canceled. |
-| EngagementPersonalDecisionMaterialized | business | bdgrz.service-engagement-independence.engagement-personal-decision-materialized | 1 | 8 | The materialized personal decision was recorded on the engagement: the content pin is released and the engagement's current personal decision pointer advances unless a later decision already holds it. It does not advance the engagement revision. |
-| EngagementPracticeCommitmentsAuthorized | reservation | bdgrz.service-engagement-independence.engagement-practice-commitments-authorized | 1 | 10 | The irreversible authorization of an acceptance or positive staff assignment, appended only when every temporary reservation and every source use is held by its exact grant. DecisionAt is the server-frozen instant every temporal validity interval is judged at. Only after this fact are permanent practice walls committed; before it, every temporary grant can still be fenced and settled. |
-| ServiceEngagementAcceptanceRecorded | business | bdgrz.service-engagement.acceptance-recorded | 1 | 8 | The engagement was accepted: every temporary grant was authorized irreversibly and every permanent practice wall was committed before this fact. AcceptanceContent is the complete original ServiceEngagementAcceptanceView, and Revision is the engagement revision after it. OperationResult is the terminal result of the acceptance operation. |
-| ServiceEngagementAcceptanceRejected | business | bdgrz.service-engagement-independence.service-engagement-acceptance-rejected | 1 | 8 | A requested acceptance was rejected before the irreversible authorization. The rejection fences the pending acceptance against late delivery and releases the engagement content pin; no permanent practice commitment was ever made for it. |
-| ServiceEngagementAcceptanceRequested | business | bdgrz.service-engagement-independence.service-engagement-acceptance-requested | 1 | 8 | The root native acceptance of an engagement acceptance on the engagement owner. It freezes the complete engagement independence intent at Revision, the engagement content revision at admission, and pins that content until the acceptance is recorded or rejected. It does not advance the engagement revision and grants no authority by itself. |
-| ServiceEngagementAssignmentRevoked | business | bdgrz.service-engagement.assignment-revoked | 1 | 12 | A staff member's assignment on an accepted service engagement was revoked with a stated reason, or the whole engagement was closed when no staff member is named. |
-| ServiceEngagementMutationRecorded | business | bdgrz.service-engagement.changed | 1 | 8 | One accepted lifecycle change of a service engagement draft: create, amend, propose, withdraw or close. Intent is the stable command kind and Change is the immutable ServiceEngagementChange; the complete resulting view is the operation result. No cumulative parent snapshot is carried. Revision is the engagement revision after the change. |
-| ServiceEngagementStaffAssigned | business | bdgrz.access-control.service-engagement.staff-assigned | 1 | 15 | One actual staff assignment was recorded on an accepted engagement after the partner authority, the service epoch and the staff and canonical-user practice walls were authorized and committed. The directory snapshots the assignment relied on are retained as immutable content. Revision is the engagement revision after it, and OperationResult is the terminal result: the complete revised acceptance view. |
-| ServiceEngagementStaffAssignmentRejected | business | bdgrz.service-engagement-independence.service-engagement-staff-assignment-rejected | 1 | 8 | A requested positive staff assignment was rejected before the irreversible authorization. The rejection fences the pending assignment against late delivery; the engagement and every earlier permanent wall are retained. |
-| ServiceEngagementStaffAssignmentRequested | business | bdgrz.service-engagement-independence.service-engagement-staff-assignment-requested | 1 | 8 | The root native acceptance of one positive actual staff assignment on the accepted engagement owner. It freezes the complete engagement independence intent at Revision and pins that content until the assignment is recorded or rejected. It does not advance the engagement revision and grants no authority by itself. |
-| ServiceIndependenceReevaluated | business | bdgrz.independence.service-reevaluated | 1 | 6 | A change to a client's services prompted a reassessment of an accepted engagement's independence, retained as a record that blocks production acceptance and never refreshes the earlier acceptance. |
+| Target event | Selected source name | Kind | Adopted discriminator | Version | Schema fields | Meaning |
+| --- | --- | --- | --- | --- | --- | --- |
+| AssignmentIndependenceReevaluated | AssignmentIndependenceReevaluated | business | bdgrz.independence.assignment-reevaluated | 1 | 6 | A lifecycle change prompted a reassessment of an engagement staff assignment's independence, retained as a receipt that blocks production acceptance and never refreshes the earlier acceptance. |
+| DirectoryIndependenceReevaluated | DirectoryIndependenceReevaluated | business | bdgrz.independence.directory-reevaluated | 1 | 6 | A denial-only receipt that one accepted staff member's directory record changed after the acceptance. The complete original DirectoryIndependenceReevaluationView is immutable content; the receipt never reactivates an old acceptance. Revision is the engagement revision after it. |
+| EngagementPersonalDecisionAdmitted | EngagementPersonalDecisionAdmitted | business | bdgrz.service-engagement-independence.engagement-personal-decision-admitted | 1 | 8 | The root native acceptance of a personal engagement decision on the engagement owner. It freezes the complete decision intent at Revision, the engagement content revision at admission, and pins that content until the decision is materialized or canceled. It does not advance the engagement revision. |
+| EngagementPersonalDecisionAuthorized | EngagementPersonalDecisionAuthorized | reservation | bdgrz.service-engagement-independence.engagement-personal-decision-authorized | 1 | 10 | The irreversible authorization of a personal engagement decision, appended only after every required source use was acquired. DecisionAt is the server-frozen decision instant that every temporal validity interval is judged at; the child decision materializes from this fact and nothing earlier. |
+| EngagementPersonalDecisionCanceled | EngagementPersonalDecisionCanceled | business | bdgrz.service-engagement-independence.engagement-personal-decision-canceled | 1 | 8 | The decision was canceled before authorization: it fences authorization and releases the engagement content pin. An authorized decision recovers forward and is never canceled. |
+| EngagementPersonalDecisionRecorded | EngagementPersonalDecisionMaterialized | business | bdgrz.service-engagement-independence.engagement-personal-decision-materialized | 1 | 8 | The materialized personal decision was recorded on the engagement: the content pin is released and the engagement's current personal decision pointer advances unless a later decision already holds it. It does not advance the engagement revision. |
+| EngagementPracticeCommitmentsAuthorized | EngagementPracticeCommitmentsAuthorized | reservation | bdgrz.service-engagement-independence.engagement-practice-commitments-authorized | 1 | 10 | The irreversible authorization of an acceptance or positive staff assignment, appended only when every temporary reservation and every source use is held by its exact grant. DecisionAt is the server-frozen instant every temporal validity interval is judged at. Only after this fact are permanent practice walls committed; before it, every temporary grant can still be fenced and settled. |
+| ServiceEngagementAcceptanceRecorded | ServiceEngagementAcceptanceRecorded | business | bdgrz.service-engagement.acceptance-recorded | 1 | 8 | The engagement was accepted: every temporary grant was authorized irreversibly and every permanent practice wall was committed before this fact. AcceptanceContent is the complete original ServiceEngagementAcceptanceView, and Revision is the engagement revision after it. OperationResult is the terminal result of the acceptance operation. |
+| ServiceEngagementAcceptanceRejected | ServiceEngagementAcceptanceRejected | business | bdgrz.service-engagement-independence.service-engagement-acceptance-rejected | 1 | 8 | A requested acceptance was rejected before the irreversible authorization. The rejection fences the pending acceptance against late delivery and releases the engagement content pin; no permanent practice commitment was ever made for it. |
+| ServiceEngagementAcceptanceRequested | ServiceEngagementAcceptanceRequested | business | bdgrz.service-engagement-independence.service-engagement-acceptance-requested | 1 | 8 | The root native acceptance of an engagement acceptance on the engagement owner. It freezes the complete engagement independence intent at Revision, the engagement content revision at admission, and pins that content until the acceptance is recorded or rejected. It does not advance the engagement revision and grants no authority by itself. |
+| ServiceEngagementAssignmentRevoked | ServiceEngagementAssignmentRevoked | business | bdgrz.service-engagement.assignment-revoked | 1 | 12 | A staff member's assignment on an accepted service engagement was revoked with a stated reason, or the whole engagement was closed when no staff member is named. |
+| ServiceEngagementMutationRecorded | ServiceEngagementMutationRecorded | business | bdgrz.service-engagement.changed | 1 | 8 | One accepted lifecycle change of a service engagement draft: create, amend, propose, withdraw or close. Intent is the stable command kind and Change is the immutable ServiceEngagementChange; the complete resulting view is the operation result. No cumulative parent snapshot is carried. Revision is the engagement revision after the change. |
+| ServiceEngagementStaffAssigned | ServiceEngagementStaffAssigned | business | bdgrz.access-control.service-engagement.staff-assigned | 1 | 15 | One actual staff assignment was recorded on an accepted engagement after the partner authority, the service epoch and the staff and canonical-user practice walls were authorized and committed. The directory snapshots the assignment relied on are retained as immutable content. Revision is the engagement revision after it, and OperationResult is the terminal result: the complete revised acceptance view. |
+| ServiceEngagementStaffAssignmentRejected | ServiceEngagementStaffAssignmentRejected | business | bdgrz.service-engagement-independence.service-engagement-staff-assignment-rejected | 1 | 8 | A requested positive staff assignment was rejected before the irreversible authorization. The rejection fences the pending assignment against late delivery; the engagement and every earlier permanent wall are retained. |
+| ServiceEngagementStaffAssignmentRequested | ServiceEngagementStaffAssignmentRequested | business | bdgrz.service-engagement-independence.service-engagement-staff-assignment-requested | 1 | 8 | The root native acceptance of one positive actual staff assignment on the accepted engagement owner. It freezes the complete engagement independence intent at Revision and pins that content until the assignment is recorded or rejected. It does not advance the engagement revision and grants no authority by itself. |
+| ServiceIndependenceReevaluated | ServiceIndependenceReevaluated | business | bdgrz.independence.service-reevaluated | 1 | 6 | A change to a client's services prompted a reassessment of an accepted engagement's independence, retained as a record that blocks production acceptance and never refreshes the earlier acceptance. |
 
 ## Event details
 
@@ -27,6 +27,9 @@ Canonical events: **16**. Complete canonical event and available schema records:
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | AssignmentIndependenceReevaluated |
+| Selected source event name | AssignmentIndependenceReevaluated |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:AssignmentIndependenceReevaluated |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | AssignmentIndependenceReevaluated |
@@ -36,7 +39,8 @@ Canonical events: **16**. Complete canonical event and available schema records:
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | A lifecycle change prompted a reassessment of an engagement staff assignment's independence, retained as a receipt that blocks production acceptance and never refreshes the earlier acceptance. |
+| Target meaning | A lifecycle change prompted a reassessment of an engagement staff assignment's independence, retained as a receipt that blocks production acceptance and never refreshes the earlier acceptance. |
+| Selected source meaning | A lifecycle change prompted a reassessment of an engagement staff assignment's independence, retained as a receipt that blocks production acceptance and never refreshes the earlier acceptance. |
 | Meaning source | authored 2026-10-29 from src/Compliance.Common/Features/AccessControl/Events/AssignmentIndependenceReevaluated.cs |
 
 #### Selected schema and implementation evidence
@@ -88,6 +92,9 @@ Canonical events: **16**. Complete canonical event and available schema records:
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | DirectoryIndependenceReevaluated |
+| Selected source event name | DirectoryIndependenceReevaluated |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:DirectoryIndependenceReevaluated |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | DirectoryIndependenceReevaluated |
@@ -97,7 +104,8 @@ Canonical events: **16**. Complete canonical event and available schema records:
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | A denial-only receipt that one accepted staff member's directory record changed after the acceptance. The complete original DirectoryIndependenceReevaluationView is immutable content; the receipt never reactivates an old acceptance. Revision is the engagement revision after it. |
+| Target meaning | A denial-only receipt that one accepted staff member's directory record changed after the acceptance. The complete original DirectoryIndependenceReevaluationView is immutable content; the receipt never reactivates an old acceptance. Revision is the engagement revision after it. |
+| Selected source meaning | A denial-only receipt that one accepted staff member's directory record changed after the acceptance. The complete original DirectoryIndependenceReevaluationView is immutable content; the receipt never reactivates an old acceptance. Revision is the engagement revision after it. |
 | Meaning source | record summary in src/Compliance.Common/Features/AccessControl/Events/DirectoryIndependenceReevaluated.cs |
 
 #### Selected schema and implementation evidence
@@ -152,6 +160,9 @@ Canonical events: **16**. Complete canonical event and available schema records:
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | EngagementPersonalDecisionAdmitted |
+| Selected source event name | EngagementPersonalDecisionAdmitted |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:EngagementPersonalDecisionAdmitted |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | EngagementPersonalDecisionAdmitted |
@@ -161,7 +172,8 @@ Canonical events: **16**. Complete canonical event and available schema records:
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | The root native acceptance of a personal engagement decision on the engagement owner. It freezes the complete decision intent at Revision, the engagement content revision at admission, and pins that content until the decision is materialized or canceled. It does not advance the engagement revision. |
+| Target meaning | The root native acceptance of a personal engagement decision on the engagement owner. It freezes the complete decision intent at Revision, the engagement content revision at admission, and pins that content until the decision is materialized or canceled. It does not advance the engagement revision. |
+| Selected source meaning | The root native acceptance of a personal engagement decision on the engagement owner. It freezes the complete decision intent at Revision, the engagement content revision at admission, and pins that content until the decision is materialized or canceled. It does not advance the engagement revision. |
 | Meaning source | record summary in src/Compliance.Common/Features/AccessControl/Events/EngagementPersonalDecisionAdmitted.cs |
 
 #### Selected schema and implementation evidence
@@ -241,19 +253,19 @@ EngagementPersonalDecisionIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T089](../reactors/engagement-acceptance-reactor.md#t089) | physical root, logical prerequisite | ServiceEngagementIndependence | AuthorizeFirmStaffRecordEngagementUse | FirmStaffRecord |
-| [T090](../reactors/engagement-acceptance-reactor.md#t090) | physical root | ServiceEngagementIndependence | SettleFirmStaffRecordEngagementUse | FirmStaffRecord |
-| [T091](../reactors/engagement-acceptance-reactor.md#t091) | physical root, logical prerequisite | ServiceEngagementIndependence | AuthorizeFirmProfessionalDutyDesignationEngagementUse | FirmProfessionalDutyDesignation |
-| [T092](../reactors/engagement-acceptance-reactor.md#t092) | physical root | ServiceEngagementIndependence | SettleFirmProfessionalDutyDesignationEngagementUse | FirmProfessionalDutyDesignation |
-| [T093](../reactors/engagement-acceptance-reactor.md#t093) | physical root, logical prerequisite | ServiceEngagementIndependence | AuthorizeIndependenceRuleCatalogEngagementUse | IndependenceRuleCatalog |
-| [T094](../reactors/engagement-acceptance-reactor.md#t094) | physical root | ServiceEngagementIndependence | SettleIndependenceRuleCatalogEngagementUse | IndependenceRuleCatalog |
-| [T095](../reactors/engagement-acceptance-reactor.md#t095) | physical root, logical prerequisite | ServiceEngagementIndependence | AuthorizeIndependenceRuleRatificationCatalogEngagementUse | IndependenceRuleRatificationCatalog |
-| [T096](../reactors/engagement-acceptance-reactor.md#t096) | physical root | ServiceEngagementIndependence | SettleIndependenceRuleRatificationCatalogEngagementUse | IndependenceRuleRatificationCatalog |
-| [T107](../reactors/engagement-personal-decision-reactor.md#t107) | physical root, logical prerequisite | ServiceEngagementIndependence | AuthorizeClientServicePersonalDecisionUse | ClientServiceIndependence |
-| [T108](../reactors/engagement-personal-decision-reactor.md#t108) | physical root | ServiceEngagementIndependence | MaterializeEngagementManagementAcknowledgement | EngagementManagementAcknowledgement |
-| [T109](../reactors/engagement-personal-decision-reactor.md#t109) | physical root | ServiceEngagementIndependence | MaterializePartnerIndependenceDecision | PartnerIndependenceDecision |
-| [T110](../reactors/engagement-personal-decision-reactor.md#t110) | physical root | EngagementManagementAcknowledgement\|PartnerIndependenceDecision | SettleEngagementPersonalDecision | ServiceEngagementIndependence |
-| [T111](../reactors/engagement-personal-decision-reactor.md#t111) | physical root | ServiceEngagementIndependence | SettleClientServicePersonalDecisionUse | ClientServiceIndependence |
+| [T089](../reactors/engagement-acceptance-reactor.md#t089) | physical root, logical prerequisite | ServiceEngagementIndependence | AuthorizeFirmStaffRecordEngagement | FirmStaffRecord |
+| [T090](../reactors/engagement-acceptance-reactor.md#t090) | physical root | ServiceEngagementIndependence | CloseFirmStaffRecordEngagementAuthorization | FirmStaffRecord |
+| [T091](../reactors/engagement-acceptance-reactor.md#t091) | physical root, logical prerequisite | ServiceEngagementIndependence | AuthorizeFirmProfessionalDutyDesignationEngagement | FirmProfessionalDutyDesignation |
+| [T092](../reactors/engagement-acceptance-reactor.md#t092) | physical root | ServiceEngagementIndependence | CloseFirmProfessionalDutyDesignationEngagementAuthorization | FirmProfessionalDutyDesignation |
+| [T093](../reactors/engagement-acceptance-reactor.md#t093) | physical root, logical prerequisite | ServiceEngagementIndependence | AuthorizeIndependenceRuleCatalogEngagement | IndependenceRuleCatalog |
+| [T094](../reactors/engagement-acceptance-reactor.md#t094) | physical root | ServiceEngagementIndependence | CloseIndependenceRuleCatalogEngagementAuthorization | IndependenceRuleCatalog |
+| [T095](../reactors/engagement-acceptance-reactor.md#t095) | physical root, logical prerequisite | ServiceEngagementIndependence | AuthorizeIndependenceRuleRatificationCatalogEngagement | IndependenceRuleRatificationCatalog |
+| [T096](../reactors/engagement-acceptance-reactor.md#t096) | physical root | ServiceEngagementIndependence | CloseIndependenceRuleRatificationCatalogEngagementAuthorization | IndependenceRuleRatificationCatalog |
+| [T107](../reactors/engagement-personal-decision-reactor.md#t107) | physical root, logical prerequisite | ServiceEngagementIndependence | AuthorizeClientServicePersonalDecision | ClientServiceIndependence |
+| [T108](../reactors/engagement-personal-decision-reactor.md#t108) | physical root | ServiceEngagementIndependence | RecordEngagementManagementAcknowledgement | EngagementManagementAcknowledgement |
+| [T109](../reactors/engagement-personal-decision-reactor.md#t109) | physical root | ServiceEngagementIndependence | RecordPartnerIndependenceEvaluation | PartnerIndependenceDecision |
+| [T110](../reactors/engagement-personal-decision-reactor.md#t110) | physical root | EngagementManagementAcknowledgement\|PartnerIndependenceDecision | CloseEngagementPersonalDecision | ServiceEngagementIndependence |
+| [T111](../reactors/engagement-personal-decision-reactor.md#t111) | physical root | ServiceEngagementIndependence | CloseClientServicePersonalDecisionAuthorization | ClientServiceIndependence |
 | [T112](../reactors/engagement-personal-decision-reactor.md#t112) | physical root, logical prerequisite | ServiceEngagementIndependence | AuthorizeEngagementPersonalDecision | ServiceEngagementIndependence |
 | [A004](../reactors/unassigned-architecture-rows.md#a004) | physical root, logical prerequisite | ServiceEngagementIndependence | CancelEngagementPersonalDecision | ServiceEngagementIndependence |
 
@@ -261,6 +273,9 @@ EngagementPersonalDecisionIntent
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | EngagementPersonalDecisionAuthorized |
+| Selected source event name | EngagementPersonalDecisionAuthorized |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:EngagementPersonalDecisionAuthorized |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | EngagementPersonalDecisionAuthorized |
@@ -270,7 +285,8 @@ EngagementPersonalDecisionIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | The irreversible authorization of a personal engagement decision, appended only after every required source use was acquired. DecisionAt is the server-frozen decision instant that every temporal validity interval is judged at; the child decision materializes from this fact and nothing earlier. |
+| Target meaning | The irreversible authorization of a personal engagement decision, appended only after every required source use was acquired. DecisionAt is the server-frozen decision instant that every temporal validity interval is judged at; the child decision materializes from this fact and nothing earlier. |
+| Selected source meaning | The irreversible authorization of a personal engagement decision, appended only after every required source use was acquired. DecisionAt is the server-frozen decision instant that every temporal validity interval is judged at; the child decision materializes from this fact and nothing earlier. |
 | Meaning source | record summary in src/Compliance.Common/Features/AccessControl/Events/EngagementPersonalDecisionAuthorized.cs |
 
 #### Selected schema and implementation evidence
@@ -352,19 +368,22 @@ EngagementPersonalDecisionIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T090](../reactors/engagement-acceptance-reactor.md#t090) | logical prerequisite | ServiceEngagementIndependence | SettleFirmStaffRecordEngagementUse | FirmStaffRecord |
-| [T092](../reactors/engagement-acceptance-reactor.md#t092) | logical prerequisite | ServiceEngagementIndependence | SettleFirmProfessionalDutyDesignationEngagementUse | FirmProfessionalDutyDesignation |
-| [T094](../reactors/engagement-acceptance-reactor.md#t094) | logical prerequisite | ServiceEngagementIndependence | SettleIndependenceRuleCatalogEngagementUse | IndependenceRuleCatalog |
-| [T096](../reactors/engagement-acceptance-reactor.md#t096) | logical prerequisite | ServiceEngagementIndependence | SettleIndependenceRuleRatificationCatalogEngagementUse | IndependenceRuleRatificationCatalog |
-| [T108](../reactors/engagement-personal-decision-reactor.md#t108) | logical prerequisite | ServiceEngagementIndependence | MaterializeEngagementManagementAcknowledgement | EngagementManagementAcknowledgement |
-| [T109](../reactors/engagement-personal-decision-reactor.md#t109) | logical prerequisite | ServiceEngagementIndependence | MaterializePartnerIndependenceDecision | PartnerIndependenceDecision |
-| [T111](../reactors/engagement-personal-decision-reactor.md#t111) | logical prerequisite | ServiceEngagementIndependence | SettleClientServicePersonalDecisionUse | ClientServiceIndependence |
+| [T090](../reactors/engagement-acceptance-reactor.md#t090) | logical prerequisite | ServiceEngagementIndependence | CloseFirmStaffRecordEngagementAuthorization | FirmStaffRecord |
+| [T092](../reactors/engagement-acceptance-reactor.md#t092) | logical prerequisite | ServiceEngagementIndependence | CloseFirmProfessionalDutyDesignationEngagementAuthorization | FirmProfessionalDutyDesignation |
+| [T094](../reactors/engagement-acceptance-reactor.md#t094) | logical prerequisite | ServiceEngagementIndependence | CloseIndependenceRuleCatalogEngagementAuthorization | IndependenceRuleCatalog |
+| [T096](../reactors/engagement-acceptance-reactor.md#t096) | logical prerequisite | ServiceEngagementIndependence | CloseIndependenceRuleRatificationCatalogEngagementAuthorization | IndependenceRuleRatificationCatalog |
+| [T108](../reactors/engagement-personal-decision-reactor.md#t108) | logical prerequisite | ServiceEngagementIndependence | RecordEngagementManagementAcknowledgement | EngagementManagementAcknowledgement |
+| [T109](../reactors/engagement-personal-decision-reactor.md#t109) | logical prerequisite | ServiceEngagementIndependence | RecordPartnerIndependenceEvaluation | PartnerIndependenceDecision |
+| [T111](../reactors/engagement-personal-decision-reactor.md#t111) | logical prerequisite | ServiceEngagementIndependence | CloseClientServicePersonalDecisionAuthorization | ClientServiceIndependence |
 | [T112](../reactors/engagement-personal-decision-reactor.md#t112) | emitted semantic fact | ServiceEngagementIndependence | AuthorizeEngagementPersonalDecision | ServiceEngagementIndependence |
 
 ### EngagementPersonalDecisionCanceled
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | EngagementPersonalDecisionCanceled |
+| Selected source event name | EngagementPersonalDecisionCanceled |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:EngagementPersonalDecisionCanceled |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | EngagementPersonalDecisionCanceled |
@@ -374,7 +393,8 @@ EngagementPersonalDecisionIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | The decision was canceled before authorization: it fences authorization and releases the engagement content pin. An authorized decision recovers forward and is never canceled. |
+| Target meaning | The decision was canceled before authorization: it fences authorization and releases the engagement content pin. An authorized decision recovers forward and is never canceled. |
+| Selected source meaning | The decision was canceled before authorization: it fences authorization and releases the engagement content pin. An authorized decision recovers forward and is never canceled. |
 | Meaning source | record summary in src/Compliance.Common/Features/AccessControl/Events/EngagementPersonalDecisionCanceled.cs |
 
 #### Selected schema and implementation evidence
@@ -454,17 +474,20 @@ EngagementPersonalDecisionIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T090](../reactors/engagement-acceptance-reactor.md#t090) | logical prerequisite | ServiceEngagementIndependence | SettleFirmStaffRecordEngagementUse | FirmStaffRecord |
-| [T092](../reactors/engagement-acceptance-reactor.md#t092) | logical prerequisite | ServiceEngagementIndependence | SettleFirmProfessionalDutyDesignationEngagementUse | FirmProfessionalDutyDesignation |
-| [T094](../reactors/engagement-acceptance-reactor.md#t094) | logical prerequisite | ServiceEngagementIndependence | SettleIndependenceRuleCatalogEngagementUse | IndependenceRuleCatalog |
-| [T096](../reactors/engagement-acceptance-reactor.md#t096) | logical prerequisite | ServiceEngagementIndependence | SettleIndependenceRuleRatificationCatalogEngagementUse | IndependenceRuleRatificationCatalog |
-| [T111](../reactors/engagement-personal-decision-reactor.md#t111) | logical prerequisite | ServiceEngagementIndependence | SettleClientServicePersonalDecisionUse | ClientServiceIndependence |
+| [T090](../reactors/engagement-acceptance-reactor.md#t090) | logical prerequisite | ServiceEngagementIndependence | CloseFirmStaffRecordEngagementAuthorization | FirmStaffRecord |
+| [T092](../reactors/engagement-acceptance-reactor.md#t092) | logical prerequisite | ServiceEngagementIndependence | CloseFirmProfessionalDutyDesignationEngagementAuthorization | FirmProfessionalDutyDesignation |
+| [T094](../reactors/engagement-acceptance-reactor.md#t094) | logical prerequisite | ServiceEngagementIndependence | CloseIndependenceRuleCatalogEngagementAuthorization | IndependenceRuleCatalog |
+| [T096](../reactors/engagement-acceptance-reactor.md#t096) | logical prerequisite | ServiceEngagementIndependence | CloseIndependenceRuleRatificationCatalogEngagementAuthorization | IndependenceRuleRatificationCatalog |
+| [T111](../reactors/engagement-personal-decision-reactor.md#t111) | logical prerequisite | ServiceEngagementIndependence | CloseClientServicePersonalDecisionAuthorization | ClientServiceIndependence |
 | [A004](../reactors/unassigned-architecture-rows.md#a004) | emitted semantic fact | ServiceEngagementIndependence | CancelEngagementPersonalDecision | ServiceEngagementIndependence |
 
-### EngagementPersonalDecisionMaterialized
+### EngagementPersonalDecisionRecorded
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | EngagementPersonalDecisionRecorded |
+| Selected source event name | EngagementPersonalDecisionMaterialized |
+| Name decision | Names the recorded personal decision; releasing its content pin does not advance the engagement revision. |
 | Canonical semantic key | event:EngagementPersonalDecisionMaterialized |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | EngagementPersonalDecisionMaterialized |
@@ -474,7 +497,8 @@ EngagementPersonalDecisionIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | The materialized personal decision was recorded on the engagement: the content pin is released and the engagement's current personal decision pointer advances unless a later decision already holds it. It does not advance the engagement revision. |
+| Target meaning | The materialized personal decision was recorded on the engagement: the content pin is released and the engagement's current personal decision pointer advances unless a later decision already holds it. It does not advance the engagement revision. |
+| Selected source meaning | The materialized personal decision was recorded on the engagement: the content pin is released and the engagement's current personal decision pointer advances unless a later decision already holds it. It does not advance the engagement revision. |
 | Meaning source | record summary in src/Compliance.Common/Features/AccessControl/Events/EngagementPersonalDecisionMaterialized.cs |
 
 #### Selected schema and implementation evidence
@@ -554,12 +578,15 @@ EngagementPersonalDecisionIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T110](../reactors/engagement-personal-decision-reactor.md#t110) | emitted semantic fact | EngagementManagementAcknowledgement\|PartnerIndependenceDecision | SettleEngagementPersonalDecision | ServiceEngagementIndependence |
+| [T110](../reactors/engagement-personal-decision-reactor.md#t110) | emitted semantic fact | EngagementManagementAcknowledgement\|PartnerIndependenceDecision | CloseEngagementPersonalDecision | ServiceEngagementIndependence |
 
 ### EngagementPracticeCommitmentsAuthorized
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | EngagementPracticeCommitmentsAuthorized |
+| Selected source event name | EngagementPracticeCommitmentsAuthorized |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:EngagementPracticeCommitmentsAuthorized |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | EngagementPracticeCommitmentsAuthorized |
@@ -569,7 +596,8 @@ EngagementPersonalDecisionIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | The irreversible authorization of an acceptance or positive staff assignment, appended only when every temporary reservation and every source use is held by its exact grant. DecisionAt is the server-frozen instant every temporal validity interval is judged at. Only after this fact are permanent practice walls committed; before it, every temporary grant can still be fenced and settled. |
+| Target meaning | The irreversible authorization of an acceptance or positive staff assignment, appended only when every temporary reservation and every source use is held by its exact grant. DecisionAt is the server-frozen instant every temporal validity interval is judged at. Only after this fact are permanent practice walls committed; before it, every temporary grant can still be fenced and settled. |
+| Selected source meaning | The irreversible authorization of an acceptance or positive staff assignment, appended only when every temporary reservation and every source use is held by its exact grant. DecisionAt is the server-frozen instant every temporal validity interval is judged at. Only after this fact are permanent practice walls committed; before it, every temporary grant can still be fenced and settled. |
 | Meaning source | record summary in src/Compliance.Common/Features/AccessControl/Events/EngagementPracticeCommitmentsAuthorized.cs |
 
 #### Selected schema and implementation evidence
@@ -663,15 +691,18 @@ EngagementIndependenceIntent
 | [T006](../reactors/engagement-acceptance-reactor.md#t006) | logical prerequisite | ServiceEngagementIndependence | CompleteServiceEngagementAcceptance | ServiceEngagementIndependence |
 | [T082](../reactors/engagement-acceptance-reactor.md#t082) | logical prerequisite | ServiceEngagementIndependence | CompleteServiceEngagementStaffAssignment | ServiceEngagementIndependence |
 | [T084](../reactors/engagement-acceptance-reactor.md#t084) | emitted semantic fact | ServiceEngagementIndependence | AuthorizeEngagementPracticeCommitments | ServiceEngagementIndependence |
-| [T090](../reactors/engagement-acceptance-reactor.md#t090) | logical prerequisite | ServiceEngagementIndependence | SettleFirmStaffRecordEngagementUse | FirmStaffRecord |
-| [T092](../reactors/engagement-acceptance-reactor.md#t092) | logical prerequisite | ServiceEngagementIndependence | SettleFirmProfessionalDutyDesignationEngagementUse | FirmProfessionalDutyDesignation |
-| [T094](../reactors/engagement-acceptance-reactor.md#t094) | logical prerequisite | ServiceEngagementIndependence | SettleIndependenceRuleCatalogEngagementUse | IndependenceRuleCatalog |
-| [T096](../reactors/engagement-acceptance-reactor.md#t096) | logical prerequisite | ServiceEngagementIndependence | SettleIndependenceRuleRatificationCatalogEngagementUse | IndependenceRuleRatificationCatalog |
+| [T090](../reactors/engagement-acceptance-reactor.md#t090) | logical prerequisite | ServiceEngagementIndependence | CloseFirmStaffRecordEngagementAuthorization | FirmStaffRecord |
+| [T092](../reactors/engagement-acceptance-reactor.md#t092) | logical prerequisite | ServiceEngagementIndependence | CloseFirmProfessionalDutyDesignationEngagementAuthorization | FirmProfessionalDutyDesignation |
+| [T094](../reactors/engagement-acceptance-reactor.md#t094) | logical prerequisite | ServiceEngagementIndependence | CloseIndependenceRuleCatalogEngagementAuthorization | IndependenceRuleCatalog |
+| [T096](../reactors/engagement-acceptance-reactor.md#t096) | logical prerequisite | ServiceEngagementIndependence | CloseIndependenceRuleRatificationCatalogEngagementAuthorization | IndependenceRuleRatificationCatalog |
 
 ### ServiceEngagementAcceptanceRecorded
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | ServiceEngagementAcceptanceRecorded |
+| Selected source event name | ServiceEngagementAcceptanceRecorded |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:ServiceEngagementAcceptanceRecorded |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | ServiceEngagementAcceptanceRecorded |
@@ -681,7 +712,8 @@ EngagementIndependenceIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | The engagement was accepted: every temporary grant was authorized irreversibly and every permanent practice wall was committed before this fact. AcceptanceContent is the complete original ServiceEngagementAcceptanceView, and Revision is the engagement revision after it. OperationResult is the terminal result of the acceptance operation. |
+| Target meaning | The engagement was accepted: every temporary grant was authorized irreversibly and every permanent practice wall was committed before this fact. AcceptanceContent is the complete original ServiceEngagementAcceptanceView, and Revision is the engagement revision after it. OperationResult is the terminal result of the acceptance operation. |
+| Selected source meaning | The engagement was accepted: every temporary grant was authorized irreversibly and every permanent practice wall was committed before this fact. AcceptanceContent is the complete original ServiceEngagementAcceptanceView, and Revision is the engagement revision after it. OperationResult is the terminal result of the acceptance operation. |
 | Meaning source | record summary in src/Compliance.Common/Features/AccessControl/Events/ServiceEngagementAcceptanceRecorded.cs |
 
 #### Selected schema and implementation evidence
@@ -779,14 +811,17 @@ EngagementIndependenceIntent
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
 | [T006](../reactors/engagement-acceptance-reactor.md#t006) | emitted semantic fact | ServiceEngagementIndependence | CompleteServiceEngagementAcceptance | ServiceEngagementIndependence |
-| [T007](../reactors/engagement-acceptance-reactor.md#t007) | logical prerequisite | ServiceEngagementIndependence | ReleaseEngagementServiceEpoch | ClientServiceIndependence |
-| [T085](../reactors/engagement-acceptance-reactor.md#t085) | logical prerequisite | ServiceEngagementIndependence | SettlePracticeIndependenceReservation | PracticeIndependenceCommitment |
+| [T007](../reactors/engagement-acceptance-reactor.md#t007) | logical prerequisite | ServiceEngagementIndependence | ReleaseEngagementServiceHistoryReservation | ClientServiceIndependence |
+| [T085](../reactors/engagement-acceptance-reactor.md#t085) | logical prerequisite | ServiceEngagementIndependence | ClosePracticeIndependenceReservation | PracticeIndependenceCommitment |
 | [S018](../reactors/accepted-staff-directory-reconciliation-reactor.md#s018) | physical root, logical prerequisite | ServiceEngagementIndependence | RecordDirectoryIndependenceReevaluation | ServiceEngagementIndependence |
 
 ### ServiceEngagementAcceptanceRejected
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | ServiceEngagementAcceptanceRejected |
+| Selected source event name | ServiceEngagementAcceptanceRejected |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:ServiceEngagementAcceptanceRejected |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | ServiceEngagementAcceptanceRejected |
@@ -796,7 +831,8 @@ EngagementIndependenceIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | A requested acceptance was rejected before the irreversible authorization. The rejection fences the pending acceptance against late delivery and releases the engagement content pin; no permanent practice commitment was ever made for it. |
+| Target meaning | A requested acceptance was rejected before the irreversible authorization. The rejection fences the pending acceptance against late delivery and releases the engagement content pin; no permanent practice commitment was ever made for it. |
+| Selected source meaning | A requested acceptance was rejected before the irreversible authorization. The rejection fences the pending acceptance against late delivery and releases the engagement content pin; no permanent practice commitment was ever made for it. |
 | Meaning source | record summary in src/Compliance.Common/Features/AccessControl/Events/ServiceEngagementAcceptanceRejected.cs |
 
 #### Selected schema and implementation evidence
@@ -884,18 +920,21 @@ EngagementIndependenceIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T007](../reactors/engagement-acceptance-reactor.md#t007) | logical prerequisite | ServiceEngagementIndependence | ReleaseEngagementServiceEpoch | ClientServiceIndependence |
-| [T085](../reactors/engagement-acceptance-reactor.md#t085) | logical prerequisite | ServiceEngagementIndependence | SettlePracticeIndependenceReservation | PracticeIndependenceCommitment |
-| [T090](../reactors/engagement-acceptance-reactor.md#t090) | logical prerequisite | ServiceEngagementIndependence | SettleFirmStaffRecordEngagementUse | FirmStaffRecord |
-| [T092](../reactors/engagement-acceptance-reactor.md#t092) | logical prerequisite | ServiceEngagementIndependence | SettleFirmProfessionalDutyDesignationEngagementUse | FirmProfessionalDutyDesignation |
-| [T094](../reactors/engagement-acceptance-reactor.md#t094) | logical prerequisite | ServiceEngagementIndependence | SettleIndependenceRuleCatalogEngagementUse | IndependenceRuleCatalog |
-| [T096](../reactors/engagement-acceptance-reactor.md#t096) | logical prerequisite | ServiceEngagementIndependence | SettleIndependenceRuleRatificationCatalogEngagementUse | IndependenceRuleRatificationCatalog |
+| [T007](../reactors/engagement-acceptance-reactor.md#t007) | logical prerequisite | ServiceEngagementIndependence | ReleaseEngagementServiceHistoryReservation | ClientServiceIndependence |
+| [T085](../reactors/engagement-acceptance-reactor.md#t085) | logical prerequisite | ServiceEngagementIndependence | ClosePracticeIndependenceReservation | PracticeIndependenceCommitment |
+| [T090](../reactors/engagement-acceptance-reactor.md#t090) | logical prerequisite | ServiceEngagementIndependence | CloseFirmStaffRecordEngagementAuthorization | FirmStaffRecord |
+| [T092](../reactors/engagement-acceptance-reactor.md#t092) | logical prerequisite | ServiceEngagementIndependence | CloseFirmProfessionalDutyDesignationEngagementAuthorization | FirmProfessionalDutyDesignation |
+| [T094](../reactors/engagement-acceptance-reactor.md#t094) | logical prerequisite | ServiceEngagementIndependence | CloseIndependenceRuleCatalogEngagementAuthorization | IndependenceRuleCatalog |
+| [T096](../reactors/engagement-acceptance-reactor.md#t096) | logical prerequisite | ServiceEngagementIndependence | CloseIndependenceRuleRatificationCatalogEngagementAuthorization | IndependenceRuleRatificationCatalog |
 | [A002](../reactors/unassigned-architecture-rows.md#a002) | emitted semantic fact | ServiceEngagementIndependence | RejectServiceEngagementAcceptance | ServiceEngagementIndependence |
 
 ### ServiceEngagementAcceptanceRequested
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | ServiceEngagementAcceptanceRequested |
+| Selected source event name | ServiceEngagementAcceptanceRequested |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:ServiceEngagementAcceptanceRequested |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | ServiceEngagementAcceptanceRequested |
@@ -905,7 +944,8 @@ EngagementIndependenceIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | The root native acceptance of an engagement acceptance on the engagement owner. It freezes the complete engagement independence intent at Revision, the engagement content revision at admission, and pins that content until the acceptance is recorded or rejected. It does not advance the engagement revision and grants no authority by itself. |
+| Target meaning | The root native acceptance of an engagement acceptance on the engagement owner. It freezes the complete engagement independence intent at Revision, the engagement content revision at admission, and pins that content until the acceptance is recorded or rejected. It does not advance the engagement revision and grants no authority by itself. |
+| Selected source meaning | The root native acceptance of an engagement acceptance on the engagement owner. It freezes the complete engagement independence intent at Revision, the engagement content revision at admission, and pins that content until the acceptance is recorded or rejected. It does not advance the engagement revision and grants no authority by itself. |
 | Meaning source | record summary in src/Compliance.Common/Features/AccessControl/Events/ServiceEngagementAcceptanceRequested.cs |
 
 #### Selected schema and implementation evidence
@@ -993,22 +1033,22 @@ EngagementIndependenceIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T004](../reactors/engagement-acceptance-reactor.md#t004) | physical root, logical prerequisite | ServiceEngagementIndependence | AcquireEngagementServiceEpoch | ClientServiceIndependence |
+| [T004](../reactors/engagement-acceptance-reactor.md#t004) | physical root, logical prerequisite | ServiceEngagementIndependence | ReserveEngagementServiceHistory | ClientServiceIndependence |
 | [T005](../reactors/engagement-acceptance-reactor.md#t005) | physical root | ServiceEngagementIndependence | CommitPracticeIndependence | PracticeIndependenceCommitment |
 | [T006](../reactors/engagement-acceptance-reactor.md#t006) | physical root | ServiceEngagementIndependence | CompleteServiceEngagementAcceptance | ServiceEngagementIndependence |
-| [T007](../reactors/engagement-acceptance-reactor.md#t007) | physical root | ServiceEngagementIndependence | ReleaseEngagementServiceEpoch | ClientServiceIndependence |
+| [T007](../reactors/engagement-acceptance-reactor.md#t007) | physical root | ServiceEngagementIndependence | ReleaseEngagementServiceHistoryReservation | ClientServiceIndependence |
 | [T082](../reactors/engagement-acceptance-reactor.md#t082) | physical root | ServiceEngagementIndependence | CompleteServiceEngagementStaffAssignment | ServiceEngagementIndependence |
 | [T083](../reactors/engagement-acceptance-reactor.md#t083) | physical root, logical prerequisite | ServiceEngagementIndependence | ReservePracticeIndependence | PracticeIndependenceCommitment |
 | [T084](../reactors/engagement-acceptance-reactor.md#t084) | physical root, logical prerequisite | ServiceEngagementIndependence | AuthorizeEngagementPracticeCommitments | ServiceEngagementIndependence |
-| [T085](../reactors/engagement-acceptance-reactor.md#t085) | physical root | ServiceEngagementIndependence | SettlePracticeIndependenceReservation | PracticeIndependenceCommitment |
-| [T089](../reactors/engagement-acceptance-reactor.md#t089) | physical root, logical prerequisite | ServiceEngagementIndependence | AuthorizeFirmStaffRecordEngagementUse | FirmStaffRecord |
-| [T090](../reactors/engagement-acceptance-reactor.md#t090) | physical root | ServiceEngagementIndependence | SettleFirmStaffRecordEngagementUse | FirmStaffRecord |
-| [T091](../reactors/engagement-acceptance-reactor.md#t091) | physical root, logical prerequisite | ServiceEngagementIndependence | AuthorizeFirmProfessionalDutyDesignationEngagementUse | FirmProfessionalDutyDesignation |
-| [T092](../reactors/engagement-acceptance-reactor.md#t092) | physical root | ServiceEngagementIndependence | SettleFirmProfessionalDutyDesignationEngagementUse | FirmProfessionalDutyDesignation |
-| [T093](../reactors/engagement-acceptance-reactor.md#t093) | physical root, logical prerequisite | ServiceEngagementIndependence | AuthorizeIndependenceRuleCatalogEngagementUse | IndependenceRuleCatalog |
-| [T094](../reactors/engagement-acceptance-reactor.md#t094) | physical root | ServiceEngagementIndependence | SettleIndependenceRuleCatalogEngagementUse | IndependenceRuleCatalog |
-| [T095](../reactors/engagement-acceptance-reactor.md#t095) | physical root, logical prerequisite | ServiceEngagementIndependence | AuthorizeIndependenceRuleRatificationCatalogEngagementUse | IndependenceRuleRatificationCatalog |
-| [T096](../reactors/engagement-acceptance-reactor.md#t096) | physical root | ServiceEngagementIndependence | SettleIndependenceRuleRatificationCatalogEngagementUse | IndependenceRuleRatificationCatalog |
+| [T085](../reactors/engagement-acceptance-reactor.md#t085) | physical root | ServiceEngagementIndependence | ClosePracticeIndependenceReservation | PracticeIndependenceCommitment |
+| [T089](../reactors/engagement-acceptance-reactor.md#t089) | physical root, logical prerequisite | ServiceEngagementIndependence | AuthorizeFirmStaffRecordEngagement | FirmStaffRecord |
+| [T090](../reactors/engagement-acceptance-reactor.md#t090) | physical root | ServiceEngagementIndependence | CloseFirmStaffRecordEngagementAuthorization | FirmStaffRecord |
+| [T091](../reactors/engagement-acceptance-reactor.md#t091) | physical root, logical prerequisite | ServiceEngagementIndependence | AuthorizeFirmProfessionalDutyDesignationEngagement | FirmProfessionalDutyDesignation |
+| [T092](../reactors/engagement-acceptance-reactor.md#t092) | physical root | ServiceEngagementIndependence | CloseFirmProfessionalDutyDesignationEngagementAuthorization | FirmProfessionalDutyDesignation |
+| [T093](../reactors/engagement-acceptance-reactor.md#t093) | physical root, logical prerequisite | ServiceEngagementIndependence | AuthorizeIndependenceRuleCatalogEngagement | IndependenceRuleCatalog |
+| [T094](../reactors/engagement-acceptance-reactor.md#t094) | physical root | ServiceEngagementIndependence | CloseIndependenceRuleCatalogEngagementAuthorization | IndependenceRuleCatalog |
+| [T095](../reactors/engagement-acceptance-reactor.md#t095) | physical root, logical prerequisite | ServiceEngagementIndependence | AuthorizeIndependenceRuleRatificationCatalogEngagement | IndependenceRuleRatificationCatalog |
+| [T096](../reactors/engagement-acceptance-reactor.md#t096) | physical root | ServiceEngagementIndependence | CloseIndependenceRuleRatificationCatalogEngagementAuthorization | IndependenceRuleRatificationCatalog |
 | [A002](../reactors/unassigned-architecture-rows.md#a002) | physical root, logical prerequisite | ServiceEngagementIndependence | RejectServiceEngagementAcceptance | ServiceEngagementIndependence |
 | [A003](../reactors/unassigned-architecture-rows.md#a003) | physical root, logical prerequisite | ServiceEngagementIndependence | RejectServiceEngagementStaffAssignment | ServiceEngagementIndependence |
 
@@ -1016,6 +1056,9 @@ EngagementIndependenceIntent
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | ServiceEngagementAssignmentRevoked |
+| Selected source event name | ServiceEngagementAssignmentRevoked |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:ServiceEngagementAssignmentRevoked |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | ServiceEngagementAssignmentRevoked |
@@ -1025,7 +1068,8 @@ EngagementIndependenceIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | A staff member's assignment on an accepted service engagement was revoked with a stated reason, or the whole engagement was closed when no staff member is named. |
+| Target meaning | A staff member's assignment on an accepted service engagement was revoked with a stated reason, or the whole engagement was closed when no staff member is named. |
+| Selected source meaning | A staff member's assignment on an accepted service engagement was revoked with a stated reason, or the whole engagement was closed when no staff member is named. |
 | Meaning source | authored 2026-10-29 from src/Compliance.Common/Features/AccessControl/Events/ServiceEngagementAssignmentRevoked.cs |
 
 #### Selected schema and implementation evidence
@@ -1073,6 +1117,9 @@ EngagementIndependenceIntent
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | ServiceEngagementMutationRecorded |
+| Selected source event name | ServiceEngagementMutationRecorded |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:ServiceEngagementMutationRecorded |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | ServiceEngagementMutationRecorded |
@@ -1082,7 +1129,8 @@ EngagementIndependenceIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | One accepted lifecycle change of a service engagement draft: create, amend, propose, withdraw or close. Intent is the stable command kind and Change is the immutable ServiceEngagementChange; the complete resulting view is the operation result. No cumulative parent snapshot is carried. Revision is the engagement revision after the change. |
+| Target meaning | One accepted lifecycle change of a service engagement draft: create, amend, propose, withdraw or close. Intent is the stable command kind and Change is the immutable ServiceEngagementChange; the complete resulting view is the operation result. No cumulative parent snapshot is carried. Revision is the engagement revision after the change. |
+| Selected source meaning | One accepted lifecycle change of a service engagement draft: create, amend, propose, withdraw or close. Intent is the stable command kind and Change is the immutable ServiceEngagementChange; the complete resulting view is the operation result. No cumulative parent snapshot is carried. Revision is the engagement revision after the change. |
 | Meaning source | record summary in src/Compliance.Common/Features/AccessControl/Events/ServiceEngagementMutationRecorded.cs |
 
 #### Selected schema and implementation evidence
@@ -1136,6 +1184,9 @@ EngagementIndependenceIntent
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | ServiceEngagementStaffAssigned |
+| Selected source event name | ServiceEngagementStaffAssigned |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:ServiceEngagementStaffAssigned |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | ServiceEngagementStaffAssigned |
@@ -1145,7 +1196,8 @@ EngagementIndependenceIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | One actual staff assignment was recorded on an accepted engagement after the partner authority, the service epoch and the staff and canonical-user practice walls were authorized and committed. The directory snapshots the assignment relied on are retained as immutable content. Revision is the engagement revision after it, and OperationResult is the terminal result: the complete revised acceptance view. |
+| Target meaning | One actual staff assignment was recorded on an accepted engagement after the partner authority, the service epoch and the staff and canonical-user practice walls were authorized and committed. The directory snapshots the assignment relied on are retained as immutable content. Revision is the engagement revision after it, and OperationResult is the terminal result: the complete revised acceptance view. |
+| Selected source meaning | One actual staff assignment was recorded on an accepted engagement after the partner authority, the service epoch and the staff and canonical-user practice walls were authorized and committed. The directory snapshots the assignment relied on are retained as immutable content. Revision is the engagement revision after it, and OperationResult is the terminal result: the complete revised acceptance view. |
 | Meaning source | record summary in src/Compliance.Common/Features/AccessControl/Events/ServiceEngagementStaffAssigned.cs |
 
 #### Selected schema and implementation evidence
@@ -1267,15 +1319,18 @@ EngagementIndependenceIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T007](../reactors/engagement-acceptance-reactor.md#t007) | logical prerequisite | ServiceEngagementIndependence | ReleaseEngagementServiceEpoch | ClientServiceIndependence |
+| [T007](../reactors/engagement-acceptance-reactor.md#t007) | logical prerequisite | ServiceEngagementIndependence | ReleaseEngagementServiceHistoryReservation | ClientServiceIndependence |
 | [T082](../reactors/engagement-acceptance-reactor.md#t082) | emitted semantic fact | ServiceEngagementIndependence | CompleteServiceEngagementStaffAssignment | ServiceEngagementIndependence |
-| [T085](../reactors/engagement-acceptance-reactor.md#t085) | logical prerequisite | ServiceEngagementIndependence | SettlePracticeIndependenceReservation | PracticeIndependenceCommitment |
+| [T085](../reactors/engagement-acceptance-reactor.md#t085) | logical prerequisite | ServiceEngagementIndependence | ClosePracticeIndependenceReservation | PracticeIndependenceCommitment |
 | [S018](../reactors/accepted-staff-directory-reconciliation-reactor.md#s018) | physical root, logical prerequisite | ServiceEngagementIndependence | RecordDirectoryIndependenceReevaluation | ServiceEngagementIndependence |
 
 ### ServiceEngagementStaffAssignmentRejected
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | ServiceEngagementStaffAssignmentRejected |
+| Selected source event name | ServiceEngagementStaffAssignmentRejected |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:ServiceEngagementStaffAssignmentRejected |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | ServiceEngagementStaffAssignmentRejected |
@@ -1285,7 +1340,8 @@ EngagementIndependenceIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | A requested positive staff assignment was rejected before the irreversible authorization. The rejection fences the pending assignment against late delivery; the engagement and every earlier permanent wall are retained. |
+| Target meaning | A requested positive staff assignment was rejected before the irreversible authorization. The rejection fences the pending assignment against late delivery; the engagement and every earlier permanent wall are retained. |
+| Selected source meaning | A requested positive staff assignment was rejected before the irreversible authorization. The rejection fences the pending assignment against late delivery; the engagement and every earlier permanent wall are retained. |
 | Meaning source | record summary in src/Compliance.Common/Features/AccessControl/Events/ServiceEngagementStaffAssignmentRejected.cs |
 
 #### Selected schema and implementation evidence
@@ -1373,18 +1429,21 @@ EngagementIndependenceIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T007](../reactors/engagement-acceptance-reactor.md#t007) | logical prerequisite | ServiceEngagementIndependence | ReleaseEngagementServiceEpoch | ClientServiceIndependence |
-| [T085](../reactors/engagement-acceptance-reactor.md#t085) | logical prerequisite | ServiceEngagementIndependence | SettlePracticeIndependenceReservation | PracticeIndependenceCommitment |
-| [T090](../reactors/engagement-acceptance-reactor.md#t090) | logical prerequisite | ServiceEngagementIndependence | SettleFirmStaffRecordEngagementUse | FirmStaffRecord |
-| [T092](../reactors/engagement-acceptance-reactor.md#t092) | logical prerequisite | ServiceEngagementIndependence | SettleFirmProfessionalDutyDesignationEngagementUse | FirmProfessionalDutyDesignation |
-| [T094](../reactors/engagement-acceptance-reactor.md#t094) | logical prerequisite | ServiceEngagementIndependence | SettleIndependenceRuleCatalogEngagementUse | IndependenceRuleCatalog |
-| [T096](../reactors/engagement-acceptance-reactor.md#t096) | logical prerequisite | ServiceEngagementIndependence | SettleIndependenceRuleRatificationCatalogEngagementUse | IndependenceRuleRatificationCatalog |
+| [T007](../reactors/engagement-acceptance-reactor.md#t007) | logical prerequisite | ServiceEngagementIndependence | ReleaseEngagementServiceHistoryReservation | ClientServiceIndependence |
+| [T085](../reactors/engagement-acceptance-reactor.md#t085) | logical prerequisite | ServiceEngagementIndependence | ClosePracticeIndependenceReservation | PracticeIndependenceCommitment |
+| [T090](../reactors/engagement-acceptance-reactor.md#t090) | logical prerequisite | ServiceEngagementIndependence | CloseFirmStaffRecordEngagementAuthorization | FirmStaffRecord |
+| [T092](../reactors/engagement-acceptance-reactor.md#t092) | logical prerequisite | ServiceEngagementIndependence | CloseFirmProfessionalDutyDesignationEngagementAuthorization | FirmProfessionalDutyDesignation |
+| [T094](../reactors/engagement-acceptance-reactor.md#t094) | logical prerequisite | ServiceEngagementIndependence | CloseIndependenceRuleCatalogEngagementAuthorization | IndependenceRuleCatalog |
+| [T096](../reactors/engagement-acceptance-reactor.md#t096) | logical prerequisite | ServiceEngagementIndependence | CloseIndependenceRuleRatificationCatalogEngagementAuthorization | IndependenceRuleRatificationCatalog |
 | [A003](../reactors/unassigned-architecture-rows.md#a003) | emitted semantic fact | ServiceEngagementIndependence | RejectServiceEngagementStaffAssignment | ServiceEngagementIndependence |
 
 ### ServiceEngagementStaffAssignmentRequested
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | ServiceEngagementStaffAssignmentRequested |
+| Selected source event name | ServiceEngagementStaffAssignmentRequested |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:ServiceEngagementStaffAssignmentRequested |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | ServiceEngagementStaffAssignmentRequested |
@@ -1394,7 +1453,8 @@ EngagementIndependenceIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | The root native acceptance of one positive actual staff assignment on the accepted engagement owner. It freezes the complete engagement independence intent at Revision and pins that content until the assignment is recorded or rejected. It does not advance the engagement revision and grants no authority by itself. |
+| Target meaning | The root native acceptance of one positive actual staff assignment on the accepted engagement owner. It freezes the complete engagement independence intent at Revision and pins that content until the assignment is recorded or rejected. It does not advance the engagement revision and grants no authority by itself. |
+| Selected source meaning | The root native acceptance of one positive actual staff assignment on the accepted engagement owner. It freezes the complete engagement independence intent at Revision and pins that content until the assignment is recorded or rejected. It does not advance the engagement revision and grants no authority by itself. |
 | Meaning source | record summary in src/Compliance.Common/Features/AccessControl/Events/ServiceEngagementStaffAssignmentRequested.cs |
 
 #### Selected schema and implementation evidence
@@ -1482,22 +1542,22 @@ EngagementIndependenceIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T004](../reactors/engagement-acceptance-reactor.md#t004) | physical root, logical prerequisite | ServiceEngagementIndependence | AcquireEngagementServiceEpoch | ClientServiceIndependence |
+| [T004](../reactors/engagement-acceptance-reactor.md#t004) | physical root, logical prerequisite | ServiceEngagementIndependence | ReserveEngagementServiceHistory | ClientServiceIndependence |
 | [T005](../reactors/engagement-acceptance-reactor.md#t005) | physical root | ServiceEngagementIndependence | CommitPracticeIndependence | PracticeIndependenceCommitment |
 | [T006](../reactors/engagement-acceptance-reactor.md#t006) | physical root | ServiceEngagementIndependence | CompleteServiceEngagementAcceptance | ServiceEngagementIndependence |
-| [T007](../reactors/engagement-acceptance-reactor.md#t007) | physical root | ServiceEngagementIndependence | ReleaseEngagementServiceEpoch | ClientServiceIndependence |
+| [T007](../reactors/engagement-acceptance-reactor.md#t007) | physical root | ServiceEngagementIndependence | ReleaseEngagementServiceHistoryReservation | ClientServiceIndependence |
 | [T082](../reactors/engagement-acceptance-reactor.md#t082) | physical root | ServiceEngagementIndependence | CompleteServiceEngagementStaffAssignment | ServiceEngagementIndependence |
 | [T083](../reactors/engagement-acceptance-reactor.md#t083) | physical root, logical prerequisite | ServiceEngagementIndependence | ReservePracticeIndependence | PracticeIndependenceCommitment |
 | [T084](../reactors/engagement-acceptance-reactor.md#t084) | physical root, logical prerequisite | ServiceEngagementIndependence | AuthorizeEngagementPracticeCommitments | ServiceEngagementIndependence |
-| [T085](../reactors/engagement-acceptance-reactor.md#t085) | physical root | ServiceEngagementIndependence | SettlePracticeIndependenceReservation | PracticeIndependenceCommitment |
-| [T089](../reactors/engagement-acceptance-reactor.md#t089) | physical root, logical prerequisite | ServiceEngagementIndependence | AuthorizeFirmStaffRecordEngagementUse | FirmStaffRecord |
-| [T090](../reactors/engagement-acceptance-reactor.md#t090) | physical root | ServiceEngagementIndependence | SettleFirmStaffRecordEngagementUse | FirmStaffRecord |
-| [T091](../reactors/engagement-acceptance-reactor.md#t091) | physical root, logical prerequisite | ServiceEngagementIndependence | AuthorizeFirmProfessionalDutyDesignationEngagementUse | FirmProfessionalDutyDesignation |
-| [T092](../reactors/engagement-acceptance-reactor.md#t092) | physical root | ServiceEngagementIndependence | SettleFirmProfessionalDutyDesignationEngagementUse | FirmProfessionalDutyDesignation |
-| [T093](../reactors/engagement-acceptance-reactor.md#t093) | physical root, logical prerequisite | ServiceEngagementIndependence | AuthorizeIndependenceRuleCatalogEngagementUse | IndependenceRuleCatalog |
-| [T094](../reactors/engagement-acceptance-reactor.md#t094) | physical root | ServiceEngagementIndependence | SettleIndependenceRuleCatalogEngagementUse | IndependenceRuleCatalog |
-| [T095](../reactors/engagement-acceptance-reactor.md#t095) | physical root, logical prerequisite | ServiceEngagementIndependence | AuthorizeIndependenceRuleRatificationCatalogEngagementUse | IndependenceRuleRatificationCatalog |
-| [T096](../reactors/engagement-acceptance-reactor.md#t096) | physical root | ServiceEngagementIndependence | SettleIndependenceRuleRatificationCatalogEngagementUse | IndependenceRuleRatificationCatalog |
+| [T085](../reactors/engagement-acceptance-reactor.md#t085) | physical root | ServiceEngagementIndependence | ClosePracticeIndependenceReservation | PracticeIndependenceCommitment |
+| [T089](../reactors/engagement-acceptance-reactor.md#t089) | physical root, logical prerequisite | ServiceEngagementIndependence | AuthorizeFirmStaffRecordEngagement | FirmStaffRecord |
+| [T090](../reactors/engagement-acceptance-reactor.md#t090) | physical root | ServiceEngagementIndependence | CloseFirmStaffRecordEngagementAuthorization | FirmStaffRecord |
+| [T091](../reactors/engagement-acceptance-reactor.md#t091) | physical root, logical prerequisite | ServiceEngagementIndependence | AuthorizeFirmProfessionalDutyDesignationEngagement | FirmProfessionalDutyDesignation |
+| [T092](../reactors/engagement-acceptance-reactor.md#t092) | physical root | ServiceEngagementIndependence | CloseFirmProfessionalDutyDesignationEngagementAuthorization | FirmProfessionalDutyDesignation |
+| [T093](../reactors/engagement-acceptance-reactor.md#t093) | physical root, logical prerequisite | ServiceEngagementIndependence | AuthorizeIndependenceRuleCatalogEngagement | IndependenceRuleCatalog |
+| [T094](../reactors/engagement-acceptance-reactor.md#t094) | physical root | ServiceEngagementIndependence | CloseIndependenceRuleCatalogEngagementAuthorization | IndependenceRuleCatalog |
+| [T095](../reactors/engagement-acceptance-reactor.md#t095) | physical root, logical prerequisite | ServiceEngagementIndependence | AuthorizeIndependenceRuleRatificationCatalogEngagement | IndependenceRuleRatificationCatalog |
+| [T096](../reactors/engagement-acceptance-reactor.md#t096) | physical root | ServiceEngagementIndependence | CloseIndependenceRuleRatificationCatalogEngagementAuthorization | IndependenceRuleRatificationCatalog |
 | [A002](../reactors/unassigned-architecture-rows.md#a002) | physical root, logical prerequisite | ServiceEngagementIndependence | RejectServiceEngagementAcceptance | ServiceEngagementIndependence |
 | [A003](../reactors/unassigned-architecture-rows.md#a003) | physical root, logical prerequisite | ServiceEngagementIndependence | RejectServiceEngagementStaffAssignment | ServiceEngagementIndependence |
 
@@ -1505,6 +1565,9 @@ EngagementIndependenceIntent
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | ServiceIndependenceReevaluated |
+| Selected source event name | ServiceIndependenceReevaluated |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:ServiceIndependenceReevaluated |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | ServiceIndependenceReevaluated |
@@ -1514,7 +1577,8 @@ EngagementIndependenceIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | A change to a client's services prompted a reassessment of an accepted engagement's independence, retained as a record that blocks production acceptance and never refreshes the earlier acceptance. |
+| Target meaning | A change to a client's services prompted a reassessment of an accepted engagement's independence, retained as a record that blocks production acceptance and never refreshes the earlier acceptance. |
+| Selected source meaning | A change to a client's services prompted a reassessment of an accepted engagement's independence, retained as a record that blocks production acceptance and never refreshes the earlier acceptance. |
 | Meaning source | authored 2026-10-29 from src/Compliance.Common/Features/AccessControl/Events/ServiceIndependenceReevaluated.cs |
 
 #### Selected schema and implementation evidence

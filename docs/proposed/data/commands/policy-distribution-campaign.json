@@ -61,7 +61,9 @@
         "line": 3824,
         "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       },
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "CloseCampaign",
+      "targetName": "CloseCampaign"
     },
     {
       "command": "LaunchPolicyCampaign",
@@ -133,7 +135,9 @@
         "line": 7626,
         "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       },
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "LaunchPolicyCampaign",
+      "targetName": "LaunchPolicyCampaign"
     },
     {
       "command": "LaunchTrainingCampaign",
@@ -205,7 +209,9 @@
         "line": 7746,
         "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       },
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "LaunchTrainingCampaign",
+      "targetName": "LaunchTrainingCampaign"
     },
     {
       "command": "ReconcileCampaignAudience",
@@ -267,7 +273,9 @@
         "line": 10172,
         "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       },
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "ReconcileCampaignAudience",
+      "targetName": "ReconcileCampaignAudience"
     },
     {
       "command": "AbortPolicyCampaignClosure",
@@ -317,7 +325,9 @@
         "line": 1133,
         "sha256": "f1d549ed0879c816cb26e86879f8fa658dab0a8acbf7c591e4d4aed40483f8ae"
       },
-      "kind": "abort"
+      "kind": "abort",
+      "sourceName": "AbortPolicyCampaignClosure",
+      "targetName": "AbortPolicyCampaignClosure"
     },
     {
       "command": "CompletePolicyCampaignClosure",
@@ -393,7 +403,9 @@
       "source": {
         "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
         "recorded": "2026-10-29"
-      }
+      },
+      "sourceName": "CompletePolicyCampaignClosure",
+      "targetName": "CompletePolicyCampaignClosure"
     }
   ],
   "sourceContractEvidence": [

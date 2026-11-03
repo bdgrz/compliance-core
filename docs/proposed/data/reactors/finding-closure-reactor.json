@@ -1,5 +1,7 @@
 {
-  "root": "FindingClosureReactor",
+  "sourceRoot": "FindingClosureReactor",
+  "targetRoot": "FindingClosureReactor",
+  "businessReason": "Close a finding only after the exact corrective action and closure evidence are complete.",
   "rows": [
     {
       "id": "T037",

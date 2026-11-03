@@ -2,16 +2,16 @@
 
 Selected command contracts: **8**. Complete selected contracts and companion source evidence: [owner command JSON](../data/commands/audit-package-manifest.json).
 
-| Command | Kind | Identity | Fields | HTTP routes |
-| --- | --- | --- | --- | --- |
-| AmendAuditPackage | http | CommandId | 8 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/audit-packages/{package_id}/amendments/{command_id} [ComplianceAuthorizationPolicies.ApiUser] |
-| ApproveAuditPackageDisclosure | http | CommandId | 9 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/audit-packages/{package_id}/approve-audit-package-disclosure/{command_id} [ApiUser + existing request-scope authorizers] |
-| ApproveAuditPackageValidationOverride | http | CommandId | 8 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/audit-packages/{package_id}/approve-audit-package-validation-override/{command_id} [ApiUser + existing request-scope authorizers] |
-| CreateAuditPackage | http | PackageId | 4 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/audit-packages/{package_id} [ComplianceAuthorizationPolicies.ApiUser] |
-| RecordAuditPackageBuildResult | receiver | CommandId | 10 | [Placeholder: value not recorded] |
-| RecordAuditPackageDelivery | http | DeliveryId | 9 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/audit-packages/{package_id}/versions/{package_version}/deliveries/{delivery_id} |
-| RequestAuditPackageBuild | http | BuildKey | 8 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/audit-packages/{package_id}/versions/{package_version}/builds/{build_key} |
-| ValidateAuditPackage | http | CommandId | 7 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/audit-packages/{package_id}/validations/{command_id} [ComplianceAuthorizationPolicies.ApiUser] |
+| Target command | Selected source name | Kind | Identity | Fields | HTTP routes |
+| --- | --- | --- | --- | --- | --- |
+| AmendAuditPackage | AmendAuditPackage | http | CommandId | 8 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/audit-packages/{package_id}/amendments/{command_id} [ComplianceAuthorizationPolicies.ApiUser] |
+| ApproveAuditPackageDisclosure | ApproveAuditPackageDisclosure | http | CommandId | 9 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/audit-packages/{package_id}/approve-audit-package-disclosure/{command_id} [ApiUser + existing request-scope authorizers] |
+| ApproveAuditPackageValidationOverride | ApproveAuditPackageValidationOverride | http | CommandId | 8 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/audit-packages/{package_id}/approve-audit-package-validation-override/{command_id} [ApiUser + existing request-scope authorizers] |
+| CreateAuditPackage | CreateAuditPackage | http | PackageId | 4 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/audit-packages/{package_id} [ComplianceAuthorizationPolicies.ApiUser] |
+| RecordAuditPackageBuildResult | RecordAuditPackageBuildResult | receiver | CommandId | 10 | [Placeholder: value not recorded] |
+| ReportAuditPackageDelivery | RecordAuditPackageDelivery | http | DeliveryId | 9 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/audit-packages/{package_id}/versions/{package_version}/deliveries/{delivery_id} |
+| RequestAuditPackageBuild | RequestAuditPackageBuild | http | BuildKey | 8 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/audit-packages/{package_id}/versions/{package_version}/builds/{build_key} |
+| ValidateAuditPackage | ValidateAuditPackage | http | CommandId | 7 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/audit-packages/{package_id}/validations/{command_id} [ComplianceAuthorizationPolicies.ApiUser] |
 
 ## Selected command details
 
@@ -19,6 +19,9 @@ Selected command contracts: **8**. Complete selected contracts and companion sou
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | AmendAuditPackage |
+| Selected source command name | AmendAuditPackage |
+| Name decision | The selected source name is retained. |
 | Owner | AuditPackageManifest |
 | Contract record status | target_contract |
 | Kind | http |
@@ -71,6 +74,9 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | ApproveAuditPackageDisclosure |
+| Selected source command name | ApproveAuditPackageDisclosure |
+| Name decision | The selected source name is retained. |
 | Owner | AuditPackageManifest |
 | Contract record status | target_contract |
 | Kind | http |
@@ -124,6 +130,9 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | ApproveAuditPackageValidationOverride |
+| Selected source command name | ApproveAuditPackageValidationOverride |
+| Name decision | The selected source name is retained. |
 | Owner | AuditPackageManifest |
 | Contract record status | target_contract |
 | Kind | http |
@@ -176,6 +185,9 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | CreateAuditPackage |
+| Selected source command name | CreateAuditPackage |
+| Name decision | The selected source name is retained. |
 | Owner | AuditPackageManifest |
 | Contract record status | target_contract |
 | Kind | http |
@@ -224,6 +236,9 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | RecordAuditPackageBuildResult |
+| Selected source command name | RecordAuditPackageBuildResult |
+| Name decision | The selected source name is retained. |
 | Owner | AuditPackageManifest |
 | Contract record status | target_contract |
 | Kind | receiver |
@@ -272,10 +287,13 @@ Existing tests: test/Compliance.Tests/Features/AuditPackages/RecordAuditPackageB
 
 Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision, ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity, ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof, ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome
 
-### RecordAuditPackageDelivery
+### ReportAuditPackageDelivery
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | ReportAuditPackageDelivery |
+| Selected source command name | RecordAuditPackageDelivery |
+| Name decision | Names the person's action to report when and to whom the selected audit package was delivered. |
 | Owner | AuditPackageManifest |
 | Contract record status | target_contract |
 | Kind | http |
@@ -329,6 +347,9 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | RequestAuditPackageBuild |
+| Selected source command name | RequestAuditPackageBuild |
+| Name decision | The selected source name is retained. |
 | Owner | AuditPackageManifest |
 | Contract record status | target_contract |
 | Kind | http |
@@ -381,6 +402,9 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | ValidateAuditPackage |
+| Selected source command name | ValidateAuditPackage |
+| Name decision | The selected source name is retained. |
 | Owner | AuditPackageManifest |
 | Contract record status | target_contract |
 | Kind | http |
@@ -431,7 +455,7 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 
 ## Source contracts
 
-| Command | Handler | Registered | Entry point |
+| Selected source command | Handler | Registered | Entry point |
 | --- | --- | --- | --- |
 | AmendAuditPackage | AmendAuditPackageHandler | true | authorized_http |
 | ApproveAuditPackageDisclosure | ApproveAuditPackageDisclosureHandler | true | authorized_http |

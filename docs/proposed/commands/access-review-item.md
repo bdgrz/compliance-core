@@ -2,20 +2,20 @@
 
 Selected command contracts: **12**. Complete selected contracts and companion source evidence: [owner command JSON](../data/commands/access-review-item.json).
 
-| Command | Kind | Identity | Fields | HTTP routes |
-| --- | --- | --- | --- | --- |
-| ExemptAccessRemediation | http | CommandId | 7 | PUT /api/v1/tenants/{tenant_id}/access-review-campaigns/{campaign_id}/items/{item_id}/remediation-exceptions/{command_id} [ComplianceAuthorizationPolicies.ApiUser] |
-| ReassignAccessReviewResponsibility | http | CommandId | 9 | PUT /api/v1/tenants/{tenant_id}/access-review-campaigns/{campaign_id}/items/{item_id}/responsibility-reassignments/{command_id} [ComplianceAuthorizationPolicies.ApiUser] |
-| RecordAccessDecision | http | CommandId | 8 | PUT /api/v1/tenants/{tenant_id}/access-review-campaigns/{campaign_id}/items/{item_id}/decisions/{command_id} [ComplianceAuthorizationPolicies.ApiUser] |
-| RecordAccessRemediationChange | http | CommandId | 8 | PUT /api/v1/tenants/{tenant_id}/access-review-campaigns/{campaign_id}/items/{item_id}/remediation-changes/{command_id} [ComplianceAuthorizationPolicies.ApiUser] |
-| VerifyAccessRemediation | http | CommandId | 6 | PUT /api/v1/tenants/{tenant_id}/access-review-campaigns/{campaign_id}/items/{item_id}/remediation-verifications/{command_id} [ComplianceAuthorizationPolicies.ApiUser] |
-| MaterializeAccessReviewItem | receiver | CommandId | 9 | [Placeholder: value not recorded] |
-| ReserveAccessReviewItemDecision | receiver | CommandId | 11 | [Placeholder: value not recorded] |
-| ApplyAccessReviewItemDecision | receiver | CommandId | 10 | [Placeholder: value not recorded] |
-| FenceAccessReviewItemDecision | receiver | CommandId | 9 | [Placeholder: value not recorded] |
-| AuthorizeAccessReviewItemCampaignCompletionUse | receiver | CommandId | 10 | [Placeholder: value not recorded] |
-| SettleAccessReviewItemCampaignCompletionUse | receiver | CommandId | 10 | [Placeholder: value not recorded] |
-| SettleAccessReviewItemDecision | receiver | CommandId | 9 | [Placeholder: value not recorded] |
+| Target command | Selected source name | Kind | Identity | Fields | HTTP routes |
+| --- | --- | --- | --- | --- | --- |
+| ExemptAccessRemediation | ExemptAccessRemediation | http | CommandId | 7 | PUT /api/v1/tenants/{tenant_id}/access-review-campaigns/{campaign_id}/items/{item_id}/remediation-exceptions/{command_id} [ComplianceAuthorizationPolicies.ApiUser] |
+| ReassignAccessReviewResponsibility | ReassignAccessReviewResponsibility | http | CommandId | 9 | PUT /api/v1/tenants/{tenant_id}/access-review-campaigns/{campaign_id}/items/{item_id}/responsibility-reassignments/{command_id} [ComplianceAuthorizationPolicies.ApiUser] |
+| RecordAccessDecision | RecordAccessDecision | http | CommandId | 8 | PUT /api/v1/tenants/{tenant_id}/access-review-campaigns/{campaign_id}/items/{item_id}/decisions/{command_id} [ComplianceAuthorizationPolicies.ApiUser] |
+| RecordAccessRemediationChange | RecordAccessRemediationChange | http | CommandId | 8 | PUT /api/v1/tenants/{tenant_id}/access-review-campaigns/{campaign_id}/items/{item_id}/remediation-changes/{command_id} [ComplianceAuthorizationPolicies.ApiUser] |
+| VerifyAccessRemediation | VerifyAccessRemediation | http | CommandId | 6 | PUT /api/v1/tenants/{tenant_id}/access-review-campaigns/{campaign_id}/items/{item_id}/remediation-verifications/{command_id} [ComplianceAuthorizationPolicies.ApiUser] |
+| OpenAccessReviewItem | MaterializeAccessReviewItem | receiver | CommandId | 9 | [Placeholder: value not recorded] |
+| ReserveAccessReviewItemDecision | ReserveAccessReviewItemDecision | receiver | CommandId | 11 | [Placeholder: value not recorded] |
+| ApplyAccessReviewItemDecision | ApplyAccessReviewItemDecision | receiver | CommandId | 10 | [Placeholder: value not recorded] |
+| CancelAccessReviewItemDecision | FenceAccessReviewItemDecision | receiver | CommandId | 9 | [Placeholder: value not recorded] |
+| AuthorizeAccessReviewItemCampaignCompletion | AuthorizeAccessReviewItemCampaignCompletionUse | receiver | CommandId | 10 | [Placeholder: value not recorded] |
+| CloseAccessReviewItemCampaignCompletionAuthorization | SettleAccessReviewItemCampaignCompletionUse | receiver | CommandId | 10 | [Placeholder: value not recorded] |
+| CloseAccessReviewItemDecisionAuthorization | SettleAccessReviewItemDecision | receiver | CommandId | 9 | [Placeholder: value not recorded] |
 
 ## Selected command details
 
@@ -23,6 +23,9 @@ Selected command contracts: **12**. Complete selected contracts and companion so
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | ExemptAccessRemediation |
+| Selected source command name | ExemptAccessRemediation |
+| Name decision | The selected source name is retained. |
 | Owner | AccessReviewItem |
 | Contract record status | target_contract |
 | Kind | http |
@@ -74,6 +77,9 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | ReassignAccessReviewResponsibility |
+| Selected source command name | ReassignAccessReviewResponsibility |
+| Name decision | The selected source name is retained. |
 | Owner | AccessReviewItem |
 | Contract record status | target_contract |
 | Kind | http |
@@ -127,6 +133,9 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | RecordAccessDecision |
+| Selected source command name | RecordAccessDecision |
+| Name decision | The selected source name is retained. |
 | Owner | AccessReviewItem |
 | Contract record status | target_contract |
 | Kind | http |
@@ -179,6 +188,9 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | RecordAccessRemediationChange |
+| Selected source command name | RecordAccessRemediationChange |
+| Name decision | The selected source name is retained. |
 | Owner | AccessReviewItem |
 | Contract record status | target_contract |
 | Kind | http |
@@ -231,6 +243,9 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | VerifyAccessRemediation |
+| Selected source command name | VerifyAccessRemediation |
+| Name decision | The selected source name is retained. |
 | Owner | AccessReviewItem |
 | Contract record status | target_contract |
 | Kind | http |
@@ -277,17 +292,20 @@ Existing tests: test/Compliance.Tests/Features/AccessReviews/AccessRemediationTe
 
 Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision, ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity, ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof, ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome
 
-### MaterializeAccessReviewItem
+### OpenAccessReviewItem
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | OpenAccessReviewItem |
+| Selected source command name | MaterializeAccessReviewItem |
+| Name decision | Opens one assigned review item for each selected item and reviewer. |
 | Owner | AccessReviewItem |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; reactor; deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result |
 | Entry point | [Placeholder: value not recorded] |
 | MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | [Placeholder: value not recorded] |
+| Selected semantic events | None listed |
 | Protocols | [Placeholder: value not recorded] |
 | Policy preservation | [Placeholder: value not recorded] |
 | Contract changes | [Placeholder: value not recorded] |
@@ -330,13 +348,16 @@ Required tests: [Placeholder: required tests not recorded]
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | ReserveAccessReviewItemDecision |
+| Selected source command name | ReserveAccessReviewItemDecision |
+| Name decision | The selected source name is retained. |
 | Owner | AccessReviewItem |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; reactor; deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result |
 | Entry point | [Placeholder: value not recorded] |
 | MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | [Placeholder: value not recorded] |
+| Selected semantic events | None listed |
 | Protocols | [Placeholder: value not recorded] |
 | Policy preservation | [Placeholder: value not recorded] |
 | Contract changes | [Placeholder: value not recorded] |
@@ -381,13 +402,16 @@ Required tests: [Placeholder: required tests not recorded]
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | ApplyAccessReviewItemDecision |
+| Selected source command name | ApplyAccessReviewItemDecision |
+| Name decision | The selected source name is retained. |
 | Owner | AccessReviewItem |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; reactor; deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result |
 | Entry point | [Placeholder: value not recorded] |
 | MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | [Placeholder: value not recorded] |
+| Selected semantic events | None listed |
 | Protocols | [Placeholder: value not recorded] |
 | Policy preservation | [Placeholder: value not recorded] |
 | Contract changes | [Placeholder: value not recorded] |
@@ -427,17 +451,20 @@ Existing tests: [Placeholder: existing tests not recorded]
 
 Required tests: [Placeholder: required tests not recorded]
 
-### FenceAccessReviewItemDecision
+### CancelAccessReviewItemDecision
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | CancelAccessReviewItemDecision |
+| Selected source command name | FenceAccessReviewItemDecision |
+| Name decision | Records cancellation of delayed decision application before item reservations are released. |
 | Owner | AccessReviewItem |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; reactor; deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result |
 | Entry point | [Placeholder: value not recorded] |
 | MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | [Placeholder: value not recorded] |
+| Selected semantic events | None listed |
 | Protocols | [Placeholder: value not recorded] |
 | Policy preservation | [Placeholder: value not recorded] |
 | Contract changes | [Placeholder: value not recorded] |
@@ -476,17 +503,20 @@ Existing tests: [Placeholder: existing tests not recorded]
 
 Required tests: [Placeholder: required tests not recorded]
 
-### AuthorizeAccessReviewItemCampaignCompletionUse
+### AuthorizeAccessReviewItemCampaignCompletion
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | AuthorizeAccessReviewItemCampaignCompletion |
+| Selected source command name | AuthorizeAccessReviewItemCampaignCompletionUse |
+| Name decision | The command authorizes the named business action; the extra Use suffix describes the coordination mechanism. |
 | Owner | AccessReviewItem |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; reactor; deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result |
 | Entry point | [Placeholder: value not recorded] |
 | MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | [Placeholder: value not recorded] |
+| Selected semantic events | None listed |
 | Protocols | [Placeholder: value not recorded] |
 | Policy preservation | [Placeholder: value not recorded] |
 | Contract changes | [Placeholder: value not recorded] |
@@ -526,17 +556,20 @@ Existing tests: [Placeholder: existing tests not recorded]
 
 Required tests: [Placeholder: required tests not recorded]
 
-### SettleAccessReviewItemCampaignCompletionUse
+### CloseAccessReviewItemCampaignCompletionAuthorization
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | CloseAccessReviewItemCampaignCompletionAuthorization |
+| Selected source command name | SettleAccessReviewItemCampaignCompletionUse |
+| Name decision | The command ends the exact authorization after its business action or cancellation. |
 | Owner | AccessReviewItem |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; reactor; deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result |
 | Entry point | [Placeholder: value not recorded] |
 | MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | [Placeholder: value not recorded] |
+| Selected semantic events | None listed |
 | Protocols | [Placeholder: value not recorded] |
 | Policy preservation | [Placeholder: value not recorded] |
 | Contract changes | [Placeholder: value not recorded] |
@@ -576,17 +609,20 @@ Existing tests: [Placeholder: existing tests not recorded]
 
 Required tests: [Placeholder: required tests not recorded]
 
-### SettleAccessReviewItemDecision
+### CloseAccessReviewItemDecisionAuthorization
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | CloseAccessReviewItemDecisionAuthorization |
+| Selected source command name | SettleAccessReviewItemDecision |
+| Name decision | Ends the exact item decision authorization after the batch is published or canceled. |
 | Owner | AccessReviewItem |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; reactor; deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result |
 | Entry point | [Placeholder: value not recorded] |
 | MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | [Placeholder: value not recorded] |
+| Selected semantic events | None listed |
 | Protocols | [Placeholder: value not recorded] |
 | Policy preservation | [Placeholder: value not recorded] |
 | Contract changes | [Placeholder: value not recorded] |
@@ -628,7 +664,7 @@ Required tests: [Placeholder: required tests not recorded]
 
 ## Source contracts
 
-| Command | Handler | Registered | Entry point |
+| Selected source command | Handler | Registered | Entry point |
 | --- | --- | --- | --- |
 | ExemptAccessRemediation | ExemptAccessRemediationHandler | true | personal_http |
 | ReassignAccessReviewResponsibility | ReassignAccessReviewResponsibilityHandler | true | authorized_http_and_mcp |

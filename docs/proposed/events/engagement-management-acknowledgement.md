@@ -2,9 +2,9 @@
 
 Canonical events: **1**. Complete canonical event and available schema records: [owner event JSON](../data/events/engagement-management-acknowledgement.json).
 
-| Event | Kind | Adopted discriminator | Version | Schema fields | Meaning |
-| --- | --- | --- | --- | --- | --- |
-| EngagementManagementAcknowledged | business | bdgrz.service-engagement.management-acknowledged | 1 | 8 | The immutable personal management acknowledgement of one engagement, materialized from the authorized personal decision. The complete EngagementManagementAcknowledgementView is immutable content; the acknowledgement identity is OperationId. |
+| Target event | Selected source name | Kind | Adopted discriminator | Version | Schema fields | Meaning |
+| --- | --- | --- | --- | --- | --- | --- |
+| EngagementManagementAcknowledged | EngagementManagementAcknowledged | business | bdgrz.service-engagement.management-acknowledged | 1 | 8 | The immutable personal management acknowledgement of one engagement, materialized from the authorized personal decision. The complete EngagementManagementAcknowledgementView is immutable content; the acknowledgement identity is OperationId. |
 
 ## Event details
 
@@ -12,6 +12,9 @@ Canonical events: **1**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | EngagementManagementAcknowledged |
+| Selected source event name | EngagementManagementAcknowledged |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:EngagementManagementAcknowledged |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | EngagementManagementAcknowledged |
@@ -21,7 +24,8 @@ Canonical events: **1**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | The immutable personal management acknowledgement of one engagement, materialized from the authorized personal decision. The complete EngagementManagementAcknowledgementView is immutable content; the acknowledgement identity is OperationId. |
+| Target meaning | The immutable personal management acknowledgement of one engagement, materialized from the authorized personal decision. The complete EngagementManagementAcknowledgementView is immutable content; the acknowledgement identity is OperationId. |
+| Selected source meaning | The immutable personal management acknowledgement of one engagement, materialized from the authorized personal decision. The complete EngagementManagementAcknowledgementView is immutable content; the acknowledgement identity is OperationId. |
 | Meaning source | record summary in src/Compliance.Common/Features/AccessControl/Events/EngagementManagementAcknowledged.cs |
 
 #### Selected schema and implementation evidence
@@ -110,8 +114,8 @@ EngagementPersonalDecisionIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T108](../reactors/engagement-personal-decision-reactor.md#t108) | emitted semantic fact | ServiceEngagementIndependence | MaterializeEngagementManagementAcknowledgement | EngagementManagementAcknowledgement |
-| [T110](../reactors/engagement-personal-decision-reactor.md#t110) | logical prerequisite | EngagementManagementAcknowledgement\|PartnerIndependenceDecision | SettleEngagementPersonalDecision | ServiceEngagementIndependence |
+| [T108](../reactors/engagement-personal-decision-reactor.md#t108) | emitted semantic fact | ServiceEngagementIndependence | RecordEngagementManagementAcknowledgement | EngagementManagementAcknowledgement |
+| [T110](../reactors/engagement-personal-decision-reactor.md#t110) | logical prerequisite | EngagementManagementAcknowledgement\|PartnerIndependenceDecision | CloseEngagementPersonalDecision | ServiceEngagementIndependence |
 
 
 

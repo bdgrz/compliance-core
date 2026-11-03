@@ -54,7 +54,9 @@
           "process_reply": 0.79
         },
         "date": "2026-10-29"
-      }
+      },
+      "sourceName": "AcceptTemplateContribution",
+      "targetName": "AcceptTemplateContribution"
     },
     {
       "command": "ProposeDeidentifiedTemplateContribution",
@@ -109,7 +111,9 @@
         "line": 6909,
         "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
       },
-      "kind": "creation"
+      "kind": "creation",
+      "sourceName": "ProposeDeidentifiedTemplateContribution",
+      "targetName": "ProposeDeidentifiedTemplateContribution"
     },
     {
       "command": "ReviewTemplateContribution",
@@ -175,7 +179,9 @@
           "process_reply": 0.64
         },
         "date": "2026-10-29"
-      }
+      },
+      "sourceName": "ReviewTemplateContribution",
+      "targetName": "ReviewTemplateContribution"
     }
   ],
   "sourceContractEvidence": []

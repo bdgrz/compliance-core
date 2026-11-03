@@ -2,12 +2,12 @@
 
 Selected command contracts: **4**. Complete selected contracts and companion source evidence: [owner command JSON](../data/commands/operational-process.json).
 
-| Command | Kind | Identity | Fields | HTTP routes |
-| --- | --- | --- | --- | --- |
-| RecordOperationalProcess | http | OperationalProcessId | 7 | PUT /api/v1/tenants/{tenant_id}/operational-processes/{operational_process_id} [ComplianceAuthorizationPolicies.ApiUser] |
-| ReviseOperationalProcess | http | CommandId | 10 | PUT /api/v1/tenants/{tenant_id}/operational-processes/revise-operational-process/{command_id} [ApiUser + existing request-scope authorizers] |
-| CancelOperationalProcessChange | abort | CommandId | 6 | [Placeholder: route/channel not recorded] |
-| ApplyOperationalProcessChange | receiver | CommandId | 8 | [Placeholder: value not recorded] |
+| Target command | Selected source name | Kind | Identity | Fields | HTTP routes |
+| --- | --- | --- | --- | --- | --- |
+| RecordOperationalProcess | RecordOperationalProcess | http | OperationalProcessId | 7 | PUT /api/v1/tenants/{tenant_id}/operational-processes/{operational_process_id} [ComplianceAuthorizationPolicies.ApiUser] |
+| ReviseOperationalProcess | ReviseOperationalProcess | http | CommandId | 10 | PUT /api/v1/tenants/{tenant_id}/operational-processes/revise-operational-process/{command_id} [ApiUser + existing request-scope authorizers] |
+| CancelOperationalProcessChange | CancelOperationalProcessChange | abort | CommandId | 6 | [Placeholder: route/channel not recorded] |
+| ApplyOperationalProcessChange | ApplyOperationalProcessChange | receiver | CommandId | 8 | [Placeholder: value not recorded] |
 
 ## Selected command details
 
@@ -15,6 +15,9 @@ Selected command contracts: **4**. Complete selected contracts and companion sou
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | RecordOperationalProcess |
+| Selected source command name | RecordOperationalProcess |
+| Name decision | The selected source name is retained. |
 | Owner | OperationalProcess |
 | Contract record status | target_contract |
 | Kind | http |
@@ -66,6 +69,9 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | ReviseOperationalProcess |
+| Selected source command name | ReviseOperationalProcess |
+| Name decision | The selected source name is retained. |
 | Owner | OperationalProcess |
 | Contract record status | target_contract |
 | Kind | http |
@@ -120,13 +126,16 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | CancelOperationalProcessChange |
+| Selected source command name | CancelOperationalProcessChange |
+| Name decision | The selected source name is retained. |
 | Owner | OperationalProcess |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | abort |
 | Logical identity | CommandId; Uuid; required=true; abort receiver identity bound to the exact admitted operation and generation: exact redelivery resolves the original rejected result; an abort after a terminal outcome is a no-op |
 | Entry point | [Placeholder: value not recorded] |
 | MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | [Placeholder: value not recorded] |
+| Selected semantic events | None listed |
 | Protocols | [Placeholder: value not recorded] |
 | Policy preservation | [Placeholder: value not recorded] |
 | Contract changes | [Placeholder: value not recorded] |
@@ -166,13 +175,16 @@ Required tests: [Placeholder: required tests not recorded]
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | ApplyOperationalProcessChange |
+| Selected source command name | ApplyOperationalProcessChange |
+| Name decision | The selected source name is retained. |
 | Owner | OperationalProcess |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; reactor; deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result |
 | Entry point | [Placeholder: value not recorded] |
 | MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | [Placeholder: value not recorded] |
+| Selected semantic events | None listed |
 | Protocols | [Placeholder: value not recorded] |
 | Policy preservation | [Placeholder: value not recorded] |
 | Contract changes | [Placeholder: value not recorded] |
@@ -213,7 +225,7 @@ Required tests: [Placeholder: required tests not recorded]
 
 ## Source contracts
 
-| Command | Handler | Registered | Entry point |
+| Selected source command | Handler | Registered | Entry point |
 | --- | --- | --- | --- |
 | RecordOperationalProcess | RecordOperationalProcessHandler | true | authorized_http_and_mcp |
 | ReviseOperationalProcess | ReviseOperationalProcessHandler | true | authorized_http_and_mcp |

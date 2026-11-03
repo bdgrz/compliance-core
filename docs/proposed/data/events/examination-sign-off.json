@@ -23,7 +23,11 @@
         "meaning": "Records management's immutable review of the exact examination inputs and outcomes.",
         "meaningSource": "record summary in src/Compliance.Common/Features/Examinations/Events/ExaminationSignedOff.cs"
       },
-      "schema": null
+      "schema": null,
+      "sourceName": "ExaminationSignedOff",
+      "targetName": "ExaminationSignedOff",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "Records management's immutable review of the exact examination inputs and outcomes."
     }
   ]
 }

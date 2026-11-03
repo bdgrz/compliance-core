@@ -70,7 +70,9 @@
         "line": 4314,
         "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
       },
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "DeclareSystemInstance",
+      "targetName": "DeclareSystemInstance"
     },
     {
       "command": "RetireSystemInstance",
@@ -136,7 +138,9 @@
         "line": 11690,
         "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
       },
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "RetireSystemInstance",
+      "targetName": "RetireSystemInstance"
     },
     {
       "command": "ReviseSystemInstance",
@@ -206,7 +210,9 @@
         "line": 13734,
         "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
       },
-      "kind": "command"
+      "kind": "command",
+      "sourceName": "ReviseSystemInstance",
+      "targetName": "ReviseSystemInstance"
     }
   ],
   "sourceContractEvidence": []

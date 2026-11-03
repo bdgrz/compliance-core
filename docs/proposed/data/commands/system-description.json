@@ -66,7 +66,9 @@
         "line": 2396,
         "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       },
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "ApproveSystemDescription",
+      "targetName": "ApproveSystemDescription"
     },
     {
       "command": "BindSystemDescriptionSources",
@@ -128,7 +130,9 @@
         "line": 3011,
         "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       },
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "BindSystemDescriptionSources",
+      "targetName": "BindSystemDescriptionSources"
     },
     {
       "command": "BindSystemDescriptionToExamination",
@@ -200,7 +204,9 @@
         "line": 3121,
         "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       },
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "BindSystemDescriptionToExamination",
+      "targetName": "BindSystemDescriptionToExamination"
     },
     {
       "command": "CreateSystemDescriptionDraft",
@@ -262,7 +268,9 @@
         "line": 5359,
         "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       },
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "CreateSystemDescriptionDraft",
+      "targetName": "CreateSystemDescriptionDraft"
     },
     {
       "command": "ProposeSystemDescriptionSuccessor",
@@ -324,7 +332,9 @@
         "line": 9576,
         "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       },
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "ProposeSystemDescriptionSuccessor",
+      "targetName": "ProposeSystemDescriptionSuccessor"
     },
     {
       "command": "RecordSystemDescriptionNoChangeDecision",
@@ -396,7 +406,9 @@
         "line": 13016,
         "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       },
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "RecordSystemDescriptionNoChangeDecision",
+      "targetName": "RecordSystemDescriptionNoChangeDecision"
     },
     {
       "command": "ReviewSystemDescription",
@@ -468,7 +480,9 @@
         "line": 15528,
         "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       },
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "ReviewSystemDescription",
+      "targetName": "ReviewSystemDescription"
     },
     {
       "command": "ReviseSystemDescriptionDraft",
@@ -540,7 +554,9 @@
         "line": 16926,
         "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       },
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "ReviseSystemDescriptionDraft",
+      "targetName": "ReviseSystemDescriptionDraft"
     }
   ],
   "sourceContractEvidence": [

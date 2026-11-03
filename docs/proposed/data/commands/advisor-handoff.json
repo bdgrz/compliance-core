@@ -61,7 +61,9 @@
         "line": 3713,
         "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       },
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "CloseAdvisorHandoff",
+      "targetName": "CloseAdvisorHandoff"
     },
     {
       "command": "CreateAdvisorHandoff",
@@ -128,7 +130,9 @@
         "line": 4934,
         "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       },
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "CreateAdvisorHandoff",
+      "targetName": "CreateAdvisorHandoff"
     },
     {
       "command": "MarkAdvisorHandoffReadyForReview",
@@ -185,7 +189,9 @@
         "line": 8101,
         "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       },
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "MarkAdvisorHandoffReadyForReview",
+      "targetName": "MarkAdvisorHandoffReadyForReview"
     },
     {
       "command": "RecordAdvisorFeedback",
@@ -268,7 +274,9 @@
         "line": 10650,
         "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       },
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "RecordAdvisorFeedback",
+      "targetName": "SubmitAdvisorFeedback"
     },
     {
       "command": "ReviseAdvisorHandoffSelection",
@@ -335,7 +343,9 @@
         "line": 15649,
         "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       },
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "ReviseAdvisorHandoffSelection",
+      "targetName": "ReviseAdvisorHandoffSelection"
     },
     {
       "command": "RevokeAdvisorHandoff",
@@ -397,7 +407,9 @@
         "line": 17154,
         "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       },
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "RevokeAdvisorHandoff",
+      "targetName": "RevokeAdvisorHandoff"
     },
     {
       "command": "AuthorizeAdvisorArtifactDownloadUse",
@@ -478,7 +490,9 @@
       "source": {
         "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
         "recorded": "2026-10-29"
-      }
+      },
+      "sourceName": "AuthorizeAdvisorArtifactDownloadUse",
+      "targetName": "AuthorizeAdvisorArtifactDownload"
     },
     {
       "command": "SettleAdvisorArtifactDownloadUse",
@@ -550,7 +564,9 @@
       "source": {
         "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
         "recorded": "2026-10-29"
-      }
+      },
+      "sourceName": "SettleAdvisorArtifactDownloadUse",
+      "targetName": "CloseAdvisorArtifactDownloadAuthorization"
     }
   ],
   "sourceContractEvidence": [

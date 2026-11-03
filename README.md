@@ -18,9 +18,9 @@ The web client consumes the backend API contract and owns its source, build, and
 test configuration in its separate repository.
 
 Product discovery and delivery are governed by the
-[product brief](docs/product/product-brief.md),
-[SOC 2 product gap analysis](docs/product/gap-analysis.md),
-[shared domain model](docs/product/domain-model.md),
+[product scope](docs/proposed/scope.md),
+[proposed domain model](docs/proposed/domain-model.md),
+[write-model catalog](docs/proposed/README.md),
 [user-story backlog](docs/product/backlog.md), and
 [triage](docs/product/triage.md). The domain model and the domain slice and
 implementation subtasks in every story are part of that story's delivery

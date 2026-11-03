@@ -71,7 +71,9 @@
         "line": 787,
         "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       },
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "AddCorrectiveAction",
+      "targetName": "AddCorrectiveAction"
     },
     {
       "command": "CloseFinding",
@@ -148,7 +150,9 @@
         "line": 3933,
         "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       },
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "CloseFinding",
+      "targetName": "CloseFinding"
     },
     {
       "command": "LinkFindingAcceptance",
@@ -220,7 +224,9 @@
         "line": 7863,
         "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       },
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "LinkFindingAcceptance",
+      "targetName": "LinkFindingAcceptance"
     },
     {
       "command": "RaiseFinding",
@@ -307,7 +313,9 @@
         "line": 9686,
         "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       },
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "RaiseFinding",
+      "targetName": "RaiseFinding"
     },
     {
       "command": "RaiseOccurrenceFinding",
@@ -373,7 +381,9 @@
         "line": 9821,
         "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       },
-      "kind": "creation"
+      "kind": "creation",
+      "sourceName": "RaiseOccurrenceFinding",
+      "targetName": "RaiseOccurrenceFinding"
     },
     {
       "command": "ReopenFinding",
@@ -435,7 +445,9 @@
         "line": 13728,
         "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       },
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "ReopenFinding",
+      "targetName": "ReopenFinding"
     },
     {
       "command": "ReviseFinding",
@@ -522,7 +534,9 @@
         "line": 16299,
         "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       },
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "ReviseFinding",
+      "targetName": "ReviseFinding"
     },
     {
       "command": "RaiseEvaluationDeviationFinding",
@@ -587,7 +601,9 @@
         "rule": "creation_key_only",
         "jev": 0.84,
         "date": "2026-10-29"
-      }
+      },
+      "sourceName": "RaiseEvaluationDeviationFinding",
+      "targetName": "RaiseEvaluationDeviationFinding"
     },
     {
       "command": "AbortFindingClosure",
@@ -637,7 +653,9 @@
         "line": 1017,
         "sha256": "f1d549ed0879c816cb26e86879f8fa658dab0a8acbf7c591e4d4aed40483f8ae"
       },
-      "kind": "abort"
+      "kind": "abort",
+      "sourceName": "AbortFindingClosure",
+      "targetName": "AbortFindingClosure"
     },
     {
       "command": "CompleteFindingClosure",
@@ -713,7 +731,9 @@
       "source": {
         "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
         "recorded": "2026-10-29"
-      }
+      },
+      "sourceName": "CompleteFindingClosure",
+      "targetName": "CompleteFindingClosure"
     }
   ],
   "sourceContractEvidence": [

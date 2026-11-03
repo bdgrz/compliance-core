@@ -2,15 +2,15 @@
 
 Canonical events: **7**. Complete canonical event and available schema records: [owner event JSON](../data/events/firm-staff-record.json).
 
-| Event | Kind | Adopted discriminator | Version | Schema fields | Meaning |
-| --- | --- | --- | --- | --- | --- |
-| FirmStaffChangeRecorded | business | bdgrz.firm-staff.changed | 1 | 9 | One change of one staff record: its registration completing or a status change. The complete FirmStaffMemberView after the change is immutable content; no cumulative directory is carried. Intent is always the record's frozen registration intent. |
-| FirmStaffProfessionalDutyUseAuthorized | reservation | bdgrz.firm-staff-record.firm-staff-professional-duty-use-authorized | 1 | 8 | An exact currently active canonical staff record is held for recording a professional-duty designation. The use does not advance the public staff content revision; Revision is the held revision. |
-| FirmStaffProfessionalDutyUseSettled | reservation | bdgrz.firm-staff-record.firm-staff-professional-duty-use-settled | 1 | 8 | The staff use for one professional-duty change ended, after the recorded designation or after the rejection fence. A settlement before any grant fences the key against late acquisition. |
-| FirmStaffRecordEngagementUseAuthorized | reservation | bdgrz.firm-staff-record.firm-staff-record-engagement-use-authorized | 1 | 8 | Holds the exact active registered staff record the partner evaluation relies on; the use does not advance the public revision, so Revision is the held revision. |
-| FirmStaffRecordEngagementUseSettled | reservation | bdgrz.firm-staff-record.firm-staff-record-engagement-use-settled | 1 | 8 | The use of the staff record ended after the irreversible personal decision or after cancellation. A settlement before any grant fences the key against late acquisition. |
-| FirmStaffRegistrationAccepted | business | bdgrz.firm-staff-record.firm-staff-registration-accepted | 1 | 8 | A firm staff registration was accepted for a new staff record; registration remains incomplete until the staff member's user identity is claimed. |
-| FirmStaffRegistrationRejected | business | bdgrz.firm-staff-record.firm-staff-registration-rejected | 1 | 8 | A pending registration was rejected because another staff record owns the canonical user. |
+| Target event | Selected source name | Kind | Adopted discriminator | Version | Schema fields | Meaning |
+| --- | --- | --- | --- | --- | --- | --- |
+| FirmStaffChangeRecorded | FirmStaffChangeRecorded | business | bdgrz.firm-staff.changed | 1 | 9 | One change of one staff record: its registration completing or a status change. The complete FirmStaffMemberView after the change is immutable content; no cumulative directory is carried. Intent is always the record's frozen registration intent. |
+| FirmStaffProfessionalDutyAuthorized | FirmStaffProfessionalDutyUseAuthorized | reservation | bdgrz.firm-staff-record.firm-staff-professional-duty-use-authorized | 1 | 8 | An exact currently active canonical staff record is held for recording a professional-duty designation. The use does not advance the public staff content revision; Revision is the held revision. |
+| FirmStaffProfessionalDutyAuthorizationClosed | FirmStaffProfessionalDutyUseSettled | reservation | bdgrz.firm-staff-record.firm-staff-professional-duty-use-settled | 1 | 8 | The staff use for one professional-duty change ended, after the recorded designation or after the rejection fence. A settlement before any grant fences the key against late acquisition. |
+| FirmStaffRecordEngagementAuthorized | FirmStaffRecordEngagementUseAuthorized | reservation | bdgrz.firm-staff-record.firm-staff-record-engagement-use-authorized | 1 | 8 | Holds the exact active registered staff record the partner evaluation relies on; the use does not advance the public revision, so Revision is the held revision. |
+| FirmStaffRecordEngagementAuthorizationClosed | FirmStaffRecordEngagementUseSettled | reservation | bdgrz.firm-staff-record.firm-staff-record-engagement-use-settled | 1 | 8 | The use of the staff record ended after the irreversible personal decision or after cancellation. A settlement before any grant fences the key against late acquisition. |
+| FirmStaffRegistrationAccepted | FirmStaffRegistrationAccepted | business | bdgrz.firm-staff-record.firm-staff-registration-accepted | 1 | 8 | A firm staff registration was accepted for a new staff record; registration remains incomplete until the staff member's user identity is claimed. |
+| FirmStaffRegistrationRejected | FirmStaffRegistrationRejected | business | bdgrz.firm-staff-record.firm-staff-registration-rejected | 1 | 8 | A pending registration was rejected because another staff record owns the canonical user. |
 
 ## Event details
 
@@ -18,6 +18,9 @@ Canonical events: **7**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | FirmStaffChangeRecorded |
+| Selected source event name | FirmStaffChangeRecorded |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:FirmStaffChangeRecorded |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | FirmStaffChangeRecorded |
@@ -27,7 +30,8 @@ Canonical events: **7**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | One change of one staff record: its registration completing or a status change. The complete FirmStaffMemberView after the change is immutable content; no cumulative directory is carried. Intent is always the record's frozen registration intent. |
+| Target meaning | One change of one staff record: its registration completing or a status change. The complete FirmStaffMemberView after the change is immutable content; no cumulative directory is carried. Intent is always the record's frozen registration intent. |
+| Selected source meaning | One change of one staff record: its registration completing or a status change. The complete FirmStaffMemberView after the change is immutable content; no cumulative directory is carried. Intent is always the record's frozen registration intent. |
 | Meaning source | record summary in src/Compliance.Common/Features/AccessControl/Events/FirmStaffChangeRecorded.cs |
 
 #### Selected schema and implementation evidence
@@ -114,10 +118,13 @@ FirmStaffRegistrationIntent
 | [T003](../reactors/firm-staff-registration-reactor.md#t003) | emitted semantic fact | FirmStaffIdentityClaim | CompleteFirmStaffRegistration | FirmStaffRecord |
 | [S017](../reactors/firm-staff-status-reevaluation-reactor.md#s017) | physical root, logical prerequisite | FirmStaffRecord | RecordDirectoryIndependenceReevaluation | ServiceEngagementIndependence |
 
-### FirmStaffProfessionalDutyUseAuthorized
+### FirmStaffProfessionalDutyAuthorized
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | FirmStaffProfessionalDutyAuthorized |
+| Selected source event name | FirmStaffProfessionalDutyUseAuthorized |
+| Name decision | Authorization is already the completed fact; Use adds no stakeholder meaning. |
 | Canonical semantic key | event:FirmStaffProfessionalDutyUseAuthorized |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | FirmStaffProfessionalDutyUseAuthorized |
@@ -127,7 +134,8 @@ FirmStaffRegistrationIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | An exact currently active canonical staff record is held for recording a professional-duty designation. The use does not advance the public staff content revision; Revision is the held revision. |
+| Target meaning | An exact currently active canonical staff record is held for recording a professional-duty designation. The use does not advance the public staff content revision; Revision is the held revision. |
+| Selected source meaning | An exact currently active canonical staff record is held for recording a professional-duty designation. The use does not advance the public staff content revision; Revision is the held revision. |
 | Meaning source | record summary in src/Compliance.Common/Features/AccessControl/Events/FirmStaffProfessionalDutyUseAuthorized.cs |
 
 #### Selected schema and implementation evidence
@@ -201,12 +209,15 @@ SourceUseAuthorizationIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T113](../reactors/professional-duty-change-reactor.md#t113) | emitted semantic fact | FirmProfessionalDutyDesignation | AuthorizeFirmStaffProfessionalDutyUse | FirmStaffRecord |
+| [T113](../reactors/professional-duty-change-reactor.md#t113) | emitted semantic fact | FirmProfessionalDutyDesignation | AuthorizeFirmStaffProfessionalDuty | FirmStaffRecord |
 
-### FirmStaffProfessionalDutyUseSettled
+### FirmStaffProfessionalDutyAuthorizationClosed
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | FirmStaffProfessionalDutyAuthorizationClosed |
+| Selected source event name | FirmStaffProfessionalDutyUseSettled |
+| Name decision | The exact authorization ended; the recorded outcome still distinguishes use, cancellation, or a late fence. |
 | Canonical semantic key | event:FirmStaffProfessionalDutyUseSettled |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | FirmStaffProfessionalDutyUseSettled |
@@ -216,7 +227,8 @@ SourceUseAuthorizationIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | The staff use for one professional-duty change ended, after the recorded designation or after the rejection fence. A settlement before any grant fences the key against late acquisition. |
+| Target meaning | The staff use for one professional-duty change ended, after the recorded designation or after the rejection fence. A settlement before any grant fences the key against late acquisition. |
+| Selected source meaning | The staff use for one professional-duty change ended, after the recorded designation or after the rejection fence. A settlement before any grant fences the key against late acquisition. |
 | Meaning source | record summary in src/Compliance.Common/Features/AccessControl/Events/FirmStaffProfessionalDutyUseSettled.cs |
 
 #### Selected schema and implementation evidence
@@ -290,12 +302,15 @@ SourceUseAuthorizationIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T114](../reactors/professional-duty-change-reactor.md#t114) | emitted semantic fact | FirmProfessionalDutyDesignation | SettleFirmStaffProfessionalDutyUse | FirmStaffRecord |
+| [T114](../reactors/professional-duty-change-reactor.md#t114) | emitted semantic fact | FirmProfessionalDutyDesignation | CloseFirmStaffProfessionalDutyAuthorization | FirmStaffRecord |
 
-### FirmStaffRecordEngagementUseAuthorized
+### FirmStaffRecordEngagementAuthorized
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | FirmStaffRecordEngagementAuthorized |
+| Selected source event name | FirmStaffRecordEngagementUseAuthorized |
+| Name decision | Authorization is already the completed fact; Use adds no stakeholder meaning. |
 | Canonical semantic key | event:FirmStaffRecordEngagementUseAuthorized |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | FirmStaffRecordEngagementUseAuthorized |
@@ -305,7 +320,8 @@ SourceUseAuthorizationIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | Holds the exact active registered staff record the partner evaluation relies on; the use does not advance the public revision, so Revision is the held revision. |
+| Target meaning | Holds the exact active registered staff record the partner evaluation relies on; the use does not advance the public revision, so Revision is the held revision. |
+| Selected source meaning | Holds the exact active registered staff record the partner evaluation relies on; the use does not advance the public revision, so Revision is the held revision. |
 | Meaning source | record summary in src/Compliance.Common/Features/AccessControl/Events/FirmStaffRecordEngagementUseAuthorized.cs |
 
 #### Selected schema and implementation evidence
@@ -379,12 +395,15 @@ SourceUseAuthorizationIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T089](../reactors/engagement-acceptance-reactor.md#t089) | emitted semantic fact | ServiceEngagementIndependence | AuthorizeFirmStaffRecordEngagementUse | FirmStaffRecord |
+| [T089](../reactors/engagement-acceptance-reactor.md#t089) | emitted semantic fact | ServiceEngagementIndependence | AuthorizeFirmStaffRecordEngagement | FirmStaffRecord |
 
-### FirmStaffRecordEngagementUseSettled
+### FirmStaffRecordEngagementAuthorizationClosed
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | FirmStaffRecordEngagementAuthorizationClosed |
+| Selected source event name | FirmStaffRecordEngagementUseSettled |
+| Name decision | The exact authorization ended; the recorded outcome still distinguishes use, cancellation, or a late fence. |
 | Canonical semantic key | event:FirmStaffRecordEngagementUseSettled |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | FirmStaffRecordEngagementUseSettled |
@@ -394,7 +413,8 @@ SourceUseAuthorizationIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | The use of the staff record ended after the irreversible personal decision or after cancellation. A settlement before any grant fences the key against late acquisition. |
+| Target meaning | The use of the staff record ended after the irreversible personal decision or after cancellation. A settlement before any grant fences the key against late acquisition. |
+| Selected source meaning | The use of the staff record ended after the irreversible personal decision or after cancellation. A settlement before any grant fences the key against late acquisition. |
 | Meaning source | record summary in src/Compliance.Common/Features/AccessControl/Events/FirmStaffRecordEngagementUseSettled.cs |
 
 #### Selected schema and implementation evidence
@@ -468,12 +488,15 @@ SourceUseAuthorizationIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T090](../reactors/engagement-acceptance-reactor.md#t090) | emitted semantic fact | ServiceEngagementIndependence | SettleFirmStaffRecordEngagementUse | FirmStaffRecord |
+| [T090](../reactors/engagement-acceptance-reactor.md#t090) | emitted semantic fact | ServiceEngagementIndependence | CloseFirmStaffRecordEngagementAuthorization | FirmStaffRecord |
 
 ### FirmStaffRegistrationAccepted
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | FirmStaffRegistrationAccepted |
+| Selected source event name | FirmStaffRegistrationAccepted |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:FirmStaffRegistrationAccepted |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | FirmStaffRegistrationAccepted |
@@ -483,7 +506,8 @@ SourceUseAuthorizationIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | A firm staff registration was accepted for a new staff record; registration remains incomplete until the staff member's user identity is claimed. |
+| Target meaning | A firm staff registration was accepted for a new staff record; registration remains incomplete until the staff member's user identity is claimed. |
+| Selected source meaning | A firm staff registration was accepted for a new staff record; registration remains incomplete until the staff member's user identity is claimed. |
 | Meaning source | authored 2026-10-29 from src/Compliance.Common/Features/AccessControl/Events/FirmStaffRegistrationAccepted.cs |
 
 #### Selected schema and implementation evidence
@@ -565,6 +589,9 @@ FirmStaffRegistrationIntent
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | FirmStaffRegistrationRejected |
+| Selected source event name | FirmStaffRegistrationRejected |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:FirmStaffRegistrationRejected |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | FirmStaffRegistrationRejected |
@@ -574,7 +601,8 @@ FirmStaffRegistrationIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | A pending registration was rejected because another staff record owns the canonical user. |
+| Target meaning | A pending registration was rejected because another staff record owns the canonical user. |
+| Selected source meaning | A pending registration was rejected because another staff record owns the canonical user. |
 | Meaning source | record summary in src/Compliance.Common/Features/AccessControl/Events/FirmStaffRegistrationRejected.cs |
 
 #### Selected schema and implementation evidence

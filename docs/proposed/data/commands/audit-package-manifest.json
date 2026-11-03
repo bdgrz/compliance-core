@@ -71,7 +71,9 @@
         "line": 1041,
         "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       },
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "AmendAuditPackage",
+      "targetName": "AmendAuditPackage"
     },
     {
       "command": "ApproveAuditPackageDisclosure",
@@ -148,7 +150,9 @@
         "line": 1901,
         "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       },
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "ApproveAuditPackageDisclosure",
+      "targetName": "ApproveAuditPackageDisclosure"
     },
     {
       "command": "ApproveAuditPackageValidationOverride",
@@ -220,7 +224,9 @@
         "line": 2027,
         "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       },
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "ApproveAuditPackageValidationOverride",
+      "targetName": "ApproveAuditPackageValidationOverride"
     },
     {
       "command": "CreateAuditPackage",
@@ -272,7 +278,9 @@
         "line": 5047,
         "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       },
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "CreateAuditPackage",
+      "targetName": "CreateAuditPackage"
     },
     {
       "command": "RecordAuditPackageBuildResult",
@@ -360,7 +368,9 @@
       ],
       "effectKind": "record_audit_package_build_result",
       "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
-      "kind": "receiver"
+      "kind": "receiver",
+      "sourceName": "RecordAuditPackageBuildResult",
+      "targetName": "RecordAuditPackageBuildResult"
     },
     {
       "command": "RecordAuditPackageDelivery",
@@ -437,7 +447,9 @@
         "line": 11143,
         "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       },
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "RecordAuditPackageDelivery",
+      "targetName": "ReportAuditPackageDelivery"
     },
     {
       "command": "RequestAuditPackageBuild",
@@ -509,7 +521,9 @@
         "line": 13838,
         "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       },
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "RequestAuditPackageBuild",
+      "targetName": "RequestAuditPackageBuild"
     },
     {
       "command": "ValidateAuditPackage",
@@ -576,7 +590,9 @@
         "line": 18276,
         "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       },
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "ValidateAuditPackage",
+      "targetName": "ValidateAuditPackage"
     }
   ],
   "sourceContractEvidence": [

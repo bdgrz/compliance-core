@@ -1,5 +1,7 @@
 {
-  "root": "TenantRegistrationReactor",
+  "sourceRoot": "TenantRegistrationReactor",
+  "targetRoot": "EstablishTenantAndInviteOwnerReactor",
+  "businessReason": "Give each new organization a usable, unique web address and invite its first administrator when that person is not already a member.",
   "rows": [
     {
       "id": "S030",

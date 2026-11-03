@@ -254,7 +254,11 @@
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "resolvedIntentSchema": "ImportFrozenPlanIntent",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "ApplicationImportSourceAdmissionRecorded",
+      "targetName": "ApplicationImportSourceAdmissionRecorded",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "The source admits exactly one batch. Revision is the source's logical revision after this fact; the plan was frozen against the revision before it."
     },
     {
       "canonical": {
@@ -509,7 +513,11 @@
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "resolvedIntentSchema": "ImportFrozenPlanIntent",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "ApplicationImportSourceSettled",
+      "targetName": "ApplicationImportSourceBatchCompleted",
+      "nameDecision": "Names the terminal result of source-claim processing; published source claims remain active after the batch completes.",
+      "targetMeaning": "The source claim of one batch ends with the batch's exact terminal fact. A published batch adds its claims to the source; a settlement before any admission fences the batch against a late claim."
     }
   ]
 }

@@ -1,5 +1,7 @@
 {
-  "root": "CorrectiveActionMaterializationReactor",
+  "sourceRoot": "CorrectiveActionMaterializationReactor",
+  "targetRoot": "OpenCorrectiveActionForFindingReactor",
+  "businessReason": "Start accepted corrective work as an independent lifecycle even if the finding later closes.",
   "rows": [
     {
       "id": "T036",

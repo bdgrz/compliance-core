@@ -98,7 +98,11 @@
         "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "TenantIdentityProviderConfigured",
+      "targetName": "TenantIdentityProviderConfigured",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "The native acceptance of ConfigureTenantIdentityProvider: public OIDC configuration and a reference to the protected content that holds the secret-store pointer, never the pointer itself."
     },
     {
       "canonical": {
@@ -192,7 +196,11 @@
         "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "TenantIdentityProviderCredentialsRotated",
+      "targetName": "TenantIdentityProviderCredentialsRotated",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "The native acceptance of RotateTenantIdentityProviderCredentials: a new credential epoch whose secret-store pointer lives in protected content, and a forced fresh connection test."
     },
     {
       "canonical": {
@@ -276,7 +284,11 @@
         "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "TenantIdentityProviderDisabled",
+      "targetName": "TenantIdentityProviderDisabled",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "The native acceptance of DisableTenantIdentityProvider; a disabled connection stays terminal."
     },
     {
       "canonical": {
@@ -365,7 +377,11 @@
         "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "TenantIdentityProviderTestRequested",
+      "targetName": "TenantIdentityProviderTestRequested",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "The native acceptance of TestTenantIdentityProvider: a request to test one exact credential epoch."
     },
     {
       "canonical": {
@@ -454,7 +470,11 @@
         "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "TenantIdentityProviderTested",
+      "targetName": "TenantIdentityProviderTested",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "The native acceptance of RecordTenantIdentityProviderTestResult: a bounded safe test result for the exact request event and credential epoch. Provider tokens and response bodies are never persisted."
     }
   ]
 }

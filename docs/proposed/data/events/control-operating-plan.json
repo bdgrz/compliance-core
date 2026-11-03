@@ -121,7 +121,11 @@
         "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "ControlOperatingPlanApproved",
+      "targetName": "ControlOperatingPlanApproved",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "An independent approval that puts a pending plan version into effect. The complete list of open work that moves to the approved owner is verified immutable content, so no item can be truncated."
     },
     {
       "canonical": {
@@ -213,7 +217,11 @@
         "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "ControlOperatingPlanProposed",
+      "targetName": "ControlOperatingPlanProposed",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "A pending plan version on one control's plan line. The logical id of Operation is the immutable plan version id; the complete ControlOperatingPlanView is verified immutable content."
     }
   ]
 }

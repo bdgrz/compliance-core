@@ -2,13 +2,13 @@
 
 Selected command contracts: **5**. Complete selected contracts and companion source evidence: [owner command JSON](../data/commands/access-review-campaign.json).
 
-| Command | Kind | Identity | Fields | HTTP routes |
-| --- | --- | --- | --- | --- |
-| CompleteAccessReviewCampaign | http | CommandId | 5 | PUT /api/v1/tenants/{tenant_id}/access-review-campaigns/{campaign_id}/completion/{command_id} [ComplianceAuthorizationPolicies.ApiUser] |
-| LaunchAccessReviewCampaign | http | CampaignId | 8 | PUT /api/v1/tenants/{tenant_id}/access-review-campaigns/{campaign_id} [ComplianceAuthorizationPolicies.ApiUser] |
-| RecordBulkAccessDecision | http | DecisionBatchId | 8 | PUT /api/v1/tenants/{tenant_id}/access-review-campaigns/{campaign_id}/bulk-decisions/{decision_batch_id} [ComplianceAuthorizationPolicies.ApiUser] |
-| AbortAccessReviewCampaignCompletion | abort | CommandId | 6 | [Placeholder: route/channel not recorded] |
-| CompleteAccessReviewCampaignClosure | receiver | CommandId | 9 | [Placeholder: value not recorded] |
+| Target command | Selected source name | Kind | Identity | Fields | HTTP routes |
+| --- | --- | --- | --- | --- | --- |
+| CompleteAccessReviewCampaign | CompleteAccessReviewCampaign | http | CommandId | 5 | PUT /api/v1/tenants/{tenant_id}/access-review-campaigns/{campaign_id}/completion/{command_id} [ComplianceAuthorizationPolicies.ApiUser] |
+| LaunchAccessReviewCampaign | LaunchAccessReviewCampaign | http | CampaignId | 8 | PUT /api/v1/tenants/{tenant_id}/access-review-campaigns/{campaign_id} [ComplianceAuthorizationPolicies.ApiUser] |
+| RecordBulkAccessDecision | RecordBulkAccessDecision | http | DecisionBatchId | 8 | PUT /api/v1/tenants/{tenant_id}/access-review-campaigns/{campaign_id}/bulk-decisions/{decision_batch_id} [ComplianceAuthorizationPolicies.ApiUser] |
+| AbortAccessReviewCampaignCompletion | AbortAccessReviewCampaignCompletion | abort | CommandId | 6 | [Placeholder: route/channel not recorded] |
+| CompleteAccessReviewCampaignClosure | CompleteAccessReviewCampaignClosure | receiver | CommandId | 9 | [Placeholder: value not recorded] |
 
 ## Selected command details
 
@@ -16,6 +16,9 @@ Selected command contracts: **5**. Complete selected contracts and companion sou
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | CompleteAccessReviewCampaign |
+| Selected source command name | CompleteAccessReviewCampaign |
+| Name decision | The selected source name is retained. |
 | Owner | AccessReviewCampaign |
 | Contract record status | target_contract |
 | Kind | http |
@@ -65,6 +68,9 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | LaunchAccessReviewCampaign |
+| Selected source command name | LaunchAccessReviewCampaign |
+| Name decision | The selected source name is retained. |
 | Owner | AccessReviewCampaign |
 | Contract record status | target_contract |
 | Kind | http |
@@ -117,6 +123,9 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | RecordBulkAccessDecision |
+| Selected source command name | RecordBulkAccessDecision |
+| Name decision | The selected source name is retained. |
 | Owner | AccessReviewCampaign |
 | Contract record status | target_contract |
 | Kind | http |
@@ -169,13 +178,16 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | AbortAccessReviewCampaignCompletion |
+| Selected source command name | AbortAccessReviewCampaignCompletion |
+| Name decision | The selected source name is retained. |
 | Owner | AccessReviewCampaign |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | abort |
 | Logical identity | CommandId; Uuid; required=true; abort receiver identity bound to the exact admitted operation and generation: exact redelivery resolves the original rejected result; an abort after a terminal outcome is a no-op |
 | Entry point | [Placeholder: value not recorded] |
 | MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | [Placeholder: value not recorded] |
+| Selected semantic events | None listed |
 | Protocols | [Placeholder: value not recorded] |
 | Policy preservation | [Placeholder: value not recorded] |
 | Contract changes | [Placeholder: value not recorded] |
@@ -215,13 +227,16 @@ Required tests: [Placeholder: required tests not recorded]
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | CompleteAccessReviewCampaignClosure |
+| Selected source command name | CompleteAccessReviewCampaignClosure |
+| Name decision | The selected source name is retained. |
 | Owner | AccessReviewCampaign |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; reactor; deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result |
 | Entry point | [Placeholder: value not recorded] |
 | MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | [Placeholder: value not recorded] |
+| Selected semantic events | None listed |
 | Protocols | [Placeholder: value not recorded] |
 | Policy preservation | [Placeholder: value not recorded] |
 | Contract changes | [Placeholder: value not recorded] |
@@ -263,7 +278,7 @@ Required tests: [Placeholder: required tests not recorded]
 
 ## Source contracts
 
-| Command | Handler | Registered | Entry point |
+| Selected source command | Handler | Registered | Entry point |
 | --- | --- | --- | --- |
 | CompleteAccessReviewCampaign | CompleteAccessReviewCampaignHandler | true | personal_http |
 | ExemptAccessRemediation | ExemptAccessRemediationHandler | true | personal_http |

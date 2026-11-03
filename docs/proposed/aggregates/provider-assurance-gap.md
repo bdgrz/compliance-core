@@ -39,7 +39,7 @@
 
 | Row | Kind | Source owner | Target owner | Command |
 | --- | --- | --- | --- | --- |
-| [T088](../reactors/provider-risk-acceptance-link-reactor.md#t088) | reaction_or_regular_process_stage | ProviderAssuranceGap | ProviderRiskAcceptance | MaterializeProviderRiskAcceptanceLink |
+| [T088](../reactors/provider-risk-acceptance-link-reactor.md#t088) | reaction_or_regular_process_stage | ProviderAssuranceGap | ProviderRiskAcceptance | LinkProviderRiskAcceptanceToGap |
 
 ## Product rules
 

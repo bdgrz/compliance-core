@@ -98,7 +98,11 @@
         "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "ApplicationRelationshipAdded",
+      "targetName": "ApplicationRelationshipAdded",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "A relationship of a stated type was added from a declared application to a target application, recorded as revision 1 of that relationship by a named actor."
     },
     {
       "canonical": {
@@ -207,7 +211,11 @@
         "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "ApplicationRelationshipApproved",
+      "targetName": "ApplicationRelationshipApproved",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "A proposed successor relationship between two applications was approved by an active member other than its proposer, against the stated impact assessment and the current application revisions."
     },
     {
       "canonical": {
@@ -306,7 +314,11 @@
         "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "ApplicationRelationshipRemoved",
+      "targetName": "ApplicationRelationshipRemoved",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "An active relationship from a declared application to a target application was removed by a named actor, ending it at the next relationship revision."
     }
   ]
 }

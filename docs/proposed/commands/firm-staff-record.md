@@ -2,16 +2,16 @@
 
 Selected command contracts: **8**. Complete selected contracts and companion source evidence: [owner command JSON](../data/commands/firm-staff-record.json).
 
-| Command | Kind | Identity | Fields | HTTP routes |
-| --- | --- | --- | --- | --- |
-| RegisterFirmStaff | http | StaffMemberId | 5 | PUT /api/v1/platform/firm-staff/{staff_member_id}/register-firm-staff [PlatformOperator] |
-| SetFirmStaffStatus | http | CommandId | 5 | PUT /api/v1/platform/firm-staff/{staff_member_id}/set-firm-staff-status/{command_id} [PlatformOperator] |
-| RejectFirmStaffRegistration | abort | CommandId | 6 | [Placeholder: route/channel not recorded] |
-| CompleteFirmStaffRegistration | receiver | CommandId | 9 | [Placeholder: value not recorded] |
-| AuthorizeFirmStaffRecordEngagementUse | receiver | CommandId | 11 | [Placeholder: value not recorded] |
-| SettleFirmStaffRecordEngagementUse | receiver | CommandId | 10 | [Placeholder: value not recorded] |
-| AuthorizeFirmStaffProfessionalDutyUse | receiver | CommandId | 11 | [Placeholder: value not recorded] |
-| SettleFirmStaffProfessionalDutyUse | receiver | CommandId | 10 | [Placeholder: value not recorded] |
+| Target command | Selected source name | Kind | Identity | Fields | HTTP routes |
+| --- | --- | --- | --- | --- | --- |
+| RegisterFirmStaff | RegisterFirmStaff | http | StaffMemberId | 5 | PUT /api/v1/platform/firm-staff/{staff_member_id}/register-firm-staff [PlatformOperator] |
+| SetFirmStaffStatus | SetFirmStaffStatus | http | CommandId | 5 | PUT /api/v1/platform/firm-staff/{staff_member_id}/set-firm-staff-status/{command_id} [PlatformOperator] |
+| RejectFirmStaffRegistration | RejectFirmStaffRegistration | abort | CommandId | 6 | [Placeholder: route/channel not recorded] |
+| CompleteFirmStaffRegistration | CompleteFirmStaffRegistration | receiver | CommandId | 9 | [Placeholder: value not recorded] |
+| AuthorizeFirmStaffRecordEngagement | AuthorizeFirmStaffRecordEngagementUse | receiver | CommandId | 11 | [Placeholder: value not recorded] |
+| CloseFirmStaffRecordEngagementAuthorization | SettleFirmStaffRecordEngagementUse | receiver | CommandId | 10 | [Placeholder: value not recorded] |
+| AuthorizeFirmStaffProfessionalDuty | AuthorizeFirmStaffProfessionalDutyUse | receiver | CommandId | 11 | [Placeholder: value not recorded] |
+| CloseFirmStaffProfessionalDutyAuthorization | SettleFirmStaffProfessionalDutyUse | receiver | CommandId | 10 | [Placeholder: value not recorded] |
 
 ## Selected command details
 
@@ -19,6 +19,9 @@ Selected command contracts: **8**. Complete selected contracts and companion sou
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | RegisterFirmStaff |
+| Selected source command name | RegisterFirmStaff |
+| Name decision | The selected source name is retained. |
 | Owner | FirmStaffRecord |
 | Contract record status | target_contract |
 | Kind | http |
@@ -68,6 +71,9 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | SetFirmStaffStatus |
+| Selected source command name | SetFirmStaffStatus |
+| Name decision | The selected source name is retained. |
 | Owner | FirmStaffRecord |
 | Contract record status | target_contract |
 | Kind | http |
@@ -117,13 +123,16 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | RejectFirmStaffRegistration |
+| Selected source command name | RejectFirmStaffRegistration |
+| Name decision | The selected source name is retained. |
 | Owner | FirmStaffRecord |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | abort |
 | Logical identity | CommandId; Uuid; required=true; abort receiver identity bound to the exact admitted operation and generation: exact redelivery resolves the original rejected result; an abort after a terminal outcome is a no-op |
 | Entry point | [Placeholder: value not recorded] |
 | MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | [Placeholder: value not recorded] |
+| Selected semantic events | None listed |
 | Protocols | [Placeholder: value not recorded] |
 | Policy preservation | [Placeholder: value not recorded] |
 | Contract changes | [Placeholder: value not recorded] |
@@ -163,13 +172,16 @@ Required tests: [Placeholder: required tests not recorded]
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | CompleteFirmStaffRegistration |
+| Selected source command name | CompleteFirmStaffRegistration |
+| Name decision | The selected source name is retained. |
 | Owner | FirmStaffRecord |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; reactor; deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result |
 | Entry point | [Placeholder: value not recorded] |
 | MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | [Placeholder: value not recorded] |
+| Selected semantic events | None listed |
 | Protocols | [Placeholder: value not recorded] |
 | Policy preservation | [Placeholder: value not recorded] |
 | Contract changes | [Placeholder: value not recorded] |
@@ -208,17 +220,20 @@ Existing tests: [Placeholder: existing tests not recorded]
 
 Required tests: [Placeholder: required tests not recorded]
 
-### AuthorizeFirmStaffRecordEngagementUse
+### AuthorizeFirmStaffRecordEngagement
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | AuthorizeFirmStaffRecordEngagement |
+| Selected source command name | AuthorizeFirmStaffRecordEngagementUse |
+| Name decision | The command authorizes the named business action; the extra Use suffix describes the coordination mechanism. |
 | Owner | FirmStaffRecord |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; reactor; deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result |
 | Entry point | [Placeholder: value not recorded] |
 | MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | [Placeholder: value not recorded] |
+| Selected semantic events | None listed |
 | Protocols | [Placeholder: value not recorded] |
 | Policy preservation | [Placeholder: value not recorded] |
 | Contract changes | [Placeholder: value not recorded] |
@@ -259,17 +274,20 @@ Existing tests: [Placeholder: existing tests not recorded]
 
 Required tests: [Placeholder: required tests not recorded]
 
-### SettleFirmStaffRecordEngagementUse
+### CloseFirmStaffRecordEngagementAuthorization
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | CloseFirmStaffRecordEngagementAuthorization |
+| Selected source command name | SettleFirmStaffRecordEngagementUse |
+| Name decision | The command ends the exact authorization after its business action or cancellation. |
 | Owner | FirmStaffRecord |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; reactor; deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result |
 | Entry point | [Placeholder: value not recorded] |
 | MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | [Placeholder: value not recorded] |
+| Selected semantic events | None listed |
 | Protocols | [Placeholder: value not recorded] |
 | Policy preservation | [Placeholder: value not recorded] |
 | Contract changes | [Placeholder: value not recorded] |
@@ -309,17 +327,20 @@ Existing tests: [Placeholder: existing tests not recorded]
 
 Required tests: [Placeholder: required tests not recorded]
 
-### AuthorizeFirmStaffProfessionalDutyUse
+### AuthorizeFirmStaffProfessionalDuty
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | AuthorizeFirmStaffProfessionalDuty |
+| Selected source command name | AuthorizeFirmStaffProfessionalDutyUse |
+| Name decision | The command authorizes the named business action; the extra Use suffix describes the coordination mechanism. |
 | Owner | FirmStaffRecord |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; reactor; deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result |
 | Entry point | [Placeholder: value not recorded] |
 | MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | [Placeholder: value not recorded] |
+| Selected semantic events | None listed |
 | Protocols | [Placeholder: value not recorded] |
 | Policy preservation | [Placeholder: value not recorded] |
 | Contract changes | [Placeholder: value not recorded] |
@@ -360,17 +381,20 @@ Existing tests: [Placeholder: existing tests not recorded]
 
 Required tests: [Placeholder: required tests not recorded]
 
-### SettleFirmStaffProfessionalDutyUse
+### CloseFirmStaffProfessionalDutyAuthorization
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | CloseFirmStaffProfessionalDutyAuthorization |
+| Selected source command name | SettleFirmStaffProfessionalDutyUse |
+| Name decision | The command ends the exact authorization after its business action or cancellation. |
 | Owner | FirmStaffRecord |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; reactor; deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result |
 | Entry point | [Placeholder: value not recorded] |
 | MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | [Placeholder: value not recorded] |
+| Selected semantic events | None listed |
 | Protocols | [Placeholder: value not recorded] |
 | Policy preservation | [Placeholder: value not recorded] |
 | Contract changes | [Placeholder: value not recorded] |
@@ -413,7 +437,7 @@ Required tests: [Placeholder: required tests not recorded]
 
 ## Source contracts
 
-| Command | Handler | Registered | Entry point |
+| Selected source command | Handler | Registered | Entry point |
 | --- | --- | --- | --- |
 | RegisterFirmStaff | RegisterFirmStaffHandler | true | authorized_http_and_mcp |
 | SetFirmStaffStatus | SetFirmStaffStatusHandler | true | authorized_http_and_mcp |

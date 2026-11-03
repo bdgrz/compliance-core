@@ -1,5 +1,7 @@
 {
-  "root": "ImportSourceAdmissionReactor",
+  "sourceRoot": "ImportSourceAdmissionReactor",
+  "targetRoot": "ApplyAcceptedApplicationImportReactor",
+  "businessReason": "Prevent two imports from consuming the same source updates and publish changes only when the accepted import can be applied as a whole.",
   "rows": [
     {
       "id": "T014",

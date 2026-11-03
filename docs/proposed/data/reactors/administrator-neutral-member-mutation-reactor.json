@@ -1,5 +1,7 @@
 {
-  "root": "AdministratorNeutralMemberMutationReactor",
+  "sourceRoot": "AdministratorNeutralMemberMutationReactor",
+  "targetRoot": "ApplyAcceptedMemberStatusChangeReactor",
+  "businessReason": "Apply an admitted suspension, deprovisioning, or reinstatement to the exact member episode.",
   "rows": [
     {
       "id": "T048",

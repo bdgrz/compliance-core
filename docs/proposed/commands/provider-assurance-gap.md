@@ -2,11 +2,11 @@
 
 Selected command contracts: **3**. Complete selected contracts and companion source evidence: [owner command JSON](../data/commands/provider-assurance-gap.json).
 
-| Command | Kind | Identity | Fields | HTTP routes |
-| --- | --- | --- | --- | --- |
-| CloseProviderCoverageGap | http | CommandId | 6 | PUT /api/v1/tenants/{tenant_id}/providers/{provider_id}/coverage-gaps/close-provider-coverage-gap/{command_id} [ApiUser + existing request-scope authorizers] |
-| LinkProviderCoverageGapRiskAcceptance | http | CommandId | 8 | PUT /api/v1/tenants/{tenant_id}/providers/{provider_id}/coverage-gaps/{gap_id}/risk-acceptances/link-provider-coverage-gap-risk-acceptance/{command_id} [ApiUser + existing request-scope authorizers] |
-| RecordProviderCoverageGap | http | GapId | 4 | PUT /api/v1/tenants/{tenant_id}/providers/{provider_id}/coverage-gaps/{gap_id} [ComplianceAuthorizationPolicies.ApiUser] |
+| Target command | Selected source name | Kind | Identity | Fields | HTTP routes |
+| --- | --- | --- | --- | --- | --- |
+| CloseProviderCoverageGap | CloseProviderCoverageGap | http | CommandId | 6 | PUT /api/v1/tenants/{tenant_id}/providers/{provider_id}/coverage-gaps/close-provider-coverage-gap/{command_id} [ApiUser + existing request-scope authorizers] |
+| LinkProviderCoverageGapRiskAcceptance | LinkProviderCoverageGapRiskAcceptance | http | CommandId | 8 | PUT /api/v1/tenants/{tenant_id}/providers/{provider_id}/coverage-gaps/{gap_id}/risk-acceptances/link-provider-coverage-gap-risk-acceptance/{command_id} [ApiUser + existing request-scope authorizers] |
+| RecordProviderCoverageGap | RecordProviderCoverageGap | http | GapId | 4 | PUT /api/v1/tenants/{tenant_id}/providers/{provider_id}/coverage-gaps/{gap_id} [ComplianceAuthorizationPolicies.ApiUser] |
 
 ## Selected command details
 
@@ -14,6 +14,9 @@ Selected command contracts: **3**. Complete selected contracts and companion sou
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | CloseProviderCoverageGap |
+| Selected source command name | CloseProviderCoverageGap |
+| Name decision | The selected source name is retained. |
 | Owner | ProviderAssuranceGap |
 | Contract record status | target_contract |
 | Kind | http |
@@ -64,6 +67,9 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | LinkProviderCoverageGapRiskAcceptance |
+| Selected source command name | LinkProviderCoverageGapRiskAcceptance |
+| Name decision | The selected source name is retained. |
 | Owner | ProviderAssuranceGap |
 | Contract record status | target_contract |
 | Kind | http |
@@ -116,6 +122,9 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | RecordProviderCoverageGap |
+| Selected source command name | RecordProviderCoverageGap |
+| Name decision | The selected source name is retained. |
 | Owner | ProviderAssuranceGap |
 | Contract record status | target_contract |
 | Kind | http |
@@ -163,7 +172,7 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 
 ## Source contracts
 
-| Command | Handler | Registered | Entry point |
+| Selected source command | Handler | Registered | Entry point |
 | --- | --- | --- | --- |
 | CloseProviderCoverageGap | CloseProviderCoverageGapHandler | true | authorized_http |
 | LinkProviderCoverageGapRiskAcceptance | LinkProviderCoverageGapRiskAcceptanceHandler | true | authorized_http |

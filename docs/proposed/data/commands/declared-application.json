@@ -88,7 +88,9 @@
       ],
       "effectKind": "apply_application_import_effect",
       "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
-      "kind": "receiver"
+      "kind": "receiver",
+      "sourceName": "ApplyApplicationImportEffect",
+      "targetName": "ApplyApplicationImportChange"
     },
     {
       "command": "DeclareApplication",
@@ -175,7 +177,9 @@
         "line": 5715,
         "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       },
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "DeclareApplication",
+      "targetName": "DeclareApplication"
     },
     {
       "command": "RetireApplication",
@@ -242,7 +246,9 @@
         "line": 14304,
         "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       },
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "RetireApplication",
+      "targetName": "RetireApplication"
     },
     {
       "command": "ReviseApplication",
@@ -360,7 +366,9 @@
         "line": 15765,
         "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       },
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "ReviseApplication",
+      "targetName": "ReviseApplication"
     },
     {
       "command": "ReserveApplicationImportTarget",
@@ -441,7 +449,9 @@
       "source": {
         "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
         "recorded": "2026-10-29"
-      }
+      },
+      "sourceName": "ReserveApplicationImportTarget",
+      "targetName": "ReserveApplicationImportTarget"
     },
     {
       "command": "FenceApplicationImportTarget",
@@ -517,7 +527,9 @@
       "source": {
         "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
         "recorded": "2026-10-29"
-      }
+      },
+      "sourceName": "FenceApplicationImportTarget",
+      "targetName": "BlockCanceledApplicationImportChanges"
     },
     {
       "command": "ReleaseApplicationImportTarget",
@@ -595,7 +607,9 @@
       "source": {
         "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
         "recorded": "2026-10-29"
-      }
+      },
+      "sourceName": "ReleaseApplicationImportTarget",
+      "targetName": "ReleaseApplicationImportTarget"
     },
     {
       "command": "ApplyApplicationNameChange",
@@ -646,7 +660,9 @@
       "source": {
         "path": "docs/product/definitive-aggregate-choreography/choreography.json",
         "recorded": "2026-10-29"
-      }
+      },
+      "sourceName": "ApplyApplicationNameChange",
+      "targetName": "ApplyApplicationNameChange"
     }
   ],
   "sourceContractEvidence": [

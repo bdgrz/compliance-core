@@ -11,13 +11,13 @@
 
 **Invariant:** One tenant inventory identity has one record kind; flow endpoint/asset scope and encryption or approved-exception terms must match highest admitted carried classification, and effective date never moves backward.
 
-**Additional decision rule:** Requires the flow to run from a service or system instance to a data store or external party, carry one or more information assets, a purpose, and explicit encrypted_in_transit and encrypted_at_rest flags, and be effective-dated and versioned.
+**Additional decision rule:** Requires the flow to run from a service or system instance to a data store or external party, carry one or more information assets, a purpose, and explicit encrypted_in_transit and encrypted_at_rest flags, and be effective-dated and versioned. A data flow records where information starts and goes, which information it carries, why it moves, and how it is protected. Its effective date cannot move backward. Confidential or restricted information must be encrypted both when stored and sent, unless an approved exception applies.
 
 **Must preserve:** [Placeholder: preservation rule not recorded.]
 
 **Replay:** Current required authorization precedes replay; exact authorized retries resolve the original accepted result using the selected logical identity and immutable actor/intent/source binding. Fresh mutable feasibility, clock selection and body preparation cannot replace that original result. Expected revision is concurrency precondition, not a new identity.
 
-**Lifecycle:** [Placeholder: a consolidated lifecycle sequence is not present in the selected owner record.]
+**Lifecycle:** A new data flow is active. ReviseDataFlow may set it to active or retired while preserving its source, destination, information, protection, and effective-date rules. Changing its status does not automatically change related asset or technology records, and a retired flow is not permanently closed by this rule.
 
 ## Commands
 

@@ -2,10 +2,10 @@
 
 Canonical events: **2**. Complete canonical event and available schema records: [owner event JSON](../data/events/location-name-claim.json).
 
-| Event | Kind | Adopted discriminator | Version | Schema fields | Meaning |
-| --- | --- | --- | --- | --- | --- |
-| LocationNameClaimed | business | bdgrz.location-name-claim.location-name-claimed | 1 | 8 | The name claim is held by the location record and change generation named by this fact. |
-| LocationNameReleased | business | bdgrz.location-name-claim.location-name-released | 1 | 8 | The name claim was released by the location record and change generation that held it. |
+| Target event | Selected source name | Kind | Adopted discriminator | Version | Schema fields | Meaning |
+| --- | --- | --- | --- | --- | --- | --- |
+| LocationNameClaimed | LocationNameClaimed | business | bdgrz.location-name-claim.location-name-claimed | 1 | 8 | The name claim is held by the location record and change generation named by this fact. |
+| LocationNameReleased | LocationNameReleased | business | bdgrz.location-name-claim.location-name-released | 1 | 8 | The name claim was released by the location record and change generation that held it. |
 
 ## Event details
 
@@ -13,6 +13,9 @@ Canonical events: **2**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | LocationNameClaimed |
+| Selected source event name | LocationNameClaimed |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:LocationNameClaimed |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | LocationNameClaimed |
@@ -22,7 +25,8 @@ Canonical events: **2**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | The name claim is held by the location record and change generation named by this fact. |
+| Target meaning | The name claim is held by the location record and change generation named by this fact. |
+| Selected source meaning | The name claim is held by the location record and change generation named by this fact. |
 | Meaning source | record summary in src/Compliance.Common/Features/TechnologyInventory/Events/LocationNameClaimed.cs |
 
 #### Selected schema and implementation evidence
@@ -109,6 +113,9 @@ RecordNameChangeIntent
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | LocationNameReleased |
+| Selected source event name | LocationNameReleased |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:LocationNameReleased |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | LocationNameReleased |
@@ -118,7 +125,8 @@ RecordNameChangeIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | The name claim was released by the location record and change generation that held it. |
+| Target meaning | The name claim was released by the location record and change generation that held it. |
+| Selected source meaning | The name claim was released by the location record and change generation that held it. |
 | Meaning source | record summary in src/Compliance.Common/Features/TechnologyInventory/Events/LocationNameReleased.cs |
 
 #### Selected schema and implementation evidence

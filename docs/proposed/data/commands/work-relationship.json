@@ -90,7 +90,9 @@
         "line": 10122,
         "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
       },
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "RecordWorkRelationship",
+      "targetName": "RecordWorkRelationship"
     },
     {
       "command": "ReviseWorkRelationship",
@@ -175,7 +177,9 @@
         "line": 13916,
         "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
       },
-      "kind": "command"
+      "kind": "command",
+      "sourceName": "ReviseWorkRelationship",
+      "targetName": "ReviseWorkRelationship"
     }
   ],
   "sourceContractEvidence": []

@@ -123,7 +123,11 @@
         "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "ApplicationDeclared",
+      "targetName": "ApplicationDeclared",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "An application was declared for the tenant with its name, purpose and owner reference by a named member, as the application's first revision."
     },
     {
       "canonical": {
@@ -296,7 +300,11 @@
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "resolvedIntentSchema": "ImportTargetGroupIntent",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "ApplicationImportEffectCanceled",
+      "targetName": "ApplicationImportChangesBlockedAfterCancellation",
+      "nameDecision": "Names the protection that prevents a canceled import batch from changing this application after cancellation.",
+      "targetMeaning": "An import batch was fenced on its target application after cancellation, even if it never held the application, so any delayed reservation or application of that batch is refused."
     },
     {
       "canonical": {
@@ -488,7 +496,11 @@
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "resolvedIntentSchema": "ImportTargetGroupIntent",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "ApplicationImportEffectPending",
+      "targetName": "ApplicationImportChangeProvisionallyApplied",
+      "nameDecision": "Names the exact change applied provisionally while the import batch awaits its final result.",
+      "targetMeaning": "One frozen import row's change to an application was provisionally applied while the batch holds the application, pending the batch's final settlement; it is not yet a published revision."
     },
     {
       "canonical": {
@@ -662,7 +674,11 @@
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "resolvedIntentSchema": "ImportTargetGroupIntent",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "ApplicationImportTargetAuthorized",
+      "targetName": "ApplicationImportTargetAuthorized",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "The target application grants the exclusive hold of one batch group. Revision is the published content revision at the hold, which a hold never advances; the group's frozen baseline and candidate revisions are carried so the hold rebuilds from the ordered stream alone."
     },
     {
       "canonical": {
@@ -836,7 +852,11 @@
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "resolvedIntentSchema": "ImportTargetGroupIntent",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "ApplicationImportTargetSettled",
+      "targetName": "ApplicationImportTargetHoldEnded",
+      "nameDecision": "Names the end of the exact application hold; the payload preserves whether publication, cancellation, or failure ended it.",
+      "targetMeaning": "The target hold ends with the batch's exact terminal fact. A published disposition promotes the frozen candidate to the application's content without a second revision increment; a canceled or failed disposition discards it. Revision is the published content revision after the settlement."
     },
     {
       "canonical": {
@@ -940,7 +960,11 @@
         "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "ApplicationRetired",
+      "targetName": "ApplicationRetired",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "An application was retired effective on a stated date with a reason, optionally merged into a successor application; its history, instances and snapshot references remain."
     },
     {
       "canonical": {
@@ -1069,7 +1093,11 @@
         "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "ApplicationRevised",
+      "targetName": "ApplicationRevised",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "A declared application's name, purpose or owner reference was revised by a named member, recorded as the application's next revision."
     }
   ]
 }

@@ -27,20 +27,20 @@
 | [SetFirmStaffStatus](../commands/firm-staff-record.md#setfirmstaffstatus) | http | CommandId |
 | [RejectFirmStaffRegistration](../commands/firm-staff-record.md#rejectfirmstaffregistration) | abort | CommandId |
 | [CompleteFirmStaffRegistration](../commands/firm-staff-record.md#completefirmstaffregistration) | receiver | CommandId |
-| [AuthorizeFirmStaffRecordEngagementUse](../commands/firm-staff-record.md#authorizefirmstaffrecordengagementuse) | receiver | CommandId |
-| [SettleFirmStaffRecordEngagementUse](../commands/firm-staff-record.md#settlefirmstaffrecordengagementuse) | receiver | CommandId |
-| [AuthorizeFirmStaffProfessionalDutyUse](../commands/firm-staff-record.md#authorizefirmstaffprofessionaldutyuse) | receiver | CommandId |
-| [SettleFirmStaffProfessionalDutyUse](../commands/firm-staff-record.md#settlefirmstaffprofessionaldutyuse) | receiver | CommandId |
+| [AuthorizeFirmStaffRecordEngagement](../commands/firm-staff-record.md#authorizefirmstaffrecordengagement) | receiver | CommandId |
+| [CloseFirmStaffRecordEngagementAuthorization](../commands/firm-staff-record.md#closefirmstaffrecordengagementauthorization) | receiver | CommandId |
+| [AuthorizeFirmStaffProfessionalDuty](../commands/firm-staff-record.md#authorizefirmstaffprofessionalduty) | receiver | CommandId |
+| [CloseFirmStaffProfessionalDutyAuthorization](../commands/firm-staff-record.md#closefirmstaffprofessionaldutyauthorization) | receiver | CommandId |
 
 ## Events
 
 | Event | Discriminator | Version |
 | --- | --- | --- |
 | [FirmStaffChangeRecorded](../events/firm-staff-record.md#firmstaffchangerecorded) | bdgrz.firm-staff.changed | 1 |
-| [FirmStaffProfessionalDutyUseAuthorized](../events/firm-staff-record.md#firmstaffprofessionaldutyuseauthorized) | bdgrz.firm-staff-record.firm-staff-professional-duty-use-authorized | 1 |
-| [FirmStaffProfessionalDutyUseSettled](../events/firm-staff-record.md#firmstaffprofessionaldutyusesettled) | bdgrz.firm-staff-record.firm-staff-professional-duty-use-settled | 1 |
-| [FirmStaffRecordEngagementUseAuthorized](../events/firm-staff-record.md#firmstaffrecordengagementuseauthorized) | bdgrz.firm-staff-record.firm-staff-record-engagement-use-authorized | 1 |
-| [FirmStaffRecordEngagementUseSettled](../events/firm-staff-record.md#firmstaffrecordengagementusesettled) | bdgrz.firm-staff-record.firm-staff-record-engagement-use-settled | 1 |
+| [FirmStaffProfessionalDutyAuthorized](../events/firm-staff-record.md#firmstaffprofessionaldutyauthorized) | bdgrz.firm-staff-record.firm-staff-professional-duty-use-authorized | 1 |
+| [FirmStaffProfessionalDutyAuthorizationClosed](../events/firm-staff-record.md#firmstaffprofessionaldutyauthorizationclosed) | bdgrz.firm-staff-record.firm-staff-professional-duty-use-settled | 1 |
+| [FirmStaffRecordEngagementAuthorized](../events/firm-staff-record.md#firmstaffrecordengagementauthorized) | bdgrz.firm-staff-record.firm-staff-record-engagement-use-authorized | 1 |
+| [FirmStaffRecordEngagementAuthorizationClosed](../events/firm-staff-record.md#firmstaffrecordengagementauthorizationclosed) | bdgrz.firm-staff-record.firm-staff-record-engagement-use-settled | 1 |
 | [FirmStaffRegistrationAccepted](../events/firm-staff-record.md#firmstaffregistrationaccepted) | bdgrz.firm-staff-record.firm-staff-registration-accepted | 1 |
 | [FirmStaffRegistrationRejected](../events/firm-staff-record.md#firmstaffregistrationrejected) | bdgrz.firm-staff-record.firm-staff-registration-rejected | 1 |
 
@@ -50,10 +50,10 @@
 | --- | --- | --- | --- | --- |
 | [T002](../reactors/firm-staff-registration-reactor.md#t002) | reaction_or_regular_process_stage | FirmStaffRecord | FirmStaffIdentityClaim | ClaimFirmStaffIdentity |
 | [T003](../reactors/firm-staff-registration-reactor.md#t003) | reaction_or_regular_process_stage | FirmStaffIdentityClaim | FirmStaffRecord | CompleteFirmStaffRegistration |
-| [T089](../reactors/engagement-acceptance-reactor.md#t089) | reaction_or_regular_process_stage | ServiceEngagementIndependence | FirmStaffRecord | AuthorizeFirmStaffRecordEngagementUse |
-| [T090](../reactors/engagement-acceptance-reactor.md#t090) | reaction_or_regular_process_stage | ServiceEngagementIndependence | FirmStaffRecord | SettleFirmStaffRecordEngagementUse |
-| [T113](../reactors/professional-duty-change-reactor.md#t113) | reaction_or_regular_process_stage | FirmProfessionalDutyDesignation | FirmStaffRecord | AuthorizeFirmStaffProfessionalDutyUse |
-| [T114](../reactors/professional-duty-change-reactor.md#t114) | reaction_or_regular_process_stage | FirmProfessionalDutyDesignation | FirmStaffRecord | SettleFirmStaffProfessionalDutyUse |
+| [T089](../reactors/engagement-acceptance-reactor.md#t089) | reaction_or_regular_process_stage | ServiceEngagementIndependence | FirmStaffRecord | AuthorizeFirmStaffRecordEngagement |
+| [T090](../reactors/engagement-acceptance-reactor.md#t090) | reaction_or_regular_process_stage | ServiceEngagementIndependence | FirmStaffRecord | CloseFirmStaffRecordEngagementAuthorization |
+| [T113](../reactors/professional-duty-change-reactor.md#t113) | reaction_or_regular_process_stage | FirmProfessionalDutyDesignation | FirmStaffRecord | AuthorizeFirmStaffProfessionalDuty |
+| [T114](../reactors/professional-duty-change-reactor.md#t114) | reaction_or_regular_process_stage | FirmProfessionalDutyDesignation | FirmStaffRecord | CloseFirmStaffProfessionalDutyAuthorization |
 | [S017](../reactors/firm-staff-status-reevaluation-reactor.md#s017) | business_receiver | FirmStaffRecord | ServiceEngagementIndependence | RecordDirectoryIndependenceReevaluation |
 | [A001](../reactors/unassigned-architecture-rows.md#a001) | process_abort_binding | FirmStaffRecord | FirmStaffRecord | RejectFirmStaffRegistration |
 

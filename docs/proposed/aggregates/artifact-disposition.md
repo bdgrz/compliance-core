@@ -26,7 +26,7 @@
 | [ApproveArtifactDisposition](../commands/artifact-disposition.md#approveartifactdisposition) | command | CommandId |
 | [ExecuteArtifactDisposition](../commands/artifact-disposition.md#executeartifactdisposition) | command | CommandId |
 | [RecordArtifactDispositionResult](../commands/artifact-disposition.md#recordartifactdispositionresult) | command | CommandId |
-| [FenceArtifactDispositionForHold](../commands/artifact-disposition.md#fenceartifactdispositionforhold) | receiver | CommandId |
+| [StopArtifactDisposalForHold](../commands/artifact-disposition.md#stopartifactdisposalforhold) | receiver | CommandId |
 
 ## Events
 
@@ -40,7 +40,7 @@
 
 | Row | Kind | Source owner | Target owner | Command |
 | --- | --- | --- | --- | --- |
-| [X006](../reactors/artifact-legal-hold-reactor.md#x006) | planned_reaction | ArtifactLegalHold | ArtifactDisposition | FenceArtifactDispositionForHold |
+| [X006](../reactors/artifact-legal-hold-reactor.md#x006) | planned_reaction | ArtifactLegalHold | ArtifactDisposition | StopArtifactDisposalForHold |
 
 ## Product rules
 

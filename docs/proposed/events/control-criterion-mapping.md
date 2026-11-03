@@ -2,11 +2,11 @@
 
 Canonical events: **3**. Complete canonical event and available schema records: [owner event JSON](../data/events/control-criterion-mapping.json).
 
-| Event | Kind | Adopted discriminator | Version | Schema fields | Meaning |
-| --- | --- | --- | --- | --- | --- |
-| ControlCriterionMappingProposed | business | bdgrz.control_mapping.proposed | 3 | 18 | A control version was proposed as satisfying a criterion of a criteria edition within a program, recorded as a mapping version by a named member, awaiting review. |
-| ControlCriterionMappingRetired | business | bdgrz.control_mapping.retired | 3 | 12 | A control-to-criterion mapping was retired by a named actor, so the control no longer counts as satisfying that criterion from this version. |
-| ControlCriterionMappingReviewed | business | bdgrz.control_mapping.reviewed | 3 | 15 | A proposed control-to-criterion mapping version was reviewed with a decision outcome by a named reviewer, optionally under a separation-of-duties waiver. |
+| Target event | Selected source name | Kind | Adopted discriminator | Version | Schema fields | Meaning |
+| --- | --- | --- | --- | --- | --- | --- |
+| ControlCriterionMappingProposed | ControlCriterionMappingProposed | business | bdgrz.control_mapping.proposed | 3 | 18 | A control version was proposed as satisfying a criterion of a criteria edition within a program, recorded as a mapping version by a named member, awaiting review. |
+| ControlCriterionMappingRetired | ControlCriterionMappingRetired | business | bdgrz.control_mapping.retired | 3 | 12 | A control-to-criterion mapping was retired by a named actor, so the control no longer counts as satisfying that criterion from this version. |
+| ControlCriterionMappingReviewed | ControlCriterionMappingReviewed | business | bdgrz.control_mapping.reviewed | 3 | 15 | A proposed control-to-criterion mapping version was reviewed with a decision outcome by a named reviewer, optionally under a separation-of-duties waiver. |
 
 ## Event details
 
@@ -14,6 +14,9 @@ Canonical events: **3**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | ControlCriterionMappingProposed |
+| Selected source event name | ControlCriterionMappingProposed |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:ControlCriterionMappingProposed |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | ControlCriterionMappingProposed |
@@ -23,7 +26,8 @@ Canonical events: **3**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | `{"discriminator":"bdgrz.control_mapping.proposed","version":1}` |
-| Meaning | A control version was proposed as satisfying a criterion of a criteria edition within a program, recorded as a mapping version by a named member, awaiting review. |
+| Target meaning | A control version was proposed as satisfying a criterion of a criteria edition within a program, recorded as a mapping version by a named member, awaiting review. |
+| Selected source meaning | A control version was proposed as satisfying a criterion of a criteria edition within a program, recorded as a mapping version by a named member, awaiting review. |
 | Meaning source | authored 2026-10-29 from src/Compliance.Common/Features/ControlMappings/Events/ControlCriterionMappingProposed.cs |
 
 #### Selected schema and implementation evidence
@@ -77,6 +81,9 @@ Canonical events: **3**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | ControlCriterionMappingRetired |
+| Selected source event name | ControlCriterionMappingRetired |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:ControlCriterionMappingRetired |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | ControlCriterionMappingRetired |
@@ -86,7 +93,8 @@ Canonical events: **3**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | `{"discriminator":"bdgrz.control_mapping.retired","version":1}` |
-| Meaning | A control-to-criterion mapping was retired by a named actor, so the control no longer counts as satisfying that criterion from this version. |
+| Target meaning | A control-to-criterion mapping was retired by a named actor, so the control no longer counts as satisfying that criterion from this version. |
+| Selected source meaning | A control-to-criterion mapping was retired by a named actor, so the control no longer counts as satisfying that criterion from this version. |
 | Meaning source | authored 2026-10-29 from src/Compliance.Common/Features/ControlMappings/Events/ControlCriterionMappingRetired.cs |
 
 #### Selected schema and implementation evidence
@@ -134,6 +142,9 @@ Canonical events: **3**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | ControlCriterionMappingReviewed |
+| Selected source event name | ControlCriterionMappingReviewed |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:ControlCriterionMappingReviewed |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | ControlCriterionMappingReviewed |
@@ -143,7 +154,8 @@ Canonical events: **3**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | `{"discriminator":"bdgrz.control_mapping.reviewed","version":1}` |
-| Meaning | A proposed control-to-criterion mapping version was reviewed with a decision outcome by a named reviewer, optionally under a separation-of-duties waiver. |
+| Target meaning | A proposed control-to-criterion mapping version was reviewed with a decision outcome by a named reviewer, optionally under a separation-of-duties waiver. |
+| Selected source meaning | A proposed control-to-criterion mapping version was reviewed with a decision outcome by a named reviewer, optionally under a separation-of-duties waiver. |
 | Meaning source | authored 2026-10-29 from src/Compliance.Common/Features/ControlMappings/Events/ControlCriterionMappingReviewed.cs |
 
 #### Selected schema and implementation evidence

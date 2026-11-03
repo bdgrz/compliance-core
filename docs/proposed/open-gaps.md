@@ -5,14 +5,14 @@ Missing or conflicting information is marked here and on the affected owner page
 ## Target and qualification
 
 - Catalog status: `FINAL_SELECTED_CANONICAL_BUSINESS_AUTHORITY_UNIVERSE`
-- Qualification note: Target architecture selected; concrete schema/wire/implementation/runtime qualification remains separate. No application implementation is authorized.
+- Qualification note: This pass refines the proposed write model; no runtime code changed. Concrete schema, wire, implementation, and runtime qualification are separate.
 - Remaining architecture decisions in the selected aggregate catalog: **0**.
 - Pending choreography owner/protocol decisions: **0**.
-- Architecture decision records with status OPEN: **5**.
+- Older source decision records with status OPEN: **5**. The proposed target now selects dispositions for four domain decisions and defers one event-contract mechanics decision; see [write-model-domain-rules.md](write-model-domain-rules.md).
 
-## Product rules without source evidence
+## Target rules without implementation evidence
 
-77 owner/rule pairs are marked not yet in source. The implementation evidence field is a placeholder.
+77 owner/rule pairs are specified in the proposed owner pages but have no implementation evidence recorded in the selected source catalog. These are implementation evidence gaps, not missing domain rules.
 
 | Owner | Rule | Missing evidence |
 | --- | --- | --- |
@@ -121,17 +121,17 @@ The target schema snapshot and canonical event catalog have different wire-versi
 
 Selected command contracts: **507**; companion target-command contract entries: **161**. Missing companion evidence is marked on owner command pages.
 
-## Earlier OPEN labels awaiting reconciliation
+## Source decision labels and target dispositions
 
-The decision catalog contains 5 OPEN records, while aggregates.json reports zero remaining architecture decisions and the definitive README says the earlier open items were closed on 2026-10-29. The disposition is contradictory across current source files.
+The source decision catalog retains 5 OPEN records, while aggregates.json reports zero remaining architecture decisions. The proposed target resolves that stale status for this write-model pass:
 
-- `OPEN_ResponseReceiptsInPayload`: Whether FirstResponse/OperationResult belong inside the business event or in an operation receipt keyed by command identity is unsettled (0.57 vs 0.39, confidence 0.35). Revision-in-payload as metadata 0.68. No contract change adopted.
-- `OPEN_CriteriaEditionOwner`: Whether a platform CriteriaEdition owner is needed for D02-01 is unsettled (0.62 at confidence 0.43).
-- `OPEN_LifecycleFactsOtherInventories`: Distinct lifecycle facts for ServiceIdentity (0.67), Person (0.65), WorkRelationship, Location, DataFlow (0.60), TechnologyComponent (0.56), InformationAsset (0.54) are unsettled; generic revision facts stay.
-- `OPEN_ClientExportClassification`: ClientExport reads as governor 0.50 / technical 0.38; classification unchanged.
-- `OPEN_CampaignNaturalKey`: Whether a second open PolicyDistributionCampaign for the same policy version and roster snapshot is an error is leaning yes (0.65); if so Jev prefers an active-campaign claim owner (0.72). Access review campaign overlap is unsettled (0.49); duplicate legal holds leaning error (0.63). No owner added.
+- `OPEN_CampaignNaturalKey`: separate campaign IDs and legal hold IDs remain distinct business records; no cross-record uniqueness rule is selected.
+- `OPEN_CriteriaEditionOwner`: criteria editions are static platform content; `ComplianceProgram` records the selected edition.
+- `OPEN_LifecycleFactsOtherInventories`: lifecycle stays on each existing owner record; no separate lifecycle command or event is selected in this target.
+- `OPEN_ClientExportClassification`: `ClientExport` is a business aggregate because its delivery completes an offboarding obligation.
+- `OPEN_ResponseReceiptsInPayload`: deferred to event-contract details because receipt placement does not change business command or event meaning.
 
-[Placeholder: reconcile these earlier OPEN labels with the selected decision catalog.]
+See [write-model-domain-rules.md](write-model-domain-rules.md) for the selected rules, source evidence, affected commands/events/reactors, and Jev signals.
 
 ## Older catalog-count discrepancies
 
@@ -141,7 +141,7 @@ The latest choreography catalog has 196 edges: 186 selected architecture rows pl
 
 ## General placeholders
 
-- Consolidated lifecycle sequences and diagrams are placeholders where no owner-level version exists.
+- Lifecycle sequences and diagrams remain open for owners not yet covered by [write-model-domain-rules.md](write-model-domain-rules.md).
 - Read-model ownership, freshness, authorization, and failure mappings remain placeholders where the source view catalog is silent.
 - Process timeout, cancellation, and scheduling details remain placeholders where the selected process record is silent.
 - M0-D20's integration template heading says ten questions, but its list contains thirteen. All thirteen are preserved in [partner-seam.md](partner-seam.md); the source decision needs an editorial count correction.

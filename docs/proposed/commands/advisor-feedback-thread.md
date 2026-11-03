@@ -2,12 +2,12 @@
 
 Selected command contracts: **4**. Complete selected contracts and companion source evidence: [owner command JSON](../data/commands/advisor-feedback-thread.json).
 
-| Command | Kind | Identity | Fields | HTTP routes |
-| --- | --- | --- | --- | --- |
-| CorrectAdvisorFeedback | http | CorrectionId | 8 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs/{handoff_id}/feedback/{feedback_id}/corrections/{correction_id} [ComplianceAuthorizationPolicies.ApiUser] |
-| ResolveAdvisorFeedback | http | CommandId | 6 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs/{handoff_id}/feedback/{feedback_id}/resolutions/{command_id} [ComplianceAuthorizationPolicies.ApiUser] |
-| RespondToAdvisorFeedback | http | CommandId | 7 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs/{handoff_id}/feedback/{feedback_id}/responses/{command_id} [ComplianceAuthorizationPolicies.ApiUser] |
-| MaterializeAdvisorFeedback | receiver | CommandId | 9 | [Placeholder: value not recorded] |
+| Target command | Selected source name | Kind | Identity | Fields | HTTP routes |
+| --- | --- | --- | --- | --- | --- |
+| CorrectAdvisorFeedback | CorrectAdvisorFeedback | http | CorrectionId | 8 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs/{handoff_id}/feedback/{feedback_id}/corrections/{correction_id} [ComplianceAuthorizationPolicies.ApiUser] |
+| ResolveAdvisorFeedback | ResolveAdvisorFeedback | http | CommandId | 6 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs/{handoff_id}/feedback/{feedback_id}/resolutions/{command_id} [ComplianceAuthorizationPolicies.ApiUser] |
+| RespondToAdvisorFeedback | RespondToAdvisorFeedback | http | CommandId | 7 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs/{handoff_id}/feedback/{feedback_id}/responses/{command_id} [ComplianceAuthorizationPolicies.ApiUser] |
+| RecordAdvisorHandoffFeedback | MaterializeAdvisorFeedback | receiver | CommandId | 9 | [Placeholder: value not recorded] |
 
 ## Selected command details
 
@@ -15,6 +15,9 @@ Selected command contracts: **4**. Complete selected contracts and companion sou
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | CorrectAdvisorFeedback |
+| Selected source command name | CorrectAdvisorFeedback |
+| Name decision | The selected source name is retained. |
 | Owner | AdvisorFeedbackThread |
 | Contract record status | target_contract |
 | Kind | http |
@@ -67,6 +70,9 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | ResolveAdvisorFeedback |
+| Selected source command name | ResolveAdvisorFeedback |
+| Name decision | The selected source name is retained. |
 | Owner | AdvisorFeedbackThread |
 | Contract record status | target_contract |
 | Kind | http |
@@ -117,6 +123,9 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | RespondToAdvisorFeedback |
+| Selected source command name | RespondToAdvisorFeedback |
+| Name decision | The selected source name is retained. |
 | Owner | AdvisorFeedbackThread |
 | Contract record status | target_contract |
 | Kind | http |
@@ -164,17 +173,20 @@ Existing tests: test/Compliance.Tests/Features/AdvisorCollaboration/AdvisorHando
 
 Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision, ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity, ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof, ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome
 
-### MaterializeAdvisorFeedback
+### RecordAdvisorHandoffFeedback
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | RecordAdvisorHandoffFeedback |
+| Selected source command name | MaterializeAdvisorFeedback |
+| Name decision | Records the exact feedback submitted for an advisor handoff, preserving its original actor and referenced record version. |
 | Owner | AdvisorFeedbackThread |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; reactor; deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result |
 | Entry point | [Placeholder: value not recorded] |
 | MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | [Placeholder: value not recorded] |
+| Selected semantic events | None listed |
 | Protocols | [Placeholder: value not recorded] |
 | Policy preservation | [Placeholder: value not recorded] |
 | Contract changes | [Placeholder: value not recorded] |
@@ -216,7 +228,7 @@ Required tests: [Placeholder: required tests not recorded]
 
 ## Source contracts
 
-| Command | Handler | Registered | Entry point |
+| Selected source command | Handler | Registered | Entry point |
 | --- | --- | --- | --- |
 | CorrectAdvisorFeedback | CorrectAdvisorFeedbackHandler | true | authorized_http |
 | ResolveAdvisorFeedback | ResolveAdvisorFeedbackHandler | true | authorized_http |

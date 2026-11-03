@@ -2,9 +2,9 @@
 
 Canonical events: **1**. Complete canonical event and available schema records: [owner event JSON](../data/events/auditor-feedback-thread.json).
 
-| Event | Kind | Adopted discriminator | Version | Schema fields | Meaning |
-| --- | --- | --- | --- | --- | --- |
-| AuditorRequestCommentRecorded | business | bdgrz.auditorrequests.auditor-request-comment-recorded | 1 | 9 | An admitted auditor request comment became its own feedback thread, recorded as the thread's first revision with the commenting member and time. |
+| Target event | Selected source name | Kind | Adopted discriminator | Version | Schema fields | Meaning |
+| --- | --- | --- | --- | --- | --- | --- |
+| AuditorRequestCommentRecorded | AuditorRequestCommentRecorded | business | bdgrz.auditorrequests.auditor-request-comment-recorded | 1 | 9 | An admitted auditor request comment became its own feedback thread, recorded as the thread's first revision with the commenting member and time. |
 
 ## Event details
 
@@ -12,6 +12,9 @@ Canonical events: **1**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | AuditorRequestCommentRecorded |
+| Selected source event name | AuditorRequestCommentRecorded |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:AuditorRequestCommentRecorded |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | AuditorRequestCommentRecorded |
@@ -21,7 +24,8 @@ Canonical events: **1**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | An admitted auditor request comment became its own feedback thread, recorded as the thread's first revision with the commenting member and time. |
+| Target meaning | An admitted auditor request comment became its own feedback thread, recorded as the thread's first revision with the commenting member and time. |
+| Selected source meaning | An admitted auditor request comment became its own feedback thread, recorded as the thread's first revision with the commenting member and time. |
 | Meaning source | authored 2026-10-29 from src/Compliance.Common/Features/AuditorRequests/Events/AuditorRequestCommentRecorded.cs |
 
 #### Selected schema and implementation evidence
@@ -101,7 +105,7 @@ ChildAdmissionIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T034](../reactors/auditor-comment-materialization-reactor.md#t034) | emitted semantic fact | AuditorRequest | MaterializeAuditorComment | AuditorFeedbackThread |
+| [T034](../reactors/auditor-comment-materialization-reactor.md#t034) | emitted semantic fact | AuditorRequest | RecordAuditorComment | AuditorFeedbackThread |
 
 
 

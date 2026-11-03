@@ -24,23 +24,23 @@
 | Command | Kind | Identity field |
 | --- | --- | --- |
 | [ReviseIndependenceRules](../commands/independence-rule-catalog.md#reviseindependencerules) | command | CommandId |
-| [AuthorizeIndependenceRuleCatalogEngagementUse](../commands/independence-rule-catalog.md#authorizeindependencerulecatalogengagementuse) | receiver | CommandId |
-| [SettleIndependenceRuleCatalogEngagementUse](../commands/independence-rule-catalog.md#settleindependencerulecatalogengagementuse) | receiver | CommandId |
+| [AuthorizeIndependenceRuleCatalogEngagement](../commands/independence-rule-catalog.md#authorizeindependencerulecatalogengagement) | receiver | CommandId |
+| [CloseIndependenceRuleCatalogEngagementAuthorization](../commands/independence-rule-catalog.md#closeindependencerulecatalogengagementauthorization) | receiver | CommandId |
 
 ## Events
 
 | Event | Discriminator | Version |
 | --- | --- | --- |
-| [IndependenceRuleCatalogEngagementUseAuthorized](../events/independence-rule-catalog.md#independencerulecatalogengagementuseauthorized) | bdgrz.independence-rule-catalog.independence-rule-catalog-engagement-use-authorized | 1 |
-| [IndependenceRuleCatalogEngagementUseSettled](../events/independence-rule-catalog.md#independencerulecatalogengagementusesettled) | bdgrz.independence-rule-catalog.independence-rule-catalog-engagement-use-settled | 1 |
+| [IndependenceRuleCatalogEngagementAuthorized](../events/independence-rule-catalog.md#independencerulecatalogengagementauthorized) | bdgrz.independence-rule-catalog.independence-rule-catalog-engagement-use-authorized | 1 |
+| [IndependenceRuleCatalogEngagementAuthorizationClosed](../events/independence-rule-catalog.md#independencerulecatalogengagementauthorizationclosed) | bdgrz.independence-rule-catalog.independence-rule-catalog-engagement-use-settled | 1 |
 | [IndependenceRulesRevised](../events/independence-rule-catalog.md#independencerulesrevised) | bdgrz.independence.rules.revised | 2 |
 
 ## Cross-owner flows
 
 | Row | Kind | Source owner | Target owner | Command |
 | --- | --- | --- | --- | --- |
-| [T093](../reactors/engagement-acceptance-reactor.md#t093) | reaction_or_regular_process_stage | ServiceEngagementIndependence | IndependenceRuleCatalog | AuthorizeIndependenceRuleCatalogEngagementUse |
-| [T094](../reactors/engagement-acceptance-reactor.md#t094) | reaction_or_regular_process_stage | ServiceEngagementIndependence | IndependenceRuleCatalog | SettleIndependenceRuleCatalogEngagementUse |
+| [T093](../reactors/engagement-acceptance-reactor.md#t093) | reaction_or_regular_process_stage | ServiceEngagementIndependence | IndependenceRuleCatalog | AuthorizeIndependenceRuleCatalogEngagement |
+| [T094](../reactors/engagement-acceptance-reactor.md#t094) | reaction_or_regular_process_stage | ServiceEngagementIndependence | IndependenceRuleCatalog | CloseIndependenceRuleCatalogEngagementAuthorization |
 
 ## Product rules
 

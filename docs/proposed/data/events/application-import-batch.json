@@ -269,7 +269,11 @@
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "resolvedIntentSchema": "ImportFrozenPlanIntent",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "ApplicationImportCanceled",
+      "targetName": "ApplicationImportCanceled",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "The batch is canceled: every target was fenced and nothing was published."
     },
     {
       "canonical": {
@@ -524,7 +528,11 @@
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "resolvedIntentSchema": "ImportFrozenPlanIntent",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "ApplicationImportCancellationAccepted",
+      "targetName": "ApplicationImportCancellationAccepted",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "The root native acceptance of a cancellation. It is the batch-local fence: a later commit of the batch is refused. Every target is then fenced before any hold is released."
     },
     {
       "canonical": {
@@ -817,7 +825,11 @@
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "resolvedIntentSchema": "ImportFrozenPlanIntent",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "ApplicationImportCommitted",
+      "targetName": "ApplicationImportCommitted",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "The one publication fact of a batch: every target is published together. EffectsManifest lists the native proof of every frozen row; FrozenRows is the complete frozen row list. SourceGeneration is the source revision the plan was frozen against."
     },
     {
       "canonical": {
@@ -1073,7 +1085,11 @@
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "resolvedIntentSchema": "ImportFrozenPlanIntent",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "ApplicationImportExecutionAuthorized",
+      "targetName": "ApplicationImportExecutionAuthorized",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "The batch authorizes execution after its source claim: the target reservations, applications and publication are driven by this fact. It carries the sealed plan's intent unchanged."
     },
     {
       "canonical": {
@@ -1176,7 +1192,11 @@
         "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "ApplicationImportFailed",
+      "targetName": "ApplicationImportFailed",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "A terminal failure of a batch. Existing native business fact, rehomed on the batch."
     },
     {
       "canonical": {
@@ -1451,7 +1471,11 @@
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "resolvedIntentSchema": "ImportFrozenPlanIntent",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "ApplicationImportPlanSealed",
+      "targetName": "ApplicationImportPlanAccepted",
+      "nameDecision": "Names acceptance of the complete frozen import plan that starts import execution.",
+      "targetMeaning": "The root native acceptance of a batch plan. FrozenPlan is the complete ImportFrozenPlanIntent: every row, target group and source claim, the actors, counts, digest and source cut. It is the root of ApplicationImportExecutionProcess."
     },
     {
       "canonical": {
@@ -1529,7 +1553,11 @@
         "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "ApplicationImportRetirementProposalSealed",
+      "targetName": "ApplicationImportRetirementProposalFinalized",
+      "nameDecision": "Names the complete frozen omission proposal and does not imply authority to retire an application.",
+      "targetMeaning": "The preparer's omission proposal, sealed with its complete immutable content. It is never authority to retire: acceptance still requires current impact evidence."
     },
     {
       "canonical": {
@@ -1657,7 +1685,11 @@
         "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "ApplicationImportRowCorrelated",
+      "targetName": "ApplicationImportRowChoiceRecorded",
+      "nameDecision": "Names the person's recorded link-existing or create-new choice for one staged row.",
+      "targetMeaning": "A personal link-existing or create-new decision for one staged row."
     },
     {
       "canonical": {
@@ -1779,7 +1811,11 @@
         "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "ApplicationImportStaged",
+      "targetName": "ApplicationImportPrepared",
+      "nameDecision": "Names the immutable source observation and complete rows submitted for an import batch.",
+      "targetMeaning": "The immutable staged observation of a source and the root native acceptance of its submission. The complete row content is the immutable RowsManifest; RowCount and InvalidCount summarize it for readers."
     }
   ]
 }

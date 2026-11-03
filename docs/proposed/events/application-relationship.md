@@ -2,11 +2,11 @@
 
 Canonical events: **3**. Complete canonical event and available schema records: [owner event JSON](../data/events/application-relationship.json).
 
-| Event | Kind | Adopted discriminator | Version | Schema fields | Meaning |
-| --- | --- | --- | --- | --- | --- |
-| ApplicationRelationshipAdded | business | bdgrz.application.relationship.added | 1 | 12 | A relationship of a stated type was added from a declared application to a target application, recorded as revision 1 of that relationship by a named actor. |
-| ApplicationRelationshipApproved | business | bdgrz.application.relationship.approved | 1 | 14 | A proposed successor relationship between two applications was approved by an active member other than its proposer, against the stated impact assessment and the current application revisions. |
-| ApplicationRelationshipRemoved | business | bdgrz.application.relationship.removed | 1 | 12 | An active relationship from a declared application to a target application was removed by a named actor, ending it at the next relationship revision. |
+| Target event | Selected source name | Kind | Adopted discriminator | Version | Schema fields | Meaning |
+| --- | --- | --- | --- | --- | --- | --- |
+| ApplicationRelationshipAdded | ApplicationRelationshipAdded | business | bdgrz.application.relationship.added | 1 | 12 | A relationship of a stated type was added from a declared application to a target application, recorded as revision 1 of that relationship by a named actor. |
+| ApplicationRelationshipApproved | ApplicationRelationshipApproved | business | bdgrz.application.relationship.approved | 1 | 14 | A proposed successor relationship between two applications was approved by an active member other than its proposer, against the stated impact assessment and the current application revisions. |
+| ApplicationRelationshipRemoved | ApplicationRelationshipRemoved | business | bdgrz.application.relationship.removed | 1 | 12 | An active relationship from a declared application to a target application was removed by a named actor, ending it at the next relationship revision. |
 
 ## Event details
 
@@ -14,6 +14,9 @@ Canonical events: **3**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | ApplicationRelationshipAdded |
+| Selected source event name | ApplicationRelationshipAdded |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:ApplicationRelationshipAdded |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | ApplicationRelationshipAdded |
@@ -23,7 +26,8 @@ Canonical events: **3**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | A relationship of a stated type was added from a declared application to a target application, recorded as revision 1 of that relationship by a named actor. |
+| Target meaning | A relationship of a stated type was added from a declared application to a target application, recorded as revision 1 of that relationship by a named actor. |
+| Selected source meaning | A relationship of a stated type was added from a declared application to a target application, recorded as revision 1 of that relationship by a named actor. |
 | Meaning source | authored 2026-10-29 from src/Compliance.Common/Features/Applications/Events/ApplicationRelationshipAdded.cs |
 
 #### Selected schema and implementation evidence
@@ -71,6 +75,9 @@ Canonical events: **3**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | ApplicationRelationshipApproved |
+| Selected source event name | ApplicationRelationshipApproved |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:ApplicationRelationshipApproved |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | ApplicationRelationshipApproved |
@@ -80,7 +87,8 @@ Canonical events: **3**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | A proposed successor relationship between two applications was approved by an active member other than its proposer, against the stated impact assessment and the current application revisions. |
+| Target meaning | A proposed successor relationship between two applications was approved by an active member other than its proposer, against the stated impact assessment and the current application revisions. |
+| Selected source meaning | A proposed successor relationship between two applications was approved by an active member other than its proposer, against the stated impact assessment and the current application revisions. |
 | Meaning source | authored 2026-10-29 from src/Compliance.Common/Features/Applications/Events/ApplicationRelationshipApproved.cs |
 
 #### Selected schema and implementation evidence
@@ -130,6 +138,9 @@ Canonical events: **3**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | ApplicationRelationshipRemoved |
+| Selected source event name | ApplicationRelationshipRemoved |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:ApplicationRelationshipRemoved |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | ApplicationRelationshipRemoved |
@@ -139,7 +150,8 @@ Canonical events: **3**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | An active relationship from a declared application to a target application was removed by a named actor, ending it at the next relationship revision. |
+| Target meaning | An active relationship from a declared application to a target application was removed by a named actor, ending it at the next relationship revision. |
+| Selected source meaning | An active relationship from a declared application to a target application was removed by a named actor, ending it at the next relationship revision. |
 | Meaning source | authored 2026-10-29 from src/Compliance.Common/Features/Applications/Events/ApplicationRelationshipRemoved.cs |
 
 #### Selected schema and implementation evidence

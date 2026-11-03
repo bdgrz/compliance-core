@@ -2,10 +2,10 @@
 
 Canonical events: **2**. Complete canonical event and available schema records: [owner event JSON](../data/events/team-member.json).
 
-| Event | Kind | Adopted discriminator | Version | Schema fields | Meaning |
-| --- | --- | --- | --- | --- | --- |
-| TeamMemberAssigned | business | bdgrz.rbac.team-member.assigned | 1 | 8 | A member was assigned to a team for one membership episode. The fact is the native acceptance of the logical CommandId on the team-member stream. |
-| TeamMemberRemoved | business | bdgrz.rbac.team-member.removed | 2 | 10 | A member's team assignment ended. The fact is the native acceptance of the logical CommandId on the team-member stream; a retirement removal carries the termination event that proves the closed membership episode. |
+| Target event | Selected source name | Kind | Adopted discriminator | Version | Schema fields | Meaning |
+| --- | --- | --- | --- | --- | --- | --- |
+| TeamMemberAssigned | TeamMemberAssigned | business | bdgrz.rbac.team-member.assigned | 1 | 8 | A member was assigned to a team for one membership episode. The fact is the native acceptance of the logical CommandId on the team-member stream. |
+| TeamMemberRemoved | TeamMemberRemoved | business | bdgrz.rbac.team-member.removed | 2 | 10 | A member's team assignment ended. The fact is the native acceptance of the logical CommandId on the team-member stream; a retirement removal carries the termination event that proves the closed membership episode. |
 
 ## Event details
 
@@ -13,6 +13,9 @@ Canonical events: **2**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | TeamMemberAssigned |
+| Selected source event name | TeamMemberAssigned |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:TeamMemberAssigned |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | TeamMemberAssigned |
@@ -22,7 +25,8 @@ Canonical events: **2**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | A member was assigned to a team for one membership episode. The fact is the native acceptance of the logical CommandId on the team-member stream. |
+| Target meaning | A member was assigned to a team for one membership episode. The fact is the native acceptance of the logical CommandId on the team-member stream. |
+| Selected source meaning | A member was assigned to a team for one membership episode. The fact is the native acceptance of the logical CommandId on the team-member stream. |
 | Meaning source | record summary in src/Compliance.Common/Features/AccessControl/Events/TeamMemberAssigned.cs |
 
 #### Selected schema and implementation evidence
@@ -108,7 +112,7 @@ AdministratorTransitionIntent
 | --- | --- | --- | --- | --- |
 | [T052](../reactors/administrator-restoration-reactor.md#t052) | logical prerequisite | Member\|TeamMember | CompleteAdministratorRestoration | TenantManagerGuard |
 | [T098](../reactors/administrator-assignment-restoration-reactor.md#t098) | emitted semantic fact | TenantManagerGuard | ApplyAdministratorAssignmentRestoration | TeamMember |
-| [S007](../reactors/retired-team-assignment-reactor.md#s007) | physical root, logical prerequisite | TeamMember | CleanupRetiredMembershipRelationship | TeamMember |
+| [S007](../reactors/retired-team-assignment-reactor.md#s007) | physical root, logical prerequisite | TeamMember | RemoveRetiredMemberAccessAndAssignments | TeamMember |
 | [S016](../reactors/tenant-rbac-bootstrap-reactor.md#s016) | emitted semantic fact | Tenant | AssignTeamMember | TeamMember |
 | [S027](../reactors/tenant-invitation-reactor.md#s027) | emitted semantic fact | TenantInvitation | AssignTeamMember | TeamMember |
 | [S034](../reactors/tenant-self-service-activation-reactor.md#s034) | physical root, logical prerequisite | TeamMember | ActivateTenant | Tenant |
@@ -117,6 +121,9 @@ AdministratorTransitionIntent
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | TeamMemberRemoved |
+| Selected source event name | TeamMemberRemoved |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:TeamMemberRemoved |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | TeamMemberRemoved |
@@ -126,7 +133,8 @@ AdministratorTransitionIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | `{"discriminator":"bdgrz.rbac.team-member.removed","version":1}` |
-| Meaning | A member's team assignment ended. The fact is the native acceptance of the logical CommandId on the team-member stream; a retirement removal carries the termination event that proves the closed membership episode. |
+| Target meaning | A member's team assignment ended. The fact is the native acceptance of the logical CommandId on the team-member stream; a retirement removal carries the termination event that proves the closed membership episode. |
+| Selected source meaning | A member's team assignment ended. The fact is the native acceptance of the logical CommandId on the team-member stream; a retirement removal carries the termination event that proves the closed membership episode. |
 | Meaning source | record summary in src/Compliance.Common/Features/AccessControl/Events/TeamMemberRemoved.cs |
 
 #### Selected schema and implementation evidence
@@ -213,10 +221,10 @@ AdministratorTransitionIntent
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
 | [T047](../reactors/administrator-assignment-withdrawal-reactor.md#t047) | emitted semantic fact | TenantManagerGuard | ApplyAdministratorAssignmentWithdrawal | TeamMember |
-| [T049](../reactors/administrator-neutral-assignment-mutation-reactor.md#t049) | emitted semantic fact | TenantManagerGuard | ApplyNeutralAdministratorAssignmentMutation | TeamMember |
+| [T049](../reactors/administrator-neutral-assignment-mutation-reactor.md#t049) | emitted semantic fact | TenantManagerGuard | RemoveAdministratorAssignment | TeamMember |
 | [T050](../reactors/administrator-withdrawal-reactor.md#t050) | logical prerequisite | Member\|TeamMember | CompleteAdministratorWithdrawal | TenantManagerGuard |
-| [S004](../reactors/member-retirement-reactor.md#s004) | emitted semantic fact | Member | CleanupRetiredMembershipRelationship | TeamMember |
-| [S007](../reactors/retired-team-assignment-reactor.md#s007) | emitted semantic fact | TeamMember | CleanupRetiredMembershipRelationship | TeamMember |
+| [S004](../reactors/member-retirement-reactor.md#s004) | emitted semantic fact | Member | RemoveRetiredMemberAccessAndAssignments | TeamMember |
+| [S007](../reactors/retired-team-assignment-reactor.md#s007) | emitted semantic fact | TeamMember | RemoveRetiredMemberAccessAndAssignments | TeamMember |
 | [S010](../reactors/team-cleanup-reactor.md#s010) | emitted semantic fact | Team | RemoveTeamMember | TeamMember |
 
 

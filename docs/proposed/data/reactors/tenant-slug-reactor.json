@@ -1,5 +1,7 @@
 {
-  "root": "TenantSlugReactor",
+  "sourceRoot": "TenantSlugReactor",
+  "targetRoot": "KeepTenantWebAddressesUniqueReactor",
+  "businessReason": "Confirm, reject, or release a tenant web address while preserving its unique claim.",
   "rows": [
     {
       "id": "S022",

@@ -106,7 +106,11 @@
         "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "CriteriaTextOverlayEntryRevised",
+      "targetName": "CriteriaTextOverlayEntryRevised",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "One revision of the licensed text overlay of one criterion. The logical id of Operation is the command id, and its actor and acceptance time are the attribution of the revision; the complete supplied content is verified immutable content, so the license and text stay exact however large the text is."
     }
   ]
 }

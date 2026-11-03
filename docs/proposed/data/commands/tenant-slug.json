@@ -44,7 +44,9 @@
         "rule": "creation_key_only",
         "jev": 0.92,
         "date": "2026-10-29"
-      }
+      },
+      "sourceName": "RegisterTenantSlug",
+      "targetName": "RegisterTenantSlug"
     },
     {
       "command": "SurrenderTenantSlug",
@@ -89,7 +91,9 @@
         "rule": "terminal_idempotent_no_guard",
         "jev": 0.88,
         "date": "2026-10-29"
-      }
+      },
+      "sourceName": "SurrenderTenantSlug",
+      "targetName": "SurrenderTenantSlug"
     }
   ],
   "sourceContractEvidence": []

@@ -75,7 +75,9 @@
         "line": 310,
         "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
       },
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "AmendProgramScopeSnapshot",
+      "targetName": "AmendProgramScopeSnapshot"
     },
     {
       "command": "FreezeProgramScopeSnapshot",
@@ -136,7 +138,9 @@
         "line": 5545,
         "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
       },
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "FreezeProgramScopeSnapshot",
+      "targetName": "FinalizeProgramScopeSnapshot"
     }
   ],
   "sourceContractEvidence": []

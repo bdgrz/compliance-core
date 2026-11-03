@@ -23,7 +23,11 @@
         "meaning": "A workforce observation was closed as resolved or dismissed with a note by a named actor.",
         "meaningSource": "authored 2026-10-29 from src/Compliance.Common/Features/Workforce/Events/WorkforceObservationResolved.cs"
       },
-      "schema": null
+      "schema": null,
+      "sourceName": "WorkforceObservationResolved",
+      "targetName": "WorkforceObservationResolved",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "A workforce observation was closed as resolved or dismissed with a note by a named actor."
     }
   ]
 }

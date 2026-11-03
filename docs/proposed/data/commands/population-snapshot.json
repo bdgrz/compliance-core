@@ -50,7 +50,9 @@
       "source": {
         "path": "docs/product/definitive-aggregate-choreography/decisions.json",
         "recorded": "2026-10-29"
-      }
+      },
+      "sourceName": "FreezePopulationSnapshot",
+      "targetName": "FinalizePopulationSnapshot"
     }
   ],
   "sourceContractEvidence": []

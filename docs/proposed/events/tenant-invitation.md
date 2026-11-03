@@ -2,10 +2,10 @@
 
 Canonical events: **2**. Complete canonical event and available schema records: [owner event JSON](../data/events/tenant-invitation.json).
 
-| Event | Kind | Adopted discriminator | Version | Schema fields | Meaning |
-| --- | --- | --- | --- | --- | --- |
-| TenantInvitationAccepted | business | bdgrz.tenant-invitation.accepted | 1 | 14 | An invitation was accepted by an authenticated user who proved the invited mailbox. The fact is the native acceptance of the invitation's acceptance operation and freezes the exact terms the reaction provisions. GuestProgramIdsManifest references the complete ordered guest program scope. |
-| TenantMemberInvited | business | bdgrz.tenant-member.invited | 1 | 17 | An invitation was created. The fact is the native acceptance of the invitation's logical id on the invitation stream and freezes the exact recipient, purpose, scopes and expiry. The bearer token never enters the fact, only its hash and the key that derives it. MailboxGeneration is the generation of the mailbox claim the invitation was published under; only that generation may release it. GuestProgramIdsManifest references the complete ordered program scope. |
+| Target event | Selected source name | Kind | Adopted discriminator | Version | Schema fields | Meaning |
+| --- | --- | --- | --- | --- | --- | --- |
+| TenantInvitationAccepted | TenantInvitationAccepted | business | bdgrz.tenant-invitation.accepted | 1 | 14 | An invitation was accepted by an authenticated user who proved the invited mailbox. The fact is the native acceptance of the invitation's acceptance operation and freezes the exact terms the reaction provisions. GuestProgramIdsManifest references the complete ordered guest program scope. |
+| TenantMemberInvited | TenantMemberInvited | business | bdgrz.tenant-member.invited | 1 | 17 | An invitation was created. The fact is the native acceptance of the invitation's logical id on the invitation stream and freezes the exact recipient, purpose, scopes and expiry. The bearer token never enters the fact, only its hash and the key that derives it. MailboxGeneration is the generation of the mailbox claim the invitation was published under; only that generation may release it. GuestProgramIdsManifest references the complete ordered program scope. |
 
 ## Event details
 
@@ -13,6 +13,9 @@ Canonical events: **2**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | TenantInvitationAccepted |
+| Selected source event name | TenantInvitationAccepted |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:TenantInvitationAccepted |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | TenantInvitationAccepted |
@@ -22,7 +25,8 @@ Canonical events: **2**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | An invitation was accepted by an authenticated user who proved the invited mailbox. The fact is the native acceptance of the invitation's acceptance operation and freezes the exact terms the reaction provisions. GuestProgramIdsManifest references the complete ordered guest program scope. |
+| Target meaning | An invitation was accepted by an authenticated user who proved the invited mailbox. The fact is the native acceptance of the invitation's acceptance operation and freezes the exact terms the reaction provisions. GuestProgramIdsManifest references the complete ordered guest program scope. |
+| Selected source meaning | An invitation was accepted by an authenticated user who proved the invited mailbox. The fact is the native acceptance of the invitation's acceptance operation and freezes the exact terms the reaction provisions. GuestProgramIdsManifest references the complete ordered guest program scope. |
 | Meaning source | record summary in src/Compliance.Common/Features/Tenants/Events/TenantInvitationAccepted.cs |
 
 #### Selected schema and implementation evidence
@@ -87,6 +91,9 @@ Canonical events: **2**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | TenantMemberInvited |
+| Selected source event name | TenantMemberInvited |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:TenantMemberInvited |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | TenantMemberInvited |
@@ -96,7 +103,8 @@ Canonical events: **2**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | An invitation was created. The fact is the native acceptance of the invitation's logical id on the invitation stream and freezes the exact recipient, purpose, scopes and expiry. The bearer token never enters the fact, only its hash and the key that derives it. MailboxGeneration is the generation of the mailbox claim the invitation was published under; only that generation may release it. GuestProgramIdsManifest references the complete ordered program scope. |
+| Target meaning | An invitation was created. The fact is the native acceptance of the invitation's logical id on the invitation stream and freezes the exact recipient, purpose, scopes and expiry. The bearer token never enters the fact, only its hash and the key that derives it. MailboxGeneration is the generation of the mailbox claim the invitation was published under; only that generation may release it. GuestProgramIdsManifest references the complete ordered program scope. |
+| Selected source meaning | An invitation was created. The fact is the native acceptance of the invitation's logical id on the invitation stream and freezes the exact recipient, purpose, scopes and expiry. The bearer token never enters the fact, only its hash and the key that derives it. MailboxGeneration is the generation of the mailbox claim the invitation was published under; only that generation may release it. GuestProgramIdsManifest references the complete ordered program scope. |
 | Meaning source | record summary in src/Compliance.Common/Features/Tenants/Events/TenantMemberInvited.cs |
 
 #### Selected schema and implementation evidence

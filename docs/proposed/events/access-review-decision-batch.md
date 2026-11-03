@@ -2,12 +2,12 @@
 
 Canonical events: **4**. Complete canonical event and available schema records: [owner event JSON](../data/events/access-review-decision-batch.json).
 
-| Event | Kind | Adopted discriminator | Version | Schema fields | Meaning |
-| --- | --- | --- | --- | --- | --- |
-| AccessReviewDecisionBatchAccepted | business | bdgrz.access-review-decision-batch.access-review-decision-batch-accepted | 1 | 8 | The batch owner materialized the admitted batch at logical revision zero from the exact admitted BulkAccessDecisionIntent. Nothing is reconstructed from current campaign or item state. |
-| AccessReviewDecisionBatchCanceled | business | bdgrz.access-review-decision-batch.access-review-decision-batch-canceled | 1 | 8 | Every selected item was fenced and the batch is canceled; no decision of it is ever published. SourceProofs is the complete set of BulkItemFenceProof. |
-| AccessReviewDecisionBatchCancellationAccepted | business | bdgrz.access-review-decision-batch.access-review-decision-batch-cancellation-accepted | 1 | 8 | The batch accepted a cancellation before any irreversible publication. From this fact every selected item is fenced against delayed holds and applies before any hold is released. SourceProofs is the failure proof. |
-| AccessReviewDecisionBatchPublished | business | bdgrz.access-review-decision-batch.access-review-decision-batch-published | 1 | 8 | Every selected item held its provisional decision and the batch published all of them as one fact. SourceProofs is the complete set of BulkItemDecisionProof (exact item event and position); OperationResult is the terminal BulkAccessDecisionResult. |
+| Target event | Selected source name | Kind | Adopted discriminator | Version | Schema fields | Meaning |
+| --- | --- | --- | --- | --- | --- | --- |
+| AccessReviewDecisionBatchAccepted | AccessReviewDecisionBatchAccepted | business | bdgrz.access-review-decision-batch.access-review-decision-batch-accepted | 1 | 8 | The batch owner materialized the admitted batch at logical revision zero from the exact admitted BulkAccessDecisionIntent. Nothing is reconstructed from current campaign or item state. |
+| AccessReviewDecisionBatchCanceled | AccessReviewDecisionBatchCanceled | business | bdgrz.access-review-decision-batch.access-review-decision-batch-canceled | 1 | 8 | Every selected item was fenced and the batch is canceled; no decision of it is ever published. SourceProofs is the complete set of BulkItemFenceProof. |
+| AccessReviewDecisionBatchCancellationAccepted | AccessReviewDecisionBatchCancellationAccepted | business | bdgrz.access-review-decision-batch.access-review-decision-batch-cancellation-accepted | 1 | 8 | The batch accepted a cancellation before any irreversible publication. From this fact every selected item is fenced against delayed holds and applies before any hold is released. SourceProofs is the failure proof. |
+| AccessReviewDecisionBatchPublished | AccessReviewDecisionBatchPublished | business | bdgrz.access-review-decision-batch.access-review-decision-batch-published | 1 | 8 | Every selected item held its provisional decision and the batch published all of them as one fact. SourceProofs is the complete set of BulkItemDecisionProof (exact item event and position); OperationResult is the terminal BulkAccessDecisionResult. |
 
 ## Event details
 
@@ -15,6 +15,9 @@ Canonical events: **4**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | AccessReviewDecisionBatchAccepted |
+| Selected source event name | AccessReviewDecisionBatchAccepted |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:AccessReviewDecisionBatchAccepted |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | AccessReviewDecisionBatchAccepted |
@@ -24,7 +27,8 @@ Canonical events: **4**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | The batch owner materialized the admitted batch at logical revision zero from the exact admitted BulkAccessDecisionIntent. Nothing is reconstructed from current campaign or item state. |
+| Target meaning | The batch owner materialized the admitted batch at logical revision zero from the exact admitted BulkAccessDecisionIntent. Nothing is reconstructed from current campaign or item state. |
+| Selected source meaning | The batch owner materialized the admitted batch at logical revision zero from the exact admitted BulkAccessDecisionIntent. Nothing is reconstructed from current campaign or item state. |
 | Meaning source | record summary in src/Compliance.Common/Features/AccessReviews/Events/AccessReviewDecisionBatchAccepted.cs |
 
 #### Selected schema and implementation evidence
@@ -107,12 +111,15 @@ BulkAccessDecisionIntent
 | [T009](../reactors/access-review-bulk-admission-reactor.md#t009) | logical prerequisite | AccessReviewDecisionBatch | ReserveAccessReviewItemDecision | AccessReviewItem |
 | [T010](../reactors/access-review-bulk-admission-reactor.md#t010) | logical prerequisite | AccessReviewDecisionBatch | ApplyAccessReviewItemDecision | AccessReviewItem |
 | [T011](../reactors/access-review-bulk-admission-reactor.md#t011) | logical prerequisite | AccessReviewDecisionBatch | PublishAccessReviewDecisionBatch | AccessReviewDecisionBatch |
-| [T086](../reactors/access-review-bulk-admission-reactor.md#t086) | emitted semantic fact | AccessReviewCampaign | MaterializeAccessReviewDecisionBatch | AccessReviewDecisionBatch |
+| [T086](../reactors/access-review-bulk-admission-reactor.md#t086) | emitted semantic fact | AccessReviewCampaign | RecordAccessReviewDecisionBatch | AccessReviewDecisionBatch |
 
 ### AccessReviewDecisionBatchCanceled
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | AccessReviewDecisionBatchCanceled |
+| Selected source event name | AccessReviewDecisionBatchCanceled |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:AccessReviewDecisionBatchCanceled |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | AccessReviewDecisionBatchCanceled |
@@ -122,7 +129,8 @@ BulkAccessDecisionIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | Every selected item was fenced and the batch is canceled; no decision of it is ever published. SourceProofs is the complete set of BulkItemFenceProof. |
+| Target meaning | Every selected item was fenced and the batch is canceled; no decision of it is ever published. SourceProofs is the complete set of BulkItemFenceProof. |
+| Selected source meaning | Every selected item was fenced and the batch is canceled; no decision of it is ever published. SourceProofs is the complete set of BulkItemFenceProof. |
 | Meaning source | record summary in src/Compliance.Common/Features/AccessReviews/Events/AccessReviewDecisionBatchCanceled.cs |
 
 #### Selected schema and implementation evidence
@@ -203,12 +211,15 @@ BulkAccessDecisionIntent
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
 | [T079](../reactors/access-review-bulk-cancellation-completion-reactor.md#t079) | emitted semantic fact | AccessReviewDecisionBatch | CompleteAccessReviewDecisionBatchCancellation | AccessReviewDecisionBatch |
-| [T080](../reactors/access-review-bulk-admission-reactor.md#t080) | physical root, logical prerequisite | AccessReviewDecisionBatch | SettleAccessReviewItemDecision | AccessReviewItem |
+| [T080](../reactors/access-review-bulk-admission-reactor.md#t080) | physical root, logical prerequisite | AccessReviewDecisionBatch | CloseAccessReviewItemDecisionAuthorization | AccessReviewItem |
 
 ### AccessReviewDecisionBatchCancellationAccepted
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | AccessReviewDecisionBatchCancellationAccepted |
+| Selected source event name | AccessReviewDecisionBatchCancellationAccepted |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:AccessReviewDecisionBatchCancellationAccepted |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | AccessReviewDecisionBatchCancellationAccepted |
@@ -218,7 +229,8 @@ BulkAccessDecisionIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | The batch accepted a cancellation before any irreversible publication. From this fact every selected item is fenced against delayed holds and applies before any hold is released. SourceProofs is the failure proof. |
+| Target meaning | The batch accepted a cancellation before any irreversible publication. From this fact every selected item is fenced against delayed holds and applies before any hold is released. SourceProofs is the failure proof. |
+| Selected source meaning | The batch accepted a cancellation before any irreversible publication. From this fact every selected item is fenced against delayed holds and applies before any hold is released. SourceProofs is the failure proof. |
 | Meaning source | record summary in src/Compliance.Common/Features/AccessReviews/Events/AccessReviewDecisionBatchCancellationAccepted.cs |
 
 #### Selected schema and implementation evidence
@@ -298,7 +310,7 @@ BulkAccessDecisionIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T012](../reactors/access-review-bulk-cancellation-reactor.md#t012) | physical root, logical prerequisite | AccessReviewDecisionBatch | FenceAccessReviewItemDecision | AccessReviewItem |
+| [T012](../reactors/access-review-bulk-cancellation-reactor.md#t012) | physical root, logical prerequisite | AccessReviewDecisionBatch | CancelAccessReviewItemDecision | AccessReviewItem |
 | [T079](../reactors/access-review-bulk-cancellation-completion-reactor.md#t079) | physical root, logical prerequisite | AccessReviewDecisionBatch | CompleteAccessReviewDecisionBatchCancellation | AccessReviewDecisionBatch |
 | [A005](../reactors/unassigned-architecture-rows.md#a005) | emitted semantic fact | AccessReviewCampaign | CancelAccessReviewDecisionBatch | AccessReviewDecisionBatch |
 
@@ -306,6 +318,9 @@ BulkAccessDecisionIntent
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | AccessReviewDecisionBatchPublished |
+| Selected source event name | AccessReviewDecisionBatchPublished |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:AccessReviewDecisionBatchPublished |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | AccessReviewDecisionBatchPublished |
@@ -315,7 +330,8 @@ BulkAccessDecisionIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | Every selected item held its provisional decision and the batch published all of them as one fact. SourceProofs is the complete set of BulkItemDecisionProof (exact item event and position); OperationResult is the terminal BulkAccessDecisionResult. |
+| Target meaning | Every selected item held its provisional decision and the batch published all of them as one fact. SourceProofs is the complete set of BulkItemDecisionProof (exact item event and position); OperationResult is the terminal BulkAccessDecisionResult. |
+| Selected source meaning | Every selected item held its provisional decision and the batch published all of them as one fact. SourceProofs is the complete set of BulkItemDecisionProof (exact item event and position); OperationResult is the terminal BulkAccessDecisionResult. |
 | Meaning source | record summary in src/Compliance.Common/Features/AccessReviews/Events/AccessReviewDecisionBatchPublished.cs |
 
 #### Selected schema and implementation evidence
@@ -396,7 +412,7 @@ BulkAccessDecisionIntent
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
 | [T011](../reactors/access-review-bulk-admission-reactor.md#t011) | emitted semantic fact | AccessReviewDecisionBatch | PublishAccessReviewDecisionBatch | AccessReviewDecisionBatch |
-| [T080](../reactors/access-review-bulk-admission-reactor.md#t080) | physical root, logical prerequisite | AccessReviewDecisionBatch | SettleAccessReviewItemDecision | AccessReviewItem |
+| [T080](../reactors/access-review-bulk-admission-reactor.md#t080) | physical root, logical prerequisite | AccessReviewDecisionBatch | CloseAccessReviewItemDecisionAuthorization | AccessReviewItem |
 
 
 

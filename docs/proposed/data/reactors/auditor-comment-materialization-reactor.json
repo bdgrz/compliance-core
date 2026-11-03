@@ -1,5 +1,7 @@
 {
-  "root": "AuditorCommentMaterializationReactor",
+  "sourceRoot": "AuditorCommentMaterializationReactor",
+  "targetRoot": "PreserveAuditorCommentsAfterRequestReactor",
+  "businessReason": "Keep comments accepted while an auditor request was open even if the request later closes.",
   "rows": [
     {
       "id": "T034",

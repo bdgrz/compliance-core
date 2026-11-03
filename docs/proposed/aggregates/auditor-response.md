@@ -28,9 +28,9 @@
 | [ReviewAuditResponse](../commands/auditor-response.md#reviewauditresponse) | http | CommandId |
 | [ReviseAuditResponseDraft](../commands/auditor-response.md#reviseauditresponsedraft) | http | CommandId |
 | [SubmitAuditResponse](../commands/auditor-response.md#submitauditresponse) | http | CommandId |
-| [MaterializeAuditorResponse](../commands/auditor-response.md#materializeauditorresponse) | receiver | CommandId |
-| [AuthorizeAuditorResponseRequestResolutionUse](../commands/auditor-response.md#authorizeauditorresponserequestresolutionuse) | receiver | CommandId |
-| [SettleAuditorResponseRequestResolutionUse](../commands/auditor-response.md#settleauditorresponserequestresolutionuse) | receiver | CommandId |
+| [CreateAuditorResponseDraft](../commands/auditor-response.md#createauditorresponsedraft) | receiver | CommandId |
+| [AuthorizeAuditorResponseRequestResolution](../commands/auditor-response.md#authorizeauditorresponserequestresolution) | receiver | CommandId |
+| [CloseAuditorResponseRequestResolutionAuthorization](../commands/auditor-response.md#closeauditorresponserequestresolutionauthorization) | receiver | CommandId |
 
 ## Events
 
@@ -41,17 +41,17 @@
 | [AuditorResponseDelivered](../events/auditor-response.md#auditorresponsedelivered) | bdgrz.auditorrequests.auditor-response-delivered | 1 |
 | [AuditorResponseDisclosureReviewed](../events/auditor-response.md#auditorresponsedisclosurereviewed) | bdgrz.auditorrequests.auditor-response-disclosure-reviewed | 1 |
 | [AuditorResponseDispositionRecorded](../events/auditor-response.md#auditorresponsedispositionrecorded) | bdgrz.auditorrequests.auditor-response-disposition-recorded | 1 |
-| [AuditorResponseRequestResolutionUseAuthorized](../events/auditor-response.md#auditorresponserequestresolutionuseauthorized) | bdgrz.auditor-response.auditor-response-request-resolution-use-authorized | 1 |
-| [AuditorResponseRequestResolutionUseSettled](../events/auditor-response.md#auditorresponserequestresolutionusesettled) | bdgrz.auditor-response.auditor-response-request-resolution-use-settled | 1 |
+| [AuditorResponseRequestResolutionAuthorized](../events/auditor-response.md#auditorresponserequestresolutionauthorized) | bdgrz.auditor-response.auditor-response-request-resolution-use-authorized | 1 |
+| [AuditorResponseRequestResolutionAuthorizationClosed](../events/auditor-response.md#auditorresponserequestresolutionauthorizationclosed) | bdgrz.auditor-response.auditor-response-request-resolution-use-settled | 1 |
 | [AuditorResponseSubmitted](../events/auditor-response.md#auditorresponsesubmitted) | bdgrz.auditorrequests.auditor-response-submitted | 1 |
 
 ## Cross-owner flows
 
 | Row | Kind | Source owner | Target owner | Command |
 | --- | --- | --- | --- | --- |
-| [T033](../reactors/auditor-response-materialization-reactor.md#t033) | reaction_or_regular_process_stage | AuditorRequest | AuditorResponse | MaterializeAuditorResponse |
-| [T061](../reactors/auditor-request-resolution-reactor.md#t061) | reaction_or_regular_process_stage | AuditorRequest | AuditorResponse | AuthorizeAuditorResponseRequestResolutionUse |
-| [T062](../reactors/auditor-request-resolution-reactor.md#t062) | reaction_or_regular_process_stage | AuditorRequest | AuditorResponse | SettleAuditorResponseRequestResolutionUse |
+| [T033](../reactors/auditor-response-materialization-reactor.md#t033) | reaction_or_regular_process_stage | AuditorRequest | AuditorResponse | CreateAuditorResponseDraft |
+| [T061](../reactors/auditor-request-resolution-reactor.md#t061) | reaction_or_regular_process_stage | AuditorRequest | AuditorResponse | AuthorizeAuditorResponseRequestResolution |
+| [T062](../reactors/auditor-request-resolution-reactor.md#t062) | reaction_or_regular_process_stage | AuditorRequest | AuditorResponse | CloseAuditorResponseRequestResolutionAuthorization |
 
 ## Product rules
 

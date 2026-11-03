@@ -70,7 +70,9 @@
         "line": 3158,
         "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
       },
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "ConfigureTenantIdentityProvider",
+      "targetName": "ConfigureTenantSignInConnection"
     },
     {
       "command": "DisableTenantIdentityProvider",
@@ -126,7 +128,9 @@
         "line": 5045,
         "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
       },
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "DisableTenantIdentityProvider",
+      "targetName": "DisableTenantSignInConnection"
     },
     {
       "command": "RecordTenantIdentityProviderTestResult",
@@ -186,7 +190,9 @@
         "line": 9955,
         "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
       },
-      "kind": "command"
+      "kind": "command",
+      "sourceName": "RecordTenantIdentityProviderTestResult",
+      "targetName": "RecordSignInConnectionTestResult"
     },
     {
       "command": "RotateTenantIdentityProviderCredentials",
@@ -247,7 +253,9 @@
         "line": 14298,
         "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
       },
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "RotateTenantIdentityProviderCredentials",
+      "targetName": "RotateTenantSignInCredentials"
     },
     {
       "command": "TestTenantIdentityProvider",
@@ -298,7 +306,9 @@
         "line": 14910,
         "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
       },
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "TestTenantIdentityProvider",
+      "targetName": "TestTenantSignInConnection"
     }
   ],
   "sourceContractEvidence": []

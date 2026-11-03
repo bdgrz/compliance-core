@@ -30,7 +30,11 @@
         "meaning": "Complete immutable local decision; occupied inline prior versions retain their exact unqualified tags.",
         "meaningSource": "record summary in src/Compliance.Common/Features/AuditPopulations/Events/AuditPopulationAmendedV3.cs"
       },
-      "schema": null
+      "schema": null,
+      "sourceName": "AuditPopulationAmended",
+      "targetName": "AuditPopulationAmended",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "Complete immutable local decision; occupied inline prior versions retain their exact unqualified tags."
     },
     {
       "canonical": {
@@ -61,7 +65,11 @@
         "meaning": "Records a population definition with its original command and response receipt.",
         "meaningSource": "record summary in src/Compliance.Common/Features/AuditPopulations/Events/AuditPopulationDefinedV4.cs"
       },
-      "schema": null
+      "schema": null,
+      "sourceName": "AuditPopulationDefined",
+      "targetName": "AuditPopulationDefined",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "Records a population definition with its original command and response receipt."
     },
     {
       "canonical": {
@@ -92,7 +100,11 @@
         "meaning": "Complete immutable local decision; occupied inline prior versions retain their exact unqualified tags.",
         "meaningSource": "record summary in src/Compliance.Common/Features/AuditPopulations/Events/AuditPopulationDefinitionRevisedV2.cs"
       },
-      "schema": null
+      "schema": null,
+      "sourceName": "AuditPopulationDefinitionRevised",
+      "targetName": "AuditPopulationDefinitionRevised",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "Complete immutable local decision; occupied inline prior versions retain their exact unqualified tags."
     },
     {
       "canonical": {
@@ -123,7 +135,11 @@
         "meaning": "Complete immutable local decision; occupied inline prior versions retain their exact unqualified tags.",
         "meaningSource": "record summary in src/Compliance.Common/Features/AuditPopulations/Events/AuditPopulationFactRecordedV3.cs"
       },
-      "schema": null
+      "schema": null,
+      "sourceName": "AuditPopulationFactRecorded",
+      "targetName": "AuditPopulationFactRecorded",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "Complete immutable local decision; occupied inline prior versions retain their exact unqualified tags."
     },
     {
       "canonical": {
@@ -154,7 +170,11 @@
         "meaning": "Complete immutable local decision; occupied inline prior versions retain their exact unqualified tags.",
         "meaningSource": "record summary in src/Compliance.Common/Features/AuditPopulations/Events/AuditPopulationFrozenV3.cs"
       },
-      "schema": null
+      "schema": null,
+      "sourceName": "AuditPopulationFrozen",
+      "targetName": "AuditPopulationFrozen",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "Complete immutable local decision; occupied inline prior versions retain their exact unqualified tags."
     },
     {
       "canonical": {
@@ -185,7 +205,11 @@
         "meaning": "Records collection intent with its original command and response receipt.",
         "meaningSource": "record summary in src/Compliance.Common/Features/AuditPopulations/Events/AuditPopulationGeneratedV4.cs"
       },
-      "schema": null
+      "schema": null,
+      "sourceName": "AuditPopulationGenerated",
+      "targetName": "AuditPopulationGenerated",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "Records collection intent with its original command and response receipt."
     },
     {
       "canonical": {
@@ -216,7 +240,11 @@
         "meaning": "Complete immutable local decision; occupied inline prior versions retain their exact unqualified tags.",
         "meaningSource": "record summary in src/Compliance.Common/Features/AuditPopulations/Events/AuditPopulationReconciledV3.cs"
       },
-      "schema": null
+      "schema": null,
+      "sourceName": "AuditPopulationReconciled",
+      "targetName": "AuditPopulationReconciled",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "Complete immutable local decision; occupied inline prior versions retain their exact unqualified tags."
     },
     {
       "canonical": {
@@ -247,7 +275,11 @@
         "meaning": "Complete immutable local decision; occupied inline prior versions retain their exact unqualified tags.",
         "meaningSource": "record summary in src/Compliance.Common/Features/AuditPopulations/Events/AuditPopulationRowClassifiedV3.cs"
       },
-      "schema": null
+      "schema": null,
+      "sourceName": "AuditPopulationRowClassified",
+      "targetName": "AuditPopulationRowClassified",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "Complete immutable local decision; occupied inline prior versions retain their exact unqualified tags."
     }
   ]
 }

@@ -60,7 +60,9 @@
           "process_reply": 0.25
         },
         "date": "2026-10-29"
-      }
+      },
+      "sourceName": "ActivateTenant",
+      "targetName": "ActivateTenant"
     },
     {
       "command": "ChangeTenantSlug",
@@ -111,7 +113,9 @@
         "line": 2585,
         "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
       },
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "ChangeTenantSlug",
+      "targetName": "ChangeTenantSlug"
     },
     {
       "command": "CompleteTenantOffboarding",
@@ -171,7 +175,9 @@
         "line": 3090,
         "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
       },
-      "kind": "command"
+      "kind": "command",
+      "sourceName": "CompleteTenantOffboarding",
+      "targetName": "CompleteTenantOffboarding"
     },
     {
       "command": "ConfirmTenantSlug",
@@ -221,7 +227,9 @@
           "process_reply": 0.48
         },
         "date": "2026-10-29"
-      }
+      },
+      "sourceName": "ConfirmTenantSlug",
+      "targetName": "ConfirmTenantSlug"
     },
     {
       "command": "ConfirmTenantSlugSurrender",
@@ -271,7 +279,9 @@
           "process_reply": 0.58
         },
         "date": "2026-10-29"
-      }
+      },
+      "sourceName": "ConfirmTenantSlugSurrender",
+      "targetName": "ConfirmTenantSlugSurrender"
     },
     {
       "command": "OffboardTenant",
@@ -322,7 +332,9 @@
         "line": 6433,
         "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
       },
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "OffboardTenant",
+      "targetName": "OffboardTenant"
     },
     {
       "command": "ReactivateTenant",
@@ -373,7 +385,9 @@
         "rule": "require_expected_revision",
         "jev": 0.81,
         "date": "2026-10-29"
-      }
+      },
+      "sourceName": "ReactivateTenant",
+      "targetName": "ReactivateTenant"
     },
     {
       "command": "RegisterTenant",
@@ -429,7 +443,9 @@
         "line": 10437,
         "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
       },
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "RegisterTenant",
+      "targetName": "RegisterTenant"
     },
     {
       "command": "RejectTenantSlug",
@@ -479,7 +495,9 @@
           "process_reply": 0.43
         },
         "date": "2026-10-29"
-      }
+      },
+      "sourceName": "RejectTenantSlug",
+      "targetName": "RejectTenantSlug"
     },
     {
       "command": "RejectTenantSlugSurrender",
@@ -529,7 +547,9 @@
           "process_reply": 0.7
         },
         "date": "2026-10-29"
-      }
+      },
+      "sourceName": "RejectTenantSlugSurrender",
+      "targetName": "RejectTenantSlugSurrender"
     },
     {
       "command": "RequestTenantSlugSurrender",
@@ -585,7 +605,9 @@
           "process_reply": 0.21
         },
         "date": "2026-10-29"
-      }
+      },
+      "sourceName": "RequestTenantSlugSurrender",
+      "targetName": "RequestTenantSlugSurrender"
     },
     {
       "command": "SuspendTenant",
@@ -636,7 +658,9 @@
         "line": 14844,
         "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
       },
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "SuspendTenant",
+      "targetName": "SuspendTenant"
     }
   ],
   "sourceContractEvidence": []

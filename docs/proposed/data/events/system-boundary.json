@@ -23,7 +23,11 @@
         "meaning": "A system boundary draft version was approved as the boundary effective from a stated date, on the strength of an accepted review and by a named approver.",
         "meaningSource": "authored 2026-10-29 from src/Compliance.Common/Features/Boundaries/Events/BoundaryApproved.cs"
       },
-      "schema": null
+      "schema": null,
+      "sourceName": "BoundaryApproved",
+      "targetName": "BoundaryApproved",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "A system boundary draft version was approved as the boundary effective from a stated date, on the strength of an accepted review and by a named approver."
     },
     {
       "canonical": {
@@ -47,7 +51,11 @@
         "meaning": "A system boundary draft was created for a program with its authored content by a named author, awaiting review.",
         "meaningSource": "authored 2026-10-29 from src/Compliance.Common/Features/Boundaries/Events/BoundaryDraftCreated.cs"
       },
-      "schema": null
+      "schema": null,
+      "sourceName": "BoundaryDraftCreated",
+      "targetName": "BoundaryDraftCreated",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "A system boundary draft was created for a program with its authored content by a named author, awaiting review."
     },
     {
       "canonical": {
@@ -71,7 +79,11 @@
         "meaning": "A system boundary draft version was discarded by a named member, ending it without approval.",
         "meaningSource": "authored 2026-10-29 from src/Compliance.Common/Features/Boundaries/Events/BoundaryDraftDiscarded.cs"
       },
-      "schema": null
+      "schema": null,
+      "sourceName": "BoundaryDraftDiscarded",
+      "targetName": "BoundaryDraftDiscarded",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "A system boundary draft version was discarded by a named member, ending it without approval."
     },
     {
       "canonical": {
@@ -95,7 +107,11 @@
         "meaning": "A system boundary draft version's content was revised by a named author, producing its next draft revision for review.",
         "meaningSource": "authored 2026-10-29 from src/Compliance.Common/Features/Boundaries/Events/BoundaryDraftRevised.cs"
       },
-      "schema": null
+      "schema": null,
+      "sourceName": "BoundaryDraftRevised",
+      "targetName": "BoundaryDraftRevised",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "A system boundary draft version's content was revised by a named author, producing its next draft revision for review."
     },
     {
       "canonical": {
@@ -119,7 +135,11 @@
         "meaning": "A system boundary draft revision was reviewed with a decision outcome by a named reviewer, optionally under a separation-of-duties waiver.",
         "meaningSource": "authored 2026-10-29 from src/Compliance.Common/Features/Boundaries/Events/BoundaryReviewed.cs"
       },
-      "schema": null
+      "schema": null,
+      "sourceName": "BoundaryReviewed",
+      "targetName": "BoundaryReviewed",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "A system boundary draft revision was reviewed with a decision outcome by a named reviewer, optionally under a separation-of-duties waiver."
     },
     {
       "canonical": {
@@ -143,7 +163,11 @@
         "meaning": "A successor draft version of a system boundary was proposed from one exact approved predecessor version, with new content by a named author.",
         "meaningSource": "authored 2026-10-29 from src/Compliance.Common/Features/Boundaries/Events/BoundarySuccessorProposed.cs"
       },
-      "schema": null
+      "schema": null,
+      "sourceName": "BoundarySuccessorProposed",
+      "targetName": "BoundarySuccessorProposed",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "A successor draft version of a system boundary was proposed from one exact approved predecessor version, with new content by a named author."
     },
     {
       "canonical": {
@@ -169,7 +193,11 @@
         "meaning": "A member was assigned a responsibility type over a scoped record for an effective period by a named assigner, together with any separation-of-duties waivers that allowed it.",
         "meaningSource": "authored 2026-10-29 from src/Compliance.Common/Features/Responsibilities/Events/ResponsibilityAssigned.cs"
       },
-      "schema": null
+      "schema": null,
+      "sourceName": "ResponsibilityAssigned",
+      "targetName": "ResponsibilityAssigned",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "A member was assigned a responsibility type over a scoped record for an effective period by a named assigner, together with any separation-of-duties waivers that allowed it."
     },
     {
       "canonical": {
@@ -195,7 +223,11 @@
         "meaning": "A member's responsibility assignment over a scoped record was revoked with a stated reason by a named member, removing the authority it granted.",
         "meaningSource": "authored 2026-10-29 from src/Compliance.Common/Features/Responsibilities/Events/ResponsibilityRevoked.cs"
       },
-      "schema": null
+      "schema": null,
+      "sourceName": "ResponsibilityRevoked",
+      "targetName": "ResponsibilityRevoked",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "A member's responsibility assignment over a scoped record was revoked with a stated reason by a named member, removing the authority it granted."
     }
   ]
 }

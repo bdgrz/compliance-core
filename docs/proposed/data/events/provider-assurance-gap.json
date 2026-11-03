@@ -102,7 +102,11 @@
         "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "ProviderCoverageGapClosed",
+      "targetName": "ProviderCoverageGapClosed",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "The open provider coverage gap was closed once, against a newer or different source. The complete ProviderCoverageGapClosureContent is immutable content. A closure never erases an already admitted risk link."
     },
     {
       "canonical": {
@@ -205,7 +209,11 @@
         "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "ProviderCoverageGapRecorded",
+      "targetName": "ProviderCoverageGapRecorded",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "A provider coverage gap was recorded as the first revision of its own owner. The complete ProviderCoverageGapContent is immutable content; RequestId is the gap id."
     },
     {
       "canonical": {
@@ -432,7 +440,11 @@
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "resolvedIntentSchema": "ProviderRiskLinkIntent",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "ProviderCoverageGapRiskAcceptanceAdmitted",
+      "targetName": "ProviderCoverageGapRiskAcceptanceAdmitted",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "A risk acceptance link was admitted on the open gap at its expected revision. Revision is the gap revision this admission produced; OperationProvenance.Episode carries the admitted RiskId:AcceptanceId pair, which the gap serializes for uniqueness. Intent is the frozen ProviderRiskLinkIntent."
     }
   ]
 }

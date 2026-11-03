@@ -2,12 +2,12 @@
 
 Canonical events: **4**. Complete canonical event and available schema records: [owner event JSON](../data/events/weekly-work-digest.json).
 
-| Event | Kind | Adopted discriminator | Version | Schema fields | Meaning |
-| --- | --- | --- | --- | --- | --- |
-| WeeklyWorkDigestDeliveryRecorded | technical | bdgrz.work.weekly-digest.delivery-recorded | 2 | [Placeholder: schema absent] | Records the durable outcome of one exact weekly digest delivery attempt. |
-| WeeklyWorkDigestDeliveryRequested | technical | bdgrz.work.weekly-digest.delivery-requested | 2 | [Placeholder: schema absent] | Records one deterministic email delivery attempt for a scheduled weekly digest. |
-| WeeklyWorkDigestDeliverySuppressed | technical | bdgrz.work.weekly-digest.delivery-suppressed | 2 | [Placeholder: schema absent] | Records why a scheduled digest was suppressed before an email attempt began. |
-| WeeklyWorkDigestScheduled | technical | bdgrz.work.weekly-digest.scheduled | 1 | [Placeholder: schema absent] | Schedules one member's stable weekly digest identity for delivery processing. |
+| Target event | Selected source name | Kind | Adopted discriminator | Version | Schema fields | Meaning |
+| --- | --- | --- | --- | --- | --- | --- |
+| WeeklyWorkDigestDeliveryRecorded | WeeklyWorkDigestDeliveryRecorded | technical | bdgrz.work.weekly-digest.delivery-recorded | 2 | [Placeholder: schema absent] | Records the durable outcome of one exact weekly digest delivery attempt. |
+| WeeklyWorkDigestDeliveryRequested | WeeklyWorkDigestDeliveryRequested | technical | bdgrz.work.weekly-digest.delivery-requested | 2 | [Placeholder: schema absent] | Records one deterministic email delivery attempt for a scheduled weekly digest. |
+| WeeklyWorkDigestDeliverySuppressed | WeeklyWorkDigestDeliverySuppressed | technical | bdgrz.work.weekly-digest.delivery-suppressed | 2 | [Placeholder: schema absent] | Records why a scheduled digest was suppressed before an email attempt began. |
+| WeeklyWorkDigestScheduled | WeeklyWorkDigestScheduled | technical | bdgrz.work.weekly-digest.scheduled | 1 | [Placeholder: schema absent] | Schedules one member's stable weekly digest identity for delivery processing. |
 
 ## Event details
 
@@ -15,6 +15,9 @@ Canonical events: **4**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | WeeklyWorkDigestDeliveryRecorded |
+| Selected source event name | WeeklyWorkDigestDeliveryRecorded |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:WeeklyWorkDigestDeliveryRecorded |
 | Owner selection | exact declared technical/storage owner |
 | Target concrete type | WeeklyWorkDigestDeliveryRecorded |
@@ -24,7 +27,8 @@ Canonical events: **4**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | Records the durable outcome of one exact weekly digest delivery attempt. |
+| Target meaning | Records the durable outcome of one exact weekly digest delivery attempt. |
+| Selected source meaning | Records the durable outcome of one exact weekly digest delivery attempt. |
 | Meaning source | record summary in src/Compliance.Common/Features/Work/Events/WeeklyWorkDigestDeliveryRecorded.cs |
 
 #### Schema
@@ -45,6 +49,9 @@ Canonical events: **4**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | WeeklyWorkDigestDeliveryRequested |
+| Selected source event name | WeeklyWorkDigestDeliveryRequested |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:WeeklyWorkDigestDeliveryRequested |
 | Owner selection | exact declared technical/storage owner |
 | Target concrete type | WeeklyWorkDigestDeliveryRequested |
@@ -54,7 +61,8 @@ Canonical events: **4**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | Records one deterministic email delivery attempt for a scheduled weekly digest. |
+| Target meaning | Records one deterministic email delivery attempt for a scheduled weekly digest. |
+| Selected source meaning | Records one deterministic email delivery attempt for a scheduled weekly digest. |
 | Meaning source | record summary in src/Compliance.Common/Features/Work/Events/WeeklyWorkDigestDeliveryRequested.cs |
 
 #### Schema
@@ -75,6 +83,9 @@ Canonical events: **4**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | WeeklyWorkDigestDeliverySuppressed |
+| Selected source event name | WeeklyWorkDigestDeliverySuppressed |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:WeeklyWorkDigestDeliverySuppressed |
 | Owner selection | exact declared technical/storage owner |
 | Target concrete type | WeeklyWorkDigestDeliverySuppressed |
@@ -84,7 +95,8 @@ Canonical events: **4**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | Records why a scheduled digest was suppressed before an email attempt began. |
+| Target meaning | Records why a scheduled digest was suppressed before an email attempt began. |
+| Selected source meaning | Records why a scheduled digest was suppressed before an email attempt began. |
 | Meaning source | record summary in src/Compliance.Common/Features/Work/Events/WeeklyWorkDigestDeliverySuppressed.cs |
 
 #### Schema
@@ -105,6 +117,9 @@ Canonical events: **4**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | WeeklyWorkDigestScheduled |
+| Selected source event name | WeeklyWorkDigestScheduled |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:WeeklyWorkDigestScheduled |
 | Owner selection | exact declared technical/storage owner |
 | Target concrete type | WeeklyWorkDigestScheduled |
@@ -114,7 +129,8 @@ Canonical events: **4**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | Schedules one member's stable weekly digest identity for delivery processing. |
+| Target meaning | Schedules one member's stable weekly digest identity for delivery processing. |
+| Selected source meaning | Schedules one member's stable weekly digest identity for delivery processing. |
 | Meaning source | record summary in src/Compliance.Common/Features/Work/Events/WeeklyWorkDigestScheduled.cs |
 
 #### Schema

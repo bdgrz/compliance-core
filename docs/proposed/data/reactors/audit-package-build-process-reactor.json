@@ -1,5 +1,7 @@
 {
-  "root": "AuditPackageBuildProcessReactor",
+  "sourceRoot": "AuditPackageBuildProcessReactor",
+  "targetRoot": "BuildAuditPackageForReviewReactor",
+  "businessReason": "Build the approved audit package as a verified archive that can be delivered for review.",
   "rows": [
     {
       "id": "T031",

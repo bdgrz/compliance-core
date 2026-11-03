@@ -2,11 +2,11 @@
 
 Canonical events: **3**. Complete canonical event and available schema records: [owner event JSON](../data/events/methodology-template-contribution.json).
 
-| Event | Kind | Adopted discriminator | Version | Schema fields | Meaning |
-| --- | --- | --- | --- | --- | --- |
-| MethodologyTemplateContributionAccepted | business | bdgrz.methodologytemplates.methodology-template-contribution-accepted | 3 | [Placeholder: schema absent] | Records the exact accepted contribution content without copying a retained read snapshot. |
-| MethodologyTemplateContributionProposed | business | bdgrz.methodologytemplates.methodology-template-contribution-proposed | 3 | [Placeholder: schema absent] | Records the exact proposed contribution content without copying a retained read snapshot. |
-| MethodologyTemplateContributionReviewed | business | bdgrz.methodologytemplates.methodology-template-contribution-reviewed | 3 | [Placeholder: schema absent] | Records the exact reviewed contribution content without copying a retained read snapshot. |
+| Target event | Selected source name | Kind | Adopted discriminator | Version | Schema fields | Meaning |
+| --- | --- | --- | --- | --- | --- | --- |
+| MethodologyTemplateContributionAccepted | MethodologyTemplateContributionAccepted | business | bdgrz.methodologytemplates.methodology-template-contribution-accepted | 3 | [Placeholder: schema absent] | Records the exact accepted contribution content without copying a retained read snapshot. |
+| MethodologyTemplateContributionProposed | MethodologyTemplateContributionProposed | business | bdgrz.methodologytemplates.methodology-template-contribution-proposed | 3 | [Placeholder: schema absent] | Records the exact proposed contribution content without copying a retained read snapshot. |
+| MethodologyTemplateContributionReviewed | MethodologyTemplateContributionReviewed | business | bdgrz.methodologytemplates.methodology-template-contribution-reviewed | 3 | [Placeholder: schema absent] | Records the exact reviewed contribution content without copying a retained read snapshot. |
 
 ## Event details
 
@@ -14,6 +14,9 @@ Canonical events: **3**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | MethodologyTemplateContributionAccepted |
+| Selected source event name | MethodologyTemplateContributionAccepted |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:MethodologyTemplateContributionAccepted |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | MethodologyTemplateContributionAccepted |
@@ -23,7 +26,8 @@ Canonical events: **3**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | Records the exact accepted contribution content without copying a retained read snapshot. |
+| Target meaning | Records the exact accepted contribution content without copying a retained read snapshot. |
+| Selected source meaning | Records the exact accepted contribution content without copying a retained read snapshot. |
 | Meaning source | record summary in src/Compliance.Common/Features/MethodologyTemplates/Events/MethodologyTemplateContributionAccepted.cs |
 
 #### Schema
@@ -44,6 +48,9 @@ Canonical events: **3**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | MethodologyTemplateContributionProposed |
+| Selected source event name | MethodologyTemplateContributionProposed |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:MethodologyTemplateContributionProposed |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | MethodologyTemplateContributionProposed |
@@ -53,7 +60,8 @@ Canonical events: **3**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | Records the exact proposed contribution content without copying a retained read snapshot. |
+| Target meaning | Records the exact proposed contribution content without copying a retained read snapshot. |
+| Selected source meaning | Records the exact proposed contribution content without copying a retained read snapshot. |
 | Meaning source | record summary in src/Compliance.Common/Features/MethodologyTemplates/Events/MethodologyTemplateContributionProposed.cs |
 
 #### Schema
@@ -74,6 +82,9 @@ Canonical events: **3**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | MethodologyTemplateContributionReviewed |
+| Selected source event name | MethodologyTemplateContributionReviewed |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:MethodologyTemplateContributionReviewed |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | MethodologyTemplateContributionReviewed |
@@ -83,7 +94,8 @@ Canonical events: **3**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | Records the exact reviewed contribution content without copying a retained read snapshot. |
+| Target meaning | Records the exact reviewed contribution content without copying a retained read snapshot. |
+| Selected source meaning | Records the exact reviewed contribution content without copying a retained read snapshot. |
 | Meaning source | record summary in src/Compliance.Common/Features/MethodologyTemplates/Events/MethodologyTemplateContributionReviewed.cs |
 
 #### Schema

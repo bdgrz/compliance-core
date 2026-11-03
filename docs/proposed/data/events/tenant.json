@@ -23,7 +23,11 @@
         "meaning": "A native activation decision bound to the exact authored administrator, email and command identity.",
         "meaningSource": "record summary in src/Compliance.Common/Features/Tenants/Events/TenantActivatedV2.cs"
       },
-      "schema": null
+      "schema": null,
+      "sourceName": "TenantActivatedV2",
+      "targetName": "TenantActivated",
+      "nameDecision": "Names the tenant's completed activation without exposing the implementation version suffix.",
+      "targetMeaning": "A native activation decision bound to the exact authored administrator, email and command identity."
     },
     {
       "canonical": {
@@ -47,7 +51,11 @@
         "meaning": "Records the TenantOffboardingCompleted domain fact for one tenant-owned subject revision.",
         "meaningSource": "record summary in src/Compliance.Common/Features/Tenants/Events/TenantOffboardingCompleted.cs"
       },
-      "schema": null
+      "schema": null,
+      "sourceName": "TenantOffboardingCompleted",
+      "targetName": "TenantOffboardingCompleted",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "Records the TenantOffboardingCompleted domain fact for one tenant-owned subject revision."
     },
     {
       "canonical": {
@@ -71,7 +79,11 @@
         "meaning": "A platform operator started offboarding the tenant with a stated reason, beginning the wind-down of the tenant's service.",
         "meaningSource": "authored 2026-10-29 from src/Compliance.Common/Features/Tenants/Events/TenantOffboardingStartedV2.cs"
       },
-      "schema": null
+      "schema": null,
+      "sourceName": "TenantOffboardingStartedV2",
+      "targetName": "TenantOffboardingStarted",
+      "nameDecision": "Names the start of tenant offboarding without exposing the implementation version suffix.",
+      "targetMeaning": "A platform operator started offboarding the tenant with a stated reason, beginning the wind-down of the tenant's service."
     },
     {
       "canonical": {
@@ -95,7 +107,11 @@
         "meaning": "A platform operator reactivated a suspended tenant with a stated reason, restoring its service.",
         "meaningSource": "authored 2026-10-29 from src/Compliance.Common/Features/Tenants/Events/TenantReactivatedV2.cs"
       },
-      "schema": null
+      "schema": null,
+      "sourceName": "TenantReactivatedV2",
+      "targetName": "TenantReactivated",
+      "nameDecision": "Names the tenant's completed reactivation without exposing the implementation version suffix.",
+      "targetMeaning": "A platform operator reactivated a suspended tenant with a stated reason, restoring its service."
     },
     {
       "canonical": {
@@ -119,7 +135,11 @@
         "meaning": "A tenant was registered with an owner user, name and slug, optionally naming its first administrator and whether activation is required.",
         "meaningSource": "authored 2026-10-29 from src/Compliance.Common/Features/Tenants/Events/TenantRegistered.cs"
       },
-      "schema": null
+      "schema": null,
+      "sourceName": "TenantRegistered",
+      "targetName": "TenantRegistered",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "A tenant was registered with an owner user, name and slug, optionally naming its first administrator and whether activation is required."
     },
     {
       "canonical": {
@@ -143,7 +163,11 @@
         "meaning": "A requested slug change ended because the slug owner refused the new slug.",
         "meaningSource": "record summary in src/Compliance.Common/Features/Tenants/Events/TenantSlugChangeRejected.cs"
       },
-      "schema": null
+      "schema": null,
+      "sourceName": "TenantSlugChangeRejected",
+      "targetName": "TenantSlugChangeRejected",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "A requested slug change ended because the slug owner refused the new slug."
     },
     {
       "canonical": {
@@ -167,7 +191,11 @@
         "meaning": "An active tenant requested changing its slug from the old to a new value; the change stays pending until completed and blocks a second slug change.",
         "meaningSource": "authored 2026-10-29 from src/Compliance.Common/Features/Tenants/Events/TenantSlugChangeRequested.cs"
       },
-      "schema": null
+      "schema": null,
+      "sourceName": "TenantSlugChangeRequested",
+      "targetName": "TenantSlugChangeRequested",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "An active tenant requested changing its slug from the old to a new value; the change stays pending until completed and blocks a second slug change."
     },
     {
       "canonical": {
@@ -191,7 +219,11 @@
         "meaning": "A tenant adopted the slug its slug owner registered. The fact is the native acceptance of the confirming receiver.",
         "meaningSource": "record summary in src/Compliance.Common/Features/Tenants/Events/TenantSlugChanged.cs"
       },
-      "schema": null
+      "schema": null,
+      "sourceName": "TenantSlugChanged",
+      "targetName": "TenantSlugChanged",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "A tenant adopted the slug its slug owner registered. The fact is the native acceptance of the confirming receiver."
     },
     {
       "canonical": {
@@ -215,7 +247,11 @@
         "meaning": "The slug owner registered the tenant's first slug and the tenant confirmed it.",
         "meaningSource": "record summary in src/Compliance.Common/Features/Tenants/Events/TenantSlugConfirmed.cs"
       },
-      "schema": null
+      "schema": null,
+      "sourceName": "TenantSlugConfirmed",
+      "targetName": "TenantSlugConfirmed",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "The slug owner registered the tenant's first slug and the tenant confirmed it."
     },
     {
       "canonical": {
@@ -239,7 +275,11 @@
         "meaning": "The slug owner refused the tenant's first slug.",
         "meaningSource": "record summary in src/Compliance.Common/Features/Tenants/Events/TenantSlugRejected.cs"
       },
-      "schema": null
+      "schema": null,
+      "sourceName": "TenantSlugRejected",
+      "targetName": "TenantSlugRejected",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "The slug owner refused the tenant's first slug."
     },
     {
       "canonical": {
@@ -263,7 +303,11 @@
         "meaning": "The slug owner released the slug the tenant was surrendering.",
         "meaningSource": "record summary in src/Compliance.Common/Features/Tenants/Events/TenantSlugSurrenderConfirmed.cs"
       },
-      "schema": null
+      "schema": null,
+      "sourceName": "TenantSlugSurrenderConfirmed",
+      "targetName": "TenantSlugSurrenderConfirmed",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "The slug owner released the slug the tenant was surrendering."
     },
     {
       "canonical": {
@@ -287,7 +331,11 @@
         "meaning": "The slug owner refused the tenant's surrender, so the tenant keeps the slug.",
         "meaningSource": "record summary in src/Compliance.Common/Features/Tenants/Events/TenantSlugSurrenderFailed.cs"
       },
-      "schema": null
+      "schema": null,
+      "sourceName": "TenantSlugSurrenderFailed",
+      "targetName": "TenantSlugSurrenderFailed",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "The slug owner refused the tenant's surrender, so the tenant keeps the slug."
     },
     {
       "canonical": {
@@ -311,7 +359,11 @@
         "meaning": "A tenant started surrendering its confirmed slug.",
         "meaningSource": "record summary in src/Compliance.Common/Features/Tenants/Events/TenantSlugSurrenderRequested.cs"
       },
-      "schema": null
+      "schema": null,
+      "sourceName": "TenantSlugSurrenderRequested",
+      "targetName": "TenantSlugSurrenderRequested",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "A tenant started surrendering its confirmed slug."
     },
     {
       "canonical": {
@@ -335,7 +387,11 @@
         "meaning": "A platform operator suspended an active tenant with a stated reason, blocking its service until it is reactivated.",
         "meaningSource": "authored 2026-10-29 from src/Compliance.Common/Features/Tenants/Events/TenantSuspendedV2.cs"
       },
-      "schema": null
+      "schema": null,
+      "sourceName": "TenantSuspendedV2",
+      "targetName": "TenantSuspended",
+      "nameDecision": "Names the tenant's completed suspension without exposing the implementation version suffix.",
+      "targetMeaning": "A platform operator suspended an active tenant with a stated reason, blocking its service until it is reactivated."
     }
   ]
 }

@@ -44,7 +44,9 @@
         "line": 2525,
         "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
       },
-      "kind": "creation"
+      "kind": "creation",
+      "sourceName": "CaptureEvidenceArtifact",
+      "targetName": "CaptureEvidenceArtifact"
     },
     {
       "command": "IssueArtifactDownload",
@@ -118,7 +120,9 @@
         "line": 6088,
         "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
       },
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "IssueArtifactDownload",
+      "targetName": "IssueArtifactDownload"
     },
     {
       "command": "RecordEvidenceArtifactInspection",
@@ -184,7 +188,9 @@
           "process_reply": 0.32
         },
         "date": "2026-10-29"
-      }
+      },
+      "sourceName": "RecordEvidenceArtifactInspection",
+      "targetName": "RecordEvidenceArtifactInspection"
     },
     {
       "command": "ReleaseEvidenceArtifactQuarantine",
@@ -240,7 +246,9 @@
         "line": 10805,
         "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
       },
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "ReleaseEvidenceArtifactQuarantine",
+      "targetName": "ReleaseEvidenceArtifactQuarantine"
     },
     {
       "command": "SettleArtifactDownloadAvailabilityUse",
@@ -312,7 +320,9 @@
       "source": {
         "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
         "recorded": "2026-10-29"
-      }
+      },
+      "sourceName": "SettleArtifactDownloadAvailabilityUse",
+      "targetName": "CloseArtifactDownloadAvailabilityAuthorization"
     }
   ],
   "sourceContractEvidence": []

@@ -80,7 +80,9 @@
         "line": 843,
         "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
       },
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "ApproveBoundary",
+      "targetName": "ApproveBoundary"
     },
     {
       "command": "CreateBoundary",
@@ -131,7 +133,9 @@
         "line": 3524,
         "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
       },
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "CreateBoundary",
+      "targetName": "CreateBoundary"
     },
     {
       "command": "DiscardBoundaryDraft",
@@ -192,7 +196,9 @@
         "line": 5117,
         "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
       },
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "DiscardBoundaryDraft",
+      "targetName": "DiscardBoundaryDraft"
     },
     {
       "command": "ProposeBoundarySuccessor",
@@ -253,7 +259,9 @@
         "line": 6661,
         "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
       },
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "ProposeBoundarySuccessor",
+      "targetName": "ProposeBoundarySuccessor"
     },
     {
       "command": "ReviewBoundary",
@@ -324,7 +332,9 @@
         "line": 11772,
         "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
       },
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "ReviewBoundary",
+      "targetName": "ReviewBoundary"
     },
     {
       "command": "ReviseBoundaryDraft",
@@ -379,7 +389,9 @@
         "line": 12449,
         "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
       },
-      "kind": "command"
+      "kind": "command",
+      "sourceName": "ReviseBoundaryDraft",
+      "targetName": "ReviseBoundaryDraft"
     }
   ],
   "sourceContractEvidence": []

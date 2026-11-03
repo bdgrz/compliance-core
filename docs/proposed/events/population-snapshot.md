@@ -2,16 +2,19 @@
 
 Canonical events: **1**. Complete canonical event and available schema records: [owner event JSON](../data/events/population-snapshot.json).
 
-| Event | Kind | Adopted discriminator | Version | Schema fields | Meaning |
-| --- | --- | --- | --- | --- | --- |
-| PopulationSnapshotFrozen | business | bdgrz.snapshot.population.frozen | 1 | [Placeholder: schema absent] | An immutable population snapshot: canonical, key-ordered rows whose content identity is the domain-separated population SHA-256. Amendments are new snapshots linked to the original. A population that fits one storage chunk keeps its rows inline. A larger population keeps no rows here: StoredChunkCount chunk events hold them, and StorageManifestSha256 binds those chunks in order. |
+| Target event | Selected source name | Kind | Adopted discriminator | Version | Schema fields | Meaning |
+| --- | --- | --- | --- | --- | --- | --- |
+| PopulationSnapshotFinalized | PopulationSnapshotFrozen | business | bdgrz.snapshot.population.frozen | 1 | [Placeholder: schema absent] | An immutable population snapshot: canonical, key-ordered rows whose content identity is the domain-separated population SHA-256. Amendments are new snapshots linked to the original. A population that fits one storage chunk keeps its rows inline. A larger population keeps no rows here: StoredChunkCount chunk events hold them, and StorageManifestSha256 binds those chunks in order. |
 
 ## Event details
 
-### PopulationSnapshotFrozen
+### PopulationSnapshotFinalized
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | PopulationSnapshotFinalized |
+| Selected source event name | PopulationSnapshotFrozen |
+| Name decision | Names the complete, immutable population snapshot that is ready for later compliance work. |
 | Canonical semantic key | event:PopulationSnapshotFrozen |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | PopulationSnapshotFrozen |
@@ -21,7 +24,8 @@ Canonical events: **1**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | An immutable population snapshot: canonical, key-ordered rows whose content identity is the domain-separated population SHA-256. Amendments are new snapshots linked to the original. A population that fits one storage chunk keeps its rows inline. A larger population keeps no rows here: StoredChunkCount chunk events hold them, and StorageManifestSha256 binds those chunks in order. |
+| Target meaning | An immutable population snapshot: canonical, key-ordered rows whose content identity is the domain-separated population SHA-256. Amendments are new snapshots linked to the original. A population that fits one storage chunk keeps its rows inline. A larger population keeps no rows here: StoredChunkCount chunk events hold them, and StorageManifestSha256 binds those chunks in order. |
+| Selected source meaning | An immutable population snapshot: canonical, key-ordered rows whose content identity is the domain-separated population SHA-256. Amendments are new snapshots linked to the original. A population that fits one storage chunk keeps its rows inline. A larger population keeps no rows here: StoredChunkCount chunk events hold them, and StorageManifestSha256 binds those chunks in order. |
 | Meaning source | record summary in src/Compliance.Common/Features/Snapshots/Events/PopulationSnapshotFrozen.cs |
 
 #### Schema

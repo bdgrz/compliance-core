@@ -24,26 +24,26 @@
 | Command | Kind | Identity field |
 | --- | --- | --- |
 | [CompleteCorrectiveAction](../commands/corrective-action.md#completecorrectiveaction) | http | CommandId |
-| [MaterializeCorrectiveAction](../commands/corrective-action.md#materializecorrectiveaction) | receiver | CommandId |
-| [AuthorizeCorrectiveActionFindingClosureUse](../commands/corrective-action.md#authorizecorrectiveactionfindingclosureuse) | receiver | CommandId |
-| [SettleCorrectiveActionFindingClosureUse](../commands/corrective-action.md#settlecorrectiveactionfindingclosureuse) | receiver | CommandId |
+| [CreateCorrectiveAction](../commands/corrective-action.md#createcorrectiveaction) | receiver | CommandId |
+| [AuthorizeCorrectiveActionFindingClosure](../commands/corrective-action.md#authorizecorrectiveactionfindingclosure) | receiver | CommandId |
+| [CloseCorrectiveActionFindingClosureAuthorization](../commands/corrective-action.md#closecorrectiveactionfindingclosureauthorization) | receiver | CommandId |
 
 ## Events
 
 | Event | Discriminator | Version |
 | --- | --- | --- |
-| [CorrectiveActionAddedV2](../events/corrective-action.md#correctiveactionaddedv2) | bdgrz.finding.corrective_action.added | 3 |
-| [CorrectiveActionCompletedV2](../events/corrective-action.md#correctiveactioncompletedv2) | bdgrz.finding.corrective_action.completed | 3 |
-| [CorrectiveActionFindingClosureUseAuthorized](../events/corrective-action.md#correctiveactionfindingclosureuseauthorized) | bdgrz.corrective-action.corrective-action-finding-closure-use-authorized | 1 |
-| [CorrectiveActionFindingClosureUseSettled](../events/corrective-action.md#correctiveactionfindingclosureusesettled) | bdgrz.corrective-action.corrective-action-finding-closure-use-settled | 1 |
+| [CorrectiveActionAdded](../events/corrective-action.md#correctiveactionadded) | bdgrz.finding.corrective_action.added | 3 |
+| [CorrectiveActionCompleted](../events/corrective-action.md#correctiveactioncompleted) | bdgrz.finding.corrective_action.completed | 3 |
+| [CorrectiveActionFindingClosureAuthorized](../events/corrective-action.md#correctiveactionfindingclosureauthorized) | bdgrz.corrective-action.corrective-action-finding-closure-use-authorized | 1 |
+| [CorrectiveActionFindingClosureAuthorizationClosed](../events/corrective-action.md#correctiveactionfindingclosureauthorizationclosed) | bdgrz.corrective-action.corrective-action-finding-closure-use-settled | 1 |
 
 ## Cross-owner flows
 
 | Row | Kind | Source owner | Target owner | Command |
 | --- | --- | --- | --- | --- |
-| [T036](../reactors/corrective-action-materialization-reactor.md#t036) | reaction_or_regular_process_stage | FindingAggregate | CorrectiveAction | MaterializeCorrectiveAction |
-| [T063](../reactors/finding-closure-reactor.md#t063) | reaction_or_regular_process_stage | FindingAggregate | CorrectiveAction | AuthorizeCorrectiveActionFindingClosureUse |
-| [T064](../reactors/finding-closure-reactor.md#t064) | reaction_or_regular_process_stage | FindingAggregate | CorrectiveAction | SettleCorrectiveActionFindingClosureUse |
+| [T036](../reactors/corrective-action-materialization-reactor.md#t036) | reaction_or_regular_process_stage | FindingAggregate | CorrectiveAction | CreateCorrectiveAction |
+| [T063](../reactors/finding-closure-reactor.md#t063) | reaction_or_regular_process_stage | FindingAggregate | CorrectiveAction | AuthorizeCorrectiveActionFindingClosure |
+| [T064](../reactors/finding-closure-reactor.md#t064) | reaction_or_regular_process_stage | FindingAggregate | CorrectiveAction | CloseCorrectiveActionFindingClosureAuthorization |
 
 ## Product rules
 

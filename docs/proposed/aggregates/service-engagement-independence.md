@@ -38,7 +38,7 @@
 | [CompleteServiceEngagementAcceptance](../commands/service-engagement-independence.md#completeserviceengagementacceptance) | receiver | CommandId |
 | [CompleteServiceEngagementStaffAssignment](../commands/service-engagement-independence.md#completeserviceengagementstaffassignment) | receiver | CommandId |
 | [AuthorizeEngagementPracticeCommitments](../commands/service-engagement-independence.md#authorizeengagementpracticecommitments) | receiver | CommandId |
-| [SettleEngagementPersonalDecision](../commands/service-engagement-independence.md#settleengagementpersonaldecision) | receiver | CommandId |
+| [CloseEngagementPersonalDecision](../commands/service-engagement-independence.md#closeengagementpersonaldecision) | receiver | CommandId |
 | [AuthorizeEngagementPersonalDecision](../commands/service-engagement-independence.md#authorizeengagementpersonaldecision) | receiver | CommandId |
 
 ## Events
@@ -50,7 +50,7 @@
 | [EngagementPersonalDecisionAdmitted](../events/service-engagement-independence.md#engagementpersonaldecisionadmitted) | bdgrz.service-engagement-independence.engagement-personal-decision-admitted | 1 |
 | [EngagementPersonalDecisionAuthorized](../events/service-engagement-independence.md#engagementpersonaldecisionauthorized) | bdgrz.service-engagement-independence.engagement-personal-decision-authorized | 1 |
 | [EngagementPersonalDecisionCanceled](../events/service-engagement-independence.md#engagementpersonaldecisioncanceled) | bdgrz.service-engagement-independence.engagement-personal-decision-canceled | 1 |
-| [EngagementPersonalDecisionMaterialized](../events/service-engagement-independence.md#engagementpersonaldecisionmaterialized) | bdgrz.service-engagement-independence.engagement-personal-decision-materialized | 1 |
+| [EngagementPersonalDecisionRecorded](../events/service-engagement-independence.md#engagementpersonaldecisionrecorded) | bdgrz.service-engagement-independence.engagement-personal-decision-materialized | 1 |
 | [EngagementPracticeCommitmentsAuthorized](../events/service-engagement-independence.md#engagementpracticecommitmentsauthorized) | bdgrz.service-engagement-independence.engagement-practice-commitments-authorized | 1 |
 | [ServiceEngagementAcceptanceRecorded](../events/service-engagement-independence.md#serviceengagementacceptancerecorded) | bdgrz.service-engagement.acceptance-recorded | 1 |
 | [ServiceEngagementAcceptanceRejected](../events/service-engagement-independence.md#serviceengagementacceptancerejected) | bdgrz.service-engagement-independence.service-engagement-acceptance-rejected | 1 |
@@ -66,27 +66,27 @@
 
 | Row | Kind | Source owner | Target owner | Command |
 | --- | --- | --- | --- | --- |
-| [T004](../reactors/engagement-acceptance-reactor.md#t004) | reaction_or_regular_process_stage | ServiceEngagementIndependence | ClientServiceIndependence | AcquireEngagementServiceEpoch |
+| [T004](../reactors/engagement-acceptance-reactor.md#t004) | reaction_or_regular_process_stage | ServiceEngagementIndependence | ClientServiceIndependence | ReserveEngagementServiceHistory |
 | [T005](../reactors/engagement-acceptance-reactor.md#t005) | reaction_or_regular_process_stage | ServiceEngagementIndependence | PracticeIndependenceCommitment | CommitPracticeIndependence |
 | [T006](../reactors/engagement-acceptance-reactor.md#t006) | reaction_or_regular_process_stage | ServiceEngagementIndependence | ServiceEngagementIndependence | CompleteServiceEngagementAcceptance |
-| [T007](../reactors/engagement-acceptance-reactor.md#t007) | reaction_or_regular_process_stage | ServiceEngagementIndependence | ClientServiceIndependence | ReleaseEngagementServiceEpoch |
+| [T007](../reactors/engagement-acceptance-reactor.md#t007) | reaction_or_regular_process_stage | ServiceEngagementIndependence | ClientServiceIndependence | ReleaseEngagementServiceHistoryReservation |
 | [T082](../reactors/engagement-acceptance-reactor.md#t082) | reaction_or_regular_process_stage | ServiceEngagementIndependence | ServiceEngagementIndependence | CompleteServiceEngagementStaffAssignment |
 | [T083](../reactors/engagement-acceptance-reactor.md#t083) | reaction_or_regular_process_stage | ServiceEngagementIndependence | PracticeIndependenceCommitment | ReservePracticeIndependence |
 | [T084](../reactors/engagement-acceptance-reactor.md#t084) | reaction_or_regular_process_stage | ServiceEngagementIndependence | ServiceEngagementIndependence | AuthorizeEngagementPracticeCommitments |
-| [T085](../reactors/engagement-acceptance-reactor.md#t085) | reaction_or_regular_process_stage | ServiceEngagementIndependence | PracticeIndependenceCommitment | SettlePracticeIndependenceReservation |
-| [T089](../reactors/engagement-acceptance-reactor.md#t089) | reaction_or_regular_process_stage | ServiceEngagementIndependence | FirmStaffRecord | AuthorizeFirmStaffRecordEngagementUse |
-| [T090](../reactors/engagement-acceptance-reactor.md#t090) | reaction_or_regular_process_stage | ServiceEngagementIndependence | FirmStaffRecord | SettleFirmStaffRecordEngagementUse |
-| [T091](../reactors/engagement-acceptance-reactor.md#t091) | reaction_or_regular_process_stage | ServiceEngagementIndependence | FirmProfessionalDutyDesignation | AuthorizeFirmProfessionalDutyDesignationEngagementUse |
-| [T092](../reactors/engagement-acceptance-reactor.md#t092) | reaction_or_regular_process_stage | ServiceEngagementIndependence | FirmProfessionalDutyDesignation | SettleFirmProfessionalDutyDesignationEngagementUse |
-| [T093](../reactors/engagement-acceptance-reactor.md#t093) | reaction_or_regular_process_stage | ServiceEngagementIndependence | IndependenceRuleCatalog | AuthorizeIndependenceRuleCatalogEngagementUse |
-| [T094](../reactors/engagement-acceptance-reactor.md#t094) | reaction_or_regular_process_stage | ServiceEngagementIndependence | IndependenceRuleCatalog | SettleIndependenceRuleCatalogEngagementUse |
-| [T095](../reactors/engagement-acceptance-reactor.md#t095) | reaction_or_regular_process_stage | ServiceEngagementIndependence | IndependenceRuleRatificationCatalog | AuthorizeIndependenceRuleRatificationCatalogEngagementUse |
-| [T096](../reactors/engagement-acceptance-reactor.md#t096) | reaction_or_regular_process_stage | ServiceEngagementIndependence | IndependenceRuleRatificationCatalog | SettleIndependenceRuleRatificationCatalogEngagementUse |
-| [T107](../reactors/engagement-personal-decision-reactor.md#t107) | reaction_or_regular_process_stage | ServiceEngagementIndependence | ClientServiceIndependence | AuthorizeClientServicePersonalDecisionUse |
-| [T108](../reactors/engagement-personal-decision-reactor.md#t108) | reaction_or_regular_process_stage | ServiceEngagementIndependence | EngagementManagementAcknowledgement | MaterializeEngagementManagementAcknowledgement |
-| [T109](../reactors/engagement-personal-decision-reactor.md#t109) | reaction_or_regular_process_stage | ServiceEngagementIndependence | PartnerIndependenceDecision | MaterializePartnerIndependenceDecision |
-| [T110](../reactors/engagement-personal-decision-reactor.md#t110) | reaction_or_regular_process_stage | EngagementManagementAcknowledgement\|PartnerIndependenceDecision | ServiceEngagementIndependence | SettleEngagementPersonalDecision |
-| [T111](../reactors/engagement-personal-decision-reactor.md#t111) | reaction_or_regular_process_stage | ServiceEngagementIndependence | ClientServiceIndependence | SettleClientServicePersonalDecisionUse |
+| [T085](../reactors/engagement-acceptance-reactor.md#t085) | reaction_or_regular_process_stage | ServiceEngagementIndependence | PracticeIndependenceCommitment | ClosePracticeIndependenceReservation |
+| [T089](../reactors/engagement-acceptance-reactor.md#t089) | reaction_or_regular_process_stage | ServiceEngagementIndependence | FirmStaffRecord | AuthorizeFirmStaffRecordEngagement |
+| [T090](../reactors/engagement-acceptance-reactor.md#t090) | reaction_or_regular_process_stage | ServiceEngagementIndependence | FirmStaffRecord | CloseFirmStaffRecordEngagementAuthorization |
+| [T091](../reactors/engagement-acceptance-reactor.md#t091) | reaction_or_regular_process_stage | ServiceEngagementIndependence | FirmProfessionalDutyDesignation | AuthorizeFirmProfessionalDutyDesignationEngagement |
+| [T092](../reactors/engagement-acceptance-reactor.md#t092) | reaction_or_regular_process_stage | ServiceEngagementIndependence | FirmProfessionalDutyDesignation | CloseFirmProfessionalDutyDesignationEngagementAuthorization |
+| [T093](../reactors/engagement-acceptance-reactor.md#t093) | reaction_or_regular_process_stage | ServiceEngagementIndependence | IndependenceRuleCatalog | AuthorizeIndependenceRuleCatalogEngagement |
+| [T094](../reactors/engagement-acceptance-reactor.md#t094) | reaction_or_regular_process_stage | ServiceEngagementIndependence | IndependenceRuleCatalog | CloseIndependenceRuleCatalogEngagementAuthorization |
+| [T095](../reactors/engagement-acceptance-reactor.md#t095) | reaction_or_regular_process_stage | ServiceEngagementIndependence | IndependenceRuleRatificationCatalog | AuthorizeIndependenceRuleRatificationCatalogEngagement |
+| [T096](../reactors/engagement-acceptance-reactor.md#t096) | reaction_or_regular_process_stage | ServiceEngagementIndependence | IndependenceRuleRatificationCatalog | CloseIndependenceRuleRatificationCatalogEngagementAuthorization |
+| [T107](../reactors/engagement-personal-decision-reactor.md#t107) | reaction_or_regular_process_stage | ServiceEngagementIndependence | ClientServiceIndependence | AuthorizeClientServicePersonalDecision |
+| [T108](../reactors/engagement-personal-decision-reactor.md#t108) | reaction_or_regular_process_stage | ServiceEngagementIndependence | EngagementManagementAcknowledgement | RecordEngagementManagementAcknowledgement |
+| [T109](../reactors/engagement-personal-decision-reactor.md#t109) | reaction_or_regular_process_stage | ServiceEngagementIndependence | PartnerIndependenceDecision | RecordPartnerIndependenceEvaluation |
+| [T110](../reactors/engagement-personal-decision-reactor.md#t110) | reaction_or_regular_process_stage | EngagementManagementAcknowledgement\|PartnerIndependenceDecision | ServiceEngagementIndependence | CloseEngagementPersonalDecision |
+| [T111](../reactors/engagement-personal-decision-reactor.md#t111) | reaction_or_regular_process_stage | ServiceEngagementIndependence | ClientServiceIndependence | CloseClientServicePersonalDecisionAuthorization |
 | [T112](../reactors/engagement-personal-decision-reactor.md#t112) | reaction_or_regular_process_stage | ServiceEngagementIndependence | ServiceEngagementIndependence | AuthorizeEngagementPersonalDecision |
 | [S017](../reactors/firm-staff-status-reevaluation-reactor.md#s017) | business_receiver | FirmStaffRecord | ServiceEngagementIndependence | RecordDirectoryIndependenceReevaluation |
 | [S018](../reactors/accepted-staff-directory-reconciliation-reactor.md#s018) | business_receiver | ServiceEngagementIndependence | ServiceEngagementIndependence | RecordDirectoryIndependenceReevaluation |

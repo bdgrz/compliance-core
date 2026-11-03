@@ -1,5 +1,3 @@
-> Captured from `docs/product/query-and-view-model-list.md`; internal links have been rebased.
-
 # Query and view-model inventory
 
 This is the requirement-backed read-layer plan for the committed product scope. It names query operations and their feature-owned response views. A query is a read, list, preview, or derived assessment; a POST transport does not make a read a command. The inventory tracks required contracts and implementation coverage separately: a source file alone does not prove a handler, projection, API route, or authorization policy exists.

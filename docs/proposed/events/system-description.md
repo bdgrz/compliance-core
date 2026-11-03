@@ -2,16 +2,16 @@
 
 Canonical events: **8**. Complete canonical event and available schema records: [owner event JSON](../data/events/system-description.json).
 
-| Event | Kind | Adopted discriminator | Version | Schema fields | Meaning |
-| --- | --- | --- | --- | --- | --- |
-| SystemDescriptionApproved | business | bdgrz.systemdescription.system-description-approved | 2 | 9 | A system description version was approved by a named member, making it the approved description for the program. |
-| SystemDescriptionBound | business | bdgrz.systemdescription.system-description-bound | 2 | 9 | The approved system description version was bound to the examination snapshot it describes, fixing which examination the description supports. |
-| SystemDescriptionDraftCreated | business | bdgrz.systemdescription.system-description-draft-created | 2 | 9 | A system description draft was created for a program with its first authored version by a named member, awaiting review. |
-| SystemDescriptionDraftRevised | business | bdgrz.systemdescription.system-description-draft-revised | 2 | 9 | A system description draft was revised into a new version by a named member, awaiting review. |
-| SystemDescriptionNoChangeRecorded | business | bdgrz.systemdescription.system-description-no-change-recorded | 2 | 9 | A non-material change in the period was recorded with a reasoned decision by a named member that the system description needs no update. |
-| SystemDescriptionReviewed | business | bdgrz.systemdescription.system-description-reviewed | 2 | 9 | A system description version was reviewed with a decision by a named reviewer. |
-| SystemDescriptionSourcesBound | business | bdgrz.systemdescription.system-description-sources-bound | 2 | 9 | A new system description draft version was reconciled against its current sources by a named member, recording the sources the description now relies on. |
-| SystemDescriptionSuccessorProposed | business | bdgrz.systemdescription.system-description-successor-proposed | 2 | 9 | A successor draft of an approved system description was proposed with a new version by a named member, awaiting review. |
+| Target event | Selected source name | Kind | Adopted discriminator | Version | Schema fields | Meaning |
+| --- | --- | --- | --- | --- | --- | --- |
+| SystemDescriptionApproved | SystemDescriptionApproved | business | bdgrz.systemdescription.system-description-approved | 2 | 9 | A system description version was approved by a named member, making it the approved description for the program. |
+| SystemDescriptionLinkedToExamination | SystemDescriptionBound | business | bdgrz.systemdescription.system-description-bound | 2 | 9 | The approved system description version was bound to the examination snapshot it describes, fixing which examination the description supports. |
+| SystemDescriptionDraftCreated | SystemDescriptionDraftCreated | business | bdgrz.systemdescription.system-description-draft-created | 2 | 9 | A system description draft was created for a program with its first authored version by a named member, awaiting review. |
+| SystemDescriptionDraftRevised | SystemDescriptionDraftRevised | business | bdgrz.systemdescription.system-description-draft-revised | 2 | 9 | A system description draft was revised into a new version by a named member, awaiting review. |
+| SystemDescriptionNoChangeRecorded | SystemDescriptionNoChangeRecorded | business | bdgrz.systemdescription.system-description-no-change-recorded | 2 | 9 | A non-material change in the period was recorded with a reasoned decision by a named member that the system description needs no update. |
+| SystemDescriptionReviewed | SystemDescriptionReviewed | business | bdgrz.systemdescription.system-description-reviewed | 2 | 9 | A system description version was reviewed with a decision by a named reviewer. |
+| SystemDescriptionSourcesRecorded | SystemDescriptionSourcesBound | business | bdgrz.systemdescription.system-description-sources-bound | 2 | 9 | A new system description draft version was reconciled against its current sources by a named member, recording the sources the description now relies on. |
+| SystemDescriptionSuccessorProposed | SystemDescriptionSuccessorProposed | business | bdgrz.systemdescription.system-description-successor-proposed | 2 | 9 | A successor draft of an approved system description was proposed with a new version by a named member, awaiting review. |
 
 ## Event details
 
@@ -19,6 +19,9 @@ Canonical events: **8**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | SystemDescriptionApproved |
+| Selected source event name | SystemDescriptionApproved |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:SystemDescriptionApproved |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | SystemDescriptionApproved |
@@ -28,7 +31,8 @@ Canonical events: **8**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | `{"discriminator":"bdgrz.systemdescription.system-description-approved","version":1}` |
-| Meaning | A system description version was approved by a named member, making it the approved description for the program. |
+| Target meaning | A system description version was approved by a named member, making it the approved description for the program. |
+| Selected source meaning | A system description version was approved by a named member, making it the approved description for the program. |
 | Meaning source | authored 2026-10-29 from src/Compliance.Common/Features/SystemDescription/Events/SystemDescriptionApproved.cs |
 
 #### Selected schema and implementation evidence
@@ -82,10 +86,13 @@ Canonical events: **8**. Complete canonical event and available schema records: 
 | [S020](../reactors/system-description-decision-reactor.md#s020) | physical root, logical prerequisite | SystemDescription | RecordSignificantChangeSystemDescriptionDecision | SignificantChange |
 | [S021](../reactors/system-description-decision-reactor.md#s021) | physical root | SystemDescription | RecordComplianceIncidentSystemDescriptionDecision | ComplianceIncident |
 
-### SystemDescriptionBound
+### SystemDescriptionLinkedToExamination
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | SystemDescriptionLinkedToExamination |
+| Selected source event name | SystemDescriptionBound |
+| Name decision | Names which approved system description version supports the exact examination snapshot. |
 | Canonical semantic key | event:SystemDescriptionBound |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | SystemDescriptionBound |
@@ -95,7 +102,8 @@ Canonical events: **8**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | `{"discriminator":"bdgrz.systemdescription.system-description-bound","version":1}` |
-| Meaning | The approved system description version was bound to the examination snapshot it describes, fixing which examination the description supports. |
+| Target meaning | The approved system description version was bound to the examination snapshot it describes, fixing which examination the description supports. |
+| Selected source meaning | The approved system description version was bound to the examination snapshot it describes, fixing which examination the description supports. |
 | Meaning source | authored 2026-10-29 from src/Compliance.Common/Features/SystemDescription/Events/SystemDescriptionBound.cs |
 
 #### Selected schema and implementation evidence
@@ -150,6 +158,9 @@ Canonical events: **8**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | SystemDescriptionDraftCreated |
+| Selected source event name | SystemDescriptionDraftCreated |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:SystemDescriptionDraftCreated |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | SystemDescriptionDraftCreated |
@@ -159,7 +170,8 @@ Canonical events: **8**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | `{"discriminator":"bdgrz.systemdescription.system-description-draft-created","version":1}` |
-| Meaning | A system description draft was created for a program with its first authored version by a named member, awaiting review. |
+| Target meaning | A system description draft was created for a program with its first authored version by a named member, awaiting review. |
+| Selected source meaning | A system description draft was created for a program with its first authored version by a named member, awaiting review. |
 | Meaning source | authored 2026-10-29 from src/Compliance.Common/Features/SystemDescription/Events/SystemDescriptionDraftCreated.cs |
 
 #### Selected schema and implementation evidence
@@ -214,6 +226,9 @@ Canonical events: **8**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | SystemDescriptionDraftRevised |
+| Selected source event name | SystemDescriptionDraftRevised |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:SystemDescriptionDraftRevised |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | SystemDescriptionDraftRevised |
@@ -223,7 +238,8 @@ Canonical events: **8**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | `{"discriminator":"bdgrz.systemdescription.system-description-draft-revised","version":1}` |
-| Meaning | A system description draft was revised into a new version by a named member, awaiting review. |
+| Target meaning | A system description draft was revised into a new version by a named member, awaiting review. |
+| Selected source meaning | A system description draft was revised into a new version by a named member, awaiting review. |
 | Meaning source | authored 2026-10-29 from src/Compliance.Common/Features/SystemDescription/Events/SystemDescriptionDraftRevised.cs |
 
 #### Selected schema and implementation evidence
@@ -278,6 +294,9 @@ Canonical events: **8**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | SystemDescriptionNoChangeRecorded |
+| Selected source event name | SystemDescriptionNoChangeRecorded |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:SystemDescriptionNoChangeRecorded |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | SystemDescriptionNoChangeRecorded |
@@ -287,7 +306,8 @@ Canonical events: **8**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | `{"discriminator":"bdgrz.systemdescription.system-description-no-change-recorded","version":1}` |
-| Meaning | A non-material change in the period was recorded with a reasoned decision by a named member that the system description needs no update. |
+| Target meaning | A non-material change in the period was recorded with a reasoned decision by a named member that the system description needs no update. |
+| Selected source meaning | A non-material change in the period was recorded with a reasoned decision by a named member that the system description needs no update. |
 | Meaning source | authored 2026-10-29 from src/Compliance.Common/Features/SystemDescription/Events/SystemDescriptionNoChangeRecorded.cs |
 
 #### Selected schema and implementation evidence
@@ -345,6 +365,9 @@ Canonical events: **8**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | SystemDescriptionReviewed |
+| Selected source event name | SystemDescriptionReviewed |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:SystemDescriptionReviewed |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | SystemDescriptionReviewed |
@@ -354,7 +377,8 @@ Canonical events: **8**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | `{"discriminator":"bdgrz.systemdescription.system-description-reviewed","version":1}` |
-| Meaning | A system description version was reviewed with a decision by a named reviewer. |
+| Target meaning | A system description version was reviewed with a decision by a named reviewer. |
+| Selected source meaning | A system description version was reviewed with a decision by a named reviewer. |
 | Meaning source | authored 2026-10-29 from src/Compliance.Common/Features/SystemDescription/Events/SystemDescriptionReviewed.cs |
 
 #### Selected schema and implementation evidence
@@ -405,10 +429,13 @@ Canonical events: **8**. Complete canonical event and available schema records: 
 
 [Placeholder: no selected choreography row names this event as root, prerequisite, or emitted fact.]
 
-### SystemDescriptionSourcesBound
+### SystemDescriptionSourcesRecorded
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | SystemDescriptionSourcesRecorded |
+| Selected source event name | SystemDescriptionSourcesBound |
+| Name decision | Names the current sources a member reconciled against a system description draft. |
 | Canonical semantic key | event:SystemDescriptionSourcesBound |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | SystemDescriptionSourcesBound |
@@ -418,7 +445,8 @@ Canonical events: **8**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | `{"discriminator":"bdgrz.systemdescription.system-description-sources-bound","version":1}` |
-| Meaning | A new system description draft version was reconciled against its current sources by a named member, recording the sources the description now relies on. |
+| Target meaning | A new system description draft version was reconciled against its current sources by a named member, recording the sources the description now relies on. |
+| Selected source meaning | A new system description draft version was reconciled against its current sources by a named member, recording the sources the description now relies on. |
 | Meaning source | authored 2026-10-29 from src/Compliance.Common/Features/SystemDescription/Events/SystemDescriptionSourcesBound.cs |
 
 #### Selected schema and implementation evidence
@@ -473,6 +501,9 @@ Canonical events: **8**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | SystemDescriptionSuccessorProposed |
+| Selected source event name | SystemDescriptionSuccessorProposed |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:SystemDescriptionSuccessorProposed |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | SystemDescriptionSuccessorProposed |
@@ -482,7 +513,8 @@ Canonical events: **8**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | `{"discriminator":"bdgrz.systemdescription.system-description-successor-proposed","version":1}` |
-| Meaning | A successor draft of an approved system description was proposed with a new version by a named member, awaiting review. |
+| Target meaning | A successor draft of an approved system description was proposed with a new version by a named member, awaiting review. |
+| Selected source meaning | A successor draft of an approved system description was proposed with a new version by a named member, awaiting review. |
 | Meaning source | authored 2026-10-29 from src/Compliance.Common/Features/SystemDescription/Events/SystemDescriptionSuccessorProposed.cs |
 
 #### Selected schema and implementation evidence

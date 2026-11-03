@@ -39,7 +39,9 @@
         "line": 1655,
         "sha256": "f1d549ed0879c816cb26e86879f8fa658dab0a8acbf7c591e4d4aed40483f8ae"
       },
-      "kind": "command"
+      "kind": "command",
+      "sourceName": "RejectIdentityRecoveryPreparation",
+      "targetName": "RejectIdentityRecoveryPreparation"
     },
     {
       "command": "CompleteAcceptedIdentityRecovery",
@@ -125,7 +127,9 @@
       "source": {
         "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
         "recorded": "2026-10-29"
-      }
+      },
+      "sourceName": "CompleteAcceptedIdentityRecovery",
+      "targetName": "CompleteAcceptedIdentityRecovery"
     },
     {
       "command": "MaterializeIdentityRecoveryPreparation",
@@ -216,7 +220,9 @@
       "source": {
         "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
         "recorded": "2026-10-29"
-      }
+      },
+      "sourceName": "MaterializeIdentityRecoveryPreparation",
+      "targetName": "PrepareAccountRecovery"
     },
     {
       "command": "AcceptProtectedIdentityRecovery",
@@ -292,7 +298,9 @@
       "source": {
         "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
         "recorded": "2026-10-29"
-      }
+      },
+      "sourceName": "AcceptProtectedIdentityRecovery",
+      "targetName": "AcceptProtectedIdentityRecovery"
     }
   ],
   "sourceContractEvidence": []

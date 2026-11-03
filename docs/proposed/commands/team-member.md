@@ -2,14 +2,14 @@
 
 Selected command contracts: **6**. Complete selected contracts and companion source evidence: [owner command JSON](../data/commands/team-member.json).
 
-| Command | Kind | Identity | Fields | HTTP routes |
-| --- | --- | --- | --- | --- |
-| AssignTeamMember | http | CommandId | 7 | {"method":"PUT","path":"/api/v1/tenants/{tenant_id}/teams/{team_id}/members/{member_id}/{command_id}"} |
-| RemoveTeamMember | http | CommandId | 7 | {"method":"PUT","path":"/api/v1/tenants/{tenant_id}/members/{member_id}/team-removals/{command_id}"} |
-| ApplyAdministratorAssignmentRestoration | receiver | CommandId | 11 | [Placeholder: value not recorded] |
-| ApplyAdministratorAssignmentWithdrawal | receiver | CommandId | 10 | [Placeholder: value not recorded] |
-| ApplyNeutralAdministratorAssignmentMutation | receiver | CommandId | 10 | [Placeholder: value not recorded] |
-| CleanupRetiredMembershipRelationship | reactor | CommandId | 9 | [Placeholder: value not recorded] |
+| Target command | Selected source name | Kind | Identity | Fields | HTTP routes |
+| --- | --- | --- | --- | --- | --- |
+| AssignTeamMember | AssignTeamMember | http | CommandId | 7 | {"method":"PUT","path":"/api/v1/tenants/{tenant_id}/teams/{team_id}/members/{member_id}/{command_id}"} |
+| RemoveTeamMember | RemoveTeamMember | http | CommandId | 7 | {"method":"PUT","path":"/api/v1/tenants/{tenant_id}/members/{member_id}/team-removals/{command_id}"} |
+| ApplyAdministratorAssignmentRestoration | ApplyAdministratorAssignmentRestoration | receiver | CommandId | 11 | [Placeholder: value not recorded] |
+| ApplyAdministratorAssignmentWithdrawal | ApplyAdministratorAssignmentWithdrawal | receiver | CommandId | 10 | [Placeholder: value not recorded] |
+| RemoveAdministratorAssignment | ApplyNeutralAdministratorAssignmentMutation | receiver | CommandId | 10 | [Placeholder: value not recorded] |
+| RemoveRetiredMemberAccessAndAssignments | CleanupRetiredMembershipRelationship | reactor | CommandId | 9 | [Placeholder: value not recorded] |
 
 ## Selected command details
 
@@ -17,13 +17,16 @@ Selected command contracts: **6**. Complete selected contracts and companion sou
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | AssignTeamMember |
+| Selected source command name | AssignTeamMember |
+| Name decision | The selected source name is retained. |
 | Owner | TeamMember |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | http |
 | Logical identity | CommandId; Uuid; required=true; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
 | Entry point | [Placeholder: value not recorded] |
 | MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | [Placeholder: value not recorded] |
+| Selected semantic events | None listed |
 | Protocols | [Placeholder: value not recorded] |
 | Policy preservation | [Placeholder: value not recorded] |
 | Contract changes | [Placeholder: value not recorded] |
@@ -64,13 +67,16 @@ Required tests: [Placeholder: required tests not recorded]
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | RemoveTeamMember |
+| Selected source command name | RemoveTeamMember |
+| Name decision | The selected source name is retained. |
 | Owner | TeamMember |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | http |
 | Logical identity | CommandId; Uuid; required=true; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
 | Entry point | [Placeholder: value not recorded] |
 | MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | [Placeholder: value not recorded] |
+| Selected semantic events | None listed |
 | Protocols | [Placeholder: value not recorded] |
 | Policy preservation | [Placeholder: value not recorded] |
 | Contract changes | [Placeholder: value not recorded] |
@@ -111,13 +117,16 @@ Required tests: [Placeholder: required tests not recorded]
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | ApplyAdministratorAssignmentRestoration |
+| Selected source command name | ApplyAdministratorAssignmentRestoration |
+| Name decision | The selected source name is retained. |
 | Owner | TeamMember |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; internal; deterministic receiver identity derived from the admitted root fact, episode and generation: exact redelivery resolves the original result, a changed admission is a new identity |
 | Entry point | [Placeholder: value not recorded] |
 | MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | [Placeholder: value not recorded] |
+| Selected semantic events | None listed |
 | Protocols | [Placeholder: value not recorded] |
 | Policy preservation | [Placeholder: value not recorded] |
 | Contract changes | [Placeholder: value not recorded] |
@@ -162,13 +171,16 @@ Required tests: [Placeholder: required tests not recorded]
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | ApplyAdministratorAssignmentWithdrawal |
+| Selected source command name | ApplyAdministratorAssignmentWithdrawal |
+| Name decision | The selected source name is retained. |
 | Owner | TeamMember |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; internal; deterministic receiver identity derived from the admitted root fact, episode and generation: exact redelivery resolves the original result, a changed admission is a new identity |
 | Entry point | [Placeholder: value not recorded] |
 | MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | [Placeholder: value not recorded] |
+| Selected semantic events | None listed |
 | Protocols | [Placeholder: value not recorded] |
 | Policy preservation | [Placeholder: value not recorded] |
 | Contract changes | [Placeholder: value not recorded] |
@@ -208,17 +220,20 @@ Existing tests: [Placeholder: existing tests not recorded]
 
 Required tests: [Placeholder: required tests not recorded]
 
-### ApplyNeutralAdministratorAssignmentMutation
+### RemoveAdministratorAssignment
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | RemoveAdministratorAssignment |
+| Selected source command name | ApplyNeutralAdministratorAssignmentMutation |
+| Name decision | Removes an initial administrator assignment only when the member has no current contribution. |
 | Owner | TeamMember |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; internal; deterministic receiver identity derived from the admitted root fact, episode and generation: exact redelivery resolves the original result, a changed admission is a new identity |
 | Entry point | [Placeholder: value not recorded] |
 | MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | [Placeholder: value not recorded] |
+| Selected semantic events | None listed |
 | Protocols | [Placeholder: value not recorded] |
 | Policy preservation | [Placeholder: value not recorded] |
 | Contract changes | [Placeholder: value not recorded] |
@@ -258,17 +273,20 @@ Existing tests: [Placeholder: existing tests not recorded]
 
 Required tests: [Placeholder: required tests not recorded]
 
-### CleanupRetiredMembershipRelationship
+### RemoveRetiredMemberAccessAndAssignments
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | RemoveRetiredMemberAccessAndAssignments |
+| Selected source command name | CleanupRetiredMembershipRelationship |
+| Name decision | Removes team assignments and access grants after the exact membership episode ends. |
 | Owner | TeamMember |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | reactor |
 | Logical identity | CommandId; Uuid; required=true; internal; deterministic receiver identity derived from the admitted root fact, episode and generation: exact redelivery resolves the original result, a changed admission is a new identity |
 | Entry point | [Placeholder: value not recorded] |
 | MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | [Placeholder: value not recorded] |
+| Selected semantic events | None listed |
 | Protocols | [Placeholder: value not recorded] |
 | Policy preservation | [Placeholder: value not recorded] |
 | Contract changes | [Placeholder: value not recorded] |

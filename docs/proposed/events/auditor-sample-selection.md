@@ -2,9 +2,9 @@
 
 Canonical events: **1**. Complete canonical event and available schema records: [owner event JSON](../data/events/auditor-sample-selection.json).
 
-| Event | Kind | Adopted discriminator | Version | Schema fields | Meaning |
-| --- | --- | --- | --- | --- | --- |
-| SampleSelectionRecorded | business | bdgrz.auditorrequests.sample-selection-recorded | 1 | 9 | The materialization of an admitted sample selection on its own owner, at revision one. Change repeats the frozen AuditorSampleSelectionIntent, so the selection never rereads the request or the latest population. |
+| Target event | Selected source name | Kind | Adopted discriminator | Version | Schema fields | Meaning |
+| --- | --- | --- | --- | --- | --- | --- |
+| SampleSelectionRecorded | SampleSelectionRecorded | business | bdgrz.auditorrequests.sample-selection-recorded | 1 | 9 | The materialization of an admitted sample selection on its own owner, at revision one. Change repeats the frozen AuditorSampleSelectionIntent, so the selection never rereads the request or the latest population. |
 
 ## Event details
 
@@ -12,6 +12,9 @@ Canonical events: **1**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | SampleSelectionRecorded |
+| Selected source event name | SampleSelectionRecorded |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:SampleSelectionRecorded |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | SampleSelectionRecorded |
@@ -21,7 +24,8 @@ Canonical events: **1**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | The materialization of an admitted sample selection on its own owner, at revision one. Change repeats the frozen AuditorSampleSelectionIntent, so the selection never rereads the request or the latest population. |
+| Target meaning | The materialization of an admitted sample selection on its own owner, at revision one. Change repeats the frozen AuditorSampleSelectionIntent, so the selection never rereads the request or the latest population. |
+| Selected source meaning | The materialization of an admitted sample selection on its own owner, at revision one. Change repeats the frozen AuditorSampleSelectionIntent, so the selection never rereads the request or the latest population. |
 | Meaning source | record summary in src/Compliance.Common/Features/AuditorRequests/Events/SampleSelectionRecorded.cs |
 
 #### Selected schema and implementation evidence
@@ -115,7 +119,7 @@ AuditorSampleSelectionIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T105](../reactors/auditor-sample-selection-materialization-reactor.md#t105) | emitted semantic fact | AuditorRequest | MaterializeAuditorSampleSelection | AuditorSampleSelection |
+| [T105](../reactors/auditor-sample-selection-materialization-reactor.md#t105) | emitted semantic fact | AuditorRequest | RecordAuditorSampleSelection | AuditorSampleSelection |
 
 
 

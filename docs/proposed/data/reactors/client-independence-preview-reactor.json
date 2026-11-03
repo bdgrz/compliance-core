@@ -1,5 +1,7 @@
 {
-  "root": "ClientIndependencePreviewReactor",
+  "sourceRoot": "ClientIndependencePreviewReactor",
+  "targetRoot": "EvaluateClientIndependenceForAcceptanceReactor",
+  "businessReason": "Give the service-acceptance decision a complete independence result so impaired or unresolved relationships block acceptance.",
   "rows": [
     {
       "id": "T106",

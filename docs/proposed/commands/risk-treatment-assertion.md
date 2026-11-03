@@ -2,11 +2,11 @@
 
 Selected command contracts: **3**. Complete selected contracts and companion source evidence: [owner command JSON](../data/commands/risk-treatment-assertion.json).
 
-| Command | Kind | Identity | Fields | HTTP routes |
-| --- | --- | --- | --- | --- |
-| ProposeRiskControlTreatment | http | CommandId | 8 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/risks/{risk_id}/control-treatments/{command_id} [ComplianceAuthorizationPolicies.ApiUser] |
-| RetireRiskControlTreatment | http | CommandId | 7 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/risks/{risk_id}/control-treatments/{treatment_id}/retirements/{command_id} [ComplianceAuthorizationPolicies.ApiUser] |
-| ReviewRiskControlTreatment | http | CommandId | 9 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/risks/{risk_id}/control-treatments/{treatment_id}/reviews/{command_id} [ComplianceAuthorizationPolicies.ApiUser] |
+| Target command | Selected source name | Kind | Identity | Fields | HTTP routes |
+| --- | --- | --- | --- | --- | --- |
+| ProposeRiskControlTreatment | ProposeRiskControlTreatment | http | CommandId | 8 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/risks/{risk_id}/control-treatments/{command_id} [ComplianceAuthorizationPolicies.ApiUser] |
+| RetireRiskControlTreatment | RetireRiskControlTreatment | http | CommandId | 7 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/risks/{risk_id}/control-treatments/{treatment_id}/retirements/{command_id} [ComplianceAuthorizationPolicies.ApiUser] |
+| ReviewRiskControlTreatment | ReviewRiskControlTreatment | http | CommandId | 9 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/risks/{risk_id}/control-treatments/{treatment_id}/reviews/{command_id} [ComplianceAuthorizationPolicies.ApiUser] |
 
 ## Selected command details
 
@@ -14,6 +14,9 @@ Selected command contracts: **3**. Complete selected contracts and companion sou
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | ProposeRiskControlTreatment |
+| Selected source command name | ProposeRiskControlTreatment |
+| Name decision | The selected source name is retained. |
 | Owner | RiskTreatmentAssertion |
 | Contract record status | target_contract |
 | Kind | http |
@@ -66,6 +69,9 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | RetireRiskControlTreatment |
+| Selected source command name | RetireRiskControlTreatment |
+| Name decision | The selected source name is retained. |
 | Owner | RiskTreatmentAssertion |
 | Contract record status | target_contract |
 | Kind | http |
@@ -117,6 +123,9 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | ReviewRiskControlTreatment |
+| Selected source command name | ReviewRiskControlTreatment |
+| Name decision | The selected source name is retained. |
 | Owner | RiskTreatmentAssertion |
 | Contract record status | target_contract |
 | Kind | http |
@@ -169,7 +178,7 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 
 ## Source contracts
 
-| Command | Handler | Registered | Entry point |
+| Selected source command | Handler | Registered | Entry point |
 | --- | --- | --- | --- |
 | ProposeRiskControlTreatment | ProposeRiskControlTreatmentHandler | true | authorized_http |
 | RetireRiskControlTreatment | RetireRiskControlTreatmentHandler | true | authorized_http |

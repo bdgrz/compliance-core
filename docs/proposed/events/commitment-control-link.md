@@ -2,11 +2,11 @@
 
 Canonical events: **3**. Complete canonical event and available schema records: [owner event JSON](../data/events/commitment-control-link.json).
 
-| Event | Kind | Adopted discriminator | Version | Schema fields | Meaning |
-| --- | --- | --- | --- | --- | --- |
-| CommitmentControlLinkProposed | business | null (recorded) | null (recorded) | [Placeholder: schema absent] | A link between an exact commitment version and an exact control version was proposed with rationale, awaiting independent review. |
-| CommitmentControlLinkRetired | business | null (recorded) | null (recorded) | [Placeholder: schema absent] | A commitment-to-control link was retired; the pair no longer supports the commitment and no successor can revive this link identity. |
-| CommitmentControlLinkReviewed | business | null (recorded) | null (recorded) | [Placeholder: schema absent] | An independent reviewer accepted or returned the proposed commitment-to-control link version; acceptance makes it the current link. |
+| Target event | Selected source name | Kind | Adopted discriminator | Version | Schema fields | Meaning |
+| --- | --- | --- | --- | --- | --- | --- |
+| CommitmentControlLinkProposed | CommitmentControlLinkProposed | business | null (recorded) | null (recorded) | [Placeholder: schema absent] | A link between an exact commitment version and an exact control version was proposed with rationale, awaiting independent review. |
+| CommitmentControlLinkRetired | CommitmentControlLinkRetired | business | null (recorded) | null (recorded) | [Placeholder: schema absent] | A commitment-to-control link was retired; the pair no longer supports the commitment and no successor can revive this link identity. |
+| CommitmentControlLinkReviewed | CommitmentControlLinkReviewed | business | null (recorded) | null (recorded) | [Placeholder: schema absent] | An independent reviewer accepted or returned the proposed commitment-to-control link version; acceptance makes it the current link. |
 
 ## Event details
 
@@ -14,6 +14,9 @@ Canonical events: **3**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | CommitmentControlLinkProposed |
+| Selected source event name | CommitmentControlLinkProposed |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:CommitmentControlLinkProposed |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | CommitmentControlLinkProposed |
@@ -23,7 +26,8 @@ Canonical events: **3**. Complete canonical event and available schema records: 
 | Source status | planned_no_source_type |
 | Adopted decision IDs | OWNER_CommitmentControlLink |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | A link between an exact commitment version and an exact control version was proposed with rationale, awaiting independent review. |
+| Target meaning | A link between an exact commitment version and an exact control version was proposed with rationale, awaiting independent review. |
+| Selected source meaning | A link between an exact commitment version and an exact control version was proposed with rationale, awaiting independent review. |
 | Meaning source | authored 2026-10-29 |
 
 #### Schema
@@ -44,6 +48,9 @@ Canonical events: **3**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | CommitmentControlLinkRetired |
+| Selected source event name | CommitmentControlLinkRetired |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:CommitmentControlLinkRetired |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | CommitmentControlLinkRetired |
@@ -53,7 +60,8 @@ Canonical events: **3**. Complete canonical event and available schema records: 
 | Source status | planned_no_source_type |
 | Adopted decision IDs | OWNER_CommitmentControlLink |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | A commitment-to-control link was retired; the pair no longer supports the commitment and no successor can revive this link identity. |
+| Target meaning | A commitment-to-control link was retired; the pair no longer supports the commitment and no successor can revive this link identity. |
+| Selected source meaning | A commitment-to-control link was retired; the pair no longer supports the commitment and no successor can revive this link identity. |
 | Meaning source | authored 2026-10-29 |
 
 #### Schema
@@ -74,6 +82,9 @@ Canonical events: **3**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | CommitmentControlLinkReviewed |
+| Selected source event name | CommitmentControlLinkReviewed |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:CommitmentControlLinkReviewed |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | CommitmentControlLinkReviewed |
@@ -83,7 +94,8 @@ Canonical events: **3**. Complete canonical event and available schema records: 
 | Source status | planned_no_source_type |
 | Adopted decision IDs | OWNER_CommitmentControlLink |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | An independent reviewer accepted or returned the proposed commitment-to-control link version; acceptance makes it the current link. |
+| Target meaning | An independent reviewer accepted or returned the proposed commitment-to-control link version; acceptance makes it the current link. |
+| Selected source meaning | An independent reviewer accepted or returned the proposed commitment-to-control link version; acceptance makes it the current link. |
 | Meaning source | authored 2026-10-29 |
 
 #### Schema

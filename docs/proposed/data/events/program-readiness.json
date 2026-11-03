@@ -188,7 +188,11 @@
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "resolvedIntentSchema": "ReadinessRunIntent",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "ReadinessAssessmentAdopted",
+      "targetName": "ReadinessAssessmentAdopted",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "The exact computed assessment became the latest of the program. Generation is the pending adoption generation the run reserved; Operation.RootOperationId is the assessment identity. SourceProofs holds the request and recorded-assessment proofs, and OperationResult the original registration with the program revision after this adoption."
     },
     {
       "canonical": {
@@ -377,7 +381,11 @@
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "resolvedIntentSchema": "ReadinessRunIntent",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "ReadinessAssessmentRequested",
+      "targetName": "ReadinessAssessmentRequested",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "The root native acceptance of a readiness run. It reserves the one pending latest-adoption generation Generation and references the frozen ReadinessRunIntent with its complete input snapshot; the assessment is only the latest once ReadinessAssessmentAdopted follows."
     },
     {
       "canonical": {
@@ -600,7 +608,11 @@
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "resolvedIntentSchema": "ReadinessDecisionIntent",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "ReadinessDecisionAccepted",
+      "targetName": "ReadinessDecisionAccepted",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "A management readiness decision for a program was accepted, sealing the latest adoption generation and the gap plans it relies on."
     },
     {
       "canonical": {
@@ -823,7 +835,11 @@
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "resolvedIntentSchema": "ReadinessDecisionIntent",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "ReadinessDecisionCanceled",
+      "targetName": "ReadinessDecisionCanceled",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "A pending decision ended before it was recorded. The fact is the local receiver fence: a delayed completion sees it and does nothing, and only then are the gap plan uses settled. SourceProofs is the failure proof."
     },
     {
       "canonical": {
@@ -1069,7 +1085,11 @@
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "resolvedIntentSchema": "ReadinessDecisionIntent",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "ReadinessDecisionRecorded",
+      "targetName": "ReadinessDecisionRecorded",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "The management readiness decision was recorded once every gap plan was held. DecisionContent is the complete ReadinessDecisionView, DecisionProofs the complete manifest of the held gap plan proofs, and OperationResult the original typed result of the decision command."
     },
     {
       "canonical": {
@@ -1292,7 +1312,11 @@
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "resolvedIntentSchema": "ReadinessDecisionIntent",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "TypeIEntryDecisionAccepted",
+      "targetName": "TypeIEntryDecisionAccepted",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "A decision to enter a Type I examination was accepted for a program, sealing the latest adoption generation and the gap plans it relies on."
     },
     {
       "canonical": {
@@ -1538,7 +1562,11 @@
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "resolvedIntentSchema": "ReadinessDecisionIntent",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "TypeIEntryDecisionRecorded",
+      "targetName": "TypeIEntryDecisionRecorded",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "The Type I entry decision was recorded once every gap plan was held. DecisionContent is the complete TypeIEntryDecisionView with its frozen unresolved items, DecisionProofs the complete manifest of the held gap plan proofs, and OperationResult the original typed result of the command."
     }
   ]
 }

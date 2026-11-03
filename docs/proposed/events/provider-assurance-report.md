@@ -2,12 +2,12 @@
 
 Canonical events: **4**. Complete canonical event and available schema records: [owner event JSON](../data/events/provider-assurance-report.json).
 
-| Event | Kind | Adopted discriminator | Version | Schema fields | Meaning |
-| --- | --- | --- | --- | --- | --- |
-| AssuranceReportRecorded | business | bdgrz.provider.assurance_report.recorded | 1 | 11 | An assurance report was recorded as the first revision of its own owner. The complete AssuranceReportContent is immutable content; RequestId is the report id, the logical identity of the creation. |
-| AssuranceReportRevised | business | bdgrz.provider.assurance_report.revised | 1 | 12 | An assurance report was revised at the expected revision of its own owner; the provider cannot change. The complete revised AssuranceReportContent is immutable content and RequestId is the command id of the revision. |
-| ProviderAssuranceReportProviderReviewUseAuthorized | reservation | bdgrz.provider-assurance-report.provider-assurance-report-provider-review-use-authorized | 1 | 8 | The exact assurance report revision is held for one provider review. The use does not advance the public report revision; Revision is the held revision and the report refuses revision while held. |
-| ProviderAssuranceReportProviderReviewUseSettled | reservation | bdgrz.provider-assurance-report.provider-assurance-report-provider-review-use-settled | 1 | 8 | The held report use ended after the recorded review or after the cancellation fence. With no earlier grant it fences the key so a delayed acquisition cannot recreate the hold. |
+| Target event | Selected source name | Kind | Adopted discriminator | Version | Schema fields | Meaning |
+| --- | --- | --- | --- | --- | --- | --- |
+| AssuranceReportRecorded | AssuranceReportRecorded | business | bdgrz.provider.assurance_report.recorded | 1 | 11 | An assurance report was recorded as the first revision of its own owner. The complete AssuranceReportContent is immutable content; RequestId is the report id, the logical identity of the creation. |
+| AssuranceReportRevised | AssuranceReportRevised | business | bdgrz.provider.assurance_report.revised | 1 | 12 | An assurance report was revised at the expected revision of its own owner; the provider cannot change. The complete revised AssuranceReportContent is immutable content and RequestId is the command id of the revision. |
+| ProviderAssuranceReportProviderReviewAuthorized | ProviderAssuranceReportProviderReviewUseAuthorized | reservation | bdgrz.provider-assurance-report.provider-assurance-report-provider-review-use-authorized | 1 | 8 | The exact assurance report revision is held for one provider review. The use does not advance the public report revision; Revision is the held revision and the report refuses revision while held. |
+| ProviderAssuranceReportProviderReviewAuthorizationClosed | ProviderAssuranceReportProviderReviewUseSettled | reservation | bdgrz.provider-assurance-report.provider-assurance-report-provider-review-use-settled | 1 | 8 | The held report use ended after the recorded review or after the cancellation fence. With no earlier grant it fences the key so a delayed acquisition cannot recreate the hold. |
 
 ## Event details
 
@@ -15,6 +15,9 @@ Canonical events: **4**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | AssuranceReportRecorded |
+| Selected source event name | AssuranceReportRecorded |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:AssuranceReportRecorded |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | AssuranceReportRecorded |
@@ -24,7 +27,8 @@ Canonical events: **4**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | An assurance report was recorded as the first revision of its own owner. The complete AssuranceReportContent is immutable content; RequestId is the report id, the logical identity of the creation. |
+| Target meaning | An assurance report was recorded as the first revision of its own owner. The complete AssuranceReportContent is immutable content; RequestId is the report id, the logical identity of the creation. |
+| Selected source meaning | An assurance report was recorded as the first revision of its own owner. The complete AssuranceReportContent is immutable content; RequestId is the report id, the logical identity of the creation. |
 | Meaning source | record summary in src/Compliance.Common/Features/Providers/Events/AssuranceReportRecorded.cs |
 
 #### Selected schema and implementation evidence
@@ -81,6 +85,9 @@ Canonical events: **4**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | AssuranceReportRevised |
+| Selected source event name | AssuranceReportRevised |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:AssuranceReportRevised |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | AssuranceReportRevised |
@@ -90,7 +97,8 @@ Canonical events: **4**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | An assurance report was revised at the expected revision of its own owner; the provider cannot change. The complete revised AssuranceReportContent is immutable content and RequestId is the command id of the revision. |
+| Target meaning | An assurance report was revised at the expected revision of its own owner; the provider cannot change. The complete revised AssuranceReportContent is immutable content and RequestId is the command id of the revision. |
+| Selected source meaning | An assurance report was revised at the expected revision of its own owner; the provider cannot change. The complete revised AssuranceReportContent is immutable content and RequestId is the command id of the revision. |
 | Meaning source | record summary in src/Compliance.Common/Features/Providers/Events/AssuranceReportRevised.cs |
 
 #### Selected schema and implementation evidence
@@ -144,10 +152,13 @@ Canonical events: **4**. Complete canonical event and available schema records: 
 
 [Placeholder: no selected choreography row names this event as root, prerequisite, or emitted fact.]
 
-### ProviderAssuranceReportProviderReviewUseAuthorized
+### ProviderAssuranceReportProviderReviewAuthorized
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | ProviderAssuranceReportProviderReviewAuthorized |
+| Selected source event name | ProviderAssuranceReportProviderReviewUseAuthorized |
+| Name decision | Authorization is already the completed fact; Use adds no stakeholder meaning. |
 | Canonical semantic key | event:ProviderAssuranceReportProviderReviewUseAuthorized |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | ProviderAssuranceReportProviderReviewUseAuthorized |
@@ -157,7 +168,8 @@ Canonical events: **4**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | The exact assurance report revision is held for one provider review. The use does not advance the public report revision; Revision is the held revision and the report refuses revision while held. |
+| Target meaning | The exact assurance report revision is held for one provider review. The use does not advance the public report revision; Revision is the held revision and the report refuses revision while held. |
+| Selected source meaning | The exact assurance report revision is held for one provider review. The use does not advance the public report revision; Revision is the held revision and the report refuses revision while held. |
 | Meaning source | record summary in src/Compliance.Common/Features/Providers/Events/ProviderAssuranceReportProviderReviewUseAuthorized.cs |
 
 #### Selected schema and implementation evidence
@@ -231,12 +243,15 @@ SourceUseAuthorizationIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T069](../reactors/provider-review-reactor.md#t069) | emitted semantic fact | ProviderAssuranceReview | AuthorizeProviderAssuranceReportProviderReviewUse | ProviderAssuranceReport |
+| [T069](../reactors/provider-review-reactor.md#t069) | emitted semantic fact | ProviderAssuranceReview | AuthorizeProviderAssuranceReportProviderReview | ProviderAssuranceReport |
 
-### ProviderAssuranceReportProviderReviewUseSettled
+### ProviderAssuranceReportProviderReviewAuthorizationClosed
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | ProviderAssuranceReportProviderReviewAuthorizationClosed |
+| Selected source event name | ProviderAssuranceReportProviderReviewUseSettled |
+| Name decision | The exact authorization ended; the recorded outcome still distinguishes use, cancellation, or a late fence. |
 | Canonical semantic key | event:ProviderAssuranceReportProviderReviewUseSettled |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | ProviderAssuranceReportProviderReviewUseSettled |
@@ -246,7 +261,8 @@ SourceUseAuthorizationIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | The held report use ended after the recorded review or after the cancellation fence. With no earlier grant it fences the key so a delayed acquisition cannot recreate the hold. |
+| Target meaning | The held report use ended after the recorded review or after the cancellation fence. With no earlier grant it fences the key so a delayed acquisition cannot recreate the hold. |
+| Selected source meaning | The held report use ended after the recorded review or after the cancellation fence. With no earlier grant it fences the key so a delayed acquisition cannot recreate the hold. |
 | Meaning source | record summary in src/Compliance.Common/Features/Providers/Events/ProviderAssuranceReportProviderReviewUseSettled.cs |
 
 #### Selected schema and implementation evidence
@@ -320,7 +336,7 @@ SourceUseAuthorizationIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T070](../reactors/provider-review-reactor.md#t070) | emitted semantic fact | ProviderAssuranceReview | SettleProviderAssuranceReportProviderReviewUse | ProviderAssuranceReport |
+| [T070](../reactors/provider-review-reactor.md#t070) | emitted semantic fact | ProviderAssuranceReview | CloseProviderAssuranceReportProviderReviewAuthorization | ProviderAssuranceReport |
 
 
 

@@ -1,5 +1,7 @@
 {
-  "root": "RetiredTeamAssignmentReactor",
+  "sourceRoot": "RetiredTeamAssignmentReactor",
+  "targetRoot": "RemoveTeamAssignmentAfterMemberRetirementReactor",
+  "businessReason": "Prevent someone whose membership has ended from remaining assigned to a team when a delayed assignment arrives.",
   "rows": [
     {
       "id": "S007",

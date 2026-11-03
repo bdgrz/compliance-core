@@ -159,7 +159,11 @@
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "resolvedIntentSchema": "SourceUseAuthorizationIntent",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "IndependenceRuleCatalogEngagementUseAuthorized",
+      "targetName": "IndependenceRuleCatalogEngagementAuthorized",
+      "nameDecision": "Authorization is already the completed fact; Use adds no stakeholder meaning.",
+      "targetMeaning": "The exact revised independence rule catalog version a partner evaluation relies on was held for the engagement; it does not publish the catalog and blocks revision until the use settles."
     },
     {
       "canonical": {
@@ -319,7 +323,11 @@
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "resolvedIntentSchema": "SourceUseAuthorizationIntent",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "IndependenceRuleCatalogEngagementUseSettled",
+      "targetName": "IndependenceRuleCatalogEngagementAuthorizationClosed",
+      "nameDecision": "The exact authorization ended; the recorded outcome still distinguishes use, cancellation, or a late fence.",
+      "targetMeaning": "The use of the draft rule catalog ended after the irreversible personal decision or after cancellation. A settlement before any grant fences the key against late acquisition."
     },
     {
       "canonical": {
@@ -343,7 +351,11 @@
         "meaning": "The independence rule catalog was revised with new rule content, becoming the next draft version of the catalog.",
         "meaningSource": "authored 2026-10-29 from src/Compliance.Common/Features/AccessControl/Events/IndependenceRulesRevised.cs"
       },
-      "schema": null
+      "schema": null,
+      "sourceName": "IndependenceRulesRevised",
+      "targetName": "IndependenceRulesRevised",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "The independence rule catalog was revised with new rule content, becoming the next draft version of the catalog."
     }
   ]
 }

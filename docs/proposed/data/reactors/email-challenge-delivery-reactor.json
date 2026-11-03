@@ -1,5 +1,7 @@
 {
-  "root": "EmailChallengeDeliveryReactor",
+  "sourceRoot": "EmailChallengeDeliveryReactor",
+  "targetRoot": "SendAccountVerificationAndRecoveryEmailsReactor",
+  "businessReason": "Send the messages people need to verify an email address or recover an account.",
   "rows": [
     {
       "id": "T115",

@@ -1,5 +1,7 @@
 {
-  "root": "RiskMethodReassessmentReactor",
+  "sourceRoot": "RiskMethodReassessmentReactor",
+  "targetRoot": "RiskMethodReassessmentReactor",
+  "businessReason": "Request reassessment when the accepted risk method changes and existing assessments need review.",
   "rows": [
     {
       "id": "S036",

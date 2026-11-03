@@ -2,10 +2,10 @@
 
 Selected command contracts: **2**. Complete selected contracts and companion source evidence: [owner command JSON](../data/commands/control-operating-plan.json).
 
-| Command | Kind | Identity | Fields | HTTP routes |
-| --- | --- | --- | --- | --- |
-| ApproveControlOperatingPlan | http | CommandId | 8 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/operating-plan/proposals/{plan_version_id}/approvals/{command_id} [ComplianceAuthorizationPolicies.ApiUser] |
-| ProposeControlOperatingPlan | http | PlanVersionId | 13 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/operating-plan/proposals/{plan_version_id} [ComplianceAuthorizationPolicies.ApiUser] |
+| Target command | Selected source name | Kind | Identity | Fields | HTTP routes |
+| --- | --- | --- | --- | --- | --- |
+| ApproveControlOperatingPlan | ApproveControlOperatingPlan | http | CommandId | 8 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/operating-plan/proposals/{plan_version_id}/approvals/{command_id} [ComplianceAuthorizationPolicies.ApiUser] |
+| ProposeControlOperatingPlan | ProposeControlOperatingPlan | http | PlanVersionId | 13 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/controls/{control_id}/operating-plan/proposals/{plan_version_id} [ComplianceAuthorizationPolicies.ApiUser] |
 
 ## Selected command details
 
@@ -13,6 +13,9 @@ Selected command contracts: **2**. Complete selected contracts and companion sou
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | ApproveControlOperatingPlan |
+| Selected source command name | ApproveControlOperatingPlan |
+| Name decision | The selected source name is retained. |
 | Owner | ControlOperatingPlan |
 | Contract record status | target_contract |
 | Kind | http |
@@ -65,6 +68,9 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | ProposeControlOperatingPlan |
+| Selected source command name | ProposeControlOperatingPlan |
+| Name decision | The selected source name is retained. |
 | Owner | ControlOperatingPlan |
 | Contract record status | target_contract |
 | Kind | http |
@@ -121,7 +127,7 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 
 ## Source contracts
 
-| Command | Handler | Registered | Entry point |
+| Selected source command | Handler | Registered | Entry point |
 | --- | --- | --- | --- |
 | ApproveControlOperatingPlan | ApproveControlOperatingPlanHandler | true | personal_http |
 | ProposeControlOperatingPlan | ProposeControlOperatingPlanHandler | true | authorized_http_and_mcp |

@@ -112,7 +112,11 @@
         "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "CriterionApplicabilityReviewed",
+      "targetName": "CriterionApplicabilityReviewed",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "A proposal that a criterion does not apply to a program was reviewed with a decision outcome by a named actor, optionally under a separation-of-duties waiver."
     },
     {
       "canonical": {
@@ -225,7 +229,11 @@
         "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "CriterionNotApplicableProposed",
+      "targetName": "CriterionNotApplicableProposed",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "A criterion of a criteria edition was proposed as not applicable to a program by a named member, awaiting review."
     },
     {
       "canonical": {
@@ -323,7 +331,11 @@
         "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "CriterionNotApplicableWithdrawn",
+      "targetName": "CriterionNotApplicableWithdrawn",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "A pending proposal that a criterion is not applicable to a program was withdrawn by a named actor, so the criterion stays applicable."
     }
   ]
 }

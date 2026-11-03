@@ -101,7 +101,9 @@
         "line": 2859,
         "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       },
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "AttestControlOccurrence",
+      "targetName": "AttestControlOccurrence"
     },
     {
       "command": "CorrectControlAttestation",
@@ -208,7 +210,9 @@
         "line": 4630,
         "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       },
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "CorrectControlAttestation",
+      "targetName": "CorrectControlAttestation"
     },
     {
       "command": "OpenControlOccurrence",
@@ -280,7 +284,9 @@
         "line": 8333,
         "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       },
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "OpenControlOccurrence",
+      "targetName": "OpenControlOccurrence"
     },
     {
       "command": "ReviewControlOccurrence",
@@ -367,7 +373,9 @@
         "line": 15018,
         "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       },
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "ReviewControlOccurrence",
+      "targetName": "ReviewControlOccurrence"
     },
     {
       "command": "MaterializeControlOccurrence",
@@ -453,7 +461,9 @@
       "source": {
         "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
         "recorded": "2026-10-29"
-      }
+      },
+      "sourceName": "MaterializeControlOccurrence",
+      "targetName": "OpenDueControlOccurrence"
     }
   ],
   "sourceContractEvidence": [

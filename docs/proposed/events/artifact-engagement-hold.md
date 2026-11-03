@@ -2,11 +2,11 @@
 
 Canonical events: **3**. Complete canonical event and available schema records: [owner event JSON](../data/events/artifact-engagement-hold.json).
 
-| Event | Kind | Adopted discriminator | Version | Schema fields | Meaning |
-| --- | --- | --- | --- | --- | --- |
-| ArtifactEngagementHoldPlaced | business | bdgrz.retention.artifact-engagement-hold-placed | 1 | [Placeholder: schema absent] | Records the ArtifactEngagementHoldPlaced domain fact for one tenant-owned subject revision. |
-| ArtifactEngagementHoldReleased | business | bdgrz.retention.artifact-engagement-hold-released | 1 | [Placeholder: schema absent] | Records the ArtifactEngagementHoldReleased domain fact for one tenant-owned subject revision. |
-| EngagementReportIssued | business | bdgrz.retention.engagement-report-issued | 1 | [Placeholder: schema absent] | Records the EngagementReportIssued domain fact for one tenant-owned subject revision. |
+| Target event | Selected source name | Kind | Adopted discriminator | Version | Schema fields | Meaning |
+| --- | --- | --- | --- | --- | --- | --- |
+| ArtifactEngagementHoldPlaced | ArtifactEngagementHoldPlaced | business | bdgrz.retention.artifact-engagement-hold-placed | 1 | [Placeholder: schema absent] | Records the ArtifactEngagementHoldPlaced domain fact for one tenant-owned subject revision. |
+| ArtifactEngagementHoldReleased | ArtifactEngagementHoldReleased | business | bdgrz.retention.artifact-engagement-hold-released | 1 | [Placeholder: schema absent] | Records the ArtifactEngagementHoldReleased domain fact for one tenant-owned subject revision. |
+| EngagementReportIssued | EngagementReportIssued | business | bdgrz.retention.engagement-report-issued | 1 | [Placeholder: schema absent] | Records the EngagementReportIssued domain fact for one tenant-owned subject revision. |
 
 ## Event details
 
@@ -14,6 +14,9 @@ Canonical events: **3**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | ArtifactEngagementHoldPlaced |
+| Selected source event name | ArtifactEngagementHoldPlaced |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:ArtifactEngagementHoldPlaced |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | ArtifactEngagementHoldPlaced |
@@ -23,7 +26,8 @@ Canonical events: **3**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | Records the ArtifactEngagementHoldPlaced domain fact for one tenant-owned subject revision. |
+| Target meaning | Records the ArtifactEngagementHoldPlaced domain fact for one tenant-owned subject revision. |
+| Selected source meaning | Records the ArtifactEngagementHoldPlaced domain fact for one tenant-owned subject revision. |
 | Meaning source | record summary in src/Compliance.Common/Features/Retention/Events/ArtifactEngagementHoldPlaced.cs |
 
 #### Schema
@@ -44,6 +48,9 @@ Canonical events: **3**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | ArtifactEngagementHoldReleased |
+| Selected source event name | ArtifactEngagementHoldReleased |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:ArtifactEngagementHoldReleased |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | ArtifactEngagementHoldReleased |
@@ -53,7 +60,8 @@ Canonical events: **3**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | Records the ArtifactEngagementHoldReleased domain fact for one tenant-owned subject revision. |
+| Target meaning | Records the ArtifactEngagementHoldReleased domain fact for one tenant-owned subject revision. |
+| Selected source meaning | Records the ArtifactEngagementHoldReleased domain fact for one tenant-owned subject revision. |
 | Meaning source | record summary in src/Compliance.Common/Features/Retention/Events/ArtifactEngagementHoldReleased.cs |
 
 #### Schema
@@ -70,12 +78,15 @@ Canonical events: **3**. Complete canonical event and available schema records: 
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [X007](../reactors/client-export-delivery-reactor.md#x007) | emitted semantic fact | ClientExport | RecordEngagementPackageDelivered | ArtifactEngagementHold |
+| [X007](../reactors/client-export-delivery-reactor.md#x007) | emitted semantic fact | ClientExport | RecordEngagementPackageDelivery | ArtifactEngagementHold |
 
 ### EngagementReportIssued
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | EngagementReportIssued |
+| Selected source event name | EngagementReportIssued |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:EngagementReportIssued |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | EngagementReportIssued |
@@ -85,7 +96,8 @@ Canonical events: **3**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | Records the EngagementReportIssued domain fact for one tenant-owned subject revision. |
+| Target meaning | Records the EngagementReportIssued domain fact for one tenant-owned subject revision. |
+| Selected source meaning | Records the EngagementReportIssued domain fact for one tenant-owned subject revision. |
 | Meaning source | record summary in src/Compliance.Common/Features/Retention/Events/EngagementReportIssued.cs |
 
 #### Schema

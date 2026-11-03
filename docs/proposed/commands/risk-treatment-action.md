@@ -2,15 +2,15 @@
 
 Selected command contracts: **7**. Complete selected contracts and companion source evidence: [owner command JSON](../data/commands/risk-treatment-action.json).
 
-| Command | Kind | Identity | Fields | HTTP routes |
-| --- | --- | --- | --- | --- |
-| AddRiskTreatmentAction | http | ActionId | 11 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/risks/{risk_id}/treatment-actions/{action_id} [ComplianceAuthorizationPolicies.ApiUser] |
-| CancelRiskTreatmentAction | http | CommandId | 7 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/risks/{risk_id}/treatment-actions/{action_id}/cancellations/{command_id} [ComplianceAuthorizationPolicies.ApiUser] |
-| ReviewRiskTreatmentActionCompletion | http | CommandId | 9 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/risks/{risk_id}/treatment-actions/{action_id}/completion-reviews/{command_id} [ComplianceAuthorizationPolicies.ApiUser] |
-| ReviseRiskTreatmentAction | http | CommandId | 12 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/risks/{risk_id}/treatment-actions/revise-risk-treatment-action/{command_id} [ApiUser + existing request-scope authorizers] |
-| SubmitRiskTreatmentActionCompletion | http | CommandId | 8 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/risks/{risk_id}/treatment-actions/{action_id}/completions/{command_id} [ComplianceAuthorizationPolicies.ApiUser] |
-| AbortRiskTreatmentActionReview | abort | CommandId | 6 | [Placeholder: route/channel not recorded] |
-| CompleteRiskTreatmentActionReview | receiver | CommandId | 9 | [Placeholder: value not recorded] |
+| Target command | Selected source name | Kind | Identity | Fields | HTTP routes |
+| --- | --- | --- | --- | --- | --- |
+| AddRiskTreatmentAction | AddRiskTreatmentAction | http | ActionId | 11 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/risks/{risk_id}/treatment-actions/{action_id} [ComplianceAuthorizationPolicies.ApiUser] |
+| CancelRiskTreatmentAction | CancelRiskTreatmentAction | http | CommandId | 7 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/risks/{risk_id}/treatment-actions/{action_id}/cancellations/{command_id} [ComplianceAuthorizationPolicies.ApiUser] |
+| ReviewRiskTreatmentActionCompletion | ReviewRiskTreatmentActionCompletion | http | CommandId | 9 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/risks/{risk_id}/treatment-actions/{action_id}/completion-reviews/{command_id} [ComplianceAuthorizationPolicies.ApiUser] |
+| ReviseRiskTreatmentAction | ReviseRiskTreatmentAction | http | CommandId | 12 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/risks/{risk_id}/treatment-actions/revise-risk-treatment-action/{command_id} [ApiUser + existing request-scope authorizers] |
+| SubmitRiskTreatmentActionCompletion | SubmitRiskTreatmentActionCompletion | http | CommandId | 8 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/risks/{risk_id}/treatment-actions/{action_id}/completions/{command_id} [ComplianceAuthorizationPolicies.ApiUser] |
+| AbortRiskTreatmentActionReview | AbortRiskTreatmentActionReview | abort | CommandId | 6 | [Placeholder: route/channel not recorded] |
+| CompleteRiskTreatmentActionReview | CompleteRiskTreatmentActionReview | receiver | CommandId | 9 | [Placeholder: value not recorded] |
 
 ## Selected command details
 
@@ -18,6 +18,9 @@ Selected command contracts: **7**. Complete selected contracts and companion sou
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | AddRiskTreatmentAction |
+| Selected source command name | AddRiskTreatmentAction |
+| Name decision | The selected source name is retained. |
 | Owner | RiskTreatmentAction |
 | Contract record status | target_contract |
 | Kind | http |
@@ -73,6 +76,9 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | CancelRiskTreatmentAction |
+| Selected source command name | CancelRiskTreatmentAction |
+| Name decision | The selected source name is retained. |
 | Owner | RiskTreatmentAction |
 | Contract record status | target_contract |
 | Kind | http |
@@ -124,6 +130,9 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | ReviewRiskTreatmentActionCompletion |
+| Selected source command name | ReviewRiskTreatmentActionCompletion |
+| Name decision | The selected source name is retained. |
 | Owner | RiskTreatmentAction |
 | Contract record status | target_contract |
 | Kind | http |
@@ -177,6 +186,9 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | ReviseRiskTreatmentAction |
+| Selected source command name | ReviseRiskTreatmentAction |
+| Name decision | The selected source name is retained. |
 | Owner | RiskTreatmentAction |
 | Contract record status | target_contract |
 | Kind | http |
@@ -233,6 +245,9 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | SubmitRiskTreatmentActionCompletion |
+| Selected source command name | SubmitRiskTreatmentActionCompletion |
+| Name decision | The selected source name is retained. |
 | Owner | RiskTreatmentAction |
 | Contract record status | target_contract |
 | Kind | http |
@@ -285,13 +300,16 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | AbortRiskTreatmentActionReview |
+| Selected source command name | AbortRiskTreatmentActionReview |
+| Name decision | The selected source name is retained. |
 | Owner | RiskTreatmentAction |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | abort |
 | Logical identity | CommandId; Uuid; required=true; abort receiver identity bound to the exact admitted operation and generation: exact redelivery resolves the original rejected result; an abort after a terminal outcome is a no-op |
 | Entry point | [Placeholder: value not recorded] |
 | MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | [Placeholder: value not recorded] |
+| Selected semantic events | None listed |
 | Protocols | [Placeholder: value not recorded] |
 | Policy preservation | [Placeholder: value not recorded] |
 | Contract changes | [Placeholder: value not recorded] |
@@ -331,13 +349,16 @@ Required tests: [Placeholder: required tests not recorded]
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | CompleteRiskTreatmentActionReview |
+| Selected source command name | CompleteRiskTreatmentActionReview |
+| Name decision | The selected source name is retained. |
 | Owner | RiskTreatmentAction |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; reactor; deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result |
 | Entry point | [Placeholder: value not recorded] |
 | MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | [Placeholder: value not recorded] |
+| Selected semantic events | None listed |
 | Protocols | [Placeholder: value not recorded] |
 | Policy preservation | [Placeholder: value not recorded] |
 | Contract changes | [Placeholder: value not recorded] |
@@ -379,7 +400,7 @@ Required tests: [Placeholder: required tests not recorded]
 
 ## Source contracts
 
-| Command | Handler | Registered | Entry point |
+| Selected source command | Handler | Registered | Entry point |
 | --- | --- | --- | --- |
 | AddRiskTreatmentAction | AddRiskTreatmentActionHandler | true | authorized_http |
 | CancelRiskTreatmentAction | CancelRiskTreatmentActionHandler | true | authorized_http |

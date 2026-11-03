@@ -2,16 +2,16 @@
 
 Selected command contracts: **8**. Complete selected contracts and companion source evidence: [owner command JSON](../data/commands/application-import-batch.json).
 
-| Command | Kind | Identity | Fields | HTTP routes |
-| --- | --- | --- | --- | --- |
-| AcceptApplicationImport | http | CommandId | 4 | PUT /api/v1/tenants/{tenant_id}/application-imports/{batch_id}/acceptances/{command_id} [ComplianceAuthorizationPolicies.ApiUser] |
-| CancelApplicationImport | http | CommandId | 5 | PUT /api/v1/tenants/{tenant_id}/application-imports/{batch_id}/cancellations/{command_id} [ComplianceAuthorizationPolicies.ApiUser] |
-| CorrelateApplicationImportRow | http | CommandId | 9 | PUT /api/v1/tenants/{tenant_id}/application-imports/{batch_id}/rows/{row_id}/correlations/{command_id} [ComplianceAuthorizationPolicies.ApiUser] |
-| ExecuteApplicationImport | command | CommandId | 4 | [Placeholder: value not recorded] |
-| FreezeApplicationImportOmissionProposal | http | CommandId | 7 | PUT /api/v1/tenants/{tenant_id}/application-imports/{batch_id}/omission-proposal/{command_id} [ComplianceAuthorizationPolicies.ApiUser] |
-| StageApplicationImport | http | SubmissionId | 6 | PUT /api/v1/tenants/{tenant_id}/application-imports/{submission_id} |
-| CommitApplicationImportBatch | receiver | CommandId | 9 | [Placeholder: value not recorded] |
-| CompleteApplicationImportCancellation | receiver | CommandId | 9 | [Placeholder: value not recorded] |
+| Target command | Selected source name | Kind | Identity | Fields | HTTP routes |
+| --- | --- | --- | --- | --- | --- |
+| AcceptApplicationImport | AcceptApplicationImport | http | CommandId | 4 | PUT /api/v1/tenants/{tenant_id}/application-imports/{batch_id}/acceptances/{command_id} [ComplianceAuthorizationPolicies.ApiUser] |
+| CancelApplicationImport | CancelApplicationImport | http | CommandId | 5 | PUT /api/v1/tenants/{tenant_id}/application-imports/{batch_id}/cancellations/{command_id} [ComplianceAuthorizationPolicies.ApiUser] |
+| RecordApplicationImportRowChoice | CorrelateApplicationImportRow | http | CommandId | 9 | PUT /api/v1/tenants/{tenant_id}/application-imports/{batch_id}/rows/{row_id}/correlations/{command_id} [ComplianceAuthorizationPolicies.ApiUser] |
+| ExecuteApplicationImport | ExecuteApplicationImport | command | CommandId | 4 | [Placeholder: value not recorded] |
+| FreezeApplicationImportOmissionProposal | FreezeApplicationImportOmissionProposal | http | CommandId | 7 | PUT /api/v1/tenants/{tenant_id}/application-imports/{batch_id}/omission-proposal/{command_id} [ComplianceAuthorizationPolicies.ApiUser] |
+| StageApplicationImport | StageApplicationImport | http | SubmissionId | 6 | PUT /api/v1/tenants/{tenant_id}/application-imports/{submission_id} |
+| CommitApplicationImportBatch | CommitApplicationImportBatch | receiver | CommandId | 9 | [Placeholder: value not recorded] |
+| CompleteApplicationImportCancellation | CompleteApplicationImportCancellation | receiver | CommandId | 9 | [Placeholder: value not recorded] |
 
 ## Selected command details
 
@@ -19,13 +19,16 @@ Selected command contracts: **8**. Complete selected contracts and companion sou
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | AcceptApplicationImport |
+| Selected source command name | AcceptApplicationImport |
+| Name decision | The selected source name is retained. |
 | Owner | ApplicationImportBatch |
 | Contract record status | target_contract |
 | Kind | http |
 | Logical identity | CommandId; Uuid; required=true; client; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
 | Entry point | personal_http |
 | MCP | false |
-| Selected semantic events | ApplicationImportPlanSealed |
+| Selected semantic events | ApplicationImportPlanAccepted |
 | Protocols | Complete batch application and publication |
 | Policy preservation | All current source handler/aggregate validation rules and source test expectations apply, except the explicit contractChanges and boundary protocol. Lifetime caps and technical attempt events are removed with their structural replacement. |
 | Contract changes | Add required CommandId., Rename ExpectedBatchRevision to ExpectedRevision and compare the new target owner revision. |
@@ -67,6 +70,9 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | CancelApplicationImport |
+| Selected source command name | CancelApplicationImport |
+| Name decision | The selected source name is retained. |
 | Owner | ApplicationImportBatch |
 | Contract record status | target_contract |
 | Kind | http |
@@ -112,17 +118,20 @@ Existing tests: test/Compliance.Tests/Features/Applications/ApplicationImportPer
 
 Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision, ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity, ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof, ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome
 
-### CorrelateApplicationImportRow
+### RecordApplicationImportRowChoice
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | RecordApplicationImportRowChoice |
+| Selected source command name | CorrelateApplicationImportRow |
+| Name decision | Records the person's choice to link the row to an existing application or create a new one. |
 | Owner | ApplicationImportBatch |
 | Contract record status | target_contract |
 | Kind | http |
 | Logical identity | CommandId; Uuid; required=true; client; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
 | Entry point | personal_http |
 | MCP | false |
-| Selected semantic events | ApplicationImportRowCorrelated |
+| Selected semantic events | ApplicationImportRowChoiceRecorded |
 | Protocols | Complete batch application and publication |
 | Policy preservation | All current source handler/aggregate validation rules and source test expectations apply, except the explicit contractChanges and boundary protocol. Lifetime caps and technical attempt events are removed with their structural replacement. |
 | Contract changes | Add required CommandId., Rename ExpectedBatchRevision to ExpectedRevision and compare the new target owner revision. |
@@ -169,6 +178,9 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | ExecuteApplicationImport |
+| Selected source command name | ExecuteApplicationImport |
+| Name decision | The selected source name is retained. |
 | Owner | ApplicationImportBatch |
 | Contract record status | target_contract |
 | Kind | command |
@@ -215,13 +227,16 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | FreezeApplicationImportOmissionProposal |
+| Selected source command name | FreezeApplicationImportOmissionProposal |
+| Name decision | The selected source name is retained. |
 | Owner | ApplicationImportBatch |
 | Contract record status | target_contract |
 | Kind | http |
 | Logical identity | CommandId; Uuid; required=true; client; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
 | Entry point | personal_http |
 | MCP | false |
-| Selected semantic events | ApplicationImportRetirementProposalSealed |
+| Selected semantic events | ApplicationImportRetirementProposalFinalized |
 | Protocols | Complete batch application and publication |
 | Policy preservation | All current source handler/aggregate validation rules and source test expectations apply, except the explicit contractChanges and boundary protocol. Lifetime caps and technical attempt events are removed with their structural replacement. |
 | Contract changes | Add required CommandId., Rename ExpectedBatchRevision to ExpectedRevision and compare the new target owner revision. |
@@ -266,13 +281,16 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | StageApplicationImport |
+| Selected source command name | StageApplicationImport |
+| Name decision | The selected source name is retained. |
 | Owner | ApplicationImportBatch |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | http |
 | Logical identity | SubmissionId; Uuid; required=true; caller-supplied immutable creation identity: an exact retry with the same id and authored intent returns the original result; the same id with changed intent is refused; a different id is a different record |
 | Entry point | [Placeholder: value not recorded] |
 | MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | [Placeholder: value not recorded] |
+| Selected semantic events | None listed |
 | Protocols | [Placeholder: value not recorded] |
 | Policy preservation | [Placeholder: value not recorded] |
 | Contract changes | [Placeholder: value not recorded] |
@@ -314,13 +332,16 @@ Required tests: [Placeholder: required tests not recorded]
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | CommitApplicationImportBatch |
+| Selected source command name | CommitApplicationImportBatch |
+| Name decision | The selected source name is retained. |
 | Owner | ApplicationImportBatch |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; reactor; deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result |
 | Entry point | [Placeholder: value not recorded] |
 | MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | [Placeholder: value not recorded] |
+| Selected semantic events | None listed |
 | Protocols | [Placeholder: value not recorded] |
 | Policy preservation | [Placeholder: value not recorded] |
 | Contract changes | [Placeholder: value not recorded] |
@@ -363,13 +384,16 @@ Required tests: [Placeholder: required tests not recorded]
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | CompleteApplicationImportCancellation |
+| Selected source command name | CompleteApplicationImportCancellation |
+| Name decision | The selected source name is retained. |
 | Owner | ApplicationImportBatch |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; reactor; deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result |
 | Entry point | [Placeholder: value not recorded] |
 | MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | [Placeholder: value not recorded] |
+| Selected semantic events | None listed |
 | Protocols | [Placeholder: value not recorded] |
 | Policy preservation | [Placeholder: value not recorded] |
 | Contract changes | [Placeholder: value not recorded] |
@@ -411,7 +435,7 @@ Required tests: [Placeholder: required tests not recorded]
 
 ## Source contracts
 
-| Command | Handler | Registered | Entry point |
+| Selected source command | Handler | Registered | Entry point |
 | --- | --- | --- | --- |
 | AcceptApplicationImport | AcceptApplicationImportHandler | true | personal_http |
 | CancelApplicationImport | CancelApplicationImportHandler | true | personal_http |

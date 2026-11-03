@@ -2,9 +2,9 @@
 
 Canonical events: **1**. Complete canonical event and available schema records: [owner event JSON](../data/events/evidence-support.json).
 
-| Event | Kind | Adopted discriminator | Version | Schema fields | Meaning |
-| --- | --- | --- | --- | --- | --- |
-| EvidenceSupportLinked | business | bdgrz.evidence.evidence-support-linked | 1 | [Placeholder: schema absent] | Records the EvidenceSupportLinked domain fact for one tenant-owned subject revision. |
+| Target event | Selected source name | Kind | Adopted discriminator | Version | Schema fields | Meaning |
+| --- | --- | --- | --- | --- | --- | --- |
+| EvidenceSupportLinked | EvidenceSupportLinked | business | bdgrz.evidence.evidence-support-linked | 1 | [Placeholder: schema absent] | Records the EvidenceSupportLinked domain fact for one tenant-owned subject revision. |
 
 ## Event details
 
@@ -12,6 +12,9 @@ Canonical events: **1**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | EvidenceSupportLinked |
+| Selected source event name | EvidenceSupportLinked |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:EvidenceSupportLinked |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | EvidenceSupportLinked |
@@ -21,7 +24,8 @@ Canonical events: **1**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | Records the EvidenceSupportLinked domain fact for one tenant-owned subject revision. |
+| Target meaning | Records the EvidenceSupportLinked domain fact for one tenant-owned subject revision. |
+| Selected source meaning | Records the EvidenceSupportLinked domain fact for one tenant-owned subject revision. |
 | Meaning source | record summary in src/Compliance.Common/Features/Evidence/Events/EvidenceSupportLinked.cs |
 
 #### Schema

@@ -200,7 +200,11 @@
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "resolvedIntentSchema": "ClosureIntent",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "AccessReviewCampaignCompleted",
+      "targetName": "AccessReviewCampaignCompleted",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "The campaign was completed with its final immutable snapshot, after every item was held and its exact decision, remediation and exception proof was verified. ItemCompletionProofs is the complete proof set; OperationResult is the original typed completion result."
     },
     {
       "canonical": {
@@ -379,7 +383,11 @@
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "resolvedIntentSchema": "ClosureIntent",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "AccessReviewCampaignCompletionAccepted",
+      "targetName": "AccessReviewCampaignCompletionAccepted",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "The campaign admitted the owner's completion: the exact campaign revision, the frozen ClosureIntent (the attestation, the complete drained item selection and the pinned head of every item) and the original 202 acknowledgment. The completion process holds every item from it."
     },
     {
       "canonical": {
@@ -558,7 +566,11 @@
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "resolvedIntentSchema": "ClosureIntent",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "AccessReviewCampaignCompletionCanceled",
+      "targetName": "AccessReviewCampaignCompletionCanceled",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "The pending completion of an access review campaign was canceled with a failure proof, so any delayed attempt to close that completion is refused and the campaign stays open."
     },
     {
       "canonical": {
@@ -697,7 +709,11 @@
         "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "AccessReviewCampaignLaunched",
+      "targetName": "AccessReviewCampaignLaunched",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "A campaign was launched with its frozen population, reviewers, instructions, and deadline. The reviewers and the complete item list are verified immutable content, so a campaign of any size is one bounded fact. ItemIntentManifest holds the frozen creation intent of every item in canonical item order; the launch fan-out materializes each item from it. The campaign's logical revision is 1 after launch."
     },
     {
       "canonical": {
@@ -886,7 +902,11 @@
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "resolvedIntentSchema": "BulkAccessDecisionIntent",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "AccessReviewDecisionBatchAdmitted",
+      "targetName": "AccessReviewDecisionBatchAdmitted",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "The campaign admitted a complete bulk decision: the exact campaign revision, the frozen BulkAccessDecisionIntent (the preview token, the immutable selection with each item's frozen head and the shared decision and rationale) and the original 202 acknowledgment. The batch is created from this fact at its own revision zero, and a campaign completion drains it before it holds any item."
     }
   ]
 }

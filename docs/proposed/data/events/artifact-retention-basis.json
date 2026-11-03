@@ -108,7 +108,11 @@
         "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "ArtifactRetentionBasisRecorded",
+      "targetName": "ArtifactRetentionBasisRecorded",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "The retention basis for an artifact source was recorded: its policy, covered period, and the date it must be retained through, seven years after the period ends."
     },
     {
       "canonical": {
@@ -187,7 +191,11 @@
         "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "ArtifactRetentionBound",
+      "targetName": "ArtifactRetentionPeriodSet",
+      "nameDecision": "Names the historical retention period assigned to an artifact source.",
+      "targetMeaning": "A retention binding was recorded for an artifact source under the earlier combined retention record, kept only as history; current retention decisions are recorded as separate basis and hold facts."
     }
   ]
 }

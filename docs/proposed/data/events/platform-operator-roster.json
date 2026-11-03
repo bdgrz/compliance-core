@@ -23,7 +23,11 @@
         "meaning": "Platform operator authority was granted to a user by a named actor with a stated reason.",
         "meaningSource": "authored 2026-10-29 from src/Compliance.Common/Features/Tenants/Events/PlatformOperatorGranted.cs"
       },
-      "schema": null
+      "schema": null,
+      "sourceName": "PlatformOperatorGranted",
+      "targetName": "PlatformOperatorGranted",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "Platform operator authority was granted to a user by a named actor with a stated reason."
     },
     {
       "canonical": {
@@ -47,7 +51,11 @@
         "meaning": "A user's platform operator authority was revoked by a named actor with a stated reason, ending the access that assignment gave.",
         "meaningSource": "authored 2026-10-29 from src/Compliance.Common/Features/Tenants/Events/PlatformOperatorRevoked.cs"
       },
-      "schema": null
+      "schema": null,
+      "sourceName": "PlatformOperatorRevoked",
+      "targetName": "PlatformOperatorRevoked",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "A user's platform operator authority was revoked by a named actor with a stated reason, ending the access that assignment gave."
     },
     {
       "canonical": {
@@ -71,7 +79,11 @@
         "meaning": "The platform operator roster was initialised with its starting set of operator users by a named actor.",
         "meaningSource": "authored 2026-10-29 from src/Compliance.Common/Features/Tenants/Events/PlatformOperatorRosterSeeded.cs"
       },
-      "schema": null
+      "schema": null,
+      "sourceName": "PlatformOperatorRosterSeeded",
+      "targetName": "PlatformOperatorRosterCreated",
+      "nameDecision": "Names the completed creation of the roster's initial set of operator users.",
+      "targetMeaning": "The platform operator roster was initialised with its starting set of operator users by a named actor."
     }
   ]
 }

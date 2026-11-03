@@ -23,7 +23,11 @@
         "meaning": "The slug is claimed for the tenant. The fact is the native acceptance of the claim on the slug owner.",
         "meaningSource": "record summary in src/Compliance.Common/Features/Tenants/Events/TenantSlugRegistered.cs"
       },
-      "schema": null
+      "schema": null,
+      "sourceName": "TenantSlugRegistered",
+      "targetName": "TenantSlugRegistered",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "The slug is claimed for the tenant. The fact is the native acceptance of the claim on the slug owner."
     },
     {
       "canonical": {
@@ -47,7 +51,11 @@
         "meaning": "The slug cannot be claimed for the tenant; the fact answers exactly one claim operation.",
         "meaningSource": "record summary in src/Compliance.Common/Features/Tenants/Events/TenantSlugRegistrationRejected.cs"
       },
-      "schema": null
+      "schema": null,
+      "sourceName": "TenantSlugRegistrationRejected",
+      "targetName": "TenantSlugRegistrationRejected",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "The slug cannot be claimed for the tenant; the fact answers exactly one claim operation."
     },
     {
       "canonical": {
@@ -71,7 +79,11 @@
         "meaning": "The tenant does not own the slug; the fact answers exactly one surrender operation.",
         "meaningSource": "record summary in src/Compliance.Common/Features/Tenants/Events/TenantSlugSurrenderRejected.cs"
       },
-      "schema": null
+      "schema": null,
+      "sourceName": "TenantSlugSurrenderRejected",
+      "targetName": "TenantSlugSurrenderRejected",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "The tenant does not own the slug; the fact answers exactly one surrender operation."
     },
     {
       "canonical": {
@@ -95,7 +107,11 @@
         "meaning": "The tenant gave up the slug and the slug is retired for good.",
         "meaningSource": "record summary in src/Compliance.Common/Features/Tenants/Events/TenantSlugSurrendered.cs"
       },
-      "schema": null
+      "schema": null,
+      "sourceName": "TenantSlugSurrendered",
+      "targetName": "TenantSlugSurrendered",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "The tenant gave up the slug and the slug is retired for good."
     }
   ]
 }

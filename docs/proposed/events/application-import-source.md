@@ -2,10 +2,10 @@
 
 Canonical events: **2**. Complete canonical event and available schema records: [owner event JSON](../data/events/application-import-source.json).
 
-| Event | Kind | Adopted discriminator | Version | Schema fields | Meaning |
-| --- | --- | --- | --- | --- | --- |
-| ApplicationImportSourceAdmissionRecorded | business | bdgrz.application_import_source.admission_recorded | 1 | 8 | The source admits exactly one batch. Revision is the source's logical revision after this fact; the plan was frozen against the revision before it. |
-| ApplicationImportSourceSettled | business | bdgrz.application_import_source.settled | 1 | 8 | The source claim of one batch ends with the batch's exact terminal fact. A published batch adds its claims to the source; a settlement before any admission fences the batch against a late claim. |
+| Target event | Selected source name | Kind | Adopted discriminator | Version | Schema fields | Meaning |
+| --- | --- | --- | --- | --- | --- | --- |
+| ApplicationImportSourceAdmissionRecorded | ApplicationImportSourceAdmissionRecorded | business | bdgrz.application_import_source.admission_recorded | 1 | 8 | The source admits exactly one batch. Revision is the source's logical revision after this fact; the plan was frozen against the revision before it. |
+| ApplicationImportSourceBatchCompleted | ApplicationImportSourceSettled | business | bdgrz.application_import_source.settled | 1 | 8 | The source claim of one batch ends with the batch's exact terminal fact. A published batch adds its claims to the source; a settlement before any admission fences the batch against a late claim. |
 
 ## Event details
 
@@ -13,6 +13,9 @@ Canonical events: **2**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | ApplicationImportSourceAdmissionRecorded |
+| Selected source event name | ApplicationImportSourceAdmissionRecorded |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:ApplicationImportSourceAdmissionRecorded |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | ApplicationImportSourceAdmissionRecorded |
@@ -22,7 +25,8 @@ Canonical events: **2**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | `{"discriminator":"bdgrz.application-import-source.application-import-source-admission-recorded","version":1}` |
-| Meaning | The source admits exactly one batch. Revision is the source's logical revision after this fact; the plan was frozen against the revision before it. |
+| Target meaning | The source admits exactly one batch. Revision is the source's logical revision after this fact; the plan was frozen against the revision before it. |
+| Selected source meaning | The source admits exactly one batch. Revision is the source's logical revision after this fact; the plan was frozen against the revision before it. |
 | Meaning source | record summary in src/Compliance.Common/Features/Applications/Events/ApplicationImportSourceAdmissionRecorded.cs |
 
 #### Selected schema and implementation evidence
@@ -117,10 +121,13 @@ ImportFrozenPlanIntent
 | [T014](../reactors/import-source-admission-reactor.md#t014) | emitted semantic fact | ApplicationImportBatch | ClaimApplicationImportSource | ApplicationImportSource |
 | [N000](../reactors/import-source-admission-reactor.md#n000) | logical prerequisite | ApplicationImportBatch | ExecuteApplicationImport | ApplicationImportBatch |
 
-### ApplicationImportSourceSettled
+### ApplicationImportSourceBatchCompleted
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | ApplicationImportSourceBatchCompleted |
+| Selected source event name | ApplicationImportSourceSettled |
+| Name decision | Names the terminal result of source-claim processing; published source claims remain active after the batch completes. |
 | Canonical semantic key | event:ApplicationImportSourceSettled |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | ApplicationImportSourceSettled |
@@ -130,7 +137,8 @@ ImportFrozenPlanIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | `{"discriminator":"bdgrz.application-import-source.application-import-source-settled","version":1}` |
-| Meaning | The source claim of one batch ends with the batch's exact terminal fact. A published batch adds its claims to the source; a settlement before any admission fences the batch against a late claim. |
+| Target meaning | The source claim of one batch ends with the batch's exact terminal fact. A published batch adds its claims to the source; a settlement before any admission fences the batch against a late claim. |
+| Selected source meaning | The source claim of one batch ends with the batch's exact terminal fact. A published batch adds its claims to the source; a settlement before any admission fences the batch against a late claim. |
 | Meaning source | record summary in src/Compliance.Common/Features/Applications/Events/ApplicationImportSourceSettled.cs |
 
 #### Selected schema and implementation evidence

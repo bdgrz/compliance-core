@@ -21,7 +21,11 @@
         "meaning": "A link between an exact commitment version and an exact control version was proposed with rationale, awaiting independent review.",
         "meaningSource": "authored 2026-10-29"
       },
-      "schema": null
+      "schema": null,
+      "sourceName": "CommitmentControlLinkProposed",
+      "targetName": "CommitmentControlLinkProposed",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "A link between an exact commitment version and an exact control version was proposed with rationale, awaiting independent review."
     },
     {
       "canonical": {
@@ -43,7 +47,11 @@
         "meaning": "A commitment-to-control link was retired; the pair no longer supports the commitment and no successor can revive this link identity.",
         "meaningSource": "authored 2026-10-29"
       },
-      "schema": null
+      "schema": null,
+      "sourceName": "CommitmentControlLinkRetired",
+      "targetName": "CommitmentControlLinkRetired",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "A commitment-to-control link was retired; the pair no longer supports the commitment and no successor can revive this link identity."
     },
     {
       "canonical": {
@@ -65,7 +73,11 @@
         "meaning": "An independent reviewer accepted or returned the proposed commitment-to-control link version; acceptance makes it the current link.",
         "meaningSource": "authored 2026-10-29"
       },
-      "schema": null
+      "schema": null,
+      "sourceName": "CommitmentControlLinkReviewed",
+      "targetName": "CommitmentControlLinkReviewed",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "An independent reviewer accepted or returned the proposed commitment-to-control link version; acceptance makes it the current link."
     }
   ]
 }

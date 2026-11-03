@@ -102,7 +102,11 @@
         "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "AssuranceReportRecorded",
+      "targetName": "AssuranceReportRecorded",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "An assurance report was recorded as the first revision of its own owner. The complete AssuranceReportContent is immutable content; RequestId is the report id, the logical identity of the creation."
     },
     {
       "canonical": {
@@ -210,7 +214,11 @@
         "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "AssuranceReportRevised",
+      "targetName": "AssuranceReportRevised",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "An assurance report was revised at the expected revision of its own owner; the provider cannot change. The complete revised AssuranceReportContent is immutable content and RequestId is the command id of the revision."
     },
     {
       "canonical": {
@@ -370,7 +378,11 @@
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "resolvedIntentSchema": "SourceUseAuthorizationIntent",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "ProviderAssuranceReportProviderReviewUseAuthorized",
+      "targetName": "ProviderAssuranceReportProviderReviewAuthorized",
+      "nameDecision": "Authorization is already the completed fact; Use adds no stakeholder meaning.",
+      "targetMeaning": "The exact assurance report revision is held for one provider review. The use does not advance the public report revision; Revision is the held revision and the report refuses revision while held."
     },
     {
       "canonical": {
@@ -530,7 +542,11 @@
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "resolvedIntentSchema": "SourceUseAuthorizationIntent",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "ProviderAssuranceReportProviderReviewUseSettled",
+      "targetName": "ProviderAssuranceReportProviderReviewAuthorizationClosed",
+      "nameDecision": "The exact authorization ended; the recorded outcome still distinguishes use, cancellation, or a late fence.",
+      "targetMeaning": "The held report use ended after the recorded review or after the cancellation fence. With no earlier grant it fences the key so a delayed acquisition cannot recreate the hold."
     }
   ]
 }

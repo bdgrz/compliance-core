@@ -26,7 +26,7 @@
 | [CancelAccessReviewDecisionBatch](../commands/access-review-decision-batch.md#cancelaccessreviewdecisionbatch) | abort | CommandId |
 | [PublishAccessReviewDecisionBatch](../commands/access-review-decision-batch.md#publishaccessreviewdecisionbatch) | receiver | CommandId |
 | [CompleteAccessReviewDecisionBatchCancellation](../commands/access-review-decision-batch.md#completeaccessreviewdecisionbatchcancellation) | receiver | CommandId |
-| [MaterializeAccessReviewDecisionBatch](../commands/access-review-decision-batch.md#materializeaccessreviewdecisionbatch) | receiver | CommandId |
+| [RecordAccessReviewDecisionBatch](../commands/access-review-decision-batch.md#recordaccessreviewdecisionbatch) | receiver | CommandId |
 
 ## Events
 
@@ -44,10 +44,10 @@
 | [T009](../reactors/access-review-bulk-admission-reactor.md#t009) | reaction_or_regular_process_stage | AccessReviewDecisionBatch | AccessReviewItem | ReserveAccessReviewItemDecision |
 | [T010](../reactors/access-review-bulk-admission-reactor.md#t010) | reaction_or_regular_process_stage | AccessReviewDecisionBatch | AccessReviewItem | ApplyAccessReviewItemDecision |
 | [T011](../reactors/access-review-bulk-admission-reactor.md#t011) | reaction_or_regular_process_stage | AccessReviewDecisionBatch | AccessReviewDecisionBatch | PublishAccessReviewDecisionBatch |
-| [T012](../reactors/access-review-bulk-cancellation-reactor.md#t012) | reaction_or_regular_process_stage | AccessReviewDecisionBatch | AccessReviewItem | FenceAccessReviewItemDecision |
+| [T012](../reactors/access-review-bulk-cancellation-reactor.md#t012) | reaction_or_regular_process_stage | AccessReviewDecisionBatch | AccessReviewItem | CancelAccessReviewItemDecision |
 | [T079](../reactors/access-review-bulk-cancellation-completion-reactor.md#t079) | reaction_or_regular_process_stage | AccessReviewDecisionBatch | AccessReviewDecisionBatch | CompleteAccessReviewDecisionBatchCancellation |
-| [T080](../reactors/access-review-bulk-admission-reactor.md#t080) | reaction_or_regular_process_stage | AccessReviewDecisionBatch | AccessReviewItem | SettleAccessReviewItemDecision |
-| [T086](../reactors/access-review-bulk-admission-reactor.md#t086) | reaction_or_regular_process_stage | AccessReviewCampaign | AccessReviewDecisionBatch | MaterializeAccessReviewDecisionBatch |
+| [T080](../reactors/access-review-bulk-admission-reactor.md#t080) | reaction_or_regular_process_stage | AccessReviewDecisionBatch | AccessReviewItem | CloseAccessReviewItemDecisionAuthorization |
+| [T086](../reactors/access-review-bulk-admission-reactor.md#t086) | reaction_or_regular_process_stage | AccessReviewCampaign | AccessReviewDecisionBatch | RecordAccessReviewDecisionBatch |
 | [A005](../reactors/unassigned-architecture-rows.md#a005) | process_abort_binding | AccessReviewCampaign | AccessReviewDecisionBatch | CancelAccessReviewDecisionBatch |
 
 ## Product rules

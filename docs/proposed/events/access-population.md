@@ -2,11 +2,11 @@
 
 Canonical events: **3**. Complete canonical event and available schema records: [owner event JSON](../data/events/access-population.json).
 
-| Event | Kind | Adopted discriminator | Version | Schema fields | Meaning |
-| --- | --- | --- | --- | --- | --- |
-| AccessPopulationAccepted | business | bdgrz.access_population.accepted | 2 | 12 | A population was attested and frozen as an immutable snapshot of its raw facts. |
-| AccessPopulationFactsRecorded | business | bdgrz.access_population.facts_recorded | 2 | 9 | A draft's complete observed facts were replaced. FactsContent is the complete AccessPopulationFacts as verified immutable content, so no list can be truncated by an event size. |
-| AccessPopulationOpened | business | bdgrz.access_population.opened | 2 | 13 | A population draft was opened for one exact system-instance revision. It is the root native fact of the population's opening operation; the logical id of Operation is the population id. |
+| Target event | Selected source name | Kind | Adopted discriminator | Version | Schema fields | Meaning |
+| --- | --- | --- | --- | --- | --- | --- |
+| AccessPopulationAccepted | AccessPopulationAccepted | business | bdgrz.access_population.accepted | 2 | 12 | A population was attested and frozen as an immutable snapshot of its raw facts. |
+| AccessPopulationFactsRecorded | AccessPopulationFactsRecorded | business | bdgrz.access_population.facts_recorded | 2 | 9 | A draft's complete observed facts were replaced. FactsContent is the complete AccessPopulationFacts as verified immutable content, so no list can be truncated by an event size. |
+| AccessPopulationOpened | AccessPopulationOpened | business | bdgrz.access_population.opened | 2 | 13 | A population draft was opened for one exact system-instance revision. It is the root native fact of the population's opening operation; the logical id of Operation is the population id. |
 
 ## Event details
 
@@ -14,6 +14,9 @@ Canonical events: **3**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | AccessPopulationAccepted |
+| Selected source event name | AccessPopulationAccepted |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:AccessPopulationAccepted |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | AccessPopulationAccepted |
@@ -23,7 +26,8 @@ Canonical events: **3**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | `{"discriminator":"bdgrz.access_population.accepted","version":1}` |
-| Meaning | A population was attested and frozen as an immutable snapshot of its raw facts. |
+| Target meaning | A population was attested and frozen as an immutable snapshot of its raw facts. |
+| Selected source meaning | A population was attested and frozen as an immutable snapshot of its raw facts. |
 | Meaning source | record summary in src/Compliance.Common/Features/AccessReviews/Events/AccessPopulationAccepted.cs |
 
 #### Selected schema and implementation evidence
@@ -71,6 +75,9 @@ Canonical events: **3**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | AccessPopulationFactsRecorded |
+| Selected source event name | AccessPopulationFactsRecorded |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:AccessPopulationFactsRecorded |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | AccessPopulationFactsRecorded |
@@ -80,7 +87,8 @@ Canonical events: **3**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | `{"discriminator":"bdgrz.access_population.facts_recorded","version":1}` |
-| Meaning | A draft's complete observed facts were replaced. FactsContent is the complete AccessPopulationFacts as verified immutable content, so no list can be truncated by an event size. |
+| Target meaning | A draft's complete observed facts were replaced. FactsContent is the complete AccessPopulationFacts as verified immutable content, so no list can be truncated by an event size. |
+| Selected source meaning | A draft's complete observed facts were replaced. FactsContent is the complete AccessPopulationFacts as verified immutable content, so no list can be truncated by an event size. |
 | Meaning source | record summary in src/Compliance.Common/Features/AccessReviews/Events/AccessPopulationFactsRecorded.cs |
 
 #### Selected schema and implementation evidence
@@ -135,6 +143,9 @@ Canonical events: **3**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | AccessPopulationOpened |
+| Selected source event name | AccessPopulationOpened |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:AccessPopulationOpened |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | AccessPopulationOpened |
@@ -144,7 +155,8 @@ Canonical events: **3**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | `{"discriminator":"bdgrz.access_population.opened","version":1}` |
-| Meaning | A population draft was opened for one exact system-instance revision. It is the root native fact of the population's opening operation; the logical id of Operation is the population id. |
+| Target meaning | A population draft was opened for one exact system-instance revision. It is the root native fact of the population's opening operation; the logical id of Operation is the population id. |
+| Selected source meaning | A population draft was opened for one exact system-instance revision. It is the root native fact of the population's opening operation; the logical id of Operation is the population id. |
 | Meaning source | record summary in src/Compliance.Common/Features/AccessReviews/Events/AccessPopulationOpened.cs |
 
 #### Selected schema and implementation evidence

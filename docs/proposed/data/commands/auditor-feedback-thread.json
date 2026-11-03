@@ -64,7 +64,9 @@
         "AuditorRequestCommentRecorded"
       ],
       "effectKind": "materialize_auditor_comment",
-      "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine."
+      "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
+      "sourceName": "MaterializeAuditorComment",
+      "targetName": "RecordAuditorComment"
     }
   ],
   "sourceContractEvidence": []

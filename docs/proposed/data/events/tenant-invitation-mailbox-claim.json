@@ -23,7 +23,11 @@
         "meaning": "One invitation holds the tenant mailbox as its single pending invitation. The generation increases with every claim and is state, never part of the stream key.",
         "meaningSource": "record summary in src/Compliance.Common/Features/Tenants/Events/TenantInvitationMailboxClaimed.cs"
       },
-      "schema": null
+      "schema": null,
+      "sourceName": "TenantInvitationMailboxClaimed",
+      "targetName": "TenantInvitationMailboxClaimed",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "One invitation holds the tenant mailbox as its single pending invitation. The generation increases with every claim and is state, never part of the stream key."
     },
     {
       "canonical": {
@@ -47,7 +51,11 @@
         "meaning": "The invitation that held the mailbox in Generation no longer does, which lets a later invitation claim it. A release names the exact invitation and generation it ends.",
         "meaningSource": "record summary in src/Compliance.Common/Features/Tenants/Events/TenantInvitationMailboxReleased.cs"
       },
-      "schema": null
+      "schema": null,
+      "sourceName": "TenantInvitationMailboxReleased",
+      "targetName": "TenantInvitationMailboxReleased",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "The invitation that held the mailbox in Generation no longer does, which lets a later invitation claim it. A release names the exact invitation and generation it ends."
     }
   ]
 }

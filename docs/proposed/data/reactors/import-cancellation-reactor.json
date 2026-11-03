@@ -1,5 +1,7 @@
 {
-  "root": "ImportCancellationReactor",
+  "sourceRoot": "ImportCancellationReactor",
+  "targetRoot": "CancelApplicationImportReactor",
+  "businessReason": "Cancel the exact import batch, stop delayed application changes, and release only its own source claims and holds.",
   "rows": [
     {
       "id": "T018",

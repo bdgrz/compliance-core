@@ -11,19 +11,19 @@
 
 **Invariant:** One recorded workforce person has immutable creation identity, revisioned contact content and at most one current platform membership correlation.
 
-**Additional decision rule:** Person is owned solely by workforce assurance: access governance may correlate an observed account to a Person but never imports a competing person roster, and a platform member is a separate access relationship from the Person.
+**Additional decision rule:** Person is owned solely by workforce assurance: access governance may correlate an observed account to a Person but never imports a competing person roster, and a platform member is a separate access relationship from the Person. A Person is the stable identity for someone in the workforce. It is separate from that person's employment record and their access to the platform.
 
 **Must preserve:** [Placeholder: preservation rule not recorded.]
 
 **Replay:** Current required authorization precedes replay; exact authorized retries resolve the original accepted result using the selected logical identity and immutable actor/intent/source binding. Fresh mutable feasibility, clock selection and body preparation cannot replace that original result. Expected revision is concurrency precondition, not a new identity.
 
-**Lifecycle:** [Placeholder: a consolidated lifecycle sequence is not present in the selected owner record.]
+**Lifecycle:** The proposed target has no separate event for ending or retiring a Person. WorkRelationship records employment status; Member records platform access. Changing contact details or platform access does not end the person's employment.
 
 ## Commands
 
 | Command | Kind | Identity field |
 | --- | --- | --- |
-| [CorrelatePersonMembership](../commands/person.md#correlatepersonmembership) | command | CommandId |
+| [SetPersonTenantMemberLink](../commands/person.md#setpersontenantmemberlink) | command | CommandId |
 | [RecordPerson](../commands/person.md#recordperson) | http | PersonId |
 | [RevisePerson](../commands/person.md#reviseperson) | command | CommandId |
 
@@ -31,7 +31,7 @@
 
 | Event | Discriminator | Version |
 | --- | --- | --- |
-| [PersonMembershipCorrelated](../events/person.md#personmembershipcorrelated) | bdgrz.workforce.person.membership-correlated | 2 |
+| [PersonMemberLinkChanged](../events/person.md#personmemberlinkchanged) | bdgrz.workforce.person.membership-correlated | 2 |
 | [PersonRecorded](../events/person.md#personrecorded) | bdgrz.workforce.person.recorded | 2 |
 | [PersonRevised](../events/person.md#personrevised) | bdgrz.workforce.person.revised | 2 |
 

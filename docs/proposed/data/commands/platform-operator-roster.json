@@ -44,7 +44,9 @@
         "line": 6031,
         "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
       },
-      "kind": "command"
+      "kind": "command",
+      "sourceName": "GrantPlatformOperator",
+      "targetName": "GrantPlatformOperator"
     },
     {
       "command": "RevokePlatformOperator",
@@ -94,7 +96,9 @@
         "line": 14146,
         "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
       },
-      "kind": "command"
+      "kind": "command",
+      "sourceName": "RevokePlatformOperator",
+      "targetName": "RevokePlatformOperator"
     },
     {
       "command": "SeedPlatformOperatorRoster",
@@ -129,7 +133,9 @@
         "line": 14439,
         "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
       },
-      "kind": "creation"
+      "kind": "creation",
+      "sourceName": "SeedPlatformOperatorRoster",
+      "targetName": "CreatePlatformOperatorRoster"
     }
   ],
   "sourceContractEvidence": []

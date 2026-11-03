@@ -1,5 +1,7 @@
 {
-  "root": "LinkImpactReviewWorkReactor",
+  "sourceRoot": "LinkImpactReviewWorkReactor",
+  "targetRoot": "RequestImpactReviewAfterSignificantChangeReactor",
+  "businessReason": "Make sure a significant change's required control and risk reviews are assigned and linked before the change is treated as addressed.",
   "rows": [
     {
       "id": "S019",

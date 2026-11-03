@@ -2,10 +2,10 @@
 
 Canonical events: **2**. Complete canonical event and available schema records: [owner event JSON](../data/events/artifact-retention-basis.json).
 
-| Event | Kind | Adopted discriminator | Version | Schema fields | Meaning |
-| --- | --- | --- | --- | --- | --- |
-| ArtifactRetentionBasisRecorded | business | bdgrz.artifact_retention.basis_recorded | 1 | 14 | The retention basis for an artifact source was recorded: its policy, covered period, and the date it must be retained through, seven years after the period ends. |
-| ArtifactRetentionBound | business | bdgrz.artifact_retention.bound | 1 | 8 | A retention binding was recorded for an artifact source under the earlier combined retention record, kept only as history; current retention decisions are recorded as separate basis and hold facts. |
+| Target event | Selected source name | Kind | Adopted discriminator | Version | Schema fields | Meaning |
+| --- | --- | --- | --- | --- | --- | --- |
+| ArtifactRetentionBasisRecorded | ArtifactRetentionBasisRecorded | business | bdgrz.artifact_retention.basis_recorded | 1 | 14 | The retention basis for an artifact source was recorded: its policy, covered period, and the date it must be retained through, seven years after the period ends. |
+| ArtifactRetentionPeriodSet | ArtifactRetentionBound | business | bdgrz.artifact_retention.bound | 1 | 8 | A retention binding was recorded for an artifact source under the earlier combined retention record, kept only as history; current retention decisions are recorded as separate basis and hold facts. |
 
 ## Event details
 
@@ -13,6 +13,9 @@ Canonical events: **2**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | ArtifactRetentionBasisRecorded |
+| Selected source event name | ArtifactRetentionBasisRecorded |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:ArtifactRetentionBasisRecorded |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | ArtifactRetentionBasisRecorded |
@@ -22,7 +25,8 @@ Canonical events: **2**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | The retention basis for an artifact source was recorded: its policy, covered period, and the date it must be retained through, seven years after the period ends. |
+| Target meaning | The retention basis for an artifact source was recorded: its policy, covered period, and the date it must be retained through, seven years after the period ends. |
+| Selected source meaning | The retention basis for an artifact source was recorded: its policy, covered period, and the date it must be retained through, seven years after the period ends. |
 | Meaning source | authored 2026-10-29 from src/Compliance.Common/Features/Retention/Events/ArtifactRetentionBasisRecorded.cs |
 
 #### Selected schema and implementation evidence
@@ -68,10 +72,13 @@ Canonical events: **2**. Complete canonical event and available schema records: 
 
 [Placeholder: no selected choreography row names this event as root, prerequisite, or emitted fact.]
 
-### ArtifactRetentionBound
+### ArtifactRetentionPeriodSet
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | ArtifactRetentionPeriodSet |
+| Selected source event name | ArtifactRetentionBound |
+| Name decision | Names the historical retention period assigned to an artifact source. |
 | Canonical semantic key | event:ArtifactRetentionBound |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | ArtifactRetentionBound |
@@ -81,7 +88,8 @@ Canonical events: **2**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | A retention binding was recorded for an artifact source under the earlier combined retention record, kept only as history; current retention decisions are recorded as separate basis and hold facts. |
+| Target meaning | A retention binding was recorded for an artifact source under the earlier combined retention record, kept only as history; current retention decisions are recorded as separate basis and hold facts. |
+| Selected source meaning | A retention binding was recorded for an artifact source under the earlier combined retention record, kept only as history; current retention decisions are recorded as separate basis and hold facts. |
 | Meaning source | authored 2026-10-29 from src/Compliance.Common/Features/Retention/Events/ArtifactRetentionBound.cs |
 
 #### Selected schema and implementation evidence

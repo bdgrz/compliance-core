@@ -1,5 +1,7 @@
 {
-  "root": "LocationChangeAcceptedReactor",
+  "sourceRoot": "LocationChangeAcceptedReactor",
+  "targetRoot": "KeepLocationNamesUniqueReactor",
+  "businessReason": "Keep location names unique while an accepted location change claims the new name and releases the old one.",
   "rows": [
     {
       "id": "T025",

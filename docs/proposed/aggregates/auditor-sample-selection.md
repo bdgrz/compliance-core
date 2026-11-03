@@ -23,7 +23,7 @@
 
 | Command | Kind | Identity field |
 | --- | --- | --- |
-| [MaterializeAuditorSampleSelection](../commands/auditor-sample-selection.md#materializeauditorsampleselection) | receiver | CommandId |
+| [RecordAuditorSampleSelection](../commands/auditor-sample-selection.md#recordauditorsampleselection) | receiver | CommandId |
 
 ## Events
 
@@ -35,7 +35,7 @@
 
 | Row | Kind | Source owner | Target owner | Command |
 | --- | --- | --- | --- | --- |
-| [T105](../reactors/auditor-sample-selection-materialization-reactor.md#t105) | reaction_or_regular_process_stage | AuditorRequest | AuditorSampleSelection | MaterializeAuditorSampleSelection |
+| [T105](../reactors/auditor-sample-selection-materialization-reactor.md#t105) | reaction_or_regular_process_stage | AuditorRequest | AuditorSampleSelection | RecordAuditorSampleSelection |
 
 ## Product rules
 

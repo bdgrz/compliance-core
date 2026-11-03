@@ -23,7 +23,11 @@
         "meaning": "A permission was assigned to a role by a named actor, so holders of the role gain it.",
         "meaningSource": "authored 2026-10-29 from src/Compliance.Common/Features/AccessControl/Events/RolePermissionAssigned.cs"
       },
-      "schema": null
+      "schema": null,
+      "sourceName": "RolePermissionAssigned",
+      "targetName": "RolePermissionAssigned",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "A permission was assigned to a role by a named actor, so holders of the role gain it."
     },
     {
       "canonical": {
@@ -47,7 +51,11 @@
         "meaning": "A permission was removed from a role by a named actor, ending the assignment episode so holders of the role lose it.",
         "meaningSource": "authored 2026-10-29 from src/Compliance.Common/Features/AccessControl/Events/RolePermissionRemoved.cs"
       },
-      "schema": null
+      "schema": null,
+      "sourceName": "RolePermissionRemoved",
+      "targetName": "RolePermissionRemoved",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "A permission was removed from a role by a named actor, ending the assignment episode so holders of the role lose it."
     }
   ]
 }

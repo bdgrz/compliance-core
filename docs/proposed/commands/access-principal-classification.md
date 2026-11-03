@@ -2,9 +2,9 @@
 
 Selected command contracts: **1**. Complete selected contracts and companion source evidence: [owner command JSON](../data/commands/access-principal-classification.json).
 
-| Command | Kind | Identity | Fields | HTTP routes |
-| --- | --- | --- | --- | --- |
-| ClassifyAccessPrincipal | http | CommandId | 11 | PUT /api/v1/tenants/{tenant_id}/access-populations/{population_id}/classifications/{command_id} [ComplianceAuthorizationPolicies.ApiUser] |
+| Target command | Selected source name | Kind | Identity | Fields | HTTP routes |
+| --- | --- | --- | --- | --- | --- |
+| ClassifyAccessPrincipal | ClassifyAccessPrincipal | http | CommandId | 11 | PUT /api/v1/tenants/{tenant_id}/access-populations/{population_id}/classifications/{command_id} [ComplianceAuthorizationPolicies.ApiUser] |
 
 ## Selected command details
 
@@ -12,6 +12,9 @@ Selected command contracts: **1**. Complete selected contracts and companion sou
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | ClassifyAccessPrincipal |
+| Selected source command name | ClassifyAccessPrincipal |
+| Name decision | The selected source name is retained. |
 | Owner | AccessPrincipalClassification |
 | Contract record status | target_contract |
 | Kind | http |
@@ -66,7 +69,7 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 
 ## Source contracts
 
-| Command | Handler | Registered | Entry point |
+| Selected source command | Handler | Registered | Entry point |
 | --- | --- | --- | --- |
 | ClassifyAccessPrincipal | ClassifyAccessPrincipalHandler | true | authorized_http_and_mcp |
 

@@ -1,5 +1,7 @@
 {
-  "root": "MemberRetirementReactor",
+  "sourceRoot": "MemberRetirementReactor",
+  "targetRoot": "RemoveMemberAssignmentsAndAccessAfterMembershipEndsReactor",
+  "businessReason": "Remove team assignments and access grants after the exact membership episode ends.",
   "rows": [
     {
       "id": "S003",

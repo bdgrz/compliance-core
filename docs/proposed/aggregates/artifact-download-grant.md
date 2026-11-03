@@ -38,9 +38,9 @@
 | Row | Kind | Source owner | Target owner | Command |
 | --- | --- | --- | --- | --- |
 | [T101](../reactors/one-committed-evidence-artifact-download-requested-starter.md#t101) | reaction_or_regular_process_stage | EvidenceArtifact | ArtifactDownloadGrant | IssueProtectedArtifactDownloadGrant |
-| [T102](../reactors/one-committed-evidence-artifact-download-requested-starter.md#t102) | reaction_or_regular_process_stage | ArtifactDownloadGrant | AdvisorHandoff | SettleAdvisorArtifactDownloadUse |
-| [T103](../reactors/one-committed-evidence-artifact-download-requested-starter.md#t103) | reaction_or_regular_process_stage | ArtifactDownloadGrant | EvidenceHandlingPolicy | SettleArtifactHandlingDownloadUse |
-| [T104](../reactors/one-committed-evidence-artifact-download-requested-starter.md#t104) | reaction_or_regular_process_stage | ArtifactDownloadGrant | EvidenceArtifact | SettleArtifactDownloadAvailabilityUse |
+| [T102](../reactors/one-committed-evidence-artifact-download-requested-starter.md#t102) | reaction_or_regular_process_stage | ArtifactDownloadGrant | AdvisorHandoff | CloseAdvisorArtifactDownloadAuthorization |
+| [T103](../reactors/one-committed-evidence-artifact-download-requested-starter.md#t103) | reaction_or_regular_process_stage | ArtifactDownloadGrant | EvidenceHandlingPolicy | CloseArtifactHandlingDownloadAuthorization |
+| [T104](../reactors/one-committed-evidence-artifact-download-requested-starter.md#t104) | reaction_or_regular_process_stage | ArtifactDownloadGrant | EvidenceArtifact | CloseArtifactDownloadAvailabilityAuthorization |
 | [A021](../reactors/unassigned-architecture-rows.md#a021) | process_abort_binding | EvidenceArtifact | ArtifactDownloadGrant | CancelProtectedArtifactDownloadGrant |
 | [Q000](../reactors/unassigned-architecture-rows.md#q000) | personal_scoped_query | null (recorded) | ArtifactDownloadGrant | GetArtifactDownloadGrant |
 

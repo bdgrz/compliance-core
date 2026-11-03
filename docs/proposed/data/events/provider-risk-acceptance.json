@@ -244,7 +244,11 @@
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "resolvedIntentSchema": "ProviderRiskLinkIntent",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "ProviderCoverageGapRiskAcceptanceLinked",
+      "targetName": "ProviderCoverageGapRiskAcceptanceLinked",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "The immutable accepted-risk link materialized from its admission. It belongs only to the link id, never changes the gap, and keeps the admission revision and instant even if the gap later closes or the acceptance expires. AcceptanceContent is the ProviderCoverageGapRiskAcceptanceView."
     }
   ]
 }

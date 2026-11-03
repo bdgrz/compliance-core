@@ -117,7 +117,11 @@
         "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "TenantInvitationAccepted",
+      "targetName": "TenantInvitationAccepted",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "An invitation was accepted by an authenticated user who proved the invited mailbox. The fact is the native acceptance of the invitation's acceptance operation and freezes the exact terms the reaction provisions. GuestProgramIdsManifest references the complete ordered guest program scope."
     },
     {
       "canonical": {
@@ -250,7 +254,11 @@
         "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "TenantMemberInvited",
+      "targetName": "TenantMemberInvited",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "An invitation was created. The fact is the native acceptance of the invitation's logical id on the invitation stream and freezes the exact recipient, purpose, scopes and expiry. The bearer token never enters the fact, only its hash and the key that derives it. MailboxGeneration is the generation of the mailbox claim the invitation was published under; only that generation may release it. GuestProgramIdsManifest references the complete ordered program scope."
     }
   ]
 }

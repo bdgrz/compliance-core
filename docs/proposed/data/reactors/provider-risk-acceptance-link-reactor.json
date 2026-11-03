@@ -1,5 +1,7 @@
 {
-  "root": "ProviderRiskAcceptanceLinkReactor",
+  "sourceRoot": "ProviderRiskAcceptanceLinkReactor",
+  "targetRoot": "KeepRiskAcceptanceWithProviderGapReactor",
+  "businessReason": "Keep the exact accepted risk linked to the provider gap that admitted it, even if the gap later closes.",
   "rows": [
     {
       "id": "T088",

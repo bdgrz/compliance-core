@@ -2,9 +2,9 @@
 
 Canonical events: **1**. Complete canonical event and available schema records: [owner event JSON](../data/events/examination-sign-off.json).
 
-| Event | Kind | Adopted discriminator | Version | Schema fields | Meaning |
-| --- | --- | --- | --- | --- | --- |
-| ExaminationSignedOff | business | bdgrz.examinations.examination-signed-off | 2 | [Placeholder: schema absent] | Records management's immutable review of the exact examination inputs and outcomes. |
+| Target event | Selected source name | Kind | Adopted discriminator | Version | Schema fields | Meaning |
+| --- | --- | --- | --- | --- | --- | --- |
+| ExaminationSignedOff | ExaminationSignedOff | business | bdgrz.examinations.examination-signed-off | 2 | [Placeholder: schema absent] | Records management's immutable review of the exact examination inputs and outcomes. |
 
 ## Event details
 
@@ -12,6 +12,9 @@ Canonical events: **1**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | ExaminationSignedOff |
+| Selected source event name | ExaminationSignedOff |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:ExaminationSignedOff |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | ExaminationSignedOff |
@@ -21,7 +24,8 @@ Canonical events: **1**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | Records management's immutable review of the exact examination inputs and outcomes. |
+| Target meaning | Records management's immutable review of the exact examination inputs and outcomes. |
+| Selected source meaning | Records management's immutable review of the exact examination inputs and outcomes. |
 | Meaning source | record summary in src/Compliance.Common/Features/Examinations/Events/ExaminationSignedOff.cs |
 
 #### Schema

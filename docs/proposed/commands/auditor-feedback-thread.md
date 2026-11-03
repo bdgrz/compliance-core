@@ -2,23 +2,26 @@
 
 Selected command contracts: **1**. Complete selected contracts and companion source evidence: [owner command JSON](../data/commands/auditor-feedback-thread.json).
 
-| Command | Kind | Identity | Fields | HTTP routes |
-| --- | --- | --- | --- | --- |
-| MaterializeAuditorComment | receiver | CommandId | 9 | [Placeholder: value not recorded] |
+| Target command | Selected source name | Kind | Identity | Fields | HTTP routes |
+| --- | --- | --- | --- | --- | --- |
+| RecordAuditorComment | MaterializeAuditorComment | receiver | CommandId | 9 | [Placeholder: value not recorded] |
 
 ## Selected command details
 
-### MaterializeAuditorComment
+### RecordAuditorComment
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | RecordAuditorComment |
+| Selected source command name | MaterializeAuditorComment |
+| Name decision | Records the exact auditor comment admitted while its request was open. |
 | Owner | AuditorFeedbackThread |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; internal; deterministic receiver identity derived from the admitted root fact, episode and generation: exact redelivery resolves the original result, a changed admission is a new identity |
 | Entry point | [Placeholder: value not recorded] |
 | MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | [Placeholder: value not recorded] |
+| Selected semantic events | None listed |
 | Protocols | [Placeholder: value not recorded] |
 | Policy preservation | [Placeholder: value not recorded] |
 | Contract changes | [Placeholder: value not recorded] |

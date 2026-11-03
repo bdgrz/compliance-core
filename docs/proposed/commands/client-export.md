@@ -2,14 +2,14 @@
 
 Selected command contracts: **6**. Complete selected contracts and companion source evidence: [owner command JSON](../data/commands/client-export.json).
 
-| Command | Kind | Identity | Fields | HTTP routes |
-| --- | --- | --- | --- | --- |
-| RecordClientExportBuildResult | command | CommandId | 7 | [Placeholder: value not recorded] |
-| RecordClientExportDelivery | command | CommandId | 7 | [Placeholder: value not recorded] |
-| RecordOwnAttestRecordDelivery | command | CommandId | 8 | [Placeholder: value not recorded] |
-| RecordOwnAttestRecordPackageResult | command | CommandId | 8 | [Placeholder: value not recorded] |
-| RequestClientExport | creation | ExportId | 5 | [Placeholder: value not recorded] |
-| RequestOwnAttestRecordPackage | creation | PackageId | 4 | [Placeholder: value not recorded] |
+| Target command | Selected source name | Kind | Identity | Fields | HTTP routes |
+| --- | --- | --- | --- | --- | --- |
+| RecordClientExportBuildResult | RecordClientExportBuildResult | command | CommandId | 7 | [Placeholder: value not recorded] |
+| RecordClientExportDelivery | RecordClientExportDelivery | command | CommandId | 7 | [Placeholder: value not recorded] |
+| RecordOwnAttestRecordDelivery | RecordOwnAttestRecordDelivery | command | CommandId | 8 | [Placeholder: value not recorded] |
+| RecordOwnAttestRecordPackageResult | RecordOwnAttestRecordPackageResult | command | CommandId | 8 | [Placeholder: value not recorded] |
+| RequestClientExport | RequestClientExport | creation | ExportId | 5 | [Placeholder: value not recorded] |
+| RequestOwnAttestRecordPackage | RequestOwnAttestRecordPackage | creation | PackageId | 4 | [Placeholder: value not recorded] |
 
 ## Selected command details
 
@@ -17,13 +17,16 @@ Selected command contracts: **6**. Complete selected contracts and companion sou
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | RecordClientExportBuildResult |
+| Selected source command name | RecordClientExportBuildResult |
+| Name decision | The selected source name is retained. |
 | Owner | ClientExport |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | command |
 | Logical identity | CommandId; Uuid; required=true; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
 | Entry point | [Placeholder: value not recorded] |
 | MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | [Placeholder: value not recorded] |
+| Selected semantic events | None listed |
 | Protocols | [Placeholder: value not recorded] |
 | Policy preservation | [Placeholder: value not recorded] |
 | Contract changes | [Placeholder: value not recorded] |
@@ -64,13 +67,16 @@ Required tests: [Placeholder: required tests not recorded]
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | RecordClientExportDelivery |
+| Selected source command name | RecordClientExportDelivery |
+| Name decision | The selected source name is retained. |
 | Owner | ClientExport |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | command |
 | Logical identity | CommandId; Uuid; required=true; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
 | Entry point | [Placeholder: value not recorded] |
 | MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | [Placeholder: value not recorded] |
+| Selected semantic events | None listed |
 | Protocols | [Placeholder: value not recorded] |
 | Policy preservation | [Placeholder: value not recorded] |
 | Contract changes | [Placeholder: value not recorded] |
@@ -111,13 +117,16 @@ Required tests: [Placeholder: required tests not recorded]
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | RecordOwnAttestRecordDelivery |
+| Selected source command name | RecordOwnAttestRecordDelivery |
+| Name decision | The selected source name is retained. |
 | Owner | ClientExport |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | command |
 | Logical identity | CommandId; Uuid; required=true; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
 | Entry point | [Placeholder: value not recorded] |
 | MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | [Placeholder: value not recorded] |
+| Selected semantic events | None listed |
 | Protocols | [Placeholder: value not recorded] |
 | Policy preservation | [Placeholder: value not recorded] |
 | Contract changes | [Placeholder: value not recorded] |
@@ -159,13 +168,16 @@ Required tests: [Placeholder: required tests not recorded]
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | RecordOwnAttestRecordPackageResult |
+| Selected source command name | RecordOwnAttestRecordPackageResult |
+| Name decision | The selected source name is retained. |
 | Owner | ClientExport |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | command |
 | Logical identity | CommandId; Uuid; required=true; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
 | Entry point | [Placeholder: value not recorded] |
 | MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | [Placeholder: value not recorded] |
+| Selected semantic events | None listed |
 | Protocols | [Placeholder: value not recorded] |
 | Policy preservation | [Placeholder: value not recorded] |
 | Contract changes | [Placeholder: value not recorded] |
@@ -207,13 +219,16 @@ Required tests: [Placeholder: required tests not recorded]
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | RequestClientExport |
+| Selected source command name | RequestClientExport |
+| Name decision | The selected source name is retained. |
 | Owner | ClientExport |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | creation |
 | Logical identity | ExportId; Uuid; required=true; caller-supplied immutable creation identity: an exact retry with the same id and authored intent returns the original result; the same id with changed intent is refused; a different id is a different record |
 | Entry point | [Placeholder: value not recorded] |
 | MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | [Placeholder: value not recorded] |
+| Selected semantic events | None listed |
 | Protocols | [Placeholder: value not recorded] |
 | Policy preservation | [Placeholder: value not recorded] |
 | Contract changes | [Placeholder: value not recorded] |
@@ -252,13 +267,16 @@ Required tests: [Placeholder: required tests not recorded]
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | RequestOwnAttestRecordPackage |
+| Selected source command name | RequestOwnAttestRecordPackage |
+| Name decision | The selected source name is retained. |
 | Owner | ClientExport |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | creation |
 | Logical identity | PackageId; Uuid; required=true; caller-supplied immutable creation identity: an exact retry with the same id and authored intent returns the original result; the same id with changed intent is refused; a different id is a different record |
 | Entry point | [Placeholder: value not recorded] |
 | MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | [Placeholder: value not recorded] |
+| Selected semantic events | None listed |
 | Protocols | [Placeholder: value not recorded] |
 | Policy preservation | [Placeholder: value not recorded] |
 | Contract changes | [Placeholder: value not recorded] |

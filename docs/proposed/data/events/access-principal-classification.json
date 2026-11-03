@@ -86,7 +86,11 @@
         "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "AccessPrincipalClassified",
+      "targetName": "AccessPrincipalClassified",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "An explicit classification decision for one exact accepted principal; earlier decisions remain in history. The decision number is the position of this fact in the principal's own stream. DecisionContent is the complete AccessPrincipalClassificationView."
     }
   ]
 }

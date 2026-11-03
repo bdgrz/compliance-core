@@ -2,10 +2,10 @@
 
 Canonical events: **2**. Complete canonical event and available schema records: [owner event JSON](../data/events/artifact-download-grant.json).
 
-| Event | Kind | Adopted discriminator | Version | Schema fields | Meaning |
-| --- | --- | --- | --- | --- | --- |
-| ArtifactDownloadGrantCanceled | business | bdgrz.artifact-download-grant.artifact-download-grant-canceled | 1 | 9 | An artifact download grant was canceled before its source use was settled, so the grant can never be issued or used to download the artifact. |
-| EvidenceArtifactDownloadIssued | business | bdgrz.evidence.evidence-artifact-download-issued | 2 | 14 | Records the receiving grant for one protected evidence artifact download. |
+| Target event | Selected source name | Kind | Adopted discriminator | Version | Schema fields | Meaning |
+| --- | --- | --- | --- | --- | --- | --- |
+| ArtifactDownloadGrantCanceled | ArtifactDownloadGrantCanceled | business | bdgrz.artifact-download-grant.artifact-download-grant-canceled | 1 | 9 | An artifact download grant was canceled before its source use was settled, so the grant can never be issued or used to download the artifact. |
+| EvidenceArtifactDownloadIssued | EvidenceArtifactDownloadIssued | business | bdgrz.evidence.evidence-artifact-download-issued | 2 | 14 | Records the receiving grant for one protected evidence artifact download. |
 
 ## Event details
 
@@ -13,6 +13,9 @@ Canonical events: **2**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | ArtifactDownloadGrantCanceled |
+| Selected source event name | ArtifactDownloadGrantCanceled |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:ArtifactDownloadGrantCanceled |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | ArtifactDownloadGrantCanceled |
@@ -22,7 +25,8 @@ Canonical events: **2**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | ARTIFACT_DOWNLOAD |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | An artifact download grant was canceled before its source use was settled, so the grant can never be issued or used to download the artifact. |
+| Target meaning | An artifact download grant was canceled before its source use was settled, so the grant can never be issued or used to download the artifact. |
+| Selected source meaning | An artifact download grant was canceled before its source use was settled, so the grant can never be issued or used to download the artifact. |
 | Meaning source | authored 2026-10-29 from src/Compliance.Common/Features/Evidence/Events/ArtifactDownloadGrantCanceled.cs |
 
 #### Selected schema and implementation evidence
@@ -109,9 +113,9 @@ EvidenceDownloadIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T102](../reactors/one-committed-evidence-artifact-download-requested-starter.md#t102) | logical prerequisite | ArtifactDownloadGrant | SettleAdvisorArtifactDownloadUse | AdvisorHandoff |
-| [T103](../reactors/one-committed-evidence-artifact-download-requested-starter.md#t103) | logical prerequisite | ArtifactDownloadGrant | SettleArtifactHandlingDownloadUse | EvidenceHandlingPolicy |
-| [T104](../reactors/one-committed-evidence-artifact-download-requested-starter.md#t104) | logical prerequisite | ArtifactDownloadGrant | SettleArtifactDownloadAvailabilityUse | EvidenceArtifact |
+| [T102](../reactors/one-committed-evidence-artifact-download-requested-starter.md#t102) | logical prerequisite | ArtifactDownloadGrant | CloseAdvisorArtifactDownloadAuthorization | AdvisorHandoff |
+| [T103](../reactors/one-committed-evidence-artifact-download-requested-starter.md#t103) | logical prerequisite | ArtifactDownloadGrant | CloseArtifactHandlingDownloadAuthorization | EvidenceHandlingPolicy |
+| [T104](../reactors/one-committed-evidence-artifact-download-requested-starter.md#t104) | logical prerequisite | ArtifactDownloadGrant | CloseArtifactDownloadAvailabilityAuthorization | EvidenceArtifact |
 | [A021](../reactors/unassigned-architecture-rows.md#a021) | emitted semantic fact | EvidenceArtifact | CancelProtectedArtifactDownloadGrant | ArtifactDownloadGrant |
 | [Q000](../reactors/unassigned-architecture-rows.md#q000) | logical prerequisite | null (recorded) | GetArtifactDownloadGrant | ArtifactDownloadGrant |
 
@@ -119,6 +123,9 @@ EvidenceDownloadIntent
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | EvidenceArtifactDownloadIssued |
+| Selected source event name | EvidenceArtifactDownloadIssued |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:EvidenceArtifactDownloadIssued |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | EvidenceArtifactDownloadIssuedV2 |
@@ -128,7 +135,8 @@ EvidenceDownloadIntent
 | Source status | declared |
 | Adopted decision IDs | ARTIFACT_DOWNLOAD |
 | Superseded selected wire | `{"discriminator":"bdgrz.evidence.evidence-artifact-download-issued","version":2,"concreteType":"EvidenceArtifactDownloadIssuedV2","owner":"ArtifactDownloadGrant"}` |
-| Meaning | Records the receiving grant for one protected evidence artifact download. |
+| Target meaning | Records the receiving grant for one protected evidence artifact download. |
+| Selected source meaning | Records the receiving grant for one protected evidence artifact download. |
 | Meaning source | record summary in src/Compliance.Common/Features/Evidence/Events/EvidenceArtifactDownloadIssuedV2.cs |
 
 #### Selected schema and implementation evidence
@@ -221,9 +229,9 @@ EvidenceDownloadIntent
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
 | [T101](../reactors/one-committed-evidence-artifact-download-requested-starter.md#t101) | emitted semantic fact | EvidenceArtifact | IssueProtectedArtifactDownloadGrant | ArtifactDownloadGrant |
-| [T102](../reactors/one-committed-evidence-artifact-download-requested-starter.md#t102) | logical prerequisite | ArtifactDownloadGrant | SettleAdvisorArtifactDownloadUse | AdvisorHandoff |
-| [T103](../reactors/one-committed-evidence-artifact-download-requested-starter.md#t103) | logical prerequisite | ArtifactDownloadGrant | SettleArtifactHandlingDownloadUse | EvidenceHandlingPolicy |
-| [T104](../reactors/one-committed-evidence-artifact-download-requested-starter.md#t104) | logical prerequisite | ArtifactDownloadGrant | SettleArtifactDownloadAvailabilityUse | EvidenceArtifact |
+| [T102](../reactors/one-committed-evidence-artifact-download-requested-starter.md#t102) | logical prerequisite | ArtifactDownloadGrant | CloseAdvisorArtifactDownloadAuthorization | AdvisorHandoff |
+| [T103](../reactors/one-committed-evidence-artifact-download-requested-starter.md#t103) | logical prerequisite | ArtifactDownloadGrant | CloseArtifactHandlingDownloadAuthorization | EvidenceHandlingPolicy |
+| [T104](../reactors/one-committed-evidence-artifact-download-requested-starter.md#t104) | logical prerequisite | ArtifactDownloadGrant | CloseArtifactDownloadAvailabilityAuthorization | EvidenceArtifact |
 | [Q000](../reactors/unassigned-architecture-rows.md#q000) | logical prerequisite | null (recorded) | GetArtifactDownloadGrant | ArtifactDownloadGrant |
 
 

@@ -2,12 +2,12 @@
 
 Canonical events: **4**. Complete canonical event and available schema records: [owner event JSON](../data/events/template-application.json).
 
-| Event | Kind | Adopted discriminator | Version | Schema fields | Meaning |
-| --- | --- | --- | --- | --- | --- |
-| MethodologyTemplateApplied | business | bdgrz.methodologytemplates.methodology-template-applied | 3 | [Placeholder: schema absent] | A methodology template was applied to a program by a named member, recording the template version and content the program now follows. |
-| TemplateApplicationDraftCreated | business | bdgrz.methodologytemplates.template-application-draft-created | 1 | [Placeholder: schema absent] | Records an owning-workflow record creation receipt that remains a draft. |
-| TemplateSuccessorAdoptionProposed | business | bdgrz.methodologytemplates.template-successor-adoption-proposed | 3 | [Placeholder: schema absent] | Adoption of a newer successor of an applied methodology template was proposed for a program by a named member, awaiting a disposition. |
-| TemplateSuccessorDispositionRecorded | business | bdgrz.methodologytemplates.template-successor-disposition-recorded | 3 | [Placeholder: schema absent] | A decision on a proposed adoption of a methodology template successor was recorded for a program by a named member. |
+| Target event | Selected source name | Kind | Adopted discriminator | Version | Schema fields | Meaning |
+| --- | --- | --- | --- | --- | --- | --- |
+| MethodologyTemplateApplied | MethodologyTemplateApplied | business | bdgrz.methodologytemplates.methodology-template-applied | 3 | [Placeholder: schema absent] | A methodology template was applied to a program by a named member, recording the template version and content the program now follows. |
+| TemplateApplicationDraftCreated | TemplateApplicationDraftCreated | business | bdgrz.methodologytemplates.template-application-draft-created | 1 | [Placeholder: schema absent] | Records an owning-workflow record creation receipt that remains a draft. |
+| TemplateSuccessorAdoptionProposed | TemplateSuccessorAdoptionProposed | business | bdgrz.methodologytemplates.template-successor-adoption-proposed | 3 | [Placeholder: schema absent] | Adoption of a newer successor of an applied methodology template was proposed for a program by a named member, awaiting a disposition. |
+| TemplateSuccessorDispositionRecorded | TemplateSuccessorDispositionRecorded | business | bdgrz.methodologytemplates.template-successor-disposition-recorded | 3 | [Placeholder: schema absent] | A decision on a proposed adoption of a methodology template successor was recorded for a program by a named member. |
 
 ## Event details
 
@@ -15,6 +15,9 @@ Canonical events: **4**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | MethodologyTemplateApplied |
+| Selected source event name | MethodologyTemplateApplied |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:MethodologyTemplateApplied |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | MethodologyTemplateApplied |
@@ -24,7 +27,8 @@ Canonical events: **4**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | A methodology template was applied to a program by a named member, recording the template version and content the program now follows. |
+| Target meaning | A methodology template was applied to a program by a named member, recording the template version and content the program now follows. |
+| Selected source meaning | A methodology template was applied to a program by a named member, recording the template version and content the program now follows. |
 | Meaning source | authored 2026-10-29 from src/Compliance.Common/Features/MethodologyTemplates/Events/MethodologyTemplateApplied.cs |
 
 #### Schema
@@ -45,6 +49,9 @@ Canonical events: **4**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | TemplateApplicationDraftCreated |
+| Selected source event name | TemplateApplicationDraftCreated |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:TemplateApplicationDraftCreated |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | TemplateApplicationDraftCreated |
@@ -54,7 +61,8 @@ Canonical events: **4**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | Records an owning-workflow record creation receipt that remains a draft. |
+| Target meaning | Records an owning-workflow record creation receipt that remains a draft. |
+| Selected source meaning | Records an owning-workflow record creation receipt that remains a draft. |
 | Meaning source | record summary in src/Compliance.Common/Features/MethodologyTemplates/Events/TemplateApplicationDraftCreated.cs |
 
 #### Schema
@@ -75,6 +83,9 @@ Canonical events: **4**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | TemplateSuccessorAdoptionProposed |
+| Selected source event name | TemplateSuccessorAdoptionProposed |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:TemplateSuccessorAdoptionProposed |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | TemplateSuccessorAdoptionProposed |
@@ -84,7 +95,8 @@ Canonical events: **4**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | Adoption of a newer successor of an applied methodology template was proposed for a program by a named member, awaiting a disposition. |
+| Target meaning | Adoption of a newer successor of an applied methodology template was proposed for a program by a named member, awaiting a disposition. |
+| Selected source meaning | Adoption of a newer successor of an applied methodology template was proposed for a program by a named member, awaiting a disposition. |
 | Meaning source | authored 2026-10-29 from src/Compliance.Common/Features/MethodologyTemplates/Events/TemplateSuccessorAdoptionProposed.cs |
 
 #### Schema
@@ -105,6 +117,9 @@ Canonical events: **4**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | TemplateSuccessorDispositionRecorded |
+| Selected source event name | TemplateSuccessorDispositionRecorded |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:TemplateSuccessorDispositionRecorded |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | TemplateSuccessorDispositionRecorded |
@@ -114,7 +129,8 @@ Canonical events: **4**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | A decision on a proposed adoption of a methodology template successor was recorded for a program by a named member. |
+| Target meaning | A decision on a proposed adoption of a methodology template successor was recorded for a program by a named member. |
+| Selected source meaning | A decision on a proposed adoption of a methodology template successor was recorded for a program by a named member. |
 | Meaning source | authored 2026-10-29 from src/Compliance.Common/Features/MethodologyTemplates/Events/TemplateSuccessorDispositionRecorded.cs |
 
 #### Schema

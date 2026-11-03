@@ -1,5 +1,7 @@
 {
-  "root": "RoleCleanupReactor",
+  "sourceRoot": "RoleCleanupReactor",
+  "targetRoot": "RemoveRoleAssignmentsAfterRoleDeletionReactor",
+  "businessReason": "When a custom role is deleted, remove its permission and team assignments so obsolete role links cannot continue granting access.",
   "rows": [
     {
       "id": "S008",

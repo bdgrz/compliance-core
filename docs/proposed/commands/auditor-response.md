@@ -2,16 +2,16 @@
 
 Selected command contracts: **8**. Complete selected contracts and companion source evidence: [owner command JSON](../data/commands/auditor-response.json).
 
-| Command | Kind | Identity | Fields | HTTP routes |
-| --- | --- | --- | --- | --- |
-| DeliverAuditResponse | http | CommandId | 9 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/auditor-requests/{request_id}/responses/{response_id}/deliver-audit-response/{command_id} [ApiUser + existing request-scope authorizers] |
-| RecordAuditorResponseDisposition | http | CommandId | 9 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/auditor-requests/{request_id}/responses/{response_id}/record-auditor-response-disposition/{command_id} [ApiUser + existing request-scope authorizers] |
-| ReviewAuditResponse | http | CommandId | 9 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/auditor-requests/{request_id}/responses/{response_id}/review-audit-response/{command_id} [ApiUser + existing request-scope authorizers] |
-| ReviseAuditResponseDraft | http | CommandId | 8 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/auditor-requests/{request_id}/responses/{response_id}/revise-audit-response-draft/{command_id} [ApiUser + existing request-scope authorizers] |
-| SubmitAuditResponse | http | CommandId | 8 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/auditor-requests/{request_id}/responses/{response_id}/submit-audit-response/{command_id} [ApiUser + existing request-scope authorizers] |
-| MaterializeAuditorResponse | receiver | CommandId | 9 | [Placeholder: value not recorded] |
-| AuthorizeAuditorResponseRequestResolutionUse | receiver | CommandId | 10 | [Placeholder: value not recorded] |
-| SettleAuditorResponseRequestResolutionUse | receiver | CommandId | 10 | [Placeholder: value not recorded] |
+| Target command | Selected source name | Kind | Identity | Fields | HTTP routes |
+| --- | --- | --- | --- | --- | --- |
+| DeliverAuditResponse | DeliverAuditResponse | http | CommandId | 9 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/auditor-requests/{request_id}/responses/{response_id}/deliver-audit-response/{command_id} [ApiUser + existing request-scope authorizers] |
+| RecordAuditorResponseDisposition | RecordAuditorResponseDisposition | http | CommandId | 9 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/auditor-requests/{request_id}/responses/{response_id}/record-auditor-response-disposition/{command_id} [ApiUser + existing request-scope authorizers] |
+| ReviewAuditResponse | ReviewAuditResponse | http | CommandId | 9 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/auditor-requests/{request_id}/responses/{response_id}/review-audit-response/{command_id} [ApiUser + existing request-scope authorizers] |
+| ReviseAuditResponseDraft | ReviseAuditResponseDraft | http | CommandId | 8 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/auditor-requests/{request_id}/responses/{response_id}/revise-audit-response-draft/{command_id} [ApiUser + existing request-scope authorizers] |
+| SubmitAuditResponse | SubmitAuditResponse | http | CommandId | 8 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/auditor-requests/{request_id}/responses/{response_id}/submit-audit-response/{command_id} [ApiUser + existing request-scope authorizers] |
+| CreateAuditorResponseDraft | MaterializeAuditorResponse | receiver | CommandId | 9 | [Placeholder: value not recorded] |
+| AuthorizeAuditorResponseRequestResolution | AuthorizeAuditorResponseRequestResolutionUse | receiver | CommandId | 10 | [Placeholder: value not recorded] |
+| CloseAuditorResponseRequestResolutionAuthorization | SettleAuditorResponseRequestResolutionUse | receiver | CommandId | 10 | [Placeholder: value not recorded] |
 
 ## Selected command details
 
@@ -19,6 +19,9 @@ Selected command contracts: **8**. Complete selected contracts and companion sou
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | DeliverAuditResponse |
+| Selected source command name | DeliverAuditResponse |
+| Name decision | The selected source name is retained. |
 | Owner | AuditorResponse |
 | Contract record status | target_contract |
 | Kind | http |
@@ -72,6 +75,9 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | RecordAuditorResponseDisposition |
+| Selected source command name | RecordAuditorResponseDisposition |
+| Name decision | The selected source name is retained. |
 | Owner | AuditorResponse |
 | Contract record status | target_contract |
 | Kind | http |
@@ -125,6 +131,9 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | ReviewAuditResponse |
+| Selected source command name | ReviewAuditResponse |
+| Name decision | The selected source name is retained. |
 | Owner | AuditorResponse |
 | Contract record status | target_contract |
 | Kind | http |
@@ -178,6 +187,9 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | ReviseAuditResponseDraft |
+| Selected source command name | ReviseAuditResponseDraft |
+| Name decision | The selected source name is retained. |
 | Owner | AuditorResponse |
 | Contract record status | target_contract |
 | Kind | http |
@@ -230,6 +242,9 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | SubmitAuditResponse |
+| Selected source command name | SubmitAuditResponse |
+| Name decision | The selected source name is retained. |
 | Owner | AuditorResponse |
 | Contract record status | target_contract |
 | Kind | http |
@@ -278,17 +293,20 @@ Existing tests: test/Compliance.Tests/Features/AuditorRequests/AuditorResponseCo
 
 Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision, ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity, ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof, ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome
 
-### MaterializeAuditorResponse
+### CreateAuditorResponseDraft
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | CreateAuditorResponseDraft |
+| Selected source command name | MaterializeAuditorResponse |
+| Name decision | Creates the exact initial response draft admitted for an auditor request. |
 | Owner | AuditorResponse |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; reactor; deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result |
 | Entry point | [Placeholder: value not recorded] |
 | MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | [Placeholder: value not recorded] |
+| Selected semantic events | None listed |
 | Protocols | [Placeholder: value not recorded] |
 | Policy preservation | [Placeholder: value not recorded] |
 | Contract changes | [Placeholder: value not recorded] |
@@ -327,17 +345,20 @@ Existing tests: [Placeholder: existing tests not recorded]
 
 Required tests: [Placeholder: required tests not recorded]
 
-### AuthorizeAuditorResponseRequestResolutionUse
+### AuthorizeAuditorResponseRequestResolution
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | AuthorizeAuditorResponseRequestResolution |
+| Selected source command name | AuthorizeAuditorResponseRequestResolutionUse |
+| Name decision | The command authorizes the named business action; the extra Use suffix describes the coordination mechanism. |
 | Owner | AuditorResponse |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; reactor; deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result |
 | Entry point | [Placeholder: value not recorded] |
 | MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | [Placeholder: value not recorded] |
+| Selected semantic events | None listed |
 | Protocols | [Placeholder: value not recorded] |
 | Policy preservation | [Placeholder: value not recorded] |
 | Contract changes | [Placeholder: value not recorded] |
@@ -377,17 +398,20 @@ Existing tests: [Placeholder: existing tests not recorded]
 
 Required tests: [Placeholder: required tests not recorded]
 
-### SettleAuditorResponseRequestResolutionUse
+### CloseAuditorResponseRequestResolutionAuthorization
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | CloseAuditorResponseRequestResolutionAuthorization |
+| Selected source command name | SettleAuditorResponseRequestResolutionUse |
+| Name decision | The command ends the exact authorization after its business action or cancellation. |
 | Owner | AuditorResponse |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; reactor; deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result |
 | Entry point | [Placeholder: value not recorded] |
 | MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | [Placeholder: value not recorded] |
+| Selected semantic events | None listed |
 | Protocols | [Placeholder: value not recorded] |
 | Policy preservation | [Placeholder: value not recorded] |
 | Contract changes | [Placeholder: value not recorded] |
@@ -430,7 +454,7 @@ Required tests: [Placeholder: required tests not recorded]
 
 ## Source contracts
 
-| Command | Handler | Registered | Entry point |
+| Selected source command | Handler | Registered | Entry point |
 | --- | --- | --- | --- |
 | DeliverAuditResponse | DeliverAuditResponseHandler | true | authorized_http |
 | RecordAuditorResponseDisposition | RecordAuditorResponseDispositionHandler | true | authorized_http |

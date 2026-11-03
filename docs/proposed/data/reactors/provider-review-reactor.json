@@ -1,5 +1,7 @@
 {
-  "root": "ProviderReviewReactor",
+  "sourceRoot": "ProviderReviewReactor",
+  "targetRoot": "RecordProviderAssuranceReportReviewReactor",
+  "businessReason": "Record the review of the exact assurance report and end its review authorization.",
   "rows": [
     {
       "id": "T069",

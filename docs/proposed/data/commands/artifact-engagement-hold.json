@@ -59,7 +59,9 @@
         "line": 6501,
         "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
       },
-      "kind": "creation"
+      "kind": "creation",
+      "sourceName": "PlaceArtifactEngagementHold",
+      "targetName": "PlaceArtifactEngagementHold"
     },
     {
       "command": "RecordEngagementReportIssued",
@@ -135,7 +137,9 @@
           "process_reply": 0.23
         },
         "date": "2026-10-29"
-      }
+      },
+      "sourceName": "RecordEngagementReportIssued",
+      "targetName": "RecordEngagementReportIssuance"
     },
     {
       "command": "ReleaseArtifactEngagementHold",
@@ -190,7 +194,9 @@
         "line": 10734,
         "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
       },
-      "kind": "command"
+      "kind": "command",
+      "sourceName": "ReleaseArtifactEngagementHold",
+      "targetName": "ReleaseArtifactEngagementHold"
     },
     {
       "command": "RecordEngagementPackageDelivered",
@@ -245,7 +251,9 @@
       "source": {
         "path": "docs/product/definitive-aggregate-choreography/choreography.json",
         "recorded": "2026-10-29"
-      }
+      },
+      "sourceName": "RecordEngagementPackageDelivered",
+      "targetName": "RecordEngagementPackageDelivery"
     }
   ],
   "sourceContractEvidence": []

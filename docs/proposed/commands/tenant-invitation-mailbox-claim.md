@@ -2,12 +2,12 @@
 
 Selected command contracts: **4**. Complete selected contracts and companion source evidence: [owner command JSON](../data/commands/tenant-invitation-mailbox-claim.json).
 
-| Command | Kind | Identity | Fields | HTTP routes |
-| --- | --- | --- | --- | --- |
-| InviteTenantMember | http | InvitationId | 5 | undefined undefined |
-| InviteOrganizationMember | http | InvitationId | 4 | undefined undefined |
-| InviteGuestConsultant | http | InvitationId | 5 | undefined undefined |
-| AcceptTenantInvitation | http | TenantInvitationIds.AcceptanceOf(InvitationId) | 4 | undefined undefined |
+| Target command | Selected source name | Kind | Identity | Fields | HTTP routes |
+| --- | --- | --- | --- | --- | --- |
+| InviteTenantMember | InviteTenantMember | http | InvitationId | 5 | undefined undefined |
+| InviteOrganizationMember | InviteOrganizationMember | http | InvitationId | 4 | undefined undefined |
+| InviteGuestConsultant | InviteGuestConsultant | http | InvitationId | 5 | undefined undefined |
+| AcceptTenantInvitation | AcceptTenantInvitation | http | TenantInvitationIds.AcceptanceOf(InvitationId) | 4 | undefined undefined |
 
 ## Selected command details
 
@@ -15,13 +15,16 @@ Selected command contracts: **4**. Complete selected contracts and companion sou
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | InviteTenantMember |
+| Selected source command name | InviteTenantMember |
+| Name decision | The selected source name is retained. |
 | Owner | TenantInvitationMailboxClaim |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | http |
 | Logical identity | InvitationId; Uuid; required=true; client; caller-supplied immutable creation identity: an exact retry with the same id and authored intent returns the original result; the same id with changed intent is refused; a different id is a different record |
 | Entry point | [Placeholder: value not recorded] |
 | MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | [Placeholder: value not recorded] |
+| Selected semantic events | None listed |
 | Protocols | [Placeholder: value not recorded] |
 | Policy preservation | [Placeholder: value not recorded] |
 | Contract changes | [Placeholder: value not recorded] |
@@ -62,13 +65,16 @@ Required tests: [Placeholder: required tests not recorded]
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | InviteOrganizationMember |
+| Selected source command name | InviteOrganizationMember |
+| Name decision | The selected source name is retained. |
 | Owner | TenantInvitationMailboxClaim |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | http |
 | Logical identity | InvitationId; Uuid; required=true; client; caller-supplied immutable creation identity: an exact retry with the same id and authored intent returns the original result; the same id with changed intent is refused; a different id is a different record |
 | Entry point | [Placeholder: value not recorded] |
 | MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | [Placeholder: value not recorded] |
+| Selected semantic events | None listed |
 | Protocols | [Placeholder: value not recorded] |
 | Policy preservation | [Placeholder: value not recorded] |
 | Contract changes | [Placeholder: value not recorded] |
@@ -108,13 +114,16 @@ Required tests: [Placeholder: required tests not recorded]
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | InviteGuestConsultant |
+| Selected source command name | InviteGuestConsultant |
+| Name decision | The selected source name is retained. |
 | Owner | TenantInvitationMailboxClaim |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | http |
 | Logical identity | InvitationId; Uuid; required=true; client; caller-supplied immutable creation identity: an exact retry with the same id and authored intent returns the original result; the same id with changed intent is refused; a different id is a different record |
 | Entry point | [Placeholder: value not recorded] |
 | MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | [Placeholder: value not recorded] |
+| Selected semantic events | None listed |
 | Protocols | [Placeholder: value not recorded] |
 | Policy preservation | [Placeholder: value not recorded] |
 | Contract changes | [Placeholder: value not recorded] |
@@ -155,13 +164,16 @@ Required tests: [Placeholder: required tests not recorded]
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | AcceptTenantInvitation |
+| Selected source command name | AcceptTenantInvitation |
+| Name decision | The selected source name is retained. |
 | Owner | TenantInvitationMailboxClaim |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | http |
 | Logical identity | TenantInvitationIds.AcceptanceOf(InvitationId); Uuid; required=true; client; caller-supplied immutable creation identity: an exact retry with the same id and authored intent returns the original result; the same id with changed intent is refused; a different id is a different record |
 | Entry point | [Placeholder: value not recorded] |
 | MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | [Placeholder: value not recorded] |
+| Selected semantic events | None listed |
 | Protocols | [Placeholder: value not recorded] |
 | Policy preservation | [Placeholder: value not recorded] |
 | Contract changes | [Placeholder: value not recorded] |

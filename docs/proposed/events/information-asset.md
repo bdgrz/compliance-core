@@ -2,9 +2,9 @@
 
 Canonical events: **1**. Complete canonical event and available schema records: [owner event JSON](../data/events/information-asset.json).
 
-| Event | Kind | Adopted discriminator | Version | Schema fields | Meaning |
-| --- | --- | --- | --- | --- | --- |
-| InformationAssetRevisionRecorded | business | bdgrz.inventory.information_asset.revision_recorded | 1 | [Placeholder: schema absent] | Records one complete, attributed asset revision; revision 1 creates it. The fact accepts its own logical operation, so an exact retry of the creation or revision replays the frozen original response however far the record has moved since. |
+| Target event | Selected source name | Kind | Adopted discriminator | Version | Schema fields | Meaning |
+| --- | --- | --- | --- | --- | --- | --- |
+| InformationAssetRevisionRecorded | InformationAssetRevisionRecorded | business | bdgrz.inventory.information_asset.revision_recorded | 1 | [Placeholder: schema absent] | Records one complete, attributed asset revision; revision 1 creates it. The fact accepts its own logical operation, so an exact retry of the creation or revision replays the frozen original response however far the record has moved since. |
 
 ## Event details
 
@@ -12,6 +12,9 @@ Canonical events: **1**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | InformationAssetRevisionRecorded |
+| Selected source event name | InformationAssetRevisionRecorded |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:InformationAssetRevisionRecorded |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | InformationAssetRevisionRecorded |
@@ -21,7 +24,8 @@ Canonical events: **1**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | Records one complete, attributed asset revision; revision 1 creates it. The fact accepts its own logical operation, so an exact retry of the creation or revision replays the frozen original response however far the record has moved since. |
+| Target meaning | Records one complete, attributed asset revision; revision 1 creates it. The fact accepts its own logical operation, so an exact retry of the creation or revision replays the frozen original response however far the record has moved since. |
+| Selected source meaning | Records one complete, attributed asset revision; revision 1 creates it. The fact accepts its own logical operation, so an exact retry of the creation or revision replays the frozen original response however far the record has moved since. |
 | Meaning source | record summary in src/Compliance.Common/Features/TechnologyInventory/Events/InformationAssetRevisionRecorded.cs |
 
 #### Schema

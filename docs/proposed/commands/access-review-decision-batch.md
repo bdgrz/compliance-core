@@ -2,12 +2,12 @@
 
 Selected command contracts: **4**. Complete selected contracts and companion source evidence: [owner command JSON](../data/commands/access-review-decision-batch.json).
 
-| Command | Kind | Identity | Fields | HTTP routes |
-| --- | --- | --- | --- | --- |
-| CancelAccessReviewDecisionBatch | abort | CommandId | 4 | [Placeholder: route/channel not recorded] |
-| PublishAccessReviewDecisionBatch | receiver | CommandId | 9 | [Placeholder: value not recorded] |
-| CompleteAccessReviewDecisionBatchCancellation | receiver | CommandId | 9 | [Placeholder: value not recorded] |
-| MaterializeAccessReviewDecisionBatch | receiver | CommandId | 9 | [Placeholder: value not recorded] |
+| Target command | Selected source name | Kind | Identity | Fields | HTTP routes |
+| --- | --- | --- | --- | --- | --- |
+| CancelAccessReviewDecisionBatch | CancelAccessReviewDecisionBatch | abort | CommandId | 4 | [Placeholder: route/channel not recorded] |
+| PublishAccessReviewDecisionBatch | PublishAccessReviewDecisionBatch | receiver | CommandId | 9 | [Placeholder: value not recorded] |
+| CompleteAccessReviewDecisionBatchCancellation | CompleteAccessReviewDecisionBatchCancellation | receiver | CommandId | 9 | [Placeholder: value not recorded] |
+| RecordAccessReviewDecisionBatch | MaterializeAccessReviewDecisionBatch | receiver | CommandId | 9 | [Placeholder: value not recorded] |
 
 ## Selected command details
 
@@ -15,13 +15,16 @@ Selected command contracts: **4**. Complete selected contracts and companion sou
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | CancelAccessReviewDecisionBatch |
+| Selected source command name | CancelAccessReviewDecisionBatch |
+| Name decision | The selected source name is retained. |
 | Owner | AccessReviewDecisionBatch |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | abort |
 | Logical identity | CommandId; Uuid; required=true; abort receiver identity bound to the exact admitted operation and generation: exact redelivery resolves the original rejected result; an abort after a terminal outcome is a no-op |
 | Entry point | [Placeholder: value not recorded] |
 | MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | [Placeholder: value not recorded] |
+| Selected semantic events | None listed |
 | Protocols | [Placeholder: value not recorded] |
 | Policy preservation | [Placeholder: value not recorded] |
 | Contract changes | [Placeholder: value not recorded] |
@@ -59,13 +62,16 @@ Required tests: [Placeholder: required tests not recorded]
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | PublishAccessReviewDecisionBatch |
+| Selected source command name | PublishAccessReviewDecisionBatch |
+| Name decision | The selected source name is retained. |
 | Owner | AccessReviewDecisionBatch |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; reactor; deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result |
 | Entry point | [Placeholder: value not recorded] |
 | MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | [Placeholder: value not recorded] |
+| Selected semantic events | None listed |
 | Protocols | [Placeholder: value not recorded] |
 | Policy preservation | [Placeholder: value not recorded] |
 | Contract changes | [Placeholder: value not recorded] |
@@ -108,13 +114,16 @@ Required tests: [Placeholder: required tests not recorded]
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | CompleteAccessReviewDecisionBatchCancellation |
+| Selected source command name | CompleteAccessReviewDecisionBatchCancellation |
+| Name decision | The selected source name is retained. |
 | Owner | AccessReviewDecisionBatch |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; reactor; deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result |
 | Entry point | [Placeholder: value not recorded] |
 | MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | [Placeholder: value not recorded] |
+| Selected semantic events | None listed |
 | Protocols | [Placeholder: value not recorded] |
 | Policy preservation | [Placeholder: value not recorded] |
 | Contract changes | [Placeholder: value not recorded] |
@@ -153,17 +162,20 @@ Existing tests: [Placeholder: existing tests not recorded]
 
 Required tests: [Placeholder: required tests not recorded]
 
-### MaterializeAccessReviewDecisionBatch
+### RecordAccessReviewDecisionBatch
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | RecordAccessReviewDecisionBatch |
+| Selected source command name | MaterializeAccessReviewDecisionBatch |
+| Name decision | Records the already admitted exact bulk selection without rebuilding or changing it. |
 | Owner | AccessReviewDecisionBatch |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; reactor; deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result |
 | Entry point | [Placeholder: value not recorded] |
 | MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | [Placeholder: value not recorded] |
+| Selected semantic events | None listed |
 | Protocols | [Placeholder: value not recorded] |
 | Policy preservation | [Placeholder: value not recorded] |
 | Contract changes | [Placeholder: value not recorded] |

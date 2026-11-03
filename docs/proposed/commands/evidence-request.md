@@ -2,13 +2,13 @@
 
 Selected command contracts: **5**. Complete selected contracts and companion source evidence: [owner command JSON](../data/commands/evidence-request.json).
 
-| Command | Kind | Identity | Fields | HTTP routes |
-| --- | --- | --- | --- | --- |
-| CancelEvidenceRequest | http | CommandId | 6 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/evidence-requests/{evidence_request_id}/cancellations/{command_id} [ComplianceAuthorizationPolicies.ApiUser] |
-| FulfilEvidenceRequest | http | CommandId | 6 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/evidence-requests/{evidence_request_id}/fulfilments/{command_id} [ComplianceAuthorizationPolicies.ApiUser] |
-| OpenEvidenceRequest | http | EvidenceRequestId | 8 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/evidence-requests/{evidence_request_id} [ComplianceAuthorizationPolicies.ApiUser] |
-| AuthorizeEvidenceRequestActionCompletionUse | receiver | CommandId | 10 | [Placeholder: value not recorded] |
-| SettleEvidenceRequestActionCompletionUse | receiver | CommandId | 10 | [Placeholder: value not recorded] |
+| Target command | Selected source name | Kind | Identity | Fields | HTTP routes |
+| --- | --- | --- | --- | --- | --- |
+| CancelEvidenceRequest | CancelEvidenceRequest | http | CommandId | 6 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/evidence-requests/{evidence_request_id}/cancellations/{command_id} [ComplianceAuthorizationPolicies.ApiUser] |
+| FulfilEvidenceRequest | FulfilEvidenceRequest | http | CommandId | 6 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/evidence-requests/{evidence_request_id}/fulfilments/{command_id} [ComplianceAuthorizationPolicies.ApiUser] |
+| OpenEvidenceRequest | OpenEvidenceRequest | http | EvidenceRequestId | 8 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/evidence-requests/{evidence_request_id} [ComplianceAuthorizationPolicies.ApiUser] |
+| AuthorizeEvidenceRequestActionCompletion | AuthorizeEvidenceRequestActionCompletionUse | receiver | CommandId | 10 | [Placeholder: value not recorded] |
+| CloseEvidenceRequestActionCompletionAuthorization | SettleEvidenceRequestActionCompletionUse | receiver | CommandId | 10 | [Placeholder: value not recorded] |
 
 ## Selected command details
 
@@ -16,6 +16,9 @@ Selected command contracts: **5**. Complete selected contracts and companion sou
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | CancelEvidenceRequest |
+| Selected source command name | CancelEvidenceRequest |
+| Name decision | The selected source name is retained. |
 | Owner | EvidenceRequest |
 | Contract record status | target_contract |
 | Kind | http |
@@ -66,6 +69,9 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | FulfilEvidenceRequest |
+| Selected source command name | FulfilEvidenceRequest |
+| Name decision | The selected source name is retained. |
 | Owner | EvidenceRequest |
 | Contract record status | target_contract |
 | Kind | http |
@@ -116,6 +122,9 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | OpenEvidenceRequest |
+| Selected source command name | OpenEvidenceRequest |
+| Name decision | The selected source name is retained. |
 | Owner | EvidenceRequest |
 | Contract record status | target_contract |
 | Kind | http |
@@ -164,17 +173,20 @@ Existing tests: test/Compliance.Tests/Features/Evidence/EvidenceRequestHandlerTe
 
 Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision, ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity, ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof, ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome
 
-### AuthorizeEvidenceRequestActionCompletionUse
+### AuthorizeEvidenceRequestActionCompletion
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | AuthorizeEvidenceRequestActionCompletion |
+| Selected source command name | AuthorizeEvidenceRequestActionCompletionUse |
+| Name decision | The command authorizes the named business action; the extra Use suffix describes the coordination mechanism. |
 | Owner | EvidenceRequest |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; reactor; deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result |
 | Entry point | [Placeholder: value not recorded] |
 | MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | [Placeholder: value not recorded] |
+| Selected semantic events | None listed |
 | Protocols | [Placeholder: value not recorded] |
 | Policy preservation | [Placeholder: value not recorded] |
 | Contract changes | [Placeholder: value not recorded] |
@@ -214,17 +226,20 @@ Existing tests: [Placeholder: existing tests not recorded]
 
 Required tests: [Placeholder: required tests not recorded]
 
-### SettleEvidenceRequestActionCompletionUse
+### CloseEvidenceRequestActionCompletionAuthorization
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | CloseEvidenceRequestActionCompletionAuthorization |
+| Selected source command name | SettleEvidenceRequestActionCompletionUse |
+| Name decision | The command ends the exact authorization after its business action or cancellation. |
 | Owner | EvidenceRequest |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; reactor; deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result |
 | Entry point | [Placeholder: value not recorded] |
 | MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | [Placeholder: value not recorded] |
+| Selected semantic events | None listed |
 | Protocols | [Placeholder: value not recorded] |
 | Policy preservation | [Placeholder: value not recorded] |
 | Contract changes | [Placeholder: value not recorded] |
@@ -267,7 +282,7 @@ Required tests: [Placeholder: required tests not recorded]
 
 ## Source contracts
 
-| Command | Handler | Registered | Entry point |
+| Selected source command | Handler | Registered | Entry point |
 | --- | --- | --- | --- |
 | CancelEvidenceRequest | CancelEvidenceRequestHandler | true | authorized_http_and_mcp |
 | FulfilEvidenceRequest | FulfilEvidenceRequestHandler | true | authorized_http |

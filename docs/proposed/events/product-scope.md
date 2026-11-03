@@ -1,5 +1,3 @@
-> Captured from `docs/product/domain-event-list.md`; internal links have been rebased.
-
 # Domain event universe and backfill list
 
 Baseline: repository source and the accepted backlog reconciled 2026-10-19. This is the event counterpart to the [system command list](../commands/product-scope.md) and [query/view-model list](../read-models.md).

@@ -61,7 +61,9 @@
         "line": 1666,
         "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       },
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "ApproveAccessExpectation",
+      "targetName": "ApproveAccessExpectation"
     },
     {
       "command": "ExemptAccessExpectation",
@@ -138,7 +140,9 @@
         "line": 6409,
         "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       },
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "ExemptAccessExpectation",
+      "targetName": "ExemptAccessExpectation"
     },
     {
       "command": "ProposeAccessExpectation",
@@ -225,7 +229,9 @@
         "line": 8816,
         "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       },
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "ProposeAccessExpectation",
+      "targetName": "ProposeAccessExpectation"
     }
   ],
   "sourceContractEvidence": [

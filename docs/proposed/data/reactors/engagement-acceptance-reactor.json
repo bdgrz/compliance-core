@@ -1,5 +1,7 @@
 {
-  "root": "EngagementAcceptanceReactor",
+  "sourceRoot": "EngagementAcceptanceReactor",
+  "targetRoot": "EngagementAcceptanceReactor",
+  "businessReason": "Accept or reject an engagement and staff assignment using the exact service history and required independence decisions.",
   "rows": [
     {
       "id": "T004",

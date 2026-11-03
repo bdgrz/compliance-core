@@ -2,14 +2,14 @@
 
 Canonical events: **6**. Complete canonical event and available schema records: [owner event JSON](../data/events/user-identity.json).
 
-| Event | Kind | Adopted discriminator | Version | Schema fields | Meaning |
-| --- | --- | --- | --- | --- | --- |
-| RecoveryIdentityProtected | reservation | bdgrz.user-identity.recovery-identity-protected | 1 | 8 | A provider identity was protected for one recovery challenge; until that protection is settled, no other account can associate the same provider identity. |
-| RecoveryIdentityProtectionSettled | reservation | bdgrz.user-identity.recovery-identity-protection-settled | 1 | 8 | The protection of one slot for one recovery challenge is settled. A slot that was never protected is settled too, which fences a delayed protection for the same challenge. |
-| UserIdentityAuthenticated | audit | bdgrz.user-identity.authenticated | 1 | [Placeholder: schema absent] | Audits successful authentication through a registered provider identity. |
-| UserIdentityProfileObserved | audit | bdgrz.user-identity.profile-observed | 2 | [Placeholder: schema absent] | Audited provider display text admitted at the proven identity revision; never identity or authority. |
-| UserIdentityRegistered | business | bdgrz.user-identity.registered | 1 | 9 | Records the provider-neutral identity linked to a platform user. A registration caused by an identity recovery names the recovery challenge and carries the receiver's operation provenance and frozen intent. |
-| UserIdentityRevoked | business | bdgrz.user-identity.revoked | 1 | 9 | Records replacement of a provider identity while preserving its platform user. A revocation caused by an identity recovery names the recovery challenge and carries the receiver's provenance and frozen intent. |
+| Target event | Selected source name | Kind | Adopted discriminator | Version | Schema fields | Meaning |
+| --- | --- | --- | --- | --- | --- | --- |
+| RecoveryIdentityProtected | RecoveryIdentityProtected | reservation | bdgrz.user-identity.recovery-identity-protected | 1 | 8 | A provider identity was protected for one recovery challenge; until that protection is settled, no other account can associate the same provider identity. |
+| RecoveryIdentityProtectionEnded | RecoveryIdentityProtectionSettled | reservation | bdgrz.user-identity.recovery-identity-protection-settled | 1 | 8 | The protection of one slot for one recovery challenge is settled. A slot that was never protected is settled too, which fences a delayed protection for the same challenge. |
+| UserIdentityAuthenticated | UserIdentityAuthenticated | audit | bdgrz.user-identity.authenticated | 1 | [Placeholder: schema absent] | Audits successful authentication through a registered provider identity. |
+| UserIdentityProfileObserved | UserIdentityProfileObserved | audit | bdgrz.user-identity.profile-observed | 2 | [Placeholder: schema absent] | Audited provider display text admitted at the proven identity revision; never identity or authority. |
+| UserIdentityRegistered | UserIdentityRegistered | business | bdgrz.user-identity.registered | 1 | 9 | Records the provider-neutral identity linked to a platform user. A registration caused by an identity recovery names the recovery challenge and carries the receiver's operation provenance and frozen intent. |
+| UserIdentityRevoked | UserIdentityRevoked | business | bdgrz.user-identity.revoked | 1 | 9 | Records replacement of a provider identity while preserving its platform user. A revocation caused by an identity recovery names the recovery challenge and carries the receiver's provenance and frozen intent. |
 
 ## Event details
 
@@ -17,6 +17,9 @@ Canonical events: **6**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | RecoveryIdentityProtected |
+| Selected source event name | RecoveryIdentityProtected |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:RecoveryIdentityProtected |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | RecoveryIdentityProtected |
@@ -26,7 +29,8 @@ Canonical events: **6**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | A provider identity was protected for one recovery challenge; until that protection is settled, no other account can associate the same provider identity. |
+| Target meaning | A provider identity was protected for one recovery challenge; until that protection is settled, no other account can associate the same provider identity. |
+| Selected source meaning | A provider identity was protected for one recovery challenge; until that protection is settled, no other account can associate the same provider identity. |
 | Meaning source | authored 2026-10-29 from src/Compliance.Common/Features/UserIdentities/Events/RecoveryIdentityProtected.cs |
 
 #### Selected schema and implementation evidence
@@ -112,10 +116,13 @@ IdentityRecoveryIntent
 | --- | --- | --- | --- | --- |
 | [T041](../reactors/identity-recovery-acceptance-reactor.md#t041) | emitted semantic fact | IdentityRecovery | ProtectRecoveryIdentity | UserIdentity |
 
-### RecoveryIdentityProtectionSettled
+### RecoveryIdentityProtectionEnded
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | RecoveryIdentityProtectionEnded |
+| Selected source event name | RecoveryIdentityProtectionSettled |
+| Name decision | Names the end of protection for the exact recovery identity slot, including when protection never began. |
 | Canonical semantic key | event:RecoveryIdentityProtectionSettled |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | RecoveryIdentityProtectionSettled |
@@ -125,7 +132,8 @@ IdentityRecoveryIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | The protection of one slot for one recovery challenge is settled. A slot that was never protected is settled too, which fences a delayed protection for the same challenge. |
+| Target meaning | The protection of one slot for one recovery challenge is settled. A slot that was never protected is settled too, which fences a delayed protection for the same challenge. |
+| Selected source meaning | The protection of one slot for one recovery challenge is settled. A slot that was never protected is settled too, which fences a delayed protection for the same challenge. |
 | Meaning source | record summary in src/Compliance.Common/Features/UserIdentities/Events/RecoveryIdentityProtectionSettled.cs |
 
 #### Selected schema and implementation evidence
@@ -209,12 +217,15 @@ IdentityRecoveryIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T057](../reactors/identity-recovery-acceptance-reactor.md#t057) | emitted semantic fact | IdentityRecovery | SettleRecoveryIdentityProtection | UserIdentity |
+| [T057](../reactors/identity-recovery-acceptance-reactor.md#t057) | emitted semantic fact | IdentityRecovery | EndRecoveryIdentityProtection | UserIdentity |
 
 ### UserIdentityAuthenticated
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | UserIdentityAuthenticated |
+| Selected source event name | UserIdentityAuthenticated |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:UserIdentityAuthenticated |
 | Owner selection | UserIdentity AuditEvent emits to independent physical audit session stream; no aggregate reducer/history increment |
 | Target concrete type | UserIdentityAuthenticated |
@@ -224,7 +235,8 @@ IdentityRecoveryIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | Audits successful authentication through a registered provider identity. |
+| Target meaning | Audits successful authentication through a registered provider identity. |
+| Selected source meaning | Audits successful authentication through a registered provider identity. |
 | Meaning source | record summary in src/Compliance.Common/Features/UserIdentities/Events/UserIdentityAuthenticated.cs |
 
 #### Schema
@@ -245,6 +257,9 @@ IdentityRecoveryIntent
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | UserIdentityProfileObserved |
+| Selected source event name | UserIdentityProfileObserved |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:UserIdentityProfileObserved |
 | Owner selection | UserIdentity AuditEvent emits to independent physical audit session stream; no aggregate reducer/history increment |
 | Target concrete type | UserIdentityProfileObserved |
@@ -254,7 +269,8 @@ IdentityRecoveryIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | Audited provider display text admitted at the proven identity revision; never identity or authority. |
+| Target meaning | Audited provider display text admitted at the proven identity revision; never identity or authority. |
+| Selected source meaning | Audited provider display text admitted at the proven identity revision; never identity or authority. |
 | Meaning source | record summary in src/Compliance.Common/Features/UserIdentities/Events/UserIdentityProfileObserved.cs |
 
 #### Schema
@@ -275,6 +291,9 @@ IdentityRecoveryIntent
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | UserIdentityRegistered |
+| Selected source event name | UserIdentityRegistered |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:UserIdentityRegistered |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | UserIdentityRegistered |
@@ -284,7 +303,8 @@ IdentityRecoveryIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | Records the provider-neutral identity linked to a platform user. A registration caused by an identity recovery names the recovery challenge and carries the receiver's operation provenance and frozen intent. |
+| Target meaning | Records the provider-neutral identity linked to a platform user. A registration caused by an identity recovery names the recovery challenge and carries the receiver's operation provenance and frozen intent. |
+| Selected source meaning | Records the provider-neutral identity linked to a platform user. A registration caused by an identity recovery names the recovery challenge and carries the receiver's operation provenance and frozen intent. |
 | Meaning source | record summary in src/Compliance.Common/Features/UserIdentities/Events/UserIdentityRegistered.cs |
 
 #### Selected schema and implementation evidence
@@ -376,6 +396,9 @@ IdentityRecoveryIntent
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | UserIdentityRevoked |
+| Selected source event name | UserIdentityRevoked |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:UserIdentityRevoked |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | UserIdentityRevoked |
@@ -385,7 +408,8 @@ IdentityRecoveryIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | Records replacement of a provider identity while preserving its platform user. A revocation caused by an identity recovery names the recovery challenge and carries the receiver's provenance and frozen intent. |
+| Target meaning | Records replacement of a provider identity while preserving its platform user. A revocation caused by an identity recovery names the recovery challenge and carries the receiver's provenance and frozen intent. |
+| Selected source meaning | Records replacement of a provider identity while preserving its platform user. A revocation caused by an identity recovery names the recovery challenge and carries the receiver's provenance and frozen intent. |
 | Meaning source | record summary in src/Compliance.Common/Features/UserIdentities/Events/UserIdentityRevoked.cs |
 
 #### Selected schema and implementation evidence

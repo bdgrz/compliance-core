@@ -96,7 +96,11 @@
         "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "SystemDescriptionApproved",
+      "targetName": "SystemDescriptionApproved",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "A system description version was approved by a named member, making it the approved description for the program."
     },
     {
       "canonical": {
@@ -193,7 +197,11 @@
         "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "SystemDescriptionBound",
+      "targetName": "SystemDescriptionLinkedToExamination",
+      "nameDecision": "Names which approved system description version supports the exact examination snapshot.",
+      "targetMeaning": "The approved system description version was bound to the examination snapshot it describes, fixing which examination the description supports."
     },
     {
       "canonical": {
@@ -290,7 +298,11 @@
         "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "SystemDescriptionDraftCreated",
+      "targetName": "SystemDescriptionDraftCreated",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "A system description draft was created for a program with its first authored version by a named member, awaiting review."
     },
     {
       "canonical": {
@@ -387,7 +399,11 @@
         "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "SystemDescriptionDraftRevised",
+      "targetName": "SystemDescriptionDraftRevised",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "A system description draft was revised into a new version by a named member, awaiting review."
     },
     {
       "canonical": {
@@ -484,7 +500,11 @@
         "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "SystemDescriptionNoChangeRecorded",
+      "targetName": "SystemDescriptionNoChangeRecorded",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "A non-material change in the period was recorded with a reasoned decision by a named member that the system description needs no update."
     },
     {
       "canonical": {
@@ -581,7 +601,11 @@
         "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "SystemDescriptionReviewed",
+      "targetName": "SystemDescriptionReviewed",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "A system description version was reviewed with a decision by a named reviewer."
     },
     {
       "canonical": {
@@ -678,7 +702,11 @@
         "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "SystemDescriptionSourcesBound",
+      "targetName": "SystemDescriptionSourcesRecorded",
+      "nameDecision": "Names the current sources a member reconciled against a system description draft.",
+      "targetMeaning": "A new system description draft version was reconciled against its current sources by a named member, recording the sources the description now relies on."
     },
     {
       "canonical": {
@@ -775,7 +803,11 @@
         "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "SystemDescriptionSuccessorProposed",
+      "targetName": "SystemDescriptionSuccessorProposed",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "A successor draft of an approved system description was proposed with a new version by a named member, awaiting review."
     }
   ]
 }

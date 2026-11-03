@@ -2,14 +2,14 @@
 
 Canonical events: **6**. Complete canonical event and available schema records: [owner event JSON](../data/events/program-rollover.json).
 
-| Event | Kind | Adopted discriminator | Version | Schema fields | Meaning |
-| --- | --- | --- | --- | --- | --- |
-| ProgramNextPeriodCreated | business | bdgrz.programs.program-next-period-created | 1 | [Placeholder: schema absent] | Records the exact next period and approved plan created from a rollover. |
-| ProgramRolloverApproved | business | bdgrz.programs.program-rollover-approved | 2 | [Placeholder: schema absent] | Records the ProgramRolloverApproved domain fact for one tenant-owned subject revision. |
-| ProgramRolloverDecisionRecorded | business | bdgrz.programs.program-rollover-decision-recorded | 1 | [Placeholder: schema absent] | A decision on a program carry-forward proposal version was recorded by someone other than its proposer, rejecting that proposal version. |
-| ProgramRolloverExecutionClaimed | business | bdgrz.programs.program-rollover-execution-claimed | 1 | [Placeholder: schema absent] | null (recorded) |
-| ProgramRolloverProposed | business | bdgrz.programs.program-rollover-proposed | 2 | [Placeholder: schema absent] | Records the ProgramRolloverProposed domain fact for one tenant-owned subject revision. |
-| ProgramRolloverRevised | business | bdgrz.programs.program-rollover-revised | 1 | [Placeholder: schema absent] | Records a revised carry-forward selection against the same completed source period. |
+| Target event | Selected source name | Kind | Adopted discriminator | Version | Schema fields | Meaning |
+| --- | --- | --- | --- | --- | --- | --- |
+| ProgramNextPeriodCreated | ProgramNextPeriodCreated | business | bdgrz.programs.program-next-period-created | 1 | [Placeholder: schema absent] | Records the exact next period and approved plan created from a rollover. |
+| ProgramRolloverApproved | ProgramRolloverApproved | business | bdgrz.programs.program-rollover-approved | 2 | [Placeholder: schema absent] | Records the ProgramRolloverApproved domain fact for one tenant-owned subject revision. |
+| ProgramRolloverDecisionRecorded | ProgramRolloverDecisionRecorded | business | bdgrz.programs.program-rollover-decision-recorded | 1 | [Placeholder: schema absent] | A decision on a program carry-forward proposal version was recorded by someone other than its proposer, rejecting that proposal version. |
+| ProgramRolloverReservedForExecution | ProgramRolloverExecutionClaimed | business | bdgrz.programs.program-rollover-execution-claimed | 1 | [Placeholder: schema absent] | The exact independently approved rollover version and content were reserved for one run. The reservation prevents revision or rejection while the successor period is prepared. |
+| ProgramRolloverProposed | ProgramRolloverProposed | business | bdgrz.programs.program-rollover-proposed | 2 | [Placeholder: schema absent] | Records the ProgramRolloverProposed domain fact for one tenant-owned subject revision. |
+| ProgramRolloverRevised | ProgramRolloverRevised | business | bdgrz.programs.program-rollover-revised | 1 | [Placeholder: schema absent] | Records a revised carry-forward selection against the same completed source period. |
 
 ## Event details
 
@@ -17,6 +17,9 @@ Canonical events: **6**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | ProgramNextPeriodCreated |
+| Selected source event name | ProgramNextPeriodCreated |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:ProgramNextPeriodCreated |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | ProgramNextPeriodCreated |
@@ -26,7 +29,8 @@ Canonical events: **6**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | Records the exact next period and approved plan created from a rollover. |
+| Target meaning | Records the exact next period and approved plan created from a rollover. |
+| Selected source meaning | Records the exact next period and approved plan created from a rollover. |
 | Meaning source | record summary in src/Compliance.Common/Features/Programs/Events/ProgramNextPeriodCreated.cs |
 
 #### Schema
@@ -47,6 +51,9 @@ Canonical events: **6**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | ProgramRolloverApproved |
+| Selected source event name | ProgramRolloverApproved |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:ProgramRolloverApproved |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | ProgramRolloverApproved |
@@ -56,7 +63,8 @@ Canonical events: **6**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | Records the ProgramRolloverApproved domain fact for one tenant-owned subject revision. |
+| Target meaning | Records the ProgramRolloverApproved domain fact for one tenant-owned subject revision. |
+| Selected source meaning | Records the ProgramRolloverApproved domain fact for one tenant-owned subject revision. |
 | Meaning source | record summary in src/Compliance.Common/Features/Programs/Events/ProgramRolloverApproved.cs |
 
 #### Schema
@@ -79,6 +87,9 @@ Canonical events: **6**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | ProgramRolloverDecisionRecorded |
+| Selected source event name | ProgramRolloverDecisionRecorded |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:ProgramRolloverDecisionRecorded |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | ProgramRolloverDecisionRecorded |
@@ -88,7 +99,8 @@ Canonical events: **6**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | A decision on a program carry-forward proposal version was recorded by someone other than its proposer, rejecting that proposal version. |
+| Target meaning | A decision on a program carry-forward proposal version was recorded by someone other than its proposer, rejecting that proposal version. |
+| Selected source meaning | A decision on a program carry-forward proposal version was recorded by someone other than its proposer, rejecting that proposal version. |
 | Meaning source | authored 2026-10-29 from src/Compliance.Common/Features/Programs/Events/ProgramRolloverDecisionRecorded.cs |
 
 #### Schema
@@ -105,10 +117,13 @@ Canonical events: **6**. Complete canonical event and available schema records: 
 
 [Placeholder: no selected choreography row names this event as root, prerequisite, or emitted fact.]
 
-### ProgramRolloverExecutionClaimed
+### ProgramRolloverReservedForExecution
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | ProgramRolloverReservedForExecution |
+| Selected source event name | ProgramRolloverExecutionClaimed |
+| Name decision | Names the reservation of the exact approved rollover for one run without exposing the internal claim mechanism. |
 | Canonical semantic key | event:ProgramRolloverExecutionClaimed |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | ProgramRolloverExecutionClaimed |
@@ -118,7 +133,8 @@ Canonical events: **6**. Complete canonical event and available schema records: 
 | Source status | planned_no_source_type |
 | Adopted decision IDs | PROGRAM_ROLLOVER_EXECUTION |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | null (recorded) |
+| Target meaning | The exact independently approved rollover version and content were reserved for one run. The reservation prevents revision or rejection while the successor period is prepared. |
+| Selected source meaning | null (recorded) |
 | Meaning source | [Placeholder: value not recorded] |
 
 #### Schema
@@ -141,6 +157,9 @@ Canonical events: **6**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | ProgramRolloverProposed |
+| Selected source event name | ProgramRolloverProposed |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:ProgramRolloverProposed |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | ProgramRolloverProposed |
@@ -150,7 +169,8 @@ Canonical events: **6**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | Records the ProgramRolloverProposed domain fact for one tenant-owned subject revision. |
+| Target meaning | Records the ProgramRolloverProposed domain fact for one tenant-owned subject revision. |
+| Selected source meaning | Records the ProgramRolloverProposed domain fact for one tenant-owned subject revision. |
 | Meaning source | record summary in src/Compliance.Common/Features/Programs/Events/ProgramRolloverProposed.cs |
 
 #### Schema
@@ -171,6 +191,9 @@ Canonical events: **6**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | ProgramRolloverRevised |
+| Selected source event name | ProgramRolloverRevised |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:ProgramRolloverRevised |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | ProgramRolloverRevised |
@@ -180,7 +203,8 @@ Canonical events: **6**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | Records a revised carry-forward selection against the same completed source period. |
+| Target meaning | Records a revised carry-forward selection against the same completed source period. |
+| Selected source meaning | Records a revised carry-forward selection against the same completed source period. |
 | Meaning source | record summary in src/Compliance.Common/Features/Programs/Events/ProgramRolloverRevised.cs |
 
 #### Schema

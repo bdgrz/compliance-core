@@ -68,7 +68,9 @@
         "LocationNameClaimed"
       ],
       "effectKind": "claim_location_name",
-      "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine."
+      "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
+      "sourceName": "ClaimLocationName",
+      "targetName": "ClaimLocationName"
     },
     {
       "command": "ReleaseLocationName",
@@ -134,7 +136,9 @@
         "LocationNameReleased"
       ],
       "effectKind": "release_location_name",
-      "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine."
+      "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
+      "sourceName": "ReleaseLocationName",
+      "targetName": "ReleaseLocationName"
     }
   ],
   "sourceContractEvidence": []

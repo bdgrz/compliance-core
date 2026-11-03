@@ -2,14 +2,14 @@
 
 Canonical events: **6**. Complete canonical event and available schema records: [owner event JSON](../data/events/tenant-manager-guard.json).
 
-| Event | Kind | Adopted discriminator | Version | Schema fields | Meaning |
-| --- | --- | --- | --- | --- | --- |
-| TenantManagerRestorationAccepted | business | bdgrz.tenant-manager-guard.tenant-manager-restoration-accepted | 2 | 8 | The tenant manager guard admitted the restoration, or first registration, of an administrator's contribution to the tenant's manager count, so that availability is counted before its source change is made. |
-| TenantManagerRestorationCompleted | business | bdgrz.tenant-manager-guard.tenant-manager-restoration-completed | 2 | 8 | The source restoration a restoration operation admitted was applied; availability is restored separately, and only when no other reason remains. Owner is the source stream the operation mutates, Revision the authored revision of that owner (negative when unconstrained) and Generation the guard generation of this fact. |
-| TenantManagerRestored | business | bdgrz.rbac.manager_guard.restored | 2 | 7 | The guard restored a member's availability as an administrator for Reason after the exact source restoration and current eligibility were proven. |
-| TenantManagerSourceMutationAdmitted | business | bdgrz.tenant-manager-guard.tenant-manager-source-mutation-admitted | 2 | 8 | The guard admitted a source mutation of a member episode that has no contribution and no pending transition. It changes no availability but makes the mutation visible to any later registration for the same episode. Owner is the source stream the operation mutates, Revision the authored revision of that owner (negative when unconstrained) and Generation the guard generation of this fact. |
-| TenantManagerWithdrawalAccepted | business | bdgrz.tenant-manager-guard.tenant-manager-withdrawal-accepted | 2 | 8 | The tenant manager guard admitted withdrawing an administrator's contribution before its source change, so that administrator stops counting as available and the last manager cannot be removed. |
-| TenantManagerWithdrawalCompleted | business | bdgrz.tenant-manager-guard.tenant-manager-withdrawal-completed | 2 | 8 | The source change a withdrawal admitted was applied; the withdrawal operation is settled and its reason stays withheld. Owner is the source stream the operation mutates, Revision the authored revision of that owner (negative when unconstrained) and Generation the guard generation of this fact. |
+| Target event | Selected source name | Kind | Adopted discriminator | Version | Schema fields | Meaning |
+| --- | --- | --- | --- | --- | --- | --- |
+| TenantManagerRestorationAccepted | TenantManagerRestorationAccepted | business | bdgrz.tenant-manager-guard.tenant-manager-restoration-accepted | 2 | 8 | The tenant manager guard admitted the restoration, or first registration, of an administrator's contribution to the tenant's manager count, so that availability is counted before its source change is made. |
+| TenantManagerRestorationCompleted | TenantManagerRestorationCompleted | business | bdgrz.tenant-manager-guard.tenant-manager-restoration-completed | 2 | 8 | The source restoration a restoration operation admitted was applied; availability is restored separately, and only when no other reason remains. Owner is the source stream the operation mutates, Revision the authored revision of that owner (negative when unconstrained) and Generation the guard generation of this fact. |
+| TenantManagerRestored | TenantManagerRestored | business | bdgrz.rbac.manager_guard.restored | 2 | 7 | The guard restored a member's availability as an administrator for Reason after the exact source restoration and current eligibility were proven. |
+| TenantManagerMemberChangeAccepted | TenantManagerSourceMutationAdmitted | business | bdgrz.tenant-manager-guard.tenant-manager-source-mutation-admitted | 2 | 8 | The guard admitted a source mutation of a member episode that has no contribution and no pending transition. It changes no availability but makes the mutation visible to any later registration for the same episode. Owner is the source stream the operation mutates, Revision the authored revision of that owner (negative when unconstrained) and Generation the guard generation of this fact. |
+| TenantManagerWithdrawalAccepted | TenantManagerWithdrawalAccepted | business | bdgrz.tenant-manager-guard.tenant-manager-withdrawal-accepted | 2 | 8 | The tenant manager guard admitted withdrawing an administrator's contribution before its source change, so that administrator stops counting as available and the last manager cannot be removed. |
+| TenantManagerWithdrawalCompleted | TenantManagerWithdrawalCompleted | business | bdgrz.tenant-manager-guard.tenant-manager-withdrawal-completed | 2 | 8 | The source change a withdrawal admitted was applied; the withdrawal operation is settled and its reason stays withheld. Owner is the source stream the operation mutates, Revision the authored revision of that owner (negative when unconstrained) and Generation the guard generation of this fact. |
 
 ## Event details
 
@@ -17,6 +17,9 @@ Canonical events: **6**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | TenantManagerRestorationAccepted |
+| Selected source event name | TenantManagerRestorationAccepted |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:TenantManagerRestorationAccepted |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | TenantManagerRestorationAccepted |
@@ -26,7 +29,8 @@ Canonical events: **6**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | `{"discriminator":"bdgrz.tenant-manager-guard.tenant-manager-restoration-accepted","version":1}` |
-| Meaning | The tenant manager guard admitted the restoration, or first registration, of an administrator's contribution to the tenant's manager count, so that availability is counted before its source change is made. |
+| Target meaning | The tenant manager guard admitted the restoration, or first registration, of an administrator's contribution to the tenant's manager count, so that availability is counted before its source change is made. |
+| Selected source meaning | The tenant manager guard admitted the restoration, or first registration, of an administrator's contribution to the tenant's manager count, so that availability is counted before its source change is made. |
 | Meaning source | authored 2026-10-29 from src/Compliance.Common/Features/AccessControl/Events/TenantManagerRestorationAccepted.cs |
 
 #### Selected schema and implementation evidence
@@ -118,6 +122,9 @@ AdministratorTransitionIntent
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | TenantManagerRestorationCompleted |
+| Selected source event name | TenantManagerRestorationCompleted |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:TenantManagerRestorationCompleted |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | TenantManagerRestorationCompleted |
@@ -127,7 +134,8 @@ AdministratorTransitionIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | `{"discriminator":"bdgrz.tenant-manager-guard.tenant-manager-restoration-completed","version":1}` |
-| Meaning | The source restoration a restoration operation admitted was applied; availability is restored separately, and only when no other reason remains. Owner is the source stream the operation mutates, Revision the authored revision of that owner (negative when unconstrained) and Generation the guard generation of this fact. |
+| Target meaning | The source restoration a restoration operation admitted was applied; availability is restored separately, and only when no other reason remains. Owner is the source stream the operation mutates, Revision the authored revision of that owner (negative when unconstrained) and Generation the guard generation of this fact. |
+| Selected source meaning | The source restoration a restoration operation admitted was applied; availability is restored separately, and only when no other reason remains. Owner is the source stream the operation mutates, Revision the authored revision of that owner (negative when unconstrained) and Generation the guard generation of this fact. |
 | Meaning source | record summary in src/Compliance.Common/Features/AccessControl/Events/TenantManagerRestorationCompleted.cs |
 
 #### Selected schema and implementation evidence
@@ -217,6 +225,9 @@ AdministratorTransitionIntent
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | TenantManagerRestored |
+| Selected source event name | TenantManagerRestored |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:TenantManagerRestored |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | TenantManagerRestored |
@@ -226,7 +237,8 @@ AdministratorTransitionIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | `{"discriminator":"bdgrz.rbac.manager_guard.restored","version":1}` |
-| Meaning | The guard restored a member's availability as an administrator for Reason after the exact source restoration and current eligibility were proven. |
+| Target meaning | The guard restored a member's availability as an administrator for Reason after the exact source restoration and current eligibility were proven. |
+| Selected source meaning | The guard restored a member's availability as an administrator for Reason after the exact source restoration and current eligibility were proven. |
 | Meaning source | record summary in src/Compliance.Common/Features/AccessControl/Events/TenantManagerRestored.cs |
 
 #### Selected schema and implementation evidence
@@ -311,10 +323,13 @@ AdministratorTransitionIntent
 | --- | --- | --- | --- | --- |
 | [T052](../reactors/administrator-restoration-reactor.md#t052) | emitted semantic fact | Member\|TeamMember | CompleteAdministratorRestoration | TenantManagerGuard |
 
-### TenantManagerSourceMutationAdmitted
+### TenantManagerMemberChangeAccepted
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | TenantManagerMemberChangeAccepted |
+| Selected source event name | TenantManagerSourceMutationAdmitted |
+| Name decision | Names the accepted member change that is serialized with other changes to the same membership episode. |
 | Canonical semantic key | event:TenantManagerSourceMutationAdmitted |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | TenantManagerSourceMutationAdmitted |
@@ -324,7 +339,8 @@ AdministratorTransitionIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | `{"discriminator":"bdgrz.tenant-manager-guard.tenant-manager-source-mutation-admitted","version":1}` |
-| Meaning | The guard admitted a source mutation of a member episode that has no contribution and no pending transition. It changes no availability but makes the mutation visible to any later registration for the same episode. Owner is the source stream the operation mutates, Revision the authored revision of that owner (negative when unconstrained) and Generation the guard generation of this fact. |
+| Target meaning | The guard admitted a source mutation of a member episode that has no contribution and no pending transition. It changes no availability but makes the mutation visible to any later registration for the same episode. Owner is the source stream the operation mutates, Revision the authored revision of that owner (negative when unconstrained) and Generation the guard generation of this fact. |
+| Selected source meaning | The guard admitted a source mutation of a member episode that has no contribution and no pending transition. It changes no availability but makes the mutation visible to any later registration for the same episode. Owner is the source stream the operation mutates, Revision the authored revision of that owner (negative when unconstrained) and Generation the guard generation of this fact. |
 | Meaning source | record summary in src/Compliance.Common/Features/AccessControl/Events/TenantManagerSourceMutationAdmitted.cs |
 
 #### Selected schema and implementation evidence
@@ -408,13 +424,16 @@ AdministratorTransitionIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T048](../reactors/administrator-neutral-member-mutation-reactor.md#t048) | physical root, logical prerequisite | TenantManagerGuard | ApplyNeutralMemberSourceMutation | Member |
-| [T049](../reactors/administrator-neutral-assignment-mutation-reactor.md#t049) | physical root, logical prerequisite | TenantManagerGuard | ApplyNeutralAdministratorAssignmentMutation | TeamMember |
+| [T048](../reactors/administrator-neutral-member-mutation-reactor.md#t048) | physical root, logical prerequisite | TenantManagerGuard | ApplyMemberStatusChange | Member |
+| [T049](../reactors/administrator-neutral-assignment-mutation-reactor.md#t049) | physical root, logical prerequisite | TenantManagerGuard | RemoveAdministratorAssignment | TeamMember |
 
 ### TenantManagerWithdrawalAccepted
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | TenantManagerWithdrawalAccepted |
+| Selected source event name | TenantManagerWithdrawalAccepted |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:TenantManagerWithdrawalAccepted |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | TenantManagerWithdrawalAccepted |
@@ -424,7 +443,8 @@ AdministratorTransitionIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | `{"discriminator":"bdgrz.tenant-manager-guard.tenant-manager-withdrawal-accepted","version":1}` |
-| Meaning | The tenant manager guard admitted withdrawing an administrator's contribution before its source change, so that administrator stops counting as available and the last manager cannot be removed. |
+| Target meaning | The tenant manager guard admitted withdrawing an administrator's contribution before its source change, so that administrator stops counting as available and the last manager cannot be removed. |
+| Selected source meaning | The tenant manager guard admitted withdrawing an administrator's contribution before its source change, so that administrator stops counting as available and the last manager cannot be removed. |
 | Meaning source | authored 2026-10-29 from src/Compliance.Common/Features/AccessControl/Events/TenantManagerWithdrawalAccepted.cs |
 
 #### Selected schema and implementation evidence
@@ -516,6 +536,9 @@ AdministratorTransitionIntent
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | TenantManagerWithdrawalCompleted |
+| Selected source event name | TenantManagerWithdrawalCompleted |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:TenantManagerWithdrawalCompleted |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | TenantManagerWithdrawalCompleted |
@@ -525,7 +548,8 @@ AdministratorTransitionIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | `{"discriminator":"bdgrz.tenant-manager-guard.tenant-manager-withdrawal-completed","version":1}` |
-| Meaning | The source change a withdrawal admitted was applied; the withdrawal operation is settled and its reason stays withheld. Owner is the source stream the operation mutates, Revision the authored revision of that owner (negative when unconstrained) and Generation the guard generation of this fact. |
+| Target meaning | The source change a withdrawal admitted was applied; the withdrawal operation is settled and its reason stays withheld. Owner is the source stream the operation mutates, Revision the authored revision of that owner (negative when unconstrained) and Generation the guard generation of this fact. |
+| Selected source meaning | The source change a withdrawal admitted was applied; the withdrawal operation is settled and its reason stays withheld. Owner is the source stream the operation mutates, Revision the authored revision of that owner (negative when unconstrained) and Generation the guard generation of this fact. |
 | Meaning source | record summary in src/Compliance.Common/Features/AccessControl/Events/TenantManagerWithdrawalCompleted.cs |
 
 #### Selected schema and implementation evidence

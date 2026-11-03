@@ -69,7 +69,9 @@
         "PracticeIndependenceReserved"
       ],
       "effectKind": "reserve_practice_independence",
-      "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine."
+      "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
+      "sourceName": "ReservePracticeIndependence",
+      "targetName": "ReservePracticeIndependence"
     },
     {
       "command": "CommitPracticeIndependence",
@@ -138,7 +140,9 @@
         "PracticeIndependenceCommitted"
       ],
       "effectKind": "commit_practice_independence",
-      "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine."
+      "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
+      "sourceName": "CommitPracticeIndependence",
+      "targetName": "CommitPracticeIndependence"
     },
     {
       "command": "SettlePracticeIndependenceReservation",
@@ -210,7 +214,9 @@
         "PracticeIndependenceReservationSettled"
       ],
       "effectKind": "settle_practice_independence_reservation",
-      "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine."
+      "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
+      "sourceName": "SettlePracticeIndependenceReservation",
+      "targetName": "ClosePracticeIndependenceReservation"
     }
   ],
   "sourceContractEvidence": []

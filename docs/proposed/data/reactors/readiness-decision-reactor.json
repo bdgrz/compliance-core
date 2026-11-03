@@ -1,5 +1,7 @@
 {
-  "root": "ReadinessDecisionReactor",
+  "sourceRoot": "ReadinessDecisionReactor",
+  "targetRoot": "RecordProgramReadinessAndTypeIDecisionsReactor",
+  "businessReason": "Record the exact readiness and Type I decisions for the selected program and gap plan.",
   "rows": [
     {
       "id": "T065",

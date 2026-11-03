@@ -2,12 +2,12 @@
 
 Selected command contracts: **4**. Complete selected contracts and companion source evidence: [owner command JSON](../data/commands/readiness-gap-plan.json).
 
-| Command | Kind | Identity | Fields | HTTP routes |
-| --- | --- | --- | --- | --- |
-| AnnotateReadinessGap | http | CommandId | 7 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/readiness/assessments/{assessment_id}/gaps/{gap_id}/annotations/{command_id} [ComplianceAuthorizationPolicies.ApiUser] |
-| PlanReadinessGap | http | CommandId | 8 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/readiness/gaps/{gap_id}/plan-readiness-gap/{command_id} [ApiUser + existing request-scope authorizers] |
-| AuthorizeReadinessGapPlanReadinessDecisionUse | receiver | CommandId | 10 | [Placeholder: value not recorded] |
-| SettleReadinessGapPlanReadinessDecisionUse | receiver | CommandId | 10 | [Placeholder: value not recorded] |
+| Target command | Selected source name | Kind | Identity | Fields | HTTP routes |
+| --- | --- | --- | --- | --- | --- |
+| AnnotateReadinessGap | AnnotateReadinessGap | http | CommandId | 7 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/readiness/assessments/{assessment_id}/gaps/{gap_id}/annotations/{command_id} [ComplianceAuthorizationPolicies.ApiUser] |
+| PlanReadinessGap | PlanReadinessGap | http | CommandId | 8 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/readiness/gaps/{gap_id}/plan-readiness-gap/{command_id} [ApiUser + existing request-scope authorizers] |
+| AuthorizeReadinessGapPlanReadinessDecision | AuthorizeReadinessGapPlanReadinessDecisionUse | receiver | CommandId | 10 | [Placeholder: value not recorded] |
+| CloseReadinessGapPlanReadinessDecisionAuthorization | SettleReadinessGapPlanReadinessDecisionUse | receiver | CommandId | 10 | [Placeholder: value not recorded] |
 
 ## Selected command details
 
@@ -15,6 +15,9 @@ Selected command contracts: **4**. Complete selected contracts and companion sou
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | AnnotateReadinessGap |
+| Selected source command name | AnnotateReadinessGap |
+| Name decision | The selected source name is retained. |
 | Owner | ReadinessGapPlan |
 | Contract record status | target_contract |
 | Kind | http |
@@ -66,6 +69,9 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | PlanReadinessGap |
+| Selected source command name | PlanReadinessGap |
+| Name decision | The selected source name is retained. |
 | Owner | ReadinessGapPlan |
 | Contract record status | target_contract |
 | Kind | http |
@@ -114,17 +120,20 @@ Existing tests: test/Compliance.Tests/Features/Readiness/ReadinessAssessmentHand
 
 Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision, ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity, ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof, ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome
 
-### AuthorizeReadinessGapPlanReadinessDecisionUse
+### AuthorizeReadinessGapPlanReadinessDecision
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | AuthorizeReadinessGapPlanReadinessDecision |
+| Selected source command name | AuthorizeReadinessGapPlanReadinessDecisionUse |
+| Name decision | The command authorizes the named business action; the extra Use suffix describes the coordination mechanism. |
 | Owner | ReadinessGapPlan |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; reactor; deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result |
 | Entry point | [Placeholder: value not recorded] |
 | MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | [Placeholder: value not recorded] |
+| Selected semantic events | None listed |
 | Protocols | [Placeholder: value not recorded] |
 | Policy preservation | [Placeholder: value not recorded] |
 | Contract changes | [Placeholder: value not recorded] |
@@ -164,17 +173,20 @@ Existing tests: [Placeholder: existing tests not recorded]
 
 Required tests: [Placeholder: required tests not recorded]
 
-### SettleReadinessGapPlanReadinessDecisionUse
+### CloseReadinessGapPlanReadinessDecisionAuthorization
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | CloseReadinessGapPlanReadinessDecisionAuthorization |
+| Selected source command name | SettleReadinessGapPlanReadinessDecisionUse |
+| Name decision | The command ends the exact authorization after its business action or cancellation. |
 | Owner | ReadinessGapPlan |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; reactor; deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result |
 | Entry point | [Placeholder: value not recorded] |
 | MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | [Placeholder: value not recorded] |
+| Selected semantic events | None listed |
 | Protocols | [Placeholder: value not recorded] |
 | Policy preservation | [Placeholder: value not recorded] |
 | Contract changes | [Placeholder: value not recorded] |
@@ -217,7 +229,7 @@ Required tests: [Placeholder: required tests not recorded]
 
 ## Source contracts
 
-| Command | Handler | Registered | Entry point |
+| Selected source command | Handler | Registered | Entry point |
 | --- | --- | --- | --- |
 | AnnotateReadinessGap | AnnotateReadinessGapHandler | true | personal_http |
 | PlanReadinessGap | PlanReadinessGapHandler | true | authorized_http |

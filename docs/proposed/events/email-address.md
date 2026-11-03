@@ -2,14 +2,14 @@
 
 Canonical events: **6**. Complete canonical event and available schema records: [owner event JSON](../data/events/email-address.json).
 
-| Event | Kind | Adopted discriminator | Version | Schema fields | Meaning |
-| --- | --- | --- | --- | --- | --- |
-| EmailAddressReserved | reservation | bdgrz.email-address.reserved | 1 | 5 | The native acceptance of ReserveEmail, the first reservation of the address. |
-| EmailAddressVerified | business | bdgrz.email-address.verified | 1 | 6 | The native acceptance of CompleteEmailChallenge; the bearer token never enters the fact. |
-| EmailChallengeIssued | business | bdgrz.email-address.challenge-issued | 1 | 9 | The native acceptance of IssueEmailChallenge. It carries the hash of the bearer token, never the token; delivery of the token to the mailbox is a technical effect of the email challenge delivery process and leaves no fact on the address stream. |
-| IdentityRecoveryChallengeClaimed | business | bdgrz.identity-recovery.challenge-claimed | 1 | 13 | Consumes an email proof challenge for one old and one replacement identity and freezes the exact candidate. It is the native acceptance of CompleteIdentityRecovery; the proofs are retained as non-bearer provenance. |
-| IdentityRecoveryChallengeCompleted | business | bdgrz.identity-recovery.challenge-completed | 1 | 10 | Completes the original email challenge of a finished recovery; a newer challenge slot is never cleared. |
-| IdentityRecoveryChallengeIssued | business | bdgrz.identity-recovery.challenge-issued | 1 | 9 | A recovery challenge was issued to a verified email address for a user, valid until its expiry, so the holder of that address can complete identity recovery. |
+| Target event | Selected source name | Kind | Adopted discriminator | Version | Schema fields | Meaning |
+| --- | --- | --- | --- | --- | --- | --- |
+| EmailAddressReserved | EmailAddressReserved | reservation | bdgrz.email-address.reserved | 1 | 5 | The native acceptance of ReserveEmail, the first reservation of the address. |
+| EmailAddressVerified | EmailAddressVerified | business | bdgrz.email-address.verified | 1 | 6 | The native acceptance of CompleteEmailChallenge; the bearer token never enters the fact. |
+| EmailChallengeIssued | EmailChallengeIssued | business | bdgrz.email-address.challenge-issued | 1 | 9 | The native acceptance of IssueEmailChallenge. It carries the hash of the bearer token, never the token; delivery of the token to the mailbox is a technical effect of the email challenge delivery process and leaves no fact on the address stream. |
+| IdentityRecoveryChallengeClaimed | IdentityRecoveryChallengeClaimed | business | bdgrz.identity-recovery.challenge-claimed | 1 | 13 | Consumes an email proof challenge for one old and one replacement identity and freezes the exact candidate. It is the native acceptance of CompleteIdentityRecovery; the proofs are retained as non-bearer provenance. |
+| IdentityRecoveryChallengeCompleted | IdentityRecoveryChallengeCompleted | business | bdgrz.identity-recovery.challenge-completed | 1 | 10 | Completes the original email challenge of a finished recovery; a newer challenge slot is never cleared. |
+| IdentityRecoveryChallengeIssued | IdentityRecoveryChallengeIssued | business | bdgrz.identity-recovery.challenge-issued | 1 | 9 | A recovery challenge was issued to a verified email address for a user, valid until its expiry, so the holder of that address can complete identity recovery. |
 
 ## Event details
 
@@ -17,6 +17,9 @@ Canonical events: **6**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | EmailAddressReserved |
+| Selected source event name | EmailAddressReserved |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:EmailAddressReserved |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | EmailAddressReserved |
@@ -26,7 +29,8 @@ Canonical events: **6**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | The native acceptance of ReserveEmail, the first reservation of the address. |
+| Target meaning | The native acceptance of ReserveEmail, the first reservation of the address. |
+| Selected source meaning | The native acceptance of ReserveEmail, the first reservation of the address. |
 | Meaning source | record summary in src/Compliance.Common/Features/UserIdentities/Events/EmailAddressReserved.cs |
 
 #### Selected schema and implementation evidence
@@ -69,6 +73,9 @@ Canonical events: **6**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | EmailAddressVerified |
+| Selected source event name | EmailAddressVerified |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:EmailAddressVerified |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | EmailAddressVerified |
@@ -78,7 +85,8 @@ Canonical events: **6**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | The native acceptance of CompleteEmailChallenge; the bearer token never enters the fact. |
+| Target meaning | The native acceptance of CompleteEmailChallenge; the bearer token never enters the fact. |
+| Selected source meaning | The native acceptance of CompleteEmailChallenge; the bearer token never enters the fact. |
 | Meaning source | record summary in src/Compliance.Common/Features/UserIdentities/Events/EmailAddressVerified.cs |
 
 #### Selected schema and implementation evidence
@@ -120,6 +128,9 @@ Canonical events: **6**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | EmailChallengeIssued |
+| Selected source event name | EmailChallengeIssued |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:EmailChallengeIssued |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | EmailChallengeIssued |
@@ -129,7 +140,8 @@ Canonical events: **6**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | The native acceptance of IssueEmailChallenge. It carries the hash of the bearer token, never the token; delivery of the token to the mailbox is a technical effect of the email challenge delivery process and leaves no fact on the address stream. |
+| Target meaning | The native acceptance of IssueEmailChallenge. It carries the hash of the bearer token, never the token; delivery of the token to the mailbox is a technical effect of the email challenge delivery process and leaves no fact on the address stream. |
+| Selected source meaning | The native acceptance of IssueEmailChallenge. It carries the hash of the bearer token, never the token; delivery of the token to the mailbox is a technical effect of the email challenge delivery process and leaves no fact on the address stream. |
 | Meaning source | record summary in src/Compliance.Common/Features/UserIdentities/Events/EmailChallengeIssued.cs |
 
 #### Selected schema and implementation evidence
@@ -179,6 +191,9 @@ Canonical events: **6**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | IdentityRecoveryChallengeClaimed |
+| Selected source event name | IdentityRecoveryChallengeClaimed |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:IdentityRecoveryChallengeClaimed |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | IdentityRecoveryChallengeClaimed |
@@ -188,7 +203,8 @@ Canonical events: **6**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | Consumes an email proof challenge for one old and one replacement identity and freezes the exact candidate. It is the native acceptance of CompleteIdentityRecovery; the proofs are retained as non-bearer provenance. |
+| Target meaning | Consumes an email proof challenge for one old and one replacement identity and freezes the exact candidate. It is the native acceptance of CompleteIdentityRecovery; the proofs are retained as non-bearer provenance. |
+| Selected source meaning | Consumes an email proof challenge for one old and one replacement identity and freezes the exact candidate. It is the native acceptance of CompleteIdentityRecovery; the proofs are retained as non-bearer provenance. |
 | Meaning source | record summary in src/Compliance.Common/Features/UserIdentities/Events/IdentityRecoveryChallengeClaimed.cs |
 
 #### Selected schema and implementation evidence
@@ -282,8 +298,8 @@ IdentityRecoveryIntent
 | [T043](../reactors/identity-recovery-acceptance-reactor.md#t043) | physical root | IdentityRecovery | RevokeRecoveredOldIdentity | UserIdentity |
 | [T044](../reactors/identity-recovery-acceptance-reactor.md#t044) | physical root | IdentityRecovery | CompleteAcceptedIdentityRecovery | IdentityRecovery |
 | [T045](../reactors/identity-recovery-acceptance-reactor.md#t045) | physical root | IdentityRecovery | SendIdentityRecoveryNotice | IdentityRecoveryNoticeProcess |
-| [T056](../reactors/identity-recovery-acceptance-reactor.md#t056) | physical root, logical prerequisite | EmailAddress | MaterializeIdentityRecoveryPreparation | IdentityRecovery |
-| [T057](../reactors/identity-recovery-acceptance-reactor.md#t057) | physical root | IdentityRecovery | SettleRecoveryIdentityProtection | UserIdentity |
+| [T056](../reactors/identity-recovery-acceptance-reactor.md#t056) | physical root, logical prerequisite | EmailAddress | PrepareAccountRecovery | IdentityRecovery |
+| [T057](../reactors/identity-recovery-acceptance-reactor.md#t057) | physical root | IdentityRecovery | EndRecoveryIdentityProtection | UserIdentity |
 | [T058](../reactors/identity-recovery-acceptance-reactor.md#t058) | physical root | IdentityRecovery | CompleteEmailRecoveryChallenge | EmailAddress |
 | [T097](../reactors/identity-recovery-acceptance-reactor.md#t097) | physical root | IdentityRecovery | AcceptProtectedIdentityRecovery | IdentityRecovery |
 | [A017](../reactors/unassigned-architecture-rows.md#a017) | physical root, logical prerequisite | EmailAddress | RejectIdentityRecoveryPreparation | IdentityRecovery |
@@ -292,6 +308,9 @@ IdentityRecoveryIntent
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | IdentityRecoveryChallengeCompleted |
+| Selected source event name | IdentityRecoveryChallengeCompleted |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:IdentityRecoveryChallengeCompleted |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | IdentityRecoveryChallengeCompleted |
@@ -301,7 +320,8 @@ IdentityRecoveryIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | Completes the original email challenge of a finished recovery; a newer challenge slot is never cleared. |
+| Target meaning | Completes the original email challenge of a finished recovery; a newer challenge slot is never cleared. |
+| Selected source meaning | Completes the original email challenge of a finished recovery; a newer challenge slot is never cleared. |
 | Meaning source | record summary in src/Compliance.Common/Features/UserIdentities/Events/IdentityRecoveryChallengeCompleted.cs |
 
 #### Selected schema and implementation evidence
@@ -393,6 +413,9 @@ IdentityRecoveryIntent
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | IdentityRecoveryChallengeIssued |
+| Selected source event name | IdentityRecoveryChallengeIssued |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:IdentityRecoveryChallengeIssued |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | IdentityRecoveryChallengeIssued |
@@ -402,7 +425,8 @@ IdentityRecoveryIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | A recovery challenge was issued to a verified email address for a user, valid until its expiry, so the holder of that address can complete identity recovery. |
+| Target meaning | A recovery challenge was issued to a verified email address for a user, valid until its expiry, so the holder of that address can complete identity recovery. |
+| Selected source meaning | A recovery challenge was issued to a verified email address for a user, valid until its expiry, so the holder of that address can complete identity recovery. |
 | Meaning source | authored 2026-10-29 from src/Compliance.Common/Features/UserIdentities/Events/IdentityRecoveryChallengeIssued.cs |
 
 #### Selected schema and implementation evidence

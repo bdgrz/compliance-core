@@ -2,10 +2,10 @@
 
 Canonical events: **2**. Complete canonical event and available schema records: [owner event JSON](../data/events/work-relationship.json).
 
-| Event | Kind | Adopted discriminator | Version | Schema fields | Meaning |
-| --- | --- | --- | --- | --- | --- |
-| WorkRelationshipRecorded | business | bdgrz.workforce.work-relationship.recorded | 1 | [Placeholder: schema absent] | A person's work relationship with the organisation was recorded under a source worker identifier with its terms by a named actor. |
-| WorkRelationshipRevised | business | bdgrz.workforce.work-relationship.revised | 1 | [Placeholder: schema absent] | A recorded work relationship's terms were revised by a named actor, producing its next revision. |
+| Target event | Selected source name | Kind | Adopted discriminator | Version | Schema fields | Meaning |
+| --- | --- | --- | --- | --- | --- | --- |
+| WorkRelationshipRecorded | WorkRelationshipRecorded | business | bdgrz.workforce.work-relationship.recorded | 1 | [Placeholder: schema absent] | A person's work relationship with the organisation was recorded under a source worker identifier with its terms by a named actor. |
+| WorkRelationshipRevised | WorkRelationshipRevised | business | bdgrz.workforce.work-relationship.revised | 1 | [Placeholder: schema absent] | A recorded work relationship's terms were revised by a named actor, producing its next revision. |
 
 ## Event details
 
@@ -13,6 +13,9 @@ Canonical events: **2**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | WorkRelationshipRecorded |
+| Selected source event name | WorkRelationshipRecorded |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:WorkRelationshipRecorded |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | WorkRelationshipRecorded |
@@ -22,7 +25,8 @@ Canonical events: **2**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | A person's work relationship with the organisation was recorded under a source worker identifier with its terms by a named actor. |
+| Target meaning | A person's work relationship with the organisation was recorded under a source worker identifier with its terms by a named actor. |
+| Selected source meaning | A person's work relationship with the organisation was recorded under a source worker identifier with its terms by a named actor. |
 | Meaning source | authored 2026-10-29 from src/Compliance.Common/Features/Workforce/Events/WorkRelationshipRecorded.cs |
 
 #### Schema
@@ -43,6 +47,9 @@ Canonical events: **2**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | WorkRelationshipRevised |
+| Selected source event name | WorkRelationshipRevised |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:WorkRelationshipRevised |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | WorkRelationshipRevised |
@@ -52,7 +59,8 @@ Canonical events: **2**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | A recorded work relationship's terms were revised by a named actor, producing its next revision. |
+| Target meaning | A recorded work relationship's terms were revised by a named actor, producing its next revision. |
+| Selected source meaning | A recorded work relationship's terms were revised by a named actor, producing its next revision. |
 | Meaning source | authored 2026-10-29 from src/Compliance.Common/Features/Workforce/Events/WorkRelationshipRevised.cs |
 
 #### Schema

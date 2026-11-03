@@ -2,16 +2,16 @@
 
 Selected command contracts: **8**. Complete selected contracts and companion source evidence: [owner command JSON](../data/commands/system-description.json).
 
-| Command | Kind | Identity | Fields | HTTP routes |
-| --- | --- | --- | --- | --- |
-| ApproveSystemDescription | http | CommandId | 7 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/system-descriptions/{description_id}/approve-system-description/{command_id} [ApiUser + existing request-scope authorizers] |
-| BindSystemDescriptionSources | http | CommandId | 6 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/system-descriptions/{description_id}/bind-system-description-sources/{command_id} [ApiUser + existing request-scope authorizers] |
-| BindSystemDescriptionToExamination | http | CommandId | 8 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/system-descriptions/{description_id}/bind-system-description-to-examination/{command_id} [ApiUser + existing request-scope authorizers] |
-| CreateSystemDescriptionDraft | http | DescriptionId | 6 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/system-descriptions/{description_id}/create-system-description-draft [ApiUser + existing request-scope authorizers] |
-| ProposeSystemDescriptionSuccessor | http | CommandId | 6 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/system-descriptions/{description_id}/propose-system-description-successor/{command_id} [ApiUser + existing request-scope authorizers] |
-| RecordSystemDescriptionNoChangeDecision | http | CommandId | 8 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/system-descriptions/{description_id}/record-system-description-no-change-decision/{command_id} [ApiUser + existing request-scope authorizers] |
-| ReviewSystemDescription | http | CommandId | 8 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/system-descriptions/{description_id}/review-system-description/{command_id} [ApiUser + existing request-scope authorizers] |
-| ReviseSystemDescriptionDraft | http | CommandId | 8 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/system-descriptions/{description_id}/revise-system-description-draft/{command_id} [ApiUser + existing request-scope authorizers] |
+| Target command | Selected source name | Kind | Identity | Fields | HTTP routes |
+| --- | --- | --- | --- | --- | --- |
+| ApproveSystemDescription | ApproveSystemDescription | http | CommandId | 7 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/system-descriptions/{description_id}/approve-system-description/{command_id} [ApiUser + existing request-scope authorizers] |
+| BindSystemDescriptionSources | BindSystemDescriptionSources | http | CommandId | 6 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/system-descriptions/{description_id}/bind-system-description-sources/{command_id} [ApiUser + existing request-scope authorizers] |
+| BindSystemDescriptionToExamination | BindSystemDescriptionToExamination | http | CommandId | 8 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/system-descriptions/{description_id}/bind-system-description-to-examination/{command_id} [ApiUser + existing request-scope authorizers] |
+| CreateSystemDescriptionDraft | CreateSystemDescriptionDraft | http | DescriptionId | 6 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/system-descriptions/{description_id}/create-system-description-draft [ApiUser + existing request-scope authorizers] |
+| ProposeSystemDescriptionSuccessor | ProposeSystemDescriptionSuccessor | http | CommandId | 6 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/system-descriptions/{description_id}/propose-system-description-successor/{command_id} [ApiUser + existing request-scope authorizers] |
+| RecordSystemDescriptionNoChangeDecision | RecordSystemDescriptionNoChangeDecision | http | CommandId | 8 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/system-descriptions/{description_id}/record-system-description-no-change-decision/{command_id} [ApiUser + existing request-scope authorizers] |
+| ReviewSystemDescription | ReviewSystemDescription | http | CommandId | 8 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/system-descriptions/{description_id}/review-system-description/{command_id} [ApiUser + existing request-scope authorizers] |
+| ReviseSystemDescriptionDraft | ReviseSystemDescriptionDraft | http | CommandId | 8 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/system-descriptions/{description_id}/revise-system-description-draft/{command_id} [ApiUser + existing request-scope authorizers] |
 
 ## Selected command details
 
@@ -19,6 +19,9 @@ Selected command contracts: **8**. Complete selected contracts and companion sou
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | ApproveSystemDescription |
+| Selected source command name | ApproveSystemDescription |
+| Name decision | The selected source name is retained. |
 | Owner | SystemDescription |
 | Contract record status | target_contract |
 | Kind | http |
@@ -70,13 +73,16 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | BindSystemDescriptionSources |
+| Selected source command name | BindSystemDescriptionSources |
+| Name decision | The selected source name is retained. |
 | Owner | SystemDescription |
 | Contract record status | target_contract |
 | Kind | http |
 | Logical identity | CommandId; Uuid; required=true; client; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
 | Entry point | personal_http |
 | MCP | false |
-| Selected semantic events | SystemDescriptionSourcesBound |
+| Selected semantic events | SystemDescriptionSourcesRecorded |
 | Protocols | Versioned description and independent export |
 | Policy preservation | All current source handler/aggregate validation rules and source test expectations apply, except the explicit contractChanges and boundary protocol. Lifetime caps and technical attempt events are removed with their structural replacement. |
 | Contract changes | Add required CommandId. |
@@ -120,13 +126,16 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | BindSystemDescriptionToExamination |
+| Selected source command name | BindSystemDescriptionToExamination |
+| Name decision | The selected source name is retained. |
 | Owner | SystemDescription |
 | Contract record status | target_contract |
 | Kind | http |
 | Logical identity | CommandId; Uuid; required=true; client; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
 | Entry point | authorized_http |
 | MCP | false |
-| Selected semantic events | SystemDescriptionBound |
+| Selected semantic events | SystemDescriptionLinkedToExamination |
 | Protocols | Versioned description and independent export |
 | Policy preservation | All current source handler/aggregate validation rules and source test expectations apply, except the explicit contractChanges and boundary protocol. Lifetime caps and technical attempt events are removed with their structural replacement. |
 | Contract changes | Add required CommandId., Add required owner-local ExpectedRevision; business Version remains an exact content version, not owner OCC. |
@@ -172,6 +181,9 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | CreateSystemDescriptionDraft |
+| Selected source command name | CreateSystemDescriptionDraft |
+| Name decision | The selected source name is retained. |
 | Owner | SystemDescription |
 | Contract record status | target_contract |
 | Kind | http |
@@ -222,6 +234,9 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | ProposeSystemDescriptionSuccessor |
+| Selected source command name | ProposeSystemDescriptionSuccessor |
+| Name decision | The selected source name is retained. |
 | Owner | SystemDescription |
 | Contract record status | target_contract |
 | Kind | http |
@@ -272,6 +287,9 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | RecordSystemDescriptionNoChangeDecision |
+| Selected source command name | RecordSystemDescriptionNoChangeDecision |
+| Name decision | The selected source name is retained. |
 | Owner | SystemDescription |
 | Contract record status | target_contract |
 | Kind | http |
@@ -324,6 +342,9 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | ReviewSystemDescription |
+| Selected source command name | ReviewSystemDescription |
+| Name decision | The selected source name is retained. |
 | Owner | SystemDescription |
 | Contract record status | target_contract |
 | Kind | http |
@@ -376,6 +397,9 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | ReviseSystemDescriptionDraft |
+| Selected source command name | ReviseSystemDescriptionDraft |
+| Name decision | The selected source name is retained. |
 | Owner | SystemDescription |
 | Contract record status | target_contract |
 | Kind | http |
@@ -427,7 +451,7 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 
 ## Source contracts
 
-| Command | Handler | Registered | Entry point |
+| Selected source command | Handler | Registered | Entry point |
 | --- | --- | --- | --- |
 | ApproveSystemDescription | ApproveSystemDescriptionHandler | true | authorized_http |
 | BindSystemDescriptionSources | BindSystemDescriptionSourcesHandler | true | personal_http |

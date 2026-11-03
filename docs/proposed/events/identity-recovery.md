@@ -2,12 +2,12 @@
 
 Canonical events: **4**. Complete canonical event and available schema records: [owner event JSON](../data/events/identity-recovery.json).
 
-| Event | Kind | Adopted discriminator | Version | Schema fields | Meaning |
-| --- | --- | --- | --- | --- | --- |
-| IdentityRecoveryAccepted | business | bdgrz.identity-recovery.identity-recovery-accepted | 1 | 9 | The recovery owner accepted the swap after both identity slots were protected. An accepted swap completes forward and can no longer be rejected. |
-| IdentityRecoveryCompleted | business | bdgrz.identity-recovery.identity-recovery-completed | 1 | 9 | The accepted swap finished: the replacement is registered and the old identity revoked to it. |
-| IdentityRecoveryPreparationRejected | business | bdgrz.identity-recovery.identity-recovery-preparation-rejected | 1 | 9 | A definite competing association rejected the preparation before acceptance. It fences delayed protection and acceptance. |
-| IdentityRecoveryPrepared | business | bdgrz.identity-recovery.identity-recovery-prepared | 1 | 9 | The recovery owner froze the exact both-proof-verified candidate from the claimed challenge. This is a preparation, not an accepted swap. |
+| Target event | Selected source name | Kind | Adopted discriminator | Version | Schema fields | Meaning |
+| --- | --- | --- | --- | --- | --- | --- |
+| IdentityRecoveryAccepted | IdentityRecoveryAccepted | business | bdgrz.identity-recovery.identity-recovery-accepted | 1 | 9 | The recovery owner accepted the swap after both identity slots were protected. An accepted swap completes forward and can no longer be rejected. |
+| IdentityRecoveryCompleted | IdentityRecoveryCompleted | business | bdgrz.identity-recovery.identity-recovery-completed | 1 | 9 | The accepted swap finished: the replacement is registered and the old identity revoked to it. |
+| IdentityRecoveryPreparationRejected | IdentityRecoveryPreparationRejected | business | bdgrz.identity-recovery.identity-recovery-preparation-rejected | 1 | 9 | A definite competing association rejected the preparation before acceptance. It fences delayed protection and acceptance. |
+| IdentityRecoveryPrepared | IdentityRecoveryPrepared | business | bdgrz.identity-recovery.identity-recovery-prepared | 1 | 9 | The recovery owner froze the exact both-proof-verified candidate from the claimed challenge. This is a preparation, not an accepted swap. |
 
 ## Event details
 
@@ -15,6 +15,9 @@ Canonical events: **4**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | IdentityRecoveryAccepted |
+| Selected source event name | IdentityRecoveryAccepted |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:IdentityRecoveryAccepted |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | IdentityRecoveryAccepted |
@@ -24,7 +27,8 @@ Canonical events: **4**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | The recovery owner accepted the swap after both identity slots were protected. An accepted swap completes forward and can no longer be rejected. |
+| Target meaning | The recovery owner accepted the swap after both identity slots were protected. An accepted swap completes forward and can no longer be rejected. |
+| Selected source meaning | The recovery owner accepted the swap after both identity slots were protected. An accepted swap completes forward and can no longer be rejected. |
 | Meaning source | record summary in src/Compliance.Common/Features/UserIdentities/Events/IdentityRecoveryAccepted.cs |
 
 #### Selected schema and implementation evidence
@@ -118,6 +122,9 @@ IdentityRecoveryIntent
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | IdentityRecoveryCompleted |
+| Selected source event name | IdentityRecoveryCompleted |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:IdentityRecoveryCompleted |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | IdentityRecoveryCompleted |
@@ -127,7 +134,8 @@ IdentityRecoveryIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | The accepted swap finished: the replacement is registered and the old identity revoked to it. |
+| Target meaning | The accepted swap finished: the replacement is registered and the old identity revoked to it. |
+| Selected source meaning | The accepted swap finished: the replacement is registered and the old identity revoked to it. |
 | Meaning source | record summary in src/Compliance.Common/Features/UserIdentities/Events/IdentityRecoveryCompleted.cs |
 
 #### Selected schema and implementation evidence
@@ -214,13 +222,16 @@ IdentityRecoveryIntent
 | --- | --- | --- | --- | --- |
 | [T044](../reactors/identity-recovery-acceptance-reactor.md#t044) | emitted semantic fact | IdentityRecovery | CompleteAcceptedIdentityRecovery | IdentityRecovery |
 | [T045](../reactors/identity-recovery-acceptance-reactor.md#t045) | logical prerequisite | IdentityRecovery | SendIdentityRecoveryNotice | IdentityRecoveryNoticeProcess |
-| [T057](../reactors/identity-recovery-acceptance-reactor.md#t057) | logical prerequisite | IdentityRecovery | SettleRecoveryIdentityProtection | UserIdentity |
+| [T057](../reactors/identity-recovery-acceptance-reactor.md#t057) | logical prerequisite | IdentityRecovery | EndRecoveryIdentityProtection | UserIdentity |
 | [T058](../reactors/identity-recovery-acceptance-reactor.md#t058) | logical prerequisite | IdentityRecovery | CompleteEmailRecoveryChallenge | EmailAddress |
 
 ### IdentityRecoveryPreparationRejected
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | IdentityRecoveryPreparationRejected |
+| Selected source event name | IdentityRecoveryPreparationRejected |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:IdentityRecoveryPreparationRejected |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | IdentityRecoveryPreparationRejected |
@@ -230,7 +241,8 @@ IdentityRecoveryIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | A definite competing association rejected the preparation before acceptance. It fences delayed protection and acceptance. |
+| Target meaning | A definite competing association rejected the preparation before acceptance. It fences delayed protection and acceptance. |
+| Selected source meaning | A definite competing association rejected the preparation before acceptance. It fences delayed protection and acceptance. |
 | Meaning source | record summary in src/Compliance.Common/Features/UserIdentities/Events/IdentityRecoveryPreparationRejected.cs |
 
 #### Selected schema and implementation evidence
@@ -315,13 +327,16 @@ IdentityRecoveryIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T057](../reactors/identity-recovery-acceptance-reactor.md#t057) | logical prerequisite | IdentityRecovery | SettleRecoveryIdentityProtection | UserIdentity |
+| [T057](../reactors/identity-recovery-acceptance-reactor.md#t057) | logical prerequisite | IdentityRecovery | EndRecoveryIdentityProtection | UserIdentity |
 | [A017](../reactors/unassigned-architecture-rows.md#a017) | emitted semantic fact | EmailAddress | RejectIdentityRecoveryPreparation | IdentityRecovery |
 
 ### IdentityRecoveryPrepared
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | IdentityRecoveryPrepared |
+| Selected source event name | IdentityRecoveryPrepared |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:IdentityRecoveryPrepared |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | IdentityRecoveryPrepared |
@@ -331,7 +346,8 @@ IdentityRecoveryIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | The recovery owner froze the exact both-proof-verified candidate from the claimed challenge. This is a preparation, not an accepted swap. |
+| Target meaning | The recovery owner froze the exact both-proof-verified candidate from the claimed challenge. This is a preparation, not an accepted swap. |
+| Selected source meaning | The recovery owner froze the exact both-proof-verified candidate from the claimed challenge. This is a preparation, not an accepted swap. |
 | Meaning source | record summary in src/Compliance.Common/Features/UserIdentities/Events/IdentityRecoveryPrepared.cs |
 
 #### Selected schema and implementation evidence
@@ -417,7 +433,7 @@ IdentityRecoveryIntent
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
 | [T041](../reactors/identity-recovery-acceptance-reactor.md#t041) | logical prerequisite | IdentityRecovery | ProtectRecoveryIdentity | UserIdentity |
-| [T056](../reactors/identity-recovery-acceptance-reactor.md#t056) | emitted semantic fact | EmailAddress | MaterializeIdentityRecoveryPreparation | IdentityRecovery |
+| [T056](../reactors/identity-recovery-acceptance-reactor.md#t056) | emitted semantic fact | EmailAddress | PrepareAccountRecovery | IdentityRecovery |
 | [T097](../reactors/identity-recovery-acceptance-reactor.md#t097) | logical prerequisite | IdentityRecovery | AcceptProtectedIdentityRecovery | IdentityRecovery |
 
 

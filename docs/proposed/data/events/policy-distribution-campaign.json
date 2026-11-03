@@ -116,7 +116,11 @@
         "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "PolicyCampaignAudienceAmended",
+      "targetName": "PolicyCampaignAudienceAmended",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "A policy distribution campaign's audience was reconciled against a later roster snapshot, adding or removing recipients without editing the frozen launch audience."
     },
     {
       "canonical": {
@@ -203,7 +207,11 @@
         "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "PolicyCampaignAudienceFrozen",
+      "targetName": "PolicyCampaignAudienceFrozen",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "The complete frozen launch audience. EntriesManifest holds every CampaignAudienceEntry in canonical person order, with no count cap."
     },
     {
       "canonical": {
@@ -419,7 +427,11 @@
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "resolvedIntentSchema": "ClosureIntent",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "PolicyCampaignClosed",
+      "targetName": "PolicyCampaignClosed",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "The terminal closure of a campaign, appended by the closure process after every admitted participant result was applied and every participant use was held. TotalsContent is the complete CampaignTotalsView; ParticipantProofs the complete participant proof list."
     },
     {
       "canonical": {
@@ -598,7 +610,11 @@
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "resolvedIntentSchema": "ClosureIntent",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "PolicyCampaignClosureAccepted",
+      "targetName": "PolicyCampaignClosureAccepted",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "The root native acceptance of a campaign closure. It seals result admission on the open generation and freezes the complete admitted participant results and the exact participant uses to hold."
     },
     {
       "canonical": {
@@ -777,7 +793,11 @@
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "resolvedIntentSchema": "ClosureIntent",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "PolicyCampaignClosureCanceled",
+      "targetName": "PolicyCampaignClosureCanceled",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "The pending closure can definitely never complete. The cancellation fences every delayed local finalization of the generation and reopens result admission on the next generation."
     },
     {
       "canonical": {
@@ -924,7 +944,11 @@
         "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "PolicyCampaignLaunched",
+      "targetName": "PolicyCampaignLaunched",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "Launches a campaign bound to exact material and a frozen roster snapshot. The audience itself follows as one PolicyCampaignAudienceFrozen fact in the same batch. AudienceTeamsManifest is the complete original list of team names."
     },
     {
       "canonical": {
@@ -1101,7 +1125,11 @@
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "resolvedIntentSchema": "ChildAdmissionIntent",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "PolicyParticipantResultAdmitted",
+      "targetName": "PolicyParticipantResultAdmitted",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "The campaign admitted one complete participant result on its open generation. The campaign's logical revision advances to Revision; the participant applies the result afterwards from the frozen ChildAdmissionIntent. The root fact carries the original 202 acknowledgment."
     }
   ]
 }

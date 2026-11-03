@@ -27,10 +27,10 @@
 
 | Event | Discriminator | Version |
 | --- | --- | --- |
-| [WorkDigestDispatchAttemptStarted](../events/work-digest-dispatch.md#workdigestdispatchattemptstarted) | bdgrz.work.digest_dispatch.attempt_started | 1 |
-| [WorkDigestDispatchOutcomeRecorded](../events/work-digest-dispatch.md#workdigestdispatchoutcomerecorded) | bdgrz.work.digest_dispatch.outcome_recorded | 1 |
-| [WorkDigestDispatchScheduled](../events/work-digest-dispatch.md#workdigestdispatchscheduled) | bdgrz.work.digest_dispatch.scheduled | 1 |
-| [WorkDigestUnknownRetryAuthorized](../events/work-digest-dispatch.md#workdigestunknownretryauthorized) | bdgrz.work.digest_dispatch.unknown_retry_authorized | 2 |
+| [WorkDigestDeliveryAttemptStarted](../events/work-digest-dispatch.md#workdigestdeliveryattemptstarted) | bdgrz.work.digest_dispatch.attempt_started | 1 |
+| [WorkDigestDeliveryOutcomeRecorded](../events/work-digest-dispatch.md#workdigestdeliveryoutcomerecorded) | bdgrz.work.digest_dispatch.outcome_recorded | 1 |
+| [WorkDigestDeliveryScheduled](../events/work-digest-dispatch.md#workdigestdeliveryscheduled) | bdgrz.work.digest_dispatch.scheduled | 1 |
+| [WorkDigestRetryApprovedAfterUnknownDelivery](../events/work-digest-dispatch.md#workdigestretryapprovedafterunknowndelivery) | bdgrz.work.digest_dispatch.unknown_retry_authorized | 2 |
 
 ## Cross-owner flows
 

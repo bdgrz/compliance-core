@@ -56,7 +56,9 @@
         "line": 13268,
         "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       },
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "RegisterFirmStaff",
+      "targetName": "RegisterFirmStaff"
     },
     {
       "command": "SetFirmStaffStatus",
@@ -113,7 +115,9 @@
         "line": 17695,
         "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       },
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "SetFirmStaffStatus",
+      "targetName": "SetFirmStaffStatus"
     },
     {
       "command": "RejectFirmStaffRegistration",
@@ -163,7 +167,9 @@
         "line": 1423,
         "sha256": "f1d549ed0879c816cb26e86879f8fa658dab0a8acbf7c591e4d4aed40483f8ae"
       },
-      "kind": "abort"
+      "kind": "abort",
+      "sourceName": "RejectFirmStaffRegistration",
+      "targetName": "RejectFirmStaffRegistration"
     },
     {
       "command": "CompleteFirmStaffRegistration",
@@ -239,7 +245,9 @@
       "source": {
         "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
         "recorded": "2026-10-29"
-      }
+      },
+      "sourceName": "CompleteFirmStaffRegistration",
+      "targetName": "CompleteFirmStaffRegistration"
     },
     {
       "command": "AuthorizeFirmStaffRecordEngagementUse",
@@ -327,7 +335,9 @@
       "source": {
         "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
         "recorded": "2026-10-29"
-      }
+      },
+      "sourceName": "AuthorizeFirmStaffRecordEngagementUse",
+      "targetName": "AuthorizeFirmStaffRecordEngagement"
     },
     {
       "command": "SettleFirmStaffRecordEngagementUse",
@@ -412,7 +422,9 @@
       "source": {
         "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
         "recorded": "2026-10-29"
-      }
+      },
+      "sourceName": "SettleFirmStaffRecordEngagementUse",
+      "targetName": "CloseFirmStaffRecordEngagementAuthorization"
     },
     {
       "command": "AuthorizeFirmStaffProfessionalDutyUse",
@@ -498,7 +510,9 @@
       "source": {
         "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
         "recorded": "2026-10-29"
-      }
+      },
+      "sourceName": "AuthorizeFirmStaffProfessionalDutyUse",
+      "targetName": "AuthorizeFirmStaffProfessionalDuty"
     },
     {
       "command": "SettleFirmStaffProfessionalDutyUse",
@@ -580,7 +594,9 @@
       "source": {
         "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
         "recorded": "2026-10-29"
-      }
+      },
+      "sourceName": "SettleFirmStaffProfessionalDutyUse",
+      "targetName": "CloseFirmStaffProfessionalDutyAuthorization"
     }
   ],
   "sourceContractEvidence": [

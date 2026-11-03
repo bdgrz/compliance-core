@@ -1,5 +1,7 @@
 {
-  "root": "AdministratorAssignmentRestorationReactor",
+  "sourceRoot": "AdministratorAssignmentRestorationReactor",
+  "targetRoot": "AdministratorAssignmentRestorationReactor",
+  "businessReason": "Restore an eligible administrator's team assignment only after their membership is restored, so the tenant can be managed without restoring ended access.",
   "rows": [
     {
       "id": "T052",

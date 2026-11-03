@@ -1,5 +1,7 @@
 {
-  "root": "SystemDescriptionDecisionReactor",
+  "sourceRoot": "SystemDescriptionDecisionReactor",
+  "targetRoot": "UpdateSystemDescriptionAfterSignificantChangeReactor",
+  "businessReason": "Require an approved system description or a recorded no-change decision before closing the impact review for a significant change or incident.",
   "rows": [
     {
       "id": "S020",

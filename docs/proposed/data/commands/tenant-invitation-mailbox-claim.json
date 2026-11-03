@@ -41,7 +41,9 @@
       "source": {
         "path": "src/Compliance.Core/Features/Tenants/Handlers/InviteTenantMemberHandler.cs -> Tenants/Services/TenantInvitationAdmission.cs:95 (mailboxes.AcquireAsync)",
         "recorded": "2026-10-29"
-      }
+      },
+      "sourceName": "InviteTenantMember",
+      "targetName": "InviteTenantMember"
     },
     {
       "command": "InviteOrganizationMember",
@@ -79,7 +81,9 @@
       "source": {
         "path": "src/Compliance.Core/Features/Tenants/Handlers/InviteOrganizationMemberHandler.cs",
         "recorded": "2026-10-29"
-      }
+      },
+      "sourceName": "InviteOrganizationMember",
+      "targetName": "InviteOrganizationMember"
     },
     {
       "command": "InviteGuestConsultant",
@@ -121,7 +125,9 @@
       "source": {
         "path": "src/Compliance.Core/Features/Tenants/Handlers/InviteGuestConsultantHandler.cs",
         "recorded": "2026-10-29"
-      }
+      },
+      "sourceName": "InviteGuestConsultant",
+      "targetName": "InviteGuestConsultant"
     },
     {
       "command": "AcceptTenantInvitation",
@@ -159,7 +165,9 @@
       "source": {
         "path": "src/Compliance.Core/Features/Tenants/Handlers/AcceptTenantInvitationHandler.cs:118 (mailboxes.ReleaseAsync)",
         "recorded": "2026-10-29"
-      }
+      },
+      "sourceName": "AcceptTenantInvitation",
+      "targetName": "AcceptTenantInvitation"
     }
   ],
   "sourceContractEvidence": []

@@ -23,11 +23,11 @@
 
 | Command | Kind | Identity field |
 | --- | --- | --- |
-| [ContinueWithOidcProvider](../commands/user-identity.md#continuewithoidcprovider) | http | none (no fields; provider and subject come from the authenticated OIDC principal); emits UserIdentityRegistered or UserIdentityAuthenticated, optionally UserIdentityProfileObserved |
-| [ContinueWithDeveloperIdentity](../commands/user-identity.md#continuewithdeveloperidentity) | http | none (derived identity provider+subject) |
-| [LinkOidcProviderIdentity](../commands/user-identity.md#linkoidcprovideridentity) | http | none (principal-derived) |
+| [ContinueSignInWithExternalProvider](../commands/user-identity.md#continuesigninwithexternalprovider) | http | none (no fields; provider and subject come from the authenticated OIDC principal); emits UserIdentityRegistered or UserIdentityAuthenticated, optionally UserIdentityProfileObserved |
+| [SignInWithDevelopmentAccount](../commands/user-identity.md#signinwithdevelopmentaccount) | http | none (derived identity provider+subject) |
+| [LinkExternalSignInToCurrentAccount](../commands/user-identity.md#linkexternalsignintocurrentaccount) | http | none (principal-derived) |
 | [ProtectRecoveryIdentity](../commands/user-identity.md#protectrecoveryidentity) | receiver | CommandId |
-| [SettleRecoveryIdentityProtection](../commands/user-identity.md#settlerecoveryidentityprotection) | receiver | CommandId |
+| [EndRecoveryIdentityProtection](../commands/user-identity.md#endrecoveryidentityprotection) | receiver | CommandId |
 | [RegisterRecoveredIdentity](../commands/user-identity.md#registerrecoveredidentity) | receiver | CommandId |
 | [RevokeRecoveredOldIdentity](../commands/user-identity.md#revokerecoveredoldidentity) | receiver | CommandId |
 
@@ -36,7 +36,7 @@
 | Event | Discriminator | Version |
 | --- | --- | --- |
 | [RecoveryIdentityProtected](../events/user-identity.md#recoveryidentityprotected) | bdgrz.user-identity.recovery-identity-protected | 1 |
-| [RecoveryIdentityProtectionSettled](../events/user-identity.md#recoveryidentityprotectionsettled) | bdgrz.user-identity.recovery-identity-protection-settled | 1 |
+| [RecoveryIdentityProtectionEnded](../events/user-identity.md#recoveryidentityprotectionended) | bdgrz.user-identity.recovery-identity-protection-settled | 1 |
 | [UserIdentityAuthenticated](../events/user-identity.md#useridentityauthenticated) | bdgrz.user-identity.authenticated | 1 |
 | [UserIdentityProfileObserved](../events/user-identity.md#useridentityprofileobserved) | bdgrz.user-identity.profile-observed | 2 |
 | [UserIdentityRegistered](../events/user-identity.md#useridentityregistered) | bdgrz.user-identity.registered | 1 |
@@ -49,7 +49,7 @@
 | [T041](../reactors/identity-recovery-acceptance-reactor.md#t041) | reaction_or_regular_process_stage | IdentityRecovery | UserIdentity | ProtectRecoveryIdentity |
 | [T042](../reactors/identity-recovery-acceptance-reactor.md#t042) | reaction_or_regular_process_stage | IdentityRecovery | UserIdentity | RegisterRecoveredIdentity |
 | [T043](../reactors/identity-recovery-acceptance-reactor.md#t043) | reaction_or_regular_process_stage | IdentityRecovery | UserIdentity | RevokeRecoveredOldIdentity |
-| [T057](../reactors/identity-recovery-acceptance-reactor.md#t057) | reaction_or_regular_process_stage | IdentityRecovery | UserIdentity | SettleRecoveryIdentityProtection |
+| [T057](../reactors/identity-recovery-acceptance-reactor.md#t057) | reaction_or_regular_process_stage | IdentityRecovery | UserIdentity | EndRecoveryIdentityProtection |
 | [S035](../reactors/email-reservation-reactor.md#s035) | business_receiver | UserIdentity | EmailAddress | ReserveEmail |
 
 ## Product rules

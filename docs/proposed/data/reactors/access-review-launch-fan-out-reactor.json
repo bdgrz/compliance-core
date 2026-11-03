@@ -1,5 +1,7 @@
 {
-  "root": "AccessReviewLaunchFanOutReactor",
+  "sourceRoot": "AccessReviewLaunchFanOutReactor",
+  "targetRoot": "OpenAccessReviewWorkReactor",
+  "businessReason": "Give reviewers a task for every in-scope account so each account receives an explicit access decision.",
   "rows": [
     {
       "id": "T008",

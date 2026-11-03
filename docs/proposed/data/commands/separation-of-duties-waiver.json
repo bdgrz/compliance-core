@@ -50,7 +50,9 @@
         "line": 1633,
         "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
       },
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "ApproveSeparationOfDutiesWaiver",
+      "targetName": "ApproveSeparationOfDutiesWaiver"
     },
     {
       "command": "RecordSeparationOfDutiesWaiver",
@@ -111,7 +113,9 @@
         "line": 9450,
         "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
       },
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "RecordSeparationOfDutiesWaiver",
+      "targetName": "RecordSeparationOfDutiesWaiver"
     }
   ],
   "sourceContractEvidence": []

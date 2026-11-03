@@ -2,20 +2,23 @@
 
 Canonical events: **5**. Complete canonical event and available schema records: [owner event JSON](../data/events/member.json).
 
-| Event | Kind | Adopted discriminator | Version | Schema fields | Meaning |
-| --- | --- | --- | --- | --- | --- |
-| MemberDeprovisionCleanupCompleted | business | bdgrz.rbac.member.deprovision_cleanup_completed | 2 | [Placeholder: schema absent] | Cleanup of a deprovisioned member's access authority for one membership episode was completed against the original termination proof. |
-| MemberDeprovisioned | business | bdgrz.rbac.member.deprovisioned | 2 | 12 | A member's membership episode was ended by deprovisioning, with a stated reason by a named actor, removing the member's access to the tenant. |
-| MemberRegistered | business | bdgrz.rbac.member.registered | 1 | [Placeholder: schema absent] | A member was registered. The registration's logical CommandId is the membership episode id, and the fact is the native acceptance of that logical operation on the member stream. |
-| MemberReinstated | business | bdgrz.rbac.member.reinstated | 1 | 11 | A suspended member was reinstated with their affiliation by a named actor, restoring their access to the tenant. |
-| MemberSuspended | business | bdgrz.rbac.member.suspended | 1 | 11 | A member was suspended with a stated reason by a named actor, blocking their access until reinstated. |
+| Target event | Selected source name | Kind | Adopted discriminator | Version | Schema fields | Meaning |
+| --- | --- | --- | --- | --- | --- | --- |
+| MemberAccessAndAssignmentsRemoved | MemberDeprovisionCleanupCompleted | business | bdgrz.rbac.member.deprovision_cleanup_completed | 2 | [Placeholder: schema absent] | Cleanup of a deprovisioned member's access authority for one membership episode was completed against the original termination proof. |
+| MemberDeprovisioned | MemberDeprovisioned | business | bdgrz.rbac.member.deprovisioned | 2 | 12 | A member's membership episode was ended by deprovisioning, with a stated reason by a named actor, removing the member's access to the tenant. |
+| MemberRegistered | MemberRegistered | business | bdgrz.rbac.member.registered | 1 | [Placeholder: schema absent] | A member was registered. The registration's logical CommandId is the membership episode id, and the fact is the native acceptance of that logical operation on the member stream. |
+| MemberReinstated | MemberReinstated | business | bdgrz.rbac.member.reinstated | 1 | 11 | A suspended member was reinstated with their affiliation by a named actor, restoring their access to the tenant. |
+| MemberSuspended | MemberSuspended | business | bdgrz.rbac.member.suspended | 1 | 11 | A member was suspended with a stated reason by a named actor, blocking their access until reinstated. |
 
 ## Event details
 
-### MemberDeprovisionCleanupCompleted
+### MemberAccessAndAssignmentsRemoved
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | MemberAccessAndAssignmentsRemoved |
+| Selected source event name | MemberDeprovisionCleanupCompleted |
+| Name decision | Names the completed removal of direct access and team assignments for the exact deprovisioned membership episode. |
 | Canonical semantic key | event:MemberDeprovisionCleanupCompleted |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | MemberDeprovisionCleanupCompleted |
@@ -25,7 +28,8 @@ Canonical events: **5**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | Cleanup of a deprovisioned member's access authority for one membership episode was completed against the original termination proof. |
+| Target meaning | Cleanup of a deprovisioned member's access authority for one membership episode was completed against the original termination proof. |
+| Selected source meaning | Cleanup of a deprovisioned member's access authority for one membership episode was completed against the original termination proof. |
 | Meaning source | authored 2026-10-29 from src/Compliance.Common/Features/AccessControl/Events/MemberDeprovisionCleanupCompleted.cs |
 
 #### Schema
@@ -48,6 +52,9 @@ Canonical events: **5**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | MemberDeprovisioned |
+| Selected source event name | MemberDeprovisioned |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:MemberDeprovisioned |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | MemberDeprovisioned |
@@ -57,7 +64,8 @@ Canonical events: **5**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | `{"discriminator":"bdgrz.rbac.member.deprovisioned","version":1}` |
-| Meaning | A member's membership episode was ended by deprovisioning, with a stated reason by a named actor, removing the member's access to the tenant. |
+| Target meaning | A member's membership episode was ended by deprovisioning, with a stated reason by a named actor, removing the member's access to the tenant. |
+| Selected source meaning | A member's membership episode was ended by deprovisioning, with a stated reason by a named actor, removing the member's access to the tenant. |
 | Meaning source | authored 2026-10-29 from src/Compliance.Common/Features/AccessControl/Events/MemberDeprovisioned.cs |
 
 #### Selected schema and implementation evidence
@@ -146,16 +154,19 @@ AdministratorTransitionIntent
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
 | [T046](../reactors/administrator-withdrawal-reactor.md#t046) | emitted semantic fact | TenantManagerGuard | ApplyMemberWithdrawal | Member |
-| [T048](../reactors/administrator-neutral-member-mutation-reactor.md#t048) | emitted semantic fact | TenantManagerGuard | ApplyNeutralMemberSourceMutation | Member |
+| [T048](../reactors/administrator-neutral-member-mutation-reactor.md#t048) | emitted semantic fact | TenantManagerGuard | ApplyMemberStatusChange | Member |
 | [T050](../reactors/administrator-withdrawal-reactor.md#t050) | logical prerequisite | Member\|TeamMember | CompleteAdministratorWithdrawal | TenantManagerGuard |
 | [S003](../reactors/member-retirement-reactor.md#s003) | physical root, logical prerequisite | Member | CompleteMemberRetirement | Member |
-| [S004](../reactors/member-retirement-reactor.md#s004) | physical root, logical prerequisite | Member | CleanupRetiredMembershipRelationship | TeamMember |
-| [S005](../reactors/member-retirement-reactor.md#s005) | physical root, logical prerequisite | Member | CleanupRetiredMembershipRelationship | AccessGrant |
+| [S004](../reactors/member-retirement-reactor.md#s004) | physical root, logical prerequisite | Member | RemoveRetiredMemberAccessAndAssignments | TeamMember |
+| [S005](../reactors/member-retirement-reactor.md#s005) | physical root, logical prerequisite | Member | RemoveRetiredMemberAccessAndAssignments | AccessGrant |
 
 ### MemberRegistered
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | MemberRegistered |
+| Selected source event name | MemberRegistered |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:MemberRegistered |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | MemberRegistered |
@@ -165,7 +176,8 @@ AdministratorTransitionIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | A member was registered. The registration's logical CommandId is the membership episode id, and the fact is the native acceptance of that logical operation on the member stream. |
+| Target meaning | A member was registered. The registration's logical CommandId is the membership episode id, and the fact is the native acceptance of that logical operation on the member stream. |
+| Selected source meaning | A member was registered. The registration's logical CommandId is the membership episode id, and the fact is the native acceptance of that logical operation on the member stream. |
 | Meaning source | record summary in src/Compliance.Common/Features/AccessControl/Events/MemberRegistered.cs |
 
 #### Schema
@@ -189,6 +201,9 @@ AdministratorTransitionIntent
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | MemberReinstated |
+| Selected source event name | MemberReinstated |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:MemberReinstated |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | MemberReinstated |
@@ -198,7 +213,8 @@ AdministratorTransitionIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | A suspended member was reinstated with their affiliation by a named actor, restoring their access to the tenant. |
+| Target meaning | A suspended member was reinstated with their affiliation by a named actor, restoring their access to the tenant. |
+| Selected source meaning | A suspended member was reinstated with their affiliation by a named actor, restoring their access to the tenant. |
 | Meaning source | authored 2026-10-29 from src/Compliance.Common/Features/AccessControl/Events/MemberReinstated.cs |
 
 #### Selected schema and implementation evidence
@@ -285,7 +301,7 @@ AdministratorTransitionIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T048](../reactors/administrator-neutral-member-mutation-reactor.md#t048) | emitted semantic fact | TenantManagerGuard | ApplyNeutralMemberSourceMutation | Member |
+| [T048](../reactors/administrator-neutral-member-mutation-reactor.md#t048) | emitted semantic fact | TenantManagerGuard | ApplyMemberStatusChange | Member |
 | [T051](../reactors/administrator-restoration-reactor.md#t051) | emitted semantic fact | TenantManagerGuard | ApplyMemberRestoration | Member |
 | [T052](../reactors/administrator-restoration-reactor.md#t052) | logical prerequisite | Member\|TeamMember | CompleteAdministratorRestoration | TenantManagerGuard |
 
@@ -293,6 +309,9 @@ AdministratorTransitionIntent
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | MemberSuspended |
+| Selected source event name | MemberSuspended |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:MemberSuspended |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | MemberSuspended |
@@ -302,7 +321,8 @@ AdministratorTransitionIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | A member was suspended with a stated reason by a named actor, blocking their access until reinstated. |
+| Target meaning | A member was suspended with a stated reason by a named actor, blocking their access until reinstated. |
+| Selected source meaning | A member was suspended with a stated reason by a named actor, blocking their access until reinstated. |
 | Meaning source | authored 2026-10-29 from src/Compliance.Common/Features/AccessControl/Events/MemberSuspended.cs |
 
 #### Selected schema and implementation evidence
@@ -390,7 +410,7 @@ AdministratorTransitionIntent
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
 | [T046](../reactors/administrator-withdrawal-reactor.md#t046) | emitted semantic fact | TenantManagerGuard | ApplyMemberWithdrawal | Member |
-| [T048](../reactors/administrator-neutral-member-mutation-reactor.md#t048) | emitted semantic fact | TenantManagerGuard | ApplyNeutralMemberSourceMutation | Member |
+| [T048](../reactors/administrator-neutral-member-mutation-reactor.md#t048) | emitted semantic fact | TenantManagerGuard | ApplyMemberStatusChange | Member |
 | [T050](../reactors/administrator-withdrawal-reactor.md#t050) | logical prerequisite | Member\|TeamMember | CompleteAdministratorWithdrawal | TenantManagerGuard |
 
 

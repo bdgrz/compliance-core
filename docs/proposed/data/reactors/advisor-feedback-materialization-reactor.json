@@ -1,5 +1,7 @@
 {
-  "root": "AdvisorFeedbackMaterializationReactor",
+  "sourceRoot": "AdvisorFeedbackMaterializationReactor",
+  "targetRoot": "PreserveAdvisorFeedbackAfterHandoffReactor",
+  "businessReason": "Keep feedback already accepted into its thread even if the advisor handoff later ends.",
   "rows": [
     {
       "id": "T013",

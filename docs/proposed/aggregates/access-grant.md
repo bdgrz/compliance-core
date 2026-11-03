@@ -38,8 +38,8 @@
 
 | Row | Kind | Source owner | Target owner | Command |
 | --- | --- | --- | --- | --- |
-| [S005](../reactors/member-retirement-reactor.md#s005) | business_receiver | Member | AccessGrant | CleanupRetiredMembershipRelationship |
-| [S006](../reactors/retired-member-grant-reactor.md#s006) | business_receiver | AccessGrant | AccessGrant | CleanupRetiredMembershipRelationship |
+| [S005](../reactors/member-retirement-reactor.md#s005) | business_receiver | Member | AccessGrant | RemoveRetiredMemberAccessAndAssignments |
+| [S006](../reactors/retired-member-grant-reactor.md#s006) | business_receiver | AccessGrant | AccessGrant | RemoveRetiredMemberAccessAndAssignments |
 | [S028](../reactors/tenant-invitation-reactor.md#s028) | business_receiver | TenantInvitation | AccessGrant | ProvisionGuestProgramAccess |
 
 ## Product rules

@@ -39,7 +39,9 @@
         "line": 13033,
         "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
       },
-      "kind": "command"
+      "kind": "command",
+      "sourceName": "ReviseIndependenceRules",
+      "targetName": "ReviseIndependenceRules"
     },
     {
       "command": "AuthorizeIndependenceRuleCatalogEngagementUse",
@@ -127,7 +129,9 @@
       "source": {
         "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
         "recorded": "2026-10-29"
-      }
+      },
+      "sourceName": "AuthorizeIndependenceRuleCatalogEngagementUse",
+      "targetName": "AuthorizeIndependenceRuleCatalogEngagement"
     },
     {
       "command": "SettleIndependenceRuleCatalogEngagementUse",
@@ -212,7 +216,9 @@
       "source": {
         "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
         "recorded": "2026-10-29"
-      }
+      },
+      "sourceName": "SettleIndependenceRuleCatalogEngagementUse",
+      "targetName": "CloseIndependenceRuleCatalogEngagementAuthorization"
     }
   ],
   "sourceContractEvidence": []

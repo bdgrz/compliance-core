@@ -11,13 +11,13 @@
 
 **Invariant:** Independent location record lifecycle.
 
-**Additional decision rule:** [Placeholder: no owner-specific decision rule is recorded.]
+**Additional decision rule:** A location keeps the same identity and kind over time. Only an active location must have a unique name within its kind.
 
 **Must preserve:** Kind is immutable; only active same-kind names are unique.
 
 **Replay:** Current required authorization precedes replay; exact authorized retries resolve the original accepted result using the selected logical identity and immutable actor/intent/source binding. Fresh mutable feasibility, clock selection and body preparation cannot replace that original result. Expected revision is concurrency precondition, not a new identity.
 
-**Lifecycle:** [Placeholder: a consolidated lifecycle sequence is not present in the selected owner record.]
+**Lifecycle:** A location starts active. ReviseLocation changes its details or status through the accepted location-change process. When a location retires, its old name becomes available after the updated record is saved; historical records keep its ID. The target does not prohibit restoring a retired location.
 
 ## Commands
 

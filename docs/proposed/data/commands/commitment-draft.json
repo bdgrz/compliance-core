@@ -80,7 +80,9 @@
         "line": 941,
         "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
       },
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "ApproveCommitmentDraft",
+      "targetName": "ApproveCommitmentDraft"
     },
     {
       "command": "CreateCommitmentDraft",
@@ -161,7 +163,9 @@
         "line": 3666,
         "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
       },
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "CreateCommitmentDraft",
+      "targetName": "CreateCommitmentDraft"
     },
     {
       "command": "RetireCommitment",
@@ -221,7 +225,9 @@
         "line": 11455,
         "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
       },
-      "kind": "command"
+      "kind": "command",
+      "sourceName": "RetireCommitment",
+      "targetName": "RetireCommitment"
     },
     {
       "command": "ReviewCommitmentDraft",
@@ -322,7 +328,9 @@
         "line": 11860,
         "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
       },
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "ReviewCommitmentDraft",
+      "targetName": "ReviewCommitmentDraft"
     },
     {
       "command": "ReviseCommitmentDraft",
@@ -387,7 +395,9 @@
         "line": 12592,
         "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
       },
-      "kind": "command"
+      "kind": "command",
+      "sourceName": "ReviseCommitmentDraft",
+      "targetName": "ReviseCommitmentDraft"
     }
   ],
   "sourceContractEvidence": []

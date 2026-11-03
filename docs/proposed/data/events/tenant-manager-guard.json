@@ -212,7 +212,11 @@
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "resolvedIntentSchema": "AdministratorTransitionIntent",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "TenantManagerRestorationAccepted",
+      "targetName": "TenantManagerRestorationAccepted",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "The tenant manager guard admitted the restoration, or first registration, of an administrator's contribution to the tenant's manager count, so that availability is counted before its source change is made."
     },
     {
       "canonical": {
@@ -425,7 +429,11 @@
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "resolvedIntentSchema": "AdministratorTransitionIntent",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "TenantManagerRestorationCompleted",
+      "targetName": "TenantManagerRestorationCompleted",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "The source restoration a restoration operation admitted was applied; availability is restored separately, and only when no other reason remains. Owner is the source stream the operation mutates, Revision the authored revision of that owner (negative when unconstrained) and Generation the guard generation of this fact."
     },
     {
       "canonical": {
@@ -633,7 +641,11 @@
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "resolvedIntentSchema": "AdministratorTransitionIntent",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "TenantManagerRestored",
+      "targetName": "TenantManagerRestored",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "The guard restored a member's availability as an administrator for Reason after the exact source restoration and current eligibility were proven."
     },
     {
       "canonical": {
@@ -846,7 +858,11 @@
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "resolvedIntentSchema": "AdministratorTransitionIntent",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "TenantManagerSourceMutationAdmitted",
+      "targetName": "TenantManagerMemberChangeAccepted",
+      "nameDecision": "Names the accepted member change that is serialized with other changes to the same membership episode.",
+      "targetMeaning": "The guard admitted a source mutation of a member episode that has no contribution and no pending transition. It changes no availability but makes the mutation visible to any later registration for the same episode. Owner is the source stream the operation mutates, Revision the authored revision of that owner (negative when unconstrained) and Generation the guard generation of this fact."
     },
     {
       "canonical": {
@@ -1059,7 +1075,11 @@
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "resolvedIntentSchema": "AdministratorTransitionIntent",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "TenantManagerWithdrawalAccepted",
+      "targetName": "TenantManagerWithdrawalAccepted",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "The tenant manager guard admitted withdrawing an administrator's contribution before its source change, so that administrator stops counting as available and the last manager cannot be removed."
     },
     {
       "canonical": {
@@ -1272,7 +1292,11 @@
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "resolvedIntentSchema": "AdministratorTransitionIntent",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "TenantManagerWithdrawalCompleted",
+      "targetName": "TenantManagerWithdrawalCompleted",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "The source change a withdrawal admitted was applied; the withdrawal operation is settled and its reason stays withheld. Owner is the source stream the operation mutates, Revision the authored revision of that owner (negative when unconstrained) and Generation the guard generation of this fact."
     }
   ]
 }

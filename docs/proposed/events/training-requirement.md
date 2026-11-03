@@ -2,9 +2,9 @@
 
 Canonical events: **1**. Complete canonical event and available schema records: [owner event JSON](../data/events/training-requirement.json).
 
-| Event | Kind | Adopted discriminator | Version | Schema fields | Meaning |
-| --- | --- | --- | --- | --- | --- |
-| TrainingRequirementDefined | business | bdgrz.training_requirement.defined | 2 | 13 | Defines a requirement's first version or an immutable successor version. ContentContent is the complete TrainingRequirementContent; DefineRequestId is the logical operation identity that defined this version. |
+| Target event | Selected source name | Kind | Adopted discriminator | Version | Schema fields | Meaning |
+| --- | --- | --- | --- | --- | --- | --- |
+| TrainingRequirementDefined | TrainingRequirementDefined | business | bdgrz.training_requirement.defined | 2 | 13 | Defines a requirement's first version or an immutable successor version. ContentContent is the complete TrainingRequirementContent; DefineRequestId is the logical operation identity that defined this version. |
 
 ## Event details
 
@@ -12,6 +12,9 @@ Canonical events: **1**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | TrainingRequirementDefined |
+| Selected source event name | TrainingRequirementDefined |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:TrainingRequirementDefined |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | TrainingRequirementDefined |
@@ -21,7 +24,8 @@ Canonical events: **1**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | `{"discriminator":"bdgrz.training_requirement.defined","version":1}` |
-| Meaning | Defines a requirement's first version or an immutable successor version. ContentContent is the complete TrainingRequirementContent; DefineRequestId is the logical operation identity that defined this version. |
+| Target meaning | Defines a requirement's first version or an immutable successor version. ContentContent is the complete TrainingRequirementContent; DefineRequestId is the logical operation identity that defined this version. |
+| Selected source meaning | Defines a requirement's first version or an immutable successor version. ContentContent is the complete TrainingRequirementContent; DefineRequestId is the logical operation identity that defined this version. |
 | Meaning source | record summary in src/Compliance.Common/Features/PolicyDistribution/Events/TrainingRequirementDefined.cs |
 
 #### Selected schema and implementation evidence

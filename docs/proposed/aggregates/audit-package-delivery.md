@@ -23,7 +23,7 @@
 
 | Command | Kind | Identity field |
 | --- | --- | --- |
-| [MaterializeRecordedAuditPackageDelivery](../commands/audit-package-delivery.md#materializerecordedauditpackagedelivery) | receiver | CommandId |
+| [RecordAuditPackageDelivery](../commands/audit-package-delivery.md#recordauditpackagedelivery) | receiver | CommandId |
 
 ## Events
 
@@ -35,7 +35,7 @@
 
 | Row | Kind | Source owner | Target owner | Command |
 | --- | --- | --- | --- | --- |
-| [T081](../reactors/audit-package-delivery-admission-reactor.md#t081) | reaction_or_regular_process_stage | AuditPackageManifest | AuditPackageDelivery | MaterializeRecordedAuditPackageDelivery |
+| [T081](../reactors/audit-package-delivery-admission-reactor.md#t081) | reaction_or_regular_process_stage | AuditPackageManifest | AuditPackageDelivery | RecordAuditPackageDelivery |
 
 ## Product rules
 

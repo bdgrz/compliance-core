@@ -30,8 +30,8 @@
 
 | Event | Discriminator | Version |
 | --- | --- | --- |
-| [EvidenceRedactionApprovedV2](../events/evidence-redaction.md#evidenceredactionapprovedv2) | bdgrz.evidence.redaction.approved | 2 |
-| [EvidenceRedactionPreparedV2](../events/evidence-redaction.md#evidenceredactionpreparedv2) | bdgrz.evidence.redaction.prepared | 2 |
+| [EvidenceRedactionApproved](../events/evidence-redaction.md#evidenceredactionapproved) | bdgrz.evidence.redaction.approved | 2 |
+| [EvidenceRedactionPrepared](../events/evidence-redaction.md#evidenceredactionprepared) | bdgrz.evidence.redaction.prepared | 2 |
 
 ## Cross-owner flows
 

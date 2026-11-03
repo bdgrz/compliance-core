@@ -1,5 +1,7 @@
 {
-  "root": "ProfessionalDutyChangeReactor",
+  "sourceRoot": "ProfessionalDutyChangeReactor",
+  "targetRoot": "ApplyOrRevokeProfessionalDutyDesignationReactor",
+  "businessReason": "Apply or revoke an exact professional duty designation while preserving its unique identity and engagement decisions.",
   "rows": [
     {
       "id": "T000",

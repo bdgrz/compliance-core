@@ -2,11 +2,11 @@
 
 Canonical events: **3**. Complete canonical event and available schema records: [owner event JSON](../data/events/criterion-applicability.json).
 
-| Event | Kind | Adopted discriminator | Version | Schema fields | Meaning |
-| --- | --- | --- | --- | --- | --- |
-| CriterionApplicabilityReviewed | business | bdgrz.criterion_applicability.reviewed | 3 | 14 | A proposal that a criterion does not apply to a program was reviewed with a decision outcome by a named actor, optionally under a separation-of-duties waiver. |
-| CriterionNotApplicableProposed | business | bdgrz.criterion_applicability.not_applicable_proposed | 3 | 14 | A criterion of a criteria edition was proposed as not applicable to a program by a named member, awaiting review. |
-| CriterionNotApplicableWithdrawn | business | bdgrz.criterion_applicability.not_applicable_withdrawn | 3 | 11 | A pending proposal that a criterion is not applicable to a program was withdrawn by a named actor, so the criterion stays applicable. |
+| Target event | Selected source name | Kind | Adopted discriminator | Version | Schema fields | Meaning |
+| --- | --- | --- | --- | --- | --- | --- |
+| CriterionApplicabilityReviewed | CriterionApplicabilityReviewed | business | bdgrz.criterion_applicability.reviewed | 3 | 14 | A proposal that a criterion does not apply to a program was reviewed with a decision outcome by a named actor, optionally under a separation-of-duties waiver. |
+| CriterionNotApplicableProposed | CriterionNotApplicableProposed | business | bdgrz.criterion_applicability.not_applicable_proposed | 3 | 14 | A criterion of a criteria edition was proposed as not applicable to a program by a named member, awaiting review. |
+| CriterionNotApplicableWithdrawn | CriterionNotApplicableWithdrawn | business | bdgrz.criterion_applicability.not_applicable_withdrawn | 3 | 11 | A pending proposal that a criterion is not applicable to a program was withdrawn by a named actor, so the criterion stays applicable. |
 
 ## Event details
 
@@ -14,6 +14,9 @@ Canonical events: **3**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | CriterionApplicabilityReviewed |
+| Selected source event name | CriterionApplicabilityReviewed |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:CriterionApplicabilityReviewed |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | CriterionApplicabilityReviewed |
@@ -23,7 +26,8 @@ Canonical events: **3**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | `{"discriminator":"bdgrz.criterion_applicability.reviewed","version":1}` |
-| Meaning | A proposal that a criterion does not apply to a program was reviewed with a decision outcome by a named actor, optionally under a separation-of-duties waiver. |
+| Target meaning | A proposal that a criterion does not apply to a program was reviewed with a decision outcome by a named actor, optionally under a separation-of-duties waiver. |
+| Selected source meaning | A proposal that a criterion does not apply to a program was reviewed with a decision outcome by a named actor, optionally under a separation-of-duties waiver. |
 | Meaning source | authored 2026-10-29 from src/Compliance.Common/Features/ControlMappings/Events/CriterionApplicabilityReviewed.cs |
 
 #### Selected schema and implementation evidence
@@ -73,6 +77,9 @@ Canonical events: **3**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | CriterionNotApplicableProposed |
+| Selected source event name | CriterionNotApplicableProposed |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:CriterionNotApplicableProposed |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | CriterionNotApplicableProposed |
@@ -82,7 +89,8 @@ Canonical events: **3**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | `{"discriminator":"bdgrz.criterion_applicability.not_applicable_proposed","version":1}` |
-| Meaning | A criterion of a criteria edition was proposed as not applicable to a program by a named member, awaiting review. |
+| Target meaning | A criterion of a criteria edition was proposed as not applicable to a program by a named member, awaiting review. |
+| Selected source meaning | A criterion of a criteria edition was proposed as not applicable to a program by a named member, awaiting review. |
 | Meaning source | authored 2026-10-29 from src/Compliance.Common/Features/ControlMappings/Events/CriterionNotApplicableProposed.cs |
 
 #### Selected schema and implementation evidence
@@ -132,6 +140,9 @@ Canonical events: **3**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | CriterionNotApplicableWithdrawn |
+| Selected source event name | CriterionNotApplicableWithdrawn |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:CriterionNotApplicableWithdrawn |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | CriterionNotApplicableWithdrawn |
@@ -141,7 +152,8 @@ Canonical events: **3**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | `{"discriminator":"bdgrz.criterion_applicability.not_applicable_withdrawn","version":1}` |
-| Meaning | A pending proposal that a criterion is not applicable to a program was withdrawn by a named actor, so the criterion stays applicable. |
+| Target meaning | A pending proposal that a criterion is not applicable to a program was withdrawn by a named actor, so the criterion stays applicable. |
+| Selected source meaning | A pending proposal that a criterion is not applicable to a program was withdrawn by a named actor, so the criterion stays applicable. |
 | Meaning source | authored 2026-10-29 from src/Compliance.Common/Features/ControlMappings/Events/CriterionNotApplicableWithdrawn.cs |
 
 #### Selected schema and implementation evidence

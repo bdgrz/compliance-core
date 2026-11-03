@@ -1,5 +1,7 @@
 {
-  "root": "ProviderChangeAcceptedReactor",
+  "sourceRoot": "ProviderChangeAcceptedReactor",
+  "targetRoot": "KeepProviderNamesUniqueReactor",
+  "businessReason": "Keep provider names unique through accepted provider changes and retirement.",
   "rows": [
     {
       "id": "T022",

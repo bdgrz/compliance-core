@@ -23,13 +23,13 @@
 
 | Command | Kind | Identity field |
 | --- | --- | --- |
-| [FreezePopulationSnapshot](../commands/population-snapshot.md#freezepopulationsnapshot) | receiver | CommandId |
+| [FinalizePopulationSnapshot](../commands/population-snapshot.md#finalizepopulationsnapshot) | receiver | CommandId |
 
 ## Events
 
 | Event | Discriminator | Version |
 | --- | --- | --- |
-| [PopulationSnapshotFrozen](../events/population-snapshot.md#populationsnapshotfrozen) | bdgrz.snapshot.population.frozen | 1 |
+| [PopulationSnapshotFinalized](../events/population-snapshot.md#populationsnapshotfinalized) | bdgrz.snapshot.population.frozen | 1 |
 
 ## Cross-owner flows
 

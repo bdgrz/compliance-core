@@ -1,5 +1,10 @@
 # FirmStaffRegistrationReactor
 
+Selected source root name: `FirmStaffRegistrationReactor`.
+## Why this reaction exists
+
+Register the firm staff member only after the exact identity claim has been confirmed.
+
 Selected choreography rows: **2**. Required proofs, recovery, effect identity, and implementation evidence are preserved in [reactor row JSON](../data/reactors/firm-staff-registration-reactor.json).
 
 | Row | Kind | Prerequisite facts | Command | Target owner | Emitted facts |
@@ -17,16 +22,16 @@ Selected choreography rows: **2**. Required proofs, recovery, effect identity, a
 | kind | reaction_or_regular_process_stage |
 | status | SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED |
 | sourceOwner | FirmStaffRecord |
-| logicalPrerequisiteFacts | FirmStaffRegistrationAccepted |
+| logicalPrerequisiteFacts (target names) | FirmStaffRegistrationAccepted |
 | logicalPrerequisiteRule | The source is FirmStaffRegistrationAccepted of the exact staff record with its frozen intent; the canonical user may be permanently claimed for that staff member only if the registration is not rejected and the user is unclaimed or already claimed by this same registration with identical intent. |
-| physicalRootEvents | FirmStaffRegistrationAccepted |
-| originalAdmissionKinds | FirmStaffRegistrationAccepted |
-| receiverCommand | ClaimFirmStaffIdentity |
+| physicalRootEvents (target names) | FirmStaffRegistrationAccepted |
+| originalAdmissionKinds (target names) | FirmStaffRegistrationAccepted |
+| Target command (selected source name: ClaimFirmStaffIdentity) | ClaimFirmStaffIdentity |
 | targetOwner | FirmStaffIdentityClaim |
 | targetAuthorityKind | business_aggregate |
-| emittedSemanticFacts | FirmStaffIdentityClaimed |
+| emittedSemanticFacts (target names) | FirmStaffIdentityClaimed |
 | emittedEventContracts | None listed |
-| currentRegisteredRootTypes | FirmStaffRegistrationReactor |
+| currentRegisteredRootTypes (target names) | FirmStaffRegistrationReactor |
 | plannedRootRole | null (recorded) |
 | processes | FirmStaffRegistrationProcess |
 | requiredProofContract | `{"canonicalCarrier":"original admitted root reference + required independently verified typed stage/terminal proof sets","admissionReferenceFactKinds":["FirmStaffRegistrationAccepted"],"admissionReferenceRole":"original business admission/first-owner fact, distinct from subscription trigger and intermediate/terminal prerequisites","verification":{"admission":"AdmissionReference is a locator only. Resolve and independently verify actual typed admitted fact, exact owner/tenant/program, saved metadata and physical/hydrated cut, original root/episode/actor/intent and immutable content.","stageAndTerminal":"Materialize each required typed stage/terminal proof from actual committed facts and full required immutable selections; prove complete grant/fence/provisional/child sets, not counts/checkpoints. Guard sets are not weakened by carrier choice.","earlyReplay":"If native receipt binding does not cover a supplied/interpreted command term, bind that term through the required actual typed proof/body before early replay. Exact receipt cannot bypass proof manifest or source tuple guards.","resultAndRecovery":"Current public authorization precedes replay. Original result/receipt and unknown-append recovery stay exact; requested cancellation propagates. Unavailable proof/content remains transient; corruption/changed intent is permanent; no inferred absence/release.","implementationStatus":"Installed pointer/handler/process presence is not proof of conformance. Field/wire migration and required behavioral tests remain separately verifiable implementation work."},"requiredTypedStageProofSets":[{"factKinds":["FirmStaffRegistrationAccepted"],"role":"The registration root is the authoritative accepted fact of the staff record and the claim practice equals the frozen intent practice","quantifier":"exactly_one","condition":"","requiredVerification":"Resolve the actual saved fact and its full immutable selection; verify the typed payload and the exact admission, root, target, generation, actor and intent binding. A pointer, checkpoint or stage order alone is not authority."},{"factKinds":["FirmStaffRegistrationRejected"],"role":"The registration was not rejected","quantifier":"none_outstanding","condition":"","requiredVerification":"Resolve the actual saved fact and its full immutable selection; verify the typed payload and the exact admission, root, target, generation, actor and intent binding. A pointer, checkpoint or stage order alone is not authority."},{"factKinds":["FirmStaffIdentityClaimed"],"role":"The canonical user is not claimed by a different staff member","quantifier":"none_outstanding","condition":"An existing claim by the same staff member with identical intent is an exact replay","requiredVerification":"Resolve the actual saved fact and its full immutable selection; verify the typed payload and the exact admission, root, target, generation, actor and intent binding. A pointer, checkpoint or stage order alone is not authority."}],"pinnedSourceRequirements":"Every exact source owner/event/content revision and complete immutable manifest required by intendedProofGate remains mandatory; no absent optional source is fabricated.","proofGate":"Canonical user claim is immutable and platform-wide.","requiredLogicalPrerequisiteProofs":"Every applicable logical prerequisite is independently verified as an actual typed saved fact (or actual technical proof where explicitly technical); a terminal proof may establish an earlier stage only through a verified native chain that includes that required typed stage. Stage order/checkpoint alone never substitutes.","prerequisiteVerification":{"admission":"The receiver resolves the original admitted root fact by its exact owner, tenant, episode, actor and immutable intent, and verifies the saved fact and content hash before acting; a reference alone grants nothing.","stageProofs":"Each required stage proof (grant, hold, review, or terminal fact) is materialised from the actual committed fact and its full immutable selection; counts, checkpoints and stage order are not accepted as proof."},"stageProofStatus":"specified","stageProofRationale":"","stageProofSource":"authored 2026-10-29 from reactor and target source"}` |
@@ -48,16 +53,16 @@ Selected choreography rows: **2**. Required proofs, recovery, effect identity, a
 | kind | reaction_or_regular_process_stage |
 | status | SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED |
 | sourceOwner | FirmStaffIdentityClaim |
-| logicalPrerequisiteFacts | FirmStaffIdentityClaimed |
+| logicalPrerequisiteFacts (target names) | FirmStaffIdentityClaimed |
 | logicalPrerequisiteRule | Exact source accepted registration and permanent claim; later status cannot rewrite identity. |
-| physicalRootEvents | FirmStaffRegistrationAccepted |
-| originalAdmissionKinds | FirmStaffRegistrationAccepted |
-| receiverCommand | CompleteFirmStaffRegistration |
+| physicalRootEvents (target names) | FirmStaffRegistrationAccepted |
+| originalAdmissionKinds (target names) | FirmStaffRegistrationAccepted |
+| Target command (selected source name: CompleteFirmStaffRegistration) | CompleteFirmStaffRegistration |
 | targetOwner | FirmStaffRecord |
 | targetAuthorityKind | business_aggregate |
-| emittedSemanticFacts | FirmStaffChangeRecorded |
+| emittedSemanticFacts (target names) | FirmStaffChangeRecorded |
 | emittedEventContracts | None listed |
-| currentRegisteredRootTypes | FirmStaffRegistrationReactor |
+| currentRegisteredRootTypes (target names) | FirmStaffRegistrationReactor |
 | plannedRootRole | null (recorded) |
 | processes | FirmStaffRegistrationProcess |
 | requiredProofContract | `{"canonicalCarrier":"original admitted root reference + required independently verified typed stage/terminal proof sets","admissionReferenceFactKinds":["FirmStaffRegistrationAccepted"],"admissionReferenceRole":"original business admission/first-owner fact, distinct from subscription trigger and intermediate/terminal prerequisites","verification":{"admission":"AdmissionReference is a locator only. Resolve and independently verify actual typed admitted fact, exact owner/tenant/program, saved metadata and physical/hydrated cut, original root/episode/actor/intent and immutable content.","stageAndTerminal":"Materialize each required typed stage/terminal proof from actual committed facts and full required immutable selections; prove complete grant/fence/provisional/child sets, not counts/checkpoints. Guard sets are not weakened by carrier choice.","earlyReplay":"If native receipt binding does not cover a supplied/interpreted command term, bind that term through the required actual typed proof/body before early replay. Exact receipt cannot bypass proof manifest or source tuple guards.","resultAndRecovery":"Current public authorization precedes replay. Original result/receipt and unknown-append recovery stay exact; requested cancellation propagates. Unavailable proof/content remains transient; corruption/changed intent is permanent; no inferred absence/release.","implementationStatus":"Installed pointer/handler/process presence is not proof of conformance. Field/wire migration and required behavioral tests remain separately verifiable implementation work."},"requiredTypedStageProofSets":[{"factKinds":["FirmStaffIdentityClaimed"],"role":"permanent exact canonical-user/staff claim","quantifier":"exactly_one_selected_variant","condition":"always","requiredVerification":"Resolve actual saved owner/source fact and full metadata/cut, verify typed payload/immutable content and exact admission/root/target/generation/actor/intent binding. Pointer, checkpoint and stage order alone are not authority."}],"pinnedSourceRequirements":"Every exact source owner/event/content revision and complete immutable manifest required by intendedProofGate remains mandatory; no absent optional source is fabricated.","proofGate":"Exact source accepted registration and permanent claim; later status cannot rewrite identity.","requiredLogicalPrerequisiteProofs":"Every applicable logical prerequisite is independently verified as an actual typed saved fact (or actual technical proof where explicitly technical); a terminal proof may establish an earlier stage only through a verified native chain that includes that required typed stage. Stage order/checkpoint alone never substitutes.","prerequisiteVerification":{"admission":"The receiver resolves the original admitted root fact by its exact owner, tenant, episode, actor and immutable intent, and verifies the saved fact and content hash before acting; a reference alone grants nothing.","stageProofs":"Each required stage proof (grant, hold, review, or terminal fact) is materialised from the actual committed fact and its full immutable selection; counts, checkpoints and stage order are not accepted as proof."}}` |

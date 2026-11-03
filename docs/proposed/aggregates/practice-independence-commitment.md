@@ -25,14 +25,14 @@
 | --- | --- | --- |
 | [ReservePracticeIndependence](../commands/practice-independence-commitment.md#reservepracticeindependence) | receiver | CommandId |
 | [CommitPracticeIndependence](../commands/practice-independence-commitment.md#commitpracticeindependence) | receiver | CommandId |
-| [SettlePracticeIndependenceReservation](../commands/practice-independence-commitment.md#settlepracticeindependencereservation) | receiver | CommandId |
+| [ClosePracticeIndependenceReservation](../commands/practice-independence-commitment.md#closepracticeindependencereservation) | receiver | CommandId |
 
 ## Events
 
 | Event | Discriminator | Version |
 | --- | --- | --- |
 | [PracticeIndependenceCommitted](../events/practice-independence-commitment.md#practiceindependencecommitted) | bdgrz.practice-independence-commitment.practice-independence-committed | 1 |
-| [PracticeIndependenceReservationSettled](../events/practice-independence-commitment.md#practiceindependencereservationsettled) | bdgrz.practice-independence-commitment.practice-independence-reservation-settled | 1 |
+| [PracticeIndependenceReservationEnded](../events/practice-independence-commitment.md#practiceindependencereservationended) | bdgrz.practice-independence-commitment.practice-independence-reservation-settled | 1 |
 | [PracticeIndependenceReserved](../events/practice-independence-commitment.md#practiceindependencereserved) | bdgrz.practice-independence-commitment.practice-independence-reserved | 1 |
 
 ## Cross-owner flows
@@ -41,7 +41,7 @@
 | --- | --- | --- | --- | --- |
 | [T005](../reactors/engagement-acceptance-reactor.md#t005) | reaction_or_regular_process_stage | ServiceEngagementIndependence | PracticeIndependenceCommitment | CommitPracticeIndependence |
 | [T083](../reactors/engagement-acceptance-reactor.md#t083) | reaction_or_regular_process_stage | ServiceEngagementIndependence | PracticeIndependenceCommitment | ReservePracticeIndependence |
-| [T085](../reactors/engagement-acceptance-reactor.md#t085) | reaction_or_regular_process_stage | ServiceEngagementIndependence | PracticeIndependenceCommitment | SettlePracticeIndependenceReservation |
+| [T085](../reactors/engagement-acceptance-reactor.md#t085) | reaction_or_regular_process_stage | ServiceEngagementIndependence | PracticeIndependenceCommitment | ClosePracticeIndependenceReservation |
 
 ## Product rules
 

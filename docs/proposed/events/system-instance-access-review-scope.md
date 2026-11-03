@@ -2,9 +2,9 @@
 
 Canonical events: **1**. Complete canonical event and available schema records: [owner event JSON](../data/events/system-instance-access-review-scope.json).
 
-| Event | Kind | Adopted discriminator | Version | Schema fields | Meaning |
-| --- | --- | --- | --- | --- | --- |
-| AccessReviewScopeDecided | business | bdgrz.system_instance.access_review_scope.decided | 2 | [Placeholder: schema absent] | An attributable immutable personal scope decision at the exact named instance revision. |
+| Target event | Selected source name | Kind | Adopted discriminator | Version | Schema fields | Meaning |
+| --- | --- | --- | --- | --- | --- | --- |
+| AccessReviewScopeDecided | AccessReviewScopeDecided | business | bdgrz.system_instance.access_review_scope.decided | 2 | [Placeholder: schema absent] | An attributable immutable personal scope decision at the exact named instance revision. |
 
 ## Event details
 
@@ -12,6 +12,9 @@ Canonical events: **1**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | AccessReviewScopeDecided |
+| Selected source event name | AccessReviewScopeDecided |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:AccessReviewScopeDecided |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | AccessReviewScopeDecided |
@@ -21,7 +24,8 @@ Canonical events: **1**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | An attributable immutable personal scope decision at the exact named instance revision. |
+| Target meaning | An attributable immutable personal scope decision at the exact named instance revision. |
+| Selected source meaning | An attributable immutable personal scope decision at the exact named instance revision. |
 | Meaning source | record summary in src/Compliance.Common/Features/Applications/Events/AccessReviewScopeDecided.cs |
 
 #### Schema

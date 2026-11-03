@@ -59,7 +59,9 @@
         "line": 2005,
         "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
       },
-      "kind": "command"
+      "kind": "command",
+      "sourceName": "AssignArtifactHandlingPolicy",
+      "targetName": "AssignArtifactHandlingPolicy"
     },
     {
       "command": "AuthorizeArtifactHandlingDownloadUse",
@@ -135,7 +137,9 @@
       "source": {
         "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
         "recorded": "2026-10-29"
-      }
+      },
+      "sourceName": "AuthorizeArtifactHandlingDownloadUse",
+      "targetName": "AuthorizeArtifactHandlingDownload"
     },
     {
       "command": "SettleArtifactHandlingDownloadUse",
@@ -207,7 +211,9 @@
       "source": {
         "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
         "recorded": "2026-10-29"
-      }
+      },
+      "sourceName": "SettleArtifactHandlingDownloadUse",
+      "targetName": "CloseArtifactHandlingDownloadAuthorization"
     }
   ],
   "sourceContractEvidence": []

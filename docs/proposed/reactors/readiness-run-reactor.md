@@ -1,4 +1,9 @@
-# ReadinessRunReactor
+# ReassessProgramReadinessReactor
+
+Selected source root name: `ReadinessRunReactor`.
+## Why this reaction exists
+
+Update current program readiness from the exact frozen assessment.
 
 Selected choreography rows: **2**. Required proofs, recovery, effect identity, and implementation evidence are preserved in [reactor row JSON](../data/reactors/readiness-run-reactor.json).
 
@@ -17,16 +22,16 @@ Selected choreography rows: **2**. Required proofs, recovery, effect identity, a
 | kind | reaction_or_regular_process_stage |
 | status | SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED |
 | sourceOwner | ReadinessAssessment |
-| logicalPrerequisiteFacts | ReadinessAssessmentRecorded |
+| logicalPrerequisiteFacts (target names) | ReadinessAssessmentRecorded |
 | logicalPrerequisiteRule | Match exact pending program admission generation, AssessmentId, as-of/input digest/rules and immutable computation result. Do not compare the pre-admission revision against the already advanced program. No adoption over another pending/newer generation. |
-| physicalRootEvents | ReadinessAssessmentRequested |
-| originalAdmissionKinds | ReadinessAssessmentRequested |
-| receiverCommand | AdoptReadinessAssessment |
+| physicalRootEvents (target names) | ReadinessAssessmentRequested |
+| originalAdmissionKinds (target names) | ReadinessAssessmentRequested |
+| Target command (selected source name: AdoptReadinessAssessment) | AdoptReadinessAssessment |
 | targetOwner | ProgramReadiness |
 | targetAuthorityKind | business_aggregate |
-| emittedSemanticFacts | ReadinessAssessmentAdopted |
+| emittedSemanticFacts (target names) | ReadinessAssessmentAdopted |
 | emittedEventContracts | None listed |
-| currentRegisteredRootTypes | ReadinessRunReactor |
+| currentRegisteredRootTypes (target names) | ReassessProgramReadinessReactor |
 | plannedRootRole | null (recorded) |
 | processes | ReadinessRunProcess |
 | requiredProofContract | `{"canonicalCarrier":"original admitted root reference + required independently verified typed stage/terminal proof sets","admissionReferenceFactKinds":["ReadinessAssessmentRequested"],"admissionReferenceRole":"original business admission/first-owner fact, distinct from subscription trigger and intermediate/terminal prerequisites","verification":{"admission":"AdmissionReference is a locator only. Resolve and independently verify actual typed admitted fact, exact owner/tenant/program, saved metadata and physical/hydrated cut, original root/episode/actor/intent and immutable content.","stageAndTerminal":"Materialize each required typed stage/terminal proof from actual committed facts and full required immutable selections; prove complete grant/fence/provisional/child sets, not counts/checkpoints. Guard sets are not weakened by carrier choice.","earlyReplay":"If native receipt binding does not cover a supplied/interpreted command term, bind that term through the required actual typed proof/body before early replay. Exact receipt cannot bypass proof manifest or source tuple guards.","resultAndRecovery":"Current public authorization precedes replay. Original result/receipt and unknown-append recovery stay exact; requested cancellation propagates. Unavailable proof/content remains transient; corruption/changed intent is permanent; no inferred absence/release.","implementationStatus":"Installed pointer/handler/process presence is not proof of conformance. Field/wire migration and required behavioral tests remain separately verifiable implementation work."},"requiredTypedStageProofSets":[{"factKinds":["ReadinessAssessmentRecorded"],"role":"actual computed assessment plus exact pending adoption generation","quantifier":"exactly_one_selected_variant","condition":"always","requiredVerification":"Resolve actual saved owner/source fact and full metadata/cut, verify typed payload/immutable content and exact admission/root/target/generation/actor/intent binding. Pointer, checkpoint and stage order alone are not authority."}],"pinnedSourceRequirements":"Every exact source owner/event/content revision and complete immutable manifest required by intendedProofGate remains mandatory; no absent optional source is fabricated.","proofGate":"Match exact pending program admission generation, AssessmentId, as-of/input digest/rules and immutable computation result. Do not compare the pre-admission revision against the already advanced program. No adoption over another pending/newer generation.","requiredLogicalPrerequisiteProofs":"Every applicable logical prerequisite is independently verified as an actual typed saved fact (or actual technical proof where explicitly technical); a terminal proof may establish an earlier stage only through a verified native chain that includes that required typed stage. Stage order/checkpoint alone never substitutes.","prerequisiteVerification":{"admission":"The receiver resolves the original admitted root fact by its exact owner, tenant, episode, actor and immutable intent, and verifies the saved fact and content hash before acting; a reference alone grants nothing.","stageProofs":"Each required stage proof (grant, hold, review, or terminal fact) is materialised from the actual committed fact and its full immutable selection; counts, checkpoints and stage order are not accepted as proof."}}` |
@@ -47,16 +52,16 @@ Selected choreography rows: **2**. Required proofs, recovery, effect identity, a
 | kind | reaction_or_regular_process_stage |
 | status | SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED |
 | sourceOwner | ProgramReadiness |
-| logicalPrerequisiteFacts | ReadinessAssessmentRequested |
+| logicalPrerequisiteFacts (target names) | ReadinessAssessmentRequested |
 | logicalPrerequisiteRule | The source is ReadinessAssessmentRequested whose frozen run intent and input snapshot define the rule version and as-of; the assessment is computed deterministically from the frozen inputs only if the rule version is the one this code can evaluate and no assessment was recorded by another operation. |
-| physicalRootEvents | ReadinessAssessmentRequested |
-| originalAdmissionKinds | ReadinessAssessmentRequested |
-| receiverCommand | ComputeReadinessAssessment |
+| physicalRootEvents (target names) | ReadinessAssessmentRequested |
+| originalAdmissionKinds (target names) | ReadinessAssessmentRequested |
+| Target command (selected source name: ComputeReadinessAssessment) | ComputeReadinessAssessment |
 | targetOwner | ReadinessAssessment |
 | targetAuthorityKind | business_aggregate |
-| emittedSemanticFacts | ReadinessAssessmentRecorded |
+| emittedSemanticFacts (target names) | ReadinessAssessmentRecorded |
 | emittedEventContracts | None listed |
-| currentRegisteredRootTypes | ReadinessRunReactor |
+| currentRegisteredRootTypes (target names) | ReassessProgramReadinessReactor |
 | plannedRootRole | null (recorded) |
 | processes | ReadinessRunProcess |
 | requiredProofContract | `{"canonicalCarrier":"original admitted root reference + required independently verified typed stage/terminal proof sets","admissionReferenceFactKinds":["ReadinessAssessmentRequested"],"admissionReferenceRole":"original business admission/first-owner fact, distinct from subscription trigger and intermediate/terminal prerequisites","verification":{"admission":"AdmissionReference is a locator only. Resolve and independently verify actual typed admitted fact, exact owner/tenant/program, saved metadata and physical/hydrated cut, original root/episode/actor/intent and immutable content.","stageAndTerminal":"Materialize each required typed stage/terminal proof from actual committed facts and full required immutable selections; prove complete grant/fence/provisional/child sets, not counts/checkpoints. Guard sets are not weakened by carrier choice.","earlyReplay":"If native receipt binding does not cover a supplied/interpreted command term, bind that term through the required actual typed proof/body before early replay. Exact receipt cannot bypass proof manifest or source tuple guards.","resultAndRecovery":"Current public authorization precedes replay. Original result/receipt and unknown-append recovery stay exact; requested cancellation propagates. Unavailable proof/content remains transient; corruption/changed intent is permanent; no inferred absence/release.","implementationStatus":"Installed pointer/handler/process presence is not proof of conformance. Field/wire migration and required behavioral tests remain separately verifiable implementation work."},"requiredTypedStageProofSets":[{"factKinds":["ReadinessAssessmentRequested"],"role":"Verified admitted run with the same operation, program, assessment id and adoption generation","quantifier":"exactly_one","condition":"","requiredVerification":"Resolve the actual saved fact and its full immutable selection; verify the typed payload and the exact admission, root, target, generation, actor and intent binding. A pointer, checkpoint or stage order alone is not authority."},{"factKinds":["ReadinessAssessmentRecorded"],"role":"No assessment already computed for this assessment id by another operation","quantifier":"none_outstanding","condition":"","requiredVerification":"Resolve the actual saved fact and its full immutable selection; verify the typed payload and the exact admission, root, target, generation, actor and intent binding. A pointer, checkpoint or stage order alone is not authority."}],"pinnedSourceRequirements":"Every exact source owner/event/content revision and complete immutable manifest required by intendedProofGate remains mandatory; no absent optional source is fabricated.","proofGate":"Evaluate only frozen ReadinessRunIntent input content with its exact supported rule version; missing business facts already represented explicitly in that snapshot. No live source reads during replay or rerun.","requiredLogicalPrerequisiteProofs":"Every applicable logical prerequisite is independently verified as an actual typed saved fact (or actual technical proof where explicitly technical); a terminal proof may establish an earlier stage only through a verified native chain that includes that required typed stage. Stage order/checkpoint alone never substitutes.","prerequisiteVerification":{"admission":"The receiver resolves the original admitted root fact by its exact owner, tenant, episode, actor and immutable intent, and verifies the saved fact and content hash before acting; a reference alone grants nothing.","stageProofs":"Each required stage proof (grant, hold, review, or terminal fact) is materialised from the actual committed fact and its full immutable selection; counts, checkpoints and stage order are not accepted as proof."},"stageProofStatus":"specified","stageProofRationale":"The computation reads only frozen immutable content (inputs, criteria, mappings, effective controls), no live committed facts; replay yields the identical assessment.","stageProofSource":"authored 2026-10-29 from reactor and target source"}` |

@@ -2,9 +2,9 @@
 
 Selected command contracts: **1**. Complete selected contracts and companion source evidence: [owner command JSON](../data/commands/work-digest-preference.json).
 
-| Command | Kind | Identity | Fields | HTTP routes |
-| --- | --- | --- | --- | --- |
-| SetWorkDigestPreference | [Placeholder: kind not recorded] | [Placeholder: identity field not recorded] | 4 | [Placeholder: value not recorded] |
+| Target command | Selected source name | Kind | Identity | Fields | HTTP routes |
+| --- | --- | --- | --- | --- | --- |
+| SetWorkDigestPreference | SetWorkDigestPreference | [Placeholder: kind not recorded] | [Placeholder: identity field not recorded] | 4 | [Placeholder: value not recorded] |
 
 ## Selected command details
 
@@ -12,13 +12,16 @@ Selected command contracts: **1**. Complete selected contracts and companion sou
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | SetWorkDigestPreference |
+| Selected source command name | SetWorkDigestPreference |
+| Name decision | The selected source name is retained. |
 | Owner | WorkDigestPreference |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | [Placeholder: value not recorded] |
 | Logical identity | [Placeholder: required status not recorded] |
 | Entry point | [Placeholder: value not recorded] |
 | MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | [Placeholder: value not recorded] |
+| Selected semantic events | None listed |
 | Protocols | [Placeholder: value not recorded] |
 | Policy preservation | [Placeholder: value not recorded] |
 | Contract changes | [Placeholder: value not recorded] |

@@ -2,10 +2,10 @@
 
 Canonical events: **2**. Complete canonical event and available schema records: [owner event JSON](../data/events/provider-name-claim.json).
 
-| Event | Kind | Adopted discriminator | Version | Schema fields | Meaning |
-| --- | --- | --- | --- | --- | --- |
-| ProviderNameClaimed | business | bdgrz.provider-name-claim.provider-name-claimed | 1 | 8 | The name claim is held by the provider record and change generation named by this fact. |
-| ProviderNameReleased | business | bdgrz.provider-name-claim.provider-name-released | 1 | 8 | The name claim was released by the provider record and change generation that held it. |
+| Target event | Selected source name | Kind | Adopted discriminator | Version | Schema fields | Meaning |
+| --- | --- | --- | --- | --- | --- | --- |
+| ProviderNameClaimed | ProviderNameClaimed | business | bdgrz.provider-name-claim.provider-name-claimed | 1 | 8 | The name claim is held by the provider record and change generation named by this fact. |
+| ProviderNameReleased | ProviderNameReleased | business | bdgrz.provider-name-claim.provider-name-released | 1 | 8 | The name claim was released by the provider record and change generation that held it. |
 
 ## Event details
 
@@ -13,6 +13,9 @@ Canonical events: **2**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | ProviderNameClaimed |
+| Selected source event name | ProviderNameClaimed |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:ProviderNameClaimed |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | ProviderNameClaimed |
@@ -22,7 +25,8 @@ Canonical events: **2**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | The name claim is held by the provider record and change generation named by this fact. |
+| Target meaning | The name claim is held by the provider record and change generation named by this fact. |
+| Selected source meaning | The name claim is held by the provider record and change generation named by this fact. |
 | Meaning source | record summary in src/Compliance.Common/Features/Providers/Events/ProviderNameClaimed.cs |
 
 #### Selected schema and implementation evidence
@@ -109,6 +113,9 @@ RecordNameChangeIntent
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | ProviderNameReleased |
+| Selected source event name | ProviderNameReleased |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:ProviderNameReleased |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | ProviderNameReleased |
@@ -118,7 +125,8 @@ RecordNameChangeIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | The name claim was released by the provider record and change generation that held it. |
+| Target meaning | The name claim was released by the provider record and change generation that held it. |
+| Selected source meaning | The name claim was released by the provider record and change generation that held it. |
 | Meaning source | record summary in src/Compliance.Common/Features/Providers/Events/ProviderNameReleased.cs |
 
 #### Selected schema and implementation evidence

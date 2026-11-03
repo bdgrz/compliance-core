@@ -1,5 +1,7 @@
 {
-  "root": "AdministratorAssignmentWithdrawalReactor",
+  "sourceRoot": "AdministratorAssignmentWithdrawalReactor",
+  "targetRoot": "AdministratorAssignmentWithdrawalReactor",
+  "businessReason": "Remove administrator team access when a manager's accepted withdrawal requires it.",
   "rows": [
     {
       "id": "T047",

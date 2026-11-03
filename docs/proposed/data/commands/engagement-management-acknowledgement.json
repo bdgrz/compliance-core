@@ -64,7 +64,9 @@
         "EngagementManagementAcknowledged"
       ],
       "effectKind": "claim_professional_assertion_identity",
-      "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine."
+      "failure": "Exact replay returns original result; proven superseded operation is terminal no-op; unavailable dependency/unknown append is transient; changed intent or invalid proof is permanent conflict/quarantine.",
+      "sourceName": "MaterializeEngagementManagementAcknowledgement",
+      "targetName": "RecordEngagementManagementAcknowledgement"
     },
     {
       "command": "AcknowledgeEngagementManagement",
@@ -132,7 +134,9 @@
         "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       },
       "attributionNote": "Creates the acknowledgement record; the engagement owner only consumes it (T110) (2026-10-29)",
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "AcknowledgeEngagementManagement",
+      "targetName": "AcknowledgeEngagementManagement"
     }
   ],
   "sourceContractEvidence": []

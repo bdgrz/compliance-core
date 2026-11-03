@@ -2,20 +2,23 @@
 
 Canonical events: **5**. Complete canonical event and available schema records: [owner event JSON](../data/events/evidence-request.json).
 
-| Event | Kind | Adopted discriminator | Version | Schema fields | Meaning |
-| --- | --- | --- | --- | --- | --- |
-| EvidenceRequestActionCompletionUseAuthorized | reservation | bdgrz.evidence-request.evidence-request-action-completion-use-authorized | 1 | 8 | A fulfilled evidence request is held for a risk action completion review. The use does not advance the public request revision: Revision is the held revision, and Generation is the action's submission generation the review seals. |
-| EvidenceRequestActionCompletionUseSettled | reservation | bdgrz.evidence-request.evidence-request-action-completion-use-settled | 1 | 8 | A risk action completion review use of an evidence request ended. The settlement intent records whether the review reached its irreversible decision or was canceled; a settlement before any grant fences the key. |
-| EvidenceRequestCancelled | business | bdgrz.evidence.request.cancelled | 2 | 10 | Cancels an open request with an attributed rationale; cancellation is final. |
-| EvidenceRequestFulfilled | business | bdgrz.evidence.request.fulfilled | 2 | 10 | Fulfils a request by linking the evidence artifact that answers it; fulfilment is final. |
-| EvidenceRequestOpened | business | bdgrz.evidence.request.opened | 2 | 13 | Opens a request for one piece of evidence, owned by a member and due on a date. It is the native acceptance of OpenEvidenceRequest and the request's revision one. |
+| Target event | Selected source name | Kind | Adopted discriminator | Version | Schema fields | Meaning |
+| --- | --- | --- | --- | --- | --- | --- |
+| EvidenceRequestActionCompletionAuthorized | EvidenceRequestActionCompletionUseAuthorized | reservation | bdgrz.evidence-request.evidence-request-action-completion-use-authorized | 1 | 8 | A fulfilled evidence request is held for a risk action completion review. The use does not advance the public request revision: Revision is the held revision, and Generation is the action's submission generation the review seals. |
+| EvidenceRequestActionCompletionAuthorizationClosed | EvidenceRequestActionCompletionUseSettled | reservation | bdgrz.evidence-request.evidence-request-action-completion-use-settled | 1 | 8 | A risk action completion review use of an evidence request ended. The settlement intent records whether the review reached its irreversible decision or was canceled; a settlement before any grant fences the key. |
+| EvidenceRequestCancelled | EvidenceRequestCancelled | business | bdgrz.evidence.request.cancelled | 2 | 10 | Cancels an open request with an attributed rationale; cancellation is final. |
+| EvidenceRequestFulfilled | EvidenceRequestFulfilled | business | bdgrz.evidence.request.fulfilled | 2 | 10 | Fulfils a request by linking the evidence artifact that answers it; fulfilment is final. |
+| EvidenceRequestOpened | EvidenceRequestOpened | business | bdgrz.evidence.request.opened | 2 | 13 | Opens a request for one piece of evidence, owned by a member and due on a date. It is the native acceptance of OpenEvidenceRequest and the request's revision one. |
 
 ## Event details
 
-### EvidenceRequestActionCompletionUseAuthorized
+### EvidenceRequestActionCompletionAuthorized
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | EvidenceRequestActionCompletionAuthorized |
+| Selected source event name | EvidenceRequestActionCompletionUseAuthorized |
+| Name decision | Authorization is already the completed fact; Use adds no stakeholder meaning. |
 | Canonical semantic key | event:EvidenceRequestActionCompletionUseAuthorized |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | EvidenceRequestActionCompletionUseAuthorized |
@@ -25,7 +28,8 @@ Canonical events: **5**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | A fulfilled evidence request is held for a risk action completion review. The use does not advance the public request revision: Revision is the held revision, and Generation is the action's submission generation the review seals. |
+| Target meaning | A fulfilled evidence request is held for a risk action completion review. The use does not advance the public request revision: Revision is the held revision, and Generation is the action's submission generation the review seals. |
+| Selected source meaning | A fulfilled evidence request is held for a risk action completion review. The use does not advance the public request revision: Revision is the held revision, and Generation is the action's submission generation the review seals. |
 | Meaning source | record summary in src/Compliance.Common/Features/Evidence/Events/EvidenceRequestActionCompletionUseAuthorized.cs |
 
 #### Selected schema and implementation evidence
@@ -99,12 +103,15 @@ SourceUseAuthorizationIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T071](../reactors/risk-action-completion-review-reactor.md#t071) | emitted semantic fact | RiskTreatmentAction | AuthorizeEvidenceRequestActionCompletionUse | EvidenceRequest |
+| [T071](../reactors/risk-action-completion-review-reactor.md#t071) | emitted semantic fact | RiskTreatmentAction | AuthorizeEvidenceRequestActionCompletion | EvidenceRequest |
 
-### EvidenceRequestActionCompletionUseSettled
+### EvidenceRequestActionCompletionAuthorizationClosed
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | EvidenceRequestActionCompletionAuthorizationClosed |
+| Selected source event name | EvidenceRequestActionCompletionUseSettled |
+| Name decision | The exact authorization ended; the recorded outcome still distinguishes use, cancellation, or a late fence. |
 | Canonical semantic key | event:EvidenceRequestActionCompletionUseSettled |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | EvidenceRequestActionCompletionUseSettled |
@@ -114,7 +121,8 @@ SourceUseAuthorizationIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | A risk action completion review use of an evidence request ended. The settlement intent records whether the review reached its irreversible decision or was canceled; a settlement before any grant fences the key. |
+| Target meaning | A risk action completion review use of an evidence request ended. The settlement intent records whether the review reached its irreversible decision or was canceled; a settlement before any grant fences the key. |
+| Selected source meaning | A risk action completion review use of an evidence request ended. The settlement intent records whether the review reached its irreversible decision or was canceled; a settlement before any grant fences the key. |
 | Meaning source | record summary in src/Compliance.Common/Features/Evidence/Events/EvidenceRequestActionCompletionUseSettled.cs |
 
 #### Selected schema and implementation evidence
@@ -188,12 +196,15 @@ SourceUseAuthorizationIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T072](../reactors/risk-action-completion-review-reactor.md#t072) | emitted semantic fact | RiskTreatmentAction | SettleEvidenceRequestActionCompletionUse | EvidenceRequest |
+| [T072](../reactors/risk-action-completion-review-reactor.md#t072) | emitted semantic fact | RiskTreatmentAction | CloseEvidenceRequestActionCompletionAuthorization | EvidenceRequest |
 
 ### EvidenceRequestCancelled
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | EvidenceRequestCancelled |
+| Selected source event name | EvidenceRequestCancelled |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:EvidenceRequestCancelled |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | EvidenceRequestCancelled |
@@ -203,7 +214,8 @@ SourceUseAuthorizationIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | `{"discriminator":"bdgrz.evidence.request.cancelled","version":1}` |
-| Meaning | Cancels an open request with an attributed rationale; cancellation is final. |
+| Target meaning | Cancels an open request with an attributed rationale; cancellation is final. |
+| Selected source meaning | Cancels an open request with an attributed rationale; cancellation is final. |
 | Meaning source | record summary in src/Compliance.Common/Features/Evidence/Events/EvidenceRequestCancelled.cs |
 
 #### Selected schema and implementation evidence
@@ -249,6 +261,9 @@ SourceUseAuthorizationIntent
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | EvidenceRequestFulfilled |
+| Selected source event name | EvidenceRequestFulfilled |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:EvidenceRequestFulfilled |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | EvidenceRequestFulfilled |
@@ -258,7 +273,8 @@ SourceUseAuthorizationIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | `{"discriminator":"bdgrz.evidence.request.fulfilled","version":1}` |
-| Meaning | Fulfils a request by linking the evidence artifact that answers it; fulfilment is final. |
+| Target meaning | Fulfils a request by linking the evidence artifact that answers it; fulfilment is final. |
+| Selected source meaning | Fulfils a request by linking the evidence artifact that answers it; fulfilment is final. |
 | Meaning source | record summary in src/Compliance.Common/Features/Evidence/Events/EvidenceRequestFulfilled.cs |
 
 #### Selected schema and implementation evidence
@@ -304,6 +320,9 @@ SourceUseAuthorizationIntent
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | EvidenceRequestOpened |
+| Selected source event name | EvidenceRequestOpened |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:EvidenceRequestOpened |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | EvidenceRequestOpened |
@@ -313,7 +332,8 @@ SourceUseAuthorizationIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | `{"discriminator":"bdgrz.evidence.request.opened","version":1}` |
-| Meaning | Opens a request for one piece of evidence, owned by a member and due on a date. It is the native acceptance of OpenEvidenceRequest and the request's revision one. |
+| Target meaning | Opens a request for one piece of evidence, owned by a member and due on a date. It is the native acceptance of OpenEvidenceRequest and the request's revision one. |
+| Selected source meaning | Opens a request for one piece of evidence, owned by a member and due on a date. It is the native acceptance of OpenEvidenceRequest and the request's revision one. |
 | Meaning source | record summary in src/Compliance.Common/Features/Evidence/Events/EvidenceRequestOpened.cs |
 
 #### Selected schema and implementation evidence

@@ -2,9 +2,9 @@
 
 Canonical events: **1**. Complete canonical event and available schema records: [owner event JSON](../data/events/risk-method.json).
 
-| Event | Kind | Adopted discriminator | Version | Schema fields | Meaning |
-| --- | --- | --- | --- | --- | --- |
-| RiskMethodVersionPublished | business | bdgrz.risk.method.version_published | 2 | [Placeholder: schema absent] | One immutable method publication, with its original operation and result. |
+| Target event | Selected source name | Kind | Adopted discriminator | Version | Schema fields | Meaning |
+| --- | --- | --- | --- | --- | --- | --- |
+| RiskMethodVersionPublished | RiskMethodVersionPublished | business | bdgrz.risk.method.version_published | 2 | [Placeholder: schema absent] | One immutable method publication, with its original operation and result. |
 
 ## Event details
 
@@ -12,6 +12,9 @@ Canonical events: **1**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | RiskMethodVersionPublished |
+| Selected source event name | RiskMethodVersionPublished |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:RiskMethodVersionPublished |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | RiskMethodVersionPublished |
@@ -21,7 +24,8 @@ Canonical events: **1**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | One immutable method publication, with its original operation and result. |
+| Target meaning | One immutable method publication, with its original operation and result. |
+| Selected source meaning | One immutable method publication, with its original operation and result. |
 | Meaning source | record summary in src/Compliance.Common/Features/Risks/Events/RiskMethodVersionPublished.cs |
 
 #### Schema

@@ -2,11 +2,11 @@
 
 Selected command contracts: **3**. Complete selected contracts and companion source evidence: [owner command JSON](../data/commands/control-criterion-mapping.json).
 
-| Command | Kind | Identity | Fields | HTTP routes |
-| --- | --- | --- | --- | --- |
-| ProposeControlCriterionMapping | http | MappingId | 10 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/control-mappings/{mapping_id} [ComplianceAuthorizationPolicies.ApiUser] |
-| RetireControlCriterionMapping | http | CommandId | 6 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/control-mappings/{mapping_id}/retirements/{command_id} [ComplianceAuthorizationPolicies.ApiUser] |
-| ReviewControlCriterionMapping | http | CommandId | 8 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/control-mappings/{mapping_id}/reviews/{command_id} [ComplianceAuthorizationPolicies.ApiUser] |
+| Target command | Selected source name | Kind | Identity | Fields | HTTP routes |
+| --- | --- | --- | --- | --- | --- |
+| ProposeControlCriterionMapping | ProposeControlCriterionMapping | http | MappingId | 10 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/control-mappings/{mapping_id} [ComplianceAuthorizationPolicies.ApiUser] |
+| RetireControlCriterionMapping | RetireControlCriterionMapping | http | CommandId | 6 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/control-mappings/{mapping_id}/retirements/{command_id} [ComplianceAuthorizationPolicies.ApiUser] |
+| ReviewControlCriterionMapping | ReviewControlCriterionMapping | http | CommandId | 8 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/control-mappings/{mapping_id}/reviews/{command_id} [ComplianceAuthorizationPolicies.ApiUser] |
 
 ## Selected command details
 
@@ -14,6 +14,9 @@ Selected command contracts: **3**. Complete selected contracts and companion sou
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | ProposeControlCriterionMapping |
+| Selected source command name | ProposeControlCriterionMapping |
+| Name decision | The selected source name is retained. |
 | Owner | ControlCriterionMapping |
 | Contract record status | target_contract |
 | Kind | http |
@@ -68,6 +71,9 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | RetireControlCriterionMapping |
+| Selected source command name | RetireControlCriterionMapping |
+| Name decision | The selected source name is retained. |
 | Owner | ControlCriterionMapping |
 | Contract record status | target_contract |
 | Kind | http |
@@ -118,6 +124,9 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | ReviewControlCriterionMapping |
+| Selected source command name | ReviewControlCriterionMapping |
+| Name decision | The selected source name is retained. |
 | Owner | ControlCriterionMapping |
 | Contract record status | target_contract |
 | Kind | http |
@@ -169,7 +178,7 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 
 ## Source contracts
 
-| Command | Handler | Registered | Entry point |
+| Selected source command | Handler | Registered | Entry point |
 | --- | --- | --- | --- |
 | ProposeControlCriterionMapping | ProposeControlCriterionMappingHandler | true | authorized_http |
 | RetireControlCriterionMapping | RetireControlCriterionMappingHandler | true | authorized_http |

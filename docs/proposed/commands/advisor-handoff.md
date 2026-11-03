@@ -2,16 +2,16 @@
 
 Selected command contracts: **8**. Complete selected contracts and companion source evidence: [owner command JSON](../data/commands/advisor-handoff.json).
 
-| Command | Kind | Identity | Fields | HTTP routes |
-| --- | --- | --- | --- | --- |
-| CloseAdvisorHandoff | http | CommandId | 6 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs/{handoff_id}/closures/{command_id} [ComplianceAuthorizationPolicies.ApiUser] |
-| CreateAdvisorHandoff | http | HandoffId | 7 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs/{handoff_id} [ComplianceAuthorizationPolicies.ApiUser] |
-| MarkAdvisorHandoffReadyForReview | http | CommandId | 5 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs/{handoff_id}/ready-for-review/{command_id} [ComplianceAuthorizationPolicies.ApiUser] |
-| RecordAdvisorFeedback | http | FeedbackId | 10 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs/{handoff_id}/feedback/{feedback_id} [ComplianceAuthorizationPolicies.ApiUser] |
-| ReviseAdvisorHandoffSelection | http | CommandId | 7 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs/{handoff_id}/selection-revisions/{command_id} [ComplianceAuthorizationPolicies.ApiUser] |
-| RevokeAdvisorHandoff | http | CommandId | 6 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs/{handoff_id}/revocations/{command_id} [ComplianceAuthorizationPolicies.ApiUser] |
-| AuthorizeAdvisorArtifactDownloadUse | receiver | CommandId | 10 | [Placeholder: value not recorded] |
-| SettleAdvisorArtifactDownloadUse | receiver | CommandId | 8 | [Placeholder: value not recorded] |
+| Target command | Selected source name | Kind | Identity | Fields | HTTP routes |
+| --- | --- | --- | --- | --- | --- |
+| CloseAdvisorHandoff | CloseAdvisorHandoff | http | CommandId | 6 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs/{handoff_id}/closures/{command_id} [ComplianceAuthorizationPolicies.ApiUser] |
+| CreateAdvisorHandoff | CreateAdvisorHandoff | http | HandoffId | 7 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs/{handoff_id} [ComplianceAuthorizationPolicies.ApiUser] |
+| MarkAdvisorHandoffReadyForReview | MarkAdvisorHandoffReadyForReview | http | CommandId | 5 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs/{handoff_id}/ready-for-review/{command_id} [ComplianceAuthorizationPolicies.ApiUser] |
+| SubmitAdvisorFeedback | RecordAdvisorFeedback | http | FeedbackId | 10 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs/{handoff_id}/feedback/{feedback_id} [ComplianceAuthorizationPolicies.ApiUser] |
+| ReviseAdvisorHandoffSelection | ReviseAdvisorHandoffSelection | http | CommandId | 7 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs/{handoff_id}/selection-revisions/{command_id} [ComplianceAuthorizationPolicies.ApiUser] |
+| RevokeAdvisorHandoff | RevokeAdvisorHandoff | http | CommandId | 6 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/advisor-handoffs/{handoff_id}/revocations/{command_id} [ComplianceAuthorizationPolicies.ApiUser] |
+| AuthorizeAdvisorArtifactDownload | AuthorizeAdvisorArtifactDownloadUse | receiver | CommandId | 10 | [Placeholder: value not recorded] |
+| CloseAdvisorArtifactDownloadAuthorization | SettleAdvisorArtifactDownloadUse | receiver | CommandId | 8 | [Placeholder: value not recorded] |
 
 ## Selected command details
 
@@ -19,6 +19,9 @@ Selected command contracts: **8**. Complete selected contracts and companion sou
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | CloseAdvisorHandoff |
+| Selected source command name | CloseAdvisorHandoff |
+| Name decision | The selected source name is retained. |
 | Owner | AdvisorHandoff |
 | Contract record status | target_contract |
 | Kind | http |
@@ -69,6 +72,9 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | CreateAdvisorHandoff |
+| Selected source command name | CreateAdvisorHandoff |
+| Name decision | The selected source name is retained. |
 | Owner | AdvisorHandoff |
 | Contract record status | target_contract |
 | Kind | http |
@@ -120,13 +126,16 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | MarkAdvisorHandoffReadyForReview |
+| Selected source command name | MarkAdvisorHandoffReadyForReview |
+| Name decision | The selected source name is retained. |
 | Owner | AdvisorHandoff |
 | Contract record status | target_contract |
 | Kind | http |
 | Logical identity | CommandId; Uuid; required=true; client; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
 | Entry point | authorized_http |
 | MCP | false |
-| Selected semantic events | AdvisorHandoffReadiedForReview |
+| Selected semantic events | AdvisorHandoffOpenedForReview |
 | Protocols | Feedback admission versus handoff revocation |
 | Policy preservation | All current source handler/aggregate validation rules and source test expectations apply, except the explicit contractChanges and boundary protocol. Lifetime caps and technical attempt events are removed with their structural replacement. |
 | Contract changes | Add required CommandId. |
@@ -165,10 +174,13 @@ Existing tests: test/Compliance.Tests/Features/Controls/ControlDraftAuthorizatio
 
 Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision, ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity, ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof, ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome
 
-### RecordAdvisorFeedback
+### SubmitAdvisorFeedback
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | SubmitAdvisorFeedback |
+| Selected source command name | RecordAdvisorFeedback |
+| Name decision | Names the advisor's action to submit feedback for review and admission against the handoff. |
 | Owner | AdvisorHandoff |
 | Contract record status | target_contract |
 | Kind | http |
@@ -223,6 +235,9 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | ReviseAdvisorHandoffSelection |
+| Selected source command name | ReviseAdvisorHandoffSelection |
+| Name decision | The selected source name is retained. |
 | Owner | AdvisorHandoff |
 | Contract record status | target_contract |
 | Kind | http |
@@ -274,6 +289,9 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | RevokeAdvisorHandoff |
+| Selected source command name | RevokeAdvisorHandoff |
+| Name decision | The selected source name is retained. |
 | Owner | AdvisorHandoff |
 | Contract record status | target_contract |
 | Kind | http |
@@ -320,17 +338,20 @@ Existing tests: test/Compliance.Tests/Features/AdvisorCollaboration/AdvisorHando
 
 Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, ShouldConflictGivenSameIdentityWithChangedActorIntentEpisodeOrOriginalRevision, ShouldRejectGivenMissingMalformedOrConflictingRouteIdentity, ShouldRejectWithoutAppendGivenWrongOrStaleSourceProof, ShouldRecoverWithoutDuplicateAppendGivenUnknownAppendOutcome
 
-### AuthorizeAdvisorArtifactDownloadUse
+### AuthorizeAdvisorArtifactDownload
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | AuthorizeAdvisorArtifactDownload |
+| Selected source command name | AuthorizeAdvisorArtifactDownloadUse |
+| Name decision | The command authorizes the named business action; the extra Use suffix describes the coordination mechanism. |
 | Owner | AdvisorHandoff |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; reactor; deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result |
 | Entry point | [Placeholder: value not recorded] |
 | MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | [Placeholder: value not recorded] |
+| Selected semantic events | None listed |
 | Protocols | [Placeholder: value not recorded] |
 | Policy preservation | [Placeholder: value not recorded] |
 | Contract changes | [Placeholder: value not recorded] |
@@ -370,17 +391,20 @@ Existing tests: [Placeholder: existing tests not recorded]
 
 Required tests: [Placeholder: required tests not recorded]
 
-### SettleAdvisorArtifactDownloadUse
+### CloseAdvisorArtifactDownloadAuthorization
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | CloseAdvisorArtifactDownloadAuthorization |
+| Selected source command name | SettleAdvisorArtifactDownloadUse |
+| Name decision | The command ends the exact authorization after its business action or cancellation. |
 | Owner | AdvisorHandoff |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; reactor; deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result |
 | Entry point | [Placeholder: value not recorded] |
 | MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | [Placeholder: value not recorded] |
+| Selected semantic events | None listed |
 | Protocols | [Placeholder: value not recorded] |
 | Policy preservation | [Placeholder: value not recorded] |
 | Contract changes | [Placeholder: value not recorded] |
@@ -421,7 +445,7 @@ Required tests: [Placeholder: required tests not recorded]
 
 ## Source contracts
 
-| Command | Handler | Registered | Entry point |
+| Selected source command | Handler | Registered | Entry point |
 | --- | --- | --- | --- |
 | CloseAdvisorHandoff | CloseAdvisorHandoffHandler | true | authorized_http |
 | CorrectAdvisorFeedback | CorrectAdvisorFeedbackHandler | true | authorized_http |

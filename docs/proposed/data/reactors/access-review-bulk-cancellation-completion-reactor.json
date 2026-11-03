@@ -1,5 +1,7 @@
 {
-  "root": "AccessReviewBulkCancellationCompletionReactor",
+  "sourceRoot": "AccessReviewBulkCancellationCompletionReactor",
+  "targetRoot": "CompleteAccessReviewBatchCancellationReactor",
+  "businessReason": "Keep canceled bulk decisions from changing access later by finishing cancellation only after every reviewed item is protected.",
   "rows": [
     {
       "id": "T079",

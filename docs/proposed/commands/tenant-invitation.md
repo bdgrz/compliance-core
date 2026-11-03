@@ -2,12 +2,12 @@
 
 Selected command contracts: **4**. Complete selected contracts and companion source evidence: [owner command JSON](../data/commands/tenant-invitation.json).
 
-| Command | Kind | Identity | Fields | HTTP routes |
-| --- | --- | --- | --- | --- |
-| AcceptTenantInvitation | http | InvitationId | 4 | PUT /api/v1/tenants/{tenant_id}/invitations/{invitation_id}/acceptance [ComplianceAuthorizationPolicies.ApiUser] |
-| InviteGuestConsultant | http | InvitationId | 5 | PUT /api/v1/tenants/{tenant_id}/guest-invitations/{invitation_id} [ComplianceAuthorizationPolicies.ApiUser] |
-| InviteOrganizationMember | http | InvitationId | 4 | PUT /api/v1/tenants/{tenant_id}/member-invitations/{invitation_id} [ComplianceAuthorizationPolicies.ApiUser] |
-| InviteTenantMember | http | InvitationId | 5 | PUT /api/v1/tenants/{tenant_id}/invitations/{invitation_id} [ComplianceAuthorizationPolicies.ApiUser] |
+| Target command | Selected source name | Kind | Identity | Fields | HTTP routes |
+| --- | --- | --- | --- | --- | --- |
+| AcceptTenantInvitation | AcceptTenantInvitation | http | InvitationId | 4 | PUT /api/v1/tenants/{tenant_id}/invitations/{invitation_id}/acceptance [ComplianceAuthorizationPolicies.ApiUser] |
+| InviteGuestConsultant | InviteGuestConsultant | http | InvitationId | 5 | PUT /api/v1/tenants/{tenant_id}/guest-invitations/{invitation_id} [ComplianceAuthorizationPolicies.ApiUser] |
+| InviteOrganizationMember | InviteOrganizationMember | http | InvitationId | 4 | PUT /api/v1/tenants/{tenant_id}/member-invitations/{invitation_id} [ComplianceAuthorizationPolicies.ApiUser] |
+| InviteTenantMember | InviteTenantMember | http | InvitationId | 5 | PUT /api/v1/tenants/{tenant_id}/invitations/{invitation_id} [ComplianceAuthorizationPolicies.ApiUser] |
 
 ## Selected command details
 
@@ -15,6 +15,9 @@ Selected command contracts: **4**. Complete selected contracts and companion sou
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | AcceptTenantInvitation |
+| Selected source command name | AcceptTenantInvitation |
+| Name decision | The selected source name is retained. |
 | Owner | TenantInvitation |
 | Contract record status | target_contract |
 | Kind | http |
@@ -63,6 +66,9 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | InviteGuestConsultant |
+| Selected source command name | InviteGuestConsultant |
+| Name decision | The selected source name is retained. |
 | Owner | TenantInvitation |
 | Contract record status | target_contract |
 | Kind | http |
@@ -112,6 +118,9 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | InviteOrganizationMember |
+| Selected source command name | InviteOrganizationMember |
+| Name decision | The selected source name is retained. |
 | Owner | TenantInvitation |
 | Contract record status | target_contract |
 | Kind | http |
@@ -160,6 +169,9 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | InviteTenantMember |
+| Selected source command name | InviteTenantMember |
+| Name decision | The selected source name is retained. |
 | Owner | TenantInvitation |
 | Contract record status | target_contract |
 | Kind | http |
@@ -208,7 +220,7 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 
 ## Source contracts
 
-| Command | Handler | Registered | Entry point |
+| Selected source command | Handler | Registered | Entry point |
 | --- | --- | --- | --- |
 | AcceptTenantInvitation | AcceptTenantInvitationHandler | true | authorized_http |
 | InviteGuestConsultant | InviteGuestConsultantHandler | true | authorized_http_and_mcp |

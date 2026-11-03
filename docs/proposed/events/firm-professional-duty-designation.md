@@ -2,21 +2,24 @@
 
 Canonical events: **6**. Complete canonical event and available schema records: [owner event JSON](../data/events/firm-professional-duty-designation.json).
 
-| Event | Kind | Adopted discriminator | Version | Schema fields | Meaning |
-| --- | --- | --- | --- | --- | --- |
-| FirmProfessionalDutyDesignationEngagementUseAuthorized | reservation | bdgrz.firm-professional-duty-designation.firm-professional-duty-designation-engagement-use-authorized | 1 | 8 | Holds the exact active engagement-partner designation the partner evaluation relies on; the use does not advance the public revision, so Revision is the held revision. |
-| FirmProfessionalDutyDesignationEngagementUseSettled | reservation | bdgrz.firm-professional-duty-designation.firm-professional-duty-designation-engagement-use-settled | 1 | 8 | The use of the duty designation ended after the irreversible personal decision or after cancellation. A settlement before any grant fences the key against late acquisition. |
-| FirmProfessionalDutyDesignationRecorded | business | bdgrz.firm.professional-duty.designation-recorded | 1 | 8 | A signed active assertion recorded or refreshed the designation. The complete FirmProfessionalDutyDesignationView is immutable content; no cumulative catalog is carried. |
-| FirmProfessionalDutyDesignationRevoked | business | bdgrz.firm.professional-duty.designation-revoked | 1 | 8 | A signed revocation assertion ended the designation. The complete FirmProfessionalDutyDesignationView is immutable content; no cumulative catalog is carried. |
-| ProfessionalDutyChangeAccepted | business | bdgrz.firm-professional-duty-designation.professional-duty-change-accepted | 1 | 8 | The root native acceptance of a professional-duty change. The designation changes only when the process claims the signed assertion and FirmProfessionalDutyDesignationRecorded or FirmProfessionalDutyDesignationRevoked follows. |
-| ProfessionalDutyChangeRejected | business | bdgrz.firm-professional-duty-designation.professional-duty-change-rejected | 1 | 8 | A pending professional-duty change was rejected before any designation changed. The rejection fences the assertion claim and the apply step against late delivery. |
+| Target event | Selected source name | Kind | Adopted discriminator | Version | Schema fields | Meaning |
+| --- | --- | --- | --- | --- | --- | --- |
+| FirmProfessionalDutyDesignationEngagementAuthorized | FirmProfessionalDutyDesignationEngagementUseAuthorized | reservation | bdgrz.firm-professional-duty-designation.firm-professional-duty-designation-engagement-use-authorized | 1 | 8 | Holds the exact active engagement-partner designation the partner evaluation relies on; the use does not advance the public revision, so Revision is the held revision. |
+| FirmProfessionalDutyDesignationEngagementAuthorizationClosed | FirmProfessionalDutyDesignationEngagementUseSettled | reservation | bdgrz.firm-professional-duty-designation.firm-professional-duty-designation-engagement-use-settled | 1 | 8 | The use of the duty designation ended after the irreversible personal decision or after cancellation. A settlement before any grant fences the key against late acquisition. |
+| FirmProfessionalDutyDesignationRecorded | FirmProfessionalDutyDesignationRecorded | business | bdgrz.firm.professional-duty.designation-recorded | 1 | 8 | A signed active assertion recorded or refreshed the designation. The complete FirmProfessionalDutyDesignationView is immutable content; no cumulative catalog is carried. |
+| FirmProfessionalDutyDesignationRevoked | FirmProfessionalDutyDesignationRevoked | business | bdgrz.firm.professional-duty.designation-revoked | 1 | 8 | A signed revocation assertion ended the designation. The complete FirmProfessionalDutyDesignationView is immutable content; no cumulative catalog is carried. |
+| ProfessionalDutyChangeAccepted | ProfessionalDutyChangeAccepted | business | bdgrz.firm-professional-duty-designation.professional-duty-change-accepted | 1 | 8 | The root native acceptance of a professional-duty change. The designation changes only when the process claims the signed assertion and FirmProfessionalDutyDesignationRecorded or FirmProfessionalDutyDesignationRevoked follows. |
+| ProfessionalDutyChangeRejected | ProfessionalDutyChangeRejected | business | bdgrz.firm-professional-duty-designation.professional-duty-change-rejected | 1 | 8 | A pending professional-duty change was rejected before any designation changed. The rejection fences the assertion claim and the apply step against late delivery. |
 
 ## Event details
 
-### FirmProfessionalDutyDesignationEngagementUseAuthorized
+### FirmProfessionalDutyDesignationEngagementAuthorized
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | FirmProfessionalDutyDesignationEngagementAuthorized |
+| Selected source event name | FirmProfessionalDutyDesignationEngagementUseAuthorized |
+| Name decision | Authorization is already the completed fact; Use adds no stakeholder meaning. |
 | Canonical semantic key | event:FirmProfessionalDutyDesignationEngagementUseAuthorized |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | FirmProfessionalDutyDesignationEngagementUseAuthorized |
@@ -26,7 +29,8 @@ Canonical events: **6**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | Holds the exact active engagement-partner designation the partner evaluation relies on; the use does not advance the public revision, so Revision is the held revision. |
+| Target meaning | Holds the exact active engagement-partner designation the partner evaluation relies on; the use does not advance the public revision, so Revision is the held revision. |
+| Selected source meaning | Holds the exact active engagement-partner designation the partner evaluation relies on; the use does not advance the public revision, so Revision is the held revision. |
 | Meaning source | record summary in src/Compliance.Common/Features/AccessControl/Events/FirmProfessionalDutyDesignationEngagementUseAuthorized.cs |
 
 #### Selected schema and implementation evidence
@@ -100,12 +104,15 @@ SourceUseAuthorizationIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T091](../reactors/engagement-acceptance-reactor.md#t091) | emitted semantic fact | ServiceEngagementIndependence | AuthorizeFirmProfessionalDutyDesignationEngagementUse | FirmProfessionalDutyDesignation |
+| [T091](../reactors/engagement-acceptance-reactor.md#t091) | emitted semantic fact | ServiceEngagementIndependence | AuthorizeFirmProfessionalDutyDesignationEngagement | FirmProfessionalDutyDesignation |
 
-### FirmProfessionalDutyDesignationEngagementUseSettled
+### FirmProfessionalDutyDesignationEngagementAuthorizationClosed
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | FirmProfessionalDutyDesignationEngagementAuthorizationClosed |
+| Selected source event name | FirmProfessionalDutyDesignationEngagementUseSettled |
+| Name decision | The exact authorization ended; the recorded outcome still distinguishes use, cancellation, or a late fence. |
 | Canonical semantic key | event:FirmProfessionalDutyDesignationEngagementUseSettled |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | FirmProfessionalDutyDesignationEngagementUseSettled |
@@ -115,7 +122,8 @@ SourceUseAuthorizationIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | The use of the duty designation ended after the irreversible personal decision or after cancellation. A settlement before any grant fences the key against late acquisition. |
+| Target meaning | The use of the duty designation ended after the irreversible personal decision or after cancellation. A settlement before any grant fences the key against late acquisition. |
+| Selected source meaning | The use of the duty designation ended after the irreversible personal decision or after cancellation. A settlement before any grant fences the key against late acquisition. |
 | Meaning source | record summary in src/Compliance.Common/Features/AccessControl/Events/FirmProfessionalDutyDesignationEngagementUseSettled.cs |
 
 #### Selected schema and implementation evidence
@@ -189,12 +197,15 @@ SourceUseAuthorizationIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T092](../reactors/engagement-acceptance-reactor.md#t092) | emitted semantic fact | ServiceEngagementIndependence | SettleFirmProfessionalDutyDesignationEngagementUse | FirmProfessionalDutyDesignation |
+| [T092](../reactors/engagement-acceptance-reactor.md#t092) | emitted semantic fact | ServiceEngagementIndependence | CloseFirmProfessionalDutyDesignationEngagementAuthorization | FirmProfessionalDutyDesignation |
 
 ### FirmProfessionalDutyDesignationRecorded
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | FirmProfessionalDutyDesignationRecorded |
+| Selected source event name | FirmProfessionalDutyDesignationRecorded |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:FirmProfessionalDutyDesignationRecorded |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | FirmProfessionalDutyDesignationRecorded |
@@ -204,7 +215,8 @@ SourceUseAuthorizationIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | A signed active assertion recorded or refreshed the designation. The complete FirmProfessionalDutyDesignationView is immutable content; no cumulative catalog is carried. |
+| Target meaning | A signed active assertion recorded or refreshed the designation. The complete FirmProfessionalDutyDesignationView is immutable content; no cumulative catalog is carried. |
+| Selected source meaning | A signed active assertion recorded or refreshed the designation. The complete FirmProfessionalDutyDesignationView is immutable content; no cumulative catalog is carried. |
 | Meaning source | record summary in src/Compliance.Common/Features/AccessControl/Events/FirmProfessionalDutyDesignationRecorded.cs |
 
 #### Selected schema and implementation evidence
@@ -296,12 +308,15 @@ ProfessionalDutyChangeIntent
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
 | [T001](../reactors/professional-duty-change-reactor.md#t001) | emitted semantic fact | ProfessionalAssertionIdentityClaim | ApplyProfessionalDutyChange | FirmProfessionalDutyDesignation |
-| [T114](../reactors/professional-duty-change-reactor.md#t114) | logical prerequisite | FirmProfessionalDutyDesignation | SettleFirmStaffProfessionalDutyUse | FirmStaffRecord |
+| [T114](../reactors/professional-duty-change-reactor.md#t114) | logical prerequisite | FirmProfessionalDutyDesignation | CloseFirmStaffProfessionalDutyAuthorization | FirmStaffRecord |
 
 ### FirmProfessionalDutyDesignationRevoked
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | FirmProfessionalDutyDesignationRevoked |
+| Selected source event name | FirmProfessionalDutyDesignationRevoked |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:FirmProfessionalDutyDesignationRevoked |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | FirmProfessionalDutyDesignationRevoked |
@@ -311,7 +326,8 @@ ProfessionalDutyChangeIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | A signed revocation assertion ended the designation. The complete FirmProfessionalDutyDesignationView is immutable content; no cumulative catalog is carried. |
+| Target meaning | A signed revocation assertion ended the designation. The complete FirmProfessionalDutyDesignationView is immutable content; no cumulative catalog is carried. |
+| Selected source meaning | A signed revocation assertion ended the designation. The complete FirmProfessionalDutyDesignationView is immutable content; no cumulative catalog is carried. |
 | Meaning source | record summary in src/Compliance.Common/Features/AccessControl/Events/FirmProfessionalDutyDesignationRevoked.cs |
 
 #### Selected schema and implementation evidence
@@ -408,6 +424,9 @@ ProfessionalDutyChangeIntent
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | ProfessionalDutyChangeAccepted |
+| Selected source event name | ProfessionalDutyChangeAccepted |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:ProfessionalDutyChangeAccepted |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | ProfessionalDutyChangeAccepted |
@@ -417,7 +436,8 @@ ProfessionalDutyChangeIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | The root native acceptance of a professional-duty change. The designation changes only when the process claims the signed assertion and FirmProfessionalDutyDesignationRecorded or FirmProfessionalDutyDesignationRevoked follows. |
+| Target meaning | The root native acceptance of a professional-duty change. The designation changes only when the process claims the signed assertion and FirmProfessionalDutyDesignationRecorded or FirmProfessionalDutyDesignationRevoked follows. |
+| Selected source meaning | The root native acceptance of a professional-duty change. The designation changes only when the process claims the signed assertion and FirmProfessionalDutyDesignationRecorded or FirmProfessionalDutyDesignationRevoked follows. |
 | Meaning source | record summary in src/Compliance.Common/Features/AccessControl/Events/ProfessionalDutyChangeAccepted.cs |
 
 #### Selected schema and implementation evidence
@@ -501,14 +521,17 @@ ProfessionalDutyChangeIntent
 | --- | --- | --- | --- | --- |
 | [T000](../reactors/professional-duty-change-reactor.md#t000) | physical root, logical prerequisite | FirmProfessionalDutyDesignation | ClaimProfessionalAssertionIdentity | ProfessionalAssertionIdentityClaim |
 | [T001](../reactors/professional-duty-change-reactor.md#t001) | physical root | ProfessionalAssertionIdentityClaim | ApplyProfessionalDutyChange | FirmProfessionalDutyDesignation |
-| [T113](../reactors/professional-duty-change-reactor.md#t113) | physical root, logical prerequisite | FirmProfessionalDutyDesignation | AuthorizeFirmStaffProfessionalDutyUse | FirmStaffRecord |
-| [T114](../reactors/professional-duty-change-reactor.md#t114) | physical root | FirmProfessionalDutyDesignation | SettleFirmStaffProfessionalDutyUse | FirmStaffRecord |
+| [T113](../reactors/professional-duty-change-reactor.md#t113) | physical root, logical prerequisite | FirmProfessionalDutyDesignation | AuthorizeFirmStaffProfessionalDuty | FirmStaffRecord |
+| [T114](../reactors/professional-duty-change-reactor.md#t114) | physical root | FirmProfessionalDutyDesignation | CloseFirmStaffProfessionalDutyAuthorization | FirmStaffRecord |
 | [A000](../reactors/unassigned-architecture-rows.md#a000) | physical root, logical prerequisite | FirmProfessionalDutyDesignation | RejectProfessionalDutyChange | FirmProfessionalDutyDesignation |
 
 ### ProfessionalDutyChangeRejected
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | ProfessionalDutyChangeRejected |
+| Selected source event name | ProfessionalDutyChangeRejected |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:ProfessionalDutyChangeRejected |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | ProfessionalDutyChangeRejected |
@@ -518,7 +541,8 @@ ProfessionalDutyChangeIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | A pending professional-duty change was rejected before any designation changed. The rejection fences the assertion claim and the apply step against late delivery. |
+| Target meaning | A pending professional-duty change was rejected before any designation changed. The rejection fences the assertion claim and the apply step against late delivery. |
+| Selected source meaning | A pending professional-duty change was rejected before any designation changed. The rejection fences the assertion claim and the apply step against late delivery. |
 | Meaning source | record summary in src/Compliance.Common/Features/AccessControl/Events/ProfessionalDutyChangeRejected.cs |
 
 #### Selected schema and implementation evidence
@@ -600,7 +624,7 @@ ProfessionalDutyChangeIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T114](../reactors/professional-duty-change-reactor.md#t114) | logical prerequisite | FirmProfessionalDutyDesignation | SettleFirmStaffProfessionalDutyUse | FirmStaffRecord |
+| [T114](../reactors/professional-duty-change-reactor.md#t114) | logical prerequisite | FirmProfessionalDutyDesignation | CloseFirmStaffProfessionalDutyAuthorization | FirmStaffRecord |
 | [A000](../reactors/unassigned-architecture-rows.md#a000) | emitted semantic fact | FirmProfessionalDutyDesignation | RejectProfessionalDutyChange | FirmProfessionalDutyDesignation |
 
 

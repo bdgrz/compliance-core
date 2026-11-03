@@ -27,7 +27,11 @@
         "meaning": "A client service was created under its owning program, recorded as the service's first revision.",
         "meaningSource": "authored 2026-10-29 from src/Compliance.Common/Features/Programs/Events/ClientServiceCreated.cs"
       },
-      "schema": null
+      "schema": null,
+      "sourceName": "ClientServiceCreated",
+      "targetName": "ClientServiceCreated",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "A client service was created under its owning program, recorded as the service's first revision."
     },
     {
       "canonical": {
@@ -55,7 +59,11 @@
         "meaning": "A client service of a program was retired with a retirement record, ending the service while keeping its last content.",
         "meaningSource": "authored 2026-10-29 from src/Compliance.Common/Features/Programs/Events/ClientServiceRetired.cs"
       },
-      "schema": null
+      "schema": null,
+      "sourceName": "ClientServiceRetired",
+      "targetName": "ClientServiceRetired",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "A client service of a program was retired with a retirement record, ending the service while keeping its last content."
     },
     {
       "canonical": {
@@ -83,7 +91,11 @@
         "meaning": "The content of a client service under a program was revised, recorded as the service's next revision.",
         "meaningSource": "authored 2026-10-29 from src/Compliance.Common/Features/Programs/Events/ClientServiceRevised.cs"
       },
-      "schema": null
+      "schema": null,
+      "sourceName": "ClientServiceRevised",
+      "targetName": "ClientServiceRevised",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "The content of a client service under a program was revised, recorded as the service's next revision."
     }
   ]
 }

@@ -23,8 +23,8 @@
 
 | Command | Kind | Identity field |
 | --- | --- | --- |
-| [MaterializePartnerIndependenceDecision](../commands/partner-independence-decision.md#materializepartnerindependencedecision) | receiver | CommandId |
-| [RecordPartnerIndependenceEvaluation](../commands/partner-independence-decision.md#recordpartnerindependenceevaluation) | http | EvaluationId |
+| [RecordPartnerIndependenceEvaluation](../commands/partner-independence-decision.md#recordpartnerindependenceevaluation) | receiver | CommandId |
+| [SubmitPartnerIndependenceEvaluation](../commands/partner-independence-decision.md#submitpartnerindependenceevaluation) | http | EvaluationId |
 
 ## Events
 
@@ -36,7 +36,7 @@
 
 | Row | Kind | Source owner | Target owner | Command |
 | --- | --- | --- | --- | --- |
-| [T109](../reactors/engagement-personal-decision-reactor.md#t109) | reaction_or_regular_process_stage | ServiceEngagementIndependence | PartnerIndependenceDecision | MaterializePartnerIndependenceDecision |
+| [T109](../reactors/engagement-personal-decision-reactor.md#t109) | reaction_or_regular_process_stage | ServiceEngagementIndependence | PartnerIndependenceDecision | RecordPartnerIndependenceEvaluation |
 
 ## Product rules
 

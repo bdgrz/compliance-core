@@ -2,13 +2,13 @@
 
 Canonical events: **5**. Complete canonical event and available schema records: [owner event JSON](../data/events/client-export.json).
 
-| Event | Kind | Adopted discriminator | Version | Schema fields | Meaning |
-| --- | --- | --- | --- | --- | --- |
-| ClientExportAttestPackageDeliveryRecorded | business | bdgrz.exports.client-export-attest-package-delivery-recorded | 1 | [Placeholder: schema absent] | A delivery decision for an attest package was recorded on a successfully built client export, with its rationale, recipient and delivery reference, for the exact package manifest. |
-| ClientExportBuildFailed | business | bdgrz.exports.client-export-build-failed | 2 | [Placeholder: schema absent] | Records the ClientExportBuildFailed domain fact for one tenant-owned subject revision. |
-| ClientExportBuilt | business | bdgrz.exports.client-export-built | 2 | [Placeholder: schema absent] | Records the ClientExportBuilt domain fact for one tenant-owned subject revision. |
-| ClientExportDelivered | business | bdgrz.exports.client-export-delivered | 2 | [Placeholder: schema absent] | Records the ClientExportDelivered domain fact for one tenant-owned subject revision. |
-| ClientExportRequested | business | bdgrz.exports.client-export-requested | 2 | [Placeholder: schema absent] | Records the ClientExportRequested domain fact for one tenant-owned subject revision. |
+| Target event | Selected source name | Kind | Adopted discriminator | Version | Schema fields | Meaning |
+| --- | --- | --- | --- | --- | --- | --- |
+| ClientExportAttestPackageDeliveryRecorded | ClientExportAttestPackageDeliveryRecorded | business | bdgrz.exports.client-export-attest-package-delivery-recorded | 1 | [Placeholder: schema absent] | A delivery decision for an attest package was recorded on a successfully built client export, with its rationale, recipient and delivery reference, for the exact package manifest. |
+| ClientExportBuildFailed | ClientExportBuildFailed | business | bdgrz.exports.client-export-build-failed | 2 | [Placeholder: schema absent] | Records the ClientExportBuildFailed domain fact for one tenant-owned subject revision. |
+| ClientExportBuilt | ClientExportBuilt | business | bdgrz.exports.client-export-built | 2 | [Placeholder: schema absent] | Records the ClientExportBuilt domain fact for one tenant-owned subject revision. |
+| ClientExportDelivered | ClientExportDelivered | business | bdgrz.exports.client-export-delivered | 2 | [Placeholder: schema absent] | Records the ClientExportDelivered domain fact for one tenant-owned subject revision. |
+| ClientExportRequested | ClientExportRequested | business | bdgrz.exports.client-export-requested | 2 | [Placeholder: schema absent] | Records the ClientExportRequested domain fact for one tenant-owned subject revision. |
 
 ## Event details
 
@@ -16,6 +16,9 @@ Canonical events: **5**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | ClientExportAttestPackageDeliveryRecorded |
+| Selected source event name | ClientExportAttestPackageDeliveryRecorded |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:ClientExportAttestPackageDeliveryRecorded |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | ClientExportAttestPackageDeliveryRecorded |
@@ -25,7 +28,8 @@ Canonical events: **5**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | A delivery decision for an attest package was recorded on a successfully built client export, with its rationale, recipient and delivery reference, for the exact package manifest. |
+| Target meaning | A delivery decision for an attest package was recorded on a successfully built client export, with its rationale, recipient and delivery reference, for the exact package manifest. |
+| Selected source meaning | A delivery decision for an attest package was recorded on a successfully built client export, with its rationale, recipient and delivery reference, for the exact package manifest. |
 | Meaning source | authored 2026-10-29 from src/Compliance.Common/Features/Exports/Events/ClientExportAttestPackageDeliveryRecorded.cs |
 
 #### Schema
@@ -42,12 +46,15 @@ Canonical events: **5**. Complete canonical event and available schema records: 
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [X007](../reactors/client-export-delivery-reactor.md#x007) | physical root, logical prerequisite | ClientExport | RecordEngagementPackageDelivered | ArtifactEngagementHold |
+| [X007](../reactors/client-export-delivery-reactor.md#x007) | physical root, logical prerequisite | ClientExport | RecordEngagementPackageDelivery | ArtifactEngagementHold |
 
 ### ClientExportBuildFailed
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | ClientExportBuildFailed |
+| Selected source event name | ClientExportBuildFailed |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:ClientExportBuildFailed |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | ClientExportBuildFailed |
@@ -57,7 +64,8 @@ Canonical events: **5**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | Records the ClientExportBuildFailed domain fact for one tenant-owned subject revision. |
+| Target meaning | Records the ClientExportBuildFailed domain fact for one tenant-owned subject revision. |
+| Selected source meaning | Records the ClientExportBuildFailed domain fact for one tenant-owned subject revision. |
 | Meaning source | record summary in src/Compliance.Common/Features/Exports/Events/ClientExportBuildFailed.cs |
 
 #### Schema
@@ -78,6 +86,9 @@ Canonical events: **5**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | ClientExportBuilt |
+| Selected source event name | ClientExportBuilt |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:ClientExportBuilt |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | ClientExportBuilt |
@@ -87,7 +98,8 @@ Canonical events: **5**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | Records the ClientExportBuilt domain fact for one tenant-owned subject revision. |
+| Target meaning | Records the ClientExportBuilt domain fact for one tenant-owned subject revision. |
+| Selected source meaning | Records the ClientExportBuilt domain fact for one tenant-owned subject revision. |
 | Meaning source | record summary in src/Compliance.Common/Features/Exports/Events/ClientExportBuilt.cs |
 
 #### Schema
@@ -108,6 +120,9 @@ Canonical events: **5**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | ClientExportDelivered |
+| Selected source event name | ClientExportDelivered |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:ClientExportDelivered |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | ClientExportDelivered |
@@ -117,7 +132,8 @@ Canonical events: **5**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | Records the ClientExportDelivered domain fact for one tenant-owned subject revision. |
+| Target meaning | Records the ClientExportDelivered domain fact for one tenant-owned subject revision. |
+| Selected source meaning | Records the ClientExportDelivered domain fact for one tenant-owned subject revision. |
 | Meaning source | record summary in src/Compliance.Common/Features/Exports/Events/ClientExportDelivered.cs |
 
 #### Schema
@@ -138,6 +154,9 @@ Canonical events: **5**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | ClientExportRequested |
+| Selected source event name | ClientExportRequested |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:ClientExportRequested |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | ClientExportRequested |
@@ -147,7 +166,8 @@ Canonical events: **5**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | Records the ClientExportRequested domain fact for one tenant-owned subject revision. |
+| Target meaning | Records the ClientExportRequested domain fact for one tenant-owned subject revision. |
+| Selected source meaning | Records the ClientExportRequested domain fact for one tenant-owned subject revision. |
 | Meaning source | record summary in src/Compliance.Common/Features/Exports/Events/ClientExportRequested.cs |
 
 #### Schema

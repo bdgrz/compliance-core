@@ -2,18 +2,21 @@
 
 Canonical events: **3**. Complete canonical event and available schema records: [owner event JSON](../data/events/person.json).
 
-| Event | Kind | Adopted discriminator | Version | Schema fields | Meaning |
-| --- | --- | --- | --- | --- | --- |
-| PersonMembershipCorrelated | business | bdgrz.workforce.person.membership-correlated | 2 | [Placeholder: schema absent] | Native identified person receipt; complete values and mutation proof are immutable content. |
-| PersonRecorded | business | bdgrz.workforce.person.recorded | 2 | [Placeholder: schema absent] | A person was recorded in the tenant's workforce with a display name, work email and optional personal contact details by a named actor. |
-| PersonRevised | business | bdgrz.workforce.person.revised | 2 | [Placeholder: schema absent] | A recorded person's display name, work email or contact details were revised by a named actor, producing the person's next revision. |
+| Target event | Selected source name | Kind | Adopted discriminator | Version | Schema fields | Meaning |
+| --- | --- | --- | --- | --- | --- | --- |
+| PersonMemberLinkChanged | PersonMembershipCorrelated | business | bdgrz.workforce.person.membership-correlated | 2 | [Placeholder: schema absent] | Native identified person receipt; complete values and mutation proof are immutable content. |
+| PersonRecorded | PersonRecorded | business | bdgrz.workforce.person.recorded | 2 | [Placeholder: schema absent] | A person was recorded in the tenant's workforce with a display name, work email and optional personal contact details by a named actor. |
+| PersonRevised | PersonRevised | business | bdgrz.workforce.person.revised | 2 | [Placeholder: schema absent] | A recorded person's display name, work email or contact details were revised by a named actor, producing the person's next revision. |
 
 ## Event details
 
-### PersonMembershipCorrelated
+### PersonMemberLinkChanged
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | PersonMemberLinkChanged |
+| Selected source event name | PersonMembershipCorrelated |
+| Name decision | Names either linking a workforce person to a tenant member or clearing that link; it does not grant access. |
 | Canonical semantic key | event:PersonMembershipCorrelated |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | PersonMembershipCorrelationRecorded |
@@ -23,7 +26,8 @@ Canonical events: **3**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | `{"discriminator":"bdgrz.workforce.person.membership-correlated","version":1}` |
-| Meaning | Native identified person receipt; complete values and mutation proof are immutable content. |
+| Target meaning | Native identified person receipt; complete values and mutation proof are immutable content. |
+| Selected source meaning | Native identified person receipt; complete values and mutation proof are immutable content. |
 | Meaning source | record summary in src/Compliance.Common/Features/Workforce/Events/PersonMembershipCorrelationRecorded.cs |
 
 #### Schema
@@ -44,6 +48,9 @@ Canonical events: **3**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | PersonRecorded |
+| Selected source event name | PersonRecorded |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:PersonRecorded |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | PersonRegistrationRecorded |
@@ -53,7 +60,8 @@ Canonical events: **3**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | `{"discriminator":"bdgrz.workforce.person.recorded","version":1}` |
-| Meaning | A person was recorded in the tenant's workforce with a display name, work email and optional personal contact details by a named actor. |
+| Target meaning | A person was recorded in the tenant's workforce with a display name, work email and optional personal contact details by a named actor. |
+| Selected source meaning | A person was recorded in the tenant's workforce with a display name, work email and optional personal contact details by a named actor. |
 | Meaning source | authored 2026-10-29 from src/Compliance.Common/Features/Workforce/Events/PersonRegistrationRecorded.cs |
 
 #### Schema
@@ -74,6 +82,9 @@ Canonical events: **3**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | PersonRevised |
+| Selected source event name | PersonRevised |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:PersonRevised |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | PersonDetailsRevised |
@@ -83,7 +94,8 @@ Canonical events: **3**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | `{"discriminator":"bdgrz.workforce.person.revised","version":1}` |
-| Meaning | A recorded person's display name, work email or contact details were revised by a named actor, producing the person's next revision. |
+| Target meaning | A recorded person's display name, work email or contact details were revised by a named actor, producing the person's next revision. |
+| Selected source meaning | A recorded person's display name, work email or contact details were revised by a named actor, producing the person's next revision. |
 | Meaning source | authored 2026-10-29 from src/Compliance.Common/Features/Workforce/Events/PersonDetailsRevised.cs |
 
 #### Schema

@@ -1,5 +1,7 @@
 {
-  "root": "TenantInvitationReactor",
+  "sourceRoot": "TenantInvitationReactor",
+  "targetRoot": "ActivateMembershipAfterInvitationAcceptanceReactor",
+  "businessReason": "Create the accepted member's membership, team access, guest grant when needed, and first-admin tenant activation.",
   "rows": [
     {
       "id": "S026",

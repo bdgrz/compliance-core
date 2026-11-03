@@ -21,7 +21,11 @@
         "meaning": "A normalized application name or alias was claimed for one declared application in the tenant; no other active application may hold it.",
         "meaningSource": "authored 2026-10-29"
       },
-      "schema": null
+      "schema": null,
+      "sourceName": "ApplicationNameClaimed",
+      "targetName": "ApplicationNameClaimed",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "A normalized application name or alias was claimed for one declared application in the tenant; no other active application may hold it."
     },
     {
       "canonical": {
@@ -43,7 +47,11 @@
         "meaning": "A previously claimed application name or alias was released because the holder was retired, renamed, or merged into another application.",
         "meaningSource": "authored 2026-10-29"
       },
-      "schema": null
+      "schema": null,
+      "sourceName": "ApplicationNameReleased",
+      "targetName": "ApplicationNameReleased",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "A previously claimed application name or alias was released because the holder was retired, renamed, or merged into another application."
     }
   ]
 }

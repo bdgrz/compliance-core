@@ -2,9 +2,9 @@
 
 Canonical events: **1**. Complete canonical event and available schema records: [owner event JSON](../data/events/imported-owner-resolution.json).
 
-| Event | Kind | Adopted discriminator | Version | Schema fields | Meaning |
-| --- | --- | --- | --- | --- | --- |
-| ImportedOwnerResolutionRecorded | business | null (recorded) | null (recorded) | [Placeholder: schema absent] | An imported owner reference was bound to a workforce person by exact email match at import or by one attributed manual resolution; unresolved references stay unresolved until then. |
+| Target event | Selected source name | Kind | Adopted discriminator | Version | Schema fields | Meaning |
+| --- | --- | --- | --- | --- | --- | --- |
+| ImportedOwnerResolutionRecorded | ImportedOwnerResolutionRecorded | business | null (recorded) | null (recorded) | [Placeholder: schema absent] | An imported owner reference was bound to a workforce person by exact email match at import or by one attributed manual resolution; unresolved references stay unresolved until then. |
 
 ## Event details
 
@@ -12,6 +12,9 @@ Canonical events: **1**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | ImportedOwnerResolutionRecorded |
+| Selected source event name | ImportedOwnerResolutionRecorded |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:ImportedOwnerResolutionRecorded |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | ImportedOwnerResolutionRecorded |
@@ -21,7 +24,8 @@ Canonical events: **1**. Complete canonical event and available schema records: 
 | Source status | planned_no_source_type |
 | Adopted decision IDs | OWNER_ImportedOwnerResolution |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | An imported owner reference was bound to a workforce person by exact email match at import or by one attributed manual resolution; unresolved references stay unresolved until then. |
+| Target meaning | An imported owner reference was bound to a workforce person by exact email match at import or by one attributed manual resolution; unresolved references stay unresolved until then. |
+| Selected source meaning | An imported owner reference was bound to a workforce person by exact email match at import or by one attributed manual resolution; unresolved references stay unresolved until then. |
 | Meaning source | authored 2026-10-29 |
 
 #### Schema

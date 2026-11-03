@@ -23,7 +23,11 @@
         "meaning": "A delivery decision for an attest package was recorded on a successfully built client export, with its rationale, recipient and delivery reference, for the exact package manifest.",
         "meaningSource": "authored 2026-10-29 from src/Compliance.Common/Features/Exports/Events/ClientExportAttestPackageDeliveryRecorded.cs"
       },
-      "schema": null
+      "schema": null,
+      "sourceName": "ClientExportAttestPackageDeliveryRecorded",
+      "targetName": "ClientExportAttestPackageDeliveryRecorded",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "A delivery decision for an attest package was recorded on a successfully built client export, with its rationale, recipient and delivery reference, for the exact package manifest."
     },
     {
       "canonical": {
@@ -47,7 +51,11 @@
         "meaning": "Records the ClientExportBuildFailed domain fact for one tenant-owned subject revision.",
         "meaningSource": "record summary in src/Compliance.Common/Features/Exports/Events/ClientExportBuildFailed.cs"
       },
-      "schema": null
+      "schema": null,
+      "sourceName": "ClientExportBuildFailed",
+      "targetName": "ClientExportBuildFailed",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "Records the ClientExportBuildFailed domain fact for one tenant-owned subject revision."
     },
     {
       "canonical": {
@@ -71,7 +79,11 @@
         "meaning": "Records the ClientExportBuilt domain fact for one tenant-owned subject revision.",
         "meaningSource": "record summary in src/Compliance.Common/Features/Exports/Events/ClientExportBuilt.cs"
       },
-      "schema": null
+      "schema": null,
+      "sourceName": "ClientExportBuilt",
+      "targetName": "ClientExportBuilt",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "Records the ClientExportBuilt domain fact for one tenant-owned subject revision."
     },
     {
       "canonical": {
@@ -95,7 +107,11 @@
         "meaning": "Records the ClientExportDelivered domain fact for one tenant-owned subject revision.",
         "meaningSource": "record summary in src/Compliance.Common/Features/Exports/Events/ClientExportDelivered.cs"
       },
-      "schema": null
+      "schema": null,
+      "sourceName": "ClientExportDelivered",
+      "targetName": "ClientExportDelivered",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "Records the ClientExportDelivered domain fact for one tenant-owned subject revision."
     },
     {
       "canonical": {
@@ -119,7 +135,11 @@
         "meaning": "Records the ClientExportRequested domain fact for one tenant-owned subject revision.",
         "meaningSource": "record summary in src/Compliance.Common/Features/Exports/Events/ClientExportRequested.cs"
       },
-      "schema": null
+      "schema": null,
+      "sourceName": "ClientExportRequested",
+      "targetName": "ClientExportRequested",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "Records the ClientExportRequested domain fact for one tenant-owned subject revision."
     }
   ]
 }

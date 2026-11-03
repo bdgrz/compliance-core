@@ -23,7 +23,11 @@
         "meaning": "An immutable population snapshot: canonical, key-ordered rows whose content identity is the domain-separated population SHA-256. Amendments are new snapshots linked to the original. A population that fits one storage chunk keeps its rows inline. A larger population keeps no rows here: StoredChunkCount chunk events hold them, and StorageManifestSha256 binds those chunks in order.",
         "meaningSource": "record summary in src/Compliance.Common/Features/Snapshots/Events/PopulationSnapshotFrozen.cs"
       },
-      "schema": null
+      "schema": null,
+      "sourceName": "PopulationSnapshotFrozen",
+      "targetName": "PopulationSnapshotFinalized",
+      "nameDecision": "Names the complete, immutable population snapshot that is ready for later compliance work.",
+      "targetMeaning": "An immutable population snapshot: canonical, key-ordered rows whose content identity is the domain-separated population SHA-256. Amendments are new snapshots linked to the original. A population that fits one storage chunk keeps its rows inline. A larger population keeps no rows here: StoredChunkCount chunk events hold them, and StorageManifestSha256 binds those chunks in order."
     }
   ]
 }

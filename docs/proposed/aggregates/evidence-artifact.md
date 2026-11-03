@@ -27,13 +27,13 @@
 | [IssueArtifactDownload](../commands/evidence-artifact.md#issueartifactdownload) | http | CommandId |
 | [RecordEvidenceArtifactInspection](../commands/evidence-artifact.md#recordevidenceartifactinspection) | command | CommandId |
 | [ReleaseEvidenceArtifactQuarantine](../commands/evidence-artifact.md#releaseevidenceartifactquarantine) | http | CommandId |
-| [SettleArtifactDownloadAvailabilityUse](../commands/evidence-artifact.md#settleartifactdownloadavailabilityuse) | receiver | CommandId |
+| [CloseArtifactDownloadAvailabilityAuthorization](../commands/evidence-artifact.md#closeartifactdownloadavailabilityauthorization) | receiver | CommandId |
 
 ## Events
 
 | Event | Discriminator | Version |
 | --- | --- | --- |
-| [ArtifactDownloadAvailabilityUseSettled](../events/evidence-artifact.md#artifactdownloadavailabilityusesettled) | bdgrz.evidence-artifact.artifact-download-availability-use-settled | 1 |
+| [ArtifactDownloadAvailabilityAuthorizationClosed](../events/evidence-artifact.md#artifactdownloadavailabilityauthorizationclosed) | bdgrz.evidence-artifact.artifact-download-availability-use-settled | 1 |
 | [EvidenceArtifactDownloadRequested](../events/evidence-artifact.md#evidenceartifactdownloadrequested) | bdgrz.evidence-artifact.evidence-artifact-download-requested | 1 |
 | [EvidenceArtifactInspected](../events/evidence-artifact.md#evidenceartifactinspected) | bdgrz.evidence.artifact.inspected | 1 |
 | [EvidenceArtifactQuarantineReleased](../events/evidence-artifact.md#evidenceartifactquarantinereleased) | bdgrz.evidence.artifact.quarantine_released | 1 |
@@ -43,10 +43,10 @@
 
 | Row | Kind | Source owner | Target owner | Command |
 | --- | --- | --- | --- | --- |
-| [T099](../reactors/one-committed-evidence-artifact-download-requested-starter.md#t099) | reaction_or_regular_process_stage | EvidenceArtifact | AdvisorHandoff | AuthorizeAdvisorArtifactDownloadUse |
-| [T100](../reactors/one-committed-evidence-artifact-download-requested-starter.md#t100) | reaction_or_regular_process_stage | EvidenceArtifact | EvidenceHandlingPolicy | AuthorizeArtifactHandlingDownloadUse |
+| [T099](../reactors/one-committed-evidence-artifact-download-requested-starter.md#t099) | reaction_or_regular_process_stage | EvidenceArtifact | AdvisorHandoff | AuthorizeAdvisorArtifactDownload |
+| [T100](../reactors/one-committed-evidence-artifact-download-requested-starter.md#t100) | reaction_or_regular_process_stage | EvidenceArtifact | EvidenceHandlingPolicy | AuthorizeArtifactHandlingDownload |
 | [T101](../reactors/one-committed-evidence-artifact-download-requested-starter.md#t101) | reaction_or_regular_process_stage | EvidenceArtifact | ArtifactDownloadGrant | IssueProtectedArtifactDownloadGrant |
-| [T104](../reactors/one-committed-evidence-artifact-download-requested-starter.md#t104) | reaction_or_regular_process_stage | ArtifactDownloadGrant | EvidenceArtifact | SettleArtifactDownloadAvailabilityUse |
+| [T104](../reactors/one-committed-evidence-artifact-download-requested-starter.md#t104) | reaction_or_regular_process_stage | ArtifactDownloadGrant | EvidenceArtifact | CloseArtifactDownloadAvailabilityAuthorization |
 | [S000](../reactors/evidence-artifact-inspection-effects-reactor.md#s000) | external_storage_reconciliation | EvidenceArtifact | null (recorded) | null (recorded) |
 | [A021](../reactors/unassigned-architecture-rows.md#a021) | process_abort_binding | EvidenceArtifact | ArtifactDownloadGrant | CancelProtectedArtifactDownloadGrant |
 | [P000](../reactors/unassigned-architecture-rows.md#p000) | personal_source_admission | null (recorded) | EvidenceArtifact | IssueArtifactDownload |

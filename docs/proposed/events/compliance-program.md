@@ -2,11 +2,11 @@
 
 Canonical events: **3**. Complete canonical event and available schema records: [owner event JSON](../data/events/compliance-program.json).
 
-| Event | Kind | Adopted discriminator | Version | Schema fields | Meaning |
-| --- | --- | --- | --- | --- | --- |
-| ProgramCreated | business | bdgrz.program.created | 2 | [Placeholder: schema absent] | A compliance program was created with its authored content, recorded as the program's first revision. |
-| ProgramCriteriaEditionSelected | business | bdgrz.program.criteria.selected | 2 | [Placeholder: schema absent] | A criteria edition was selected for a compliance program, becoming the edition its criteria are measured against; re-selecting the same edition leaves the revision unchanged. |
-| ProgramRevised | business | bdgrz.program.revised | 2 | [Placeholder: schema absent] | A compliance program's authored content was revised, recorded as the program's next revision. |
+| Target event | Selected source name | Kind | Adopted discriminator | Version | Schema fields | Meaning |
+| --- | --- | --- | --- | --- | --- | --- |
+| ProgramCreated | ProgramCreated | business | bdgrz.program.created | 2 | [Placeholder: schema absent] | A compliance program was created with its authored content, recorded as the program's first revision. |
+| ProgramCriteriaEditionSelected | ProgramCriteriaEditionSelected | business | bdgrz.program.criteria.selected | 2 | [Placeholder: schema absent] | A criteria edition was selected for a compliance program, becoming the edition its criteria are measured against; re-selecting the same edition leaves the revision unchanged. |
+| ProgramRevised | ProgramRevised | business | bdgrz.program.revised | 2 | [Placeholder: schema absent] | A compliance program's authored content was revised, recorded as the program's next revision. |
 
 ## Event details
 
@@ -14,6 +14,9 @@ Canonical events: **3**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | ProgramCreated |
+| Selected source event name | ProgramCreated |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:ProgramCreated |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | ProgramCreated |
@@ -23,7 +26,8 @@ Canonical events: **3**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | A compliance program was created with its authored content, recorded as the program's first revision. |
+| Target meaning | A compliance program was created with its authored content, recorded as the program's first revision. |
+| Selected source meaning | A compliance program was created with its authored content, recorded as the program's first revision. |
 | Meaning source | authored 2026-10-29 from src/Compliance.Common/Features/Programs/Events/ProgramCreated.cs |
 
 #### Schema
@@ -44,6 +48,9 @@ Canonical events: **3**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | ProgramCriteriaEditionSelected |
+| Selected source event name | ProgramCriteriaEditionSelected |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:ProgramCriteriaEditionSelected |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | ProgramCriteriaEditionSelected |
@@ -53,7 +60,8 @@ Canonical events: **3**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | A criteria edition was selected for a compliance program, becoming the edition its criteria are measured against; re-selecting the same edition leaves the revision unchanged. |
+| Target meaning | A criteria edition was selected for a compliance program, becoming the edition its criteria are measured against; re-selecting the same edition leaves the revision unchanged. |
+| Selected source meaning | A criteria edition was selected for a compliance program, becoming the edition its criteria are measured against; re-selecting the same edition leaves the revision unchanged. |
 | Meaning source | authored 2026-10-29 from src/Compliance.Common/Features/Programs/Events/ProgramCriteriaEditionSelected.cs |
 
 #### Schema
@@ -74,6 +82,9 @@ Canonical events: **3**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | ProgramRevised |
+| Selected source event name | ProgramRevised |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:ProgramRevised |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | ProgramRevised |
@@ -83,7 +94,8 @@ Canonical events: **3**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | A compliance program's authored content was revised, recorded as the program's next revision. |
+| Target meaning | A compliance program's authored content was revised, recorded as the program's next revision. |
+| Selected source meaning | A compliance program's authored content was revised, recorded as the program's next revision. |
 | Meaning source | authored 2026-10-29 from src/Compliance.Common/Features/Programs/Events/ProgramRevised.cs |
 
 #### Schema

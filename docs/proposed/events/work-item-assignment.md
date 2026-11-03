@@ -2,11 +2,11 @@
 
 Canonical events: **3**. Complete canonical event and available schema records: [owner event JSON](../data/events/work-item-assignment.json).
 
-| Event | Kind | Adopted discriminator | Version | Schema fields | Meaning |
-| --- | --- | --- | --- | --- | --- |
-| WorkAssignmentLegacyHistoryImported | migration_import | bdgrz.work.assignment-history-imported | 2 | [Placeholder: schema absent] | An existing read-only program ledger prefix was sealed into immutable per-item history before its first native write. |
-| WorkItemAssignmentEscalated | business | bdgrz.work.escalated | 2 | [Placeholder: schema absent] | A work item's accountability was escalated, recording its current assignee and that it is escalated, as the next revision of its assignment. |
-| WorkItemAssignmentRecorded | business | bdgrz.work.assigned | 2 | [Placeholder: schema absent] | A work item was assigned to a member, or left unassigned, recorded as the next revision of its assignment without escalation. |
+| Target event | Selected source name | Kind | Adopted discriminator | Version | Schema fields | Meaning |
+| --- | --- | --- | --- | --- | --- | --- |
+| WorkAssignmentLegacyHistoryImported | WorkAssignmentLegacyHistoryImported | migration_import | bdgrz.work.assignment-history-imported | 2 | [Placeholder: schema absent] | An existing read-only program ledger prefix was sealed into immutable per-item history before its first native write. |
+| WorkItemAssignmentEscalated | WorkItemAssignmentEscalated | business | bdgrz.work.escalated | 2 | [Placeholder: schema absent] | A work item's accountability was escalated, recording its current assignee and that it is escalated, as the next revision of its assignment. |
+| WorkItemAssignmentRecorded | WorkItemAssignmentRecorded | business | bdgrz.work.assigned | 2 | [Placeholder: schema absent] | A work item was assigned to a member, or left unassigned, recorded as the next revision of its assignment without escalation. |
 
 ## Event details
 
@@ -14,6 +14,9 @@ Canonical events: **3**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | WorkAssignmentLegacyHistoryImported |
+| Selected source event name | WorkAssignmentLegacyHistoryImported |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:WorkAssignmentLegacyHistoryImported |
 | Owner selection | exact verified legacy import onto the per-item owner; fenced old ledger has no new writer |
 | Target concrete type | WorkAssignmentLegacyHistoryImported |
@@ -23,7 +26,8 @@ Canonical events: **3**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | An existing read-only program ledger prefix was sealed into immutable per-item history before its first native write. |
+| Target meaning | An existing read-only program ledger prefix was sealed into immutable per-item history before its first native write. |
+| Selected source meaning | An existing read-only program ledger prefix was sealed into immutable per-item history before its first native write. |
 | Meaning source | record summary in src/Compliance.Common/Features/Work/Events/WorkAssignmentLegacyHistoryImported.cs |
 
 #### Schema
@@ -44,6 +48,9 @@ Canonical events: **3**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | WorkItemAssignmentEscalated |
+| Selected source event name | WorkItemAssignmentEscalated |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:WorkItemAssignmentEscalated |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | WorkItemAssignmentEscalated |
@@ -53,7 +60,8 @@ Canonical events: **3**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | A work item's accountability was escalated, recording its current assignee and that it is escalated, as the next revision of its assignment. |
+| Target meaning | A work item's accountability was escalated, recording its current assignee and that it is escalated, as the next revision of its assignment. |
+| Selected source meaning | A work item's accountability was escalated, recording its current assignee and that it is escalated, as the next revision of its assignment. |
 | Meaning source | authored 2026-10-29 from src/Compliance.Common/Features/Work/Events/WorkItemAssignmentEscalated.cs |
 
 #### Schema
@@ -74,6 +82,9 @@ Canonical events: **3**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | WorkItemAssignmentRecorded |
+| Selected source event name | WorkItemAssignmentRecorded |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:WorkItemAssignmentRecorded |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | WorkItemAssignmentRecorded |
@@ -83,7 +94,8 @@ Canonical events: **3**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | A work item was assigned to a member, or left unassigned, recorded as the next revision of its assignment without escalation. |
+| Target meaning | A work item was assigned to a member, or left unassigned, recorded as the next revision of its assignment without escalation. |
+| Selected source meaning | A work item was assigned to a member, or left unassigned, recorded as the next revision of its assignment without escalation. |
 | Meaning source | authored 2026-10-29 from src/Compliance.Common/Features/Work/Events/WorkItemAssignmentRecorded.cs |
 
 #### Schema

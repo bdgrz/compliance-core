@@ -64,7 +64,9 @@
         "line": 229,
         "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
       },
-      "kind": "command"
+      "kind": "command",
+      "sourceName": "AmendAuditPopulation",
+      "targetName": "AmendAuditPopulation"
     },
     {
       "command": "ClassifyAuditPopulationRow",
@@ -135,7 +137,9 @@
         "rule": "require_expected_revision",
         "jev": 0.85,
         "date": "2026-10-29"
-      }
+      },
+      "sourceName": "ClassifyAuditPopulationRow",
+      "targetName": "ClassifyAuditPopulationRow"
     },
     {
       "command": "DefineAuditPopulation",
@@ -191,7 +195,9 @@
         "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
       },
       "kind": "creation",
-      "identityNote": "DefinitionId is the PopulationId of the new stream (2026-10-29, source AuditPopulationMutations.cs:69)."
+      "identityNote": "DefinitionId is the PopulationId of the new stream (2026-10-29, source AuditPopulationMutations.cs:69).",
+      "sourceName": "DefineAuditPopulation",
+      "targetName": "DefineAuditPopulation"
     },
     {
       "command": "FreezeAuditPopulation",
@@ -246,7 +252,9 @@
         "line": 5474,
         "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
       },
-      "kind": "command"
+      "kind": "command",
+      "sourceName": "FreezeAuditPopulation",
+      "targetName": "FreezeAuditPopulation"
     },
     {
       "command": "GenerateAuditPopulation",
@@ -296,7 +304,9 @@
         "line": 5844,
         "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
       },
-      "kind": "creation"
+      "kind": "creation",
+      "sourceName": "GenerateAuditPopulation",
+      "targetName": "GenerateAuditPopulation"
     },
     {
       "command": "ReconcileAuditPopulation",
@@ -351,7 +361,9 @@
         "line": 7727,
         "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
       },
-      "kind": "command"
+      "kind": "command",
+      "sourceName": "ReconcileAuditPopulation",
+      "targetName": "ReconcileAuditPopulation"
     },
     {
       "command": "RecordAuditPopulationFacts",
@@ -411,7 +423,9 @@
         "line": 8043,
         "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
       },
-      "kind": "command"
+      "kind": "command",
+      "sourceName": "RecordAuditPopulationFacts",
+      "targetName": "RecordAuditPopulationFacts"
     },
     {
       "command": "ReviseAuditPopulationDefinition",
@@ -481,7 +495,9 @@
         "line": 12363,
         "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
       },
-      "kind": "command"
+      "kind": "command",
+      "sourceName": "ReviseAuditPopulationDefinition",
+      "targetName": "ReviseAuditPopulationDefinition"
     }
   ],
   "sourceContractEvidence": []

@@ -2,11 +2,11 @@
 
 Canonical events: **3**. Complete canonical event and available schema records: [owner event JSON](../data/events/control-occurrence.json).
 
-| Event | Kind | Adopted discriminator | Version | Schema fields | Meaning |
-| --- | --- | --- | --- | --- | --- |
-| ControlOccurrenceAttested | business | bdgrz.control.occurrence.attested | 2 | 9 | One attestation version of an occurrence. The complete ControlAttestationView is verified immutable content, so a large evidence list is never an event-size rejection. |
-| ControlOccurrenceOpened | business | bdgrz.control.occurrence.opened | 2 | 21 | The one materialization of a control occurrence for its business window. CreationIntent is the complete frozen creation intent; Intent repeats the reference the opening operation accepted. A direct opening carries the first response; a materialization receiver fact does not. |
-| ControlOccurrenceReviewed | business | bdgrz.control.occurrence.reviewed | 2 | 9 | The independent review decision on one exact attestation version. The complete ControlOccurrenceReviewView is verified immutable content. |
+| Target event | Selected source name | Kind | Adopted discriminator | Version | Schema fields | Meaning |
+| --- | --- | --- | --- | --- | --- | --- |
+| ControlOccurrenceAttested | ControlOccurrenceAttested | business | bdgrz.control.occurrence.attested | 2 | 9 | One attestation version of an occurrence. The complete ControlAttestationView is verified immutable content, so a large evidence list is never an event-size rejection. |
+| ControlOccurrenceOpened | ControlOccurrenceOpened | business | bdgrz.control.occurrence.opened | 2 | 21 | The one materialization of a control occurrence for its business window. CreationIntent is the complete frozen creation intent; Intent repeats the reference the opening operation accepted. A direct opening carries the first response; a materialization receiver fact does not. |
+| ControlOccurrenceReviewed | ControlOccurrenceReviewed | business | bdgrz.control.occurrence.reviewed | 2 | 9 | The independent review decision on one exact attestation version. The complete ControlOccurrenceReviewView is verified immutable content. |
 
 ## Event details
 
@@ -14,6 +14,9 @@ Canonical events: **3**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | ControlOccurrenceAttested |
+| Selected source event name | ControlOccurrenceAttested |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:ControlOccurrenceAttested |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | ControlOccurrenceAttested |
@@ -23,7 +26,8 @@ Canonical events: **3**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | `{"discriminator":"bdgrz.control.occurrence.attested","version":1}` |
-| Meaning | One attestation version of an occurrence. The complete ControlAttestationView is verified immutable content, so a large evidence list is never an event-size rejection. |
+| Target meaning | One attestation version of an occurrence. The complete ControlAttestationView is verified immutable content, so a large evidence list is never an event-size rejection. |
+| Selected source meaning | One attestation version of an occurrence. The complete ControlAttestationView is verified immutable content, so a large evidence list is never an event-size rejection. |
 | Meaning source | record summary in src/Compliance.Common/Features/Operations/Events/ControlOccurrenceAttested.cs |
 
 #### Selected schema and implementation evidence
@@ -80,6 +84,9 @@ Canonical events: **3**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | ControlOccurrenceOpened |
+| Selected source event name | ControlOccurrenceOpened |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:ControlOccurrenceOpened |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | ControlOccurrenceOpened |
@@ -89,7 +96,8 @@ Canonical events: **3**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | `{"discriminator":"bdgrz.control.occurrence.opened","version":1}` |
-| Meaning | The one materialization of a control occurrence for its business window. CreationIntent is the complete frozen creation intent; Intent repeats the reference the opening operation accepted. A direct opening carries the first response; a materialization receiver fact does not. |
+| Target meaning | The one materialization of a control occurrence for its business window. CreationIntent is the complete frozen creation intent; Intent repeats the reference the opening operation accepted. A direct opening carries the first response; a materialization receiver fact does not. |
+| Selected source meaning | The one materialization of a control occurrence for its business window. CreationIntent is the complete frozen creation intent; Intent repeats the reference the opening operation accepted. A direct opening carries the first response; a materialization receiver fact does not. |
 | Meaning source | record summary in src/Compliance.Common/Features/Operations/Events/ControlOccurrenceOpened.cs |
 
 #### Selected schema and implementation evidence
@@ -190,12 +198,15 @@ ControlOccurrenceCreationIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T040](../reactors/control-occurrence-fan-out-reactor.md#t040) | emitted semantic fact | TypeIIPeriod | MaterializeControlOccurrence | ControlOccurrence |
+| [T040](../reactors/control-occurrence-fan-out-reactor.md#t040) | emitted semantic fact | TypeIIPeriod | OpenDueControlOccurrence | ControlOccurrence |
 
 ### ControlOccurrenceReviewed
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | ControlOccurrenceReviewed |
+| Selected source event name | ControlOccurrenceReviewed |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:ControlOccurrenceReviewed |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | ControlOccurrenceReviewed |
@@ -205,7 +216,8 @@ ControlOccurrenceCreationIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | `{"discriminator":"bdgrz.control.occurrence.reviewed","version":1}` |
-| Meaning | The independent review decision on one exact attestation version. The complete ControlOccurrenceReviewView is verified immutable content. |
+| Target meaning | The independent review decision on one exact attestation version. The complete ControlOccurrenceReviewView is verified immutable content. |
+| Selected source meaning | The independent review decision on one exact attestation version. The complete ControlOccurrenceReviewView is verified immutable content. |
 | Meaning source | record summary in src/Compliance.Common/Features/Operations/Events/ControlOccurrenceReviewed.cs |
 
 #### Selected schema and implementation evidence

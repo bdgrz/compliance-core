@@ -23,7 +23,11 @@
         "meaning": "Review work was linked to a significant change to carry out the follow-up its impact requires, recorded by a named member.",
         "meaningSource": "authored 2026-10-29 from src/Compliance.Common/Features/Changes/Events/ImpactReviewWorkLinked.cs"
       },
-      "schema": null
+      "schema": null,
+      "sourceName": "ImpactReviewWorkLinked",
+      "targetName": "ImpactReviewWorkLinked",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "Review work was linked to a significant change to carry out the follow-up its impact requires, recorded by a named member."
     },
     {
       "canonical": {
@@ -47,7 +51,11 @@
         "meaning": "The impact of a significant change on the system and its controls was assessed by a named member, becoming the change's current assessment.",
         "meaningSource": "authored 2026-10-29 from src/Compliance.Common/Features/Changes/Events/SignificantChangeImpactAssessed.cs"
       },
-      "schema": null
+      "schema": null,
+      "sourceName": "SignificantChangeImpactAssessed",
+      "targetName": "SignificantChangeImpactAssessed",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "The impact of a significant change on the system and its controls was assessed by a named member, becoming the change's current assessment."
     },
     {
       "canonical": {
@@ -71,7 +79,11 @@
         "meaning": "A significant change to the system was recorded for a program by a named member as the change's first revision.",
         "meaningSource": "authored 2026-10-29 from src/Compliance.Common/Features/Changes/Events/SignificantChangeRecorded.cs"
       },
-      "schema": null
+      "schema": null,
+      "sourceName": "SignificantChangeRecorded",
+      "targetName": "SignificantChangeRecorded",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "A significant change to the system was recorded for a program by a named member as the change's first revision."
     },
     {
       "canonical": {
@@ -95,7 +107,11 @@
         "meaning": "A recorded significant change was revised by a named member, changing its content at the next revision.",
         "meaningSource": "authored 2026-10-29 from src/Compliance.Common/Features/Changes/Events/SignificantChangeRevised.cs"
       },
-      "schema": null
+      "schema": null,
+      "sourceName": "SignificantChangeRevised",
+      "targetName": "SignificantChangeRevised",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "A recorded significant change was revised by a named member, changing its content at the next revision."
     },
     {
       "canonical": {
@@ -119,7 +135,11 @@
         "meaning": "A decision was recorded on whether a significant change requires an update to the system description, made by a named member.",
         "meaningSource": "authored 2026-10-29 from src/Compliance.Common/Features/Changes/Events/SignificantChangeSystemDescriptionDecisionRecorded.cs"
       },
-      "schema": null
+      "schema": null,
+      "sourceName": "SignificantChangeSystemDescriptionDecisionRecorded",
+      "targetName": "SignificantChangeSystemDescriptionDecisionRecorded",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "A decision was recorded on whether a significant change requires an update to the system description, made by a named member."
     }
   ]
 }

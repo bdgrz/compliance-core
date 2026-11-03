@@ -2,9 +2,9 @@
 
 Canonical events: **1**. Complete canonical event and available schema records: [owner event JSON](../data/events/audit-outcome.json).
 
-| Event | Kind | Adopted discriminator | Version | Schema fields | Meaning |
-| --- | --- | --- | --- | --- | --- |
-| AuditOutcomeRecorded | business | bdgrz.examinations.audit-outcome-recorded | 2 | [Placeholder: schema absent] | Retains an externally supplied conclusion and exact issued-report provenance. |
+| Target event | Selected source name | Kind | Adopted discriminator | Version | Schema fields | Meaning |
+| --- | --- | --- | --- | --- | --- | --- |
+| AuditOutcomeRecorded | AuditOutcomeRecorded | business | bdgrz.examinations.audit-outcome-recorded | 2 | [Placeholder: schema absent] | Retains an externally supplied conclusion and exact issued-report provenance. |
 
 ## Event details
 
@@ -12,6 +12,9 @@ Canonical events: **1**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | AuditOutcomeRecorded |
+| Selected source event name | AuditOutcomeRecorded |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:AuditOutcomeRecorded |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | AuditOutcomeRecorded |
@@ -21,7 +24,8 @@ Canonical events: **1**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | Retains an externally supplied conclusion and exact issued-report provenance. |
+| Target meaning | Retains an externally supplied conclusion and exact issued-report provenance. |
+| Selected source meaning | Retains an externally supplied conclusion and exact issued-report provenance. |
 | Meaning source | record summary in src/Compliance.Common/Features/Examinations/Events/AuditOutcomeRecorded.cs |
 
 #### Schema

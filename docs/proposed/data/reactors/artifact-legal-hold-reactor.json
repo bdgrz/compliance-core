@@ -1,5 +1,7 @@
 {
-  "root": "ArtifactLegalHoldReactor",
+  "sourceRoot": "ArtifactLegalHoldReactor",
+  "targetRoot": "ProtectArtifactsUnderLegalHoldReactor",
+  "businessReason": "Stop an approved artifact disposal while a legal hold applies and allow it to proceed only after all holds are clear.",
   "rows": [
     {
       "id": "X006",

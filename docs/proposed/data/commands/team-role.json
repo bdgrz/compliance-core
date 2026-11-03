@@ -49,7 +49,9 @@
         "line": 2286,
         "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
       },
-      "kind": "command"
+      "kind": "command",
+      "sourceName": "AssignTeamRole",
+      "targetName": "AssignTeamRole"
     },
     {
       "command": "RemoveTeamRole",
@@ -104,7 +106,9 @@
         "line": 10948,
         "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
       },
-      "kind": "command"
+      "kind": "command",
+      "sourceName": "RemoveTeamRole",
+      "targetName": "RemoveTeamRole"
     }
   ],
   "sourceContractEvidence": []

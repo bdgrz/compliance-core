@@ -94,7 +94,11 @@
         "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "AuditPackageAmended",
+      "targetName": "AuditPackageAmended",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "An audit package was amended into its next manifest version by an accepted change, which may follow a frozen version without altering the earlier version."
     },
     {
       "canonical": {
@@ -315,7 +319,11 @@
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "resolvedIntentSchema": "PackageBuildIntent",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "AuditPackageBuildRequested",
+      "targetName": "AuditPackageBuildRequested",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "A build of the archive for one exact manifest version of an audit package was admitted, binding the build to that version and permitting the builder to report a result."
     },
     {
       "canonical": {
@@ -536,7 +544,11 @@
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "resolvedIntentSchema": "PackageBuildIntent",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "AuditPackageBuilt",
+      "targetName": "AuditPackageBuilt",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "The archive for an audit package version was built and its verified output recorded, answering the admitted build request for that exact version."
     },
     {
       "canonical": {
@@ -631,7 +643,11 @@
         "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "AuditPackageCreated",
+      "targetName": "AuditPackageCreated",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "An audit package was created for a program as its first manifest version."
     },
     {
       "canonical": {
@@ -878,7 +894,11 @@
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "resolvedIntentSchema": "PackageDeliveryRecordingIntent",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "AuditPackageDeliveryAdmitted",
+      "targetName": "AuditPackageDeliveryAdmitted",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "Freezes an exact personal external-handoff attestation before independent historical materialization."
     },
     {
       "canonical": {
@@ -973,7 +993,11 @@
         "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "AuditPackageDisclosureApproved",
+      "targetName": "AuditPackageDisclosureApproved",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "Disclosure of one audit package manifest version to its recipients was approved, permitting that version to be admitted for delivery."
     },
     {
       "canonical": {
@@ -1068,7 +1092,11 @@
         "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "AuditPackageValidated",
+      "targetName": "AuditPackageValidated",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "The outcome of validating one audit package manifest version was recorded against that version."
     },
     {
       "canonical": {
@@ -1163,7 +1191,11 @@
         "reducerRule": "Validate owner/generation and local predecessor; apply only this owner delta or immutable content reference. Never hydrate a foreign aggregate or mutate based on a projection.",
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "AuditPackageValidationOverrideApproved",
+      "targetName": "AuditPackageValidationOverrideApproved",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "An approver overrode the validation findings for one audit package manifest version, allowing that version to proceed despite them."
     }
   ]
 }

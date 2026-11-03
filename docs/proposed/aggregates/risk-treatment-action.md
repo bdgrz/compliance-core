@@ -47,8 +47,8 @@
 
 | Row | Kind | Source owner | Target owner | Command |
 | --- | --- | --- | --- | --- |
-| [T071](../reactors/risk-action-completion-review-reactor.md#t071) | reaction_or_regular_process_stage | RiskTreatmentAction | EvidenceRequest | AuthorizeEvidenceRequestActionCompletionUse |
-| [T072](../reactors/risk-action-completion-review-reactor.md#t072) | reaction_or_regular_process_stage | RiskTreatmentAction | EvidenceRequest | SettleEvidenceRequestActionCompletionUse |
+| [T071](../reactors/risk-action-completion-review-reactor.md#t071) | reaction_or_regular_process_stage | RiskTreatmentAction | EvidenceRequest | AuthorizeEvidenceRequestActionCompletion |
+| [T072](../reactors/risk-action-completion-review-reactor.md#t072) | reaction_or_regular_process_stage | RiskTreatmentAction | EvidenceRequest | CloseEvidenceRequestActionCompletionAuthorization |
 | [T078](../reactors/risk-action-completion-review-reactor.md#t078) | reaction_or_regular_process_stage | RiskTreatmentAction | RiskTreatmentAction | CompleteRiskTreatmentActionReview |
 | [A012](../reactors/unassigned-architecture-rows.md#a012) | process_abort_binding | RiskTreatmentAction | RiskTreatmentAction | AbortRiskTreatmentActionReview |
 

@@ -31,7 +31,7 @@
 | Event | Discriminator | Version |
 | --- | --- | --- |
 | [ApplicationImportSourceAdmissionRecorded](../events/application-import-source.md#applicationimportsourceadmissionrecorded) | bdgrz.application_import_source.admission_recorded | 1 |
-| [ApplicationImportSourceSettled](../events/application-import-source.md#applicationimportsourcesettled) | bdgrz.application_import_source.settled | 1 |
+| [ApplicationImportSourceBatchCompleted](../events/application-import-source.md#applicationimportsourcebatchcompleted) | bdgrz.application_import_source.settled | 1 |
 
 ## Cross-owner flows
 

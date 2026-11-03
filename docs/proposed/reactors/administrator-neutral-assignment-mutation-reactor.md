@@ -1,10 +1,15 @@
-# AdministratorNeutralAssignmentMutationReactor
+# RemoveUnneededAdministratorAssignmentReactor
+
+Selected source root name: `AdministratorNeutralAssignmentMutationReactor`.
+## Why this reaction exists
+
+Remove an initial administrator assignment only when the member never became active or no longer contributes.
 
 Selected choreography rows: **1**. Required proofs, recovery, effect identity, and implementation evidence are preserved in [reactor row JSON](../data/reactors/administrator-neutral-assignment-mutation-reactor.json).
 
 | Row | Kind | Prerequisite facts | Command | Target owner | Emitted facts |
 | --- | --- | --- | --- | --- | --- |
-| T049 | reaction_or_regular_process_stage | TenantManagerSourceMutationAdmitted | ApplyNeutralAdministratorAssignmentMutation | TeamMember | TeamMemberRemoved |
+| T049 | reaction_or_regular_process_stage | TenantManagerMemberChangeAccepted | RemoveAdministratorAssignment | TeamMember | TeamMemberRemoved |
 
 ## Selected row details
 
@@ -16,16 +21,16 @@ Selected choreography rows: **1**. Required proofs, recovery, effect identity, a
 | kind | reaction_or_regular_process_stage |
 | status | SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED |
 | sourceOwner | TenantManagerGuard |
-| logicalPrerequisiteFacts | TenantManagerSourceMutationAdmitted |
+| logicalPrerequisiteFacts (target names) | TenantManagerMemberChangeAccepted |
 | logicalPrerequisiteRule | The source is TenantManagerSourceMutationAdmitted where the command is RemoveTeamMember on the Administrators team for an assignment whose member episode never completed registration as an available contribution or has no current contribution; the receiver removes the assignment at the authored expected revision and generation. |
-| physicalRootEvents | TenantManagerSourceMutationAdmitted |
-| originalAdmissionKinds | TenantManagerWithdrawalAccepted, TenantManagerRestorationAccepted, TenantManagerSourceMutationAdmitted |
-| receiverCommand | ApplyNeutralAdministratorAssignmentMutation |
+| physicalRootEvents (target names) | TenantManagerMemberChangeAccepted |
+| originalAdmissionKinds (target names) | TenantManagerWithdrawalAccepted, TenantManagerRestorationAccepted, TenantManagerMemberChangeAccepted |
+| Target command (selected source name: ApplyNeutralAdministratorAssignmentMutation) | RemoveAdministratorAssignment |
 | targetOwner | TeamMember |
 | targetAuthorityKind | business_aggregate |
-| emittedSemanticFacts | TeamMemberRemoved |
+| emittedSemanticFacts (target names) | TeamMemberRemoved |
 | emittedEventContracts | None listed |
-| currentRegisteredRootTypes | AdministratorNeutralAssignmentMutationReactor |
+| currentRegisteredRootTypes (target names) | RemoveUnneededAdministratorAssignmentReactor |
 | plannedRootRole | null (recorded) |
 | processes | AdministratorTransitionProcess |
 | requiredProofContract | `{"canonicalCarrier":"original admitted root reference + required independently verified typed stage/terminal proof sets","admissionReferenceFactKinds":["TenantManagerWithdrawalAccepted","TenantManagerRestorationAccepted","TenantManagerSourceMutationAdmitted"],"admissionReferenceRole":"original business admission/first-owner fact, distinct from subscription trigger and intermediate/terminal prerequisites","verification":{"admission":"AdmissionReference is a locator only. Resolve and independently verify actual typed admitted fact, exact owner/tenant/program, saved metadata and physical/hydrated cut, original root/episode/actor/intent and immutable content.","stageAndTerminal":"Materialize each required typed stage/terminal proof from actual committed facts and full required immutable selections; prove complete grant/fence/provisional/child sets, not counts/checkpoints. Guard sets are not weakened by carrier choice.","earlyReplay":"If native receipt binding does not cover a supplied/interpreted command term, bind that term through the required actual typed proof/body before early replay. Exact receipt cannot bypass proof manifest or source tuple guards.","resultAndRecovery":"Current public authorization precedes replay. Original result/receipt and unknown-append recovery stay exact; requested cancellation propagates. Unavailable proof/content remains transient; corruption/changed intent is permanent; no inferred absence/release.","implementationStatus":"Installed pointer/handler/process presence is not proof of conformance. Field/wire migration and required behavioral tests remain separately verifiable implementation work."},"requiredTypedStageProofSets":[{"factKinds":["TeamMemberAssigned"],"role":"The live Administrators-team assignment at the authored expected revision and generation","quantifier":"exactly_one","condition":"","requiredVerification":"Resolve the actual saved fact and its full immutable selection; verify the typed payload and the exact admission, root, target, generation, actor and intent binding. A pointer, checkpoint or stage order alone is not authority."},{"factKinds":["TenantManagerRestorationCompleted"],"role":"Registration or restoration completion making the episode a current contribution; none may exist for the episode","quantifier":"none_outstanding","condition":"neutral kind only; otherwise withdrawal (T047) applies","requiredVerification":"Resolve the actual saved fact and its full immutable selection; verify the typed payload and the exact admission, root, target, generation, actor and intent binding. A pointer, checkpoint or stage order alone is not authority."},{"factKinds":["TeamMemberRemoved"],"role":"Prior removal or newer episode; none may supersede","quantifier":"none_outstanding","condition":"","requiredVerification":"Resolve the actual saved fact and its full immutable selection; verify the typed payload and the exact admission, root, target, generation, actor and intent binding. A pointer, checkpoint or stage order alone is not authority."}],"pinnedSourceRequirements":"Every exact source owner/event/content revision and complete immutable manifest required by intendedProofGate remains mandatory; no absent optional source is fabricated.","proofGate":"Only RemoveTeamMember on BuiltInRbac.AdministratorsTeamId for an assignment whose member episode never completed registration or has no current contribution. Applies the original TeamMemberRemoved with the authored ExpectedAssignmentRevision/Generation; immutable built-in role/required permission protections remain enforced. Removal from any other team never reaches the guard.","requiredLogicalPrerequisiteProofs":"Every applicable logical prerequisite is independently verified as an actual typed saved fact (or actual technical proof where explicitly technical); a terminal proof may establish an earlier stage only through a verified native chain that includes that required typed stage. Stage order/checkpoint alone never substitutes.","prerequisiteVerification":{"admission":"The receiver resolves the original admitted root fact by its exact owner, tenant, episode, actor and immutable intent, and verifies the saved fact and content hash before acting; a reference alone grants nothing.","stageProofs":"Each required stage proof (grant, hold, review, or terminal fact) is materialised from the actual committed fact and its full immutable selection; counts, checkpoints and stage order are not accepted as proof."},"stageProofStatus":"specified","stageProofRationale":"Admission verifies the neutral classification; ApplyRemoval enforces episode, revision and generation. Immutable built-in role protections remain.","stageProofSource":"authored 2026-10-29 from reactor and target source"}` |

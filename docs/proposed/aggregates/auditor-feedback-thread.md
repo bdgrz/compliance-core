@@ -23,7 +23,7 @@
 
 | Command | Kind | Identity field |
 | --- | --- | --- |
-| [MaterializeAuditorComment](../commands/auditor-feedback-thread.md#materializeauditorcomment) | receiver | CommandId |
+| [RecordAuditorComment](../commands/auditor-feedback-thread.md#recordauditorcomment) | receiver | CommandId |
 
 ## Events
 
@@ -35,7 +35,7 @@
 
 | Row | Kind | Source owner | Target owner | Command |
 | --- | --- | --- | --- | --- |
-| [T034](../reactors/auditor-comment-materialization-reactor.md#t034) | reaction_or_regular_process_stage | AuditorRequest | AuditorFeedbackThread | MaterializeAuditorComment |
+| [T034](../reactors/auditor-comment-materialization-reactor.md#t034) | reaction_or_regular_process_stage | AuditorRequest | AuditorFeedbackThread | RecordAuditorComment |
 
 ## Product rules
 

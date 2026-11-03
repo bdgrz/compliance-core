@@ -25,7 +25,7 @@
 | --- | --- | --- |
 | [RejectIdentityRecoveryPreparation](../commands/identity-recovery.md#rejectidentityrecoverypreparation) | command | CommandId |
 | [CompleteAcceptedIdentityRecovery](../commands/identity-recovery.md#completeacceptedidentityrecovery) | receiver | CommandId |
-| [MaterializeIdentityRecoveryPreparation](../commands/identity-recovery.md#materializeidentityrecoverypreparation) | receiver | CommandId |
+| [PrepareAccountRecovery](../commands/identity-recovery.md#prepareaccountrecovery) | receiver | CommandId |
 | [AcceptProtectedIdentityRecovery](../commands/identity-recovery.md#acceptprotectedidentityrecovery) | receiver | CommandId |
 
 ## Events
@@ -46,8 +46,8 @@
 | [T043](../reactors/identity-recovery-acceptance-reactor.md#t043) | reaction_or_regular_process_stage | IdentityRecovery | UserIdentity | RevokeRecoveredOldIdentity |
 | [T044](../reactors/identity-recovery-acceptance-reactor.md#t044) | reaction_or_regular_process_stage | IdentityRecovery | IdentityRecovery | CompleteAcceptedIdentityRecovery |
 | [T045](../reactors/identity-recovery-acceptance-reactor.md#t045) | reaction_or_regular_process_stage | IdentityRecovery | IdentityRecoveryNoticeProcess | SendIdentityRecoveryNotice |
-| [T056](../reactors/identity-recovery-acceptance-reactor.md#t056) | reaction_or_regular_process_stage | EmailAddress | IdentityRecovery | MaterializeIdentityRecoveryPreparation |
-| [T057](../reactors/identity-recovery-acceptance-reactor.md#t057) | reaction_or_regular_process_stage | IdentityRecovery | UserIdentity | SettleRecoveryIdentityProtection |
+| [T056](../reactors/identity-recovery-acceptance-reactor.md#t056) | reaction_or_regular_process_stage | EmailAddress | IdentityRecovery | PrepareAccountRecovery |
+| [T057](../reactors/identity-recovery-acceptance-reactor.md#t057) | reaction_or_regular_process_stage | IdentityRecovery | UserIdentity | EndRecoveryIdentityProtection |
 | [T058](../reactors/identity-recovery-acceptance-reactor.md#t058) | reaction_or_regular_process_stage | IdentityRecovery | EmailAddress | CompleteEmailRecoveryChallenge |
 | [T097](../reactors/identity-recovery-acceptance-reactor.md#t097) | reaction_or_regular_process_stage | IdentityRecovery | IdentityRecovery | AcceptProtectedIdentityRecovery |
 | [A017](../reactors/unassigned-architecture-rows.md#a017) | process_abort_binding | EmailAddress | IdentityRecovery | RejectIdentityRecoveryPreparation |

@@ -65,7 +65,9 @@
           "process_reply": 0.34
         },
         "date": "2026-10-29"
-      }
+      },
+      "sourceName": "ApproveArtifactDisposition",
+      "targetName": "ApproveArtifactDisposition"
     },
     {
       "command": "ExecuteArtifactDisposition",
@@ -115,7 +117,9 @@
         "rule": "terminal_idempotent_no_guard",
         "jev": 0.8,
         "date": "2026-10-29"
-      }
+      },
+      "sourceName": "ExecuteArtifactDisposition",
+      "targetName": "ExecuteArtifactDisposition"
     },
     {
       "command": "RecordArtifactDispositionResult",
@@ -190,7 +194,9 @@
         "line": 7952,
         "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
       },
-      "kind": "command"
+      "kind": "command",
+      "sourceName": "RecordArtifactDispositionResult",
+      "targetName": "RecordArtifactDispositionResult"
     },
     {
       "command": "FenceArtifactDispositionForHold",
@@ -241,7 +247,9 @@
       "source": {
         "path": "docs/product/definitive-aggregate-choreography/choreography.json",
         "recorded": "2026-10-29"
-      }
+      },
+      "sourceName": "FenceArtifactDispositionForHold",
+      "targetName": "StopArtifactDisposalForHold"
     }
   ],
   "sourceContractEvidence": []

@@ -13,13 +13,9 @@ The reorganized domain catalog lives in docs/proposed. Structured JSON catalogs 
 | [manifest.json](../product/definitive-aggregate-choreography/choreography/manifest.json) | Historical manifest for the physical plan and its 186-row baseline. |
 | [target-command-contracts.json](../product/audits/2026-10-23/target-command-contracts.json) | Companion command/handler source evidence. |
 | [target-event-contracts.json](../product/audits/2026-10-23/target-event-contracts.json) | Companion event payload schemas. |
+| [write-model-names.json](data/write-model-names.json) | Proposed target names and business reasons for commands, events, and reactors. |
 | [operation-query-contracts.json](../product/audits/2026-10-23/operation-query-contracts.json) | Operation-query contracts. |
-| [domain-model.md](../product/domain-model.md) | Captured in domain-model.md. |
-| [product-brief.md](../product/product-brief.md) | Captured in scope.md. |
-| [user-journeys.md](../product/user-journeys.md) | Captured in journeys.md. |
-| [command-list.md](../product/command-list.md) | Captured in commands/product-scope.md. |
-| [domain-event-list.md](../product/domain-event-list.md) | Captured in events/product-scope.md. |
-| [query-and-view-model-list.md](../product/query-and-view-model-list.md) | Captured in read-models.md. |
+| Proposed domain model, product scope, journeys, command inventory, event inventory, and read contracts | Owned in docs/proposed; no duplicate docs/product copy is maintained. |
 | [canonical-entity-model.md](../product/canonical-entity-model.md) | Canonical entity families, standards use, source authority, and manual-first constraint are integrated in domain-model.md; the approved conceptual source remains available for exact mapping. |
 | [m0-d08-technology-inventory.md](../product/decisions/m0-d08-technology-inventory.md) | External-source authority and no-connector decision are summarized in partner-seam.md. |
 | [m0-d11-vendors.md](../product/decisions/m0-d11-vendors.md) | Provider materiality, assurance, review, and subservice rules are summarized in partner-seam.md. |

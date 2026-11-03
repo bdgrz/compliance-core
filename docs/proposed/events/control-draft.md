@@ -2,20 +2,20 @@
 
 Canonical events: **12**. Complete canonical event and available schema records: [owner event JSON](../data/events/control-draft.json).
 
-| Event | Kind | Adopted discriminator | Version | Schema fields | Meaning |
-| --- | --- | --- | --- | --- | --- |
-| ControlApproved | business | bdgrz.control.approved | 2 | [Placeholder: schema absent] | Activates an immutable control version from one exact reviewed draft revision. |
-| ControlDraftCreated | business | bdgrz.control.draft.created | 2 | [Placeholder: schema absent] | A control draft was created in a program with its identifier and authored content by a named member, awaiting review. |
-| ControlDraftDiscarded | business | bdgrz.control.draft.discarded | 2 | [Placeholder: schema absent] | A control draft was discarded with a stated rationale by a named member, ending it without approval. |
-| ControlDraftRevised | business | bdgrz.control.draft.revised | 2 | [Placeholder: schema absent] | A control draft's authored content was revised by a named member, producing the draft's next revision for review. |
-| ControlOwnerPersonDesignated | business | bdgrz.control.owner_person.designated | 2 | [Placeholder: schema absent] | Designates, or clears with a null PersonId, the governed workforce person who owns one exact pending control revision. The person need not sign in. The signed-in recording actor is kept separate, and CorrelatedMemberId is snapshotted only to apply owner-based separation of duties; it never grants access. |
-| ControlProposalWithdrawn | business | bdgrz.control.proposal.withdrawn | 2 | [Placeholder: schema absent] | Withdraws a pending successor draft or retirement proposal at its exact revision. The current approved version stays effective; the ControlDraftRevised raised in the same commit restores its content on a new revision so stale decisions cannot apply. |
-| ControlRetired | business | bdgrz.control.retired | 2 | [Placeholder: schema absent] | Ends future use of one exact approved control version. Prior versions, decisions, and relationships are retained and stay readable. |
-| ControlRetirementProposed | business | bdgrz.control.retirement.proposed | 2 | [Placeholder: schema absent] | Proposes ending future use of one exact approved control version. |
-| ControlReviewed | business | bdgrz.control.reviewed | 2 | [Placeholder: schema absent] | A control version was reviewed with a decision outcome and rationale by a named reviewer, recorded against the exact draft revision reviewed. |
-| ControlSuccessorProposed | business | bdgrz.control.successor.proposed | 2 | [Placeholder: schema absent] | A successor version line was opened for a control from one exact approved predecessor version by a named member, with the successor's content to be authored separately. |
-| ResponsibilityAssigned | business | bdgrz.responsibility.assigned | 1 | [Placeholder: schema absent] | A member was assigned a responsibility type over a scoped record for an effective period by a named assigner, together with any separation-of-duties waivers that allowed it. |
-| ResponsibilityRevoked | business | bdgrz.responsibility.revoked | 1 | [Placeholder: schema absent] | A member's responsibility assignment over a scoped record was revoked with a stated reason by a named member, removing the authority it granted. |
+| Target event | Selected source name | Kind | Adopted discriminator | Version | Schema fields | Meaning |
+| --- | --- | --- | --- | --- | --- | --- |
+| ControlApproved | ControlApproved | business | bdgrz.control.approved | 2 | [Placeholder: schema absent] | Activates an immutable control version from one exact reviewed draft revision. |
+| ControlDraftCreated | ControlDraftCreated | business | bdgrz.control.draft.created | 2 | [Placeholder: schema absent] | A control draft was created in a program with its identifier and authored content by a named member, awaiting review. |
+| ControlDraftDiscarded | ControlDraftDiscarded | business | bdgrz.control.draft.discarded | 2 | [Placeholder: schema absent] | A control draft was discarded with a stated rationale by a named member, ending it without approval. |
+| ControlDraftRevised | ControlDraftRevised | business | bdgrz.control.draft.revised | 2 | [Placeholder: schema absent] | A control draft's authored content was revised by a named member, producing the draft's next revision for review. |
+| ControlOwnerPersonDesignated | ControlOwnerPersonDesignated | business | bdgrz.control.owner_person.designated | 2 | [Placeholder: schema absent] | Designates, or clears with a null PersonId, the governed workforce person who owns one exact pending control revision. The person need not sign in. The signed-in recording actor is kept separate, and CorrelatedMemberId is snapshotted only to apply owner-based separation of duties; it never grants access. |
+| ControlProposalWithdrawn | ControlProposalWithdrawn | business | bdgrz.control.proposal.withdrawn | 2 | [Placeholder: schema absent] | Withdraws a pending successor draft or retirement proposal at its exact revision. The current approved version stays effective; the ControlDraftRevised raised in the same commit restores its content on a new revision so stale decisions cannot apply. |
+| ControlRetired | ControlRetired | business | bdgrz.control.retired | 2 | [Placeholder: schema absent] | Ends future use of one exact approved control version. Prior versions, decisions, and relationships are retained and stay readable. |
+| ControlRetirementProposed | ControlRetirementProposed | business | bdgrz.control.retirement.proposed | 2 | [Placeholder: schema absent] | Proposes ending future use of one exact approved control version. |
+| ControlReviewed | ControlReviewed | business | bdgrz.control.reviewed | 2 | [Placeholder: schema absent] | A control version was reviewed with a decision outcome and rationale by a named reviewer, recorded against the exact draft revision reviewed. |
+| ControlSuccessorProposed | ControlSuccessorProposed | business | bdgrz.control.successor.proposed | 2 | [Placeholder: schema absent] | A successor version line was opened for a control from one exact approved predecessor version by a named member, with the successor's content to be authored separately. |
+| ResponsibilityAssigned | ResponsibilityAssigned | business | bdgrz.responsibility.assigned | 1 | [Placeholder: schema absent] | A member was assigned a responsibility type over a scoped record for an effective period by a named assigner, together with any separation-of-duties waivers that allowed it. |
+| ResponsibilityRevoked | ResponsibilityRevoked | business | bdgrz.responsibility.revoked | 1 | [Placeholder: schema absent] | A member's responsibility assignment over a scoped record was revoked with a stated reason by a named member, removing the authority it granted. |
 
 ## Event details
 
@@ -23,6 +23,9 @@ Canonical events: **12**. Complete canonical event and available schema records:
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | ControlApproved |
+| Selected source event name | ControlApproved |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:ControlApproved |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | ControlApproved |
@@ -32,7 +35,8 @@ Canonical events: **12**. Complete canonical event and available schema records:
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | Activates an immutable control version from one exact reviewed draft revision. |
+| Target meaning | Activates an immutable control version from one exact reviewed draft revision. |
+| Selected source meaning | Activates an immutable control version from one exact reviewed draft revision. |
 | Meaning source | record summary in src/Compliance.Common/Features/Controls/Events/ControlApproved.cs |
 
 #### Schema
@@ -53,6 +57,9 @@ Canonical events: **12**. Complete canonical event and available schema records:
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | ControlDraftCreated |
+| Selected source event name | ControlDraftCreated |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:ControlDraftCreated |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | ControlDraftCreated |
@@ -62,7 +69,8 @@ Canonical events: **12**. Complete canonical event and available schema records:
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | A control draft was created in a program with its identifier and authored content by a named member, awaiting review. |
+| Target meaning | A control draft was created in a program with its identifier and authored content by a named member, awaiting review. |
+| Selected source meaning | A control draft was created in a program with its identifier and authored content by a named member, awaiting review. |
 | Meaning source | authored 2026-10-29 from src/Compliance.Common/Features/Controls/Events/ControlDraftCreated.cs |
 
 #### Schema
@@ -83,6 +91,9 @@ Canonical events: **12**. Complete canonical event and available schema records:
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | ControlDraftDiscarded |
+| Selected source event name | ControlDraftDiscarded |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:ControlDraftDiscarded |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | ControlDraftDiscarded |
@@ -92,7 +103,8 @@ Canonical events: **12**. Complete canonical event and available schema records:
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | A control draft was discarded with a stated rationale by a named member, ending it without approval. |
+| Target meaning | A control draft was discarded with a stated rationale by a named member, ending it without approval. |
+| Selected source meaning | A control draft was discarded with a stated rationale by a named member, ending it without approval. |
 | Meaning source | authored 2026-10-29 from src/Compliance.Common/Features/Controls/Events/ControlDraftDiscarded.cs |
 
 #### Schema
@@ -113,6 +125,9 @@ Canonical events: **12**. Complete canonical event and available schema records:
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | ControlDraftRevised |
+| Selected source event name | ControlDraftRevised |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:ControlDraftRevised |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | ControlDraftRevised |
@@ -122,7 +137,8 @@ Canonical events: **12**. Complete canonical event and available schema records:
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | A control draft's authored content was revised by a named member, producing the draft's next revision for review. |
+| Target meaning | A control draft's authored content was revised by a named member, producing the draft's next revision for review. |
+| Selected source meaning | A control draft's authored content was revised by a named member, producing the draft's next revision for review. |
 | Meaning source | authored 2026-10-29 from src/Compliance.Common/Features/Controls/Events/ControlDraftRevised.cs |
 
 #### Schema
@@ -143,6 +159,9 @@ Canonical events: **12**. Complete canonical event and available schema records:
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | ControlOwnerPersonDesignated |
+| Selected source event name | ControlOwnerPersonDesignated |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:ControlOwnerPersonDesignated |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | ControlOwnerPersonDesignated |
@@ -152,7 +171,8 @@ Canonical events: **12**. Complete canonical event and available schema records:
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | Designates, or clears with a null PersonId, the governed workforce person who owns one exact pending control revision. The person need not sign in. The signed-in recording actor is kept separate, and CorrelatedMemberId is snapshotted only to apply owner-based separation of duties; it never grants access. |
+| Target meaning | Designates, or clears with a null PersonId, the governed workforce person who owns one exact pending control revision. The person need not sign in. The signed-in recording actor is kept separate, and CorrelatedMemberId is snapshotted only to apply owner-based separation of duties; it never grants access. |
+| Selected source meaning | Designates, or clears with a null PersonId, the governed workforce person who owns one exact pending control revision. The person need not sign in. The signed-in recording actor is kept separate, and CorrelatedMemberId is snapshotted only to apply owner-based separation of duties; it never grants access. |
 | Meaning source | record summary in src/Compliance.Common/Features/Controls/Events/ControlOwnerPersonDesignated.cs |
 
 #### Schema
@@ -173,6 +193,9 @@ Canonical events: **12**. Complete canonical event and available schema records:
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | ControlProposalWithdrawn |
+| Selected source event name | ControlProposalWithdrawn |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:ControlProposalWithdrawn |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | ControlProposalWithdrawn |
@@ -182,7 +205,8 @@ Canonical events: **12**. Complete canonical event and available schema records:
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | Withdraws a pending successor draft or retirement proposal at its exact revision. The current approved version stays effective; the ControlDraftRevised raised in the same commit restores its content on a new revision so stale decisions cannot apply. |
+| Target meaning | Withdraws a pending successor draft or retirement proposal at its exact revision. The current approved version stays effective; the ControlDraftRevised raised in the same commit restores its content on a new revision so stale decisions cannot apply. |
+| Selected source meaning | Withdraws a pending successor draft or retirement proposal at its exact revision. The current approved version stays effective; the ControlDraftRevised raised in the same commit restores its content on a new revision so stale decisions cannot apply. |
 | Meaning source | record summary in src/Compliance.Common/Features/Controls/Events/ControlProposalWithdrawn.cs |
 
 #### Schema
@@ -203,6 +227,9 @@ Canonical events: **12**. Complete canonical event and available schema records:
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | ControlRetired |
+| Selected source event name | ControlRetired |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:ControlRetired |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | ControlRetired |
@@ -212,7 +239,8 @@ Canonical events: **12**. Complete canonical event and available schema records:
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | Ends future use of one exact approved control version. Prior versions, decisions, and relationships are retained and stay readable. |
+| Target meaning | Ends future use of one exact approved control version. Prior versions, decisions, and relationships are retained and stay readable. |
+| Selected source meaning | Ends future use of one exact approved control version. Prior versions, decisions, and relationships are retained and stay readable. |
 | Meaning source | record summary in src/Compliance.Common/Features/Controls/Events/ControlRetired.cs |
 
 #### Schema
@@ -233,6 +261,9 @@ Canonical events: **12**. Complete canonical event and available schema records:
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | ControlRetirementProposed |
+| Selected source event name | ControlRetirementProposed |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:ControlRetirementProposed |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | ControlRetirementProposed |
@@ -242,7 +273,8 @@ Canonical events: **12**. Complete canonical event and available schema records:
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | Proposes ending future use of one exact approved control version. |
+| Target meaning | Proposes ending future use of one exact approved control version. |
+| Selected source meaning | Proposes ending future use of one exact approved control version. |
 | Meaning source | record summary in src/Compliance.Common/Features/Controls/Events/ControlRetirementProposed.cs |
 
 #### Schema
@@ -263,6 +295,9 @@ Canonical events: **12**. Complete canonical event and available schema records:
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | ControlReviewed |
+| Selected source event name | ControlReviewed |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:ControlReviewed |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | ControlReviewed |
@@ -272,7 +307,8 @@ Canonical events: **12**. Complete canonical event and available schema records:
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | A control version was reviewed with a decision outcome and rationale by a named reviewer, recorded against the exact draft revision reviewed. |
+| Target meaning | A control version was reviewed with a decision outcome and rationale by a named reviewer, recorded against the exact draft revision reviewed. |
+| Selected source meaning | A control version was reviewed with a decision outcome and rationale by a named reviewer, recorded against the exact draft revision reviewed. |
 | Meaning source | authored 2026-10-29 from src/Compliance.Common/Features/Controls/Events/ControlReviewed.cs |
 
 #### Schema
@@ -293,6 +329,9 @@ Canonical events: **12**. Complete canonical event and available schema records:
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | ControlSuccessorProposed |
+| Selected source event name | ControlSuccessorProposed |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:ControlSuccessorProposed |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | ControlSuccessorProposed |
@@ -302,7 +341,8 @@ Canonical events: **12**. Complete canonical event and available schema records:
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | A successor version line was opened for a control from one exact approved predecessor version by a named member, with the successor's content to be authored separately. |
+| Target meaning | A successor version line was opened for a control from one exact approved predecessor version by a named member, with the successor's content to be authored separately. |
+| Selected source meaning | A successor version line was opened for a control from one exact approved predecessor version by a named member, with the successor's content to be authored separately. |
 | Meaning source | authored 2026-10-29 from src/Compliance.Common/Features/Controls/Events/ControlSuccessorProposed.cs |
 
 #### Schema
@@ -323,6 +363,9 @@ Canonical events: **12**. Complete canonical event and available schema records:
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | ResponsibilityAssigned |
+| Selected source event name | ResponsibilityAssigned |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:ResponsibilityAssigned |
 | Owner selection | ResponsibilityScope.RecordType/RecordId + exact owner authority header selects one of three listed scope owners |
 | Target concrete type | ResponsibilityAssigned |
@@ -332,7 +375,8 @@ Canonical events: **12**. Complete canonical event and available schema records:
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | A member was assigned a responsibility type over a scoped record for an effective period by a named assigner, together with any separation-of-duties waivers that allowed it. |
+| Target meaning | A member was assigned a responsibility type over a scoped record for an effective period by a named assigner, together with any separation-of-duties waivers that allowed it. |
+| Selected source meaning | A member was assigned a responsibility type over a scoped record for an effective period by a named assigner, together with any separation-of-duties waivers that allowed it. |
 | Meaning source | authored 2026-10-29 from src/Compliance.Common/Features/Responsibilities/Events/ResponsibilityAssigned.cs |
 
 #### Schema
@@ -353,6 +397,9 @@ Canonical events: **12**. Complete canonical event and available schema records:
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | ResponsibilityRevoked |
+| Selected source event name | ResponsibilityRevoked |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:ResponsibilityRevoked |
 | Owner selection | ResponsibilityScope.RecordType/RecordId + exact owner authority header selects one of three listed scope owners |
 | Target concrete type | ResponsibilityRevoked |
@@ -362,7 +409,8 @@ Canonical events: **12**. Complete canonical event and available schema records:
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | A member's responsibility assignment over a scoped record was revoked with a stated reason by a named member, removing the authority it granted. |
+| Target meaning | A member's responsibility assignment over a scoped record was revoked with a stated reason by a named member, removing the authority it granted. |
+| Selected source meaning | A member's responsibility assignment over a scoped record was revoked with a stated reason by a named member, removing the authority it granted. |
 | Meaning source | authored 2026-10-29 from src/Compliance.Common/Features/Responsibilities/Events/ResponsibilityRevoked.cs |
 
 #### Schema

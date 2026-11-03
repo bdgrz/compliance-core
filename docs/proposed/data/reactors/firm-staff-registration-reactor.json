@@ -1,5 +1,7 @@
 {
-  "root": "FirmStaffRegistrationReactor",
+  "sourceRoot": "FirmStaffRegistrationReactor",
+  "targetRoot": "FirmStaffRegistrationReactor",
+  "businessReason": "Register the firm staff member only after the exact identity claim has been confirmed.",
   "rows": [
     {
       "id": "T002",

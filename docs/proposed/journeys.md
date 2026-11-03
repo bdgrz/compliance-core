@@ -1,5 +1,3 @@
-> Captured from `docs/product/user-journeys.md`; internal links have been rebased.
-
 # User journeys and flows
 
 Status: product-level flow map, derived from the product brief, accepted

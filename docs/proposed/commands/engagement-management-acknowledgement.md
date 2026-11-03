@@ -2,24 +2,27 @@
 
 Selected command contracts: **2**. Complete selected contracts and companion source evidence: [owner command JSON](../data/commands/engagement-management-acknowledgement.json).
 
-| Command | Kind | Identity | Fields | HTTP routes |
-| --- | --- | --- | --- | --- |
-| MaterializeEngagementManagementAcknowledgement | receiver | CommandId | 9 | [Placeholder: value not recorded] |
-| AcknowledgeEngagementManagement | http | AcknowledgementId | 7 | PUT /api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/management-acknowledgements/{acknowledgement_id} [ComplianceAuthorizationPolicies.ApiUser] |
+| Target command | Selected source name | Kind | Identity | Fields | HTTP routes |
+| --- | --- | --- | --- | --- | --- |
+| RecordEngagementManagementAcknowledgement | MaterializeEngagementManagementAcknowledgement | receiver | CommandId | 9 | [Placeholder: value not recorded] |
+| AcknowledgeEngagementManagement | AcknowledgeEngagementManagement | http | AcknowledgementId | 7 | PUT /api/v1/tenants/{tenant_id}/service-engagements/{engagement_id}/management-acknowledgements/{acknowledgement_id} [ComplianceAuthorizationPolicies.ApiUser] |
 
 ## Selected command details
 
-### MaterializeEngagementManagementAcknowledgement
+### RecordEngagementManagementAcknowledgement
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | RecordEngagementManagementAcknowledgement |
+| Selected source command name | MaterializeEngagementManagementAcknowledgement |
+| Name decision | Records the manager's acknowledgement of the exact engagement revision and service history. |
 | Owner | EngagementManagementAcknowledgement |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; internal; deterministic receiver identity derived from the admitted root fact, episode and generation: exact redelivery resolves the original result, a changed admission is a new identity |
 | Entry point | [Placeholder: value not recorded] |
 | MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | [Placeholder: value not recorded] |
+| Selected semantic events | None listed |
 | Protocols | [Placeholder: value not recorded] |
 | Policy preservation | [Placeholder: value not recorded] |
 | Contract changes | [Placeholder: value not recorded] |
@@ -62,13 +65,16 @@ Required tests: [Placeholder: required tests not recorded]
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | AcknowledgeEngagementManagement |
+| Selected source command name | AcknowledgeEngagementManagement |
+| Name decision | The selected source name is retained. |
 | Owner | EngagementManagementAcknowledgement |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | http |
 | Logical identity | AcknowledgementId; Uuid; required=true; client; caller-supplied immutable creation identity: an exact retry with the same id and authored intent returns the original result; the same id with changed intent is refused; a different id is a different record |
 | Entry point | [Placeholder: value not recorded] |
 | MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | [Placeholder: value not recorded] |
+| Selected semantic events | None listed |
 | Protocols | [Placeholder: value not recorded] |
 | Policy preservation | [Placeholder: value not recorded] |
 | Contract changes | [Placeholder: value not recorded] |

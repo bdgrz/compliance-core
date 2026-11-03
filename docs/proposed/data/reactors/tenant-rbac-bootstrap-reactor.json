@@ -1,5 +1,7 @@
 {
-  "root": "TenantRbacBootstrapReactor",
+  "sourceRoot": "TenantRbacBootstrapReactor",
+  "targetRoot": "SetUpStartingTenantAccessReactor",
+  "businessReason": "Give a new tenant its starting roles, teams, permissions, and owner access.",
   "rows": [
     {
       "id": "S011",

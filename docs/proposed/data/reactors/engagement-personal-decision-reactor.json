@@ -1,5 +1,7 @@
 {
-  "root": "EngagementPersonalDecisionReactor",
+  "sourceRoot": "EngagementPersonalDecisionReactor",
+  "targetRoot": "RecordEngagementIndependenceDecisionsReactor",
+  "businessReason": "Record each person's independence decision against the exact engagement revision and service history.",
   "rows": [
     {
       "id": "T089",

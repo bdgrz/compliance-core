@@ -1,5 +1,7 @@
 {
-  "root": "FirmStaffStatusReevaluationReactor",
+  "sourceRoot": "FirmStaffStatusReevaluationReactor",
+  "targetRoot": "ReassessFirmStaffIndependenceAfterChangesReactor",
+  "businessReason": "Keep client-service independence decisions current when a firm's staff status changes, and block affected acceptances that relied on outdated staff information.",
   "rows": [
     {
       "id": "S017",

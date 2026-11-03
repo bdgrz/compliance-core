@@ -11,13 +11,13 @@
 
 **Invariant:** Final export delivery requires archive counts matching frozen included/withheld inventory and a successful exact-manifest delivery for each required attest package.
 
-**Additional decision rule:** [Placeholder: no owner-specific decision rule is recorded.]
+**Additional decision rule:** Final delivery is accepted only when the archive counts match the included and withheld items listed at the start, and every required attestation package has been delivered successfully with the required contents.
 
 **Must preserve:** [Placeholder: preservation rule not recorded.]
 
 **Replay:** Current required authorization precedes replay; exact authorized retries resolve the original accepted result using the selected logical identity and immutable actor/intent/source binding. Fresh mutable feasibility, clock selection and body preparation cannot replace that original result. Expected revision is concurrency precondition, not a new identity.
 
-**Lifecycle:** [Placeholder: a consolidated lifecycle sequence is not present in the selected owner record.]
+**Lifecycle:** RequestClientExport starts the delivery obligation. A build result alone does not mean the client received it. RecordClientExportDelivery completes the obligation and provides the delivery fact needed before offboarding and evidence disposition.
 
 ## Commands
 
@@ -44,7 +44,7 @@
 
 | Row | Kind | Source owner | Target owner | Command |
 | --- | --- | --- | --- | --- |
-| [X007](../reactors/client-export-delivery-reactor.md#x007) | planned_reaction | ClientExport | ArtifactEngagementHold | RecordEngagementPackageDelivered |
+| [X007](../reactors/client-export-delivery-reactor.md#x007) | planned_reaction | ClientExport | ArtifactEngagementHold | RecordEngagementPackageDelivery |
 
 ## Product rules
 

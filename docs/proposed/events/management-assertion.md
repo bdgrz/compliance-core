@@ -2,11 +2,11 @@
 
 Canonical events: **3**. Complete canonical event and available schema records: [owner event JSON](../data/events/management-assertion.json).
 
-| Event | Kind | Adopted discriminator | Version | Schema fields | Meaning |
-| --- | --- | --- | --- | --- | --- |
-| ManagementAssertionApproved | business | bdgrz.examinations.management-assertion-approved | 1 | [Placeholder: schema absent] | Records an independent management decision on one exact assertion version. |
-| ManagementAssertionRecorded | business | bdgrz.examinations.management-assertion-recorded | 2 | [Placeholder: schema absent] | Creates a versioned assertion and records its exact input bindings and wording. |
-| ManagementAssertionRevised | business | bdgrz.examinations.management-assertion-revised | 1 | [Placeholder: schema absent] | Appends a new immutable wording and input binding to a management assertion. |
+| Target event | Selected source name | Kind | Adopted discriminator | Version | Schema fields | Meaning |
+| --- | --- | --- | --- | --- | --- | --- |
+| ManagementAssertionApproved | ManagementAssertionApproved | business | bdgrz.examinations.management-assertion-approved | 1 | [Placeholder: schema absent] | Records an independent management decision on one exact assertion version. |
+| ManagementAssertionRecorded | ManagementAssertionRecorded | business | bdgrz.examinations.management-assertion-recorded | 2 | [Placeholder: schema absent] | Creates a versioned assertion and records its exact input bindings and wording. |
+| ManagementAssertionRevised | ManagementAssertionRevised | business | bdgrz.examinations.management-assertion-revised | 1 | [Placeholder: schema absent] | Appends a new immutable wording and input binding to a management assertion. |
 
 ## Event details
 
@@ -14,6 +14,9 @@ Canonical events: **3**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | ManagementAssertionApproved |
+| Selected source event name | ManagementAssertionApproved |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:ManagementAssertionApproved |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | ManagementAssertionApproved |
@@ -23,7 +26,8 @@ Canonical events: **3**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | Records an independent management decision on one exact assertion version. |
+| Target meaning | Records an independent management decision on one exact assertion version. |
+| Selected source meaning | Records an independent management decision on one exact assertion version. |
 | Meaning source | record summary in src/Compliance.Common/Features/Examinations/Events/ManagementAssertionApproved.cs |
 
 #### Schema
@@ -44,6 +48,9 @@ Canonical events: **3**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | ManagementAssertionRecorded |
+| Selected source event name | ManagementAssertionRecorded |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:ManagementAssertionRecorded |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | ManagementAssertionRecorded |
@@ -53,7 +60,8 @@ Canonical events: **3**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | Creates a versioned assertion and records its exact input bindings and wording. |
+| Target meaning | Creates a versioned assertion and records its exact input bindings and wording. |
+| Selected source meaning | Creates a versioned assertion and records its exact input bindings and wording. |
 | Meaning source | record summary in src/Compliance.Common/Features/Examinations/Events/ManagementAssertionRecorded.cs |
 
 #### Schema
@@ -74,6 +82,9 @@ Canonical events: **3**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | ManagementAssertionRevised |
+| Selected source event name | ManagementAssertionRevised |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:ManagementAssertionRevised |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | ManagementAssertionRevised |
@@ -83,7 +94,8 @@ Canonical events: **3**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | Appends a new immutable wording and input binding to a management assertion. |
+| Target meaning | Appends a new immutable wording and input binding to a management assertion. |
+| Selected source meaning | Appends a new immutable wording and input binding to a management assertion. |
 | Meaning source | record summary in src/Compliance.Common/Features/Examinations/Events/ManagementAssertionRevised.cs |
 
 #### Schema

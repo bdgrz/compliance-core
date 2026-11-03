@@ -70,7 +70,9 @@
           "process_reply": 0.22
         },
         "date": "2026-10-29"
-      }
+      },
+      "sourceName": "ApproveTypeIIOperatingPlan",
+      "targetName": "ApproveTypeIIOperatingPlan"
     },
     {
       "command": "ProposeTypeIIOperatingPlan",
@@ -126,7 +128,9 @@
         "line": 7277,
         "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
       },
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "ProposeTypeIIOperatingPlan",
+      "targetName": "ProposeTypeIIOperatingPlan"
     },
     {
       "command": "ReviewTypeIIOperatingPlan",
@@ -197,7 +201,9 @@
         "rule": "require_expected_revision",
         "jev": 0.81,
         "date": "2026-10-29"
-      }
+      },
+      "sourceName": "ReviewTypeIIOperatingPlan",
+      "targetName": "ReviewTypeIIOperatingPlan"
     }
   ],
   "sourceContractEvidence": []

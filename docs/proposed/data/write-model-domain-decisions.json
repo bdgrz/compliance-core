@@ -1,0 +1,352 @@
+{
+  "date": "2026-11-02",
+  "scope": "Business actions people request, facts recorded when those actions succeed, and the business purpose of automatic reactions. Screen and report views and internal delivery details are outside this pass.",
+  "authority": "These are the selected rules for the proposed target. The decisions and owner records below define the selected domain rules.",
+  "decisions": [
+    {
+      "id": "CAMPAIGN_AND_HOLD_IDENTITY",
+      "sourceOpenIds": [
+        "OPEN_CampaignNaturalKey"
+      ],
+      "status": "SELECTED_FOR_PROPOSED_WRITE_MODEL",
+      "name": "Each campaign and hold has its own identity",
+      "rule": "CampaignId identifies one policy or access-review campaign. Creating a second campaign with a different CampaignId creates a separate campaign, even if the policy version and roster or access population match. HoldId identifies one legal direction. Separate holds on the same artifact stay active independently; releasing one does not release another.",
+      "reason": "No accepted rule says that only one open campaign may exist for a policy version and snapshot. A policy may be launched again with a different due date or instructions. Each legal direction stays in force until that same hold is released.",
+      "affectedOwners": [
+        "PolicyDistributionCampaign",
+        "AccessReviewCampaign",
+        "ArtifactLegalHold"
+      ],
+      "commands": [
+        "LaunchPolicyCampaign",
+        "LaunchTrainingCampaign",
+        "LaunchAccessReviewCampaign",
+        "PlaceArtifactLegalHold",
+        "ReleaseArtifactLegalHold"
+      ],
+      "events": [
+        "PolicyCampaignLaunched",
+        "AccessReviewCampaignLaunched",
+        "ArtifactLegalHoldPlaced",
+        "ArtifactLegalHoldReleased"
+      ],
+      "reactors": [],
+      "sources": [
+        "docs/product/decisions/m0-d12-policy-acknowledgement-training.md",
+        "docs/product/decisions/m0-d07-access-review-population.md",
+        "docs/product/decisions/m0-d16-evidence-handling.md",
+        "docs/product/definitive-aggregate-choreography/aggregates.json"
+      ]
+    },
+    {
+      "id": "CRITERIA_EDITION_OWNER",
+      "sourceOpenIds": [
+        "OPEN_CriteriaEditionOwner"
+      ],
+      "status": "SELECTED_FOR_PROPOSED_WRITE_MODEL",
+      "name": "Published criteria editions cannot be changed",
+      "rule": "The platform publishes criteria editions. Once published, an edition does not change; changes appear in a new edition. A program records which edition it uses through SelectProgramCriteriaEdition, which records ProgramCriteriaEditionSelected. Customers do not create or edit the platform editions.",
+      "reason": "M0-D02 places criteria editions under platform control and says a published edition stays unchanged. A customer program decides which edition it follows.",
+      "affectedOwners": [
+        "ComplianceProgram"
+      ],
+      "commands": [
+        "SelectProgramCriteriaEdition"
+      ],
+      "events": [
+        "ProgramCriteriaEditionSelected"
+      ],
+      "reactors": [],
+      "sources": [
+        "docs/product/decisions/m0-d02-criteria-content.md",
+        "docs/product/definitive-aggregate-choreography/product-rule-traceability.json"
+      ]
+    },
+    {
+      "id": "INVENTORY_LIFECYCLE_FACTS",
+      "sourceOpenIds": [
+        "OPEN_LifecycleFactsOtherInventories"
+      ],
+      "status": "SELECTED_FOR_PROPOSED_WRITE_MODEL",
+      "name": "Status changes stay with the existing record",
+      "rule": "Use the record's existing change command to update its status along with its other details. The command emits that record's existing revision event. The proposed target adds no separate command or event just to end, disable, retire, reactivate, or delete one of these records. A retired or ended record can change again unless its rule below says otherwise. Changing one record does not automatically change another. Location name changes follow the existing process: it reserves the new name when a change is accepted and releases the old name after the record changes.",
+      "reason": "Each record's status follows that record's own rules. Current product decisions do not say that changing one of these records automatically changes access or starts a separate process. Changes to people's work status follow comparison of accepted workforce roster versions. Location names follow the accepted location change: the new name is reserved when the change is accepted, and the old name is released after the record changes.",
+      "affectedOwners": [
+        "ServiceIdentity",
+        "Person",
+        "WorkRelationship",
+        "Location",
+        "DataFlow",
+        "TechnologyComponent",
+        "InformationAsset"
+      ],
+      "commands": [
+        "ReviseServiceIdentity",
+        "RevisePerson",
+        "ReviseWorkRelationship",
+        "ReviseLocation",
+        "ReviseDataFlow",
+        "ReviseTechnologyComponent",
+        "ReviseInformationAsset"
+      ],
+      "events": [
+        "ServiceIdentityRevised",
+        "PersonRevised",
+        "WorkRelationshipRevised",
+        "LocationRevisionRecorded",
+        "DataFlowRevisionRecorded",
+        "TechnologyComponentRevisionRecorded",
+        "InformationAssetRevisionRecorded"
+      ],
+      "reactors": [
+        "KeepLocationNamesUniqueReactor"
+      ],
+      "sources": [
+        "docs/product/decisions/m0-d06-workforce-source.md",
+        "docs/product/decisions/m0-d08-technology-inventory.md",
+        "docs/product/decisions/m0-d22-canonical-ownership.md",
+        "docs/product/definitive-aggregate-choreography/service-identity-review-2026-10-27.md",
+        "docs/product/definitive-aggregate-choreography/person-review-2026-10-29.md",
+        "docs/product/definitive-aggregate-choreography/data-flow-review-2026-10-29.md",
+        "docs/product/definitive-aggregate-choreography/information-asset-review-2026-10-29.md",
+        "docs/product/definitive-aggregate-choreography/location-review-2026-10-27.md"
+      ]
+    },
+    {
+      "id": "CLIENT_EXPORT_BUSINESS_OWNER",
+      "sourceOpenIds": [
+        "OPEN_ClientExportClassification"
+      ],
+      "status": "SELECTED_FOR_PROPOSED_WRITE_MODEL",
+      "name": "ClientExport owns its separate recipient delivery",
+      "rule": "ClientExport is the business record for one agreed export to its named recipient. It fixes the included and withheld records, records the export result, and records final delivery. That delivery is required before client offboarding and later evidence disposition. It does not satisfy the separate M0-D27 requirement to deliver the firm's engagement record package into the attest team's audit software.",
+      "reason": "M0-D16 requires ClientExport delivery before client offboarding and evidence disposition. M0-D27 separately requires the firm's own engagement record package to be delivered into the attest team's audit software. The recipient and purpose are different, so one delivery cannot stand in for the other.",
+      "affectedOwners": [
+        "ClientExport",
+        "ArtifactDisposition"
+      ],
+      "commands": [
+        "RequestClientExport",
+        "RecordClientExportBuildResult",
+        "RecordClientExportDelivery"
+      ],
+      "events": [
+        "ClientExportRequested",
+        "ClientExportBuilt",
+        "ClientExportBuildFailed",
+        "ClientExportDelivered"
+      ],
+      "sourceCompatibilityEvents": [
+        {
+          "event": "ClientExportAttestPackageDeliveryRecorded",
+          "reason": "The selected source event records a delivered or not-delivered decision for an M0-D27 engagement package on the ClientExport stream. The target gives that package its own business owner; the old event remains source compatibility evidence until its outcomes and wire are reconciled with the target package events."
+        }
+      ],
+      "reactors": [],
+      "sources": [
+        "docs/product/decisions/m0-d16-evidence-handling.md",
+        "docs/product/definitive-aggregate-choreography/client-export-review-2026-10-29.md",
+        "docs/product/definitive-aggregate-choreography/aggregates.json"
+      ]
+    },
+    {
+      "id": "ATTEST_ENGAGEMENT_RECORD_PACKAGE",
+      "status": "SELECTED_FOR_PROPOSED_WRITE_MODEL",
+      "name": "The firm’s attest engagement record package has its own business record",
+      "rule": "For an in-product attest engagement that must be preserved, request and generate its engagement record package, then record its delivery into the attest team's audit software before the engagement closes or the client is offboarded. ClientExport is a separate delivery to its named recipient; neither delivery satisfies the other. Keep the engagement hold in place until the attest engagement record package is delivered.",
+      "reason": "M0-D27 requires the firm’s own attest team to retain a package of its engagement record. The ClientExport review defines a different export to its recipient and explicitly places the own-attest package commands on the attest-record side rather than in ClientExport. The source event catalog still assigns a related delivery-decision event to ClientExport, so its historical outcome and wire mapping need reconciliation before implementation.",
+      "affectedOwners": [
+        "AttestEngagementRecordPackage",
+        "ClientExport",
+        "ServiceEngagementIndependence",
+        "Tenant",
+        "ArtifactEngagementHold"
+      ],
+      "commands": [
+        "RequestAttestEngagementRecordPackage",
+        "RecordAttestEngagementPackageBuildResult",
+        "RecordAttestEngagementRecordPackageDelivery",
+        "CloseServiceEngagement",
+        "OffboardTenant",
+        "CompleteTenantOffboarding"
+      ],
+      "events": [
+        "AttestEngagementRecordPackageRequested",
+        "AttestEngagementRecordPackageGenerated",
+        "AttestEngagementRecordPackageGenerationFailed",
+        "AttestEngagementRecordPackageDelivered"
+      ],
+      "reactors": [],
+      "sources": [
+        "docs/product/decisions/m0-d27-attest-scope.md",
+        "docs/product/definitive-aggregate-choreography/client-export-review-2026-10-29.md",
+        "docs/product/definitive-aggregate-choreography/aggregates.json"
+      ]
+    }
+  ],
+  "ownerRules": {
+    "PolicyDistributionCampaign": {
+      "decisionRule": "Each campaign has its own CampaignId. A second campaign may use the same policy version and roster snapshot; no rule prohibits it.",
+      "lifecycle": "At launch, the campaign saves the roster it covers. Later roster changes are recorded as amendments. Results can be added only while the campaign is open. An accepted closure stops results until that closure is canceled or completed.",
+      "evidence": "M0-D12; CampaignId creation identity; OPEN_CampaignNaturalKey disposition."
+    },
+    "AccessReviewCampaign": {
+      "decisionRule": "Each campaign has its own CampaignId. A second campaign may use the same population snapshot; no rule prohibits overlapping campaigns.",
+      "lifecycle": "Each campaign keeps its own saved population, completion decision, and closure. Completing one campaign does not close or change another.",
+      "evidence": "M0-D07; caller-supplied CampaignId creation identity; Jev access_review_campaign_duplicate 0.05."
+    },
+    "ArtifactLegalHold": {
+      "decisionRule": "HoldId identifies one legal direction for one covered artifact. Different holds remain active independently, even when they cover the same artifact.",
+      "lifecycle": "Place each hold once and release only that same hold. Evidence cannot be disposed of while any hold on it remains active. Releasing one hold leaves any other holds in force.",
+      "evidence": "M0-D16; PlaceArtifactLegalHold and ReleaseArtifactLegalHold; Jev separate_legal_holds 0.95."
+    },
+    "ServiceIdentity": {
+      "decisionRule": "Each service identity has one accountable person or team, an approved purpose, and a review date no more than one year away.",
+      "lifecycle": "A service identity can be active, disabled, or retired. RecordServiceIdentity creates it; ReviseServiceIdentity changes its details or status and records ServiceIdentityRevised. Retiring it does not automatically change access at an outside service. If its owner relationship ends or its review date passes, it appears as work that needs a new owner or review.",
+      "evidence": "M0-D06; D22-03; service-identity-review-2026-10-27.md."
+    },
+    "Person": {
+      "decisionRule": "A Person is the stable identity for someone in the workforce. It is separate from that person's employment record and their access to the platform.",
+      "lifecycle": "The proposed target has no separate event for ending or retiring a Person. WorkRelationship records employment status; Member records platform access. Changing contact details or platform access does not end the person's employment.",
+      "evidence": "M0-D06; M0-D22; person-review-2026-10-29.md; Jev person_lifecycle 0.11."
+    },
+    "WorkRelationship": {
+      "decisionRule": "A WorkRelationship links one Person to their record in a workforce source, using that source's stable worker ID. Its status and end date must agree; an ended relationship must have an end date.",
+      "lifecycle": "Allowed statuses are pending, active, on_leave, and ended. ReviseWorkRelationship records a status or terms change as WorkRelationshipRevised. Changes to people's work status follow comparison of accepted workforce roster versions. Changing this record alone does not grant or revoke platform or outside-service access.",
+      "evidence": "M0-D06; M0-D22; WorkRelationship owner status rules; Jev work_relationship_lifecycle 0.89."
+    },
+    "Location": {
+      "decisionRule": "A location keeps the same identity and kind over time. Only an active location must have a unique name within its kind.",
+      "lifecycle": "A location starts active. ReviseLocation changes its details or status through the accepted location-change process. When a location retires, its old name becomes available after the updated record is saved; historical records keep its ID. The target does not prohibit restoring a retired location.",
+      "evidence": "M0-D22; LocationNames and LocationNameChangeProcess; location-review-2026-10-27.md."
+    },
+    "DataFlow": {
+      "decisionRule": "A data flow records where information starts and goes, which information it carries, why it moves, and how it is protected. Its effective date cannot move backward. Confidential or restricted information must be encrypted both when stored and sent, unless an approved exception applies.",
+      "lifecycle": "A new data flow is active. ReviseDataFlow may set it to active or retired while preserving its source, destination, information, protection, and effective-date rules. Changing its status does not automatically change related asset or technology records, and a retired flow is not permanently closed by this rule.",
+      "evidence": "M0-D08; D08-05; D08-06; data-flow-review-2026-10-29.md."
+    },
+    "TechnologyComponent": {
+      "decisionRule": "Keep one record for each governed technology component at the level it is managed. A cloud account belongs to exactly one system instance. Endpoint categories are recorded by count and management source.",
+      "lifecycle": "A new component is active. ReviseTechnologyComponent may set it to active or retired. Retirement keeps the same component identity and historical references. This change alone does not change the system instance or access.",
+      "evidence": "M0-D08; D08-01 through D08-03; TechnologyInventoryRules."
+    },
+    "InformationAsset": {
+      "decisionRule": "Each information asset has one classification, a retention rule, a responsible owner, and a status. The DataFlow record separately says which protections apply to information it carries.",
+      "lifecycle": "A new asset is active. ReviseInformationAsset may set it to active or retired. Retirement keeps the same identity and retention history. Reactivation is allowed. Changing asset status does not delete or change its data flows.",
+      "evidence": "M0-D08; D08-04; information-asset-review-2026-10-29.md."
+    },
+    "ClientExport": {
+      "decisionRule": "Final delivery records that the named recipient received the agreed export after its included and withheld records were fixed and the export was successfully prepared. This satisfies the ClientExport obligation only; it does not satisfy the separate M0-D27 engagement record package delivery to the firm's audit software.",
+      "lifecycle": "RequestClientExport fixes the delivery obligation and its record list. A successful export result does not mean the recipient received it. RecordClientExportDelivery records the recipient's receipt and provides the delivery fact needed before offboarding and evidence disposition. The target keeps the M0-D27 engagement record package on its own owner.",
+      "sourceCompatibilityEvents": [
+        {
+          "event": "ClientExportAttestPackageDeliveryRecorded",
+          "reason": "The selected source event records a delivered or not-delivered decision for an M0-D27 engagement package on the ClientExport stream. It is retained as compatibility evidence, not as a separate target ClientExport fact; reconcile its historical outcomes and wire before implementation."
+        }
+      ],
+      "evidence": "M0-D16; M0-D27; client-export-review-2026-10-29.md; Jev client_export_is_business_owner 0.96 and separate_owner 0.97."
+    },
+    "AttestEngagementRecordPackage": {
+      "decisionRule": "The package preserves the firm’s own in-product attest engagement record and is separate from any ClientExport. Only a recorded successful delivery to the attest team's audit software satisfies the M0-D27 obligation.",
+      "lifecycle": "Request the engagement record package, record whether it was generated, and record successful delivery to the firm's audit software. A failed generation or an unconfirmed delivery does not satisfy the obligation. Engagement closure and client offboarding wait for recorded delivery; the engagement hold continues to block evidence disposition until then.",
+      "sourceCompatibilityEvents": "ClientExportAttestPackageDeliveryRecorded currently records delivered and not_delivered decisions on a ClientExport stream. The proposed target separates the package from ClientExport; map historical outcomes and its existing wire into the target events before implementation.",
+      "evidence": "M0-D27; client-export-review-2026-10-29.md; the three package commands and related delivery-decision event are currently grouped under ClientExport in the source catalog and are separated in this proposed target."
+    }
+  },
+  "deferredMechanics": [
+    {
+      "id": "OPEN_ResponseReceiptsInPayload",
+      "status": "DEFERRED_TO_EVENT_CONTRACT_DETAILS",
+      "decision": "Whether a command's original response belongs in its business event or in a separate operation receipt does not change the business command, event meaning, or reactor reason. Keep the existing source contract unchanged in this pass.",
+      "source": "docs/product/definitive-aggregate-choreography/decisions.json"
+    }
+  ],
+  "sourceEventDispositions": [
+    {
+      "event": "ClientExportAttestPackageDeliveryRecorded",
+      "sourceOwner": "ClientExport",
+      "status": "SOURCE_COMPATIBILITY_EVIDENCE_NO_DIRECT_TARGET_EVENT_MAPPING",
+      "targetOwner": "AttestEngagementRecordPackage",
+      "relatedTargetEvent": "AttestEngagementRecordPackageDelivered",
+      "reason": "The source event records both delivered and not_delivered decisions for an M0-D27 engagement package on the ClientExport stream. The target separates the package from ClientExport and names successful delivery as AttestEngagementRecordPackageDelivered. Preserve the old discriminator and history as source evidence; define how both old outcomes map to the target before implementation.",
+      "source": "docs/product/definitive-aggregate-choreography/events.json"
+    }
+  ],
+  "targetOwnerNameOverrides": [
+    {
+      "sourceOwner": "TenantSlug",
+      "targetOwner": "WorkspaceWebAddress",
+      "reason": "Uses the product’s public name for the globally unique workspace address instead of the internal term slug.",
+      "invariant": "Each workspace web address has one owner. Once an address is retired, it can never be claimed again.",
+      "selectedIdentitySummary": "The normalized public web address identifies its one global claim record; once retired, that address is permanently unavailable."
+    },
+    {
+      "sourceOwner": "TenantManagerGuard",
+      "targetOwner": "TenantAdministratorContinuity",
+      "reason": "Names the business protection this tenant-wide owner provides instead of calling it a guard.",
+      "invariant": "A tenant always keeps at least one active administrator. An administrator change cannot leave the tenant without one.",
+      "selectedIdentitySummary": "One tenant-wide authority protects the continued availability of an active administrator."
+    }
+  ],
+  "targetOwners": [
+    {
+      "owner": "AttestEngagementRecordPackage",
+      "sourceOwner": "ClientExport",
+      "reassignedCommands": [
+        "RequestOwnAttestRecordPackage",
+        "RecordOwnAttestRecordPackageResult",
+        "RecordOwnAttestRecordDelivery"
+      ],
+      "classification": "business_aggregate",
+      "businessAggregate": true,
+      "sourceCapabilityArea": "AttestRecords",
+      "baselineSourcePath": "src/Compliance.Common/Features/AttestRecords/Commands/RequestOwnAttestRecordPackage.cs",
+      "sourceReviewPath": "docs/product/definitive-aggregate-choreography/client-export-review-2026-10-29.md",
+      "status": "PROPOSED_TARGET_OWNER_FROM_ACCEPTED_PRODUCT_RULE",
+      "selectedIdentitySummary": "Tenant + ServiceEngagementId + PackageId. PackageId identifies the requested record package for the exact firm attest engagement.",
+      "invariant": "The firm’s own attest engagement record is preserved by generating its exact record package and recording delivery into the firm’s audit software before engagement closure or client offboarding. ClientExport delivery cannot satisfy this obligation.",
+      "targetNote": "The source aggregate catalog groups these three commands under ClientExport. The source event ClientExportAttestPackageDeliveryRecorded also records delivered or not_delivered decisions for an M0-D27 package on the ClientExport stream. This target gives the package its own business record based on M0-D27 and the ClientExport review, which distinguishes the package from ClientExport’s export to its named recipient. Reconcile the old command and event records with this separate target owner before implementation.",
+      "productRules": [
+        {
+          "id": "M0-D27",
+          "doc": "m0-d27-attest-scope.md",
+          "rule": "Closing an in-product attest engagement or offboarding a client with an attest engagement requires generating its engagement record package and recording delivery into the attest team’s audit software; the engagement hold blocks evidence disposition until delivery."
+        }
+      ],
+      "targetEvents": [
+        {
+          "event": "AttestEngagementRecordPackageRequested",
+          "reason": "Names the completed request for the exact package the firm must retain.",
+          "meaning": "The firm requested the engagement record package needed to preserve its own attest engagement."
+        },
+        {
+          "event": "AttestEngagementRecordPackageGenerated",
+          "reason": "Names successful generation of the exact engagement record package.",
+          "meaning": "The exact attest engagement record package was generated successfully and is ready for delivery."
+        },
+        {
+          "event": "AttestEngagementRecordPackageGenerationFailed",
+          "reason": "Names the completed failure to generate the exact engagement record package.",
+          "meaning": "Generation of the exact attest engagement record package failed; it has not been delivered."
+        },
+        {
+          "event": "AttestEngagementRecordPackageDelivered",
+          "reason": "Names successful delivery of the exact package to the firm’s audit software.",
+          "meaning": "The exact engagement record package was delivered to the firm’s audit software and its delivery was recorded."
+        }
+      ],
+      "sourceCompatibilityEvents": [
+        {
+          "event": "ClientExportAttestPackageDeliveryRecorded",
+          "sourceOwner": "ClientExport",
+          "reason": "The current event records both delivered and not_delivered outcomes for an M0-D27 package in ClientExport state. The proposed target only treats the successful delivery fact as satisfying the preservation rule. Define how old outcome history maps to the new package record before implementation."
+        }
+      ],
+      "sources": [
+        "docs/product/decisions/m0-d27-attest-scope.md",
+        "docs/product/definitive-aggregate-choreography/client-export-review-2026-10-29.md",
+        "docs/product/definitive-aggregate-choreography/aggregates.json"
+      ]
+    }
+  ]
+}

@@ -1,6 +1,8 @@
-# Product documentation
+# Product delivery references
 
-Status: reconciled product baseline, 2026-10-04.
+The domain source of truth is [docs/proposed](../proposed/README.md). System architecture and diagrams belong in [docs/architecture](../architecture/).
+
+This directory retains delivery planning and product-specific evidence that has not yet been folded into the proposed domain catalog. It is being pruned; do not add duplicate command, event, or aggregate definitions here.
 
 ## The product in one paragraph
 
@@ -20,24 +22,17 @@ professional engagements, and enforced independence.
 
 | Document | What it establishes |
 | --- | --- |
-| [Product brief](../proposed/scope.md) | Customer, business thesis, objectives, commercial model, journey, and release boundaries |
-| [User journeys and flows](../proposed/journeys.md) | Mermaid maps for MVP workflows and later lifecycle, firm, and commercial journeys; includes story coverage |
+| [Product scope](../proposed/scope.md) | Customer, business thesis, objectives, commercial model, journey, and release boundaries |
 | [Business operations](business-operations.md) | Multiple organizations per account, client management delegation, organization billing, add-on acceptance, and commercial readiness decisions |
-| [Domain model](../proposed/domain-model.md) | Process spine, cohesive ownership, relationships, and cross-workflow rules |
-| [Canonical entity model](canonical-entity-model.md) | Approved identity, workforce, inventory, access, and provenance vocabulary |
-| [System command list](../proposed/commands/product-scope.md) | Existing commands plus the pruned, requirement-linked commands needed for committed product features |
-| [Command gap analysis](command-inventory-gap-analysis.md) | Story-by-story coverage and rationale for missing or decision-gated commands |
-| [Query and view-model list](../proposed/read-models.md) | Existing query/model inventory plus requirement-linked read contracts and response views to backfill |
-| [Domain event list](../proposed/events/product-scope.md) | Existing event inventory plus the pruned, requirement-linked event contracts to backfill |
+| [Domain model and aggregates](../proposed/domain-model.md) | Domain boundaries and relationships |
+| [Commands](../proposed/commands/README.md), [events](../proposed/events/README.md), and [reactors](../proposed/reactors/README.md) | Proposed write model |
 | [Product decisions](decisions/) | Accepted M0 decisions and subsequent bounded product decisions |
 | [Backlog](backlog.md) | Story users, outcomes, requirements, owners, dependencies, and acceptance evidence |
 | [Delivery cycle](delivery-cycle.md) | Release exits, scheduling, implementation boundaries, and delivery evidence |
 | [Triage](triage.md) and [gap analysis](gap-analysis.md) | Dated planning rationale, coverage gaps, and links to follow-up work |
 | [Source reference policy](source-reference-policy.md) | Permitted source use, exact editions, and excluded material |
 
-Feature contract documents below refine particular stories. They describe
-bounded behavior and remaining scope; their presence is not proof that an
-entire story or milestone has shipped.
+Remaining product documents describe delivery policy, story scope, or historical evidence. They are not alternate domain definitions.
 
 ## Objectives and owning capabilities
 

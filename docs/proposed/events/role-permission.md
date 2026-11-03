@@ -2,10 +2,10 @@
 
 Canonical events: **2**. Complete canonical event and available schema records: [owner event JSON](../data/events/role-permission.json).
 
-| Event | Kind | Adopted discriminator | Version | Schema fields | Meaning |
-| --- | --- | --- | --- | --- | --- |
-| RolePermissionAssigned | business | bdgrz.rbac.role-permission.assigned | 1 | [Placeholder: schema absent] | A permission was assigned to a role by a named actor, so holders of the role gain it. |
-| RolePermissionRemoved | business | bdgrz.rbac.role-permission.removed | 1 | [Placeholder: schema absent] | A permission was removed from a role by a named actor, ending the assignment episode so holders of the role lose it. |
+| Target event | Selected source name | Kind | Adopted discriminator | Version | Schema fields | Meaning |
+| --- | --- | --- | --- | --- | --- | --- |
+| RolePermissionAssigned | RolePermissionAssigned | business | bdgrz.rbac.role-permission.assigned | 1 | [Placeholder: schema absent] | A permission was assigned to a role by a named actor, so holders of the role gain it. |
+| RolePermissionRemoved | RolePermissionRemoved | business | bdgrz.rbac.role-permission.removed | 1 | [Placeholder: schema absent] | A permission was removed from a role by a named actor, ending the assignment episode so holders of the role lose it. |
 
 ## Event details
 
@@ -13,6 +13,9 @@ Canonical events: **2**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | RolePermissionAssigned |
+| Selected source event name | RolePermissionAssigned |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:RolePermissionAssigned |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | RolePermissionAssigned |
@@ -22,7 +25,8 @@ Canonical events: **2**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | A permission was assigned to a role by a named actor, so holders of the role gain it. |
+| Target meaning | A permission was assigned to a role by a named actor, so holders of the role gain it. |
+| Selected source meaning | A permission was assigned to a role by a named actor, so holders of the role gain it. |
 | Meaning source | authored 2026-10-29 from src/Compliance.Common/Features/AccessControl/Events/RolePermissionAssigned.cs |
 
 #### Schema
@@ -45,6 +49,9 @@ Canonical events: **2**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | RolePermissionRemoved |
+| Selected source event name | RolePermissionRemoved |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:RolePermissionRemoved |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | RolePermissionRemoved |
@@ -54,7 +61,8 @@ Canonical events: **2**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | A permission was removed from a role by a named actor, ending the assignment episode so holders of the role lose it. |
+| Target meaning | A permission was removed from a role by a named actor, ending the assignment episode so holders of the role lose it. |
+| Selected source meaning | A permission was removed from a role by a named actor, ending the assignment episode so holders of the role lose it. |
 | Meaning source | authored 2026-10-29 from src/Compliance.Common/Features/AccessControl/Events/RolePermissionRemoved.cs |
 
 #### Schema

@@ -230,7 +230,11 @@
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "resolvedIntentSchema": "EngagementIndependenceIntent",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "PracticeIndependenceCommitted",
+      "targetName": "PracticeIndependenceCommitted",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "The permanent practice wall of one subject: this staff member or canonical user serves the practice for this client for ever. No fact releases, revokes or reactivates it, whatever happens to the engagement, the staff record or the reservation that preceded it. Revision counts the permanent commitments of the subject, and the practice and engagement are carried because the owner's reducer cannot read immutable content."
     },
     {
       "canonical": {
@@ -462,7 +466,11 @@
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "resolvedIntentSchema": "EngagementIndependenceIntent",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "PracticeIndependenceReservationSettled",
+      "targetName": "PracticeIndependenceReservationEnded",
+      "nameDecision": "Names the end of the temporary reservation after commitment or cancellation.",
+      "targetMeaning": "The temporary reservation of a practice subject ended after the operation recorded its terminal fact. A settlement before any reservation fences the key against late acquisition. A permanent commitment made by the operation is never removed by its settlement."
     },
     {
       "canonical": {
@@ -694,7 +702,11 @@
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "resolvedIntentSchema": "EngagementIndependenceIntent",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "PracticeIndependenceReserved",
+      "targetName": "PracticeIndependenceReserved",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "A temporary exclusive reservation of one practice subject for one acceptance or staff assignment. It grants no permanent authority: the wall exists only once PracticeIndependenceCommitted follows the irreversible authorization. Revision is the committed revision held, and the practice and engagement are carried because the owner's reducer cannot read immutable content."
     }
   ]
 }

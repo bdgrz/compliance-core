@@ -11,13 +11,13 @@
 
 **Invariant:** One legal hold lifecycle and one exact release after placement.
 
-**Additional decision rule:** [Placeholder: no owner-specific decision rule is recorded.]
+**Additional decision rule:** HoldId identifies one legal direction for one covered artifact. Different holds remain active independently, even when they cover the same artifact.
 
 **Must preserve:** Retention is not itself disposal authority; no release by timeout or missing read.
 
 **Replay:** Current required authorization precedes replay; exact authorized retries resolve the original accepted result using the selected logical identity and immutable actor/intent/source binding. Fresh mutable feasibility, clock selection and body preparation cannot replace that original result. Expected revision is concurrency precondition, not a new identity.
 
-**Lifecycle:** [Placeholder: a consolidated lifecycle sequence is not present in the selected owner record.]
+**Lifecycle:** Place each hold once and release only that same hold. Evidence cannot be disposed of while any hold on it remains active. Releasing one hold leaves any other holds in force.
 
 ## Commands
 
@@ -37,7 +37,7 @@
 
 | Row | Kind | Source owner | Target owner | Command |
 | --- | --- | --- | --- | --- |
-| [X006](../reactors/artifact-legal-hold-reactor.md#x006) | planned_reaction | ArtifactLegalHold | ArtifactDisposition | FenceArtifactDispositionForHold |
+| [X006](../reactors/artifact-legal-hold-reactor.md#x006) | planned_reaction | ArtifactLegalHold | ArtifactDisposition | StopArtifactDisposalForHold |
 
 ## Product rules
 

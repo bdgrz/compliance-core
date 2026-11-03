@@ -2,10 +2,10 @@
 
 Canonical events: **2**. Complete canonical event and available schema records: [owner event JSON](../data/events/control-operating-plan.json).
 
-| Event | Kind | Adopted discriminator | Version | Schema fields | Meaning |
-| --- | --- | --- | --- | --- | --- |
-| ControlOperatingPlanApproved | business | bdgrz.control.operating_plan.approved | 2 | 14 | An independent approval that puts a pending plan version into effect. The complete list of open work that moves to the approved owner is verified immutable content, so no item can be truncated. |
-| ControlOperatingPlanProposed | business | bdgrz.control.operating_plan.proposed | 2 | 8 | A pending plan version on one control's plan line. The logical id of Operation is the immutable plan version id; the complete ControlOperatingPlanView is verified immutable content. |
+| Target event | Selected source name | Kind | Adopted discriminator | Version | Schema fields | Meaning |
+| --- | --- | --- | --- | --- | --- | --- |
+| ControlOperatingPlanApproved | ControlOperatingPlanApproved | business | bdgrz.control.operating_plan.approved | 2 | 14 | An independent approval that puts a pending plan version into effect. The complete list of open work that moves to the approved owner is verified immutable content, so no item can be truncated. |
+| ControlOperatingPlanProposed | ControlOperatingPlanProposed | business | bdgrz.control.operating_plan.proposed | 2 | 8 | A pending plan version on one control's plan line. The logical id of Operation is the immutable plan version id; the complete ControlOperatingPlanView is verified immutable content. |
 
 ## Event details
 
@@ -13,6 +13,9 @@ Canonical events: **2**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | ControlOperatingPlanApproved |
+| Selected source event name | ControlOperatingPlanApproved |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:ControlOperatingPlanApproved |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | ControlOperatingPlanApproved |
@@ -22,7 +25,8 @@ Canonical events: **2**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | `{"discriminator":"bdgrz.control.operating_plan.approved","version":1}` |
-| Meaning | An independent approval that puts a pending plan version into effect. The complete list of open work that moves to the approved owner is verified immutable content, so no item can be truncated. |
+| Target meaning | An independent approval that puts a pending plan version into effect. The complete list of open work that moves to the approved owner is verified immutable content, so no item can be truncated. |
+| Selected source meaning | An independent approval that puts a pending plan version into effect. The complete list of open work that moves to the approved owner is verified immutable content, so no item can be truncated. |
 | Meaning source | record summary in src/Compliance.Common/Features/Operations/Events/ControlOperatingPlanApproved.cs |
 
 #### Selected schema and implementation evidence
@@ -82,6 +86,9 @@ Canonical events: **2**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | ControlOperatingPlanProposed |
+| Selected source event name | ControlOperatingPlanProposed |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:ControlOperatingPlanProposed |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | ControlOperatingPlanProposed |
@@ -91,7 +98,8 @@ Canonical events: **2**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | `{"discriminator":"bdgrz.control.operating_plan.proposed","version":1}` |
-| Meaning | A pending plan version on one control's plan line. The logical id of Operation is the immutable plan version id; the complete ControlOperatingPlanView is verified immutable content. |
+| Target meaning | A pending plan version on one control's plan line. The logical id of Operation is the immutable plan version id; the complete ControlOperatingPlanView is verified immutable content. |
+| Selected source meaning | A pending plan version on one control's plan line. The logical id of Operation is the immutable plan version id; the complete ControlOperatingPlanView is verified immutable content. |
 | Meaning source | record summary in src/Compliance.Common/Features/Operations/Events/ControlOperatingPlanProposed.cs |
 
 #### Selected schema and implementation evidence

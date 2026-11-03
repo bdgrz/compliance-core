@@ -1,5 +1,7 @@
 {
-  "root": "ApplicationRetirementReactor",
+  "sourceRoot": "ApplicationRetirementReactor",
+  "targetRoot": "RemoveRelationshipsAfterApplicationRetirementReactor",
+  "businessReason": "Remove active application relationships when the exact application is retired or merged.",
   "rows": [
     {
       "id": "X005",

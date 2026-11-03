@@ -2,11 +2,11 @@
 
 Canonical events: **3**. Complete canonical event and available schema records: [owner event JSON](../data/events/role.json).
 
-| Event | Kind | Adopted discriminator | Version | Schema fields | Meaning |
-| --- | --- | --- | --- | --- | --- |
-| RoleDefined | business | bdgrz.rbac.role.defined | 1 | [Placeholder: schema absent] | A role was defined. The fact is the native acceptance of the logical operation that created it. |
-| RoleDeleted | business | bdgrz.rbac.role.deleted | 1 | [Placeholder: schema absent] | A role was deleted. The fact is the native acceptance of the deletion and the source of role cleanup. |
-| RoleRenamed | business | bdgrz.rbac.role.renamed | 1 | [Placeholder: schema absent] | A role was renamed. The fact is the native acceptance of the rename. |
+| Target event | Selected source name | Kind | Adopted discriminator | Version | Schema fields | Meaning |
+| --- | --- | --- | --- | --- | --- | --- |
+| RoleDefined | RoleDefined | business | bdgrz.rbac.role.defined | 1 | [Placeholder: schema absent] | A role was defined. The fact is the native acceptance of the logical operation that created it. |
+| RoleDeleted | RoleDeleted | business | bdgrz.rbac.role.deleted | 1 | [Placeholder: schema absent] | A role was deleted. The fact is the native acceptance of the deletion and the source of role cleanup. |
+| RoleRenamed | RoleRenamed | business | bdgrz.rbac.role.renamed | 1 | [Placeholder: schema absent] | A role was renamed. The fact is the native acceptance of the rename. |
 
 ## Event details
 
@@ -14,6 +14,9 @@ Canonical events: **3**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | RoleDefined |
+| Selected source event name | RoleDefined |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:RoleDefined |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | RoleDefined |
@@ -23,7 +26,8 @@ Canonical events: **3**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | A role was defined. The fact is the native acceptance of the logical operation that created it. |
+| Target meaning | A role was defined. The fact is the native acceptance of the logical operation that created it. |
+| Selected source meaning | A role was defined. The fact is the native acceptance of the logical operation that created it. |
 | Meaning source | record summary in src/Compliance.Common/Features/AccessControl/Events/RoleDefined.cs |
 
 #### Schema
@@ -46,6 +50,9 @@ Canonical events: **3**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | RoleDeleted |
+| Selected source event name | RoleDeleted |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:RoleDeleted |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | RoleDeleted |
@@ -55,7 +62,8 @@ Canonical events: **3**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | A role was deleted. The fact is the native acceptance of the deletion and the source of role cleanup. |
+| Target meaning | A role was deleted. The fact is the native acceptance of the deletion and the source of role cleanup. |
+| Selected source meaning | A role was deleted. The fact is the native acceptance of the deletion and the source of role cleanup. |
 | Meaning source | record summary in src/Compliance.Common/Features/AccessControl/Events/RoleDeleted.cs |
 
 #### Schema
@@ -79,6 +87,9 @@ Canonical events: **3**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | RoleRenamed |
+| Selected source event name | RoleRenamed |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:RoleRenamed |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | RoleRenamed |
@@ -88,7 +99,8 @@ Canonical events: **3**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | A role was renamed. The fact is the native acceptance of the rename. |
+| Target meaning | A role was renamed. The fact is the native acceptance of the rename. |
+| Selected source meaning | A role was renamed. The fact is the native acceptance of the rename. |
 | Meaning source | record summary in src/Compliance.Common/Features/AccessControl/Events/RoleRenamed.cs |
 
 #### Schema

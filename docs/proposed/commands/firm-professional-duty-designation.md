@@ -2,14 +2,14 @@
 
 Selected command contracts: **6**. Complete selected contracts and companion source evidence: [owner command JSON](../data/commands/firm-professional-duty-designation.json).
 
-| Command | Kind | Identity | Fields | HTTP routes |
-| --- | --- | --- | --- | --- |
-| RecordFirmProfessionalDutyDesignation | http | AssertionId | 4 | PUT /api/v1/platform/firm-professional-duties/{designation_id}/assertions/{assertion_id} [existing platform firm-duty authorizer + signed assertion verifier] |
-| RevokeFirmProfessionalDutyDesignation | http | AssertionId | 4 | PUT /api/v1/platform/firm-professional-duties/{designation_id}/assertion-revocations/{assertion_id} [existing platform firm-duty authorizer + signed assertion verifier] |
-| RejectProfessionalDutyChange | abort | CommandId | 6 | [Placeholder: route/channel not recorded] |
-| ApplyProfessionalDutyChange | receiver | CommandId | 10 | [Placeholder: value not recorded] |
-| AuthorizeFirmProfessionalDutyDesignationEngagementUse | receiver | CommandId | 11 | [Placeholder: value not recorded] |
-| SettleFirmProfessionalDutyDesignationEngagementUse | receiver | CommandId | 10 | [Placeholder: value not recorded] |
+| Target command | Selected source name | Kind | Identity | Fields | HTTP routes |
+| --- | --- | --- | --- | --- | --- |
+| RecordFirmProfessionalDutyDesignation | RecordFirmProfessionalDutyDesignation | http | AssertionId | 4 | PUT /api/v1/platform/firm-professional-duties/{designation_id}/assertions/{assertion_id} [existing platform firm-duty authorizer + signed assertion verifier] |
+| RevokeFirmProfessionalDutyDesignation | RevokeFirmProfessionalDutyDesignation | http | AssertionId | 4 | PUT /api/v1/platform/firm-professional-duties/{designation_id}/assertion-revocations/{assertion_id} [existing platform firm-duty authorizer + signed assertion verifier] |
+| RejectProfessionalDutyChange | RejectProfessionalDutyChange | abort | CommandId | 6 | [Placeholder: route/channel not recorded] |
+| ApplyProfessionalDutyChange | ApplyProfessionalDutyChange | receiver | CommandId | 10 | [Placeholder: value not recorded] |
+| AuthorizeFirmProfessionalDutyDesignationEngagement | AuthorizeFirmProfessionalDutyDesignationEngagementUse | receiver | CommandId | 11 | [Placeholder: value not recorded] |
+| CloseFirmProfessionalDutyDesignationEngagementAuthorization | SettleFirmProfessionalDutyDesignationEngagementUse | receiver | CommandId | 10 | [Placeholder: value not recorded] |
 
 ## Selected command details
 
@@ -17,6 +17,9 @@ Selected command contracts: **6**. Complete selected contracts and companion sou
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | RecordFirmProfessionalDutyDesignation |
+| Selected source command name | RecordFirmProfessionalDutyDesignation |
+| Name decision | The selected source name is retained. |
 | Owner | FirmProfessionalDutyDesignation |
 | Contract record status | target_contract |
 | Kind | http |
@@ -65,6 +68,9 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | RevokeFirmProfessionalDutyDesignation |
+| Selected source command name | RevokeFirmProfessionalDutyDesignation |
+| Name decision | The selected source name is retained. |
 | Owner | FirmProfessionalDutyDesignation |
 | Contract record status | target_contract |
 | Kind | http |
@@ -113,13 +119,16 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | RejectProfessionalDutyChange |
+| Selected source command name | RejectProfessionalDutyChange |
+| Name decision | The selected source name is retained. |
 | Owner | FirmProfessionalDutyDesignation |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | abort |
 | Logical identity | CommandId; Uuid; required=true; abort receiver identity bound to the exact admitted operation and generation: exact redelivery resolves the original rejected result; an abort after a terminal outcome is a no-op |
 | Entry point | [Placeholder: value not recorded] |
 | MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | [Placeholder: value not recorded] |
+| Selected semantic events | None listed |
 | Protocols | [Placeholder: value not recorded] |
 | Policy preservation | [Placeholder: value not recorded] |
 | Contract changes | [Placeholder: value not recorded] |
@@ -159,13 +168,16 @@ Required tests: [Placeholder: required tests not recorded]
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | ApplyProfessionalDutyChange |
+| Selected source command name | ApplyProfessionalDutyChange |
+| Name decision | The selected source name is retained. |
 | Owner | FirmProfessionalDutyDesignation |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; reactor; deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result |
 | Entry point | [Placeholder: value not recorded] |
 | MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | [Placeholder: value not recorded] |
+| Selected semantic events | None listed |
 | Protocols | [Placeholder: value not recorded] |
 | Policy preservation | [Placeholder: value not recorded] |
 | Contract changes | [Placeholder: value not recorded] |
@@ -205,17 +217,20 @@ Existing tests: [Placeholder: existing tests not recorded]
 
 Required tests: [Placeholder: required tests not recorded]
 
-### AuthorizeFirmProfessionalDutyDesignationEngagementUse
+### AuthorizeFirmProfessionalDutyDesignationEngagement
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | AuthorizeFirmProfessionalDutyDesignationEngagement |
+| Selected source command name | AuthorizeFirmProfessionalDutyDesignationEngagementUse |
+| Name decision | The command authorizes the named business action; the extra Use suffix describes the coordination mechanism. |
 | Owner | FirmProfessionalDutyDesignation |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; reactor; deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result |
 | Entry point | [Placeholder: value not recorded] |
 | MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | [Placeholder: value not recorded] |
+| Selected semantic events | None listed |
 | Protocols | [Placeholder: value not recorded] |
 | Policy preservation | [Placeholder: value not recorded] |
 | Contract changes | [Placeholder: value not recorded] |
@@ -256,17 +271,20 @@ Existing tests: [Placeholder: existing tests not recorded]
 
 Required tests: [Placeholder: required tests not recorded]
 
-### SettleFirmProfessionalDutyDesignationEngagementUse
+### CloseFirmProfessionalDutyDesignationEngagementAuthorization
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | CloseFirmProfessionalDutyDesignationEngagementAuthorization |
+| Selected source command name | SettleFirmProfessionalDutyDesignationEngagementUse |
+| Name decision | The command ends the exact authorization after its business action or cancellation. |
 | Owner | FirmProfessionalDutyDesignation |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; reactor; deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result |
 | Entry point | [Placeholder: value not recorded] |
 | MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | [Placeholder: value not recorded] |
+| Selected semantic events | None listed |
 | Protocols | [Placeholder: value not recorded] |
 | Policy preservation | [Placeholder: value not recorded] |
 | Contract changes | [Placeholder: value not recorded] |
@@ -309,7 +327,7 @@ Required tests: [Placeholder: required tests not recorded]
 
 ## Source contracts
 
-| Command | Handler | Registered | Entry point |
+| Selected source command | Handler | Registered | Entry point |
 | --- | --- | --- | --- |
 | RecordFirmProfessionalDutyDesignation | RecordFirmProfessionalDutyDesignationHandler | true | authorized_http |
 | RevokeFirmProfessionalDutyDesignation | RevokeFirmProfessionalDutyDesignationHandler | true | authorized_http |

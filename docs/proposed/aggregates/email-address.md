@@ -45,7 +45,7 @@
 
 | Row | Kind | Source owner | Target owner | Command |
 | --- | --- | --- | --- | --- |
-| [T056](../reactors/identity-recovery-acceptance-reactor.md#t056) | reaction_or_regular_process_stage | EmailAddress | IdentityRecovery | MaterializeIdentityRecoveryPreparation |
+| [T056](../reactors/identity-recovery-acceptance-reactor.md#t056) | reaction_or_regular_process_stage | EmailAddress | IdentityRecovery | PrepareAccountRecovery |
 | [T058](../reactors/identity-recovery-acceptance-reactor.md#t058) | reaction_or_regular_process_stage | IdentityRecovery | EmailAddress | CompleteEmailRecoveryChallenge |
 | [T115](../reactors/email-challenge-delivery-reactor.md#t115) | reaction_or_regular_process_stage | EmailAddress | EmailChallengeDeliveryLedger | DeliverEmailChallenge |
 | [T116](../reactors/email-challenge-delivery-reactor.md#t116) | reaction_or_regular_process_stage | EmailAddress | EmailChallengeDeliveryLedger | DeliverRecoveryChallenge |

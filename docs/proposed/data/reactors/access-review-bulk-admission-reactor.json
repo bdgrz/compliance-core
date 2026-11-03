@@ -1,5 +1,7 @@
 {
-  "root": "AccessReviewBulkAdmissionReactor",
+  "sourceRoot": "AccessReviewBulkAdmissionReactor",
+  "targetRoot": "PublishApprovedAccessReviewDecisionReactor",
+  "businessReason": "Make all decisions from one bulk review visible together so no access change takes effect from a partial review.",
   "rows": [
     {
       "id": "T009",

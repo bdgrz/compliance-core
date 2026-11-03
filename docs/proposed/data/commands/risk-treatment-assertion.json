@@ -71,7 +71,9 @@
         "line": 9346,
         "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       },
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "ProposeRiskControlTreatment",
+      "targetName": "ProposeRiskControlTreatment"
     },
     {
       "command": "RetireRiskControlTreatment",
@@ -138,7 +140,9 @@
         "line": 14529,
         "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       },
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "RetireRiskControlTreatment",
+      "targetName": "RetireRiskControlTreatment"
     },
     {
       "command": "ReviewRiskControlTreatment",
@@ -215,7 +219,9 @@
         "line": 15276,
         "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       },
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "ReviewRiskControlTreatment",
+      "targetName": "ReviewRiskControlTreatment"
     }
   ],
   "sourceContractEvidence": [

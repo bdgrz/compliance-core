@@ -40,10 +40,10 @@
 
 | Event | Discriminator | Version |
 | --- | --- | --- |
-| [TenantActivatedV2](../events/tenant.md#tenantactivatedv2) | bdgrz.tenant.activated | 2 |
+| [TenantActivated](../events/tenant.md#tenantactivated) | bdgrz.tenant.activated | 2 |
 | [TenantOffboardingCompleted](../events/tenant.md#tenantoffboardingcompleted) | bdgrz.tenants.tenant-offboarding-completed | 1 |
-| [TenantOffboardingStartedV2](../events/tenant.md#tenantoffboardingstartedv2) | bdgrz.tenant.offboarding.started | 2 |
-| [TenantReactivatedV2](../events/tenant.md#tenantreactivatedv2) | bdgrz.tenant.reactivated | 2 |
+| [TenantOffboardingStarted](../events/tenant.md#tenantoffboardingstarted) | bdgrz.tenant.offboarding.started | 2 |
+| [TenantReactivated](../events/tenant.md#tenantreactivated) | bdgrz.tenant.reactivated | 2 |
 | [TenantRegistered](../events/tenant.md#tenantregistered) | bdgrz.tenant.registered | 1 |
 | [TenantSlugChangeRejected](../events/tenant.md#tenantslugchangerejected) | bdgrz.tenant-slug.change-rejected | 1 |
 | [TenantSlugChangeRequested](../events/tenant.md#tenantslugchangerequested) | bdgrz.tenant-slug.change-requested | 1 |
@@ -53,7 +53,7 @@
 | [TenantSlugSurrenderConfirmed](../events/tenant.md#tenantslugsurrenderconfirmed) | bdgrz.tenant-slug-surrender.confirmed | 1 |
 | [TenantSlugSurrenderFailed](../events/tenant.md#tenantslugsurrenderfailed) | bdgrz.tenant-slug-surrender.failed | 1 |
 | [TenantSlugSurrenderRequested](../events/tenant.md#tenantslugsurrenderrequested) | bdgrz.tenant-slug.surrender-requested | 1 |
-| [TenantSuspendedV2](../events/tenant.md#tenantsuspendedv2) | bdgrz.tenant.suspended | 2 |
+| [TenantSuspended](../events/tenant.md#tenantsuspended) | bdgrz.tenant.suspended | 2 |
 
 ## Cross-owner flows
 

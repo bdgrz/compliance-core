@@ -1,5 +1,7 @@
 {
-  "root": "RiskEvaluationReactor",
+  "sourceRoot": "RiskEvaluationReactor",
+  "targetRoot": "RequestRiskReassessmentWhenRiskChangesReactor",
+  "businessReason": "Request a new assessment when a risk acceptance expires or recorded exposure exceeds appetite.",
   "rows": [
     {
       "id": "X009",

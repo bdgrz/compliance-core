@@ -1,5 +1,7 @@
 {
-  "root": "RiskActionCompletionReviewReactor",
+  "sourceRoot": "RiskActionCompletionReviewReactor",
+  "targetRoot": "RiskActionCompletionReviewReactor",
+  "businessReason": "Keep the evidence cited for a completed risk action unchanged while an independent reviewer decides whether the action worked.",
   "rows": [
     {
       "id": "T071",

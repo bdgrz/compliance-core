@@ -2,23 +2,26 @@
 
 Selected command contracts: **1**. Complete selected contracts and companion source evidence: [owner command JSON](../data/commands/population-snapshot.json).
 
-| Command | Kind | Identity | Fields | HTTP routes |
-| --- | --- | --- | --- | --- |
-| FreezePopulationSnapshot | receiver | CommandId | 8 | [Placeholder: value not recorded] |
+| Target command | Selected source name | Kind | Identity | Fields | HTTP routes |
+| --- | --- | --- | --- | --- | --- |
+| FinalizePopulationSnapshot | FreezePopulationSnapshot | receiver | CommandId | 8 | [Placeholder: value not recorded] |
 
 ## Selected command details
 
-### FreezePopulationSnapshot
+### FinalizePopulationSnapshot
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | FinalizePopulationSnapshot |
+| Selected source command name | FreezePopulationSnapshot |
+| Name decision | Finalizes the complete ordered population as the immutable snapshot used by later compliance work. |
 | Owner | PopulationSnapshot |
 | Contract record status | PLANNED |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; reactor; deterministic receiver identity derived from the admitting owner fact, episode and generation; exact redelivery resolves the original result |
 | Entry point | [Placeholder: value not recorded] |
 | MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | [Placeholder: value not recorded] |
+| Selected semantic events | None listed |
 | Protocols | [Placeholder: value not recorded] |
 | Policy preservation | [Placeholder: value not recorded] |
 | Contract changes | [Placeholder: value not recorded] |

@@ -2,17 +2,20 @@
 
 Canonical events: **2**. Complete canonical event and available schema records: [owner event JSON](../data/events/evidence-redaction.json).
 
-| Event | Kind | Adopted discriminator | Version | Schema fields | Meaning |
-| --- | --- | --- | --- | --- | --- |
-| EvidenceRedactionApprovedV2 | business | bdgrz.evidence.redaction.approved | 2 | [Placeholder: schema absent] | Native personal approval of an exact preparation and observed available derivative. |
-| EvidenceRedactionPreparedV2 | business | bdgrz.evidence.redaction.prepared | 2 | [Placeholder: schema absent] | Native preparation with exact source qualification and frozen original result; occupied inline v1 remains legacy. |
+| Target event | Selected source name | Kind | Adopted discriminator | Version | Schema fields | Meaning |
+| --- | --- | --- | --- | --- | --- | --- |
+| EvidenceRedactionApproved | EvidenceRedactionApprovedV2 | business | bdgrz.evidence.redaction.approved | 2 | [Placeholder: schema absent] | Native personal approval of an exact preparation and observed available derivative. |
+| EvidenceRedactionPrepared | EvidenceRedactionPreparedV2 | business | bdgrz.evidence.redaction.prepared | 2 | [Placeholder: schema absent] | Native preparation with exact source qualification and frozen original result; occupied inline v1 remains legacy. |
 
 ## Event details
 
-### EvidenceRedactionApprovedV2
+### EvidenceRedactionApproved
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | EvidenceRedactionApproved |
+| Selected source event name | EvidenceRedactionApprovedV2 |
+| Name decision | Names the personal approval of the exact evidence redaction without exposing the implementation version suffix. |
 | Canonical semantic key | event:EvidenceRedactionApproved |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | EvidenceRedactionApprovedV2 |
@@ -22,7 +25,8 @@ Canonical events: **2**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | Native personal approval of an exact preparation and observed available derivative. |
+| Target meaning | Native personal approval of an exact preparation and observed available derivative. |
+| Selected source meaning | Native personal approval of an exact preparation and observed available derivative. |
 | Meaning source | record summary in src/Compliance.Common/Features/Evidence/Events/EvidenceRedactionApprovedV2.cs |
 
 #### Schema
@@ -39,10 +43,13 @@ Canonical events: **2**. Complete canonical event and available schema records: 
 
 [Placeholder: no selected choreography row names this event as root, prerequisite, or emitted fact.]
 
-### EvidenceRedactionPreparedV2
+### EvidenceRedactionPrepared
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | EvidenceRedactionPrepared |
+| Selected source event name | EvidenceRedactionPreparedV2 |
+| Name decision | Names the prepared evidence redaction and its exact source without exposing the implementation version suffix. |
 | Canonical semantic key | event:EvidenceRedactionPrepared |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | EvidenceRedactionPreparedV2 |
@@ -52,7 +59,8 @@ Canonical events: **2**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | Native preparation with exact source qualification and frozen original result; occupied inline v1 remains legacy. |
+| Target meaning | Native preparation with exact source qualification and frozen original result; occupied inline v1 remains legacy. |
+| Selected source meaning | Native preparation with exact source qualification and frozen original result; occupied inline v1 remains legacy. |
 | Meaning source | record summary in src/Compliance.Common/Features/Evidence/Events/EvidenceRedactionPreparedV2.cs |
 
 #### Schema

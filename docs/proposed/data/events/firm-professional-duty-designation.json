@@ -159,7 +159,11 @@
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "resolvedIntentSchema": "SourceUseAuthorizationIntent",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "FirmProfessionalDutyDesignationEngagementUseAuthorized",
+      "targetName": "FirmProfessionalDutyDesignationEngagementAuthorized",
+      "nameDecision": "Authorization is already the completed fact; Use adds no stakeholder meaning.",
+      "targetMeaning": "Holds the exact active engagement-partner designation the partner evaluation relies on; the use does not advance the public revision, so Revision is the held revision."
     },
     {
       "canonical": {
@@ -319,7 +323,11 @@
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "resolvedIntentSchema": "SourceUseAuthorizationIntent",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "FirmProfessionalDutyDesignationEngagementUseSettled",
+      "targetName": "FirmProfessionalDutyDesignationEngagementAuthorizationClosed",
+      "nameDecision": "The exact authorization ended; the recorded outcome still distinguishes use, cancellation, or a late fence.",
+      "targetMeaning": "The use of the duty designation ended after the irreversible personal decision or after cancellation. A settlement before any grant fences the key against late acquisition."
     },
     {
       "canonical": {
@@ -529,7 +537,11 @@
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "resolvedIntentSchema": "ProfessionalDutyChangeIntent",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "FirmProfessionalDutyDesignationRecorded",
+      "targetName": "FirmProfessionalDutyDesignationRecorded",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "A signed active assertion recorded or refreshed the designation. The complete FirmProfessionalDutyDesignationView is immutable content; no cumulative catalog is carried."
     },
     {
       "canonical": {
@@ -739,7 +751,11 @@
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "resolvedIntentSchema": "ProfessionalDutyChangeIntent",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "FirmProfessionalDutyDesignationRevoked",
+      "targetName": "FirmProfessionalDutyDesignationRevoked",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "A signed revocation assertion ended the designation. The complete FirmProfessionalDutyDesignationView is immutable content; no cumulative catalog is carried."
     },
     {
       "canonical": {
@@ -940,7 +956,11 @@
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "resolvedIntentSchema": "ProfessionalDutyChangeIntent",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "ProfessionalDutyChangeAccepted",
+      "targetName": "ProfessionalDutyChangeAccepted",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "The root native acceptance of a professional-duty change. The designation changes only when the process claims the signed assertion and FirmProfessionalDutyDesignationRecorded or FirmProfessionalDutyDesignationRevoked follows."
     },
     {
       "canonical": {
@@ -1141,7 +1161,11 @@
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "resolvedIntentSchema": "ProfessionalDutyChangeIntent",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "ProfessionalDutyChangeRejected",
+      "targetName": "ProfessionalDutyChangeRejected",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "A pending professional-duty change was rejected before any designation changed. The rejection fences the assertion claim and the apply step against late delivery."
     }
   ]
 }

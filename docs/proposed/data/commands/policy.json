@@ -85,7 +85,9 @@
         "line": 1355,
         "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
       },
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "ApprovePolicy",
+      "targetName": "ApprovePolicy"
     },
     {
       "command": "ApprovePolicyRetirement",
@@ -156,7 +158,9 @@
         "line": 1458,
         "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
       },
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "ApprovePolicyRetirement",
+      "targetName": "ApprovePolicyRetirement"
     },
     {
       "command": "ConfirmPolicyReview",
@@ -217,7 +221,9 @@
         "line": 3246,
         "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
       },
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "ConfirmPolicyReview",
+      "targetName": "ConfirmPolicyReview"
     },
     {
       "command": "CreatePolicyDraft",
@@ -273,7 +279,9 @@
         "line": 3976,
         "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
       },
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "CreatePolicyDraft",
+      "targetName": "CreatePolicyDraft"
     },
     {
       "command": "DiscardPolicyDraft",
@@ -334,7 +342,9 @@
         "line": 5269,
         "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
       },
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "DiscardPolicyDraft",
+      "targetName": "DiscardPolicyDraft"
     },
     {
       "command": "ProposePolicyRetirement",
@@ -400,7 +410,9 @@
         "line": 6977,
         "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
       },
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "ProposePolicyRetirement",
+      "targetName": "ProposePolicyRetirement"
     },
     {
       "command": "ProposePolicySuccessor",
@@ -461,7 +473,9 @@
         "line": 7056,
         "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
       },
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "ProposePolicySuccessor",
+      "targetName": "ProposePolicySuccessor"
     },
     {
       "command": "ReviewPolicyDraft",
@@ -532,7 +546,9 @@
         "line": 12134,
         "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
       },
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "ReviewPolicyDraft",
+      "targetName": "ReviewPolicyDraft"
     },
     {
       "command": "RevisePolicyDraft",
@@ -587,7 +603,9 @@
         "line": 13322,
         "sha256": "b30a2282d45d79be7ac38b82a42afdc9139e8a40bb2ce71445ab93449f597f0d"
       },
-      "kind": "command"
+      "kind": "command",
+      "sourceName": "RevisePolicyDraft",
+      "targetName": "RevisePolicyDraft"
     }
   ],
   "sourceContractEvidence": []

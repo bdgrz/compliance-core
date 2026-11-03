@@ -2,20 +2,23 @@
 
 Canonical events: **5**. Complete canonical event and available schema records: [owner event JSON](../data/events/evidence-artifact.json).
 
-| Event | Kind | Adopted discriminator | Version | Schema fields | Meaning |
-| --- | --- | --- | --- | --- | --- |
-| ArtifactDownloadAvailabilityUseSettled | reservation | bdgrz.evidence-artifact.artifact-download-availability-use-settled | 1 | 8 | null (recorded) |
-| EvidenceArtifactDownloadRequested | business | bdgrz.evidence-artifact.evidence-artifact-download-requested | 1 | 8 | null (recorded) |
-| EvidenceArtifactInspected | business | bdgrz.evidence.artifact.inspected | 1 | [Placeholder: schema absent] | Records the inspection result that moves an artifact out of pending inspection. |
-| EvidenceArtifactQuarantineReleased | business | bdgrz.evidence.artifact.quarantine_released | 1 | [Placeholder: schema absent] | A quarantined evidence artifact was released after a clean rescan, with a rationale and the deciding actor recording that the malware detection was a false positive. |
-| EvidenceArtifactRegistered | business | bdgrz.evidence.artifact.registered | 1 | [Placeholder: schema absent] | Registers uploaded content as evidence awaiting inspection; the content is not yet available. |
+| Target event | Selected source name | Kind | Adopted discriminator | Version | Schema fields | Meaning |
+| --- | --- | --- | --- | --- | --- | --- |
+| ArtifactDownloadAvailabilityAuthorizationClosed | ArtifactDownloadAvailabilityUseSettled | reservation | bdgrz.evidence-artifact.artifact-download-availability-use-settled | 1 | 8 | null (recorded) |
+| EvidenceArtifactDownloadRequested | EvidenceArtifactDownloadRequested | business | bdgrz.evidence-artifact.evidence-artifact-download-requested | 1 | 8 | null (recorded) |
+| EvidenceArtifactInspected | EvidenceArtifactInspected | business | bdgrz.evidence.artifact.inspected | 1 | [Placeholder: schema absent] | Records the inspection result that moves an artifact out of pending inspection. |
+| EvidenceArtifactQuarantineReleased | EvidenceArtifactQuarantineReleased | business | bdgrz.evidence.artifact.quarantine_released | 1 | [Placeholder: schema absent] | A quarantined evidence artifact was released after a clean rescan, with a rationale and the deciding actor recording that the malware detection was a false positive. |
+| EvidenceArtifactRegistered | EvidenceArtifactRegistered | business | bdgrz.evidence.artifact.registered | 1 | [Placeholder: schema absent] | Registers uploaded content as evidence awaiting inspection; the content is not yet available. |
 
 ## Event details
 
-### ArtifactDownloadAvailabilityUseSettled
+### ArtifactDownloadAvailabilityAuthorizationClosed
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | ArtifactDownloadAvailabilityAuthorizationClosed |
+| Selected source event name | ArtifactDownloadAvailabilityUseSettled |
+| Name decision | The exact authorization ended; the recorded outcome still distinguishes use, cancellation, or a late fence. |
 | Canonical semantic key | event:ArtifactDownloadAvailabilityUseSettled |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | ArtifactDownloadAvailabilityUseSettled |
@@ -25,7 +28,8 @@ Canonical events: **5**. Complete canonical event and available schema records: 
 | Source status | planned_no_source_type |
 | Adopted decision IDs | ARTIFACT_DOWNLOAD |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | null (recorded) |
+| Target meaning | null (recorded) |
+| Selected source meaning | null (recorded) |
 | Meaning source | [Placeholder: value not recorded] |
 
 #### Selected schema and implementation evidence
@@ -99,12 +103,15 @@ SourceUseAuthorizationIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T104](../reactors/one-committed-evidence-artifact-download-requested-starter.md#t104) | emitted semantic fact | ArtifactDownloadGrant | SettleArtifactDownloadAvailabilityUse | EvidenceArtifact |
+| [T104](../reactors/one-committed-evidence-artifact-download-requested-starter.md#t104) | emitted semantic fact | ArtifactDownloadGrant | CloseArtifactDownloadAvailabilityAuthorization | EvidenceArtifact |
 
 ### EvidenceArtifactDownloadRequested
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | EvidenceArtifactDownloadRequested |
+| Selected source event name | EvidenceArtifactDownloadRequested |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:EvidenceArtifactDownloadRequested |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | EvidenceArtifactDownloadRequested |
@@ -114,7 +121,8 @@ SourceUseAuthorizationIntent
 | Source status | planned_no_source_type |
 | Adopted decision IDs | ARTIFACT_DOWNLOAD |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | null (recorded) |
+| Target meaning | null (recorded) |
+| Selected source meaning | null (recorded) |
 | Meaning source | [Placeholder: value not recorded] |
 
 #### Selected schema and implementation evidence
@@ -200,8 +208,8 @@ EvidenceDownloadIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T099](../reactors/one-committed-evidence-artifact-download-requested-starter.md#t099) | logical prerequisite | EvidenceArtifact | AuthorizeAdvisorArtifactDownloadUse | AdvisorHandoff |
-| [T100](../reactors/one-committed-evidence-artifact-download-requested-starter.md#t100) | logical prerequisite | EvidenceArtifact | AuthorizeArtifactHandlingDownloadUse | EvidenceHandlingPolicy |
+| [T099](../reactors/one-committed-evidence-artifact-download-requested-starter.md#t099) | logical prerequisite | EvidenceArtifact | AuthorizeAdvisorArtifactDownload | AdvisorHandoff |
+| [T100](../reactors/one-committed-evidence-artifact-download-requested-starter.md#t100) | logical prerequisite | EvidenceArtifact | AuthorizeArtifactHandlingDownload | EvidenceHandlingPolicy |
 | [T101](../reactors/one-committed-evidence-artifact-download-requested-starter.md#t101) | logical prerequisite | EvidenceArtifact | IssueProtectedArtifactDownloadGrant | ArtifactDownloadGrant |
 | [A021](../reactors/unassigned-architecture-rows.md#a021) | physical root, logical prerequisite | EvidenceArtifact | CancelProtectedArtifactDownloadGrant | ArtifactDownloadGrant |
 | [P000](../reactors/unassigned-architecture-rows.md#p000) | emitted semantic fact | null (recorded) | IssueArtifactDownload | EvidenceArtifact |
@@ -211,6 +219,9 @@ EvidenceDownloadIntent
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | EvidenceArtifactInspected |
+| Selected source event name | EvidenceArtifactInspected |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:EvidenceArtifactInspected |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | EvidenceArtifactInspected |
@@ -220,7 +231,8 @@ EvidenceDownloadIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | Records the inspection result that moves an artifact out of pending inspection. |
+| Target meaning | Records the inspection result that moves an artifact out of pending inspection. |
+| Selected source meaning | Records the inspection result that moves an artifact out of pending inspection. |
 | Meaning source | record summary in src/Compliance.Common/Features/Evidence/Events/EvidenceArtifactInspected.cs |
 
 #### Schema
@@ -243,6 +255,9 @@ EvidenceDownloadIntent
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | EvidenceArtifactQuarantineReleased |
+| Selected source event name | EvidenceArtifactQuarantineReleased |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:EvidenceArtifactQuarantineReleased |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | EvidenceArtifactQuarantineReleased |
@@ -252,7 +267,8 @@ EvidenceDownloadIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | A quarantined evidence artifact was released after a clean rescan, with a rationale and the deciding actor recording that the malware detection was a false positive. |
+| Target meaning | A quarantined evidence artifact was released after a clean rescan, with a rationale and the deciding actor recording that the malware detection was a false positive. |
+| Selected source meaning | A quarantined evidence artifact was released after a clean rescan, with a rationale and the deciding actor recording that the malware detection was a false positive. |
 | Meaning source | authored 2026-10-29 from src/Compliance.Common/Features/Evidence/Events/EvidenceArtifactQuarantineReleased.cs |
 
 #### Schema
@@ -273,6 +289,9 @@ EvidenceDownloadIntent
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | EvidenceArtifactRegistered |
+| Selected source event name | EvidenceArtifactRegistered |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:EvidenceArtifactRegistered |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | EvidenceArtifactRegistered |
@@ -282,7 +301,8 @@ EvidenceDownloadIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | Registers uploaded content as evidence awaiting inspection; the content is not yet available. |
+| Target meaning | Registers uploaded content as evidence awaiting inspection; the content is not yet available. |
+| Selected source meaning | Registers uploaded content as evidence awaiting inspection; the content is not yet available. |
 | Meaning source | record summary in src/Compliance.Common/Features/Evidence/Events/EvidenceArtifactRegistered.cs |
 
 #### Schema

@@ -51,7 +51,9 @@
         "line": 12043,
         "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       },
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "RecordFirmProfessionalDutyDesignation",
+      "targetName": "RecordFirmProfessionalDutyDesignation"
     },
     {
       "command": "RevokeFirmProfessionalDutyDesignation",
@@ -103,7 +105,9 @@
         "line": 17265,
         "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       },
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "RevokeFirmProfessionalDutyDesignation",
+      "targetName": "RevokeFirmProfessionalDutyDesignation"
     },
     {
       "command": "RejectProfessionalDutyChange",
@@ -153,7 +157,9 @@
         "line": 1481,
         "sha256": "f1d549ed0879c816cb26e86879f8fa658dab0a8acbf7c591e4d4aed40483f8ae"
       },
-      "kind": "abort"
+      "kind": "abort",
+      "sourceName": "RejectProfessionalDutyChange",
+      "targetName": "RejectProfessionalDutyChange"
     },
     {
       "command": "ApplyProfessionalDutyChange",
@@ -235,7 +241,9 @@
       "source": {
         "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
         "recorded": "2026-10-29"
-      }
+      },
+      "sourceName": "ApplyProfessionalDutyChange",
+      "targetName": "ApplyProfessionalDutyChange"
     },
     {
       "command": "AuthorizeFirmProfessionalDutyDesignationEngagementUse",
@@ -323,7 +331,9 @@
       "source": {
         "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
         "recorded": "2026-10-29"
-      }
+      },
+      "sourceName": "AuthorizeFirmProfessionalDutyDesignationEngagementUse",
+      "targetName": "AuthorizeFirmProfessionalDutyDesignationEngagement"
     },
     {
       "command": "SettleFirmProfessionalDutyDesignationEngagementUse",
@@ -408,7 +418,9 @@
       "source": {
         "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
         "recorded": "2026-10-29"
-      }
+      },
+      "sourceName": "SettleFirmProfessionalDutyDesignationEngagementUse",
+      "targetName": "CloseFirmProfessionalDutyDesignationEngagementAuthorization"
     }
   ],
   "sourceContractEvidence": [

@@ -171,7 +171,11 @@
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "resolvedIntentSchema": "FirmStaffRegistrationIntent",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "FirmStaffChangeRecorded",
+      "targetName": "FirmStaffChangeRecorded",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "One change of one staff record: its registration completing or a status change. The complete FirmStaffMemberView after the change is immutable content; no cumulative directory is carried. Intent is always the record's frozen registration intent."
     },
     {
       "canonical": {
@@ -331,7 +335,11 @@
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "resolvedIntentSchema": "SourceUseAuthorizationIntent",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "FirmStaffProfessionalDutyUseAuthorized",
+      "targetName": "FirmStaffProfessionalDutyAuthorized",
+      "nameDecision": "Authorization is already the completed fact; Use adds no stakeholder meaning.",
+      "targetMeaning": "An exact currently active canonical staff record is held for recording a professional-duty designation. The use does not advance the public staff content revision; Revision is the held revision."
     },
     {
       "canonical": {
@@ -491,7 +499,11 @@
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "resolvedIntentSchema": "SourceUseAuthorizationIntent",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "FirmStaffProfessionalDutyUseSettled",
+      "targetName": "FirmStaffProfessionalDutyAuthorizationClosed",
+      "nameDecision": "The exact authorization ended; the recorded outcome still distinguishes use, cancellation, or a late fence.",
+      "targetMeaning": "The staff use for one professional-duty change ended, after the recorded designation or after the rejection fence. A settlement before any grant fences the key against late acquisition."
     },
     {
       "canonical": {
@@ -651,7 +663,11 @@
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "resolvedIntentSchema": "SourceUseAuthorizationIntent",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "FirmStaffRecordEngagementUseAuthorized",
+      "targetName": "FirmStaffRecordEngagementAuthorized",
+      "nameDecision": "Authorization is already the completed fact; Use adds no stakeholder meaning.",
+      "targetMeaning": "Holds the exact active registered staff record the partner evaluation relies on; the use does not advance the public revision, so Revision is the held revision."
     },
     {
       "canonical": {
@@ -811,7 +827,11 @@
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "resolvedIntentSchema": "SourceUseAuthorizationIntent",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "FirmStaffRecordEngagementUseSettled",
+      "targetName": "FirmStaffRecordEngagementAuthorizationClosed",
+      "nameDecision": "The exact authorization ended; the recorded outcome still distinguishes use, cancellation, or a late fence.",
+      "targetMeaning": "The use of the staff record ended after the irreversible personal decision or after cancellation. A settlement before any grant fences the key against late acquisition."
     },
     {
       "canonical": {
@@ -968,7 +988,11 @@
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "resolvedIntentSchema": "FirmStaffRegistrationIntent",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "FirmStaffRegistrationAccepted",
+      "targetName": "FirmStaffRegistrationAccepted",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "A firm staff registration was accepted for a new staff record; registration remains incomplete until the staff member's user identity is claimed."
     },
     {
       "canonical": {
@@ -1125,7 +1149,11 @@
         "serializer": "Register concrete target event and every proof/content variant in ComplianceCoreJsonContext and attributed persistence preflight coverage.",
         "resolvedIntentSchema": "FirmStaffRegistrationIntent",
         "nativeResponseRule": "FirstResponse is non-null only on this logical command first native accepting fact; it references FirstResponseDescriptor. OperationResult is non-null on the declared terminal business fact and references MutationResultContent. Both use verified content and static concrete result serializers; neither is reconstructed from current state."
-      }
+      },
+      "sourceName": "FirmStaffRegistrationRejected",
+      "targetName": "FirmStaffRegistrationRejected",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "A pending registration was rejected because another staff record owns the canonical user."
     }
   ]
 }

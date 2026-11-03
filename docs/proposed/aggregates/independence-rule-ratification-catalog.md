@@ -24,23 +24,23 @@
 | Command | Kind | Identity field |
 | --- | --- | --- |
 | [RatifyIndependenceRuleVersion](../commands/independence-rule-ratification-catalog.md#ratifyindependenceruleversion) | http | CommandId |
-| [AuthorizeIndependenceRuleRatificationCatalogEngagementUse](../commands/independence-rule-ratification-catalog.md#authorizeindependenceruleratificationcatalogengagementuse) | receiver | CommandId |
-| [SettleIndependenceRuleRatificationCatalogEngagementUse](../commands/independence-rule-ratification-catalog.md#settleindependenceruleratificationcatalogengagementuse) | receiver | CommandId |
+| [AuthorizeIndependenceRuleRatificationCatalogEngagement](../commands/independence-rule-ratification-catalog.md#authorizeindependenceruleratificationcatalogengagement) | receiver | CommandId |
+| [CloseIndependenceRuleRatificationCatalogEngagementAuthorization](../commands/independence-rule-ratification-catalog.md#closeindependenceruleratificationcatalogengagementauthorization) | receiver | CommandId |
 
 ## Events
 
 | Event | Discriminator | Version |
 | --- | --- | --- |
-| [IndependenceRuleRatificationCatalogEngagementUseAuthorized](../events/independence-rule-ratification-catalog.md#independenceruleratificationcatalogengagementuseauthorized) | bdgrz.independence-rule-ratification-catalog.independence-rule-ratification-catalog-engagement-use-authorized | 1 |
-| [IndependenceRuleRatificationCatalogEngagementUseSettled](../events/independence-rule-ratification-catalog.md#independenceruleratificationcatalogengagementusesettled) | bdgrz.independence-rule-ratification-catalog.independence-rule-ratification-catalog-engagement-use-settled | 1 |
+| [IndependenceRuleRatificationCatalogEngagementAuthorized](../events/independence-rule-ratification-catalog.md#independenceruleratificationcatalogengagementauthorized) | bdgrz.independence-rule-ratification-catalog.independence-rule-ratification-catalog-engagement-use-authorized | 1 |
+| [IndependenceRuleRatificationCatalogEngagementAuthorizationClosed](../events/independence-rule-ratification-catalog.md#independenceruleratificationcatalogengagementauthorizationclosed) | bdgrz.independence-rule-ratification-catalog.independence-rule-ratification-catalog-engagement-use-settled | 1 |
 | [IndependenceRuleRatificationRecorded](../events/independence-rule-ratification-catalog.md#independenceruleratificationrecorded) | bdgrz.independence.rules.ratification-recorded | 2 |
 
 ## Cross-owner flows
 
 | Row | Kind | Source owner | Target owner | Command |
 | --- | --- | --- | --- | --- |
-| [T095](../reactors/engagement-acceptance-reactor.md#t095) | reaction_or_regular_process_stage | ServiceEngagementIndependence | IndependenceRuleRatificationCatalog | AuthorizeIndependenceRuleRatificationCatalogEngagementUse |
-| [T096](../reactors/engagement-acceptance-reactor.md#t096) | reaction_or_regular_process_stage | ServiceEngagementIndependence | IndependenceRuleRatificationCatalog | SettleIndependenceRuleRatificationCatalogEngagementUse |
+| [T095](../reactors/engagement-acceptance-reactor.md#t095) | reaction_or_regular_process_stage | ServiceEngagementIndependence | IndependenceRuleRatificationCatalog | AuthorizeIndependenceRuleRatificationCatalogEngagement |
+| [T096](../reactors/engagement-acceptance-reactor.md#t096) | reaction_or_regular_process_stage | ServiceEngagementIndependence | IndependenceRuleRatificationCatalog | CloseIndependenceRuleRatificationCatalogEngagementAuthorization |
 
 ## Product rules
 

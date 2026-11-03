@@ -2,11 +2,11 @@
 
 Canonical events: **3**. Complete canonical event and available schema records: [owner event JSON](../data/events/risk-evaluation.json).
 
-| Event | Kind | Adopted discriminator | Version | Schema fields | Meaning |
-| --- | --- | --- | --- | --- | --- |
-| RiskAccepted | business | bdgrz.risk.accepted | 2 | [Placeholder: schema absent] | A named member accepted a risk as it currently stands without further treatment. |
-| RiskAssessmentRecorded | business | bdgrz.risk.assessment.recorded | 2 | [Placeholder: schema absent] | An assessment of a risk's likelihood and impact was recorded by a named member as the risk's current assessment. |
-| RiskTreatmentChosen | business | bdgrz.risk.treatment.chosen | 2 | [Placeholder: schema absent] | A treatment approach was chosen for a risk by a named member, recorded against the risk's current assessment. |
+| Target event | Selected source name | Kind | Adopted discriminator | Version | Schema fields | Meaning |
+| --- | --- | --- | --- | --- | --- | --- |
+| RiskAccepted | RiskAccepted | business | bdgrz.risk.accepted | 2 | [Placeholder: schema absent] | A named member accepted a risk as it currently stands without further treatment. |
+| RiskAssessmentRecorded | RiskAssessmentRecorded | business | bdgrz.risk.assessment.recorded | 2 | [Placeholder: schema absent] | An assessment of a risk's likelihood and impact was recorded by a named member as the risk's current assessment. |
+| RiskTreatmentChosen | RiskTreatmentChosen | business | bdgrz.risk.treatment.chosen | 2 | [Placeholder: schema absent] | A treatment approach was chosen for a risk by a named member, recorded against the risk's current assessment. |
 
 ## Event details
 
@@ -14,6 +14,9 @@ Canonical events: **3**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | RiskAccepted |
+| Selected source event name | RiskAccepted |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:RiskAccepted |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | RiskAccepted |
@@ -23,7 +26,8 @@ Canonical events: **3**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | A named member accepted a risk as it currently stands without further treatment. |
+| Target meaning | A named member accepted a risk as it currently stands without further treatment. |
+| Selected source meaning | A named member accepted a risk as it currently stands without further treatment. |
 | Meaning source | authored 2026-10-29 from src/Compliance.Common/Features/Risks/Events/RiskAccepted.cs |
 
 #### Schema
@@ -46,6 +50,9 @@ Canonical events: **3**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | RiskAssessmentRecorded |
+| Selected source event name | RiskAssessmentRecorded |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:RiskAssessmentRecorded |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | RiskAssessmentRecorded |
@@ -55,7 +62,8 @@ Canonical events: **3**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | An assessment of a risk's likelihood and impact was recorded by a named member as the risk's current assessment. |
+| Target meaning | An assessment of a risk's likelihood and impact was recorded by a named member as the risk's current assessment. |
+| Selected source meaning | An assessment of a risk's likelihood and impact was recorded by a named member as the risk's current assessment. |
 | Meaning source | authored 2026-10-29 from src/Compliance.Common/Features/Risks/Events/RiskAssessmentRecorded.cs |
 
 #### Schema
@@ -78,6 +86,9 @@ Canonical events: **3**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | RiskTreatmentChosen |
+| Selected source event name | RiskTreatmentChosen |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:RiskTreatmentChosen |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | RiskTreatmentChosen |
@@ -87,7 +98,8 @@ Canonical events: **3**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | A treatment approach was chosen for a risk by a named member, recorded against the risk's current assessment. |
+| Target meaning | A treatment approach was chosen for a risk by a named member, recorded against the risk's current assessment. |
+| Selected source meaning | A treatment approach was chosen for a risk by a named member, recorded against the risk's current assessment. |
 | Meaning source | authored 2026-10-29 from src/Compliance.Common/Features/Risks/Events/RiskTreatmentChosen.cs |
 
 #### Schema

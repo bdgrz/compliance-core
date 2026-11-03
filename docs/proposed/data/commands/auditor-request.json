@@ -101,7 +101,9 @@
         "line": 1161,
         "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       },
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "AmendSampleSelection",
+      "targetName": "AmendSampleSelection"
     },
     {
       "command": "AssignAuditorRequest",
@@ -173,7 +175,9 @@
         "line": 2512,
         "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       },
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "AssignAuditorRequest",
+      "targetName": "AssignAuditorRequest"
     },
     {
       "command": "CreateAuditResponseDraft",
@@ -240,7 +244,9 @@
         "line": 5145,
         "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       },
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "CreateAuditResponseDraft",
+      "targetName": "CreateAuditResponseDraft"
     },
     {
       "command": "RecordAuditorRequest",
@@ -327,7 +333,9 @@
         "line": 11267,
         "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       },
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "RecordAuditorRequest",
+      "targetName": "RecordAuditorRequest"
     },
     {
       "command": "RecordAuditorRequestComment",
@@ -394,7 +402,9 @@
         "line": 11399,
         "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       },
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "RecordAuditorRequestComment",
+      "targetName": "RecordAuditorRequestComment"
     },
     {
       "command": "RecordSampleSelection",
@@ -486,7 +496,9 @@
         "line": 12876,
         "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       },
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "RecordSampleSelection",
+      "targetName": "RecordSampleSelection"
     },
     {
       "command": "ReopenAuditorRequest",
@@ -548,7 +560,9 @@
         "line": 13617,
         "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       },
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "ReopenAuditorRequest",
+      "targetName": "ReopenAuditorRequest"
     },
     {
       "command": "ResolveAuditorRequest",
@@ -615,7 +629,9 @@
         "line": 14070,
         "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       },
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "ResolveAuditorRequest",
+      "targetName": "ResolveAuditorRequest"
     },
     {
       "command": "ReviseAuditorRequest",
@@ -697,7 +713,9 @@
         "line": 16169,
         "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       },
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "ReviseAuditorRequest",
+      "targetName": "ReviseAuditorRequest"
     },
     {
       "command": "AbortAuditorRequestResolution",
@@ -747,7 +765,9 @@
         "line": 959,
         "sha256": "f1d549ed0879c816cb26e86879f8fa658dab0a8acbf7c591e4d4aed40483f8ae"
       },
-      "kind": "abort"
+      "kind": "abort",
+      "sourceName": "AbortAuditorRequestResolution",
+      "targetName": "AbortAuditorRequestResolution"
     },
     {
       "command": "CompleteAuditorRequestResolution",
@@ -823,7 +843,9 @@
       "source": {
         "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
         "recorded": "2026-10-29"
-      }
+      },
+      "sourceName": "CompleteAuditorRequestResolution",
+      "targetName": "CompleteAuditorRequestResolution"
     }
   ],
   "sourceContractEvidence": [

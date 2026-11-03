@@ -2,11 +2,11 @@
 
 Selected command contracts: **3**. Complete selected contracts and companion source evidence: [owner command JSON](../data/commands/access-expectation.json).
 
-| Command | Kind | Identity | Fields | HTTP routes |
-| --- | --- | --- | --- | --- |
-| ApproveAccessExpectation | http | CommandId | 6 | PUT /api/v1/tenants/{tenant_id}/system-instances/{system_instance_id}/access-expectations/{expectation_id}/approval/{command_id} [ComplianceAuthorizationPolicies.ApiUser] |
-| ExemptAccessExpectation | http | CommandId | 9 | PUT /api/v1/tenants/{tenant_id}/system-instances/{system_instance_id}/access-expectations/{expectation_id}/exceptions/{command_id} [ComplianceAuthorizationPolicies.ApiUser] |
-| ProposeAccessExpectation | http | ExpectationId | 11 | PUT /api/v1/tenants/{tenant_id}/applications/{application_id}/system-instances/{system_instance_id}/access-expectations/{expectation_id} [ComplianceAuthorizationPolicies.ApiUser] |
+| Target command | Selected source name | Kind | Identity | Fields | HTTP routes |
+| --- | --- | --- | --- | --- | --- |
+| ApproveAccessExpectation | ApproveAccessExpectation | http | CommandId | 6 | PUT /api/v1/tenants/{tenant_id}/system-instances/{system_instance_id}/access-expectations/{expectation_id}/approval/{command_id} [ComplianceAuthorizationPolicies.ApiUser] |
+| ExemptAccessExpectation | ExemptAccessExpectation | http | CommandId | 9 | PUT /api/v1/tenants/{tenant_id}/system-instances/{system_instance_id}/access-expectations/{expectation_id}/exceptions/{command_id} [ComplianceAuthorizationPolicies.ApiUser] |
+| ProposeAccessExpectation | ProposeAccessExpectation | http | ExpectationId | 11 | PUT /api/v1/tenants/{tenant_id}/applications/{application_id}/system-instances/{system_instance_id}/access-expectations/{expectation_id} [ComplianceAuthorizationPolicies.ApiUser] |
 
 ## Selected command details
 
@@ -14,6 +14,9 @@ Selected command contracts: **3**. Complete selected contracts and companion sou
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | ApproveAccessExpectation |
+| Selected source command name | ApproveAccessExpectation |
+| Name decision | The selected source name is retained. |
 | Owner | AccessExpectation |
 | Contract record status | target_contract |
 | Kind | http |
@@ -64,6 +67,9 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | ExemptAccessExpectation |
+| Selected source command name | ExemptAccessExpectation |
+| Name decision | The selected source name is retained. |
 | Owner | AccessExpectation |
 | Contract record status | target_contract |
 | Kind | http |
@@ -117,6 +123,9 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | ProposeAccessExpectation |
+| Selected source command name | ProposeAccessExpectation |
+| Name decision | The selected source name is retained. |
 | Owner | AccessExpectation |
 | Contract record status | target_contract |
 | Kind | http |
@@ -171,7 +180,7 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 
 ## Source contracts
 
-| Command | Handler | Registered | Entry point |
+| Selected source command | Handler | Registered | Entry point |
 | --- | --- | --- | --- |
 | ApproveAccessExpectation | ApproveAccessExpectationHandler | true | personal_http |
 | ExemptAccessExpectation | ExemptAccessExpectationHandler | true | personal_http |

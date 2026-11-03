@@ -61,7 +61,9 @@
         "line": 12143,
         "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       },
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "RecordLocation",
+      "targetName": "RecordLocation"
     },
     {
       "command": "ReviseLocation",
@@ -133,7 +135,9 @@
         "line": 16436,
         "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       },
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "ReviseLocation",
+      "targetName": "ReviseLocation"
     },
     {
       "command": "CancelLocationChange",
@@ -183,7 +187,9 @@
         "line": 785,
         "sha256": "f1d549ed0879c816cb26e86879f8fa658dab0a8acbf7c591e4d4aed40483f8ae"
       },
-      "kind": "abort"
+      "kind": "abort",
+      "sourceName": "CancelLocationChange",
+      "targetName": "CancelLocationChange"
     },
     {
       "command": "ApplyLocationChange",
@@ -254,7 +260,9 @@
       "source": {
         "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
         "recorded": "2026-10-29"
-      }
+      },
+      "sourceName": "ApplyLocationChange",
+      "targetName": "ApplyLocationChange"
     }
   ],
   "sourceContractEvidence": [

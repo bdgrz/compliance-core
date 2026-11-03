@@ -2,18 +2,18 @@
 
 Selected command contracts: **10**. Complete selected contracts and companion source evidence: [owner command JSON](../data/commands/finding-aggregate.json).
 
-| Command | Kind | Identity | Fields | HTTP routes |
-| --- | --- | --- | --- | --- |
-| AddCorrectiveAction | http | ActionId | 8 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/findings/{finding_id}/corrective-actions/{action_id} [ComplianceAuthorizationPolicies.ApiUser] |
-| CloseFinding | http | CommandId | 9 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/findings/{finding_id}/closures/{command_id} [ComplianceAuthorizationPolicies.ApiUser] |
-| LinkFindingAcceptance | http | CommandId | 8 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/findings/{finding_id}/acceptances/{command_id} [ComplianceAuthorizationPolicies.ApiUser] |
-| RaiseFinding | http | FindingId | 11 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/findings/{finding_id} [ComplianceAuthorizationPolicies.ApiUser] |
-| RaiseOccurrenceFinding | creation | FindingId | 8 | [Placeholder: value not recorded] |
-| ReopenFinding | http | CommandId | 6 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/findings/{finding_id}/reopenings/{command_id} [ComplianceAuthorizationPolicies.ApiUser] |
-| ReviseFinding | http | CommandId | 11 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/findings/{finding_id}/revisions/{command_id} [ComplianceAuthorizationPolicies.ApiUser] |
-| RaiseEvaluationDeviationFinding | command | CommandId | 7 | [Placeholder: value not recorded] |
-| AbortFindingClosure | abort | CommandId | 6 | [Placeholder: route/channel not recorded] |
-| CompleteFindingClosure | receiver | CommandId | 9 | [Placeholder: value not recorded] |
+| Target command | Selected source name | Kind | Identity | Fields | HTTP routes |
+| --- | --- | --- | --- | --- | --- |
+| AddCorrectiveAction | AddCorrectiveAction | http | ActionId | 8 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/findings/{finding_id}/corrective-actions/{action_id} [ComplianceAuthorizationPolicies.ApiUser] |
+| CloseFinding | CloseFinding | http | CommandId | 9 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/findings/{finding_id}/closures/{command_id} [ComplianceAuthorizationPolicies.ApiUser] |
+| LinkFindingAcceptance | LinkFindingAcceptance | http | CommandId | 8 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/findings/{finding_id}/acceptances/{command_id} [ComplianceAuthorizationPolicies.ApiUser] |
+| RaiseFinding | RaiseFinding | http | FindingId | 11 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/findings/{finding_id} [ComplianceAuthorizationPolicies.ApiUser] |
+| RaiseOccurrenceFinding | RaiseOccurrenceFinding | creation | FindingId | 8 | [Placeholder: value not recorded] |
+| ReopenFinding | ReopenFinding | http | CommandId | 6 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/findings/{finding_id}/reopenings/{command_id} [ComplianceAuthorizationPolicies.ApiUser] |
+| ReviseFinding | ReviseFinding | http | CommandId | 11 | PUT /api/v1/tenants/{tenant_id}/programs/{program_id}/findings/{finding_id}/revisions/{command_id} [ComplianceAuthorizationPolicies.ApiUser] |
+| RaiseEvaluationDeviationFinding | RaiseEvaluationDeviationFinding | command | CommandId | 7 | [Placeholder: value not recorded] |
+| AbortFindingClosure | AbortFindingClosure | abort | CommandId | 6 | [Placeholder: route/channel not recorded] |
+| CompleteFindingClosure | CompleteFindingClosure | receiver | CommandId | 9 | [Placeholder: value not recorded] |
 
 ## Selected command details
 
@@ -21,6 +21,9 @@ Selected command contracts: **10**. Complete selected contracts and companion so
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | AddCorrectiveAction |
+| Selected source command name | AddCorrectiveAction |
+| Name decision | The selected source name is retained. |
 | Owner | FindingAggregate |
 | Contract record status | target_contract |
 | Kind | http |
@@ -73,6 +76,9 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | CloseFinding |
+| Selected source command name | CloseFinding |
+| Name decision | The selected source name is retained. |
 | Owner | FindingAggregate |
 | Contract record status | target_contract |
 | Kind | http |
@@ -126,13 +132,16 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | LinkFindingAcceptance |
+| Selected source command name | LinkFindingAcceptance |
+| Name decision | The selected source name is retained. |
 | Owner | FindingAggregate |
 | Contract record status | target_contract |
 | Kind | http |
 | Logical identity | CommandId; Uuid; required=true; client; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
 | Entry point | authorized_http |
 | MCP | false |
-| Selected semantic events | FindingAcceptanceLinkedV2 |
+| Selected semantic events | FindingAcceptanceLinked |
 | Protocols | Action admission and finding closure |
 | Policy preservation | All current source handler/aggregate validation rules and source test expectations apply, except the explicit contractChanges and boundary protocol. Lifetime caps and technical attempt events are removed with their structural replacement. |
 | Contract changes | Add required CommandId. |
@@ -178,13 +187,16 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | RaiseFinding |
+| Selected source command name | RaiseFinding |
+| Name decision | The selected source name is retained. |
 | Owner | FindingAggregate |
 | Contract record status | target_contract |
 | Kind | http |
 | Logical identity | FindingId; Uuid; required=true; client; deterministic receiver identity derived from the admitted root fact, episode and generation: exact redelivery resolves the original result, a changed admission is a new identity |
 | Entry point | authorized_http_and_mcp |
 | MCP | true |
-| Selected semantic events | FindingRaisedV2 |
+| Selected semantic events | FindingRaised |
 | Protocols | Action admission and finding closure |
 | Policy preservation | All current source handler/aggregate validation rules and source test expectations apply, except the explicit contractChanges and boundary protocol. Lifetime caps and technical attempt events are removed with their structural replacement. |
 | Contract changes | Add required FindingId. |
@@ -233,13 +245,16 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | RaiseOccurrenceFinding |
+| Selected source command name | RaiseOccurrenceFinding |
+| Name decision | The selected source name is retained. |
 | Owner | FindingAggregate |
 | Contract record status | target_contract |
 | Kind | creation |
 | Logical identity | FindingId; Uuid; required=true; source_event_effect; caller-supplied immutable creation identity: an exact retry with the same id and authored intent returns the original result; the same id with changed intent is refused; a different id is a different record |
 | Entry point | internal_trusted_command |
 | MCP | false |
-| Selected semantic events | FindingRaisedV2, CorrectiveActionAdmitted |
+| Selected semantic events | FindingRaised, CorrectiveActionAdmitted |
 | Protocols | Action admission and finding closure |
 | Policy preservation | All current source handler/aggregate validation rules and source test expectations apply, except the explicit contractChanges and boundary protocol. Lifetime caps and technical attempt events are removed with their structural replacement. |
 | Contract changes | When source kind is occurrence_review, preserve the default requested corrective action by atomically admitting its complete deterministic ActionId/content alongside FindingRaisedV2; materialize it independently. Failed/skipped attestation variants without requested action emit FindingRaisedV2 only. |
@@ -283,13 +298,16 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | ReopenFinding |
+| Selected source command name | ReopenFinding |
+| Name decision | The selected source name is retained. |
 | Owner | FindingAggregate |
 | Contract record status | target_contract |
 | Kind | http |
 | Logical identity | CommandId; Uuid; required=true; client; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
 | Entry point | authorized_http |
 | MCP | false |
-| Selected semantic events | FindingReopenedV2 |
+| Selected semantic events | FindingReopened |
 | Protocols | Action admission and finding closure |
 | Policy preservation | All current source handler/aggregate validation rules and source test expectations apply, except the explicit contractChanges and boundary protocol. Lifetime caps and technical attempt events are removed with their structural replacement. |
 | Contract changes | Add required CommandId. |
@@ -333,13 +351,16 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | ReviseFinding |
+| Selected source command name | ReviseFinding |
+| Name decision | The selected source name is retained. |
 | Owner | FindingAggregate |
 | Contract record status | target_contract |
 | Kind | http |
 | Logical identity | CommandId; Uuid; required=true; client; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
 | Entry point | authorized_http |
 | MCP | false |
-| Selected semantic events | FindingRevisedV2 |
+| Selected semantic events | FindingRevised |
 | Protocols | Action admission and finding closure |
 | Policy preservation | All current source handler/aggregate validation rules and source test expectations apply, except the explicit contractChanges and boundary protocol. Lifetime caps and technical attempt events are removed with their structural replacement. |
 | Contract changes | Add required CommandId. |
@@ -388,13 +409,16 @@ Required tests: ShouldReturnOriginalResultGivenExactRetryAfterLaterOwnerChange, 
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | RaiseEvaluationDeviationFinding |
+| Selected source command name | RaiseEvaluationDeviationFinding |
+| Name decision | The selected source name is retained. |
 | Owner | FindingAggregate |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | command |
 | Logical identity | CommandId; Uuid; required=true; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
 | Entry point | [Placeholder: value not recorded] |
 | MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | [Placeholder: value not recorded] |
+| Selected semantic events | None listed |
 | Protocols | [Placeholder: value not recorded] |
 | Policy preservation | [Placeholder: value not recorded] |
 | Contract changes | [Placeholder: value not recorded] |
@@ -435,13 +459,16 @@ Required tests: [Placeholder: required tests not recorded]
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | AbortFindingClosure |
+| Selected source command name | AbortFindingClosure |
+| Name decision | The selected source name is retained. |
 | Owner | FindingAggregate |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | abort |
 | Logical identity | CommandId; Uuid; required=true; abort receiver identity bound to the exact admitted operation and generation: exact redelivery resolves the original rejected result; an abort after a terminal outcome is a no-op |
 | Entry point | [Placeholder: value not recorded] |
 | MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | [Placeholder: value not recorded] |
+| Selected semantic events | None listed |
 | Protocols | [Placeholder: value not recorded] |
 | Policy preservation | [Placeholder: value not recorded] |
 | Contract changes | [Placeholder: value not recorded] |
@@ -481,13 +508,16 @@ Required tests: [Placeholder: required tests not recorded]
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | CompleteFindingClosure |
+| Selected source command name | CompleteFindingClosure |
+| Name decision | The selected source name is retained. |
 | Owner | FindingAggregate |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; reactor; deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result |
 | Entry point | [Placeholder: value not recorded] |
 | MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | [Placeholder: value not recorded] |
+| Selected semantic events | None listed |
 | Protocols | [Placeholder: value not recorded] |
 | Policy preservation | [Placeholder: value not recorded] |
 | Contract changes | [Placeholder: value not recorded] |
@@ -529,7 +559,7 @@ Required tests: [Placeholder: required tests not recorded]
 
 ## Source contracts
 
-| Command | Handler | Registered | Entry point |
+| Selected source command | Handler | Registered | Entry point |
 | --- | --- | --- | --- |
 | AddCorrectiveAction | AddCorrectiveActionHandler | true | authorized_http |
 | CloseFinding | CloseFindingHandler | true | personal_http |

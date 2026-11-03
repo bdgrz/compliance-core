@@ -1,5 +1,7 @@
 {
-  "root": "OperationalProcessChangeAcceptedReactor",
+  "sourceRoot": "OperationalProcessChangeAcceptedReactor",
+  "targetRoot": "KeepOperationalProcessNamesUniqueReactor",
+  "businessReason": "Keep active operational process names unique through accepted revisions and retirement.",
   "rows": [
     {
       "id": "T028",

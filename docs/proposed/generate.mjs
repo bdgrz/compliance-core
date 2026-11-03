@@ -17,6 +17,8 @@ const sources = {
   commandSchemas: "docs/product/audits/2026-10-23/target-command-contracts.json",
   eventSchemas: "docs/product/audits/2026-10-23/target-event-contracts.json",
   readSchemas: "docs/product/audits/2026-10-23/operation-query-contracts.json",
+  writeModelNames: "docs/proposed/data/write-model-names.json",
+  writeModelDomainDecisions: "docs/proposed/data/write-model-domain-decisions.json",
 };
 const json = (file) => JSON.parse(fs.readFileSync(path.join(root, file), "utf8"));
 const present = (file) => fs.existsSync(path.join(root, file));
@@ -49,6 +51,11 @@ function display(value) {
   if (Array.isArray(value)) return value.length ? value.map(display).join(", ") : "None listed";
   if (typeof value === "object") return code(JSON.stringify(value).replaceAll("|", "&#124;").replaceAll("\n", " "));
   return String(value).replaceAll("|", "\\|").replaceAll("\n", " ");
+}
+
+function namedList(values, nameFor) {
+  if (!Array.isArray(values) || values.length === 0) return "None listed";
+  return values.map((value) => code(nameFor(value))).join(", ");
 }
 
 function table(headers, rows) {
@@ -84,28 +91,129 @@ const choreographyManifestCatalog = json(sources.choreographyManifest);
 const commandSchemaCatalog = json(sources.commandSchemas);
 const eventSchemaCatalog = json(sources.eventSchemas);
 const readSchemaCatalog = json(sources.readSchemas);
-const businessOwners = aggregateCatalog.businessOwners || [];
-const technicalOwners = aggregateCatalog.technicalOwners || [];
-const owners = businessOwners.concat(technicalOwners);
+const writeModelNameCatalog = json(sources.writeModelNames);
+const writeModelDomainDecisionCatalog = json(sources.writeModelDomainDecisions);
+const sourceBusinessOwners = aggregateCatalog.businessOwners || [];
+const sourceTechnicalOwners = aggregateCatalog.technicalOwners || [];
+const sourceOwners = sourceBusinessOwners.concat(sourceTechnicalOwners);
+const ownerNameOverrides = new Map((writeModelDomainDecisionCatalog.targetOwnerNameOverrides || []).map((item) => [item.sourceOwner, item]));
+const targetOwnerName = (name) => ownerNameOverrides.get(name)?.targetOwner || name;
+const targetOwnerSpecs = writeModelDomainDecisionCatalog.targetOwners || [];
+const commandsBySourceOwner = new Map(sourceOwners.map((owner) => [owner.owner, owner.selectedCommandContracts || []]));
+const reassignedCommands = new Map();
+for (const spec of targetOwnerSpecs) {
+  for (const command of spec.reassignedCommands || []) reassignedCommands.set(command, spec.owner);
+}
+const owners = sourceOwners.map((owner) => ({
+  ...owner,
+  sourceOwner: owner.owner,
+  owner: targetOwnerName(owner.owner),
+  selectedCommandContracts: (owner.selectedCommandContracts || [])
+    .filter((item) => !reassignedCommands.has(item.command))
+    .map((item) => ({ ...item, sourceOwner: owner.owner, owner: targetOwnerName(owner.owner) })),
+})).concat(targetOwnerSpecs.map((spec) => {
+  const domainDecision = (writeModelDomainDecisionCatalog.decisions || []).find((item) => item.id === "ATTEST_ENGAGEMENT_RECORD_PACKAGE");
+  const sourceCommands = commandsBySourceOwner.get(spec.sourceOwner) || [];
+  return {
+    owner: spec.owner,
+    sourceOwner: spec.sourceOwner,
+    classification: spec.classification,
+    businessAggregate: spec.businessAggregate,
+    sourceCapabilityArea: spec.sourceCapabilityArea,
+    baselineSourcePath: spec.baselineSourcePath,
+    sourceReviewPath: spec.sourceReviewPath,
+    status: spec.status,
+    implementationStatus: spec.status,
+    selectedIdentitySummary: spec.selectedIdentitySummary,
+    invariant: spec.invariant,
+    targetNote: spec.targetNote,
+    sources: (spec.sources || []).map((source) => ({ path: source })),
+    productRules: domainDecision ? [{ id: "M0-D27", doc: "m0-d27-attest-scope.md", rule: domainDecision.rule }] : [],
+    selectedCommandContracts: sourceCommands
+      .filter((item) => (spec.reassignedCommands || []).includes(item.command))
+      .map((item) => ({ ...item, sourceOwner: spec.sourceOwner, owner: spec.owner })),
+    targetEvents: spec.targetEvents || [],
+    targetOnly: true,
+  };
+}));
+const businessOwners = owners.filter((owner) => owner.businessAggregate || owner.classification === "business_aggregate");
+const technicalOwners = owners.filter((owner) => !(owner.businessAggregate || owner.classification === "business_aggregate"));
 const events = eventCatalog.events || [];
+const sourceEventDispositions = writeModelDomainDecisionCatalog.sourceEventDispositions || [];
+const sourceEventDispositionNames = new Set(sourceEventDispositions.map((item) => item.event));
+const targetOnlyEvents = targetOwnerSpecs.flatMap((spec) => (spec.targetEvents || []).map((item) => ({
+  event: item.event,
+  sourceName: null,
+  owners: [spec.owner],
+  meaning: item.meaning,
+  emissionKind: "proposed_target_business_fact",
+  sourceStatus: "TARGET_ONLY_NO_SELECTED_SOURCE_EVENT_TYPE_OR_WIRE",
+  targetOnly: true,
+  nameReason: item.reason,
+})));
+const targetSourceEvents = events.filter((item) => !sourceEventDispositionNames.has(item.event));
+const targetEventUniverse = targetSourceEvents.concat(targetOnlyEvents);
 const flows = flowCatalog.edges || [];
 const commandContracts = owners.reduce((all, owner) => all.concat(owner.selectedCommandContracts || []), []);
 const eventSchemas = new Map((eventSchemaCatalog.events || []).map((item) => [item.event, item]));
+const commandNameDecisions = writeModelNameCatalog.commands || {};
+const eventNameDecisions = writeModelNameCatalog.events || {};
+const reactorNameDecisions = writeModelNameCatalog.reactors || {};
+function commandNameDecision(name) {
+  if (!name) return { targetName: name, reason: "[Placeholder: command name not recorded]" };
+  if (commandNameDecisions[name]) return commandNameDecisions[name];
+  let match = name.match(/^Authorize(.+)Use$/);
+  if (match) return { targetName: "Authorize" + match[1], reason: writeModelNameCatalog.commandPatterns[0].reason };
+  match = name.match(/^Settle(.+)Use$/);
+  if (match) return { targetName: "Close" + match[1] + "Authorization", reason: writeModelNameCatalog.commandPatterns[1].reason };
+  return { targetName: name, reason: "The selected source name is retained." };
+}
+function eventNameDecision(name) {
+  if (!name) return { targetName: name, reason: "[Placeholder: event name not recorded]" };
+  if (eventNameDecisions[name]) return eventNameDecisions[name];
+  let match = name.match(/^(.+)UseAuthorized$/);
+  if (match) return { targetName: match[1] + "Authorized", reason: writeModelNameCatalog.eventPatterns[0].reason };
+  match = name.match(/^(.+)UseSettled$/);
+  if (match) return { targetName: match[1] + "AuthorizationClosed", reason: writeModelNameCatalog.eventPatterns[1].reason };
+  return { targetName: name, reason: "The selected source name is retained." };
+}
+function reactorNameDecision(name) {
+  if (!name) return { targetName: name, businessReason: "" };
+  return reactorNameDecisions[name] || { targetName: name, businessReason: "" };
+}
+function commandName(name) { return commandNameDecision(name).targetName; }
+function eventName(name) { return eventNameDecision(name).targetName; }
+function reactorName(name) { return reactorNameDecision(name).targetName; }
+function targetNameCollisions(items, sourceName, targetName) {
+  const names = new Map();
+  for (const item of items) {
+    const target = targetName(item);
+    const sources = names.get(target) || new Set();
+    sources.add(sourceName(item));
+    names.set(target, sources);
+  }
+  return [...names.entries()].filter(([, sources]) => sources.size > 1).map(([target, sources]) => ({ target, sources: [...sources] }));
+}
 const eventOwnerRows = new Map();
 const flowOwnerRows = new Map();
 const flowRootRows = new Map();
 const flowUnassigned = [];
 
-for (const event of events) {
-  const names = event.owners && event.owners.length ? event.owners : ["unassigned"];
+for (const event of targetSourceEvents) {
+  const names = event.owners && event.owners.length ? event.owners.map(targetOwnerName) : ["unassigned"];
   for (const name of names) {
     const rows = eventOwnerRows.get(name) || [];
     rows.push(event);
     eventOwnerRows.set(name, rows);
   }
 }
+for (const event of targetOnlyEvents) {
+  const rows = eventOwnerRows.get(event.owners[0]) || [];
+  rows.push(event);
+  eventOwnerRows.set(event.owners[0], rows);
+}
 for (const flow of flows) {
-  for (const name of new Set([flow.sourceOwner, flow.targetOwner].filter(Boolean))) {
+  for (const name of new Set([flow.sourceOwner, flow.targetOwner].filter(Boolean).map(targetOwnerName))) {
     const rows = flowOwnerRows.get(name) || [];
     rows.push(flow);
     flowOwnerRows.set(name, rows);
@@ -119,14 +227,23 @@ for (const flow of flows) {
     flowRootRows.set(name, rows);
   }
 }
+const commandTargetCollisions = targetNameCollisions(commandContracts, (item) => item.command, (item) => commandName(item.command));
+const eventTargetCollisions = targetNameCollisions(targetEventUniverse, (item) => item.event, (item) => eventName(item.event));
+const ownerTargetCollisions = [...new Set(owners.map((item) => item.owner))].length === owners.length ? [] : owners.map((item) => item.owner).filter((name, index, all) => all.indexOf(name) !== index);
+const reactorRoots = [...flowRootRows.keys()];
+const reactorTargetCollisions = targetNameCollisions(reactorRoots, (item) => item, (item) => reactorName(item));
+const unnamedReactors = reactorRoots.filter((item) => !reactorNameDecision(item).targetName || !reactorNameDecision(item).businessReason.trim());
+if (commandTargetCollisions.length || eventTargetCollisions.length || ownerTargetCollisions.length || reactorTargetCollisions.length || unnamedReactors.length) {
+  throw new Error("Write-model target names must be unique and every reactor needs a business reason: " + JSON.stringify({ commandTargetCollisions, eventTargetCollisions, ownerTargetCollisions, reactorTargetCollisions, unnamedReactors }));
+}
 
 function ownerArea(owner) {
   const candidates = [owner.baselineSourcePath].concat((owner.sources || []).map((item) => item.path));
   for (const candidate of candidates) {
-    const match = candidate && candidate.match(/src\/Compliance\.Core\/Features\/([^/]+)/);
+    const match = candidate && candidate.match(/src\/Compliance\.[^/]+\/Features\/([^/]+)/);
     if (match) return match[1];
   }
-  return "[Placeholder: source capability area is not recorded]";
+  return owner.sourceCapabilityArea || "[Placeholder: source capability area is not recorded]";
 }
 
 function ownerPage(owner) {
@@ -135,34 +252,41 @@ function ownerPage(owner) {
   const data = "docs/proposed/data/aggregates/" + id + ".json";
   writeJson(data, owner);
   const commands = owner.selectedCommandContracts || [];
-  const emitted = events.filter((item) => (item.owners || []).includes(owner.owner));
+  const emitted = eventOwnerRows.get(owner.owner) || [];
   const ownerFlows = flowOwnerRows.get(owner.owner) || [];
   const commandRows = commands.map((item) => [
-    link(output, "docs/proposed/commands/" + id + ".md#" + headingAnchor(item.command), item.command),
+    link(output, "docs/proposed/commands/" + id + ".md#" + headingAnchor(commandName(item.command)), commandName(item.command)),
     item.kind || "[Placeholder: command kind not recorded]",
     item.logicalIdentity && item.logicalIdentity.field || "[Placeholder: identity field not recorded]",
   ]);
   const eventRows = emitted.map((item) => [
-    link(output, "docs/proposed/events/" + id + ".md#" + headingAnchor(item.event), item.event),
+    link(output, "docs/proposed/events/" + id + ".md#" + headingAnchor(eventName(item.event)), eventName(item.event)),
     item.adoptedTargetWire && item.adoptedTargetWire.discriminator || "[Placeholder: discriminator not recorded]",
     item.adoptedTargetWire && item.adoptedTargetWire.version,
   ]);
   const flowRows = ownerFlows.map((item) => [
     link(output, "docs/proposed/reactors/" + slug((item.currentRegisteredRootTypes || [])[0] || item.plannedRootRole || "unassigned-architecture-rows") + ".md#" + slug(item.id), item.id),
     item.kind,
-    item.sourceOwner,
-    item.targetOwner,
-    item.receiverCommand,
+    targetOwnerName(item.sourceOwner),
+    targetOwnerName(item.targetOwner),
+    commandName(item.receiverCommand),
   ]);
   const productRules = (owner.productRules || []).map((item) => {
     const decision = item.doc ? "docs/product/decisions/" + item.doc : "";
     const citation = decision && present(decision) ? link(output, decision, item.doc) : "[Placeholder: product decision source is not present]";
     return "- **" + display(item.id) + "** — " + display(item.rule) + " Source: " + citation + ".";
   });
+  const domainRule = (writeModelDomainDecisionCatalog.ownerRules || {})[owner.owner]
+    || (writeModelDomainDecisionCatalog.ownerRules || {})[owner.sourceOwner]
+    || {};
+  const additionalDecision = [owner.decides, domainRule.decisionRule].filter(Boolean).join(" ");
+  const compatibilityEvents = sourceEventDispositions.filter((item) => item.sourceOwner === (owner.sourceOwner || owner.owner) || item.targetOwner === owner.owner);
   const decisions = (owner.adoptedArchitectureDecisions || []).map((item) => "- " + code(item.decisionId || "[Placeholder: decision id not recorded]") + " — " + display(item.choice) + ".");
   const reviewName = id + "-review-2026-10-29.md";
   const reviewAlt = id + "-review-2026-10-27.md";
-  const reviewPath = present("docs/product/definitive-aggregate-choreography/" + reviewName)
+  const reviewPath = owner.sourceReviewPath && present(owner.sourceReviewPath)
+    ? owner.sourceReviewPath
+    : present("docs/product/definitive-aggregate-choreography/" + reviewName)
     ? "docs/product/definitive-aggregate-choreography/" + reviewName
     : present("docs/product/definitive-aggregate-choreography/" + reviewAlt)
       ? "docs/product/definitive-aggregate-choreography/" + reviewAlt
@@ -175,6 +299,7 @@ function ownerPage(owner) {
     "- Source area: " + code(ownerArea(owner)) + " (derived from source path; not a bounded-context ruling).",
     "- Business aggregate: " + code(owner.businessAggregate === undefined ? "[Placeholder: classification not recorded]" : owner.businessAggregate),
     "- Selected status: " + code(owner.status || owner.implementationStatus || "[Placeholder: status not recorded]"),
+    owner.sourceOwner && owner.sourceOwner !== owner.owner ? "- Selected source owner: " + code(owner.sourceOwner) + "." : "",
     "",
     "## Identity and invariant",
     "",
@@ -182,13 +307,17 @@ function ownerPage(owner) {
     "",
     "**Invariant:** " + (owner.invariant || "[Placeholder: invariant not recorded.]"),
     "",
-    "**Additional decision rule:** " + (owner.decides || "[Placeholder: no owner-specific decision rule is recorded.]"),
+    "**Additional decision rule:** " + (additionalDecision || "[Placeholder: no owner-specific decision rule is recorded.]"),
     "",
     "**Must preserve:** " + (owner.mustPreserve || "[Placeholder: preservation rule not recorded.]"),
     "",
     "**Replay:** " + (owner.selectedReplayRule || "[Placeholder: replay rule not recorded.]"),
     "",
-    "**Lifecycle:** [Placeholder: a consolidated lifecycle sequence is not present in the selected owner record.]",
+    "**Lifecycle:** " + (domainRule.lifecycle || "[Placeholder: a consolidated lifecycle sequence is not present in the selected owner record.]"),
+    "",
+    owner.targetNote ? "## Source-to-target ownership\n\n" + owner.targetNote : "",
+    owner.targetOnly ? "**Target events:** These are proposed business facts only. No selected source event type, discriminator, version, or payload schema exists yet; define the event contracts before implementation." : "",
+    compatibilityEvents.length ? "## Source event compatibility\n\n" + table(["Selected source event", "Source owner", "Target owner", "Disposition"], compatibilityEvents.map((item) => [code(item.event), code(item.sourceOwner), code(item.targetOwner), item.reason])) : "",
     "",
     "## Commands",
     "",
@@ -224,10 +353,16 @@ function commandPage(owner) {
   const id = slug(owner.owner);
   const output = "docs/proposed/commands/" + id + ".md";
   const contracts = owner.selectedCommandContracts || [];
-  const audit = (commandSchemaCatalog.commands || []).filter((item) => item.owner === owner.owner || (item.sourceRoots || []).includes(owner.owner));
+  const sourceOwner = owner.sourceOwner || owner.owner;
+  const audit = (commandSchemaCatalog.commands || []).filter((item) => item.owner === sourceOwner || (item.sourceRoots || []).includes(sourceOwner));
   const data = "docs/proposed/data/commands/" + id + ".json";
-  writeJson(data, { owner: owner.owner, selectedContracts: contracts, sourceContractEvidence: audit });
+  writeJson(data, {
+    owner: owner.owner,
+    selectedContracts: contracts.map((item) => ({ ...item, sourceName: item.command, targetName: commandName(item.command) })),
+    sourceContractEvidence: audit,
+  });
   const rows = contracts.map((item) => [
+    commandName(item.command),
     item.command,
     item.kind || "[Placeholder: kind not recorded]",
     item.logicalIdentity && item.logicalIdentity.field || "[Placeholder: identity field not recorded]",
@@ -243,16 +378,20 @@ function commandPage(owner) {
     const fields = item.fields || [];
     const http = item.http || [];
     return [
-      "### " + item.command,
+      "### " + commandName(item.command),
       "",
       table(["Selected contract detail", "Value"], [
-        ["Owner", item.owner || owner.owner],
+        ["Target command name", commandName(item.command)],
+        ["Selected source command name", item.command],
+        ["Name decision", commandNameDecision(item.command).reason],
+        ["Target owner", owner.owner],
+        ["Selected source owner", item.sourceOwner || item.owner || sourceOwner],
         ["Contract record status", item.status || sourceEvidence.status],
         ["Kind", item.kind],
         ["Logical identity", [identity.field, identity.type, identity.required === undefined ? "[Placeholder: required status not recorded]" : "required=" + identity.required, identity.origin, identity.rule].filter(Boolean).join("; ") || "[Placeholder: logical identity not recorded]"],
         ["Entry point", item.entryPoint || sourceEvidence.entryPoint],
         ["MCP", item.mcp === undefined ? sourceEvidence.mcp === undefined ? "[Placeholder: MCP availability not recorded]" : sourceEvidence.mcp : item.mcp],
-        ["Selected semantic events", item.events || sourceEvidence.events],
+        ["Selected semantic events", (item.events || sourceEvidence.events || []).map(eventName)],
         ["Protocols", item.protocols || sourceEvidence.protocols],
         ["Policy preservation", item.policyPreservation || sourceEvidence.policyPreservation],
         ["Contract changes", item.contractChanges || sourceEvidence.contractChanges],
@@ -287,9 +426,11 @@ function commandPage(owner) {
   write(output, [
     "# " + owner.owner + " commands",
     "",
+    owner.sourceOwner && owner.sourceOwner !== owner.owner ? "In the selected source catalog these commands are grouped under " + code(owner.sourceOwner) + "; the proposed target assigns them to " + code(owner.owner) + " based on the selected business rule." : "",
+    "",
     "Selected command contracts: **" + contracts.length + "**. Complete selected contracts and companion source evidence: " + link(output, data, "owner command JSON") + ".",
     "",
-    rows.length ? table(["Command", "Kind", "Identity", "Fields", "HTTP routes"], rows) : "[Placeholder: no selected command contract is recorded for this owner.]",
+    rows.length ? table(["Target command", "Selected source name", "Kind", "Identity", "Fields", "HTTP routes"], rows) : "[Placeholder: no selected command contract is recorded for this owner.]",
     "",
     "## Selected command details",
     "",
@@ -297,7 +438,7 @@ function commandPage(owner) {
     "",
     "## Source contracts",
     "",
-    audit.length ? table(["Command", "Handler", "Registered", "Entry point"], audit.map((item) => [
+    audit.length ? table(["Selected source command", "Handler", "Registered", "Entry point"], audit.map((item) => [
       item.command,
       item.handler || "[Placeholder: handler not recorded]",
       item.sourceHandlers && item.sourceHandlers.map((handler) => handler.registered).join(", "),
@@ -318,30 +459,52 @@ for (const ownerName of eventOwners) {
   const id = slug(ownerName);
   const output = "docs/proposed/events/" + id + ".md";
   const records = eventOwnerRows.get(ownerName) || [];
-  const full = records.map((item) => ({ canonical: item, schema: eventSchemas.get(item.event) || null }));
+  const full = records.map((item) => ({
+    canonical: item,
+    schema: eventSchemas.get(item.event) || null,
+    naming: item.targetOnly
+      ? { targetName: item.event, reason: item.nameReason, meaning: item.meaning }
+      : eventNameDecision(item.event),
+  }));
   const data = "docs/proposed/data/events/" + id + ".json";
-  writeJson(data, { owner: ownerName, events: full });
-  const rows = full.map(({ canonical, schema }) => [
-    canonical.event,
+  writeJson(data, {
+    owner: ownerName,
+    events: full.map(({ canonical, schema, naming }) => ({
+      canonical,
+      schema,
+      sourceName: canonical.targetOnly ? "No selected source event type" : canonical.event,
+      targetName: naming.targetName,
+      nameDecision: naming.reason,
+      targetMeaning: naming.meaning || canonical.meaning,
+    })),
+  });
+  const rows = full.map(({ canonical, schema, naming }) => [
+    naming.targetName,
+    canonical.targetOnly ? "New proposed target fact" : canonical.event,
     canonical.emissionKind,
-    canonical.adoptedTargetWire && canonical.adoptedTargetWire.discriminator,
-    canonical.adoptedTargetWire && canonical.adoptedTargetWire.version,
-    schema ? (schema.fields || []).length : "[Placeholder: schema absent]",
-    canonical.meaning,
+    canonical.targetOnly ? "No source wire selected" : canonical.adoptedTargetWire && canonical.adoptedTargetWire.discriminator,
+    canonical.targetOnly ? "Not selected" : canonical.adoptedTargetWire && canonical.adoptedTargetWire.version,
+    canonical.targetOnly ? "Contract required" : schema ? (schema.fields || []).length : "[Placeholder: schema absent]",
+    naming.meaning || canonical.meaning,
   ]);
   const mismatches = full.filter(({ canonical, schema }) => schema && schema.discriminatorVersion !== undefined && canonical.adoptedTargetWire && schema.discriminatorVersion !== canonical.adoptedTargetWire.version);
-  const details = full.flatMap(({ canonical, schema }) => {
+  const details = full.flatMap(({ canonical, schema, naming }) => {
+    const targetMeaning = naming.meaning || canonical.meaning;
     const metadata = [
+      ["Target event name", naming.targetName],
+      ["Selected source event name", canonical.targetOnly ? "No selected source event type" : canonical.event],
+      ["Name decision", naming.reason],
       ["Canonical semantic key", canonical.canonicalSemanticKey],
       ["Owner selection", canonical.ownerSelection],
       ["Target concrete type", canonical.targetConcreteType],
-      ["Adopted wire", canonical.adoptedTargetWire],
+      ["Adopted wire", canonical.targetOnly ? "No source discriminator or version selected" : canonical.adoptedTargetWire],
       ["Wire qualification", canonical.wireQualification],
       ["Schema status", canonical.schemaStatus],
       ["Source status", canonical.sourceStatus],
       ["Adopted decision IDs", canonical.adoptedDecisionIds],
       ["Superseded selected wire", canonical.supersededSelectedWire],
-      ["Meaning", canonical.meaning],
+      ["Target meaning", targetMeaning],
+      ["Selected source meaning", canonical.targetOnly ? "No source event meaning; see selected product rule." : canonical.meaning],
       ["Meaning source", canonical.meaningSource],
     ];
     const schemaMetadata = schema
@@ -374,13 +537,13 @@ for (const ownerName of eventOwners) {
       ? table(["Row", "Relationship", "Source owner", "Receiver command", "Target owner"], matchingFlows.map(([flow, role]) => [
         link(output, "docs/proposed/reactors/" + slug((flow.currentRegisteredRootTypes || [])[0] || flow.plannedRootRole || "unassigned-architecture-rows") + ".md#" + headingAnchor(flow.id), flow.id),
         role,
-        flow.sourceOwner,
-        flow.receiverCommand,
-        flow.targetOwner,
+        targetOwnerName(flow.sourceOwner),
+        commandName(flow.receiverCommand),
+        targetOwnerName(flow.targetOwner),
       ]))
       : "[Placeholder: no selected choreography row names this event as root, prerequisite, or emitted fact.]";
     return [
-      "### " + canonical.event,
+      "### " + naming.targetName,
       "",
       table(["Canonical event detail", "Value"], metadata),
       "",
@@ -394,9 +557,11 @@ for (const ownerName of eventOwners) {
       "",
       schema && schema.resolvedIntentSchema ? "#### Resolved intent schema\n\n" + (typeof schema.resolvedIntentSchema === "object" ? table(["Property", "Value"], Object.entries(schema.resolvedIntentSchema)) : display(schema.resolvedIntentSchema)) : "[Placeholder: no resolved intent schema is recorded.]",
       "",
-      "#### Choreography references",
+      canonical.targetOnly ? "#### Target event contract" : "#### Choreography references",
       "",
-      choreography,
+      canonical.targetOnly
+        ? "[Placeholder: define the event fields, wire discriminator, version, and emitting command before implementation.]"
+        : choreography,
       "",
     ];
   });
@@ -405,7 +570,7 @@ for (const ownerName of eventOwners) {
     "",
     "Canonical events: **" + records.length + "**. Complete canonical event and available schema records: " + link(output, data, "owner event JSON") + ".",
     "",
-    rows.length ? table(["Event", "Kind", "Adopted discriminator", "Version", "Schema fields", "Meaning"], rows) : "[Placeholder: no canonical events are assigned to this owner.]",
+    rows.length ? table(["Target event", "Selected source name", "Kind", "Adopted discriminator", "Version", "Schema fields", "Meaning"], rows) : "[Placeholder: no canonical events are assigned to this owner.]",
     "",
     "## Event details",
     "",
@@ -421,23 +586,34 @@ function reactorPage(name, records) {
   const id = slug(name);
   const output = "docs/proposed/reactors/" + id + ".md";
   const data = "docs/proposed/data/reactors/" + id + ".json";
-  writeJson(data, { root: name, rows: records });
+  const naming = reactorNameDecision(name);
+  writeJson(data, { sourceRoot: name, targetRoot: naming.targetName, businessReason: naming.businessReason, rows: records });
   const rows = records.map((item) => [
     item.id,
     item.kind,
-    item.logicalPrerequisiteFacts,
-    item.receiverCommand,
-    item.targetOwner,
-    item.emittedSemanticFacts,
+    (item.logicalPrerequisiteFacts || []).map(eventName),
+    commandName(item.receiverCommand),
+    targetOwnerName(item.targetOwner),
+    (item.emittedSemanticFacts || []).map(eventName),
   ]);
   const details = records.flatMap((item) => [
     "### " + item.id,
     "",
-    table(["Selected choreography detail", "Value"], Object.entries(item).map(([key, value]) => [key, value])),
+    table(["Selected choreography detail", "Value"], Object.entries(item).map(([key, value]) => {
+      if (key === "receiverCommand" && value) return ["Target command (selected source name: " + value + ")", commandName(value)];
+      if (key === "sourceOwner" && value) return ["Source owner (target name)", targetOwnerName(value) + " (source: " + value + ")"];
+      if (key === "targetOwner" && value) return ["Target owner", targetOwnerName(value)];
+      if (["logicalPrerequisiteFacts", "physicalRootEvents", "originalAdmissionKinds", "emittedSemanticFacts"].includes(key) && Array.isArray(value)) return [key + " (target names)", value.map(eventName)];
+      if (key === "currentRegisteredRootTypes" && Array.isArray(value)) return [key + " (target names)", value.map(reactorName)];
+      return [key, value];
+    })),
     "",
   ]);
   write(output, [
-    "# " + name,
+    "# " + naming.targetName,
+    "",
+    "Selected source root name: " + code(name) + ".",
+    naming.businessReason ? "## Why this reaction exists\n\n" + naming.businessReason : "",
     "",
     "Selected choreography rows: **" + records.length + "**. Required proofs, recovery, effect identity, and implementation evidence are preserved in " + link(output, data, "reactor row JSON") + ".",
     "",
@@ -504,7 +680,7 @@ const ownerSections = [...ownerAreas.entries()].sort(([a], [b]) => a.localeCompa
     link("docs/proposed/aggregates/README.md", "docs/proposed/aggregates/" + slug(owner.owner) + ".md", owner.owner),
     owner.classification,
     (owner.selectedCommandContracts || []).length,
-    events.filter((event) => (event.owners || []).includes(owner.owner)).length,
+    (eventOwnerRows.get(owner.owner) || []).length,
     owner.invariant,
   ])),
 );
@@ -537,7 +713,7 @@ write("docs/proposed/commands/README.md", [
 write("docs/proposed/events/README.md", [
   "# Canonical event index",
   "",
-  "Selected canonical events: **" + events.length + "**. Adopted wires come from the canonical event catalog; payload schema mismatches are called out on owner pages.",
+  "Selected source canonical events: **" + events.length + "**. The proposed target has **" + targetEventUniverse.length + "** business events, including **" + targetOnlyEvents.length + "** newly named facts whose event contracts are not selected yet. " + sourceEventDispositions.length + " source event is retained as compatibility evidence without a direct target event mapping.",
   "",
   table(["Owner", "Events", "Schemas"], [...eventOwnerRows.entries()].sort(([a], [b]) => a.localeCompare(b)).map(([name, rows]) => [
     link("docs/proposed/events/README.md", "docs/proposed/events/" + slug(name) + ".md", name),
@@ -546,7 +722,45 @@ write("docs/proposed/events/README.md", [
   ])),
   "",
   "Product event scope: " + link("docs/proposed/events/README.md", "docs/proposed/events/product-scope.md", "product-scope.md") + ".",
+  "Source facts kept only for compatibility: " + link("docs/proposed/events/README.md", "docs/proposed/events/source-compatibility.md", "source-compatibility.md") + ".",
   "Historical name/disposition snapshot: " + link("docs/proposed/events/README.md", "docs/proposed/events/reconciliation.md", "reconciliation.md") + ".",
+].join("\n"));
+
+const sourceCompatibilityEventRows = sourceEventDispositions.map((item) => {
+  const event = events.find((candidate) => candidate.event === item.event) || {};
+  return {
+    ...item,
+    sourceMeaning: event.meaning,
+    sourceWire: event.adoptedTargetWire,
+    sourceStatus: event.sourceStatus,
+  };
+});
+writeJson("docs/proposed/data/events/source-compatibility.json", sourceCompatibilityEventRows);
+write("docs/proposed/events/source-compatibility.md", [
+  "# Source events kept for compatibility",
+  "",
+  "These records describe facts from the selected source catalog that do not have a direct event name in the proposed target. They preserve the old source meaning and wire for later reconciliation; they are not additional target business events.",
+  "",
+  table(["Selected source event", "Source owner", "Proposed owner", "Related target event", "Wire", "Version", "Disposition"], sourceCompatibilityEventRows.map((item) => [
+    code(item.event),
+    code(item.sourceOwner),
+    code(item.targetOwner),
+    code(item.relatedTargetEvent),
+    item.sourceWire && item.sourceWire.discriminator,
+    item.sourceWire && item.sourceWire.version,
+    item.reason,
+  ])),
+  "",
+  ...sourceCompatibilityEventRows.flatMap((item) => [
+    "## " + item.event,
+    "",
+    "**Selected source meaning:** " + display(item.sourceMeaning),
+    "",
+    "**Source status:** " + display(item.sourceStatus),
+    "",
+    "**Target disposition:** " + item.reason,
+    "",
+  ]),
 ].join("\n"));
 
 const eventCategoryCounts = Object.entries((eventReconciliationCatalog.events || []).reduce((counts, item) => {
@@ -562,7 +776,7 @@ const eventDispositionCounts = Object.entries((eventReconciliationCatalog.events
 write("docs/proposed/events/reconciliation.md", [
   "# Historical event-name reconciliation snapshot",
   "",
-  "This full name/disposition map is retained from an earlier reconciliation packet. Its recorded polish date is " + display(eventReconciliationCatalog.polish && eventReconciliationCatalog.polish.date) + ", but its summary still reports " + display(eventReconciliationCatalog.summary && eventReconciliationCatalog.summary.businessOwnerCount) + " owners and " + display(eventReconciliationCatalog.summary && eventReconciliationCatalog.summary.intendedEmittedCanonicalSemanticEvents) + " emitted events. The current canonical catalog reports " + businessOwners.length + " owners and " + events.length + " event rows. Treat the snapshot as historical evidence until it is reconciled against the current catalogs.",
+  "This full name/disposition map is retained from an earlier reconciliation packet. Its recorded polish date is " + display(eventReconciliationCatalog.polish && eventReconciliationCatalog.polish.date) + ", but its summary still reports " + display(eventReconciliationCatalog.summary && eventReconciliationCatalog.summary.businessOwnerCount) + " owners and " + display(eventReconciliationCatalog.summary && eventReconciliationCatalog.summary.intendedEmittedCanonicalSemanticEvents) + " emitted events. The selected source catalogs report " + sourceBusinessOwners.length + " business owners and " + events.length + " source event rows; the proposed target omits " + sourceEventDispositions.length + " source-only compatibility fact and adds " + targetOnlyEvents.length + " newly named event facts. Treat the snapshot as historical evidence until it is reconciled against the current catalogs.",
   "",
   "Current selected event index: " + link("docs/proposed/events/reconciliation.md", "docs/proposed/events/README.md", "events/README.md") + ". Complete captured snapshot: " + link("docs/proposed/events/reconciliation.md", "docs/proposed/data/event-reconciliation-snapshot.json", "JSON") + ".",
   "",
@@ -594,7 +808,7 @@ write("docs/proposed/reactors/README.md", [
   "Selected architecture rows: **" + flows.length + "**. Each row preserves source, target, trigger, required proofs, effect identity, recovery, and implementation-conformance details in JSON.",
   "",
   table(["Root", "Rows"], [...flowRootRows.entries()].sort(([a], [b]) => a.localeCompare(b)).map(([name, rows]) => [
-    link("docs/proposed/reactors/README.md", "docs/proposed/reactors/" + slug(name) + ".md", name),
+    link("docs/proposed/reactors/README.md", "docs/proposed/reactors/" + slug(name) + ".md", reactorName(name)),
     rows.length,
   ])),
   "",
@@ -790,9 +1004,66 @@ write("docs/proposed/decisions-log.md", [
   "",
   table(["ID", "Status", "Choice", "Rationale"], decisions.map((item) => [item.id, item.status, item.choice, item.rationale])),
   "",
+  "The source catalog retains some older OPEN labels. Their proposed write-model disposition is recorded in " + link("docs/proposed/decisions-log.md", "docs/proposed/write-model-domain-rules.md", "Write model domain rules") + ".",
+  "",
   "Product decision records remain the individual authority:",
   "",
   productDecisions.map((file) => "- " + link("docs/proposed/decisions-log.md", "docs/product/decisions/" + file, file)).join("\n"),
+].join("\n"));
+
+const domainDecisions = writeModelDomainDecisionCatalog.decisions || [];
+const domainDecisionPage = "docs/proposed/write-model-domain-rules.md";
+write(domainDecisionPage, [
+  "# Write model domain rules",
+  "",
+  writeModelDomainDecisionCatalog.scope,
+  "",
+  writeModelDomainDecisionCatalog.authority,
+  "",
+  "## Selected decisions",
+  "",
+  table(["Decision", "Selected rule"], domainDecisions.map((item) => [item.name, item.rule])),
+  "",
+  ...domainDecisions.flatMap((item) => [
+    "### " + item.id,
+    "",
+    "**Selected rule:** " + item.rule,
+    "",
+    "**Why:** " + item.reason,
+    "",
+    "**Owners:** " + namedList(item.affectedOwners, targetOwnerName) + ".",
+    "",
+    "**Commands:** " + namedList(item.commands, commandName) + ".",
+    "",
+    "**Events:** " + namedList(item.events, eventName) + ".",
+    "",
+    "**Reactors:** " + namedList(item.reactors, reactorName) + ".",
+    "",
+    "**Source evidence:** " + (item.sources || []).map((source) => sourceLink(domainDecisionPage, source)).join(", ") + ".",
+    "",
+  ]),
+  "## Lifecycle by owner",
+  "",
+  table(["Owner", "Decision", "Lifecycle rule", "Evidence"], Object.entries(writeModelDomainDecisionCatalog.ownerRules || {}).map(([owner, item]) => [
+    link(domainDecisionPage, "docs/proposed/aggregates/" + slug(targetOwnerName(owner)) + ".md", targetOwnerName(owner)),
+    item.decisionRule,
+    item.lifecycle,
+    item.evidence,
+  ])),
+  "",
+  "## Source event compatibility",
+  "",
+  sourceCompatibilityEventRows.length ? table(["Selected source event", "Source owner", "Target owner", "Related target event", "Reason"], sourceCompatibilityEventRows.map((item) => [
+    code(item.event),
+    code(item.sourceOwner),
+    code(item.targetOwner),
+    code(item.relatedTargetEvent),
+    item.reason,
+  ])) : "None listed.",
+  "",
+  "## Deferred to event-contract details",
+  "",
+  table(["Source label", "Disposition"], (writeModelDomainDecisionCatalog.deferredMechanics || []).map((item) => [item.id, item.decision])),
 ].join("\n"));
 
 const inputFiles = Object.values(sources);
@@ -801,16 +1072,94 @@ const counts = {
   technicalResponsibilities: technicalOwners.length,
   selectedCommandContracts: commandContracts.length,
   canonicalEvents: events.length,
-  targetEventSchemas: eventSchemas.size,
+  targetBusinessEvents: targetEventUniverse.length,
+  proposedEventsWithoutSelectedSourceContract: targetOnlyEvents.length,
+  targetEventSchemas: targetEventUniverse.filter((item) => eventSchemas.has(item.event)).length,
   choreographyRows: flows.length,
   registeredRootTypes: new Set(flows.flatMap((item) => item.currentRegisteredRootTypes || [])).size,
+  namedReactorRoots: flowRootRows.size,
+  targetCommandNames: new Set(commandContracts.map((item) => commandName(item.command))).size,
+  targetEventNames: new Set(targetEventUniverse.map((item) => eventName(item.event))).size,
   processDefinitions: processDefinitions.length,
   architectureDecisions: decisions.length,
-  productRulesNotYetInSource: rulesMissingSource.length,
+  productRulesNeedingImplementationEvidence: rulesMissingSource.length,
 };
+const commandNameChanges = commandContracts.map((item) => ({
+  sourceName: item.command,
+  targetName: commandName(item.command),
+  reason: commandNameDecision(item.command).reason,
+})).filter((item) => item.targetName !== item.sourceName);
+const eventNameChanges = targetSourceEvents.map((item) => ({
+  sourceName: item.event,
+  targetName: eventName(item.event),
+  reason: eventNameDecision(item.event).reason,
+})).filter((item) => item.targetName !== item.sourceName);
+const ownerNameChanges = [...ownerNameOverrides.values()].map((item) => ({
+  sourceName: item.sourceOwner,
+  targetName: item.targetOwner,
+  reason: item.reason,
+}));
+const targetOnlyEventNames = targetOnlyEvents.map((item) => ({
+  name: item.event,
+  owner: item.owners[0],
+  reason: item.nameReason,
+  meaning: item.meaning,
+}));
+const reactorNameChanges = [...flowRootRows.keys()].map((name) => {
+  const decision = reactorNameDecision(name);
+  return { sourceName: name, targetName: decision.targetName, reason: decision.businessReason };
+}).filter((item) => item.targetName !== item.sourceName);
+const retainedEventDecisions = Object.entries(eventNameDecisions).filter(([name, decision]) => decision.targetName === name);
+const meaningClarifications = Object.entries(eventNameDecisions).filter(([, decision]) => decision.meaning);
+write("docs/proposed/write-model-names.md", [
+  "# Write model names",
+  "",
+  "This is the naming target for commands → events → reactors. The complete target names appear on the generated command, event, and reactor pages; this page records the naming rules and every changed name.",
+  "",
+  "## Naming rules",
+  "",
+  ...writeModelNameCatalog.principles.map((item) => "- " + item),
+  "",
+  "## Coverage",
+  "",
+  table(["Write model element", "Target names"], [
+    ["Commands", new Set(commandContracts.map((item) => commandName(item.command))).size],
+    ["Events", new Set(targetEventUniverse.map((item) => eventName(item.event))).size],
+    ["Named reactor roots", new Set(reactorRoots.map((item) => reactorName(item))).size],
+  ]),
+  "",
+  "Selected command-contract entries: " + commandContracts.length + "; distinct source command names: " + new Set(commandContracts.map((item) => item.command)).size + ". Repeated source-command entries under multiple owners share their target name. Each distinct command, event, and reactor root has a unique target name. Every named reactor root has a stated business reason. Names not listed as changed retain their selected source name. Repeated authorization command/event names follow the suffix rules recorded in " + link("docs/proposed/write-model-names.md", "docs/proposed/data/write-model-names.json", "the structured naming decisions") + ".",
+  "",
+  "## Commands",
+  "",
+  table(["Selected source name", "Target command name", "Why it names the requested action"], commandNameChanges.map((item) => [code(item.sourceName), code(item.targetName), item.reason])),
+  "",
+  "### Command names retained\n\n" + table(["Name retained", "Why it is the right action"], Object.entries(writeModelNameCatalog.retainedCommands || {}).map(([name, decision]) => [code(name), decision.reason])),
+  "",
+  "## Events",
+  "",
+  table(["Selected source name", "Target event name", "Why it names the completed fact"], eventNameChanges.map((item) => [code(item.sourceName), code(item.targetName), item.reason])),
+  "",
+  retainedEventDecisions.length ? "### Event names retained for exact meaning\n\n" + table(["Name retained", "Reason"], retainedEventDecisions.map(([name, decision]) => [code(name), decision.reason])) : "",
+  meaningClarifications.length ? "### Meaning clarified from the choreography\n\n" + table(["Target event name", "Meaning"], meaningClarifications.map(([name, decision]) => [code(decision.targetName), decision.meaning])) : "",
+  "",
+  "### New target event names\n\n" + table(["Target event", "Owner", "Why this fact is recorded", "Meaning"], targetOnlyEventNames.map((item) => [code(item.name), code(item.owner), item.reason, item.meaning])),
+  "",
+  "Event discriminator strings and versions remain exactly as recorded in the source contracts. The target type name is a separate decision; implementation must preserve wire compatibility while adopting the target name.",
+  "",
+  "## Reactors",
+  "",
+  table(["Selected root name", "Target reactor name", "Business reason"], reactorNameChanges.map((item) => [code(item.sourceName), code(item.targetName), item.reason])),
+  "",
+  "## Owner names\n\n" + table(["Selected source owner", "Target owner", "Why the target name fits"], ownerNameChanges.map((item) => [code(item.sourceName), code(item.targetName), item.reason])),
+  "",
+  "## Implementation boundary",
+  "",
+  "These target names change the proposed model only. Selected source names, routes, command identities, event discriminator strings, and discriminator versions remain compatibility evidence. This page makes no claim that the renamed contracts are already implemented.",
+].filter((line) => line !== undefined).join("\n"));
 const manifest = {
   generatedOn: new Date().toISOString().slice(0, 10),
-  provenance: "Mechanical rendering from selected repository sources; no new domain rules were inferred.",
+  provenance: "Rendered from selected repository sources plus the explicit proposed write-model naming decisions.",
   counts,
   sourceHashes: Object.fromEntries(inputFiles.map((file) => [
     file,
@@ -833,13 +1182,8 @@ write("docs/proposed/sources.md", [
     [link("docs/proposed/sources.md", sources.choreographyManifest), "Historical manifest for the physical plan and its 186-row baseline."],
     [link("docs/proposed/sources.md", sources.commandSchemas), "Companion command/handler source evidence."],
     [link("docs/proposed/sources.md", sources.eventSchemas), "Companion event payload schemas."],
+    [link("docs/proposed/sources.md", sources.writeModelNames), "Proposed target names and business reasons for commands, events, and reactors."],
     [link("docs/proposed/sources.md", sources.readSchemas), "Operation-query contracts."],
-    [link("docs/proposed/sources.md", "docs/product/domain-model.md"), "Captured in domain-model.md."],
-    [link("docs/proposed/sources.md", "docs/product/product-brief.md"), "Captured in scope.md."],
-    [link("docs/proposed/sources.md", "docs/product/user-journeys.md"), "Captured in journeys.md."],
-    [link("docs/proposed/sources.md", "docs/product/command-list.md"), "Captured in commands/product-scope.md."],
-    [link("docs/proposed/sources.md", "docs/product/domain-event-list.md"), "Captured in events/product-scope.md."],
-    [link("docs/proposed/sources.md", "docs/product/query-and-view-model-list.md"), "Captured in read-models.md."],
     [link("docs/proposed/sources.md", "docs/product/canonical-entity-model.md"), "Canonical entity families, standards use, source authority, and manual-first constraint are integrated in domain-model.md; the approved conceptual source remains available for exact mapping."],
     [link("docs/proposed/sources.md", "docs/product/decisions/m0-d08-technology-inventory.md"), "External-source authority and no-connector decision are summarized in partner-seam.md."],
     [link("docs/proposed/sources.md", "docs/product/decisions/m0-d11-vendors.md"), "Provider materiality, assurance, review, and subservice rules are summarized in partner-seam.md."],
@@ -861,20 +1205,25 @@ write("docs/proposed/sources.md", [
 write("docs/proposed/README.md", [
   "# Proposed domain model",
   "",
-  "A structured, source-backed capture of the Compliance Core domain. This first pass mechanically reorganizes domain, owner, command, event, choreography, process, read-model, and decision information already in the repository. It adds no domain rules.",
+  "This is the working target for Compliance Core implementation. The current refinement scope is the write model: commands → events → reactors. The naming decisions below are intended to become the implementation names after the affected contracts are updated.",
   "",
-  "Unknown or conflicting details use " + code("[Placeholder: ...]") + ". Complete selected per-owner records are under data/; paths outside this checkout are replaced by explicit placeholders.",
+  "The proposed pages explain business outcomes and preserve enough source names and wire details to map the target back to current contracts. Unknown or conflicting details use " + code("[Placeholder: ...]") + ".",
   "",
-  "## Start here",
+  "## Current target: commands → events → reactors",
   "",
-  "- " + link("docs/proposed/README.md", "docs/proposed/domain-model.md", "Domain model") + ", " + link("docs/proposed/README.md", "docs/proposed/scope.md", "product scope") + ", and " + link("docs/proposed/README.md", "docs/proposed/journeys.md", "journeys") + ".",
+  "- " + link("docs/proposed/README.md", "docs/proposed/write-model-names.md", "Write model names") + " records target names and the reason for each changed name.",
+  "- " + link("docs/proposed/README.md", "docs/proposed/write-model-domain-rules.md", "Write model domain rules") + " records the selected business rules for commands, events, and reactors.",
+  "- " + link("docs/proposed/README.md", "docs/proposed/commands/README.md", "Commands") + " state the requested actions; " + link("docs/proposed/README.md", "docs/proposed/events/README.md", "events") + " state completed facts; " + link("docs/proposed/README.md", "docs/proposed/reactors/README.md", "reactors") + " state why each reaction exists.",
+  "- " + link("docs/proposed/README.md", "docs/proposed/domain-model.md", "Domain model") + ", " + link("docs/proposed/README.md", "docs/proposed/scope.md", "product scope") + ", and " + link("docs/proposed/README.md", "docs/proposed/journeys.md", "journeys") + " provide broader product context.",
   "- " + link("docs/proposed/README.md", "docs/proposed/aggregates/README.md", "Aggregates") + " — one page per business owner and technical responsibility.",
-  "- " + link("docs/proposed/README.md", "docs/proposed/commands/README.md", "Commands") + " and " + link("docs/proposed/README.md", "docs/proposed/events/README.md", "events") + ".",
-  "- " + link("docs/proposed/README.md", "docs/proposed/reactors/README.md", "Reactors") + ", " + link("docs/proposed/README.md", "docs/proposed/processes/README.md", "processes") + ", and the " + link("docs/proposed/README.md", "docs/proposed/worker-catalog.md", "worker catalog") + "; " + link("docs/proposed/README.md", "docs/proposed/reactors/registration-plan.md", "registration plan") + ".",
+  "",
+  "## Later reference material",
+  "",
+  "- " + link("docs/proposed/README.md", "docs/proposed/read-models.md", "Read models") + " and " + link("docs/proposed/README.md", "docs/proposed/processes/README.md", "processes") + " remain available for later refinement.",
+  "- " + link("docs/proposed/README.md", "docs/proposed/worker-catalog.md", "Worker catalog") + " and " + link("docs/proposed/README.md", "docs/proposed/reactors/registration-plan.md", "registration plan") + " record implementation context.",
   "- " + link("docs/proposed/README.md", "docs/proposed/partner-seam.md", "Provider and external-source seams") + " records governed provider facts, the manual-first connector boundary, and placeholders for future partner contracts.",
   "- " + link("docs/proposed/README.md", "docs/proposed/architecture-overview.md", "Architecture notes") + ", " + link("docs/proposed/README.md", "docs/proposed/aggregate-boundary-notes.md", "boundary notes") + ", and " + link("docs/proposed/README.md", "docs/proposed/product-rule-traceability.md", "product-rule traceability") + ".",
-  "- " + link("docs/proposed/README.md", "docs/proposed/read-models.md", "Read models") + ", " + link("docs/proposed/README.md", "docs/proposed/decisions-log.md", "decisions") + ", and " + link("docs/proposed/README.md", "docs/proposed/open-gaps.md", "open details") + ".",
-  "- " + link("docs/proposed/README.md", "docs/proposed/sources.md", "Source map") + ".",
+  "- " + link("docs/proposed/README.md", "docs/proposed/decisions-log.md", "decisions") + ", " + link("docs/proposed/README.md", "docs/proposed/open-gaps.md", "open details") + ", and " + link("docs/proposed/README.md", "docs/proposed/sources.md", "source map") + ".",
   "",
   "## Inventory",
   "",
@@ -882,7 +1231,7 @@ write("docs/proposed/README.md", [
   "",
   "## Authority and qualification",
   "",
-  "The definitive aggregate/choreography catalog remains the selected target architecture. This documentation reorganizes it for navigation. Target selection, source presence, or catalog completeness does not prove producer/receiver delivery, persistence, replay, recovery, or runtime qualification.",
+  "The proposed target names are recorded in " + link("docs/proposed/README.md", "docs/proposed/data/write-model-names.json", "write-model-names.json") + ". The definitive catalog and current code provide the source names, business rules, route contracts, and event wires used to reconcile that target. Renamed event types keep their selected discriminator strings and versions.",
   "",
   "Implementation evidence and delivery sequencing remain in " + link("docs/proposed/README.md", "docs/product/definitive-aggregate-choreography/aggregate-status.md", "aggregate-status.md") + " and " + link("docs/proposed/README.md", "docs/product/definitive-aggregate-choreography/aggregate-backlog.md", "aggregate-backlog.md") + ".",
   "",

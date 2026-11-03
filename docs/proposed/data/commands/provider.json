@@ -46,7 +46,9 @@
         "line": 12584,
         "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       },
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "RecordProvider",
+      "targetName": "RecordProvider"
     },
     {
       "command": "ReviseProvider",
@@ -103,7 +105,9 @@
         "line": 16680,
         "sha256": "343d10463931c367235f030aa2b09f630f2f6411fc3afb6e6cfd0007edc25bdd"
       },
-      "kind": "http"
+      "kind": "http",
+      "sourceName": "ReviseProvider",
+      "targetName": "ReviseProvider"
     },
     {
       "command": "CancelProviderChange",
@@ -153,7 +157,9 @@
         "line": 727,
         "sha256": "f1d549ed0879c816cb26e86879f8fa658dab0a8acbf7c591e4d4aed40483f8ae"
       },
-      "kind": "abort"
+      "kind": "abort",
+      "sourceName": "CancelProviderChange",
+      "targetName": "CancelProviderChange"
     },
     {
       "command": "ApplyProviderChange",
@@ -225,7 +231,9 @@
       "source": {
         "path": "docs/product/audits/2026-10-23/target-reactor-contracts.json",
         "recorded": "2026-10-29"
-      }
+      },
+      "sourceName": "ApplyProviderChange",
+      "targetName": "ApplyProviderChange"
     }
   ],
   "sourceContractEvidence": [

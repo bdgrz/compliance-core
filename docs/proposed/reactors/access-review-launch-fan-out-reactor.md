@@ -1,10 +1,15 @@
-# AccessReviewLaunchFanOutReactor
+# OpenAccessReviewWorkReactor
+
+Selected source root name: `AccessReviewLaunchFanOutReactor`.
+## Why this reaction exists
+
+Give reviewers a task for every in-scope account so each account receives an explicit access decision.
 
 Selected choreography rows: **1**. Required proofs, recovery, effect identity, and implementation evidence are preserved in [reactor row JSON](../data/reactors/access-review-launch-fan-out-reactor.json).
 
 | Row | Kind | Prerequisite facts | Command | Target owner | Emitted facts |
 | --- | --- | --- | --- | --- | --- |
-| T008 | reaction_or_regular_process_stage | AccessReviewCampaignLaunched | MaterializeAccessReviewItem | AccessReviewItem | AccessReviewItemOpened |
+| T008 | reaction_or_regular_process_stage | AccessReviewCampaignLaunched | OpenAccessReviewItem | AccessReviewItem | AccessReviewItemOpened |
 
 ## Selected row details
 
@@ -16,16 +21,16 @@ Selected choreography rows: **1**. Required proofs, recovery, effect identity, a
 | kind | reaction_or_regular_process_stage |
 | status | SELECTED_TARGET_DEFINITION_NO_IMPLEMENTATION_AUTHORIZED |
 | sourceOwner | AccessReviewCampaign |
-| logicalPrerequisiteFacts | AccessReviewCampaignLaunched |
+| logicalPrerequisiteFacts (target names) | AccessReviewCampaignLaunched |
 | logicalPrerequisiteRule | The launch manifest must include this exact item with its personal responsibility; the item opens once per manifest selection. |
-| physicalRootEvents | AccessReviewCampaignLaunched |
-| originalAdmissionKinds | AccessReviewCampaignLaunched |
-| receiverCommand | MaterializeAccessReviewItem |
+| physicalRootEvents (target names) | AccessReviewCampaignLaunched |
+| originalAdmissionKinds (target names) | AccessReviewCampaignLaunched |
+| Target command (selected source name: MaterializeAccessReviewItem) | OpenAccessReviewItem |
 | targetOwner | AccessReviewItem |
 | targetAuthorityKind | business_aggregate |
-| emittedSemanticFacts | AccessReviewItemOpened |
+| emittedSemanticFacts (target names) | AccessReviewItemOpened |
 | emittedEventContracts | None listed |
-| currentRegisteredRootTypes | AccessReviewLaunchFanOutReactor |
+| currentRegisteredRootTypes (target names) | OpenAccessReviewWorkReactor |
 | plannedRootRole | null (recorded) |
 | processes | AccessReviewLaunchFanOut |
 | requiredProofContract | `{"canonicalCarrier":"original admitted root reference + required independently verified typed stage/terminal proof sets","admissionReferenceFactKinds":["AccessReviewCampaignLaunched"],"admissionReferenceRole":"original business admission/first-owner fact, distinct from subscription trigger and intermediate/terminal prerequisites","verification":{"admission":"AdmissionReference is a locator only. Resolve and independently verify actual typed admitted fact, exact owner/tenant/program, saved metadata and physical/hydrated cut, original root/episode/actor/intent and immutable content.","stageAndTerminal":"Materialize each required typed stage/terminal proof from actual committed facts and full required immutable selections; prove complete grant/fence/provisional/child sets, not counts/checkpoints. Guard sets are not weakened by carrier choice.","earlyReplay":"If native receipt binding does not cover a supplied/interpreted command term, bind that term through the required actual typed proof/body before early replay. Exact receipt cannot bypass proof manifest or source tuple guards.","resultAndRecovery":"Current public authorization precedes replay. Original result/receipt and unknown-append recovery stay exact; requested cancellation propagates. Unavailable proof/content remains transient; corruption/changed intent is permanent; no inferred absence/release.","implementationStatus":"Installed pointer/handler/process presence is not proof of conformance. Field/wire migration and required behavioral tests remain separately verifiable implementation work."},"requiredTypedStageProofSets":[{"factKinds":["AccessReviewItemOpened"],"role":"No prior open of this item with different content","quantifier":"none_outstanding","condition":"retry no-op if identical","requiredVerification":"Resolve the actual saved fact and its full immutable selection; verify the typed payload and the exact admission, root, target, generation, actor and intent binding. A pointer, checkpoint or stage order alone is not authority."}],"pinnedSourceRequirements":"Every exact source owner/event/content revision and complete immutable manifest required by intendedProofGate remains mandatory; no absent optional source is fabricated.","proofGate":"Source complete launch manifest includes this exact item and personal responsibility.","requiredLogicalPrerequisiteProofs":"Every applicable logical prerequisite is independently verified as an actual typed saved fact (or actual technical proof where explicitly technical); a terminal proof may establish an earlier stage only through a verified native chain that includes that required typed stage. Stage order/checkpoint alone never substitutes.","prerequisiteVerification":{"admission":"The receiver resolves the original admitted root fact by its exact owner, tenant, episode, actor and immutable intent, and verifies the saved fact and content hash before acting; a reference alone grants nothing.","stageProofs":"Each required stage proof (grant, hold, review, or terminal fact) is materialised from the actual committed fact and its full immutable selection; counts, checkpoints and stage order are not accepted as proof."},"stageProofStatus":"specified","stageProofRationale":"Manifest is part of the launch fact content so the root carries the proof; only duplicate-open conflict beyond it.","stageProofSource":"authored 2026-10-29 from reactor and target source"}` |

@@ -23,7 +23,7 @@
 
 | Command | Kind | Identity field |
 | --- | --- | --- |
-| [MaterializeProviderRiskAcceptanceLink](../commands/provider-risk-acceptance.md#materializeproviderriskacceptancelink) | receiver | CommandId |
+| [LinkProviderRiskAcceptanceToGap](../commands/provider-risk-acceptance.md#linkproviderriskacceptancetogap) | receiver | CommandId |
 
 ## Events
 
@@ -35,7 +35,7 @@
 
 | Row | Kind | Source owner | Target owner | Command |
 | --- | --- | --- | --- | --- |
-| [T088](../reactors/provider-risk-acceptance-link-reactor.md#t088) | reaction_or_regular_process_stage | ProviderAssuranceGap | ProviderRiskAcceptance | MaterializeProviderRiskAcceptanceLink |
+| [T088](../reactors/provider-risk-acceptance-link-reactor.md#t088) | reaction_or_regular_process_stage | ProviderAssuranceGap | ProviderRiskAcceptance | LinkProviderRiskAcceptanceToGap |
 
 ## Product rules
 

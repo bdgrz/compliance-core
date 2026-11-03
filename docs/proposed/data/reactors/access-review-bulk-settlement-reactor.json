@@ -1,5 +1,7 @@
 {
-  "root": "AccessReviewBulkSettlementReactor",
+  "sourceRoot": "AccessReviewBulkSettlementReactor",
+  "targetRoot": "ApplyPublishedAccessReviewDecisionReactor",
+  "businessReason": "Apply the published batch decision to each selected item while canceled decisions stay hidden.",
   "rows": [
     {
       "id": "T080",

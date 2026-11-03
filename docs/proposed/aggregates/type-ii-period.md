@@ -26,7 +26,7 @@
 | [AmendTypeIIPeriodClose](../commands/type-ii-period.md#amendtypeiiperiodclose) | command | CommandId |
 | [ApproveTypeIIPeriodClose](../commands/type-ii-period.md#approvetypeiiperiodclose) | http | CommandId |
 | [FreezeTypeIIPeriodClose](../commands/type-ii-period.md#freezetypeiiperiodclose) | http | CommandId |
-| [GenerateDueControlOccurrences](../commands/type-ii-period.md#generateduecontroloccurrences) | creation | GenerationKey |
+| [OpenDueControlOccurrences](../commands/type-ii-period.md#openduecontroloccurrences) | creation | GenerationKey |
 | [StartTypeIIObservationPeriod](../commands/type-ii-period.md#starttypeiiobservationperiod) | http | PeriodId |
 | [AmendTypeIIObservationPeriod](../commands/type-ii-period.md#amendtypeiiobservationperiod) | http | CommandId |
 | [CancelTypeIIPeriodAmendment](../commands/type-ii-period.md#canceltypeiiperiodamendment) | http | CommandId |
@@ -54,10 +54,10 @@
 
 | Row | Kind | Source owner | Target owner | Command |
 | --- | --- | --- | --- | --- |
-| [T040](../reactors/control-occurrence-fan-out-reactor.md#t040) | reaction_or_regular_process_stage | TypeIIPeriod | ControlOccurrence | MaterializeControlOccurrence |
+| [T040](../reactors/control-occurrence-fan-out-reactor.md#t040) | reaction_or_regular_process_stage | TypeIIPeriod | ControlOccurrence | OpenDueControlOccurrence |
 | [T053](../reactors/type-ii-range-reactor.md#t053) | reaction_or_regular_process_stage | TypeIIPeriod | TypeIIObservationCalendar | AcquireTypeIIPeriodRange |
 | [T054](../reactors/type-ii-range-reactor.md#t054) | reaction_or_regular_process_stage | TypeIIObservationCalendar | TypeIIPeriod | ApplyTypeIIPeriodRange |
-| [T055](../reactors/type-ii-range-reactor.md#t055) | reaction_or_regular_process_stage | TypeIIPeriod | TypeIIObservationCalendar | SettleTypeIIPeriodRange |
+| [T055](../reactors/type-ii-range-reactor.md#t055) | reaction_or_regular_process_stage | TypeIIPeriod | TypeIIObservationCalendar | CloseTypeIIPeriodRangeReservation |
 | [A018](../reactors/unassigned-architecture-rows.md#a018) | process_abort_binding | TypeIIPeriod | TypeIIPeriod | RejectTypeIIPeriodOpening |
 | [A019](../reactors/unassigned-architecture-rows.md#a019) | process_abort_binding | TypeIIPeriod | TypeIIPeriod | RejectTypeIIPeriodAmendment |
 | [A020](../reactors/unassigned-architecture-rows.md#a020) | process_abort_binding | TypeIIPeriod | TypeIIPeriod | CancelTypeIIPeriodAmendment |

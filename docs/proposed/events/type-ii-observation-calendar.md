@@ -2,17 +2,20 @@
 
 Canonical events: **2**. Complete canonical event and available schema records: [owner event JSON](../data/events/type-ii-observation-calendar.json).
 
-| Event | Kind | Adopted discriminator | Version | Schema fields | Meaning |
-| --- | --- | --- | --- | --- | --- |
-| TypeIIPeriodRangeAuthorized | reservation | bdgrz.type-ii-observation-calendar.type-ii-period-range-authorized | 2 | 8 | The calendar holds the new range of one opening or amendment. The calendar's own reservation generation is the number of authorizations up to and including this fact. PriorOperationId names the live reservation an amendment replaces; that reservation stays held until the amendment is applied. The range and period remain on the native fact; Header and CurrentAuthority bind the compact live authority and linked terminal history. |
-| TypeIIPeriodRangeSettled | reservation | bdgrz.type-ii-observation-calendar.type-ii-period-range-settled | 2 | 8 | The calendar settled exactly one reservation, TargetOperationId, and for an applied amendment also released the replaced ReleasedOperationId. A settlement before any authorization fences the reservation so a late acquisition is refused. |
+| Target event | Selected source name | Kind | Adopted discriminator | Version | Schema fields | Meaning |
+| --- | --- | --- | --- | --- | --- | --- |
+| TypeIIPeriodDateRangeReserved | TypeIIPeriodRangeAuthorized | reservation | bdgrz.type-ii-observation-calendar.type-ii-period-range-authorized | 2 | 8 | The calendar holds the new range of one opening or amendment. The calendar's own reservation generation is the number of authorizations up to and including this fact. PriorOperationId names the live reservation an amendment replaces; that reservation stays held until the amendment is applied. The range and period remain on the native fact; Header and CurrentAuthority bind the compact live authority and linked terminal history. |
+| TypeIIPeriodDateRangeReservationEnded | TypeIIPeriodRangeSettled | reservation | bdgrz.type-ii-observation-calendar.type-ii-period-range-settled | 2 | 8 | The calendar settled exactly one reservation, TargetOperationId, and for an applied amendment also released the replaced ReleasedOperationId. A settlement before any authorization fences the reservation so a late acquisition is refused. |
 
 ## Event details
 
-### TypeIIPeriodRangeAuthorized
+### TypeIIPeriodDateRangeReserved
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | TypeIIPeriodDateRangeReserved |
+| Selected source event name | TypeIIPeriodRangeAuthorized |
+| Name decision | Names the reserved observation dates before a Type II period opening or amendment. |
 | Canonical semantic key | event:TypeIIPeriodRangeAuthorized |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | TypeIIPeriodRangeAuthorized |
@@ -22,7 +25,8 @@ Canonical events: **2**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | `{"discriminator":"bdgrz.type-i-i-observation-calendar.type-i-i-period-range-authorized","version":1}` |
-| Meaning | The calendar holds the new range of one opening or amendment. The calendar's own reservation generation is the number of authorizations up to and including this fact. PriorOperationId names the live reservation an amendment replaces; that reservation stays held until the amendment is applied. The range and period remain on the native fact; Header and CurrentAuthority bind the compact live authority and linked terminal history. |
+| Target meaning | The calendar holds the new range of one opening or amendment. The calendar's own reservation generation is the number of authorizations up to and including this fact. PriorOperationId names the live reservation an amendment replaces; that reservation stays held until the amendment is applied. The range and period remain on the native fact; Header and CurrentAuthority bind the compact live authority and linked terminal history. |
+| Selected source meaning | The calendar holds the new range of one opening or amendment. The calendar's own reservation generation is the number of authorizations up to and including this fact. PriorOperationId names the live reservation an amendment replaces; that reservation stays held until the amendment is applied. The range and period remain on the native fact; Header and CurrentAuthority bind the compact live authority and linked terminal history. |
 | Meaning source | record summary in src/Compliance.Common/Features/Operations/Events/TypeIIPeriodRangeAuthorized.cs |
 
 #### Selected schema and implementation evidence
@@ -105,10 +109,13 @@ TypeIIRangeIntent
 | [T053](../reactors/type-ii-range-reactor.md#t053) | emitted semantic fact | TypeIIPeriod | AcquireTypeIIPeriodRange | TypeIIObservationCalendar |
 | [T054](../reactors/type-ii-range-reactor.md#t054) | logical prerequisite | TypeIIObservationCalendar | ApplyTypeIIPeriodRange | TypeIIPeriod |
 
-### TypeIIPeriodRangeSettled
+### TypeIIPeriodDateRangeReservationEnded
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | TypeIIPeriodDateRangeReservationEnded |
+| Selected source event name | TypeIIPeriodRangeSettled |
+| Name decision | Names the end of the exact date reservation after acceptance, replacement, or cancellation. |
 | Canonical semantic key | event:TypeIIPeriodRangeSettled |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | TypeIIPeriodRangeSettled |
@@ -118,7 +125,8 @@ TypeIIRangeIntent
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | `{"discriminator":"bdgrz.type-i-i-observation-calendar.type-i-i-period-range-settled","version":1}` |
-| Meaning | The calendar settled exactly one reservation, TargetOperationId, and for an applied amendment also released the replaced ReleasedOperationId. A settlement before any authorization fences the reservation so a late acquisition is refused. |
+| Target meaning | The calendar settled exactly one reservation, TargetOperationId, and for an applied amendment also released the replaced ReleasedOperationId. A settlement before any authorization fences the reservation so a late acquisition is refused. |
+| Selected source meaning | The calendar settled exactly one reservation, TargetOperationId, and for an applied amendment also released the replaced ReleasedOperationId. A settlement before any authorization fences the reservation so a late acquisition is refused. |
 | Meaning source | record summary in src/Compliance.Common/Features/Operations/Events/TypeIIPeriodRangeSettled.cs |
 
 #### Selected schema and implementation evidence
@@ -198,7 +206,7 @@ TypeIIRangeIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T055](../reactors/type-ii-range-reactor.md#t055) | emitted semantic fact | TypeIIPeriod | SettleTypeIIPeriodRange | TypeIIObservationCalendar |
+| [T055](../reactors/type-ii-range-reactor.md#t055) | emitted semantic fact | TypeIIPeriod | CloseTypeIIPeriodRangeReservation | TypeIIObservationCalendar |
 
 
 ## Wire/schema version discrepancies

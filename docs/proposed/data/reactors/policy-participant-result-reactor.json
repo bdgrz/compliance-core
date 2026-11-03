@@ -1,5 +1,7 @@
 {
-  "root": "PolicyParticipantResultReactor",
+  "sourceRoot": "PolicyParticipantResultReactor",
+  "targetRoot": "RecordPolicyRequirementOutcomesReactor",
+  "businessReason": "Record the participant's exact acknowledgement, training completion, or approved waiver.",
   "rows": [
     {
       "id": "T076",

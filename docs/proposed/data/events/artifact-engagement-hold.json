@@ -23,7 +23,11 @@
         "meaning": "Records the ArtifactEngagementHoldPlaced domain fact for one tenant-owned subject revision.",
         "meaningSource": "record summary in src/Compliance.Common/Features/Retention/Events/ArtifactEngagementHoldPlaced.cs"
       },
-      "schema": null
+      "schema": null,
+      "sourceName": "ArtifactEngagementHoldPlaced",
+      "targetName": "ArtifactEngagementHoldPlaced",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "Records the ArtifactEngagementHoldPlaced domain fact for one tenant-owned subject revision."
     },
     {
       "canonical": {
@@ -47,7 +51,11 @@
         "meaning": "Records the ArtifactEngagementHoldReleased domain fact for one tenant-owned subject revision.",
         "meaningSource": "record summary in src/Compliance.Common/Features/Retention/Events/ArtifactEngagementHoldReleased.cs"
       },
-      "schema": null
+      "schema": null,
+      "sourceName": "ArtifactEngagementHoldReleased",
+      "targetName": "ArtifactEngagementHoldReleased",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "Records the ArtifactEngagementHoldReleased domain fact for one tenant-owned subject revision."
     },
     {
       "canonical": {
@@ -71,7 +79,11 @@
         "meaning": "Records the EngagementReportIssued domain fact for one tenant-owned subject revision.",
         "meaningSource": "record summary in src/Compliance.Common/Features/Retention/Events/EngagementReportIssued.cs"
       },
-      "schema": null
+      "schema": null,
+      "sourceName": "EngagementReportIssued",
+      "targetName": "EngagementReportIssued",
+      "nameDecision": "The selected source name is retained.",
+      "targetMeaning": "Records the EngagementReportIssued domain fact for one tenant-owned subject revision."
     }
   ]
 }

@@ -2,16 +2,16 @@
 
 Selected command contracts: **8**. Complete selected contracts and companion source evidence: [owner command JSON](../data/commands/member.json).
 
-| Command | Kind | Identity | Fields | HTTP routes |
-| --- | --- | --- | --- | --- |
-| CompleteMemberRetirement | command | CommandId | 6 | [Placeholder: value not recorded] |
-| RegisterMember | command | CommandId | 5 | [Placeholder: value not recorded] |
-| SuspendMember | http | CommandId | 6 | {"method":"PUT","path":"/api/v1/tenants/{tenant_id}/members/{user_id}/suspensions/{command_id}"} |
-| DeprovisionMember | http | CommandId | 6 | {"method":"PUT","path":"/api/v1/tenants/{tenant_id}/members/{user_id}/deprovisioning/{command_id}"} |
-| ReinstateMember | http | CommandId | 5 | {"method":"PUT","path":"/api/v1/tenants/{tenant_id}/members/by-user/{user_id}/reinstatements/{command_id}"} |
-| ApplyMemberWithdrawal | receiver | CommandId | 10 | [Placeholder: value not recorded] |
-| ApplyNeutralMemberSourceMutation | receiver | CommandId | 10 | [Placeholder: value not recorded] |
-| ApplyMemberRestoration | receiver | CommandId | 9 | [Placeholder: value not recorded] |
+| Target command | Selected source name | Kind | Identity | Fields | HTTP routes |
+| --- | --- | --- | --- | --- | --- |
+| CompleteMemberRetirement | CompleteMemberRetirement | command | CommandId | 6 | [Placeholder: value not recorded] |
+| RegisterMember | RegisterMember | command | CommandId | 5 | [Placeholder: value not recorded] |
+| SuspendMember | SuspendMember | http | CommandId | 6 | {"method":"PUT","path":"/api/v1/tenants/{tenant_id}/members/{user_id}/suspensions/{command_id}"} |
+| DeprovisionMember | DeprovisionMember | http | CommandId | 6 | {"method":"PUT","path":"/api/v1/tenants/{tenant_id}/members/{user_id}/deprovisioning/{command_id}"} |
+| ReinstateMember | ReinstateMember | http | CommandId | 5 | {"method":"PUT","path":"/api/v1/tenants/{tenant_id}/members/by-user/{user_id}/reinstatements/{command_id}"} |
+| ApplyMemberWithdrawal | ApplyMemberWithdrawal | receiver | CommandId | 10 | [Placeholder: value not recorded] |
+| ApplyMemberStatusChange | ApplyNeutralMemberSourceMutation | receiver | CommandId | 10 | [Placeholder: value not recorded] |
+| ApplyMemberRestoration | ApplyMemberRestoration | receiver | CommandId | 9 | [Placeholder: value not recorded] |
 
 ## Selected command details
 
@@ -19,13 +19,16 @@ Selected command contracts: **8**. Complete selected contracts and companion sou
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | CompleteMemberRetirement |
+| Selected source command name | CompleteMemberRetirement |
+| Name decision | The selected source name is retained. |
 | Owner | Member |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | command |
 | Logical identity | CommandId; Uuid; required=true; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
 | Entry point | [Placeholder: value not recorded] |
 | MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | [Placeholder: value not recorded] |
+| Selected semantic events | None listed |
 | Protocols | [Placeholder: value not recorded] |
 | Policy preservation | [Placeholder: value not recorded] |
 | Contract changes | [Placeholder: value not recorded] |
@@ -65,13 +68,16 @@ Required tests: [Placeholder: required tests not recorded]
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | RegisterMember |
+| Selected source command name | RegisterMember |
+| Name decision | The selected source name is retained. |
 | Owner | Member |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | command |
 | Logical identity | CommandId; Uuid; required=true; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
 | Entry point | [Placeholder: value not recorded] |
 | MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | [Placeholder: value not recorded] |
+| Selected semantic events | None listed |
 | Protocols | [Placeholder: value not recorded] |
 | Policy preservation | [Placeholder: value not recorded] |
 | Contract changes | [Placeholder: value not recorded] |
@@ -110,13 +116,16 @@ Required tests: [Placeholder: required tests not recorded]
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | SuspendMember |
+| Selected source command name | SuspendMember |
+| Name decision | The selected source name is retained. |
 | Owner | Member |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | http |
 | Logical identity | CommandId; Uuid; required=true; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
 | Entry point | [Placeholder: value not recorded] |
 | MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | [Placeholder: value not recorded] |
+| Selected semantic events | None listed |
 | Protocols | [Placeholder: value not recorded] |
 | Policy preservation | [Placeholder: value not recorded] |
 | Contract changes | [Placeholder: value not recorded] |
@@ -156,13 +165,16 @@ Required tests: [Placeholder: required tests not recorded]
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | DeprovisionMember |
+| Selected source command name | DeprovisionMember |
+| Name decision | The selected source name is retained. |
 | Owner | Member |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | http |
 | Logical identity | CommandId; Uuid; required=true; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
 | Entry point | [Placeholder: value not recorded] |
 | MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | [Placeholder: value not recorded] |
+| Selected semantic events | None listed |
 | Protocols | [Placeholder: value not recorded] |
 | Policy preservation | [Placeholder: value not recorded] |
 | Contract changes | [Placeholder: value not recorded] |
@@ -202,13 +214,16 @@ Required tests: [Placeholder: required tests not recorded]
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | ReinstateMember |
+| Selected source command name | ReinstateMember |
+| Name decision | The selected source name is retained. |
 | Owner | Member |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | http |
 | Logical identity | CommandId; Uuid; required=true; CommandId binds one immutable authored intent to the exact owner identity and expected revision: an exact retry returns the original result, a changed intent under the same CommandId is refused |
 | Entry point | [Placeholder: value not recorded] |
 | MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | [Placeholder: value not recorded] |
+| Selected semantic events | None listed |
 | Protocols | [Placeholder: value not recorded] |
 | Policy preservation | [Placeholder: value not recorded] |
 | Contract changes | [Placeholder: value not recorded] |
@@ -247,13 +262,16 @@ Required tests: [Placeholder: required tests not recorded]
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | ApplyMemberWithdrawal |
+| Selected source command name | ApplyMemberWithdrawal |
+| Name decision | The selected source name is retained. |
 | Owner | Member |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; reactor; deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result |
 | Entry point | [Placeholder: value not recorded] |
 | MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | [Placeholder: value not recorded] |
+| Selected semantic events | None listed |
 | Protocols | [Placeholder: value not recorded] |
 | Policy preservation | [Placeholder: value not recorded] |
 | Contract changes | [Placeholder: value not recorded] |
@@ -293,17 +311,20 @@ Existing tests: [Placeholder: existing tests not recorded]
 
 Required tests: [Placeholder: required tests not recorded]
 
-### ApplyNeutralMemberSourceMutation
+### ApplyMemberStatusChange
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | ApplyMemberStatusChange |
+| Selected source command name | ApplyNeutralMemberSourceMutation |
+| Name decision | Applies the admitted suspend, deprovision, or reinstate decision to the exact member episode. |
 | Owner | Member |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; reactor; deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result |
 | Entry point | [Placeholder: value not recorded] |
 | MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | [Placeholder: value not recorded] |
+| Selected semantic events | None listed |
 | Protocols | [Placeholder: value not recorded] |
 | Policy preservation | [Placeholder: value not recorded] |
 | Contract changes | [Placeholder: value not recorded] |
@@ -347,13 +368,16 @@ Required tests: [Placeholder: required tests not recorded]
 
 | Selected contract detail | Value |
 | --- | --- |
+| Target command name | ApplyMemberRestoration |
+| Selected source command name | ApplyMemberRestoration |
+| Name decision | The selected source name is retained. |
 | Owner | Member |
 | Contract record status | [Placeholder: value not recorded] |
 | Kind | receiver |
 | Logical identity | CommandId; Uuid; required=true; reactor; deterministic receiver identity derived from the admitted root fact, episode and generation; exact redelivery resolves the original result |
 | Entry point | [Placeholder: value not recorded] |
 | MCP | [Placeholder: MCP availability not recorded] |
-| Selected semantic events | [Placeholder: value not recorded] |
+| Selected semantic events | None listed |
 | Protocols | [Placeholder: value not recorded] |
 | Policy preservation | [Placeholder: value not recorded] |
 | Contract changes | [Placeholder: value not recorded] |

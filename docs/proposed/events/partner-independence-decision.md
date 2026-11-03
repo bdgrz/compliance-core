@@ -2,9 +2,9 @@
 
 Canonical events: **1**. Complete canonical event and available schema records: [owner event JSON](../data/events/partner-independence-decision.json).
 
-| Event | Kind | Adopted discriminator | Version | Schema fields | Meaning |
-| --- | --- | --- | --- | --- | --- |
-| PartnerIndependenceEvaluationRecorded | business | bdgrz.service-engagement.partner-evaluation.recorded | 1 | 8 | The immutable personal partner evaluation, materialized from the authorized personal decision. The complete PartnerIndependenceEvaluationView and the ratified rules it relied on are immutable content; the evaluation identity is OperationId. |
+| Target event | Selected source name | Kind | Adopted discriminator | Version | Schema fields | Meaning |
+| --- | --- | --- | --- | --- | --- | --- |
+| PartnerIndependenceEvaluationRecorded | PartnerIndependenceEvaluationRecorded | business | bdgrz.service-engagement.partner-evaluation.recorded | 1 | 8 | The immutable personal partner evaluation, materialized from the authorized personal decision. The complete PartnerIndependenceEvaluationView and the ratified rules it relied on are immutable content; the evaluation identity is OperationId. |
 
 ## Event details
 
@@ -12,6 +12,9 @@ Canonical events: **1**. Complete canonical event and available schema records: 
 
 | Canonical event detail | Value |
 | --- | --- |
+| Target event name | PartnerIndependenceEvaluationRecorded |
+| Selected source event name | PartnerIndependenceEvaluationRecorded |
+| Name decision | The selected source name is retained. |
 | Canonical semantic key | event:PartnerIndependenceEvaluationRecorded |
 | Owner selection | one exact canonical authority owner |
 | Target concrete type | PartnerIndependenceEvaluationRecorded |
@@ -21,7 +24,8 @@ Canonical events: **1**. Complete canonical event and available schema records: 
 | Source status | declared |
 | Adopted decision IDs | None listed |
 | Superseded selected wire | [Placeholder: value not recorded] |
-| Meaning | The immutable personal partner evaluation, materialized from the authorized personal decision. The complete PartnerIndependenceEvaluationView and the ratified rules it relied on are immutable content; the evaluation identity is OperationId. |
+| Target meaning | The immutable personal partner evaluation, materialized from the authorized personal decision. The complete PartnerIndependenceEvaluationView and the ratified rules it relied on are immutable content; the evaluation identity is OperationId. |
+| Selected source meaning | The immutable personal partner evaluation, materialized from the authorized personal decision. The complete PartnerIndependenceEvaluationView and the ratified rules it relied on are immutable content; the evaluation identity is OperationId. |
 | Meaning source | record summary in src/Compliance.Common/Features/AccessControl/Events/PartnerIndependenceEvaluationRecorded.cs |
 
 #### Selected schema and implementation evidence
@@ -119,8 +123,8 @@ EngagementPersonalDecisionIntent
 
 | Row | Relationship | Source owner | Receiver command | Target owner |
 | --- | --- | --- | --- | --- |
-| [T109](../reactors/engagement-personal-decision-reactor.md#t109) | emitted semantic fact | ServiceEngagementIndependence | MaterializePartnerIndependenceDecision | PartnerIndependenceDecision |
-| [T110](../reactors/engagement-personal-decision-reactor.md#t110) | logical prerequisite | EngagementManagementAcknowledgement\|PartnerIndependenceDecision | SettleEngagementPersonalDecision | ServiceEngagementIndependence |
+| [T109](../reactors/engagement-personal-decision-reactor.md#t109) | emitted semantic fact | ServiceEngagementIndependence | RecordPartnerIndependenceEvaluation | PartnerIndependenceDecision |
+| [T110](../reactors/engagement-personal-decision-reactor.md#t110) | logical prerequisite | EngagementManagementAcknowledgement\|PartnerIndependenceDecision | CloseEngagementPersonalDecision | ServiceEngagementIndependence |
 
 
 

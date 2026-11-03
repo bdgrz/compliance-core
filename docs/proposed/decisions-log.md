@@ -40,6 +40,8 @@ Architecture decisions: **35**. Complete selected records: [decision JSON](data/
 | CHOREO_X008_ProofRead | SELECTED_FOR_TARGET_DEFINITION | proof_read_at_signoff | The signed letter is a stage proof the SignOffExamination command verifies; no reactor or availability fact. |
 | CMD_AuditObservationPlanned | SELECTED_FOR_TARGET_DEFINITION | planned_from_aggregate_methods | Four planned command contracts derived from the existing aggregate methods so the owner is no longer command-less. |
 
+The source catalog retains some older OPEN labels. Their proposed write-model disposition is recorded in [Write model domain rules](write-model-domain-rules.md).
+
 Product decision records remain the individual authority:
 
 - [m0-d01-program-targets.md](../product/decisions/m0-d01-program-targets.md)
