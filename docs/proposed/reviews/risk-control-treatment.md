@@ -65,9 +65,10 @@ explicit nullable defaults preserving the existing no-decision branch.
   tests**, including existing treatment retry and native-history tests.
 - Release solution build: **0 warnings, 0 errors**. Solution whitespace
   verification and `git diff --check` passed.
-- Full backend units after the change: **7,940 passed, 25 failed**, out of
+- Initial full backend units after the change: **7,940 passed, 25 failed**, out of
   7,965 tests. The failure names match the pre-change baseline exactly: **no new
-  failures**. This is not repository-wide green or hosted CI qualification.
+  failures**. That historical run had no new failures; current requalification
+  after the baseline repair is recorded below.
 
 Commands:
 
@@ -100,11 +101,26 @@ Jev review used `jev-1.14.0`: local ownership of the proposer/reviewer compariso
   competing appends remain supplied by the existing workflow and Portia. The
   focused owner tests do not establish new host, broker or durable-store
   qualification.
-- Baseline full units after the compiler repair: **7,931 passed, 25 failed**.
-  The failures preceded this aggregate change: retired design and coverage
-  inputs ([#1162](https://github.com/bdgrz/compliance-core/issues/1162)), nine
-  persistence-frame cases ([#1163](https://github.com/bdgrz/compliance-core/issues/1163)),
-  and five work scheduling/policy queue cases recorded on
-  [#1161](https://github.com/bdgrz/compliance-core/issues/1161#issuecomment-6612324394).
-  Required CI still invokes retired validation scripts. No checks were removed
-  or weakened; merge qualification remains outstanding.
+
+## Requalification after baseline repair
+
+The baseline's 25 failures and retired CI-tool paths are repaired in
+[PR #1166](https://github.com/bdgrz/compliance-core/pull/1166). Their historical
+results above are retained as RED and regression evidence, not current blockers.
+
+After rebasing this slice onto that repair:
+
+- All **212 risk tests** passed, including all **9 owner cases**.
+- All **7,982 backend unit tests** passed: **0 failed, 0 skipped**.
+- Solution whitespace verification, Release build and `git diff --check` passed,
+  with **0 warnings and 0 errors**.
+- All **6 Node tests** and both restored Spec commands passed. Runtime wire and
+  source compatibility checks remain enabled; unfinished command paths remain
+  classified as unfinished.
+- Independent adversarial review of the rebased source was clear, including
+  accepted-command replay before owner preparation, stable reviewer attribution
+  and refusal without a fact.
+
+Hosted CI and merge status are recorded on the implementation PR linked from
+[#1164](https://github.com/bdgrz/compliance-core/issues/1164). Local results do not
+establish hosted, broker, deployment or complete proposed-model qualification.
