@@ -650,15 +650,17 @@ public sealed partial class AggregateCommandCoverageTests
                 invalidAggregateMethodEvidence.Add(
                     $"{producer.Aggregate}.{producer.Method}/{producer.MethodArgumentCount} is overloaded; route evidence needs a signature");
 
+        var requestRouteOperations = requests.Where(request =>
+                request.GetProperty("classification").GetString() is "command" or "internal_reaction" &&
+                request.GetProperty("handlerRegistration").GetBoolean())
+            .Select(request => AggregateMutationOperationsForRequest(request, sourceRoots,
+                typeSources, aggregateNames)).ToArray();
+
         foreach (var producer in producerMethods)
         {
             var reachable = false;
-            foreach (var request in requests.Where(request =>
-                         request.GetProperty("classification").GetString() is "command" or "internal_reaction" &&
-                         request.GetProperty("handlerRegistration").GetBoolean()))
+            foreach (var routeOperations in requestRouteOperations)
             {
-                var routeOperations = AggregateMutationOperationsForRequest(request, sourceRoots,
-                    typeSources, aggregateNames);
                 if (routeOperations.Any(operation => operation.Aggregate == producer.Aggregate &&
                     AggregateMethodCanReach(operation.Method, operation.ArgumentCount,
                         producer.Method, producer.MethodArgumentCount,

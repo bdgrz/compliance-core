@@ -2,25 +2,23 @@
 
 ## Branch and release strategy
 
-`develop` is the default integration branch. Create feature, fix, hotfix, and
-chore branches from `develop`, then open pull requests back to `develop`. Do not
-push directly to `develop` or `main`. Merge topic branches into `develop` with
+`main` is the default integration branch. Create feature, fix, hotfix, and
+chore branches from `main`, then open pull requests back to `main`. Do not
+push directly to `main`. Merge topic branches into `main` with
 a squash merge after the required checks pass.
 
 Ordinary PRs deliver one functional slice or keep unfinished behavior behind a
 default-off flag. Sprints do not need branches. A genuinely multi-story feature
 may use a short-lived `feat/<feature>` branch only with fixed included stories,
-acceptance and exit; its child PRs and final PR to `develop` each require review
+acceptance and exit; its child PRs and final PR to `main` each require review
 and final-head checks. Keep WIP = 1 throughout.
 
-`main` is the release branch. Promote only by opening a pull request from this
-repository's `develop` branch to `main`. The promotion must pass backend
-validation. Native AMD64 and ARM64 container qualification runs after successful
-CI on `main`. Use a merge commit for promotion so `main` retains the history of
-`develop`; topic branches continue to use squash merges.
+Native AMD64 and ARM64 container qualification runs after successful CI on
+`main`. A passing topic PR and merge do not by themselves prove native container
+or deployment qualification.
 
-Pull requests into `develop` require the `Backend` check on the final head.
-`ci.yml` runs locked restore, whitespace validation, Release build and backend
+Pull requests into `main` require the `Backend` check on the final head.
+`ci.yml` runs restore, whitespace validation, Release build and backend
 unit tests on pull requests and pushes to `develop` and `main`. Container builds
 remain in `containers.yml`, after successful CI on `main` or manual dispatch.
 
@@ -36,6 +34,9 @@ dependencies, focused check and stopping point. Cap discovery at 20 minutes.
 Another workflow/repository, unplanned contract change, unrelated refactor or
 unknown scope requires a stop and re-scope.
 
+Aggregate rounds also follow [Aggregate delivery and evidence](docs/aggregate-delivery.md)
+for baseline qualification, Jev API checkpoints and the final evidence record.
+
 Create a child task only for a confirmed gap with useful independent acceptance
 and a focused PR boundary. Reuse working code and existing evidence. Backend
 API behavior and client implementation use separate owning repositories and
@@ -43,7 +44,7 @@ PRs; clients consume contracts and do not redefine authorization or domain
 policy. Backend dependencies identify the actual upstream capability rather
 than a product parent waiting on client acceptance.
 
-1. Select the next Ready task in Order, move it In Progress and create an issue/topic branch from `develop`. Keep code inside the owning repository and documented module boundaries.
+1. Select the next Ready task in Order, move it In Progress and create an issue/topic branch from `main`. Keep code inside the owning repository and documented module boundaries.
 2. For a behavior change, add and run a focused failing unit test, make the smallest correction that passes it, and run the owning repository's full unit suite plus applicable format/build checks. Use `Should<ExpectedBehavior>Given<Condition>` names. Evidence-only and documentation tasks do not manufacture RED; verify their actual evidence, links and consistency.
 3. Open a focused PR after those checks pass. Review the immutable head adversarially for contract, authorization, isolation, replay and failure gaps. Address findings, rerun affected checks, and repeat review after changes until clear.
 4. Require CI on the final PR head, squash merge, and read back the merged commit and each linked issue's acceptance. Record contract, security, persistence and operational effects; never commit credentials or weaken production authentication for tests.
