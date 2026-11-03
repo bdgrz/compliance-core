@@ -61,3 +61,4 @@ work.
 | --- | --- | --- |
 | RiskControlTreatment (`RiskTreatmentAssertion` in current source) | Partial: reviewer independence enforced in the owner; control-retirement coordination and proposed-owner migration remain | [Review](reviews/risk-control-treatment.md) |
 | WorkRelationship | Partial: ending is terminal for new revisions; full identity/lifecycle and named-event migration remain | [Review](reviews/work-relationship-terminal-status.md) |
+| ServiceIdentity | Partial: retirement freezes changed terms; full owner/review model and named-event migration remain | [Review](reviews/service-identity-retirement.md) |
