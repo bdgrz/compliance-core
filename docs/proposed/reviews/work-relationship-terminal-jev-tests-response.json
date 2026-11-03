@@ -1,0 +1,1 @@
+{"model":"jev-1.14.0","answers":{"refusal_matrix":{"type":"noul","noul":0.89},"corrections":{"type":"noul","noul":0.94},"registration_retry":{"type":"noul","noul":0.95},"legacy_and_stale":{"type":"noul","noul":0.9}},"usage":{"input_tokens":6333,"output_tokens":76}}

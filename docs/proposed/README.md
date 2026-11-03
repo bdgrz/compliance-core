@@ -60,3 +60,4 @@ work.
 | Owner | Implementation status | Evidence |
 | --- | --- | --- |
 | RiskControlTreatment (`RiskTreatmentAssertion` in current source) | Partial: reviewer independence enforced in the owner; control-retirement coordination and proposed-owner migration remain | [Review](reviews/risk-control-treatment.md) |
+| WorkRelationship | Partial: ending is terminal for new revisions; full identity/lifecycle and named-event migration remain | [Review](reviews/work-relationship-terminal-status.md) |
