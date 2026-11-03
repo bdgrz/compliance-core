@@ -126,7 +126,7 @@ public abstract class AuthorizeSourceUseHandler<TOwner, TRequest>(IAggregateRead
                     if (Decide(owner, binding, source.Key) is { } outcome)
                         return outcome;
                     return FencedReason(owner, source.Key) is { } fenced
-                        ? SourceUseReceiverSupport.Superseded(fenced, null) : null;
+                        ? SourceUseReceiverSupport.Superseded(fenced, null) : default(Result<ReceiverOutcome>?);
                 }
                 var pinnedPreparation = await NativeReceiverPreparation.PrepareAsync<TOwner, PinnedPrepared>(reader,
                     () => Open(request, request.CommandId).ForSourceUses(source.Key), Early, async (owner, token) =>

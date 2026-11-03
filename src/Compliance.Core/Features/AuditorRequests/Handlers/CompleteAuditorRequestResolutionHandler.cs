@@ -168,7 +168,7 @@ sealed class CompleteAuditorRequestResolutionHandler(IAggregateReader reader, IA
             AuditorRequestResolutionCanceled canceled => SourceUseReceiverSupport.Superseded(
                 "The resolution was canceled; its fence stands.", NativeFactReference.Of(request.Stream, canceled)),
             AuditorRequestResolved => SourceUseReceiverSupport.Permanent("The request was resolved by another operation."),
-            _ => null,
+            _ => default(Result<ReceiverOutcome>?),
         };
     }
 

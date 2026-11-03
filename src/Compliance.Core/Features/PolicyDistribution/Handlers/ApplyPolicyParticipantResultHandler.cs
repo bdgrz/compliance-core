@@ -311,7 +311,7 @@ sealed class ApplyPolicyParticipantResultHandler(IAggregateReader reader, IAggre
         }
         return owner.SelectedResult is { } result
             ? SourceUseReceiverSupport.Replayed(NativeFactReference.Of(owner.Stream, result))
-            : null;
+            : default(Result<ReceiverOutcome>?);
     }
 
     sealed record Step(Result<ReceiverOutcome> Outcome);

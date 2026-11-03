@@ -185,7 +185,7 @@ public sealed class CampaignReceiverPreparationRaceTests
                 () => new PolicyCampaignParticipant(host.Tenant, command.CampaignId, command.PersonId,
                     command.CommandId, command.OperationId),
                 owner => owner.SelectedResult is { } fact
-                    ? SourceUseReceiverSupport.Replayed(NativeFactReference.Of(owner.Stream, fact)) : null,
+                    ? SourceUseReceiverSupport.Replayed(NativeFactReference.Of(owner.Stream, fact)) : default(Result<ReceiverOutcome>?),
                 async (_, _) =>
                 {
                     if (commitWinner)

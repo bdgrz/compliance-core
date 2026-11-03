@@ -168,7 +168,7 @@ public sealed class MaterializeAdvisorFeedbackHandler(IAggregateReader reader, I
 
         return thread.IsMaterialized
             ? SourceUseReceiverSupport.Permanent("The advisor feedback was already materialized by another operation.")
-            : null;
+            : default(Result<ReceiverOutcome>?);
     }
 
     sealed record Decided(Result<ReceiverOutcome> Outcome);

@@ -212,7 +212,7 @@ sealed class MaterializeProviderRiskAcceptanceLinkHandler(IAggregateReader reade
         return owner.Linked is { } linked
             ? SourceUseReceiverSupport.Superseded("The link is already materialized.",
                 NativeFactReference.Of(owner.Stream, linked))
-            : null;
+            : default(Result<ReceiverOutcome>?);
     }
 
     sealed record Prepared(ImmutableContentRef Acceptance, ImmutableContentRef Result);

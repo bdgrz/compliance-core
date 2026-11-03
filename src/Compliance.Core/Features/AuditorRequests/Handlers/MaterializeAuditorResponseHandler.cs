@@ -172,7 +172,7 @@ sealed class MaterializeAuditorResponseHandler(IAggregateReader reader, IAggrega
 
         return owner.IsMaterialized
             ? SourceUseReceiverSupport.Permanent("The auditor response was already materialized by another operation.")
-            : null;
+            : default(Result<ReceiverOutcome>?);
     }
 
     sealed record Decided(Result<ReceiverOutcome> Outcome);

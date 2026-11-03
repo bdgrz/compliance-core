@@ -168,7 +168,7 @@ sealed class ProfessionalDutyChangeReceivers(IAggregateReader reader, IAggregate
                     NativeAcceptanceDecision.Replayed => SourceUseReceiverSupport.Replayed(Fact(current.Stream, current.Acceptance.SelectedFact!)),
                     NativeAcceptanceDecision.Conflict => Result<ReceiverOutcome>.Failure(AcceptedAppendResult.ConflictError),
                     _ when current.IsRejected(command.AssertionId) => Result<ReceiverOutcome>.Success(new ReceiverOutcome.Rejected("The change was rejected.", null)),
-                    _ => null,
+                    _ => default(Result<ReceiverOutcome>?),
                 };
                 var prepared = await NativeReceiverPreparation.PrepareAsync<FirmProfessionalDutyDesignation, Built>(reader,
                     () => new FirmProfessionalDutyDesignation(owner.UserId, owner.Duty, owner.TenantId,

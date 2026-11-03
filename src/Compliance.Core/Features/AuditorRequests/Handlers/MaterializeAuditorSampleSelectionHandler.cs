@@ -180,7 +180,7 @@ sealed class MaterializeAuditorSampleSelectionHandler(IAggregateReader reader, I
 
         return owner.IsMaterialized
             ? SourceUseReceiverSupport.Permanent("The sample selection was already materialized by another operation.")
-            : null;
+            : default(Result<ReceiverOutcome>?);
     }
 
     sealed record Decided(Result<ReceiverOutcome> Outcome);

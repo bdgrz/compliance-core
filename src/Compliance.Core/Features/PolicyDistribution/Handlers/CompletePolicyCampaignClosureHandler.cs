@@ -175,7 +175,7 @@ sealed class CompletePolicyCampaignClosureHandler(IAggregateReader reader, IAggr
                 NativeFactReference.Of(campaign.Stream, canceled)));
         return campaign.Closing is { } closed && closed.Operation.RootOperationId == operationId
             ? SourceUseReceiverSupport.Replayed(NativeFactReference.Of(campaign.Stream, closed))
-            : null;
+            : default(Result<ReceiverOutcome>?);
     }
 
     async ValueTask<Result<Built>> PrepareAsync(PolicyDistributionCampaign campaign, PolicyCampaignClosure closure,

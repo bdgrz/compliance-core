@@ -157,7 +157,7 @@ sealed class AbortPolicyCampaignClosureHandler(IAggregateReader reader, IAggrega
         return campaign.Closing is { } closed && closed.Operation.RootOperationId == operationId
             ? SourceUseReceiverSupport.Superseded("The closure already completed and recovers forward.",
                 NativeFactReference.Of(campaign.Stream, closed))
-            : null;
+            : default(Result<ReceiverOutcome>?);
     }
 
     sealed record Step(Result<ReceiverOutcome> Outcome);

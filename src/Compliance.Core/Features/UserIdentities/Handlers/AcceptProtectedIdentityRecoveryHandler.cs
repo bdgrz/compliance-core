@@ -75,7 +75,7 @@ public sealed class AcceptProtectedIdentityRecoveryHandler(IdentityRecoveryRecei
                     slots.Replacement.IsSettledFor(request.ChallengeId))
                     return IdentityRecoveryReceiverSupport.Superseded("The preparation was rejected or its protection settled.");
                 return slots.Old.IsProtectedFor(request.ChallengeId) && slots.Replacement.IsProtectedFor(request.ChallengeId)
-                    ? null
+                    ? default(Result<ReceiverOutcome>?)
                     : IdentityRecoveryReceiverSupport.Wait("A protected slot is not readable yet.");
             },
             (current, _) => current.Accept(provenance, request.Intent, request.ProtectionProofs),

@@ -171,7 +171,7 @@ sealed class CompleteRiskTreatmentActionReviewHandler(IAggregateReader reader, I
                     NativeFactReference.Of(action.Stream, canceled))),
             RiskTreatmentActionCompletionReviewed => SourceUseReceiverSupport.Permanent(
                 "The completion was decided by another operation."),
-            _ => null,
+            _ => default(Result<ReceiverOutcome>?),
         };
     }
 

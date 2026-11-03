@@ -268,7 +268,7 @@ sealed class CompleteAccessReviewCampaignClosureHandler(IAggregateReader reader,
                 NativeFactReference.Of(campaign.Stream, canceled));
         return campaign.ClosedFor(operationId) is { } closed
             ? SourceUseReceiverSupport.Replayed(NativeFactReference.Of(campaign.Stream, closed))
-            : null;
+            : default(Result<ReceiverOutcome>?);
     }
 
     sealed record PreparedClosure(AccessReviewPreparedCut? Cut, ImmutableContentRef? Content, ImmutableContentRef? Proofs,

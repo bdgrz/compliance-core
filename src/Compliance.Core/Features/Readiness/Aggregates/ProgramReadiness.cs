@@ -333,7 +333,7 @@ public sealed class ProgramReadiness : Aggregate
         _pendingDecision is TAccepted pending && PendingRoot(pending) == operation.RootOperationId &&
         DecisionTerms(pending)!.Value.Intent == intent && operation.Owner == Stream &&
         LatestAssessmentId == assessmentId
-            ? null
+            ? default(Result?)
             : Result.Failure(new RequestError(RequestErrorKind.Conflict,
                 "Only the exact pending decision can be recorded.", false));
 

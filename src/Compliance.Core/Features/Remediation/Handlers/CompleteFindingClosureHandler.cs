@@ -172,7 +172,7 @@ sealed class CompleteFindingClosureHandler(IAggregateReader reader, IAggregateEx
             FindingClosureCanceled canceled => SourceUseReceiverSupport.Superseded(
                 "The closure was canceled; its fence stands.", NativeFactReference.Of(finding.Stream, canceled)),
             FindingClosedV2 => SourceUseReceiverSupport.Permanent("The finding was closed by another operation."),
-            _ => null,
+            _ => default(Result<ReceiverOutcome>?),
         };
     }
 

@@ -92,7 +92,7 @@ public sealed class RejectIdentityRecoveryPreparationHandler(IdentityRecoveryRec
                 var decision = identity.DecideProtection(request.ChallengeId, intent.AccountId, conflict.Role,
                     intent.ReplacementIdentityId);
                 return decision.Outcome == UserIdentity.ProtectionOutcome.Conflict
-                    ? null
+                    ? default(Result<ReceiverOutcome>?)
                     : IdentityRecoveryReceiverSupport.Invalid<ReceiverOutcome>(
                         "The named association conflict cannot be proven against the authoritative identity.");
             },

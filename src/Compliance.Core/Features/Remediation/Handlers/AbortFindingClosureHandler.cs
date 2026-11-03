@@ -181,7 +181,7 @@ sealed class AbortFindingClosureHandler(IAggregateReader reader, IAggregateExecu
                 "The closure already closed the finding; it recovers forward.", NativeFactReference.Of(finding.Stream, closed)),
             FindingClosureCanceled canceled => SourceUseReceiverSupport.Replayed(NativeFactReference.Of(finding.Stream,
                 canceled)),
-            _ => null,
+            _ => default(Result<ReceiverOutcome>?),
         };
     }
 

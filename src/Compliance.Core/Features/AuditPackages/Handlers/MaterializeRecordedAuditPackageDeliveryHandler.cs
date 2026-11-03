@@ -68,7 +68,7 @@ public sealed class MaterializeRecordedAuditPackageDeliveryHandler(AuditPackageS
             return await append.ApplyAsync(() => new AuditPackageDelivery(tenant, command.PackageId,
                     command.ManifestVersion, command.DeliveryId, command.CommandId), owner => owner.Acceptance,
                 AcceptedOperationBinding.Of(operation), owner => owner.IsMaterialized
-                    ? ReceiverAppend.Invalid("The handoff child was materialized by another logical effect.") : null,
+                    ? ReceiverAppend.Invalid("The handoff child was materialized by another logical effect.") : default(Result<ReceiverOutcome>?),
                 owner => owner.Materialize(admitted.ProgramId, operation, verified.Value!, command.Intent,
                     command.Source, terminalResult), context, ct).ConfigureAwait(false);
         }

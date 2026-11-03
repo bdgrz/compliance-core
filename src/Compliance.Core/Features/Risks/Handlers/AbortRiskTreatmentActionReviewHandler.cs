@@ -176,7 +176,7 @@ sealed class AbortRiskTreatmentActionReviewHandler(RiskActionReviewVerifier veri
                 NativeFactReference.Of(action.Stream, reviewed)),
             RiskTreatmentActionCompletionReviewCanceled canceled => SourceUseReceiverSupport.Replayed(
                 NativeFactReference.Of(action.Stream, canceled)),
-            _ => null,
+            _ => default(Result<ReceiverOutcome>?),
         };
     }
 

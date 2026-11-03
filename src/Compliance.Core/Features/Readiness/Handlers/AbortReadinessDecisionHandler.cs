@@ -185,7 +185,7 @@ sealed class AbortReadinessDecisionHandler(IAggregateReader reader, IAggregateEx
                 NativeFactReference.Of(program.Stream, program.TerminalDecision(operationId)!)),
             ReadinessDecisionCanceled canceled => SourceUseReceiverSupport.Replayed(NativeFactReference.Of(program.Stream,
                 canceled)),
-            _ => null,
+            _ => default(Result<ReceiverOutcome>?),
         };
     }
 

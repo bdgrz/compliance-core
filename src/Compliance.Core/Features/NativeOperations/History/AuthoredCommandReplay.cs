@@ -72,7 +72,7 @@ public static class AuthoredCommandReplay
     public static Result? Unit(NativeAcceptance acceptance, OperationProvenance operation) =>
         TryReplay(acceptance, operation, out var failure)
             ? failure is null ? Result.Success : Result.Failure(failure.ToRequestError())
-            : null;
+            : default(Result?);
 
     public static void Observe(Aggregate owner, NativeAcceptance acceptance, DomainEvent fact, OperationProvenance? operation)
     {

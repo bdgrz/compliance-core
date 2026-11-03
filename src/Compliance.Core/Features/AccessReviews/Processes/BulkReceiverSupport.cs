@@ -39,7 +39,7 @@ static class BulkReceiverSupport
             NativeAcceptanceDecision.Replayed => SourceUseReceiverSupport.Replayed(NativeFactReference.Of(stream,
                 acceptance.SelectedFact!)),
             NativeAcceptanceDecision.Conflict => Result<ReceiverOutcome>.Failure(AcceptedAppendResult.ConflictError),
-            _ => null,
+            _ => default(Result<ReceiverOutcome>?),
         };
 
     public static NativeFactReference Fact(EventStreamAddress stream, DomainEvent fact) =>

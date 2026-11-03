@@ -283,7 +283,7 @@ public abstract class SettleSourceUseHandler<TOwner, TRequest>(IAggregateReader 
 
         return owner.Uses.Find(key) is { IsSettled: true } entry
             ? SourceUseReceiverSupport.Replayed(NativeFactReference.Of(owner.Stream, entry.SettleFact!))
-            : null;
+            : default(Result<ReceiverOutcome>?);
     }
 
     sealed record SettlementPrepared(ImmutableContentRef Intent, ReservationGrant? Grant);

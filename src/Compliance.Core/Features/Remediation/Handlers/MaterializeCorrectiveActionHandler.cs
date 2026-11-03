@@ -172,7 +172,7 @@ sealed class MaterializeCorrectiveActionHandler(IAggregateReader reader, IAggreg
 
         return action.IsMaterialized
             ? SourceUseReceiverSupport.Permanent("The corrective action was already materialized by another operation.")
-            : null;
+            : default(Result<ReceiverOutcome>?);
     }
 
     sealed record Decided(Result<ReceiverOutcome> Outcome);

@@ -133,7 +133,7 @@ sealed class ApplicationImportReceivers(IAggregateReader reader, IAggregateExecu
                 return SourceUseReceiverSupport.Transient("Another batch holds this source. Retry after it settles.");
             return source.Revision != command.ExpectedRevision
                 ? SourceUseReceiverSupport.Permanent("The source changed after this plan was frozen.")
-                : null;
+                : default(Result<ReceiverOutcome>?);
         }
 
         var preparation = await NativeReceiverPreparation.PrepareAsync<ApplicationImportSource, ApplicationImportContext>(reader,
@@ -198,7 +198,7 @@ sealed class ApplicationImportReceivers(IAggregateReader reader, IAggregateExecu
                 return SourceUseReceiverSupport.Superseded("The target was fenced or settled before it was reserved.",
                     NativeFactReference.Of(application.Stream, (DomainEvent?)hold.Settled ?? hold.Fence!));
             return application.CheckReserve(batch.Id, group.InitialApplicationRevision) is { } error
-                ? Result<ReceiverOutcome>.Failure(error) : null;
+                ? Result<ReceiverOutcome>.Failure(error) : default(Result<ReceiverOutcome>?);
         }
         var preparation = await NativeReceiverPreparation.PrepareAsync<DeclaredApplication, PreparedTarget>(reader,
             () => new DeclaredApplication(tenant, command.ApplicationId, command.CommandId),
@@ -318,7 +318,7 @@ sealed class ApplicationImportReceivers(IAggregateReader reader, IAggregateExecu
             if (owner.Committed is { } existing)
                 return SourceUseReceiverSupport.Replayed(NativeFactReference.Of(owner.Stream, existing));
             return owner.IsCancelRequested || owner.IsEnded
-                ? ApplicationImportVerifier.Ended(owner, "The batch ended before it published.") : null;
+                ? ApplicationImportVerifier.Ended(owner, "The batch ended before it published.") : default(Result<ReceiverOutcome>?);
         }
         var preparation = await NativeReceiverPreparation.PrepareAsync<ApplicationImportBatch, PreparedCommit>(reader,
             () => new ApplicationImportBatch(tenant, batch.Id, command.CommandId), Early,
@@ -366,7 +366,7 @@ sealed class ApplicationImportReceivers(IAggregateReader reader, IAggregateExecu
                 return SourceUseReceiverSupport.Replayed(NativeFactReference.Of(application.Stream, existing));
             return prepared && hold?.Settled is { } settled
                 ? SourceUseReceiverSupport.Superseded("The target was already settled.", NativeFactReference.Of(application.Stream, settled))
-                : null;
+                : default(Result<ReceiverOutcome>?);
         }
         var preparation = await NativeReceiverPreparation.PrepareAsync<DeclaredApplication, PreparedFence>(reader,
             () => new DeclaredApplication(tenant, command.ApplicationId, command.CommandId),
@@ -427,7 +427,7 @@ sealed class ApplicationImportReceivers(IAggregateReader reader, IAggregateExecu
                 return SourceUseReceiverSupport.Superseded("The batch already published; the cancellation recovers forward.",
                     NativeFactReference.Of(owner.Stream, committed));
             return owner.Canceled is { } existing
-                ? SourceUseReceiverSupport.Replayed(NativeFactReference.Of(owner.Stream, existing)) : null;
+                ? SourceUseReceiverSupport.Replayed(NativeFactReference.Of(owner.Stream, existing)) : default(Result<ReceiverOutcome>?);
         }
         var preparation = await NativeReceiverPreparation.PrepareAsync<ApplicationImportBatch, PreparedCancellation>(reader,
             () => new ApplicationImportBatch(tenant, batch.Id, command.CommandId), Early,
@@ -472,7 +472,7 @@ sealed class ApplicationImportReceivers(IAggregateReader reader, IAggregateExecu
                 return decided;
             return source.Find(batch.Id) is { Settled: { } existing }
                 ? SourceUseReceiverSupport.Replayed(NativeFactReference.Of(source.Stream, existing))
-                : null;
+                : default(Result<ReceiverOutcome>?);
         }
 
         var preparation = await NativeReceiverPreparation.PrepareAsync<ApplicationImportSource, ImportFrozenPlanIntent>(reader,
@@ -528,7 +528,7 @@ sealed class ApplicationImportReceivers(IAggregateReader reader, IAggregateExecu
                 return SourceUseReceiverSupport.Transient("The published target effects are not visible yet.");
             return disposition != ApplicationImportDisposition.Published && hold.Fence is null
                 ? SourceUseReceiverSupport.Transient("The target fence is not visible yet.")
-                : null;
+                : default(Result<ReceiverOutcome>?);
         }
 
         var preparation = await NativeReceiverPreparation.PrepareAsync<DeclaredApplication, ImportFrozenPlanIntent>(reader,
@@ -1038,7 +1038,7 @@ sealed class ApplicationImportReceivers(IAggregateReader reader, IAggregateExecu
             NativeAcceptanceDecision.Replayed => SourceUseReceiverSupport.Replayed(NativeFactReference.Of(stream,
                 acceptance.SelectedFact!)),
             NativeAcceptanceDecision.Conflict => Result<ReceiverOutcome>.Failure(AcceptedAppendResult.ConflictError),
-            _ => null,
+            _ => default(Result<ReceiverOutcome>?),
         };
 
     static bool Malformed(Uuid commandId, Uuid operationId, long generation) =>

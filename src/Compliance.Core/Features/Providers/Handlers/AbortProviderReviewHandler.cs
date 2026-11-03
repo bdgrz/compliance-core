@@ -119,7 +119,7 @@ sealed class AbortProviderReviewHandler(IAggregateReader reader, IAggregateExecu
         return owner.Recorded is { } recorded
             ? SourceUseReceiverSupport.Superseded("The review is already recorded; it recovers forward.",
                 NativeFactReference.Of(owner.Stream, recorded))
-            : null;
+            : default(Result<ReceiverOutcome>?);
     }
 
     sealed record Decision(Result<ReceiverOutcome> Outcome);

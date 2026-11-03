@@ -297,7 +297,7 @@ sealed class ServiceEngagementCommands(NativeOperationExecutor operations,
             .ConfigureAwait(false);
         return decision.Code switch
         {
-            IndependenceDecisionCode.Allowed => null,
+            IndependenceDecisionCode.Allowed => default(Result<ServiceEngagementCommands.Built>?),
             IndependenceDecisionCode.PersonPracticeConflict => IndependenceContent.Failure<Built>(
                 RequestErrorKind.Conflict,
                 $"Rule {decision.RuleId} refuses the opposite practice. Conflicting historical engagement: {decision.ConflictingAssignment!.EngagementId}; staff: {decision.ConflictingAssignment.FirmStaffMemberId}; user: {decision.ConflictingAssignment.UserId}."),

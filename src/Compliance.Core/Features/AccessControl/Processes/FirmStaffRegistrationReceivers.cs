@@ -148,7 +148,7 @@ sealed class FirmStaffRegistrationReceivers(IAggregateReader reader, IAggregateE
                 Fact(owner.Stream, owner.Acceptance.SelectedFact!))),
             NativeAcceptanceDecision.Conflict => Result<ReceiverOutcome>.Failure(AcceptedAppendResult.ConflictError),
             _ when owner.IsRejected => Superseded("The registration was rejected.", null),
-            _ => null,
+            _ => default(Result<ReceiverOutcome>?),
         };
         var prepared = await NativeReceiverPreparation.PrepareAsync<FirmStaffRecord, Completion>(reader,
             () => new FirmStaffRecord(command.StaffMemberId, command.CommandId), Decide,

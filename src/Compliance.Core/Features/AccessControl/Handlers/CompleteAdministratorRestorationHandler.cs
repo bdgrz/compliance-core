@@ -82,7 +82,7 @@ public sealed class CompleteAdministratorRestorationHandler(AdministratorReceive
         return await support.ApplyAsync(loaded.Create,
             current => current.Acceptance, AcceptedOperationBinding.Of(provenance),
             current => current.PendingGeneration(request.OperationId) == request.Generation
-                ? null
+                ? default(Result<ReceiverOutcome>?)
                 : AdministratorReceiverSupport.Invalid<ReceiverOutcome>("The guard has no such unfinished restoration."),
             (TenantManagerGuard current) => current.CompleteRestoration(provenance, request.OperationId, request.MemberId, eligible,
                 intent.Value.Header.AffectedOwner,

@@ -58,7 +58,7 @@ public sealed class CompleteAdministratorWithdrawalHandler(AdministratorReceiver
         return await support.ApplyAsync(loaded.Create,
             current => current.Acceptance, AcceptedOperationBinding.Of(provenance),
             current => current.PendingGeneration(request.OperationId) == request.Generation
-                ? null
+                ? default(Result<ReceiverOutcome>?)
                 : AdministratorReceiverSupport.Invalid<ReceiverOutcome>("The guard has no such unfinished withdrawal."),
             (TenantManagerGuard current) => current.CompleteWithdrawal(provenance, request.OperationId, intent.Value!.Header.AffectedOwner,
                 intent.Value.Header.OriginalExpectedRevision is { } revision ? (long)revision : -1, request.Intent,

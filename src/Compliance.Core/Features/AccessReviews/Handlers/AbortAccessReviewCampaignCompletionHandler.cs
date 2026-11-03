@@ -174,7 +174,7 @@ sealed class AbortAccessReviewCampaignCompletionHandler(IAggregateReader reader,
             return SourceUseReceiverSupport.Replayed(NativeFactReference.Of(campaign.Stream, canceled));
         return prepared && campaign.ClosedFor(command.OperationId) is { } closed
             ? SourceUseReceiverSupport.Superseded("The completion already closed the campaign; it recovers forward.",
-                NativeFactReference.Of(campaign.Stream, closed)) : null;
+                NativeFactReference.Of(campaign.Stream, closed)) : default(Result<ReceiverOutcome>?);
     }
 
     sealed record Verified;

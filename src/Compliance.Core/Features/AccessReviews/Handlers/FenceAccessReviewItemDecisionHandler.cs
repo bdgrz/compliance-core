@@ -160,7 +160,7 @@ sealed class FenceAccessReviewItemDecisionHandler(IAggregateReader reader, IAggr
             return accepted;
         return item.FenceFor(batchId) is { } fence
             ? SourceUseReceiverSupport.Replayed(BulkReceiverSupport.Fact(item.Stream, fence))
-            : null;
+            : default(Result<ReceiverOutcome>?);
     }
 
     sealed record PreparedFence(Result<ReceiverOutcome>? Outcome);

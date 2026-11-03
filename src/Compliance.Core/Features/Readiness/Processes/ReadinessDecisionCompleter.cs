@@ -238,7 +238,7 @@ sealed class ReadinessDecisionCompleter(IAggregateReader reader, IAggregateExecu
                 "The decision was canceled; settle its plan uses.", NativeFactReference.Of(program.Stream, canceled))),
             ReadinessDecisionRecorded or TypeIEntryDecisionRecorded => SourceUseReceiverSupport.Permanent(
                 "The decision was recorded by another operation."),
-            _ => null,
+            _ => default(Result<ReceiverOutcome>?),
         };
     }
 
