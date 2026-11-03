@@ -5,6 +5,12 @@ product owner. It closes [M0-D03 #60](https://github.com/bdgrz/compliance/issues
 Enforcement is specified in ADR 0002 (M0-A04). Tenancy and firm-staff access
 follow [M0-D25](m0-d25-client-tenancy.md).
 
+> **Superseded in part, 2026-11-03.** Roles are organization-managed aggregates,
+> and custom roles are in scope. Teams hold members and are assigned roles, and
+> that is how members get permissions. See
+> [Platform access PA-01](../contexts/platform-access.md#decisions). The
+> separation-of-duties, responsibility and scope rules below still apply.
+
 | Question | Decision and rationale |
 | --- | --- |
 | Built-in role catalog | Four client roles: **Org Admin** (members, teams, grants, organization settings, SoD waivers), **Compliance Lead** (programs, scope, controls, approvals, and accepting imports), **Contributor** (owns and performs assigned controls, evidence, and tasks; may stage and preview imports but not accept them), and **Viewer** (read-only). Two firm-staff roles: **Advisor** and **Attest**. A small fixed catalog matches a small team and keeps authorization reviewable. Custom roles are out of scope for the first release. |
