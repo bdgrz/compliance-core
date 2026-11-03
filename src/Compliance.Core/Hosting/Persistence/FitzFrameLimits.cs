@@ -14,7 +14,8 @@ namespace Bdgrz.Compliance.Hosting.Persistence;
 
 static class FitzFrameLimits
 {
-    // Fitz.Core 2.0.0: StreamSession and KvTransaction encode operation payloads before FrameCodec.
+    // The application keeps a 65,535-byte operation cap, including route metadata.
+    // Fitz 3 encodes these operation payloads inside its larger Wire-2 frames.
     public static void CheckEvent(EventStreamAddress stream, int envelopeBytes)
     {
         var size = (long)envelopeBytes + Encoding.UTF8.GetByteCount(stream.ToString()) + 26;

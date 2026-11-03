@@ -7,7 +7,7 @@ using Bdgrz.Compliance.Features.Tenants.Processes;
 using Bdgrz.Compliance.Features.Providers.Projections;
 namespace Bdgrz.Compliance.Hosting.Persistence;
 
-/// <summary>A KV operation cannot be represented by the pinned Fitz wire protocol.</summary>
+/// <summary>A KV operation exceeds the application's storage operation cap.</summary>
 sealed class KvFrameSizeException(long operationBytes)
     : Exception("A key/value operation exceeds the 65,535-byte storage operation limit.")
 {

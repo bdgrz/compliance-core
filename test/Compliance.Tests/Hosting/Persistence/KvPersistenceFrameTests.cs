@@ -112,7 +112,8 @@ public sealed class KvPersistenceFrameTests
         Assert.Equal(value, result.Value!.Value.ToArray());
         var operation = PinnedFitzFrameTests.OperationPayload(false, Encoding.UTF8.GetBytes(Route), key,
             result.Value.Value.ToArray());
-        Assert.Equal(ushort.MaxValue + 14, PinnedFitzFrameTests.Encode(insert ? "KvInsert" : "KvPut", operation).Length);
+        Assert.Equal(ushort.MaxValue + FitzLimits.MinFrameSize,
+            PinnedFitzFrameTests.Encode(insert ? "KvInsert" : "KvPut", operation).Length);
     }
 
     [Fact]
@@ -131,6 +132,35 @@ public sealed class KvPersistenceFrameTests
 
         // Assert
         Assert.Empty(inner.Snapshot(Route));
+    }
+
+    [Theory]
+    [InlineData(false, 0)]
+    [InlineData(true, 0)]
+    [InlineData(false, 1)]
+    [InlineData(true, 1)]
+    public async Task ShouldEnforceScanBoundaryGivenExclusiveStartOption(bool exclusive, int excess)
+    {
+        // Arrange
+        var inner = new InMemoryKvClient();
+        await using var transaction = await Guard(inner).BeginAsync(Route);
+        var key = new byte[ushort.MaxValue - Encoding.UTF8.GetByteCount(Route) - 20 + excess];
+        var query = new KvScanQuery(StartKey: key, StartExclusive: exclusive);
+
+        // Act
+        var failure = await Record.ExceptionAsync(async () => await transaction.ScanAsync(query));
+
+        // Assert
+        if (excess == 0)
+        {
+            Assert.Null(failure);
+            Assert.Contains(inner.Operations, operation => operation.Operation == KvTestOperation.Scan);
+        }
+        else
+        {
+            Assert.IsType<KvFrameSizeException>(failure);
+            Assert.DoesNotContain(inner.Operations, operation => operation.Operation == KvTestOperation.Scan);
+        }
     }
 
     static PersistenceKvClient Guard(IKvClient inner) => new(inner);

@@ -71,7 +71,7 @@ sealed class PersistenceKvClient(IKvClient inner) : IKvClient
             ArgumentNullException.ThrowIfNull(query);
             var size = 16L + (query.StartKey is { } start ? 4L + start.Length : 0) +
                 (query.EndKey is { } end ? 4L + end.Length : 0) +
-                (query.Limit.HasValue ? 4 : 0) + (query.StartExclusive ? 1 : 0);
+                (query.Limit.HasValue ? 4 : 0);
             Check(size, ct);
             return inner.ScanAsync(query, ct);
         }
