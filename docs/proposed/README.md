@@ -50,3 +50,13 @@ conventions and the later decision rows fixed.
 
 Organization commercial operations (subscription, billing and add-ons) is not
 designed yet; it awaits the business-operations decisions.
+
+## Aggregate implementation evidence
+
+Context design status does not establish implementation or workflow delivery.
+Each bounded implementation review records its invariant, tests and remaining
+work.
+
+| Owner | Implementation status | Evidence |
+| --- | --- | --- |
+| RiskControlTreatment (`RiskTreatmentAssertion` in current source) | Partial: reviewer independence enforced in the owner; control-retirement coordination and proposed-owner migration remain | [Review](reviews/risk-control-treatment.md) |

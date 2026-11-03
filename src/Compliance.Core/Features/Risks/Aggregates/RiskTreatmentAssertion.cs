@@ -186,6 +186,10 @@ public sealed class RiskTreatmentAssertion : Aggregate
         var prepared = PrepareOwn(operation, expected => PrepareReview(treatmentId, expected));
         if (!prepared.IsSuccess)
             return prepared;
+        if (reviewer.Kind == "member" && Uuid.TryParse(reviewer.Id, out var reviewerMemberId) &&
+            reviewerMemberId == Pending!.ProposerMemberId && (waiverId is null || waiverId == Uuid.Empty))
+            return Result.Failure(new RequestError(RequestErrorKind.Forbidden,
+                "A control treatment proposer cannot review their own assertion without a separation-of-duties waiver."));
         RaiseEvent(new RiskControlTreatmentReviewed(_tenantId, _programId, _riskId, _revision + 1, treatmentId,
             operation.LogicalId, outcome, rationale, reviewer, reviewedAt, waiverId, operation, firstResponse,
             operationResult));
