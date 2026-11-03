@@ -71,12 +71,24 @@ Acceptance rules, checked against current state when the command runs:
 Closing an attest engagement is refused until its record package delivery is
 recorded (M0-D27, FS-06).
 
+Proposing or accepting an engagement needs an active tenant (Platform access
+offboarding rule).
+
+**Independence impaired** (FS-11): an accepted, open attest engagement shows an
+`independence_impaired` gap when the client's nonattest service history now holds
+a service that the engagement's rule-set version classifies `impairing`, dated
+within the look-back before the examination period starts or during it. The gap
+is computed from current records, as with any other gap ([CV-08](conventions.md#guards-and-reviews)).
+While it shows, new staff assignments to the engagement are refused, and
+Examinations refuses to record an audit outcome for an examination that names
+the engagement.
+
 | Command | Who | Accepts when | Emits |
 | --- | --- | --- | --- |
-| ProposeServiceEngagement | Firm staff of the engagement's practice | `EngagementId` is new | ServiceEngagementProposed |
+| ProposeServiceEngagement | Firm staff of the engagement's practice | `EngagementId` is new; tenant active | ServiceEngagementProposed |
 | ReviseServiceEngagement | Firm staff of the practice | Proposed | ServiceEngagementRevised |
 | DeclineServiceEngagement | Engagement partner | Proposed | ServiceEngagementDeclined |
-| AcceptServiceEngagement | Engagement partner | Proposed; acceptance rules hold | ServiceEngagementAccepted |
+| AcceptServiceEngagement | Engagement partner | Proposed; tenant active; acceptance rules hold | ServiceEngagementAccepted |
 | CloseServiceEngagement | Engagement partner | Accepted; for attest, package delivered | ServiceEngagementClosed |
 
 | Event | Carries |
@@ -91,27 +103,65 @@ recorded (M0-D27, FS-06).
 
 **Identity:** `TenantId` + `EngagementId` + `UserId`.
 
-**Invariant:** one firm staff member is assigned to one engagement, or is not. An
-ended assignment can be assigned again, and its history is kept.
+**Invariant:** one firm staff member is assigned to one engagement, or is not.
+An assignment is first requested, and takes effect only once the person's
+`ClientPracticeCompartment` for this client admits it (FS-13). An ended
+assignment can be requested again, and its history is kept.
 
-Assignment rules, checked against current state when the command runs:
+Assignment rules checked when the request is made (advice, [CV-05](conventions.md#guards-and-reviews)):
 
-- The engagement is accepted and not closed (FS-05).
+- The engagement is accepted and not closed (FS-05), and the tenant is active.
+- For an attest engagement, it shows no `independence_impaired` gap (FS-11).
 - The person is an active firm staff member whose practice matches the
   engagement's practice.
-- **Person exclusivity:** a person who has ever held an assignment of the other
-  practice for the same client is refused. Advisory staff who served a client are
-  never on its attest team (M0-D26).
+
+Person exclusivity is not checked here; the compartment decides it.
+
+```mermaid
+stateDiagram-v2
+    [*] --> requested: AssignEngagementStaff
+    requested --> assigned: CompleteEngagementAssignment (admitted)
+    requested --> refused: CompleteEngagementAssignment (refused)
+    assigned --> ended: EndEngagementAssignment
+    refused --> requested: AssignEngagementStaff
+    ended --> requested: AssignEngagementStaff
+```
 
 | Command | Who | Accepts when | Emits |
 | --- | --- | --- | --- |
-| AssignEngagementStaff | Engagement partner | Assignment rules hold | EngagementStaffAssigned |
+| AssignEngagementStaff | Engagement partner | Not requested or assigned; rules above hold | EngagementStaffAssignmentRequested |
+| CompleteEngagementAssignment | Reactor on PracticeCompartmentEntered or PracticeCompartmentRefused | Requested; names that answer | EngagementStaffAssigned or EngagementStaffAssignmentRefused |
 | EndEngagementAssignment | Engagement partner or reactor | Assigned | EngagementAssignmentEnded |
 
 | Event | Carries |
 | --- | --- |
-| EngagementStaffAssigned | tenant, engagement, user, practice, assigned by |
+| EngagementStaffAssignmentRequested | tenant, engagement, user, practice, requested by |
+| EngagementStaffAssigned | tenant, engagement, user, practice, compartment answer, assigned by |
+| EngagementStaffAssignmentRefused | tenant, engagement, user, reason (`other_practice` with the practice held) |
 | EngagementAssignmentEnded | tenant, engagement, user, reason, ended by |
+
+Access through an assignment starts only at `EngagementStaffAssigned`.
+
+### ClientPracticeCompartment
+
+**Identity:** `TenantId` + `UserId`.
+
+**Invariant:** one person serves one client in one practice, `advisory` or
+`attest`, for life. The first admitted assignment fixes the practice; every later
+assignment of the other practice for the same client is refused. Advisory staff
+who served a client are never on its attest team (M0-D26, FS-13, CV-11).
+
+- Both answers are recorded ([CV-10](conventions.md#reactors)).
+- Ending an assignment never releases the compartment.
+
+| Command | Who | Accepts when | Emits |
+| --- | --- | --- | --- |
+| EnterPracticeCompartment | Reactor on EngagementStaffAssignmentRequested | Always answers; a repeat for the same engagement is a no-op | PracticeCompartmentEntered or PracticeCompartmentRefused |
+
+| Event | Carries |
+| --- | --- |
+| PracticeCompartmentEntered | tenant, user, practice, engagement, first entry (yes or no) |
+| PracticeCompartmentRefused | tenant, user, practice held, practice requested, engagement |
 
 ### NonattestServiceRecord
 
@@ -123,7 +173,11 @@ Corrections are revisions with a reason, and a record entered in error is voided
 Nothing is ever deleted.
 
 - Services delivered through the product are recorded by a reactor when an
-  advisory engagement is accepted, and their end date is set when it closes.
+  advisory engagement is accepted, and their end date is set when it closes. That
+  record's `RecordId` is the engagement's `EngagementId`, so a repeated trigger
+  records it once and the closure reactor finds it directly ([CV-02](conventions.md#reactors)).
+- Recording or revising a service is never refused because it impairs an open
+  attest engagement. The engagement shows the gap instead (FS-11).
 - Services delivered outside the product are recorded by an engagement partner,
   so the look-back sees the client's full history (FS-02).
 - Every revision or void makes earlier independence evaluations stale (FS-03).
@@ -224,7 +278,9 @@ stateDiagram-v2
 **Invariant:** one firm staff member holds one duty, or does not. Each grant and
 revocation records actor, time and reason.
 
-- Only an active firm staff member can be designated.
+- Only an active firm staff member can be designated, and a designation acts only
+  while its holder is an active firm staff member. Authorization checks the
+  status, so no reactor revokes the designation (FS-12).
 - Platform operators designate and revoke (FS-07).
 
 | Command | Who | Accepts when | Emits |
@@ -269,11 +325,16 @@ software satisfies M0-D27; a client export never does.
 
 ```mermaid
 flowchart LR
+    T([Tenant active]) -. checks .-> C1
     C1[/ProposeServiceEngagement/] --> E1([ServiceEngagementProposed])
-    C2[/AcceptServiceEngagement/] --> E2([ServiceEngagementAccepted])
-    E2 --> R1{{Record the service}} --> C3[/RecordNonattestService/] --> E3([NonattestServiceRecorded])
-    C4[/AssignEngagementStaff/] --> E4([EngagementStaffAssigned])
-    C5[/CloseServiceEngagement/] --> E5([ServiceEngagementClosed])
+    E1 -. checks .-> C2[/AcceptServiceEngagement/]
+    A([No accepted, open attest engagement, for an impairing kind]) -. checks .-> C2
+    C2 --> E2([ServiceEngagementAccepted])
+    E2 --> R1{{"Record the service (RecordId = EngagementId)"}} --> C3[/RecordNonattestService/] --> E3([NonattestServiceRecorded])
+    E2 -. checks .-> C4[/AssignEngagementStaff/] --> E4([EngagementStaffAssignmentRequested])
+    E4 --> RC{{Admit to compartment}} --> CC[/EnterPracticeCompartment/] --> EC([PracticeCompartmentEntered])
+    EC --> RA{{Complete}} --> CA[/CompleteEngagementAssignment/] --> EA([EngagementStaffAssigned])
+    E2 -. checks .-> C5[/CloseServiceEngagement/] --> E5([ServiceEngagementClosed])
     E5 --> R2{{Set actual end date}} --> C6[/ReviseNonattestService/] --> E6([NonattestServiceRevised])
     E5 --> R3{{End assignments}} --> C7[/EndEngagementAssignment/] --> E7([EngagementAssignmentEnded])
 ```
@@ -282,17 +343,29 @@ flowchart LR
 
 ```mermaid
 flowchart LR
+    T([Tenant active]) -. checks .-> C1
     C1[/ProposeServiceEngagement/] --> E1([ServiceEngagementProposed])
-    C2[/RecordIndependenceEvaluation/] --> E2([IndependenceEvaluated])
-    C3[/RecordPartnerEvaluation/] --> E3([PartnerEvaluationRecorded])
-    C4[/RecordManagementAcknowledgement/] --> E4([ManagementAcknowledgementRecorded])
-    C5[/ApproveIndependenceEvaluation/] --> E5([IndependenceEvaluationApproved])
-    C6[/AcceptServiceEngagement/] --> E6([ServiceEngagementAccepted])
-    C7[/AssignEngagementStaff/] --> E7([EngagementStaffAssigned])
+    E1 -. checks .-> C2[/RecordIndependenceEvaluation/]
+    H([Nonattest service history, active rule set]) -. checks .-> C2
+    C2 --> E2([IndependenceEvaluated])
+    E2 -. "conditionally_compatible only" .-> C3[/RecordPartnerEvaluation/] --> E3([PartnerEvaluationRecorded])
+    E2 -. checks .-> C4[/RecordManagementAcknowledgement/] --> E4([ManagementAcknowledgementRecorded])
+    E3 -. checks .-> C5[/ApproveIndependenceEvaluation/]
+    E4 -. checks .-> C5
+    C5 --> E5([IndependenceEvaluationApproved])
+    E5 -. "not stale (FS-03)" .-> C6[/AcceptServiceEngagement/] --> E6([ServiceEngagementAccepted])
+    E6 -. checks .-> C7[/AssignEngagementStaff/] --> E7([EngagementStaffAssignmentRequested])
+    E7 --> R8{{Admit to compartment}} --> C8[/EnterPracticeCompartment/]
+    C8 --> E8([PracticeCompartmentEntered])
+    C8 --> E9([PracticeCompartmentRefused])
+    E8 --> R9{{Complete}} --> C9[/CompleteEngagementAssignment/]
+    E9 --> R9
+    C9 --> E10([EngagementStaffAssigned])
+    C9 --> E11([EngagementStaffAssignmentRefused])
 ```
 
 These are separate decisions by different people; each command checks the facts
-it needs, so no reactor connects them. The partner evaluation is needed only for
+it needs, so no reactor connects them. The dotted edges show those checks. The partner evaluation is needed only for
 a `conditionally_compatible` result.
 
 ### Attest engagement closure
@@ -303,10 +376,25 @@ flowchart LR
     E1 --> P1{{Package build}}
     P1 --> C2[/RecordAttestEngagementRecordPackageGenerated/] --> E2([AttestEngagementRecordPackageGenerated])
     P1 --> C3[/RecordAttestEngagementRecordPackageFailed/] --> E3([AttestEngagementRecordPackageGenerationFailed])
-    C4[/RecordAttestEngagementRecordPackageDelivery/] --> E4([AttestEngagementRecordPackageDelivered])
-    C5[/CloseServiceEngagement/] --> E5([ServiceEngagementClosed])
+    E2 -. checks .-> C4[/RecordAttestEngagementRecordPackageDelivery/] --> E4([AttestEngagementRecordPackageDelivered])
+    E3 -. "failed: request a new package" .-> C1
+    E4 -. checks .-> C5[/CloseServiceEngagement/] --> E5([ServiceEngagementClosed])
+    E4 -.-> X1[[Retention: engagement hold; Platform access: offboarding]]
     E5 --> R1{{End assignments}} --> C6[/EndEngagementAssignment/] --> E6([EngagementAssignmentEnded])
 ```
+
+### Independence impaired during an attest engagement
+
+```mermaid
+flowchart LR
+    C1[/RecordNonattestService or ReviseNonattestService/] --> E1([NonattestServiceRecorded / NonattestServiceRevised])
+    E1 -. "impairing, inside an open attest engagement's window" .-> G1[[Gap on the attest engagement: independence_impaired]]
+    G1 -. "refuses" .-> C2[/AssignEngagementStaff/]
+    G1 -. "refuses" .-> C3[[Examinations: RecordAuditOutcome]]
+```
+
+The service is recorded as the truth; nothing is refused at the record. The gap
+is computed, so voiding a record entered in error clears it (FS-11).
 
 ### Firm staff leaves
 
@@ -316,7 +404,8 @@ flowchart LR
 ```
 
 Access already stopped, because authorization requires an active firm staff
-member and an open engagement. Ending the assignments is housekeeping.
+member and an open engagement. Ending the assignments is housekeeping. Partner
+designations stay recorded but act only while the holder is active (FS-12).
 
 ## Authorization contract
 
@@ -324,6 +413,8 @@ Firm services adds these checks to the Platform access authorization contract:
 
 1. Advisor or Attest work for a client needs an assignment that has not ended, to
    an accepted engagement that is not closed, held by an active firm staff member.
+   A partner duty acts only while its holder is an active firm staff member
+   (FS-12).
 2. **Compartments:** Attest assignees cannot read advisory working notes (advisor
    feedback, handoff content, advisory notes). Advisors cannot read attest-side
    request discussions marked `attest_internal`. Shared management records follow
@@ -333,10 +424,26 @@ Firm services adds these checks to the Platform access authorization contract:
 ## Cross-context contracts
 
 - **Platform access:** `CompleteTenantOffboarding` needs a delivered record package
-  for every attest engagement of the tenant. Firm staff status and practice come
+  for every attest engagement of the tenant, and no accepted, open engagement.
+  Proposing, accepting and assigning need an active tenant.
+- **Examinations:** an examination names an attest engagement only when it is
+  accepted, not closed, and in the same tenant. `RecordAuditOutcome` is refused
+  while that engagement shows `independence_impaired` (FS-11). Firm staff status and practice come
   from `FirmStaffMember`.
 - **Retention:** the engagement hold blocks evidence disposition until the attest
   record package is delivered (M0-D16, M0-D27).
+
+## Disagreement and replay
+
+Cases required by [CV-12](conventions.md#guards-and-reviews).
+
+| Case | Outcome |
+| --- | --- |
+| Advisory and attest assignments for the same person and client requested at the same time | The compartment admits whichever arrives first and refuses the other; the refused assignment records `EngagementStaffAssignmentRefused` |
+| Assignment requested while the engagement is being closed | The request was advice-checked; an assignment that completes after the close grants no access, because authorization requires an open engagement; a reaction to `EngagementStaffAssigned` on a closed engagement ends it (reason `engagement_closed`) |
+| `EngagementStaffAssignmentRequested` delivered twice | The compartment's repeat for the same engagement is a no-op |
+| Impairing service recorded while an attest engagement is being accepted | Both commit; FS-11's gap appears and blocks new assignments and the audit outcome |
+| Compartment answer not yet received | The assignment stays `requested` and grants no access |
 
 ## Decisions
 
@@ -354,7 +461,10 @@ Anything in between is settled by common sense, with the reasoning stated.
 | FS-07 | Partners are recorded as `PartnerDesignation`, and platform operators designate them. Only engagement partners accept, decline, assign, evaluate and record partner evaluations; only quality-management partners draft and ratify rule sets. | Without a recorded designation, any attest staff member could act as a partner: 0.68; another platform-level authority exists: 0.41. Common sense: a gate needs a recorded fact, and operators are the only platform-level authority (as PA-14). |
 | FS-08 | Only ratified rule-set versions are used. | 0.72. M0-D26 says the quality-management partner ratifies. |
 | FS-09 | Management's acknowledgement is recorded by a client-personnel Org Admin. | 0.78. Common sense: management means the client. |
-| FS-10 | Small independent aggregates, each checking other facts against current state when its command runs. No reservations, epochs or identity claims. | Product owner, 2026-11-03. |
+| FS-10 | Small independent aggregates, each checking other facts against current state when its command runs, except person exclusivity (FS-13). No reservations or epochs. | Product owner, 2026-11-03; narrowed by FS-13 after the Portia guidelines review. |
+| FS-11 | An impairing service inside an open attest engagement's window is recorded as the truth and shows as an `independence_impaired` gap on the engagement. The gap blocks new staff assignments and recording the audit outcome. | Flow audit B7. Record and show a gap rather than refuse: 0.89. Block new assignments: 0.83. Block the audit outcome: 0.92. |
+| FS-12 | A partner designation acts only while its holder is an active firm staff member; authorization checks this, so no reactor revokes it. | Flow audit G13. 0.78. Same approach as PA-09. |
+| FS-13 | Person exclusivity is decided by one `ClientPracticeCompartment` per person per client, which admits each assignment before it takes effect. Acceptance-time independence rules (FS-03, FS-04) stay advisory because FS-11 detects any breach and blocks the outcome. | Separate compartment admitting assignments: 0.85. Merging assignments into one record per person per client: 0.74. Detecting a breach after the fact: 0.10 (no). |
 
 ## Open questions
 
@@ -368,7 +478,7 @@ None at this time.
 | ClientServiceIndependence | NonattestServiceRecord; the acceptance check reads the history (FS-03) |
 | ClientIndependenceDecision, PartnerIndependenceDecision, EngagementManagementAcknowledgement | IndependenceEvaluation |
 | IndependenceRuleCatalog, IndependenceRuleRatificationCatalog | IndependenceRuleSet |
-| PracticeIndependenceCommitment | Removed; person exclusivity checks the assignment history (FS-05) |
+| PracticeIndependenceCommitment | ClientPracticeCompartment (FS-13) |
 | ProfessionalAssertionIdentityClaim | Removed |
 | FirmProfessionalDutyDesignation | PartnerDesignation |
 | FirmStaffRecord engagement and duty authorizations | Removed; checks read `FirmStaffMember` and `PartnerDesignation` |

@@ -61,6 +61,13 @@ environment reference, and a location reference.
 | ChangeTechnologyComponentOwner | Compliance Lead | Active | TechnologyComponentOwnerChanged |
 | RetireTechnologyComponent | Compliance Lead | Active; reason given | TechnologyComponentRetired |
 
+| Event | Carries |
+| --- | --- |
+| TechnologyComponentRecorded | tenant, component, category, name, owner, environment, location, system instance (if any), endpoint count and management source (endpoint class), recorded by |
+| TechnologyComponentDetailsChanged | tenant, component, changed fields, changed by |
+| TechnologyComponentOwnerChanged | tenant, component, previous owner, new owner, changed by |
+| TechnologyComponentRetired | tenant, component, effective at, reason, retired by |
+
 ### InformationAsset
 
 **Identity:** `TenantId` + `InformationAssetId`.
@@ -79,6 +86,14 @@ and one owner.
 | ChangeInformationAssetOwner | Compliance Lead | Active | InformationAssetOwnerChanged |
 | RetireInformationAsset | Compliance Lead | Active; reason given | InformationAssetRetired |
 
+| Event | Carries |
+| --- | --- |
+| InformationAssetRecorded | tenant, asset, name, classification, retention reference, owner, recorded by |
+| InformationAssetClassified | tenant, asset, previous classification, new classification, classified by |
+| InformationAssetDetailsChanged | tenant, asset, changed fields, changed by |
+| InformationAssetOwnerChanged | tenant, asset, previous owner, new owner, changed by |
+| InformationAssetRetired | tenant, asset, effective at, reason, retired by |
+
 Retiring an asset does not change its data flows.
 
 ### DataFlow
@@ -96,20 +111,26 @@ versions are effective-dated, and the effective date never moves backward.
 
 | Command | Who | Accepts when | Emits |
 | --- | --- | --- | --- |
-| RecordDataFlow | Compliance Lead or Contributor | `DataFlowId` is new; rules hold | DataFlowRecorded |
-| ReviseDataFlow | Compliance Lead or Contributor | Active; rules hold; effective date not earlier | DataFlowRevised |
+| RecordDataFlow | Compliance Lead or Contributor | `DataFlowId` is new; source, destination and assets active; rules hold | DataFlowRecorded |
+| ReviseDataFlow | Compliance Lead or Contributor | Active; source, destination and assets active; rules hold; effective date not earlier | DataFlowRevised |
 | RetireDataFlow | Compliance Lead | Active; reason given | DataFlowRetired |
 
 A data flow is a versioned statement, so its changes are one `DataFlowRevised`
 fact carrying the full new version.
+
+| Event | Carries |
+| --- | --- |
+| DataFlowRecorded | tenant, flow, version, effective at, source, destination, information assets, purpose, encrypted in transit, encrypted at rest, exception reference (if any), recorded by |
+| DataFlowRevised | tenant, flow, version, effective at, the full new version, revised by |
+| DataFlowRetired | tenant, flow, effective at, reason, retired by |
 
 ### Location
 
 **Identity:** `TenantId` + `LocationId`.
 
 **Invariant:** one location has one kind for life and a name. Among active
-locations of the same kind, names are unique; this is checked against current
-state when a name is set.
+locations of the same kind, names should be unique: advice checked when a name is
+set, with the `duplicate_location_name` gap and a rename to repair it (TI-04).
 
 | Command | Who | Accepts when | Emits |
 | --- | --- | --- | --- |
@@ -120,13 +141,21 @@ state when a name is set.
 
 A retired location's name becomes available again.
 
+| Event | Carries |
+| --- | --- |
+| LocationRecorded | tenant, location, kind, name, details, recorded by |
+| LocationRenamed | tenant, location, previous name, new name, renamed by |
+| LocationDetailsChanged | tenant, location, changed fields, changed by |
+| LocationRetired | tenant, location, effective at, reason, retired by |
+
 ### OperationalProcess
 
 **Identity:** `TenantId` + `OperationalProcessId`.
 
 **Invariant:** one process has one type for life, a name, an owner and a
-description. Names are unique among active processes; this is checked against
-current state when a name is set.
+description. Names should be unique among active processes: advice checked when
+a name is set, with the `duplicate_process_name` gap and a rename to repair it
+(TI-04).
 
 | Command | Who | Accepts when | Emits |
 | --- | --- | --- | --- |
@@ -136,14 +165,40 @@ current state when a name is set.
 | ChangeOperationalProcessOwner | Compliance Lead | Active | OperationalProcessOwnerChanged |
 | RetireOperationalProcess | Compliance Lead | Active; reason given | OperationalProcessRetired |
 
-Every event carries the tenant, the record ID, the changed values and the actor.
-Retirement events also carry the effective date and reason.
+| Event | Carries |
+| --- | --- |
+| OperationalProcessRecorded | tenant, process, type, name, owner, description, recorded by |
+| OperationalProcessRenamed | tenant, process, previous name, new name, renamed by |
+| OperationalProcessDetailsChanged | tenant, process, changed fields, changed by |
+| OperationalProcessOwnerChanged | tenant, process, previous owner, new owner, changed by |
+| OperationalProcessRetired | tenant, process, effective at, reason, retired by |
 
 ## Flows
 
 This context has no reactors. Each command checks the facts it needs against
 current state. Consumers such as risk, the system description and controls react
 to its facts in their own contexts.
+
+### Data flow encryption
+
+```mermaid
+flowchart LR
+    A([Carried assets' current classification]) -. checks .-> C1
+    X1[[Assurance work: approved encryption exception]] -. checks .-> C1
+    C1[/RecordDataFlow or ReviseDataFlow/] --> E1([DataFlowRecorded / DataFlowRevised])
+    C2[/ClassifyInformationAsset/] --> E2([InformationAssetClassified])
+    E2 -. "raised above a flow's encryption" .-> G1[[Gap on the data flow]]
+```
+
+A raised classification is recorded as the truth; flows that no longer meet the
+rule show a gap until they are revised (TI-02, [CV-08](conventions.md#guards-and-reviews)).
+
+## Computed gaps
+
+| Gap | Shown when |
+| --- | --- |
+| `duplicate_location_name` | Two active locations of the same kind share a name |
+| `duplicate_process_name` | Two active operational processes share a name |
 
 ## Decisions
 
@@ -155,7 +210,7 @@ Anything in between is settled by common sense, with the reasoning stated.
 | TI-01 | Cloud accounts are recorded only as system instances; no cloud-account component. | 0.75. M0-D08: cloud-account components correspond one-to-one with system instances and are not duplicated. |
 | TI-02 | Raising a classification is allowed, and flows that no longer meet the encryption rule show as gaps. | 0.74. Same pattern as an overdue service-identity review: show the gap, don't block the truth. |
 | TI-03 | Retirement is final for all inventory records; something revived is a new record. | Location restorable: 0.49; process retirement final: 0.46, both even. Common sense: the same rule as applications and work relationships keeps lifecycles simple. This replaces the earlier allowance to reactivate assets and locations. |
-| TI-04 | Name uniqueness for locations and processes is checked against current state; there are no name-claim aggregates or name-change processes. | Small independent aggregates (as AI-03). |
+| TI-04 | Name uniqueness for locations and processes is advice with a duplicate gap and a rename to repair it; there are no name-claim aggregates or name-change processes. | Small independent aggregates (as AI-03, CV-05). |
 
 ## Open questions
 

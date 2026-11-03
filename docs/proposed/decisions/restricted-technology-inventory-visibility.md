@@ -2,7 +2,7 @@
 
 This decision records the product direction accepted in [#492](https://github.com/bdgrz/compliance/issues/492#issuecomment-5979326833) for [#465](https://github.com/bdgrz/compliance/issues/465).
 
-The backend operation contract is in [Restricted technology inventory reads, version 1](../aggregates/technology-component.md).
+The backend operation contract is in [Technology and information inventory](../contexts/technology-and-information-inventory.md).
 
 ## Decision
 

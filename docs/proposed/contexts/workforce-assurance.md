@@ -169,12 +169,17 @@ and receives at most one attributable reconciliation decision: `accepted` or
 - Observations can be entered by a person, so the manual path works without a
   connected source.
 - An accepted HRIS observation is applied to the person and work relationship by
-  a reactor.
+  a reactor. Accepting a revision older than one already accepted for the same
+  source record is refused; the person dismisses it instead, so a late
+  acceptance never overwrites newer facts (WF-08).
+- A new person and work relationship created by that reactor take IDs derived from
+  the source record, so two revisions of a new worker produce one person
+  ([CV-02](conventions.md#reactors), WF-08).
 
 | Command | Who | Accepts when | Emits |
 | --- | --- | --- | --- |
 | RecordWorkforceSourceObservation | Compliance Lead, or a source integration | This revision is new | WorkforceSourceObserved |
-| ReconcileWorkforceSourceObservation | Compliance Lead or Org Admin | Not reconciled; note given | WorkforceSourceReconciled |
+| ReconcileWorkforceSourceObservation | Compliance Lead or Org Admin | Not reconciled; note given; `accepted` only when no newer revision of the same record is accepted | WorkforceSourceReconciled |
 
 | Event | Carries |
 | --- | --- |
@@ -188,10 +193,11 @@ and receives at most one attributable reconciliation decision: `accepted` or
 ```mermaid
 flowchart LR
     C1[/RecordWorkforceSourceObservation/] --> E1([WorkforceSourceObserved])
-    C2[/ReconcileWorkforceSourceObservation/] --> E2([WorkforceSourceReconciled])
+    N([No newer revision of the record accepted]) -. "checks, for accepted" .-> C2
+    E1 -. checks .-> C2[/ReconcileWorkforceSourceObservation/] --> E2([WorkforceSourceReconciled])
     E2 --> R1{{Apply accepted HRIS facts}}
-    R1 --> C3[/RecordPerson or ChangePersonDetails/] --> E3([PersonRecorded / PersonDetailsChanged])
-    R1 --> C4[/RecordWorkRelationship or a status or manager change/] --> E4([WorkRelationship facts])
+    R1 --> C3[/"RecordPerson (ID from source record) or ChangePersonDetails"/] --> E3([PersonRecorded / PersonDetailsChanged])
+    R1 --> C4[/RecordWorkRelationship or a named change/] --> E4([WorkRelationship facts])
 ```
 
 The reactor runs only for an `accepted` HRIS observation. It issues one command
@@ -232,6 +238,7 @@ Anything in between is settled by common sense, with the reasoning stated.
 | WF-05 | A member is linked to at most one person, but a person may have several linked members. | One-to-one both ways: 0.32. Common sense: one person can have more than one account, but one account is never two people. |
 | WF-06 | A sponsor must be active when named; a later departure shows as unsponsored work rather than blocking anything. | Sponsor must be active: 0.43. Same treatment as a service identity whose owner leaves (M0-D06). |
 | WF-07 | One observation aggregate carries both the observation and its reconciliation. | The old `WorkforceObservationResolution` duplicated the reconciliation on `WorkforceSourceObservation`. |
+| WF-08 | Accepting a revision older than one already accepted for the same source record is refused, so the person dismisses it. New people and work relationships take IDs derived from the source record. | Flow audit G5. Refuse rather than silently skip: 0.81 (silently skipping was 0.58). CV-02. |
 
 ## Open questions
 

@@ -125,8 +125,9 @@ built.
   belongs in Portia, following the rule that reusable infrastructure lives
   there, before building a Compliance-local version.
 
-The [2026-10-06 ownership assessment](../../proposed/aggregates/application-import-batch.md)
-checks Portia 0.7.0's published primitives and scope. It records the application
+The 2026-10-06 ownership assessment (now retired; application import is deferred
+in [Application inventory](../../proposed/contexts/application-inventory.md))
+checked Portia 0.7.0's published primitives and scope. It recorded the application
 ledger boundary and the implementation gates; acceptance and the visibility
 barrier remain work for EN-05.
 
@@ -228,8 +229,8 @@ worker parser with its own progress and retention.
 
 - [M0-D28 #139](https://github.com/bdgrz/compliance/issues/139) approves the
   canonical source-observation and correlation vocabulary. This ADR uses the
-  current [application-import domain model](../../proposed/aggregates/application-import-batch.md)
-  terms and will align with the approved catalog.
+  [Application inventory](../../proposed/contexts/application-inventory.md)
+  terms; application import is deferred there (M0-D05).
 - [M0-D05 #62](https://github.com/bdgrz/compliance/issues/62) validates the
   governed Application and SystemInstance boundaries for the first consumer.
 - Third-party schemas, connector mappings, and vendor content remain excluded
@@ -239,8 +240,9 @@ worker parser with its own progress and retention.
   [cntryl/portia#70](https://github.com/cntryl/portia/issues/70) and DevOps
   under accepted [ADR 0003](0003-event-sourced-history-and-effective-versions.md).
 
-The first-consumer wire contract is
-[application import command catalog](../../proposed/commands/application-import-batch.md).
+The first-consumer wire contract will be defined in
+[Application inventory](../../proposed/contexts/application-inventory.md) when
+import is scheduled.
 
 ## Public references
 

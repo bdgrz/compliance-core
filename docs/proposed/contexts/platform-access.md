@@ -10,7 +10,7 @@ person may do there, and who operates the platform. It answers *may this person
 act here*. It does not answer *is this person expected to do this work*; that is
 a responsibility, owned by the context that owns the work (M0-D03).
 
-**Owns:** organizations (tenants) and their lifecycle, workspace web addresses,
+**Owns:** organizations (tenants) and their lifecycle, slugs,
 invitations, members and their affiliation, teams and their members, team role
 assignments, roles and their permissions,
 separation-of-duties waivers, platform users
@@ -25,7 +25,7 @@ the firm-staff directory, and per-organization sign-in connections.
 | Independence decisions about firm staff | Firm services |
 | Responsibilities (control owner, reviewer, approver) | The context that owns the work; it references members, people and teams |
 | Workforce `Person` records | Workforce assurance; a person may never sign in |
-| Client export, attest record package, retention disposition | Exports, Attest records, Retention; offboarding waits on their facts |
+| Client export, attest record package, evidence retention | Exports and Firm services (offboarding waits on their facts); Retention keeps evidence on its schedule after offboarding (RT-04) |
 | Acknowledgement waivers for policies | Policies |
 
 ## Language
@@ -35,7 +35,7 @@ the firm-staff directory, and per-organization sign-in connections.
 | Organization | A client organization. Its technical name is **tenant** (`tenant_id`) everywhere in contracts; product text says organization (M0-D25). |
 | Platform user | A person who can sign in. Exists outside every tenant. |
 | Sign-in identity | One external issuer + subject pair that authenticates exactly one platform user. |
-| Workspace web address | The organization's normalized, globally unique address (slug). |
+| Slug | The organization's normalized, globally unique short name used in its workspace URL. |
 | Membership | One platform user's belonging to one organization. |
 | Membership episode | One continuous period of membership. Deprovisioning ends it for good; rejoining starts a new episode. |
 | Affiliation | Exactly one of `client_personnel`, `firm_staff`, `guest` per episode. |
@@ -59,12 +59,12 @@ product-defined.
 **Identity:** `TenantId`, supplied by the caller at registration.
 
 **Invariant:** one organization moves through one lifecycle, and holds at most
-one pending web-address change.
+one pending slug change.
 
 ```mermaid
 stateDiagram-v2
     [*] --> registered: RegisterTenant
-    registered --> active: web address confirmed
+    registered --> active: slug confirmed
     active --> suspended: SuspendTenant (operator)
     suspended --> active: ReactivateTenant (operator)
     active --> offboarding: StartTenantOffboarding (operator)
@@ -73,50 +73,67 @@ stateDiagram-v2
     offboarded --> [*]
 ```
 
-- A registered organization becomes active when its first web address is
+- A registered organization becomes active when its first slug is
   confirmed. The creator is already its first Org Admin on the Administrators team, so
   activation waits for nothing else.
+- When the first slug is rejected, the organization stays registered and the
+  creator requests another slug. This is the one command anyone can issue in a
+  registered organization (PA-21).
 - Suspension blocks every member and assigned firm staff member and preserves all
   records. Only an operator suspends, reactivates or offboards.
-- Offboarding forbids new active service. It completes only after the export
-  delivery, the attest engagement record package delivery decision, and the
-  retention disposition are recorded (M0-D16, M0-D25, M0-D27).
+- Offboarding forbids new active service: Firm services refuses to propose or
+  accept an engagement, or assign staff, unless the tenant is active. Offboarding
+  completes only after the client export is received and the attest engagement
+  record package delivery for every attest engagement are recorded, and no
+  service engagement is still accepted and open (M0-D16, M0-D25, M0-D27).
+  Evidence then stays on its retention schedule, and a platform operator
+  approves later dispositions (Retention, RT-04).
 - Repeating the current state is a no-op; every other transition is refused.
 
 | Command | Who | Accepts when | Emits |
 | --- | --- | --- | --- |
 | RegisterTenant | Platform user with a verified email | `TenantId` is new | TenantRegistered |
-| ConfirmWorkspaceWebAddress | Reactor | Address claim matches the pending request | TenantActivated (first address) or WorkspaceWebAddressChanged |
-| RejectWorkspaceWebAddress | Reactor | Address claim was denied for the pending request | WorkspaceWebAddressRejected |
-| RequestWorkspaceWebAddressChange | Org Admin | Active; no change pending | WorkspaceWebAddressChangeRequested |
+| ConfirmTenantSlug | Reactor | Slug claim matches the pending request | TenantActivated (first slug) or TenantSlugChanged |
+| RejectTenantSlug | Reactor | Slug claim was denied for the pending request | TenantSlugRejected |
+| RequestTenantSlugChange | Org Admin; or the creator while registered | Registered or active; no change pending (PA-21) | TenantSlugChangeRequested |
 | SuspendTenant | Operator | Active | TenantSuspended |
 | ReactivateTenant | Operator | Suspended | TenantReactivated |
 | StartTenantOffboarding | Operator | Active or suspended | TenantOffboardingStarted |
-| CompleteTenantOffboarding | Operator | Offboarding, and the three closing facts are recorded | TenantOffboardingCompleted |
+| CompleteTenantOffboarding | Operator | Offboarding; a client export received; every attest record package delivered; no accepted, open service engagement | TenantOffboardingCompleted |
 
 | Event | Carries |
 | --- | --- |
-| TenantRegistered | tenant, display name, requested web address, creator user, registered at |
-| TenantActivated | tenant, web address, activated at |
-| WorkspaceWebAddressChangeRequested | tenant, current address, requested address, requested by |
-| WorkspaceWebAddressChanged | tenant, previous address, new address |
-| WorkspaceWebAddressRejected | tenant, requested address, reason (`taken` or `retired`) |
+| TenantRegistered | tenant, display name, requested slug, creator user, registered at |
+| TenantActivated | tenant, slug, activated at |
+| TenantSlugChangeRequested | tenant, current slug, requested slug, requested by |
+| TenantSlugChanged | tenant, previous slug, new slug |
+| TenantSlugRejected | tenant, requested slug, reason (`taken` or `retired`) |
+
+The tenant has a pending request from `RegisterTenant` until its first slug is
+confirmed or rejected, and from `RequestTenantSlugChange` until that
+slug is confirmed or rejected.
 | TenantSuspended | tenant, operator, reason |
 | TenantReactivated | tenant, operator, reason |
 | TenantOffboardingStarted | tenant, operator, reason |
-| TenantOffboardingCompleted | tenant, operator, references to the three closing facts |
+| TenantOffboardingCompleted | tenant, operator, client export received, record package deliveries |
 
-### WorkspaceWebAddress
+### TenantSlug
 
-**Identity:** the normalized address.
+**Identity:** the normalized slug.
 
-**Invariant:** an address belongs to at most one tenant, and once released it is
-retired permanently, so a former organization's address can never be reused.
+**Invariant:** a slug belongs to at most one tenant, and once released it is
+retired permanently, so a former organization's slug can never be reused.
 
 | Command | Who | Accepts when | Emits |
 | --- | --- | --- | --- |
-| ClaimWorkspaceWebAddress | Reactor | Unclaimed; a repeat claim by the same tenant is a no-op | WorkspaceWebAddressClaimed, or WorkspaceWebAddressClaimDenied when taken or retired |
-| RetireWorkspaceWebAddress | Reactor | Claimed by the releasing tenant | WorkspaceWebAddressRetired |
+| ClaimTenantSlug | Reactor | Unclaimed; a repeat claim by the same tenant is a no-op | TenantSlugClaimed, or TenantSlugClaimDenied when taken or retired |
+| RetireTenantSlug | Reactor | Claimed by the releasing tenant | TenantSlugRetired |
+
+| Event | Carries |
+| --- | --- |
+| TenantSlugClaimed | slug, tenant |
+| TenantSlugClaimDenied | slug, requesting tenant, reason (`taken` or `retired`) |
+| TenantSlugRetired | slug, tenant |
 
 ### TenantInvitation
 
@@ -130,11 +147,12 @@ organization. The invitation holds its current offer and its history.
 - An offer names the affiliation (`client_personnel`, `firm_staff` or `guest`)
   and the teams to join. A guest offer also names a finite end date and at least
   one program.
-- Inviting someone who is already an active member is refused.
+- Inviting someone who has a current membership episode (active or suspended) is
+  refused. A suspended member comes back by reinstatement, not invitation (PA-22).
 
 | Command | Who | Accepts when | Emits |
 | --- | --- | --- | --- |
-| InviteMember | Org Admin | No pending offer; not an active member | MemberInvited |
+| InviteMember | Org Admin | No pending offer; no current episode | MemberInvited |
 | RevokeInvitation | Org Admin | Offer pending | InvitationRevoked |
 | AcceptInvitation | The invited platform user | Pending, unexpired, verified email matches | InvitationAccepted |
 
@@ -159,7 +177,11 @@ starts a new episode.
   team. Advisor and Attest come only from engagement assignment.
 - Self-suspension and self-deprovisioning are refused. Each change records actor,
   time and reason.
-- Suspending or deprovisioning the last active Org Admin is refused (PA-04).
+- Suspending or deprovisioning an Org Admin takes effect only after the
+  `OrgAdminRoster` releases them, and the roster refuses the last one (PA-04,
+  PA-27). For this rule an Org Admin is an active, non-guest member of the
+  Administrators team; Org Admin held through another team gives permission but
+  does not count (PA-23).
 
 ```mermaid
 stateDiagram-v2
@@ -174,13 +196,13 @@ stateDiagram-v2
 | Command | Who | Accepts when | Emits |
 | --- | --- | --- | --- |
 | RegisterMember | Reactor | No current episode | MemberRegistered |
-| SuspendMember | Org Admin | Active; not self; not the last active Org Admin | MemberSuspended |
+| SuspendMember | Org Admin, or reactor on OrgAdminReleased | Active; not self; an Org Admin needs a roster release for this suspension | MemberSuspended |
 | ReinstateMember | Org Admin | Suspended | MemberReinstated |
-| DeprovisionMember | Org Admin | Active or suspended; not self; not the last active Org Admin | MemberDeprovisioned |
+| DeprovisionMember | Org Admin, or reactor on OrgAdminReleased | Active or suspended; not self; an Org Admin needs a roster release for this deprovisioning | MemberDeprovisioned |
 
 | Event | Carries |
 | --- | --- |
-| MemberRegistered | tenant, user, episode, affiliation, guest end date and programs |
+| MemberRegistered | tenant, user, episode, origin (`tenant_creation` or the accepted invitation offer), affiliation, guest end date and programs |
 | MemberSuspended | tenant, user, episode, actor, reason |
 | MemberReinstated | tenant, user, episode, actor, reason |
 | MemberDeprovisioned | tenant, user, episode, actor, reason |
@@ -214,19 +236,48 @@ ID in every organization.
 **Invariant:** one member is on one team, or is not. A repeat assignment is a
 no-op.
 
-- Removing the last active Org Admin from the Administrators team is refused
-  (PA-04).
+- Removing an Org Admin from the Administrators team needs a roster release
+  (PA-27).
+- Only a non-guest member can be put on the Administrators team.
 - A team membership counts only while the member's episode is active (PA-09).
 
 | Command | Who | Accepts when | Emits |
 | --- | --- | --- | --- |
-| AssignTeamMember | Org Admin or reactor | Not on the team | TeamMemberAssigned |
-| RemoveTeamMember | Org Admin or reactor | On the team; not the last active Org Admin on Administrators | TeamMemberRemoved |
+| AssignTeamMember | Org Admin or reactor | Team active; not on the team; not a guest when the team is Administrators | TeamMemberAssigned |
+| RemoveTeamMember | Org Admin or reactor | On the team; for Administrators, a roster release for this removal or for the user's deprovisioning | TeamMemberRemoved |
 
 | Event | Carries |
 | --- | --- |
 | TeamMemberAssigned | tenant, team, user, episode, assigned by |
 | TeamMemberRemoved | tenant, team, user, removed by |
+
+### OrgAdminRoster
+
+**Identity:** `TenantId`.
+
+**Invariant:** the organization always keeps at least one active Org Admin. The
+roster holds who counts (active, non-guest members of the Administrators team)
+and admits each suspension, deprovisioning or removal from the team before it
+takes effect, refusing the last one. Both answers are recorded
+([CV-10](conventions.md#reactors), PA-27, CV-11).
+
+- Additions arrive by reaction and only ever raise the count. A release whose
+  action never happens leaves the count lower than reality, which can only refuse
+  more; an Org Admin cancels such a release.
+- Offboarding is exempt: a completed offboarding ends every membership.
+
+| Command | Who | Accepts when | Emits |
+| --- | --- | --- | --- |
+| AddOrgAdmin | Reactor on TeamMemberAssigned (Administrators) or MemberReinstated (on Administrators) | Not counted; a repeat is a no-op | OrgAdminAdded |
+| ReleaseOrgAdmin | Org Admin, not self | Counted; intent (`suspend`, `deprovision` or `remove_from_administrators`) and reason given; always answers | OrgAdminReleased or OrgAdminReleaseRefused (last Org Admin) |
+| CancelOrgAdminRelease | Org Admin | Released, and the action did not happen | OrgAdminRestored |
+
+| Event | Carries |
+| --- | --- |
+| OrgAdminAdded | tenant, user |
+| OrgAdminReleased | tenant, user, intent, reason, released by |
+| OrgAdminReleaseRefused | tenant, user, intent, reason (`last_org_admin`), requested by |
+| OrgAdminRestored | tenant, user, cancelled release, by |
 
 ### TeamRole
 
@@ -313,6 +364,16 @@ beneficiary, approves it once (M0-D03, M0-D23).
 | --- | --- | --- | --- |
 | RequestSeparationOfDutiesWaiver | Org Admin | Reason given; expiry after now | SeparationOfDutiesWaiverRequested |
 | ApproveSeparationOfDutiesWaiver | A different Org Admin, not the beneficiary | Requested and unexpired | SeparationOfDutiesWaiverApproved |
+| RevokeSeparationOfDutiesWaiver | Org Admin | Requested or approved; unexpired; reason given | SeparationOfDutiesWaiverRevoked |
+
+| Event | Carries |
+| --- | --- |
+| SeparationOfDutiesWaiverRequested | tenant, waiver, beneficiary, record type, scope, reason, expires at, requested by |
+| SeparationOfDutiesWaiverApproved | tenant, waiver, approved by, approved at |
+| SeparationOfDutiesWaiverRevoked | tenant, waiver, reason, revoked by |
+
+Expiry is computed, not recorded. A revoked waiver covers nothing from the moment
+it is revoked; actions already taken under it keep their flag.
 
 Every waived action is flagged in readiness results and audit exports; the
 contexts that perform the action record that flag.
@@ -346,11 +407,31 @@ stateDiagram-v2
 | RecordSignInIdentity | SignInIdentity | First sign-in with this issuer and subject | SignInIdentityRecorded |
 | AttachSignInIdentity | SignInIdentity (reactor) | Unattached, or already attached to the same user (no-op) | SignInIdentityAttached |
 | RevokeSignInIdentity | SignInIdentity (reactor or the user) | Attached | SignInIdentityRevoked |
-| IssueEmailChallenge | EmailAddress | Issuer did not verify the address | EmailChallengeIssued |
+| RecordIssuerVerifiedEmail | EmailAddress (reactor) | The sign-in identity's issuer verified the address | EmailAddressVerified |
+| IssueEmailChallenge | EmailAddress (reactor) | Issuer did not verify the address; requested for an unattached sign-in identity | EmailChallengeIssued |
+| CompleteEmailChallenge | EmailAddress | Current challenge answered from the same sign-in identity, unexpired | EmailAddressVerified |
 | ClaimEmailAddress | EmailAddress (reactor) | Verified, and unclaimed or claimed by the same user | EmailAddressClaimed, or EmailAddressClaimDenied when another user owns it |
-| RegisterPlatformUser | PlatformUser (reactor) | `UserId` is new | PlatformUserRegistered |
+| RegisterPlatformUser | PlatformUser (reactor) | `UserId` is new; a repeat for the same sign-in identity is a no-op | PlatformUserRegistered |
 | RequestAccountRecovery | EmailAddress | Claimed; requested from an unattached sign-in identity | AccountRecoveryChallengeIssued |
 | CompleteAccountRecovery | EmailAddress | Current challenge answered from the same sign-in identity | AccountRecoveryVerified |
+
+| Event | Carries |
+| --- | --- |
+| SignInIdentityRecorded | issuer, subject, email as asserted, whether the issuer verified it |
+| SignInIdentityAttached | issuer, subject, user, reason (`first_sign_in` or `account_recovery`) |
+| SignInIdentityRevoked | issuer, subject, user, reason, revoked by |
+| EmailChallengeIssued | address, sign-in identity, challenge, expires at |
+| EmailAddressVerified | address, sign-in identity, method (`issuer` or `challenge`) |
+| EmailAddressClaimed | address, user |
+| EmailAddressClaimDenied | address, sign-in identity, owning user |
+| PlatformUserRegistered | user, display name, verified email, first sign-in identity |
+| AccountRecoveryChallengeIssued | address, user, new sign-in identity, challenge, expires at |
+| AccountRecoveryVerified | address, user, new sign-in identity |
+
+The new user's `UserId` is derived from the first sign-in identity, so a repeated
+trigger registers the same user once ([CV-02](conventions.md#reactors)). An
+issuer-verified email is recorded as `EmailAddressVerified` with method `issuer`,
+so the claim always follows the same fact.
 
 **Account recovery** (PA-10): a person who has lost their old sign-in method
 signs in with a new one. Because their verified email already belongs to their
@@ -361,25 +442,24 @@ person approves it.
 
 Successful authentications are audit-log entries, not domain events (PA-08).
 
-### PlatformOperator
+### PlatformOperators
 
-**Identity:** `UserId`.
+**Identity:** the platform (one record).
 
-**Invariant:** one platform user is an operator, or is not. Each grant and
-revocation records actor, time and reason (M0-D25).
+**Invariant:** the platform's operators are one set that is never empty once
+seeded. Each grant and revocation records actor, time and reason, and revoking
+the last operator is refused in this one stream (M0-D25, PA-20, CV-11).
 
 - An existing operator grants and revokes operator status. There is no two-person
   rule.
-- Revoking the last active operator is refused. Like the last Org Admin, this is
-  checked against current state when the command runs (PA-20).
 - Configured operator IDs are granted only while the platform has no operator. A
   configured ID never re-grants a revoked operator on restart.
 
 | Command | Who | Accepts when | Emits |
 | --- | --- | --- | --- |
-| SeedPlatformOperator | System | The platform has no operator; this user was never revoked | PlatformOperatorGranted |
+| SeedPlatformOperator | System | The set is empty; this user was never revoked | PlatformOperatorGranted |
 | GrantPlatformOperator | Operator | Not an operator | PlatformOperatorGranted |
-| RevokePlatformOperator | Operator | An operator; not the last active one | PlatformOperatorRevoked |
+| RevokePlatformOperator | Operator | An operator; not the last one | PlatformOperatorRevoked |
 
 | Event | Carries |
 | --- | --- |
@@ -393,10 +473,18 @@ revocation records actor, time and reason (M0-D25).
 **Invariant:** the practice (`advisory` or `attest`) is recorded once and never
 changes. The entry is active or inactive, and it lives outside every tenant.
 
-| Command | Who | Emits |
-| --- | --- | --- |
-| RegisterFirmStaffMember | Operator (PA-14) | FirmStaffMemberRegistered |
-| ChangeFirmStaffStatus | Operator (PA-14) | FirmStaffMemberStatusChanged |
+| Command | Who | Accepts when | Emits |
+| --- | --- | --- | --- |
+| RegisterFirmStaffMember | Operator (PA-14) | No entry for this user; practice given | FirmStaffMemberRegistered |
+| ChangeFirmStaffStatus | Operator (PA-14) | Registered; status differs; reason given | FirmStaffMemberStatusChanged |
+
+| Event | Carries |
+| --- | --- |
+| FirmStaffMemberRegistered | user, practice, registered by |
+| FirmStaffMemberStatusChanged | user, previous status, new status, reason, changed by |
+
+An inactive firm staff member holds no engagement work and no partner duty;
+authorization checks the status (PA-09 approach, FS-12 in Firm services).
 
 ### TenantSignInConnection (later release, F1-06)
 
@@ -407,6 +495,9 @@ credentials. A credential rotation invalidates any earlier test, and a disabled
 connection stays disabled. The detailed design is deferred to F1-06.
 
 ## Flows
+
+Diagrams follow [CV-01](conventions.md#flow-diagrams), and reactors follow
+[CV-02 to CV-04](conventions.md#reactors).
 
 Delivery of invitation and verification emails is a technical process; it records
 send attempts and makes no business decision.
@@ -422,58 +513,68 @@ flowchart LR
     E8 --> R7{{Give it Org Admin}} --> C8[/AssignRoleToTeam/] --> E9([RoleAssignedToTeam])
     E1 --> R1{{Register creator}} --> C2[/RegisterMember/] --> E2([MemberRegistered])
     E2 --> R9{{Put creator on Administrators}} --> C10[/AssignTeamMember/] --> E11([TeamMemberAssigned])
-    E1 --> R2{{Claim web address}} --> C3[/ClaimWorkspaceWebAddress/]
-    C3 --> E3([WorkspaceWebAddressClaimed])
-    C3 --> E4([WorkspaceWebAddressClaimDenied])
-    E3 --> R3{{Confirm address}} --> C4[/ConfirmWorkspaceWebAddress/] --> E5([TenantActivated])
-    E4 --> R4{{Reject address}} --> C5[/RejectWorkspaceWebAddress/] --> E6([WorkspaceWebAddressRejected])
+    E1 --> R2{{Claim slug}} --> C3[/ClaimTenantSlug/]
+    C3 --> E3([TenantSlugClaimed])
+    C3 --> E4([TenantSlugClaimDenied])
+    E3 --> R3{{Confirm slug}} --> C4[/ConfirmTenantSlug/] --> E5([TenantActivated])
+    E4 --> R4{{Reject slug}} --> C5[/RejectTenantSlug/] --> E6([TenantSlugRejected])
+    E6 -. "creator, tenant still registered" .-> C11[/RequestTenantSlugChange/]
+    C11 --> E12([TenantSlugChangeRequested]) --> R2
 ```
 
-Built-in role and team IDs are fixed, so the creator can be put on the
-Administrators team before it exists. The creator acts once the team's Org Admin
-assignment is recorded.
-After a rejection the tenant stays registered. The creator chooses another
-address with RequestWorkspaceWebAddressChange.
+`MemberRegistered` carries origin `tenant_creation`, which is what the "Put
+creator on Administrators" reactor reacts to. Built-in role and team IDs are
+fixed, so the creator can be put on the Administrators team before it exists. The
+creator acts once the team's Org Admin assignment is recorded.
+After a rejection the tenant stays registered, and the creator requests another
+slug (PA-21). Dotted edges are facts a command checks, not reactions.
 
-### Web address change
+### Slug change
 
 ```mermaid
 flowchart LR
-    C1[/RequestWorkspaceWebAddressChange/] --> E1([WorkspaceWebAddressChangeRequested])
-    E1 --> R1{{Claim new address}} --> C2[/ClaimWorkspaceWebAddress/]
-    C2 --> E2([WorkspaceWebAddressClaimed]) --> R2{{Confirm address}} --> C3[/ConfirmWorkspaceWebAddress/] --> E3([WorkspaceWebAddressChanged])
-    C2 --> E4([WorkspaceWebAddressClaimDenied]) --> R3{{Reject address}} --> C4[/RejectWorkspaceWebAddress/] --> E5([WorkspaceWebAddressRejected])
-    E3 --> R4{{Retire old address}} --> C5[/RetireWorkspaceWebAddress/] --> E6([WorkspaceWebAddressRetired])
+    C1[/RequestTenantSlugChange/] --> E1([TenantSlugChangeRequested])
+    E1 --> R1{{Claim new slug}} --> C2[/ClaimTenantSlug/]
+    C2 --> E2([TenantSlugClaimed]) --> R2{{Confirm slug}} --> C3[/ConfirmTenantSlug/] --> E3([TenantSlugChanged])
+    C2 --> E4([TenantSlugClaimDenied]) --> R3{{Reject slug}} --> C4[/RejectTenantSlug/] --> E5([TenantSlugRejected])
+    E3 --> R4{{Retire old slug}} --> C5[/RetireTenantSlug/] --> E6([TenantSlugRetired])
 ```
 
 ### Invitation and joining
 
 ```mermaid
 flowchart LR
+    M([Member: no current episode]) -. checks .-> C1
     C1[/InviteMember/] --> E1([MemberInvited])
     E1 --> P1{{Invitation email delivery}}
-    C2[/AcceptInvitation/] --> E2([InvitationAccepted])
-    E2 --> R1{{Register member}} --> C3[/RegisterMember/] --> E3([MemberRegistered])
-    E3 --> R2{{Join invited teams}} --> C4[/AssignTeamMember/] --> E4([TeamMemberAssigned])
+    E1 -. checks .-> C2[/AcceptInvitation/] --> E2([InvitationAccepted])
+    E2 --> R1{{Register member}} --> C3[/RegisterMember/] --> E3(["MemberRegistered (origin: offer)"])
+    E3 --> R2{{Join the offer's teams}} --> C4[/AssignTeamMember/]
+    C4 -->|team active| E4([TeamMemberAssigned])
+    C4 -. "team deleted since the offer: refused" .-> G1[[Visible gap on the member]]
 ```
 
 A guest's invited programs are recorded on the member episode and limit what
-those teams give them.
+those teams give them. The teams come from the offer named by the event's origin.
 
 ### First sign-in
 
 ```mermaid
 flowchart LR
     C1[/RecordSignInIdentity/] --> E1([SignInIdentityRecorded])
-    E1 --> R1{{Claim verified email}} --> C2[/ClaimEmailAddress/]
-    C2 --> E2([EmailAddressClaimed]) --> R2{{Register user}} --> C3[/RegisterPlatformUser/] --> E3([PlatformUserRegistered])
-    E3 --> R3{{Attach identity}} --> C4[/AttachSignInIdentity/] --> E4([SignInIdentityAttached])
-    C2 --> E5([EmailAddressClaimDenied])
+    E1 -->|issuer verified the email| R0{{Record issuer verification}} --> C8[/RecordIssuerVerifiedEmail/] --> V([EmailAddressVerified])
+    E1 -->|not verified| R5{{Challenge the email}} --> C6[/IssueEmailChallenge/] --> E6([EmailChallengeIssued])
+    E6 --> P1{{Challenge email delivery}}
+    E6 -. checks .-> C7[/CompleteEmailChallenge/] --> V
+    V --> R1{{Claim verified email}} --> C2[/ClaimEmailAddress/]
+    C2 --> E2([EmailAddressClaimed]) --> R2{{"Register user (UserId from identity)"}} --> C3[/RegisterPlatformUser/] --> E3([PlatformUserRegistered])
+    E3 --> R3{{Attach identity}} --> C4[/AttachSignInIdentity/] --> E4(["SignInIdentityAttached (first_sign_in)"])
+    C2 --> E5([EmailAddressClaimDenied]) -.-> X1[[Offer account recovery]]
 ```
 
 After a denial, the identity stays unattached and the person is offered account
-recovery. When the issuer has not verified the email, an email challenge
-(IssueEmailChallenge) comes before the claim.
+recovery. Both verification paths end in `EmailAddressVerified`, so the claim
+always follows the same fact.
 
 ### Account recovery
 
@@ -481,11 +582,14 @@ recovery. When the issuer has not verified the email, an email challenge
 flowchart LR
     C1[/RequestAccountRecovery/] --> E1([AccountRecoveryChallengeIssued])
     E1 --> P1{{Recovery email delivery}}
-    C2[/CompleteAccountRecovery/] --> E2([AccountRecoveryVerified])
-    E2 --> R1{{Attach new identity}} --> C3[/AttachSignInIdentity/] --> E3([SignInIdentityAttached])
-    E3 --> R2{{Revoke other identities}} --> C4[/RevokeSignInIdentity/] --> E4([SignInIdentityRevoked])
+    E1 -. checks .-> C2[/CompleteAccountRecovery/] --> E2([AccountRecoveryVerified])
+    E2 --> R1{{Attach new identity}} --> C3[/AttachSignInIdentity/] --> E3(["SignInIdentityAttached (account_recovery)"])
+    E2 --> R2{{Revoke the user's other identities}} --> C4[/RevokeSignInIdentity/] --> E4([SignInIdentityRevoked])
     E2 --> P2{{Recovery notice delivery}}
 ```
+
+Revocation reacts to `AccountRecoveryVerified`, which names the identity to keep,
+never to `SignInIdentityAttached`, which every first sign-in also records.
 
 ### Membership ends
 
@@ -506,7 +610,7 @@ flowchart LR
     E1 --> R1{{Take role off teams}} --> C2[/RemoveRoleFromTeam/] --> E2([RoleRemovedFromTeam])
     E1 --> R3{{Remove role permissions}} --> C5[/RemoveRolePermission/] --> E5([RolePermissionRemoved])
     C3[/DeleteTeam/] --> E3([TeamDeleted])
-    E3 --> R2{{Remove team members}} --> C4[/RemoveMemberFromTeam/] --> E4([MemberRemovedFromTeam])
+    E3 --> R2{{Remove team members}} --> C4[/RemoveTeamMember/] --> E4([TeamMemberRemoved])
     E3 --> R4{{Remove team roles}} --> C2
 ```
 
@@ -518,12 +622,16 @@ up the records; they do not stop access.
 ```mermaid
 flowchart LR
     C1[/StartTenantOffboarding/] --> E1([TenantOffboardingStarted])
-    E1 -.-> X1[[Exports, Attest records, Retention]]
-    X1 -.-> C2[/CompleteTenantOffboarding/] --> E2([TenantOffboardingCompleted])
-    E2 --> R1{{Retire web address}} --> C3[/RetireWorkspaceWebAddress/] --> E3([WorkspaceWebAddressRetired])
+    E1 -. "refuses new service" .-> F1[[Firm services: propose, accept, assign]]
+    E1 -.-> X1[[Exports: client export]]
+    X1 -. "ClientExportReceived" .-> C2
+    P1([AttestEngagementRecordPackageDelivered, per attest engagement]) -. checks .-> C2
+    S1([No accepted, open ServiceEngagement]) -. checks .-> C2
+    C2[/CompleteTenantOffboarding/] --> E2([TenantOffboardingCompleted])
+    E2 --> R1{{Retire slug}} --> C3[/RetireTenantSlug/] --> E3([TenantSlugRetired])
 ```
 
-The dotted steps belong to other contexts and are designed there.
+The export belongs to Exports. After completion, Retention keeps the evidence on its schedule (RT-04).
 
 ## Authorization contract
 
@@ -531,6 +639,8 @@ Authorization is a query, not an aggregate. A person may act in an organization
 when every one of these holds:
 
 1. The tenant is active (not registered, suspended, offboarding or offboarded).
+   The one exception: while the tenant is registered, its creator may issue
+   `RequestTenantSlugChange` (PA-21).
 2. The person has a current, active membership episode, and a guest's end date has
    not passed, **or** they have an active engagement assignment from Firm services
    for Advisor or Attest work.
@@ -546,6 +656,17 @@ when every one of these holds:
 Platform operators see tenant lifecycle, who the Org Admins are, and usage.
 They read business records only through a membership or engagement assignment.
 
+## Disagreement and replay
+
+Cases required by [CV-12](conventions.md#guards-and-reviews).
+
+| Case | Outcome |
+| --- | --- |
+| Two Org Admins each try to remove the other, the only two, at the same moment | The roster releases whichever arrives first and refuses the other (`last_org_admin`) |
+| A release is granted but the suspension then fails | The roster undercounts, which only refuses more; an Org Admin cancels the release |
+| `TeamMemberAssigned` for Administrators delivered twice | `AddOrgAdmin` repeat is a no-op |
+| Two operators revoke each other at once | `PlatformOperators` orders them; the second revocation is refused |
+
 ## Decisions
 
 Jev answers come from `jev-1.14.0`, 2026-11-03. A yes is ≥ 0.8 and a no is ≤ 0.2;
@@ -556,8 +677,8 @@ anything between is left open.
 | PA-01 | Roles are aggregates that each organization manages. Teams hold members and are assigned roles, and a member gets client permissions only through their teams. There are no direct member grants, so `AccessGrant` is removed. | Product owner, 2026-11-03. This supersedes M0-D03's fixed catalog and "custom roles are out of scope". |
 | PA-02 | A team role assignment names its scope: organization, program, engagement or shared resource. | Scope fits team role assignments: 0.77, adopted because the M0-D03 scope hierarchy needs a place to live once grants go through teams. |
 | PA-03 | A guest's programs are recorded on the membership and limit whatever their teams give them. | Guest capped by programs: 0.95. M0-D03. |
-| PA-04 | Small independent aggregates: `TenantInvitation`, `Member`, `Team` and `TeamMember`, alongside `Role`, `RolePermission` and `TeamRole`. The organization always keeps an active Org Admin: `SuspendMember`, `DeprovisionMember` and removing someone from the Administrators team are refused when the current state shows they are the last active Org Admin. The built-in Administrators team permanently holds Org Admin and cannot be deleted. | Product owner, 2026-11-03: "each of these things is a small independent thing". The check reads current state at command time, and no extra guard aggregate is added. |
-| PA-05 | Self-service creation registers the creator as a member and puts them on the Administrators team. There is no first-owner invitation, and activation waits only for the web address. | First administrator invited by email: 0.05. M0-D25. |
+| PA-04 | Small independent aggregates: `TenantInvitation`, `Member`, `Team` and `TeamMember`, alongside `Role`, `RolePermission` and `TeamRole`. The organization always keeps an active Org Admin, decided by the `OrgAdminRoster` (PA-27). The built-in Administrators team permanently holds Org Admin and cannot be deleted. | Product owner, 2026-11-03: "each of these things is a small independent thing". The last-admin rule moved to the roster after the Portia guidelines review. |
+| PA-05 | Self-service creation registers the creator as a member and puts them on the Administrators team. There is no first-owner invitation, and activation waits only for the slug. | First administrator invited by email: 0.05. M0-D25. |
 | PA-06 | The firm-staff directory has one entry per platform user, keyed by `UserId`. `FirmStaffIdentityClaim` is not needed. | One entry per user: 0.80. M0-D25. |
 | PA-07 | Engagement authorization and professional-duty facts move from the firm-staff record to Firm services. | Ownership table in [domain-model.md](../domain-model.md). |
 | PA-08 | Sign-in events (authenticated, profile observed) are audit-log entries, not domain events. | Modeling rule: a status or activity log does not own business state. |
@@ -571,8 +692,15 @@ anything between is left open.
 | PA-17 | Small aggregates: `Role` is the role's name and lifecycle, `RolePermission` is one permission assigned to one role, and `TeamRole` is one role assigned to one team at one scope. Each assignment is decided on its own, and built-in protections are checked locally against fixed built-in IDs. | Product owner, 2026-11-03, for `Role` and `RolePermission`; `TeamRole` follows the same principle. Supersedes Jev's earlier lean towards one role record owning its whole permission set (0.86). |
 | PA-18 | Built-in roles cannot be renamed, edited or deleted. Custom roles cover anything else. | Built-in roles deletable: 0.22. Keeping all built-ins fixed (not only Org Admin) is a common-sense choice: everyone, auditors included, can rely on what a built-in role means. |
 | PA-19 | Removing a deleted role's permissions and team assignments, and a deleted team's members and roles, is done by reactors as housekeeping, because permission checks ignore deleted roles and teams immediately. | Later tidy-up harmless: 0.75. Adopted because the check ignores deleted records, so nothing depends on how fast the tidy-up runs. |
-| PA-16 | Web addresses are claimed by a reactor after registration or a change request, and a denial is a recorded fact. In a reactor-driven claim, that fact is the only way the tenant learns of the denial and leaves its pending state. | Claim-first alternative: sound 0.56, harm from abandoned claims 0.32. Both near-even, so the existing design stays: it leaves no reservations behind for abandoned sign-ups, and it uses the same pattern as email claims. |
-| PA-20 | One `PlatformOperator` aggregate per user replaces the single platform roster. The last-operator rule is a check against current state when the command runs. | Small independent aggregates (product owner, 2026-11-03). Supersedes the earlier OWNER_PlatformOperatorGrant choice of one roster. |
+| PA-16 | Slugs are claimed by a reactor after registration or a change request, and a denial is a recorded fact. In a reactor-driven claim, that fact is the only way the tenant learns of the denial and leaves its pending state. | Claim-first alternative: sound 0.56, harm from abandoned claims 0.32. Both near-even, so the existing design stays: it leaves no reservations behind for abandoned sign-ups, and it uses the same pattern as email claims. |
+| PA-20 | One `PlatformOperators` record holds the operator set, so the last-operator rule is decided in one stream. | An advisory last-admin or last-operator check: 0.11 (no). Reverses the earlier one-aggregate-per-user choice after the Portia guidelines review (CV-11). |
+| PA-21 | A tenant whose first slug is rejected stays registered, and its creator requests another slug. `RequestTenantSlugChange` accepts in `registered` or `active`, and authorization lets the creator issue it while registered. | Flow audit 2026-11-03 (B1): without it a rejected first slug strands the organization. Creator-only change while registered: 0.75; common sense, since the alternative is a dead end. |
+| PA-22 | Inviting a user with a current episode, active or suspended, is refused; a suspended member returns by reinstatement. | Flow audit B3: otherwise an accepted invitation dead-ends at `RegisterMember`. 0.60. Common sense: suspension is a deliberate Org Admin decision, and an invitation must not undo it. |
+| PA-23 | For the last-Org-Admin rule, only active members of the Administrators team count. Org Admin held through another team gives permission but never counts, so deleting that team or removing its role needs no check. | Flow audit B2. Jev near-even on both this (0.52) and restricting Org Admin to the Administrators team (sound 0.57, harm 0.68). Common sense: the three existing guards cover every way to leave the Administrators team's active members, and organizations keep the freedom to grant Org Admin elsewhere. |
+| PA-24 | Withdrawn. The last-Org-Admin and last-operator rules are now decided authoritatively (PA-20, PA-27), so simultaneous removals cannot both pass. | Advisory check with repair: 0.11 (no). |
+| PA-25 | The organization's globally unique short name is the `TenantSlug` aggregate, and its commands and events say slug (`ClaimTenantSlug`, `TenantSlugClaimed`, and so on). `WorkspaceWebAddress` was a longer rename of the same thing. | Product owner, 2026-11-03: slug is the common term. |
+| PA-26 | Completing offboarding is refused while any of the firm's service engagements with the tenant is accepted and not closed. Proposing, accepting and assigning need an active tenant. | Flow audit G1. 0.79; common sense: offboarding already forbids new active service. |
+| PA-27 | One `OrgAdminRoster` per organization admits each suspension, deprovisioning or Administrators-team removal of an Org Admin and refuses the last one; the member or team command takes effect only with that release. | Roster admitting removals: 0.71. Advisory check: 0.11 (no). |
 
 ## Open questions
 
@@ -586,7 +714,7 @@ The generated pages for these owners were deleted when this context was locked.
 | Old owner | Becomes |
 | --- | --- |
 | Tenant | Tenant |
-| TenantSlug, WorkspaceWebAddress | WorkspaceWebAddress (TenantSlug was a duplicate) |
+| TenantSlug, WorkspaceWebAddress | TenantSlug (one aggregate; WorkspaceWebAddress was a rename, PA-25) |
 | Member | Member |
 | TenantInvitation, TenantInvitationMailboxClaim | TenantInvitation, keyed by tenant and email (one pending offer per email: Jev 0.80) |
 | TenantAdministratorContinuity, TenantManagerGuard | Removed; last-admin check on Member and TeamMember commands (PA-04) |
@@ -602,6 +730,6 @@ The generated pages for these owners were deleted when this context was locked.
 | EmailAddress | EmailAddress (also owns the recovery challenge) |
 | EmailChallengeDeliveryLedger | Technical verification and recovery email delivery |
 | IdentityRecovery, IdentityRecoveryNoticeProcess | Account recovery on EmailAddress and SignInIdentity (PA-10) |
-| PlatformOperatorRoster | PlatformOperator, one per user (PA-20) |
+| PlatformOperatorRoster | PlatformOperators (PA-20) |
 | FirmStaffRecord, FirmStaffIdentityClaim | FirmStaffMember (PA-06, PA-07) |
 | TenantIdentityProvider | TenantSignInConnection (F1-06) |

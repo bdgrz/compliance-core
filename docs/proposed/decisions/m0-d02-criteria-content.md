@@ -28,7 +28,7 @@ Status: decided, 2026-09-22. Decision owner: Jeff Repanich, product owner.
 ## Repository check
 
 The platform seed and tenant-overlay contracts are described in
-[criteria-catalog-v1.md](../aggregates/criteria-text-overlay.md). The seed contains criterion
+[Criteria](../contexts/criteria.md). The seed contains criterion
 identifiers, locally assigned point-of-focus identifiers, edition metadata,
 and original summaries. `PlatformCriteriaCatalogTests` guards the authored
 summary boundary. Partial point-of-focus coverage and unsupported Privacy

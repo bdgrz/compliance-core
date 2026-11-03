@@ -130,6 +130,11 @@ original text; nothing is overwritten (AC-02).
 | PostAuditorRequestComment | Either side | `CommentId` is new; request exists | AuditorRequestCommentPosted |
 | CorrectAuditorRequestComment | Its author | Exists | AuditorRequestCommentCorrected |
 
+| Event | Carries |
+| --- | --- |
+| AuditorRequestCommentPosted | tenant, comment, request, side, text, visibility (`attest_internal` or shared), posted by, on behalf of |
+| AuditorRequestCommentCorrected | tenant, comment, correction sequence, corrected text, corrected by |
+
 ### AuditPopulation
 
 **Identity:** `TenantId` + `PopulationId`, for one examination.
@@ -201,6 +206,13 @@ changed package is a new package that references the earlier one.
   source record version, and every evidence artifact is still shareable.
 - The build is a technical job; failed attempts are operational logs, not
   business records (AC-05).
+- A build request names the contents revision to build. The built archive is
+  recorded only if it was built from that revision and the contents have not
+  changed since; otherwise it is refused and the build is requested again
+  (AC-07).
+- Each delivery rechecks that every evidence artifact is still shareable. A
+  validated package with an artifact that has since been quarantined or disposed
+  of cannot be delivered again (AC-08).
 - Only a validated package can be delivered, and only a validated package
   version can be signed for in Examinations.
 
@@ -208,7 +220,8 @@ changed package is a new package that references the earlier one.
 stateDiagram-v2
     [*] --> assembling: AssembleAuditPackage
     assembling --> assembling: ChangeAuditPackageContents
-    assembling --> built: RecordAuditPackageBuilt
+    assembling --> assembling: RequestAuditPackageBuild
+    assembling --> built: RecordAuditPackageBuilt (requested revision is current)
     built --> validated: ValidateAuditPackage
     built --> rejected: ValidateAuditPackage (fails)
     validated --> validated: RecordAuditPackageDelivery
@@ -220,31 +233,39 @@ stateDiagram-v2
 | AssembleAuditPackage | Compliance Lead | `PackageId` is new; examination open | AuditPackageAssembled |
 | ChangeAuditPackageContents | Compliance Lead | Assembling | AuditPackageContentsChanged |
 | RequestAuditPackageBuild | Compliance Lead | Assembling | AuditPackageBuildRequested |
-| RecordAuditPackageBuilt | Build job | Assembling; build requested | AuditPackageBuilt |
+| RecordAuditPackageBuilt | Build job | Assembling; built from the requested contents revision, which is still current | AuditPackageBuilt |
 | ValidateAuditPackage | Compliance Lead | Built | AuditPackageValidated or AuditPackageRejected |
-| RecordAuditPackageDelivery | Compliance Lead | Validated | AuditPackageDelivered |
+| RecordAuditPackageDelivery | Compliance Lead | Validated; every evidence artifact still shareable | AuditPackageDelivered |
 
 | Event | Carries |
 | --- | --- |
 | AuditPackageAssembled | tenant, package, examination, contents (exact record and artifact versions), previous package (if any), assembled by |
 | AuditPackageContentsChanged | tenant, package, contents, changed by |
-| AuditPackageBuildRequested | tenant, package, requested by |
-| AuditPackageBuilt | tenant, package, archive reference, manifest and hash |
+| AuditPackageBuildRequested | tenant, package, contents revision, requested by |
+| AuditPackageBuilt | tenant, package, contents revision, archive reference, manifest and hash |
 | AuditPackageValidated | tenant, package, manifest hash, validated by |
 | AuditPackageRejected | tenant, package, failed entries, validated by |
 | AuditPackageDelivered | tenant, package, recipient, channel, delivered at, recorded by |
 
 ## Flows
 
+Diagrams follow [CV-01](conventions.md#flow-diagrams): dotted edges are the
+facts each command checks.
+
 ### Request and response
 
 ```mermaid
 flowchart LR
+    X0([Examination open]) -. checks .-> C1
     C1[/RecordAuditorRequest/] --> E1([AuditorRequestRecorded])
-    C2[/DeliverAuditorResponse/] --> E2([AuditorResponseDelivered])
+    E1 -. "request open" .-> C5[/DraftAuditorResponse/] --> E5([AuditorResponseDrafted])
+    E5 -. checks .-> C2[/DeliverAuditorResponse/]
+    A[[Evidence: artifacts shareable]] -. checks .-> C2
+    C2 --> E2([AuditorResponseDelivered])
     E2 -.-> X1[[Evidence: log disclosure]]
-    C3[/RecordAuditorResponseDisposition/] --> E3([AuditorResponseDispositionRecorded])
-    C4[/CloseAuditorRequest/] --> E4([AuditorRequestClosed])
+    E2 -. checks .-> C3[/RecordAuditorResponseDisposition/] --> E3([AuditorResponseDispositionRecorded])
+    E3 -. "more_needed: new response" .-> C5
+    N([No draft responses]) -. checks .-> C4[/CloseAuditorRequest/] --> E4([AuditorRequestClosed])
 ```
 
 `more_needed` is answered by a new response on the same open request.
@@ -253,23 +274,31 @@ flowchart LR
 
 ```mermaid
 flowchart LR
+    X0([Examination open]) -. checks .-> C1
     C1[/DraftAuditPopulation/] --> E1([AuditPopulationDrafted])
-    C2[/FreezeAuditPopulation/] --> E2([AuditPopulationFrozen])
-    C3[/RecordSampleSelection/] --> E3([SampleSelectionRecorded])
-    C4[/"DraftAuditPopulation (supersedes)"/] --> E4([AuditPopulationDrafted])
+    E1 -. "scope, time, completeness declared" .-> C2[/FreezeAuditPopulation/] --> E2([AuditPopulationFrozen])
+    E2 -. "hash matches; rows exist" .-> C3[/RecordSampleSelection/] --> E3([SampleSelectionRecorded])
+    E2 -. "frozen; no other unfrozen successor" .-> C4[/"DraftAuditPopulation (supersedes)"/] --> E4([AuditPopulationDrafted])
 ```
+
+A sample never moves to a superseding population; selecting from it is a new
+selection linked to the earlier one.
 
 ### Package
 
 ```mermaid
 flowchart LR
     C1[/AssembleAuditPackage/] --> E1([AuditPackageAssembled])
-    C2[/RequestAuditPackageBuild/] --> E2([AuditPackageBuildRequested])
-    E2 --> R1{{Build package archive}} --> C3[/RecordAuditPackageBuilt/] --> E3([AuditPackageBuilt])
-    C4[/ValidateAuditPackage/] --> E4([AuditPackageValidated])
+    E1 -. checks .-> C2[/RequestAuditPackageBuild/] --> E2(["AuditPackageBuildRequested (contents revision)"])
+    E2 --> R1{{Build package archive}} --> C3[/RecordAuditPackageBuilt/]
+    C3 -->|requested revision still current| E3([AuditPackageBuilt])
+    C3 -. "contents changed: refused" .-> C2
+    E3 -. checks .-> C4[/ValidateAuditPackage/] --> E4([AuditPackageValidated])
     E4 -.-> X1[[Examinations: assertion may be signed]]
-    C5[/RecordAuditPackageDelivery/] --> E5([AuditPackageDelivered])
+    A[[Evidence: artifacts still shareable]] -. checks .-> C5
+    E4 -. checks .-> C5[/RecordAuditPackageDelivery/] --> E5([AuditPackageDelivered])
     E5 -.-> X2[[Evidence: log disclosure]]
+    E5 -.-> X3[[Examinations: outcome may be recorded]]
 ```
 
 ## Authorization contract
@@ -294,6 +323,8 @@ Anything in between is settled by common sense, with the reasoning stated.
 | AC-04 | Deliveries are facts on the validated package, not separate records. | Separate record: 0.60. Common sense: a delivery is a single fact with no lifecycle of its own. |
 | AC-05 | Package build attempts are operational logs, not business records; no build process aggregate. | Build attempts are records: 0.32. Common sense: only the validated result is relied on. |
 | AC-06 | A Compliance Lead records an external firm's requests, selections and decisions, attributed to the firm. | 0.47. Common sense: M0-D27 keeps requests and responses in the client tenant, and external firms have no accounts (M0-D17). |
+| AC-07 | A build request names the contents revision; the built archive is recorded only from that revision while it is still current. | Flow audit B8: otherwise a later contents change is archived, validated and signed for as if it matched. 0.79. |
+| AC-08 | Each delivery rechecks that every evidence artifact is still shareable. | Flow audit G11: deliveries are unlimited (AC-04), and an artifact can be quarantined after validation. 0.79. |
 
 ## Open questions
 

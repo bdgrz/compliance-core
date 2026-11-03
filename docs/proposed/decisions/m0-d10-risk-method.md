@@ -24,6 +24,5 @@ The first client's appetite value and advisor confirmation are in
 
 This extends the existing `ControlRiskTreatment` and `IncidentReference`. The
 `RiskMethod`, `RiskAssessment`, and `RiskAcceptance` fields are alignments
-requested on M0-D28. The existing risk draft
-([risk-draft-v1](../aggregates/risk-draft.md)) remains `draft_unassessed` until these
-records exist.
+requested on M0-D28. The write model for these records is in
+[Risk and provider oversight](../contexts/risk-and-provider-oversight.md).

@@ -55,10 +55,10 @@ readiness ≤ Type I as-of ≤ Type II start ≤ Type II end.
 
 | Command | Who | Accepts when | Emits |
 | --- | --- | --- | --- |
-| CreateProgram | Compliance Lead | `ProgramId` is new | ProgramCreated |
+| CreateProgram | Compliance Lead | `ProgramId` is new; edition published | ProgramCreated |
 | RenameProgram | Compliance Lead | Exists | ProgramRenamed |
 | ReviseProgramTargets | Compliance Lead | Dates in order | ProgramTargetsRevised |
-| SelectProgramCriteriaEdition | Compliance Lead | Edition exists and differs | ProgramCriteriaEditionSelected |
+| SelectProgramCriteriaEdition | Compliance Lead | Edition published and differs | ProgramCriteriaEditionSelected |
 | ChangeProgramStage | Compliance Lead | Next stage; supporting reference given | ProgramStageChanged |
 
 | Event | Carries |
@@ -85,9 +85,10 @@ change.
   the subject's inventory exists, it may be a typed unresolved reference with
   owner and rationale. A client service must be active and belong to this
   program (M0-D22).
-- Approval is a review of the exact draft revision by someone other than its
-  author, unless a separation-of-duties waiver covers it. The review approves or
-  requests changes (PS-04).
+- Approval is a review of the exact draft revision by someone who authored no
+  revision of the draft, unless a separation-of-duties waiver covers it
+  ([CV-06](conventions.md#guards-and-reviews)). The review approves or requests
+  changes (PS-04).
 - A never-approved draft can be discarded (PS-05).
 - Dropping a category or a subject is a new version, never an edit.
 
@@ -106,7 +107,7 @@ stateDiagram-v2
 | --- | --- | --- | --- |
 | DraftBoundary | Compliance Lead or Contributor | No open draft | BoundaryDrafted |
 | ReviseBoundaryDraft | Compliance Lead or Contributor | Draft open; content rules hold | BoundaryDraftRevised |
-| ReviewBoundaryDraft | Compliance Lead, not the author | Draft open; reviews the current revision; approval needs a later effective date and content rules | BoundaryChangesRequested or BoundaryVersionApproved |
+| ReviewBoundaryDraft | Compliance Lead who authored no revision, or covered by a waiver | Draft open; reviews the current revision; approval needs a later effective date and content rules | BoundaryChangesRequested or BoundaryVersionApproved |
 | DiscardBoundaryDraft | Compliance Lead | Draft open | BoundaryDraftDiscarded |
 
 | Event | Carries |
@@ -142,16 +143,32 @@ retired. A retired service cannot be revised.
 
 ```mermaid
 flowchart LR
+    N([No open draft]) -. checks .-> C1
     C1[/DraftBoundary/] --> E1([BoundaryDrafted])
-    C2[/ReviseBoundaryDraft/] --> E2([BoundaryDraftRevised])
-    C3[/ReviewBoundaryDraft/] --> E3([BoundaryChangesRequested])
+    E1 -. checks .-> C2[/ReviseBoundaryDraft/] --> E2([BoundaryDraftRevised])
+    S([Subjects active, client services in this program]) -. checks .-> C2
+    E2 -. "current revision; reviewer authored none" .-> C3[/ReviewBoundaryDraft/]
+    C3 --> E3([BoundaryChangesRequested])
     C3 --> E4([BoundaryVersionApproved])
-    E4 -.-> X1[[Risk, System description, Controls]]
+    E1 -. checks .-> C4[/DiscardBoundaryDraft/] --> E5([BoundaryDraftDiscarded])
+    E4 -.-> X1[[Risk, System description, Control environment, Commitments]]
 ```
 
 Approving a boundary version notifies the contexts that depend on scope (risk
-reassessment, the system description, control applicability). They design their
-own reactions.
+reassessment, the system description, control applicability, commitment
+categories). They design their own reactions.
+
+### Criteria edition change
+
+```mermaid
+flowchart LR
+    C1[/SelectProgramCriteriaEdition/] --> E1([ProgramCriteriaEditionSelected])
+    E1 -.-> X1[[Criteria and Control environment: map controls to the new edition]]
+```
+
+The program records the selection only. Not-applicable decisions are made again
+for the new edition ([Criteria](criteria.md), CR-05), and controls are mapped to it
+in Control environment.
 
 Program and scope has no reactors of its own. Each command checks the facts it
 needs against current state.
@@ -169,7 +186,7 @@ Anything in between is settled by common sense, with the reasoning stated.
 | PS-04 | Boundary review and approval are one step: a review of the exact revision by someone other than the author, which approves or requests changes. | The approver need not differ from the reviewer: 0.12. |
 | PS-05 | Never-approved drafts can be discarded; approved versions stay forever. | 0.75. EN-02 allows never-used-draft deletion. |
 | PS-06 | Each client service belongs to one program. | M0-D22 product rule. Jev leaned towards shared services (0.24), not decisive, so the product rule stands. |
-| PS-07 | Responsibility assignments recorded on the old boundary (`ResponsibilityAssigned`, `ResponsibilityRevoked`) move to the context that designs responsibilities. | M0-D03: a responsibility belongs to the context that owns the work. |
+| PS-07 | Responsibility assignments recorded on the old boundary (`ResponsibilityAssigned`, `ResponsibilityRevoked`) move to the context that owns the work: control responsibilities are `ControlResponsibility` in [Control environment](control-environment.md). | M0-D03: a responsibility belongs to the context that owns the work. |
 
 ## Open questions
 
