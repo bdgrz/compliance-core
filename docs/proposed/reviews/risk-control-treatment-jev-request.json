@@ -1,0 +1,41 @@
+{
+  "model": "jev-latest",
+  "state": {
+    "source_revision": "fcfb053c1670f94ad6860876e7b089baddbe2000",
+    "source_rule": "docs/proposed/contexts/risk-and-provider-oversight.md: one control treats one risk only once a proposal is accepted by a reviewer who did not propose it. The command permits a reviewer covered by an approved separation-of-duties waiver. CV-06 requires independent review unless such a waiver covers it.",
+    "owner": "RiskTreatmentAssertion, one tenant/program/risk/control stream, with the pending proposal and its ProposerMemberId available in its own replayed state.",
+    "existing_behavior": "The HTTP handler refuses an unwaived self-review, but the public aggregate Review method only checks pending treatment and revision before raising RiskControlTreatmentReviewed. Thus direct owner invocation can record an unwaived self-review.",
+    "bounded_change": "Before raising the review fact, compare the reviewer's parsed stable member ID with the pending proposal's ProposerMemberId. Refuse with Forbidden and no fact when they match and waiverId is null or the empty UUID. Preserve independent review and review with a nonempty waiver reference. Existing handler remains responsible for resolving an approved waiver for the exact subject, revision and beneficiary; this slice does not claim a reference proves approval.",
+    "event": {
+      "name": "RiskControlTreatmentReviewed",
+      "meaning": "A reviewer recorded accept or reject for the exact pending proposal, with attribution, rationale and optional waiver reference.",
+      "wire_policy": "Existing discriminator and schema remain unchanged. This aggregate-only change introduces no handlers, reactors, projections or API routes."
+    }
+  },
+  "questions": {
+    "local_invariant": {
+      "type": "noul",
+      "instructions": "Can RiskTreatmentAssertion decide whether its pending proposal is being self-reviewed from facts already in its own stream?",
+      "criteria": {
+        "true": "The pending proposal records its proposer and the review command names the reviewer, so stable member identity comparison is local to this owner.",
+        "false": "Deciding whether the reviewer proposed this assertion requires another owner's facts that this stream does not record."
+      }
+    },
+    "preserves_independent_review": {
+      "type": "noul",
+      "instructions": "Does the bounded change preserve independently authored risk-treatment reviews?",
+      "criteria": {
+        "true": "A different reviewer can still accept or reject the proposal, while the proposer without a waiver reference is refused with no review fact.",
+        "false": "The change prevents a different reviewer from deciding the pending proposal."
+      }
+    },
+    "event_name": {
+      "type": "noul",
+      "instructions": "Does RiskControlTreatmentReviewed name the completed review fact clearly in the past tense?",
+      "criteria": {
+        "true": "The name describes a completed review whose accept or reject result is carried in the payload.",
+        "false": "The name describes a request, technical receipt or a different business event."
+      }
+    }
+  }
+}
