@@ -46,6 +46,7 @@ public sealed class WorkRelationship : Aggregate
 
     readonly Uuid _tenantId;
     bool _created;
+    bool _hasEnded;
     long _revision;
     Uuid _personId;
     string? _sourceWorkerId;
@@ -67,8 +68,13 @@ public sealed class WorkRelationship : Aggregate
             _personId = ev.PersonId;
             _sourceWorkerId = ev.SourceWorkerId;
             _initialTerms = ev.Terms;
+            _hasEnded |= ev.Terms is { LifecycleStatus: "ended" };
         });
-        On<WorkRelationshipRevised>(ev => _revision = ev.Revision);
+        On<WorkRelationshipRevised>(ev =>
+        {
+            _revision = ev.Revision;
+            _hasEnded |= ev.Terms is { LifecycleStatus: "ended" };
+        });
     }
 
     public static string NormalizeWorkerId(string? sourceWorkerId) =>
@@ -111,6 +117,9 @@ public sealed class WorkRelationship : Aggregate
         var validation = Validate(_personId, terms);
         if (validation is not null)
             return CommandFailure.InvalidContent(validation.Message!);
+        if (_hasEnded && terms.LifecycleStatus != "ended")
+            return CommandFailure.StateConflict(
+                "An ended work relationship must stay ended; record a new relationship for a rehire.");
         RaiseEvent(new WorkRelationshipRevised(_tenantId, Id, _revision + 1, Clean(terms), actor,
             changedAt));
         return null;

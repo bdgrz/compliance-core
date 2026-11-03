@@ -1,0 +1,1 @@
+{"model":"jev-1.14.0","answers":{"local_owner":{"type":"noul","noul":0.86},"keep_terminal_history":{"type":"noul","noul":0.93},"bounded_red_matrix":{"type":"noul","noul":0.67}},"usage":{"input_tokens":4539,"output_tokens":57}}
