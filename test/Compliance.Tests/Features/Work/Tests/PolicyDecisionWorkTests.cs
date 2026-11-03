@@ -216,7 +216,8 @@ public sealed class PolicyDecisionWorkTests
         // Arrange
         var fixture = await OperationsFixture.CreateAsync();
         var policyId = Policy.IdFor(fixture.TenantId, fixture.ProgramId, "POL-WORK");
-        await SeedApprovedPolicyAsync(fixture, policyId, fixture.Today.AddMonths(-1), 1);
+        var approvedOn = fixture.Today.AddMonths(-1);
+        await SeedApprovedPolicyAsync(fixture, policyId, approvedOn, 1);
 
         // Act
         var dueQueue = await WorkAsync(fixture, fixture.ApproverUserId, horizonDays: 0);
@@ -233,7 +234,7 @@ public sealed class PolicyDecisionWorkTests
 
         // Assert
         Assert.Equal("policy_periodic_review", item.Kind);
-        Assert.Equal(fixture.Today, item.DueOn);
+        Assert.Equal(approvedOn.AddMonths(1), item.DueOn);
         Assert.Equal("confirm_review", item.NextAction);
         Assert.Equal($"/api/v1/tenants/{fixture.TenantId}/programs/{fixture.ProgramId}/" +
                      $"policies/{policyId}/periodic-reviews", item.ActionPath);
