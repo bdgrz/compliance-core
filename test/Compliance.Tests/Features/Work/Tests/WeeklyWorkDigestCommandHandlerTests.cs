@@ -1,5 +1,8 @@
 using System.Security.Cryptography;
 using System.Text;
+using Cntryl.Fitz;
+using Cntryl.Fitz.Testing;
+using Bdgrz.Compliance.Hosting.Persistence;
 using Bdgrz.Compliance.Tests.Testing;
 using Cntryl.Portia;
 using Cntryl.Portia.Testing;
@@ -126,7 +129,7 @@ public sealed class WeeklyWorkDigestCommandHandlerTests
         Assert.Equal("scheduled", digest.View.Status);
         Assert.Equal("scheduled", (await new WorkDigestHistoryReader(fixture.Reader, fixture.Events, fixture.Sources).ReadWeeklyAsync(fixture.TenantId, digestId)).View.Status);
         Assert.True(retry.IsSuccess, retry.Error?.Message);
-        Assert.Equal(0, retry.Value.DigestsScheduled);
+        Assert.Equal(result.Value, retry.Value);
     }
 
     [Fact]
@@ -370,6 +373,7 @@ public sealed class WeeklyWorkDigestCommandHandlerTests
         readonly AsyncServiceScope _scope;
         readonly InMemoryEventStore _store;
         readonly IAggregateExecutor _executor;
+        readonly IKvClient _scheduleStorage = new PersistenceKvClient(new InMemoryKvClient());
 
         public Uuid TenantId { get; } = Uuid.CreateVersion4();
         public IAggregateReader Reader { get; }
@@ -400,8 +404,10 @@ public sealed class WeeklyWorkDigestCommandHandlerTests
             _executor = scoped.GetRequiredService<IAggregateExecutor>();
         }
 
-        public ScheduleWeeklyWorkDigestHandler ScheduleHandler(ITenantMembershipDirectoryReader memberships) =>
-            new(_executor, memberships, RecipientResolver(), Clock);
+        public ScheduleWeeklyWorkDigestHandler ScheduleHandler(ITenantMembershipDirectoryReader memberships,
+            IAggregateExecutor? executor = null) =>
+            new(executor ?? _executor, memberships, RecipientResolver(), Clock,
+                new FitzKvWeeklyDigestSchedulePages(_scheduleStorage), Content);
 
         WeeklyDigestOperations ReceiverOperations() => new(new NativeOperationExecutor(Reader, _executor, Content),
             Events, Sources, Content, RecipientResolver(), Clock);
