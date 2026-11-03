@@ -60,6 +60,7 @@ public sealed class ServiceIdentity : Aggregate
 
     readonly Uuid _tenantId;
     bool _created;
+    bool _hasRetired;
     long _revision;
     ServiceIdentityTerms? _initialTerms;
     ServiceIdentityTerms? _terms;
@@ -107,6 +108,8 @@ public sealed class ServiceIdentity : Aggregate
         var clean = Clean(terms);
         if (_terms == clean)
             return null;
+        if (_hasRetired)
+            return CommandFailure.StateConflict("A retired service identity cannot be changed.");
         RaiseEvent(new ServiceIdentityRevised(_tenantId, Id, _revision + 1, clean, actor,
             changedAt));
         return null;
@@ -157,6 +160,7 @@ public sealed class ServiceIdentity : Aggregate
         _revision = 1;
         _initialTerms = fact.Terms;
         _terms = fact.Terms;
+        _hasRetired |= fact.Terms.LifecycleStatus == "retired";
     }
 
     void ObserveRevised(ServiceIdentityRevised fact)
@@ -169,5 +173,6 @@ public sealed class ServiceIdentity : Aggregate
             throw new InvalidOperationException("A service identity revision must contain valid canonical terms.");
         _revision = fact.Revision;
         _terms = fact.Terms;
+        _hasRetired |= fact.Terms.LifecycleStatus == "retired";
     }
 }
