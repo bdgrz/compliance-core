@@ -219,7 +219,7 @@ public sealed class PolicyDecisionWorkTests
         await SeedApprovedPolicyAsync(fixture, policyId, fixture.Today.AddMonths(-1), 1);
 
         // Act
-        var dueQueue = await WorkAsync(fixture, fixture.ApproverUserId);
+        var dueQueue = await WorkAsync(fixture, fixture.ApproverUserId, horizonDays: 0);
         var item = Assert.Single(dueQueue.Items);
         await ApplyPolicyAsync(fixture, policyId, policy =>
         {
@@ -237,7 +237,7 @@ public sealed class PolicyDecisionWorkTests
         Assert.Equal("confirm_review", item.NextAction);
         Assert.Equal($"/api/v1/tenants/{fixture.TenantId}/programs/{fixture.ProgramId}/" +
                      $"policies/{policyId}/periodic-reviews", item.ActionPath);
-        Assert.Empty((await WorkAsync(fixture, fixture.ApproverUserId)).Items);
+        Assert.Empty((await WorkAsync(fixture, fixture.ApproverUserId, horizonDays: 0)).Items);
     }
 
     [Fact]
@@ -337,13 +337,32 @@ public sealed class PolicyDecisionWorkTests
     {
         // Arrange
         var fixture = await OperationsFixture.CreateAsync();
-        await SeedApprovedPolicyAsync(fixture, Policy.IdFor(fixture.TenantId, fixture.ProgramId, "POL-WORK"), fixture.Today, 1);
+        await SeedApprovedPolicyAsync(fixture, Policy.IdFor(fixture.TenantId, fixture.ProgramId, "POL-WORK"), fixture.Today, 2);
 
         // Act
         var queue = await WorkAsync(fixture, fixture.ApproverUserId);
 
         // Assert
         Assert.Empty(queue.Items);
+    }
+
+    [Fact]
+    public async Task ShouldIncludePeriodicReviewGivenDueDateMatchesQueueHorizon()
+    {
+        // Arrange
+        var fixture = await OperationsFixture.CreateAsync();
+        await SeedApprovedPolicyAsync(fixture, Policy.IdFor(fixture.TenantId, fixture.ProgramId,
+            "POL-WORK"), fixture.Today, 1);
+        var dueOn = fixture.Today.AddMonths(1);
+        var horizonDays = dueOn.DayNumber - fixture.Today.DayNumber;
+
+        // Act
+        var beforeDue = await WorkAsync(fixture, fixture.ApproverUserId, horizonDays - 1);
+        var atDue = await WorkAsync(fixture, fixture.ApproverUserId, horizonDays);
+
+        // Assert
+        Assert.Empty(beforeDue.Items);
+        Assert.Equal(dueOn, Assert.Single(atDue.Items).DueOn);
     }
 
     [Fact]
