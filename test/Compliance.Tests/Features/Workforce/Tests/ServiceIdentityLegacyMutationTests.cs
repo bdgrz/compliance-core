@@ -48,9 +48,7 @@ public sealed class ServiceIdentityLegacyMutationTests
             "retire" => request with { LifecycleStatus = "retired" },
             _ => throw new ArgumentOutOfRangeException(nameof(change)),
         };
-        var executor = new OwnerExecutor(identity);
-        IRequestHandler<ReviseServiceIdentity> handler = new ReviseServiceIdentityHandler(executor,
-            new Reader(identity), new Clock());
+        IRequestHandler<ReviseServiceIdentity> handler = new ReviseServiceIdentityHandler();
         var actor = new ClaimsPrincipal(new ClaimsIdentity([new Claim("iss", "bdgrz"),
             new Claim("sub", Uuid.CreateVersion4().ToString())], "BdgrzSession"));
 
@@ -61,7 +59,6 @@ public sealed class ServiceIdentityLegacyMutationTests
         var error = Assert.IsType<RequestError>(result.Error);
         Assert.Equal(RequestErrorKind.Conflict, error.Kind);
         Assert.Contains("named", error.Message, StringComparison.OrdinalIgnoreCase);
-        Assert.Equal(0, executor.Calls);
         Assert.Single(new AggregateScenario<ServiceIdentity>(identity).PendingEvents);
         Assert.Equal(1, identity.Revision);
     }
@@ -88,40 +85,4 @@ public sealed class ServiceIdentityLegacyMutationTests
         Assert.Empty(new AggregateScenario<ServiceIdentity>(replayed).PendingEvents);
     }
 
-    sealed class Reader(ServiceIdentity identity) : IAggregateReader
-    {
-        public ValueTask<TAggregate> HydrateAsync<TAggregate>(TAggregate aggregate, CancellationToken ct = default)
-            where TAggregate : Aggregate
-        {
-            if (aggregate is ServiceIdentity)
-                return ValueTask.FromResult((TAggregate)(Aggregate)identity);
-            if (aggregate is Person person)
-            {
-                var fact = DomainEventSeed.Attach(new PersonRecorded(person.TenantId, person.Id,
-                    "Recorded owner", null, Author, Now), person.Id, 1);
-                return ValueTask.FromResult((TAggregate)(Aggregate)NativeFacts.Replay(person, [fact]));
-            }
-            return ValueTask.FromResult(aggregate);
-        }
-    }
-
-    sealed class OwnerExecutor(ServiceIdentity identity) : IAggregateExecutor
-    {
-        public int Calls { get; private set; }
-        public ValueTask<Result> ExecuteAsync<TAggregate>(TAggregate aggregate, Func<TAggregate, AggregateOutcome> operation,
-            IExecutionContext context, CancellationToken ct = default) where TAggregate : Aggregate
-        {
-            Assert.Equal(identity.Stream, aggregate.Stream);
-            Calls++;
-            return ValueTask.FromResult(operation((TAggregate)(Aggregate)identity).Result);
-        }
-        public ValueTask<Result<TOut>> ExecuteAsync<TAggregate, TOut>(TAggregate aggregate,
-            Func<TAggregate, AggregateOutcome<TOut>> operation, IExecutionContext context,
-            CancellationToken ct = default) where TAggregate : Aggregate => throw new InvalidOperationException("No value response.");
-    }
-
-    sealed class Clock : TimeProvider
-    {
-        public override DateTimeOffset GetUtcNow() => Now;
-    }
 }

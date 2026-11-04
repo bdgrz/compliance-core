@@ -54,7 +54,7 @@ namespace Bdgrz.Compliance.Features.Workforce.Aggregates;
 /// </summary>
 public sealed class ServiceIdentity : Aggregate
 {
-    static readonly string[] IdentityKinds = ["workload", "service", "automation", "bot", "integration"];
+    static readonly string[] IdentityKinds = ["workload", "service", "automation", "bot", "integration", "shared_account"];
     static readonly string[] LifecycleStatuses = ["active", "disabled", "retired"];
     static readonly string[] OwnerKinds = ["person", "team"];
 
@@ -77,6 +77,57 @@ public sealed class ServiceIdentity : Aggregate
         _tenantId = tenantId;
         On<ServiceIdentityRecorded>(ObserveRecorded);
         On<ServiceIdentityRevised>(ObserveRevised);
+        On<ServiceIdentityOwnerChanged>(fact =>
+        {
+            RequireNamedFact(fact.TenantId, fact.ServiceIdentityId, fact.Revision);
+            if (fact.PreviousOwnerKind != _terms!.OwnerKind || fact.PreviousOwnerId != _terms.OwnerId ||
+                !OwnerKinds.Contains(fact.OwnerKind) || fact.OwnerId == Uuid.Empty ||
+                _terms.IdentityKind == "shared_account" && fact.OwnerKind != "person")
+                throw new InvalidOperationException("The named owner change must preserve its exact predecessor and accountable owner.");
+            _terms = _terms with { OwnerKind = fact.OwnerKind, OwnerId = fact.OwnerId };
+            _revision = fact.Revision;
+        });
+        On<ServiceIdentityPurposeChanged>(fact =>
+        {
+            RequireNamedFact(fact.TenantId, fact.ServiceIdentityId, fact.Revision);
+            if (string.IsNullOrWhiteSpace(fact.Purpose) || fact.Purpose.Length > 1000 || fact.Purpose != fact.Purpose.Trim())
+                throw new InvalidOperationException("The named purpose must be canonical approved text.");
+            _terms = _terms! with { Purpose = fact.Purpose };
+            _revision = fact.Revision;
+        });
+        On<ServiceIdentityReviewed>(fact =>
+        {
+            RequireNamedFact(fact.TenantId, fact.ServiceIdentityId, fact.Revision);
+            var reviewedOn = DateOnly.FromDateTime(fact.ReviewedAt.UtcDateTime);
+            if (fact.NextReviewDate <= reviewedOn || fact.NextReviewDate > reviewedOn.AddYears(1))
+                throw new InvalidOperationException("The next service identity review must be within one year of this review.");
+            _terms = _terms! with { ReviewBy = fact.NextReviewDate };
+            _revision = fact.Revision;
+        });
+        On<ServiceIdentityDisabled>(fact =>
+        {
+            RequireNamedFact(fact.TenantId, fact.ServiceIdentityId, fact.Revision);
+            if (_terms!.LifecycleStatus != "active")
+                throw new InvalidOperationException("Only an active service identity can be disabled.");
+            _terms = _terms with { LifecycleStatus = "disabled" };
+            _revision = fact.Revision;
+        });
+        On<ServiceIdentityEnabled>(fact =>
+        {
+            RequireNamedFact(fact.TenantId, fact.ServiceIdentityId, fact.Revision);
+            if (_terms!.LifecycleStatus != "disabled" || _terms.ExpiresOn is { } expiry &&
+                expiry <= DateOnly.FromDateTime(fact.ChangedAt.UtcDateTime))
+                throw new InvalidOperationException("Only a disabled unexpired service identity can be enabled.");
+            _terms = _terms with { LifecycleStatus = "active" };
+            _revision = fact.Revision;
+        });
+        On<ServiceIdentityRetired>(fact =>
+        {
+            RequireNamedFact(fact.TenantId, fact.ServiceIdentityId, fact.Revision);
+            _terms = _terms! with { LifecycleStatus = "retired" };
+            _hasRetired = true;
+            _revision = fact.Revision;
+        });
     }
 
     public Result<ServiceIdentityRegistration> Record(ServiceIdentityTerms terms, DateOnly today,
@@ -117,23 +168,103 @@ public sealed class ServiceIdentity : Aggregate
         return null;
     }
 
-    public CommandFailure? ChangeOwner(long expectedRevision, string ownerKind, Uuid ownerId, ActorReference actor, DateTimeOffset changedAt) =>
-        CommandFailure.StateConflict($"Named service identity operation is not implemented for {Id}.");
+    public CommandFailure? ChangeOwner(long expectedRevision, string ownerKind, Uuid ownerId,
+        ActorReference actor, DateTimeOffset changedAt)
+    {
+        var refusal = RequireNamedChange(expectedRevision);
+        if (refusal is not null)
+            return refusal;
+        if (!OwnerKinds.Contains(ownerKind) || ownerId == Uuid.Empty ||
+            _terms!.IdentityKind == "shared_account" && ownerKind != "person")
+            return CommandFailure.InvalidContent("A service identity requires one accountable owner; a shared account requires a person.");
+        if (_terms!.OwnerKind == ownerKind && _terms.OwnerId == ownerId)
+            return null;
+        RaiseEvent(new ServiceIdentityOwnerChanged(_tenantId, Id, _revision + 1,
+            _terms.OwnerKind, _terms.OwnerId, ownerKind, ownerId, actor, changedAt));
+        return null;
+    }
 
-    public CommandFailure? ChangePurpose(long expectedRevision, string purpose, ActorReference actor, DateTimeOffset changedAt) =>
-        CommandFailure.StateConflict($"Named service identity operation is not implemented for {Id}.");
+    public CommandFailure? ChangePurpose(long expectedRevision, string purpose,
+        ActorReference actor, DateTimeOffset changedAt)
+    {
+        var refusal = RequireNamedChange(expectedRevision);
+        if (refusal is not null)
+            return refusal;
+        if (string.IsNullOrWhiteSpace(purpose) || purpose.Trim().Length > 1000)
+            return CommandFailure.InvalidContent("A service identity requires an approved purpose of at most 1000 characters.");
+        var clean = purpose.Trim();
+        if (_terms!.Purpose == clean)
+            return null;
+        RaiseEvent(new ServiceIdentityPurposeChanged(_tenantId, Id, _revision + 1, clean, actor, changedAt));
+        return null;
+    }
 
-    public CommandFailure? Review(long expectedRevision, DateOnly nextReviewDate, string? notes, ActorReference actor, DateTimeOffset changedAt) =>
-        CommandFailure.StateConflict($"Named service identity operation is not implemented for {Id}.");
+    public CommandFailure? Review(long expectedRevision, DateOnly nextReviewDate, string? notes,
+        ActorReference actor, DateTimeOffset changedAt)
+    {
+        var refusal = RequireNamedChange(expectedRevision);
+        if (refusal is not null)
+            return refusal;
+        var reviewedOn = DateOnly.FromDateTime(changedAt.UtcDateTime);
+        if (nextReviewDate <= reviewedOn || nextReviewDate > reviewedOn.AddYears(1))
+            return CommandFailure.InvalidContent("The next review date must be in the next year.");
+        RaiseEvent(new ServiceIdentityReviewed(_tenantId, Id, _revision + 1, actor,
+            string.IsNullOrWhiteSpace(notes) ? null : notes.Trim(), nextReviewDate, changedAt));
+        return null;
+    }
 
-    public CommandFailure? Disable(long expectedRevision, string? reason, ActorReference actor, DateTimeOffset changedAt) =>
-        CommandFailure.StateConflict($"Named service identity operation is not implemented for {Id}.");
+    public CommandFailure? Disable(long expectedRevision, string? reason,
+        ActorReference actor, DateTimeOffset changedAt)
+    {
+        var refusal = RequireNamedChange(expectedRevision);
+        if (refusal is not null)
+            return refusal;
+        if (_terms!.LifecycleStatus != "active")
+            return CommandFailure.StateConflict("Only an active service identity can be disabled.");
+        RaiseEvent(new ServiceIdentityDisabled(_tenantId, Id, _revision + 1, reason, actor, changedAt));
+        return null;
+    }
 
-    public CommandFailure? Enable(long expectedRevision, DateOnly today, ActorReference actor, DateTimeOffset changedAt) =>
-        CommandFailure.StateConflict($"Named service identity operation is not implemented for {Id}.");
+    public CommandFailure? Enable(long expectedRevision,
+        ActorReference actor, DateTimeOffset changedAt)
+    {
+        var refusal = RequireNamedChange(expectedRevision);
+        if (refusal is not null)
+            return refusal;
+        if (_terms!.LifecycleStatus != "disabled")
+            return CommandFailure.StateConflict("Only a disabled service identity can be enabled.");
+        if (_terms.ExpiresOn is { } expiry && expiry <= DateOnly.FromDateTime(changedAt.UtcDateTime))
+            return CommandFailure.InvalidContent("An expired service identity cannot be enabled.");
+        RaiseEvent(new ServiceIdentityEnabled(_tenantId, Id, _revision + 1, actor, changedAt));
+        return null;
+    }
 
-    public CommandFailure? Retire(long expectedRevision, string? reason, ActorReference actor, DateTimeOffset changedAt) =>
-        CommandFailure.StateConflict($"Named service identity operation is not implemented for {Id}.");
+    public CommandFailure? Retire(long expectedRevision, string? reason,
+        ActorReference actor, DateTimeOffset changedAt)
+    {
+        var refusal = RequireNamedChange(expectedRevision);
+        if (refusal is not null)
+            return refusal;
+        RaiseEvent(new ServiceIdentityRetired(_tenantId, Id, _revision + 1, reason, actor, changedAt));
+        return null;
+    }
+
+    CommandFailure? RequireNamedChange(long expectedRevision)
+    {
+        if (!_created)
+            return CommandFailure.MissingRecord("The service identity was not found.");
+        if (expectedRevision != _revision)
+            return CommandFailure.ForVersion(VersionedRecordRules.StaleRevision("service identity", _revision));
+        return _hasRetired
+            ? CommandFailure.StateConflict("A retired service identity cannot be changed.")
+            : null;
+    }
+
+    void RequireNamedFact(Uuid tenantId, Uuid identityId, long revision)
+    {
+        if (tenantId != _tenantId || identityId != Id || !_created || _hasRetired || revision != _revision + 1)
+            throw new InvalidOperationException("A named service identity fact must follow its exact non-retired predecessor.");
+    }
 
     static RequestError? Validate(ServiceIdentityTerms terms, DateOnly today)
     {
@@ -143,7 +274,7 @@ public sealed class ServiceIdentity : Aggregate
             return Invalid("A service identity requires a display name of at most 200 characters.");
         if (!IdentityKinds.Contains(terms.IdentityKind))
             return Invalid(
-                "The identity kind must be workload, service, automation, bot, or integration.");
+                "The identity kind must be workload, service, automation, bot, integration, or shared_account.");
         if (string.IsNullOrWhiteSpace(terms.Purpose) || terms.Purpose.Trim().Length > 1000)
             return Invalid("A service identity requires an approved purpose of at most 1000 characters.");
         if (terms.Environment is { } environment && environment.Trim().Length > 100)
@@ -152,6 +283,9 @@ public sealed class ServiceIdentity : Aggregate
             return Invalid("The lifecycle status must be active, disabled, or retired.");
         if (!OwnerKinds.Contains(terms.OwnerKind) || terms.OwnerId == Uuid.Empty)
             return Invalid("A service identity requires exactly one accountable person or team owner.");
+        if (terms.IdentityKind == "shared_account" && (terms.OwnerKind != "person" ||
+            string.IsNullOrWhiteSpace(terms.SharedJustification) || terms.SharedJustification.Trim().Length > 1000))
+            return Invalid("A shared account requires an accountable person and a justification of at most 1000 characters.");
         if (terms.ReviewBy > today.AddYears(1))
             return Invalid("The review date must be at most one year out.");
         if (terms.LifecycleStatus != "retired" && terms.ReviewBy <= today)
@@ -167,6 +301,7 @@ public sealed class ServiceIdentity : Aggregate
         DisplayName = terms.DisplayName.Trim(),
         Purpose = terms.Purpose.Trim(),
         Environment = string.IsNullOrWhiteSpace(terms.Environment) ? null : terms.Environment.Trim(),
+        SharedJustification = string.IsNullOrWhiteSpace(terms.SharedJustification) ? null : terms.SharedJustification.Trim(),
     };
 
     void ObserveRecorded(ServiceIdentityRecorded fact)

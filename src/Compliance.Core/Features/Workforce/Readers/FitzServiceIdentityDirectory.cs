@@ -50,7 +50,8 @@ sealed class FitzServiceIdentityDirectory(IKvClient client)
                     new ServiceIdentityView(recorded.TenantId, recorded.ServiceIdentityId, 1,
                         terms.DisplayName, terms.IdentityKind, terms.Purpose, terms.Environment,
                         terms.LifecycleStatus, terms.OwnerKind, terms.OwnerId, terms.ReviewBy,
-                        ManualSource, false, [], recorded.Actor, recorded.ChangedAt, terms.ExpiresOn), ct)
+                        ManualSource, false, [], recorded.Actor, recorded.ChangedAt, terms.ExpiresOn,
+                        SharedJustification: terms.SharedJustification), ct)
                     .ConfigureAwait(false);
                 break;
             case ServiceIdentityRevised revised:
@@ -73,11 +74,60 @@ sealed class FitzServiceIdentityDirectory(IKvClient client)
                         OwnerId = revised.Terms.OwnerId,
                         ReviewBy = revised.Terms.ReviewBy,
                         ExpiresOn = revised.Terms.ExpiresOn,
+                        SharedJustification = revised.Terms.SharedJustification,
                         LastChangedBy = revised.Actor,
                         LastChangedAt = revised.ChangedAt,
                     }, ct).ConfigureAwait(false);
                 break;
+            case ServiceIdentityOwnerChanged owner:
+                await ApplyNamedAsync(owner.TenantId, owner.ServiceIdentityId, owner.Revision, current =>
+                {
+                    if (current.OwnerKind != owner.PreviousOwnerKind || current.OwnerId != owner.PreviousOwnerId)
+                        throw new InvalidOperationException("A named owner change requires the exact previous owner.");
+                    return current with { OwnerKind = owner.OwnerKind, OwnerId = owner.OwnerId };
+                }, owner.Actor, owner.ChangedAt, ct).ConfigureAwait(false);
+                break;
+            case ServiceIdentityPurposeChanged purpose:
+                await ApplyNamedAsync(purpose.TenantId, purpose.ServiceIdentityId, purpose.Revision,
+                    current => current with { Purpose = purpose.Purpose }, purpose.Actor, purpose.ChangedAt, ct).ConfigureAwait(false);
+                break;
+            case ServiceIdentityReviewed review:
+                await ApplyNamedAsync(review.TenantId, review.ServiceIdentityId, review.Revision,
+                    current => current with
+                    {
+                        ReviewBy = review.NextReviewDate,
+                        LastReviewedOn = DateOnly.FromDateTime(review.ReviewedAt.UtcDateTime),
+                        LastReviewer = review.Reviewer,
+                        ReviewNotes = review.Notes,
+                    }, review.Reviewer, review.ReviewedAt, ct).ConfigureAwait(false);
+                break;
+            case ServiceIdentityDisabled disabled:
+                await ApplyNamedAsync(disabled.TenantId, disabled.ServiceIdentityId, disabled.Revision,
+                    current => current with { LifecycleStatus = "disabled" }, disabled.Actor, disabled.ChangedAt, ct).ConfigureAwait(false);
+                break;
+            case ServiceIdentityEnabled enabled:
+                await ApplyNamedAsync(enabled.TenantId, enabled.ServiceIdentityId, enabled.Revision,
+                    current => current with { LifecycleStatus = "active" }, enabled.Actor, enabled.ChangedAt, ct).ConfigureAwait(false);
+                break;
+            case ServiceIdentityRetired retired:
+                await ApplyNamedAsync(retired.TenantId, retired.ServiceIdentityId, retired.Revision,
+                    current => current with { LifecycleStatus = "retired" }, retired.Actor, retired.ChangedAt, ct).ConfigureAwait(false);
+                break;
         }
+    }
+
+    async ValueTask ApplyNamedAsync(Uuid tenantId, Uuid identityId, long revision,
+        Func<ServiceIdentityView, ServiceIdentityView> change, ActorReference actor, DateTimeOffset changedAt, CancellationToken ct)
+    {
+        var current = await ServiceIdentityDirectorySchema.Identities.GetAsync(Transaction, identityId, ct).ConfigureAwait(false);
+        if (current is null || current.TenantId != tenantId || current.Revision + 1 != revision || current.LifecycleStatus == "retired")
+            throw new InvalidOperationException("A named service identity fact requires its tenant's non-retired predecessor.");
+        await ServiceIdentityDirectorySchema.Identities.ReplaceAsync(Transaction, current, change(current) with
+        {
+            Revision = revision,
+            LastChangedBy = actor,
+            LastChangedAt = changedAt,
+        }, ct).ConfigureAwait(false);
     }
 
     public async ValueTask<ServiceIdentityView?> GetAsync(Uuid tenantId, Uuid serviceIdentityId,
