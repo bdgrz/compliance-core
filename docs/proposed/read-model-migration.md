@@ -4,7 +4,7 @@ User direction: use `Portia.Cassie` for read-model repositories. Fitz remains th
 
 The initial source inventory at `ae193e31` found **82** Core classes deriving from `FitzKvProjectionStore`. That count identifies stores to inspect; it does not establish feature coverage or imply that authoritative event readers should become projections.
 
-The first conversion batch owns **9** repositories: six Workforce directories, the methodology publication directory, and two corrective-action/closure Work directories. **73** other inventory stores remain. The first nine are locally validated by the assembled backend gate below; final-head hosted CI and merge remain pending. Superseded stores may retire during approved owner cutovers; this inventory is not a final target store count.
+The first conversion batch owns **9** repositories: six Workforce directories, the methodology publication directory, and two corrective-action/closure Work directories. **73** other inventory stores remain. The first nine passed the assembled backend gate and exact-head CI, then merged in PR #1186 as `baffd1ba`; independent post-merge Backend CI also passed. Superseded stores may retire during approved owner cutovers; this inventory is not a final target store count.
 
 Application schema startup, native Cassie configuration, a pinned development/test service, and an isolated native test-database seam are implemented. Healthy test leases clear their own rows and remove custom tables before reuse. Incomplete or failed leases are discarded without further DDL; the dedicated memory-backed test service reclaims their isolated data and metadata when it stops. The pinned engine's DROP DATABASE flush error is parked in [#1183](https://github.com/bdgrz/compliance-core/issues/1183). Native schema/data/database isolation, repository queries, tenant/pattern/rebuild separation and assembled business paths pass in the complete local backend gate. Hosted final-head qualification still precedes merge. Rebuilds must start against empty Cassie checkpoints so source events populate SQL; an existing Fitz KV checkpoint does not prove Cassie data exists.
 
@@ -51,7 +51,7 @@ Application schema startup, native Cassie configuration, a pinned development/te
 | [FitzCriteriaTextOverlayDirectory.cs](../../src/Compliance.Core/Features/Criteria/Readers/FitzCriteriaTextOverlayDirectory.cs) | Remaining |
 | [FitzExaminationEngagementDirectory.cs](../../src/Compliance.Core/Features/Examinations/Readers/FitzExaminationEngagementDirectory.cs) | Remaining |
 | [FitzComplianceIncidentDirectory.cs](../../src/Compliance.Core/Features/Incidents/Readers/FitzComplianceIncidentDirectory.cs) | Remaining |
-| [FitzMethodologyTemplateDirectory.cs](../../src/Compliance.Core/Features/MethodologyTemplates/Readers/CassieMethodologyTemplateDirectory.cs) | First batch: prepared Cassie source; native validation pending |
+| [FitzMethodologyTemplateDirectory.cs](../../src/Compliance.Core/Features/MethodologyTemplates/Readers/CassieMethodologyTemplateDirectory.cs) | First batch: native validation and exact-head CI passed; merged in PR #1186 |
 | [FitzObservationPeriodDirectory.cs](../../src/Compliance.Core/Features/Operations/Readers/FitzObservationPeriodDirectory.cs) | Remaining |
 | [FitzPolicyDirectory.cs](../../src/Compliance.Core/Features/Policies/Readers/FitzPolicyDirectory.cs) | Remaining |
 | [FitzCampaignDirectory.cs](../../src/Compliance.Core/Features/PolicyDistribution/Readers/FitzCampaignDirectory.cs) | Remaining |
@@ -82,24 +82,24 @@ Application schema startup, native Cassie configuration, a pinned development/te
 | [FitzControlMappingWorkItemDirectory.cs](../../src/Compliance.Core/Features/Work/Readers/FitzControlMappingWorkItemDirectory.cs) | Remaining |
 | [FitzControlOccurrenceWorkItemDirectory.cs](../../src/Compliance.Core/Features/Work/Readers/FitzControlOccurrenceWorkItemDirectory.cs) | Remaining |
 | [FitzControlOperatingPlanWorkItemDirectory.cs](../../src/Compliance.Core/Features/Work/Readers/FitzControlOperatingPlanWorkItemDirectory.cs) | Remaining |
-| [FitzCorrectiveActionWorkItemDirectory.cs](../../src/Compliance.Core/Features/Work/Readers/CassieCorrectiveActionWorkItemDirectory.cs) | First batch: prepared Cassie source; native validation pending |
+| [FitzCorrectiveActionWorkItemDirectory.cs](../../src/Compliance.Core/Features/Work/Readers/CassieCorrectiveActionWorkItemDirectory.cs) | First batch: native validation and exact-head CI passed; merged in PR #1186 |
 | [FitzCriterionApplicabilityWorkItemDirectory.cs](../../src/Compliance.Core/Features/Work/Readers/FitzCriterionApplicabilityWorkItemDirectory.cs) | Remaining |
 | [FitzEvidenceWorkItemDirectory.cs](../../src/Compliance.Core/Features/Work/Readers/FitzEvidenceWorkItemDirectory.cs) | Remaining |
-| [FitzFindingClosureWorkItemDirectory.cs](../../src/Compliance.Core/Features/Work/Readers/CassieFindingClosureWorkItemDirectory.cs) | First batch: prepared Cassie source; native validation pending |
+| [FitzFindingClosureWorkItemDirectory.cs](../../src/Compliance.Core/Features/Work/Readers/CassieFindingClosureWorkItemDirectory.cs) | First batch: native validation and exact-head CI passed; merged in PR #1186 |
 | [FitzPolicyCampaignWorkItemDirectory.cs](../../src/Compliance.Core/Features/Work/Readers/FitzPolicyCampaignWorkItemDirectory.cs) | Remaining |
 | [FitzPolicyDecisionWorkItemDirectory.cs](../../src/Compliance.Core/Features/Work/Readers/FitzPolicyDecisionWorkItemDirectory.cs) | Remaining |
-| [FitzPersonDirectory.cs](../../src/Compliance.Core/Features/Workforce/Readers/CassiePersonDirectory.cs) | First batch: prepared Cassie source; native validation pending |
-| [FitzServiceIdentityDirectory.cs](../../src/Compliance.Core/Features/Workforce/Readers/CassieServiceIdentityDirectory.cs) | First batch: prepared Cassie source; native validation pending |
-| [FitzWorkRelationshipDirectory.cs](../../src/Compliance.Core/Features/Workforce/Readers/CassieWorkRelationshipDirectory.cs) | First batch: prepared Cassie source; native validation pending |
-| [FitzWorkforceObservationDirectory.cs](../../src/Compliance.Core/Features/Workforce/Readers/CassieWorkforceObservationDirectory.cs) | First batch: prepared Cassie source; native validation pending |
-| [FitzWorkforceObservationResolutionDirectory.cs](../../src/Compliance.Core/Features/Workforce/Readers/CassieWorkforceObservationResolutionDirectory.cs) | First batch: prepared Cassie source; native validation pending |
-| [FitzWorkforceSourceDirectory.cs](../../src/Compliance.Core/Features/Workforce/Readers/CassieWorkforceSourceDirectory.cs) | First batch: prepared Cassie source; native validation pending |
+| [FitzPersonDirectory.cs](../../src/Compliance.Core/Features/Workforce/Readers/CassiePersonDirectory.cs) | First batch: native validation and exact-head CI passed; merged in PR #1186 |
+| [FitzServiceIdentityDirectory.cs](../../src/Compliance.Core/Features/Workforce/Readers/CassieServiceIdentityDirectory.cs) | First batch: native validation and exact-head CI passed; merged in PR #1186 |
+| [FitzWorkRelationshipDirectory.cs](../../src/Compliance.Core/Features/Workforce/Readers/CassieWorkRelationshipDirectory.cs) | First batch: native validation and exact-head CI passed; merged in PR #1186 |
+| [FitzWorkforceObservationDirectory.cs](../../src/Compliance.Core/Features/Workforce/Readers/CassieWorkforceObservationDirectory.cs) | First batch: native validation and exact-head CI passed; merged in PR #1186 |
+| [FitzWorkforceObservationResolutionDirectory.cs](../../src/Compliance.Core/Features/Workforce/Readers/CassieWorkforceObservationResolutionDirectory.cs) | First batch: native validation and exact-head CI passed; merged in PR #1186 |
+| [FitzWorkforceSourceDirectory.cs](../../src/Compliance.Core/Features/Workforce/Readers/CassieWorkforceSourceDirectory.cs) | First batch: native validation and exact-head CI passed; merged in PR #1186 |
 
 The Finding and Waiver readers currently reconstruct authoritative aggregate/native facts. They are separate from these KV stores and remain authoritative composition. A persisted Finding list/query repository is not implemented by merely migrating the two Work directories.
 
 The first assembled native selection ran 70 cases: nine non-database cases passed and 61 cases failed during shared schema setup, before most repository assertions. The published engine rejects compound primary keys, so the Methodology and Work schemas were adapted to structurally encoded single primary keys and single-column uniqueness. A direct native-client probe confirmed single-column unique indexes, `ON CONFLICT` updates and duplicate-key refusal. Parallel catalog creation also conflicted on the global object-id counter. The native test fixture now serializes metadata setup/reset and the schema tests share that gate. Ordinary xUnit collection parallelism is restored for qualification; test data remains isolated by exclusive database leases. Concurrent production schema startup is an explicit unresolved gate in [#1184](https://github.com/bdgrz/compliance-core/issues/1184).
 
-Subsequent native checkpoints: 70 cases ran with 45 passing and 25 failing (paging LIMIT syntax and a scoped-service test fixture); after those fixes, 72 ran with 60 passing and 12 failing (VALUES casts and duplicate physical column selection). The next 72-case checkpoint passed 69 and failed three: two source-observation cursor cases still selected the same physical column twice, and corrective-action refresh hit a native delete/reinsert primary-key conflict at commit. Narrow SQL fixes are prepared; the latest strict Release build passed with zero warnings and errors. The nine repositories are still unqualified pending regression and assembled-suite acceptance.
+Subsequent native checkpoints: 70 cases ran with 45 passing and 25 failing (paging LIMIT syntax and a scoped-service test fixture); after those fixes, 72 ran with 60 passing and 12 failing (VALUES casts and duplicate physical column selection). The next 72-case checkpoint passed 69 and failed three: two source-observation cursor cases still selected the same physical column twice, and corrective-action refresh hit a native delete/reinsert primary-key conflict at commit. Narrow SQL fixes are prepared; the latest strict Release build passed with zero warnings and errors. This was an intermediate failure checkpoint; the later acceptance and PR #1186 delivery below supersede that pending status.
 
 Test database schema reuse reduced the selected run from 5:02 for 70 cases to 2:53 for 72. Each active lease still owns a separate native database; returned leases clear all application rows and checkpoint rows. Missing standard tables or failed cleanup discard the lease. Shared application DDL is cached, while custom test tables are removed. These fixture changes do not implement or replace Portia projection execution.
 
@@ -113,7 +113,7 @@ whitespace verification, six Node tooling tests and both proposal/runtime fixtur
 validators pass. The complete backend unit gate passed **8,673/8,673** in 14m22s
 against a fresh pinned native service with ordinary xUnit collection parallelism.
 Compiler inputs remained unchanged throughout the run. Broker/Web integration,
-final-head hosted CI and merge are separate gates; the latter two remain pending.
+final-head hosted CI and merge were separate gates; PR #1186 subsequently passed and merged, as recorded below.
 
 Five production-composition fixtures now use isolated native leases and registered
 Portia projectors, including fresh databases for replay. A deliberately incomplete
@@ -158,3 +158,12 @@ The initial hosted run failed before test discovery on readiness connection rese
 after a successful build. CI now retries all errors from the idempotent readiness
 GET. Exact final-head CI/merge status is tracked in
 [PR1186](https://github.com/bdgrz/compliance-core/pull/1186).
+
+### PR #1186 merged delivery
+
+Final reviewed head `adfe165a` passed Backend CI with 8,700 units and merged as
+`baffd1ba`. A tree comparison confirmed the merged source matches that reviewed
+head. The first nine repositories are delivered; concurrent multi-host schema
+startup (#1184), native teardown behavior (#1183), remaining store cutovers and
+whole-context coverage remain explicit qualifications. Post-merge Backend CI also
+passed on `baffd1ba`.

@@ -111,8 +111,8 @@ static class PersonSeeds
                 case PersonRevised value:
                     actor = value.Actor;
                     at = value.ChangedAt;
-                    kind = nameof(RevisePerson);
-                    var revised = rules.Revise(value.Revision - 1, value.DisplayName, value.WorkEmail, value.PersonalContact, actor, at);
+                    kind = nameof(ChangePersonDetails);
+                    var revised = rules.ChangeDetails(value.Revision - 1, value.DisplayName, value.WorkEmail, value.PersonalContact, actor, at);
                     result = revised is null ? Result.Success : Result.Failure(new RequestError(RequestErrorKind.Conflict, revised.Message!));
                     break;
                 case PersonMembershipCorrelated value:

@@ -2,58 +2,56 @@
 
 Tracking: [#1176](https://github.com/bdgrz/compliance-core/issues/1176).
 
-The current integration gate is finishing before another batch is accepted. One
-Person writer cutover is prepared in isolation and held until this gate merges.
+PR #1186 has merged as `baffd1ba` after exact-head Backend CI passed 8,700 units.
+The Person writer cutover is now the sole integrating slice; one small Program
+target-date invariant repair is prepared separately and held.
 The reviewed context documents remain the specification. This is a delivery reset,
 not a change to the domain scope or the user's Portia.Cassie direction.
 
 ## Verified delivery
 
-Three domain batches merged through PRs #1179, #1181 and #1182. Main is
-`97cecc07`; the last merged backend suite passed 8,431 cases. These results apply
-to those revisions and their Fitz-backed read stores.
+Four domain batches merged through PRs #1179, #1181, #1182 and #1186. The
+latest merge is `baffd1ba`. PR #1186's exact final head passed Backend CI with
+**8,700/8,700** unit cases, after source/adversarial/Jev review. Its merged tree
+matches the reviewed tree; independent post-merge Backend CI also passed.
+No deployment or whole-domain completion is claimed.
 
-The current integration tree contains the next domain batch and nine Cassie
-repositories, twelve application tables, configuration/schema startup and native
-CI/test setup. Strict Release build and whole-solution whitespace verification pass.
-The assembled backend unit suite passed **8,673/8,673** in 14m22s against a fresh
-pinned native service with ordinary collection parallelism. Compiler inputs stayed
-unchanged throughout that run. Final-head hosted CI and merge remain pending.
-This result does not establish complete domain/context coverage.
+PR #1186 delivers the next named-command business batch and the first nine
+Portia.Cassie repositories, twelve application tables, schema/configuration and
+native CI/test setup. Acceptance retained ordinary xUnit collection parallelism;
+only shared native schema metadata setup is gated. The gate repaired five real
+Portia projection-composition fixtures, incomplete-database cleanup and a fixture
+whose future activation changed a work item's identity during queries. Production
+Work selection was unchanged.
 
-The resumed gate repaired five production-composition fixtures, restoring real
-registered Portia projector execution and separate native replay databases. A
-72-case diagnostic run passed 70 and failed incomplete-database cleanup plus a
-mixed-source timing fixture. The first repair now discards incomplete databases
-without further DDL. The second backdates staged control/policy decisions and
-freezes query time after all seeding: a future responsibility activation previously
-changed a fallback work item identity mid-test. Production Work selection was not
-changed. Independent review also restored the former Person replacement identity
-check; its native regression was observed RED at the intended assertion, then
-GREEN in the complete run, preserving stored state and checkpoint on refusal.
+Review restored the Person replacement identity check, then fixed current-member
+checks on service-owner review and corrective-change receipt replay. Focused
+regressions observed the intended failures before repairs; 58 authorization cases
+and the expanded 8,700-unit suite passed afterward. The startup readiness probe's
+connection-reset retry was also exercised successfully in final-head CI.
 
-The [requirement coverage map](requirement-coverage.md) now records eight contexts
-against actual owners/tests and named missing behavior. The other contexts still
-need that requirement-level mapping; source review itself is not execution proof.
+The [requirement coverage map](requirement-coverage.md) records eight contexts
+against actual owners/tests and named missing behavior. Other context maps remain
+source-review handoffs; a map or passing old tests do not prove target acceptance.
 
-The exact-head review then found current-authorization gaps in service-owner review
-and accepted corrective-change retries. A clean27-case selection observed13
-behavioral failures; repairs passed58 focused cases and the expanded full unit
-gate **8,700/8,700** in14m15s. The first hosted run stopped before units on startup
-readiness connection reset; the GET probe now retries that error. Final-head hosted
-CI and delivery evidence live in [PR1186](https://github.com/bdgrz/compliance-core/pull/1186).
+The Person cutover observed seven retired-command failures and the old HTTP-route
+failure before removing the writer. The first full gate passed 8,706 and failed
+one unisolated RBAC presentation fixture; the fixture correction passed 13 focused
+cases with SQL unavailable. Fresh assembled acceptance then passed **8,707/8,707**
+in 12m47s with unchanged inputs. Its final-head CI/merge remain separate from the
+already merged PR #1186 evidence.
 
 ## Preserved, unvalidated work
 
 | Work | Preserved branch/head | Remaining gate |
 | --- | --- | --- |
-| First nine Cassie repositories and batch-4 business behavior | `feat/proposed-domain-impl`, integration tree | Full backend suite, final review, exact-head CI and merge |
+| Person generic-writer retirement | `feat/proposed-domain-impl`, current bounded integration | Local native/HTTP/MCP/full-unit acceptance passed; final-head review/CI and merge |
 | Seven Access Cassie repositories | `work/proposed-access-cassie` at `226d00d6` | Shared wiring, native tests and assembled validation |
 | Five Program/scope Cassie repositories | `work/proposed-program-scope-cassie` at `f283c48b` | Shared wiring, native tests and assembled validation |
 | Finding closure proposal/review/withdrawal | `work/proposed-assurance` at `527fda47` | Reopen authority, Work/Examinations consumers, public cutover, shared wiring and executed tests |
 | Methodology name admission | `work/proposed-methodology`, separately listed milestone commits | Integration/wiring and executed validation; do not sweep branch ancestry |
 | Member/person linkage | `work/proposed-workforce`, held `f17ae8a7` draft | Actual owner/handler implementation and validation; not GREEN |
-| Program date ordering | `work/proposed-program-dates` at `adcc1348` | Planning only; no code/tests authored |
+| Program date ordering | `work/proposed-program-dates` at `784bfca2` | 35 authored/unexecuted tests; observed RED, integration and acceptance remain pending |
 
 Source-only commits and Jev probabilities are review inputs, not delivery evidence.
 Do not integrate broad worker commit ranges: some branches intentionally contain

@@ -65,6 +65,7 @@ work.
 
 | Owner | Implementation status | Evidence |
 | --- | --- | --- |
+| Person | Partial: named details and generic-writer retirement locally qualified; member linkage and accepted HRIS application remain | [Writer cutover](reviews/person-named-writer-cutover.md) |
 | RiskControlTreatment (`RiskTreatmentAssertion` in current source) | Partial: reviewer independence enforced in the owner; control-retirement coordination and proposed-owner migration remain | [Review](reviews/risk-control-treatment.md) |
 | WorkRelationship | Partial: named lifecycle/changes and computed sponsorship; initial/source conformance and whole-owner qualification remain | [Terminal review](reviews/work-relationship-terminal-status.md), [named changes and sponsorship](reviews/workforce-named-and-sponsorship.md) |
 | ServiceIdentity | Partial: named owner/purpose/review/lifecycle operations assembled; full proposed owner and workflow qualification remain | [Review](reviews/service-identity-retirement.md), [assembled evidence](implementation-progress.md) |

@@ -160,7 +160,7 @@ public sealed class PersonNativeHistoryTests
         var request = new RecordPerson(Uuid.CreateVersion4(), fixture.TenantId, "Grace", "grace@example.com");
         var first = await fixture.BusAsync(request);
         Assert.True(first.IsSuccess, first.Error?.Message);
-        var revised = await ReviseAsync(fixture, new RevisePerson(Uuid.CreateVersion4(), fixture.TenantId,
+        var revised = await ChangeDetailsAsync(fixture, new ChangePersonDetails(Uuid.CreateVersion4(), fixture.TenantId,
             request.PersonId, 1, "Grace Hopper", "grace@example.com"));
         Assert.True(revised.IsSuccess, revised.Error?.Message);
         await using var scope = fixture.Provider.CreateAsyncScope();
@@ -197,8 +197,8 @@ public sealed class PersonNativeHistoryTests
         await using var fixture = await AttestWorkforceManagementWallTests.Fixture.CreateAsync();
         var request = new RecordPerson(Uuid.CreateVersion4(), fixture.TenantId, "Grace");
         Assert.True((await fixture.BusAsync(request)).IsSuccess);
-        Assert.True((await ReviseAsync(fixture, new RevisePerson(Uuid.CreateVersion4(), fixture.TenantId, request.PersonId, 1, "Grace Hopper"))).IsSuccess);
-        Assert.True((await ReviseAsync(fixture, new RevisePerson(Uuid.CreateVersion4(), fixture.TenantId, request.PersonId, 2, "Rear Admiral Grace Hopper"))).IsSuccess);
+        Assert.True((await ChangeDetailsAsync(fixture, new ChangePersonDetails(Uuid.CreateVersion4(), fixture.TenantId, request.PersonId, 1, "Grace Hopper"))).IsSuccess);
+        Assert.True((await ChangeDetailsAsync(fixture, new ChangePersonDetails(Uuid.CreateVersion4(), fixture.TenantId, request.PersonId, 2, "Rear Admiral Grace Hopper"))).IsSuccess);
         await using var scope = fixture.Provider.CreateAsyncScope();
         var owner = await scope.ServiceProvider.GetRequiredService<IAggregateReader>().HydrateAsync(new Person(fixture.TenantId, request.PersonId));
         var facts = (await FactsAsync(fixture.Provider, owner.Stream)).ToArray();
@@ -206,7 +206,7 @@ public sealed class PersonNativeHistoryTests
             facts = facts[..^1];
         else
         {
-            var original = Assert.IsType<PersonDetailsRevised>(facts[1]);
+            var original = Assert.IsType<PersonDetailsChanged>(facts[1]);
             var altered = fault == "payload" ? original with { Change = original.Change with { ContentId = Uuid.CreateVersion4() } } : original with { };
             altered.AttachMetadata(fault switch
             {
@@ -284,10 +284,10 @@ public sealed class PersonNativeHistoryTests
         await using var fixture = await AttestWorkforceManagementWallTests.Fixture.CreateAsync();
         var person = new RecordPerson(Uuid.CreateVersion4(), fixture.TenantId, "Grace");
         Assert.True((await fixture.BusAsync(person)).IsSuccess);
-        Assert.True((await ReviseAsync(fixture, new RevisePerson(Uuid.CreateVersion4(), fixture.TenantId, person.PersonId, 1, "Grace Hopper"))).IsSuccess);
-        Assert.True((await ReviseAsync(fixture, new RevisePerson(Uuid.CreateVersion4(), fixture.TenantId, person.PersonId, 2, "Rear Admiral Grace Hopper"))).IsSuccess);
+        Assert.True((await ChangeDetailsAsync(fixture, new ChangePersonDetails(Uuid.CreateVersion4(), fixture.TenantId, person.PersonId, 1, "Grace Hopper"))).IsSuccess);
+        Assert.True((await ChangeDetailsAsync(fixture, new ChangePersonDetails(Uuid.CreateVersion4(), fixture.TenantId, person.PersonId, 2, "Rear Admiral Grace Hopper"))).IsSuccess);
         var facts = (await FactsAsync(fixture.Provider, new Person(fixture.TenantId, person.PersonId).Stream)).ToArray();
-        var middle = Assert.IsType<PersonDetailsRevised>(facts[1]);
+        var middle = Assert.IsType<PersonDetailsChanged>(facts[1]);
         var altered = middle with { };
         altered.AttachMetadata(middle.Metadata with { CausationId = Uuid.CreateVersion4() });
         facts[1] = altered;
@@ -308,12 +308,12 @@ public sealed class PersonNativeHistoryTests
         var executor = actual.GetRequiredService<IAggregateExecutor>();
         var operations = new PersonOperations(new NativeOperationExecutor(originalReader, executor, content),
             new PersonReader(originalReader, originalEvents, content), originalReader, content, TimeProvider.System);
-        var request = new RevisePerson(Uuid.CreateVersion4(), fixture.TenantId, person.PersonId, 3, "Fourth name");
-        var context = new Cntryl.Portia.RequestContext<RevisePerson>(request,
+        var request = new ChangePersonDetails(Uuid.CreateVersion4(), fixture.TenantId, person.PersonId, 3, "Fourth name");
+        var context = new Cntryl.Portia.RequestContext<ChangePersonDetails>(request,
             new RequestDispatchContext(ProgramManagementServices.Actor(fixture.UserId)));
 
         // Act
-        var refused = await operations.ReviseAsync(context, CancellationToken.None);
+        var refused = await operations.ChangeDetailsAsync(context, CancellationToken.None);
         var beforeRetry = await actualReader.HydrateAsync(new Person(fixture.TenantId, person.PersonId));
 
         // Assert
@@ -323,12 +323,12 @@ public sealed class PersonNativeHistoryTests
         Assert.Equal(3, beforeRetry.Revision);
         var fresh = new PersonOperations(new NativeOperationExecutor(actualReader, executor, content),
             new PersonReader(actualReader, different, content), actualReader, content, TimeProvider.System);
-        Assert.True((await fresh.ReviseAsync(context, CancellationToken.None)).IsSuccess);
+        Assert.True((await fresh.ChangeDetailsAsync(context, CancellationToken.None)).IsSuccess);
         Assert.Equal(4, (await actualReader.HydrateAsync(new Person(fixture.TenantId, person.PersonId))).Revision);
     }
 
     [Fact]
-    public async Task ShouldReadAndNativelyReviseExactImmutableLegacyPersonGivenExistingV1History()
+    public async Task ShouldReadAndChangeExactImmutableLegacyPersonGivenExistingV1History()
     {
         // Arrange
         await using var fixture = await AttestWorkforceManagementWallTests.Fixture.CreateAsync();
@@ -348,7 +348,7 @@ public sealed class PersonNativeHistoryTests
         var original = await people.ReadAsync(fixture.TenantId, person);
 
         // Act
-        var revised = await ReviseAsync(fixture, new RevisePerson(Uuid.CreateVersion4(), fixture.TenantId, person, 2,
+        var revised = await ChangeDetailsAsync(fixture, new ChangePersonDetails(Uuid.CreateVersion4(), fixture.TenantId, person, 2,
             "Revised legacy person", "legacy@example.com", contact));
         var current = await people.ReadAsync(fixture.TenantId, person);
         var facts = await FactsAsync(fixture.Provider, stream);
@@ -365,10 +365,11 @@ public sealed class PersonNativeHistoryTests
         Assert.Equal(3, current.Owner.Revision);
         Assert.IsType<PersonRecorded>(facts[0]);
         Assert.IsType<PersonMembershipCorrelated>(facts[1]);
-        Assert.IsType<PersonDetailsRevised>(facts[2]);
+        var changed = Assert.IsType<PersonDetailsChanged>(facts[2]);
+        Assert.Equal(new PersonDetailChanges(true, false, false), changed.ChangedFields);
     }
 
-    static async Task<Result<UnitResult>> ReviseAsync(AttestWorkforceManagementWallTests.Fixture fixture, RevisePerson request)
+    static async Task<Result<UnitResult>> ChangeDetailsAsync(AttestWorkforceManagementWallTests.Fixture fixture, ChangePersonDetails request)
     {
         await using var scope = fixture.Provider.CreateAsyncScope();
         return await scope.ServiceProvider.GetRequiredService<IRequestBus>().SendAsync(request, ProgramManagementServices.Actor(fixture.UserId));
