@@ -181,6 +181,10 @@ public sealed class FindingAggregate : Aggregate
     /// <summary>The current unclosed proposal revision.</summary>
     public FindingClosureProposed? ClosureProposal => _proposal;
 
+    /// <summary>Every author of one closure's proposal revisions, for source-authoritative review eligibility.</summary>
+    public IReadOnlyList<Uuid> ProposalAuthors(Uuid closureId) => _proposalAuthors.TryGetValue(closureId, out var authors)
+        ? authors.OrderBy(static id => id.ToString(), StringComparer.Ordinal).ToArray() : [];
+
     /// <summary>The closure fact of the current generation; null while open or after a reopen.</summary>
     public FindingClosedV2? Closed => _closed;
 

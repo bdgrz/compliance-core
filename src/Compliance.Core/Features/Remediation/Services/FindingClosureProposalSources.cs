@@ -37,8 +37,11 @@ static class FindingClosureProposalSources
         Array.AsReadOnly(terms.ResolutionEvidence.ToArray()), terms.VerificationRationale.Trim(), terms.Rationale.Trim());
 
     public static FindingClosureProposalView View(Uuid closureId, long proposalRevision, FindingClosureTerms terms,
-        FindingHistorySnapshot history, AccessControl.Models.ActorReference proposer, DateTimeOffset proposedAt) =>
-        new(closureId, proposalRevision, terms, history.Admitted.Select(static item => item.Operation.LogicalId).ToArray(), proposer, proposedAt);
+        FindingHistorySnapshot history, AccessControl.Models.ActorReference proposer, DateTimeOffset proposedAt,
+        IReadOnlyList<Uuid> previousAuthors) =>
+        new(closureId, proposalRevision, terms, history.Admitted.Select(static item => item.Operation.LogicalId).ToArray(), proposer, proposedAt,
+            previousAuthors.Append(Rules.FindingClosureProposalRules.MemberId(proposer)).Distinct()
+                .OrderBy(static id => id.ToString(), StringComparer.Ordinal).ToArray());
 
     public static Task<ImmutableSelectionManifest> WriteActionsAsync(IImmutableContentStore content,
         FindingAggregate finding, FindingHistorySnapshot history, CancellationToken ct)
