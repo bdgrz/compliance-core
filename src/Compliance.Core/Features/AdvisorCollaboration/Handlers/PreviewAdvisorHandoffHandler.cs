@@ -133,6 +133,11 @@ public sealed class PreviewAdvisorHandoffHandler(AdvisorHandoffReader aggregates
                 RequestErrorKind.Conflict,
                 "The advisor handoff changed while its preview was being prepared."));
 
+        exact = await recordVersions.RequireCurrentAsync(request.TenantId,
+            request.ProgramId, selected, ct).ConfigureAwait(false);
+        if (!exact.IsSuccess)
+            return Result<AdvisorHandoffPreviewView>.Failure(exact.Error);
+
         return Result<AdvisorHandoffPreviewView>.Success(new AdvisorHandoffPreviewView(
             request.TenantId, request.ProgramId, request.HandoffId,
             handoff.ComparedToHandoffId, handoff.Revision, purpose, handoff.ExpiresOn,

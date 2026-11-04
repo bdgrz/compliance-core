@@ -58,7 +58,7 @@ sealed class AdvisorSharedSourceReader(ControlReader controlSources, PolicyReade
         Uuid programId, Uuid handoffId, AdvisorRecordVersion selectedSource,
         CancellationToken ct = default)
     {
-        var current = await versions.RequireCurrentAsync(tenantId, programId, [selectedSource], ct)
+        var current = await versions.RequireRetainedAsync(tenantId, programId, [selectedSource], ct)
             .ConfigureAwait(false);
         if (!current.IsSuccess)
             return Result<AdvisorSharedSourceView>.Failure(current.Error);
@@ -84,7 +84,7 @@ sealed class AdvisorSharedSourceReader(ControlReader controlSources, PolicyReade
         if (!view.IsSuccess)
             return view;
 
-        current = await versions.RequireCurrentAsync(tenantId, programId, [selectedSource], ct)
+        current = await versions.RequireRetainedAsync(tenantId, programId, [selectedSource], ct)
             .ConfigureAwait(false);
         return current.IsSuccess
             ? view

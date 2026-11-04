@@ -63,10 +63,14 @@ sealed class AdvisorRecordVersionResolver(IAggregateReader aggregates, ControlRe
 {
     public ValueTask<Result> RequireCurrentAsync(Uuid tenantId, Uuid programId,
         IReadOnlyList<AdvisorRecordVersion> selection, CancellationToken ct = default) =>
-        ControlSourceFailures.ClassifyAsync(() => RequireCurrentCoreAsync(tenantId, programId, selection, ct));
+        ControlSourceFailures.ClassifyAsync(() => RequireCurrentCoreAsync(tenantId, programId, selection, true, ct));
+
+    public ValueTask<Result> RequireRetainedAsync(Uuid tenantId, Uuid programId,
+        IReadOnlyList<AdvisorRecordVersion> selection, CancellationToken ct = default) =>
+        ControlSourceFailures.ClassifyAsync(() => RequireCurrentCoreAsync(tenantId, programId, selection, false, ct));
 
     async ValueTask<Result> RequireCurrentCoreAsync(Uuid tenantId, Uuid programId,
-        IReadOnlyList<AdvisorRecordVersion> selection, CancellationToken ct = default)
+        IReadOnlyList<AdvisorRecordVersion> selection, bool requireActiveSupport, CancellationToken ct)
     {
         if (tenantId == Uuid.Empty || programId == Uuid.Empty ||
             selection is not { Count: > 0 and <= AdvisorHandoff.MaximumSelectionCount } ||
@@ -88,7 +92,7 @@ sealed class AdvisorRecordVersionResolver(IAggregateReader aggregates, ControlRe
                 AdvisorRecordVersion.PolicyVersionKind => await RequirePolicyVersionAsync(tenantId,
                     programId, selected, ct).ConfigureAwait(false),
                 AdvisorRecordVersion.EvidenceArtifactKind => await RequireEvidenceAsync(tenantId,
-                    programId, selected, ct).ConfigureAwait(false),
+                    programId, selected, requireActiveSupport, ct).ConfigureAwait(false),
                 AdvisorRecordVersion.ReadinessGapKind => await RequireReadinessGapAsync(tenantId,
                     programId, selected, ct).ConfigureAwait(false),
                 AdvisorRecordVersion.BoundaryQuestionKind => await RequireBoundaryQuestionAsync(
@@ -167,14 +171,16 @@ sealed class AdvisorRecordVersionResolver(IAggregateReader aggregates, ControlRe
     }
 
     async ValueTask<Result> RequireEvidenceAsync(Uuid tenantId, Uuid programId,
-        AdvisorRecordVersion selected, CancellationToken ct)
+        AdvisorRecordVersion selected, bool requireActiveSupport, CancellationToken ct)
     {
-        var support = await aggregates.HydrateAsync(new EvidenceSupport(tenantId, programId,
+        var support = await aggregates.HydrateAsync(EvidenceSupport.ForVerification(tenantId,
             selected.EvidenceSupportId!.Value), ct).ConfigureAwait(false);
         if (support.Current is not { } link || link.TenantId != tenantId ||
             link.ProgramId != programId || link.SubjectId != selected.EvidenceSupportId ||
             link.ArtifactId != selected.RecordId)
             return Missing();
+        if (requireActiveSupport && !support.IsActive)
+            return Stale();
 
         var request = new LinkEvidenceSupport(selected.EvidenceSupportId!.Value, tenantId, programId, link.ArtifactId,
             link.SupportedRecordType!, link.SupportedRecordId, link.SupportedRecordRevision,
