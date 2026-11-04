@@ -208,6 +208,41 @@ public sealed class IssueArtifactDownloadHandlerTests
         Assert.Equal(3, retained.Revision);
     }
 
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task ShouldRequireRetainedSourceAfterHandoffAuthorityGivenPreviouslySelectedEvidence(bool handoffAllowed)
+    {
+        // Arrange
+        await using var fixture = new Fixture(allow: false);
+        var artifactId = await fixture.SeedArtifactAsync(EvidenceInspectionOutcome.Clean);
+        var metadata = await new EvidenceArtifactMetadataRead(fixture.Reader, fixture.Events)
+            .GetAsync(fixture.TenantId, artifactId, CancellationToken.None);
+        Assert.True(metadata.IsSuccess, metadata.Error?.Message);
+        var request = new IssueArtifactDownload(fixture.TenantId, artifactId, "Retained advisor review")
+        {
+            ProgramId = Uuid.CreateVersion4(),
+            AdvisorHandoffId = Uuid.CreateVersion4(),
+            SelectedSource = AdvisorRecordVersion.EvidenceArtifact(artifactId, 2,
+                metadata.Value.SourcePosition, metadata.Value.ContentSha256, Uuid.CreateVersion4()),
+        };
+        var sources = new RetainedSourceResolver();
+        var access = new EvidenceArtifactDownloadAccess(new FixedArtifactPermission(false),
+            new FixedAdvisorSourceAuthorization(handoffAllowed), sources);
+
+        // Act
+        var result = await fixture.Handler(access).HandleAsync(fixture.Context(request), CancellationToken.None);
+        var retained = await fixture.Reader.HydrateAsync(new EvidenceArtifact(fixture.TenantId, artifactId));
+
+        // Assert
+        Assert.Equal(handoffAllowed, result.IsSuccess);
+        Assert.Equal(0, sources.CurrentCalls);
+        Assert.Equal(handoffAllowed, sources.RetainedCalls > 0);
+        Assert.Equal(handoffAllowed ? 3UL : 2UL, retained.CommittedStreamPosition);
+        if (!handoffAllowed)
+            Assert.Equal(RequestErrorKind.NotFound, result.Error?.Kind);
+    }
+
     sealed class Fixture : IAsyncDisposable
     {
         readonly ServiceProvider _provider;
@@ -326,6 +361,27 @@ public sealed class IssueArtifactDownloadHandlerTests
         public ValueTask<bool> CanReadSelectedSourceAsync(Uuid tenantId, Uuid programId,
             Uuid handoffId, AdvisorRecordVersion sourceVersion, Uuid userId,
             CancellationToken ct = default) => ValueTask.FromResult(allow);
+    }
+
+    sealed class RetainedSourceResolver : IAdvisorRecordVersionResolver
+    {
+        public int CurrentCalls { get; private set; }
+        public int RetainedCalls { get; private set; }
+
+        public ValueTask<Result> RequireCurrentAsync(Uuid tenantId, Uuid programId,
+            IReadOnlyList<AdvisorRecordVersion> selection, CancellationToken ct = default)
+        {
+            CurrentCalls++;
+            return ValueTask.FromResult(Result.Failure(new RequestError(RequestErrorKind.Conflict,
+                "The support was withdrawn after the handoff selected it.")));
+        }
+
+        public ValueTask<Result> RequireRetainedAsync(Uuid tenantId, Uuid programId,
+            IReadOnlyList<AdvisorRecordVersion> selection, CancellationToken ct = default)
+        {
+            RetainedCalls++;
+            return ValueTask.FromResult(Result.Success);
+        }
     }
 
     sealed class FixedCurrentSourceResolver : IAdvisorRecordVersionResolver
