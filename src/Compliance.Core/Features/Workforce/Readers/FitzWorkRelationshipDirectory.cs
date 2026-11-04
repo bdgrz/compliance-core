@@ -39,8 +39,8 @@ sealed class FitzWorkRelationshipDirectory(IKvClient client)
                         recorded.Terms.LifecycleStatus, recorded.Terms.StartDate,
                         recorded.Terms.EndDate, recorded.Terms.Department,
                         recorded.Terms.ManagerPersonId, recorded.Terms.SponsorPersonId, false,
-                        ManualSource, recorded.Actor, recorded.ChangedAt,
-                        recorded.Terms.EmploymentStatusReason), ct).ConfigureAwait(false);
+                        recorded.Source?.SourceKind ?? ManualSource, recorded.Actor, recorded.ChangedAt,
+                        recorded.Terms.EmploymentStatusReason, Source: recorded.Source), ct).ConfigureAwait(false);
                 break;
             case WorkRelationshipRevised revised:
                 var current = await WorkRelationshipDirectorySchema.Relationships.GetAsync(

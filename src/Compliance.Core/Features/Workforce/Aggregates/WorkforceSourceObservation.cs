@@ -29,6 +29,7 @@ using Bdgrz.Compliance.Features.Examinations.Aggregates;
 using Bdgrz.Compliance.Features.Providers.Handlers;
 using Bdgrz.Compliance.Features.Workforce.Events;
 using Bdgrz.Compliance.Features.Workforce.Models;
+using Bdgrz.Compliance.Features.Workforce.Rules;
 namespace Bdgrz.Compliance.Features.Workforce.Aggregates;
 
 /// <summary>Owns an immutable source observation and its attributable reconciliation decision.</summary>
@@ -74,17 +75,10 @@ public sealed class WorkforceSourceObservation : Aggregate
         if (source is null || facts is null || targetId == Uuid.Empty ||
             observedTargetRevision < 1 || observedAt > recordedAt)
             return Invalid("A source observation requires a target, positive revision, facts, and a non-future observation time.");
-        var cleanSource = source with
-        {
-            SourceKind = source.SourceKind?.Trim() ?? string.Empty,
-            SourceSystem = source.SourceSystem?.Trim() ?? string.Empty,
-            SourceRecordId = source.SourceRecordId?.Trim() ?? string.Empty,
-            SourceRevision = source.SourceRevision?.Trim() ?? string.Empty,
-        };
-        if (cleanSource.SourceSystem.Length is 0 or > 200 ||
-            cleanSource.SourceRecordId.Length is 0 or > 500 ||
-            cleanSource.SourceRevision.Length is 0 or > 200)
-            return Invalid("A source requires a system (1–200), record ID (1–500), and revision (1–200 characters).");
+        var cleanSource = WorkforceSourceIdentityRules.Normalize(source);
+        var sourceError = WorkforceSourceIdentityRules.InputError(cleanSource);
+        if (sourceError is not null)
+            return Invalid(sourceError);
         var compatible = targetKind switch
         {
             "person" => cleanSource.SourceKind is "hris" or "idp" && facts.Person is not null &&
