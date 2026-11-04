@@ -91,6 +91,7 @@ public sealed class AccessReviewItem : Aggregate, ISourceUseOwner
     AccessReviewItemOpened? _opened;
     long _revision;
     bool _closed;
+    bool _verified;
 
     /// <summary>Opens the item, selecting the logical operation to resolve.</summary>
     public AccessReviewItem(Uuid tenantId, Uuid campaignId, Uuid itemId, Uuid selectedLogicalId = default,
@@ -164,8 +165,11 @@ public sealed class AccessReviewItem : Aggregate, ISourceUseOwner
         });
         On<AccessRemediationChangeRecorded>(ev => Business(ev, ev.TenantId, ev.CampaignId, ev.ItemId, ev.Revision,
             ev.Operation));
-        On<AccessRemediationVerified>(ev => Business(ev, ev.TenantId, ev.CampaignId, ev.ItemId, ev.Revision,
-            ev.Operation));
+        On<AccessRemediationVerified>(ev =>
+        {
+            Business(ev, ev.TenantId, ev.CampaignId, ev.ItemId, ev.Revision, ev.Operation);
+            _verified = true;
+        });
         On<AccessRemediationExceptionRecorded>(ev => Business(ev, ev.TenantId, ev.CampaignId, ev.ItemId, ev.Revision,
             ev.Operation));
         On<AccessReviewResponsibilityReassigned>(ev => Business(ev, ev.TenantId, ev.CampaignId, ev.ItemId,
@@ -271,6 +275,8 @@ public sealed class AccessReviewItem : Aggregate, ISourceUseOwner
     public Result RecordDecision(OperationProvenance operation, ImmutableContentRef decisions,
         ImmutableContentRef intent, ImmutableContentRef firstResponse, ImmutableContentRef operationResult)
     {
+        if (_verified)
+            return VerifiedDecisionFailure();
         var prepared = PrepareRoot(operation);
         if (!prepared.IsSuccess)
             return prepared;
@@ -325,6 +331,8 @@ public sealed class AccessReviewItem : Aggregate, ISourceUseOwner
     /// <summary>Checks that a bulk decision may hold this item and that the item is not held by another operation.</summary>
     public Result PrepareBulkHold(Uuid decisionBatchId)
     {
+        if (_verified)
+            return VerifiedDecisionFailure();
         if (_opened is null)
             return Result.Failure(new RequestError(RequestErrorKind.Conflict,
                 "The review item has not been materialized yet; retry shortly.", true));
@@ -362,6 +370,8 @@ public sealed class AccessReviewItem : Aggregate, ISourceUseOwner
         ArgumentNullException.ThrowIfNull(decisions);
         ArgumentNullException.ThrowIfNull(intent);
         var batchId = operation.RootOperationId;
+        if (_verified)
+            return VerifiedDecisionFailure();
         if (_opened is null || _closed || batchId != _selectedBatchId || IsFenced(batchId) ||
             Uses.Find(BulkKey(batchId)) is not { IsActive: true })
             return Result.Failure(new RequestError(RequestErrorKind.Conflict,
@@ -429,6 +439,9 @@ public sealed class AccessReviewItem : Aggregate, ISourceUseOwner
         return Append(operation, new AccessReviewItemCampaignCompletionUseSettled(_tenantId, _campaignId, _itemId, Stream, _revision,
             generation, intent, null, disposition, operation, null, null));
     }
+
+    static Result VerifiedDecisionFailure() => Result.Failure(new RequestError(RequestErrorKind.Conflict,
+        "A verified access review item cannot revise its decision."));
 
     Result PrepareRoot(OperationProvenance operation)
     {
