@@ -240,6 +240,19 @@ public sealed class FindingAggregate : Aggregate
             : Result.Success;
     }
 
+    /// <summary>Checks proposal terms and the finding's own resolved action set without recording a fact.</summary>
+    public Result PrepareProposal(long expectedRevision, Uuid closureId, long previousProposalRevision, FindingClosureTerms terms)
+    {
+        var prepared = PrepareWrite(expectedRevision);
+        if (!prepared.IsSuccess)
+            return prepared;
+        if (UnresolvedActionCount != 0)
+            return Fail(CommandFailure.StateConflict("Every planned action must have its outcome recorded before proposing closure."));
+        if (closureId == Uuid.Empty || previousProposalRevision != _proposalRevisions.GetValueOrDefault(closureId))
+            return Fail(CommandFailure.StateConflict("The closure proposal lineage changed before this proposal."));
+        return FindingClosureProposalRules.ValidTerms(terms) ? Result.Success : InvalidProposal();
+    }
+
     /// <summary>Records a proposal using the finding's own resolved action set.</summary>
     public Result ProposeClosure(OperationProvenance operation, Uuid closureId, long previousProposalRevision,
         FindingClosureTerms terms, ImmutableSelectionManifest actions, ImmutableContentRef firstResponse,
@@ -248,14 +261,10 @@ public sealed class FindingAggregate : Aggregate
         ArgumentNullException.ThrowIfNull(operation);
         if (!OwnProposalOperation(operation, nameof(ProposeFindingClosure), out var expected))
             return InvalidProposal();
-        var prepared = PrepareWrite(expected);
+        var prepared = PrepareProposal(expected, closureId, previousProposalRevision, terms);
         if (!prepared.IsSuccess)
             return prepared;
-        if (UnresolvedActionCount != 0)
-            return Fail(CommandFailure.StateConflict("Every planned action must have its outcome recorded before proposing closure."));
-        if (closureId == Uuid.Empty || previousProposalRevision != _proposalRevisions.GetValueOrDefault(closureId))
-            return Fail(CommandFailure.StateConflict("The closure proposal lineage changed before this proposal."));
-        if (!FindingClosureProposalRules.ValidTerms(terms) || !FindingClosureProposalRules.ValidActions(actions, _admittedCount))
+        if (!FindingClosureProposalRules.ValidActions(actions, _admittedCount))
             return InvalidProposal();
         var frozen = terms with
         {

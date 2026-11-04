@@ -38,6 +38,7 @@ static class FindingViews
         var remediated = view.CorrectiveActions.Count > 0 &&
                          view.CorrectiveActions.All(static action => action.Status is FindingStates.Completed or FindingStates.Cancelled);
         var status = view.Closure is not null ? FindingStates.Closed
+            : view.ClosureProposal is not null ? FindingStates.Closing
             : remediated ? FindingStates.Remediated
             : FindingStates.Open;
         var readiness = view.Closure is not null ? FindingStates.Closed
@@ -78,6 +79,7 @@ static class FindingViews
         {
             Revision = number,
             Closure = closure,
+            ClosureProposal = null,
             History = [.. view.History, new FindingHistoryEntryView(number, "closed",
                 $"Decision {closure.DecisionId}: {closure.Rationale}", closure.ClosedBy, closure.ClosedAt)],
         }, now);
@@ -88,6 +90,7 @@ static class FindingViews
         {
             Revision = number,
             Closure = null,
+            ClosureProposal = null,
             History = [.. view.History, new FindingHistoryEntryView(number, "reopened", reason, actor, at)],
         }, now);
 
@@ -98,6 +101,15 @@ static class FindingViews
                 .ToArray(),
             History = [.. view.History, new FindingHistoryEntryView(action.Revision, "corrective_action_completed",
                 action.ResolutionNotes!, action.CompletedBy!, action.CompletedAt!.Value)],
+        }, now);
+
+    public static FindingView WithProposal(FindingView view, FindingClosureProposalView proposal, long number, DateTimeOffset now) =>
+        Settle(view with
+        {
+            Revision = number,
+            ClosureProposal = proposal,
+            History = [.. view.History, new FindingHistoryEntryView(number, "closure_proposed",
+                $"Closure {proposal.ClosureId}: {proposal.Terms.Rationale}", proposal.ProposedBy, proposal.ProposedAt)],
         }, now);
 
     public static string Date(DateOnly date) => date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);

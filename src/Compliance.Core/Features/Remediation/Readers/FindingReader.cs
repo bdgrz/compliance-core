@@ -114,6 +114,18 @@ public sealed class FindingReader(IAggregateReader reader, IDomainEventReader ev
                     history.Add((new FindingHistoryEntryView(ev.Revision, "corrective_action_resolved",
                         $"Action {ev.ActionId}: {ev.Outcome}", ev.Operation.Actor, ev.Operation.AcceptedAt), order));
                     break;
+                case FindingClosureProposed ev:
+                    history.Add((new FindingHistoryEntryView(ev.Revision, "closure_proposed",
+                        $"Closure {ev.ClosureId}: {ev.Terms.Rationale}", ev.ProposedBy, ev.ProposedAt), order));
+                    break;
+                case FindingClosureWithdrawn ev:
+                    history.Add((new FindingHistoryEntryView(ev.Revision, "closure_withdrawn",
+                        $"Closure {ev.ClosureId} withdrawn.", ev.WithdrawnBy, ev.WithdrawnAt), order));
+                    break;
+                case FindingClosureReturned ev:
+                    history.Add((new FindingHistoryEntryView(ev.Revision, "closure_returned", ev.Comments,
+                        ev.Review.ReviewedBy, ev.Review.ReviewedAt), order));
+                    break;
                 case FindingClosedV2 ev:
                     closure = await FindingContent.ReadAsync<FindingClosureView>(content, tenant, ev.ClosureContent, ct)
                         .ConfigureAwait(false);
@@ -149,7 +161,10 @@ public sealed class FindingReader(IAggregateReader reader, IDomainEventReader ev
         var view = new FindingView(tenant, raised.ProgramId, raised.FindingId, finding.Revision, raised.Source,
             raised.Title, raised.Description, finding.Severity!, finding.AffectedScope!, finding.OwnerMemberId,
             finding.DueOn, finding.RootCause, FindingStates.Open, FindingStates.Unresolved, links, actions, acceptances,
-            closure, history.Select(static item => item.Entry).ToArray(), raised.RaisedBy, raised.RaisedAt);
+            closure, history.Select(static item => item.Entry).ToArray(), raised.RaisedBy, raised.RaisedAt,
+            finding.ClosureProposal is { } proposal ? new FindingClosureProposalView(proposal.ClosureId, proposal.ProposalRevision,
+                proposal.Terms, source.Admitted.Select(static item => item.Operation.LogicalId).ToArray(),
+                proposal.ProposedBy, proposal.ProposedAt) : null);
         return FindingViews.Settle(view, now);
     }
 

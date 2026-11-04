@@ -1,6 +1,7 @@
 using Cntryl.Portia;
 using Microsoft.Extensions.DependencyInjection;
 using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.Content.Services;
 using Bdgrz.Compliance.Features.Evidence.Aggregates;
 using Bdgrz.Compliance.Features.Evidence.Models;
 using Bdgrz.Compliance.Features.NativeOperations.Models;
@@ -34,6 +35,7 @@ public sealed class ProposeFindingClosureHandlerTests
         // Act
         var result = await handler.HandleAsync(Context(request, lead ? fixture.LeadUserId : fixture.OwnerUserId), CancellationToken.None);
         var owner = await fixture.FindingStreamAsync(finding.FindingId);
+        var current = await fixture.GetFindingAsync(finding.FindingId);
 
         // Assert
         Assert.True(result.IsSuccess, result.Error?.Message);
@@ -44,6 +46,7 @@ public sealed class ProposeFindingClosureHandlerTests
         Assert.Equal(request.Terms.VerificationRationale.Trim(), result.Value.ClosureProposal.Terms.VerificationRationale);
         Assert.Null(result.Value.Closure);
         Assert.Equal(finding.Source, result.Value.Source);
+        Assert.Equal(WireJson.Of(result.Value), WireJson.Of(current));
         var actions = await ImmutableSelectionManifests.ReadAsync<AdmittedChild>(fixture.Content, fixture.TenantId.ToString(),
             owner.ClosureProposal!.ActionsReliedOn, CancellationToken.None);
         Assert.Empty(actions);

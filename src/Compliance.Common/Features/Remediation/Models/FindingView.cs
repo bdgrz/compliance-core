@@ -5,7 +5,7 @@ using Bdgrz.Compliance.Features.Workforce.Models;
 namespace Bdgrz.Compliance.Features.Remediation.Models;
 
 /// <summary>
-///     A governed deficiency and its corrective work. Status is open, remediated, or closed.
+///     A governed deficiency and its corrective work. Status is open, closing, remediated, or closed.
 ///     Readiness status is closed, remediated, accepted, overdue, or unresolved when read.
 /// </summary>
 public sealed record FindingView(Uuid TenantId, Uuid ProgramId, Uuid FindingId, long Revision,
@@ -15,4 +15,4 @@ public sealed record FindingView(Uuid TenantId, Uuid ProgramId, Uuid FindingId, 
     IReadOnlyList<CorrectiveActionView> CorrectiveActions,
     IReadOnlyList<FindingAcceptanceView> Acceptances, FindingClosureView? Closure,
     IReadOnlyList<FindingHistoryEntryView> History, ActorReference RaisedBy,
-    DateTimeOffset RaisedAt);
+    DateTimeOffset RaisedAt, FindingClosureProposalView? ClosureProposal = null);
