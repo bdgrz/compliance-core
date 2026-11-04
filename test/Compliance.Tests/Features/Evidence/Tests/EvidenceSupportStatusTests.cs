@@ -6,6 +6,7 @@ using Bdgrz.Compliance.Features.Evidence.Aggregates;
 using Bdgrz.Compliance.Features.Evidence.Commands;
 using Bdgrz.Compliance.Features.Evidence.Handlers;
 using Bdgrz.Compliance.Features.Evidence.Models;
+using Bdgrz.Compliance.Features.Evidence.Readers;
 using Bdgrz.Compliance.Features.Evidence.Queries;
 using Bdgrz.Compliance.Features.Evidence.Services;
 using Bdgrz.Compliance.Features.Operations.Models;
@@ -142,6 +143,61 @@ public sealed class EvidenceSupportStatusTests
     }
 
     [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task ShouldRefuseStaleStatusGivenWithdrawalDuringAssembly(bool list)
+    {
+        // Arrange
+        await using var fixture = await ArtifactMetadataAccessTests.Fixture.CreateAsync();
+        await fixture.AllowAsync();
+        var program = Uuid.CreateVersion4();
+        var link = await SeedAsync(fixture, program);
+        await using var scope = fixture.Provider.CreateAsyncScope();
+        var hooked = new AfterSupportRead(scope.ServiceProvider.GetRequiredService<IAggregateReader>(),
+            () => WithdrawAsync(fixture, program, link.CommandId));
+        var read = Read(scope.ServiceProvider, hooked);
+        var dispatch = new RequestDispatchContext(ProgramManagementServices.Actor(fixture.UserId));
+
+        // Act
+        var error = list
+            ? (await new ListEvidenceSupportsHandler(read).HandleAsync(new RequestContext<ListEvidenceSupports>(
+                new(fixture.TenantId, program), dispatch), CancellationToken.None)).Error
+            : (await new GetEvidenceSupportHandler(read).HandleAsync(new RequestContext<GetEvidenceSupport>(
+                new(fixture.TenantId, program, link.CommandId), dispatch), CancellationToken.None)).Error;
+
+        // Assert
+        Assert.Equal(RequestErrorKind.Conflict, error?.Kind);
+        Assert.True(error!.IsTransient);
+        var retained = await scope.ServiceProvider.GetRequiredService<IAggregateReader>()
+            .HydrateAsync(EvidenceSupport.ForVerification(fixture.TenantId, link.CommandId));
+        Assert.False(retained.IsActive);
+        Assert.Equal(2, retained.Revision);
+    }
+
+    [Fact]
+    public async Task ShouldPreserveFrozenLinkReadGivenCurrentStatusReadAfterWithdrawal()
+    {
+        // Arrange
+        await using var fixture = await ArtifactMetadataAccessTests.Fixture.CreateAsync();
+        var program = Uuid.CreateVersion4();
+        var link = await SeedAsync(fixture, program);
+        await using var scope = fixture.Provider.CreateAsyncScope();
+        var reads = new EvidenceSupportReader(scope.ServiceProvider.GetRequiredService<IAggregateReader>());
+        var before = await reads.ReadOriginalAsync(fixture.TenantId, program, link.CommandId);
+        await WithdrawAsync(fixture, program, link.CommandId);
+
+        // Act
+        var status = await reads.ReadStatusAsync(fixture.TenantId, program, link.CommandId);
+        var after = await reads.ReadOriginalAsync(fixture.TenantId, program, link.CommandId);
+
+        // Assert
+        Assert.True(status.IsSuccess, status.Error?.Message);
+        Assert.False(status.Value.IsActive);
+        Assert.Equal(before.Value, status.Value.Original);
+        Assert.Equal(before.Value, after.Value);
+    }
+
+    [Theory]
     [InlineData("bad", 1)]
     [InlineData(null, 0)]
     [InlineData(null, 201)]
@@ -200,7 +256,24 @@ public sealed class EvidenceSupportStatusTests
                 new RequestDispatchContext(ProgramManagementServices.Actor(fixture.UserId))), CancellationToken.None);
     }
 
-    static EvidenceSupportStatusRead Read(IServiceProvider services) => new(
-        services.GetRequiredService<IAggregateReader>(), services.GetRequiredService<IDomainEventReader>(),
+    static EvidenceSupportStatusRead Read(IServiceProvider services, IAggregateReader? reader = null) => new(
+        reader ?? services.GetRequiredService<IAggregateReader>(), services.GetRequiredService<IDomainEventReader>(),
         services.GetRequiredService<EvidenceArtifactReadAccess>());
+
+    sealed class AfterSupportRead(IAggregateReader inner, Func<Task> after) : IAggregateReader
+    {
+        bool _fired;
+
+        public async ValueTask<TAggregate> HydrateAsync<TAggregate>(TAggregate aggregate, CancellationToken ct = default)
+            where TAggregate : Aggregate
+        {
+            var owner = await inner.HydrateAsync(aggregate, ct).ConfigureAwait(false);
+            if (!_fired && owner is EvidenceSupport)
+            {
+                _fired = true;
+                await after().ConfigureAwait(false);
+            }
+            return owner;
+        }
+    }
 }
