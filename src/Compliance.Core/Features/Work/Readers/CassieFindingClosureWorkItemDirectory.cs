@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text.Json;
 using Cntryl.Cassie.Commands;
 using Cntryl.Portia;
@@ -39,12 +40,13 @@ sealed class CassieFindingClosureWorkItemDirectory(CassieProjectionDatabase data
             ?? throw new InvalidOperationException("A finding fact cannot be projected before its raise is visible.");
         await ValidatePreviousRowAsync(tenantId, programId, findingId, ct).ConfigureAwait(false);
         await using var command = CreateCommand("""
-            INSERT INTO work_finding_closures (projection_key, tenant_id, program_id, finding_id, payload)
-            VALUES (@projection, @tenant, @program, @finding, CAST(@payload AS JSONB))
-            ON CONFLICT (projection_key, program_id, finding_id) DO UPDATE SET payload = EXCLUDED.payload
+            INSERT INTO work_finding_closures (row_key, projection_key, tenant_id, program_id, finding_id, payload)
+            VALUES (@row_key, @projection, @tenant, @program, @finding, CAST(@payload AS JSONB))
+            ON CONFLICT (row_key) DO UPDATE SET payload = EXCLUDED.payload
             WHERE work_finding_closures.tenant_id = @tenant
             """);
         _ = command.Parameters.Add(new CassieParameter { ParameterName = "projection", Value = CurrentProjectionKey });
+        _ = command.Parameters.Add(new CassieParameter { ParameterName = "row_key", Value = RowKey(programId, findingId) });
         _ = command.Parameters.Add(new CassieParameter { ParameterName = "tenant", Value = tenantId.ToString() });
         _ = command.Parameters.Add(new CassieParameter { ParameterName = "program", Value = programId.ToString() });
         _ = command.Parameters.Add(new CassieParameter { ParameterName = "finding", Value = findingId.ToString() });
@@ -110,6 +112,10 @@ sealed class CassieFindingClosureWorkItemDirectory(CassieProjectionDatabase data
     }
 
     string QueryKey(Uuid tenantId) => GetProjectionKey(new CheckpointIdentity(ProjectorName, SourcePattern(tenantId)));
+
+    string RowKey(Uuid programId, Uuid findingId) => string.Concat(
+        CurrentProjectionKey.Length.ToString(CultureInfo.InvariantCulture), ":", CurrentProjectionKey,
+        programId.ToString(), ":", findingId.ToString());
 
     async ValueTask ValidatePreviousRowAsync(Uuid tenantId, Uuid programId, Uuid findingId, CancellationToken ct)
     {

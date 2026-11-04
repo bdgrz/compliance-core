@@ -66,10 +66,11 @@ sealed class CassieCorrectiveActionWorkItemDirectory(CassieProjectionDatabase da
         {
             var item = AccountableWorkItemView.FromCandidate(tenantId, programId, candidate);
             await using var insert = CreateCommand("""
-                INSERT INTO work_corrective_actions (projection_key, tenant_id, program_id, finding_id, work_item_id, payload)
-                VALUES (@projection, @tenant, @program, @finding, @work_item, CAST(@payload AS JSONB))
+                INSERT INTO work_corrective_actions (row_key, projection_key, tenant_id, program_id, finding_id, work_item_id, payload)
+                VALUES (@row_key, @projection, @tenant, @program, @finding, @work_item, CAST(@payload AS JSONB))
                 """);
             Scope(insert, tenantId, programId, findingId);
+            _ = insert.Parameters.Add(new CassieParameter { ParameterName = "row_key", Value = RowKey(programId, item.WorkItemId) });
             _ = insert.Parameters.Add(new CassieParameter { ParameterName = "work_item", Value = item.WorkItemId.ToString() });
             _ = insert.Parameters.Add(new CassieParameter { ParameterName = "payload",
                 Value = JsonSerializer.Serialize(item, ComplianceCoreJsonContext.Default.AccountableWorkItemView) });
@@ -136,6 +137,10 @@ sealed class CassieCorrectiveActionWorkItemDirectory(CassieProjectionDatabase da
     }
 
     string QueryKey(Uuid tenantId) => GetProjectionKey(new CheckpointIdentity(ProjectorName, SourcePattern(tenantId)));
+
+    string RowKey(Uuid programId, Uuid workItemId) => string.Concat(
+        CurrentProjectionKey.Length.ToString(CultureInfo.InvariantCulture), ":", CurrentProjectionKey,
+        programId.ToString(), ":", workItemId.ToString());
 
     async ValueTask ValidatePreviousRowsAsync(Uuid tenantId, Uuid programId, Uuid findingId, CancellationToken ct)
     {

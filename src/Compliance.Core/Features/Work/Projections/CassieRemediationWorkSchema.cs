@@ -7,13 +7,13 @@ public static class CassieRemediationWorkSchema
     {
         """
         CREATE TABLE IF NOT EXISTS work_corrective_actions (
+            row_key TEXT PRIMARY KEY,
             projection_key TEXT NOT NULL,
             tenant_id TEXT NOT NULL,
             program_id TEXT NOT NULL,
             finding_id TEXT NOT NULL,
             work_item_id TEXT NOT NULL,
-            payload JSONB NOT NULL,
-            PRIMARY KEY (projection_key, program_id, work_item_id)
+            payload JSONB NOT NULL
         )
         """,
         """
@@ -29,13 +29,17 @@ public static class CassieRemediationWorkSchema
         """,
         """
         CREATE TABLE IF NOT EXISTS work_finding_closures (
+            row_key TEXT PRIMARY KEY,
             projection_key TEXT NOT NULL,
             tenant_id TEXT NOT NULL,
             program_id TEXT NOT NULL,
             finding_id TEXT NOT NULL,
-            payload JSONB NOT NULL,
-            PRIMARY KEY (projection_key, program_id, finding_id)
+            payload JSONB NOT NULL
         )
+        """,
+        """
+        CREATE INDEX IF NOT EXISTS work_finding_closures_by_program
+            ON work_finding_closures (projection_key, program_id, finding_id)
         """,
     });
 }
