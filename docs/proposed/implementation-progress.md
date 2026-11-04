@@ -29,9 +29,9 @@ wiring requirements and edit only their assigned business slice.
 
 | Worker worktree | Exclusive business paths | First bounded batch | State |
 | --- | --- | --- | --- |
-| `workforce` | `Features/Workforce/**` in Common, Core, App and feature tests | Start, leave, return and end WorkRelationship lifecycle | Batch 1 merged; batch 2 source prepared |
-| `assurance` | `Features/Remediation/**` in Common, Core, App and feature tests | Product Waiver request, independent review and revocation | Batch 1 merged; batch 2 source prepared |
-| `methodology` | `Features/MethodologyTemplates/**` in Common, Core, App and feature tests | TemplateVersionApplication per-version entry outcomes | Batch 1 merged; batch 2 source prepared |
+| `workforce` | `Features/Workforce/**` in Common, Core, App and feature tests | Start, leave, return and end WorkRelationship lifecycle | Batch 2 merged; next source batch prepared |
+| `assurance` | `Features/Remediation/**` in Common, Core, App and feature tests | Product Waiver request, independent review and revocation | Batch 2 merged; next source batch prepared |
+| `methodology` | `Features/MethodologyTemplates/**` in Common, Core, App and feature tests | TemplateVersionApplication per-version entry outcomes | Batch 2 merged; next source batch prepared |
 
 Workers submit test-first and implementation commits. Following the user's updated
 instruction, they now use source review and live Jev before any compilation or test
@@ -154,7 +154,9 @@ business cases; 51 fixture/catalog correction cases; all 8,327 backend units wit
 zero failures/skips; whitespace verification; six Node cases and proposal/coverage
 checks. The inspected inventory adds 12 facts (one explicit line-start producer
 gap), one owner and six registered requests. Counts describe source navigation,
-not whole-domain completion. Final-head hosted acceptance remains pending.
+not whole-domain completion. PR [#1181](https://github.com/bdgrz/compliance-core/pull/1181) passed exact-head
+Backend CI and merged to main as `7df499fd`. The integration merge preserved the
+next source batch byte-for-byte; post-merge main CI is separate and pending.
 
 ## Next source batch (unvalidated)
 
