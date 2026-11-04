@@ -43,6 +43,7 @@ using Bdgrz.Compliance.Features.Providers.Projections;
 using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
 using Bdgrz.Compliance.Features.Workforce.Aggregates;
 using Bdgrz.Compliance.Features.Content.Persistence;
+using Bdgrz.Compliance.Features.Workforce.Events;
 namespace Bdgrz.Compliance.Features.Workforce.Readers;
 
 /// <summary>Verified current or exact historical producing values; never a projection or live replacement for a source version.</summary>
@@ -93,6 +94,15 @@ public sealed class PersonReader(IAggregateReader reader, IDomainEventReader eve
             mutation.CommandKind != native.Operation.CommandKind || mutation.Changed != native.Changed || PersonContent.Header(view) != native.Header ||
             view.SourceKind != "manual" || view.RestrictedFieldsRedacted)
             throw new ImmutableContentIntegrityException("The immutable person body/mutation differs from its exact producing transition.");
+        if (fact is PersonDetailsChanged changed)
+        {
+            var beforeView = prior is not null
+                ? await content.ReadJsonAsync<PersonView>(realm, prior, ct).ConfigureAwait(false)
+                : Legacy(new Person(native.Header.TenantId, native.Header.PersonId), facts.Take(index).ToArray());
+            if (beforeView is null || PersonContent.Header(beforeView) != before ||
+                PersonContent.DetailChanges(beforeView, view) != changed.ChangedFields)
+                throw new ImmutableContentIntegrityException("The named person changed fields differ from their exact historical values.");
+        }
         return view;
     }
     static PersonView? Legacy(Person owner, IReadOnlyList<DomainEvent> facts)

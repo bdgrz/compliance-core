@@ -7,7 +7,8 @@ public sealed partial class PersonDirectoryProjector(IPersonDirectoryProjection 
     : Projector(projection, EventStreamPattern.ForTenant("people"), "PersonDirectoryV2"),
       IProjectorHandler<PersonRecorded>, IProjectorHandler<PersonRevised>,
       IProjectorHandler<PersonMembershipCorrelated>, IProjectorHandler<PersonRegistrationRecorded>,
-      IProjectorHandler<PersonDetailsRevised>, IProjectorHandler<PersonMembershipCorrelationRecorded>
+      IProjectorHandler<PersonDetailsRevised>, IProjectorHandler<PersonMembershipCorrelationRecorded>,
+      IProjectorHandler<PersonDetailsChanged>
 {
     public async ValueTask<Result> HandleAsync(IProjectorContext<PersonRecorded> context,
         CancellationToken ct)
@@ -51,6 +52,12 @@ public sealed partial class PersonDirectoryProjector(IPersonDirectoryProjection 
     {
         var ev = context.Trigger;
         await projection.ApplyAsync(ev, ct).ConfigureAwait(false);
+        return Result.Success;
+    }
+
+    public async ValueTask<Result> HandleAsync(IProjectorContext<PersonDetailsChanged> context, CancellationToken ct)
+    {
+        await projection.ApplyAsync(context.Trigger, ct).ConfigureAwait(false);
         return Result.Success;
     }
 
