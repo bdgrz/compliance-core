@@ -5,7 +5,7 @@ using Bdgrz.Compliance.Features.Boundaries.Projections;
 namespace Bdgrz.Compliance.Features.Boundaries.Projectors;
 
 public sealed partial class BoundaryDirectoryProjector(IBoundaryDirectoryProjection projection)
-    : Projector(projection, EventStreamPattern.ForTenant(), FitzBoundaryDirectory.ProjectorName),
+    : Projector(projection, EventStreamPattern.ForTenant(), CassieBoundaryDirectory.ProjectorName),
       IProjectorHandler<BoundaryDraftCreated>, IProjectorHandler<BoundaryDraftRevised>,
       IProjectorHandler<BoundaryDraftDiscarded>,
       IProjectorHandler<BoundaryReviewed>, IProjectorHandler<BoundaryApproved>,
