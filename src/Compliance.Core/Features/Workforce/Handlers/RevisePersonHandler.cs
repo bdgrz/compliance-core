@@ -1,11 +1,13 @@
 using Cntryl.Portia;
-using Bdgrz.Compliance.Features.Workforce.Services;
 using Bdgrz.Compliance.Features.NativeOperations.Models;
 using Bdgrz.Compliance.Features.Workforce.Commands;
 namespace Bdgrz.Compliance.Features.Workforce.Handlers;
 
-public sealed class RevisePersonHandler(PersonOperations operations) : IRequestHandler<RevisePerson, UnitResult>
+/// <summary>Refuses generic writes while retaining the registered retired request contract.</summary>
+public sealed class RevisePersonHandler : IRequestHandler<RevisePerson, UnitResult>
 {
-    public ValueTask<Result<UnitResult>> HandleAsync(IRequestContext<RevisePerson> context, CancellationToken ct) =>
-        operations.ReviseAsync(context, ct);
+    ValueTask<Result<UnitResult>> IRequestHandler<RevisePerson, UnitResult>.HandleAsync(
+        IRequestContext<RevisePerson> context, CancellationToken ct) =>
+        ValueTask.FromResult(Result<UnitResult>.Failure(new RequestError(RequestErrorKind.Conflict,
+            "Generic person revision is retired; use ChangePersonDetails.")));
 }
