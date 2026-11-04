@@ -154,7 +154,7 @@ public sealed class TechnologyInventoryAggregateTests
         Assert.Equal(2, component.Revision);
         Assert.Equal(TechnologyInventoryRules.Retired, component.Content!.Lifecycle);
         Assert.Equal(RequestErrorKind.Conflict, stale.Error!.Kind);
-        Assert.Equal(RequestErrorKind.Validation, recategorized.Error!.Kind);
+        Assert.Equal(RequestErrorKind.Conflict, recategorized.Error!.Kind);
     }
 
     [Theory]

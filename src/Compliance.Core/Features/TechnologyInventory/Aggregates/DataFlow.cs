@@ -128,6 +128,9 @@ public sealed class DataFlow : Aggregate
             return Failure(CommandFailure.MissingRecord("The data flow was not found."));
         if (expectedRevision != _revision)
             return Failure(CommandFailure.ForVersion(VersionedRecordRules.StaleRevision("data flow", _revision)));
+        if (_content!.Lifecycle == TechnologyInventoryRules.Retired)
+            return Result<DataFlowContent>.Failure(new RequestError(RequestErrorKind.Conflict,
+                "A retired data flow cannot change; record a new identity."));
         var content = TechnologyInventoryRules.Normalize(change(_content!));
         var error = TechnologyInventoryRules.Validate(content) ??
                     (content.EffectiveFrom < _content!.EffectiveFrom

@@ -125,6 +125,9 @@ public sealed class TechnologyComponent : Aggregate
         if (expectedRevision != _revision)
             return Failure(CommandFailure.ForVersion(VersionedRecordRules.StaleRevision("technology component",
                 _revision)));
+        if (_content!.Lifecycle == TechnologyInventoryRules.Retired)
+            return Result<TechnologyComponentContent>.Failure(new RequestError(RequestErrorKind.Conflict,
+                "A retired technology component cannot change; record a new identity."));
         var content = TechnologyInventoryRules.Normalize(change(_content!));
         var error = TechnologyInventoryRules.Validate(content) ??
                     (content.Category != _content!.Category ||
