@@ -31,7 +31,8 @@ using Bdgrz.Compliance.Features.Work.Commands;
 namespace Bdgrz.Compliance.Features.Workforce.Authorizers;
 
 sealed class WorkforceAuthorizer(ITenantMembershipDirectoryReader memberships,
-    ITenantActivity tenants, IPermissionAuthorizer permissions, IAggregateReader? reader = null)
+    ITenantActivity tenants, IPermissionAuthorizer permissions, IAggregateReader? reader = null,
+    TimeProvider? clock = null)
     : IRequestAuthorizer<IWorkforceRequest>
 {
     // Field restriction (M0-D06) applies once restricted workforce fields exist.
@@ -61,7 +62,7 @@ sealed class WorkforceAuthorizer(ITenantMembershipDirectoryReader memberships,
             var allowed = reader is not null
                 ? await ServiceIdentityReviewAccess.IsAllowedAsync(reader, permissions, tenantId,
                     await reader.HydrateAsync(new ServiceIdentity(tenantId, review.ServiceIdentityId), ct).ConfigureAwait(false),
-                    userId, ct).ConfigureAwait(false)
+                    userId, DateOnly.FromDateTime((clock ?? TimeProvider.System).GetUtcNow().UtcDateTime), ct).ConfigureAwait(false)
                 : await permissions.IsAllowedAsync(tenantId, userId, RbacIds.Member(tenantId, userId),
                     ServiceIdentityPermissions.Review, ct).ConfigureAwait(false);
             return allowed ? Result.Success : Result.Failure(new RequestError(RequestErrorKind.Forbidden,

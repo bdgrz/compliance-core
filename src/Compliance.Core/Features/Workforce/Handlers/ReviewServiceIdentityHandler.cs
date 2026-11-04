@@ -24,11 +24,13 @@ public sealed class ReviewServiceIdentityHandler(IAggregateExecutor executor, IA
         // Bind this source authority check to the exact revision the executor will decide.
         if (current.Revision != request.ExpectedRevision)
             return Result.Failure(new RequestError(RequestErrorKind.Conflict, "The service identity revision changed; review its current owner."));
-        if (!await ServiceIdentityReviewAccess.IsAllowedAsync(reader, permissions, request.TenantId, current, userId, ct).ConfigureAwait(false))
+        var reviewedAt = clock.GetUtcNow();
+        if (!await ServiceIdentityReviewAccess.IsAllowedAsync(reader, permissions, request.TenantId, current, userId,
+                DateOnly.FromDateTime(reviewedAt.UtcDateTime), ct).ConfigureAwait(false))
             return Result.Failure(new RequestError(RequestErrorKind.Forbidden,
                 "Only the current owner or an authorized service identity reviewer may review this identity."));
         return await executor.ExecuteAsync(new ServiceIdentity(request.TenantId, request.ServiceIdentityId),
             identity => CommandFailureRequestAdapter.ToOutcome(identity.Review(request.ExpectedRevision,
-                request.NextReviewDate, request.Notes, WorkforceActor.From(context), clock.GetUtcNow())), context, ct).ConfigureAwait(false);
+                request.NextReviewDate, request.Notes, WorkforceActor.From(context), reviewedAt)), context, ct).ConfigureAwait(false);
     }
 }
