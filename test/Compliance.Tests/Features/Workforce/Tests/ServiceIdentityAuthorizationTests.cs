@@ -130,7 +130,7 @@ public sealed class ServiceIdentityAuthorizationTests
         readonly Person _person;
         readonly Team? _team;
         readonly TeamMember? _assignment;
-        readonly Member? _member;
+        readonly Member _member;
 
         public Fixture(bool linked = false, bool teamOwner = false, bool sameEpisode = true, bool teamActive = true)
         {
@@ -144,15 +144,15 @@ public sealed class ServiceIdentityAuthorizationTests
                     linked ? User : Uuid.CreateVersion4(), Author, Now), Owner, 2),
             ];
             _person = NativeFacts.Replay(new Person(Tenant, Owner), facts);
+            _member = new Member(Tenant, User);
+            var episode = Uuid.CreateVersion4();
+            Assert.True(_member.Register(NativeFacts.Root(_member, episode, "RegisterMember", null), NativeFacts.Ref()).IsSuccess);
             if (teamOwner)
             {
                 _team = new Team(Tenant, Owner);
                 Assert.True(_team.Define(NativeFacts.Root(_team, Owner, "DefineTeam", null), NativeFacts.Ref(), "Owner team").IsSuccess);
                 if (!teamActive)
                     Assert.True(_team.Delete(NativeFacts.Root(_team, Uuid.CreateVersion4(), "DeleteTeam", null), NativeFacts.Ref()).IsSuccess);
-                _member = new Member(Tenant, User);
-                var episode = Uuid.CreateVersion4();
-                Assert.True(_member.Register(NativeFacts.Root(_member, episode, "RegisterMember", null), NativeFacts.Ref()).IsSuccess);
                 _assignment = new TeamMember(Tenant, Owner, RbacIds.Member(Tenant, User));
                 Assert.True(_assignment.Assign(NativeFacts.Root(_assignment, Uuid.CreateVersion4(), "AssignTeamMember", 0),
                     NativeFacts.Ref(), sameEpisode ? episode : Uuid.CreateVersion4(), 0, 0).IsSuccess);
@@ -179,7 +179,7 @@ public sealed class ServiceIdentityAuthorizationTests
                 Person when aggregate.Id == Owner => (TAggregate)(Aggregate)_person,
                 Team when _team is not null && aggregate.Id == _team.Id => (TAggregate)(Aggregate)_team,
                 TeamMember when _assignment is not null && aggregate.Id == _assignment.Id => (TAggregate)(Aggregate)_assignment,
-                Member when _member is not null && aggregate.Id == _member.Id => (TAggregate)(Aggregate)_member,
+                Member when aggregate.Id == _member.Id => (TAggregate)(Aggregate)_member,
                 _ => aggregate,
             });
     }

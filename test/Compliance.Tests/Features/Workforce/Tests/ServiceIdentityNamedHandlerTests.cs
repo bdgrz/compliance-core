@@ -141,6 +141,7 @@ public sealed class ServiceIdentityNamedHandlerTests
         public OwnerExecutor Executor { get; }
         public IReadOnlyList<DomainEvent> Facts => new AggregateScenario<ServiceIdentity>(Identity).PendingEvents;
         readonly Person _person;
+        readonly Member _member;
 
         public Fixture(bool linked = false)
         {
@@ -154,6 +155,9 @@ public sealed class ServiceIdentityNamedHandlerTests
                     linked ? User : Uuid.CreateVersion4(), Author, Now), Owner, 2),
             ];
             _person = NativeFacts.Replay(new Person(Tenant, Owner), facts);
+            _member = new Member(Tenant, User);
+            Assert.True(_member.Register(NativeFacts.Root(_member, Uuid.CreateVersion4(), "RegisterMember", null),
+                NativeFacts.Ref()).IsSuccess);
             Executor = new OwnerExecutor(Identity);
         }
 
@@ -167,6 +171,7 @@ public sealed class ServiceIdentityNamedHandlerTests
             {
                 ServiceIdentity when aggregate.Id == Identity.Id => (TAggregate)(Aggregate)Identity,
                 Person when aggregate.Id == Owner => (TAggregate)(Aggregate)_person,
+                Member when aggregate.Id == _member.Id => (TAggregate)(Aggregate)_member,
                 _ => aggregate,
             });
     }
