@@ -71,6 +71,32 @@ public sealed class InventoryRetryTests
     static readonly DateTimeOffset Now = new(2026, 10, 23, 12, 0, 0, TimeSpan.Zero);
 
     [Fact]
+    public async Task ShouldReplayOriginalClassificationGivenLaterNamedDetailsChange()
+    {
+        // Arrange
+        await using var host = await Host.CreateAsync();
+        var asset = Uuid.CreateVersion4();
+        Assert.True((await host.RecordAssetAsync(new RecordInformationAsset(asset, host.TenantId,
+            "Customers", "internal", "RET-1", host.OwnerId))).IsSuccess);
+        var request = new ClassifyInformationAsset(Uuid.CreateVersion4(), host.TenantId, asset, 1, "restricted");
+        Assert.True((await host.ClassifyAsync(request)).IsSuccess);
+        Assert.True((await host.ChangeDetailsAsync(new ChangeInformationAssetDetails(Uuid.CreateVersion4(),
+            host.TenantId, asset, 2, "Renamed", "RET-2"))).IsSuccess);
+
+        // Act
+        var retry = await host.ClassifyAsync(request);
+        var changed = await host.ClassifyAsync(request with { Classification = "public" });
+        var current = await host.Reader.HydrateAsync(new InformationAsset(host.TenantId, asset));
+
+        // Assert
+        Assert.True(retry.IsSuccess, retry.Error?.Message);
+        Assert.Equal(RequestErrorKind.Conflict, changed.Error?.Kind);
+        Assert.Equal(3, current.Revision);
+        Assert.Equal("restricted", current.Content!.Classification);
+        Assert.Equal("Renamed", current.Content.Name);
+    }
+
+    [Fact]
     public async Task ShouldReplayOriginalRegistrationGivenExactComponentRetryAfterLaterRevision()
     {
         // Arrange
@@ -233,6 +259,14 @@ public sealed class InventoryRetryTests
         T Get<T>() where T : notnull => _provider.GetRequiredService<T>();
 
         TechnologyInventoryReferences References() => new(Reader, null!, null!, Get<IImmutableContentStore>());
+
+        public ValueTask<Result> ClassifyAsync(ClassifyInformationAsset request) =>
+            new InformationAssetChangesHandler(NewOperations(), References(), Get<IImmutableContentStore>(), TimeProvider.System)
+                .HandleAsync(new RequestContext<ClassifyInformationAsset>(request, Author), CancellationToken.None);
+
+        public ValueTask<Result> ChangeDetailsAsync(ChangeInformationAssetDetails request) =>
+            new InformationAssetChangesHandler(NewOperations(), References(), Get<IImmutableContentStore>(), TimeProvider.System)
+                .HandleAsync(new RequestContext<ChangeInformationAssetDetails>(request, Author), CancellationToken.None);
 
         public ValueTask<Result<TechnologyComponentRegistration>> RecordComponentAsync(RecordTechnologyComponent request) =>
             new RecordTechnologyComponentHandler(NewOperations(), Reader, References(),
