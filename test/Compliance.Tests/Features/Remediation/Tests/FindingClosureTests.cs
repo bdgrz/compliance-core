@@ -194,7 +194,8 @@ public sealed class FindingClosureTests
         var before = await fixture.FindingStreamAsync(finding.FindingId);
 
         // Act
-        var refused = await PersonalReadinessClosureTransportTests.CloseHttpAsync(fixture.Provider, fixture.ApproverUserId, close);
+        var refused = await PersonalReadinessClosureTransportTests.CloseHttpAsync(fixture.Provider, fixture.ApproverUserId,
+            close, RequestErrorKind.Conflict);
         var pending = await fixture.FindingStreamAsync(finding.FindingId, close.CommandId);
 
         // Assert
@@ -228,7 +229,8 @@ public sealed class FindingClosureTests
         var before = await fixture.FindingStreamAsync(finding.FindingId);
 
         // Act
-        var refused = await PersonalReadinessClosureTransportTests.CloseHttpAsync(fixture.Provider, fixture.ApproverUserId, close);
+        var refused = await PersonalReadinessClosureTransportTests.CloseHttpAsync(fixture.Provider, fixture.ApproverUserId,
+            close, RequestErrorKind.Conflict);
         var canceled = await fixture.FindingStreamAsync(finding.FindingId, close.CommandId);
         var actions = new List<CorrectiveAction>();
         foreach (var action in finding.CorrectiveActions)

@@ -4,6 +4,7 @@ using Bdgrz.Compliance.Features.AuditorRequests.Commands;
 using Bdgrz.Compliance.Features.AuditorRequests.Queries;
 using Bdgrz.Compliance.Features.Evidence.Commands;
 using Bdgrz.Compliance.Features.Evidence.Queries;
+using Bdgrz.Compliance.Features.MethodologyTemplates.Commands;
 using Bdgrz.Compliance.Features.MethodologyTemplates.Queries;
 using Bdgrz.Compliance.Features.Responsibilities.Commands;
 using Bdgrz.Compliance.Features.Responsibilities.Queries;

@@ -231,7 +231,8 @@ public sealed class FindingCorrectiveActionOutcomeTests
 
     static OperationProvenance Root(FindingAggregate owner, Uuid id, string kind, long? revision) =>
         FindingContent.Provenance(id, kind, owner.Stream, Lead, revision is { } number ? (ulong)number : null,
-            new string('a', 64), NativeFacts.Now) with { FirstOwner = owner.Stream };
+            new string('a', 64), NativeFacts.Now) with
+        { FirstOwner = owner.Stream };
 
     static NativeFactReference Source(FindingAggregate owner, Uuid action) => new(
         new CorrectiveAction(owner.TenantId, owner.ProgramId, owner.FindingId, action).Stream, Uuid.CreateVersion4(), 2);
@@ -241,5 +242,6 @@ public sealed class FindingCorrectiveActionOutcomeTests
     static OperationProvenance Report(FindingAggregate owner, NativeFactReference source) =>
         FindingContent.Provenance(Uuid.CreateVersion5(source.EventId, nameof(RecordCorrectiveActionOutcome)),
             nameof(RecordCorrectiveActionOutcome), owner.Stream, Reporter, null, new string('b', 64), NativeFacts.Now)
-        with { FirstOwner = owner.Stream, CausationEventId = source.EventId };
+        with
+        { FirstOwner = owner.Stream, CausationEventId = source.EventId };
 }

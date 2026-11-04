@@ -50,7 +50,7 @@ against executable behavior and tests. It does not mean that the context has no 
 | [Platform access](contexts/platform-access.md) | Not mapped | Full requirement mapping and workflow validation pending |
 | [Firm services](contexts/firm-services.md) | Not mapped | Full requirement mapping and workflow validation pending |
 | [Program and scope](contexts/program-and-scope.md) | Not mapped | Full requirement mapping and workflow validation pending |
-| [Workforce assurance](contexts/workforce-assurance.md) | Partial: named WorkRelationship lifecycle/changes and computed unsponsored gap; retired service identities are terminal | Full requirement mapping and workflow validation pending |
+| [Workforce assurance](contexts/workforce-assurance.md), [requirement map](workforce-implementation.md) | Partial: named WorkRelationship lifecycle/changes and computed unsponsored gap; retired service identities are terminal | Full requirement mapping and workflow validation pending |
 | [Application inventory](contexts/application-inventory.md) | Not mapped | Full requirement mapping and workflow validation pending |
 | [Technology and information inventory](contexts/technology-and-information-inventory.md) | Not mapped | Full requirement mapping and workflow validation pending |
 | [Examinations](contexts/examinations.md) | Not mapped | Full requirement mapping and workflow validation pending |
@@ -198,3 +198,29 @@ and ordered application support remain explicit; legacy DTO attribution is not
 fabricated. New line producers are present in this source batch. Generic workforce
 revision retirement is a separate next slice. Full compiled/behavioral acceptance
 will be recorded after the combined checkpoint.
+
+Batch 3 compilation failures before behavioral execution: IDE0007 required an
+inferred local type in publication comparison; then the shared App composition
+missed the methodology command namespace import. Both were corrected without
+changing analyzer enforcement. These are assembly failures, not behavioral RED.
+
+Batch 3 local runtime acceptance passed: zero-warning/error Release compilation;
+69 affected regression cases after the initial 2,186-case run found eight fixture
+failures; all 8,431 backend units with zero failures/skips; Node/proposal/coverage
+checks passed. Full whitespace verification also passed. The eight
+initial failures were corrected by real external DispatchAsync contexts, explicit
+expected business refusals, delivery of committed outcomes in seeds, and a valid
+bound cancellation-proof setup; no production guard or assertion was weakened.
+
+This is a breaking Finding history change: replayed closure admission/finalization
+requires prior finding-owned action-resolution facts. Legacy closed histories that
+lack them need a separate stream conversion or fresh data; backward compatibility
+and rollback were explicitly not required. No deployment/data conversion is claimed.
+
+Additional compilation-only corrections included test naming/assertion conventions,
+whitespace, the reporting fixture's nullable result switch and a seed helper's
+resolver qualification. Existing rules stayed enforced. The final compiled source
+and all 8,431 units passed after those corrections; these failures were not counted
+as observed behavioral RED. The inspected inventory has five additional facts,
+eight additional registered requests (three internal-only), and explicit missing
+new-line creation/retirement routes. Counts remain navigation evidence only.

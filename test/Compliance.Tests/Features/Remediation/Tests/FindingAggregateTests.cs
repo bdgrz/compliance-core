@@ -472,7 +472,8 @@ public sealed class FindingAggregateTests
             Uuid.CreateVersion4(), 2);
         var operation = FindingContent.Provenance(Uuid.CreateVersion5(source.EventId, nameof(RecordCorrectiveActionOutcome)),
             nameof(RecordCorrectiveActionOutcome), owner.Stream, ActorReference.ForSystemProcess("report_action_outcome", "Report outcome"),
-            null, new string('b', 64), NativeFacts.Now) with { FirstOwner = owner.Stream, CausationEventId = source.EventId };
+            null, new string('b', 64), NativeFacts.Now) with
+        { FirstOwner = owner.Stream, CausationEventId = source.EventId };
         Assert.True(owner.RecordActionOutcome(operation, action, "completed", source,
             NativeFacts.Ref("source-fact-locator.v1")).IsSuccess);
     }

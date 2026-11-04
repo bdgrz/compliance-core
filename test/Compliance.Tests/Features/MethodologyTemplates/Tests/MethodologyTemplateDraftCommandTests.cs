@@ -32,16 +32,16 @@ public sealed class MethodologyTemplateDraftCommandTests
         var approve = new ApproveMethodologyTemplateDraft(Uuid.CreateVersion4(), fixture.Template, fixture.Draft, 1);
 
         // Act
-        var authored = await fixture.Bus.SendAsync(revise, Context(Author, true));
-        var reviewed = await fixture.Bus.SendAsync(review, Context(Reviewer));
-        var approved = await fixture.Bus.SendAsync(approve, Context(Approver));
+        var authored = await fixture.Bus.DispatchAsync(revise, Context(Author, true));
+        var reviewed = await fixture.Bus.DispatchAsync(review, Context(Reviewer));
+        var approved = await fixture.Bus.DispatchAsync(approve, Context(Approver));
         var owner = await fixture.OwnerAsync();
         var facts = await fixture.FactsAsync();
 
         // Assert
-        Assert.True(authored.IsSuccess);
-        Assert.True(reviewed.IsSuccess);
-        Assert.True(approved.IsSuccess);
+        Assert.True(authored.IsSuccess, authored.Error?.Message);
+        Assert.True(reviewed.IsSuccess, reviewed.Error?.Message);
+        Assert.True(approved.IsSuccess, approved.Error?.Message);
         Assert.Equal("approved", owner.Status);
         Assert.Equal(Author, Assert.Single(owner.RevisionAuthors));
         Assert.Equal(Author, Assert.Single(facts.OfType<MethodologyTemplateDraftRevisedV4>()).RevisedBy);
@@ -56,17 +56,21 @@ public sealed class MethodologyTemplateDraftCommandTests
     {
         // Arrange
         await using var fixture = await Fixture.CreateAsync();
-        Assert.True((await fixture.Bus.SendAsync(fixture.Revision([Entry()]), Context(Author, true))).IsSuccess);
+        var authored = await fixture.Bus.DispatchAsync(fixture.Revision([Entry()]), Context(Author, true));
+        Assert.True(authored.IsSuccess, authored.Error?.Message);
         if (approval)
-            Assert.True((await fixture.Bus.SendAsync(new ReviewMethodologyTemplateDraft(Uuid.CreateVersion4(),
-                fixture.Template, fixture.Draft, 1, true, "Reviewed"), Context(Reviewer))).IsSuccess);
+        {
+            var reviewed = await fixture.Bus.DispatchAsync(new ReviewMethodologyTemplateDraft(Uuid.CreateVersion4(),
+                fixture.Template, fixture.Draft, 1, true, "Reviewed"), Context(Reviewer));
+            Assert.True(reviewed.IsSuccess, reviewed.Error?.Message);
+        }
         var before = (await fixture.OwnerAsync()).Version;
         IRequest request = approval
             ? new ApproveMethodologyTemplateDraft(Uuid.CreateVersion4(), fixture.Template, fixture.Draft, 1)
             : new ReviewMethodologyTemplateDraft(Uuid.CreateVersion4(), fixture.Template, fixture.Draft, 1, true, "Reviewed");
 
         // Act
-        var result = await fixture.Bus.SendAsync(request, Context(approval ? Approver : Reviewer, true));
+        var result = await fixture.Bus.DispatchAsync(request, Context(approval ? Approver : Reviewer, true));
         var owner = await fixture.OwnerAsync();
 
         // Assert
@@ -94,7 +98,7 @@ public sealed class MethodologyTemplateDraftCommandTests
         var before = (await fixture.OwnerAsync()).Version;
 
         // Act
-        var result = await fixture.Bus.SendAsync(request, context);
+        var result = await fixture.Bus.DispatchAsync(request, context);
         var owner = await fixture.OwnerAsync();
 
         // Assert
@@ -112,7 +116,7 @@ public sealed class MethodologyTemplateDraftCommandTests
         var before = (await fixture.OwnerAsync()).Version;
 
         // Act
-        var result = await fixture.Bus.SendAsync(request, Context(Author, true));
+        var result = await fixture.Bus.DispatchAsync(request, Context(Author, true));
         var owner = await fixture.OwnerAsync();
 
         // Assert
@@ -130,16 +134,16 @@ public sealed class MethodologyTemplateDraftCommandTests
         var request = fixture.Revision([Entry()]);
 
         // Act
-        var revised = await fixture.Bus.SendAsync(request, Context(Author, true));
-        var repeated = await fixture.Bus.SendAsync(request, Context(Author, true));
-        var changed = await fixture.Bus.SendAsync(request with { Entries = [Entry() with { Title = "Changed intent" }] },
+        var revised = await fixture.Bus.DispatchAsync(request, Context(Author, true));
+        var repeated = await fixture.Bus.DispatchAsync(request, Context(Author, true));
+        var changed = await fixture.Bus.DispatchAsync(request with { Entries = [Entry() with { Title = "Changed intent" }] },
             Context(Author, true));
         var owner = await fixture.OwnerAsync();
         var facts = await fixture.FactsAsync();
 
         // Assert
-        Assert.True(revised.IsSuccess);
-        Assert.True(repeated.IsSuccess);
+        Assert.True(revised.IsSuccess, revised.Error?.Message);
+        Assert.True(repeated.IsSuccess, repeated.Error?.Message);
         Assert.False(changed.IsSuccess);
         Assert.Equal(RequestErrorKind.Conflict, changed.Error.Kind);
         Assert.Equal(1, owner.Revision);
@@ -157,15 +161,15 @@ public sealed class MethodologyTemplateDraftCommandTests
         var request = new DiscardMethodologyTemplateDraft(Uuid.CreateVersion4(), fixture.Template, fixture.Draft, "Superseded plan");
 
         // Act
-        var discarded = await fixture.Bus.SendAsync(request, Context(Author, true));
-        var repeated = await fixture.Bus.SendAsync(request, Context(Author, true));
-        var changed = await fixture.Bus.SendAsync(request with { Reason = "Another reason" }, Context(Author, true));
+        var discarded = await fixture.Bus.DispatchAsync(request, Context(Author, true));
+        var repeated = await fixture.Bus.DispatchAsync(request, Context(Author, true));
+        var changed = await fixture.Bus.DispatchAsync(request with { Reason = "Another reason" }, Context(Author, true));
         var owner = await fixture.OwnerAsync();
         var facts = await fixture.FactsAsync();
 
         // Assert
-        Assert.True(discarded.IsSuccess);
-        Assert.True(repeated.IsSuccess);
+        Assert.True(discarded.IsSuccess, discarded.Error?.Message);
+        Assert.True(repeated.IsSuccess, repeated.Error?.Message);
         Assert.False(changed.IsSuccess);
         Assert.Equal("discarded", owner.Status);
         Assert.Single(facts.OfType<MethodologyTemplateDraftDiscarded>());

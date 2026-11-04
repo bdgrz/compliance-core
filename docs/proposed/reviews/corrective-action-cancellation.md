@@ -29,3 +29,24 @@ Remaining: AW-09 finding-owned action-outcome reporting and proposed closure
 lifecycle, ChangeCorrectiveAction and the rest of the approved domain. Coordinated
 Finding source vocabulary/producers remain tracked separately in #1180. No complete
 owner, workflow or context claim.
+
+## Batch 3 finding-owned outcomes (AW-09)
+
+The finding records each admitted action's exact completed/cancelled source before
+closure may be admitted or finalized. Unknown/conflicting reports refuse without a
+fact; exact repeats do not append, including after later terminal finding state.
+System-only source-bound reporting verifies the concrete event, exact owner scope,
+event ID, payload and physical position. The reactor propagates failed delivery.
+Read, work and baseline consumers retain the resolution and source-proof content.
+
+Twenty-eight cases were authored first and first executed in the assembled gate.
+Legacy tests were adapted to record actual outcomes and keep failure-proof/holding
+assertions; closure-before-outcome now correctly refuses. Local final suite: all
+8,431 backend units passed with no failures/skips. Live Jev remained advisory.
+
+AW-09 own-stream outcome reporting is implemented in this batch; the earlier pending
+item is superseded. Proposed closure proposal/review lifecycle, its zero-action
+semantics, generic naming migration and remaining Finding behavior are still partial.
+Replayed closure histories now require preceding parent resolution facts: this is a
+breaking cutover, with historical conversion/fresh data separately scoped. No data
+conversion or deployment qualification is claimed.

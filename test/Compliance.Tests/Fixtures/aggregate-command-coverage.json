@@ -1,36 +1,36 @@
 {
   "schemaVersion": 1,
   "capturedAt": "2026-11-04",
-  "sourceCommit": "cb85fc3ce971f35b6a4190f04de5f0bd5cbc4919",
+  "sourceCommit": "80f12dc6528377c9b0135e41891a1359451c83c8",
   "method": "Roslyn inventory over Compliance.Common and Compliance.Core. It recognizes explicit and target-typed DomainEvent construction that reaches RaiseEvent, AuditEvent, a typed raise callback, a publishing helper, or a returned event value raised by an owning aggregate caller; it also scans On<Fact> reducers, IRequest contracts, IRequestHandler implementations, AddRequestHandler registrations, typed aggregate mutation targets, and source-derived direct callers. Publisher detection uses conventional publisher names and callback type syntax; aggregate call reachability is a syntactic heuristic matched by method name and compatible arity. Neither scan resolves receiver or symbol identity, so same-named calls on unrelated objects can be candidates for human review rather than semantic proof. Legacy emitters remain listed with replay compatibility requirements until a verified stream migration. Test paths are navigation evidence, not proof of fact-specific replay or behavior assertions. The S20 cutover (#1026) splits FindingAggregate from the independent CorrectiveAction owner, admits actions on the finding and closes it through FindingClosureProcess; the legacy RemediationLedger, its migration aggregates and the history migration command were deleted with no dual read path.",
   "factReplayGuards": [],
   "counts": {
-    "domainEventContracts": 555,
-    "factsWithReducer": 529,
-    "factsWithAggregateEmitter": 407,
+    "domainEventContracts": 560,
+    "factsWithReducer": 535,
+    "factsWithAggregateEmitter": 413,
     "auditFactsWithoutReducer": 2,
-    "factsWithoutReducerOrEmitter": 24,
+    "factsWithoutReducerOrEmitter": 23,
     "legacyReducerOnlyFacts": 122,
     "aggregateTypes": 136,
-    "aggregateTypesWithCommandPath": 101,
-    "requestContracts": 800,
-    "commonRequestContracts": 798,
+    "aggregateTypesWithCommandPath": 102,
+    "requestContracts": 808,
+    "commonRequestContracts": 806,
     "requestClassificationCounts": {
-      "command": 360,
+      "command": 365,
       "confirmed_command_gap": 7,
       "deferred_command": 5,
       "internal_executor_context": 1,
-      "internal_reaction": 152,
+      "internal_reaction": 155,
       "query_or_reconstruction": 275
     },
     "applicationMcpAdapterRequests": 2,
-    "registeredCoreHandlerRegistrations": 758,
+    "registeredCoreHandlerRegistrations": 766,
     "unregisteredCoreHandlerClasses": 0,
-    "unwiredAggregateProducerOperations": 69,
+    "unwiredAggregateProducerOperations": 66,
     "unwiredAggregateProducerClassifications": {
       "direct_processor_executor": 2,
       "legacy_emitter_to_prune": 1,
-      "no_registered_request_route": 66
+      "no_registered_request_route": 63
     },
     "factReplayGuardRows": 0
   },
@@ -3883,7 +3883,11 @@
       ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Examinations/Tests/CorrectiveActionCancellationBaselineTests.cs",
-        "test/Compliance.Tests/Features/Remediation/Tests/CorrectiveActionCancellationTests.cs"
+        "test/Compliance.Tests/Features/Operations/Tests/OperationsFixture.cs",
+        "test/Compliance.Tests/Features/Remediation/Tests/CorrectiveActionCancellationTests.cs",
+        "test/Compliance.Tests/Features/Remediation/Tests/CorrectiveActionOutcomeReactorTests.cs",
+        "test/Compliance.Tests/Features/Remediation/Tests/FindingCorrectiveActionOutcomeWorkflowTests.cs",
+        "test/Compliance.Tests/Testing/FindingSeed.cs"
       ],
       "disposition": "aggregate_fact",
       "note": ""
@@ -3902,9 +3906,13 @@
       ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Incidents/Tests/ComplianceIncidentOperationTests.cs",
+        "test/Compliance.Tests/Features/Operations/Tests/OperationsFixture.cs",
         "test/Compliance.Tests/Features/Remediation/Tests/CorrectiveActionLifecycleTests.cs",
         "test/Compliance.Tests/Features/Remediation/Tests/CorrectiveActionNativeHistoryTests.cs",
-        "test/Compliance.Tests/IncidentFacts.cs"
+        "test/Compliance.Tests/Features/Remediation/Tests/CorrectiveActionOutcomeReactorTests.cs",
+        "test/Compliance.Tests/Features/Remediation/Tests/FindingCorrectiveActionOutcomeWorkflowTests.cs",
+        "test/Compliance.Tests/IncidentFacts.cs",
+        "test/Compliance.Tests/Testing/FindingSeed.cs"
       ],
       "disposition": "aggregate_fact",
       "note": "",
@@ -4797,7 +4805,8 @@
       ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Remediation/Tests/FindingProcessReactorTests.cs",
-        "test/Compliance.Tests/Features/Remediation/Tests/FindingReactorSourceTests.cs"
+        "test/Compliance.Tests/Features/Remediation/Tests/FindingReactorSourceTests.cs",
+        "test/Compliance.Tests/Features/Remediation/Tests/FindingTransportTests.cs"
       ],
       "disposition": "aggregate_fact",
       "note": "Root acceptance of a closure decision; seals action admission for the generation and starts FindingClosureProcess.",
@@ -4817,12 +4826,35 @@
         "src/Compliance.Core/Features/Remediation/Aggregates/FindingAggregate.cs"
       ],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Remediation/Tests/FindingCancellationProofBindingTests.cs",
         "test/Compliance.Tests/Features/Remediation/Tests/FindingClosureTests.cs"
       ],
       "disposition": "aggregate_fact",
       "note": "Local receiver fence that ends a pending closure after a permanent proof mismatch.",
       "discriminator": "bdgrz.finding-aggregate.finding-closure-canceled",
       "schemaVersion": 1
+    },
+    {
+      "fact": "FindingCorrectiveActionResolved",
+      "contract": "src/Compliance.Common/Features/Remediation/Events/FindingCorrectiveActionResolved.cs",
+      "discriminator": "bdgrz.finding.corrective_action.resolved",
+      "schemaVersion": 1,
+      "reducers": [
+        {
+          "aggregate": "FindingAggregate",
+          "source": "src/Compliance.Core/Features/Remediation/Aggregates/FindingAggregate.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/Remediation/Aggregates/FindingAggregate.cs"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Examinations/Tests/FindingCorrectiveActionOutcomeBaselineTests.cs",
+        "test/Compliance.Tests/Features/Remediation/Tests/FindingCorrectiveActionOutcomeTests.cs",
+        "test/Compliance.Tests/Features/Remediation/Tests/FindingCorrectiveActionOutcomeWorkflowTests.cs"
+      ],
+      "disposition": "aggregate_fact",
+      "note": ""
     },
     {
       "fact": "FindingRaisedV2",
@@ -5912,6 +5944,26 @@
       "schemaVersion": 3
     },
     {
+      "fact": "MethodologyTemplateCreatedV4",
+      "contract": "src/Compliance.Common/Features/MethodologyTemplates/Events/MethodologyTemplateCreatedV4.cs",
+      "discriminator": "bdgrz.methodologytemplates.methodology-template-created",
+      "schemaVersion": 4,
+      "reducers": [
+        {
+          "aggregate": "MethodologyTemplate",
+          "source": "src/Compliance.Core/Features/MethodologyTemplates/Aggregates/MethodologyTemplate.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/MethodologyTemplates/Aggregates/MethodologyTemplate.cs"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/MethodologyTemplates/Tests/MethodologyTemplateLineTests.cs"
+      ],
+      "disposition": "aggregate_fact",
+      "note": ""
+    },
+    {
       "fact": "MethodologyTemplateDraftAccepted",
       "contract": "src/Compliance.Common/Features/MethodologyTemplates/Events/MethodologyTemplateDraftAccepted.cs",
       "discriminator": "bdgrz.methodology-templates.methodology-template-draft-accepted",
@@ -5925,7 +5977,9 @@
       "emitters": [
         "src/Compliance.Core/Features/MethodologyTemplates/Aggregates/MethodologyTemplateDraft.cs"
       ],
-      "testSymbolReferences": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/MethodologyTemplates/Tests/MethodologyTemplateDraftCommandTests.cs"
+      ],
       "disposition": "aggregate_fact",
       "note": ""
     },
@@ -5943,7 +5997,32 @@
       "emitters": [
         "src/Compliance.Core/Features/MethodologyTemplates/Aggregates/MethodologyTemplateDraft.cs"
       ],
-      "testSymbolReferences": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/MethodologyTemplates/Tests/MethodologyTemplateDraftCommandTests.cs",
+        "test/Compliance.Tests/Features/MethodologyTemplates/Tests/MethodologyTemplateDraftConclusionTests.cs",
+        "test/Compliance.Tests/Features/MethodologyTemplates/Tests/MethodologyTemplateLineWorkflowTests.cs"
+      ],
+      "disposition": "aggregate_fact",
+      "note": ""
+    },
+    {
+      "fact": "MethodologyTemplateDraftClosed",
+      "contract": "src/Compliance.Common/Features/MethodologyTemplates/Events/MethodologyTemplateDraftClosed.cs",
+      "discriminator": "bdgrz.methodology-templates.methodology-template-draft-closed",
+      "schemaVersion": 1,
+      "reducers": [
+        {
+          "aggregate": "MethodologyTemplate",
+          "source": "src/Compliance.Core/Features/MethodologyTemplates/Aggregates/MethodologyTemplate.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/MethodologyTemplates/Aggregates/MethodologyTemplate.cs"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/MethodologyTemplates/Tests/MethodologyTemplateLineTests.cs",
+        "test/Compliance.Tests/Features/MethodologyTemplates/Tests/MethodologyTemplateLineWorkflowTests.cs"
+      ],
       "disposition": "aggregate_fact",
       "note": ""
     },
@@ -5961,7 +6040,11 @@
       "emitters": [
         "src/Compliance.Core/Features/MethodologyTemplates/Aggregates/MethodologyTemplateDraft.cs"
       ],
-      "testSymbolReferences": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/MethodologyTemplates/Tests/MethodologyTemplateDraftCommandTests.cs",
+        "test/Compliance.Tests/Features/MethodologyTemplates/Tests/MethodologyTemplateDraftConclusionTests.cs",
+        "test/Compliance.Tests/Features/MethodologyTemplates/Tests/MethodologyTemplateLineWorkflowTests.cs"
+      ],
       "disposition": "aggregate_fact",
       "note": ""
     },
@@ -6053,7 +6136,9 @@
       "emitters": [
         "src/Compliance.Core/Features/MethodologyTemplates/Aggregates/MethodologyTemplateDraft.cs"
       ],
-      "testSymbolReferences": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/MethodologyTemplates/Tests/MethodologyTemplateDraftCommandTests.cs"
+      ],
       "disposition": "aggregate_fact",
       "note": ""
     },
@@ -6062,13 +6147,22 @@
       "contract": "src/Compliance.Common/Features/MethodologyTemplates/Events/MethodologyTemplateDraftStarted.cs",
       "discriminator": "bdgrz.methodology-templates.methodology-template-draft-started",
       "schemaVersion": 1,
-      "reducers": [],
-      "emitters": [],
-      "testSymbolReferences": [
-        "test/Compliance.Tests/Features/MethodologyTemplates/Tests/MethodologyTemplateDraftOpeningTests.cs"
+      "reducers": [
+        {
+          "aggregate": "MethodologyTemplate",
+          "source": "src/Compliance.Core/Features/MethodologyTemplates/Aggregates/MethodologyTemplate.cs"
+        }
       ],
-      "disposition": "confirmed_gap",
-      "note": "Confirmed producer gap under #1176: internal draft-opening receiver exists, but the template line Start command and aggregate emission are not implemented in this batch."
+      "emitters": [
+        "src/Compliance.Core/Features/MethodologyTemplates/Aggregates/MethodologyTemplate.cs"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/MethodologyTemplates/Tests/MethodologyTemplateDraftOpeningTests.cs",
+        "test/Compliance.Tests/Features/MethodologyTemplates/Tests/MethodologyTemplateLineTests.cs",
+        "test/Compliance.Tests/Features/MethodologyTemplates/Tests/MethodologyTemplateLineWorkflowTests.cs"
+      ],
+      "disposition": "aggregate_fact",
+      "note": "Line StartDraft now emits and reduces the committed start; the global opener verifies its exact immutable source. New-line public creation/name admission remains pending under #1176."
     },
     {
       "fact": "MethodologyTemplateRetired",
@@ -6089,6 +6183,26 @@
       "schemaVersion": 3
     },
     {
+      "fact": "MethodologyTemplateRetiredV4",
+      "contract": "src/Compliance.Common/Features/MethodologyTemplates/Events/MethodologyTemplateRetiredV4.cs",
+      "discriminator": "bdgrz.methodologytemplates.methodology-template-retired",
+      "schemaVersion": 4,
+      "reducers": [
+        {
+          "aggregate": "MethodologyTemplate",
+          "source": "src/Compliance.Core/Features/MethodologyTemplates/Aggregates/MethodologyTemplate.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/MethodologyTemplates/Aggregates/MethodologyTemplate.cs"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/MethodologyTemplates/Tests/MethodologyTemplateLineTests.cs"
+      ],
+      "disposition": "aggregate_fact",
+      "note": ""
+    },
+    {
       "fact": "MethodologyTemplateVersionPublished",
       "contract": "src/Compliance.Common/Features/MethodologyTemplates/Events/MethodologyTemplateVersionPublished.cs",
       "reducers": [
@@ -6107,6 +6221,27 @@
       "note": "",
       "discriminator": "bdgrz.methodologytemplates.methodology-template-version-published",
       "schemaVersion": 3
+    },
+    {
+      "fact": "MethodologyTemplateVersionPublishedV4",
+      "contract": "src/Compliance.Common/Features/MethodologyTemplates/Events/MethodologyTemplateVersionPublishedV4.cs",
+      "discriminator": "bdgrz.methodologytemplates.methodology-template-version-published",
+      "schemaVersion": 4,
+      "reducers": [
+        {
+          "aggregate": "MethodologyTemplate",
+          "source": "src/Compliance.Core/Features/MethodologyTemplates/Aggregates/MethodologyTemplate.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/MethodologyTemplates/Aggregates/MethodologyTemplate.cs"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/MethodologyTemplates/Tests/MethodologyTemplateLineTests.cs",
+        "test/Compliance.Tests/Features/MethodologyTemplates/Tests/MethodologyTemplateLineWorkflowTests.cs"
+      ],
+      "disposition": "aggregate_fact",
+      "note": ""
     },
     {
       "fact": "MissingOccurrenceRecorded",
@@ -10964,6 +11099,7 @@
         "src/Compliance.Core/Features/Workforce/Aggregates/WorkRelationship.cs"
       ],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Workforce/Tests/RecordWorkRelationshipHandlerTests.cs",
         "test/Compliance.Tests/Features/Workforce/Tests/WorkRelationshipLifecycleHandlerTests.cs",
         "test/Compliance.Tests/Features/Workforce/Tests/WorkRelationshipLifecycleProjectionTests.cs",
         "test/Compliance.Tests/Features/Workforce/Tests/WorkRelationshipLifecycleTests.cs",
@@ -11059,9 +11195,9 @@
         "test/Compliance.Tests/Features/Workforce/Tests/FitzWorkRelationshipDirectoryTests.cs",
         "test/Compliance.Tests/Features/Workforce/Tests/FitzWorkforceObservationDirectoryTests.cs",
         "test/Compliance.Tests/Features/Workforce/Tests/RecordWorkRelationshipHandlerTests.cs",
-        "test/Compliance.Tests/Features/Workforce/Tests/WorkRelationshipLifecycleProjectionTests.cs",
-        "test/Compliance.Tests/Features/Workforce/Tests/WorkRelationshipNamedChangeHandlerTests.cs",
-        "test/Compliance.Tests/Features/Workforce/Tests/WorkRelationshipNamedChangeProjectionTests.cs"
+        "test/Compliance.Tests/Features/Workforce/Tests/WorkRelationshipInitialAdmissionTests.cs",
+        "test/Compliance.Tests/Features/Workforce/Tests/WorkRelationshipLifecycleHandlerTests.cs",
+        "test/Compliance.Tests/Features/Workforce/Tests/WorkRelationshipLifecycleProjectionTests.cs"
       ],
       "disposition": "aggregate_fact",
       "note": "",
@@ -12260,8 +12396,8 @@
         "test/Compliance.Tests/Features/Remediation/Tests/CorrectiveActionLifecycleTests.cs",
         "test/Compliance.Tests/Features/Remediation/Tests/CorrectiveActionMaterializationContentTests.cs",
         "test/Compliance.Tests/Features/Remediation/Tests/CorrectiveActionNativeHistoryTests.cs",
-        "test/Compliance.Tests/Features/Remediation/Tests/FindingClosureTests.cs",
-        "test/Compliance.Tests/Features/Risks/Tests/RiskActionWorkIdentityTests.cs"
+        "test/Compliance.Tests/Features/Remediation/Tests/FindingAggregateTests.cs",
+        "test/Compliance.Tests/Features/Remediation/Tests/FindingClosureTests.cs"
       ],
       "commandRouteDisposition": "registered_command_route",
       "note": "Independent corrective action owner, materialized from the finding admission at revision one and completed at revision two; closure uses hold it through the source-use reservations."
@@ -12621,6 +12757,7 @@
         "FindingClosedV2",
         "FindingClosureAccepted",
         "FindingClosureCanceled",
+        "FindingCorrectiveActionResolved",
         "FindingRaisedV2",
         "FindingReopenedV2",
         "FindingRevisedV2"
@@ -12637,7 +12774,8 @@
         "AbortFindingClosure",
         "CompleteFindingClosure",
         "RaiseEvaluationDeviationFinding",
-        "RaiseOccurrenceFinding"
+        "RaiseOccurrenceFinding",
+        "RecordCorrectiveActionOutcome"
       ],
       "testSymbolReferences": [
         "test/Compliance.Tests/AggregateCommandCoverageTests.Export.cs",
@@ -12991,24 +13129,34 @@
       "source": "src/Compliance.Core/Features/MethodologyTemplates/Aggregates/MethodologyTemplate.cs",
       "appliedFacts": [
         "MethodologyTemplateCreated",
+        "MethodologyTemplateCreatedV4",
+        "MethodologyTemplateDraftClosed",
         "MethodologyTemplateDraftReviewed",
         "MethodologyTemplateDraftRevised",
+        "MethodologyTemplateDraftStarted",
         "MethodologyTemplateRetired",
-        "MethodologyTemplateVersionPublished"
+        "MethodologyTemplateRetiredV4",
+        "MethodologyTemplateVersionPublished",
+        "MethodologyTemplateVersionPublishedV4"
       ],
-      "commandRequests": [],
-      "internalReactionRequests": [],
+      "commandRequests": [
+        "StartMethodologyTemplateDraft"
+      ],
+      "internalReactionRequests": [
+        "CloseMethodologyTemplateDraft",
+        "PublishMethodologyTemplateVersion"
+      ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/MethodologyTemplates/Tests/MethodologyTemplateCommandHandlerTests.cs",
         "test/Compliance.Tests/Features/MethodologyTemplates/Tests/MethodologyTemplateContributionTests.cs",
+        "test/Compliance.Tests/Features/MethodologyTemplates/Tests/MethodologyTemplateDraftCommandTests.cs",
         "test/Compliance.Tests/Features/MethodologyTemplates/Tests/MethodologyTemplateDraftOpeningTests.cs",
+        "test/Compliance.Tests/Features/MethodologyTemplates/Tests/MethodologyTemplateLineTests.cs",
+        "test/Compliance.Tests/Features/MethodologyTemplates/Tests/MethodologyTemplateLineWorkflowTests.cs",
         "test/Compliance.Tests/Features/MethodologyTemplates/Tests/MethodologyTemplateNativeHistoryTests.cs",
-        "test/Compliance.Tests/Features/MethodologyTemplates/Tests/MethodologyTemplateOwnerTests.cs",
-        "test/Compliance.Tests/Features/MethodologyTemplates/Tests/MethodologyTemplateReadHandlerTests.cs",
-        "test/Compliance.Tests/Features/MethodologyTemplates/Tests/MethodologyTemplateTests.cs",
-        "test/Compliance.Tests/Testing/MethodologyTemplateScenario.cs"
+        "test/Compliance.Tests/Features/MethodologyTemplates/Tests/MethodologyTemplateOwnerTests.cs"
       ],
-      "commandRouteDisposition": "pending_command_route",
+      "commandRouteDisposition": "registered_command_route",
       "ownerIssue": 1022,
       "note": "Confirmed source gap: no registered mutation route reaches this owner. Existing family tracks the boundary; retain the concrete blocker locally."
     },
@@ -13045,16 +13193,25 @@
         "MethodologyTemplateDraftReturned",
         "MethodologyTemplateDraftRevisedV4"
       ],
-      "commandRequests": [],
+      "commandRequests": [
+        "ApproveMethodologyTemplateDraft",
+        "DiscardMethodologyTemplateDraft",
+        "ReviewMethodologyTemplateDraft",
+        "ReviseMethodologyTemplateDraftV3"
+      ],
       "internalReactionRequests": [
         "OpenMethodologyTemplateDraft"
       ],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/MethodologyTemplates/Tests/MethodologyTemplateDraftCommandTests.cs",
+        "test/Compliance.Tests/Features/MethodologyTemplates/Tests/MethodologyTemplateDraftConclusionTests.cs",
         "test/Compliance.Tests/Features/MethodologyTemplates/Tests/MethodologyTemplateDraftOpeningTests.cs",
-        "test/Compliance.Tests/Features/MethodologyTemplates/Tests/MethodologyTemplateDraftTests.cs"
+        "test/Compliance.Tests/Features/MethodologyTemplates/Tests/MethodologyTemplateDraftTests.cs",
+        "test/Compliance.Tests/Features/MethodologyTemplates/Tests/MethodologyTemplateLineTests.cs",
+        "test/Compliance.Tests/Features/MethodologyTemplates/Tests/MethodologyTemplateLineWorkflowTests.cs"
       ],
       "commandRouteDisposition": "registered_command_route",
-      "note": "Separate draft owner and source-bound opener are tested. Human draft handlers and line publish/discard choreography remain pending under #1176; this route inventory does not establish workflow completion."
+      "note": "Separate owner and human commands are wired and locally exercised; complete line creation/read/application conformance remains pending under #1176."
     },
     {
       "aggregate": "OperationalProcess",
@@ -13137,9 +13294,9 @@
         "test/Compliance.Tests/Features/Applications/Tests/ApplicationRevisionGovernanceTests.cs",
         "test/Compliance.Tests/Features/Controls/Tests/ControlOwnerPersonReadTests.cs",
         "test/Compliance.Tests/Features/Controls/Tests/ControlOwnerPersonWriteTests.cs",
+        "test/Compliance.Tests/Features/MethodologyTemplates/Tests/MethodologyTemplateDraftCommandTests.cs",
         "test/Compliance.Tests/Features/PolicyDistribution/Tests/CampaignTransportTests.cs",
-        "test/Compliance.Tests/Features/PolicyDistribution/Tests/PolicyAcknowledgementIndependenceTests.cs",
-        "test/Compliance.Tests/Features/Providers/Tests/ProviderReferenceTests.cs"
+        "test/Compliance.Tests/Features/PolicyDistribution/Tests/PolicyAcknowledgementIndependenceTests.cs"
       ],
       "commandRouteDisposition": "pending_command_route",
       "ownerIssue": 1022,
@@ -14575,7 +14732,7 @@
         "test/Compliance.Tests/Features/Workforce/Tests/FitzWorkRelationshipDirectoryTests.cs",
         "test/Compliance.Tests/Features/Workforce/Tests/FitzWorkforceObservationDirectoryTests.cs",
         "test/Compliance.Tests/Features/Workforce/Tests/RecordWorkRelationshipHandlerTests.cs",
-        "test/Compliance.Tests/Features/Workforce/Tests/WorkRelationshipLifecycleHandlerTests.cs"
+        "test/Compliance.Tests/Features/Workforce/Tests/WorkRelationshipInitialAdmissionTests.cs"
       ],
       "commandRouteDisposition": "registered_command_route"
     },
@@ -15215,11 +15372,11 @@
         "test/Compliance.Tests/Features/Operations/Tests/OperationsFixture.cs",
         "test/Compliance.Tests/Features/Remediation/Tests/FindingAggregateTests.cs",
         "test/Compliance.Tests/Features/Remediation/Tests/FindingClosureTests.cs",
+        "test/Compliance.Tests/Features/Remediation/Tests/FindingCorrectiveActionOutcomeTests.cs",
         "test/Compliance.Tests/Features/Remediation/Tests/FindingIdentifiedOperationTests.cs",
         "test/Compliance.Tests/Features/Remediation/Tests/FindingNativeHistoryTests.cs",
         "test/Compliance.Tests/Features/Remediation/Tests/FindingNativePreparationTests.cs",
-        "test/Compliance.Tests/Features/Remediation/Tests/FindingTests.cs",
-        "test/Compliance.Tests/Testing/FindingSeed.cs"
+        "test/Compliance.Tests/Features/Remediation/Tests/FindingTests.cs"
       ],
       "note": "202 admission on the finding; IndependentChildMaterialization materializes the action."
     },
@@ -16262,6 +16419,31 @@
       "helperServices": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Examinations/Tests/ApproveManagementAssertionHandlerTests.cs"
+      ],
+      "note": ""
+    },
+    {
+      "request": "ApproveMethodologyTemplateDraft",
+      "contract": "src/Compliance.Common/Features/MethodologyTemplates/Commands/ApproveMethodologyTemplateDraft.cs",
+      "classification": "command",
+      "interfaces": "IRequest, IMethodologyTemplateDraftCommand, IIdentifiedRequest, ICallable",
+      "handlers": [
+        {
+          "name": "ApproveMethodologyTemplateDraftHandler",
+          "source": "src/Compliance.Core/Features/MethodologyTemplates/Handlers/ApproveMethodologyTemplateDraftHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
+      "helperServices": [],
+      "directAggregateReferences": [
+        "MethodologyTemplateDraft"
+      ],
+      "aggregateTargets": [
+        "MethodologyTemplateDraft"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/MethodologyTemplates/Tests/MethodologyTemplateDraftCommandTests.cs"
       ],
       "note": ""
     },
@@ -17346,6 +17528,7 @@
         "test/Compliance.Tests/Features/Examinations/Tests/CorrectiveActionCancellationBaselineTests.cs",
         "test/Compliance.Tests/Features/Remediation/Tests/CorrectiveActionCancellationTests.cs",
         "test/Compliance.Tests/Features/Remediation/Tests/CorrectiveActionCancellationWorkflowTests.cs",
+        "test/Compliance.Tests/Features/Remediation/Tests/FindingCorrectiveActionOutcomeWorkflowTests.cs",
         "test/Compliance.Tests/Features/Work/Tests/CorrectiveActionCancellationWorkTests.cs"
       ],
       "note": ""
@@ -17580,6 +17763,7 @@
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Workforce/Tests/WorkRelationshipNamedChangeHandlerTests.cs",
         "test/Compliance.Tests/Features/Workforce/Tests/WorkRelationshipNamedChangesTests.cs",
+        "test/Compliance.Tests/Features/Workforce/Tests/WorkRelationshipProvenanceTests.cs",
         "test/Compliance.Tests/Features/Workforce/Tests/WorkRelationshipSponsorshipTests.cs"
       ],
       "note": ""
@@ -18028,10 +18212,38 @@
         "test/Compliance.Tests/Features/Operations/Tests/OperationsFixture.cs",
         "test/Compliance.Tests/Features/Readiness/Tests/PersonalReadinessClosureTransportTests.cs",
         "test/Compliance.Tests/Features/Remediation/Tests/FindingAggregateTests.cs",
+        "test/Compliance.Tests/Features/Remediation/Tests/FindingCorrectiveActionOutcomeTests.cs",
         "test/Compliance.Tests/Features/Remediation/Tests/FindingNativeHistoryTests.cs",
         "test/Compliance.Tests/Features/Work/Tests/ReviewerWorkAuthorityTests.cs"
       ],
       "note": "202 admission that seals action admission and starts FindingClosureProcess; an exact separation-of-duties waiver proof replaces a live waiver."
+    },
+    {
+      "request": "CloseMethodologyTemplateDraft",
+      "contract": "src/Compliance.Common/Features/MethodologyTemplates/Commands/CloseMethodologyTemplateDraft.cs",
+      "classification": "internal_reaction",
+      "interfaces": "IRequest, IIdentifiedRequest",
+      "handlers": [
+        {
+          "name": "CloseMethodologyTemplateDraftHandler",
+          "source": "src/Compliance.Core/Features/MethodologyTemplates/Handlers/CloseMethodologyTemplateDraftHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
+      "helperServices": [],
+      "directAggregateReferences": [
+        "MethodologyTemplate",
+        "MethodologyTemplateDraft"
+      ],
+      "aggregateTargets": [
+        "MethodologyTemplate"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/MethodologyTemplates/Tests/MethodologyTemplateDraftConclusionTests.cs",
+        "test/Compliance.Tests/Features/MethodologyTemplates/Tests/MethodologyTemplateLineWorkflowTests.cs"
+      ],
+      "note": "System-only receiver bound to its exact committed source fact; no public HTTP/MCP route."
     },
     {
       "request": "CloseProviderCoverageGap",
@@ -18466,7 +18678,8 @@
         "FindingReader"
       ],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Remediation/Tests/FindingClosureTests.cs"
+        "test/Compliance.Tests/Features/Remediation/Tests/FindingClosureTests.cs",
+        "test/Compliance.Tests/Features/Remediation/Tests/FindingCorrectiveActionOutcomeTests.cs"
       ],
       "note": "System-only complete receiver of FindingClosureProcess; appends FindingClosedV2 once every action is held."
     },
@@ -20037,6 +20250,31 @@
         "test/Compliance.Tests/Features/Controls/Tests/ControlDraftActorSnapshotTests.cs",
         "test/Compliance.Tests/Features/Controls/Tests/ControlDraftHandlerTests.cs",
         "test/Compliance.Tests/Testing/ControlSeeds.cs"
+      ],
+      "note": ""
+    },
+    {
+      "request": "DiscardMethodologyTemplateDraft",
+      "contract": "src/Compliance.Common/Features/MethodologyTemplates/Commands/DiscardMethodologyTemplateDraft.cs",
+      "classification": "command",
+      "interfaces": "IRequest, IMethodologyTemplateDraftCommand, IIdentifiedRequest, ICallable",
+      "handlers": [
+        {
+          "name": "DiscardMethodologyTemplateDraftHandler",
+          "source": "src/Compliance.Core/Features/MethodologyTemplates/Handlers/DiscardMethodologyTemplateDraftHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
+      "helperServices": [],
+      "directAggregateReferences": [
+        "MethodologyTemplateDraft"
+      ],
+      "aggregateTargets": [
+        "MethodologyTemplateDraft"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/MethodologyTemplates/Tests/MethodologyTemplateDraftCommandTests.cs"
       ],
       "note": ""
     },
@@ -27021,9 +27259,10 @@
         "MethodologyTemplateDraft"
       ],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/MethodologyTemplates/Tests/MethodologyTemplateDraftOpeningTests.cs"
+        "test/Compliance.Tests/Features/MethodologyTemplates/Tests/MethodologyTemplateDraftOpeningTests.cs",
+        "test/Compliance.Tests/Features/MethodologyTemplates/Tests/MethodologyTemplateLineWorkflowTests.cs"
       ],
-      "note": "System-only receiver of the committed MethodologyTemplateDraftStarted source. Registered and tested; line-start producer remains pending under #1176."
+      "note": "System-only receiver of the committed MethodologyTemplateDraftStarted source. Producer and receiver are now wired/tested; public new-line creation/name admission and read/application cutover remain pending under #1176."
     },
     {
       "request": "OpenTemplateVersionApplication",
@@ -28138,6 +28377,33 @@
       "note": ""
     },
     {
+      "request": "PublishMethodologyTemplateVersion",
+      "contract": "src/Compliance.Common/Features/MethodologyTemplates/Commands/PublishMethodologyTemplateVersion.cs",
+      "classification": "internal_reaction",
+      "interfaces": "IRequest, IIdentifiedRequest",
+      "handlers": [
+        {
+          "name": "PublishMethodologyTemplateVersionHandler",
+          "source": "src/Compliance.Core/Features/MethodologyTemplates/Handlers/PublishMethodologyTemplateVersionHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
+      "helperServices": [],
+      "directAggregateReferences": [
+        "MethodologyTemplate",
+        "MethodologyTemplateDraft"
+      ],
+      "aggregateTargets": [
+        "MethodologyTemplate"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/MethodologyTemplates/Tests/MethodologyTemplateDraftConclusionTests.cs",
+        "test/Compliance.Tests/Features/MethodologyTemplates/Tests/MethodologyTemplateLineWorkflowTests.cs"
+      ],
+      "note": "System-only receiver bound to its exact committed source fact; no public HTTP/MCP route."
+    },
+    {
       "request": "PublishRiskMethodVersion",
       "contract": "src/Compliance.Common/Features/Risks/Commands/PublishRiskMethodVersion.cs",
       "interfaces": "IRequest<RiskMethodVersionView>, IProgramScopedRequest, IClientManagementMutationRequest, ICallable, IIdentifiedRequest",
@@ -28216,6 +28482,7 @@
         "test/Compliance.Tests/Features/AccessControl/Tests/AttestProgramManagementWriteWallTests.cs",
         "test/Compliance.Tests/Features/Operations/Tests/OperationsFixture.cs",
         "test/Compliance.Tests/Features/Remediation/Tests/FindingAggregateTests.cs",
+        "test/Compliance.Tests/Features/Remediation/Tests/FindingCorrectiveActionOutcomeTests.cs",
         "test/Compliance.Tests/Features/Remediation/Tests/FindingNativeHistoryTests.cs",
         "test/Compliance.Tests/Features/Remediation/Tests/FindingSeverityTests.cs"
       ],
@@ -29026,6 +29293,37 @@
         "test/Compliance.Tests/Features/Work/Tests/WorkQueueReadConsistencyTests.cs"
       ],
       "note": ""
+    },
+    {
+      "request": "RecordCorrectiveActionOutcome",
+      "contract": "src/Compliance.Common/Features/Remediation/Commands/RecordCorrectiveActionOutcome.cs",
+      "classification": "internal_reaction",
+      "interfaces": "IRequest, IOperationsReactionRequest, IIdentifiedRequest",
+      "handlers": [
+        {
+          "name": "RecordCorrectiveActionOutcomeHandler",
+          "source": "src/Compliance.Core/Features/Remediation/Handlers/RecordCorrectiveActionOutcomeHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
+      "helperServices": [],
+      "directAggregateReferences": [
+        "CorrectiveAction",
+        "FindingAggregate"
+      ],
+      "aggregateTargets": [
+        "FindingAggregate"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Remediation/Tests/CorrectiveActionOutcomeReactorTests.cs",
+        "test/Compliance.Tests/Features/Remediation/Tests/FindingAggregateTests.cs",
+        "test/Compliance.Tests/Features/Remediation/Tests/FindingCorrectiveActionOutcomeTests.cs",
+        "test/Compliance.Tests/Features/Remediation/Tests/FindingCorrectiveActionOutcomeWorkflowTests.cs",
+        "test/Compliance.Tests/Features/Remediation/Tests/FindingNativeHistoryTests.cs",
+        "test/Compliance.Tests/Testing/FindingSeed.cs"
+      ],
+      "note": "System-only receiver bound to its exact committed source fact; no public HTTP/MCP route."
     },
     {
       "request": "RecordDataFlow",
@@ -31725,6 +32023,31 @@
       "note": ""
     },
     {
+      "request": "ReviewMethodologyTemplateDraft",
+      "contract": "src/Compliance.Common/Features/MethodologyTemplates/Commands/ReviewMethodologyTemplateDraft.cs",
+      "classification": "command",
+      "interfaces": "IRequest, IMethodologyTemplateDraftCommand, IIdentifiedRequest, ICallable",
+      "handlers": [
+        {
+          "name": "ReviewMethodologyTemplateDraftHandler",
+          "source": "src/Compliance.Core/Features/MethodologyTemplates/Handlers/ReviewMethodologyTemplateDraftHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
+      "helperServices": [],
+      "directAggregateReferences": [
+        "MethodologyTemplateDraft"
+      ],
+      "aggregateTargets": [
+        "MethodologyTemplateDraft"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/MethodologyTemplates/Tests/MethodologyTemplateDraftCommandTests.cs"
+      ],
+      "note": ""
+    },
+    {
       "request": "ReviewPolicyDraft",
       "contract": "src/Compliance.Common/Features/Policies/Commands/ReviewPolicyDraft.cs",
       "interfaces": "IRequest<PolicyDecisionView>, IProgramScopedRequest, IClientManagementMutationRequest, IIdentifiedRequest, ICallable",
@@ -32395,6 +32718,31 @@
         "test/Compliance.Tests/Features/MethodologyTemplates/Tests/MethodologyTemplateReadHandlerTests.cs",
         "test/Compliance.Tests/Features/MethodologyTemplates/Tests/MethodologyTemplateTests.cs",
         "test/Compliance.Tests/Testing/MethodologyTemplateScenario.cs"
+      ],
+      "note": ""
+    },
+    {
+      "request": "ReviseMethodologyTemplateDraftV3",
+      "contract": "src/Compliance.Common/Features/MethodologyTemplates/Commands/ReviseMethodologyTemplateDraftV3.cs",
+      "classification": "command",
+      "interfaces": "IRequest, IMethodologyTemplateDraftCommand, IIdentifiedRequest, ICallable",
+      "handlers": [
+        {
+          "name": "ReviseMethodologyTemplateDraftV3Handler",
+          "source": "src/Compliance.Core/Features/MethodologyTemplates/Handlers/ReviseMethodologyTemplateDraftV3Handler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
+      "helperServices": [],
+      "directAggregateReferences": [
+        "MethodologyTemplateDraft"
+      ],
+      "aggregateTargets": [
+        "MethodologyTemplateDraft"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/MethodologyTemplates/Tests/MethodologyTemplateDraftCommandTests.cs"
       ],
       "note": ""
     },
@@ -33869,6 +34217,31 @@
       "note": ""
     },
     {
+      "request": "StartMethodologyTemplateDraft",
+      "contract": "src/Compliance.Common/Features/MethodologyTemplates/Commands/StartMethodologyTemplateDraft.cs",
+      "classification": "command",
+      "interfaces": "IRequest, IMethodologyTemplateDraftCommand, IIdentifiedRequest, ICallable",
+      "handlers": [
+        {
+          "name": "StartMethodologyTemplateDraftHandler",
+          "source": "src/Compliance.Core/Features/MethodologyTemplates/Handlers/StartMethodologyTemplateDraftHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
+      "helperServices": [],
+      "directAggregateReferences": [
+        "MethodologyTemplate"
+      ],
+      "aggregateTargets": [
+        "MethodologyTemplate"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/MethodologyTemplates/Tests/MethodologyTemplateLineWorkflowTests.cs"
+      ],
+      "note": ""
+    },
+    {
       "request": "StartTypeIIObservationPeriod",
       "contract": "src/Compliance.Common/Features/Operations/Commands/StartTypeIIObservationPeriod.cs",
       "interfaces": "IRequest<OperationAcceptedResponse>, IProgramScopedRequest, IClientManagementMutationRequest,\n        IIdentifiedRequest, ICallable",
@@ -34753,59 +35126,26 @@
       "note": "Confirmed registered-request route gap; this source operation emits a fact but is not reached by a registered mutation handler. Keep unresolved locally."
     },
     {
-      "fact": "MethodologyTemplateDraftApproved",
-      "aggregate": "MethodologyTemplateDraft",
-      "method": "Approve",
+      "fact": "MethodologyTemplateCreatedV4",
+      "aggregate": "MethodologyTemplate",
+      "method": "CreateLine",
+      "methodArgumentCount": 3,
+      "source": "src/Compliance.Core/Features/MethodologyTemplates/Aggregates/MethodologyTemplate.cs",
+      "callerSources": [],
+      "classification": "no_registered_request_route",
+      "ownerIssue": 1176,
+      "note": "Confirmed route gap: new-line public creation/name admission or retirement transport is pending. The private owner path alone is not a completed workflow."
+    },
+    {
+      "fact": "MethodologyTemplateRetiredV4",
+      "aggregate": "MethodologyTemplate",
+      "method": "RetireLine",
       "methodArgumentCount": 2,
-      "source": "src/Compliance.Core/Features/MethodologyTemplates/Aggregates/MethodologyTemplateDraft.cs",
+      "source": "src/Compliance.Core/Features/MethodologyTemplates/Aggregates/MethodologyTemplate.cs",
       "callerSources": [],
       "classification": "no_registered_request_route",
       "ownerIssue": 1176,
-      "note": "Draft owner behavior is covered by focused tests; the corresponding human command/handler is pending in the next business slice. No public write path is claimed."
-    },
-    {
-      "fact": "MethodologyTemplateDraftDiscarded",
-      "aggregate": "MethodologyTemplateDraft",
-      "method": "Discard",
-      "methodArgumentCount": 2,
-      "source": "src/Compliance.Core/Features/MethodologyTemplates/Aggregates/MethodologyTemplateDraft.cs",
-      "callerSources": [],
-      "classification": "no_registered_request_route",
-      "ownerIssue": 1176,
-      "note": "Draft owner behavior is covered by focused tests; the corresponding human command/handler is pending in the next business slice. No public write path is claimed."
-    },
-    {
-      "fact": "MethodologyTemplateDraftAccepted",
-      "aggregate": "MethodologyTemplateDraft",
-      "method": "Review",
-      "methodArgumentCount": 4,
-      "source": "src/Compliance.Core/Features/MethodologyTemplates/Aggregates/MethodologyTemplateDraft.cs",
-      "callerSources": [],
-      "classification": "no_registered_request_route",
-      "ownerIssue": 1176,
-      "note": "Draft owner behavior is covered by focused tests; the corresponding human command/handler is pending in the next business slice. No public write path is claimed."
-    },
-    {
-      "fact": "MethodologyTemplateDraftReturned",
-      "aggregate": "MethodologyTemplateDraft",
-      "method": "Review",
-      "methodArgumentCount": 4,
-      "source": "src/Compliance.Core/Features/MethodologyTemplates/Aggregates/MethodologyTemplateDraft.cs",
-      "callerSources": [],
-      "classification": "no_registered_request_route",
-      "ownerIssue": 1176,
-      "note": "Draft owner behavior is covered by focused tests; the corresponding human command/handler is pending in the next business slice. No public write path is claimed."
-    },
-    {
-      "fact": "MethodologyTemplateDraftRevisedV4",
-      "aggregate": "MethodologyTemplateDraft",
-      "method": "Revise",
-      "methodArgumentCount": 4,
-      "source": "src/Compliance.Core/Features/MethodologyTemplates/Aggregates/MethodologyTemplateDraft.cs",
-      "callerSources": [],
-      "classification": "no_registered_request_route",
-      "ownerIssue": 1176,
-      "note": "Draft owner behavior is covered by focused tests; the corresponding human command/handler is pending in the next business slice. No public write path is claimed."
+      "note": "Confirmed route gap: new-line public creation/name admission or retirement transport is pending. The private owner path alone is not a completed workflow."
     },
     {
       "fact": "ProgramNextPeriodCreated",

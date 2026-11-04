@@ -103,7 +103,8 @@ public sealed class RecordWorkRelationshipHandlerTests
             await scenario.ProjectSponsorAsync(sponsorStatus, sponsorType);
         var request = scenario.Request(null, null) with
         {
-            WorkerType = "external_collaborator", SponsorPersonId = scenario.ManagerId,
+            WorkerType = "external_collaborator",
+            SponsorPersonId = scenario.ManagerId,
         };
 
         // Act
@@ -129,7 +130,8 @@ public sealed class RecordWorkRelationshipHandlerTests
         await scenario.ProjectSponsorAsync("active", tenantId: Uuid.CreateVersion4());
         var request = scenario.Request(null, null) with
         {
-            WorkerType = "external_collaborator", SponsorPersonId = scenario.ManagerId,
+            WorkerType = "external_collaborator",
+            SponsorPersonId = scenario.ManagerId,
         };
 
         // Act
@@ -149,7 +151,8 @@ public sealed class RecordWorkRelationshipHandlerTests
         await scenario.AppendUnprojectedSponsorAsync();
         var request = scenario.Request(null, null) with
         {
-            WorkerType = "external_collaborator", SponsorPersonId = scenario.ManagerId,
+            WorkerType = "external_collaborator",
+            SponsorPersonId = scenario.ManagerId,
         };
 
         // Act
@@ -170,7 +173,8 @@ public sealed class RecordWorkRelationshipHandlerTests
         await scenario.ProjectSponsorAsync("active");
         var initial = scenario.Request(null, null) with
         {
-            WorkerType = "external_collaborator", SponsorPersonId = scenario.ManagerId,
+            WorkerType = "external_collaborator",
+            SponsorPersonId = scenario.ManagerId,
         };
         Assert.True((await scenario.RecordAsync(initial, new GrantedPermissions())).IsSuccess);
         await scenario.ProjectSponsorAsync("ended");
@@ -191,7 +195,8 @@ public sealed class RecordWorkRelationshipHandlerTests
         await scenario.ProjectSponsorAsync("active");
         var initial = scenario.Request(null, null) with
         {
-            WorkerType = "external_collaborator", SponsorPersonId = scenario.ManagerId,
+            WorkerType = "external_collaborator",
+            SponsorPersonId = scenario.ManagerId,
         };
         Assert.True((await scenario.RecordAsync(initial, new GrantedPermissions())).IsSuccess);
         await scenario.ProjectSponsorAsync("ended");

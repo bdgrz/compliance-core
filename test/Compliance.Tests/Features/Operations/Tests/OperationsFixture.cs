@@ -576,18 +576,21 @@ sealed class OperationsFixture
         await foreach (var record in events.ReadAsync(EventStreamPattern.ForPattern(TenantId.ToString(),
                            CorrectiveAction.Area), EventCursor.Start, CancellationToken.None))
         {
-            Result? reported = record.Event switch
+            Result reported;
+            switch (record.Event)
             {
-                Bdgrz.Compliance.Features.Remediation.Events.CorrectiveActionCompletedV2 fact
-                    when fact.ProgramId == ProgramId && fact.FindingId == findingId =>
-                    await reactor.HandleAsync(AdministratorTransitionHost.ReactionOf<Bdgrz.Compliance.Features.Remediation.Events.CorrectiveActionCompletedV2>(record), CancellationToken.None),
-                Bdgrz.Compliance.Features.Remediation.Events.CorrectiveActionCancelled fact
-                    when fact.ProgramId == ProgramId && fact.FindingId == findingId =>
-                    await reactor.HandleAsync(AdministratorTransitionHost.ReactionOf<Bdgrz.Compliance.Features.Remediation.Events.CorrectiveActionCancelled>(record), CancellationToken.None),
-                _ => null,
-            };
-            if (reported is { } result)
-                Assert.True(result.IsSuccess, result.Error?.Message);
+                case Bdgrz.Compliance.Features.Remediation.Events.CorrectiveActionCompletedV2 fact
+                    when fact.ProgramId == ProgramId && fact.FindingId == findingId:
+                    reported = await reactor.HandleAsync(AdministratorTransitionHost.ReactionOf<Bdgrz.Compliance.Features.Remediation.Events.CorrectiveActionCompletedV2>(record), CancellationToken.None);
+                    break;
+                case Bdgrz.Compliance.Features.Remediation.Events.CorrectiveActionCancelled fact
+                    when fact.ProgramId == ProgramId && fact.FindingId == findingId:
+                    reported = await reactor.HandleAsync(AdministratorTransitionHost.ReactionOf<Bdgrz.Compliance.Features.Remediation.Events.CorrectiveActionCancelled>(record), CancellationToken.None);
+                    break;
+                default:
+                    continue;
+            }
+            Assert.True(reported.IsSuccess, reported.Error?.Message);
         }
         return await GetFindingAsync(findingId);
     }
