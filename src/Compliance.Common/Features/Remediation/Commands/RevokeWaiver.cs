@@ -7,7 +7,7 @@ namespace Bdgrz.Compliance.Features.Remediation.Commands;
 [Discriminator("bdgrz.waiver.revoke", 1)]
 public sealed record RevokeWaiver(Uuid CommandId, Uuid TenantId, Uuid WaiverId,
     long ExpectedRevision, string Reason) : IRequest, IIdentifiedRequest,
-    IWaiverManagementRequest, IClientManagementMutationRequest
+    IWaiverManagementRequest, IClientManagementMutationRequest, ICallable
 {
     Uuid IIdentifiedRequest.RequestId => CommandId;
 }

@@ -2746,4 +2746,9 @@ namespace Bdgrz.Compliance;
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.Remediation.Queries.GetWaiver))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.MethodologyTemplates.Models.TemplateApplicationOutcomeCounts))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.MethodologyTemplates.Models.TemplateEntryOutcome))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.MethodologyTemplates.Commands.OpenTemplateVersionApplication))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.MethodologyTemplates.Commands.RecordTemplateEntryOutcome))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.MethodologyTemplates.Events.TemplateVersionApplicationOpened))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.MethodologyTemplates.Events.TemplateEntryOutcomeRecorded))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.MethodologyTemplates.Events.TemplateVersionApplicationCompleted))]
 sealed partial class ComplianceCoreJsonContext : JsonSerializerContext;

@@ -1909,6 +1909,9 @@ public static class ComplianceServiceCollectionExtensions
             .AddRequestHandler<RetireMethodologyTemplateHandler>()
             .AddRequestHandler<GetTemplateApplicationHandler>()
             .AddRequestHandler<ApplyMethodologyTemplateHandler>()
+            .AddRequestHandler<OpenTemplateVersionApplicationHandler>()
+            .AddRequestHandler<RecordTemplateEntryOutcomeHandler>()
+            .AddRequestAuthorizer<Bdgrz.Compliance.Features.MethodologyTemplates.Authorizers.TemplateVersionApplicationAuthorizer>()
             .AddRequestHandler<ProposeTemplateSuccessorAdoptionHandler>()
             .AddRequestHandler<RecordTemplateSuccessorDispositionHandler>()
             .AddRequestHandler<ProposeDeidentifiedTemplateContributionHandler>()
@@ -2038,6 +2041,8 @@ public static class ComplianceServiceCollectionExtensions
             .AddReactor<IdentityRecoveryAcceptanceReactor>("IdentityRecoveryAcceptanceV1", WorkloadScope.Global,
                 options => options.FailureAttemptLimit = int.MaxValue)
             .AddProjector<MethodologyTemplateDirectoryProjector>(FitzMethodologyTemplateDirectory.ProjectorName, WorkloadScope.Global)
+            .AddReactor<Bdgrz.Compliance.Features.MethodologyTemplates.Reactors.TemplateVersionApplicationOpeningReactor>(
+                Bdgrz.Compliance.Features.MethodologyTemplates.Reactors.TemplateVersionApplicationOpeningReactor.WorkloadName, WorkloadScope.PerTenant)
             .AddProjector<ObservationPeriodDirectoryProjector>(FitzObservationPeriodDirectory.ProjectorName, WorkloadScope.PerTenant)
             .AddProjector<AuditPackageDirectoryProjector>(FitzAuditPackageDirectory.ProjectorName, WorkloadScope.PerTenant)
             .AddProjector<AuditorRequestDirectoryProjector>(FitzAuditorRequestDirectory.ProjectorName, WorkloadScope.PerTenant)

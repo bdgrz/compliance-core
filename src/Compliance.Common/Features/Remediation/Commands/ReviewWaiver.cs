@@ -7,7 +7,7 @@ namespace Bdgrz.Compliance.Features.Remediation.Commands;
 [Discriminator("bdgrz.waiver.review", 1)]
 public sealed record ReviewWaiver(Uuid CommandId, Uuid TenantId, Uuid WaiverId,
     long ExpectedRevision, bool Approve, string? Comments = null) : IRequest, IIdentifiedRequest,
-    IWaiverManagementRequest, IClientManagementMutationRequest
+    IWaiverManagementRequest, IClientManagementMutationRequest, ICallable
 {
     Uuid IIdentifiedRequest.RequestId => CommandId;
 }
