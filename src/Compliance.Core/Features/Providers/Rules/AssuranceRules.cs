@@ -61,7 +61,9 @@ public static class AssuranceRules
             : null;
 
     public static string? InputError(ProviderReviewContent? content) =>
-        content is null || content.Exceptions?.Any(static item => item is null) == true
+        content is null || content.Exceptions?.Any(static item => item is null) == true ||
+        content.CoverageGapsFound?.Any(static item => item is null) == true ||
+        content.CuecsAdopted?.Any(static item => item is null) == true
             ? "A provider review requires content with non-null collection entries."
             : null;
 
@@ -90,6 +92,9 @@ public static class AssuranceRules
         Rationale = content.Rationale?.Trim() ?? string.Empty,
         Exceptions = List(content.Exceptions),
         Evidence = Normalize(content.Evidence),
+        CoverageGapsFound = Array.AsReadOnly((content.CoverageGapsFound ?? [])
+            .Select(ProviderCoverageGapRules.Normalize).ToArray()),
+        CuecsAdopted = List(content.CuecsAdopted),
     };
 
     public static string? Validate(AssuranceReportContent content)
@@ -128,8 +133,18 @@ public static class AssuranceRules
             return "A review requires valid dates with the next review due after the review.";
         if (!Kinds.Contains(content.EvidenceKind, StringComparer.Ordinal))
             return "The evidence kind must be soc2_type1, soc2_type2, iso27001 or questionnaire.";
-        if (content.Conclusion is not ("acceptable" or "acceptable_with_exceptions" or "not_acceptable"))
-            return "The conclusion must be acceptable, acceptable_with_exceptions or not_acceptable.";
+        if (content.EvidenceKind == "questionnaire" ? !content.NoSoc2OrIso27001 : content.NoSoc2OrIso27001)
+            return "A questionnaire review must declare that no SOC 2 report or ISO/IEC 27001 certificate exists; other kinds cannot make that declaration.";
+        if (content.Conclusion is not ("acceptable" or "acceptable_with_gaps" or "acceptable_with_exceptions" or "not_acceptable"))
+            return "The conclusion must be acceptable, acceptable_with_gaps or not_acceptable.";
+        var gaps = content.CoverageGapsFound ?? [];
+        if (gaps.Count > MaximumListItems || gaps.Any(gap => ProviderCoverageGapRules.InputError(gap) is not null) ||
+            content.Conclusion == "acceptable_with_gaps" && gaps.Count == 0 ||
+            content.Conclusion == "acceptable" && gaps.Count > 0)
+            return "An acceptable_with_gaps review requires bounded exact coverage gaps; an acceptable review has none.";
+        if (content.CuecsAdopted is { } cuecs && (cuecs.Count > MaximumListItems ||
+                cuecs.Any(static item => string.IsNullOrWhiteSpace(item) || item.Length > 2000)))
+            return "Adopted complementary user-entity controls are bounded to 50 nonempty entries.";
         if (content.Rationale.Length is < 1 or > 2000)
             return "A review records a rationale of at most 2000 characters.";
         if (content.Exceptions!.Count > 20 || content.Exceptions.Any(static item => item.Length is < 1 or > 1000) ||

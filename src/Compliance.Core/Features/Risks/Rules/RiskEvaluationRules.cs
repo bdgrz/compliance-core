@@ -287,7 +287,7 @@ public sealed class RiskEvaluationRules
         var scope = CheckScope(programId, expectedRevision);
         if (scope is not null)
             return scope;
-        if (authority is not (ComplianceLead or Executive))
+        if (authority is not (ComplianceLead or Executive or "above_appetite"))
             return CommandFailure.InvalidContent("The approver authority must be compliance_lead or executive.");
         if (InvalidRationale(rationale))
             return CommandFailure.InvalidContent("An acceptance requires a rationale of at most 4000 characters.");
@@ -297,17 +297,12 @@ public sealed class RiskEvaluationRules
             return CommandFailure.StateConflict("Only a risk whose chosen treatment is accept can be accepted.");
         if (Latest(Residual) is not { } residual || residual.AssessmentId != residualAssessmentId)
             return CommandFailure.StateConflict("Accept the current residual assessment.");
-        if (method.MethodVersionId != residual.MethodVersionId)
-            return CommandFailure.StateConflict("The residual assessment uses another method version.");
         if (!approverHoldsAuthority)
             return CommandFailure.ActorProhibited($"The approver does not hold {authority} acceptance authority.");
         if (authority == ComplianceLead &&
             (method.AppetiteThreshold is not { } appetite || residual.Score > appetite))
             return CommandFailure.ActorProhibited(
                 "Accepting a risk above appetite, or while appetite is unset, requires an executive approver.");
-        if (residual.Assessor.Kind == "member" &&
-            residual.Assessor.Id == approverMemberId.ToString())
-            return CommandFailure.ActorProhibited("The residual assessor cannot accept the same risk.");
         if (waiver is not null && (waiver.ToScope() != new SeparationOfDutiesWaiverProofScope(_tenantId,
                 waiver.WaiverId, approverMemberId, approverMemberId, SeparationOfDutiesActions.Approve,
                 SeparationOfDutiesRecordTypes.Risk, Id, residualAssessmentId, expectedRevision) ||
@@ -318,9 +313,10 @@ public sealed class RiskEvaluationRules
                 waiver.ApprovalFact.AggregateVersion != 2))
             return CommandFailure.ActorProhibited(
                 "The separation-of-duties waiver is not active for this member and risk revision.");
-        if (ownerMemberId == approverMemberId && waiver is null)
+        if (waiver is null && (ownerMemberId == approverMemberId ||
+                residual.Assessor.Kind == "member" && residual.Assessor.Id == approverMemberId.ToString()))
             return CommandFailure.ActorProhibited(
-                "The risk owner cannot accept their own risk without a separation-of-duties waiver.");
+                "The risk owner and residual assessor require an exact separation-of-duties waiver to accept this risk.");
         RaiseEvent(new RiskAcceptedBody(_tenantId, programId, Id, Revision + 1,
             new RiskAcceptanceView(acceptanceId, residualAssessmentId, residual.Score,
                 method.AppetiteThreshold, approverMemberId,

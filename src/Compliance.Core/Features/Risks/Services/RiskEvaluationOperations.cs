@@ -64,9 +64,15 @@ public sealed class RiskEvaluationOperations(IAggregateReader reader, RiskEvalua
                 if (!found.IsSuccess)
                     return found;
                 var methods = await methodSources.ReadAsync(request.TenantId, request.ProgramId, token).ConfigureAwait(false);
-                if (methods.GetVersion(request.MethodVersion) is not { } method)
-                    return Result.Failure(new RequestError(RequestErrorKind.Validation, "The risk method version was not found."));
+                if (methods.Current is not { } method || method.Version != request.MethodVersion)
+                    return Result.Failure(new RequestError(RequestErrorKind.Conflict, "Assessments must name the current risk method version."));
                 var governance = await governanceReader.ReadRiskAsync(request.TenantId, request.ProgramId, request.RiskId, token).ConfigureAwait(false);
+                var assessments = snapshot.ToView().Assessments;
+                if (request.Phase == RiskEvaluation.Residual && governance.OpenTriggers(request.RiskId, assessments)
+                    .Any(trigger => !assessments.Any(assessment => assessment.Phase == RiskEvaluation.Inherent &&
+                        assessment.AssessedAt > trigger.RaisedAt)))
+                    return Result.Failure(new RequestError(RequestErrorKind.Conflict,
+                        "Record an inherent assessment after every outstanding reassessment requirement before residual scoring."));
                 return Outcome(snapshot.Rules.RecordAssessment(request.ProgramId, request.ExpectedRevision, request.CommandId, method,
                     request.Phase, request.Likelihood, request.Impact, request.Rationale, actor.MemberId, actor.Display, at,
                     governance.HasAcceptedControlTreatment(request.RiskId)));
@@ -94,7 +100,8 @@ public sealed class RiskEvaluationOperations(IAggregateReader reader, RiskEvalua
             return Result<RiskAcceptanceView>.Failure(new RequestError(RequestErrorKind.Forbidden, "Risk acceptance requires a personal HTTP invocation."));
         var request = context.Request;
         var actor = RiskActor.From(context.Actor, request.TenantId);
-        var permission = RbacPermissions.RiskAcceptanceFor(request.ApproverAuthority);
+        var permission = request.ApproverAuthority == "above_appetite"
+            ? "risks.accept_above_appetite" : RbacPermissions.RiskAcceptanceFor(request.ApproverAuthority);
         var held = permission is not null && await permissions.IsAllowedAsync(request.TenantId, actor.UserId, actor.MemberId,
             request.ProgramId, permission, ct).ConfigureAwait(false);
         if (!held)
@@ -110,7 +117,7 @@ public sealed class RiskEvaluationOperations(IAggregateReader reader, RiskEvalua
                 if (snapshot.FindAssessment(request.ResidualAssessmentId) is not { Phase: RiskEvaluation.Residual } residual)
                     return Result.Failure(new RequestError(RequestErrorKind.Conflict, "Accept the current residual assessment."));
                 var methods = await methodSources.ReadAsync(request.TenantId, request.ProgramId, token).ConfigureAwait(false);
-                var method = methods.Find(residual.MethodVersionId) ?? throw new InvalidOperationException("A residual assessment must cite a published method.");
+                var method = methods.Current ?? throw new InvalidOperationException("Risk acceptance requires the current published method.");
                 var governance = await governanceReader.ReadRiskAsync(request.TenantId, request.ProgramId, request.RiskId, token).ConfigureAwait(false);
                 Uuid? ownerMemberId = null;
                 if (governance.OwnerOf(request.RiskId) is { } owner)
