@@ -164,6 +164,12 @@ public sealed class ProgramRules
             return "The Type II target end date must follow its start date.";
         if (plan.TargetTypeIAsOfDate > plan.TargetTypeIIStartDate)
             return "The Type II target period must follow the Type I target date.";
+        if (plan.TargetReadinessDate > plan.TargetTypeIIStartDate)
+            return "The Type II target start date cannot precede the readiness target date.";
+        if (plan.TargetReadinessDate > plan.TargetTypeIIEndDate)
+            return "The Type II target end date cannot precede the readiness target date.";
+        if (plan.TargetTypeIAsOfDate > plan.TargetTypeIIEndDate)
+            return "The Type II target end date cannot precede the Type I target date.";
         return null;
     }
 }
