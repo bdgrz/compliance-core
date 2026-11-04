@@ -28,6 +28,21 @@ public sealed class EvidenceSupportReader(IAggregateReader reader)
                 "Withdrawn evidence support cannot be selected for new reliance."));
     }
 
+    /// <summary>Reads current lifecycle status without changing the immutable link receipt.</summary>
+    public async ValueTask<Result<EvidenceSupportStatusView>> ReadStatusAsync(Uuid tenantId, Uuid programId,
+        Uuid supportId, CancellationToken ct = default)
+    {
+        var owner = await ReadAsync(tenantId, programId, supportId, ct).ConfigureAwait(false);
+        return owner is null
+            ? Result<EvidenceSupportStatusView>.Failure(new RequestError(RequestErrorKind.NotFound,
+                "The evidence support link was not found in this program."))
+            : Result<EvidenceSupportStatusView>.Success(Status(owner));
+    }
+
+    internal static EvidenceSupportStatusView Status(EvidenceSupport owner) => new(owner.View()!, owner.Revision,
+        owner.IsActive, owner.Withdrawal is not { } withdrawn ? null : new(withdrawn.CommandId, withdrawn.Reason,
+            withdrawn.ActorMemberId, withdrawn.ActorDisplay, withdrawn.OccurredAt));
+
     async ValueTask<EvidenceSupport?> ReadAsync(Uuid tenantId, Uuid programId, Uuid supportId, CancellationToken ct)
     {
         if (tenantId == Uuid.Empty || programId == Uuid.Empty || supportId == Uuid.Empty)
