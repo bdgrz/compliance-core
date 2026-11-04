@@ -168,7 +168,7 @@ public sealed class FindingReader(IAggregateReader reader, IDomainEventReader ev
             closure, history.Select(static item => item.Entry).ToArray(), raised.RaisedBy, raised.RaisedAt,
             finding.ClosureProposal is { } proposal ? new FindingClosureProposalView(proposal.ClosureId, proposal.ProposalRevision,
                 proposal.Terms, source.Admitted.Select(static item => item.Operation.LogicalId).ToArray(),
-                proposal.ProposedBy, proposal.ProposedAt) : null, finding.Analysis, finding.AffectedRecords);
+                proposal.ProposedBy, proposal.ProposedAt, finding.ProposalAuthors(proposal.ClosureId)) : null, finding.Analysis, finding.AffectedRecords);
         return FindingViews.Settle(view, now);
     }
 

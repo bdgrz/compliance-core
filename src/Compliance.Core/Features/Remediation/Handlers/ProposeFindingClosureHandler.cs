@@ -66,7 +66,7 @@ public sealed class ProposeFindingClosureHandler(NativeOperationExecutor operati
             var history = await FindingHistory.ReadAsync(events, owner, token).ConfigureAwait(false);
             actions = await FindingClosureProposalSources.WriteActionsAsync(content, owner, history, token).ConfigureAwait(false);
             var proposal = FindingClosureProposalSources.View(request.ClosureId, request.PreviousProposalRevision + 1,
-                terms, history, proposedBy, now);
+                terms, history, proposedBy, now, owner.ProposalAuthors(request.ClosureId));
             var current = await findings.ComposeAsync(owner, now, token).ConfigureAwait(false);
             var after = FindingViews.WithProposal(current!, proposal, owner.Revision + 1, now);
             var frozen = await FindingContent.FreezeAsync(content, request.TenantId, FindingContent.ViewSchema, after, token)
