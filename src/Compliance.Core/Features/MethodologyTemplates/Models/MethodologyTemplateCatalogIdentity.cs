@@ -11,4 +11,4 @@ using Bdgrz.Compliance.Features.AccessControl.Aggregates;
 namespace Bdgrz.Compliance.Features.MethodologyTemplates.Models;
 
 /// <summary>Stable discovery identity only; current/publication content is resolved from its native owner.</summary>
-public sealed record MethodologyTemplateCatalogIdentity(Uuid TemplateId, DateTimeOffset FirstPublishedAt);
+public sealed record MethodologyTemplateCatalogIdentity(Uuid TemplateId, DateTimeOffset FirstPublishedAt, bool SeparateDraftLine = false);
