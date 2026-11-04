@@ -139,6 +139,20 @@ public sealed class PolicyDistributionCampaign : Aggregate
             LatestRosterSnapshotId = ev.RosterSnapshotId;
             _revision++;
         });
+        On<PolicyCampaignWorkforceAudienceAmended>(ev =>
+        {
+            if (ev.Operation is null || ev.TenantId != _tenantId || ev.CampaignId != Id ||
+                _frozen is null || IsSealed || ev.Revision != _revision + 1 ||
+                ev.Reconciliation != _reconciliations + 1 || ev.Operation.Owner != Stream ||
+                ev.WorkforceFact.Stream.Realm != Stream.Realm || ev.WorkforceFact.Stream.Area != "work-relationships" ||
+                ev.WorkforceFact.EventId == Uuid.Empty || ev.WorkforceFact.AggregateVersion == 0 ||
+                ev.Operation.CausationEventId != ev.WorkforceFact.EventId || ev.FirstResponse is null ||
+                ev.Amendment.PersonId == Uuid.Empty || ev.Amendment.Reason is not ("joiner" or "mover_in" or "mover_out" or "leaver"))
+                throw new ImmutableContentIntegrityException("A workforce audience amendment requires its exact open campaign and source.");
+            Acceptance.Observe(ev);
+            _revision = ev.Revision;
+            _reconciliations = ev.Reconciliation;
+        });
         On<PolicyParticipantResultAdmitted>(ev =>
         {
             if (ev.Operation is null)
@@ -342,6 +356,25 @@ public sealed class PolicyDistributionCampaign : Aggregate
         RaiseEvent(new PolicyCampaignAudienceAmended(_tenantId, Id, _reconciliations + 1, 1, rosterSnapshotId,
             rosterContentSha256, observedOn, amendments, actor, amendedAt, operation, firstResponse,
             operationResult));
+        return Result.Success;
+    }
+
+    /// <summary>Applies one source-backed audience change without replacing the immutable launch roster.</summary>
+    public Result AmendFromWorkforce(OperationProvenance operation, NativeFactReference source,
+        CampaignAudienceAmendment amendment, DateTimeOffset amendedAt, ImmutableContentRef firstResponse)
+    {
+        if (operation.Owner != Stream || operation.CommandKind != nameof(ApplyCampaignWorkforceChange) ||
+            operation.OriginalExpectedRevision is not null || operation.CausationEventId != source.EventId)
+            return Result.Failure(new RequestError(RequestErrorKind.Validation,
+                "The workforce amendment requires its exact source-bound operation."));
+        var prepared = PrepareOpenAdmission(Revision);
+        if (!prepared.IsSuccess)
+            return prepared;
+        var append = _cut.Require(this, Acceptance, operation);
+        if (!append.IsSuccess)
+            return append;
+        RaiseEvent(new PolicyCampaignWorkforceAudienceAmended(_tenantId, Id, Revision + 1,
+            _reconciliations + 1, source, amendment, operation.Actor, amendedAt, operation, firstResponse));
         return Result.Success;
     }
 

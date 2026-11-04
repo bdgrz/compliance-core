@@ -79,16 +79,22 @@ sealed class CampaignRoster
         foreach (var entry in entries)
             roster.Add(new CampaignParticipant(entry.PersonId, entry.DisplayName, entry.WorkerType,
                 entry.Department, true, "launch", launch.RosterSnapshotId, entry.DueOn, frozenFact));
-        foreach (var ev in campaign.Amendments)
+        foreach (var change in campaign.Facts.Where(value => value is PolicyCampaignAudienceAmended or
+            PolicyCampaignWorkforceAudienceAmended))
         {
-            var amendments = await content.ReadJsonAsync<IReadOnlyList<CampaignAudienceAmendment>>(realm,
-                ev.AmendmentsManifest, ct).ConfigureAwait(false);
-            var fact = NativeFactReference.Of(campaign.Stream, ev);
+            var workforce = change as PolicyCampaignWorkforceAudienceAmended;
+            var snapshot = change as PolicyCampaignAudienceAmended;
+            IReadOnlyList<CampaignAudienceAmendment> amendments = workforce is not null ? [workforce.Amendment] :
+                await content.ReadJsonAsync<IReadOnlyList<CampaignAudienceAmendment>>(realm,
+                    snapshot!.AmendmentsManifest, ct).ConfigureAwait(false);
+            var fact = NativeFactReference.Of(campaign.Stream, change);
+            var observationId = workforce?.WorkforceFact.EventId ?? snapshot!.RosterSnapshotId;
             foreach (var amendment in amendments)
             {
-                roster._amendments.Add(new CampaignAmendmentView(ev.Reconciliation, amendment.PersonId,
-                    amendment.DisplayName, amendment.Reason, amendment.DueOn, ev.RosterSnapshotId,
-                    ev.RosterContentSha256, ev.Actor, ev.AmendedAt));
+                roster._amendments.Add(new CampaignAmendmentView(workforce?.Reconciliation ?? snapshot!.Reconciliation,
+                    amendment.PersonId, amendment.DisplayName, amendment.Reason, amendment.DueOn, observationId,
+                    snapshot?.RosterContentSha256 ?? string.Empty, workforce?.Actor ?? snapshot!.Actor,
+                    workforce?.AmendedAt ?? snapshot!.AmendedAt, workforce?.WorkforceFact));
                 if (amendment.Reason is "joiner" or "mover_in")
                 {
                     if (roster._participants.TryGetValue(amendment.PersonId, out var returning))
@@ -96,7 +102,7 @@ sealed class CampaignRoster
                         returning.RemovedReason = null;
                         returning.RemovedBy = null;
                         returning.Inclusion = amendment.Reason;
-                        returning.IncludedBy = ev.RosterSnapshotId;
+                        returning.IncludedBy = observationId;
                         returning.DueOn = amendment.DueOn!.Value;
                         returning.Department = amendment.Department;
                         returning.WorkerType = amendment.WorkerType!;
@@ -105,12 +111,12 @@ sealed class CampaignRoster
                     else
                         roster.Add(new CampaignParticipant(amendment.PersonId, amendment.DisplayName,
                             amendment.WorkerType!, amendment.Department, false, amendment.Reason,
-                            ev.RosterSnapshotId, amendment.DueOn!.Value, fact));
+                            observationId, amendment.DueOn!.Value, fact));
                 }
                 else if (roster._participants.TryGetValue(amendment.PersonId, out var leaving))
                 {
                     leaving.RemovedReason = amendment.Reason;
-                    leaving.RemovedBy = ev.RosterSnapshotId;
+                    leaving.RemovedBy = observationId;
                 }
             }
         }
