@@ -255,13 +255,20 @@ public sealed class CassieProgramScopeRepositoryTests
         await ReplaceStoredRowAsync(database, table, after);
 
         // Act
-        var pointFailure = await Record.ExceptionAsync(() => scenario.Exists(tenant));
+        bool? found = null;
+        var pointFailure = await Record.ExceptionAsync(async () => found = await scenario.Exists(tenant));
         Page<Uuid>? visible = null;
         var listFailure = await Record.ExceptionAsync(async () => visible = await scenario.ListAsync(tenant, 10, null));
         await ReplaceStoredRowAsync(database, table, before);
 
         // Assert
-        Assert.IsType<ImmutableContentIntegrityException>(pointFailure);
+        if (kind == "population" && corruption == "scope_id")
+        {
+            Assert.Null(pointFailure);
+            Assert.False(found);
+        }
+        else
+            Assert.IsType<ImmutableContentIntegrityException>(pointFailure);
         if (corruption == "scope_id" && kind != "program")
         {
             Assert.Null(listFailure);
