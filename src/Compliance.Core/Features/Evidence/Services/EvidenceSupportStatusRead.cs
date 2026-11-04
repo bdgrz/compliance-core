@@ -112,14 +112,15 @@ sealed class EvidenceSupportStatusRead(IAggregateReader reader, IDomainEventRead
     {
         var identities = new Dictionary<Uuid, Identity>();
         var records = new List<string>();
+        var scanned = 0;
         await foreach (var record in events.ReadAsync(EventStreamPattern.ForPattern(tenantId.ToString(),
                            "evidence-support"), EventCursor.Start, ct).ConfigureAwait(false))
         {
-            if (record.Event.Metadata.IsAudit)
-                continue;
-            if (records.Count >= MaximumSourceRecords)
+            if (++scanned > MaximumSourceRecords)
                 return Result<Source>.Failure(new RequestError(RequestErrorKind.Conflict,
                     "The bounded support status source scan is incomplete."));
+            if (record.Event.Metadata.IsAudit)
+                continue;
             var id = record.Event.Metadata.AggregateId;
             if (id == Uuid.Empty || record.Event.Metadata.EventId == Uuid.Empty ||
                 record.Stream != EvidenceSupport.ForVerification(tenantId, id).Stream)
