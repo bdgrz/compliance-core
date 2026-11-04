@@ -139,8 +139,7 @@ sealed class PermissionProjectionState
             .Where(item => Members.Contains(item.MemberId) && Teams.Contains(item.TeamId) &&
                 GetMembershipEpisodeId(item.MemberId) == item.MembershipEpisodeId);
         var activeTeamRoles = TeamRoles
-            .Where(item => Teams.Contains(item.TeamId) && Roles.Contains(item.RoleId) &&
-                           BuiltInRbac.IsBuiltInRole(TenantId, item.RoleId))
+            .Where(item => Teams.Contains(item.TeamId) && Roles.Contains(item.RoleId))
             .ToLookup(item => item.TeamId);
         var rolePermissions = RolePermissions.ToLookup(item => item.RoleId);
         var grants = new HashSet<PermissionGrant>();

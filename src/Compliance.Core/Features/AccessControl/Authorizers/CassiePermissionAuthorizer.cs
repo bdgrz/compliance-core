@@ -86,8 +86,7 @@ sealed class CassiePermissionAuthorizer(CassieProjectionDatabase database, ITena
             if (!await HasGrantAsync(initialRead, tenantId, memberId, permission, ct).ConfigureAwait(false))
                 return false;
             var state = await ReadStateAsync(initialRead, tenantId, ct).ConfigureAwait(false);
-            currentAccess = state?.Explain(memberId)
-                .Where(edge => BuiltInRbac.IsBuiltInRole(tenantId, edge.RoleId)).ToArray() ?? [];
+            currentAccess = state?.Explain(memberId) ?? [];
         }
 
         // Older projections can retain a grant key without an explainable active path.
