@@ -220,6 +220,62 @@ public sealed class CassieRemediationWorkRepositoryTests
         Assert.Equal(RequestErrorKind.Conflict, result.Error?.Kind);
     }
 
+    [Theory]
+    [InlineData(false, false)]
+    [InlineData(false, true)]
+    [InlineData(true, false)]
+    [InlineData(true, true)]
+    public async Task ShouldPreservePoisonedRowAndCheckpointGivenRefreshFindsPreviousScopeMismatch(bool closure, bool program)
+    {
+        // Arrange
+        await using var database = await CassieRepositoryTestDatabase.OpenAsync();
+        var fixture = await OperationsFixture.CreateAsync();
+        await using var provider = fixture.Provider;
+        var finding = await CorrectiveActionChangeWorkflowTests.OpenAsync(fixture);
+        var reader = provider.GetRequiredService<FindingReader>();
+        var events = provider.GetRequiredService<IDomainEventReader>();
+        await using var work = new CassieCorrectiveActionWorkItemDirectory(database.Database, reader, TimeProvider.System);
+        await using var closures = new CassieFindingClosureWorkItemDirectory(database.Database, reader, TimeProvider.System);
+        IProjectionStore repository = closure ? closures : work;
+        Func<DomainEvent, CancellationToken, ValueTask> apply = closure ? closures.ApplyAsync : work.ApplyAsync;
+        var name = closure ? CassieFindingClosureWorkItemDirectory.ProjectorName : CassieCorrectiveActionWorkItemDirectory.ProjectorName;
+        var table = closure ? "work_finding_closures" : "work_corrective_actions";
+        var pattern = work.SourcePattern(fixture.TenantId);
+        var identity = new CheckpointIdentity(name, pattern);
+        await ProjectAsync(repository, name, pattern, ProjectionCheckpoint.Start, events, apply);
+        var checkpoint = await repository.LoadCheckpointAsync(identity);
+        var revision = await work.LoadRevisionAsync(fixture.TenantId);
+        var original = await ReadPayloadAsync(database, table);
+        var oldId = program ? fixture.ProgramId : fixture.TenantId;
+        var poisoned = original.Replace(oldId.ToString(), Uuid.CreateVersion4().ToString(), StringComparison.Ordinal);
+        Assert.NotEqual(original, poisoned);
+        await using (var connection = await database.DataSource.OpenConnectionAsync())
+        await using (var command = connection.CreateCommand())
+        {
+            command.CommandText = $"UPDATE {table} SET payload = CAST(@payload AS JSONB)";
+            _ = command.Parameters.Add(new CassieParameter { ParameterName = "payload", Value = poisoned });
+            Assert.Equal(1, await command.ExecuteNonQueryAsync());
+        }
+        var retained = await ReadPayloadAsync(database, table);
+        await fixture.AsAsync(fixture.LeadUserId, CorrectiveActionChangeWorkflowTests.Change(fixture, finding));
+
+        // Act
+        await Assert.ThrowsAsync<InvalidOperationException>(() => ProjectAsync(repository, name, pattern, checkpoint, events, apply));
+
+        // Assert
+        Assert.Equal(retained, await ReadPayloadAsync(database, table));
+        Assert.Equal(checkpoint, await repository.LoadCheckpointAsync(identity));
+        Assert.Equal(revision, await work.LoadRevisionAsync(fixture.TenantId));
+    }
+
+    static async Task<string> ReadPayloadAsync(CassieRepositoryTestDatabase database, string table)
+    {
+        await using var connection = await database.DataSource.OpenConnectionAsync();
+        await using var command = connection.CreateCommand();
+        command.CommandText = $"SELECT CAST(payload AS TEXT) FROM {table}";
+        return Assert.IsType<string>(await command.ExecuteScalarAsync());
+    }
+
     static async Task ProjectAsync(IProjectionStore repository, string name, EventStreamPattern pattern,
         ProjectionCheckpoint checkpoint, IDomainEventReader events, Func<DomainEvent, CancellationToken, ValueTask> apply)
     {
