@@ -73,6 +73,41 @@ namespace Bdgrz.Compliance.Tests.Features.Policies.Tests;
 public sealed class PolicyNativeContentTests
 {
     [Fact]
+    public async Task ShouldAcceptNativeApprovalGivenReviewerIsIndependentOfAllAuthors()
+    {
+        // Arrange
+        await using var source = new PolicySourceFixture();
+        var tenant = Uuid.CreateVersion4();
+        var program = Uuid.CreateVersion4();
+        var author = Uuid.CreateVersion4();
+        var reviewer = Uuid.CreateVersion4();
+        var id = Policy.IdFor(tenant, program, "REVIEW-APPROVAL");
+        var create = new CreatePolicyDraft(id, tenant, program, "REVIEW-APPROVAL", Content("Reviewed"));
+        Assert.True((await new CreatePolicyDraftHandler(source.Operations()).HandleAsync(
+            PolicySourceFixture.Context(create, author), CancellationToken.None)).IsSuccess);
+        var review = new ReviewPolicyDraft(Uuid.CreateVersion4(), tenant, program, id, 1, "accept", "Reviewed");
+        Assert.True((await new ReviewPolicyDraftHandler(source.Operations()).HandleAsync(
+            PolicySourceFixture.Context(review, reviewer, true), CancellationToken.None)).IsSuccess);
+        var approval = new ApprovePolicy(Uuid.CreateVersion4(), tenant, program, id, 1, review.CommandId,
+            DateOnly.FromDateTime(source.Clock.Now.UtcDateTime), true, "Approved");
+
+        // Act
+        var result = await source.Operations().ExecuteAsync<ApprovePolicy, PolicyVersionView>(
+            PolicySourceFixture.Context(approval, reviewer, true), tenant, program, id, approval.CommandId,
+            nameof(ApprovePolicy), 1, (_, _, _, _) => ValueTask.FromResult(Result.Success),
+            (rules, actor, at) => PolicyOperations.Outcome(rules.Approve(program, 1, approval.CommandId,
+                review.CommandId, approval.EffectiveFrom, true, approval.Rationale, null, actor.Reference,
+                actor.MemberId, at)), null, CancellationToken.None);
+        var restored = await source.Policies.ReadAsync(tenant, program, id);
+
+        // Assert
+        Assert.True(result.IsSuccess, result.Error?.Message);
+        Assert.Equal(RbacIds.Member(tenant, reviewer).ToString(), result.Value!.ApprovedBy.Id);
+        Assert.Equal(result.Value, restored.CurrentVersion);
+        Assert.Equal(3, (await source.FactsAsync(tenant, id)).Count);
+    }
+
+    [Fact]
     public async Task ShouldRetainOriginalActorDisplayGivenNativePolicyAdmissionAndLaterLabelChange()
     {
         // Arrange
