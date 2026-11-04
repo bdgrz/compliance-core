@@ -79,6 +79,8 @@ sealed class WorkforceAuthorizer(ITenantMembershipDirectoryReader memberships,
             .ConfigureAwait(false)
             ? Result.Success
             : Result.Failure(new RequestError(RequestErrorKind.Forbidden,
-                "The actor may not perform this workforce action."));
+                permission == RbacPermissions.WorkforceManage
+                    ? "The actor may not inspect or manage the workforce roster."
+                    : "The actor may not perform this workforce action."));
     }
 }
