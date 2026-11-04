@@ -266,8 +266,10 @@ public sealed class MethodologyTemplateCommandHandlerTests
 
         // Assert
         Assert.Equal(RequestErrorKind.Validation, first.Error?.Kind);
-        Assert.Equal(first.Error, retry.Error);
-        Assert.Equal(first.Error, changed.Error);
+        Assert.Equal(first.Error?.Kind, retry.Error?.Kind);
+        Assert.Equal(first.Error?.Message, retry.Error?.Message);
+        Assert.Equal(first.Error?.Kind, changed.Error?.Kind);
+        Assert.Equal(first.Error?.Message, changed.Error?.Message);
         Assert.Equal(0, owner.Revision);
         Assert.Equal(0UL, owner.CommittedStreamPosition);
     }

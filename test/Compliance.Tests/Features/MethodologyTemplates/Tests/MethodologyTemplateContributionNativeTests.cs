@@ -145,13 +145,13 @@ public sealed class MethodologyTemplateContributionNativeTests
         var operations = scenario.Operations(missing);
 
         // Act
-        var proposalReplay = await HistoricalProposeAsync(operations, 
+        var proposalReplay = await HistoricalProposeAsync(operations,
             MethodologyTemplateContributionScenario.Context(proposal, author), CancellationToken.None);
-        var reviewReplay = await HistoricalReviewAsync(operations, 
+        var reviewReplay = await HistoricalReviewAsync(operations,
             MethodologyTemplateContributionScenario.Context(review, reviewer), CancellationToken.None);
-        var acceptReplay = await HistoricalAcceptAsync(operations, 
+        var acceptReplay = await HistoricalAcceptAsync(operations,
             MethodologyTemplateContributionScenario.Context(accept, acceptor), CancellationToken.None);
-        var changed = await HistoricalReviewAsync(operations, 
+        var changed = await HistoricalReviewAsync(operations,
             MethodologyTemplateContributionScenario.Context(review with { ReviewNotes = "Changed" }, reviewer), CancellationToken.None);
         var after = await scenario.Reader.HydrateAsync(new MethodologyTemplateContribution(tenant, proposal.ContributionId));
 
@@ -245,9 +245,9 @@ public sealed class MethodologyTemplateContributionNativeTests
 
         // Act
         var result = stage == "current"
-            ? await HistoricalReviewAsync(operations, 
+            ? await HistoricalReviewAsync(operations,
                 MethodologyTemplateContributionScenario.Context(review, reviewer), CancellationToken.None)
-            : await HistoricalProposeAsync(operations, 
+            : await HistoricalProposeAsync(operations,
                 MethodologyTemplateContributionScenario.Context(proposal, author), CancellationToken.None);
         var afterFailure = await scenario.Reader.HydrateAsync(new MethodologyTemplateContribution(tenant,
             proposal.ContributionId));
