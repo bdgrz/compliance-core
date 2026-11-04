@@ -32,7 +32,7 @@ public static class MethodologyTemplateDestinationCommands
                     ControlContent(frozen, templateId, templateVersion))),
             "policy" => Success(Policy.IdFor(tenantId, programId, frozen.Policy!.Identifier), "policy",
                 new CreatePolicyDraft(Policy.IdFor(tenantId, programId, frozen.Policy!.Identifier), tenantId, programId,
-                    Policy.NormalizeIdentifier(frozen.Policy!.Identifier), frozen.Policy!.Content)),
+                    Policy.NormalizeIdentifier(frozen.Policy!.Identifier), PolicyContent(frozen, templateId, templateVersion))),
             "risk" => Success(RiskDraft.IdFor(tenantId, programId, frozen.Risk!.Identifier), "risk",
                 new CreateRiskDraft(RiskDraft.IdFor(tenantId, programId, frozen.Risk!.Identifier), tenantId, programId,
                     RiskDraft.NormalizeIdentifier(frozen.Risk!.Identifier), frozen.Risk!.Title, frozen.Risk!.Scenario,
@@ -125,6 +125,13 @@ public static class MethodologyTemplateDestinationCommands
         {
             Provenance = new ControlContentProvenance("template", entry.Title,
                 $"methodology:{templateId}:{entry.EntryKey}", version.ToString(CultureInfo.InvariantCulture)),
+        };
+
+    static Bdgrz.Compliance.Features.Policies.Models.PolicyContent PolicyContent(
+        MethodologyTemplateRecordContent entry, Uuid templateId, long version) =>
+        templateId == Uuid.Empty ? entry.Policy!.Content : entry.Policy!.Content with
+        {
+            TemplateOrigin = new MethodologyTemplateEntryProvenance(templateId, version, entry.EntryKey),
         };
 
     static string? Scope(Uuid tenantId, Uuid programId, Uuid templateId, long templateVersion) =>

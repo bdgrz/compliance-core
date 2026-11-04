@@ -661,7 +661,7 @@ public sealed class PolicyRules
         string.IsNullOrWhiteSpace(content.SourceReference) ? null : content.SourceReference.Trim(),
         string.IsNullOrWhiteSpace(content.OwnerReference) ? null : content.OwnerReference.Trim(),
         (content.Applicability ?? []).Select(static reference => new PolicyApplicabilityReference(
-            reference.SubjectType, reference.Subject.Trim(), reference.RecordId)).ToArray());
+            reference.SubjectType, reference.Subject.Trim(), reference.RecordId)).ToArray(), content.TemplateOrigin);
 
     /// <summary>The SHA-256 of the canonical content, used as the acknowledged policy hash.</summary>
     public static string Hash(PolicyContent content) => Convert.ToHexStringLower(
