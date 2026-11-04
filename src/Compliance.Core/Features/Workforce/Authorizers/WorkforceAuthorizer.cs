@@ -17,6 +17,9 @@ using Bdgrz.Compliance.Features.Tenants.Contracts;
 using Bdgrz.Compliance.Features.Tenants.Processes;
 using Bdgrz.Compliance.Features.UserIdentities.Services;
 using Bdgrz.Compliance.Features.Workforce.Contracts;
+using Bdgrz.Compliance.Features.Workforce.Commands;
+using Bdgrz.Compliance.Features.Workforce.Aggregates;
+using Bdgrz.Compliance.Features.Workforce.Services;
 using Bdgrz.Compliance.Features.AccessControl.Aggregates;
 using Bdgrz.Compliance.Features.AccessControl.Authorizers;
 using Bdgrz.Compliance.Features.Examinations.Aggregates;
@@ -35,7 +38,6 @@ sealed class WorkforceAuthorizer(ITenantMembershipDirectoryReader memberships,
     public async ValueTask<Result> AuthorizeAsync(IRequestContext<IWorkforceRequest> context,
         CancellationToken ct)
     {
-        _ = reader;
         if (!UserIdentityClaims.TryGetBdgrzSubject(context.Actor, out var userId))
             return Result.Failure(new RequestError(RequestErrorKind.Unauthorized,
                 "The workforce roster requires a Bdgrz user identity."));
@@ -51,11 +53,32 @@ sealed class WorkforceAuthorizer(ITenantMembershipDirectoryReader memberships,
         if (!await tenants.IsActiveAsync(tenantId, ct).ConfigureAwait(false))
             return Result.Failure(new RequestError(RequestErrorKind.Forbidden,
                 "The tenant is not active."));
+        if (context.Request is ReviewServiceIdentity review)
+        {
+            if (context.Invocation is not HttpInvocation || RequestActor.IsSystem(context.Actor))
+                return Result.Failure(new RequestError(RequestErrorKind.Forbidden,
+                    "A service identity review requires a personal HTTP invocation."));
+            var allowed = reader is not null
+                ? await ServiceIdentityReviewAccess.IsAllowedAsync(reader, permissions, tenantId,
+                    await reader.HydrateAsync(new ServiceIdentity(tenantId, review.ServiceIdentityId), ct).ConfigureAwait(false),
+                    userId, ct).ConfigureAwait(false)
+                : await permissions.IsAllowedAsync(tenantId, userId, RbacIds.Member(tenantId, userId),
+                    ServiceIdentityPermissions.Review, ct).ConfigureAwait(false);
+            return allowed ? Result.Success : Result.Failure(new RequestError(RequestErrorKind.Forbidden,
+                "Only the current owner or an authorized service identity reviewer may review this identity."));
+        }
+        var permission = context.Request switch
+        {
+            RecordServiceIdentity => ServiceIdentityPermissions.Record,
+            ChangeServiceIdentityOwner or ChangeServiceIdentityPurpose or DisableServiceIdentity or
+                EnableServiceIdentity or RetireServiceIdentity => ServiceIdentityPermissions.Manage,
+            _ => RbacPermissions.WorkforceManage,
+        };
         return await permissions.IsAllowedAsync(tenantId, userId,
-                RbacIds.Member(tenantId, userId), RbacPermissions.WorkforceManage, ct)
+                RbacIds.Member(tenantId, userId), permission, ct)
             .ConfigureAwait(false)
             ? Result.Success
             : Result.Failure(new RequestError(RequestErrorKind.Forbidden,
-                "The actor may not inspect or manage the workforce roster."));
+                "The actor may not perform this workforce action."));
     }
 }

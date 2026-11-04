@@ -65,6 +65,27 @@ public sealed class ServiceIdentityAuthorizationTests
     }
 
     [Theory]
+    [InlineData(true, true, true)]
+    [InlineData(false, true, false)]
+    [InlineData(true, false, false)]
+    public async Task ShouldRequireCurrentActiveTeamMembershipGivenTeamOwnerReview(
+        bool sameEpisode, bool teamActive, bool accepted)
+    {
+        // Arrange
+        var fixture = new Fixture(teamOwner: true, sameEpisode: sameEpisode, teamActive: teamActive);
+        var authorizer = new WorkforceAuthorizer(new FixedMembershipDirectory(true), new Active(),
+            new Permissions(null), fixture);
+
+        // Act
+        var result = await authorizer.AuthorizeAsync(fixture.Context(fixture.Request("review")), CancellationToken.None);
+
+        // Assert
+        Assert.Equal(accepted, result.IsSuccess);
+        if (!accepted)
+            Assert.Equal(RequestErrorKind.Forbidden, Assert.IsType<RequestError>(result.Error).Kind);
+    }
+
+    [Theory]
     [InlineData("direct")]
     [InlineData("mcp")]
     public async Task ShouldRefuseReviewGivenNonPersonalHttpInvocation(string transport)
@@ -107,12 +128,15 @@ public sealed class ServiceIdentityAuthorizationTests
         public Uuid Owner { get; } = Uuid.CreateVersion4();
         public ServiceIdentity Identity { get; }
         readonly Person _person;
+        readonly Team? _team;
+        readonly TeamMember? _assignment;
+        readonly Member? _member;
 
-        public Fixture(bool linked = false)
+        public Fixture(bool linked = false, bool teamOwner = false, bool sameEpisode = true, bool teamActive = true)
         {
             Identity = new ServiceIdentity(Tenant, Uuid.CreateVersion4());
             Assert.True(Identity.Record(new ServiceIdentityTerms("Bot", "bot", "Approved purpose", null,
-                "active", "person", Owner, Today.AddMonths(6)), Today, Author, Now).IsSuccess);
+                "active", teamOwner ? "team" : "person", Owner, Today.AddMonths(6)), Today, Author, Now).IsSuccess);
             DomainEvent[] facts =
             [
                 DomainEventSeed.Attach(new PersonRecorded(Tenant, Owner, "Owner", null, Author, Now), Owner, 1),
@@ -120,6 +144,19 @@ public sealed class ServiceIdentityAuthorizationTests
                     linked ? User : Uuid.CreateVersion4(), Author, Now), Owner, 2),
             ];
             _person = NativeFacts.Replay(new Person(Tenant, Owner), facts);
+            if (teamOwner)
+            {
+                _team = new Team(Tenant, Owner);
+                Assert.True(_team.Define(NativeFacts.Root(_team, Owner, "DefineTeam", null), NativeFacts.Ref(), "Owner team").IsSuccess);
+                if (!teamActive)
+                    Assert.True(_team.Delete(NativeFacts.Root(_team, Uuid.CreateVersion4(), "DeleteTeam", null), NativeFacts.Ref()).IsSuccess);
+                _member = new Member(Tenant, User);
+                var episode = Uuid.CreateVersion4();
+                Assert.True(_member.Register(NativeFacts.Root(_member, episode, "RegisterMember", null), NativeFacts.Ref()).IsSuccess);
+                _assignment = new TeamMember(Tenant, Owner, RbacIds.Member(Tenant, User));
+                Assert.True(_assignment.Assign(NativeFacts.Root(_assignment, Uuid.CreateVersion4(), "AssignTeamMember", 0),
+                    NativeFacts.Ref(), sameEpisode ? episode : Uuid.CreateVersion4(), 0, 0).IsSuccess);
+            }
         }
 
         public IWorkforceRequest Request(string action) => action switch
@@ -140,6 +177,9 @@ public sealed class ServiceIdentityAuthorizationTests
             {
                 ServiceIdentity when aggregate.Id == Identity.Id => (TAggregate)(Aggregate)Identity,
                 Person when aggregate.Id == Owner => (TAggregate)(Aggregate)_person,
+                Team when _team is not null && aggregate.Id == _team.Id => (TAggregate)(Aggregate)_team,
+                TeamMember when _assignment is not null && aggregate.Id == _assignment.Id => (TAggregate)(Aggregate)_assignment,
+                Member when _member is not null && aggregate.Id == _member.Id => (TAggregate)(Aggregate)_member,
                 _ => aggregate,
             });
     }

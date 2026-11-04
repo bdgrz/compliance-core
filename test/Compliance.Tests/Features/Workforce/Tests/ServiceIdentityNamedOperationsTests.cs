@@ -29,7 +29,7 @@ public sealed class ServiceIdentityNamedOperationsTests
         var purpose = identity.ChangePurpose(2, " Approved new purpose ", Author, Now);
         var reviewed = identity.Review(3, Today.AddYears(1), " Checked the current purpose ", Author, Now);
         var disabled = identity.Disable(4, "Investigation", Author, Now);
-        var enabled = identity.Enable(5, Today, Author, Now);
+        var enabled = identity.Enable(5, Author, Now);
         var retired = identity.Retire(6, "Replaced by a new identity", Author, Now);
 
         // Assert
@@ -225,7 +225,7 @@ public sealed class ServiceIdentityNamedOperationsTests
         Assert.Null(identity.ChangePurpose(2, "Updated purpose", Author, Now));
         Assert.Null(identity.Review(3, Today.AddYears(1), "Reviewed", Author, Now));
         Assert.Null(identity.Disable(4, "Paused", Author, Now));
-        Assert.Null(identity.Enable(5, Today, Author, Now));
+        Assert.Null(identity.Enable(5, Author, Now));
         var replayed = NativeFacts.Replay(new ServiceIdentity(Tenant, identity.Id),
             new AggregateScenario<ServiceIdentity>(identity).PendingEvents);
 
@@ -240,7 +240,7 @@ public sealed class ServiceIdentityNamedOperationsTests
             new AggregateScenario<ServiceIdentity>(identity).PendingEvents.Concat(
                 new AggregateScenario<ServiceIdentity>(replayed).PendingEvents));
         Assert.Equal(CommandFailureCode.StateConflict,
-            Assert.IsType<CommandFailure>(terminal.Enable(7, Today, Author, Now)).Code);
+            Assert.IsType<CommandFailure>(terminal.Enable(7, Author, Now)).Code);
     }
 
     [Fact]
@@ -277,6 +277,93 @@ public sealed class ServiceIdentityNamedOperationsTests
         Assert.Empty(new AggregateScenario<ServiceIdentity>(identity).PendingEvents);
     }
 
+    [Theory]
+    [InlineData("owner_kind")]
+    [InlineData("owner_id")]
+    [InlineData("purpose_blank")]
+    [InlineData("purpose_long")]
+    public void ShouldRefuseWithoutFactGivenInvalidNamedContent(string invalid)
+    {
+        // Arrange
+        var identity = Recorded();
+
+        // Act
+        var failure = invalid switch
+        {
+            "owner_kind" => identity.ChangeOwner(1, "role", Person, Author, Now),
+            "owner_id" => identity.ChangeOwner(1, "person", Uuid.Empty, Author, Now),
+            "purpose_blank" => identity.ChangePurpose(1, " ", Author, Now),
+            "purpose_long" => identity.ChangePurpose(1, new string('x', 1001), Author, Now),
+            _ => throw new ArgumentOutOfRangeException(nameof(invalid)),
+        };
+
+        // Assert
+        Assert.Equal(CommandFailureCode.InvalidContent, Assert.IsType<CommandFailure>(failure).Code);
+        Assert.Single(new AggregateScenario<ServiceIdentity>(identity).PendingEvents);
+        Assert.Equal(1, identity.Revision);
+    }
+
+    [Fact]
+    public void ShouldRefuseWithoutFactGivenSharedAccountOwnerChangedToTeam()
+    {
+        // Arrange
+        var identity = New();
+        Assert.True(identity.Record(Terms("active") with
+        { IdentityKind = "shared_account", SharedJustification = "Emergency use" }, Today, Author, Now).IsSuccess);
+
+        // Act
+        var failure = identity.ChangeOwner(1, "team", Team, Author, Now);
+
+        // Assert
+        Assert.Equal(CommandFailureCode.InvalidContent, Assert.IsType<CommandFailure>(failure).Code);
+        Assert.Single(new AggregateScenario<ServiceIdentity>(identity).PendingEvents);
+    }
+
+    [Fact]
+    public void ShouldRefuseWithoutFactGivenEnablingExpiredIdentity()
+    {
+        // Arrange
+        var identity = New();
+        Assert.True(identity.Record(Terms("disabled") with { ExpiresOn = Today }, Today, Author, Now).IsSuccess);
+
+        // Act
+        var failure = identity.Enable(1, Author, Now);
+
+        // Assert
+        Assert.Equal(CommandFailureCode.InvalidContent, Assert.IsType<CommandFailure>(failure).Code);
+        Assert.Single(new AggregateScenario<ServiceIdentity>(identity).PendingEvents);
+    }
+
+    [Theory]
+    [InlineData("owner")]
+    [InlineData("purpose")]
+    [InlineData("review")]
+    [InlineData("disable")]
+    [InlineData("retire")]
+    public void ShouldAllowNamedRepairGivenReviewDateHasElapsed(string operation)
+    {
+        // Arrange
+        var identity = New();
+        Assert.True(identity.Record(Terms("active") with { ReviewBy = Today.AddDays(1) }, Today, Author, Now).IsSuccess);
+        var later = Now.AddMonths(2);
+
+        // Act
+        var failure = operation switch
+        {
+            "owner" => identity.ChangeOwner(1, "team", Team, Author, later),
+            "purpose" => identity.ChangePurpose(1, "Updated purpose", Author, later),
+            "review" => identity.Review(1, Today.AddMonths(6), "Overdue review completed", Author, later),
+            "disable" => identity.Disable(1, "Paused", Author, later),
+            "retire" => identity.Retire(1, "Replaced", Author, later),
+            _ => throw new ArgumentOutOfRangeException(nameof(operation)),
+        };
+
+        // Assert
+        Assert.Null(failure);
+        Assert.Equal(2, identity.Revision);
+        Assert.Equal(2, new AggregateScenario<ServiceIdentity>(identity).PendingEvents.Count);
+    }
+
     static ServiceIdentity New() => new(Tenant, Uuid.CreateVersion4());
 
     static ServiceIdentity Recorded(string status = "active")
@@ -295,7 +382,7 @@ public sealed class ServiceIdentityNamedOperationsTests
         "purpose" => identity.ChangePurpose(revision, "Updated purpose", Author, Now),
         "review" => identity.Review(revision, Today.AddYears(1), "Reviewed", Author, Now),
         "disable" => identity.Disable(revision, "Paused", Author, Now),
-        "enable" => identity.Enable(revision, Today, Author, Now),
+        "enable" => identity.Enable(revision, Author, Now),
         "retire" => identity.Retire(revision, "Completed", Author, Now),
         _ => throw new ArgumentOutOfRangeException(nameof(operation)),
     };
