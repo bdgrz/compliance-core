@@ -206,6 +206,26 @@ public sealed class WorkRelationshipLifecycleTests
         Assert.IsType<WorkRelationshipLeaveEnded>(Assert.Single(scenario.PendingEvents));
     }
 
+    [Fact]
+    public void ShouldStartAnotherLeaveGivenSerializedNamedReturnFromLeave()
+    {
+        // Arrange
+        var relationship = Recorded("pending");
+        Assert.Null(relationship.Start(1, Start, Author, Now));
+        Assert.Null(relationship.StartLeave(2, Start.AddDays(10), Author, Now));
+        Assert.Null(relationship.EndLeave(3, Start.AddDays(20), Author, Now));
+        var replayed = NativeFacts.Replay(New(), NativeFacts.Raised(relationship));
+        var scenario = new AggregateScenario<WorkRelationship>(replayed);
+
+        // Act
+        var failure = replayed.StartLeave(4, Start.AddDays(30), Author, Now);
+
+        // Assert
+        Assert.Null(failure);
+        Assert.Equal(5, replayed.Revision);
+        Assert.IsType<WorkRelationshipLeaveStarted>(Assert.Single(scenario.PendingEvents));
+    }
+
     static (Uuid Tenant, Uuid Relationship, string Worker, long Revision, ActorReference Actor, DateTimeOffset At)
         Identity(DomainEvent fact) => fact switch
         {
