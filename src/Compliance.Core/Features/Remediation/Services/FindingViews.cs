@@ -63,6 +63,16 @@ static class FindingViews
                 revision.RevisedBy, revision.RevisedAt)],
         }, now);
 
+    public static FindingView WithAnalysis(FindingView view, string analysis, string severity, IReadOnlyList<FindingLink> affectedRecords,
+        long number, ActorReference actor, DateTimeOffset at) => Settle(view with
+        {
+            Revision = number,
+            Analysis = analysis,
+            Severity = severity,
+            AffectedRecords = affectedRecords.ToArray(),
+            History = [.. view.History, new FindingHistoryEntryView(number, "analysis_revised", analysis, actor, at)],
+        }, at);
+
     public static FindingView WithAcceptance(FindingView view, FindingAcceptanceView acceptance, long number,
         DateTimeOffset now) =>
         Settle(view with

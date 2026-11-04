@@ -84,6 +84,13 @@ public static class FindingHistory
                         revised.RevisedAt == operation.AcceptedAt &&
                         NativeOwnerHistory.IsOwnRoot(owner, operation, nameof(ReviseFinding), (ulong)index);
                     break;
+                case FindingAnalysisRevised analysis:
+                    valid = writable && Scope(analysis.TenantId, analysis.ProgramId, analysis.FindingId) &&
+                        analysis.Revision == revision && analysis.RevisedBy == operation.Actor &&
+                        analysis.RevisedAt == operation.AcceptedAt && analysis.Analysis == analysis.Analysis.Trim() &&
+                        FindingRules.ValidateAnalysis(analysis.Analysis, analysis.Severity, analysis.AffectedRecords) is null &&
+                        NativeOwnerHistory.IsOwnRoot(owner, operation, nameof(ReviseFindingAnalysis), (ulong)index);
+                    break;
                 case CorrectiveActionAdmitted admitted:
                     valid = writable && admitted.Owner == owner.Stream && admitted.Revision == revision &&
                         admitted.Generation == generation && actions.Add(operation.LogicalId) &&

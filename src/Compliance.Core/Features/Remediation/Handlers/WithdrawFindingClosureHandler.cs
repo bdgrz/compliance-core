@@ -12,7 +12,7 @@ using Bdgrz.Compliance.Features.Remediation.Services;
 namespace Bdgrz.Compliance.Features.Remediation.Handlers;
 
 /// <summary>Records the proposer's exact withdrawal and fences any accepted review in the same owner append.</summary>
-public sealed class WithdrawFindingClosureHandler(NativeOperationExecutor operations, FindingReader findings,
+public sealed class WithdrawFindingClosureHandler(NativeOperationExecutor operations, IAggregateReader reader, FindingReader findings,
     IImmutableContentStore content, TimeProvider clock) : IRequestHandler<WithdrawFindingClosure, FindingView>
 {
     public async ValueTask<Result<FindingView>> HandleAsync(IRequestContext<WithdrawFindingClosure> context, CancellationToken ct)
@@ -22,9 +22,12 @@ public sealed class WithdrawFindingClosureHandler(NativeOperationExecutor operat
             request.FindingId == Uuid.Empty || request.ClosureId == Uuid.Empty || request.ExpectedRevision < 0 || request.ProposalRevision < 1)
             return Result<FindingView>.Failure(new RequestError(RequestErrorKind.Validation,
                 "Withdrawal requires the exact finding and current proposal revision."));
-        var actor = OperationsActor.From(context.Actor, request.TenantId);
-        var withdrawnBy = ActorReference.ForMember(actor.MemberId, actor.Display);
         var now = clock.GetUtcNow();
+        var acting = await FindingActors.RequireCurrentAsync(context.Actor, request.TenantId, reader, now, ct).ConfigureAwait(false);
+        if (!acting.IsSuccess)
+            return Result<FindingView>.Failure(acting.Error!);
+        var actor = acting.Value;
+        var withdrawnBy = ActorReference.ForMember(actor.MemberId, actor.Display);
         var snapshot = new FindingAggregate(request.TenantId, request.ProgramId, request.FindingId, request.CommandId);
         var provenance = FindingContent.Provenance(request.CommandId, nameof(WithdrawFindingClosure), snapshot.Stream,
             withdrawnBy, (ulong)request.ExpectedRevision, FindingCommands.Digest(request), now) with { FirstOwner = snapshot.Stream };

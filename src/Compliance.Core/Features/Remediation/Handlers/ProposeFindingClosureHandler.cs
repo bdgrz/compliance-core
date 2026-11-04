@@ -27,9 +27,20 @@ public sealed class ProposeFindingClosureHandler(NativeOperationExecutor operati
             request.PreviousProposalRevision < 0)
             return Result<FindingView>.Failure(new RequestError(RequestErrorKind.Validation,
                 "A closure proposal requires its finding, closure identity and non-negative predecessor revisions."));
-        var actor = OperationsActor.From(context.Actor, request.TenantId);
-        var proposedBy = ActorReference.ForMember(actor.MemberId, actor.Display);
         var now = clock.GetUtcNow();
+        var acting = await FindingActors.RequireCurrentAsync(context.Actor, request.TenantId, reader, now, ct).ConfigureAwait(false);
+        if (!acting.IsSuccess)
+            return Result<FindingView>.Failure(acting.Error!);
+        var actor = acting.Value;
+        var authority = await reader.HydrateAsync(new FindingAggregate(request.TenantId, request.ProgramId, request.FindingId), ct)
+            .ConfigureAwait(false);
+        if (!authority.IsRecorded)
+            return Result<FindingView>.Failure(new RequestError(RequestErrorKind.NotFound, "The finding was not found."));
+        if (authority.OwnerMemberId != actor.MemberId && !await permissions.IsAllowedAsync(request.TenantId, actor.UserId,
+                actor.MemberId, FindingClosurePermissions.Propose, ct).ConfigureAwait(false))
+            return Result<FindingView>.Failure(new RequestError(RequestErrorKind.Forbidden,
+                "Only the finding owner or a Compliance Lead may propose closure."));
+        var proposedBy = ActorReference.ForMember(actor.MemberId, actor.Display);
         var snapshot = new FindingAggregate(request.TenantId, request.ProgramId, request.FindingId, request.CommandId);
         var provenance = FindingContent.Provenance(request.CommandId, nameof(ProposeFindingClosure), snapshot.Stream,
             proposedBy, (ulong)request.ExpectedRevision, FindingCommands.Digest(request), now) with { FirstOwner = snapshot.Stream };
