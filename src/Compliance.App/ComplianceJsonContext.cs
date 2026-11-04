@@ -108,4 +108,8 @@ namespace Bdgrz.Compliance;
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.Workforce.Commands.ChangeDepartment))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.Workforce.Commands.ChangeSponsor))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.Workforce.Commands.CorrectWorkRelationshipDates))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.MethodologyTemplates.Commands.ReviseMethodologyTemplateDraftV3))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.MethodologyTemplates.Commands.ReviewMethodologyTemplateDraft))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.MethodologyTemplates.Commands.ApproveMethodologyTemplateDraft))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.MethodologyTemplates.Commands.DiscardMethodologyTemplateDraft))]
 sealed partial class ComplianceJsonContext : JsonSerializerContext;

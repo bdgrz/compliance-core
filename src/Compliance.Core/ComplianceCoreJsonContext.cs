@@ -2769,4 +2769,8 @@ namespace Bdgrz.Compliance;
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.MethodologyTemplates.Events.MethodologyTemplateDraftDiscarded))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.MethodologyTemplates.Events.MethodologyTemplateDraftStarted))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.MethodologyTemplates.Commands.OpenMethodologyTemplateDraft))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.MethodologyTemplates.Commands.ReviseMethodologyTemplateDraftV3))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.MethodologyTemplates.Commands.ReviewMethodologyTemplateDraft))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.MethodologyTemplates.Commands.ApproveMethodologyTemplateDraft))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.MethodologyTemplates.Commands.DiscardMethodologyTemplateDraft))]
 sealed partial class ComplianceCoreJsonContext : JsonSerializerContext;
