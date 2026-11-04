@@ -1,5 +1,5 @@
-using Cntryl.Fitz;
-using Cntryl.Fitz.Testing;
+using Bdgrz.Compliance.Features.AccessControl.Projections;
+using Bdgrz.Compliance.Tests.Testing;
 using Cntryl.Portia;
 using Bdgrz.Compliance.Features.AccessControl.Models;
 using Bdgrz.Compliance.Features.Applications.Models;
@@ -64,10 +64,10 @@ using Bdgrz.Compliance.Features.Tenants.Aggregates;
 namespace Bdgrz.Compliance.Tests.Features.AccessControl.Tests;
 
 /// <summary>
-///     Exercises the real KvDirectory-backed index/cursor/search logic against Fitz's own in-memory
-///     KV double — same coverage as <see cref="FitzTeamDirectoryReaderTests" />.
+///     Exercises native Cassie ordering, cursor, search, and isolation through the production repository.
 /// </summary>
-public sealed class FitzRoleDirectoryReaderTests
+[Trait("Category", "CassieIntegration")]
+public sealed class CassieRoleDirectoryReaderTests
 {
     static readonly Uuid TenantId = Uuid.CreateVersion4();
 
@@ -75,10 +75,10 @@ public sealed class FitzRoleDirectoryReaderTests
     public async Task ShouldReturnStoredRoleGivenMatchingId()
     {
         // Arrange
-        var client = new InMemoryKvClient();
+        await using var database = await CassieRepositoryTestDatabase.OpenAsync(CassieAccessControlSchema.Statements);
         var roleId = Uuid.CreateVersion4();
-        await SeedAsync(client, roleId, "Reviewer");
-        var reader = new FitzRoleDirectoryReader(client);
+        await SeedAsync(database.Database, roleId, "Reviewer");
+        await using var reader = new CassieRoleDirectoryReader(database.Database);
 
         // Act
         var role = await reader.GetAsync(TenantId, roleId, CancellationToken.None);
@@ -92,7 +92,8 @@ public sealed class FitzRoleDirectoryReaderTests
     public async Task ShouldReturnNullGivenNoSuchRole()
     {
         // Arrange
-        var reader = new FitzRoleDirectoryReader(new InMemoryKvClient());
+        await using var database = await CassieRepositoryTestDatabase.OpenAsync(CassieAccessControlSchema.Statements);
+        await using var reader = new CassieRoleDirectoryReader(database.Database);
 
         // Act
         var role = await reader.GetAsync(TenantId, Uuid.CreateVersion4(), CancellationToken.None);
@@ -105,10 +106,10 @@ public sealed class FitzRoleDirectoryReaderTests
     public async Task ShouldReplaceDisplayNameGivenRoleRenameEvent()
     {
         // Arrange
-        var client = new InMemoryKvClient();
+        await using var database = await CassieRepositoryTestDatabase.OpenAsync(CassieAccessControlSchema.Statements);
         var roleId = Uuid.CreateVersion4();
-        await SeedAsync(client, roleId, "Tenant Administration");
-        var reader = new FitzRoleDirectoryReader(client);
+        await SeedAsync(database.Database, roleId, "Tenant Administration");
+        await using var reader = new CassieRoleDirectoryReader(database.Database);
         var identity = new CheckpointIdentity("RoleDirectory", EventStreamPattern.ForPattern(TenantId.ToString()));
         await using (var batch = await reader.BeginAsync(
                          new ProjectionBatchContext(identity, ProjectionCheckpoint.Start)))
@@ -129,10 +130,10 @@ public sealed class FitzRoleDirectoryReaderTests
     public async Task ShouldReturnRolesInNameOrderGivenTenantQuery()
     {
         // Arrange
-        var client = new InMemoryKvClient();
-        await SeedAsync(client, Uuid.CreateVersion4(), "Beta");
-        await SeedAsync(client, Uuid.CreateVersion4(), "Alpha");
-        var reader = new FitzRoleDirectoryReader(client);
+        await using var database = await CassieRepositoryTestDatabase.OpenAsync(CassieAccessControlSchema.Statements);
+        await SeedAsync(database.Database, Uuid.CreateVersion4(), "Beta");
+        await SeedAsync(database.Database, Uuid.CreateVersion4(), "Alpha");
+        await using var reader = new CassieRoleDirectoryReader(database.Database);
 
         // Act
         var page = await reader.ListAsync(TenantId, null, null, null, descending: false, CancellationToken.None);
@@ -146,10 +147,10 @@ public sealed class FitzRoleDirectoryReaderTests
     public async Task ShouldFilterRolesGivenNameSubstring()
     {
         // Arrange
-        var client = new InMemoryKvClient();
-        await SeedAsync(client, Uuid.CreateVersion4(), "Site Reviewer");
-        await SeedAsync(client, Uuid.CreateVersion4(), "Administrator");
-        var reader = new FitzRoleDirectoryReader(client);
+        await using var database = await CassieRepositoryTestDatabase.OpenAsync(CassieAccessControlSchema.Statements);
+        await SeedAsync(database.Database, Uuid.CreateVersion4(), "Site Reviewer");
+        await SeedAsync(database.Database, Uuid.CreateVersion4(), "Administrator");
+        await using var reader = new CassieRoleDirectoryReader(database.Database);
 
         // Act
         var page = await reader.ListAsync(TenantId, null, null, "review", descending: false, CancellationToken.None);
@@ -163,11 +164,11 @@ public sealed class FitzRoleDirectoryReaderTests
     public async Task ShouldReturnRolesOnlyGivenRequestedTenant()
     {
         // Arrange
-        var client = new InMemoryKvClient();
+        await using var database = await CassieRepositoryTestDatabase.OpenAsync(CassieAccessControlSchema.Statements);
         var otherTenantId = Uuid.CreateVersion4();
-        await SeedAsync(client, Uuid.CreateVersion4(), "Mine", TenantId);
-        await SeedAsync(client, Uuid.CreateVersion4(), "Theirs", otherTenantId);
-        var reader = new FitzRoleDirectoryReader(client);
+        await SeedAsync(database.Database, Uuid.CreateVersion4(), "Mine", TenantId);
+        await SeedAsync(database.Database, Uuid.CreateVersion4(), "Theirs", otherTenantId);
+        await using var reader = new CassieRoleDirectoryReader(database.Database);
 
         // Act
         var page = await reader.ListAsync(TenantId, null, null, null, descending: false, CancellationToken.None);
@@ -177,10 +178,10 @@ public sealed class FitzRoleDirectoryReaderTests
         Assert.Equal("Mine", role.Name);
     }
 
-    static async Task SeedAsync(InMemoryKvClient client, Uuid roleId, string name, Uuid? tenantId = null)
+    static async Task SeedAsync(CassieProjectionDatabase database, Uuid roleId, string name, Uuid? tenantId = null)
     {
         var tenant = tenantId ?? TenantId;
-        var repository = new FitzRoleDirectoryReader(client);
+        await using var repository = new CassieRoleDirectoryReader(database);
         var identity = new CheckpointIdentity("RoleDirectory", EventStreamPattern.ForPattern(tenant.ToString()));
         await using var batch = await repository.BeginAsync(new ProjectionBatchContext(identity, ProjectionCheckpoint.Start));
         await repository.ApplyAsync(RbacFacts.RoleDefinedFact(tenant, roleId, name));

@@ -41,7 +41,7 @@ public sealed class ListTeamRolesHandler(ITeamRoleDirectoryReader directory)
                 ListRequestNormalization.IsDescending(request.Sort),
                 ct).ConfigureAwait(false);
         }
-        catch (KvDirectoryQueryException)
+        catch (AccessControlDirectoryQueryException)
         {
             return Result<Page<TeamRoleView>>.Failure(new RequestError(RequestErrorKind.Validation,
                 "The team role cursor is invalid."));

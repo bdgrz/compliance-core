@@ -1,4 +1,5 @@
 using Cntryl.Cassie.Connection;
+using Bdgrz.Compliance.Features.AccessControl.Projections;
 using Bdgrz.Compliance.Features.MethodologyTemplates.Projections;
 using Bdgrz.Compliance.Features.Work.Projections;
 using Bdgrz.Compliance.Features.Workforce.Projections;
@@ -9,6 +10,7 @@ static class CassieReadModelSchema
 {
     internal static IReadOnlyList<string> Statements { get; } =
     [
+        .. CassieAccessControlSchema.Statements,
         .. CassieWorkforceSchema.Statements,
         .. CassieMethodologyTemplateSchema.Statements,
         .. CassieRemediationWorkSchema.Statements,

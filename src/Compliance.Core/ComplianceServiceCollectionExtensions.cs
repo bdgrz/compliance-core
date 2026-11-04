@@ -424,20 +424,20 @@ public static class ComplianceServiceCollectionExtensions
         services.AddScoped<TenantInvitationDeliverySupport>();
         services.AddSingleton<ITenantInvitationDeliveryStore>(provider =>
             new FitzKvTenantInvitationDeliveryStore(provider.GetRequiredService<IKvClient>()));
-        services.AddScoped<FitzPermissionAuthorizer>();
-        services.AddScoped<IPermissionProjection>(provider => provider.GetRequiredService<FitzPermissionAuthorizer>());
-        services.AddScoped<IPermissionAuthorizer>(provider => provider.GetRequiredService<FitzPermissionAuthorizer>());
-        services.AddScoped<IMemberAccessReader>(provider => provider.GetRequiredService<FitzPermissionAuthorizer>());
+        services.AddScoped<CassiePermissionAuthorizer>();
+        services.AddScoped<IPermissionProjection>(provider => provider.GetRequiredService<CassiePermissionAuthorizer>());
+        services.AddScoped<IPermissionAuthorizer>(provider => provider.GetRequiredService<CassiePermissionAuthorizer>());
+        services.AddScoped<IMemberAccessReader>(provider => provider.GetRequiredService<CassiePermissionAuthorizer>());
         services.AddScoped<IMemberAccessEligibility, EventSourcedMemberAccessEligibility>();
         services.AddScoped<MemberAuthorityCleanup>();
-        services.AddScoped<FitzTeamDirectoryReader>();
-        services.AddScoped<ITeamDirectoryProjection>(provider => provider.GetRequiredService<FitzTeamDirectoryReader>());
-        services.AddScoped<ITeamDirectoryReader>(provider => provider.GetRequiredService<FitzTeamDirectoryReader>());
-        services.AddScoped<FitzTeamMemberDirectoryReader>();
+        services.AddScoped<CassieTeamDirectoryReader>();
+        services.AddScoped<ITeamDirectoryProjection>(provider => provider.GetRequiredService<CassieTeamDirectoryReader>());
+        services.AddScoped<ITeamDirectoryReader>(provider => provider.GetRequiredService<CassieTeamDirectoryReader>());
+        services.AddScoped<CassieTeamMemberDirectoryReader>();
         services.AddScoped<ITeamMemberDirectoryProjection>(
-            provider => provider.GetRequiredService<FitzTeamMemberDirectoryReader>());
+            provider => provider.GetRequiredService<CassieTeamMemberDirectoryReader>());
         services.AddScoped<ITeamMemberDirectoryReader>(
-            provider => provider.GetRequiredService<FitzTeamMemberDirectoryReader>());
+            provider => provider.GetRequiredService<CassieTeamMemberDirectoryReader>());
         services.AddScoped<FitzTenantDirectoryReader>();
         services.AddScoped<ITenantDirectoryProjection>(provider => provider.GetRequiredService<FitzTenantDirectoryReader>());
         services.AddScoped<ITenantDirectoryReader>(provider => provider.GetRequiredService<FitzTenantDirectoryReader>());
@@ -960,20 +960,20 @@ public static class ComplianceServiceCollectionExtensions
         services.AddScoped<BoundaryImpactService>();
         services.AddScoped<IBoundaryReferenceValidator,
             GovernedBoundaryReferenceValidator>();
-        services.AddScoped<FitzRoleDirectoryReader>();
-        services.AddScoped<IRoleDirectoryProjection>(provider => provider.GetRequiredService<FitzRoleDirectoryReader>());
-        services.AddScoped<IRoleDirectoryReader>(provider => provider.GetRequiredService<FitzRoleDirectoryReader>());
-        services.AddScoped<FitzRolePermissionDirectoryReader>();
+        services.AddScoped<CassieRoleDirectoryReader>();
+        services.AddScoped<IRoleDirectoryProjection>(provider => provider.GetRequiredService<CassieRoleDirectoryReader>());
+        services.AddScoped<IRoleDirectoryReader>(provider => provider.GetRequiredService<CassieRoleDirectoryReader>());
+        services.AddScoped<CassieRolePermissionDirectoryReader>();
         services.AddScoped<IRolePermissionDirectoryProjection>(
-            provider => provider.GetRequiredService<FitzRolePermissionDirectoryReader>());
+            provider => provider.GetRequiredService<CassieRolePermissionDirectoryReader>());
         services.AddScoped<IRolePermissionDirectoryReader>(
-            provider => provider.GetRequiredService<FitzRolePermissionDirectoryReader>());
-        services.AddScoped<FitzRoleTeamDirectoryReader>();
-        services.AddScoped<IRoleTeamDirectoryProjection>(provider => provider.GetRequiredService<FitzRoleTeamDirectoryReader>());
-        services.AddScoped<IRoleTeamDirectoryReader>(provider => provider.GetRequiredService<FitzRoleTeamDirectoryReader>());
-        services.AddScoped<FitzTeamRoleDirectoryReader>();
-        services.AddScoped<ITeamRoleDirectoryProjection>(provider => provider.GetRequiredService<FitzTeamRoleDirectoryReader>());
-        services.AddScoped<ITeamRoleDirectoryReader>(provider => provider.GetRequiredService<FitzTeamRoleDirectoryReader>());
+            provider => provider.GetRequiredService<CassieRolePermissionDirectoryReader>());
+        services.AddScoped<CassieRoleTeamDirectoryReader>();
+        services.AddScoped<IRoleTeamDirectoryProjection>(provider => provider.GetRequiredService<CassieRoleTeamDirectoryReader>());
+        services.AddScoped<IRoleTeamDirectoryReader>(provider => provider.GetRequiredService<CassieRoleTeamDirectoryReader>());
+        services.AddScoped<CassieTeamRoleDirectoryReader>();
+        services.AddScoped<ITeamRoleDirectoryProjection>(provider => provider.GetRequiredService<CassieTeamRoleDirectoryReader>());
+        services.AddScoped<ITeamRoleDirectoryReader>(provider => provider.GetRequiredService<CassieTeamRoleDirectoryReader>());
         services.AddScoped<SeparationOfDutiesWaiverAuthorizer>();
         services.AddScoped<EvidenceRedactionWaiverRead>();
         services.AddScoped<EvidenceRedactionRead>();
@@ -2212,13 +2212,13 @@ public static class ComplianceServiceCollectionExtensions
                 ControlEvaluationDeviationFindingReactor.WorkloadName, WorkloadScope.PerTenant)
             .AddProjector<ActualStaffEngagementLocatorProjector>(ActualStaffEngagementLocatorProjector.WorkloadName,
                 WorkloadScope.PerTenant)
-            .AddProjector<PermissionProjector>("PermissionProjection", WorkloadScope.PerTenant)
-            .AddProjector<TeamDirectoryProjector>("TeamDirectory", WorkloadScope.PerTenant)
-            .AddProjector<TeamMemberDirectoryProjector>("TeamMemberDirectory", WorkloadScope.PerTenant)
-            .AddProjector<RoleDirectoryProjector>("RoleDirectory", WorkloadScope.PerTenant)
-            .AddProjector<RolePermissionDirectoryProjector>("RolePermissionDirectory", WorkloadScope.PerTenant)
-            .AddProjector<RoleTeamDirectoryProjector>("RoleTeamDirectory", WorkloadScope.PerTenant)
-            .AddProjector<TeamRoleDirectoryProjector>("TeamRoleDirectory", WorkloadScope.PerTenant)
+            .AddCassieProjection<PermissionProjector, CassiePermissionAuthorizer>("PermissionProjection", WorkloadScope.PerTenant)
+            .AddCassieProjection<TeamDirectoryProjector, CassieTeamDirectoryReader>("TeamDirectory", WorkloadScope.PerTenant)
+            .AddCassieProjection<TeamMemberDirectoryProjector, CassieTeamMemberDirectoryReader>("TeamMemberDirectory", WorkloadScope.PerTenant)
+            .AddCassieProjection<RoleDirectoryProjector, CassieRoleDirectoryReader>("RoleDirectory", WorkloadScope.PerTenant)
+            .AddCassieProjection<RolePermissionDirectoryProjector, CassieRolePermissionDirectoryReader>("RolePermissionDirectory", WorkloadScope.PerTenant)
+            .AddCassieProjection<RoleTeamDirectoryProjector, CassieRoleTeamDirectoryReader>("RoleTeamDirectory", WorkloadScope.PerTenant)
+            .AddCassieProjection<TeamRoleDirectoryProjector, CassieTeamRoleDirectoryReader>("TeamRoleDirectory", WorkloadScope.PerTenant)
             .AddProjector<FirmStaffDirectoryProjector>(FitzFirmStaffDirectory.ProjectorName, WorkloadScope.Global)
             .AddProjector<FirmProfessionalDutyDirectoryProjector>(FitzFirmProfessionalDutyDirectory.ProjectorName,
                 WorkloadScope.Global)

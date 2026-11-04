@@ -1,5 +1,5 @@
-using Cntryl.Fitz;
-using Cntryl.Fitz.Testing;
+using Bdgrz.Compliance.Features.AccessControl.Projections;
+using Bdgrz.Compliance.Tests.Testing;
 using Cntryl.Portia;
 using Cntryl.Portia.Testing;
 using Bdgrz.Compliance.Features.AccessControl.Models;
@@ -77,7 +77,8 @@ using Bdgrz.Compliance.Features.Exports.Commands;
 using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
 namespace Bdgrz.Compliance.Tests.Features.AccessControl.Tests;
 
-public sealed class FitzTeamMemberDirectoryReaderTests
+[Trait("Category", "CassieIntegration")]
+public sealed class CassieTeamMemberDirectoryReaderTests
 {
     static readonly Uuid TenantId = Uuid.CreateVersion4();
     static readonly Uuid TeamId = Uuid.CreateVersion4();
@@ -86,12 +87,12 @@ public sealed class FitzTeamMemberDirectoryReaderTests
     public async Task ShouldReturnEveryMemberGivenTeamQuery()
     {
         // Arrange
-        var client = new InMemoryKvClient();
+        await using var database = await CassieRepositoryTestDatabase.OpenAsync(CassieAccessControlSchema.Statements);
         var first = Uuid.CreateVersion4();
         var second = Uuid.CreateVersion4();
-        await SeedAsync(client, TeamId, first);
-        await SeedAsync(client, TeamId, second);
-        var reader = new FitzTeamMemberDirectoryReader(client, new InMemoryEventStore());
+        await SeedAsync(database.Database, TeamId, first);
+        await SeedAsync(database.Database, TeamId, second);
+        await using var reader = new CassieTeamMemberDirectoryReader(database.Database, new InMemoryEventStore());
 
         // Act
         var page = await reader.ListAsync(
@@ -106,10 +107,10 @@ public sealed class FitzTeamMemberDirectoryReaderTests
     public async Task ShouldFindMemberRemovalAfterCheckpointGivenLaggingTeamProjection()
     {
         // Arrange
-        var client = new InMemoryKvClient();
+        await using var database = await CassieRepositoryTestDatabase.OpenAsync(CassieAccessControlSchema.Statements);
         var events = new InMemoryEventStore();
         var memberId = Uuid.CreateVersion4();
-        var reader = new FitzTeamMemberDirectoryReader(client, events);
+        await using var reader = new CassieTeamMemberDirectoryReader(database.Database, events);
         var pattern = EventStreamPattern.ForPattern(TenantId.ToString());
         var identity = new CheckpointIdentity("TeamMemberDirectory", pattern);
         await using (var batch = await reader.BeginAsync(new ProjectionBatchContext(
@@ -136,11 +137,11 @@ public sealed class FitzTeamMemberDirectoryReaderTests
     public async Task ShouldReturnCurrentAssignmentsGivenProjectionAndEventTail()
     {
         // Arrange
-        var client = new InMemoryKvClient();
+        await using var database = await CassieRepositoryTestDatabase.OpenAsync(CassieAccessControlSchema.Statements);
         var events = new InMemoryEventStore();
         var memberId = Uuid.CreateVersion4();
         var nextTeamId = Uuid.CreateVersion4();
-        var reader = new FitzTeamMemberDirectoryReader(client, events);
+        await using var reader = new CassieTeamMemberDirectoryReader(database.Database, events);
         var pattern = EventStreamPattern.ForPattern(TenantId.ToString());
         var identity = new CheckpointIdentity("TeamMemberDirectory", pattern);
         await using (var batch = await reader.BeginAsync(new ProjectionBatchContext(
@@ -172,10 +173,10 @@ public sealed class FitzTeamMemberDirectoryReaderTests
     public async Task ShouldHonorLaterAssignmentGivenRemovalAndReassignmentBeforeProjectionCatchesUp()
     {
         // Arrange
-        var client = new InMemoryKvClient();
+        await using var database = await CassieRepositoryTestDatabase.OpenAsync(CassieAccessControlSchema.Statements);
         var events = new InMemoryEventStore();
         var memberId = Uuid.CreateVersion4();
-        var reader = new FitzTeamMemberDirectoryReader(client, events);
+        await using var reader = new CassieTeamMemberDirectoryReader(database.Database, events);
         var pattern = EventStreamPattern.ForPattern(TenantId.ToString());
         var identity = new CheckpointIdentity("TeamMemberDirectory", pattern);
         await using (var batch = await reader.BeginAsync(new ProjectionBatchContext(
@@ -206,13 +207,13 @@ public sealed class FitzTeamMemberDirectoryReaderTests
     public async Task ShouldReturnMembersOnlyGivenRequestedTeam()
     {
         // Arrange
-        var client = new InMemoryKvClient();
+        await using var database = await CassieRepositoryTestDatabase.OpenAsync(CassieAccessControlSchema.Statements);
         var otherTeamId = Uuid.CreateVersion4();
         var member = Uuid.CreateVersion4();
         var otherMember = Uuid.CreateVersion4();
-        await SeedAsync(client, TeamId, member);
-        await SeedAsync(client, otherTeamId, otherMember);
-        var reader = new FitzTeamMemberDirectoryReader(client, new InMemoryEventStore());
+        await SeedAsync(database.Database, TeamId, member);
+        await SeedAsync(database.Database, otherTeamId, otherMember);
+        await using var reader = new CassieTeamMemberDirectoryReader(database.Database, new InMemoryEventStore());
 
         // Act
         var page = await reader.ListAsync(
@@ -227,10 +228,10 @@ public sealed class FitzTeamMemberDirectoryReaderTests
     public async Task ShouldAvoidEmptyPageGivenReturnedCursor()
     {
         // Arrange
-        var client = new InMemoryKvClient();
-        await SeedAsync(client, TeamId, Uuid.CreateVersion4());
-        await SeedAsync(client, TeamId, Uuid.CreateVersion4());
-        var reader = new FitzTeamMemberDirectoryReader(client, new InMemoryEventStore());
+        await using var database = await CassieRepositoryTestDatabase.OpenAsync(CassieAccessControlSchema.Statements);
+        await SeedAsync(database.Database, TeamId, Uuid.CreateVersion4());
+        await SeedAsync(database.Database, TeamId, Uuid.CreateVersion4());
+        await using var reader = new CassieTeamMemberDirectoryReader(database.Database, new InMemoryEventStore());
 
         // Act
         var firstPage = await reader.ListAsync(
@@ -254,12 +255,12 @@ public sealed class FitzTeamMemberDirectoryReaderTests
     public async Task ShouldFilterMembersGivenIdSubstring()
     {
         // Arrange
-        var client = new InMemoryKvClient();
+        await using var database = await CassieRepositoryTestDatabase.OpenAsync(CassieAccessControlSchema.Statements);
         var member = Uuid.CreateVersion4();
         var otherMember = Uuid.CreateVersion4();
-        await SeedAsync(client, TeamId, member);
-        await SeedAsync(client, TeamId, otherMember);
-        var reader = new FitzTeamMemberDirectoryReader(client, new InMemoryEventStore());
+        await SeedAsync(database.Database, TeamId, member);
+        await SeedAsync(database.Database, TeamId, otherMember);
+        await using var reader = new CassieTeamMemberDirectoryReader(database.Database, new InMemoryEventStore());
         var middleOfMemberId = member.ToString().Substring(9, 8);
 
         // Act
@@ -271,9 +272,9 @@ public sealed class FitzTeamMemberDirectoryReaderTests
         Assert.Equal(member, result.MemberId);
     }
 
-    static async Task SeedAsync(InMemoryKvClient client, Uuid teamId, Uuid memberId)
+    static async Task SeedAsync(CassieProjectionDatabase database, Uuid teamId, Uuid memberId)
     {
-        var repository = new FitzTeamMemberDirectoryReader(client, new InMemoryEventStore());
+        await using var repository = new CassieTeamMemberDirectoryReader(database, new InMemoryEventStore());
         var identity = new CheckpointIdentity("TeamMemberDirectory", EventStreamPattern.ForPattern(TenantId.ToString()));
         await using var batch = await repository.BeginAsync(new ProjectionBatchContext(identity, ProjectionCheckpoint.Start));
         await repository.ApplyAsync(TeamMemberFacts.Assigned(TenantId, teamId, memberId));

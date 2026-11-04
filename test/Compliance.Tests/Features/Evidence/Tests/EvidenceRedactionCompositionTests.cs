@@ -798,7 +798,8 @@ public sealed partial class EvidenceRedactionCompositionTests
         services.AddCompliance(new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
         {
             ["Fitz:Endpoint"] = "ws://fitz:4090/ws",
-            ["Fitz:ApplicationName"] = "compliance"
+            ["Fitz:ApplicationName"] = "compliance",
+            ["Cassie:ConnectionString"] = fixture.ConnectionString
         }).Build(), developerAuthentication: true);
         services.AddSingleton(events ?? fixture.Provider.GetRequiredService<IEventStore>());
         services.AddSingleton<IDomainEventReader>(events ?? fixture.Provider.GetRequiredService<IDomainEventReader>());
@@ -809,7 +810,7 @@ public sealed partial class EvidenceRedactionCompositionTests
             services.AddSingleton(immutable);
         services.AddSingleton<TimeProvider>(clock);
         services.AddScoped<IPermissionAuthorizer>(provider =>
-            new AdvancingPermissionAuthorizer(provider.GetRequiredService<FitzPermissionAuthorizer>(), approver, clock));
+            new AdvancingPermissionAuthorizer(provider.GetRequiredService<CassiePermissionAuthorizer>(), approver, clock));
         return services.BuildServiceProvider(new ServiceProviderOptions { ValidateScopes = true });
     }
 

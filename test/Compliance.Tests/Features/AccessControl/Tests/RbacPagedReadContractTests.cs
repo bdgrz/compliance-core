@@ -1,5 +1,4 @@
 using System.Security.Claims;
-using Cntryl.Fitz.Extensions;
 using Cntryl.Portia;
 using Bdgrz.Compliance.Features.AccessControl.Services;
 using Bdgrz.Compliance.Features.Readiness.Models;
@@ -201,7 +200,7 @@ public sealed class RbacPagedReadContractTests
             LastSearch = search;
             LastDescending = descending;
             return RejectCursor
-                ? ValueTask.FromException<Page<TeamView>>(new KvDirectoryQueryException())
+                ? ValueTask.FromException<Page<TeamView>>(new AccessControlDirectoryQueryException())
                 : ValueTask.FromResult(Page);
         }
     }
@@ -228,7 +227,7 @@ public sealed class RbacPagedReadContractTests
             LastDescending = descending;
             LastTeamId = teamId;
             return RejectCursor
-                ? ValueTask.FromException<Page<TeamMemberView>>(new KvDirectoryQueryException())
+                ? ValueTask.FromException<Page<TeamMemberView>>(new AccessControlDirectoryQueryException())
                 : ValueTask.FromResult(Page);
         }
     }
@@ -255,7 +254,7 @@ public sealed class RbacPagedReadContractTests
             LastSearch = search;
             LastDescending = descending;
             return RejectCursor
-                ? ValueTask.FromException<Page<RoleView>>(new KvDirectoryQueryException())
+                ? ValueTask.FromException<Page<RoleView>>(new AccessControlDirectoryQueryException())
                 : ValueTask.FromResult(Page);
         }
     }
@@ -282,7 +281,7 @@ public sealed class RbacPagedReadContractTests
             LastDescending = descending;
             LastRoleId = roleId;
             return RejectCursor
-                ? ValueTask.FromException<Page<RolePermissionView>>(new KvDirectoryQueryException())
+                ? ValueTask.FromException<Page<RolePermissionView>>(new AccessControlDirectoryQueryException())
                 : ValueTask.FromResult(Page);
         }
     }
@@ -309,7 +308,7 @@ public sealed class RbacPagedReadContractTests
             LastDescending = descending;
             LastRoleId = roleId;
             return RejectCursor
-                ? ValueTask.FromException<Page<RoleTeamView>>(new KvDirectoryQueryException())
+                ? ValueTask.FromException<Page<RoleTeamView>>(new AccessControlDirectoryQueryException())
                 : ValueTask.FromResult(Page);
         }
     }
