@@ -6,6 +6,7 @@ using Bdgrz.Compliance.Features.Kernel.Services;
 using Bdgrz.Compliance.Features.MethodologyTemplates.Aggregates;
 using Bdgrz.Compliance.Features.MethodologyTemplates.Events;
 using Bdgrz.Compliance.Features.MethodologyTemplates.Models;
+using Bdgrz.Compliance.Features.MethodologyTemplates.Services;
 using Bdgrz.Compliance.Features.NativeOperations.Models;
 using Bdgrz.Compliance.Features.SourceFacts.Models;
 using Bdgrz.Compliance.Features.SourceFacts.Projections;
@@ -136,10 +137,8 @@ public sealed class MethodologyTemplateLineReader(IAuthoritativeSnapshotReader s
             MethodologyTemplate.PublishedVersionIdentity(published.TemplateId, published.Version), published.Version,
             published.DraftId, published.DraftRevision, published.ApprovalEventId, published.ApprovedBy,
             published.Metadata.OccurredOn, published.EntriesContent,
-            Array.AsReadOnly(entries.Select(entry => entry with
-            {
-                CriteriaReferences = Array.AsReadOnly(entry.CriteriaReferences.ToArray()),
-            }).ToArray()), Array.AsReadOnly(published.ChangedEntryKeys.ToArray()),
+            Array.AsReadOnly(entries.Select(MethodologyTemplateDestinationCommands.Freeze).ToArray()),
+            Array.AsReadOnly(published.ChangedEntryKeys.ToArray()),
             NativeFactReference.Of(source.Locator.Source, published), source.Locator.ResourcePosition);
     }
 

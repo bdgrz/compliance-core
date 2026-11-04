@@ -20,7 +20,10 @@ public sealed class RecordTemplateEntryOutcomeHandler(IAggregateExecutor executo
                 "The entry outcome must identify its exact application, entry and stable reaction command.")));
         return executor.ExecuteAsync(new TemplateVersionApplication(request.TenantId, request.ProgramId,
                 request.TemplateId, request.TemplateVersion), owner => AggregateOutcome.CommitOnSuccess(
-                owner.IsOpened && owner.ApplicationEventId != request.ApplicationEventId
+                owner.ApplicationCommandId != Uuid.Empty
+                    ? Result.Failure(new RequestError(RequestErrorKind.Validation,
+                        "Canonical application outcomes require verified destination execution, not an asserted answer."))
+                    : owner.IsOpened && owner.ApplicationEventId != request.ApplicationEventId
                     ? Result.Failure(new RequestError(RequestErrorKind.Conflict, "The outcome belongs to another application source."))
                     : owner.Record(request.Outcome)), context, ct);
     }
