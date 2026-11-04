@@ -80,6 +80,9 @@ public sealed class SystemBoundary : Aggregate
     {
         _tenantId = tenantId;
         Acceptance = new(selectedCommandId);
+        On<BoundaryDrafted>(ApplyFact);
+        On<BoundaryChangesRequested>(ApplyFact);
+        On<BoundaryVersionApproved>(ApplyFact);
         On<BoundaryDraftCreated>(ApplyFact);
         On<BoundaryDraftRevised>(ApplyFact);
         On<BoundaryReviewed>(ApplyFact);
@@ -173,6 +176,8 @@ public sealed class SystemBoundary : Aggregate
     }
     void Validate(DomainEvent value, IBoundaryFact fact)
     {
+        value = BoundaryFactShape.Normalize(value);
+        fact = (IBoundaryFact)value;
         Require(fact.Operation is not null && fact.Operation.Actor is not null && fact.Header is not null,
             "A boundary native fact requires its original operation and compact header.");
         var operation = fact.Operation;
@@ -203,9 +208,11 @@ public sealed class SystemBoundary : Aggregate
             "The boundary receipt lost its original member, display snapshot or acceptance instant.");
         if (_header is null)
         {
-            Require(value is BoundaryDraftCreated created && operation.CommandKind == nameof(CreateBoundary) && operation.LogicalId == Id &&
-                operation.OriginalExpectedRevision is null && fact.ChangeCount == 1 && created.ProgramId == header.ProgramId &&
-                created.DraftVersionId == Uuid.CreateVersion5(Id, "draft-1") && created.Content == header.Content &&
+            Require(value is BoundaryDraftCreated created &&
+                (operation.CommandKind == nameof(CreateBoundary) && operation.LogicalId == Id && operation.OriginalExpectedRevision is null ||
+                 operation.CommandKind == nameof(DraftBoundary) && Id == header.ProgramId && operation.OriginalExpectedRevision == 0) && fact.ChangeCount == 1 && created.ProgramId == header.ProgramId &&
+                created.DraftVersionId == (operation.CommandKind == nameof(DraftBoundary)
+                    ? Uuid.CreateVersion5(operation.LogicalId, "draft") : Uuid.CreateVersion5(Id, "draft-1")) && created.Content == header.Content &&
                 header == new BoundaryAuthorityHeader(TenantId, created.ProgramId, Id, 1, true, true, created.DraftVersionId, 1,
                     created.AuthorMemberId, false, Uuid.Empty, null, Uuid.Empty, Uuid.Empty, null, created.ChangedAt, header.Content),
                 "A boundary begins with its exact authored first draft identity.");
@@ -244,7 +251,7 @@ public sealed class SystemBoundary : Aggregate
                 };
                 break;
             case BoundaryReviewed reviewed:
-                Require(operation.CommandKind == nameof(ReviewBoundary) && operation.LogicalId == reviewed.DecisionId &&
+                Require((operation.CommandKind == nameof(ReviewBoundary) || operation.CommandKind == nameof(ReviewBoundaryDraft)) && operation.LogicalId == reviewed.DecisionId &&
                     reviewed.DraftVersionId == before.DraftVersionId && before.DraftVersionId != Uuid.Empty && reviewed.Revision == before.DraftRevision &&
                     reviewed.Outcome is "accept" or "request_changes", "Review must answer the exact pending boundary draft.");
                 expected = before with
@@ -256,9 +263,10 @@ public sealed class SystemBoundary : Aggregate
                 };
                 break;
             case BoundaryApproved approved:
-                Require(operation.CommandKind == nameof(ApproveBoundary) && operation.LogicalId == approved.ApprovalDecisionId &&
+                Require((operation.CommandKind == nameof(ApproveBoundary) || operation.CommandKind == nameof(ReviewBoundaryDraft)) && operation.LogicalId == approved.ApprovalDecisionId &&
                     before.DraftVersionId != Uuid.Empty && approved.DraftVersionId == before.DraftVersionId && approved.Revision == before.DraftRevision &&
-                    before.AcceptedReviewDecisionId != Uuid.Empty && approved.AcceptedReviewDecisionId == before.AcceptedReviewDecisionId && approved.EffectiveFrom != default &&
+                    (operation.CommandKind == nameof(ReviewBoundaryDraft) ? approved.AcceptedReviewDecisionId == approved.ApprovalDecisionId :
+                     before.AcceptedReviewDecisionId != Uuid.Empty && approved.AcceptedReviewDecisionId == before.AcceptedReviewDecisionId) && approved.EffectiveFrom != default &&
                     (before.LatestApprovedEffectiveFrom is null || approved.EffectiveFrom > before.LatestApprovedEffectiveFrom),
                     "Approval must retain the latest exact accepted review and later effective version.");
                 expected = before with
@@ -274,7 +282,7 @@ public sealed class SystemBoundary : Aggregate
                 };
                 break;
             case BoundaryDraftDiscarded discarded:
-                Require(operation.CommandKind == nameof(DiscardBoundaryDraft) && before.DraftVersionId != Uuid.Empty && !before.DraftEverReviewed &&
+                Require(operation.CommandKind == nameof(DiscardBoundaryDraft) && before.DraftVersionId != Uuid.Empty &&
                     discarded.DraftVersionId == before.DraftVersionId && discarded.Revision == before.DraftRevision, "A referenced boundary draft cannot be discarded.");
                 expected = before with
                 {
@@ -287,8 +295,8 @@ public sealed class SystemBoundary : Aggregate
                 };
                 break;
             case BoundarySuccessorProposed proposed:
-                Require(operation.CommandKind == nameof(ProposeBoundarySuccessor) && operation.OriginalExpectedRevision == unchecked((ulong)before.Revision) &&
-                    before.DraftVersionId == Uuid.Empty && before.LatestApprovedVersionId != Uuid.Empty && proposed.PredecessorVersionId == before.LatestApprovedVersionId &&
+                Require((operation.CommandKind == nameof(ProposeBoundarySuccessor) || operation.CommandKind == nameof(DraftBoundary)) && operation.OriginalExpectedRevision == unchecked((ulong)before.Revision) &&
+                    before.DraftVersionId == Uuid.Empty && (before.LatestApprovedVersionId != Uuid.Empty || operation.CommandKind == nameof(DraftBoundary)) && proposed.PredecessorVersionId == before.LatestApprovedVersionId &&
                     proposed.DraftVersionId == Uuid.CreateVersion5(operation.LogicalId, "draft") && proposed.Content == header.Content,
                     "A successor must follow the exact approved boundary without another open draft.");
                 expected = before with
@@ -320,7 +328,15 @@ public sealed class SystemBoundary : Aggregate
     }
     BoundaryAuthorityContent ExpectedAuthority(DomainEvent value, BoundaryAuthorityHeader header, BoundaryAuthorityContent? before)
     {
+        value = BoundaryFactShape.Normalize(value);
         var after = before is null ? new BoundaryAuthorityContent(header, [], []) : before with { Header = header };
+        if (value is BoundaryDraftCreated created)
+            after = after with { DraftAuthorMemberIds = [created.AuthorMemberId] };
+        else if (value is BoundarySuccessorProposed proposed)
+            after = after with { DraftAuthorMemberIds = [proposed.AuthorMemberId] };
+        else if (value is BoundaryDraftRevised revised)
+            after = after with { DraftAuthorMemberIds = after.DraftAuthorMemberIds.Append(revised.AuthorMemberId)
+                .Distinct().OrderBy(static id => id.ToString(), StringComparer.Ordinal).ToArray() };
         if (((IBoundaryFact)value).ChangeCount == 0)
             return after;
         switch (value)
@@ -347,6 +363,7 @@ public sealed class SystemBoundary : Aggregate
     }
     void ValidateLocal(DomainEvent value, BoundaryMutationContent mutation, BoundaryAuthorityContent? before)
     {
+        value = BoundaryFactShape.Normalize(value);
         var proofs = mutation.Waivers ?? [];
         Require(proofs.All(proof => proof is not null && LocatorValid(proof)) && proofs.Select(proof => proof.WaiverId).Distinct().Count() == proofs.Count,
             "A boundary mutation requires exact distinct immutable waiver proofs.");
@@ -355,7 +372,7 @@ public sealed class SystemBoundary : Aggregate
             var data = (BoundaryReviewedContent)mutation.Changes.Single();
             Require(!string.IsNullOrWhiteSpace(data.Rationale), "Review requires its authored rationale.");
             ValidateDecision(before!, reviewed.ActorMemberId, ResponsibilityType.AssignedReviewer, SeparationOfDutiesActions.Review,
-                reviewed.DecidedAt, reviewed.SeparationOfDutiesWaiverId, proofs);
+                reviewed.DecidedAt, reviewed.SeparationOfDutiesWaiverId, proofs, reviewed.Operation.CommandKind == nameof(ReviewBoundaryDraft));
             return;
         }
         if (value is BoundaryApproved approved)
@@ -363,7 +380,7 @@ public sealed class SystemBoundary : Aggregate
             var data = (BoundaryApprovedContent)mutation.Changes.Single();
             Require(!string.IsNullOrWhiteSpace(data.Rationale) && !string.IsNullOrWhiteSpace(data.ImpactDigest), "Approval requires rationale and acknowledged impact.");
             ValidateDecision(before!, approved.ActorMemberId, ResponsibilityType.PolicyApprover, SeparationOfDutiesActions.Approve,
-                approved.DecidedAt, approved.SeparationOfDutiesWaiverId, proofs);
+                approved.DecidedAt, approved.SeparationOfDutiesWaiverId, proofs, approved.Operation.CommandKind == nameof(ReviewBoundaryDraft));
             return;
         }
         if (value is BoundaryDraftDiscarded)
@@ -401,13 +418,15 @@ public sealed class SystemBoundary : Aggregate
     }
 
     void ValidateDecision(BoundaryAuthorityContent before, Uuid member, ResponsibilityType role, string action, DateTimeOffset at,
-        Uuid? waiverId, IReadOnlyList<SeparationOfDutiesWaiverProof> proofs)
+        Uuid? waiverId, IReadOnlyList<SeparationOfDutiesWaiverProof> proofs, bool canonical = false)
     {
         var set = Set(before);
         var proof = waiverId is { } id ? proofs.SingleOrDefault(item => item.WaiverId == id) : null;
         Require(proofs.Count == (proof is null ? 0 : 1) && (waiverId is null || proof is not null), "A decision must bind its exact immutable waiver.");
-        var author = before.Header.DraftAuthorMemberId == member;
-        Require(ResponsibilityDecisionGuard.ValidateAuthorized(set, Scope(), member, role, at, author, proof) is null &&
+        var author = before.DraftAuthorMemberIds.Contains(member) || before.Header.DraftAuthorMemberId == member;
+        if (canonical)
+            action = SeparationOfDutiesActions.Review;
+        Require((canonical || ResponsibilityDecisionGuard.ValidateAuthorized(set, Scope(), member, role, at, author, proof) is null) &&
             (proof is not null ? BoundaryWaiverProof.Allows(proof, TenantId, new SeparationOfDutiesWaiverScope(
                 SeparationOfDutiesRecordTypes.Boundary, Id, DraftVersionId, DraftRevision, action), member, at) : !author),
             "The boundary decision violates its exact author, reviewer or responsibility independence.");

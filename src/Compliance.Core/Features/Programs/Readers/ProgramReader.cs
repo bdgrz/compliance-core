@@ -64,6 +64,11 @@ public sealed class ProgramReader(IAggregateReader reader, IDomainEventReader ev
             var failure = fact switch
             {
                 ProgramCreated => rules.Create(authored.Name, authored.Plan, member, display, fact.Operation.AcceptedAt),
+                ProgramCreatedV3 created => rules.CreateWithEdition(authored.Name, authored.Plan, created.EditionId, member, display, fact.Operation.AcceptedAt),
+                ProgramRenamed renamed => rules.Rename(renamed.Revision - 1, renamed.Name, member, display, renamed.ChangedAt),
+                ProgramTargetsRevised targets => rules.ReviseTargets(targets.Revision - 1, targets.Plan, member, display, targets.ChangedAt),
+                ProgramStageChanged stage => rules.ChangeStage(stage.Revision - 1, stage.Stage, stage.Support, stage.Rationale,
+                    member, display, stage.ChangedAt),
                 ProgramRevised revised => rules.Revise(revised.Revision - 1, authored.Name, authored.Plan, member, display, revised.ChangedAt),
                 ProgramCriteriaEditionSelected selected => rules.SelectCriteriaEdition(selected.Revision - 1, selected.EditionId,
                     member, display, selected.ChangedAt),
@@ -85,12 +90,35 @@ public sealed class ProgramReader(IAggregateReader reader, IDomainEventReader ev
         var digest = fact switch
         {
             ProgramCreated => AuthoredIntentDigest.Compute(new CreateProgram(fact.ProgramId, fact.TenantId, value.Name, value.Plan)),
+            ProgramCreatedV3 created => AuthoredIntentDigest.Compute(new CreateProgramV3(fact.ProgramId, fact.TenantId, value.Name, value.Plan, created.EditionId)),
+            ProgramRenamed renamed => AuthoredIntentDigest.Compute(new RenameProgram(fact.Operation.LogicalId, fact.TenantId,
+                fact.ProgramId, (long)expected!.Value, renamed.Name)),
+            ProgramTargetsRevised targets => AuthoredIntentDigest.Compute(new ReviseProgramTargets(fact.Operation.LogicalId, fact.TenantId,
+                fact.ProgramId, (long)expected!.Value, targets.Plan)),
+            ProgramStageChanged stage => AuthoredIntentDigest.Compute(new ChangeProgramStage(fact.Operation.LogicalId, fact.TenantId,
+                fact.ProgramId, (long)expected!.Value, stage.Stage,
+                new Bdgrz.Compliance.Features.NativeOperations.Models.NativeFactReference(stage.Support.Source.Source,
+                    stage.Support.Source.EventId, stage.Support.Source.AggregateVersion), stage.Support.Source.ResourcePosition, stage.Rationale)),
             ProgramRevised => AuthoredIntentDigest.Compute(new ReviseProgram(fact.Operation.LogicalId, fact.TenantId, fact.ProgramId,
                 (long)expected!.Value, value.Name, value.Plan)),
             ProgramCriteriaEditionSelected selected => AuthoredIntentDigest.Compute(new SelectProgramCriteriaEdition(fact.Operation.LogicalId,
                 fact.TenantId, fact.ProgramId, (long)expected!.Value, selected.EditionId)),
             _ => throw new ImmutableContentIntegrityException("The program has another authored value kind."),
         };
+        if (fact is ProgramRenamed nameChange)
+        {
+            var previous = await ReadContentAsync(content, fact.TenantId, nameChange.PreviousContent, ct).ConfigureAwait(false);
+            if (previous.Name != nameChange.PreviousName || value.Name != nameChange.Name || value.Plan != previous.Plan ||
+                nameChange.ChangeCount != (previous.Name == value.Name ? 0 : 1))
+                throw new ImmutableContentIntegrityException("The named program rename differs from its exact preceding value.");
+        }
+        else if (fact is ProgramTargetsRevised targetChange)
+        {
+            var previous = await ReadContentAsync(content, fact.TenantId, targetChange.PreviousContent, ct).ConfigureAwait(false);
+            if (value.Name != previous.Name || value.Plan != targetChange.Plan ||
+                targetChange.ChangeCount != (previous.Plan == value.Plan ? 0 : 1))
+                throw new ImmutableContentIntegrityException("The named target change differs from its exact preceding value.");
+        }
         if (digest != fact.Operation.AuthoredIntentSha256)
             throw new ImmutableContentIntegrityException("The program authored value differs from its exact native command binding.");
         return value;

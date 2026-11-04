@@ -58,6 +58,7 @@ sealed class CassieBoundaryDirectory(CassieProjectionDatabase database, Boundary
 
     public async ValueTask ApplyAsync(DomainEvent value, CancellationToken ct = default)
     {
+        value = BoundaryFactShape.Normalize(value);
         if (value is not IBoundaryFact fact || value is not (BoundaryDraftCreated or BoundaryDraftRevised or BoundaryDraftDiscarded or
             BoundaryReviewed or BoundaryApproved or BoundarySuccessorProposed))
             return;
@@ -97,12 +98,7 @@ sealed class CassieBoundaryDirectory(CassieProjectionDatabase database, Boundary
                 throw new InvalidOperationException("A successor cannot project before its approved predecessor.");
         }
         var row = new BoundaryDirectoryIdentity(header, fact.NativeSequence);
-        if (!header.IsVisible)
-        {
-            if (current is not null)
-                await DeleteAsync("boundary_current_identities", current.Header.TenantId, current.Header.BoundaryId.ToString(), ct).ConfigureAwait(false);
-        }
-        else if (current is null)
+        if (current is null)
             await InsertIdentityAsync("boundary_current_identities", row, ct).ConfigureAwait(false);
         else
             await ReplaceIdentityAsync(row, ct).ConfigureAwait(false);

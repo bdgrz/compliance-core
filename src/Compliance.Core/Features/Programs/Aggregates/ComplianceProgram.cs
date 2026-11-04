@@ -34,6 +34,7 @@ using Bdgrz.Compliance.Features.Work.Models;
 using Bdgrz.Compliance.Features.Programs.Commands;
 using Bdgrz.Compliance.Features.Programs.Events;
 using Bdgrz.Compliance.Features.Programs.Models;
+using Bdgrz.Compliance.Features.Programs.Rules;
 using Bdgrz.Compliance.Features.Proofs.Models;
 using Bdgrz.Compliance.Features.SourceUse.Handlers;
 namespace Bdgrz.Compliance.Features.Programs.Aggregates;
@@ -47,6 +48,8 @@ public sealed class ComplianceProgram : Aggregate
     long _revision;
     bool _lastChangeWasSelection;
     ProgramCriteriaEditionSelected? _selection;
+    Uuid? _creationEditionId;
+    string _stage = "readiness";
     ImmutableContentRef? _content;
     ulong _nativeSequence;
 
@@ -56,6 +59,10 @@ public sealed class ComplianceProgram : Aggregate
         _tenantId = tenantId;
         Acceptance = new NativeAcceptance(selectedLogicalId);
         On<ProgramCreated>(ApplyFact);
+        On<ProgramCreatedV3>(ApplyFact);
+        On<ProgramRenamed>(ApplyFact);
+        On<ProgramTargetsRevised>(ApplyFact);
+        On<ProgramStageChanged>(ApplyFact);
         On<ProgramRevised>(ApplyFact);
         On<ProgramCriteriaEditionSelected>(ApplyFact);
     }
@@ -63,7 +70,8 @@ public sealed class ComplianceProgram : Aggregate
     public Uuid TenantId => _tenantId;
     public bool IsCreated => _created;
     public long Revision => _revision;
-    public Uuid? CriteriaEditionId => _selection?.EditionId;
+    public Uuid? CriteriaEditionId => _selection?.EditionId ?? _creationEditionId;
+    public string Stage => _stage;
     public ProgramCriteriaEditionSelected? CurrentSelection => _selection;
     public ImmutableContentRef? CurrentContent => _content;
     public ulong NativeSequence => _nativeSequence;
@@ -134,6 +142,69 @@ public sealed class ComplianceProgram : Aggregate
         return Result.Success;
     }
 
+    public Result CreateWithEdition(OperationProvenance operation, Uuid editionId, ImmutableContentRef content,
+        ImmutableContentRef first, ImmutableContentRef result)
+    {
+        var guard = NativeCut.Require(this, Acceptance, operation);
+        if (!guard.IsSuccess)
+            return guard;
+        var prepared = PrepareCreate();
+        if (!prepared.IsSuccess)
+            return prepared;
+        if (editionId == Uuid.Empty)
+            return Result.Failure(new RequestError(RequestErrorKind.Validation, "A program requires its published criteria edition."));
+        Emit(new ProgramCreatedV3(_tenantId, Id, 1, editionId, content, operation.AcceptedAt,
+            operation, first, result, NativeSequence + 1, 1));
+        return Result.Success;
+    }
+
+    public Result Rename(OperationProvenance operation, string previousName, string name,
+        ImmutableContentRef content, ImmutableContentRef first, ImmutableContentRef result)
+    {
+        var prepared = PrepareNamed(operation);
+        if (!prepared.IsSuccess)
+            return prepared;
+        var changed = previousName != name;
+        Emit(new ProgramRenamed(_tenantId, Id, Revision + (changed ? 1 : 0), previousName, name,
+            _content!, content, operation.AcceptedAt, operation, first, result, NativeSequence + 1, changed ? 1 : 0));
+        return Result.Success;
+    }
+
+    public Result ReviseTargets(OperationProvenance operation, ProgramPlan plan, ImmutableContentRef content,
+        ImmutableContentRef first, ImmutableContentRef result)
+    {
+        var prepared = PrepareNamed(operation);
+        if (!prepared.IsSuccess)
+            return prepared;
+        var changed = content != _content;
+        Emit(new ProgramTargetsRevised(_tenantId, Id, Revision + (changed ? 1 : 0), plan,
+            _content!, content, operation.AcceptedAt, operation, first, result, NativeSequence + 1, changed ? 1 : 0));
+        return Result.Success;
+    }
+
+    public Result ChangeStage(OperationProvenance operation, string stage, ProgramStageSupport support,
+        string rationale, ImmutableContentRef first, ImmutableContentRef result)
+    {
+        var prepared = PrepareNamed(operation);
+        if (!prepared.IsSuccess)
+            return prepared;
+        var error = ProgramRules.StageError(_tenantId, Id, Stage, stage, support, rationale);
+        if (error is not null)
+            return Result.Failure(new RequestError(RequestErrorKind.Validation, error));
+        Emit(new ProgramStageChanged(_tenantId, Id, Revision + 1, Stage, stage, support, rationale,
+            _content!, operation.AcceptedAt, operation, first, result, NativeSequence + 1, 1));
+        return Result.Success;
+    }
+
+    Result PrepareNamed(OperationProvenance operation)
+    {
+        var guard = NativeCut.Require(this, Acceptance, operation);
+        if (!guard.IsSuccess)
+            return guard;
+        return operation.OriginalExpectedRevision is { } expected && expected <= long.MaxValue
+            ? PrepareRevise((long)expected) : Failure("A named program change requires its original business revision.");
+    }
+
     internal void ObserveVerified(DomainEvent ev)
     {
         ApplyFact((IProgramFact)ev);
@@ -161,6 +232,10 @@ public sealed class ComplianceProgram : Aggregate
         var kind = fact switch
         {
             ProgramCreated => nameof(CreateProgram),
+            ProgramCreatedV3 => nameof(CreateProgramV3),
+            ProgramRenamed => nameof(RenameProgram),
+            ProgramTargetsRevised => nameof(ReviseProgramTargets),
+            ProgramStageChanged => nameof(ChangeProgramStage),
             ProgramRevised => nameof(ReviseProgram),
             ProgramCriteriaEditionSelected => nameof(SelectProgramCriteriaEdition),
             _ => throw new InvalidOperationException("The program has another native fact kind."),
@@ -179,6 +254,43 @@ public sealed class ComplianceProgram : Aggregate
                     throw Invalid();
                 _created = true;
                 _content = created.Content;
+                break;
+            case ProgramCreatedV3 created:
+                if (_created || created.Revision != 1 || created.ChangeCount != 1 || created.EditionId == Uuid.Empty ||
+                    operation.LogicalId != Id || operation.OriginalExpectedRevision is not null || created.ChangedAt != operation.AcceptedAt)
+                    throw Invalid();
+                _created = true;
+                _content = created.Content;
+                _creationEditionId = created.EditionId;
+                break;
+            case ProgramRenamed renamed:
+                if (!_created || operation.OriginalExpectedRevision != (ulong)Revision || renamed.PreviousContent != _content ||
+                    renamed.Revision != Revision + renamed.ChangeCount || renamed.ChangedAt != operation.AcceptedAt ||
+                    string.IsNullOrWhiteSpace(renamed.PreviousName) || string.IsNullOrWhiteSpace(renamed.Name) ||
+                    renamed.Name != renamed.Name.Trim() || renamed.ChangeCount != (renamed.Name == renamed.PreviousName ? 0 : 1) ||
+                    (renamed.ChangeCount == 0) != (renamed.Content == _content))
+                    throw Invalid();
+                _content = renamed.Content;
+                if (renamed.ChangeCount == 1)
+                    _lastChangeWasSelection = false;
+                break;
+            case ProgramTargetsRevised targets:
+                if (!_created || operation.OriginalExpectedRevision != (ulong)Revision || targets.PreviousContent != _content ||
+                    targets.Revision != Revision + targets.ChangeCount || targets.ChangedAt != operation.AcceptedAt ||
+                    targets.Plan is null || (targets.ChangeCount == 0) != (targets.Content == _content))
+                    throw Invalid();
+                _content = targets.Content;
+                if (targets.ChangeCount == 1)
+                    _lastChangeWasSelection = false;
+                break;
+            case ProgramStageChanged stage:
+                if (!_created || operation.OriginalExpectedRevision != (ulong)Revision || stage.Content != _content ||
+                    stage.Revision != Revision + 1 || stage.ChangeCount != 1 || stage.PreviousStage != Stage ||
+                    stage.ChangedAt != operation.AcceptedAt || stage.Rationale != stage.Rationale?.Trim() ||
+                    ProgramRules.StageError(_tenantId, Id, Stage, stage.Stage, stage.Support, stage.Rationale) is not null)
+                    throw Invalid();
+                _stage = stage.Stage;
+                _lastChangeWasSelection = false;
                 break;
             case ProgramRevised revised:
                 if (!_created || operation.OriginalExpectedRevision != (ulong)Revision || revised.Revision != Revision + 1 ||

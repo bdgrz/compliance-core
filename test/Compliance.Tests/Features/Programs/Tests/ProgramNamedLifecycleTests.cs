@@ -142,5 +142,5 @@ public sealed class ProgramNamedLifecycleTests
     static ProgramStageSupport Support(ProgramRules program, string kind) => new(kind, program.Id,
         new SourceFactLocator(new EventStreamAddress(program.TenantId.ToString(), kind, Uuid.CreateVersion4().ToString()),
             Uuid.CreateVersion4(), 0, 0, 0, 1, new string('a', 64)),
-        new ImmutableContentRef(Uuid.CreateVersion4(), "program-stage-support.v1", "application/json", 1, new string('b', 64)));
+        new ImmutableContentRef(Uuid.CreateVersion4(), new string('b', 64), 1, "application/json", "program-stage-support.v1"));
 }

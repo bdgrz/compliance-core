@@ -18,6 +18,11 @@ public sealed record ProgramHistorySnapshot(ComplianceProgram Owner, IReadOnlyLi
         .Where(fact => fact.ChangeCount == 1 && fact.ChangedAt <= asOf)
         .OrderByDescending(static fact => fact.ChangedAt).ThenByDescending(static fact => fact.Revision).FirstOrDefault();
 
-    public ProgramCriteriaEditionSelection? CriteriaSelectionAt(DateTimeOffset asOf) => CriteriaFactAt(asOf) is { } fact
-        ? new ProgramCriteriaEditionSelection(fact.Revision, fact.EditionId, fact.ChangedAt) : null;
+    public ProgramCriteriaEditionSelection? CriteriaSelectionAt(DateTimeOffset asOf)
+    {
+        if (CriteriaFactAt(asOf) is { } selected)
+            return new ProgramCriteriaEditionSelection(selected.Revision, selected.EditionId, selected.ChangedAt);
+        return Facts.OfType<ProgramCreatedV3>().FirstOrDefault(fact => fact.ChangedAt <= asOf) is { } created
+            ? new ProgramCriteriaEditionSelection(created.Revision, created.EditionId, created.ChangedAt) : null;
+    }
 }

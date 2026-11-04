@@ -4,4 +4,5 @@ using Bdgrz.Compliance.Features.Programs.Models;
 namespace Bdgrz.Compliance.Features.Programs.Rules;
 
 public sealed record ProgramRuleChange(string Kind, long Revision, ProgramContent? Content,
-    Uuid? EditionId, ActorReference Actor, DateTimeOffset ChangedAt);
+    Uuid? EditionId, ActorReference Actor, DateTimeOffset ChangedAt,
+    string? Stage = null, ProgramStageSupport? StageSupport = null, string? Rationale = null);

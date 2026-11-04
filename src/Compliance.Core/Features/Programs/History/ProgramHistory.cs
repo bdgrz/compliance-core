@@ -80,7 +80,7 @@ public static class ProgramHistory
         }
         if (replay.IsCreated != owner.IsCreated || replay.Revision != owner.Revision || replay.NativeSequence != owner.NativeSequence ||
             replay.CurrentContent != owner.CurrentContent || replay.CriteriaEditionId != owner.CriteriaEditionId ||
-            replay.LastChangeWasSelection != owner.LastChangeWasSelection || !Same(replay.CurrentSelection, owner.CurrentSelection))
+            replay.Stage != owner.Stage || replay.LastChangeWasSelection != owner.LastChangeWasSelection || !Same(replay.CurrentSelection, owner.CurrentSelection))
             throw new ImmutableContentIntegrityException("The verified program prefix differs from compact current authority.");
         owner.NativeCut.Confirm(owner, replay.NativeCut.Digest, replay.NativeCut.MetadataDigest, known);
         ct.ThrowIfCancellationRequested();
@@ -94,21 +94,28 @@ public static class ProgramHistory
         var kind = fact switch
         {
             ProgramCreated => nameof(CreateProgram),
+            ProgramCreatedV3 => nameof(CreateProgramV3),
+            ProgramRenamed => nameof(RenameProgram),
+            ProgramTargetsRevised => nameof(ReviseProgramTargets),
+            ProgramStageChanged => nameof(ChangeProgramStage),
             ProgramRevised => nameof(ReviseProgram),
             ProgramCriteriaEditionSelected => nameof(SelectProgramCriteriaEdition),
             _ => throw new ImmutableContentIntegrityException("The program has another native fact kind."),
         };
         if (fact.TenantId == Uuid.Empty || fact.ProgramId == Uuid.Empty || fact.Revision < 1 || fact.NativeSequence < 1 ||
-            fact.ChangeCount is < 0 or > 1 || fact.ChangeCount == 0 && fact is not ProgramCriteriaEditionSelected ||
+            fact.ChangeCount is < 0 or > 1 || fact.ChangeCount == 0 && fact is not (ProgramCriteriaEditionSelected or ProgramRenamed or ProgramTargetsRevised) ||
             operation is null || operation.Actor is null || operation.Actor.Display is null || operation.Actor.Kind != "member" ||
             operation.AuthoredIntentSha256 is not { Length: 64 } ||
             !Uuid.TryParse(operation.Actor.Id, CultureInfo.InvariantCulture, out var member) || member == Uuid.Empty ||
             !NativeOwnerHistory.IsOwnRoot(owner, operation, kind, operation.OriginalExpectedRevision) ||
-            (fact is ProgramCreated ? operation.LogicalId != owner.Id || operation.OriginalExpectedRevision is not null
+            (fact is ProgramCreated or ProgramCreatedV3 ? operation.LogicalId != owner.Id || operation.OriginalExpectedRevision is not null
                 : operation.OriginalExpectedRevision is not { } expected || expected > long.MaxValue) ||
             !Reference(fact.Content, ProgramContent.Schema) || !Reference(fact.FirstResponse, FirstResponses.Schema) ||
             !Reference(fact.OperationResult, "mutation-result-content.v1"))
             throw new ImmutableContentIntegrityException("The program header differs from its exact native root, member or immutable references.");
+        if (fact is ProgramRenamed renamed && !Reference(renamed.PreviousContent, ProgramContent.Schema) ||
+            fact is ProgramTargetsRevised targets && !Reference(targets.PreviousContent, ProgramContent.Schema))
+            throw new ImmutableContentIntegrityException("The named program change lacks its exact preceding authored content.");
         if (fact is ProgramCriteriaEditionSelected selection && operation.AuthoredIntentSha256 !=
             AuthoredIntentDigest.Compute(new SelectProgramCriteriaEdition(operation.LogicalId, fact.TenantId, fact.ProgramId,
                 (long)operation.OriginalExpectedRevision!.Value, selection.EditionId)))

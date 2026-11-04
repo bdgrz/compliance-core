@@ -25,6 +25,8 @@ public static class BoundaryFactFactory
         ImmutableContentRef change, ImmutableContentRef authority, ImmutableContentRef first, ImmutableContentRef result,
         BoundaryMutationContent mutation) => kind switch
         {
+            nameof(DraftBoundary) => CanonicalDraft(header, sequence, operation, change, authority, first, result, mutation),
+            nameof(ReviewBoundaryDraft) => CanonicalReview(header, sequence, operation, change, authority, first, result, mutation),
             nameof(CreateBoundary) => BoundaryDraftCreated(header, sequence, operation, change, authority, first, result, mutation),
             nameof(ReviseBoundaryDraft) => BoundaryDraftRevised(header, sequence, operation, change, authority, first, result, mutation),
             nameof(ReviewBoundary) => BoundaryReviewed(header, sequence, operation, change, authority, first, result, mutation),
@@ -35,6 +37,57 @@ public static class BoundaryFactFactory
             nameof(RevokeResponsibility) => ResponsibilityRevoked(header, sequence, operation, change, authority, first, result, mutation),
             _ => throw new InvalidOperationException("The boundary command kind is not selected."),
         };
+    static BoundaryDrafted CanonicalDraft(BoundaryAuthorityHeader header, long sequence, OperationProvenance operation,
+        ImmutableContentRef change, ImmutableContentRef authority, ImmutableContentRef first, ImmutableContentRef result, BoundaryMutationContent mutation)
+    {
+        var predecessor = mutation.Changes.Single() is BoundarySuccessorProposedContent successor
+            ? (Uuid?)successor.PredecessorVersionId : null;
+        return new(header.TenantId, header.ProgramId, header.DraftVersionId, predecessor, header.Content,
+            Uuid.Parse(operation.Actor.Id), operation.Actor.Display, operation.AcceptedAt)
+        {
+            Operation = operation,
+            Header = header,
+            Change = change,
+            Authority = authority,
+            NativeSequence = sequence,
+            ChangeCount = mutation.Changes.Count,
+            FirstResponse = first,
+            OperationResult = result,
+        };
+    }
+
+    static DomainEvent CanonicalReview(BoundaryAuthorityHeader header, long sequence, OperationProvenance operation,
+        ImmutableContentRef change, ImmutableContentRef authority, ImmutableContentRef first, ImmutableContentRef result, BoundaryMutationContent mutation)
+    {
+        if (mutation.Changes.Single() is BoundaryApprovedContent approved)
+            return new BoundaryVersionApproved(header.TenantId, header.ProgramId, approved.DraftVersionId, approved.Revision,
+                approved.ApprovalDecisionId, approved.ActorMemberId, approved.ActorDisplay, approved.EffectiveFrom, approved.DecidedAt,
+                approved.SeparationOfDutiesWaiverId)
+            {
+                Operation = operation,
+                Header = header,
+                Change = change,
+                Authority = authority,
+                NativeSequence = sequence,
+                ChangeCount = mutation.Changes.Count,
+                FirstResponse = first,
+                OperationResult = result,
+            };
+        var requested = Selected<BoundaryReviewedContent>(mutation);
+        return new BoundaryChangesRequested(header.TenantId, header.ProgramId, requested.DraftVersionId, requested.Revision,
+            requested.DecisionId, requested.ActorMemberId, requested.ActorDisplay, requested.DecidedAt, requested.SeparationOfDutiesWaiverId)
+        {
+            Operation = operation,
+            Header = header,
+            Change = change,
+            Authority = authority,
+            NativeSequence = sequence,
+            ChangeCount = mutation.Changes.Count,
+            FirstResponse = first,
+            OperationResult = result,
+        };
+    }
+
     static T Selected<T>(BoundaryMutationContent mutation) where T : class, IBoundaryMutationContent =>
         (mutation.Changes.Count == 0 ? mutation.Receipt as T : mutation.Changes.OfType<T>().SingleOrDefault())
         ?? throw new InvalidOperationException("The boundary command has another exact prepared content kind.");

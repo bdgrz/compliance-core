@@ -97,6 +97,7 @@ public sealed class BoundaryRules
     long _draftRevision;
     BoundaryContent? _draftContent;
     Uuid _draftAuthorMemberId;
+    readonly HashSet<Uuid> _draftAuthors = [];
     bool _draftEverReviewed;
     Uuid _acceptedReviewDecisionId;
     string? _latestReviewOutcome;
@@ -142,6 +143,7 @@ public sealed class BoundaryRules
             _draftRevision = 1;
             _draftContent = ev.Content;
             _draftAuthorMemberId = ev.AuthorMemberId;
+            _draftAuthors.Add(ev.AuthorMemberId);
             _draftEverReviewed = false;
             _draftChangedAt = ev.ChangedAt;
             _latestReviewOutcome = null;
@@ -152,6 +154,7 @@ public sealed class BoundaryRules
             _draftRevision = ev.Revision;
             _draftContent = ev.Content;
             _draftAuthorMemberId = ev.AuthorMemberId;
+            _draftAuthors.Add(ev.AuthorMemberId);
             _acceptedReviewDecisionId = Uuid.Empty;
             _draftChangedAt = ev.ChangedAt;
             _latestReviewOutcome = null;
@@ -201,6 +204,8 @@ public sealed class BoundaryRules
             _draftRevision = 1;
             _draftContent = ev.Content;
             _draftAuthorMemberId = ev.AuthorMemberId;
+            _draftAuthors.Clear();
+            _draftAuthors.Add(ev.AuthorMemberId);
             _draftEverReviewed = false;
             _acceptedReviewDecisionId = Uuid.Empty;
             _draftChangedAt = ev.ChangedAt;
@@ -291,6 +296,73 @@ public sealed class BoundaryRules
     sealed record ResponsibilityDecisionFact(Uuid MemberId, ResponsibilityType Type,
         DateTimeOffset At, Uuid? WaiverId);
 
+    public Result<BoundaryRegistration> DraftBoundary(Uuid programId, Uuid draftVersionId, long expectedRevision,
+        BoundaryContent content, Uuid authorMemberId, string authorDisplay, DateTimeOffset changedAt)
+    {
+        if (programId != Id || programId == Uuid.Empty)
+            return Result<BoundaryRegistration>.Failure(new RequestError(RequestErrorKind.Validation,
+                "A program has one boundary, identified by that program."));
+        if (expectedRevision != Revision)
+            return Result<BoundaryRegistration>.Failure(new RequestError(RequestErrorKind.Conflict,
+                "The boundary changed. Reload its current revision."));
+        if (!_created)
+            return Create(programId, draftVersionId, content, authorMemberId, authorDisplay, changedAt);
+        if (_draftVersionId != Uuid.Empty)
+            return Result<BoundaryRegistration>.Failure(new RequestError(RequestErrorKind.Conflict,
+                "The boundary already has an open draft."));
+        if (draftVersionId == Uuid.Empty || _readVersions.ContainsKey(draftVersionId) || authorMemberId == Uuid.Empty ||
+            Validate(content) is not null)
+            return Result<BoundaryRegistration>.Failure(new RequestError(RequestErrorKind.Validation,
+                "A boundary draft requires a new version identity, valid content and an author."));
+        RaiseEvent(new BoundarySuccessorProposedContent(_tenantId, Id, draftVersionId, _latestApprovedVersionId,
+            content, authorMemberId, authorDisplay, changedAt));
+        return Result<BoundaryRegistration>.Success(new BoundaryRegistration(Id, draftVersionId));
+    }
+
+    public CommandFailure? ReviewDraft(Uuid draftVersionId, long expectedRevision, Uuid decisionId,
+        string outcome, string rationale, DateOnly? effectiveFrom, Uuid reviewerMemberId,
+        string reviewerDisplay, DateTimeOffset decidedAt, SeparationOfDutiesWaiverProof? waiver = null)
+    {
+        if (CheckDraft(draftVersionId, expectedRevision) is { } current)
+            return current;
+        if (reviewerMemberId == Uuid.Empty || decisionId == Uuid.Empty ||
+            outcome is not ("approve" or "request_changes") || string.IsNullOrWhiteSpace(rationale))
+            return CommandFailure.InvalidContent("A boundary review requires an exact decision, reviewer, outcome and rationale.");
+        var scope = new SeparationOfDutiesWaiverScope(SeparationOfDutiesRecordTypes.Boundary, Id,
+            draftVersionId, expectedRevision, SeparationOfDutiesActions.Review);
+        if (waiver is not null && !BoundaryWaiverProof.Allows(waiver, _tenantId, scope, reviewerMemberId, decidedAt))
+            return CommandFailure.ActorProhibited("The waiver does not cover this exact boundary review.");
+        if (_draftAuthors.Contains(reviewerMemberId) && waiver is null)
+            return CommandFailure.ActorProhibited("A member who authored any revision cannot review that boundary draft.");
+        if (outcome == "approve")
+        {
+            if (Validate(_draftContent) is { } invalid)
+                return CommandFailure.InvalidContent(invalid);
+            if (effectiveFrom is null || effectiveFrom == default(DateOnly) ||
+                _latestApprovedEffectiveFrom is { } prior && effectiveFrom <= prior)
+                return CommandFailure.InvalidContent("An approved boundary requires an effective date after its predecessor.");
+            Remember(waiver);
+            RaiseEvent(new BoundaryApprovedContent(_tenantId, Id, draftVersionId, expectedRevision,
+                decisionId, decisionId, reviewerMemberId, reviewerDisplay, rationale.Trim(), effectiveFrom.Value,
+                decidedAt, "canonical-review", waiver?.WaiverId)
+            {
+                StoredActor = ActorReference.ForMember(reviewerMemberId, reviewerDisplay),
+            });
+        }
+        else
+        {
+            if (effectiveFrom is not null)
+                return CommandFailure.InvalidContent("A request for changes cannot assign an approved effective date.");
+            Remember(waiver);
+            RaiseEvent(new BoundaryReviewedContent(_tenantId, Id, draftVersionId, expectedRevision, decisionId,
+                "request_changes", reviewerMemberId, reviewerDisplay, rationale.Trim(), decidedAt, waiver?.WaiverId)
+            {
+                StoredActor = ActorReference.ForMember(reviewerMemberId, reviewerDisplay),
+            });
+        }
+        return null;
+    }
+
     public Result<BoundaryRegistration> Create(Uuid programId, Uuid draftVersionId,
         BoundaryContent content, Uuid authorMemberId, string authorDisplay,
         DateTimeOffset changedAt)
@@ -350,7 +422,7 @@ public sealed class BoundaryRules
         var responsibilityFailure = ResponsibilityDecisionGuard.ValidateAuthorized(
             GetResponsibilitySet(responsibilityScope), responsibilityScope, reviewerMemberId,
             ResponsibilityType.AssignedReviewer, decidedAt,
-            reviewerMemberId == _draftAuthorMemberId, separationOfDutiesWaiver);
+            _draftAuthors.Contains(reviewerMemberId), separationOfDutiesWaiver);
         if (responsibilityFailure is not null)
             return responsibilityFailure;
         var reviewWaiverScope = new SeparationOfDutiesWaiverScope(
@@ -361,7 +433,7 @@ public sealed class BoundaryRules
              !BoundaryWaiverProof.Allows(separationOfDutiesWaiver, _tenantId, reviewWaiverScope, reviewerMemberId, decidedAt)))
             return CommandFailure.ActorProhibited(
                 "The separation-of-duties waiver is not active for this reviewer and draft revision.");
-        if (reviewerMemberId == _draftAuthorMemberId && separationOfDutiesWaiver is null)
+        if (_draftAuthors.Contains(reviewerMemberId) && separationOfDutiesWaiver is null)
             return CommandFailure.ActorProhibited(
                 "A boundary author cannot review their own draft.");
         if (outcome is not ("accept" or "request_changes") || string.IsNullOrWhiteSpace(rationale))
@@ -384,8 +456,6 @@ public sealed class BoundaryRules
         var current = CheckDraft(draftVersionId, expectedRevision);
         if (current is not null)
             return current;
-        if (VersionedRecordRules.DraftDiscardConflict(_draftEverReviewed) is { } referenced)
-            return CommandFailure.ForVersion(referenced);
         if (string.IsNullOrWhiteSpace(rationale))
             return CommandFailure.InvalidContent("Discarding a draft requires a rationale.");
         RaiseEvent(new BoundaryDraftDiscardedContent(_tenantId, Id, draftVersionId,
@@ -409,7 +479,7 @@ public sealed class BoundaryRules
         var responsibilityFailure = ResponsibilityDecisionGuard.ValidateAuthorized(
             GetResponsibilitySet(responsibilityScope), responsibilityScope, approverMemberId,
             ResponsibilityType.PolicyApprover, decidedAt,
-            approverMemberId == _draftAuthorMemberId, separationOfDutiesWaiver);
+            _draftAuthors.Contains(approverMemberId), separationOfDutiesWaiver);
         if (responsibilityFailure is not null)
             return responsibilityFailure;
         var approvalWaiverScope = new SeparationOfDutiesWaiverScope(
@@ -420,7 +490,7 @@ public sealed class BoundaryRules
              !BoundaryWaiverProof.Allows(separationOfDutiesWaiver, _tenantId, approvalWaiverScope, approverMemberId, decidedAt)))
             return CommandFailure.ActorProhibited(
                 "The separation-of-duties waiver is not active for this approver and draft revision.");
-        if (approverMemberId == _draftAuthorMemberId && separationOfDutiesWaiver is null)
+        if (_draftAuthors.Contains(approverMemberId) && separationOfDutiesWaiver is null)
             return CommandFailure.ActorProhibited(
                 "A boundary author cannot approve their own draft.");
         // Drafts recorded before a content rule existed must satisfy it before approval.
@@ -555,7 +625,10 @@ public sealed class BoundaryRules
         var scope = new ResponsibilityScope("boundary", Id, _draftVersionId, _draftRevision);
         return new(header, _draftContent is not null ? GetResponsibilitySet(scope).ReadAssignments().ToArray() : [],
             _draftContent is not null && _responsibilityDecisions.TryGetValue(scope, out var decisions)
-                ? decisions.Select(static value => new BoundaryDecisionConstraint(value.MemberId, value.Type, value.At, value.WaiverId)).ToArray() : []);
+                ? decisions.Select(static value => new BoundaryDecisionConstraint(value.MemberId, value.Type, value.At, value.WaiverId)).ToArray() : [])
+        {
+            DraftAuthorMemberIds = _draftAuthors.OrderBy(static id => id.ToString(), StringComparer.Ordinal).ToArray(),
+        };
     }
     void Remember(SeparationOfDutiesWaiverProof? proof)
     {
