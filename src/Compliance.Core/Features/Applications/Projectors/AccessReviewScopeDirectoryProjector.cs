@@ -10,6 +10,11 @@ public sealed partial class AccessReviewScopeDirectoryProjector(
             AccessReviewScopeStreams.ProjectorName),
         IProjectorHandler<AccessReviewScopeDecided>
 {
-    public ValueTask HandleAsync(AccessReviewScopeDecided ev, IProjectorContext context,
-        CancellationToken ct) => projection.ApplyAsync(ev, ct);
+    public async ValueTask<Result> HandleAsync(IProjectorContext<AccessReviewScopeDecided> context,
+        CancellationToken ct)
+    {
+        var ev = context.Trigger;
+        await projection.ApplyAsync(ev, ct).ConfigureAwait(false);
+        return Result.Success;
+    }
 }

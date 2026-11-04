@@ -14,9 +14,12 @@ public sealed class FindingClosureWorkItemProjector(
     : Projector(projection, EventStreamPattern.ForTenant(),
         FitzFindingClosureWorkItemDirectory.ProjectorName)
 {
-    protected override ValueTask ProjectEventAsync(DomainEventRecord record, IProjectorContext context,
-        CancellationToken ct) =>
-        record.Event.Metadata.IsAudit || record.Stream.Area is not (FindingAggregate.Area or CorrectiveAction.Area)
-            ? ValueTask.CompletedTask
-            : projection.ApplyAsync(record.Event, ct);
+    protected override async ValueTask<Result> ProjectEventAsync(DomainEventRecord record, IProjectorContext context,
+        CancellationToken ct)
+    {
+        if (record.Event.Metadata.IsAudit || record.Stream.Area is not (FindingAggregate.Area or CorrectiveAction.Area))
+            return Result.Success;
+        await projection.ApplyAsync(record.Event, ct).ConfigureAwait(false);
+        return Result.Success;
+    }
 }

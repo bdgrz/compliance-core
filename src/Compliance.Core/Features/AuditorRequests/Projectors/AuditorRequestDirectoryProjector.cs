@@ -10,8 +10,17 @@ public sealed partial class AuditorRequestDirectoryProjector(IAuditorRequestDire
     : Projector(projection, EventStreamPattern.ForTenant(AuditorRequest.Area), FitzAuditorRequestDirectory.ProjectorName),
         IProjectorHandler<AuditorRequestRecorded>, IProjectorHandler<AuditorSampleSelectionAdmitted>
 {
-    public ValueTask HandleAsync(AuditorRequestRecorded fact, IProjectorContext context, CancellationToken ct) =>
-        projection.ApplyAsync(fact, ct);
-    public ValueTask HandleAsync(AuditorSampleSelectionAdmitted fact, IProjectorContext context, CancellationToken ct) =>
-        projection.ApplyAsync(fact, ct);
+    public async ValueTask<Result> HandleAsync(IProjectorContext<AuditorRequestRecorded> context, CancellationToken ct)
+    {
+        var fact = context.Trigger;
+        await projection.ApplyAsync(fact, ct).ConfigureAwait(false);
+        return Result.Success;
+    }
+
+    public async ValueTask<Result> HandleAsync(IProjectorContext<AuditorSampleSelectionAdmitted> context, CancellationToken ct)
+    {
+        var fact = context.Trigger;
+        await projection.ApplyAsync(fact, ct).ConfigureAwait(false);
+        return Result.Success;
+    }
 }

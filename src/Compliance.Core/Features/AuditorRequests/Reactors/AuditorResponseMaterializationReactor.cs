@@ -39,25 +39,20 @@ using Bdgrz.Compliance.Features.AuditorRequests.Aggregates;
 using Bdgrz.Compliance.Features.AuditorRequests.Events;
 using Bdgrz.Compliance.Features.Examinations.Aggregates;
 using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
-namespace Bdgrz.Compliance.Features.AuditorRequests.Reactors;
 
+namespace Bdgrz.Compliance.Features.AuditorRequests.Reactors;
 /// <summary>
 ///     Starts <c>IndependentChildMaterialization</c> from a committed response admission. The process record exists before
 ///     the source checkpoint advances and the sweep resumes it if this reactor stops, so an admission is always
 ///     materialized exactly once even when the reactor, the receiver or the process worker crashes in between.
 /// </summary>
-sealed partial class AuditorResponseMaterializationReactor(IProjectionCheckpointStore checkpoints,
-    ProcessRootReaction process, IImmutableContentStore content, ISourceFactResolver sources)
-    : Reactor(checkpoints, EventStreamPattern.ForTenant(AuditorRequest.Area), WorkloadName),
-        IReactorHandler<AuditorResponseAdmitted>
+sealed partial class AuditorResponseMaterializationReactor(IProjectionCheckpointStore checkpoints, ProcessRootReaction process, IImmutableContentStore content, ISourceFactResolver sources) : Reactor(checkpoints, EventStreamPattern.ForTenant(AuditorRequest.Area), WorkloadName), IReactorHandler<AuditorResponseAdmitted>
 {
     public const string WorkloadName = "AuditorResponseMaterializationV1";
-
-    public async ValueTask HandleAsync(IReactorContext<AuditorResponseAdmitted> context, CancellationToken ct)
+    public async ValueTask<Result> HandleAsync(IReactorContext<AuditorResponseAdmitted> context, CancellationToken ct)
     {
-        await AuditorRequestReactorSources.VerifyAsync(sources, content, Pattern, context, context.Trigger.Owner, ct)
-            .ConfigureAwait(false);
-        _ = await process.StartAsync(FindingClosureEffects.MaterializationProcessName, context, context.Trigger.Intent,
-            [context.Trigger.Operation.LogicalId.ToString()], $"reactor:{WorkloadName}", ct).ConfigureAwait(false);
+        await AuditorRequestReactorSources.VerifyAsync(sources, content, Pattern, context, context.Trigger.Owner, ct).ConfigureAwait(false);
+        _ = await process.StartAsync(FindingClosureEffects.MaterializationProcessName, context, context.Trigger.Intent, [context.Trigger.Operation.LogicalId.ToString()], $"reactor:{WorkloadName}", ct).ConfigureAwait(false);
+        return Result.Success;
     }
 }

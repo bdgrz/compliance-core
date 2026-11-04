@@ -9,6 +9,11 @@ public sealed partial class PopulationSnapshotDirectoryProjector(
             "PopulationSnapshotDirectoryV2"),
       IProjectorHandler<PopulationSnapshotFrozen>
 {
-    public ValueTask HandleAsync(PopulationSnapshotFrozen ev, IProjectorContext context,
-        CancellationToken ct) => projection.ApplyAsync(ev, ct);
+    public async ValueTask<Result> HandleAsync(IProjectorContext<PopulationSnapshotFrozen> context,
+        CancellationToken ct)
+    {
+        var ev = context.Trigger;
+        await projection.ApplyAsync(ev, ct).ConfigureAwait(false);
+        return Result.Success;
+    }
 }

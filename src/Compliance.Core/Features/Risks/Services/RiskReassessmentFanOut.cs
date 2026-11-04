@@ -60,14 +60,14 @@ static class RiskReassessmentFanOut
             programId, triggerKind, sourceReference, raisedAt, methodVersionId, riskId);
 
     /// <summary>Sends one trigger command for every assessed risk of the program that the change affects.</summary>
-    public static async ValueTask SendAsync(IRequestBus bus, IAggregateReader reader, IRiskDraftDirectoryReader risks,
+    public static async ValueTask<Result> SendAsync(IRequestBus bus, IAggregateReader reader, IRiskDraftDirectoryReader risks,
         RiskDraftListReadConsistency consistency, IReactorContext context, Uuid sourceEventId, Uuid tenantId,
         Uuid programId, string triggerKind, string sourceReference, DateTimeOffset raisedAt, Uuid? methodVersionId,
         CancellationToken ct)
     {
         var caughtUp = await consistency.EnsureCaughtUpAsync(tenantId, ct).ConfigureAwait(false);
         if (!caughtUp.IsSuccess)
-            throw new ReactionCommandFailedException(caughtUp.Error!);
+            return Result.Failure(caughtUp.Error);
         string? cursor = null;
         do
         {
@@ -80,11 +80,14 @@ static class RiskReassessmentFanOut
                     continue;
                 if (methodVersionId is { } method && inherentMethod == method)
                     continue;
-                await bus.SendReactionAsync(Command(sourceEventId, tenantId, programId, risk.RiskId, triggerKind,
+                var result = await bus.SendReactionAsync(Command(sourceEventId, tenantId, programId, risk.RiskId, triggerKind,
                     sourceReference, raisedAt, methodVersionId), context, ct).ConfigureAwait(false);
+                if (!result.IsSuccess)
+                    return result;
             }
 
             cursor = page.NextCursor;
         } while (cursor is not null);
+        return Result.Success;
     }
 }

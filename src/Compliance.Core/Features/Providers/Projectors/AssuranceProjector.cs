@@ -47,28 +47,39 @@ public sealed partial class AssuranceProjector(IAssuranceProjection projection, 
       IProjectorHandler<ProviderCoverageGapRiskAcceptanceAdmitted>,
       IProjectorHandler<ProviderCoverageGapRiskAcceptanceLinked>
 {
-    public async ValueTask HandleAsync(AssuranceReportRecorded ev, IProjectorContext context, CancellationToken ct) =>
+    public async ValueTask<Result> HandleAsync(IProjectorContext<AssuranceReportRecorded> context, CancellationToken ct)
+    {
+        var ev = context.Trigger;
         await projection.ApplyReportAsync(ReportView(ev.TenantId, ev.ReportId, ev.ProviderId, 1,
             await ReadAsync<AssuranceReportContent>(ev.TenantId, ev.ContentContent, ct).ConfigureAwait(false),
             ev.ProviderRevision, ev.Actor, ev.RecordedAt), ct).ConfigureAwait(false);
+        return Result.Success;
+    }
 
-    public async ValueTask HandleAsync(AssuranceReportRevised ev, IProjectorContext context, CancellationToken ct) =>
+    public async ValueTask<Result> HandleAsync(IProjectorContext<AssuranceReportRevised> context, CancellationToken ct)
+    {
+        var ev = context.Trigger;
         await projection.ApplyReportAsync(ReportView(ev.TenantId, ev.ReportId, ev.ProviderId, ev.Revision,
             await ReadAsync<AssuranceReportContent>(ev.TenantId, ev.ContentContent, ct).ConfigureAwait(false),
             ev.ProviderRevision, ev.Actor, ev.RecordedAt), ct).ConfigureAwait(false);
+        return Result.Success;
+    }
 
-    public async ValueTask HandleAsync(ProviderReviewRecorded ev, IProjectorContext context, CancellationToken ct)
+    public async ValueTask<Result> HandleAsync(IProjectorContext<ProviderReviewRecorded> context, CancellationToken ct)
     {
+        var ev = context.Trigger;
         var reviewContent = await ReadAsync<ProviderReviewContent>(ev.TenantId, ev.ContentContent, ct)
             .ConfigureAwait(false);
         await projection.ApplyReviewAsync(new ProviderReviewView(ev.TenantId, ev.ReviewId, ev.ProviderId,
             AssuranceRules.Normalize(reviewContent), ev.ProviderRevision, ev.AssuranceReportRevision, ev.Actor,
             ev.RecordedAt), ct).ConfigureAwait(false);
+        return Result.Success;
     }
 
-    public async ValueTask HandleAsync(ProviderCoverageGapRecorded ev, IProjectorContext context,
+    public async ValueTask<Result> HandleAsync(IProjectorContext<ProviderCoverageGapRecorded> context,
         CancellationToken ct)
     {
+        var ev = context.Trigger;
         var gapContent = await ReadAsync<ProviderCoverageGapContent>(ev.TenantId, ev.ContentContent, ct)
             .ConfigureAwait(false);
         if (ProviderCoverageGapRules.InputError(gapContent) is not null || ev.RequestId == Uuid.Empty)
@@ -76,33 +87,40 @@ public sealed partial class AssuranceProjector(IAssuranceProjection projection, 
         await projection.ApplyGapRecordedAsync(new ProviderCoverageGapView(ev.TenantId, ev.GapId, ev.ProviderId,
             ev.ProviderRevision, 1, ProviderCoverageGapRules.Normalize(gapContent), "open", ev.Actor, ev.RecordedAt,
             null, []), ct).ConfigureAwait(false);
+        return Result.Success;
     }
 
-    public async ValueTask HandleAsync(ProviderCoverageGapClosed ev, IProjectorContext context,
+    public async ValueTask<Result> HandleAsync(IProjectorContext<ProviderCoverageGapClosed> context,
         CancellationToken ct)
     {
+        var ev = context.Trigger;
         var closure = await ReadAsync<ProviderCoverageGapClosureContent>(ev.TenantId, ev.ContentContent, ct)
             .ConfigureAwait(false);
         await projection.ApplyGapClosedAsync(ev.TenantId, ev.ProviderId, ev.GapId, ev.Revision,
             new ProviderCoverageGapClosureView(closure, ev.Actor, ev.ClosedAt) { Revision = ev.Revision }, ct)
             .ConfigureAwait(false);
+        return Result.Success;
     }
 
-    public async ValueTask HandleAsync(ProviderCoverageGapRiskAcceptanceAdmitted ev, IProjectorContext context,
+    public async ValueTask<Result> HandleAsync(IProjectorContext<ProviderCoverageGapRiskAcceptanceAdmitted> context,
         CancellationToken ct)
     {
+        var ev = context.Trigger;
         var tenantId = ProviderReviewEffects.TenantOf(ev.Owner);
         var intent = await ReadAsync<ProviderRiskLinkIntent>(tenantId, ev.Intent, ct).ConfigureAwait(false);
         await projection.ApplyGapAdmissionAsync(tenantId, intent.ProviderId, intent.GapId, ev.Revision, ct)
             .ConfigureAwait(false);
+        return Result.Success;
     }
 
-    public async ValueTask HandleAsync(ProviderCoverageGapRiskAcceptanceLinked ev, IProjectorContext context,
+    public async ValueTask<Result> HandleAsync(IProjectorContext<ProviderCoverageGapRiskAcceptanceLinked> context,
         CancellationToken ct)
     {
+        var ev = context.Trigger;
         var link = await ReadAsync<ProviderCoverageGapRiskAcceptanceView>(ev.TenantId, ev.AcceptanceContent, ct)
             .ConfigureAwait(false);
         await projection.ApplyGapLinkAsync(ev.TenantId, ev.ProviderId, ev.GapId, link, ct).ConfigureAwait(false);
+        return Result.Success;
     }
 
     Task<T> ReadAsync<T>(Uuid tenantId, ImmutableContentRef reference, CancellationToken ct) where T : notnull =>

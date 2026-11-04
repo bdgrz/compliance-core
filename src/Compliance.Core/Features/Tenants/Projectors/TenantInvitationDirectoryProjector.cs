@@ -9,9 +9,19 @@ public sealed partial class TenantInvitationDirectoryProjector(
       "TenantInvitationDirectory"),
       IProjectorHandler<TenantMemberInvited>, IProjectorHandler<TenantInvitationAccepted>
 {
-    public ValueTask HandleAsync(TenantMemberInvited ev, IProjectorContext context,
-        CancellationToken ct) => projection.ApplyAsync(ev, ct);
+    public async ValueTask<Result> HandleAsync(IProjectorContext<TenantMemberInvited> context,
+        CancellationToken ct)
+    {
+        var ev = context.Trigger;
+        await projection.ApplyAsync(ev, ct).ConfigureAwait(false);
+        return Result.Success;
+    }
 
-    public ValueTask HandleAsync(TenantInvitationAccepted ev, IProjectorContext context,
-        CancellationToken ct) => projection.ApplyAsync(ev, ct);
+    public async ValueTask<Result> HandleAsync(IProjectorContext<TenantInvitationAccepted> context,
+        CancellationToken ct)
+    {
+        var ev = context.Trigger;
+        await projection.ApplyAsync(ev, ct).ConfigureAwait(false);
+        return Result.Success;
+    }
 }

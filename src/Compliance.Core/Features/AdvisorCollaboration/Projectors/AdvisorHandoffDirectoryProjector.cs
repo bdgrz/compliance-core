@@ -44,25 +44,55 @@ public sealed partial class AdvisorHandoffDirectoryProjector(IAdvisorHandoffDire
       IProjectorHandler<AdvisorHandoffRevoked>,
       IProjectorHandler<AdvisorFeedbackAdmitted>
 {
-    public async ValueTask HandleAsync(AdvisorHandoffCreated ev, IProjectorContext context,
-        CancellationToken ct) => await projection.ApplyAsync(ev, await AdvisorContent
+    public async ValueTask<Result> HandleAsync(IProjectorContext<AdvisorHandoffCreated> context,
+        CancellationToken ct)
+    {
+        var ev = context.Trigger;
+        await projection.ApplyAsync(ev, await AdvisorContent
             .ReadAsync<IReadOnlyList<AdvisorRecordVersion>>(content, ev.TenantId, ev.RecordVersionsManifest, ct)
             .ConfigureAwait(false), ct).ConfigureAwait(false);
+        return Result.Success;
+    }
 
-    public async ValueTask HandleAsync(AdvisorHandoffSelectionRevised ev, IProjectorContext context,
-        CancellationToken ct) => await projection.ApplyAsync(ev, await AdvisorContent
+    public async ValueTask<Result> HandleAsync(IProjectorContext<AdvisorHandoffSelectionRevised> context,
+        CancellationToken ct)
+    {
+        var ev = context.Trigger;
+        await projection.ApplyAsync(ev, await AdvisorContent
             .ReadAsync<IReadOnlyList<AdvisorRecordVersion>>(content, ev.TenantId, ev.RecordVersionsManifest, ct)
             .ConfigureAwait(false), ct).ConfigureAwait(false);
+        return Result.Success;
+    }
 
-    public ValueTask HandleAsync(AdvisorHandoffReadiedForReview ev, IProjectorContext context,
-        CancellationToken ct) => projection.ApplyAsync(ev, null, ct);
+    public async ValueTask<Result> HandleAsync(IProjectorContext<AdvisorHandoffReadiedForReview> context,
+        CancellationToken ct)
+    {
+        var ev = context.Trigger;
+        await projection.ApplyAsync(ev, null, ct).ConfigureAwait(false);
+        return Result.Success;
+    }
 
-    public ValueTask HandleAsync(AdvisorHandoffClosed ev, IProjectorContext context,
-        CancellationToken ct) => projection.ApplyAsync(ev, null, ct);
+    public async ValueTask<Result> HandleAsync(IProjectorContext<AdvisorHandoffClosed> context,
+        CancellationToken ct)
+    {
+        var ev = context.Trigger;
+        await projection.ApplyAsync(ev, null, ct).ConfigureAwait(false);
+        return Result.Success;
+    }
 
-    public ValueTask HandleAsync(AdvisorHandoffRevoked ev, IProjectorContext context,
-        CancellationToken ct) => projection.ApplyAsync(ev, null, ct);
+    public async ValueTask<Result> HandleAsync(IProjectorContext<AdvisorHandoffRevoked> context,
+        CancellationToken ct)
+    {
+        var ev = context.Trigger;
+        await projection.ApplyAsync(ev, null, ct).ConfigureAwait(false);
+        return Result.Success;
+    }
 
-    public ValueTask HandleAsync(AdvisorFeedbackAdmitted ev, IProjectorContext context,
-        CancellationToken ct) => projection.ApplyAsync(ev, null, ct);
+    public async ValueTask<Result> HandleAsync(IProjectorContext<AdvisorFeedbackAdmitted> context,
+        CancellationToken ct)
+    {
+        var ev = context.Trigger;
+        await projection.ApplyAsync(ev, null, ct).ConfigureAwait(false);
+        return Result.Success;
+    }
 }

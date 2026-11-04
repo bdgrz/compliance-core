@@ -87,28 +87,39 @@ public sealed partial class TenantActivationPolicy
     ///     Runs one activation reaction under the policy. A transient failure propagates for
     ///     durable replay; a permanent failure propagates until its budget is spent.
     /// </summary>
-    public async ValueTask ReactAsync(string reactor, Uuid tenantId, DomainEvent trigger,
-        ILogger logger, Func<CancellationToken, ValueTask> reaction, CancellationToken ct)
+    public async ValueTask<Result> ReactAsync(string reactor, Uuid tenantId, DomainEvent trigger,
+        ILogger logger, Func<CancellationToken, ValueTask<Result>> reaction, CancellationToken ct)
     {
         var key = (reactor, trigger.Metadata.EventId);
+        Result result;
         try
         {
-            await reaction(ct).ConfigureAwait(false);
-            _ = _permanentFailures.TryRemove(key, out _);
+            result = await reaction(ct).ConfigureAwait(false);
         }
-        catch (ReactionCommandFailedException failure) when (!failure.Error.IsTransient)
+        catch (ReactionCommandFailedException failure)
         {
-            var attempts = _permanentFailures.AddOrUpdate(key, 1, static (_, count) => count + 1);
-            if (attempts < PermanentFailureLimit)
-                throw;
-            _ = _permanentFailures.TryRemove(key, out _);
-            LogActivationAbandoned(logger, tenantId, reactor, attempts, failure.Error.Kind,
-                failure.Error.Message);
+            result = Result.Failure(failure.Error);
         }
+
+        if (result.IsSuccess)
+        {
+            _ = _permanentFailures.TryRemove(key, out _);
+            return result;
+        }
+        if (result.Error.IsTransient)
+            return result;
+
+        var attempts = _permanentFailures.AddOrUpdate(key, 1, static (_, count) => count + 1);
+        if (attempts < PermanentFailureLimit)
+            return result;
+        _ = _permanentFailures.TryRemove(key, out _);
+        LogActivationAbandoned(logger, tenantId, reactor, attempts, result.Error.Kind,
+            result.Error.Message);
+        return Result.Success;
     }
 
     /// <summary>Sends the activation, retrying a transient failure within the local window.</summary>
-    public async ValueTask SendActivationAsync(IRequestBus bus, ActivateTenant activation,
+    public async ValueTask<Result> SendActivationAsync(IRequestBus bus, ActivateTenant activation,
         IReactorContext context, ILogger logger, CancellationToken ct)
     {
         var started = Stopwatch.GetTimestamp();
@@ -116,33 +127,33 @@ public sealed partial class TenantActivationPolicy
         while (true)
         {
             ct.ThrowIfCancellationRequested();
-            try
+            var result = await bus.SendReactionAsync(activation, context, ct).ConfigureAwait(false);
+            if (result.IsSuccess)
             {
-                await bus.SendReactionAsync(activation, context, ct).ConfigureAwait(false);
                 if (attempts > 0 && logger.IsEnabled(LogLevel.Information))
                 {
                     var elapsedMilliseconds = Stopwatch.GetElapsedTime(started).TotalMilliseconds;
                     LogActivationRecovered(logger, activation.TenantId, attempts + 1,
                         elapsedMilliseconds);
                 }
-                return;
+                return result;
             }
-            catch (ReactionCommandFailedException failure) when (failure.Error.IsTransient)
-            {
-                attempts++;
-                if (attempts == 1)
-                    LogActivationWaiting(logger, activation.TenantId, failure.Error.Kind);
-                if (Stopwatch.GetElapsedTime(started) >= LocalRetryWindow)
-                {
-                    LogActivationDeferred(logger, activation.TenantId, attempts,
-                        failure.Error.Kind);
-                    throw;
-                }
+            if (!result.Error.IsTransient)
+                return result;
 
-                // Projection materialization can lag the source reaction. An extended lag
-                // returns to Portia's durable pass retry instead of holding this pass forever.
-                await Task.Delay(TimeSpan.FromMilliseconds(250), ct).ConfigureAwait(false);
+            attempts++;
+            if (attempts == 1)
+                LogActivationWaiting(logger, activation.TenantId, result.Error.Kind);
+            if (Stopwatch.GetElapsedTime(started) >= LocalRetryWindow)
+            {
+                LogActivationDeferred(logger, activation.TenantId, attempts,
+                    result.Error.Kind);
+                return result;
             }
+
+            // Projection materialization can lag the source reaction. An extended lag
+            // returns to Portia's durable pass retry instead of holding this pass forever.
+            await Task.Delay(TimeSpan.FromMilliseconds(250), ct).ConfigureAwait(false);
         }
     }
 

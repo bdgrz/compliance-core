@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/dotnet/sdk:10.0.403-noble-aot@sha256:db24de72e2f4272c9e5a542f03a782bda059da7f2075409ba1e81c438bb05079 AS build
+FROM mcr.microsoft.com/dotnet/sdk:10.0.403-noble-aot@sha256:c45158dabdcffc8409ef46c9431c16b36d9419405b51fd29261fa8a6af3f516f AS build
 
 WORKDIR /source
 

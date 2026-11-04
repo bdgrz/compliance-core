@@ -30,44 +30,34 @@ using Bdgrz.Compliance.Features.Providers.Projections;
 using Bdgrz.Compliance.Features.Readiness.Aggregates;
 using Bdgrz.Compliance.Features.Readiness.Events;
 using Bdgrz.Compliance.Features.Readiness.Models;
-namespace Bdgrz.Compliance.Features.Readiness.Reactors;
 
+namespace Bdgrz.Compliance.Features.Readiness.Reactors;
 /// <summary>
 ///     Starts <c>ReadinessDecisionProcess</c> from a committed readiness or Type I entry decision acceptance. The
 ///     process record, with the complete canonical gap plan key list of the frozen manifest, exists before the source
 ///     checkpoint advances; the sweep resumes it if this reactor stops. A manifest that cannot be read yet is
 ///     transient: no record is created from an unverified decision.
 /// </summary>
-sealed partial class ReadinessDecisionReactor(IProjectionCheckpointStore checkpoints, ProcessRootReaction process,
-    IImmutableContentStore content)
-    : Reactor(checkpoints, EventStreamPattern.ForTenant(ProgramReadiness.Area), WorkloadName),
-        IReactorHandler<ReadinessDecisionAccepted>, IReactorHandler<TypeIEntryDecisionAccepted>
+sealed partial class ReadinessDecisionReactor(IProjectionCheckpointStore checkpoints, ProcessRootReaction process, IImmutableContentStore content) : Reactor(checkpoints, EventStreamPattern.ForTenant(ProgramReadiness.Area), WorkloadName), IReactorHandler<ReadinessDecisionAccepted>, IReactorHandler<TypeIEntryDecisionAccepted>
 {
     public const string WorkloadName = "ReadinessDecisionV1";
-
-    public ValueTask HandleAsync(IReactorContext<ReadinessDecisionAccepted> context, CancellationToken ct) =>
-        StartAsync(context, context.Trigger.Intent, ct);
-
-    public ValueTask HandleAsync(IReactorContext<TypeIEntryDecisionAccepted> context, CancellationToken ct) =>
-        StartAsync(context, context.Trigger.Intent, ct);
-
-    async ValueTask StartAsync(IReactorContext context, Proofs.Models.ImmutableContentRef intentReference, CancellationToken ct)
+    public ValueTask<Result> HandleAsync(IReactorContext<ReadinessDecisionAccepted> context, CancellationToken ct) => StartAsync(context, context.Trigger.Intent, ct);
+    public ValueTask<Result> HandleAsync(IReactorContext<TypeIEntryDecisionAccepted> context, CancellationToken ct) => StartAsync(context, context.Trigger.Intent, ct);
+    async ValueTask<Result> StartAsync(IReactorContext context, Proofs.Models.ImmutableContentRef intentReference, CancellationToken ct)
     {
         var tenant = Uuid.Parse(context.Source.Stream.Realm, System.Globalization.CultureInfo.InvariantCulture);
         IReadOnlyList<string> targets;
         try
         {
-            var intent = await ReadinessContent.ReadAsync<ReadinessDecisionIntent>(content, tenant, intentReference, ct)
-                .ConfigureAwait(false);
+            var intent = await ReadinessContent.ReadAsync<ReadinessDecisionIntent>(content, tenant, intentReference, ct).ConfigureAwait(false);
             targets = await ReadinessDecisionProcess.TargetsAsync(content, tenant, intent, ct).ConfigureAwait(false);
         }
         catch (ImmutableContentIntegrityException exception)
         {
-            throw new ReactionCommandFailedException(new RequestError(RequestErrorKind.Conflict,
-                $"The frozen decision cannot be verified: {exception.Message}", exception is ImmutableContentUnavailableException));
+            throw new ReactionCommandFailedException(new RequestError(RequestErrorKind.Conflict, $"The frozen decision cannot be verified: {exception.Message}", exception is ImmutableContentUnavailableException));
         }
 
-        _ = await process.StartAsync(ReadinessEffects.DecisionProcessName, context, intentReference, targets,
-            $"reactor:{WorkloadName}", ct).ConfigureAwait(false);
+        _ = await process.StartAsync(ReadinessEffects.DecisionProcessName, context, intentReference, targets, $"reactor:{WorkloadName}", ct).ConfigureAwait(false);
+        return Result.Success;
     }
 }

@@ -50,7 +50,7 @@ services:
 
   broker:
     container_name: broker
-    image: ghcr.io/cntryl/fitz:0.2.0
+    image: ghcr.io/cntryl/fitz:0.4.0@sha256:5e7d844c52dc24de35f33fb024a3a19b0fa13af7d1fa64edfc8e953371051e1f
     restart: unless-stopped
     stop_signal: SIGINT
     stop_grace_period: 15s
@@ -78,7 +78,7 @@ services:
 
   storage:
     container_name: storage
-    image: ghcr.io/sqrzl/sqrzl-emulator:latest@sha256:786d910514727d7e26a9c26266a2232cfbcd9b31609d088b08a473326dc22c16
+    image: ghcr.io/sqrzl/sqrzl-emulator:latest@sha256:da1a2a731fe6de71ce8241e3d9fda9ae48dec6015f8b531f4f3129e4ca9969a8
     restart: unless-stopped
     environment:
       SQRZL_BLOBS_PATH: /app/blobs

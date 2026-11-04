@@ -1152,7 +1152,7 @@ public static class ComplianceServiceCollectionExtensions
         services.AddSingleton(IndependentChildMaterializationProcess.Definition());
         services.AddSingleton<IChildMaterializationReceiver, ProviderRiskAcceptanceLinkMaterializer>();
         services.AddScoped<ProviderReviewVerifier>();
-        // Portia 0.9.1 registers the shared connection's IStreamClient for source-fact verification.
+        // Portia registers the shared connection's IStreamClient for source-fact verification.
         services.TryAddScoped<ISourceFactResolver>(provider => new FitzSourceFactResolver(
             provider.GetRequiredService<IStreamClient>(), provider.GetRequiredService<IDomainEventSerializer>()));
         services.TryAddScoped<INativeEventReceiptReader, FitzNativeEventReceiptReader>();

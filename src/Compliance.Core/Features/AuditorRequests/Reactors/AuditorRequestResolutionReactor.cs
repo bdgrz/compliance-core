@@ -31,47 +31,37 @@ using Bdgrz.Compliance.Features.AuditorRequests.Aggregates;
 using Bdgrz.Compliance.Features.AuditorRequests.Events;
 using Bdgrz.Compliance.Features.Examinations.Aggregates;
 using Bdgrz.Compliance.Features.Providers.Projections;
-namespace Bdgrz.Compliance.Features.AuditorRequests.Reactors;
 
+namespace Bdgrz.Compliance.Features.AuditorRequests.Reactors;
 /// <summary>
 ///     Starts <c>AuditorRequestResolutionProcess</c> from a committed resolution acceptance. The process record, with the
 ///     complete canonical response key list of the frozen manifest, exists before the source checkpoint advances; the
 ///     sweep resumes it if this reactor stops. A manifest that cannot be read yet is transient: no record is created from
 ///     an unverified resolution.
 /// </summary>
-sealed partial class AuditorRequestResolutionReactor(IProjectionCheckpointStore checkpoints, ProcessRootReaction process,
-    IImmutableContentStore content, ISourceFactResolver sources)
-    : Reactor(checkpoints, EventStreamPattern.ForTenant(AuditorRequest.Area), WorkloadName),
-        IReactorHandler<AuditorRequestResolutionAccepted>
+sealed partial class AuditorRequestResolutionReactor(IProjectionCheckpointStore checkpoints, ProcessRootReaction process, IImmutableContentStore content, ISourceFactResolver sources) : Reactor(checkpoints, EventStreamPattern.ForTenant(AuditorRequest.Area), WorkloadName), IReactorHandler<AuditorRequestResolutionAccepted>
 {
     public const string WorkloadName = "AuditorRequestResolutionV1";
-
-    public async ValueTask HandleAsync(IReactorContext<AuditorRequestResolutionAccepted> context, CancellationToken ct)
+    public async ValueTask<Result> HandleAsync(IReactorContext<AuditorRequestResolutionAccepted> context, CancellationToken ct)
     {
         var accepted = context.Trigger;
-        await AuditorRequestReactorSources.VerifyAsync(sources, content, Pattern, context, accepted.Owner, ct)
-            .ConfigureAwait(false);
+        await AuditorRequestReactorSources.VerifyAsync(sources, content, Pattern, context, accepted.Owner, ct).ConfigureAwait(false);
         var tenant = Uuid.Parse(context.Source.Stream.Realm, CultureInfo.InvariantCulture);
         IReadOnlyList<AdmittedRequestChild> children;
         ClosureIntent intent;
         AuditorResolutionDecision decision;
         try
         {
-            intent = await AuditorContent.ReadAsync<ClosureIntent>(content, tenant, accepted.Intent, ct)
-                .ConfigureAwait(false);
-            decision = await AuditorContent.ReadAsync<AuditorResolutionDecision>(content, tenant, intent.AuthoredDecision,
-                ct).ConfigureAwait(false);
-            children = await AuditorRequestResolutionProofs.ChildrenAsync(content, tenant, intent, ct)
-                .ConfigureAwait(false);
+            intent = await AuditorContent.ReadAsync<ClosureIntent>(content, tenant, accepted.Intent, ct).ConfigureAwait(false);
+            decision = await AuditorContent.ReadAsync<AuditorResolutionDecision>(content, tenant, intent.AuthoredDecision, ct).ConfigureAwait(false);
+            children = await AuditorRequestResolutionProofs.ChildrenAsync(content, tenant, intent, ct).ConfigureAwait(false);
         }
         catch (ImmutableContentIntegrityException exception)
         {
-            throw new ReactionCommandFailedException(new RequestError(RequestErrorKind.Conflict,
-                $"The frozen resolution cannot be verified: {exception.Message}", exception is ImmutableContentUnavailableException));
+            throw new ReactionCommandFailedException(new RequestError(RequestErrorKind.Conflict, $"The frozen resolution cannot be verified: {exception.Message}", exception is ImmutableContentUnavailableException));
         }
 
-        _ = await process.StartAsync(AuditorRequestResolutionEffects.ProcessName, context, accepted.Intent,
-            AuditorRequestResolutionProcess.ResponseKeys(tenant, decision.ProgramId, intent.ParentId, children),
-            $"reactor:{WorkloadName}", ct).ConfigureAwait(false);
+        _ = await process.StartAsync(AuditorRequestResolutionEffects.ProcessName, context, accepted.Intent, AuditorRequestResolutionProcess.ResponseKeys(tenant, decision.ProgramId, intent.ParentId, children), $"reactor:{WorkloadName}", ct).ConfigureAwait(false);
+        return Result.Success;
     }
 }

@@ -33,53 +33,45 @@ using Bdgrz.Compliance.Features.Proofs.Models;
 using Bdgrz.Compliance.Features.Remediation.Commands;
 using Bdgrz.Compliance.Features.Workforce.Models;
 using Bdgrz.Compliance.Features.Content.Persistence;
-namespace Bdgrz.Compliance.Features.Remediation.Reactors;
 
+namespace Bdgrz.Compliance.Features.Remediation.Reactors;
 /// <summary>
 ///     Routes control-operation exceptions into the shared finding path: a failed or skipped
 ///     attestation and each action a reviewer requests become a finding whose identity derives
 ///     from the exact attestation or decision, so replay never duplicates one. It reads the occurrence facts of the
 ///     tenant and their verified attestation and review content; the finding ids derive from those exact ids.
 /// </summary>
-public sealed partial class ControlOccurrenceFindingReactor(IProjectionCheckpointStore checkpoints,
-    IRequestBus bus, IImmutableContentStore content, ISourceFactResolver sources)
-    : Reactor(checkpoints, EventStreamPattern.ForTenant(ControlOccurrence.Area), WorkloadName),
-      IReactorHandler<ControlOccurrenceAttested>, IReactorHandler<ControlOccurrenceReviewed>
+public sealed partial class ControlOccurrenceFindingReactor(IProjectionCheckpointStore checkpoints, IRequestBus bus, IImmutableContentStore content, ISourceFactResolver sources) : Reactor(checkpoints, EventStreamPattern.ForTenant(ControlOccurrence.Area), WorkloadName), IReactorHandler<ControlOccurrenceAttested>, IReactorHandler<ControlOccurrenceReviewed>
 {
     public const string WorkloadName = "ControlOccurrenceFindingsV1";
-
-    public async ValueTask HandleAsync(IReactorContext<ControlOccurrenceAttested> context,
-        CancellationToken ct)
+    public async ValueTask<Result> HandleAsync(IReactorContext<ControlOccurrenceAttested> context, CancellationToken ct)
     {
         var ev = context.Trigger;
-        await FindingReactorSources.VerifyAsync(sources, content, Pattern, context,
-            new ControlOccurrence(ev.TenantId, ev.ProgramId, ev.ControlId, ev.OccurrenceId).Stream, ct).ConfigureAwait(false);
-        var attestation = await ReadAsync<ControlAttestationView>(context, ev.AttestationContent, ct)
-            .ConfigureAwait(false);
+        await FindingReactorSources.VerifyAsync(sources, content, Pattern, context, new ControlOccurrence(ev.TenantId, ev.ProgramId, ev.ControlId, ev.OccurrenceId).Stream, ct).ConfigureAwait(false);
+        var attestation = await ReadAsync<ControlAttestationView>(context, ev.AttestationContent, ct).ConfigureAwait(false);
         if (attestation.Result is not (ControlOperationStates.Failed or ControlOperationStates.Skipped))
-            return;
-        await bus.SendReactionAsync(new RaiseOccurrenceFinding(ev.TenantId, ev.ProgramId,
-            Uuid.CreateVersion5(attestation.AttestationId, "finding"), ev.ControlId,
-            ev.OccurrenceId, attestation.AttestationId.ToString(), "control_occurrence",
-            $"{attestation.Result}: {attestation.Rationale}"), context, ct).ConfigureAwait(false);
+            return Result.Success;
+        var reactionOutcome1 = await bus.SendReactionAsync(new RaiseOccurrenceFinding(ev.TenantId, ev.ProgramId, Uuid.CreateVersion5(attestation.AttestationId, "finding"), ev.ControlId, ev.OccurrenceId, attestation.AttestationId.ToString(), "control_occurrence", $"{attestation.Result}: {attestation.Rationale}"), context, ct).ConfigureAwait(false);
+        if (!reactionOutcome1.IsSuccess)
+            return reactionOutcome1;
+        return Result.Success;
     }
 
-    public async ValueTask HandleAsync(IReactorContext<ControlOccurrenceReviewed> context,
-        CancellationToken ct)
+    public async ValueTask<Result> HandleAsync(IReactorContext<ControlOccurrenceReviewed> context, CancellationToken ct)
     {
         var ev = context.Trigger;
-        await FindingReactorSources.VerifyAsync(sources, content, Pattern, context,
-            new ControlOccurrence(ev.TenantId, ev.ProgramId, ev.ControlId, ev.OccurrenceId).Stream, ct).ConfigureAwait(false);
-        var review = await ReadAsync<ControlOccurrenceReviewView>(context, ev.ReviewContent, ct)
-            .ConfigureAwait(false);
+        await FindingReactorSources.VerifyAsync(sources, content, Pattern, context, new ControlOccurrence(ev.TenantId, ev.ProgramId, ev.ControlId, ev.OccurrenceId).Stream, ct).ConfigureAwait(false);
+        var review = await ReadAsync<ControlOccurrenceReviewView>(context, ev.ReviewContent, ct).ConfigureAwait(false);
         if (review.Outcome != ControlOperationStates.ActionRequested)
-            return;
+            return Result.Success;
         for (var index = 0; index < review.RequestedActions.Count; index++)
-            await bus.SendReactionAsync(new RaiseOccurrenceFinding(ev.TenantId, ev.ProgramId,
-                Uuid.CreateVersion5(review.DecisionId, "requested-action-" +
-                    index.ToString(CultureInfo.InvariantCulture)), ev.ControlId, ev.OccurrenceId,
-                review.DecisionId.ToString(), "occurrence_review", review.RequestedActions[index]),
-                context, ct).ConfigureAwait(false);
+        {
+            var reactionOutcome1 = await bus.SendReactionAsync(new RaiseOccurrenceFinding(ev.TenantId, ev.ProgramId, Uuid.CreateVersion5(review.DecisionId, "requested-action-" + index.ToString(CultureInfo.InvariantCulture)), ev.ControlId, ev.OccurrenceId, review.DecisionId.ToString(), "occurrence_review", review.RequestedActions[index]), context, ct).ConfigureAwait(false);
+            if (!reactionOutcome1.IsSuccess)
+                return reactionOutcome1;
+        }
+
+        return Result.Success;
     }
 
     async ValueTask<T> ReadAsync<T>(IReactorContext context, ImmutableContentRef reference, CancellationToken ct)
@@ -91,8 +83,7 @@ public sealed partial class ControlOccurrenceFindingReactor(IProjectionCheckpoin
         }
         catch (ImmutableContentIntegrityException exception)
         {
-            throw new ReactionCommandFailedException(new RequestError(RequestErrorKind.Conflict,
-                $"The occurrence content cannot be verified: {exception.Message}", exception is ImmutableContentUnavailableException));
+            throw new ReactionCommandFailedException(new RequestError(RequestErrorKind.Conflict, $"The occurrence content cannot be verified: {exception.Message}", exception is ImmutableContentUnavailableException));
         }
     }
 }

@@ -17,7 +17,11 @@ sealed partial class FirmStaffDirectoryProjector(IFirmStaffDirectoryProjection p
             FitzFirmStaffDirectory.ProjectorName),
         IProjectorHandler<FirmStaffChangeRecorded>
 {
-    public async ValueTask HandleAsync(FirmStaffChangeRecorded ev, IProjectorContext context, CancellationToken ct) =>
+    public async ValueTask<Result> HandleAsync(IProjectorContext<FirmStaffChangeRecorded> context, CancellationToken ct)
+    {
+        var ev = context.Trigger;
         await projection.ApplyAsync(await views.ReadAsync(ev, ct)
             .ConfigureAwait(false), ct).ConfigureAwait(false);
+        return Result.Success;
+    }
 }

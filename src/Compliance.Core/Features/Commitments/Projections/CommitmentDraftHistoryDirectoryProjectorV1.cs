@@ -9,9 +9,19 @@ public sealed partial class CommitmentDraftHistoryDirectoryProjectorV1(
             FitzCommitmentDraftHistoryDirectoryV1.ProjectorName),
       IProjectorHandler<CommitmentDraftCreated>, IProjectorHandler<CommitmentDraftRevised>
 {
-    public ValueTask HandleAsync(CommitmentDraftCreated ev, IProjectorContext context,
-        CancellationToken ct) => projection.ApplyAsync(ev, ct);
+    public async ValueTask<Result> HandleAsync(IProjectorContext<CommitmentDraftCreated> context,
+        CancellationToken ct)
+    {
+        var ev = context.Trigger;
+        await projection.ApplyAsync(ev, ct).ConfigureAwait(false);
+        return Result.Success;
+    }
 
-    public ValueTask HandleAsync(CommitmentDraftRevised ev, IProjectorContext context,
-        CancellationToken ct) => projection.ApplyAsync(ev, ct);
+    public async ValueTask<Result> HandleAsync(IProjectorContext<CommitmentDraftRevised> context,
+        CancellationToken ct)
+    {
+        var ev = context.Trigger;
+        await projection.ApplyAsync(ev, ct).ConfigureAwait(false);
+        return Result.Success;
+    }
 }

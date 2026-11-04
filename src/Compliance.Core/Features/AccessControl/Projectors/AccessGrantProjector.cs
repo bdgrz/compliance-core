@@ -7,9 +7,17 @@ public sealed partial class AccessGrantProjector(IAccessGrantProjection projecti
     : Projector(projection, EventStreamPattern.ForTenant(), "AccessGrantsV1"),
       IProjectorHandler<AccessGrantIssued>, IProjectorHandler<AccessGrantRevoked>
 {
-    public ValueTask HandleAsync(AccessGrantIssued ev, IProjectorContext context, CancellationToken ct) =>
-        projection.ApplyAsync(ev, ct);
+    public async ValueTask<Result> HandleAsync(IProjectorContext<AccessGrantIssued> context, CancellationToken ct)
+    {
+        var ev = context.Trigger;
+        await projection.ApplyAsync(ev, ct).ConfigureAwait(false);
+        return Result.Success;
+    }
 
-    public ValueTask HandleAsync(AccessGrantRevoked ev, IProjectorContext context, CancellationToken ct) =>
-        projection.ApplyAsync(ev, ct);
+    public async ValueTask<Result> HandleAsync(IProjectorContext<AccessGrantRevoked> context, CancellationToken ct)
+    {
+        var ev = context.Trigger;
+        await projection.ApplyAsync(ev, ct).ConfigureAwait(false);
+        return Result.Success;
+    }
 }

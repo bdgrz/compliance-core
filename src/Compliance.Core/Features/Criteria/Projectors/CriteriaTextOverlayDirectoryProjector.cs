@@ -11,6 +11,10 @@ public sealed partial class CriteriaTextOverlayDirectoryProjector(
         FitzCriteriaTextOverlayDirectory.ProjectorName),
     IProjectorHandler<CriteriaTextOverlayEntryRevised>
 {
-    public ValueTask HandleAsync(CriteriaTextOverlayEntryRevised ev,
-        IProjectorContext context, CancellationToken ct) => projection.ApplyAsync(ev, ct);
+    public async ValueTask<Result> HandleAsync(IProjectorContext<CriteriaTextOverlayEntryRevised> context, CancellationToken ct)
+    {
+        var ev = context.Trigger;
+        await projection.ApplyAsync(ev, ct).ConfigureAwait(false);
+        return Result.Success;
+    }
 }

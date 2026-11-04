@@ -11,8 +11,24 @@ public sealed partial class ObservationPeriodDirectoryProjector(IObservationPeri
     : Projector(projection, EventStreamPattern.ForTenant(TypeIIPeriod.Area),
         FitzObservationPeriodDirectory.ProjectorName), IProjectorHandler<ObservationPeriodStarted>, IProjectorHandler<ObservationPeriodCloseFrozen>, IProjectorHandler<TypeIIPeriodCloseAmended>
 {
-    public ValueTask HandleAsync(ObservationPeriodStarted fact, IProjectorContext context, CancellationToken ct) =>
-        projection.ApplyAsync(fact, ct);
-    public ValueTask HandleAsync(ObservationPeriodCloseFrozen fact, IProjectorContext context, CancellationToken ct) => projection.ApplyAsync(fact, ct);
-    public ValueTask HandleAsync(TypeIIPeriodCloseAmended fact, IProjectorContext context, CancellationToken ct) => projection.ApplyAsync(fact, ct);
+    public async ValueTask<Result> HandleAsync(IProjectorContext<ObservationPeriodStarted> context, CancellationToken ct)
+    {
+        var fact = context.Trigger;
+        await projection.ApplyAsync(fact, ct).ConfigureAwait(false);
+        return Result.Success;
+    }
+
+    public async ValueTask<Result> HandleAsync(IProjectorContext<ObservationPeriodCloseFrozen> context, CancellationToken ct)
+    {
+        var fact = context.Trigger;
+        await projection.ApplyAsync(fact, ct).ConfigureAwait(false);
+        return Result.Success;
+    }
+
+    public async ValueTask<Result> HandleAsync(IProjectorContext<TypeIIPeriodCloseAmended> context, CancellationToken ct)
+    {
+        var fact = context.Trigger;
+        await projection.ApplyAsync(fact, ct).ConfigureAwait(false);
+        return Result.Success;
+    }
 }
