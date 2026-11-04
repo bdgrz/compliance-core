@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using Bdgrz.Compliance.Tests.Testing;
 using Cntryl.Fitz.Extensions;
 using Cntryl.Portia;
@@ -250,14 +251,149 @@ public sealed class EvidenceGovernanceTypeIBaselineSourceContributorTests
         Assert.False(result.Error.IsTransient);
     }
 
+    [Theory]
+    [InlineData(-1)]
+    [InlineData(0)]
+    public async Task ShouldExcludeWithdrawnSupportGivenWithdrawalCommittedAtOrBeforeReceiptCut(int receiptMilliseconds)
+    {
+        // Arrange
+        var fixture = await Fixture(includeLaterLink: false, includeWithdrawal: true,
+            withdrawalReceiptMilliseconds: receiptMilliseconds);
+
+        // Act
+        var result = await fixture.Contributor.ReadAsync(Engagement(), fixture.Context, CancellationToken.None);
+
+        // Assert
+        Assert.True(result.IsSuccess, result.Error?.Message);
+        Assert.DoesNotContain(result.Value.Sources, static source => source.Kind == "evidence_artifact");
+        Assert.Contains(result.Value.ScopeDifferences, static difference =>
+            difference.Contains("withdrawn", StringComparison.OrdinalIgnoreCase));
+    }
+
+    [Fact]
+    public async Task ShouldPreserveExactCapturedHashGivenBackdatedWithdrawalCommittedAfterReceiptCut()
+    {
+        // Arrange
+        var before = await Fixture(includeLaterLink: false, withdrawalReceiptMilliseconds: 1);
+        var after = await Fixture(includeLaterLink: false, includeWithdrawal: true,
+            withdrawalReceiptMilliseconds: 1);
+
+        // Act
+        var original = await before.Contributor.ReadAsync(Engagement(), before.Context, CancellationToken.None);
+        var later = await after.Contributor.ReadAsync(Engagement(), after.Context, CancellationToken.None);
+
+        // Assert
+        Assert.True(original.IsSuccess, original.Error?.Message);
+        Assert.True(later.IsSuccess, later.Error?.Message);
+        Assert.Equal(Assert.Single(original.Value.Sources, static source => source.Kind == "evidence_artifact"),
+            Assert.Single(later.Value.Sources, static source => source.Kind == "evidence_artifact"));
+        Assert.Equal(original.Value.Blockers, later.Value.Blockers);
+        Assert.Equal(original.Value.ScopeDifferences, later.Value.ScopeDifferences);
+    }
+
+    [Fact]
+    public async Task ShouldPreserveExactCapturedHashGivenWithdrawalOccurredAfterEffectiveDate()
+    {
+        // Arrange
+        var before = await Fixture(includeLaterLink: false);
+        var after = await Fixture(includeLaterLink: false, includeWithdrawal: true, laterWithdrawal: true);
+
+        // Act
+        var original = await before.Contributor.ReadAsync(Engagement(), before.Context, CancellationToken.None);
+        var later = await after.Contributor.ReadAsync(Engagement(), after.Context, CancellationToken.None);
+
+        // Assert
+        Assert.True(original.IsSuccess, original.Error?.Message);
+        Assert.True(later.IsSuccess, later.Error?.Message);
+        Assert.Equal(Assert.Single(original.Value.Sources, static source => source.Kind == "evidence_artifact"),
+            Assert.Single(later.Value.Sources, static source => source.Kind == "evidence_artifact"));
+    }
+
+    [Fact]
+    public async Task ShouldRetainArtifactAndWithdrawalHistoryGivenAnotherActiveSupportForSameArtifact()
+    {
+        // Arrange
+        var before = await Fixture(includeLaterLink: false, secondActiveSupport: true);
+        var after = await Fixture(includeLaterLink: false, includeWithdrawal: true, secondActiveSupport: true);
+
+        // Act
+        var original = await before.Contributor.ReadAsync(Engagement(), before.Context, CancellationToken.None);
+        var later = await after.Contributor.ReadAsync(Engagement(), after.Context, CancellationToken.None);
+
+        // Assert
+        Assert.True(original.IsSuccess, original.Error?.Message);
+        Assert.True(later.IsSuccess, later.Error?.Message);
+        var previous = Assert.Single(original.Value.Sources, static source => source.Kind == "evidence_artifact");
+        var current = Assert.Single(later.Value.Sources, static source => source.Kind == "evidence_artifact");
+        Assert.Equal(previous.RecordId, current.RecordId);
+        Assert.Equal(previous.Revision, current.Revision);
+        Assert.NotEqual(previous.ContentSha256, current.ContentSha256);
+        Assert.Contains(later.Value.ScopeDifferences, static difference =>
+            difference.Contains("withdrawn", StringComparison.OrdinalIgnoreCase));
+    }
+
+    [Theory]
+    [InlineData("missing_link")]
+    [InlineData("duplicate_link")]
+    [InlineData("duplicate_withdrawal")]
+    [InlineData("wrong_program")]
+    [InlineData("wrong_subject")]
+    [InlineData("wrong_tenant")]
+    [InlineData("wrong_revision")]
+    [InlineData("wrong_expected_revision")]
+    [InlineData("empty_command")]
+    [InlineData("empty_actor")]
+    [InlineData("empty_reason")]
+    [InlineData("untrimmed_reason")]
+    [InlineData("oversized_reason")]
+    [InlineData("oversized_actor_display")]
+    [InlineData("invalid_digest")]
+    [InlineData("earlier_occurrence")]
+    [InlineData("wrong_physical_offset")]
+    [InlineData("wrong_metadata_version")]
+    [InlineData("wrong_metadata_time")]
+    [InlineData("unknown_event")]
+    public async Task ShouldRefuseFullSupportHistoryGivenMalformedPostCutWithdrawalSuffix(string fault)
+    {
+        // Arrange
+        var fixture = await Fixture(includeLaterLink: false, includeWithdrawal: true,
+            withdrawalReceiptMilliseconds: 1, supportHistoryFault: fault);
+
+        // Act
+        var result = await fixture.Contributor.ReadAsync(Engagement(), fixture.Context, CancellationToken.None);
+
+        // Assert
+        Assert.False(result.IsSuccess);
+        Assert.Equal(RequestErrorKind.Conflict, result.Error.Kind);
+        Assert.False(result.Error.IsTransient);
+    }
+
+    [Fact]
+    public async Task ShouldRefuseTransientlyGivenWithdrawalAppearsBetweenFullHistoryReads()
+    {
+        // Arrange
+        var fixture = await Fixture(includeLaterLink: false, includeWithdrawal: true,
+            supportHistoryFault: "between_reads");
+
+        // Act
+        var result = await fixture.Contributor.ReadAsync(Engagement(), fixture.Context, CancellationToken.None);
+
+        // Assert
+        Assert.False(result.IsSuccess);
+        Assert.Equal(RequestErrorKind.Conflict, result.Error.Kind);
+        Assert.True(result.Error.IsTransient);
+    }
+
     static async Task<FixtureState> Fixture(bool includeLaterLink, bool includeHold = false,
         bool includeLaterReport = false, bool includeDisclosure = false,
         bool includeLaterDisclosure = false, bool includePriorHandlingPolicy = false,
-        bool includeFutureHandlingPolicy = false, bool lateArtifactReceipt = false)
+        bool includeFutureHandlingPolicy = false, bool lateArtifactReceipt = false,
+        bool includeWithdrawal = false, bool laterWithdrawal = false, bool secondActiveSupport = false,
+        int? withdrawalReceiptMilliseconds = null, string? supportHistoryFault = null)
     {
         var store = new InMemoryEventStore();
         var matching = Support(SupportId, ControlId, 2, BeforeTypeIDate);
-        var unmatched = Support(UnmatchedSupportId, Uuid.CreateVersion4(), 2,
+        var unmatched = Support(UnmatchedSupportId, secondActiveSupport ? ControlId : Uuid.CreateVersion4(), 2,
             BeforeTypeIDate.AddMinutes(1));
         var links = new List<EvidenceSupportLinked> { matching, unmatched };
         if (includeLaterLink)
@@ -269,6 +405,18 @@ public sealed class EvidenceGovernanceTypeIBaselineSourceContributorTests
                 occurredOn: support.OccurredAt);
             await store.AppendAsync(new EventStreamAddress(TenantId.ToString(), "evidence-support",
                 support.SubjectId.ToString()), 0, [attached]);
+        }
+
+        if (includeWithdrawal)
+        {
+            var withdrawnAt = laterWithdrawal ? AfterTypeIDate : BeforeTypeIDate.AddMinutes(2);
+            var withdrawal = new EvidenceSupportWithdrawn(TenantId, SupportId, 2, MemberId,
+                withdrawnAt, ProgramId, Uuid.CreateVersion5(SupportId, "withdrawal_command"), 1,
+                new string('c', 64), "The artifact was linked by mistake.", "Compliance Lead");
+            await store.AppendAsync(new EventStreamAddress(TenantId.ToString(), "evidence-support",
+                SupportId.ToString()), 1, [DomainEventSeed.Attach(withdrawal, SupportId, 2,
+                    eventId: Uuid.CreateVersion5(SupportId, "evidence_support_withdrawn_v1"),
+                    occurredOn: withdrawnAt)]);
         }
 
         var registeredAt = BeforeTypeIDate.AddHours(-2);
@@ -420,18 +568,25 @@ public sealed class EvidenceGovernanceTypeIBaselineSourceContributorTests
                 new ArtifactEngagementHold(TenantId, EngagementId)).Given(holdEvents).Aggregate);
         }
 
+        IDomainEventReader eventReader = supportHistoryFault is null ? store :
+            new FaultedSupportHistory(store, supportHistoryFault);
         ITypeIBaselineSourceContributor contributor =
-            new EvidenceGovernanceTypeIBaselineSourceContributor(store,
+            new EvidenceGovernanceTypeIBaselineSourceContributor(eventReader,
                 new AggregateReader(fixtureAggregates.ToArray()));
         var effectiveControlVersion = new TypeIBaselineSourceReference("control_version",
             ControlId, Uuid.CreateVersion4(), 2, new string('b', 64));
         var context = new TypeIBaselineSourceReadContext(MemberId, [effectiveControlVersion]);
-        if (lateArtifactReceipt)
+        if (lateArtifactReceipt || withdrawalReceiptMilliseconds is not null)
         {
             var cutoff = AfterTypeIDate.AddDays(3);
             var receipts = new ScriptedNativeEventReceipts();
             await foreach (var record in store.ReadAsync(EventStreamPattern.ForPattern(TenantId.ToString()), EventCursor.Start, CancellationToken.None))
-                receipts.Record(record, record.Event is EvidenceArtifactDownloadIssued ? cutoff.AddMilliseconds(1) : cutoff.AddMilliseconds(-1));
+                receipts.Record(record, record.Event switch
+                {
+                    EvidenceSupportWithdrawn => cutoff.AddMilliseconds(withdrawalReceiptMilliseconds ?? -1),
+                    EvidenceArtifactDownloadIssued when lateArtifactReceipt => cutoff.AddMilliseconds(1),
+                    _ => cutoff.AddMilliseconds(-1),
+                });
             context = context with
             {
                 RecordedThrough = cutoff,
@@ -481,6 +636,79 @@ public sealed class EvidenceGovernanceTypeIBaselineSourceContributorTests
 
     sealed record FixtureState(ITypeIBaselineSourceContributor Contributor,
         TypeIBaselineSourceReadContext Context);
+
+    sealed class FaultedSupportHistory(IDomainEventReader inner, string fault) : IDomainEventReader
+    {
+        int _supportReads;
+
+        public IAsyncEnumerable<DomainEventRecord> ReadAsync(EventStreamAddress stream, ulong fromOffset,
+            CancellationToken ct = default) => inner.ReadAsync(stream, fromOffset, ct);
+
+        public async IAsyncEnumerable<DomainEventRecord> ReadAsync(EventStreamPattern pattern, EventCursor cursor,
+            [EnumeratorCancellation] CancellationToken ct = default)
+        {
+            var supportRead = pattern.Area == "evidence-support" ? ++_supportReads : 0;
+            await foreach (var record in inner.ReadAsync(pattern, cursor, ct))
+            {
+                if (record.Stream.Area != "evidence-support" || record.Stream.Resource != SupportId.ToString())
+                {
+                    yield return record;
+                    continue;
+                }
+                if (record.Event is EvidenceSupportLinked)
+                {
+                    if (fault == "missing_link")
+                        continue;
+                    yield return record;
+                    if (fault == "duplicate_link")
+                        yield return record;
+                    continue;
+                }
+                if (record.Event is not EvidenceSupportWithdrawn withdrawal)
+                {
+                    yield return record;
+                    continue;
+                }
+                if (fault == "between_reads" && supportRead == 1)
+                    continue;
+                if (fault == "wrong_physical_offset")
+                {
+                    yield return record with { ResourceOffset = 2 };
+                    continue;
+                }
+                DomainEvent changed = fault switch
+                {
+                    "wrong_program" => withdrawal with { ProgramId = Uuid.CreateVersion5(ProgramId, "foreign") },
+                    "wrong_subject" => withdrawal with { SubjectId = UnmatchedSupportId },
+                    "wrong_tenant" => withdrawal with { TenantId = Uuid.CreateVersion5(TenantId, "foreign") },
+                    "wrong_revision" => withdrawal with { Revision = 3 },
+                    "wrong_expected_revision" => withdrawal with { OriginalExpectedRevision = 0 },
+                    "empty_command" => withdrawal with { CommandId = Uuid.Empty },
+                    "empty_actor" => withdrawal with { ActorMemberId = Uuid.Empty },
+                    "empty_reason" => withdrawal with { Reason = "" },
+                    "untrimmed_reason" => withdrawal with { Reason = " Mistaken link " },
+                    "oversized_reason" => withdrawal with { Reason = new string('r', 2001) },
+                    "oversized_actor_display" => withdrawal with { ActorDisplay = new string('a', 201) },
+                    "invalid_digest" => withdrawal with { AuthoredIntentSha256 = new string('A', 64) },
+                    "earlier_occurrence" => withdrawal with { OccurredAt = BeforeTypeIDate.AddMinutes(-1) },
+                    "unknown_event" => new EvidenceArtifactInspected(TenantId, SupportId,
+                        EvidenceArtifactStates.Available, null, withdrawal.OccurredAt),
+                    _ => withdrawal with { },
+                };
+                var metadata = withdrawal.Metadata;
+                changed.AttachMetadata(fault switch
+                {
+                    "wrong_metadata_version" => metadata with { AggregateVersion = 3 },
+                    "wrong_metadata_time" => metadata with { OccurredOn = metadata.OccurredOn.AddMinutes(1) },
+                    "earlier_occurrence" => metadata with { OccurredOn = BeforeTypeIDate.AddMinutes(-1) },
+                    _ => metadata,
+                });
+                yield return record with { Event = changed };
+                if (fault == "duplicate_withdrawal")
+                    yield return record with { Event = changed };
+            }
+        }
+    }
 
     sealed class AggregateReader(params Aggregate[] aggregates) : IAggregateReader
     {
