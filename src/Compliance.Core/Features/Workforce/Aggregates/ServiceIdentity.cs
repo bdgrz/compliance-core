@@ -100,7 +100,8 @@ public sealed class ServiceIdentity : Aggregate
         {
             RequireNamedFact(fact.TenantId, fact.ServiceIdentityId, fact.Revision);
             var reviewedOn = DateOnly.FromDateTime(fact.ReviewedAt.UtcDateTime);
-            if (fact.NextReviewDate <= reviewedOn || fact.NextReviewDate > reviewedOn.AddYears(1))
+            if (fact.NextReviewDate <= reviewedOn || fact.NextReviewDate > reviewedOn.AddYears(1) ||
+                fact.Notes is { Length: > 1000 })
                 throw new InvalidOperationException("The next service identity review must be within one year of this review.");
             _terms = _terms! with { ReviewBy = fact.NextReviewDate };
             _revision = fact.Revision;
@@ -109,8 +110,8 @@ public sealed class ServiceIdentity : Aggregate
         {
             RequireNamedFact(fact.TenantId, fact.ServiceIdentityId, fact.Revision);
             var current = _terms!;
-            if (current.LifecycleStatus != "active")
-                throw new InvalidOperationException("Only an active service identity can be disabled.");
+            if (current.LifecycleStatus != "active" || fact.Reason is { Length: > 1000 })
+                throw new InvalidOperationException("A disable fact requires an active identity and bounded reason.");
             _terms = current with { LifecycleStatus = "disabled" };
             _revision = fact.Revision;
         });
@@ -127,6 +128,8 @@ public sealed class ServiceIdentity : Aggregate
         On<ServiceIdentityRetired>(fact =>
         {
             RequireNamedFact(fact.TenantId, fact.ServiceIdentityId, fact.Revision);
+            if (fact.Reason is { Length: > 1000 })
+                throw new InvalidOperationException("A retirement fact requires a bounded reason.");
             _terms = _terms! with { LifecycleStatus = "retired" };
             _hasRetired = true;
             _revision = fact.Revision;
@@ -212,6 +215,8 @@ public sealed class ServiceIdentity : Aggregate
         var reviewedOn = DateOnly.FromDateTime(changedAt.UtcDateTime);
         if (nextReviewDate <= reviewedOn || nextReviewDate > reviewedOn.AddYears(1))
             return CommandFailure.InvalidContent("The next review date must be in the next year.");
+        if (notes?.Trim().Length > 1000)
+            return CommandFailure.InvalidContent("Review notes must be at most 1000 characters.");
         RaiseEvent(new ServiceIdentityReviewed(_tenantId, Id, _revision + 1, actor,
             string.IsNullOrWhiteSpace(notes) ? null : notes.Trim(), nextReviewDate, changedAt));
         return null;
@@ -225,6 +230,8 @@ public sealed class ServiceIdentity : Aggregate
             return refusal;
         if (_terms!.LifecycleStatus != "active")
             return CommandFailure.StateConflict("Only an active service identity can be disabled.");
+        if (reason is { Length: > 1000 })
+            return CommandFailure.InvalidContent("The disable reason must be at most 1000 characters.");
         RaiseEvent(new ServiceIdentityDisabled(_tenantId, Id, _revision + 1, reason, actor, changedAt));
         return null;
     }
@@ -250,6 +257,8 @@ public sealed class ServiceIdentity : Aggregate
         var refusal = RequireNamedChange(expectedRevision);
         if (refusal is not null)
             return refusal;
+        if (reason is { Length: > 1000 })
+            return CommandFailure.InvalidContent("The retirement reason must be at most 1000 characters.");
         RaiseEvent(new ServiceIdentityRetired(_tenantId, Id, _revision + 1, reason, actor, changedAt));
         return null;
     }
