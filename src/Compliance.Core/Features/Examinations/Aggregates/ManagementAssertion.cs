@@ -77,6 +77,7 @@ public sealed class ManagementAssertion : Aggregate
         On<ManagementAssertionRecorded>(Apply);
         On<ManagementAssertionRevised>(Apply);
         On<ManagementAssertionApproved>(Apply);
+        On<ManagementAssertionSigned>(Apply);
     }
 
     public CommandFailure? Create(ManagementAssertionContent content, Uuid actorMemberId,
@@ -107,7 +108,7 @@ public sealed class ManagementAssertion : Aggregate
             return CommandFailure.MissingRecord("The management assertion was not found.");
         if (expectedRevision != Revision)
             return StaleRevision();
-        if (current.Versions.Count >= MaximumVersions || current.Status == "retired")
+        if (current.Signature is not null || current.Versions.Count >= MaximumVersions || current.Status == "retired")
             return CommandFailure.StateConflict("The assertion is retired or has reached its version limit.");
         if (ValidateActor(actorMemberId, actorDisplay, revisedAt) is { } actorFailure)
             return actorFailure;
@@ -183,6 +184,29 @@ public sealed class ManagementAssertion : Aggregate
                 new ManagementAssertionApproved(tenant, subject, revision, actor, snapshot, at));
     }
 
+    /// <summary>Terminates the current assertion identity under one source-admitted named signer.</summary>
+    public CommandFailure? Sign(long expectedRevision, ManagementAssertionSignatureView signature)
+    {
+        if (_current is not { } current)
+            return CommandFailure.MissingRecord("The management assertion was not found.");
+        if (current.Signature is { } original)
+            return expectedRevision == Revision - 1 && (signature with
+                { SignerDisplay = original.SignerDisplay, SignedAt = original.SignedAt }) == original
+                ? null : CommandFailure.StateConflict("The assertion already has a different terminal signature.");
+        if (expectedRevision != Revision)
+            return StaleRevision();
+        if (!ValidSignature(current, signature))
+            return Invalid("Assertion signing requires its exact current version and validated examination package.");
+        var state = current with { Signature = signature, Status = "signed", Revision = Revision + 1,
+            UpdatedAt = signature.SignedAt };
+        return Emit(state, signature.SignerMemberId, signature.SignedAt,
+            static (tenant, subject, revision, actor, snapshot, at) =>
+                new ManagementAssertionSigned(tenant, subject, revision, actor!.Value, snapshot, at));
+    }
+
+    void Apply(ManagementAssertionSigned ev) => ApplyState(ev.TenantId, ev.SubjectId,
+        ev.Revision, ev.ActorMemberId, ev.State, ev.OccurredAt);
+
     void Apply(ManagementAssertionRecorded ev) => ApplyState(ev.TenantId, ev.SubjectId,
         ev.Revision, ev.ActorMemberId, ev.State, ev.OccurredAt, creating: true);
 
@@ -254,17 +278,24 @@ public sealed class ManagementAssertion : Aggregate
             "reject" => "rejected",
             _ => "draft",
         };
+        if (state.Signature is { } signature)
+            return state.Status == "signed" && ValidSignature(state, signature) && state.UpdatedAt == signature.SignedAt
+                ? null : Invalid("The assertion signature does not match its exact current inputs.");
         return state.Status == expectedStatus ? null : Invalid("The assertion status does not match its decision history.");
     }
 
     static bool ValidTransition(ManagementAssertionView prior, ManagementAssertionView next,
         Uuid? actorMemberId)
     {
-        if (next.Revision != prior.Revision + 1 || next.TenantId != prior.TenantId ||
+        if (prior.Signature is not null || next.Revision != prior.Revision + 1 || next.TenantId != prior.TenantId ||
             next.ProgramId != prior.ProgramId || next.ManagementAssertionId != prior.ManagementAssertionId ||
             next.ExaminationId != prior.ExaminationId || next.ScopeKind != prior.ScopeKind ||
             next.Versions.Count < prior.Versions.Count || next.Versions.Count > prior.Versions.Count + 1)
             return false;
+        if (next.Signature is { } signature)
+            return next.Versions.Count == prior.Versions.Count && SameVersions(prior.Versions, next.Versions) &&
+                next.Approvals.SequenceEqual(prior.Approvals) && signature.SignerMemberId == actorMemberId &&
+                signature.SignedAt == next.UpdatedAt;
         if (next.Versions.Count == prior.Versions.Count)
             return SameVersions(prior.Versions, next.Versions) &&
                    next.Approvals.Count == prior.Approvals.Count + 1 &&
@@ -275,6 +306,21 @@ public sealed class ManagementAssertion : Aggregate
                next.Approvals.SequenceEqual(prior.Approvals) &&
                next.CurrentVersion?.AuthoredByMemberId == actorMemberId &&
                next.Versions[^1].AuthoredAt == next.UpdatedAt;
+    }
+
+    static bool ValidSignature(ManagementAssertionView state, ManagementAssertionSignatureView? signature)
+    {
+        if (signature is null || state.CurrentVersion is not { } current || signature.AssertionVersion != current.Version ||
+            signature.ExaminationRevision <= 0 || signature.SignerMemberId == Uuid.Empty ||
+            !ExecutiveRoles.Contains(signature.SignerRole) || !Bounded(signature.SignerDisplay, 1, 200) ||
+            signature.SignedAt == default || signature.SignedAt < current.AuthoredAt)
+            return false;
+        var content = current.Content;
+        return signature.PackageId == content.PackageId && signature.PackageVersion == content.PackageVersion &&
+            signature.PackageManifestId == content.PackageManifestId &&
+            signature.PackageManifestSha256 == content.PackageManifestSha256 &&
+            signature.SourceSnapshotId == content.SourceSnapshotId && signature.SourceSnapshotSha256 == content.SourceSnapshotSha256 &&
+            signature.SourceSnapshotKind == (content.ScopeKind == "type_i" ? "type_i_baseline" : "type_ii_close_snapshot");
     }
 
     static ManagementAssertionContent? NormalizeContent(ManagementAssertionContent? content)
