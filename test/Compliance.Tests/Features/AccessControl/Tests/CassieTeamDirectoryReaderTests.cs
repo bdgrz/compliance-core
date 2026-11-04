@@ -1,5 +1,5 @@
-using Cntryl.Fitz;
-using Cntryl.Fitz.Testing;
+using Bdgrz.Compliance.Features.AccessControl.Projections;
+using Bdgrz.Compliance.Tests.Testing;
 using Cntryl.Portia;
 using Bdgrz.Compliance.Features.AccessControl.Models;
 using Bdgrz.Compliance.Features.Applications.Models;
@@ -75,10 +75,10 @@ using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
 namespace Bdgrz.Compliance.Tests.Features.AccessControl.Tests;
 
 /// <summary>
-///     Exercises the real KvDirectory-backed index/cursor/search logic against Fitz's own in-memory
-///     KV double, closing the gap where these adapters had zero direct coverage.
+///     Exercises native Cassie ordering, cursor, search, and tenant isolation through the production repository.
 /// </summary>
-public sealed class FitzTeamDirectoryReaderTests
+[Trait("Category", "CassieIntegration")]
+public sealed class CassieTeamDirectoryReaderTests
 {
     static readonly Uuid TenantId = Uuid.CreateVersion4();
 
@@ -86,10 +86,10 @@ public sealed class FitzTeamDirectoryReaderTests
     public async Task ShouldReturnStoredTeamGivenMatchingId()
     {
         // Arrange
-        var client = new InMemoryKvClient();
+        await using var database = await CassieRepositoryTestDatabase.OpenAsync(CassieAccessControlSchema.Statements);
         var teamId = Uuid.CreateVersion4();
-        await SeedAsync(client, teamId, "Reviewers");
-        var reader = new FitzTeamDirectoryReader(client);
+        await SeedAsync(database.Database, teamId, "Reviewers");
+        await using var reader = new CassieTeamDirectoryReader(database.Database);
 
         // Act
         var team = await reader.GetAsync(TenantId, teamId, CancellationToken.None);
@@ -103,7 +103,8 @@ public sealed class FitzTeamDirectoryReaderTests
     public async Task ShouldReturnNullGivenNoSuchTeam()
     {
         // Arrange
-        var reader = new FitzTeamDirectoryReader(new InMemoryKvClient());
+        await using var database = await CassieRepositoryTestDatabase.OpenAsync(CassieAccessControlSchema.Statements);
+        await using var reader = new CassieTeamDirectoryReader(database.Database);
 
         // Act
         var team = await reader.GetAsync(TenantId, Uuid.CreateVersion4(), CancellationToken.None);
@@ -116,10 +117,10 @@ public sealed class FitzTeamDirectoryReaderTests
     public async Task ShouldReturnTeamsInNameOrderGivenTenantQuery()
     {
         // Arrange
-        var client = new InMemoryKvClient();
-        await SeedAsync(client, Uuid.CreateVersion4(), "Beta");
-        await SeedAsync(client, Uuid.CreateVersion4(), "Alpha");
-        var reader = new FitzTeamDirectoryReader(client);
+        await using var database = await CassieRepositoryTestDatabase.OpenAsync(CassieAccessControlSchema.Statements);
+        await SeedAsync(database.Database, Uuid.CreateVersion4(), "Beta");
+        await SeedAsync(database.Database, Uuid.CreateVersion4(), "Alpha");
+        await using var reader = new CassieTeamDirectoryReader(database.Database);
 
         // Act
         var page = await reader.ListAsync(
@@ -134,12 +135,12 @@ public sealed class FitzTeamDirectoryReaderTests
     public async Task ShouldPaginateResultsGivenReturnedCursor()
     {
         // Arrange
-        var client = new InMemoryKvClient();
+        await using var database = await CassieRepositoryTestDatabase.OpenAsync(CassieAccessControlSchema.Statements);
         var first = Uuid.CreateVersion4();
         var second = Uuid.CreateVersion4();
-        await SeedAsync(client, first, "Alpha");
-        await SeedAsync(client, second, "Beta");
-        var reader = new FitzTeamDirectoryReader(client);
+        await SeedAsync(database.Database, first, "Alpha");
+        await SeedAsync(database.Database, second, "Beta");
+        await using var reader = new CassieTeamDirectoryReader(database.Database);
 
         // Act
         var firstPage = await reader.ListAsync(TenantId, 1, null, null, descending: false, CancellationToken.None);
@@ -160,10 +161,10 @@ public sealed class FitzTeamDirectoryReaderTests
     public async Task ShouldFilterTeamsGivenNamePrefix()
     {
         // Arrange
-        var client = new InMemoryKvClient();
-        await SeedAsync(client, Uuid.CreateVersion4(), "Reviewers");
-        await SeedAsync(client, Uuid.CreateVersion4(), "Administrators");
-        var reader = new FitzTeamDirectoryReader(client);
+        await using var database = await CassieRepositoryTestDatabase.OpenAsync(CassieAccessControlSchema.Statements);
+        await SeedAsync(database.Database, Uuid.CreateVersion4(), "Reviewers");
+        await SeedAsync(database.Database, Uuid.CreateVersion4(), "Administrators");
+        await using var reader = new CassieTeamDirectoryReader(database.Database);
 
         // Act
         var page = await reader.ListAsync(
@@ -180,10 +181,10 @@ public sealed class FitzTeamDirectoryReaderTests
     public async Task ShouldFilterTeamsGivenNameSubstring()
     {
         // Arrange
-        var client = new InMemoryKvClient();
-        await SeedAsync(client, Uuid.CreateVersion4(), "Site Reviewers");
-        await SeedAsync(client, Uuid.CreateVersion4(), "Administrators");
-        var reader = new FitzTeamDirectoryReader(client);
+        await using var database = await CassieRepositoryTestDatabase.OpenAsync(CassieAccessControlSchema.Statements);
+        await SeedAsync(database.Database, Uuid.CreateVersion4(), "Site Reviewers");
+        await SeedAsync(database.Database, Uuid.CreateVersion4(), "Administrators");
+        await using var reader = new CassieTeamDirectoryReader(database.Database);
 
         // Act
         var page = await reader.ListAsync(
@@ -198,11 +199,11 @@ public sealed class FitzTeamDirectoryReaderTests
     public async Task ShouldPaginateSearchResultsGivenReturnedCursor()
     {
         // Arrange
-        var client = new InMemoryKvClient();
-        await SeedAsync(client, Uuid.CreateVersion4(), "Alpha Reviewers");
-        await SeedAsync(client, Uuid.CreateVersion4(), "Beta");
-        await SeedAsync(client, Uuid.CreateVersion4(), "Gamma Reviewers");
-        var reader = new FitzTeamDirectoryReader(client);
+        await using var database = await CassieRepositoryTestDatabase.OpenAsync(CassieAccessControlSchema.Statements);
+        await SeedAsync(database.Database, Uuid.CreateVersion4(), "Alpha Reviewers");
+        await SeedAsync(database.Database, Uuid.CreateVersion4(), "Beta");
+        await SeedAsync(database.Database, Uuid.CreateVersion4(), "Gamma Reviewers");
+        await using var reader = new CassieTeamDirectoryReader(database.Database);
 
         // Act
         var firstPage = await reader.ListAsync(
@@ -222,10 +223,10 @@ public sealed class FitzTeamDirectoryReaderTests
     public async Task ShouldSortTeamsDescendingGivenNameOrder()
     {
         // Arrange
-        var client = new InMemoryKvClient();
-        await SeedAsync(client, Uuid.CreateVersion4(), "Alpha");
-        await SeedAsync(client, Uuid.CreateVersion4(), "Beta");
-        var reader = new FitzTeamDirectoryReader(client);
+        await using var database = await CassieRepositoryTestDatabase.OpenAsync(CassieAccessControlSchema.Statements);
+        await SeedAsync(database.Database, Uuid.CreateVersion4(), "Alpha");
+        await SeedAsync(database.Database, Uuid.CreateVersion4(), "Beta");
+        await using var reader = new CassieTeamDirectoryReader(database.Database);
 
         // Act
         var page = await reader.ListAsync(TenantId, null, null, null, descending: true, CancellationToken.None);
@@ -238,11 +239,11 @@ public sealed class FitzTeamDirectoryReaderTests
     public async Task ShouldReturnTeamsOnlyGivenRequestedTenant()
     {
         // Arrange
-        var client = new InMemoryKvClient();
+        await using var database = await CassieRepositoryTestDatabase.OpenAsync(CassieAccessControlSchema.Statements);
         var otherTenantId = Uuid.CreateVersion4();
-        await SeedAsync(client, Uuid.CreateVersion4(), "Mine", TenantId);
-        await SeedAsync(client, Uuid.CreateVersion4(), "Theirs", otherTenantId);
-        var reader = new FitzTeamDirectoryReader(client);
+        await SeedAsync(database.Database, Uuid.CreateVersion4(), "Mine", TenantId);
+        await SeedAsync(database.Database, Uuid.CreateVersion4(), "Theirs", otherTenantId);
+        await using var reader = new CassieTeamDirectoryReader(database.Database);
 
         // Act
         var page = await reader.ListAsync(
@@ -253,10 +254,10 @@ public sealed class FitzTeamDirectoryReaderTests
         Assert.Equal("Mine", team.Name);
     }
 
-    static async Task SeedAsync(InMemoryKvClient client, Uuid teamId, string name, Uuid? tenantId = null)
+    static async Task SeedAsync(CassieProjectionDatabase database, Uuid teamId, string name, Uuid? tenantId = null)
     {
         var tenant = tenantId ?? TenantId;
-        var repository = new FitzTeamDirectoryReader(client);
+        await using var repository = new CassieTeamDirectoryReader(database);
         var identity = new CheckpointIdentity("TeamDirectory", EventStreamPattern.ForPattern(tenant.ToString()));
         await using var batch = await repository.BeginAsync(new ProjectionBatchContext(identity, ProjectionCheckpoint.Start));
         await repository.ApplyAsync(RbacFacts.TeamDefinedFact(tenant, teamId, name));

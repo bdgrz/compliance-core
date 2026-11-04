@@ -41,7 +41,7 @@ public sealed class ListRolePermissionsHandler(IRolePermissionDirectoryReader di
                 ListRequestNormalization.IsDescending(request.Sort),
                 ct).ConfigureAwait(false);
         }
-        catch (KvDirectoryQueryException)
+        catch (AccessControlDirectoryQueryException)
         {
             return Result<Page<RolePermissionView>>.Failure(new RequestError(RequestErrorKind.Validation,
                 "The role permission cursor is invalid."));

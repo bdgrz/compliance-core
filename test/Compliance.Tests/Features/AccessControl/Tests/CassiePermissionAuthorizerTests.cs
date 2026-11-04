@@ -90,19 +90,20 @@ using Bdgrz.Compliance.Features.Tenants.Readers;
 using Bdgrz.Compliance.Tests;
 namespace Bdgrz.Compliance.Tests.Features.AccessControl.Tests;
 
-public sealed class FitzPermissionAuthorizerTests
+[Trait("Category", "CassieIntegration")]
+public sealed class CassiePermissionAuthorizerTests
 {
     [Fact]
     public async Task ShouldDenyGivenRevocationProjectsBetweenExplanationAndPendingScan()
     {
         // Arrange
-        var client = new InMemoryKvClient();
+        await using var database = await CassieRepositoryTestDatabase.OpenAsync(CassieAccessControlSchema.Statements);
         var tenantId = Uuid.CreateVersion4();
         var userId = Uuid.CreateVersion4();
         var memberId = RbacIds.Member(tenantId, userId);
         var teamId = BuiltInRbac.AdministratorsTeamId(tenantId);
         var roleId = BuiltInRbac.TenantAdministrationRoleId(tenantId);
-        FitzPermissionAuthorizer? permissions = null;
+        CassiePermissionAuthorizer? permissions = null;
         var events = new ProjectionInterleavingReader(async () =>
         {
             var identity = new CheckpointIdentity("PermissionProjection",
@@ -112,7 +113,7 @@ public sealed class FitzPermissionAuthorizerTests
             await permissions.ApplyAsync(TeamMemberFacts.Removed(tenantId, teamId, memberId, Uuid.Empty, Uuid.CreateVersion4()));
             await batch.CommitAsync(ProjectionCheckpoint.Start);
         });
-        permissions = new FitzPermissionAuthorizer(client, new FixedMembershipDirectory(true), events,
+        permissions = new CassiePermissionAuthorizer(database.Database, new FixedMembershipDirectory(true), events,
             new FixedMemberAccessEligibility(true));
         await SeedActiveTeamGrantAsync(permissions, tenantId, userId, teamId, roleId);
 
@@ -130,7 +131,7 @@ public sealed class FitzPermissionAuthorizerTests
     public async Task ShouldDenyGivenSuspensionCommitsAfterPendingScanBeforeFinalGrantRead()
     {
         // Arrange
-        var client = new InMemoryKvClient();
+        await using var database = await CassieRepositoryTestDatabase.OpenAsync(CassieAccessControlSchema.Statements);
         var sourceEvents = new InMemoryEventStore();
         var services = new ServiceCollection();
         services.AddSingleton<IEventStore>(sourceEvents);
@@ -155,7 +156,7 @@ public sealed class FitzPermissionAuthorizerTests
                 "Administrator", DateTimeOffset.UtcNow, "Access review.").IsSuccess);
             await writer.SaveAsync(current, new RequestDispatchContext(RequestActor.System));
         });
-        var permissions = new FitzPermissionAuthorizer(client, projectedMembership, events,
+        var permissions = new CassiePermissionAuthorizer(database.Database, projectedMembership, events,
             new EventSourcedMemberAccessEligibility(reader));
         await SeedActiveTeamGrantAsync(permissions, tenantId, userId, teamId, roleId);
 
@@ -176,19 +177,20 @@ public sealed class FitzPermissionAuthorizerTests
     public async Task ShouldDenyGivenLegacyGrantKeyWithoutExplanationAndPendingSuspension()
     {
         // Arrange
-        var client = new InMemoryKvClient();
+        await using var database = await CassieRepositoryTestDatabase.OpenAsync(CassieAccessControlSchema.Statements);
         var events = new InMemoryEventStore();
         var tenantId = Uuid.CreateVersion4();
         var userId = Uuid.CreateVersion4();
         var memberId = RbacIds.Member(tenantId, userId);
-        var permissions = new FitzPermissionAuthorizer(client, new FixedMembershipDirectory(true), events,
+        var permissions = new CassiePermissionAuthorizer(database.Database, new FixedMembershipDirectory(true), events,
             new FixedMemberAccessEligibility(true));
-        var route = await new PermissionRouteReader(client).GetRouteAsync(tenantId);
-        await using (var tx = await client.BeginAsync(route, KvMode.ReadWrite))
+        await SeedActiveTeamGrantAsync(permissions, tenantId, userId,
+            BuiltInRbac.AdministratorsTeamId(tenantId), BuiltInRbac.TenantAdministrationRoleId(tenantId));
+        await using (var connection = await database.DataSource.OpenConnectionAsync())
+        await using (var command = connection.CreateCommand())
         {
-            await tx.PutAsync(PermissionProjectionKeys.Grant(memberId, RbacPermissions.TenantAccess),
-                "1"u8.ToArray());
-            await tx.CommitAsync(KvDurability.Sync);
+            command.CommandText = "DELETE FROM access_permission_states";
+            Assert.Equal(1, await command.ExecuteNonQueryAsync());
         }
         Assert.Empty(await permissions.ReadAsync(tenantId, memberId));
         Assert.False(await permissions.IsAllowedAsync(tenantId, userId, memberId,
@@ -212,7 +214,7 @@ public sealed class FitzPermissionAuthorizerTests
     public async Task ShouldDenyGivenMemberSuspensionHasNotReachedPermissionProjection()
     {
         // Arrange
-        var client = new InMemoryKvClient();
+        await using var database = await CassieRepositoryTestDatabase.OpenAsync(CassieAccessControlSchema.Statements);
         var events = new InMemoryEventStore();
         var tenantId = Uuid.CreateVersion4();
         var userId = Uuid.CreateVersion4();
@@ -220,8 +222,8 @@ public sealed class FitzPermissionAuthorizerTests
         var teamId = BuiltInRbac.AdministratorsTeamId(tenantId);
         var roleId = BuiltInRbac.TenantAdministrationRoleId(tenantId);
         var membership = new FixedMembershipDirectory(true);
-        using var services = CreateServices(client, membership, events);
-        var permissions = ActivatorUtilities.CreateInstance<FitzPermissionAuthorizer>(services);
+        using var services = CreateServices(database.Database, membership, events);
+        var permissions = ActivatorUtilities.CreateInstance<CassiePermissionAuthorizer>(services);
         var pattern = EventStreamPattern.ForPattern(tenantId.ToString());
         var identity = new CheckpointIdentity("PermissionProjection", pattern);
         await SeedActiveTeamGrantAsync(permissions, tenantId, userId, teamId, roleId);
@@ -257,7 +259,7 @@ public sealed class FitzPermissionAuthorizerTests
         await events.AppendAsync(stream, 1, [reinstatement]);
         var deniedWhileReinstatementLags = await permissions.IsAllowedAsync(tenantId, userId,
             memberId, RbacPermissions.TenantAccess);
-        var restartedPermissions = new FitzPermissionAuthorizer(client, membership, events,
+        var restartedPermissions = new CassiePermissionAuthorizer(database.Database, membership, events,
             new FixedMemberAccessEligibility(true));
         await foreach (var record in events.ReadAsync(pattern, cursor, CancellationToken.None))
         {
@@ -281,7 +283,7 @@ public sealed class FitzPermissionAuthorizerTests
     public async Task ShouldDenyGivenTeamMemberRemovalHasNotReachedPermissionProjection()
     {
         // Arrange
-        var client = new InMemoryKvClient();
+        await using var database = await CassieRepositoryTestDatabase.OpenAsync(CassieAccessControlSchema.Statements);
         var events = new InMemoryEventStore();
         var tenantId = Uuid.CreateVersion4();
         var userId = Uuid.CreateVersion4();
@@ -289,8 +291,8 @@ public sealed class FitzPermissionAuthorizerTests
         var teamId = BuiltInRbac.AdministratorsTeamId(tenantId);
         var roleId = BuiltInRbac.TenantAdministrationRoleId(tenantId);
         var membership = new FixedMembershipDirectory(true);
-        using var services = CreateServices(client, membership, events);
-        var permissions = ActivatorUtilities.CreateInstance<FitzPermissionAuthorizer>(services);
+        using var services = CreateServices(database.Database, membership, events);
+        var permissions = ActivatorUtilities.CreateInstance<CassiePermissionAuthorizer>(services);
         var pattern = EventStreamPattern.ForPattern(tenantId.ToString());
         var identity = new CheckpointIdentity("PermissionProjection", pattern);
         await SeedActiveTeamGrantAsync(permissions, tenantId, userId, teamId, roleId);
@@ -328,15 +330,15 @@ public sealed class FitzPermissionAuthorizerTests
     public async Task ShouldAllowGivenAnotherMembersTeamRemovalHasNotReachedPermissionProjection()
     {
         // Arrange
-        var client = new InMemoryKvClient();
+        await using var database = await CassieRepositoryTestDatabase.OpenAsync(CassieAccessControlSchema.Statements);
         var events = new InMemoryEventStore();
         var tenantId = Uuid.CreateVersion4();
         var userId = Uuid.CreateVersion4();
         var memberId = RbacIds.Member(tenantId, userId);
         var teamId = BuiltInRbac.AdministratorsTeamId(tenantId);
         var roleId = BuiltInRbac.TenantAdministrationRoleId(tenantId);
-        using var services = CreateServices(client, new FixedMembershipDirectory(true), events);
-        var permissions = ActivatorUtilities.CreateInstance<FitzPermissionAuthorizer>(services);
+        using var services = CreateServices(database.Database, new FixedMembershipDirectory(true), events);
+        var permissions = ActivatorUtilities.CreateInstance<CassiePermissionAuthorizer>(services);
         var pattern = EventStreamPattern.ForPattern(tenantId.ToString());
         await SeedActiveTeamGrantAsync(permissions, tenantId, userId, teamId, roleId);
         var otherMemberId = RbacIds.Member(tenantId, Uuid.CreateVersion4());
@@ -359,15 +361,16 @@ public sealed class FitzPermissionAuthorizerTests
     public async Task ShouldAllowGivenUnprojectedProgramEventDoesNotChangePermissions()
     {
         // Arrange
+        await using var database = await CassieRepositoryTestDatabase.OpenAsync(CassieAccessControlSchema.Statements);
         var tenantId = Uuid.CreateVersion4();
         var userId = Uuid.CreateVersion4();
         var memberId = RbacIds.Member(tenantId, userId);
         var teamId = BuiltInRbac.AdministratorsTeamId(tenantId);
         var roleId = BuiltInRbac.TenantAdministrationRoleId(tenantId);
         var events = new InMemoryEventStore();
-        using var services = CreateServices(new InMemoryKvClient(),
+        using var services = CreateServices(database.Database,
             new FixedMembershipDirectory(true), events);
-        var permissions = ActivatorUtilities.CreateInstance<FitzPermissionAuthorizer>(services);
+        var permissions = ActivatorUtilities.CreateInstance<CassiePermissionAuthorizer>(services);
         await SeedActiveTeamGrantAsync(permissions, tenantId, userId, teamId, roleId);
         var programId = Uuid.CreateVersion4();
         await using var programNative = new ProgramNativeFixture();
@@ -391,14 +394,14 @@ public sealed class FitzPermissionAuthorizerTests
     public async Task ShouldDenyFirmStaffGivenPersistedPreUpgradePermissionGrant()
     {
         // Arrange: an old permission projection has a grant, while membership says firm_staff.
-        var client = new InMemoryKvClient();
+        await using var database = await CassieRepositoryTestDatabase.OpenAsync(CassieAccessControlSchema.Statements);
         var tenantId = Uuid.CreateVersion4();
         var userId = Uuid.CreateVersion4();
         var memberId = RbacIds.Member(tenantId, userId);
         var teamId = Uuid.CreateVersion4();
         var roleId = BuiltInRbac.TenantAdministrationRoleId(tenantId);
-        var memberships = new FitzTenantMembershipDirectoryReader(client);
-        var permissions = new FitzPermissionAuthorizer(client, memberships, new InMemoryEventStore(),
+        var memberships = new FitzTenantMembershipDirectoryReader(new InMemoryKvClient());
+        var permissions = new CassiePermissionAuthorizer(database.Database, memberships, new InMemoryEventStore(),
             new FixedMemberAccessEligibility(true));
         var permissionIdentity = new CheckpointIdentity("PermissionProjection",
             EventStreamPattern.ForPattern(tenantId.ToString()));
@@ -431,16 +434,37 @@ public sealed class FitzPermissionAuthorizerTests
         Assert.False(allowed);
     }
 
-    static ServiceProvider CreateServices(IKvClient client,
+    [Fact]
+    public async Task ShouldAuthorizeGivenEquivalentPermissionText()
+    {
+        // Arrange
+        await using var database = await CassieRepositoryTestDatabase.OpenAsync(CassieAccessControlSchema.Statements);
+        var tenant = Uuid.CreateVersion4();
+        var user = Uuid.CreateVersion4();
+        await using var permissions = new CassiePermissionAuthorizer(database.Database,
+            new FixedMembershipDirectory(true), new InMemoryEventStore(), new FixedMemberAccessEligibility(true));
+        await SeedActiveTeamGrantAsync(permissions, tenant, user, BuiltInRbac.AdministratorsTeamId(tenant),
+            BuiltInRbac.TenantAdministrationRoleId(tenant));
+
+        // Act
+        var canonical = await permissions.IsAllowedAsync(tenant, user, RbacIds.Member(tenant, user), RbacPermissions.TenantAccess);
+        var equivalent = await permissions.IsAllowedAsync(tenant, user, RbacIds.Member(tenant, user), "  " + RbacPermissions.TenantAccess.ToUpperInvariant() + "  ");
+
+        // Assert
+        Assert.True(canonical);
+        Assert.True(equivalent);
+    }
+
+    static ServiceProvider CreateServices(CassieProjectionDatabase database,
         ITenantMembershipDirectoryReader memberships, IDomainEventReader events) =>
         new ServiceCollection()
-            .AddSingleton(client)
+            .AddSingleton(database)
             .AddSingleton(memberships)
             .AddSingleton(events)
             .AddSingleton<IMemberAccessEligibility>(new FixedMemberAccessEligibility(true))
             .BuildServiceProvider();
 
-    static async Task SeedActiveTeamGrantAsync(FitzPermissionAuthorizer permissions,
+    static async Task SeedActiveTeamGrantAsync(CassiePermissionAuthorizer permissions,
         Uuid tenantId, Uuid userId, Uuid teamId, Uuid roleId)
     {
         var pattern = EventStreamPattern.ForPattern(tenantId.ToString());
@@ -456,16 +480,6 @@ public sealed class FitzPermissionAuthorizerTests
         await permissions.ApplyAsync(RbacTeamRoleFacts.Assigned(tenantId, teamId, roleId));
         await permissions.ApplyAsync(RbacPermissionFacts.Assigned(tenantId, roleId, RbacPermissions.TenantAccess));
         await batch.CommitAsync(ProjectionCheckpoint.Start);
-    }
-
-    sealed class PermissionRouteReader(IKvClient client)
-        : FitzKvProjectionStore(client, FitzPermissionAuthorizer.Route, "PermissionProjection")
-    {
-        public async Task<string> GetRouteAsync(Uuid tenantId)
-        {
-            await using var tx = await BeginReadAsync(tenantId.ToString());
-            return tx.Route;
-        }
     }
 
     sealed class ProjectionInterleavingReader(Func<Task> projectRevocation) : IDomainEventReader

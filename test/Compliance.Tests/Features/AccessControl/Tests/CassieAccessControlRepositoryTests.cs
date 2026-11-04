@@ -125,6 +125,93 @@ public sealed class CassieAccessControlRepositoryTests
         Assert.Equal(ProjectionCheckpoint.Start, await scenario.Store.LoadCheckpointAsync(alien));
     }
 
+    [Theory]
+    [InlineData("tenant")]
+    [InlineData("direction")]
+    [InlineData("search")]
+    [InlineData("directory")]
+    public async Task ShouldRejectCursorGivenDifferentDirectoryQuery(string change)
+    {
+        // Arrange
+        await using var database = await CassieRepositoryTestDatabase.OpenAsync(CassieAccessControlSchema.Statements);
+        await using var teams = new CassieTeamDirectoryReader(database.Database);
+        await using var roles = new CassieRoleDirectoryReader(database.Database);
+        var tenant = Uuid.CreateVersion4();
+        await using (var batch = await teams.BeginAsync(new ProjectionBatchContext(
+                         new CheckpointIdentity("TeamDirectory", EventStreamPattern.ForPattern(tenant.ToString())), ProjectionCheckpoint.Start)))
+        {
+            await teams.ApplyAsync(RbacFacts.TeamDefinedFact(tenant, Uuid.CreateVersion4(), "Alpha"));
+            await teams.ApplyAsync(RbacFacts.TeamDefinedFact(tenant, Uuid.CreateVersion4(), "Beta"));
+            await batch.CommitAsync(ProjectionCheckpoint.Start);
+        }
+        var first = await teams.ListAsync(tenant, 1, null, null, false);
+
+        // Act
+        var failure = await Record.ExceptionAsync(async () =>
+        {
+            if (change == "directory")
+                await roles.ListAsync(tenant, 1, first.NextCursor, null, false);
+            else
+                await teams.ListAsync(change == "tenant" ? Uuid.CreateVersion4() : tenant,
+                    1, first.NextCursor, change == "search" ? "a" : null, change == "direction");
+        });
+
+        // Assert
+        Assert.NotNull(first.NextCursor);
+        Assert.IsType<AccessControlDirectoryQueryException>(failure);
+    }
+
+    [Fact]
+    public async Task ShouldRejectCursorGivenDifferentParentRole()
+    {
+        // Arrange
+        await using var database = await CassieRepositoryTestDatabase.OpenAsync(CassieAccessControlSchema.Statements);
+        await using var permissions = new CassieRolePermissionDirectoryReader(database.Database);
+        var tenant = Uuid.CreateVersion4();
+        var role = Uuid.CreateVersion4();
+        await using (var batch = await permissions.BeginAsync(new ProjectionBatchContext(
+                         new CheckpointIdentity("RolePermissionDirectory", EventStreamPattern.ForPattern(tenant.ToString())), ProjectionCheckpoint.Start)))
+        {
+            await permissions.ApplyAsync(RbacPermissionFacts.Assigned(tenant, role, "controls.manage"));
+            await permissions.ApplyAsync(RbacPermissionFacts.Assigned(tenant, role, "controls.read"));
+            await batch.CommitAsync(ProjectionCheckpoint.Start);
+        }
+        var first = await permissions.ListAsync(tenant, role, 1, null, null, false);
+
+        // Act
+        var failure = await Record.ExceptionAsync(async () =>
+            await permissions.ListAsync(tenant, Uuid.CreateVersion4(), 1, first.NextCursor, null, false));
+
+        // Assert
+        Assert.NotNull(first.NextCursor);
+        Assert.IsType<AccessControlDirectoryQueryException>(failure);
+    }
+
+    [Fact]
+    public async Task ShouldRetainFullUnsignedRevisionGivenAssignmentBeyondSignedRange()
+    {
+        // Arrange
+        await using var database = await CassieRepositoryTestDatabase.OpenAsync(CassieAccessControlSchema.Statements);
+        await using var permissions = new CassieRolePermissionDirectoryReader(database.Database);
+        var tenant = Uuid.CreateVersion4();
+        var role = Uuid.CreateVersion4();
+        var assignment = Uuid.CreateVersion4();
+
+        // Act
+        await using (var batch = await permissions.BeginAsync(new ProjectionBatchContext(
+                         new CheckpointIdentity("RolePermissionDirectory", EventStreamPattern.ForPattern(tenant.ToString())), ProjectionCheckpoint.Start)))
+        {
+            await permissions.ApplyAsync(new RolePermissionAssigned(tenant, role, "controls.read", assignment,
+                ulong.MaxValue - 1, RbacPermissionFacts.Actor));
+            await batch.CommitAsync(ProjectionCheckpoint.Start);
+        }
+        var row = Assert.Single((await permissions.ListAsync(tenant, role, 1, null, null, false)).Items);
+
+        // Assert
+        Assert.Equal(assignment, row.AssignmentId);
+        Assert.Equal(ulong.MaxValue, row.Revision);
+    }
+
     static Scenario Create(CassieProjectionDatabase database, string kind, Uuid tenant, Uuid id)
     {
         switch (kind)

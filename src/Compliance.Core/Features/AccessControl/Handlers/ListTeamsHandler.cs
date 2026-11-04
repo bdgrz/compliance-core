@@ -38,7 +38,7 @@ public sealed class ListTeamsHandler(ITeamDirectoryReader directory) : IRequestH
                 ListRequestNormalization.IsDescending(request.Sort),
                 ct).ConfigureAwait(false);
         }
-        catch (KvDirectoryQueryException)
+        catch (AccessControlDirectoryQueryException)
         {
             return Result<Page<TeamView>>.Failure(new RequestError(RequestErrorKind.Validation,
                 "The team cursor is invalid."));
