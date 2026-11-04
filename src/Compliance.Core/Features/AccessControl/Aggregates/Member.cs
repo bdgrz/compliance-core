@@ -76,14 +76,18 @@ public sealed class Member : Aggregate
     MemberDeprovisioned? _currentTermination;
     MemberDeprovisioned? _selectedTermination;
     bool _selectedCleanupCompleted;
+    Uuid? _linkedPersonId;
+    Uuid? _pendingPersonId;
+    long _personLinkGeneration;
+    MemberPersonLinkAdmitted? _personLinkAdmission;
 
     /// <summary>Acceptance of the logical registration this hydration was selected for.</summary>
     public NativeAcceptance Acceptance { get; }
 
-    public Uuid? LinkedPersonId => Id == Uuid.Empty ? Id : default(Uuid?);
-    public Uuid? PendingPersonId => Id == Uuid.Empty ? Id : default(Uuid?);
-    public long PersonLinkGeneration => Id == Uuid.Empty ? -1 : 0;
-    public MemberPersonLinkAdmitted? PersonLinkAdmission => Acceptance.SelectedFact as MemberPersonLinkAdmitted;
+    public Uuid? LinkedPersonId => _linkedPersonId;
+    public Uuid? PendingPersonId => _pendingPersonId;
+    public long PersonLinkGeneration => _personLinkGeneration;
+    public MemberPersonLinkAdmitted? PersonLinkAdmission => _personLinkAdmission;
     public bool IsRegistered => _isRegistered;
     public string? Affiliation => _affiliation;
     public DateOnly? MembershipExpiresOn => _membershipExpiresOn;
@@ -128,6 +132,60 @@ public sealed class Member : Aggregate
         _selectedEpisodeId = selectedEpisodeId;
         _userId = userId;
         Acceptance = new NativeAcceptance(selectedCommandId);
+        On<MemberPersonLinkAdmitted>(fact =>
+        {
+            RequireMemberIdentity(fact.TenantId, fact.MemberId, fact.UserId);
+            RequireOwnOperation(fact.Operation);
+            if (fact.PersonId == Uuid.Empty || fact.LinkId != fact.Operation.LogicalId ||
+                fact.Generation != _personLinkGeneration + 1 || _linkedPersonId is not null || _pendingPersonId is not null)
+                throw new MemberHistoryIntegrityException("A member person admission must advance one unbound generation.");
+            _pendingPersonId = fact.PersonId;
+            _personLinkGeneration = fact.Generation;
+            _personLinkAdmission = fact;
+            Acceptance.Observe(fact);
+        });
+        On<MemberPersonLinkRefused>(fact =>
+        {
+            RequireMemberIdentity(fact.TenantId, fact.MemberId, fact.UserId);
+            RequireOwnOperation(fact.Operation);
+            if (fact.PersonId == Uuid.Empty || fact.LinkId != fact.Operation.LogicalId || fact.Generation != _personLinkGeneration ||
+                string.IsNullOrWhiteSpace(fact.Reason))
+                throw new MemberHistoryIntegrityException("A refused person admission cannot alter the member binding.");
+            Acceptance.Observe(fact);
+        });
+        On<MemberPersonLinkConfirmed>(fact =>
+        {
+            RequirePersonConclusion(fact.TenantId, fact.MemberId, fact.UserId, fact.PersonId, fact.Link);
+            RequireOwnOperation(fact.Operation);
+            if (_pendingPersonId != fact.PersonId || _linkedPersonId is not null)
+                throw new MemberHistoryIntegrityException("A person link confirmation needs the exact pending admission.");
+            _pendingPersonId = null;
+            _linkedPersonId = fact.PersonId;
+            Acceptance.Observe(fact);
+        });
+        On<MemberPersonLinkAdmissionCancelled>(fact =>
+        {
+            RequirePersonConclusion(fact.TenantId, fact.MemberId, fact.UserId, fact.PersonId, fact.Link);
+            RequireOwnOperation(fact.Operation);
+            if (_pendingPersonId != fact.PersonId || _linkedPersonId is not null || fact.Generation != _personLinkGeneration + 1)
+                throw new MemberHistoryIntegrityException("A cancelled admission must release its exact pending generation.");
+            _pendingPersonId = null;
+            _personLinkGeneration = fact.Generation;
+            _personLinkAdmission = null;
+            Acceptance.Observe(fact);
+        });
+        On<MemberPersonLinkReleased>(fact =>
+        {
+            RequirePersonConclusion(fact.TenantId, fact.MemberId, fact.UserId, fact.PersonId, fact.Link);
+            RequireOwnOperation(fact.Operation);
+            if ((_pendingPersonId ?? _linkedPersonId) != fact.PersonId || fact.Generation != _personLinkGeneration + 1)
+                throw new MemberHistoryIntegrityException("A released link must release its exact admitted generation.");
+            _pendingPersonId = null;
+            _linkedPersonId = null;
+            _personLinkGeneration = fact.Generation;
+            _personLinkAdmission = null;
+            Acceptance.Observe(fact);
+        });
         On<MemberRegistered>(registered =>
         {
             if (_isRegistered || _isDeprovisioned && !_isDeprovisionCleanupComplete)
@@ -440,20 +498,95 @@ public sealed class Member : Aggregate
     }
 
     public Result RequestPersonLink(OperationProvenance operation, ImmutableContentRef firstResponse,
-        Uuid personId, long expectedGeneration) => Result.Failure(new RequestError(RequestErrorKind.Conflict,
-            $"Member person-link admission is not implemented for {Id}."));
+        Uuid personId, long expectedGeneration)
+    {
+        var selected = PersonLinkOperation(operation, firstResponse);
+        if (selected is { } accepted)
+            return accepted;
+        if (!_isRegistered || _affiliation == "firm_staff")
+            return Result.Failure(new RequestError(RequestErrorKind.NotFound, "The workforce member was not found."));
+        if (personId == Uuid.Empty || expectedGeneration < 0)
+            return Result.Failure(new RequestError(RequestErrorKind.Validation, "A person and nonnegative link generation are required."));
+        if (_linkedPersonId is not null || _pendingPersonId is not null || expectedGeneration != _personLinkGeneration)
+        {
+            RaiseEvent(new MemberPersonLinkRefused(_tenantId, Id, _userId, personId, operation.LogicalId,
+                expectedGeneration, _personLinkGeneration, "The member is already linked, has a pending admission, or its generation changed.",
+                operation, firstResponse));
+            return Result.Success;
+        }
+        RaiseEvent(new MemberPersonLinkAdmitted(_tenantId, Id, _userId, personId, operation.LogicalId,
+            _personLinkGeneration + 1, operation, firstResponse));
+        return Result.Success;
+    }
 
     public Result ConfirmPersonLink(OperationProvenance operation, ImmutableContentRef firstResponse,
-        VerifiedSourceProof<PersonLinkedToMember> source) => Result.Failure(new RequestError(RequestErrorKind.Conflict,
-            $"Member person-link confirmation is not implemented for {Id}."));
+        VerifiedSourceProof<PersonLinkedToMember> source) => ConcludePersonLink(operation, firstResponse,
+            source, source.Facts.Header, source.Facts.Link, source.Facts.Operation, "confirm");
 
     public Result CancelPersonLinkAdmission(OperationProvenance operation, ImmutableContentRef firstResponse,
-        VerifiedSourceProof<PersonMemberLinkRefused> source) => Result.Failure(new RequestError(RequestErrorKind.Conflict,
-            $"Member person-link cancellation is not implemented for {Id}."));
+        VerifiedSourceProof<PersonMemberLinkRefused> source) => ConcludePersonLink(operation, firstResponse,
+            source, source.Facts.Header, source.Facts.Link, source.Facts.Operation, "cancel");
 
     public Result ReleasePersonLink(OperationProvenance operation, ImmutableContentRef firstResponse,
-        VerifiedSourceProof<PersonUnlinkedFromMember> source) => Result.Failure(new RequestError(RequestErrorKind.Conflict,
-            $"Member person-link release is not implemented for {Id}."));
+        VerifiedSourceProof<PersonUnlinkedFromMember> source) => ConcludePersonLink(operation, firstResponse,
+            source, source.Facts.Header, source.Facts.Link, source.Facts.Operation, "release");
+
+    Result ConcludePersonLink<T>(OperationProvenance operation, ImmutableContentRef firstResponse,
+        VerifiedSourceProof<T> source, PersonHeader person, PersonMemberLink link, OperationProvenance sourceOperation,
+        string conclusion) where T : DomainEvent
+    {
+        var selected = PersonLinkOperation(operation, firstResponse);
+        if (selected is { } accepted)
+            return accepted;
+        if (source.EventId == Uuid.Empty || source.EventId != operation.CausationEventId ||
+            source.Source != new EventStreamAddress(_tenantId.ToString(), "people", person.PersonId.ToString()) ||
+            person.TenantId != _tenantId || link.UserId != _userId || link.MemberId != Id ||
+            link.Generation != _personLinkGeneration || _personLinkAdmission is not { } admission ||
+            link.LinkId != admission.LinkId || link.AdmissionEventId != admission.Metadata.EventId ||
+            person.PersonId != admission.PersonId || sourceOperation.RootOperationId != link.LinkId ||
+            (conclusion == "confirm" || conclusion == "cancel" ? _pendingPersonId : _pendingPersonId ?? _linkedPersonId) != person.PersonId)
+            return Result.Failure(new RequestError(RequestErrorKind.Conflict, "The person conclusion must match the exact current member admission."));
+        var reference = new NativeFactReference(source.Source, source.EventId, source.OwnerRevision);
+        switch (conclusion)
+        {
+            case "confirm":
+                RaiseEvent(new MemberPersonLinkConfirmed(_tenantId, Id, _userId, person.PersonId, link, reference,
+                    operation, firstResponse));
+                break;
+            case "cancel":
+                RaiseEvent(new MemberPersonLinkAdmissionCancelled(_tenantId, Id, _userId, person.PersonId, link,
+                    _personLinkGeneration + 1, reference, operation, firstResponse));
+                break;
+            default:
+                RaiseEvent(new MemberPersonLinkReleased(_tenantId, Id, _userId, person.PersonId, link,
+                    _personLinkGeneration + 1, reference, operation, firstResponse));
+                break;
+        }
+        return Result.Success;
+    }
+
+    Result? PersonLinkOperation(OperationProvenance operation, ImmutableContentRef firstResponse)
+    {
+        if (operation.LogicalId == Uuid.Empty || operation.Owner != Stream || firstResponse is null)
+            return Result.Failure(new RequestError(RequestErrorKind.Validation, "A member link requires its own identified operation."));
+        if (Acceptance.SelectedLogicalId != operation.LogicalId)
+            return null;
+        return Acceptance.Decide(AcceptedOperationBinding.Of(operation)) switch
+        {
+            NativeAcceptanceDecision.Replayed => Result.Success,
+            NativeAcceptanceDecision.Conflict => Result.Failure(new RequestError(RequestErrorKind.Conflict, "The member link operation has different intent.")),
+            _ => null,
+        };
+    }
+
+    void RequirePersonConclusion(Uuid tenant, Uuid member, Uuid user, Uuid person, PersonMemberLink link)
+    {
+        RequireMemberIdentity(tenant, member, user);
+        if (_personLinkAdmission is not { } admission || person != admission.PersonId || link.UserId != user ||
+            link.MemberId != member || link.LinkId != admission.LinkId || link.Generation != _personLinkGeneration ||
+            link.AdmissionEventId != admission.Metadata.EventId)
+            throw new MemberHistoryIntegrityException("The person conclusion differs from the member's exact admitted binding.");
+    }
 
     void RequireOwnOperation(OperationProvenance operation)
     {
