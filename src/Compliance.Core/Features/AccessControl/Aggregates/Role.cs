@@ -96,7 +96,8 @@ public sealed class Role : Aggregate
         });
         On<RoleRenamed>(ev =>
         {
-            if (ev.TenantId != _tenantId || ev.RoleId != Id || !_isDefined || _isDeleted || string.IsNullOrWhiteSpace(ev.Name))
+            if (ev.TenantId != _tenantId || ev.RoleId != Id || !_isDefined || _isDeleted || BuiltInRbac.IsBuiltInRole(_tenantId, Id) ||
+                string.IsNullOrWhiteSpace(ev.Name))
                 throw new InvalidOperationException("Role rename requires the exact active role.");
             Accept(ev, ev.CommandId, ev.Operation);
             _name = ev.Name;
@@ -138,7 +139,9 @@ public sealed class Role : Aggregate
     /// </summary>
     public Result PrepareRename(string name)
     {
-        if (_isDeleted || !_isDefined && !BuiltInRbac.IsBuiltInRole(_tenantId, Id))
+        if (BuiltInRbac.IsBuiltInRole(_tenantId, Id))
+            return Result.Failure(new RequestError(RequestErrorKind.Conflict, "Built-in roles cannot be renamed."));
+        if (_isDeleted || !_isDefined)
             return Result.Failure(new RequestError(RequestErrorKind.NotFound, "The role is not defined."));
         if (string.IsNullOrWhiteSpace(name))
             return Result.Failure(new RequestError(RequestErrorKind.Validation, "A role requires a name."));
@@ -154,10 +157,7 @@ public sealed class Role : Aggregate
         if (!prepared.IsSuccess)
             return prepared;
         var normalized = name.Trim();
-        // Renaming a built-in role the catalog has not defined yet defines it under the migrated name.
-        RaiseEvent(_isDefined
-            ? new RoleRenamed(_tenantId, Id, normalized, operation.LogicalId, operation, firstResponse)
-            : new RoleDefined(_tenantId, Id, normalized, operation.LogicalId, operation, firstResponse));
+        RaiseEvent(new RoleRenamed(_tenantId, Id, normalized, operation.LogicalId, operation, firstResponse));
         return Result.Success;
     }
 
