@@ -1,4 +1,4 @@
-using Cntryl.Fitz.Testing;
+using Bdgrz.Compliance.Tests.Testing;
 using Cntryl.Portia;
 using Microsoft.Extensions.DependencyInjection;
 using Bdgrz.Compliance.Features.Remediation.Readers;
@@ -13,12 +13,13 @@ public sealed class CorrectiveActionChangeWorkTests
     public async Task ShouldRefreshWorkOwnerDescriptionAndDueDateGivenActionChanged()
     {
         // Arrange
+        await using var database = await CassieRepositoryTestDatabase.OpenAsync();
         var fixture = await OperationsFixture.CreateAsync();
         await using var provider = fixture.Provider;
         var finding = await CorrectiveActionChangeWorkflowTests.OpenAsync(fixture);
         await using var scope = provider.CreateAsyncScope();
         var events = scope.ServiceProvider.GetRequiredService<IDomainEventReader>();
-        var directory = new FitzCorrectiveActionWorkItemDirectory(new InMemoryKvClient(),
+        await using var directory = new CassieCorrectiveActionWorkItemDirectory(database.Database,
             scope.ServiceProvider.GetRequiredService<FindingReader>(), TimeProvider.System);
         var pattern = directory.SourcePattern(fixture.TenantId);
         await ProjectAsync(directory, events, pattern, ProjectionCheckpoint.Start);
@@ -41,11 +42,11 @@ public sealed class CorrectiveActionChangeWorkTests
         Assert.NotEqual(before.Responsible.Id, current.Responsible.Id);
     }
 
-    static async Task ProjectAsync(FitzCorrectiveActionWorkItemDirectory directory, IDomainEventReader events,
+    static async Task ProjectAsync(CassieCorrectiveActionWorkItemDirectory directory, IDomainEventReader events,
         EventStreamPattern pattern, ProjectionCheckpoint checkpoint)
     {
         await using var batch = await directory.BeginAsync(new ProjectionBatchContext(new CheckpointIdentity(
-            FitzCorrectiveActionWorkItemDirectory.ProjectorName, pattern), checkpoint));
+            CassieCorrectiveActionWorkItemDirectory.ProjectorName, pattern), checkpoint));
         var cursor = checkpoint.Cursor;
         await foreach (var record in events.ReadAsync(pattern, cursor, CancellationToken.None))
         {

@@ -2,7 +2,6 @@ using Cntryl.Cassie.Commands;
 using Cntryl.Portia;
 using Microsoft.Extensions.DependencyInjection;
 using Bdgrz.Compliance.Features.Remediation.Commands;
-using Bdgrz.Compliance.Features.Remediation.Events;
 using Bdgrz.Compliance.Features.Remediation.Readers;
 using Bdgrz.Compliance.Features.Work.Readers;
 using Bdgrz.Compliance.Features.Work.Services;
@@ -88,7 +87,7 @@ public sealed class CassieRemediationWorkRepositoryTests
         }
         var published = await repository.LoadProjectedProgramAsync(fixture.TenantId, fixture.ProgramId);
         var publishedRevision = await repository.LoadRevisionAsync(fixture.TenantId);
-        var candidateCheckpoint = await repository.LoadCheckpointAsync(candidate);
+        var candidateCheckpoint = await ((IProjectionStore)repository).LoadCheckpointAsync(candidate);
         await ProjectAsync(repository, CassieCorrectiveActionWorkItemDirectory.ProjectorName, pattern,
             ProjectionCheckpoint.Start, events, repository.ApplyAsync);
 
@@ -206,8 +205,12 @@ public sealed class CassieRemediationWorkRepositoryTests
             provider.GetRequiredService<IDomainEventReader>(), repository.ApplyAsync);
         await using var connection = await database.DataSource.OpenConnectionAsync();
         await using var command = connection.CreateCommand();
-        command.CommandText = "UPDATE work_corrective_actions SET payload = jsonb_set(payload, '{tenant_id}', CAST(@tenant AS JSONB))";
-        _ = command.Parameters.Add(new CassieParameter { ParameterName = "tenant", Value = "\"" + Uuid.CreateVersion4() + "\"" });
+        command.CommandText = "SELECT CAST(payload AS TEXT) FROM work_corrective_actions";
+        var original = Assert.IsType<string>(await command.ExecuteScalarAsync());
+        var poisoned = original.Replace(fixture.TenantId.ToString(), Uuid.CreateVersion4().ToString(), StringComparison.Ordinal);
+        Assert.NotEqual(original, poisoned);
+        command.CommandText = "UPDATE work_corrective_actions SET payload = CAST(@payload AS JSONB)";
+        _ = command.Parameters.Add(new CassieParameter { ParameterName = "payload", Value = poisoned });
         Assert.Equal(1, await command.ExecuteNonQueryAsync());
 
         // Act

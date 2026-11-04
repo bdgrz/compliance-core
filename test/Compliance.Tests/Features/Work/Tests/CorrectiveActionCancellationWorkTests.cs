@@ -1,4 +1,4 @@
-using Cntryl.Fitz.Testing;
+using Bdgrz.Compliance.Tests.Testing;
 using Cntryl.Portia;
 using Microsoft.Extensions.DependencyInjection;
 using Bdgrz.Compliance.Features.Remediation.Commands;
@@ -14,6 +14,7 @@ public sealed class CorrectiveActionCancellationWorkTests
     public async Task ShouldReplaceActionWorkWithIndependentClosureWorkGivenCancellationProjected()
     {
         // Arrange
+        await using var database = await CassieRepositoryTestDatabase.OpenAsync();
         var fixture = await OperationsFixture.CreateAsync();
         await using var provider = fixture.Provider;
         var finding = await fixture.RaiseFindingAsync(fixture.OwnerMemberId);
@@ -22,12 +23,12 @@ public sealed class CorrectiveActionCancellationWorkTests
         await using var scope = provider.CreateAsyncScope();
         var reader = scope.ServiceProvider.GetRequiredService<FindingReader>();
         var events = scope.ServiceProvider.GetRequiredService<IDomainEventReader>();
-        var work = new FitzCorrectiveActionWorkItemDirectory(new InMemoryKvClient(), reader, TimeProvider.System);
-        var closures = new FitzFindingClosureWorkItemDirectory(new InMemoryKvClient(), reader, TimeProvider.System);
+        await using var work = new CassieCorrectiveActionWorkItemDirectory(database.Database, reader, TimeProvider.System);
+        await using var closures = new CassieFindingClosureWorkItemDirectory(database.Database, reader, TimeProvider.System);
         var pattern = work.SourcePattern(fixture.TenantId);
-        await ProjectAsync(work, FitzCorrectiveActionWorkItemDirectory.ProjectorName, pattern,
+        await ProjectAsync(work, CassieCorrectiveActionWorkItemDirectory.ProjectorName, pattern,
             ProjectionCheckpoint.Start, events, work.ApplyAsync);
-        await ProjectAsync(closures, FitzFindingClosureWorkItemDirectory.ProjectorName, pattern,
+        await ProjectAsync(closures, CassieFindingClosureWorkItemDirectory.ProjectorName, pattern,
             ProjectionCheckpoint.Start, events, closures.ApplyAsync);
         Assert.Single((await work.LoadProjectedProgramAsync(fixture.TenantId, fixture.ProgramId)).Value);
         Assert.Empty((await closures.LoadProjectedProgramAsync(fixture.TenantId, fixture.ProgramId)).Value);
@@ -38,9 +39,9 @@ public sealed class CorrectiveActionCancellationWorkTests
         var cancelled = await fixture.AsAsync(fixture.LeadUserId, new CancelCorrectiveAction(Uuid.CreateVersion4(),
             fixture.TenantId, fixture.ProgramId, finding.FindingId, action.Revision, action.ActionId,
             "Duplicate; retained action removes access."));
-        await ProjectAsync(work, FitzCorrectiveActionWorkItemDirectory.ProjectorName, pattern, workCheckpoint, events,
+        await ProjectAsync(work, CassieCorrectiveActionWorkItemDirectory.ProjectorName, pattern, workCheckpoint, events,
             work.ApplyAsync);
-        await ProjectAsync(closures, FitzFindingClosureWorkItemDirectory.ProjectorName, pattern, closureCheckpoint, events,
+        await ProjectAsync(closures, CassieFindingClosureWorkItemDirectory.ProjectorName, pattern, closureCheckpoint, events,
             closures.ApplyAsync);
         var actionWork = await work.LoadProgramAsync(fixture.TenantId, fixture.ProgramId);
         var closureWork = await closures.LoadProgramAsync(fixture.TenantId, fixture.ProgramId);
