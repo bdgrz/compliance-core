@@ -71,7 +71,6 @@ public sealed class TechnologyInventoryAggregateTests
     [Theory]
     [InlineData("server", null, null, null)]
     [InlineData("cloud_account", null, null, null)]
-    [InlineData("network", "instance", null, null)]
     [InlineData("endpoint_class", null, null, "MDM")]
     [InlineData("network", null, 3, null)]
     public void ShouldRejectBeforeAppendGivenInvalidComponentShape(string category,
@@ -96,7 +95,7 @@ public sealed class TechnologyInventoryAggregateTests
     }
 
     [Fact]
-    public void ShouldKeyCloudAccountBySystemInstanceGivenCloudAccountComponent()
+    public void ShouldRefuseDuplicateCloudAccountGivenComponentRecording()
     {
         // Arrange
         var instanceId = Uuid.CreateVersion4();
@@ -109,9 +108,27 @@ public sealed class TechnologyInventoryAggregateTests
         var rejected = other.Record(content, Author, Now);
 
         // Assert
-        Assert.True(accepted.IsSuccess);
-        Assert.Equal(instanceId, accepted.Value.ComponentId);
+        Assert.Equal(RequestErrorKind.Validation, accepted.Error!.Kind);
         Assert.Equal(RequestErrorKind.Validation, rejected.Error!.Kind);
+        Assert.Empty(new AggregateScenario<TechnologyComponent>(matching).PendingEvents);
+        Assert.Empty(new AggregateScenario<TechnologyComponent>(other).PendingEvents);
+    }
+
+    [Fact]
+    public void ShouldKeepIndependentComponentIdentityGivenCloudAccountReference()
+    {
+        // Arrange
+        var id = Uuid.CreateVersion4();
+        var instance = Uuid.CreateVersion4();
+        var component = new TechnologyComponent(TenantId, id);
+
+        // Act
+        var result = component.Record(Component("repository", "api") with { SystemInstanceId = instance }, Author, Now);
+
+        // Assert
+        Assert.True(result.IsSuccess, result.Error?.Message);
+        Assert.Equal(id, component.Id);
+        Assert.Equal(instance, component.Content!.SystemInstanceId);
     }
 
     [Fact]

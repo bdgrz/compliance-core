@@ -162,7 +162,7 @@ public sealed class AccessRemediationTests
 
         // Assert
         Assert.Contains("verified", refused.Message, StringComparison.Ordinal);
-        Assert.Equal("launched", after.Status);
+        Assert.Equal("active", after.Status);
         var original = before.Items.Single(item => item.Item.ItemId == itemId);
         var current = after.Items.Single(item => item.Item.ItemId == itemId);
         Assert.Equal(original.Revision, current.Revision);
