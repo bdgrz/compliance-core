@@ -120,6 +120,41 @@ public sealed class WithdrawEvidenceSupportHandlerTests
         Assert.Equal(2UL, owner.CommittedStreamPosition);
     }
 
+    [Theory]
+    [InlineData("suspended", false)]
+    [InlineData("deprovisioned", false)]
+    [InlineData("expired", false)]
+    [InlineData("suspended", true)]
+    [InlineData("deprovisioned", true)]
+    [InlineData("expired", true)]
+    public async Task ShouldRefuseWithoutAppendGivenMemberLosesCurrentAuthority(string loss, bool acceptedRetry)
+    {
+        // Arrange
+        await using var fixture = new Fixture();
+        var today = DateOnly.FromDateTime(Now.UtcDateTime);
+        await fixture.SeedMemberAsync(loss == "expired" ? "guest" : "client_personnel",
+            loss == "expired" ? today : null);
+        var link = await fixture.SeedLinkAsync();
+        var request = fixture.Request(link.CommandId);
+        if (acceptedRetry)
+            Assert.True((await fixture.Handler().HandleAsync(fixture.Context(request), CancellationToken.None)).IsSuccess);
+        var before = await fixture.ReadAsync(link.CommandId);
+        await fixture.LoseMemberAuthorityAsync(loss);
+        fixture.Permissions.Requested.Clear();
+
+        // Act
+        var result = await fixture.Handler().HandleAsync(fixture.Context(request), CancellationToken.None);
+        var after = await fixture.ReadAsync(link.CommandId);
+
+        // Assert
+        Assert.Equal(RequestErrorKind.Forbidden, result.Error?.Kind);
+        Assert.Equal(before.CommittedStreamPosition, after.CommittedStreamPosition);
+        Assert.Equal(before.View(), after.View());
+        Assert.Equal(before.Withdrawal, after.Withdrawal);
+        Assert.Equal(!acceptedRetry, after.IsActive);
+        Assert.Empty(fixture.Permissions.Requested);
+    }
+
     [Fact]
     public async Task ShouldKeepExactRetryAndRejectChangedReasonGivenCommittedWithdrawal()
     {
@@ -226,6 +261,7 @@ public sealed class WithdrawEvidenceSupportHandlerTests
         public Uuid ProgramId { get; } = Uuid.CreateVersion4();
         public Uuid UserId { get; } = Uuid.CreateVersion4();
         public Permissions Permissions { get; } = new();
+        public FixedClock Clock { get; } = new();
         public IAggregateReader Reader => _scope.ServiceProvider.GetRequiredService<IAggregateReader>();
         public IAggregateWriter Writer => _scope.ServiceProvider.GetRequiredService<IAggregateWriter>();
         public ClaimsPrincipal Actor => new(new ClaimsIdentity(
@@ -243,7 +279,7 @@ public sealed class WithdrawEvidenceSupportHandlerTests
         }
 
         public WithdrawEvidenceSupportHandler Handler() => new(
-            _scope.ServiceProvider.GetRequiredService<IAggregateExecutor>(), Reader, Permissions, new FixedClock());
+            _scope.ServiceProvider.GetRequiredService<IAggregateExecutor>(), Reader, Permissions, Clock);
 
         public WithdrawEvidenceSupport Request(Uuid supportId) =>
             new(Uuid.CreateVersion4(), TenantId, ProgramId, supportId, 1, "Wrong target version");
@@ -255,11 +291,33 @@ public sealed class WithdrawEvidenceSupportHandlerTests
         public ValueTask<EvidenceSupport> ReadAsync(Uuid id) =>
             Reader.HydrateAsync(new EvidenceSupport(TenantId, ProgramId, id));
 
-        public async Task SeedMemberAsync(string affiliation = "client_personnel")
+        public async Task SeedMemberAsync(string affiliation = "client_personnel", DateOnly? expiresOn = null)
         {
             var member = new Member(TenantId, UserId);
             Assert.True(member.Register(NativeFacts.Root(member, Uuid.CreateVersion4(), "RegisterMember", 0),
-                NativeFacts.Ref(), affiliation).IsSuccess);
+                NativeFacts.Ref(), affiliation, expiresOn).IsSuccess);
+            await Writer.SaveAsync(member, new RequestDispatchContext(RequestActor.System));
+        }
+
+        public async Task LoseMemberAuthorityAsync(string loss)
+        {
+            if (loss == "expired")
+            {
+                Clock.UtcNow = Now.AddDays(1);
+                return;
+            }
+
+            var member = await Reader.HydrateAsync(new Member(TenantId, UserId));
+            var revision = (long)member.MemberRevision;
+            var operation = NativeFacts.Root(member, Uuid.CreateVersion4(),
+                loss == "suspended" ? "SuspendMember" : "DeprovisionMember", revision,
+                member.Id, Now);
+            var result = loss == "suspended"
+                ? member.Suspend(operation, NativeFacts.Ref(), null, member.Id, "Evidence lead", Now,
+                    "Membership authority ended", member.MembershipEpisodeId, revision)
+                : member.Deprovision(operation, NativeFacts.Ref(), null, member.Id, "Evidence lead", Now,
+                    "Membership authority ended", member.MembershipEpisodeId, revision);
+            Assert.True(result.IsSuccess, result.Error?.Message);
             await Writer.SaveAsync(member, new RequestDispatchContext(RequestActor.System));
         }
 
@@ -284,7 +342,8 @@ public sealed class WithdrawEvidenceSupportHandlerTests
 
     sealed class FixedClock : TimeProvider
     {
-        public override DateTimeOffset GetUtcNow() => Now;
+        public DateTimeOffset UtcNow { get; set; } = Now;
+        public override DateTimeOffset GetUtcNow() => UtcNow;
     }
 
     sealed class Permissions : IPermissionAuthorizer
