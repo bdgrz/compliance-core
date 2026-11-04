@@ -153,27 +153,6 @@ public sealed class ServiceIdentity : Aggregate
         return Result<ServiceIdentityRegistration>.Success(new ServiceIdentityRegistration(Id));
     }
 
-    public CommandFailure? Revise(long expectedRevision, ServiceIdentityTerms terms, DateOnly today,
-        ActorReference actor, DateTimeOffset changedAt)
-    {
-        if (!_created)
-            return CommandFailure.MissingRecord("The service identity was not found.");
-        if (expectedRevision != _revision)
-            return CommandFailure.ForVersion(
-                VersionedRecordRules.StaleRevision("service identity", _revision));
-        var validation = Validate(terms, today);
-        if (validation is not null)
-            return CommandFailure.InvalidContent(validation.Message!);
-        var clean = Clean(terms);
-        if (_terms == clean)
-            return null;
-        if (_hasRetired)
-            return CommandFailure.StateConflict("A retired service identity cannot be changed.");
-        RaiseEvent(new ServiceIdentityRevised(_tenantId, Id, _revision + 1, clean, actor,
-            changedAt));
-        return null;
-    }
-
     public CommandFailure? ChangeOwner(long expectedRevision, string ownerKind, Uuid ownerId,
         ActorReference actor, DateTimeOffset changedAt)
     {
