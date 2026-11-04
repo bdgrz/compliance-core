@@ -144,7 +144,7 @@ static class OccurrenceProofs
                     return Result<FirstResponseDescriptor>.Failure(new RequestError(RequestErrorKind.Conflict,
                         "The exact occurrence review source cannot be verified.", failure is ImmutableContentUnavailableException));
                 }
-            }, (owner, frozen) => owner.Review(provenance, review!, frozen, result!)), context, ct).ConfigureAwait(false);
+            }, (owner, frozen) => owner.Review(provenance, review!, frozen, result!, request.Outcome)), context, ct).ConfigureAwait(false);
         return await ControlOperatingContent.ResponseAsync<ControlOccurrenceView>(content, tenantId, outcome, ct).ConfigureAwait(false);
     }
 
