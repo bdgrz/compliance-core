@@ -41,7 +41,7 @@ sealed class CassieFindingClosureWorkItemDirectory(CassieProjectionDatabase data
         await ValidatePreviousRowAsync(tenantId, programId, findingId, ct).ConfigureAwait(false);
         await using var command = CreateCommand("""
             INSERT INTO work_finding_closures (row_key, projection_key, tenant_id, program_id, finding_id, payload)
-            VALUES (@row_key, @projection, @tenant, @program, @finding, CAST(@payload AS JSONB))
+            VALUES (@row_key, @projection, @tenant, @program, @finding, @payload)
             ON CONFLICT (row_key) DO UPDATE SET payload = EXCLUDED.payload
             WHERE work_finding_closures.tenant_id = @tenant
             """);
@@ -80,7 +80,7 @@ sealed class CassieFindingClosureWorkItemDirectory(CassieProjectionDatabase data
         var candidates = new List<WorkCandidate>();
         await using var read = await OpenReadAsync(ct).ConfigureAwait(false);
         await using var command = read.CreateCommand("""
-            SELECT finding_id, CAST(payload AS TEXT) FROM work_finding_closures
+            SELECT finding_id, payload FROM work_finding_closures
             WHERE projection_key = @projection AND tenant_id = @tenant AND program_id = @program
             ORDER BY finding_id
             """);
@@ -120,7 +120,7 @@ sealed class CassieFindingClosureWorkItemDirectory(CassieProjectionDatabase data
     async ValueTask ValidatePreviousRowAsync(Uuid tenantId, Uuid programId, Uuid findingId, CancellationToken ct)
     {
         await using var command = CreateCommand("""
-            SELECT CAST(payload AS TEXT) FROM work_finding_closures
+            SELECT payload FROM work_finding_closures
             WHERE projection_key = @projection AND program_id = @program AND finding_id = @finding
             """);
         _ = command.Parameters.Add(new CassieParameter { ParameterName = "projection", Value = CurrentProjectionKey });

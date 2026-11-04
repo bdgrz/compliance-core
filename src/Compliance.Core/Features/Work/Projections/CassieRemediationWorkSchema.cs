@@ -13,7 +13,7 @@ public static class CassieRemediationWorkSchema
             program_id TEXT NOT NULL,
             finding_id TEXT NOT NULL,
             work_item_id TEXT NOT NULL,
-            payload JSONB NOT NULL
+            payload TEXT NOT NULL
         )
         """,
         """
@@ -34,7 +34,7 @@ public static class CassieRemediationWorkSchema
             tenant_id TEXT NOT NULL,
             program_id TEXT NOT NULL,
             finding_id TEXT NOT NULL,
-            payload JSONB NOT NULL
+            payload TEXT NOT NULL
         )
         """,
         """

@@ -212,11 +212,11 @@ public sealed class CassieRemediationWorkRepositoryTests
             scope.ServiceProvider.GetRequiredService<IDomainEventReader>(), repository.ApplyAsync);
         await using var connection = await database.DataSource.OpenConnectionAsync();
         await using var command = connection.CreateCommand();
-        command.CommandText = "SELECT CAST(payload AS TEXT) FROM work_corrective_actions";
+        command.CommandText = "SELECT payload FROM work_corrective_actions";
         var original = Assert.IsType<string>(await command.ExecuteScalarAsync());
         var poisoned = original.Replace(fixture.TenantId.ToString(), Uuid.CreateVersion4().ToString(), StringComparison.Ordinal);
         Assert.NotEqual(original, poisoned);
-        command.CommandText = "UPDATE work_corrective_actions SET payload = CAST(@payload AS JSONB)";
+        command.CommandText = "UPDATE work_corrective_actions SET payload = @payload";
         _ = command.Parameters.Add(new CassieParameter { ParameterName = "payload", Value = poisoned });
         Assert.Equal(1, await command.ExecuteNonQueryAsync());
 
@@ -260,7 +260,7 @@ public sealed class CassieRemediationWorkRepositoryTests
         await using (var connection = await database.DataSource.OpenConnectionAsync())
         await using (var command = connection.CreateCommand())
         {
-            command.CommandText = $"UPDATE {table} SET payload = CAST(@payload AS JSONB)";
+            command.CommandText = $"UPDATE {table} SET payload = @payload";
             _ = command.Parameters.Add(new CassieParameter { ParameterName = "payload", Value = poisoned });
             Assert.Equal(1, await command.ExecuteNonQueryAsync());
         }
@@ -280,7 +280,7 @@ public sealed class CassieRemediationWorkRepositoryTests
     {
         await using var connection = await database.DataSource.OpenConnectionAsync();
         await using var command = connection.CreateCommand();
-        command.CommandText = $"SELECT CAST(payload AS TEXT) FROM {table}";
+        command.CommandText = $"SELECT payload FROM {table}";
         return Assert.IsType<string>(await command.ExecuteScalarAsync());
     }
 

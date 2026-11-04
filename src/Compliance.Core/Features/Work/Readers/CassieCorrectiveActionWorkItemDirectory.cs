@@ -67,7 +67,7 @@ sealed class CassieCorrectiveActionWorkItemDirectory(CassieProjectionDatabase da
             var item = AccountableWorkItemView.FromCandidate(tenantId, programId, candidate);
             await using var insert = CreateCommand("""
                 INSERT INTO work_corrective_actions (row_key, projection_key, tenant_id, program_id, finding_id, work_item_id, payload)
-                VALUES (@row_key, @projection, @tenant, @program, @finding, @work_item, CAST(@payload AS JSONB))
+                VALUES (@row_key, @projection, @tenant, @program, @finding, @work_item, @payload)
                 """);
             Scope(insert, tenantId, programId, findingId);
             _ = insert.Parameters.Add(new CassieParameter { ParameterName = "row_key", Value = RowKey(programId, item.WorkItemId) });
@@ -111,7 +111,7 @@ sealed class CassieCorrectiveActionWorkItemDirectory(CassieProjectionDatabase da
         var candidates = new List<WorkCandidate>();
         await using var read = await OpenReadAsync(ct).ConfigureAwait(false);
         await using var command = read.CreateCommand("""
-            SELECT finding_id, work_item_id, CAST(payload AS TEXT) FROM work_corrective_actions
+            SELECT finding_id, work_item_id, payload FROM work_corrective_actions
             WHERE projection_key = @projection AND tenant_id = @tenant AND program_id = @program
             ORDER BY work_item_id
             """);
@@ -145,7 +145,7 @@ sealed class CassieCorrectiveActionWorkItemDirectory(CassieProjectionDatabase da
     async ValueTask ValidatePreviousRowsAsync(Uuid tenantId, Uuid programId, Uuid findingId, CancellationToken ct)
     {
         await using var command = CreateCommand("""
-            SELECT CAST(payload AS TEXT) FROM work_corrective_actions
+            SELECT payload FROM work_corrective_actions
             WHERE projection_key = @projection AND tenant_id = @tenant AND program_id = @program AND finding_id = @finding
             """);
         Scope(command, tenantId, programId, findingId);
