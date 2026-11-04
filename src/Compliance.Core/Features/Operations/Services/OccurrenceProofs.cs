@@ -120,7 +120,8 @@ static class OccurrenceProofs
                     var waiver = prepared.Value.Waiver;
                     var actions = request.RequestedActions ?? [];
                     var failure = ControlOperationRules.CheckReview(current, tenantId, request.ExpectedRevision,
-                        request.AttestationId, request.Outcome, request.Rationale, actions, actor.MemberId, now, waiver);
+                        request.AttestationId, request.Outcome, request.Rationale, actions, actor.MemberId, now, waiver,
+                        request.FindingDecision, request.FindingRationale);
                     if (failure is not null)
                         return Result<FirstResponseDescriptor>.Failure(failure.ToRequestError());
                     var gate = owner.PrepareProof(request.ExpectedRevision, false);
@@ -129,7 +130,8 @@ static class OccurrenceProofs
                     var attestation = current.Attestations[^1];
                     var view = new ControlOccurrenceReviewView(request.CommandId, request.AttestationId, attestation.Version,
                         request.Outcome, request.Rationale.Trim(), actions.Select(static item => item.Trim()).ToArray(),
-                        actor.MemberId, ActorReference.ForMember(actor.MemberId, actor.Display), now, waiver?.Id);
+                        actor.MemberId, ActorReference.ForMember(actor.MemberId, actor.Display), now, waiver?.Id,
+                        request.FindingDecision ?? (actions.Count > 0 ? "raise" : null), request.FindingRationale?.Trim());
                     review = await ControlOperatingContent.WriteAsync(content, tenantId,
                         ControlOperatingContent.ReviewSchema, view, token).ConfigureAwait(false);
                     var frozen = await FreezeAsync(content, tenantId,

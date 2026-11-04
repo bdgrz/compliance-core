@@ -15,7 +15,8 @@ namespace Bdgrz.Compliance.Features.Operations.Commands;
 [Discriminator("bdgrz.control.occurrence.review", 2)]
 public sealed record ReviewControlOccurrence(Uuid CommandId, Uuid TenantId, Uuid ProgramId, Uuid ControlId,
     Uuid OccurrenceId, long ExpectedRevision, Uuid AttestationId, string Outcome, string Rationale,
-    IReadOnlyList<string>? RequestedActions = null, Uuid? SeparationOfDutiesWaiverId = null)
+    IReadOnlyList<string>? RequestedActions = null, Uuid? SeparationOfDutiesWaiverId = null,
+    string? FindingDecision = null, string? FindingRationale = null)
     : IRequest<ControlOccurrenceView>, IControlOperationRequest, IClientManagementMutationRequest,
         IIdentifiedRequest, ICallable
 {

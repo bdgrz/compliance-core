@@ -10,4 +10,5 @@ namespace Bdgrz.Compliance.Features.Operations.Models;
 public sealed record ControlOccurrenceReviewView(Uuid DecisionId, Uuid AttestationId,
     int AttestationVersion, string Outcome, string Rationale,
     IReadOnlyList<string> RequestedActions, Uuid ReviewerMemberId, ActorReference ReviewedBy,
-    DateTimeOffset ReviewedAt, Uuid? SeparationOfDutiesWaiverId = null);
+    DateTimeOffset ReviewedAt, Uuid? SeparationOfDutiesWaiverId = null,
+    string? FindingDecision = null, string? FindingRationale = null);

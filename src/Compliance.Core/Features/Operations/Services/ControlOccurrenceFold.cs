@@ -117,7 +117,8 @@ public static class ControlOccurrenceFold
     public static ControlOccurrenceView Present(ControlOccurrenceView view, DateOnly? today)
     {
         ArgumentNullException.ThrowIfNull(view);
-        return view.State == ControlOperationStates.Open && view.DueOn is { } due && today is { } asOf && due < asOf
+        return view.State == ControlOperationStates.Open && (view.PeriodEnd ?? view.DueOn) is { } end &&
+            today is { } asOf && end < asOf
             ? view with { State = ControlOperationStates.Missed }
             : view;
     }
