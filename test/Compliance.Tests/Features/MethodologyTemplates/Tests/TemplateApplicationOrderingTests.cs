@@ -165,6 +165,31 @@ public sealed class TemplateApplicationOrderingTests
         Assert.Null(replay.Aggregate.OutcomeFor("control"));
     }
 
+    [Fact]
+    public void ShouldPlanFullDifferencesGivenSkippedPublicationAndRemovedEntry()
+    {
+        // Arrange
+        IReadOnlyList<MethodologyTemplateRecordContent> previous =
+        [
+            new("changed", "control", "Original", "Old summary", []),
+            new("unchanged", "policy", "Stable", "Same summary", []),
+            new("removed", "risk", "Retained client content", "No overwrite", []),
+        ];
+        IReadOnlyList<MethodologyTemplateRecordContent> selected =
+        [
+            new("changed", "control", "New content", "Changed two publications ago", []),
+            new("unchanged", "policy", "Stable", "Same summary", []),
+            new("added", "risk", "New draft", "New summary", []),
+        ];
+
+        // Act
+        var plan = Bdgrz.Compliance.Features.MethodologyTemplates.Services.TemplateApplicationEntries.Plan(previous, selected);
+
+        // Assert
+        Assert.Equal(["added"], plan.Create);
+        Assert.Equal(["changed"], plan.Propose);
+    }
+
     static AggregateScenario<TemplateApplication> Scenario() => new(new TemplateApplication(Tenant, Program, Template, true));
 
     static Result Apply(TemplateApplication owner, Uuid command, long version) => owner.ApplyVersion(command,
