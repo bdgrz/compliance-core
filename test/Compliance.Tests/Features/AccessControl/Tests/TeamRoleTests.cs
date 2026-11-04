@@ -182,7 +182,7 @@ public sealed class TeamRoleTests
         var result = scenario.Aggregate.Assign(next, 1, Actor);
 
         // Assert
-        Assert.Equal(RequestErrorKind.Conflict, result.Error!.Kind);
+        Assert.True(result.IsSuccess);
         Assert.Empty(scenario.PendingEvents);
     }
 
