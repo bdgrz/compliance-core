@@ -1,8 +1,10 @@
 using Cntryl.Portia;
+using Bdgrz.Compliance.Features.AccessControl.Aggregates;
 using Bdgrz.Compliance.Features.Remediation.Commands;
 using Bdgrz.Compliance.Features.Remediation.Models;
 using Bdgrz.Compliance.Tests.Features.Operations.Tests;
 using Bdgrz.Compliance.Tests.Features.Readiness.Tests;
+using Bdgrz.Compliance.Tests.Features.Programs.Tests;
 using Bdgrz.Compliance.Tests.Testing;
 namespace Bdgrz.Compliance.Tests.Features.Remediation.Tests;
 
@@ -82,6 +84,64 @@ public sealed class CorrectiveActionChangeWorkflowTests
         Assert.Equal(before.Version, after.Version);
         Assert.Equal(3, after.Revision);
         Assert.Equal("A later correction.", after.Changed!.Description);
+    }
+
+    [Fact]
+    public async Task ShouldRefuseFrozenResponseWithoutAppendGivenChangePermissionRevoked()
+    {
+        // Arrange
+        var fixture = await OperationsFixture.CreateAsync();
+        await using var provider = fixture.Provider;
+        var finding = await OpenAsync(fixture);
+        var request = Change(fixture, finding);
+        var accepted = await fixture.AsAsync(fixture.LeadUserId, request);
+        var before = await fixture.ActionAsync(finding.FindingId, request.ActionId);
+        Assert.NotEqual(fixture.LeadMemberId, finding.OwnerMemberId);
+        Assert.True(fixture.Permissions.Managers.Remove(fixture.LeadMemberId));
+
+        // Act
+        await fixture.Scenario(fixture.LeadUserId).When(request)
+            .ExpectFailure(RequestErrorKind.Forbidden);
+        var refused = await fixture.ActionAsync(finding.FindingId, request.ActionId);
+        fixture.Permissions.Managers.Add(fixture.LeadMemberId);
+        var restored = await fixture.AsAsync(fixture.LeadUserId, request);
+        var after = await fixture.ActionAsync(finding.FindingId, request.ActionId);
+
+        // Assert
+        Assert.Equal(before.Version, refused.Version);
+        Assert.Equal(before.Version, after.Version);
+        Assert.Equal(before.Revision, after.Revision);
+        Assert.Equal(WireJson.Of(accepted), WireJson.Of(restored));
+    }
+
+    [Theory]
+    [InlineData(false, false)]
+    [InlineData(false, true)]
+    [InlineData(true, false)]
+    [InlineData(true, true)]
+    public async Task ShouldRefuseWithoutAppendGivenFindingOwnerMembershipEnded(bool retry, bool deprovisioned)
+    {
+        // Arrange
+        var fixture = await OperationsFixture.CreateAsync();
+        await using var provider = fixture.Provider;
+        var finding = await OpenAsync(fixture);
+        var request = Change(fixture, finding);
+        if (retry)
+            await fixture.AsAsync(fixture.OwnerUserId, request);
+        await ProgramManagementServices.SeedAsync(provider, new Member(fixture.TenantId, fixture.OwnerUserId),
+            member => deprovisioned
+                ? member.Deprovision(fixture.LeadMemberId, "Lead", DateTimeOffset.UtcNow, "Left.")
+                : member.Suspend(fixture.LeadMemberId, "Lead", DateTimeOffset.UtcNow, "Suspended."));
+        var before = await fixture.ActionAsync(finding.FindingId, request.ActionId);
+
+        // Act
+        await fixture.Scenario(fixture.OwnerUserId).When(request)
+            .ExpectFailure(RequestErrorKind.Forbidden);
+        var after = await fixture.ActionAsync(finding.FindingId, request.ActionId);
+
+        // Assert
+        Assert.Equal(before.Version, after.Version);
+        Assert.Equal(before.Revision, after.Revision);
     }
 
     [Fact]

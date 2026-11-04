@@ -31,6 +31,24 @@ public sealed class ChangeCorrectiveActionHandler(NativeOperationExecutor operat
         var actor = OperationsActor.From(context.Actor, request.TenantId);
         var changedBy = ActorReference.ForMember(actor.MemberId, actor.Display);
         var now = clock.GetUtcNow();
+        var actingMember = await reader.HydrateAsync(Member.ForVerification(request.TenantId, actor.MemberId), ct)
+            .ConfigureAwait(false);
+        if (!actingMember.IsAccessEligibleOn(DateOnly.FromDateTime(now.UtcDateTime)) ||
+            actingMember.UserId != actor.UserId || actingMember.Affiliation == "firm_staff")
+            return Result<FindingView>.Failure(new RequestError(RequestErrorKind.Forbidden,
+                "Only an active client member may change corrective work."));
+        // Native accepted retries bypass preparation, so current authority must precede receipt replay.
+        if (!await permissions.IsAllowedAsync(request.TenantId, actor.UserId, actor.MemberId,
+                CorrectiveActionPermissions.Change, ct).ConfigureAwait(false))
+        {
+            var current = await findings.ReadOneAsync(request.TenantId, request.ProgramId, request.FindingId, now, ct)
+                .ConfigureAwait(false);
+            if (!current.IsSuccess)
+                return Result<FindingView>.Failure(current.Error!);
+            if (current.Value!.OwnerMemberId != actor.MemberId)
+                return Result<FindingView>.Failure(new RequestError(RequestErrorKind.Forbidden,
+                    "Only the finding owner or a member with corrective-action change permission may change this action."));
+        }
         var snapshot = new CorrectiveAction(request.TenantId, request.ProgramId, request.FindingId,
             request.ActionId, request.CommandId);
         var provenance = FindingContent.Provenance(request.CommandId, nameof(ChangeCorrectiveAction), snapshot.Stream,
