@@ -12,4 +12,5 @@ public sealed record ApprovePolicyRetirement(Uuid CommandId, Uuid TenantId, Uuid
     : IRequest<PolicyDecisionView>, IProgramScopedRequest, IClientManagementMutationRequest, IIdentifiedRequest, ICallable
 {
     Uuid IIdentifiedRequest.RequestId => CommandId;
+    string IProgramScopedRequest.RequiredPermission => "policies.approve";
 }

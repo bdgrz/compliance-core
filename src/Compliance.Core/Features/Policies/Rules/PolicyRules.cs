@@ -440,7 +440,7 @@ public sealed class PolicyRules
 
     /// <summary>
     ///     Approves the exact reviewed revision as the next immutable version. The approver must be
-    ///     independent of every author of the revision and of its accepted reviewer.
+    ///     independent of every author of the revision; its accepted reviewer may approve.
     /// </summary>
     public CommandFailure? Approve(Uuid programId, long expectedRevision, Uuid decisionId,
         Uuid acceptedReviewDecisionId, DateOnly effectiveFrom, bool major, string rationale,
@@ -453,11 +453,10 @@ public sealed class PolicyRules
         if (!_draftOpen)
             return CommandFailure.StateConflict(
                 "Only an open policy draft can be approved. Retirement uses its own approval.");
-        var conflict = _pendingAuthors.Contains(approverMemberId) ||
-                       _acceptedReview?.ReviewerMemberId == approverMemberId;
+        var conflict = _pendingAuthors.Contains(approverMemberId);
         if (CheckIndependence(approverMemberId, conflict, SeparationOfDutiesActions.Approve,
                 decidedAt, waiver,
-                "A policy approver must be independent of its authors and accepted reviewer.") is
+                "A policy approver must be independent of its authors.") is
             { } sod)
             return sod;
         if (_acceptedReview is not { } accepted || accepted.DecisionId != acceptedReviewDecisionId)
@@ -553,11 +552,10 @@ public sealed class PolicyRules
             return target;
         if (_pendingRetirement is not { } pending)
             return CommandFailure.StateConflict("The policy has no pending retirement.");
-        var conflict = _pendingAuthors.Contains(approverMemberId) ||
-                       _acceptedReview?.ReviewerMemberId == approverMemberId;
+        var conflict = _pendingAuthors.Contains(approverMemberId);
         if (CheckIndependence(approverMemberId, conflict, SeparationOfDutiesActions.Approve,
                 decidedAt, waiver,
-                "A retirement approver must be independent of its proposer and accepted reviewer.") is
+                "A retirement approver must be independent of its proposer.") is
             { } sod)
             return sod;
         if (_acceptedReview is not { } accepted || accepted.DecisionId != acceptedReviewDecisionId)

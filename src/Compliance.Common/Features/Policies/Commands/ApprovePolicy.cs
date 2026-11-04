@@ -16,4 +16,5 @@ public sealed record ApprovePolicy(Uuid CommandId, Uuid TenantId, Uuid ProgramId
     : IRequest<PolicyVersionView>, IProgramScopedRequest, IClientManagementMutationRequest, IIdentifiedRequest, ICallable
 {
     Uuid IIdentifiedRequest.RequestId => CommandId;
+    string IProgramScopedRequest.RequiredPermission => "policies.approve";
 }

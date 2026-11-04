@@ -73,11 +73,15 @@ public static class PolicyAudience
     ///     current employee and contractor; <c>role_targeted</c> covers every current worker whose
     ///     roster team (department) is named.
     /// </summary>
+    public static bool IsCurrent(FrozenWorkRelationship relationship, DateOnly? asOf = null) =>
+        relationship.LifecycleStatus is "active" or "on_leave" &&
+        (asOf is null || relationship.StartDate <= asOf.Value);
+
     public static bool Matches(string kind, IReadOnlyList<string> teams,
-        FrozenWorkRelationship relationship)
+        FrozenWorkRelationship relationship, DateOnly? asOf = null)
     {
         ArgumentNullException.ThrowIfNull(relationship);
-        if (relationship.LifecycleStatus == "ended")
+        if (!IsCurrent(relationship, asOf))
             return false;
         return kind == CoreSecurity
             ? relationship.WorkerType is "employee" or "contractor"

@@ -48,9 +48,9 @@ public sealed record RosterAudience(IReadOnlyDictionary<Uuid, RosterMatch> Match
                      .OrderBy(static relationship => relationship.SourceWorkerId,
                          StringComparer.Ordinal))
         {
-            if (relationship.LifecycleStatus != "ended")
+            if (PolicyAudience.IsCurrent(relationship, DateOnly.FromDateTime(roster.FrozenAt.UtcDateTime)))
                 present.Add(relationship.PersonId);
-            if (!PolicyAudience.Matches(kind, teams, relationship))
+            if (!PolicyAudience.Matches(kind, teams, relationship, DateOnly.FromDateTime(roster.FrozenAt.UtcDateTime)))
                 continue;
             var name = names.GetValueOrDefault(relationship.PersonId) ?? "Unknown person";
             matching[relationship.PersonId] = matching.TryGetValue(relationship.PersonId,
