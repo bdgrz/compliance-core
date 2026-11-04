@@ -117,9 +117,9 @@ sealed class CassieMethodologyTemplateDirectory(CassieProjectionDatabase databas
         var after = cursor is null ? "" : "AND (first_published_ticks > @ticks OR (first_published_ticks = @ticks AND template_id > @template))";
         await using var command = read.CreateCommand($"""
             SELECT template_id, first_published_ticks, separate_draft_line FROM {CassieMethodologyTemplateSchema.Catalog}
-            WHERE projection_key = @scope {after} ORDER BY first_published_ticks, template_id LIMIT @take
+            WHERE projection_key = @scope {after} ORDER BY first_published_ticks, template_id LIMIT {(take + 1).ToString(CultureInfo.InvariantCulture)}
             """);
-        Bind(command, ("scope", key), ("take", take + 1));
+        Bind(command, ("scope", key));
         if (cursor is not null)
             Bind(command, ("ticks", ticks), ("template", template.ToString()));
         var rows = new List<MethodologyTemplateCatalogIdentity>();
