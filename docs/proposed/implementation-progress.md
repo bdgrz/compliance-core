@@ -50,7 +50,7 @@ against executable behavior and tests. It does not mean that the context has no 
 | [Platform access](contexts/platform-access.md) | Not mapped | Full requirement mapping and workflow validation pending |
 | [Firm services](contexts/firm-services.md) | Not mapped | Full requirement mapping and workflow validation pending |
 | [Program and scope](contexts/program-and-scope.md) | Not mapped | Full requirement mapping and workflow validation pending |
-| [Workforce assurance](contexts/workforce-assurance.md) | Partial: ended work relationships and retired service identities are terminal; see existing owner reviews | Full requirement mapping and workflow validation pending |
+| [Workforce assurance](contexts/workforce-assurance.md) | Partial: named WorkRelationship lifecycle/changes and computed unsponsored gap; retired service identities are terminal | Full requirement mapping and workflow validation pending |
 | [Application inventory](contexts/application-inventory.md) | Not mapped | Full requirement mapping and workflow validation pending |
 | [Technology and information inventory](contexts/technology-and-information-inventory.md) | Not mapped | Full requirement mapping and workflow validation pending |
 | [Examinations](contexts/examinations.md) | Not mapped | Full requirement mapping and workflow validation pending |
@@ -60,7 +60,7 @@ against executable behavior and tests. It does not mean that the context has no 
 | [Control environment](contexts/control-environment.md) | Not mapped | Full requirement mapping and workflow validation pending |
 | [Evidence](contexts/evidence.md) | Not mapped | Full requirement mapping and workflow validation pending |
 | [Retention](contexts/retention.md) | Not mapped | Full requirement mapping and workflow validation pending |
-| [Assurance work](contexts/assurance-work.md) | Product Waiver owner, handlers, authorization and point read locally validated | Finding/CorrectiveAction proposed migration and waiver consumers remain |
+| [Assurance work](contexts/assurance-work.md) | Product Waiver workflow plus Finding severity and CorrectiveAction cancellation locally covered | Finding/CorrectiveAction proposed migration and waiver consumers remain |
 | [Policies](contexts/policies.md) | Not mapped | Full requirement mapping and workflow validation pending |
 | [Risk and provider oversight](contexts/risk-and-provider-oversight.md) | Partial: treatment reviewer independence; see existing owner review | Full requirement mapping and workflow validation pending |
 | [External access governance](contexts/external-access-governance.md) | Not mapped | Full requirement mapping and workflow validation pending |
@@ -69,7 +69,7 @@ against executable behavior and tests. It does not mean that the context has no 
 | [Readiness](contexts/readiness.md) | Not mapped | Full requirement mapping and workflow validation pending |
 | [Advisor collaboration](contexts/advisor-collaboration.md) | Not mapped | Full requirement mapping and workflow validation pending |
 | [Exports](contexts/exports.md) | Not mapped | Full requirement mapping and workflow validation pending |
-| [Firm methodology](contexts/firm-methodology.md) | Per-version outcomes and committed-source opening locally validated | Draft/line migration, entry materialization and parent completion remain |
+| [Firm methodology](contexts/firm-methodology.md) | Per-version outcomes; separate draft owner and committed-source draft opener locally covered | Draft/line migration, entry materialization and parent completion remain |
 | [Work queue](contexts/work-queue.md) | Not mapped | Full requirement mapping and workflow validation pending |
 
 The existing [owner reviews](README.md#aggregate-implementation-evidence) remain
@@ -106,17 +106,19 @@ CI and adversarial/Jev review, then merged as `8dc0f40e`. Post-merge CI also pas
 
 ### Batch 2 source-first checkpoint
 
-The batch contains these integrated source slices. Combined compilation, formatting,
-focused tests and full unit validation are pending; this table does not claim GREEN.
+The batch contains these integrated source slices. Release compilation passed with
+zero warnings/errors and all 797 affected business tests passed. Full-suite and
+format acceptance remain pending; the table distinguishes earlier RED evidence
+from test-first cases first executed at the assembled checkpoint.
 
 | Slice | Prepared behavior | Observed evidence / remaining work |
 | --- | --- | --- |
-| Finding severity (AW-07) | Admit/replay only low, moderate, high; keep Work priority vocabulary separate | Earlier 22-case RED: 14 failed, eight passed. Earlier focused GREEN: 65 passed. Assembled validation pending. |
-| WorkRelationship named changes | Manager, department, sponsor and reasoned date corrections; owner guards, handlers and both projections; manager-chain default Lead grant | Earlier 61-case RED: 54 failed, seven passed. Implementation and new role wiring not yet executed. Initial record/source reconciliation remains. |
-| WorkRelationship unsponsored (WF-06) | Compute current sponsor eligibility with existing observation catch-up; retain field restrictions; no domain fact | 13 authored cases, never executed. Source/Jev checked; whole-context validation pending. |
-| MethodologyTemplateDraft | Separate draft owner, all-author reviewer exclusion, third-person approval, current-review clearing, terminal retry rules; immutable content | Earlier 19-case RED: 18 failed, one passed. Implementation unvalidated. Human commands and line publish/discard choreography remain. |
-| Draft opening | Internal System-only command verifies committed line-start source; global reactor maps source fact | Eight authored cases, never executed. Actual line-start producer remains pending. |
-| Corrective action cancellation | Reasoned Lead cancellation; terminal fences; independent finding closure treatment; work removal and baseline history retain separate cancellation attribution | Authored owner/workflow/consumer tests, never executed. AW-09 finding-owned outcome reporting remains pending. |
+| Finding severity (AW-07) | Admit/replay only low, moderate, high; keep Work priority vocabulary separate | Earlier 22-case RED: 14 failed, eight passed. Earlier focused GREEN: 65 passed. Included in the successful assembled affected suites. |
+| WorkRelationship named changes | Manager, department, sponsor and reasoned date corrections; owner guards, handlers and both projections; manager-chain default Lead grant | Earlier 61-case RED: 54 failed, seven passed. Named implementation and role wiring passed the assembled affected suites. Initial record/source reconciliation remains. |
+| WorkRelationship unsponsored (WF-06) | Compute current sponsor eligibility with existing observation catch-up; retain field restrictions; no domain fact | 13 cases authored before implementation, first executed successfully in assembled affected suites. Whole-context validation pending. |
+| MethodologyTemplateDraft | Separate draft owner, all-author reviewer exclusion, third-person approval, current-review clearing, terminal retry rules; immutable content | Earlier 19-case RED: 18 failed, one passed. Owner implementation passed assembled affected suites. Human commands and line publish/discard choreography remain. |
+| Draft opening | Internal System-only command verifies committed line-start source; global reactor maps source fact | Eight cases authored before implementation, first executed successfully in assembled affected suites. Actual line-start producer remains pending. |
+| Corrective action cancellation | Reasoned Lead cancellation; terminal fences; independent finding closure treatment; work removal and baseline history retain separate cancellation attribution | Owner/workflow/consumer tests first executed successfully in assembled affected suites. AW-09 finding-owned outcome reporting remains pending. |
 
 Worker source reviews and coordinator shared-wiring review called live `jev-1.14.0`.
 Exact questions, source manifests, probabilities and response artifacts are retained
@@ -125,6 +127,13 @@ not proof of successful compilation or runtime behavior. Coordinator wiring revi
 adverse probabilities ranged 0.05–0.18; direct source inspection found no blocker.
 
 ### Parked items and validation failures
+
+- The first assembled full suite ran 8,327 cases: 8,307 passed and 20 failed.
+  Nineteen failures came from two outside Finding seeds still using the removed
+  `medium` severity; the remaining failure was five catalog rows using an issue
+  URL where the existing schema requires a numeric issue ID. Both source seeds and
+  the metadata were corrected. The 51-case affected rerun passed; the complete
+  rerun is pending. No production guard or assertion was weakened.
 
 - Approved Finding source vocabulary requires coordinated authoritative producers;
   legacy AuditObservation binds `examination_item`, which cannot simply be renamed

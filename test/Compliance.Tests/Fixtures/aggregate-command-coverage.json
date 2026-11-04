@@ -1,36 +1,36 @@
 {
   "schemaVersion": 1,
   "capturedAt": "2026-11-04",
-  "sourceCommit": "e798f9f162aa5d1b56d811ad175c11f40e7b9d24",
+  "sourceCommit": "cb85fc3ce971f35b6a4190f04de5f0bd5cbc4919",
   "method": "Roslyn inventory over Compliance.Common and Compliance.Core. It recognizes explicit and target-typed DomainEvent construction that reaches RaiseEvent, AuditEvent, a typed raise callback, a publishing helper, or a returned event value raised by an owning aggregate caller; it also scans On<Fact> reducers, IRequest contracts, IRequestHandler implementations, AddRequestHandler registrations, typed aggregate mutation targets, and source-derived direct callers. Publisher detection uses conventional publisher names and callback type syntax; aggregate call reachability is a syntactic heuristic matched by method name and compatible arity. Neither scan resolves receiver or symbol identity, so same-named calls on unrelated objects can be candidates for human review rather than semantic proof. Legacy emitters remain listed with replay compatibility requirements until a verified stream migration. Test paths are navigation evidence, not proof of fact-specific replay or behavior assertions. The S20 cutover (#1026) splits FindingAggregate from the independent CorrectiveAction owner, admits actions on the finding and closes it through FindingClosureProcess; the legacy RemediationLedger, its migration aggregates and the history migration command were deleted with no dual read path.",
   "factReplayGuards": [],
   "counts": {
-    "domainEventContracts": 543,
-    "factsWithReducer": 518,
-    "factsWithAggregateEmitter": 396,
+    "domainEventContracts": 555,
+    "factsWithReducer": 529,
+    "factsWithAggregateEmitter": 407,
     "auditFactsWithoutReducer": 2,
-    "factsWithoutReducerOrEmitter": 23,
+    "factsWithoutReducerOrEmitter": 24,
     "legacyReducerOnlyFacts": 122,
-    "aggregateTypes": 135,
-    "aggregateTypesWithCommandPath": 100,
-    "requestContracts": 794,
-    "commonRequestContracts": 792,
+    "aggregateTypes": 136,
+    "aggregateTypesWithCommandPath": 101,
+    "requestContracts": 800,
+    "commonRequestContracts": 798,
     "requestClassificationCounts": {
-      "command": 355,
+      "command": 360,
       "confirmed_command_gap": 7,
       "deferred_command": 5,
       "internal_executor_context": 1,
-      "internal_reaction": 151,
+      "internal_reaction": 152,
       "query_or_reconstruction": 275
     },
     "applicationMcpAdapterRequests": 2,
-    "registeredCoreHandlerRegistrations": 752,
+    "registeredCoreHandlerRegistrations": 758,
     "unregisteredCoreHandlerClasses": 0,
-    "unwiredAggregateProducerOperations": 64,
+    "unwiredAggregateProducerOperations": 69,
     "unwiredAggregateProducerClassifications": {
       "direct_processor_executor": 2,
       "legacy_emitter_to_prune": 1,
-      "no_registered_request_route": 61
+      "no_registered_request_route": 66
     },
     "factReplayGuardRows": 0
   },
@@ -3868,6 +3868,27 @@
       "schemaVersion": 1
     },
     {
+      "fact": "CorrectiveActionCancelled",
+      "contract": "src/Compliance.Common/Features/Remediation/Events/CorrectiveActionCancelled.cs",
+      "discriminator": "bdgrz.finding.corrective_action.cancelled",
+      "schemaVersion": 1,
+      "reducers": [
+        {
+          "aggregate": "CorrectiveAction",
+          "source": "src/Compliance.Core/Features/Remediation/Aggregates/CorrectiveAction.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/Remediation/Aggregates/CorrectiveAction.cs"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Examinations/Tests/CorrectiveActionCancellationBaselineTests.cs",
+        "test/Compliance.Tests/Features/Remediation/Tests/CorrectiveActionCancellationTests.cs"
+      ],
+      "disposition": "aggregate_fact",
+      "note": ""
+    },
+    {
       "fact": "CorrectiveActionCompletedV2",
       "contract": "src/Compliance.Common/Features/Remediation/Events/CorrectiveActionCompletedV2.cs",
       "reducers": [
@@ -3903,6 +3924,7 @@
         "src/Compliance.Core/Features/Remediation/Aggregates/CorrectiveAction.cs"
       ],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Remediation/Tests/CorrectiveActionCancellationTests.cs",
         "test/Compliance.Tests/Features/Remediation/Tests/CorrectiveActionLifecycleTests.cs",
         "test/Compliance.Tests/Features/Remediation/Tests/CorrectiveActionNativeHistoryTests.cs"
       ],
@@ -4816,7 +4838,8 @@
       ],
       "testSymbolReferences": [
         "test/Compliance.Tests/AggregateCommandCoverageTests.cs",
-        "test/Compliance.Tests/Features/Incidents/Tests/ComplianceIncidentOperationTests.cs"
+        "test/Compliance.Tests/Features/Incidents/Tests/ComplianceIncidentOperationTests.cs",
+        "test/Compliance.Tests/Features/Remediation/Tests/FindingSeverityTests.cs"
       ],
       "disposition": "aggregate_fact",
       "note": "Emitted by manual and routed creation; the optional initial routed action is a separate admission fact in the same finding stream.",
@@ -5889,6 +5912,98 @@
       "schemaVersion": 3
     },
     {
+      "fact": "MethodologyTemplateDraftAccepted",
+      "contract": "src/Compliance.Common/Features/MethodologyTemplates/Events/MethodologyTemplateDraftAccepted.cs",
+      "discriminator": "bdgrz.methodology-templates.methodology-template-draft-accepted",
+      "schemaVersion": 1,
+      "reducers": [
+        {
+          "aggregate": "MethodologyTemplateDraft",
+          "source": "src/Compliance.Core/Features/MethodologyTemplates/Aggregates/MethodologyTemplateDraft.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/MethodologyTemplates/Aggregates/MethodologyTemplateDraft.cs"
+      ],
+      "testSymbolReferences": [],
+      "disposition": "aggregate_fact",
+      "note": ""
+    },
+    {
+      "fact": "MethodologyTemplateDraftApproved",
+      "contract": "src/Compliance.Common/Features/MethodologyTemplates/Events/MethodologyTemplateDraftApproved.cs",
+      "discriminator": "bdgrz.methodology-templates.methodology-template-draft-approved",
+      "schemaVersion": 1,
+      "reducers": [
+        {
+          "aggregate": "MethodologyTemplateDraft",
+          "source": "src/Compliance.Core/Features/MethodologyTemplates/Aggregates/MethodologyTemplateDraft.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/MethodologyTemplates/Aggregates/MethodologyTemplateDraft.cs"
+      ],
+      "testSymbolReferences": [],
+      "disposition": "aggregate_fact",
+      "note": ""
+    },
+    {
+      "fact": "MethodologyTemplateDraftDiscarded",
+      "contract": "src/Compliance.Common/Features/MethodologyTemplates/Events/MethodologyTemplateDraftDiscarded.cs",
+      "discriminator": "bdgrz.methodology-templates.methodology-template-draft-discarded",
+      "schemaVersion": 1,
+      "reducers": [
+        {
+          "aggregate": "MethodologyTemplateDraft",
+          "source": "src/Compliance.Core/Features/MethodologyTemplates/Aggregates/MethodologyTemplateDraft.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/MethodologyTemplates/Aggregates/MethodologyTemplateDraft.cs"
+      ],
+      "testSymbolReferences": [],
+      "disposition": "aggregate_fact",
+      "note": ""
+    },
+    {
+      "fact": "MethodologyTemplateDraftOpened",
+      "contract": "src/Compliance.Common/Features/MethodologyTemplates/Events/MethodologyTemplateDraftOpened.cs",
+      "discriminator": "bdgrz.methodology-templates.methodology-template-draft-opened",
+      "schemaVersion": 1,
+      "reducers": [
+        {
+          "aggregate": "MethodologyTemplateDraft",
+          "source": "src/Compliance.Core/Features/MethodologyTemplates/Aggregates/MethodologyTemplateDraft.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/MethodologyTemplates/Aggregates/MethodologyTemplateDraft.cs"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/MethodologyTemplates/Tests/MethodologyTemplateDraftOpeningTests.cs"
+      ],
+      "disposition": "aggregate_fact",
+      "note": ""
+    },
+    {
+      "fact": "MethodologyTemplateDraftReturned",
+      "contract": "src/Compliance.Common/Features/MethodologyTemplates/Events/MethodologyTemplateDraftReturned.cs",
+      "discriminator": "bdgrz.methodology-templates.methodology-template-draft-returned",
+      "schemaVersion": 1,
+      "reducers": [
+        {
+          "aggregate": "MethodologyTemplateDraft",
+          "source": "src/Compliance.Core/Features/MethodologyTemplates/Aggregates/MethodologyTemplateDraft.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/MethodologyTemplates/Aggregates/MethodologyTemplateDraft.cs"
+      ],
+      "testSymbolReferences": [],
+      "disposition": "aggregate_fact",
+      "note": ""
+    },
+    {
       "fact": "MethodologyTemplateDraftReviewed",
       "contract": "src/Compliance.Common/Features/MethodologyTemplates/Events/MethodologyTemplateDraftReviewed.cs",
       "reducers": [
@@ -5923,6 +6038,37 @@
       "note": "",
       "discriminator": "bdgrz.methodologytemplates.methodology-template-draft-revised",
       "schemaVersion": 3
+    },
+    {
+      "fact": "MethodologyTemplateDraftRevisedV4",
+      "contract": "src/Compliance.Common/Features/MethodologyTemplates/Events/MethodologyTemplateDraftRevisedV4.cs",
+      "discriminator": "bdgrz.methodologytemplates.methodology-template-draft-revised",
+      "schemaVersion": 4,
+      "reducers": [
+        {
+          "aggregate": "MethodologyTemplateDraft",
+          "source": "src/Compliance.Core/Features/MethodologyTemplates/Aggregates/MethodologyTemplateDraft.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/MethodologyTemplates/Aggregates/MethodologyTemplateDraft.cs"
+      ],
+      "testSymbolReferences": [],
+      "disposition": "aggregate_fact",
+      "note": ""
+    },
+    {
+      "fact": "MethodologyTemplateDraftStarted",
+      "contract": "src/Compliance.Common/Features/MethodologyTemplates/Events/MethodologyTemplateDraftStarted.cs",
+      "discriminator": "bdgrz.methodology-templates.methodology-template-draft-started",
+      "schemaVersion": 1,
+      "reducers": [],
+      "emitters": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/MethodologyTemplates/Tests/MethodologyTemplateDraftOpeningTests.cs"
+      ],
+      "disposition": "confirmed_gap",
+      "note": "Confirmed producer gap under #1176: internal draft-opening receiver exists, but the template line Start command and aggregate emission are not implemented in this batch."
     },
     {
       "fact": "MethodologyTemplateRetired",
@@ -6339,6 +6485,7 @@
         "test/Compliance.Tests/Features/Workforce/Tests/FitzPersonDirectoryTests.cs",
         "test/Compliance.Tests/Features/Workforce/Tests/PersonNativeHistoryTests.cs",
         "test/Compliance.Tests/Features/Workforce/Tests/PersonTests.cs",
+        "test/Compliance.Tests/Features/Workforce/Tests/WorkRelationshipNamedChangeHandlerTests.cs",
         "test/Compliance.Tests/Features/Workforce/Tests/WorkforceRosterSnapshotTests.cs",
         "test/Compliance.Tests/Testing/PersonSeeds.cs"
       ],
@@ -10759,6 +10906,50 @@
       "schemaVersion": 1
     },
     {
+      "fact": "WorkRelationshipDatesCorrected",
+      "contract": "src/Compliance.Common/Features/Workforce/Events/WorkRelationshipDatesCorrected.cs",
+      "discriminator": "bdgrz.workforce.work-relationship.dates-corrected",
+      "schemaVersion": 1,
+      "reducers": [
+        {
+          "aggregate": "WorkRelationship",
+          "source": "src/Compliance.Core/Features/Workforce/Aggregates/WorkRelationship.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/Workforce/Aggregates/WorkRelationship.cs"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Workforce/Tests/WorkRelationshipNamedChangeHandlerTests.cs",
+        "test/Compliance.Tests/Features/Workforce/Tests/WorkRelationshipNamedChangeProjectionTests.cs",
+        "test/Compliance.Tests/Features/Workforce/Tests/WorkRelationshipNamedChangesTests.cs"
+      ],
+      "disposition": "aggregate_fact",
+      "note": ""
+    },
+    {
+      "fact": "WorkRelationshipDepartmentChanged",
+      "contract": "src/Compliance.Common/Features/Workforce/Events/WorkRelationshipDepartmentChanged.cs",
+      "discriminator": "bdgrz.workforce.work-relationship.department-changed",
+      "schemaVersion": 1,
+      "reducers": [
+        {
+          "aggregate": "WorkRelationship",
+          "source": "src/Compliance.Core/Features/Workforce/Aggregates/WorkRelationship.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/Workforce/Aggregates/WorkRelationship.cs"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Workforce/Tests/WorkRelationshipNamedChangeHandlerTests.cs",
+        "test/Compliance.Tests/Features/Workforce/Tests/WorkRelationshipNamedChangeProjectionTests.cs",
+        "test/Compliance.Tests/Features/Workforce/Tests/WorkRelationshipNamedChangesTests.cs"
+      ],
+      "disposition": "aggregate_fact",
+      "note": ""
+    },
+    {
       "fact": "WorkRelationshipEnded",
       "contract": "src/Compliance.Common/Features/Workforce/Events/WorkRelationshipEnded.cs",
       "discriminator": "bdgrz.workforce.work-relationship.ended",
@@ -10776,6 +10967,7 @@
         "test/Compliance.Tests/Features/Workforce/Tests/WorkRelationshipLifecycleHandlerTests.cs",
         "test/Compliance.Tests/Features/Workforce/Tests/WorkRelationshipLifecycleProjectionTests.cs",
         "test/Compliance.Tests/Features/Workforce/Tests/WorkRelationshipLifecycleTests.cs",
+        "test/Compliance.Tests/Features/Workforce/Tests/WorkRelationshipSponsorshipTests.cs",
         "test/Compliance.Tests/Features/Workforce/Tests/WorkforceLifecycleObservationTests.cs"
       ],
       "disposition": "aggregate_fact",
@@ -10828,6 +11020,28 @@
       "note": ""
     },
     {
+      "fact": "WorkRelationshipManagerChanged",
+      "contract": "src/Compliance.Common/Features/Workforce/Events/WorkRelationshipManagerChanged.cs",
+      "discriminator": "bdgrz.workforce.work-relationship.manager-changed",
+      "schemaVersion": 1,
+      "reducers": [
+        {
+          "aggregate": "WorkRelationship",
+          "source": "src/Compliance.Core/Features/Workforce/Aggregates/WorkRelationship.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/Workforce/Aggregates/WorkRelationship.cs"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Workforce/Tests/WorkRelationshipNamedChangeHandlerTests.cs",
+        "test/Compliance.Tests/Features/Workforce/Tests/WorkRelationshipNamedChangeProjectionTests.cs",
+        "test/Compliance.Tests/Features/Workforce/Tests/WorkRelationshipNamedChangesTests.cs"
+      ],
+      "disposition": "aggregate_fact",
+      "note": ""
+    },
+    {
       "fact": "WorkRelationshipRecorded",
       "contract": "src/Compliance.Common/Features/Workforce/Events/WorkRelationshipRecorded.cs",
       "reducers": [
@@ -10846,8 +11060,8 @@
         "test/Compliance.Tests/Features/Workforce/Tests/FitzWorkforceObservationDirectoryTests.cs",
         "test/Compliance.Tests/Features/Workforce/Tests/RecordWorkRelationshipHandlerTests.cs",
         "test/Compliance.Tests/Features/Workforce/Tests/WorkRelationshipLifecycleProjectionTests.cs",
-        "test/Compliance.Tests/Features/Workforce/Tests/WorkRelationshipTests.cs",
-        "test/Compliance.Tests/Features/Workforce/Tests/WorkforceLifecycleObservationTests.cs"
+        "test/Compliance.Tests/Features/Workforce/Tests/WorkRelationshipNamedChangeHandlerTests.cs",
+        "test/Compliance.Tests/Features/Workforce/Tests/WorkRelationshipNamedChangeProjectionTests.cs"
       ],
       "disposition": "aggregate_fact",
       "note": "",
@@ -10880,6 +11094,28 @@
       "note": "",
       "discriminator": "bdgrz.workforce.work-relationship.revised",
       "schemaVersion": 1
+    },
+    {
+      "fact": "WorkRelationshipSponsorChanged",
+      "contract": "src/Compliance.Common/Features/Workforce/Events/WorkRelationshipSponsorChanged.cs",
+      "discriminator": "bdgrz.workforce.work-relationship.sponsor-changed",
+      "schemaVersion": 1,
+      "reducers": [
+        {
+          "aggregate": "WorkRelationship",
+          "source": "src/Compliance.Core/Features/Workforce/Aggregates/WorkRelationship.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/Workforce/Aggregates/WorkRelationship.cs"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Workforce/Tests/WorkRelationshipNamedChangeHandlerTests.cs",
+        "test/Compliance.Tests/Features/Workforce/Tests/WorkRelationshipNamedChangeProjectionTests.cs",
+        "test/Compliance.Tests/Features/Workforce/Tests/WorkRelationshipNamedChangesTests.cs"
+      ],
+      "disposition": "aggregate_fact",
+      "note": ""
     },
     {
       "fact": "WorkRelationshipStarted",
@@ -12003,11 +12239,13 @@
       "source": "src/Compliance.Core/Features/Remediation/Aggregates/CorrectiveAction.cs",
       "appliedFacts": [
         "CorrectiveActionAddedV2",
+        "CorrectiveActionCancelled",
         "CorrectiveActionCompletedV2",
         "CorrectiveActionFindingClosureUseAuthorized",
         "CorrectiveActionFindingClosureUseSettled"
       ],
       "commandRequests": [
+        "CancelCorrectiveAction",
         "CompleteCorrectiveAction"
       ],
       "internalReactionRequests": [
@@ -12018,12 +12256,12 @@
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Incidents/Tests/ComplianceIncidentOperationTests.cs",
         "test/Compliance.Tests/Features/Operations/Tests/OperationsFixture.cs",
+        "test/Compliance.Tests/Features/Remediation/Tests/CorrectiveActionCancellationTests.cs",
         "test/Compliance.Tests/Features/Remediation/Tests/CorrectiveActionLifecycleTests.cs",
         "test/Compliance.Tests/Features/Remediation/Tests/CorrectiveActionMaterializationContentTests.cs",
         "test/Compliance.Tests/Features/Remediation/Tests/CorrectiveActionNativeHistoryTests.cs",
         "test/Compliance.Tests/Features/Remediation/Tests/FindingClosureTests.cs",
-        "test/Compliance.Tests/Features/Risks/Tests/RiskActionWorkIdentityTests.cs",
-        "test/Compliance.Tests/Features/Work/Tests/RiskOwnerWorkSourceTests.cs"
+        "test/Compliance.Tests/Features/Risks/Tests/RiskActionWorkIdentityTests.cs"
       ],
       "commandRouteDisposition": "registered_command_route",
       "note": "Independent corrective action owner, materialized from the finding admission at revision one and completed at revision two; closure uses hold it through the source-use reservations."
@@ -12409,7 +12647,7 @@
         "test/Compliance.Tests/Features/Operations/Tests/OperationsFixture.cs",
         "test/Compliance.Tests/Features/Readiness/Tests/PersonalReadinessClosureTransportTests.cs",
         "test/Compliance.Tests/Features/Remediation/Tests/CorrectiveActionAcceptedMaterializationReplayTests.cs",
-        "test/Compliance.Tests/Features/Remediation/Tests/CorrectiveActionLifecycleTests.cs"
+        "test/Compliance.Tests/Features/Remediation/Tests/CorrectiveActionCancellationTests.cs"
       ],
       "commandRouteDisposition": "registered_command_route",
       "note": "Owns finding terms, triage, acceptance links, action admission and the closure decision. Admission and closure seal by generation; the children and closure are completed by processes. No legacy ledger is read."
@@ -12763,6 +13001,7 @@
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/MethodologyTemplates/Tests/MethodologyTemplateCommandHandlerTests.cs",
         "test/Compliance.Tests/Features/MethodologyTemplates/Tests/MethodologyTemplateContributionTests.cs",
+        "test/Compliance.Tests/Features/MethodologyTemplates/Tests/MethodologyTemplateDraftOpeningTests.cs",
         "test/Compliance.Tests/Features/MethodologyTemplates/Tests/MethodologyTemplateNativeHistoryTests.cs",
         "test/Compliance.Tests/Features/MethodologyTemplates/Tests/MethodologyTemplateOwnerTests.cs",
         "test/Compliance.Tests/Features/MethodologyTemplates/Tests/MethodologyTemplateReadHandlerTests.cs",
@@ -12794,6 +13033,28 @@
         "test/Compliance.Tests/Features/MethodologyTemplates/Tests/MethodologyTemplateContributionTests.cs"
       ],
       "commandRouteDisposition": "registered_command_route"
+    },
+    {
+      "aggregate": "MethodologyTemplateDraft",
+      "source": "src/Compliance.Core/Features/MethodologyTemplates/Aggregates/MethodologyTemplateDraft.cs",
+      "appliedFacts": [
+        "MethodologyTemplateDraftAccepted",
+        "MethodologyTemplateDraftApproved",
+        "MethodologyTemplateDraftDiscarded",
+        "MethodologyTemplateDraftOpened",
+        "MethodologyTemplateDraftReturned",
+        "MethodologyTemplateDraftRevisedV4"
+      ],
+      "commandRequests": [],
+      "internalReactionRequests": [
+        "OpenMethodologyTemplateDraft"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/MethodologyTemplates/Tests/MethodologyTemplateDraftOpeningTests.cs",
+        "test/Compliance.Tests/Features/MethodologyTemplates/Tests/MethodologyTemplateDraftTests.cs"
+      ],
+      "commandRouteDisposition": "registered_command_route",
+      "note": "Separate draft owner and source-bound opener are tested. Human draft handlers and line publish/discard choreography remain pending under #1176; this route inventory does not establish workflow completion."
     },
     {
       "aggregate": "OperationalProcess",
@@ -14282,14 +14543,22 @@
       "aggregate": "WorkRelationship",
       "source": "src/Compliance.Core/Features/Workforce/Aggregates/WorkRelationship.cs",
       "appliedFacts": [
+        "WorkRelationshipDatesCorrected",
+        "WorkRelationshipDepartmentChanged",
         "WorkRelationshipEnded",
         "WorkRelationshipLeaveEnded",
         "WorkRelationshipLeaveStarted",
+        "WorkRelationshipManagerChanged",
         "WorkRelationshipRecorded",
         "WorkRelationshipRevised",
+        "WorkRelationshipSponsorChanged",
         "WorkRelationshipStarted"
       ],
       "commandRequests": [
+        "ChangeDepartment",
+        "ChangeManager",
+        "ChangeSponsor",
+        "CorrectWorkRelationshipDates",
         "EndLeave",
         "EndWorkRelationship",
         "RecordWorkRelationship",
@@ -17052,6 +17321,36 @@
       "note": ""
     },
     {
+      "request": "CancelCorrectiveAction",
+      "contract": "src/Compliance.Common/Features/Remediation/Commands/CancelCorrectiveAction.cs",
+      "classification": "command",
+      "interfaces": "IRequest<FindingView>, IControlOperationRequest, IClientManagementMutationRequest, IIdentifiedRequest, ICallable",
+      "handlers": [
+        {
+          "name": "CancelCorrectiveActionHandler",
+          "source": "src/Compliance.Core/Features/Remediation/Handlers/CancelCorrectiveActionHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
+      "helperServices": [
+        "FindingReader"
+      ],
+      "directAggregateReferences": [
+        "CorrectiveAction"
+      ],
+      "aggregateTargets": [
+        "CorrectiveAction"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Examinations/Tests/CorrectiveActionCancellationBaselineTests.cs",
+        "test/Compliance.Tests/Features/Remediation/Tests/CorrectiveActionCancellationTests.cs",
+        "test/Compliance.Tests/Features/Remediation/Tests/CorrectiveActionCancellationWorkflowTests.cs",
+        "test/Compliance.Tests/Features/Work/Tests/CorrectiveActionCancellationWorkTests.cs"
+      ],
+      "note": ""
+    },
+    {
       "request": "CancelEngagementPersonalDecision",
       "contract": "src/Compliance.Common/Features/AccessControl/Commands/CancelEngagementPersonalDecision.cs",
       "interfaces": "IRequest<ReceiverOutcome>, IEngagementPersonalDecisionReceiver, IIdentifiedRequest",
@@ -17255,6 +17554,87 @@
       ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Evidence/Tests/EvidenceIntakeTests.cs"
+      ],
+      "note": ""
+    },
+    {
+      "request": "ChangeDepartment",
+      "contract": "src/Compliance.Common/Features/Workforce/Commands/ChangeDepartment.cs",
+      "classification": "command",
+      "interfaces": "IRequest, IWorkforceRequest, IClientManagementMutationRequest, ICallable",
+      "handlers": [
+        {
+          "name": "ChangeDepartmentHandler",
+          "source": "src/Compliance.Core/Features/Workforce/Handlers/ChangeDepartmentHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
+      "helperServices": [],
+      "directAggregateReferences": [
+        "WorkRelationship"
+      ],
+      "aggregateTargets": [
+        "WorkRelationship"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Workforce/Tests/WorkRelationshipNamedChangeHandlerTests.cs",
+        "test/Compliance.Tests/Features/Workforce/Tests/WorkRelationshipNamedChangesTests.cs",
+        "test/Compliance.Tests/Features/Workforce/Tests/WorkRelationshipSponsorshipTests.cs"
+      ],
+      "note": ""
+    },
+    {
+      "request": "ChangeManager",
+      "contract": "src/Compliance.Common/Features/Workforce/Commands/ChangeManager.cs",
+      "classification": "command",
+      "interfaces": "IRequest, IWorkforceRequest, IClientManagementMutationRequest, ICallable",
+      "handlers": [
+        {
+          "name": "ChangeManagerHandler",
+          "source": "src/Compliance.Core/Features/Workforce/Handlers/ChangeManagerHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
+      "helperServices": [],
+      "directAggregateReferences": [
+        "Person",
+        "WorkRelationship"
+      ],
+      "aggregateTargets": [
+        "WorkRelationship"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Workforce/Tests/WorkRelationshipNamedChangeHandlerTests.cs",
+        "test/Compliance.Tests/Features/Workforce/Tests/WorkRelationshipNamedChangesTests.cs"
+      ],
+      "note": ""
+    },
+    {
+      "request": "ChangeSponsor",
+      "contract": "src/Compliance.Common/Features/Workforce/Commands/ChangeSponsor.cs",
+      "classification": "command",
+      "interfaces": "IRequest, IWorkforceRequest, IClientManagementMutationRequest, ICallable",
+      "handlers": [
+        {
+          "name": "ChangeSponsorHandler",
+          "source": "src/Compliance.Core/Features/Workforce/Handlers/ChangeSponsorHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
+      "helperServices": [],
+      "directAggregateReferences": [
+        "Person",
+        "WorkRelationship"
+      ],
+      "aggregateTargets": [
+        "WorkRelationship"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Workforce/Tests/WorkRelationshipNamedChangeHandlerTests.cs",
+        "test/Compliance.Tests/Features/Workforce/Tests/WorkRelationshipNamedChangesTests.cs"
       ],
       "note": ""
     },
@@ -18003,6 +18383,7 @@
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AccessControl/Tests/AttestManagementWriteWallTests.cs",
         "test/Compliance.Tests/Features/Operations/Tests/OperationsFixture.cs",
+        "test/Compliance.Tests/Features/Remediation/Tests/CorrectiveActionCancellationTests.cs",
         "test/Compliance.Tests/Features/Remediation/Tests/CorrectiveActionLifecycleTests.cs",
         "test/Compliance.Tests/Features/Remediation/Tests/CorrectiveActionNativeHistoryTests.cs",
         "test/Compliance.Tests/Features/Remediation/Tests/CorrectiveActionNativePreparationTests.cs",
@@ -18608,6 +18989,31 @@
         "test/Compliance.Tests/Features/Operations/Tests/PersonalOccurrenceProofTransportTests.cs",
         "test/Compliance.Tests/Features/Work/Tests/FitzControlOccurrenceWorkItemDirectoryTests.cs",
         "test/Compliance.Tests/Features/Work/Tests/NotApplicableOccurrenceReviewTests.cs"
+      ],
+      "note": ""
+    },
+    {
+      "request": "CorrectWorkRelationshipDates",
+      "contract": "src/Compliance.Common/Features/Workforce/Commands/CorrectWorkRelationshipDates.cs",
+      "classification": "command",
+      "interfaces": "IRequest, IWorkforceRequest, IClientManagementMutationRequest, ICallable",
+      "handlers": [
+        {
+          "name": "CorrectWorkRelationshipDatesHandler",
+          "source": "src/Compliance.Core/Features/Workforce/Handlers/CorrectWorkRelationshipDatesHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
+      "helperServices": [],
+      "directAggregateReferences": [
+        "WorkRelationship"
+      ],
+      "aggregateTargets": [
+        "WorkRelationship"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Workforce/Tests/WorkRelationshipNamedChangeHandlerTests.cs"
       ],
       "note": ""
     },
@@ -23021,6 +23427,7 @@
       "helperServices": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Workforce/Tests/AttestWorkforceManagementWallTests.cs",
+        "test/Compliance.Tests/Features/Workforce/Tests/WorkRelationshipSponsorshipTests.cs",
         "test/Compliance.Tests/Features/Workforce/Tests/WorkforceRosterSnapshotTests.cs"
       ],
       "note": "Read/reconstruction request; it does not own a business mutation."
@@ -25950,7 +26357,8 @@
       "aggregateTargets": [],
       "helperServices": [],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Workforce/Tests/FitzWorkRelationshipDirectoryTests.cs"
+        "test/Compliance.Tests/Features/Workforce/Tests/FitzWorkRelationshipDirectoryTests.cs",
+        "test/Compliance.Tests/Features/Workforce/Tests/WorkRelationshipSponsorshipTests.cs"
       ],
       "note": "Read/reconstruction request; it does not own a business mutation."
     },
@@ -26333,6 +26741,7 @@
       "helperServices": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Remediation/Tests/CorrectiveActionAcceptedMaterializationReplayTests.cs",
+        "test/Compliance.Tests/Features/Remediation/Tests/CorrectiveActionCancellationTests.cs",
         "test/Compliance.Tests/Features/Remediation/Tests/CorrectiveActionLifecycleTests.cs",
         "test/Compliance.Tests/Features/Remediation/Tests/CorrectiveActionMaterializationContentTests.cs",
         "test/Compliance.Tests/Features/Remediation/Tests/CorrectiveActionNativeHistoryTests.cs"
@@ -26589,6 +26998,32 @@
         "test/Compliance.Tests/Features/Work/Tests/WorkQueueSearchTests.cs"
       ],
       "note": ""
+    },
+    {
+      "request": "OpenMethodologyTemplateDraft",
+      "contract": "src/Compliance.Common/Features/MethodologyTemplates/Commands/OpenMethodologyTemplateDraft.cs",
+      "classification": "internal_reaction",
+      "interfaces": "IRequest, IIdentifiedRequest",
+      "handlers": [
+        {
+          "name": "OpenMethodologyTemplateDraftHandler",
+          "source": "src/Compliance.Core/Features/MethodologyTemplates/Handlers/OpenMethodologyTemplateDraftHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
+      "helperServices": [],
+      "directAggregateReferences": [
+        "MethodologyTemplate",
+        "MethodologyTemplateDraft"
+      ],
+      "aggregateTargets": [
+        "MethodologyTemplateDraft"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/MethodologyTemplates/Tests/MethodologyTemplateDraftOpeningTests.cs"
+      ],
+      "note": "System-only receiver of the committed MethodologyTemplateDraftStarted source. Registered and tested; line-start producer remains pending under #1176."
     },
     {
       "request": "OpenTemplateVersionApplication",
@@ -27781,7 +28216,8 @@
         "test/Compliance.Tests/Features/AccessControl/Tests/AttestProgramManagementWriteWallTests.cs",
         "test/Compliance.Tests/Features/Operations/Tests/OperationsFixture.cs",
         "test/Compliance.Tests/Features/Remediation/Tests/FindingAggregateTests.cs",
-        "test/Compliance.Tests/Features/Remediation/Tests/FindingNativeHistoryTests.cs"
+        "test/Compliance.Tests/Features/Remediation/Tests/FindingNativeHistoryTests.cs",
+        "test/Compliance.Tests/Features/Remediation/Tests/FindingSeverityTests.cs"
       ],
       "note": "FindingId is the logical operation identity."
     },
@@ -27807,6 +28243,7 @@
         "RoutedFinding"
       ],
       "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Remediation/Tests/FindingSeverityTests.cs",
         "test/Compliance.Tests/Features/Remediation/Tests/OccurrenceFindingTests.cs"
       ],
       "note": "Internal event-driven follow-up command; a requested action is admitted atomically with the raise."
@@ -31848,6 +32285,7 @@
         "test/Compliance.Tests/Features/Examinations/Tests/FindingTypeIBaselineSourceContributorTests.cs",
         "test/Compliance.Tests/Features/Remediation/Tests/FindingAggregateTests.cs",
         "test/Compliance.Tests/Features/Remediation/Tests/FindingIdentifiedOperationTests.cs",
+        "test/Compliance.Tests/Features/Remediation/Tests/FindingSeverityTests.cs",
         "test/Compliance.Tests/Features/Remediation/Tests/FindingTests.cs",
         "test/Compliance.Tests/Features/Work/Tests/FindingClosureWorkTests.cs",
         "test/Compliance.Tests/Features/Work/Tests/ReviewerWorkAuthorityTests.cs"
@@ -33425,7 +33863,8 @@
       ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Workforce/Tests/WorkRelationshipLifecycleHandlerTests.cs",
-        "test/Compliance.Tests/Features/Workforce/Tests/WorkRelationshipLifecycleTests.cs"
+        "test/Compliance.Tests/Features/Workforce/Tests/WorkRelationshipLifecycleTests.cs",
+        "test/Compliance.Tests/Features/Workforce/Tests/WorkRelationshipNamedChangesTests.cs"
       ],
       "note": ""
     },
@@ -34314,6 +34753,61 @@
       "note": "Confirmed registered-request route gap; this source operation emits a fact but is not reached by a registered mutation handler. Keep unresolved locally."
     },
     {
+      "fact": "MethodologyTemplateDraftApproved",
+      "aggregate": "MethodologyTemplateDraft",
+      "method": "Approve",
+      "methodArgumentCount": 2,
+      "source": "src/Compliance.Core/Features/MethodologyTemplates/Aggregates/MethodologyTemplateDraft.cs",
+      "callerSources": [],
+      "classification": "no_registered_request_route",
+      "ownerIssue": 1176,
+      "note": "Draft owner behavior is covered by focused tests; the corresponding human command/handler is pending in the next business slice. No public write path is claimed."
+    },
+    {
+      "fact": "MethodologyTemplateDraftDiscarded",
+      "aggregate": "MethodologyTemplateDraft",
+      "method": "Discard",
+      "methodArgumentCount": 2,
+      "source": "src/Compliance.Core/Features/MethodologyTemplates/Aggregates/MethodologyTemplateDraft.cs",
+      "callerSources": [],
+      "classification": "no_registered_request_route",
+      "ownerIssue": 1176,
+      "note": "Draft owner behavior is covered by focused tests; the corresponding human command/handler is pending in the next business slice. No public write path is claimed."
+    },
+    {
+      "fact": "MethodologyTemplateDraftAccepted",
+      "aggregate": "MethodologyTemplateDraft",
+      "method": "Review",
+      "methodArgumentCount": 4,
+      "source": "src/Compliance.Core/Features/MethodologyTemplates/Aggregates/MethodologyTemplateDraft.cs",
+      "callerSources": [],
+      "classification": "no_registered_request_route",
+      "ownerIssue": 1176,
+      "note": "Draft owner behavior is covered by focused tests; the corresponding human command/handler is pending in the next business slice. No public write path is claimed."
+    },
+    {
+      "fact": "MethodologyTemplateDraftReturned",
+      "aggregate": "MethodologyTemplateDraft",
+      "method": "Review",
+      "methodArgumentCount": 4,
+      "source": "src/Compliance.Core/Features/MethodologyTemplates/Aggregates/MethodologyTemplateDraft.cs",
+      "callerSources": [],
+      "classification": "no_registered_request_route",
+      "ownerIssue": 1176,
+      "note": "Draft owner behavior is covered by focused tests; the corresponding human command/handler is pending in the next business slice. No public write path is claimed."
+    },
+    {
+      "fact": "MethodologyTemplateDraftRevisedV4",
+      "aggregate": "MethodologyTemplateDraft",
+      "method": "Revise",
+      "methodArgumentCount": 4,
+      "source": "src/Compliance.Core/Features/MethodologyTemplates/Aggregates/MethodologyTemplateDraft.cs",
+      "callerSources": [],
+      "classification": "no_registered_request_route",
+      "ownerIssue": 1176,
+      "note": "Draft owner behavior is covered by focused tests; the corresponding human command/handler is pending in the next business slice. No public write path is claimed."
+    },
+    {
       "fact": "ProgramNextPeriodCreated",
       "aggregate": "ProgramRollover",
       "method": "RecordNextPeriodCreated",
@@ -34602,5 +35096,5 @@
       "note": "Aggregate roots pass their RaiseEvent callback into this helper; the helper constructs ResponsibilityAssigned and ResponsibilityRevoked."
     }
   ],
-  "sourceWorktreeNote": "Exported from the assembled batch1 source at sourceCommit. Internal-only request classification and remaining-work notes were reviewed separately. Inventory is navigation metadata, not proof of domain or workflow completion."
+  "sourceWorktreeNote": "Inventory reflects the source and assemblies of this explicit export, including uncommitted source changes; sourceCommit identifies the current base commit."
 }
