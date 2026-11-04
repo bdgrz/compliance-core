@@ -8,6 +8,7 @@ using Bdgrz.Compliance.Features.Workforce.Models;
 using Bdgrz.Compliance.Features.Workforce.Queries;
 using Bdgrz.Compliance.Features.Workforce.Readers;
 using Bdgrz.Compliance.Features.Workforce.Services;
+using Bdgrz.Compliance.Tests.Testing;
 using Cntryl.Fitz.Testing;
 using Cntryl.Portia;
 using Cntryl.Portia.Testing;
@@ -201,11 +202,22 @@ public sealed class WorkRelationshipSponsorshipTests
         {
             var fixture = new Fixture();
             fixture.Owner = new WorkRelationship(fixture.Tenant, WorkRelationship.IdFor(fixture.Tenant, "X-100"));
-            Assert.True(fixture.Owner.Record(fixture.Person, "X-100", new WorkRelationshipTerms("external_collaborator",
+            var terms = new WorkRelationshipTerms("external_collaborator",
                 status, Start, status == "ended" ? Start.AddMonths(1) : null, "Engineering", Uuid.CreateVersion4(),
-                fixture.Sponsor, "Restricted workforce reason"), Author, Now).IsSuccess);
-            var fact = Assert.IsType<WorkRelationshipRecorded>(
-                Assert.Single(new AggregateScenario<WorkRelationship>(fixture.Owner).PendingEvents));
+                fixture.Sponsor, "Restricted workforce reason");
+            WorkRelationshipRecorded fact;
+            if (status is "pending" or "active")
+            {
+                Assert.True(fixture.Owner.Record(fixture.Person, "X-100", terms, Author, Now).IsSuccess);
+                fact = Assert.IsType<WorkRelationshipRecorded>(
+                    Assert.Single(new AggregateScenario<WorkRelationship>(fixture.Owner).PendingEvents));
+            }
+            else
+            {
+                fact = DomainEventSeed.Attach(new WorkRelationshipRecorded(fixture.Tenant, fixture.Owner.Id,
+                    fixture.Person, "X-100", terms, Author, Now), fixture.Owner.Id, 1);
+                fixture.Owner = NativeFacts.Replay(fixture.Owner, [fact]);
+            }
             await fixture.ApplyPrimaryAsync(fact);
             await fixture.ApplyObservationAsync(fact);
             fixture.View = (await fixture.Primary.GetAsync(fixture.Tenant, fixture.Owner.Id))!;

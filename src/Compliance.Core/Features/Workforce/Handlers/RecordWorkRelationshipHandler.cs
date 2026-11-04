@@ -25,10 +25,12 @@ using Bdgrz.Compliance.Features.Workforce.Aggregates;
 using Bdgrz.Compliance.Features.Workforce.Authorizers;
 using Bdgrz.Compliance.Features.Workforce.Commands;
 using Bdgrz.Compliance.Features.Workforce.Models;
+using Bdgrz.Compliance.Features.Workforce.Readers;
 namespace Bdgrz.Compliance.Features.Workforce.Handlers;
 
 public sealed class RecordWorkRelationshipHandler(IAggregateExecutor executor,
-    IAggregateReader reader, IPermissionAuthorizer permissions, TimeProvider clock)
+    IAggregateReader reader, IPermissionAuthorizer permissions, IWorkforceObservationDirectoryReader roster,
+    WorkforceObservationReadConsistency consistency, TimeProvider clock)
     : IRequestHandler<RecordWorkRelationship, WorkRelationshipRegistration>
 {
     public async ValueTask<Result<WorkRelationshipRegistration>> HandleAsync(
@@ -50,6 +52,16 @@ public sealed class RecordWorkRelationshipHandler(IAggregateExecutor executor,
             userId, FieldClasses.WorkforceManagerChain, ct).ConfigureAwait(false);
         var personalDetails = await FieldRestrictions.ForActorAsync(permissions, request.TenantId,
             userId, FieldClasses.WorkforcePersonalDetails, ct).ConfigureAwait(false);
+        RequestError? sponsorRefusal = null;
+        if (request.SponsorPersonId is { } sponsorId)
+        {
+            var ready = await consistency.EnsureCaughtUpAsync(request.TenantId, ct).ConfigureAwait(false);
+            if (!ready.IsSuccess)
+                sponsorRefusal = ready.Error;
+            else if (!await roster.HasActiveInternalRelationshipAsync(request.TenantId, sponsorId, ct).ConfigureAwait(false))
+                sponsorRefusal = new RequestError(RequestErrorKind.Validation,
+                    "The sponsor must have an active employee or contractor relationship.");
+        }
         var relationshipId = WorkRelationship.IdFor(request.TenantId, request.SourceWorkerId ?? "");
         return await executor.ExecuteAsync(new WorkRelationship(request.TenantId, relationshipId),
             relationship =>
@@ -60,6 +72,10 @@ public sealed class RecordWorkRelationshipHandler(IAggregateExecutor executor,
                     return AggregateOutcome.Discard(Result<WorkRelationshipRegistration>.Failure(
                         new RequestError(RequestErrorKind.Forbidden,
                             "Retrying a work relationship requires both restricted workforce field grants.")));
+                // Eligibility is checked when the sponsor is first named. A later departure
+                // is unsponsored work, so it must not block an exact registration retry.
+                if (!relationship.IsCreated && sponsorRefusal is not null)
+                    return AggregateOutcome.Discard(Result<WorkRelationshipRegistration>.Failure(sponsorRefusal));
                 return AggregateOutcome.CommitOnSuccess(relationship.Record(request.PersonId,
                     request.SourceWorkerId ?? "", terms, actor, clock.GetUtcNow(), request.Source));
             }, context, ct)

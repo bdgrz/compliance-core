@@ -164,6 +164,9 @@ public sealed class WorkRelationship : Aggregate
                 : Result<WorkRelationshipRegistration>.Failure(new RequestError(
                     RequestErrorKind.Conflict,
                     "The source worker ID already identifies a different work relationship."));
+        if (clean.LifecycleStatus is not ("pending" or "active"))
+            return Result<WorkRelationshipRegistration>.Failure(new RequestError(RequestErrorKind.Validation,
+                "A new work relationship must be pending or active."));
         RaiseEvent(new WorkRelationshipRecorded(_tenantId, Id, personId, workerId, clean, actor,
             changedAt, cleanSource));
         return Result<WorkRelationshipRegistration>.Success(new WorkRelationshipRegistration(Id));

@@ -493,7 +493,8 @@ public sealed class RecordWorkRelationshipHandlerTests
             if (!authorized.IsSuccess)
                 return Result<WorkRelationshipRegistration>.Failure(authorized.Error);
             return await new RecordWorkRelationshipHandler(executor ?? Executor, Reader,
-                    permissions, TimeProvider.System)
+                    permissions, Roster, new WorkforceObservationReadConsistency(Roster,
+                        _scope.ServiceProvider.GetRequiredService<IDomainEventReader>()), TimeProvider.System)
                 .HandleAsync(new RequestContext<RecordWorkRelationship>(request, actor),
                     CancellationToken.None);
         }
