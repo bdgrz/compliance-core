@@ -65,7 +65,48 @@ sealed class FitzWorkRelationshipDirectory(IKvClient client)
                         LastChangedAt = revised.ChangedAt,
                     }, ct).ConfigureAwait(false);
                 break;
+            case WorkRelationshipStarted started:
+                await ReplaceLifecycleAsync(started.TenantId, started.RelationshipId, started.WorkerIdentifier,
+                    started.Revision, started.Actor, started.ChangedAt,
+                    view => view with { LifecycleStatus = "active", StartDate = started.StartDate }, ct)
+                    .ConfigureAwait(false);
+                break;
+            case WorkRelationshipLeaveStarted leave:
+                await ReplaceLifecycleAsync(leave.TenantId, leave.RelationshipId, leave.WorkerIdentifier,
+                    leave.Revision, leave.Actor, leave.ChangedAt,
+                    view => view with { LifecycleStatus = "on_leave" }, ct).ConfigureAwait(false);
+                break;
+            case WorkRelationshipLeaveEnded returned:
+                await ReplaceLifecycleAsync(returned.TenantId, returned.RelationshipId, returned.WorkerIdentifier,
+                    returned.Revision, returned.Actor, returned.ChangedAt,
+                    view => view with { LifecycleStatus = "active" }, ct).ConfigureAwait(false);
+                break;
+            case WorkRelationshipEnded ended:
+                await ReplaceLifecycleAsync(ended.TenantId, ended.RelationshipId, ended.WorkerIdentifier,
+                    ended.Revision, ended.Actor, ended.ChangedAt,
+                    view => view with
+                    {
+                        LifecycleStatus = "ended",
+                        EndDate = ended.EndDate,
+                        EmploymentStatusReason = ended.Reason,
+                    }, ct).ConfigureAwait(false);
+                break;
         }
+    }
+
+    async ValueTask ReplaceLifecycleAsync(Uuid tenantId, Uuid relationshipId, string workerIdentifier,
+        long revision, ActorReference actor, DateTimeOffset changedAt,
+        Func<WorkRelationshipView, WorkRelationshipView> change, CancellationToken ct)
+    {
+        var current = await WorkRelationshipDirectorySchema.Relationships.GetAsync(
+            Transaction, relationshipId, ct).ConfigureAwait(false);
+        if (current is null || current.TenantId != tenantId || current.SourceWorkerId != workerIdentifier ||
+            current.Revision + 1 != revision)
+            throw new InvalidOperationException(
+                "A named work relationship fact cannot project before its matching predecessor.");
+        await WorkRelationshipDirectorySchema.Relationships.ReplaceAsync(Transaction, current,
+            change(current) with { Revision = revision, LastChangedBy = actor, LastChangedAt = changedAt }, ct)
+            .ConfigureAwait(false);
     }
 
     public async ValueTask<WorkRelationshipView?> GetAsync(Uuid tenantId, Uuid relationshipId,
