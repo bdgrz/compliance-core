@@ -16,4 +16,5 @@ public sealed record ServiceIdentityView(Uuid TenantId, Uuid ServiceIdentityId, 
     string DisplayName, string IdentityKind, string Purpose, string? Environment,
     string LifecycleStatus, string OwnerKind, Uuid OwnerId, DateOnly ReviewBy, string SourceKind,
     bool Unowned, IReadOnlyList<string> UnownedReasons, ActorReference LastChangedBy,
-    DateTimeOffset LastChangedAt, DateOnly? ExpiresOn = null, bool Expired = false);
+    DateTimeOffset LastChangedAt, DateOnly? ExpiresOn = null, bool Expired = false, string? SharedJustification = null,
+    DateOnly? LastReviewedOn = null, ActorReference? LastReviewer = null, string? ReviewNotes = null);
