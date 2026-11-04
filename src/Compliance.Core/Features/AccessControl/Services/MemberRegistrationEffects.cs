@@ -22,8 +22,8 @@ static class MemberRegistrationEffects
 {
     /// <summary>The registration command a source event causes for one tenant user.</summary>
     public static RegisterMember Register(Uuid sourceEventId, Uuid tenantId, Uuid userId,
-        string affiliation = "client_personnel", DateOnly? membershipExpiresOn = null) =>
-        new(CommandId(sourceEventId, tenantId, userId), tenantId, userId, affiliation, membershipExpiresOn);
+        string affiliation = "client_personnel", DateOnly? membershipExpiresOn = null, IReadOnlyList<Uuid>? programIds = null) =>
+        new(CommandId(sourceEventId, tenantId, userId), tenantId, userId, affiliation, membershipExpiresOn, programIds);
 
     /// <summary>The logical registration id, which is also the membership episode id.</summary>
     public static Uuid CommandId(Uuid sourceEventId, Uuid tenantId, Uuid userId) =>

@@ -63,6 +63,7 @@ public sealed class Member : Aggregate
     bool _isRegistered;
     string? _affiliation;
     DateOnly? _membershipExpiresOn;
+    Uuid[] _guestProgramIds = [];
     Uuid _membershipEpisodeId;
     bool _isSuspended;
     bool _isDeprovisioned;
@@ -81,6 +82,7 @@ public sealed class Member : Aggregate
     public bool IsRegistered => _isRegistered;
     public string? Affiliation => _affiliation;
     public DateOnly? MembershipExpiresOn => _membershipExpiresOn;
+    public IReadOnlyList<Uuid> GuestProgramIds => _guestProgramIds.ToArray();
     public Uuid UserId => _userId;
     public Uuid MembershipEpisodeId => _membershipEpisodeId;
     public bool IsSuspended => _isSuspended;
@@ -137,12 +139,14 @@ public sealed class Member : Aggregate
                                   expiresOn != DateOnly.MinValue && expiresOn != DateOnly.MaxValue;
             if (registered.Affiliation is not ("client_personnel" or "firm_staff" or "guest") ||
                 registered.Affiliation == "guest" && !hasFiniteExpiry ||
-                registered.Affiliation != "guest" && registered.MembershipExpiresOn is not null)
+                registered.Affiliation != "guest" && registered.MembershipExpiresOn is not null ||
+                !ValidProgramCap(registered.Affiliation, registered.ProgramIds))
                 throw new MemberHistoryIntegrityException("The member registration event has invalid affiliation or expiry terms.");
             Acceptance.Observe(registered);
             _isRegistered = true;
             _affiliation = registered.Affiliation;
             _membershipExpiresOn = registered.MembershipExpiresOn;
+            _guestProgramIds = registered.ProgramIds?.Distinct().OrderBy(static id => id.ToString(), StringComparer.Ordinal).ToArray() ?? [];
             _userId = registered.UserId;
             _membershipEpisodeId = registered.MembershipEpisodeId;
             _isSuspended = false;
@@ -213,7 +217,7 @@ public sealed class Member : Aggregate
     ///     Checks the registration guards against hydrated state without raising anything; the first half of the
     ///     native acceptance pair.
     /// </summary>
-    public Result PrepareRegister(string affiliation = "client_personnel", DateOnly? membershipExpiresOn = null)
+    public Result PrepareRegister(string affiliation = "client_personnel", DateOnly? membershipExpiresOn = null, IReadOnlyList<Uuid>? programIds = null)
     {
         EnsureUserIdentity();
         if (affiliation is not ("client_personnel" or "firm_staff" or "guest"))
@@ -221,9 +225,9 @@ public sealed class Member : Aggregate
         var hasFiniteExpiry = membershipExpiresOn is { } endDate &&
                               endDate != DateOnly.MinValue && endDate != DateOnly.MaxValue;
         if (affiliation == "guest" && !hasFiniteExpiry ||
-            affiliation != "guest" && membershipExpiresOn is not null)
+            affiliation != "guest" && membershipExpiresOn is not null || !ValidProgramCap(affiliation, programIds))
             return Result.Failure(new RequestError(RequestErrorKind.Validation,
-                "Guest membership requires a finite end date; other affiliations cannot have one."));
+                "Guest membership requires a finite end date and at least one program; other affiliations have no guest terms."));
         if (_isDeprovisioned && !_isDeprovisionCleanupComplete)
             return Result.Failure(new RequestError(RequestErrorKind.Conflict,
                 "Membership authority cleanup must finish before a new invitation can take effect."));
@@ -231,6 +235,10 @@ public sealed class Member : Aggregate
             return Result.Failure(LiveEpisodeConflict);
         return Result.Success;
     }
+
+    static bool ValidProgramCap(string affiliation, IReadOnlyList<Uuid>? programs) => affiliation == "guest"
+        ? programs is { Count: > 0 } && programs.All(static id => id != Uuid.Empty)
+        : programs is null or { Count: 0 };
 
     /// <summary>
     ///     The one live-episode conflict a new registration can meet. Dispatchers that register as a side effect of
@@ -244,18 +252,18 @@ public sealed class Member : Aggregate
     ///     operation is the membership episode id.
     /// </summary>
     public Result Register(OperationProvenance operation, ImmutableContentRef firstResponse,
-        string affiliation = "client_personnel", DateOnly? membershipExpiresOn = null)
+        string affiliation = "client_personnel", DateOnly? membershipExpiresOn = null, IReadOnlyList<Uuid>? programIds = null)
     {
         ArgumentNullException.ThrowIfNull(operation);
         ArgumentNullException.ThrowIfNull(firstResponse);
         if (operation.LogicalId == Uuid.Empty || operation.Owner != Stream)
             return Result.Failure(new RequestError(RequestErrorKind.Validation,
                 "A member registration requires its own logical operation."));
-        var prepared = PrepareRegister(affiliation, membershipExpiresOn);
+        var prepared = PrepareRegister(affiliation, membershipExpiresOn, programIds);
         if (!prepared.IsSuccess)
             return prepared;
         RaiseEvent(new MemberRegistered(_tenantId, Id, _userId, affiliation, operation.LogicalId,
-            membershipExpiresOn, operation.LogicalId, operation, firstResponse));
+            membershipExpiresOn, operation.LogicalId, operation, firstResponse, programIds?.Distinct().ToArray()));
         return Result.Success;
     }
 

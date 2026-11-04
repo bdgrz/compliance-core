@@ -10,7 +10,7 @@ namespace Bdgrz.Compliance.Features.AccessControl.Commands;
 /// </summary>
 [Discriminator("bdgrz.rbac.member.register", 1)]
 public sealed record RegisterMember(Uuid CommandId, Uuid TenantId, Uuid UserId,
-    string Affiliation = "client_personnel", DateOnly? MembershipExpiresOn = null)
+    string Affiliation = "client_personnel", DateOnly? MembershipExpiresOn = null, IReadOnlyList<Uuid>? ProgramIds = null)
     : IRequest, IRbacManagementRequest, IIdentifiedRequest
 {
     Uuid IIdentifiedRequest.RequestId => CommandId;
