@@ -2729,4 +2729,8 @@ namespace Bdgrz.Compliance;
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.Workforce.Events.WorkRelationshipLeaveStarted))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.Workforce.Events.WorkRelationshipLeaveEnded))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.Workforce.Events.WorkRelationshipEnded))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Workforce.Events.WorkRelationshipManagerChanged))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Workforce.Events.WorkRelationshipDepartmentChanged))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Workforce.Events.WorkRelationshipSponsorChanged))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Workforce.Events.WorkRelationshipDatesCorrected))]
 sealed partial class ComplianceCoreJsonContext : JsonSerializerContext;
