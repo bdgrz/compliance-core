@@ -1,30 +1,30 @@
 {
   "schemaVersion": 1,
-  "capturedAt": "2026-11-03",
-  "sourceCommit": "a7f1cca8013f0f957e8ed2e0b2a06c4daa7ae55c",
+  "capturedAt": "2026-11-04",
+  "sourceCommit": "e798f9f162aa5d1b56d811ad175c11f40e7b9d24",
   "method": "Roslyn inventory over Compliance.Common and Compliance.Core. It recognizes explicit and target-typed DomainEvent construction that reaches RaiseEvent, AuditEvent, a typed raise callback, a publishing helper, or a returned event value raised by an owning aggregate caller; it also scans On<Fact> reducers, IRequest contracts, IRequestHandler implementations, AddRequestHandler registrations, typed aggregate mutation targets, and source-derived direct callers. Publisher detection uses conventional publisher names and callback type syntax; aggregate call reachability is a syntactic heuristic matched by method name and compatible arity. Neither scan resolves receiver or symbol identity, so same-named calls on unrelated objects can be candidates for human review rather than semantic proof. Legacy emitters remain listed with replay compatibility requirements until a verified stream migration. Test paths are navigation evidence, not proof of fact-specific replay or behavior assertions. The S20 cutover (#1026) splits FindingAggregate from the independent CorrectiveAction owner, admits actions on the finding and closes it through FindingClosureProcess; the legacy RemediationLedger, its migration aggregates and the history migration command were deleted with no dual read path.",
   "factReplayGuards": [],
   "counts": {
-    "domainEventContracts": 532,
-    "factsWithReducer": 507,
-    "factsWithAggregateEmitter": 385,
+    "domainEventContracts": 543,
+    "factsWithReducer": 518,
+    "factsWithAggregateEmitter": 396,
     "auditFactsWithoutReducer": 2,
     "factsWithoutReducerOrEmitter": 23,
     "legacyReducerOnlyFacts": 122,
-    "aggregateTypes": 133,
-    "aggregateTypesWithCommandPath": 98,
-    "requestContracts": 784,
-    "commonRequestContracts": 782,
+    "aggregateTypes": 135,
+    "aggregateTypesWithCommandPath": 100,
+    "requestContracts": 794,
+    "commonRequestContracts": 792,
     "requestClassificationCounts": {
-      "command": 348,
+      "command": 355,
       "confirmed_command_gap": 7,
       "deferred_command": 5,
       "internal_executor_context": 1,
-      "internal_reaction": 149,
-      "query_or_reconstruction": 274
+      "internal_reaction": 151,
+      "query_or_reconstruction": 275
     },
     "applicationMcpAdapterRequests": 2,
-    "registeredCoreHandlerRegistrations": 742,
+    "registeredCoreHandlerRegistrations": 752,
     "unregisteredCoreHandlerClasses": 0,
     "unwiredAggregateProducerOperations": 64,
     "unwiredAggregateProducerClassifications": {
@@ -4950,6 +4950,7 @@
       ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AccessControl/Tests/DirectoryIndependenceReevaluationTests.cs",
+        "test/Compliance.Tests/Features/AccessControl/Tests/DirectoryReevaluationResultTests.cs",
         "test/Compliance.Tests/Features/AccessControl/Tests/FirmStaffNativeHistoryTests.cs",
         "test/Compliance.Tests/Features/AccessControl/Tests/FirmStaffRecordTests.cs",
         "test/Compliance.Tests/Features/AccessControl/Tests/FirmStaffRetainedStatusTests.cs"
@@ -5801,7 +5802,8 @@
       ],
       "emitters": [],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/MethodologyTemplates/Tests/TemplateApplicationNativeHistoryTests.cs"
+        "test/Compliance.Tests/Features/MethodologyTemplates/Tests/TemplateApplicationNativeHistoryTests.cs",
+        "test/Compliance.Tests/Features/MethodologyTemplates/Tests/TemplateVersionApplicationWorkflowTests.cs"
       ],
       "disposition": "legacy_replay",
       "note": "Confirmed publisher gap: a current reducer exists but this source inventory finds no publishing operation. Retained for replay; this row does not claim a current write path.",
@@ -7857,7 +7859,9 @@
       "emitters": [
         "src/Compliance.Core/Features/Risks/Aggregates/RiskTreatmentAssertion.cs"
       ],
-      "testSymbolReferences": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Risks/Tests/RiskTreatmentAssertionAggregateTests.cs"
+      ],
       "disposition": "aggregate_fact",
       "note": "",
       "discriminator": "bdgrz.risk.control_treatment.reviewed",
@@ -7921,7 +7925,8 @@
         "src/Compliance.Core/Features/Risks/Aggregates/RiskMethod.cs"
       ],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Risks/Tests/RiskMethodReassessmentNativeTests.cs"
+        "test/Compliance.Tests/Features/Risks/Tests/RiskMethodReassessmentNativeTests.cs",
+        "test/Compliance.Tests/Features/Risks/Tests/RiskReassessmentFanOutResultTests.cs"
       ],
       "disposition": "aggregate_fact",
       "note": "",
@@ -9034,6 +9039,26 @@
       "schemaVersion": 1
     },
     {
+      "fact": "TemplateEntryOutcomeRecorded",
+      "contract": "src/Compliance.Common/Features/MethodologyTemplates/Events/TemplateEntryOutcomeRecorded.cs",
+      "discriminator": "bdgrz.methodology-templates.template-entry-outcome-recorded",
+      "schemaVersion": 1,
+      "reducers": [
+        {
+          "aggregate": "TemplateVersionApplication",
+          "source": "src/Compliance.Core/Features/MethodologyTemplates/Aggregates/TemplateVersionApplication.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/MethodologyTemplates/Aggregates/TemplateVersionApplication.cs"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/MethodologyTemplates/Tests/TemplateVersionApplicationWorkflowTests.cs"
+      ],
+      "disposition": "aggregate_fact",
+      "note": ""
+    },
+    {
       "fact": "TemplateSuccessorAdoptionProposed",
       "contract": "src/Compliance.Common/Features/MethodologyTemplates/Events/TemplateSuccessorAdoptionProposed.cs",
       "reducers": [
@@ -9064,6 +9089,46 @@
       "note": "Confirmed publisher gap: a current reducer exists but this source inventory finds no publishing operation. Retained for replay; this row does not claim a current write path.",
       "discriminator": "bdgrz.methodologytemplates.template-successor-disposition-recorded",
       "schemaVersion": 3
+    },
+    {
+      "fact": "TemplateVersionApplicationCompleted",
+      "contract": "src/Compliance.Common/Features/MethodologyTemplates/Events/TemplateVersionApplicationCompleted.cs",
+      "discriminator": "bdgrz.methodology-templates.template-version-application-completed",
+      "schemaVersion": 1,
+      "reducers": [
+        {
+          "aggregate": "TemplateVersionApplication",
+          "source": "src/Compliance.Core/Features/MethodologyTemplates/Aggregates/TemplateVersionApplication.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/MethodologyTemplates/Aggregates/TemplateVersionApplication.cs"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/MethodologyTemplates/Tests/TemplateVersionApplicationWorkflowTests.cs"
+      ],
+      "disposition": "aggregate_fact",
+      "note": ""
+    },
+    {
+      "fact": "TemplateVersionApplicationOpened",
+      "contract": "src/Compliance.Common/Features/MethodologyTemplates/Events/TemplateVersionApplicationOpened.cs",
+      "discriminator": "bdgrz.methodology-templates.template-version-application-opened",
+      "schemaVersion": 1,
+      "reducers": [
+        {
+          "aggregate": "TemplateVersionApplication",
+          "source": "src/Compliance.Core/Features/MethodologyTemplates/Aggregates/TemplateVersionApplication.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/MethodologyTemplates/Aggregates/TemplateVersionApplication.cs"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/MethodologyTemplates/Tests/TemplateVersionApplicationWorkflowTests.cs"
+      ],
+      "disposition": "aggregate_fact",
+      "note": ""
     },
     {
       "fact": "TenantActivated",
@@ -10315,6 +10380,84 @@
       "schemaVersion": 1
     },
     {
+      "fact": "WaiverApproved",
+      "contract": "src/Compliance.Common/Features/Remediation/Events/WaiverApproved.cs",
+      "discriminator": "bdgrz.waiver.approved",
+      "schemaVersion": 1,
+      "reducers": [
+        {
+          "aggregate": "Waiver",
+          "source": "src/Compliance.Core/Features/Remediation/Aggregates/Waiver.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/Remediation/Aggregates/Waiver.cs"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Remediation/Tests/WaiverAggregateTests.cs"
+      ],
+      "disposition": "aggregate_fact",
+      "note": ""
+    },
+    {
+      "fact": "WaiverRejected",
+      "contract": "src/Compliance.Common/Features/Remediation/Events/WaiverRejected.cs",
+      "discriminator": "bdgrz.waiver.rejected",
+      "schemaVersion": 1,
+      "reducers": [
+        {
+          "aggregate": "Waiver",
+          "source": "src/Compliance.Core/Features/Remediation/Aggregates/Waiver.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/Remediation/Aggregates/Waiver.cs"
+      ],
+      "testSymbolReferences": [],
+      "disposition": "aggregate_fact",
+      "note": ""
+    },
+    {
+      "fact": "WaiverRequested",
+      "contract": "src/Compliance.Common/Features/Remediation/Events/WaiverRequested.cs",
+      "discriminator": "bdgrz.waiver.requested",
+      "schemaVersion": 1,
+      "reducers": [
+        {
+          "aggregate": "Waiver",
+          "source": "src/Compliance.Core/Features/Remediation/Aggregates/Waiver.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/Remediation/Aggregates/Waiver.cs"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Remediation/Tests/WaiverAggregateTests.cs"
+      ],
+      "disposition": "aggregate_fact",
+      "note": ""
+    },
+    {
+      "fact": "WaiverRevoked",
+      "contract": "src/Compliance.Common/Features/Remediation/Events/WaiverRevoked.cs",
+      "discriminator": "bdgrz.waiver.revoked",
+      "schemaVersion": 1,
+      "reducers": [
+        {
+          "aggregate": "Waiver",
+          "source": "src/Compliance.Core/Features/Remediation/Aggregates/Waiver.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/Remediation/Aggregates/Waiver.cs"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Remediation/Tests/WaiverAggregateTests.cs"
+      ],
+      "disposition": "aggregate_fact",
+      "note": ""
+    },
+    {
       "fact": "WeeklyWorkDigestDeliveryRecorded",
       "contract": "src/Compliance.Common/Features/Work/Events/WeeklyWorkDigestDeliveryRecorded.cs",
       "reducers": [
@@ -10616,6 +10759,75 @@
       "schemaVersion": 1
     },
     {
+      "fact": "WorkRelationshipEnded",
+      "contract": "src/Compliance.Common/Features/Workforce/Events/WorkRelationshipEnded.cs",
+      "discriminator": "bdgrz.workforce.work-relationship.ended",
+      "schemaVersion": 1,
+      "reducers": [
+        {
+          "aggregate": "WorkRelationship",
+          "source": "src/Compliance.Core/Features/Workforce/Aggregates/WorkRelationship.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/Workforce/Aggregates/WorkRelationship.cs"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Workforce/Tests/WorkRelationshipLifecycleHandlerTests.cs",
+        "test/Compliance.Tests/Features/Workforce/Tests/WorkRelationshipLifecycleProjectionTests.cs",
+        "test/Compliance.Tests/Features/Workforce/Tests/WorkRelationshipLifecycleTests.cs",
+        "test/Compliance.Tests/Features/Workforce/Tests/WorkforceLifecycleObservationTests.cs"
+      ],
+      "disposition": "aggregate_fact",
+      "note": ""
+    },
+    {
+      "fact": "WorkRelationshipLeaveEnded",
+      "contract": "src/Compliance.Common/Features/Workforce/Events/WorkRelationshipLeaveEnded.cs",
+      "discriminator": "bdgrz.workforce.work-relationship.leave-ended",
+      "schemaVersion": 1,
+      "reducers": [
+        {
+          "aggregate": "WorkRelationship",
+          "source": "src/Compliance.Core/Features/Workforce/Aggregates/WorkRelationship.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/Workforce/Aggregates/WorkRelationship.cs"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Workforce/Tests/WorkRelationshipLifecycleHandlerTests.cs",
+        "test/Compliance.Tests/Features/Workforce/Tests/WorkRelationshipLifecycleProjectionTests.cs",
+        "test/Compliance.Tests/Features/Workforce/Tests/WorkRelationshipLifecycleTests.cs",
+        "test/Compliance.Tests/Features/Workforce/Tests/WorkforceLifecycleObservationTests.cs"
+      ],
+      "disposition": "aggregate_fact",
+      "note": ""
+    },
+    {
+      "fact": "WorkRelationshipLeaveStarted",
+      "contract": "src/Compliance.Common/Features/Workforce/Events/WorkRelationshipLeaveStarted.cs",
+      "discriminator": "bdgrz.workforce.work-relationship.leave-started",
+      "schemaVersion": 1,
+      "reducers": [
+        {
+          "aggregate": "WorkRelationship",
+          "source": "src/Compliance.Core/Features/Workforce/Aggregates/WorkRelationship.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/Workforce/Aggregates/WorkRelationship.cs"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Workforce/Tests/WorkRelationshipLifecycleHandlerTests.cs",
+        "test/Compliance.Tests/Features/Workforce/Tests/WorkRelationshipLifecycleProjectionTests.cs",
+        "test/Compliance.Tests/Features/Workforce/Tests/WorkRelationshipLifecycleTests.cs",
+        "test/Compliance.Tests/Features/Workforce/Tests/WorkforceLifecycleObservationTests.cs"
+      ],
+      "disposition": "aggregate_fact",
+      "note": ""
+    },
+    {
       "fact": "WorkRelationshipRecorded",
       "contract": "src/Compliance.Common/Features/Workforce/Events/WorkRelationshipRecorded.cs",
       "reducers": [
@@ -10633,8 +10845,9 @@
         "test/Compliance.Tests/Features/Workforce/Tests/FitzWorkRelationshipDirectoryTests.cs",
         "test/Compliance.Tests/Features/Workforce/Tests/FitzWorkforceObservationDirectoryTests.cs",
         "test/Compliance.Tests/Features/Workforce/Tests/RecordWorkRelationshipHandlerTests.cs",
+        "test/Compliance.Tests/Features/Workforce/Tests/WorkRelationshipLifecycleProjectionTests.cs",
         "test/Compliance.Tests/Features/Workforce/Tests/WorkRelationshipTests.cs",
-        "test/Compliance.Tests/Features/Workforce/Tests/WorkforceRosterSnapshotTests.cs"
+        "test/Compliance.Tests/Features/Workforce/Tests/WorkforceLifecycleObservationTests.cs"
       ],
       "disposition": "aggregate_fact",
       "note": "",
@@ -10658,13 +10871,38 @@
         "test/Compliance.Tests/Features/Workforce/Tests/FitzWorkRelationshipDirectoryTests.cs",
         "test/Compliance.Tests/Features/Workforce/Tests/FitzWorkforceObservationDirectoryTests.cs",
         "test/Compliance.Tests/Features/Workforce/Tests/RecordWorkRelationshipHandlerTests.cs",
+        "test/Compliance.Tests/Features/Workforce/Tests/WorkRelationshipLifecycleTests.cs",
         "test/Compliance.Tests/Features/Workforce/Tests/WorkRelationshipTests.cs",
+        "test/Compliance.Tests/Features/Workforce/Tests/WorkforceLifecycleObservationTests.cs",
         "test/Compliance.Tests/Features/Workforce/Tests/WorkforceRosterSnapshotTests.cs"
       ],
       "disposition": "aggregate_fact",
       "note": "",
       "discriminator": "bdgrz.workforce.work-relationship.revised",
       "schemaVersion": 1
+    },
+    {
+      "fact": "WorkRelationshipStarted",
+      "contract": "src/Compliance.Common/Features/Workforce/Events/WorkRelationshipStarted.cs",
+      "discriminator": "bdgrz.workforce.work-relationship.started",
+      "schemaVersion": 1,
+      "reducers": [
+        {
+          "aggregate": "WorkRelationship",
+          "source": "src/Compliance.Core/Features/Workforce/Aggregates/WorkRelationship.cs"
+        }
+      ],
+      "emitters": [
+        "src/Compliance.Core/Features/Workforce/Aggregates/WorkRelationship.cs"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Workforce/Tests/WorkRelationshipLifecycleHandlerTests.cs",
+        "test/Compliance.Tests/Features/Workforce/Tests/WorkRelationshipLifecycleProjectionTests.cs",
+        "test/Compliance.Tests/Features/Workforce/Tests/WorkRelationshipLifecycleTests.cs",
+        "test/Compliance.Tests/Features/Workforce/Tests/WorkforceLifecycleObservationTests.cs"
+      ],
+      "disposition": "aggregate_fact",
+      "note": ""
     },
     {
       "fact": "WorkforceObservationResolved",
@@ -12252,13 +12490,13 @@
       ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/AccessControl/Tests/DirectoryIndependenceReevaluationTests.cs",
+        "test/Compliance.Tests/Features/AccessControl/Tests/DirectoryReevaluationResultTests.cs",
         "test/Compliance.Tests/Features/AccessControl/Tests/EngagementAcceptanceProcessTests.cs",
         "test/Compliance.Tests/Features/AccessControl/Tests/EngagementPersonalDecisionTests.cs",
         "test/Compliance.Tests/Features/AccessControl/Tests/FirmStaffIdentityClaimTests.cs",
         "test/Compliance.Tests/Features/AccessControl/Tests/FirmStaffNativeHistoryTests.cs",
         "test/Compliance.Tests/Features/AccessControl/Tests/FirmStaffRecordAggregateTests.cs",
-        "test/Compliance.Tests/Features/AccessControl/Tests/FirmStaffRecordTests.cs",
-        "test/Compliance.Tests/Features/AccessControl/Tests/FirmStaffRetainedStatusTests.cs"
+        "test/Compliance.Tests/Features/AccessControl/Tests/FirmStaffRecordTests.cs"
       ],
       "commandRouteDisposition": "registered_command_route"
     },
@@ -13215,6 +13453,7 @@
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Risks/Tests/PersonalRiskSignoffTransportTests.cs",
         "test/Compliance.Tests/Features/Risks/Tests/RiskGovernanceHandlerTests.cs",
+        "test/Compliance.Tests/Features/Risks/Tests/RiskTreatmentAssertionAggregateTests.cs",
         "test/Compliance.Tests/Features/Risks/Tests/RiskTreatmentAssertionNativeTests.cs",
         "test/Compliance.Tests/Testing/RiskSeeds.cs"
       ],
@@ -13587,11 +13826,32 @@
       "internalReactionRequests": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/MethodologyTemplates/Tests/MethodologyTemplateNativeHistoryTests.cs",
-        "test/Compliance.Tests/Features/MethodologyTemplates/Tests/TemplateApplicationNativeHistoryTests.cs"
+        "test/Compliance.Tests/Features/MethodologyTemplates/Tests/TemplateApplicationNativeHistoryTests.cs",
+        "test/Compliance.Tests/Features/MethodologyTemplates/Tests/TemplateVersionApplicationWorkflowTests.cs"
       ],
       "commandRouteDisposition": "pending_command_route",
       "ownerIssue": 1022,
       "note": "Confirmed source gap: no registered mutation route reaches this owner. Existing family tracks the boundary; retain the concrete blocker locally."
+    },
+    {
+      "aggregate": "TemplateVersionApplication",
+      "source": "src/Compliance.Core/Features/MethodologyTemplates/Aggregates/TemplateVersionApplication.cs",
+      "appliedFacts": [
+        "TemplateEntryOutcomeRecorded",
+        "TemplateVersionApplicationCompleted",
+        "TemplateVersionApplicationOpened"
+      ],
+      "commandRequests": [],
+      "internalReactionRequests": [
+        "OpenTemplateVersionApplication",
+        "RecordTemplateEntryOutcome"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/MethodologyTemplates/Tests/TemplateVersionApplicationTests.cs",
+        "test/Compliance.Tests/Features/MethodologyTemplates/Tests/TemplateVersionApplicationWorkflowTests.cs"
+      ],
+      "commandRouteDisposition": "registered_command_route",
+      "note": "Per-version immutable entry outcomes are implemented; entry materialization and parent application completion remain tracked in #1176."
     },
     {
       "aggregate": "Tenant",
@@ -13894,6 +14154,34 @@
       "commandRouteDisposition": "registered_command_route"
     },
     {
+      "aggregate": "Waiver",
+      "source": "src/Compliance.Core/Features/Remediation/Aggregates/Waiver.cs",
+      "appliedFacts": [
+        "WaiverApproved",
+        "WaiverRejected",
+        "WaiverRequested",
+        "WaiverRevoked"
+      ],
+      "commandRequests": [
+        "RequestWaiver",
+        "ReviewWaiver",
+        "RevokeWaiver"
+      ],
+      "internalReactionRequests": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/ControlMappings/Tests/ControlCriterionMappingTests.cs",
+        "test/Compliance.Tests/Features/ControlMappings/Tests/CriterionApplicabilityTests.cs",
+        "test/Compliance.Tests/Features/Evidence/Tests/EvidenceRedactionDecisionTests.cs",
+        "test/Compliance.Tests/Features/Policies/Tests/PolicyNativeContentTests.cs",
+        "test/Compliance.Tests/Features/PolicyDistribution/Tests/CampaignAdmissionTests.cs",
+        "test/Compliance.Tests/Features/PolicyDistribution/Tests/PersonalCampaignWaiverTransportTests.cs",
+        "test/Compliance.Tests/Features/PolicyDistribution/Tests/PolicyCampaignHandlerTests.cs",
+        "test/Compliance.Tests/Features/PolicyDistribution/Tests/PolicyCampaignNativeHistoryTests.cs"
+      ],
+      "commandRouteDisposition": "registered_command_route",
+      "note": "Product waiver owner, independent review, expiry, revocation and point read are implemented in batch1; downstream waiver consumption remains tracked in #1176."
+    },
+    {
       "aggregate": "WeeklyWorkDigest",
       "source": "src/Compliance.Core/Features/Work/Aggregates/WeeklyWorkDigest.cs",
       "appliedFacts": [
@@ -13994,12 +14282,20 @@
       "aggregate": "WorkRelationship",
       "source": "src/Compliance.Core/Features/Workforce/Aggregates/WorkRelationship.cs",
       "appliedFacts": [
+        "WorkRelationshipEnded",
+        "WorkRelationshipLeaveEnded",
+        "WorkRelationshipLeaveStarted",
         "WorkRelationshipRecorded",
-        "WorkRelationshipRevised"
+        "WorkRelationshipRevised",
+        "WorkRelationshipStarted"
       ],
       "commandRequests": [
+        "EndLeave",
+        "EndWorkRelationship",
         "RecordWorkRelationship",
-        "ReviseWorkRelationship"
+        "ReviseWorkRelationship",
+        "StartLeave",
+        "StartWorkRelationship"
       ],
       "internalReactionRequests": [],
       "testSymbolReferences": [
@@ -14010,7 +14306,7 @@
         "test/Compliance.Tests/Features/Workforce/Tests/FitzWorkRelationshipDirectoryTests.cs",
         "test/Compliance.Tests/Features/Workforce/Tests/FitzWorkforceObservationDirectoryTests.cs",
         "test/Compliance.Tests/Features/Workforce/Tests/RecordWorkRelationshipHandlerTests.cs",
-        "test/Compliance.Tests/Features/Workforce/Tests/WorkRelationshipTests.cs"
+        "test/Compliance.Tests/Features/Workforce/Tests/WorkRelationshipLifecycleHandlerTests.cs"
       ],
       "commandRouteDisposition": "registered_command_route"
     },
@@ -14593,6 +14889,7 @@
         "test/Compliance.Tests/Features/AccessControl/Tests/TenantRbacBootstrapReactorTests.cs",
         "test/Compliance.Tests/Features/Tenants/Tests/ActivateTenantIdentityTests.cs",
         "test/Compliance.Tests/Features/Tenants/Tests/ActivateTenantReadinessTests.cs",
+        "test/Compliance.Tests/Features/Tenants/Tests/TenantActivationPolicyResultTests.cs",
         "test/Compliance.Tests/Features/Tenants/Tests/TenantInvitationReactorTests.cs",
         "test/Compliance.Tests/Features/Tenants/Tests/TenantSelfServiceActivationReactorTests.cs"
       ],
@@ -15181,7 +15478,8 @@
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/MethodologyTemplates/Tests/MethodologyTemplateCommandHandlerTests.cs",
         "test/Compliance.Tests/Features/MethodologyTemplates/Tests/MethodologyTemplateNativeHistoryTests.cs",
-        "test/Compliance.Tests/Features/MethodologyTemplates/Tests/TemplateApplicationNativeHistoryTests.cs"
+        "test/Compliance.Tests/Features/MethodologyTemplates/Tests/TemplateApplicationNativeHistoryTests.cs",
+        "test/Compliance.Tests/Features/MethodologyTemplates/Tests/TemplateVersionApplicationWorkflowTests.cs"
       ],
       "note": ""
     },
@@ -15722,6 +16020,7 @@
         "test/Compliance.Tests/Features/MethodologyTemplates/Tests/MethodologyTemplateOwnerTests.cs",
         "test/Compliance.Tests/Features/MethodologyTemplates/Tests/MethodologyTemplateReadHandlerTests.cs",
         "test/Compliance.Tests/Features/MethodologyTemplates/Tests/MethodologyTemplateTests.cs",
+        "test/Compliance.Tests/Features/MethodologyTemplates/Tests/TemplateVersionApplicationWorkflowTests.cs",
         "test/Compliance.Tests/Testing/MethodologyTemplateScenario.cs"
       ],
       "note": ""
@@ -18614,6 +18913,7 @@
         "test/Compliance.Tests/Features/MethodologyTemplates/Tests/MethodologyTemplateOwnerTests.cs",
         "test/Compliance.Tests/Features/MethodologyTemplates/Tests/MethodologyTemplateReadHandlerTests.cs",
         "test/Compliance.Tests/Features/MethodologyTemplates/Tests/MethodologyTemplateTests.cs",
+        "test/Compliance.Tests/Features/MethodologyTemplates/Tests/TemplateVersionApplicationWorkflowTests.cs",
         "test/Compliance.Tests/Testing/MethodologyTemplateScenario.cs"
       ],
       "note": ""
@@ -19380,6 +19680,57 @@
       ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Evaluations/Tests/ControlEvaluationTests.cs"
+      ],
+      "note": ""
+    },
+    {
+      "request": "EndLeave",
+      "contract": "src/Compliance.Common/Features/Workforce/Commands/EndLeave.cs",
+      "classification": "command",
+      "interfaces": "IRequest, IWorkforceRequest, IClientManagementMutationRequest, ICallable",
+      "handlers": [
+        {
+          "name": "EndLeaveHandler",
+          "source": "src/Compliance.Core/Features/Workforce/Handlers/EndLeaveHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
+      "helperServices": [],
+      "directAggregateReferences": [
+        "WorkRelationship"
+      ],
+      "aggregateTargets": [
+        "WorkRelationship"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Workforce/Tests/WorkRelationshipLifecycleHandlerTests.cs",
+        "test/Compliance.Tests/Features/Workforce/Tests/WorkRelationshipLifecycleTests.cs"
+      ],
+      "note": ""
+    },
+    {
+      "request": "EndWorkRelationship",
+      "contract": "src/Compliance.Common/Features/Workforce/Commands/EndWorkRelationship.cs",
+      "classification": "command",
+      "interfaces": "IRequest, IWorkforceRequest, IClientManagementMutationRequest, ICallable",
+      "handlers": [
+        {
+          "name": "EndWorkRelationshipHandler",
+          "source": "src/Compliance.Core/Features/Workforce/Handlers/EndWorkRelationshipHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
+      "helperServices": [],
+      "directAggregateReferences": [
+        "WorkRelationship"
+      ],
+      "aggregateTargets": [
+        "WorkRelationship"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Workforce/Tests/WorkRelationshipLifecycleHandlerTests.cs"
       ],
       "note": ""
     },
@@ -22528,6 +22879,29 @@
       "aggregateTargets": [],
       "helperServices": [],
       "testSymbolReferences": [],
+      "note": "Read/reconstruction request; it does not own a business mutation."
+    },
+    {
+      "request": "GetWaiver",
+      "contract": "src/Compliance.Common/Features/Remediation/Queries/GetWaiver.cs",
+      "classification": "query_or_reconstruction",
+      "interfaces": "IRequest<WaiverView>, ITenantAccessRequest, ICallable",
+      "handlers": [
+        {
+          "name": "GetWaiverHandler",
+          "source": "src/Compliance.Core/Features/Remediation/Handlers/GetWaiverHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
+      "helperServices": [
+        "WaiverReader"
+      ],
+      "directAggregateReferences": [],
+      "aggregateTargets": [],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Remediation/Tests/WaiverHandlerTests.cs"
+      ],
       "note": "Read/reconstruction request; it does not own a business mutation."
     },
     {
@@ -26217,6 +26591,31 @@
       "note": ""
     },
     {
+      "request": "OpenTemplateVersionApplication",
+      "contract": "src/Compliance.Common/Features/MethodologyTemplates/Commands/OpenTemplateVersionApplication.cs",
+      "classification": "internal_reaction",
+      "interfaces": "IRequest, IIdentifiedRequest",
+      "handlers": [
+        {
+          "name": "OpenTemplateVersionApplicationHandler",
+          "source": "src/Compliance.Core/Features/MethodologyTemplates/Handlers/OpenTemplateVersionApplicationHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
+      "helperServices": [],
+      "directAggregateReferences": [
+        "TemplateVersionApplication"
+      ],
+      "aggregateTargets": [
+        "TemplateVersionApplication"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/MethodologyTemplates/Tests/TemplateVersionApplicationWorkflowTests.cs"
+      ],
+      "note": "System-only reaction command; no HTTP or MCP route. Opens or records the exact committed per-version application outcome."
+    },
+    {
       "request": "PlaceArtifactEngagementHold",
       "contract": "src/Compliance.Common/Features/Retention/Commands/PlaceArtifactEngagementHold.cs",
       "interfaces": "IRequest, IArtifactRetentionAdminRequest, IClientManagementMutationRequest, ICallable",
@@ -27108,6 +27507,7 @@
         "test/Compliance.Tests/Features/Risks/Tests/PersonalRiskSignoffTransportTests.cs",
         "test/Compliance.Tests/Features/Risks/Tests/RiskGovernanceHandlerTests.cs",
         "test/Compliance.Tests/Features/Risks/Tests/RiskOwnerBoundaryTests.cs",
+        "test/Compliance.Tests/Features/Risks/Tests/RiskTreatmentAssertionAggregateTests.cs",
         "test/Compliance.Tests/Features/Risks/Tests/RiskTreatmentAssertionNativeTests.cs",
         "test/Compliance.Tests/Features/Risks/Tests/RiskTreatmentAssertionRetryTests.cs",
         "test/Compliance.Tests/Testing/RiskSeeds.cs"
@@ -27436,7 +27836,8 @@
         "test/Compliance.Tests/Features/Risks/Tests/RiskGovernanceHandlerTests.cs",
         "test/Compliance.Tests/Features/Risks/Tests/RiskGovernanceNativeTests.cs",
         "test/Compliance.Tests/Features/Risks/Tests/RiskGovernanceRetryTests.cs",
-        "test/Compliance.Tests/Features/Risks/Tests/RiskOwnerBoundaryTests.cs"
+        "test/Compliance.Tests/Features/Risks/Tests/RiskOwnerBoundaryTests.cs",
+        "test/Compliance.Tests/Features/Risks/Tests/RiskReassessmentFanOutResultTests.cs"
       ],
       "note": "Internal event-driven follow-up command."
     },
@@ -28236,7 +28637,8 @@
       ],
       "helperServices": [],
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/AccessControl/Tests/DirectoryIndependenceReevaluationTests.cs"
+        "test/Compliance.Tests/Features/AccessControl/Tests/DirectoryIndependenceReevaluationTests.cs",
+        "test/Compliance.Tests/Features/AccessControl/Tests/DirectoryReevaluationResultTests.cs"
       ],
       "note": ""
     },
@@ -28935,6 +29337,31 @@
         "test/Compliance.Tests/Features/TechnologyInventory/Tests/InventoryRetryTests.cs"
       ],
       "note": ""
+    },
+    {
+      "request": "RecordTemplateEntryOutcome",
+      "contract": "src/Compliance.Common/Features/MethodologyTemplates/Commands/RecordTemplateEntryOutcome.cs",
+      "classification": "internal_reaction",
+      "interfaces": "IRequest, IIdentifiedRequest",
+      "handlers": [
+        {
+          "name": "RecordTemplateEntryOutcomeHandler",
+          "source": "src/Compliance.Core/Features/MethodologyTemplates/Handlers/RecordTemplateEntryOutcomeHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
+      "helperServices": [],
+      "directAggregateReferences": [
+        "TemplateVersionApplication"
+      ],
+      "aggregateTargets": [
+        "TemplateVersionApplication"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/MethodologyTemplates/Tests/TemplateVersionApplicationWorkflowTests.cs"
+      ],
+      "note": "System-only reaction command; no HTTP or MCP route. Opens or records the exact committed per-version application outcome."
     },
     {
       "request": "RecordTemplateSuccessorDisposition",
@@ -30114,6 +30541,33 @@
       "note": ""
     },
     {
+      "request": "RequestWaiver",
+      "contract": "src/Compliance.Common/Features/Remediation/Commands/RequestWaiver.cs",
+      "classification": "command",
+      "interfaces": "IRequest<WaiverRegistration>, IIdentifiedRequest,\n    IWaiverManagementRequest, IClientManagementMutationRequest, ICallable",
+      "handlers": [
+        {
+          "name": "RequestWaiverHandler",
+          "source": "src/Compliance.Core/Features/Remediation/Handlers/RequestWaiverHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
+      "helperServices": [],
+      "directAggregateReferences": [
+        "Waiver"
+      ],
+      "aggregateTargets": [
+        "Waiver"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Remediation/Tests/WaiverAggregateTests.cs",
+        "test/Compliance.Tests/Features/Remediation/Tests/WaiverAuthorizationTests.cs",
+        "test/Compliance.Tests/Features/Remediation/Tests/WaiverHandlerTests.cs"
+      ],
+      "note": ""
+    },
+    {
       "request": "ReserveAccessReviewItemDecision",
       "contract": "src/Compliance.Common/Features/AccessReviews/Commands/ReserveAccessReviewItemDecision.cs",
       "classification": "internal_reaction",
@@ -30828,6 +31282,7 @@
         "test/Compliance.Tests/Features/MethodologyTemplates/Tests/MethodologyTemplateOwnerTests.cs",
         "test/Compliance.Tests/Features/MethodologyTemplates/Tests/MethodologyTemplateReadHandlerTests.cs",
         "test/Compliance.Tests/Features/MethodologyTemplates/Tests/MethodologyTemplateTests.cs",
+        "test/Compliance.Tests/Features/MethodologyTemplates/Tests/TemplateVersionApplicationWorkflowTests.cs",
         "test/Compliance.Tests/Testing/MethodologyTemplateScenario.cs"
       ],
       "note": ""
@@ -30878,6 +31333,7 @@
       ],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Risks/Tests/RiskGovernanceHandlerTests.cs",
+        "test/Compliance.Tests/Features/Risks/Tests/RiskTreatmentAssertionAggregateTests.cs",
         "test/Compliance.Tests/Features/Risks/Tests/RiskTreatmentAssertionNativeTests.cs",
         "test/Compliance.Tests/Features/Work/Tests/ReviewerWorkAuthorityTests.cs",
         "test/Compliance.Tests/Testing/RiskSeeds.cs"
@@ -30995,6 +31451,33 @@
       "helperServices": [],
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Examinations/Tests/TypeIIPlanCommandHandlerTests.cs"
+      ],
+      "note": ""
+    },
+    {
+      "request": "ReviewWaiver",
+      "contract": "src/Compliance.Common/Features/Remediation/Commands/ReviewWaiver.cs",
+      "classification": "command",
+      "interfaces": "IRequest, IIdentifiedRequest,\n    IWaiverManagementRequest, IClientManagementMutationRequest, ICallable",
+      "handlers": [
+        {
+          "name": "ReviewWaiverHandler",
+          "source": "src/Compliance.Core/Features/Remediation/Handlers/ReviewWaiverHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
+      "helperServices": [],
+      "directAggregateReferences": [
+        "Waiver"
+      ],
+      "aggregateTargets": [
+        "Waiver"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Remediation/Tests/WaiverAggregateTests.cs",
+        "test/Compliance.Tests/Features/Remediation/Tests/WaiverAuthorizationTests.cs",
+        "test/Compliance.Tests/Features/Remediation/Tests/WaiverHandlerTests.cs"
       ],
       "note": ""
     },
@@ -32037,6 +32520,33 @@
       "note": ""
     },
     {
+      "request": "RevokeWaiver",
+      "contract": "src/Compliance.Common/Features/Remediation/Commands/RevokeWaiver.cs",
+      "classification": "command",
+      "interfaces": "IRequest, IIdentifiedRequest,\n    IWaiverManagementRequest, IClientManagementMutationRequest, ICallable",
+      "handlers": [
+        {
+          "name": "RevokeWaiverHandler",
+          "source": "src/Compliance.Core/Features/Remediation/Handlers/RevokeWaiverHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
+      "helperServices": [],
+      "directAggregateReferences": [
+        "Waiver"
+      ],
+      "aggregateTargets": [
+        "Waiver"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Remediation/Tests/WaiverAggregateTests.cs",
+        "test/Compliance.Tests/Features/Remediation/Tests/WaiverAuthorizationTests.cs",
+        "test/Compliance.Tests/Features/Remediation/Tests/WaiverHandlerTests.cs"
+      ],
+      "note": ""
+    },
+    {
       "request": "RotateTenantIdentityProviderCredentials",
       "contract": "src/Compliance.Common/Features/UserIdentities/Commands/RotateTenantIdentityProviderCredentials.cs",
       "interfaces": "IRequest, IClientManagementMutationRequest, ICallable, IIdentifiedRequest",
@@ -32894,6 +33404,32 @@
       "note": ""
     },
     {
+      "request": "StartLeave",
+      "contract": "src/Compliance.Common/Features/Workforce/Commands/StartLeave.cs",
+      "classification": "command",
+      "interfaces": "IRequest, IWorkforceRequest, IClientManagementMutationRequest, ICallable",
+      "handlers": [
+        {
+          "name": "StartLeaveHandler",
+          "source": "src/Compliance.Core/Features/Workforce/Handlers/StartLeaveHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
+      "helperServices": [],
+      "directAggregateReferences": [
+        "WorkRelationship"
+      ],
+      "aggregateTargets": [
+        "WorkRelationship"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Workforce/Tests/WorkRelationshipLifecycleHandlerTests.cs",
+        "test/Compliance.Tests/Features/Workforce/Tests/WorkRelationshipLifecycleTests.cs"
+      ],
+      "note": ""
+    },
+    {
       "request": "StartTypeIIObservationPeriod",
       "contract": "src/Compliance.Common/Features/Operations/Commands/StartTypeIIObservationPeriod.cs",
       "interfaces": "IRequest<OperationAcceptedResponse>, IProgramScopedRequest, IClientManagementMutationRequest,\n        IIdentifiedRequest, ICallable",
@@ -32922,6 +33458,31 @@
       "testSymbolReferences": [
         "test/Compliance.Tests/Features/Operations/Tests/StartTypeIIObservationPeriodHandlerTests.cs",
         "test/Compliance.Tests/Testing/TypeIIPeriodSeeds.cs"
+      ],
+      "note": ""
+    },
+    {
+      "request": "StartWorkRelationship",
+      "contract": "src/Compliance.Common/Features/Workforce/Commands/StartWorkRelationship.cs",
+      "classification": "command",
+      "interfaces": "IRequest, IWorkforceRequest, IClientManagementMutationRequest, ICallable",
+      "handlers": [
+        {
+          "name": "StartWorkRelationshipHandler",
+          "source": "src/Compliance.Core/Features/Workforce/Handlers/StartWorkRelationshipHandler.cs",
+          "registered": true
+        }
+      ],
+      "handlerRegistration": true,
+      "helperServices": [],
+      "directAggregateReferences": [
+        "WorkRelationship"
+      ],
+      "aggregateTargets": [
+        "WorkRelationship"
+      ],
+      "testSymbolReferences": [
+        "test/Compliance.Tests/Features/Workforce/Tests/WorkRelationshipLifecycleHandlerTests.cs"
       ],
       "note": ""
     },
@@ -33292,7 +33853,9 @@
       "registrationSource": "src/Compliance.App/Program.cs",
       "kind": "mcp_command_adapter",
       "testSymbolReferences": [
-        "test/Compliance.Tests/Features/Applications/Tests/ApplicationRevisionFieldPresenceHttpTests.cs"
+        "test/Compliance.Tests/AggregateCommandCoverageTests.cs",
+        "test/Compliance.Tests/Features/Applications/Tests/ApplicationRevisionFieldPresenceHttpTests.cs",
+        "test/Compliance.Tests/Features/Applications/Tests/ApplicationUpdateIntentTests.cs"
       ]
     },
     {
@@ -33304,6 +33867,7 @@
       "registrationSource": "src/Compliance.App/Program.cs",
       "kind": "mcp_query_adapter",
       "testSymbolReferences": [
+        "test/Compliance.Tests/AggregateCommandCoverageTests.cs",
         "test/Compliance.Tests/Features/Applications/Tests/ApplicationRevisionFieldPresenceHttpTests.cs"
       ]
     }
@@ -34038,5 +34602,5 @@
       "note": "Aggregate roots pass their RaiseEvent callback into this helper; the helper constructs ResponsibilityAssigned and ResponsibilityRevoked."
     }
   ],
-  "sourceWorktreeNote": "Inventory reflects the source and assemblies of this explicit export, including uncommitted source changes; sourceCommit identifies the current base commit."
+  "sourceWorktreeNote": "Exported from the assembled batch1 source at sourceCommit. Internal-only request classification and remaining-work notes were reviewed separately. Inventory is navigation metadata, not proof of domain or workflow completion."
 }
