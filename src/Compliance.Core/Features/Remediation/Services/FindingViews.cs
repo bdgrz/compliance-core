@@ -112,6 +112,14 @@ static class FindingViews
                 $"Closure {proposal.ClosureId}: {proposal.Terms.Rationale}", proposal.ProposedBy, proposal.ProposedAt)],
         }, now);
 
+    public static FindingView WithReturnedProposal(FindingView view, string comments, long number,
+        ActorReference reviewer, DateTimeOffset reviewedAt) => Settle(view with
+        {
+            Revision = number,
+            ClosureProposal = null,
+            History = [.. view.History, new FindingHistoryEntryView(number, "closure_returned", comments, reviewer, reviewedAt)],
+        }, reviewedAt);
+
     public static string Date(DateOnly date) => date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
 
     public static FindingView WithCancelledAction(FindingView view, CorrectiveActionView action, DateTimeOffset now) =>

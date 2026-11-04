@@ -2,6 +2,7 @@ using Cntryl.Portia;
 using Microsoft.Extensions.DependencyInjection;
 using Bdgrz.Compliance.Features.AccessControl.Models;
 using Bdgrz.Compliance.Features.Evidence.Models;
+using Bdgrz.Compliance.Features.NativeOperations.Models;
 using Bdgrz.Compliance.Features.Remediation.Commands;
 using Bdgrz.Compliance.Features.Remediation.Events;
 using Bdgrz.Compliance.Features.Remediation.Handlers;
@@ -216,6 +217,82 @@ public sealed class FindingClosureReviewHandlerTests
         // Assert
         Assert.Equal(RequestErrorKind.Conflict, result.Error?.Kind);
         Assert.Equal(before.Version, after.Version);
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task ShouldAllowIndependentProposalReviewGivenReviewerOwnsFindingOrAuthoredItsAnalysis(bool findingOwner)
+    {
+        // Arrange
+        var fixture = await OperationsFixture.CreateAsync();
+        await using var provider = fixture.Provider;
+        await using var scope = provider.CreateAsyncScope();
+        var finding = await fixture.RaiseFindingAsync(findingOwner ? fixture.ApproverMemberId : fixture.OwnerMemberId);
+        var artifact = await ProposeFindingClosureHandlerTests.ArtifactAsync(fixture, EvidenceInspectionOutcome.Clean);
+        var proposer = ActivatorUtilities.CreateInstance<ProposeFindingClosureHandler>(scope.ServiceProvider);
+        var proposed = await proposer.HandleAsync(ProposeFindingClosureHandlerTests.Context(
+            ProposeFindingClosureHandlerTests.Command(fixture, finding, artifact), findingOwner ? fixture.LeadUserId : fixture.OwnerUserId), CancellationToken.None);
+        Assert.True(proposed.IsSuccess, proposed.Error?.Message);
+        var request = Review(fixture, proposed.Value, true);
+        var reviewer = findingOwner ? fixture.ApproverUserId : fixture.LeadUserId;
+        var handler = ActivatorUtilities.CreateInstance<ReviewFindingClosureHandler>(scope.ServiceProvider);
+
+        // Act
+        var accepted = await handler.HandleAsync(ProposeFindingClosureHandlerTests.Context(request, reviewer), CancellationToken.None);
+        Assert.True(accepted.IsSuccess, accepted.Error?.Message);
+        await fixture.RunClosureAsync(finding.FindingId, request.CommandId);
+
+        // Assert
+        var owner = await fixture.FindingStreamAsync(finding.FindingId);
+        Assert.NotNull(owner.Closed);
+        Assert.Equal(fixture.Member(reviewer), owner.Closed.Review!.ReviewerMemberId);
+        Assert.Null(owner.Closed.Review.Waiver);
+    }
+
+    [Fact]
+    public async Task ShouldCloseAndReleaseHeldSourceGivenReviewerResolvedActionButAuthoredNoProposalRevision()
+    {
+        // Arrange
+        var fixture = await OperationsFixture.CreateAsync();
+        await using var provider = fixture.Provider;
+        await using var scope = provider.CreateAsyncScope();
+        var finding = await fixture.RaiseFindingAsync(fixture.OwnerMemberId);
+        finding = await fixture.AddActionAsync(finding, fixture.ApproverMemberId, fixture.Today.AddDays(4));
+        var actionId = Assert.Single(finding.CorrectiveActions).ActionId;
+        finding = await fixture.AsAsync(fixture.ApproverUserId, fixture.Complete(finding, actionId, "Access removed.", OperationsFixture.FullSupport));
+        var action = await fixture.ActionAsync(finding.FindingId, actionId);
+        DomainEventRecord? source = null;
+        await foreach (var fact in scope.ServiceProvider.GetRequiredService<IDomainEventReader>().ReadAsync(action.Stream, 0))
+            if (fact.Event is CorrectiveActionCompletedV2)
+                source = fact;
+        Assert.NotNull(source);
+        var report = FindingCorrectiveActionOutcomeWorkflowTests.Report(fixture, finding, source, "completed");
+        var reported = await ActivatorUtilities.CreateInstance<RecordCorrectiveActionOutcomeHandler>(scope.ServiceProvider)
+            .HandleAsync(new Cntryl.Portia.RequestContext<RecordCorrectiveActionOutcome>(report,
+                new RequestDispatchContext(RequestActor.System)), CancellationToken.None);
+        Assert.True(reported.IsSuccess, reported.Error?.Message);
+        finding = await fixture.GetFindingAsync(finding.FindingId);
+        var artifact = await ProposeFindingClosureHandlerTests.ArtifactAsync(fixture, EvidenceInspectionOutcome.Clean);
+        var proposed = await ActivatorUtilities.CreateInstance<ProposeFindingClosureHandler>(scope.ServiceProvider).HandleAsync(
+            ProposeFindingClosureHandlerTests.Context(ProposeFindingClosureHandlerTests.Command(fixture, finding, artifact), fixture.OwnerUserId), CancellationToken.None);
+        Assert.True(proposed.IsSuccess, proposed.Error?.Message);
+        var request = Review(fixture, proposed.Value, true);
+        var handler = ActivatorUtilities.CreateInstance<ReviewFindingClosureHandler>(scope.ServiceProvider);
+
+        // Act
+        var accepted = await handler.HandleAsync(ProposeFindingClosureHandlerTests.Context(request, fixture.ApproverUserId), CancellationToken.None);
+        Assert.True(accepted.IsSuccess, accepted.Error?.Message);
+        await fixture.RunClosureAsync(finding.FindingId, request.CommandId);
+        var owner = await fixture.FindingStreamAsync(finding.FindingId);
+        var settled = await fixture.ActionAsync(finding.FindingId, actionId);
+
+        // Assert
+        Assert.NotNull(owner.Closed);
+        Assert.Equal(fixture.ApproverMemberId, owner.Closed.Review!.ReviewerMemberId);
+        Assert.Equal(fixture.ApproverMemberId, settled.Completed!.CompletedByMemberId);
+        Assert.Null(owner.Closed.Review.Waiver);
+        Assert.False(settled.Uses.HasActiveUse);
     }
 
     internal static ReviewFindingClosure Review(OperationsFixture fixture, FindingView proposed, bool approve) => new(

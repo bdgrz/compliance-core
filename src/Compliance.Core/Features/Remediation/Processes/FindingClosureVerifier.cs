@@ -23,6 +23,7 @@ using Bdgrz.Compliance.Features.Providers.History;
 using Bdgrz.Compliance.Features.Providers.Rules;
 using Bdgrz.Compliance.Features.Remediation.History;
 using Bdgrz.Compliance.Features.Remediation.Models;
+using Bdgrz.Compliance.Features.Remediation.Projections;
 using Bdgrz.Compliance.Features.Remediation.Services;
 using Bdgrz.Compliance.Features.SourceFacts.Contracts;
 using Bdgrz.Compliance.Features.SourceFacts.Models;
@@ -123,6 +124,8 @@ sealed class FindingClosureVerifier(IAggregateReader reader, IImmutableContentSt
         try
         {
             var history = await FindingHistory.ReadAsync(events, finding, ct).ConfigureAwait(false);
+            if (!await MatchesProposalAsync(finding, history, intent, decision, tenant, ct).ConfigureAwait(false))
+                return FindingClosure.Failed(Permanent("The frozen review differs from its exact committed closure proposal and reviewer."));
             return new FindingClosure(null, finding, intent, decision, tenant, history);
         }
         catch (ImmutableContentIntegrityException exception)
@@ -130,6 +133,31 @@ sealed class FindingClosureVerifier(IAggregateReader reader, IImmutableContentSt
             return FindingClosure.Failed(new RequestError(RequestErrorKind.Conflict,
                 $"The exact finding source cannot be verified: {exception.Message}", exception is ImmutableContentUnavailableException));
         }
+    }
+
+    async ValueTask<bool> MatchesProposalAsync(FindingAggregate finding, FindingHistorySnapshot history,
+        ClosureIntent intent, ClosureDecision decision, Uuid tenant, CancellationToken ct)
+    {
+        var accepted = history.AcceptedClosure(intent.Header.RootOperationId);
+        if (accepted is null)
+            return true;
+        if (accepted.Review is not { } review)
+            return decision.Review is null && decision.ProposalSource is null;
+        if (decision.Review != review || decision.ProposalSource is not { } source || source.Stream != finding.Stream ||
+            history.FactById(source.EventId) is not FindingClosureProposed proposal ||
+            proposal.Metadata.AggregateVersion != source.AggregateVersion || proposal.Revision >= accepted.Revision ||
+            proposal.ClosureId != review.ClosureId || proposal.ProposalRevision != review.ProposalRevision ||
+            intent.Header != FindingContent.Header(accepted.Operation, accepted.Operation.AcceptedAt) ||
+            intent.AdmittedChildren != proposal.ActionsReliedOn || decision.ClosedBy != review.ReviewedBy ||
+            decision.CloserMemberId != review.ReviewerMemberId || decision.DecidedAt != review.ReviewedAt ||
+            decision.SeparationOfDutiesWaiverId != review.Waiver?.WaiverId ||
+            decision.VerificationRationale != proposal.Terms.VerificationRationale || decision.Rationale != proposal.Terms.Rationale ||
+            decision.ResolutionEvidence is null || !decision.ResolutionEvidence.SequenceEqual(FindingClosureProposalSources.References(proposal.Terms)))
+            return false;
+        if (review.Waiver is null)
+            return intent.WaiverProof is null;
+        return intent.WaiverProof is { } reference && await FindingContent.ReadAsync<SeparationOfDutiesWaiverProof>(
+            content, tenant, reference, ct).ConfigureAwait(false) == review.Waiver;
     }
 
     static RequestError Permanent(string message) => new(RequestErrorKind.Conflict, message, false);

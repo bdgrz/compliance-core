@@ -123,7 +123,9 @@ sealed class CompleteFindingClosureHandler(IAggregateReader reader, IAggregateEx
 
         var view = new FindingClosureView(decision.DecisionId, decision.VerificationRationale, decision.ResolutionEvidence,
             decision.Rationale, decision.CloserMemberId, decision.ClosedBy, decision.DecidedAt,
-            decision.SeparationOfDutiesWaiverId);
+            decision.SeparationOfDutiesWaiverId, decision.Review?.ClosureId, decision.Review?.ProposalRevision,
+            decision.ProposalSource is { } proposalSource && closure.History!.FactById(proposalSource.EventId) is FindingClosureProposed proposal
+                ? proposal.Terms.ResolutionEvidence : null);
         var current = await findings.ComposeAsync(finding, now, ct).ConfigureAwait(false);
         var after = FindingViews.WithClosure(current!, view, finding.Revision + 1, now);
         var closureContent = await FindingContent.WriteDeterministicAsync(content, tenant, command.CommandId,
