@@ -1,5 +1,5 @@
-using Cntryl.Fitz;
-using Cntryl.Fitz.Extensions;
+using System.Globalization;
+using Bdgrz.Compliance.Features.Programs.Readers;
 using Cntryl.Portia;
 using Bdgrz.Compliance.Features.AuditPackages.Rules;
 using Bdgrz.Compliance.Features.Incidents.Rules;
@@ -14,9 +14,8 @@ using Bdgrz.Compliance.Features.Snapshots.Models;
 using Bdgrz.Compliance.Features.Snapshots.Projections;
 namespace Bdgrz.Compliance.Features.Snapshots.Readers;
 
-sealed class FitzPopulationSnapshotDirectory(IKvClient client)
-    : FitzKvProjectionStore(client, "kv://bdgrz/population-snapshot-directory-v2/projection",
-            "PopulationSnapshotDirectoryV2"),
+sealed class CassiePopulationSnapshotDirectory(CassieProjectionDatabase database)
+    : CassieProgramScopeRepository(database, "PopulationSnapshotDirectoryV2", "population-snapshots"),
         IPopulationSnapshotDirectoryReader, IPopulationSnapshotDirectoryProjection
 {
     public ValueTask<ProjectionCheckpoint> LoadCheckpointAsync(Uuid tenantId,
@@ -29,18 +28,15 @@ sealed class FitzPopulationSnapshotDirectory(IKvClient client)
         if (domainEvent is not PopulationSnapshotFrozen frozen)
             throw new ArgumentException("The population snapshot directory requires a frozen snapshot event.",
                 nameof(domainEvent));
-        return PopulationSnapshotDirectorySchema.Directory.InsertAsync(Transaction,
+        return InsertValueAsync(
             new PopulationSnapshotSummary(frozen.TenantId, frozen.SnapshotId, frozen.RootSnapshotId,
                 frozen.AmendsSnapshotId, frozen.Kind, frozen.RowCount, frozen.ContentSha256,
                 frozen.AmendmentReason, frozen.FrozenBy, frozen.FrozenAt), ct);
     }
 
-    public async ValueTask<Page<PopulationSnapshotSummary>> ListAsync(Uuid tenantId, string kind,
-        int limit, string? cursor, CancellationToken ct = default)
-    {
-        await using var tx = await BeginReadAsync(tenantId.ToString(), ct).ConfigureAwait(false);
-        return await PopulationSnapshotDirectorySchema.Directory.QueryAsync(tx,
-            PopulationSnapshotDirectorySchema.ByKindNewestFirst.Query().WithPrefix(kind)
-                .Take(Math.Clamp(limit, 1, 200)).After(cursor), ct).ConfigureAwait(false);
-    }
+    public ValueTask<Page<PopulationSnapshotSummary>> ListAsync(Uuid tenantId, string kind, int limit, string? cursor, CancellationToken ct = default) =>
+        PageAsync("population_snapshots", tenantId, kind, limit, cursor, ComplianceCoreJsonContext.Default.PopulationSnapshotSummary, ct);
+    ValueTask InsertValueAsync(PopulationSnapshotSummary value, CancellationToken ct) =>
+        InsertAsync("population_snapshots", value.TenantId, value.SnapshotId.ToString(), value.Kind,
+            (long.MaxValue - value.FrozenAt.UtcTicks).ToString("D20", CultureInfo.InvariantCulture), value, ComplianceCoreJsonContext.Default.PopulationSnapshotSummary, ct);
 }

@@ -44,7 +44,7 @@ public sealed class ListProgramClientServicesHandler(IClientServiceDirectoryRead
             page = await directory.ListProgramAsync(request.TenantId, request.ProgramId,
                 request.Limit ?? 50, request.Cursor, ct).ConfigureAwait(false);
         }
-        catch (KvDirectoryQueryException)
+        catch (ProgramScopeDirectoryQueryException)
         {
             return Result<Page<ClientServiceView>>.Failure(new RequestError(
                 RequestErrorKind.Validation, "The program client service cursor is invalid."));

@@ -1,5 +1,4 @@
 using System.Globalization;
-using Cntryl.Fitz;
 using Cntryl.Portia;
 using Bdgrz.Compliance.Features.AccessControl.Readers;
 using Bdgrz.Compliance.Features.AuditPackages.Rules;
@@ -20,8 +19,8 @@ using Bdgrz.Compliance.Features.Programs.Models;
 using Bdgrz.Compliance.Features.Programs.Projections;
 namespace Bdgrz.Compliance.Features.Programs.Readers;
 
-sealed class FitzClientServiceDirectory(IKvClient client, IImmutableContentStore content)
-    : FitzKvProjectionStore(client, "kv://bdgrz/client-service-directory/projection", "ClientServiceDirectory"),
+sealed class CassieClientServiceDirectory(CassieProjectionDatabase database, IImmutableContentStore content)
+    : CassieProgramScopeRepository(database, "ClientServiceDirectory"),
         IClientServiceDirectoryReader, IClientServiceDirectoryProjection
 {
     public async ValueTask ApplyAsync(DomainEvent domainEvent, CancellationToken ct = default)
@@ -32,12 +31,12 @@ sealed class FitzClientServiceDirectory(IKvClient client, IImmutableContentStore
         {
             case ClientServiceCreated created:
                 var creation = await ProductClientServiceReader.ReadContentAsync(content, created, ct).ConfigureAwait(false);
-                await ClientServiceDirectorySchema.Directory.InsertAsync(Transaction,
+                await InsertValueAsync(
                     new ClientServiceView(created.TenantId, created.ServiceId, 1, creation.Name,
                         creation.Purpose, creation.OwnerReference, "active", created.ActorMemberId,
                         created.ActorDisplay, created.ChangedAt,
                         created.ProgramId == Uuid.Empty ? null : created.ProgramId), ct).ConfigureAwait(false);
-                await ClientServiceDirectorySchema.Revisions.InsertAsync(Transaction,
+                await InsertRevisionAsync(
                         new ClientServiceRevisionView(created.ServiceId, 1, creation.Name,
                             creation.Purpose, creation.OwnerReference, "active", null,
                             created.ActorMemberId, created.ActorDisplay, created.ChangedAt,
@@ -49,7 +48,7 @@ sealed class FitzClientServiceDirectory(IKvClient client, IImmutableContentStore
                 var current = await RequireCurrentAsync(revised.ServiceId, ct).ConfigureAwait(false);
                 if (current.ProgramId != revised.ProgramId)
                     throw new ImmutableContentIntegrityException("The service revision differs from its actual projected predecessor.");
-                await ClientServiceDirectorySchema.Directory.ReplaceAsync(Transaction, current,
+                await ReplaceValueAsync(
                     current with
                     {
                         Revision = revised.Revision,
@@ -60,7 +59,7 @@ sealed class FitzClientServiceDirectory(IKvClient client, IImmutableContentStore
                         LastChangedByDisplay = revised.ActorDisplay,
                         LastChangedAt = revised.ChangedAt,
                     }, ct).ConfigureAwait(false);
-                await ClientServiceDirectorySchema.Revisions.InsertAsync(Transaction,
+                await InsertRevisionAsync(
                         new ClientServiceRevisionView(revised.ServiceId, revised.Revision, revision.Name,
                             revision.Purpose, revision.OwnerReference, "active", null,
                             revised.ActorMemberId, revised.ActorDisplay, revised.ChangedAt,
@@ -74,7 +73,7 @@ sealed class FitzClientServiceDirectory(IKvClient client, IImmutableContentStore
                 if (active.ProgramId != retired.ProgramId || active.Name != retiredValue.Name ||
                     active.Purpose != retiredValue.Purpose || active.OwnerReference != retiredValue.OwnerReference)
                     throw new ImmutableContentIntegrityException("The service retirement differs from its actual projected predecessor.");
-                await ClientServiceDirectorySchema.Directory.ReplaceAsync(Transaction, active,
+                await ReplaceValueAsync(
                     active with
                     {
                         Revision = retired.Revision,
@@ -83,7 +82,7 @@ sealed class FitzClientServiceDirectory(IKvClient client, IImmutableContentStore
                         LastChangedByDisplay = retired.ActorDisplay,
                         LastChangedAt = retired.ChangedAt,
                     }, ct).ConfigureAwait(false);
-                await ClientServiceDirectorySchema.Revisions.InsertAsync(Transaction,
+                await InsertRevisionAsync(
                         new ClientServiceRevisionView(retired.ServiceId, retired.Revision, active.Name,
                             active.Purpose, active.OwnerReference, "retired", retirement.Rationale,
                             retired.ActorMemberId, retired.ActorDisplay, retired.ChangedAt,
@@ -94,54 +93,43 @@ sealed class FitzClientServiceDirectory(IKvClient client, IImmutableContentStore
     }
 
     async ValueTask<ClientServiceView> RequireCurrentAsync(Uuid serviceId, CancellationToken ct) =>
-        await ClientServiceDirectorySchema.Directory.GetAsync(Transaction, serviceId, ct)
+        await CurrentValueAsync(serviceId, ct)
             .ConfigureAwait(false) ?? throw new InvalidOperationException(
             "A service change cannot project before its creation.");
 
-    public async ValueTask<ClientServiceView?> GetAsync(Uuid tenantId, Uuid serviceId,
-        CancellationToken ct = default)
-    {
-        await using var tx = await BeginReadAsync(tenantId.ToString(), ct).ConfigureAwait(false);
-        return await ClientServiceDirectorySchema.Directory.GetAsync(tx, serviceId, ct)
-            .ConfigureAwait(false);
-    }
+    public ValueTask<ClientServiceView?> GetAsync(Uuid tenantId, Uuid serviceId, CancellationToken ct = default) =>
+        ReadAsync("client_service_directory", tenantId, serviceId.ToString(), ComplianceCoreJsonContext.Default.ClientServiceView, ct);
 
-    public async ValueTask<Page<ClientServiceView>> ListAsync(Uuid tenantId, int limit, string? cursor,
-        CancellationToken ct = default)
-    {
-        await using var tx = await BeginReadAsync(tenantId.ToString(), ct).ConfigureAwait(false);
-        return await ClientServiceDirectorySchema.Directory.QueryAsync(tx,
-                ClientServiceDirectorySchema.ByName.Query().Take(Math.Clamp(limit, 1, 200)).After(cursor), ct)
-            .ConfigureAwait(false);
-    }
+    public ValueTask<Page<ClientServiceView>> ListAsync(Uuid tenantId, int limit, string? cursor, CancellationToken ct = default) =>
+        PageAsync("client_service_directory", tenantId, null, limit, cursor, ComplianceCoreJsonContext.Default.ClientServiceView, ct);
 
-    public async ValueTask<Page<ClientServiceView>> ListProgramAsync(Uuid tenantId,
-        Uuid programId, int limit, string? cursor, CancellationToken ct = default)
+    public async ValueTask<Page<ClientServiceRevisionView>?> ListRevisionsAsync(Uuid tenantId, Uuid serviceId, int limit, string? cursor, CancellationToken ct = default)
     {
-        await using var tx = await BeginReadAsync(tenantId.ToString(), ct).ConfigureAwait(false);
-        return await ClientServiceDirectorySchema.Directory.QueryAsync(tx,
-            ClientServiceDirectorySchema.ByProgram.Query().WithPrefix(programId.ToString())
-                .Take(Math.Clamp(limit, 1, 200)).After(cursor), ct).ConfigureAwait(false);
-    }
-
-    public async ValueTask<Page<ClientServiceRevisionView>?> ListRevisionsAsync(Uuid tenantId,
-        Uuid serviceId, int limit, string? cursor, CancellationToken ct = default)
-    {
-        await using var tx = await BeginReadAsync(tenantId.ToString(), ct).ConfigureAwait(false);
-        if (await ClientServiceDirectorySchema.Directory.GetAsync(tx, serviceId, ct)
-                .ConfigureAwait(false) is null)
+        if (await GetAsync(tenantId, serviceId, ct).ConfigureAwait(false) is null)
             return null;
-        return await ClientServiceDirectorySchema.Revisions.QueryAsync(tx,
-            ClientServiceDirectorySchema.RevisionsByService.Query().WithPrefix(serviceId.ToString())
-                .Take(Math.Clamp(limit, 1, 200)).After(cursor), ct).ConfigureAwait(false);
+        return await PageAsync("client_service_revisions", tenantId, serviceId.ToString(), limit, cursor,
+            ComplianceCoreJsonContext.Default.ClientServiceRevisionView, ct).ConfigureAwait(false);
     }
 
-    public async ValueTask<ClientServiceRevisionView?> GetRevisionAsync(Uuid tenantId,
-        Uuid serviceId, long revision, CancellationToken ct = default)
-    {
-        await using var tx = await BeginReadAsync(tenantId.ToString(), ct).ConfigureAwait(false);
-        return await ClientServiceDirectorySchema.Revisions.GetAsync(tx,
-                $"{serviceId}:{revision.ToString("D20", CultureInfo.InvariantCulture)}", ct)
-            .ConfigureAwait(false);
-    }
+    public ValueTask<ClientServiceRevisionView?> GetRevisionAsync(Uuid tenantId, Uuid serviceId, long revision, CancellationToken ct = default) =>
+        ReadAsync("client_service_revisions", tenantId, $"{serviceId}:{revision.ToString("D20", CultureInfo.InvariantCulture)}",
+            ComplianceCoreJsonContext.Default.ClientServiceRevisionView, ct);
+
+    public ValueTask<ProjectionCheckpoint> LoadCheckpointAsync(Uuid tenantId, CancellationToken ct = default) =>
+        base.LoadCheckpointAsync(new CheckpointIdentity("ClientServiceDirectory", EventStreamPattern.ForPattern(tenantId.ToString())), ct);
+
+    ValueTask<ClientServiceView?> CurrentValueAsync(Uuid id, CancellationToken ct) =>
+        CurrentAsync("client_service_directory", id.ToString(), ComplianceCoreJsonContext.Default.ClientServiceView, ct);
+    ValueTask InsertValueAsync(ClientServiceView value, CancellationToken ct) =>
+        InsertAsync("client_service_directory", value.TenantId, value.ServiceId.ToString(), (value.ProgramId ?? Uuid.Empty).ToString(),
+            value.Name.ToUpperInvariant(), value, ComplianceCoreJsonContext.Default.ClientServiceView, ct);
+    ValueTask ReplaceValueAsync(ClientServiceView value, CancellationToken ct) =>
+        ReplaceAsync("client_service_directory", value.TenantId, value.ServiceId.ToString(), (value.ProgramId ?? Uuid.Empty).ToString(),
+            value.Name.ToUpperInvariant(), value, ComplianceCoreJsonContext.Default.ClientServiceView, ct);
+    ValueTask InsertRevisionAsync(ClientServiceRevisionView value, CancellationToken ct) =>
+        InsertAsync("client_service_revisions", BatchTenant(), $"{value.ServiceId}:{value.Revision.ToString("D20", CultureInfo.InvariantCulture)}", value.ServiceId.ToString(),
+            value.Revision.ToString("D20", CultureInfo.InvariantCulture), value, ComplianceCoreJsonContext.Default.ClientServiceRevisionView, ct);
+    Uuid BatchTenant() => Uuid.Parse(Identity.Pattern.Realm, CultureInfo.InvariantCulture);
+    public ValueTask<Page<ClientServiceView>> ListProgramAsync(Uuid tenantId, Uuid programId, int limit, string? cursor, CancellationToken ct = default) =>
+        PageAsync("client_service_directory", tenantId, programId.ToString(), limit, cursor, ComplianceCoreJsonContext.Default.ClientServiceView, ct);
 }
