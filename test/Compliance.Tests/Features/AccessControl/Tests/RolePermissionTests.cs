@@ -29,7 +29,7 @@ public sealed class RolePermissionTests
     static readonly Uuid TenantId = Uuid.Parse("11f455d2-fb10-4f28-a157-23e18e706e70", CultureInfo.InvariantCulture);
     static readonly Uuid RoleId = Uuid.Parse("c1b1b99d-2c52-46c6-ad58-55fe90bf53b3", CultureInfo.InvariantCulture);
     static readonly ActorAttribution Actor = new("portia:system", "Portia");
-    const string Permission = "controls.read";
+    const string Permission = RbacPermissions.ProgramManage;
 
     [Fact]
     public async Task ShouldNotRestoreAuthorityGivenAnExactRetryAfterPermissionRemoval()
