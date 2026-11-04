@@ -9,6 +9,7 @@ using Bdgrz.Compliance.Features.MethodologyTemplates.Models;
 using Bdgrz.Compliance.Features.NativeOperations.Models;
 using Bdgrz.Compliance.Features.NativeOperations.Services;
 using Bdgrz.Compliance.Features.Proofs.Models;
+using Bdgrz.Compliance.Features.SourceFacts.History;
 using Bdgrz.Compliance.Features.SourceFacts.Models;
 using Bdgrz.Compliance.Tests.Testing;
 
