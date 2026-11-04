@@ -532,8 +532,10 @@ public sealed class WorkforceRosterSnapshotTests
         {
             var consistency = new WorkRelationshipReadConsistency(_relationships, Reader,
                 _provider.GetRequiredService<IDomainEventReader>());
-            return new GetWorkRelationshipHandler(consistency,
-                    permissions)
+            var roster = new FitzWorkforceObservationDirectory(new InMemoryKvClient());
+            return new GetWorkRelationshipHandler(consistency, permissions,
+                    new WorkRelationshipSponsorship(roster,
+                        new WorkforceObservationReadConsistency(roster, new InMemoryEventStore())))
                 .HandleAsync(new RequestContext<GetWorkRelationship>(
                     new GetWorkRelationship(TenantId, relationshipId), Actor(_userId)),
                     CancellationToken.None);

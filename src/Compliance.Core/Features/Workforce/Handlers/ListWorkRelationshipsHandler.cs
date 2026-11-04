@@ -22,11 +22,13 @@ using Bdgrz.Compliance.Features.Workforce.Readers;
 namespace Bdgrz.Compliance.Features.Workforce.Handlers;
 
 public sealed class ListWorkRelationshipsHandler(IWorkRelationshipDirectoryReader directory,
-    WorkRelationshipReadConsistency consistency) : IRequestHandler<ListWorkRelationships, Page<WorkRelationshipView>>
+    WorkRelationshipReadConsistency consistency, WorkRelationshipSponsorship sponsorship)
+    : IRequestHandler<ListWorkRelationships, Page<WorkRelationshipView>>
 {
     public async ValueTask<Result<Page<WorkRelationshipView>>> HandleAsync(
         IRequestContext<ListWorkRelationships> context, CancellationToken ct)
     {
+        _ = sponsorship;
         var request = context.Request;
         if (request.Limit is < 1 or > 200)
             return Result<Page<WorkRelationshipView>>.Failure(new RequestError(RequestErrorKind.Validation,
