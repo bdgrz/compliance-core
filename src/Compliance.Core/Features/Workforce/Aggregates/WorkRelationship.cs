@@ -125,6 +125,22 @@ public sealed class WorkRelationship : Aggregate
         return null;
     }
 
+    public CommandFailure? Start(long expectedRevision, DateOnly startDate,
+        ActorReference actor, DateTimeOffset changedAt) =>
+        CommandFailure.StateConflict("The named work relationship lifecycle is not implemented.");
+
+    public CommandFailure? StartLeave(long expectedRevision, DateOnly fromDate,
+        ActorReference actor, DateTimeOffset changedAt) =>
+        CommandFailure.StateConflict("The named work relationship lifecycle is not implemented.");
+
+    public CommandFailure? EndLeave(long expectedRevision, DateOnly returnDate,
+        ActorReference actor, DateTimeOffset changedAt) =>
+        CommandFailure.StateConflict("The named work relationship lifecycle is not implemented.");
+
+    public CommandFailure? End(long expectedRevision, DateOnly endDate, string? reason,
+        ActorReference actor, DateTimeOffset changedAt) =>
+        CommandFailure.StateConflict("The named work relationship lifecycle is not implemented.");
+
     static RequestError? Validate(Uuid personId, WorkRelationshipTerms terms)
     {
         static RequestError Invalid(string message) => new(RequestErrorKind.Validation, message);
