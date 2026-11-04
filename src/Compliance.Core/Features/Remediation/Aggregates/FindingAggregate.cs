@@ -83,6 +83,7 @@ public sealed class FindingAggregate : Aggregate
     readonly Dictionary<Uuid, FindingCorrectiveActionResolved?> _actionOutcomes = [];
     FindingRaisedV2? _raised;
     FindingRevisedV2? _revised;
+    FindingAnalysisRevised? _analysis;
     FindingClosureAccepted? _pending;
     FindingClosureProposed? _proposal;
     readonly Dictionary<Uuid, long> _proposalRevisions = [];
@@ -104,6 +105,7 @@ public sealed class FindingAggregate : Aggregate
         _selectedClosureRoot = selectedClosureRoot;
         On<FindingRaisedV2>(Apply);
         On<FindingRevisedV2>(Apply);
+        On<FindingAnalysisRevised>(Apply);
         On<CorrectiveActionAdmitted>(Apply);
         On<FindingCorrectiveActionResolved>(Apply);
         On<FindingAcceptanceLinkedV2>(Apply);
@@ -146,7 +148,14 @@ public sealed class FindingAggregate : Aggregate
     public long Generation => _generation;
 
     /// <summary>The current severity.</summary>
-    public string? Severity => _revised?.Severity ?? _raised?.Severity;
+    public string? Severity => _analysis is { } analysis && analysis.Revision > (_revised?.Revision ?? 0)
+        ? analysis.Severity : _revised?.Severity ?? _raised?.Severity;
+
+    /// <summary>The latest separately authored team analysis, never the source wording.</summary>
+    public string? Analysis => _analysis?.Analysis;
+
+    /// <summary>The exact affected records named by the latest analysis.</summary>
+    public IReadOnlyList<FindingLink> AffectedRecords => _analysis?.AffectedRecords ?? [];
 
     /// <summary>The current owner.</summary>
     public Uuid OwnerMemberId => _revised?.OwnerMemberId ?? _raised?.OwnerMemberId ?? Uuid.Empty;
@@ -400,6 +409,34 @@ public sealed class FindingAggregate : Aggregate
         return Result.Success;
     }
 
+    /// <summary>Checks an analysis revision without changing source wording, ownership or due dates.</summary>
+    public Result PrepareAnalysis(long expectedRevision, string analysis, string severity, IReadOnlyList<FindingLink> affectedRecords)
+    {
+        var prepared = PrepareWrite(expectedRevision);
+        if (!prepared.IsSuccess)
+            return prepared;
+        if (FindingRules.ValidateAnalysis(analysis, severity, affectedRecords) is { } invalid)
+            return Fail(invalid);
+        return Analysis == analysis.Trim() && Severity == severity && AffectedRecords.SequenceEqual(FindingRules.Trimmed(affectedRecords))
+            ? Fail(CommandFailure.InvalidContent("The finding analysis changes nothing.")) : Result.Success;
+    }
+
+    /// <summary>Records one named analysis fact; source wording and ownership remain unchanged.</summary>
+    public Result ReviseAnalysis(OperationProvenance operation, string analysis, string severity,
+        IReadOnlyList<FindingLink> affectedRecords, ImmutableContentRef firstResponse, ImmutableContentRef operationResult)
+    {
+        ArgumentNullException.ThrowIfNull(operation);
+        if (!OwnProposalOperation(operation, nameof(ReviseFindingAnalysis), out var expected))
+            return Fail(CommandFailure.InvalidContent("Analysis requires its exact member-authored native operation."));
+        var prepared = PrepareAnalysis(expected, analysis, severity, affectedRecords);
+        if (!prepared.IsSuccess)
+            return prepared;
+        RaiseEvent(new FindingAnalysisRevised(operation.LogicalId, _tenantId, _programId, _findingId, _revision + 1,
+            analysis.Trim(), severity, FindingRules.Trimmed(affectedRecords), operation.Actor, operation.AcceptedAt,
+            operation, firstResponse, operationResult));
+        return Result.Success;
+    }
+
     /// <summary>Links an acceptance as the root native fact of its operation.</summary>
     public Result LinkAcceptance(OperationProvenance operation, ImmutableContentRef acceptance,
         ImmutableContentRef firstResponse, ImmutableContentRef operationResult)
@@ -529,6 +566,18 @@ public sealed class FindingAggregate : Aggregate
         if (!FindingRules.IsSeverity(ev.Severity))
             throw new InvalidOperationException("A finding revision must name low, moderate, or high severity.");
         _revised = ev;
+        Advance(ev);
+    }
+
+    void Apply(FindingAnalysisRevised ev)
+    {
+        Acceptance.Observe(ev);
+        EnsureWritable(ev.TenantId, ev.ProgramId, ev.FindingId, ev.Revision, ev.Operation);
+        if (FindingRules.ValidateAnalysis(ev.Analysis, ev.Severity, ev.AffectedRecords) is not null ||
+            ev.Analysis != ev.Analysis.Trim() || ev.RevisedBy != ev.Operation.Actor || ev.RevisedAt != ev.Operation.AcceptedAt ||
+            !OwnProposalOperation(ev.Operation, nameof(ReviseFindingAnalysis), out var expected) || expected != _revision)
+            throw new InvalidOperationException("Finding analysis must retain its exact scope, actor and predecessor.");
+        _analysis = ev;
         Advance(ev);
     }
 

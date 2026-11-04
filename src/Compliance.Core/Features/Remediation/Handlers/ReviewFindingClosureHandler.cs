@@ -36,9 +36,15 @@ public sealed class ReviewFindingClosureHandler(NativeOperationExecutor operatio
             request.FindingId == Uuid.Empty || request.ClosureId == Uuid.Empty || request.ExpectedRevision < 0 ||
             request.ProposalRevision < 1 || request.SeparationOfDutiesWaiverId == Uuid.Empty)
             return Failure(RequestErrorKind.Validation, "A closure review requires the exact finding and proposal revision.");
-        var actor = OperationsActor.From(context.Actor, request.TenantId);
-        var reviewedBy = ActorReference.ForMember(actor.MemberId, actor.Display);
         var now = clock.GetUtcNow();
+        var acting = await FindingActors.RequireCurrentAsync(context.Actor, request.TenantId, reader, now, ct).ConfigureAwait(false);
+        if (!acting.IsSuccess)
+            return Failure(acting.Error!.Kind, acting.Error.Message);
+        var actor = acting.Value;
+        if (!await permissions.IsAllowedAsync(request.TenantId, actor.UserId, actor.MemberId,
+                FindingClosurePermissions.Review, ct).ConfigureAwait(false))
+            return Failure(RequestErrorKind.Forbidden, "Only a Compliance Lead may review a finding closure proposal.");
+        var reviewedBy = ActorReference.ForMember(actor.MemberId, actor.Display);
         var snapshot = new FindingAggregate(request.TenantId, request.ProgramId, request.FindingId, request.CommandId);
         var provenance = FindingContent.Provenance(request.CommandId, nameof(ReviewFindingClosure), snapshot.Stream,
             reviewedBy, (ulong)request.ExpectedRevision, FindingCommands.Digest(request), now) with { FirstOwner = snapshot.Stream };

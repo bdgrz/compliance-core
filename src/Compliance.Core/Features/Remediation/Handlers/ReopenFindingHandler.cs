@@ -1,4 +1,6 @@
 using Cntryl.Portia;
+using Bdgrz.Compliance.Features.AccessControl.Authorizers;
+using Bdgrz.Compliance.Features.Remediation.Contracts;
 using Bdgrz.Compliance.Features.AccessControl.Models;
 using Bdgrz.Compliance.Features.AccessControl.Processes;
 using Bdgrz.Compliance.Features.AuditPackages.Rules;
@@ -34,7 +36,8 @@ namespace Bdgrz.Compliance.Features.Remediation.Handlers;
 ///     earlier closure can never close the new generation. The frozen first response is the complete finding view after
 ///     the reopening.
 /// </summary>
-public sealed class ReopenFindingHandler(NativeOperationExecutor operations, FindingReader findings, IImmutableContentStore content, TimeProvider clock)
+public sealed class ReopenFindingHandler(NativeOperationExecutor operations, IAggregateReader reader, FindingReader findings,
+    IPermissionAuthorizer permissions, IImmutableContentStore content, TimeProvider clock)
     : IRequestHandler<ReopenFinding, FindingView>
 {
     public async ValueTask<Result<FindingView>> HandleAsync(IRequestContext<ReopenFinding> context, CancellationToken ct)
@@ -43,9 +46,16 @@ public sealed class ReopenFindingHandler(NativeOperationExecutor operations, Fin
         if (request.CommandId == Uuid.Empty || request.ExpectedRevision < 0)
             return Result<FindingView>.Failure(new RequestError(RequestErrorKind.Validation,
                 "A reopening requires a command id and a non-negative expected revision."));
-        var actor = OperationsActor.From(context.Actor, request.TenantId);
-        var actorReference = ActorReference.ForMember(actor.MemberId, actor.Display);
         var now = clock.GetUtcNow();
+        var acting = await FindingActors.RequireCurrentAsync(context.Actor, request.TenantId, reader, now, ct).ConfigureAwait(false);
+        if (!acting.IsSuccess)
+            return Result<FindingView>.Failure(acting.Error!);
+        var actor = acting.Value;
+        if (!await permissions.IsAllowedAsync(request.TenantId, actor.UserId, actor.MemberId,
+                FindingClosurePermissions.Reopen, ct).ConfigureAwait(false))
+            return Result<FindingView>.Failure(new RequestError(RequestErrorKind.Forbidden,
+                "Only a Compliance Lead may reopen a finding."));
+        var actorReference = ActorReference.ForMember(actor.MemberId, actor.Display);
         var snapshot = new FindingAggregate(request.TenantId, request.ProgramId,
             request.FindingId, request.CommandId);
         var provenance = FindingContent.Provenance(request.CommandId, "ReopenFinding", snapshot.Stream, actorReference,

@@ -86,6 +86,13 @@ static class FindingRules
             : null;
     }
 
+    public static CommandFailure? ValidateAnalysis(string? analysis, string? severity, IReadOnlyList<FindingLink>? affectedRecords) =>
+        !IsBoundedText(analysis, MaximumTextLength) || !IsSeverity(severity)
+            ? CommandFailure.InvalidContent("Finding analysis needs bounded text and low, moderate or high severity.")
+            : affectedRecords is null || affectedRecords.Count > 50 || affectedRecords.Any(static link => link is null ||
+                !LinkKinds.Contains(link.Kind) || string.IsNullOrWhiteSpace(link.Reference) || link.Reference.Trim().Length > 500)
+                ? InvalidLinks() : null;
+
     public static CommandFailure? ValidateAction(Uuid actionId, string? description, Uuid ownerMemberId, DateOnly dueOn)
     {
         if (actionId == Uuid.Empty)

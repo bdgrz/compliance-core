@@ -15,4 +15,5 @@ public sealed record FindingView(Uuid TenantId, Uuid ProgramId, Uuid FindingId, 
     IReadOnlyList<CorrectiveActionView> CorrectiveActions,
     IReadOnlyList<FindingAcceptanceView> Acceptances, FindingClosureView? Closure,
     IReadOnlyList<FindingHistoryEntryView> History, ActorReference RaisedBy,
-    DateTimeOffset RaisedAt, FindingClosureProposalView? ClosureProposal = null);
+    DateTimeOffset RaisedAt, FindingClosureProposalView? ClosureProposal = null,
+    string? Analysis = null, IReadOnlyList<FindingLink>? AffectedRecords = null);
