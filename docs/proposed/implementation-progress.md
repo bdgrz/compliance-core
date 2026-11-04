@@ -21,7 +21,12 @@ Tracking issue: [#1176](https://github.com/bdgrz/compliance-core/issues/1176).
   changing the reviewed proposal. Portia owns execution, persistence, concurrency,
   delivery and retries.
 
-See the [delivery reset](delivery-reset.md) for the current implementation freeze, preserved worker checkpoints and reduced work-in-progress limits.
+See the [delivery reset](delivery-reset.md) for the resumed queue, preserved worker
+checkpoints and work-in-progress limits. The user explicitly resumed on 2026-11-04
+with parallel agents. Program date ordering is the sole delivery candidate;
+Support withdrawal and Access Cassie are preparing. Other agents review consumers,
+shared wiring and held prerequisites. Only the isolated Program validation lane
+runs local .NET commands; no new full-gate result is claimed yet.
 
 ## Active batches and exclusive ownership
 

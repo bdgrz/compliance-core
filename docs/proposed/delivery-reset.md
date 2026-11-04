@@ -2,10 +2,12 @@
 
 Tracking: [#1176](https://github.com/bdgrz/compliance-core/issues/1176).
 
-**Paused at the user's request.** The current Program full run was canceled and
-does not establish full acceptance. The [restart handoff](restart-handoff.md)
-preserves the checkpoint and proposed concurrent-agent plan. Do not resume
-implementation without the user's instruction.
+**Resumed by explicit user instruction on 2026-11-04.** The saved Program full run
+was canceled and does not establish full acceptance. A fresh immutable Program
+candidate is qualifying in an isolated worktree. Support withdrawal and Access
+Cassie prepare concurrently; other agents review dependencies and shared wiring.
+The [restart handoff](restart-handoff.md) preserves the historical checkpoint and
+the resumed operating plan. Source preparation remains unvalidated.
 
 PR #1186 has merged as `baffd1ba` after exact-head Backend CI passed 8,700 units.
 Person writer retirement subsequently merged through PR #1187 as `4e4c9d01`;

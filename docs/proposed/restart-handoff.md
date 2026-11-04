@@ -1,5 +1,13 @@
 # Paused implementation and agent plan
 
+**Resumed 2026-11-04 by explicit user instruction:** “Read
+docs/proposed/restart-handoff.md and resume processing with many parallel agents.”
+The paused state below is the historical recovery checkpoint. The active queue is
+Program date qualification/delivery, with Support withdrawal and Access Cassie
+preparing in exclusive feature paths. Additional agents review consumers, shared
+wiring and held packets. One isolated worktree owns local .NET execution; the
+coordinator remains the only shared-file writer. Preparation is not acceptance.
+
 Saved 2026-11-04 for a Codex restart. **Implementation is paused at the user's
 explicit request. Saving this checkpoint does not authorize resuming it.**
 
