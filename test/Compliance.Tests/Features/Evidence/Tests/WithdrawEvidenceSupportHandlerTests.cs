@@ -4,6 +4,7 @@ using Cntryl.Portia.Testing;
 using Microsoft.Extensions.DependencyInjection;
 using Bdgrz.Compliance.Features.AccessControl.Aggregates;
 using Bdgrz.Compliance.Features.AccessControl.Authorizers;
+using Bdgrz.Compliance.Features.AccessControl.Models;
 using Bdgrz.Compliance.Features.AccessControl.Services;
 using Bdgrz.Compliance.Features.Evidence.Aggregates;
 using Bdgrz.Compliance.Features.Evidence.Commands;
@@ -43,7 +44,7 @@ public sealed class WithdrawEvidenceSupportHandlerTests
         Assert.Equal(7, historical.Value.SupportedRecordRevision);
         Assert.Equal(2, historical.Value.ArtifactRevision);
         Assert.Equal(Now.AddHours(-1), historical.Value.LinkedAt);
-        Assert.Equal(2, restored.CommittedStreamPosition);
+        Assert.Equal(2UL, restored.CommittedStreamPosition);
         Assert.Equal("Wrong target version", restored.Withdrawal!.Reason);
         Assert.Equal(RbacIds.Member(fixture.TenantId, fixture.UserId), restored.Withdrawal.ActorMemberId);
         Assert.Equal(EvidenceSupportPermissions.Withdraw, Assert.Single(fixture.Permissions.Requested));
@@ -242,7 +243,7 @@ public sealed class WithdrawEvidenceSupportHandlerTests
         }
 
         public WithdrawEvidenceSupportHandler Handler() => new(
-            _scope.ServiceProvider.GetRequiredService<IAggregateExecutor>(), Reader, Permissions, TimeProvider.System);
+            _scope.ServiceProvider.GetRequiredService<IAggregateExecutor>(), Reader, Permissions, new FixedClock());
 
         public WithdrawEvidenceSupport Request(Uuid supportId) =>
             new(Uuid.CreateVersion4(), TenantId, ProgramId, supportId, 1, "Wrong target version");
@@ -279,6 +280,11 @@ public sealed class WithdrawEvidenceSupportHandlerTests
             await _scope.DisposeAsync();
             await _provider.DisposeAsync();
         }
+    }
+
+    sealed class FixedClock : TimeProvider
+    {
+        public override DateTimeOffset GetUtcNow() => Now;
     }
 
     sealed class Permissions : IPermissionAuthorizer

@@ -35,10 +35,12 @@ public sealed class EvidenceSupport : Aggregate
     };
 
     readonly Uuid _tenantId;
-    readonly Uuid _programId;
+    Uuid _programId;
 
     public EvidenceSupportLinked? Current { get; private set; }
-    public long Revision => Current?.Revision ?? 0;
+    public EvidenceSupportWithdrawn? Withdrawal { get; private set; }
+    public long Revision => Withdrawal?.Revision ?? Current?.Revision ?? 0;
+    public bool IsActive => Current is not null && Withdrawal is null;
 
     public EvidenceSupport(Uuid tenantId, Uuid programId, Uuid supportId)
         : base(supportId, new EventStreamAddress(tenantId.ToString(), "evidence-support",
@@ -47,7 +49,12 @@ public sealed class EvidenceSupport : Aggregate
         _tenantId = tenantId;
         _programId = programId;
         On<EvidenceSupportLinked>(Apply);
+        On<EvidenceSupportWithdrawn>(Apply);
     }
+
+    /// <summary>Reads the tenant-owned identity before checking its immutable program binding.</summary>
+    public static EvidenceSupport ForVerification(Uuid tenantId, Uuid supportId) =>
+        new(tenantId, Uuid.Empty, supportId);
 
     /// <summary>The authored command identity is the immutable support assertion identity.</summary>
     public static Uuid IdFor(LinkEvidenceSupport request)
@@ -124,11 +131,41 @@ public sealed class EvidenceSupport : Aggregate
         return null;
     }
 
+    /// <summary>Terminates new reliance while retaining the original link and its accepted receipt.</summary>
+    public CommandFailure? Withdraw(WithdrawEvidenceSupport request, ActorReference actor, DateTimeOffset occurredAt)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+        ArgumentNullException.ThrowIfNull(actor);
+        if (Current is not { } original)
+            return CommandFailure.MissingRecord("The evidence support link was not found.");
+        if (Withdrawal is { } prior)
+            return request.TenantId == _tenantId && request.ProgramId == _programId && request.SupportId == Id &&
+                   request.CommandId == prior.CommandId && request.ExpectedRevision == prior.OriginalExpectedRevision &&
+                   AuthoredIntentDigest.Compute(request) == prior.AuthoredIntentSha256 &&
+                   actor.Kind == "member" && Uuid.TryParse(actor.Id, out var retryMemberId) &&
+                   retryMemberId == prior.ActorMemberId
+                ? null
+                : CommandFailure.StateConflict("The support withdrawal already accepted another actor or authored intent.");
+        if (request.ExpectedRevision != Revision)
+            return CommandFailure.ForVersion(VersionedRecordRules.StaleRevision("evidence support", Revision));
+        var reason = request.Reason?.Trim() ?? string.Empty;
+        if (request.CommandId == Uuid.Empty || request.TenantId != _tenantId || request.ProgramId != _programId ||
+            request.SupportId != Id || !BoundedText(reason) || actor.Kind != "member" ||
+            !Uuid.TryParse(actor.Id, out var memberId) || memberId == Uuid.Empty ||
+            string.IsNullOrWhiteSpace(actor.Display) || actor.Display.Trim().Length > 200 ||
+            occurredAt == default || occurredAt < original.OccurredAt)
+            return CommandFailure.InvalidContent("Withdrawal requires the exact support scope, a reason, and a member actor.");
+        RaiseEvent(new EvidenceSupportWithdrawn(_tenantId, Id, Revision + 1, memberId, occurredAt, _programId,
+            request.CommandId, request.ExpectedRevision, AuthoredIntentDigest.Compute(request), reason, actor.Display.Trim()));
+        return null;
+    }
+
     void Apply(EvidenceSupportLinked ev)
     {
         var recordType = NormalizeType(ev.SupportedRecordType);
         if (Current is not null || ev.TenantId != _tenantId || ev.SubjectId != Id ||
-            ev.ProgramId != _programId || ev.Revision != 1 || ev.ArtifactId == Uuid.Empty ||
+            ev.ProgramId == Uuid.Empty || _programId != Uuid.Empty && ev.ProgramId != _programId ||
+            ev.Revision != 1 || ev.ArtifactId == Uuid.Empty ||
             ev.ArtifactRevision <= 0 || !Sha256(ev.ArtifactContentSha256) ||
             !SupportedTypes.Contains(recordType) || ev.SupportedRecordType != recordType ||
             ev.SupportedRecordId == Uuid.Empty || ev.SupportedRecordRevision <= 0 ||
@@ -140,6 +177,20 @@ public sealed class EvidenceSupport : Aggregate
             ev.ActorDisplay.Length > 200 || ev.OccurredAt == default)
             throw new InvalidOperationException("The evidence support link event is invalid.");
         Current = ev;
+        _programId = ev.ProgramId;
+    }
+
+    void Apply(EvidenceSupportWithdrawn ev)
+    {
+        if (Current is not { } original || Withdrawal is not null ||
+            ev.TenantId != _tenantId || ev.SubjectId != Id || ev.ProgramId != _programId ||
+            ev.Revision != Revision + 1 || ev.OriginalExpectedRevision != Revision ||
+            ev.CommandId == Uuid.Empty || !Sha256(ev.AuthoredIntentSha256) ||
+            !BoundedText(ev.Reason) || ev.Reason.Trim() != ev.Reason || ev.ActorMemberId == Uuid.Empty ||
+            string.IsNullOrWhiteSpace(ev.ActorDisplay) || ev.ActorDisplay.Trim() != ev.ActorDisplay ||
+            ev.ActorDisplay.Length > 200 || ev.OccurredAt == default || ev.OccurredAt < original.OccurredAt)
+            throw new InvalidOperationException("The evidence support withdrawal event is invalid.");
+        Withdrawal = ev;
     }
 
     static string NormalizeType(string? value) => value?.Trim().ToLowerInvariant() ?? string.Empty;

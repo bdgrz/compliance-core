@@ -1,5 +1,6 @@
 using Cntryl.Portia;
 using Cntryl.Portia.Testing;
+using Bdgrz.Compliance.Features.AccessControl.Models;
 using Bdgrz.Compliance.Features.Evidence.Aggregates;
 using Bdgrz.Compliance.Features.Evidence.Commands;
 using Bdgrz.Compliance.Features.Evidence.Events;
@@ -82,7 +83,7 @@ public sealed class EvidenceSupportWithdrawalTests
 
         // Act
         var retry = owner.Withdraw(request,
-            ActorReference.ForMember(MemberId, "Renamed lead"), Now.AddDays(1));
+            new ActorReference("member", MemberId.ToString().ToUpperInvariant(), "Renamed lead"), Now.AddDays(1));
 
         // Assert
         Assert.Null(retry);
@@ -259,12 +260,16 @@ public sealed class EvidenceSupportWithdrawalTests
         var owner = Linked(Link());
         Assert.Null(owner.Withdraw(Withdrawal(owner.Id), Actor(), Now.AddMinutes(1)));
         var history = Events(owner);
+        var withdrawal = Assert.IsType<EvidenceSupportWithdrawn>(history[1]);
+        var missingPredecessor = withdrawal with { };
+        var firstWithdrawal = withdrawal with { };
+        var secondWithdrawal = withdrawal with { };
         var empty = new AggregateScenario<EvidenceSupport>(new EvidenceSupport(TenantId, ProgramId, owner.Id));
         var duplicate = new AggregateScenario<EvidenceSupport>(new EvidenceSupport(TenantId, ProgramId, owner.Id));
 
         // Act / Assert
-        Assert.Throws<InvalidOperationException>(() => empty.Given(history[1]));
-        Assert.Throws<InvalidOperationException>(() => duplicate.Given(history[0], history[1], history[1]));
+        Assert.Throws<InvalidOperationException>(() => empty.Given(missingPredecessor));
+        Assert.Throws<InvalidOperationException>(() => duplicate.Given(history[0], firstWithdrawal, secondWithdrawal));
     }
 
     static LinkEvidenceSupport Link() => new(Uuid.CreateVersion4(), TenantId, ProgramId, Uuid.CreateVersion4(),
