@@ -172,25 +172,6 @@ public sealed class WorkRelationship : Aggregate
         return Result<WorkRelationshipRegistration>.Success(new WorkRelationshipRegistration(Id));
     }
 
-    public CommandFailure? Revise(long expectedRevision, WorkRelationshipTerms terms,
-        ActorReference actor, DateTimeOffset changedAt)
-    {
-        if (!_created)
-            return CommandFailure.MissingRecord("The work relationship was not found.");
-        if (expectedRevision != _revision)
-            return CommandFailure.ForVersion(
-                VersionedRecordRules.StaleRevision("work relationship", _revision));
-        var validation = Validate(_personId, terms);
-        if (validation is not null)
-            return CommandFailure.InvalidContent(validation.Message!);
-        if (_hasEnded && terms.LifecycleStatus != "ended")
-            return CommandFailure.StateConflict(
-                "An ended work relationship must stay ended; record a new relationship for a rehire.");
-        RaiseEvent(new WorkRelationshipRevised(_tenantId, Id, _revision + 1, Clean(terms), actor,
-            changedAt));
-        return null;
-    }
-
     public CommandFailure? Start(long expectedRevision, DateOnly startDate,
         ActorReference actor, DateTimeOffset changedAt)
     {

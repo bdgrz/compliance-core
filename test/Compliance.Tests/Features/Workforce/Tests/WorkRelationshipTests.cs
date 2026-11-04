@@ -141,7 +141,7 @@ public sealed class WorkRelationshipTests
     }
 
     [Fact]
-    public void ShouldRecordLeaverAndRejectStaleGivenRevise()
+    public void ShouldRecordLeaverAndRejectStaleGivenNamedEnding()
     {
         // Arrange
         var relationship = New();
@@ -149,19 +149,19 @@ public sealed class WorkRelationshipTests
         Assert.True(relationship.Record(PersonId, "E-100", Employee(), Author, Now).IsSuccess);
 
         // Act
-        var ended = relationship.Revise(1, Employee("ended", new DateOnly(2026, 9, 1)), Author, Now.AddMinutes(1));
-        var stale = relationship.Revise(1, Employee(), Author, Now.AddMinutes(2));
-        var absent = missing.Revise(1, Employee(), Author, Now);
+        var ended = relationship.End(1, new DateOnly(2026, 9, 1), "Left the organization", Author, Now.AddMinutes(1));
+        var stale = relationship.Start(1, Start, Author, Now.AddMinutes(2));
+        var absent = missing.Start(1, Start, Author, Now);
 
         // Assert
         Assert.Null(ended);
         Assert.Equal(2, relationship.Revision);
         Assert.Equal(CommandFailureCode.VersionConflict, Assert.IsType<CommandFailure>(stale).Code);
         Assert.Equal(CommandFailureCode.MissingRecord, Assert.IsType<CommandFailure>(absent).Code);
-        var revised = Assert.IsType<WorkRelationshipRevised>(
+        var ending = Assert.IsType<WorkRelationshipEnded>(
             new AggregateScenario<WorkRelationship>(relationship).PendingEvents[^1]);
-        Assert.Equal("ended", revised.Terms.LifecycleStatus);
-        Assert.Equal(new DateOnly(2026, 9, 1), revised.Terms.EndDate);
+        Assert.Equal(new DateOnly(2026, 9, 1), ending.EndDate);
+        Assert.Equal("Left the organization", ending.Reason);
     }
 
     [Theory]
@@ -177,7 +177,7 @@ public sealed class WorkRelationshipTests
     [InlineData("pending", true, true)]
     [InlineData("active", true, true)]
     [InlineData("on_leave", true, true)]
-    public void ShouldRefuseRevisionWithoutFactGivenEndedWorkRelationship(string status,
+    public void ShouldRefuseNamedLifecycleWithoutFactGivenEndedWorkRelationship(string status,
         bool initiallyEnded, bool replayed)
     {
         // Arrange
@@ -187,7 +187,7 @@ public sealed class WorkRelationshipTests
         var facts = scenario.PendingEvents.ToArray();
 
         // Act
-        var failure = relationship.Revise(revision, Employee(status), Author, Now.AddMinutes(2));
+        var failure = AttemptLifecycle(relationship, status, revision);
 
         // Assert
         Assert.Equal(CommandFailureCode.StateConflict, Assert.IsType<CommandFailure>(failure).Code);
@@ -207,18 +207,20 @@ public sealed class WorkRelationshipTests
         var revision = relationship.Revision;
         var scenario = new AggregateScenario<WorkRelationship>(relationship);
         var count = scenario.PendingEvents.Count;
-        var corrected = Employee("ended", new DateOnly(2026, 9, 2)) with
-        { EmploymentStatusReason = "Corrected the recorded end date." };
+        var correctedEnd = new DateOnly(2026, 9, 2);
 
         // Act
-        var failure = relationship.Revise(revision, corrected, Author, Now.AddMinutes(2));
+        var failure = relationship.CorrectDates(revision, Start, correctedEnd,
+            "Corrected the recorded end date.", Author, Now.AddMinutes(2));
 
         // Assert
         Assert.Null(failure);
         Assert.Equal(revision + 1, relationship.Revision);
         Assert.Equal(count + 1, scenario.PendingEvents.Count);
-        var fact = Assert.IsType<WorkRelationshipRevised>(scenario.PendingEvents[^1]);
-        Assert.Equal(corrected, fact.Terms);
+        var fact = Assert.IsType<WorkRelationshipDatesCorrected>(scenario.PendingEvents[^1]);
+        Assert.Equal(Start, fact.StartDate);
+        Assert.Equal(correctedEnd, fact.EndDate);
+        Assert.Equal("Corrected the recorded end date.", fact.Reason);
     }
 
     [Theory]
@@ -258,7 +260,7 @@ public sealed class WorkRelationshipTests
         Assert.Equal(3, relationship.Revision);
 
         // Act
-        var failure = relationship.Revise(3, Employee(status), Author, Now.AddMinutes(3));
+        var failure = AttemptLifecycle(relationship, status, 3);
 
         // Assert
         Assert.Equal(CommandFailureCode.StateConflict, Assert.IsType<CommandFailure>(failure).Code);
@@ -277,7 +279,7 @@ public sealed class WorkRelationshipTests
         var facts = scenario.PendingEvents.ToArray();
 
         // Act
-        var failure = relationship.Revise(1, Employee(), Author, Now.AddMinutes(2));
+        var failure = relationship.Start(1, Start, Author, Now.AddMinutes(2));
 
         // Assert
         Assert.Equal(CommandFailureCode.VersionConflict, Assert.IsType<CommandFailure>(failure).Code);
@@ -288,16 +290,16 @@ public sealed class WorkRelationshipTests
     [Theory]
     [InlineData(false)]
     [InlineData(true)]
-    public void ShouldPreserveContentRefusalWithoutFactGivenInvalidRevisionAfterEnding(bool replayed)
+    public void ShouldPreserveContentRefusalWithoutFactGivenInvalidDateCorrectionAfterEnding(bool replayed)
     {
         // Arrange
         var relationship = Ended(false, replayed);
         var scenario = new AggregateScenario<WorkRelationship>(relationship);
         var facts = scenario.PendingEvents.ToArray();
-        var invalid = Employee() with { WorkerType = "volunteer" };
 
         // Act
-        var failure = relationship.Revise(2, invalid, Author, Now.AddMinutes(2));
+        var failure = relationship.CorrectDates(2, Start, Start.AddDays(-1),
+            "Incorrect dates", Author, Now.AddMinutes(2));
 
         // Assert
         Assert.Equal(CommandFailureCode.InvalidContent, Assert.IsType<CommandFailure>(failure).Code);
@@ -314,9 +316,9 @@ public sealed class WorkRelationshipTests
         var scenario = new AggregateScenario<WorkRelationship>(relationship);
 
         // Act
-        var started = relationship.Revise(1, Employee(), Author, Now.AddMinutes(1));
-        var leave = relationship.Revise(2, Employee("on_leave"), Author, Now.AddMinutes(2));
-        var returned = relationship.Revise(3, Employee(), Author, Now.AddMinutes(3));
+        var started = relationship.Start(1, Start, Author, Now.AddMinutes(1));
+        var leave = relationship.StartLeave(2, Start.AddDays(1), Author, Now.AddMinutes(2));
+        var returned = relationship.EndLeave(3, Start.AddDays(2), Author, Now.AddMinutes(3));
 
         // Assert
         Assert.Null(started);
@@ -324,9 +326,19 @@ public sealed class WorkRelationshipTests
         Assert.Null(returned);
         Assert.Equal(4, relationship.Revision);
         Assert.Equal(4, scenario.PendingEvents.Count);
-        Assert.Equal(["active", "on_leave", "active"], scenario.PendingEvents
-            .OfType<WorkRelationshipRevised>().Select(static fact => fact.Terms.LifecycleStatus));
+        Assert.Collection(scenario.PendingEvents.Skip(1),
+            fact => Assert.IsType<WorkRelationshipStarted>(fact),
+            fact => Assert.IsType<WorkRelationshipLeaveStarted>(fact),
+            fact => Assert.IsType<WorkRelationshipLeaveEnded>(fact));
     }
+
+    static CommandFailure? AttemptLifecycle(WorkRelationship relationship, string status, long revision) => status switch
+    {
+        "pending" => relationship.Start(revision, Start, Author, Now.AddMinutes(2)),
+        "active" => relationship.EndLeave(revision, Start, Author, Now.AddMinutes(2)),
+        "on_leave" => relationship.StartLeave(revision, Start, Author, Now.AddMinutes(2)),
+        _ => throw new ArgumentOutOfRangeException(nameof(status)),
+    };
 
     static WorkRelationship Ended(bool initiallyEnded, bool replayed)
     {
@@ -343,7 +355,7 @@ public sealed class WorkRelationshipTests
             return NativeFacts.Replay(relationship, [DomainEventSeed.Attach(historical, relationship.Id, 1)]);
         }
         Assert.True(relationship.Record(PersonId, "E-100", Employee(), Author, Now).IsSuccess);
-        Assert.Null(relationship.Revise(1, ended, Author, Now.AddMinutes(1)));
+        Assert.Null(relationship.End(1, ended.EndDate!.Value, null, Author, Now.AddMinutes(1)));
         return replayed ? NativeFacts.Replay(New(), NativeFacts.Raised(relationship)) : relationship;
     }
 }
