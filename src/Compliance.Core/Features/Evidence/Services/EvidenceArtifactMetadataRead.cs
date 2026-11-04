@@ -78,6 +78,7 @@ sealed class EvidenceArtifactMetadataRead(IAggregateReader reader, IDomainEventR
             return Missing();
         var position = artifact.CommittedStreamPosition;
         ulong expectedOffset = 0;
+        var currentContent = registration.Content;
         string? state = null;
         string? reason = null;
         DateTimeOffset? availabilityRecordedAt = null;
@@ -113,6 +114,14 @@ sealed class EvidenceArtifactMetadataRead(IAggregateReader reader, IDomainEventR
                     reason = null;
                     availabilityRecordedAt = ev.DecidedAt;
                     break;
+                case ArtifactHandlingClassChanged ev when ev.TenantId == tenantId && ev.ArtifactId == artifactId &&
+                    ev.Revision == (long)expectedOffset && state is not (null or EvidenceArtifactStates.Rejected or EvidenceArtifactStates.Disposed) &&
+                    ev.PreviousClass == currentContent.HandlingClass && ev.HandlingClass != ev.PreviousClass &&
+                    ev.HandlingClass is "public" or "internal" or "confidential" or "restricted" &&
+                    !string.IsNullOrWhiteSpace(ev.Rationale) && ev.Rationale.Trim() == ev.Rationale &&
+                    ev.Rationale.Length <= EvidenceRules.MaximumTextLength:
+                    currentContent = currentContent with { HandlingClass = ev.HandlingClass };
+                    break;
                 case EvidenceArtifactDownloadIssued ev when ev.TenantId == tenantId && ev.ArtifactId == artifactId &&
                                                            state == EvidenceArtifactStates.Available && reason is null &&
                                                            ev.Revision == (long)expectedOffset && ev.RequestId != Uuid.Empty &&
@@ -139,7 +148,7 @@ sealed class EvidenceArtifactMetadataRead(IAggregateReader reader, IDomainEventR
             return Missing();
         var view = new EvidenceArtifactMetadataView(tenantId, artifactId, position,
             registration.ContentSha256, registration.ContentLength,
-            state == EvidenceArtifactStates.Rejected ? null : registration.Content,
+            state is EvidenceArtifactStates.Rejected or EvidenceArtifactStates.Disposed ? null : currentContent,
             registration.Collector, registration.RegisteredAt, state!, reason);
         var current = await reader.HydrateAsync(new EvidenceArtifact(tenantId, artifactId), ct).ConfigureAwait(false);
         if (current.CommittedStreamPosition != position)
@@ -167,7 +176,8 @@ sealed class EvidenceArtifactMetadataRead(IAggregateReader reader, IDomainEventR
     static bool IsInvalidEvidenceHistory(InvalidOperationException exception) => exception.Message is
         "The evidence artifact registration event is invalid." or
         "The evidence artifact inspection event is invalid." or
-        "The evidence quarantine release event is invalid.";
+        "The evidence quarantine release event is invalid." or
+        "The evidence handling class change event is invalid.";
 
     static Result<EvidenceArtifactMetadataSnapshot> Missing() => Result<EvidenceArtifactMetadataSnapshot>.Failure(
         new RequestError(RequestErrorKind.NotFound, "The artifact metadata was not found."));
