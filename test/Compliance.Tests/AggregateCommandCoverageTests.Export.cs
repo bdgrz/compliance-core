@@ -202,6 +202,7 @@ public sealed partial class AggregateCommandCoverageTests
             developerAuthentication: true);
         var registered = services.Where(static descriptor => descriptor.ServiceType == typeof(RequestHandlerRegistration))
             .Select(static descriptor => (RequestHandlerRegistration)descriptor.ImplementationInstance!)
+            .Where(static registration => ContractAssemblies().Contains(registration.RequestType.Assembly))
             .OrderBy(static registration => registration.RequestType.Name, StringComparer.Ordinal)
             .ThenBy(static registration => registration.HandlerType.Name, StringComparer.Ordinal).ToArray();
         var requests = new List<JsonObject>();

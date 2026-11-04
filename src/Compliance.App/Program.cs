@@ -269,6 +269,10 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
         .AddMcpTool<ListPeople>(tool => tool.ReadOnly())
         .AddMcpTool<RecordWorkRelationship>()
         .AddMcpTool<ReviseWorkRelationship>(tool => tool.Idempotent())
+        .AddMcpTool<StartWorkRelationship>(tool => tool.Idempotent())
+        .AddMcpTool<StartLeave>(tool => tool.Idempotent())
+        .AddMcpTool<EndLeave>(tool => tool.Idempotent())
+        .AddMcpTool<EndWorkRelationship>(tool => tool.Idempotent())
         .AddMcpTool<GetWorkRelationship>(tool => tool.ReadOnly())
         .AddMcpTool<ListWorkRelationships>(tool => tool.ReadOnly())
         .AddMcpTool<ListWorkforceObservations>(tool => tool.ReadOnly())
@@ -384,6 +388,8 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
         .AddMcpTool<GetControlEvaluation>(tool => tool.ReadOnly())
         .AddMcpTool<ListControlEvaluations>(tool => tool.ReadOnly())
         .AddMcpTool<RaiseFinding>()
+        .AddMcpTool<RequestWaiver>(tool => tool.Idempotent())
+        .AddMcpTool<Bdgrz.Compliance.Features.Remediation.Queries.GetWaiver>()
         .AddMcpTool<GetFinding>(tool => tool.ReadOnly())
         .AddMcpTool<ListFindings>(tool => tool.ReadOnly())
         .AddMcpTool<OpenEvidenceRequest>()
@@ -1999,12 +2005,44 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
             "/api/v1/tenants/{tenant_id}/people")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Workforce");
+    app.MapPortiaPost<RequestWaiver, Bdgrz.Compliance.Features.Remediation.Models.WaiverRegistration>(
+            "/api/v1/tenants/{tenant_id}/waivers", config => config.OnNativeResult()).WithNativeFirstResponse<RequestWaiver>()
+        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
+        .WithTags("Assurance work");
+    app.MapPortiaPost<ReviewWaiver>(
+            "/api/v1/tenants/{tenant_id}/waivers/{waiver_id}/review", config => config.OnNativeResult()).WithNativeFirstResponse<ReviewWaiver>()
+        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
+        .WithTags("Assurance work");
+    app.MapPortiaPost<RevokeWaiver>(
+            "/api/v1/tenants/{tenant_id}/waivers/{waiver_id}/revoke", config => config.OnNativeResult()).WithNativeFirstResponse<RevokeWaiver>()
+        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
+        .WithTags("Assurance work");
+    app.MapPortiaGet<Bdgrz.Compliance.Features.Remediation.Queries.GetWaiver, Bdgrz.Compliance.Features.Remediation.Models.WaiverView>(
+            "/api/v1/tenants/{tenant_id}/waivers/{waiver_id}")
+        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
+        .WithTags("Assurance work");
     app.MapPortiaPost<RecordWorkRelationship, WorkRelationshipRegistration>(
             "/api/v1/tenants/{tenant_id}/work-relationships", config => config.OnNativeResult()).WithNativeFirstResponse<RecordWorkRelationship>()
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Workforce");
     app.MapPortiaPut<ReviseWorkRelationship>(
             "/api/v1/tenants/{tenant_id}/work-relationships/{relationship_id}", config => config.OnNativeResult()).WithNativeFirstResponse<ReviseWorkRelationship>()
+        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
+        .WithTags("Workforce");
+    app.MapPortiaPost<StartWorkRelationship>(
+            "/api/v1/tenants/{tenant_id}/work-relationships/{relationship_id}/start", config => config.OnNativeResult()).WithNativeFirstResponse<StartWorkRelationship>()
+        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
+        .WithTags("Workforce");
+    app.MapPortiaPost<StartLeave>(
+            "/api/v1/tenants/{tenant_id}/work-relationships/{relationship_id}/leave/start", config => config.OnNativeResult()).WithNativeFirstResponse<StartLeave>()
+        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
+        .WithTags("Workforce");
+    app.MapPortiaPost<EndLeave>(
+            "/api/v1/tenants/{tenant_id}/work-relationships/{relationship_id}/leave/end", config => config.OnNativeResult()).WithNativeFirstResponse<EndLeave>()
+        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
+        .WithTags("Workforce");
+    app.MapPortiaPost<EndWorkRelationship>(
+            "/api/v1/tenants/{tenant_id}/work-relationships/{relationship_id}/end", config => config.OnNativeResult()).WithNativeFirstResponse<EndWorkRelationship>()
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Workforce");
     app.MapPortiaGet<GetWorkRelationship, WorkRelationshipView>(

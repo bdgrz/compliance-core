@@ -1028,6 +1028,7 @@ public static class ComplianceServiceCollectionExtensions
         services.AddScoped<TemplateApplicationReader>()
             .AddScoped<TemplateApplicationOperations>()
             .AddScoped<MethodologyTemplateReader>();
+        services.AddScoped<Bdgrz.Compliance.Features.Remediation.Readers.WaiverReader>();
         services.AddScoped<MethodologyTemplateOperations>();
         services.AddScoped<MethodologyTemplateContributionReader>();
         services.AddScoped<FollowUpCompletionVerifier>();
@@ -1462,6 +1463,10 @@ public static class ComplianceServiceCollectionExtensions
             .AddRequestHandler<ListPeopleHandler>()
             .AddRequestHandler<RecordWorkRelationshipHandler>()
             .AddRequestHandler<ReviseWorkRelationshipHandler>()
+            .AddRequestHandler<StartWorkRelationshipHandler>()
+            .AddRequestHandler<StartLeaveHandler>()
+            .AddRequestHandler<EndLeaveHandler>()
+            .AddRequestHandler<EndWorkRelationshipHandler>()
             .AddRequestHandler<GetWorkRelationshipHandler>()
             .AddRequestHandler<ListWorkRelationshipsHandler>()
             .AddRequestHandler<ListWorkforceObservationsHandler>()
@@ -1698,6 +1703,11 @@ public static class ComplianceServiceCollectionExtensions
             .AddRequestHandler<GetControlOccurrenceHandler>()
             .AddRequestHandler<ListControlOccurrencesHandler>()
             .AddRequestHandler<RaiseFindingHandler>()
+            .AddRequestHandler<RequestWaiverHandler>()
+            .AddRequestHandler<ReviewWaiverHandler>()
+            .AddRequestHandler<RevokeWaiverHandler>()
+            .AddRequestHandler<GetWaiverHandler>()
+            .AddRequestAuthorizer<Bdgrz.Compliance.Features.Remediation.Authorizers.WaiverManagementAuthorizer>()
             .AddRequestHandler<RaiseOccurrenceFindingHandler>()
             .AddRequestHandler<ReviseFindingHandler>()
             .AddRequestHandler<AddCorrectiveActionHandler>()
@@ -1899,6 +1909,9 @@ public static class ComplianceServiceCollectionExtensions
             .AddRequestHandler<RetireMethodologyTemplateHandler>()
             .AddRequestHandler<GetTemplateApplicationHandler>()
             .AddRequestHandler<ApplyMethodologyTemplateHandler>()
+            .AddRequestHandler<OpenTemplateVersionApplicationHandler>()
+            .AddRequestHandler<RecordTemplateEntryOutcomeHandler>()
+            .AddRequestAuthorizer<Bdgrz.Compliance.Features.MethodologyTemplates.Authorizers.TemplateVersionApplicationAuthorizer>()
             .AddRequestHandler<ProposeTemplateSuccessorAdoptionHandler>()
             .AddRequestHandler<RecordTemplateSuccessorDispositionHandler>()
             .AddRequestHandler<ProposeDeidentifiedTemplateContributionHandler>()
@@ -2028,6 +2041,8 @@ public static class ComplianceServiceCollectionExtensions
             .AddReactor<IdentityRecoveryAcceptanceReactor>("IdentityRecoveryAcceptanceV1", WorkloadScope.Global,
                 options => options.FailureAttemptLimit = int.MaxValue)
             .AddProjector<MethodologyTemplateDirectoryProjector>(FitzMethodologyTemplateDirectory.ProjectorName, WorkloadScope.Global)
+            .AddReactor<Bdgrz.Compliance.Features.MethodologyTemplates.Reactors.TemplateVersionApplicationOpeningReactor>(
+                Bdgrz.Compliance.Features.MethodologyTemplates.Reactors.TemplateVersionApplicationOpeningReactor.WorkloadName, WorkloadScope.PerTenant)
             .AddProjector<ObservationPeriodDirectoryProjector>(FitzObservationPeriodDirectory.ProjectorName, WorkloadScope.PerTenant)
             .AddProjector<AuditPackageDirectoryProjector>(FitzAuditPackageDirectory.ProjectorName, WorkloadScope.PerTenant)
             .AddProjector<AuditorRequestDirectoryProjector>(FitzAuditorRequestDirectory.ProjectorName, WorkloadScope.PerTenant)
