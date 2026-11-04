@@ -63,7 +63,7 @@ public sealed class RegisterMemberHandler(NativeOperationExecutor operations, IA
             member => member.Acceptance,
             (member, token) => PrepareAsync(member, request, token),
             (Member member, ImmutableContentRef frozen) => member.Register(provenance, frozen, request.Affiliation,
-                request.MembershipExpiresOn)), context, ct).ConfigureAwait(false);
+                request.MembershipExpiresOn, request.ProgramIds)), context, ct).ConfigureAwait(false);
         if (!accepted.IsSuccess)
             return Result.Failure(accepted.Error!);
         return accepted.Value switch
@@ -85,7 +85,7 @@ public sealed class RegisterMemberHandler(NativeOperationExecutor operations, IA
     async ValueTask<Result<FirstResponseDescriptor>> PrepareAsync(Member member, RegisterMember request,
         CancellationToken ct)
     {
-        var prepared = member.PrepareRegister(request.Affiliation, request.MembershipExpiresOn);
+        var prepared = member.PrepareRegister(request.Affiliation, request.MembershipExpiresOn, request.ProgramIds);
         if (!prepared.IsSuccess)
             return Result<FirstResponseDescriptor>.Failure(prepared.Error!);
         var result = await content.WriteJsonAsync(request.TenantId.ToString(), Uuid.CreateVersion4(),
