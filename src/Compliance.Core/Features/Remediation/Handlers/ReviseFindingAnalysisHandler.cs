@@ -48,6 +48,10 @@ public sealed class ReviseFindingAnalysisHandler(NativeOperationExecutor operati
         ImmutableContentRef? result = null;
         async ValueTask<Result<FirstResponseDescriptor>> PrepareAsync(FindingAggregate owner, CancellationToken token)
         {
+            if (owner.OwnerMemberId != actor.MemberId && !await permissions.IsAllowedAsync(request.TenantId, actor.UserId,
+                    actor.MemberId, FindingAnalysisPermissions.Revise, token).ConfigureAwait(false))
+                return Result<FirstResponseDescriptor>.Failure(new RequestError(RequestErrorKind.Forbidden,
+                    "Only the current owner, a Compliance Lead or Contributor may revise finding analysis."));
             var prepared = owner.PrepareAnalysis(request.ExpectedRevision, analysis, request.Severity, affected);
             if (!prepared.IsSuccess)
                 return Result<FirstResponseDescriptor>.Failure(prepared.Error!);

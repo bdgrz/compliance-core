@@ -43,7 +43,8 @@ public sealed class ReopenFindingHandler(NativeOperationExecutor operations, IAg
     public async ValueTask<Result<FindingView>> HandleAsync(IRequestContext<ReopenFinding> context, CancellationToken ct)
     {
         var request = context.Request;
-        if (request.CommandId == Uuid.Empty || request.ExpectedRevision < 0)
+        if (request.CommandId == Uuid.Empty || request.TenantId == Uuid.Empty || request.ProgramId == Uuid.Empty ||
+            request.FindingId == Uuid.Empty || request.ExpectedRevision < 0)
             return Result<FindingView>.Failure(new RequestError(RequestErrorKind.Validation,
                 "A reopening requires a command id and a non-negative expected revision."));
         var now = clock.GetUtcNow();
