@@ -144,7 +144,7 @@ sealed class EvidenceArtifactMetadataRead(IAggregateReader reader, IDomainEventR
         }
         if (expectedOffset != position)
             return Changed();
-        if (state != artifact.State || reason != artifact.StateReason)
+        if (state != artifact.State || reason != artifact.StateReason || currentContent != artifact.Content)
             return Missing();
         var view = new EvidenceArtifactMetadataView(tenantId, artifactId, position,
             registration.ContentSha256, registration.ContentLength,

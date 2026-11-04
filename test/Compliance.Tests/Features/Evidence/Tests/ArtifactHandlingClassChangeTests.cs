@@ -1,5 +1,7 @@
 using Cntryl.Portia;
 using Cntryl.Portia.Testing;
+using Microsoft.Extensions.DependencyInjection;
+using Bdgrz.Compliance.Tests.Testing;
 using Bdgrz.Compliance.Features.AccessControl.Models;
 using Bdgrz.Compliance.Features.Evidence.Aggregates;
 using Bdgrz.Compliance.Features.Evidence.Commands;
@@ -134,6 +136,62 @@ public sealed class ArtifactHandlingClassChangeTests
         Assert.NotNull(failure);
         Assert.Equal("internal", owner.Content!.HandlingClass);
         Assert.Equal(2, owner.Revision);
+    }
+
+    [Fact]
+    public void ShouldReplayOriginalClassificationRetryGivenLaterClassChange()
+    {
+        // Arrange
+        var owner = Registered();
+        var first = Request(owner);
+        Assert.Null(owner.ChangeHandlingClass(first, Actor, Now));
+        Assert.Null(owner.ChangeHandlingClass(first with { CommandId = Uuid.CreateVersion4(), ExpectedRevision = 2,
+            HandlingClass = "confidential" }, Actor, Now.AddHours(1)));
+        var facts = new AggregateScenario<EvidenceArtifact>(owner).PendingEvents.Select((fact, index) =>
+            DomainEventSeed.Attach(fact, owner.Id, (ulong)index + 1)).ToArray();
+        var replay = new AggregateScenario<EvidenceArtifact>(new EvidenceArtifact(first.TenantId, owner.Id, first.CommandId))
+            .Given(facts).Aggregate;
+
+        // Act
+        var retry = replay.ChangeHandlingClass(first, Actor, Now.AddDays(1));
+
+        // Assert
+        Assert.Null(retry);
+        Assert.Equal("confidential", replay.Content!.HandlingClass);
+        Assert.Equal(3, replay.Revision);
+        Assert.Empty(new AggregateScenario<EvidenceArtifact>(replay).PendingEvents);
+    }
+
+    [Fact]
+    public async Task ShouldCommitOneClassificationGivenCompetingAppends()
+    {
+        // Arrange
+        var services = new ServiceCollection();
+        var events = new InMemoryEventStore();
+        services.AddSingleton<IEventStore>(events);
+        services.AddSingleton<IDomainEventReader>(events);
+        services.AddPortia();
+        await using var provider = services.BuildServiceProvider();
+        await using var scope = provider.CreateAsyncScope();
+        var reader = scope.ServiceProvider.GetRequiredService<IAggregateReader>();
+        var writer = scope.ServiceProvider.GetRequiredService<IAggregateWriter>();
+        var owner = Registered();
+        var request = Request(owner);
+        var dispatch = new RequestDispatchContext(RequestActor.System);
+        await writer.SaveAsync(owner, dispatch);
+        var first = await reader.HydrateAsync(new EvidenceArtifact(request.TenantId, owner.Id));
+        var competing = await reader.HydrateAsync(new EvidenceArtifact(request.TenantId, owner.Id));
+        Assert.Null(first.ChangeHandlingClass(request, Actor, Now));
+        Assert.Null(competing.ChangeHandlingClass(request with { CommandId = Uuid.CreateVersion4(), HandlingClass = "public" }, Actor, Now));
+        await writer.SaveAsync(first, dispatch);
+
+        // Act
+        await Assert.ThrowsAsync<EventStreamConcurrencyException>(async () => await writer.SaveAsync(competing, dispatch));
+        var committed = await reader.HydrateAsync(new EvidenceArtifact(request.TenantId, owner.Id));
+
+        // Assert
+        Assert.Equal("restricted", committed.Content!.HandlingClass);
+        Assert.Equal(2UL, committed.CommittedStreamPosition);
     }
 
     static ChangeArtifactHandlingClass Request(EvidenceArtifact owner) => new(Uuid.CreateVersion4(),
