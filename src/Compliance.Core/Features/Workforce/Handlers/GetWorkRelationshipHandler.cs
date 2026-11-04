@@ -31,12 +31,15 @@ public sealed class GetWorkRelationshipHandler(WorkRelationshipReadConsistency c
     public async ValueTask<Result<WorkRelationshipView>> HandleAsync(
         IRequestContext<GetWorkRelationship> context, CancellationToken ct)
     {
-        _ = sponsorship;
         var request = context.Request;
         var view = await consistency.GetAsync(request.TenantId, request.RelationshipId,
             request.MinimumRevision, ct).ConfigureAwait(false);
         if (!view.IsSuccess)
             return view;
+        var evaluated = await sponsorship.EvaluateAsync(request.TenantId, [view.Value], ct).ConfigureAwait(false);
+        if (!evaluated.IsSuccess)
+            return Result<WorkRelationshipView>.Failure(evaluated.Error);
+        view = Result<WorkRelationshipView>.Success(evaluated.Value[0]);
         var userId = UserIdentityClaims.TryGetBdgrzSubject(context.Actor, out var subject)
             ? subject
             : throw new InvalidOperationException("WorkforceAuthorizer must reject this actor.");

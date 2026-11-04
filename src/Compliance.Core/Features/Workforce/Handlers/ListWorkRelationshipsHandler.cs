@@ -28,7 +28,6 @@ public sealed class ListWorkRelationshipsHandler(IWorkRelationshipDirectoryReade
     public async ValueTask<Result<Page<WorkRelationshipView>>> HandleAsync(
         IRequestContext<ListWorkRelationships> context, CancellationToken ct)
     {
-        _ = sponsorship;
         var request = context.Request;
         if (request.Limit is < 1 or > 200)
             return Result<Page<WorkRelationshipView>>.Failure(new RequestError(RequestErrorKind.Validation,
@@ -48,10 +47,13 @@ public sealed class ListWorkRelationshipsHandler(IWorkRelationshipDirectoryReade
             return Result<Page<WorkRelationshipView>>.Failure(new RequestError(RequestErrorKind.Validation,
                 "The work relationship cursor is invalid."));
         }
-        return page.Items.Any(item => item.TenantId != request.TenantId)
-            ? Result<Page<WorkRelationshipView>>.Failure(new RequestError(RequestErrorKind.NotFound,
-                "The work relationships were not found."))
-            : Result<Page<WorkRelationshipView>>.Success(Redact(page));
+        if (page.Items.Any(item => item.TenantId != request.TenantId))
+            return Result<Page<WorkRelationshipView>>.Failure(new RequestError(RequestErrorKind.NotFound,
+                "The work relationships were not found."));
+        var evaluated = await sponsorship.EvaluateAsync(request.TenantId, page.Items, ct).ConfigureAwait(false);
+        return evaluated.IsSuccess
+            ? Result<Page<WorkRelationshipView>>.Success(Redact(new Page<WorkRelationshipView>(evaluated.Value, page.NextCursor)))
+            : Result<Page<WorkRelationshipView>>.Failure(evaluated.Error);
     }
 
     // Lists never disclose restricted workforce fields (M0-D06).
