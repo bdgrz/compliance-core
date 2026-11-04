@@ -51,6 +51,7 @@ public sealed class WorkRelationship : Aggregate
     Uuid _personId;
     string? _sourceWorkerId;
     WorkRelationshipTerms? _initialTerms;
+    WorkRelationshipTerms? _terms;
 
     public bool IsCreated => _created;
     public long Revision => _revision;
@@ -68,12 +69,40 @@ public sealed class WorkRelationship : Aggregate
             _personId = ev.PersonId;
             _sourceWorkerId = ev.SourceWorkerId;
             _initialTerms = ev.Terms;
+            _terms = ev.Terms;
             _hasEnded |= ev.Terms is { LifecycleStatus: "ended" };
         });
         On<WorkRelationshipRevised>(ev =>
         {
             _revision = ev.Revision;
+            _terms = ev.Terms;
             _hasEnded |= ev.Terms is { LifecycleStatus: "ended" };
+        });
+        On<WorkRelationshipStarted>(ev =>
+        {
+            _revision = ev.Revision;
+            _terms = _terms! with { LifecycleStatus = "active", StartDate = ev.StartDate };
+        });
+        On<WorkRelationshipLeaveStarted>(ev =>
+        {
+            _revision = ev.Revision;
+            _terms = _terms! with { LifecycleStatus = "on_leave" };
+        });
+        On<WorkRelationshipLeaveEnded>(ev =>
+        {
+            _revision = ev.Revision;
+            _terms = _terms! with { LifecycleStatus = "active" };
+        });
+        On<WorkRelationshipEnded>(ev =>
+        {
+            _revision = ev.Revision;
+            _hasEnded = true;
+            _terms = _terms! with
+            {
+                LifecycleStatus = "ended",
+                EndDate = ev.EndDate,
+                EmploymentStatusReason = ev.Reason,
+            };
         });
     }
 
@@ -126,20 +155,70 @@ public sealed class WorkRelationship : Aggregate
     }
 
     public CommandFailure? Start(long expectedRevision, DateOnly startDate,
-        ActorReference actor, DateTimeOffset changedAt) =>
-        CommandFailure.StateConflict("The named work relationship lifecycle is not implemented.");
+        ActorReference actor, DateTimeOffset changedAt)
+    {
+        var refusal = RequireRevision(expectedRevision);
+        if (refusal is not null)
+            return refusal;
+        if (_hasEnded || _terms!.LifecycleStatus != "pending")
+            return CommandFailure.StateConflict("Only a pending work relationship can be started.");
+        var invalid = Validate(_personId, _terms! with { LifecycleStatus = "active", StartDate = startDate });
+        if (invalid is not null)
+            return CommandFailure.InvalidContent(invalid.Message!);
+        RaiseEvent(new WorkRelationshipStarted(_tenantId, Id, _sourceWorkerId!, _revision + 1,
+            startDate, actor, changedAt));
+        return null;
+    }
 
     public CommandFailure? StartLeave(long expectedRevision, DateOnly fromDate,
-        ActorReference actor, DateTimeOffset changedAt) =>
-        CommandFailure.StateConflict("The named work relationship lifecycle is not implemented.");
+        ActorReference actor, DateTimeOffset changedAt)
+    {
+        var refusal = RequireRevision(expectedRevision);
+        if (refusal is not null)
+            return refusal;
+        if (_hasEnded || _terms!.LifecycleStatus != "active")
+            return CommandFailure.StateConflict("Only an active work relationship can start leave.");
+        RaiseEvent(new WorkRelationshipLeaveStarted(_tenantId, Id, _sourceWorkerId!, _revision + 1,
+            fromDate, actor, changedAt));
+        return null;
+    }
 
     public CommandFailure? EndLeave(long expectedRevision, DateOnly returnDate,
-        ActorReference actor, DateTimeOffset changedAt) =>
-        CommandFailure.StateConflict("The named work relationship lifecycle is not implemented.");
+        ActorReference actor, DateTimeOffset changedAt)
+    {
+        var refusal = RequireRevision(expectedRevision);
+        if (refusal is not null)
+            return refusal;
+        if (_hasEnded || _terms!.LifecycleStatus != "on_leave")
+            return CommandFailure.StateConflict("Only a work relationship on leave can return from leave.");
+        RaiseEvent(new WorkRelationshipLeaveEnded(_tenantId, Id, _sourceWorkerId!, _revision + 1,
+            returnDate, actor, changedAt));
+        return null;
+    }
 
     public CommandFailure? End(long expectedRevision, DateOnly endDate, string? reason,
-        ActorReference actor, DateTimeOffset changedAt) =>
-        CommandFailure.StateConflict("The named work relationship lifecycle is not implemented.");
+        ActorReference actor, DateTimeOffset changedAt)
+    {
+        var refusal = RequireRevision(expectedRevision);
+        if (refusal is not null)
+            return refusal;
+        if (_hasEnded || _terms!.LifecycleStatus == "ended")
+            return CommandFailure.StateConflict("An ended work relationship stays ended.");
+        if (endDate < _terms!.StartDate)
+            return CommandFailure.InvalidContent("The end date cannot be before the start date.");
+        RaiseEvent(new WorkRelationshipEnded(_tenantId, Id, _sourceWorkerId!, _revision + 1,
+            endDate, reason, actor, changedAt));
+        return null;
+    }
+
+    CommandFailure? RequireRevision(long expectedRevision)
+    {
+        if (!_created)
+            return CommandFailure.MissingRecord("The work relationship was not found.");
+        return expectedRevision != _revision
+            ? CommandFailure.ForVersion(VersionedRecordRules.StaleRevision("work relationship", _revision))
+            : null;
+    }
 
     static RequestError? Validate(Uuid personId, WorkRelationshipTerms terms)
     {
