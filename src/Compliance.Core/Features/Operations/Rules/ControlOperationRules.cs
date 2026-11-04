@@ -195,6 +195,8 @@ public static class ControlOperationRules
         ArgumentNullException.ThrowIfNull(input);
         if (current.Attestations.Count == 0)
             return CommandFailure.StateConflict("The occurrence has no attestation to correct.");
+        if (current.State != ControlOperationStates.Returned)
+            return CommandFailure.StateConflict("Only a returned attestation can be corrected.");
         if (expectedRevision != current.Revision)
             return CommandFailure.ForVersion(VersionedRecordRules.StaleRevision("control occurrence", current.Revision));
         if (!IsBoundedText(correctionReason))
@@ -205,7 +207,8 @@ public static class ControlOperationRules
     /// <summary>The review rules over the occurrence as the caller read it.</summary>
     public static CommandFailure? CheckReview(ControlOccurrenceView current, Uuid tenantId, long expectedRevision,
         Uuid attestationId, string outcome, string rationale, IReadOnlyList<string> requestedActions,
-        Uuid reviewerMemberId, DateTimeOffset reviewedAt, SeparationOfDutiesWaiver? waiver)
+        Uuid reviewerMemberId, DateTimeOffset reviewedAt, SeparationOfDutiesWaiver? waiver,
+        string? findingDecision = null, string? findingRationale = null)
     {
         ArgumentNullException.ThrowIfNull(current);
         ArgumentNullException.ThrowIfNull(requestedActions);
@@ -226,7 +229,7 @@ public static class ControlOperationRules
                                   performer.Id == reviewerMemberId;
         if (performedOrRecorded && waiver is null)
             return CommandFailure.ActorProhibited("The member who performed or recorded an attestation cannot review it.");
-        if (outcome is not (ControlOperationStates.Approved or ControlOperationStates.Returned or
+        if (outcome is not ("accepted" or ControlOperationStates.Approved or ControlOperationStates.Returned or
                 ControlOperationStates.ActionRequested or ControlOperationStates.Deferred) ||
             !IsBoundedText(rationale))
             return CommandFailure.InvalidContent(
@@ -236,6 +239,14 @@ public static class ControlOperationRules
                 : requestedActions.Count > 0)
             return CommandFailure.InvalidContent(
                 "Requested actions are required for action_requested, at most 20 of at most 4000 characters, and not allowed otherwise.");
+        if (findingDecision is not (null or "raise" or "none") ||
+            findingDecision == "none" && !IsBoundedText(findingRationale) ||
+            findingRationale is { Length: > MaximumTextLength })
+            return CommandFailure.InvalidContent("A finding decision is raise or none; none requires a bounded reason.");
+        if (attestation.Result is ControlOperationStates.Failed or ControlOperationStates.Skipped or "not_performed" &&
+            outcome is ControlOperationStates.Approved or "accepted" or ControlOperationStates.ActionRequested &&
+            findingDecision is null)
+            return CommandFailure.InvalidContent("Accepting a failed or not-performed attestation requires an explicit finding decision.");
         return null;
     }
 
@@ -256,7 +267,7 @@ public static class ControlOperationRules
         DateTimeOffset recordedAt)
     {
         if (input.Result is not (ControlOperationStates.Complete or ControlOperationStates.Failed or
-                ControlOperationStates.NotApplicable or ControlOperationStates.Skipped))
+                ControlOperationStates.NotApplicable or ControlOperationStates.Skipped or "performed" or "not_performed"))
             return CommandFailure.InvalidContent(
                 "An attestation result must be complete, failed, not_applicable, or skipped.");
         if (input.PerformedBy.Kind is not ("member" or "person"))
@@ -267,7 +278,7 @@ public static class ControlOperationRules
             return CommandFailure.InvalidContent("The covered period must end on or after it starts.");
         if (input.Notes is { } notes && notes.Trim().Length > MaximumTextLength)
             return CommandFailure.InvalidContent("Attestation notes must be at most 4000 characters.");
-        if (input.Result != ControlOperationStates.Complete && !IsBoundedText(input.Rationale))
+        if (input.Result is not (ControlOperationStates.Complete or "performed") && !IsBoundedText(input.Rationale))
             return CommandFailure.InvalidContent(
                 "A failed, not_applicable, or skipped result requires a rationale of at most 4000 characters.");
         if (input.Evidence.Count > MaximumEvidence || input.Evidence.Any(evidence =>
@@ -277,7 +288,7 @@ public static class ControlOperationRules
                 evidence.ExpectedEvidenceIndex is { } index && (index < 0 || index >= expectedEvidence.Count)))
             return CommandFailure.InvalidContent(
                 "Each evidence reference needs a kind of artifact, record, or external, a reference of at most 2000 characters, and a valid expected evidence index.");
-        if (input.Result != ControlOperationStates.Complete)
+        if (input.Result is not (ControlOperationStates.Complete or "performed"))
             return null;
         var covered = input.Evidence.Where(static evidence => evidence.ExpectedEvidenceIndex is not null)
             .Select(static evidence => evidence.ExpectedEvidenceIndex!.Value).ToHashSet();
