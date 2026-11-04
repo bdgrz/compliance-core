@@ -72,6 +72,8 @@ static class BuiltInRolePermissions
             Bdgrz.Compliance.Features.Workforce.Services.ServiceIdentityPermissions.Manage);
         yield return RbacPermissionEffects.Assign(sourceEventId, tenantId, lead,
             Bdgrz.Compliance.Features.Workforce.Services.ServiceIdentityPermissions.Review);
+        yield return RbacPermissionEffects.Assign(sourceEventId, tenantId, lead,
+            Bdgrz.Compliance.Features.Evidence.Services.EvidenceSupportPermissions.Withdraw);
         yield return RbacPermissionEffects.Assign(sourceEventId, tenantId, viewer, RbacPermissions.EvidenceArtifactRead);
     }
 }

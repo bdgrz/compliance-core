@@ -276,6 +276,7 @@ static class NativeFirstResponseContracts
         or "SuspendTenant"
         or "TestTenantIdentityProvider"
         or "ValidateAuditPackage"
+        or "WithdrawEvidenceSupport"
         or "WithdrawControlProposal"
         or "WithdrawCriterionNotApplicable";
     public static bool Pending(string command) => command is

@@ -144,7 +144,7 @@ sealed class ProgramManagementAuthorizer(ITenantMembershipDirectoryReader member
                 return complianceLead
                     ? Result.Success
                     : Result.Failure(new RequestError(RequestErrorKind.Forbidden,
-                        "This advisor handoff operation requires a current Compliance Lead grant."));
+                        "This operation requires a current Compliance Lead grant."));
             }
             var scopedAllowed = await scopedPermissions.IsAllowedAsync(tenantId, userId, memberId,
                     scoped.ProgramId, scoped.RequiredPermission, ct)
@@ -235,5 +235,5 @@ sealed class ProgramManagementAuthorizer(ITenantMembershipDirectoryReader member
 
     static bool RequiresComplianceLead(IProgramManagementRequest request) => request is
         CreateAdvisorHandoff or ReviseAdvisorHandoffSelection or MarkAdvisorHandoffReadyForReview or
-        PreviewAdvisorHandoff;
+        PreviewAdvisorHandoff or Bdgrz.Compliance.Features.Evidence.Commands.WithdrawEvidenceSupport;
 }

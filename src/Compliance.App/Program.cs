@@ -413,6 +413,9 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
         .AddMcpTool<PrepareEvidenceRedaction>()
         .AddMcpTool<GetEvidenceRedaction>(tool => tool.ReadOnly())
         .AddMcpTool<GetEvidenceArtifactMetadata>(tool => tool.ReadOnly())
+        .AddMcpTool<WithdrawEvidenceSupport>(tool => tool.Idempotent())
+        .AddMcpTool<GetEvidenceSupport>(tool => tool.ReadOnly())
+        .AddMcpTool<ListEvidenceSupports>(tool => tool.ReadOnly())
         .AddMcpTool<GetEvidenceRequest>(tool => tool.ReadOnly())
         .AddMcpTool<ListEvidenceRequests>(tool => tool.ReadOnly())
         .AddMcpTool<OpenAccessPopulation>(tool => tool.Idempotent())
@@ -1607,6 +1610,18 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
             "/api/v1/tenants/{tenant_id}/programs/{program_id}/evidence-artifacts/{artifact_id}/supports/{command_id}", config => config.OnNativeResult()).WithNativeFirstResponse<LinkEvidenceSupport>()
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Evidence artifacts");
+    app.MapPortiaGet<GetEvidenceSupport, EvidenceSupportStatusView>(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/evidence-supports/{evidence_support_id}")
+        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
+        .WithTags("Evidence supports");
+    app.MapPortiaGet<ListEvidenceSupports, Page<EvidenceSupportStatusView>>(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/evidence-supports")
+        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
+        .WithTags("Evidence supports");
+    app.MapPortiaPut<WithdrawEvidenceSupport>(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/evidence-supports/{support_id}/withdrawals/{command_id}", config => config.OnNativeResult()).WithNativeFirstResponse<WithdrawEvidenceSupport>()
+        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
+        .WithTags("Evidence supports");
     app.MapPortiaGet<GetEvidenceRequest, EvidenceRequestView>(
             "/api/v1/tenants/{tenant_id}/programs/{program_id}/evidence-requests/{evidence_request_id}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)

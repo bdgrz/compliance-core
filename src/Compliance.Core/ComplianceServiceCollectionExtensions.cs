@@ -984,6 +984,8 @@ public static class ComplianceServiceCollectionExtensions
         services.AddScoped<EvidenceArtifactReadAccess>();
         services.AddScoped<EvidenceArtifactMetadataRead>();
         services.AddScoped<EvidenceSupportTargetSource>();
+        services.AddScoped<EvidenceSupportReader>();
+        services.AddScoped<EvidenceSupportStatusRead>();
         services.AddScoped<IAdvisorRecordVersionResolver, AdvisorRecordVersionResolver>();
         services.AddScoped<IAdvisorSharedSourceReader, AdvisorSharedSourceReader>();
         services.AddScoped<FitzAdvisorHandoffDirectory>();
@@ -1747,6 +1749,9 @@ public static class ComplianceServiceCollectionExtensions
             .AddRequestAuthorizer<EvidenceArtifactDownloadAccess>()
             .AddRequestHandler<IssueArtifactDownloadHandler>()
             .AddRequestHandler<LinkEvidenceSupportHandler>()
+            .AddRequestHandler<WithdrawEvidenceSupportHandler>()
+            .AddRequestHandler<GetEvidenceSupportHandler>()
+            .AddRequestHandler<ListEvidenceSupportsHandler>()
             .AddRequestAuthorizer<EvidenceArtifactInspectionAuthorizer>()
             .AddRequestHandler<RecordEvidenceArtifactInspectionHandler>()
             .AddRequestHandler<ReleaseEvidenceArtifactQuarantineHandler>()
