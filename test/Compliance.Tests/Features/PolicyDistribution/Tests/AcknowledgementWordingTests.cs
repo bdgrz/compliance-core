@@ -1,9 +1,12 @@
 using Cntryl.Portia;
+using Bdgrz.Compliance.Features.Versioning.Models;
 using Cntryl.Portia.Testing;
 using Bdgrz.Compliance.Features.AccessControl.Models;
 using Bdgrz.Compliance.Features.PolicyDistribution.Aggregates;
 using Bdgrz.Compliance.Features.PolicyDistribution.Commands;
 using Bdgrz.Compliance.Features.PolicyDistribution.Events;
+using Bdgrz.Compliance.Features.PolicyDistribution.Models;
+using Bdgrz.Compliance.Tests.Testing;
 
 namespace Bdgrz.Compliance.Tests.Features.PolicyDistribution.Tests;
 
@@ -72,6 +75,38 @@ public sealed class AcknowledgementWordingTests
         Assert.Equal("Later wording", owner.Wording);
         Assert.Equal(2, owner.Revision);
         Assert.Equal(before, new AggregateScenario<AcknowledgementWording>(owner).PendingEvents.Count);
+    }
+
+    [Fact]
+    public void ShouldRetainCapturedWordingGivenOrganizationLaterChangesItsChoice()
+    {
+        // Arrange
+        var tenant = Uuid.CreateVersion4();
+        var member = Uuid.CreateVersion4();
+        var actor = ActorReference.ForMember(member, "Org Admin");
+        var wording = new AcknowledgementWording(tenant);
+        Assert.Null(wording.Set(new SetAcknowledgementWording(Uuid.CreateVersion4(), tenant, 0,
+            "First organization wording"), actor, Now));
+        var campaign = new PolicyDistributionCampaign(tenant, Uuid.CreateVersion4());
+        var operation = NativeFacts.Root(campaign, campaign.Id, "LaunchPolicyCampaign", null, member);
+        var launch = campaign.LaunchCampaign(operation, Uuid.CreateVersion4(),
+            new CampaignSubject("policy", Uuid.CreateVersion4(), "POL-01", "Policy", 1, new string('a', 64)),
+            "core_security", NativeFacts.Ref(), Uuid.CreateVersion4(), new string('b', 64),
+            DateOnly.FromDateTime(Now.UtcDateTime), DateOnly.FromDateTime(Now.UtcDateTime).AddDays(30),
+            null, 0, operation.Actor, member, NativeFacts.Now, NativeFacts.Ref(), NativeFacts.Ref(),
+            NativeFacts.Ref(), wording.Wording);
+        Assert.True(launch.IsSuccess, launch.Error?.Message);
+
+        // Act
+        var changed = wording.Set(new SetAcknowledgementWording(Uuid.CreateVersion4(), tenant, 1,
+            "Later organization wording"), actor, Now.AddMinutes(1));
+
+        // Assert
+        Assert.Null(changed);
+        var fact = Assert.IsType<PolicyCampaignLaunched>(
+            new AggregateScenario<PolicyDistributionCampaign>(campaign).PendingEvents[0]);
+        Assert.Equal("First organization wording", fact.AcknowledgementText);
+        Assert.Equal("Later organization wording", wording.Wording);
     }
 
     [Theory]
