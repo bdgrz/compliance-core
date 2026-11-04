@@ -84,7 +84,49 @@ sealed class FitzWorkforceObservationDirectory(IKvClient client)
                             revised.ChangedAt.UtcDateTime), moved, revised.Actor,
                         revised.ChangedAt, ct).ConfigureAwait(false);
                 break;
+            case WorkRelationshipStarted started:
+                await ApplyLifecycleAsync(started.TenantId, started.RelationshipId, started.WorkerIdentifier,
+                    started.Revision, terms => terms with { LifecycleStatus = "active", StartDate = started.StartDate },
+                    null, started.StartDate, started.Actor, started.ChangedAt, ct).ConfigureAwait(false);
+                break;
+            case WorkRelationshipLeaveStarted leave:
+                await ApplyLifecycleAsync(leave.TenantId, leave.RelationshipId, leave.WorkerIdentifier,
+                    leave.Revision, terms => terms with { LifecycleStatus = "on_leave" },
+                    null, leave.FromDate, leave.Actor, leave.ChangedAt, ct).ConfigureAwait(false);
+                break;
+            case WorkRelationshipLeaveEnded returned:
+                await ApplyLifecycleAsync(returned.TenantId, returned.RelationshipId, returned.WorkerIdentifier,
+                    returned.Revision, terms => terms with { LifecycleStatus = "active" },
+                    null, returned.ReturnDate, returned.Actor, returned.ChangedAt, ct).ConfigureAwait(false);
+                break;
+            case WorkRelationshipEnded ending:
+                await ApplyLifecycleAsync(ending.TenantId, ending.RelationshipId, ending.WorkerIdentifier,
+                    ending.Revision, terms => terms with
+                    {
+                        LifecycleStatus = "ended",
+                        EndDate = ending.EndDate,
+                        EmploymentStatusReason = ending.Reason,
+                    }, "leaver", ending.EndDate, ending.Actor, ending.ChangedAt, ct).ConfigureAwait(false);
+                break;
         }
+    }
+
+    async ValueTask ApplyLifecycleAsync(Uuid tenantId, Uuid relationshipId, string workerIdentifier,
+        long revision, Func<WorkRelationshipTerms, WorkRelationshipTerms> change,
+        string? observationKind, DateOnly effectiveDate, ActorReference actor, DateTimeOffset changedAt,
+        CancellationToken ct)
+    {
+        var current = await WorkforceObservationSchema.Relationships.GetAsync(Transaction, relationshipId, ct)
+            .ConfigureAwait(false);
+        if (current is null || current.TenantId != tenantId || current.SourceWorkerId != workerIdentifier ||
+            current.Revision + 1 != revision)
+            throw new InvalidOperationException(
+                "A named work relationship fact cannot be observed before its matching predecessor.");
+        var next = current with { Revision = revision, Terms = change(current.Terms) };
+        await WorkforceObservationSchema.Relationships.ReplaceAsync(Transaction, current, next, ct)
+            .ConfigureAwait(false);
+        if (observationKind is not null)
+            await ObserveAsync(next, observationKind, effectiveDate, [], actor, changedAt, ct).ConfigureAwait(false);
     }
 
     public async ValueTask<Page<WorkforceObservationView>> ListAsync(Uuid tenantId, string? kind,
