@@ -31,6 +31,10 @@ public sealed class CorrectiveActionChangeWorkflowTests
         Assert.Equal(2, action.Revision);
         Assert.Equal("open", action.Status);
         Assert.Equal(finding.Source, read.Source);
+        Assert.Equal(Assert.Single(finding.History, static entry => entry.Change == "corrective_action_added").Summary,
+            Assert.Single(read.History, static entry => entry.Change == "corrective_action_added").Summary);
+        Assert.Contains(request.Description.Trim(),
+            Assert.Single(read.History, static entry => entry.Change == "corrective_action_changed").Summary, StringComparison.Ordinal);
         Assert.Equal(WireJson.Of(changed), WireJson.Of(read));
         Assert.Equal(1, (await fixture.FindingStreamAsync(finding.FindingId)).UnresolvedActionCount);
     }
