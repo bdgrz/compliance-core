@@ -1,0 +1,268 @@
+{
+  "status": "paused; user must explicitly resume implementation",
+  "captured_base_head": "1deb9cf7121f9d49ab1ee0e60bda4ea52f223455",
+  "branch": "feat/proposed-domain-impl",
+  "main_delivery": "4e4c9d0129e0390df270695565ea4b21291df66c",
+  "checkpoint_purpose": "Preserve previously authored, incompletely qualified work and read-only handoffs; not a feature acceptance or merge.",
+  "config_change": {
+    "path": "~/.codex/config.toml",
+    "setting": "features.multi_agent_v2.max_concurrent_threads_per_session",
+    "value": 20,
+    "validated_by": "tomli parse; codex features list exits0",
+    "session_limit_at_capture": "4 total active slots; current runtime instructions remain authoritative"
+  },
+  "worktrees": "worktree /Users/jrepanich/Code/bdgrz/compliance-core\nHEAD 1deb9cf7121f9d49ab1ee0e60bda4ea52f223455\nbranch refs/heads/feat/proposed-domain-impl\n\nworktree /Users/jrepanich/Code/bdgrz/compliance-core-worktrees/assurance\nHEAD 527fda47d96d450284c64d86cd660e53a779f37d\nbranch refs/heads/work/proposed-assurance\n\nworktree /Users/jrepanich/Code/bdgrz/compliance-core-worktrees/assurance-cassie-person-guard\nHEAD 2737df4a6ecdb1923eb27f33d5ecec140b47f396\nbranch refs/heads/fix/cassie-person-identity-guard\n\nworktree /Users/jrepanich/Code/bdgrz/compliance-core-worktrees/evidence-support-withdrawal\nHEAD 3c81d36648d4b548e51a20998a4ebaf23b2c4688\nbranch refs/heads/work/evidence-support-withdrawal\n\nworktree /Users/jrepanich/Code/bdgrz/compliance-core-worktrees/methodology\nHEAD 65d57ff9004885d667e71c832c9f10ba37ef6ad9\nbranch refs/heads/work/proposed-methodology\n\nworktree /Users/jrepanich/Code/bdgrz/compliance-core-worktrees/person-named-writer-cutover\nHEAD c2e06cf77bf9ae9070bb6e7f384804990e85404a\nbranch refs/heads/work/person-named-writer-cutover\n\nworktree /Users/jrepanich/Code/bdgrz/compliance-core-worktrees/platform-access\nHEAD 226d00d6a1d471aa4b2cf44b0153172ab402f0ae\nbranch refs/heads/work/proposed-access-cassie\n\nworktree /Users/jrepanich/Code/bdgrz/compliance-core-worktrees/program-dates\nHEAD 784bfca2a4c8dbc222466fbf2b3b362aa5a6f385\nbranch refs/heads/work/proposed-program-dates\n\nworktree /Users/jrepanich/Code/bdgrz/compliance-core-worktrees/program-scope\nHEAD f283c48b7bf549bc7a2b35e474f670d21b4a2438\nbranch refs/heads/work/proposed-program-scope-cassie\n\nworktree /Users/jrepanich/Code/bdgrz/compliance-core-worktrees/service-review-membership\nHEAD 0acd25ddb32e4fb91def4fd27ad3f5f8d741ccce\nbranch refs/heads/work/proposed-service-review-membership\n\nworktree /Users/jrepanich/Code/bdgrz/compliance-core-worktrees/workforce\nHEAD 446041d248983a9955c820d6925ba425395b17ec\nbranch refs/heads/work/proposed-workforce\n\n",
+  "artifacts": [
+    {
+      "file": "compliance-coverage-advisor-collaboration-handoff.md",
+      "original_path": "/tmp/compliance-coverage-advisor-collaboration-handoff.md",
+      "sha256": "ad5ae35bbb6836d91e7c0418944166a720bd72b543a3f3e2724c1bd00d5338d7",
+      "bytes": 13110
+    },
+    {
+      "file": "compliance-coverage-application-inventory-handoff.md",
+      "original_path": "/tmp/compliance-coverage-application-inventory-handoff.md",
+      "sha256": "afe3dab6e0007a52096346f2a219decb20b6537f9b1682f42f3bb472f9768acf",
+      "bytes": 7256
+    },
+    {
+      "file": "compliance-coverage-auditor-collaboration-handoff.md",
+      "original_path": "/tmp/compliance-coverage-auditor-collaboration-handoff.md",
+      "sha256": "bd31321272421f59b32c34831106b249eed1cd724265c4fdc8766150aeb94977",
+      "bytes": 14789
+    },
+    {
+      "file": "compliance-coverage-change-and-incident-oversight-handoff.md",
+      "original_path": "/tmp/compliance-coverage-change-and-incident-oversight-handoff.md",
+      "sha256": "3d62d5ae696bea31a23283e18ec1c81a9865cee8ef5ff825ff83e32dd271a945",
+      "bytes": 10564
+    },
+    {
+      "file": "compliance-coverage-commitments-handoff.md",
+      "original_path": "/tmp/compliance-coverage-commitments-handoff.md",
+      "sha256": "9c8481f559402440e928d5c6114b43b82e9bc87328add3c38e8defd7254af671",
+      "bytes": 7188
+    },
+    {
+      "file": "compliance-coverage-criteria-handoff.md",
+      "original_path": "/tmp/compliance-coverage-criteria-handoff.md",
+      "sha256": "4565893388193db4b62a490c3a815624d231d498cf5fda7cd476f872ee71d9c0",
+      "bytes": 6903
+    },
+    {
+      "file": "compliance-coverage-evidence-handoff.md",
+      "original_path": "/tmp/compliance-coverage-evidence-handoff.md",
+      "sha256": "4b9a46d2009022de13fa8a9efe000b3652efd734e1d99445be2c8fa581502973",
+      "bytes": 13427
+    },
+    {
+      "file": "compliance-coverage-examinations-handoff.md",
+      "original_path": "/tmp/compliance-coverage-examinations-handoff.md",
+      "sha256": "ac18b7e4abb152d9e352a462a8196bc4c8a506dd83fe1f71dce1b6fd3da62527",
+      "bytes": 13725
+    },
+    {
+      "file": "compliance-coverage-exports-handoff.md",
+      "original_path": "/tmp/compliance-coverage-exports-handoff.md",
+      "sha256": "e0bd3a6a655b10c7746c9ba9c6cb1f1be90f9522fa794cbd41932c0596f3a1a6",
+      "bytes": 9244
+    },
+    {
+      "file": "compliance-coverage-external-access-governance-handoff.md",
+      "original_path": "/tmp/compliance-coverage-external-access-governance-handoff.md",
+      "sha256": "1c5f1338c61eada8f106f1313a85c80b829ecdde2655bf5ffa8e2c51a481d0d6",
+      "bytes": 11329
+    },
+    {
+      "file": "compliance-coverage-policies-handoff.md",
+      "original_path": "/tmp/compliance-coverage-policies-handoff.md",
+      "sha256": "423545795f87ff93a7f0575a69fb12abd8678cf38e50776acc874afcd3875fbf",
+      "bytes": 10553
+    },
+    {
+      "file": "compliance-coverage-readiness-handoff.md",
+      "original_path": "/tmp/compliance-coverage-readiness-handoff.md",
+      "sha256": "3a9c023b17fae656a4a3ce60f4564ad0cddef1d5ea468426116fca9ad9edca13",
+      "bytes": 13218
+    },
+    {
+      "file": "compliance-coverage-retention-handoff.md",
+      "original_path": "/tmp/compliance-coverage-retention-handoff.md",
+      "sha256": "bc974f79ca366efa1275c277b1e77a29822c1b979b525f0827fe1a72cc8c0341",
+      "bytes": 6875
+    },
+    {
+      "file": "compliance-coverage-risk-and-provider-oversight-handoff.md",
+      "original_path": "/tmp/compliance-coverage-risk-and-provider-oversight-handoff.md",
+      "sha256": "addf123460f0839a5e196570b6ef9818691d8fdaf0344cfd7e30fa47224d01d6",
+      "bytes": 12694
+    },
+    {
+      "file": "compliance-coverage-system-description-handoff.md",
+      "original_path": "/tmp/compliance-coverage-system-description-handoff.md",
+      "sha256": "c5776e67cc2e41b07274f771bc3586223222e40a9615693fc467b09df73c44d2",
+      "bytes": 9780
+    },
+    {
+      "file": "compliance-coverage-technology-and-information-inventory-handoff.md",
+      "original_path": "/tmp/compliance-coverage-technology-and-information-inventory-handoff.md",
+      "sha256": "95c2f86a66c95d87fe1bb1265870c23813278168a955ae8b89628121eea6dd10",
+      "bytes": 8584
+    },
+    {
+      "file": "compliance-all-context-coverage-manifest.json",
+      "original_path": "/tmp/compliance-all-context-coverage-manifest.json",
+      "sha256": "8f37f841f1012d942ab5573201f6431ae4a0a3a4800c6857f3455f4cb7c09b10",
+      "bytes": 3412
+    },
+    {
+      "file": "compliance-paused-handoff-2026-11-04.json",
+      "original_path": "/tmp/compliance-paused-handoff-2026-11-04.json",
+      "sha256": "f4de4d67e7567394b9b0aaafee401f5fc650aa175b44a6bab33aae681a238a9f",
+      "bytes": 1681
+    },
+    {
+      "file": "compliance-evidence-support-withdrawal-handoff.json",
+      "original_path": "/tmp/compliance-evidence-support-withdrawal-handoff.json",
+      "sha256": "eadd0a85e51416b09f76d4b73f0fd93dcbb4132d658576139c7c3db1fed0f5b9",
+      "bytes": 4086
+    },
+    {
+      "file": "compliance-evidence-support-withdrawal-integration-review.md",
+      "original_path": "/tmp/compliance-evidence-support-withdrawal-integration-review.md",
+      "sha256": "89a4eb7508e59c65b0725d423c783b2a6d9b8d06b615d514341bbe381dbf4baa",
+      "bytes": 19842
+    },
+    {
+      "file": "compliance-evidence-support-withdrawal-jev-final-manifest.json",
+      "original_path": "/tmp/compliance-evidence-support-withdrawal-jev-final-manifest.json",
+      "sha256": "e10f24203a2181dda94250618ff6c92902de58d02c9e29ec90ecbf0bcb3e2b1a",
+      "bytes": 1551
+    },
+    {
+      "file": "compliance-evidence-support-withdrawal-jev-response.json",
+      "original_path": "/tmp/compliance-evidence-support-withdrawal-jev-response.json",
+      "sha256": "87a6a2ee8e81a7bce8758d0828667da3d4adafb0092cf578c5bed88d9bfea25c",
+      "bytes": 644
+    },
+    {
+      "file": "compliance-evidence-support-withdrawal-jev-followup-response.json",
+      "original_path": "/tmp/compliance-evidence-support-withdrawal-jev-followup-response.json",
+      "sha256": "2a0edeeaaf4dffffc84c9ab8eefb2120aaae5458d66dc206a59ce234714a0321",
+      "bytes": 512
+    },
+    {
+      "file": "compliance-access-cassie-integration-checklist.md",
+      "original_path": "/tmp/compliance-access-cassie-integration-checklist.md",
+      "sha256": "d743901feac8af81814d5380a9f83e3385f79c5e6eb268da06c14f126499898f",
+      "bytes": 20205
+    },
+    {
+      "file": "compliance-access-cassie-handoff.json",
+      "original_path": "/tmp/compliance-access-cassie-handoff.json",
+      "sha256": "9c2130ea272895b95b351a78e415e18ce46d0127753f9b08c37dd492a94832d1",
+      "bytes": 18637
+    },
+    {
+      "file": "compliance-access-cassie-review.md",
+      "original_path": "/tmp/compliance-access-cassie-review.md",
+      "sha256": "d53e71089fbc557f6fd1039ca82300f89afa6c44c2fb9eb1cd54c471448076a3",
+      "bytes": 3301
+    },
+    {
+      "file": "compliance-program-dates-source-review.md",
+      "original_path": "/tmp/compliance-program-dates-source-review.md",
+      "sha256": "93dbaabfa1ccb886940cf106fa7773bb27772c264f9b99bc93e83b2cf16c7a03",
+      "bytes": 7579
+    },
+    {
+      "file": "compliance-program-dates-assembled-jev-request.json",
+      "original_path": "/tmp/compliance-program-dates-assembled-jev-request.json",
+      "sha256": "97c4c3fdc5b738ace401b4438f1c67465cc03b9172e20de0e0866df1c90145b4",
+      "bytes": 17020
+    },
+    {
+      "file": "compliance-program-dates-assembled-jev-response.json",
+      "original_path": "/tmp/compliance-program-dates-assembled-jev-response.json",
+      "sha256": "d3a3784f61890f5c51ac04c95a3b9f752241bf30dda5da044df379850cf0b404",
+      "bytes": 577
+    },
+    {
+      "file": "compliance-program-dates-full-source-hashes.json",
+      "original_path": "/tmp/compliance-program-dates-full-source-hashes.json",
+      "sha256": "496339ea90255844ce25ab47e608af3fb947149588e450b1bb5bf0be487e8289",
+      "bytes": 281
+    },
+    {
+      "file": "compliance-person-cutover-accepted-source-hashes.json",
+      "original_path": "/tmp/compliance-person-cutover-accepted-source-hashes.json",
+      "sha256": "c68c3a26e9db01bbdaab47d4f0a889f4369da21e92f0d9ef3e77bdc8329ca56b",
+      "bytes": 1937
+    },
+    {
+      "file": "compliance-person-cutover-full-source-hashes.json",
+      "original_path": "/tmp/compliance-person-cutover-full-source-hashes.json",
+      "sha256": "6dc448f053238424b98401f63d0cf2f7b2975ccaa394cc8782c3d5b3b12f5fa5",
+      "bytes": 1774
+    },
+    {
+      "file": "compliance-pr1186-auth-full-source-hashes.json",
+      "original_path": "/tmp/compliance-pr1186-auth-full-source-hashes.json",
+      "sha256": "f1cfaf4cc5a7cec0b74c80e67d0da9fc1079dac21daef01d607751489de3c325",
+      "bytes": 1245
+    },
+    {
+      "file": "compliance-cassie-integration-green-source-hashes.json",
+      "original_path": "/tmp/compliance-cassie-integration-green-source-hashes.json",
+      "sha256": "4de25f537e7549234709c181ec32a099767879cf779f52e2c86c137e050d5f5f",
+      "bytes": 1355
+    },
+    {
+      "file": "compliance-person-cutover-exact-source-review.md",
+      "original_path": "/tmp/compliance-person-cutover-exact-source-review.md",
+      "sha256": "2d55799b0686cc2cf73eb0d32ad456ed6387c51e1459717c6076438289cbe830",
+      "bytes": 23269
+    },
+    {
+      "file": "compliance-portia-ergonomics-review.md",
+      "original_path": "/tmp/compliance-portia-ergonomics-review.md",
+      "sha256": "4b2cb139236fe54c97a8df24a6418ff3fc75c91a3748692cb8401e74736090f0",
+      "bytes": 11113
+    },
+    {
+      "file": "compliance-program-dates-red-tests-tail.txt",
+      "original_path": "/tmp/compliance-program-dates-red-tests.log",
+      "sha256": "2163d875895290e7638448953fb9ad6ffe413c95fd5cd0e9382e987b282d39c7",
+      "bytes": 2929
+    },
+    {
+      "file": "compliance-program-dates-green-tests-tail.txt",
+      "original_path": "/tmp/compliance-program-dates-green-tests.log",
+      "sha256": "fce9b13206160fc4540d6fc270bd03cd276856ad5aace66aa0c1577b74576415",
+      "bytes": 1587
+    },
+    {
+      "file": "compliance-program-dates-full-unit-tail.txt",
+      "original_path": "/tmp/compliance-program-dates-full-unit.log",
+      "sha256": "c7d940f91ce2ff928b0313ab44460c6e6174a858984613df9ff0343927e223b9",
+      "bytes": 5476
+    },
+    {
+      "file": "compliance-program-dates-green-build-tail.txt",
+      "original_path": "/tmp/compliance-program-dates-green-build.log",
+      "sha256": "8e5994e6abab3886e73017c55e796b45ff57ef08979cbdbcc33e8c1c395afe3c",
+      "bytes": 767
+    },
+    {
+      "file": "compliance-program-dates-whitespace-tail.txt",
+      "original_path": "/tmp/compliance-program-dates-whitespace.log",
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+      "bytes": 1
+    },
+    {
+      "file": "program-date-paused-source.patch",
+      "sha256": "4e9c046af1ed7d98b13251d1a512109a841f5915bb28ac2807d257decd314961",
+      "bytes": 6495
+    }
+  ]
+}

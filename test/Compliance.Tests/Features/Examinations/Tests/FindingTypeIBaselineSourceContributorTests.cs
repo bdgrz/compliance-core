@@ -102,8 +102,8 @@ public sealed class FindingTypeIBaselineSourceContributorTests
         var source = Assert.Single(result.Value.Sources);
         Assert.Equal("finding", source.Kind);
         Assert.Equal(finding.FindingId, source.RecordId);
-        Assert.Equal(2, source.Revision);
-        Assert.Equal(Uuid.CreateVersion5(finding.FindingId, "finding_v1:2"), source.VersionId);
+        Assert.Equal(3, source.Revision);
+        Assert.Equal(Uuid.CreateVersion5(finding.FindingId, "finding_v1:3"), source.VersionId);
         Assert.Matches("^[0-9a-f]{64}$", source.ContentSha256);
     }
 
@@ -120,7 +120,7 @@ public sealed class FindingTypeIBaselineSourceContributorTests
 
         // Act
         await fixture.AsAsync(fixture.LeadUserId, new ReviseFinding(Uuid.CreateVersion4(), fixture.TenantId,
-            fixture.ProgramId, finding.FindingId, 1, "critical", fixture.OwnerMemberId, fixture.Today.AddDays(3), "All",
+            fixture.ProgramId, finding.FindingId, 1, "moderate", fixture.OwnerMemberId, fixture.Today.AddDays(3), "All",
             null, "Escalated."));
         var after = await contributor.ReadAsync(engagement, new TypeIBaselineSourceReadContext(fixture.LeadMemberId, []),
             CancellationToken.None);

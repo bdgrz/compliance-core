@@ -582,7 +582,7 @@ public sealed class ProposeTypeIIOperatingPlanHandlerTests
 
             await FindingSeed.RaiseAsync(provider, TenantId, ProgramId, FindingId,
                 new FindingSource("readiness_gap", Uuid.CreateVersion4(), "1", "Known opening gap."),
-                "Known opening finding", "A readiness gap remains open.", "medium", "System access", MemberId,
+                "Known opening finding", "A readiness gap remains open.", "moderate", "System access", MemberId,
                 new DateOnly(2026, 12, 1), [], ActorReference.ForMember(ActorMemberId, "Plan author"),
                 Now.AddMinutes(-21));
             var finding = (await Findings.ReadViewAsync(TenantId, ProgramId, FindingId, Now))!;

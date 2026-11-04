@@ -98,7 +98,7 @@ public sealed class PersonNativeIdentityTests
     }
 
     [Fact]
-    public async Task ShouldReplayOriginalRevisionReceiptGivenConsumedExpectedPersonRevision()
+    public async Task ShouldReplayOriginalDetailsChangeReceiptGivenConsumedExpectedPersonRevision()
     {
         // Arrange
         await using var fixture = await AttestWorkforceManagementWallTests.Fixture.CreateAsync();
@@ -110,7 +110,7 @@ public sealed class PersonNativeIdentityTests
             expected_revision = 1L,
             display_name = "Ada King",
             work_email = "ada@example.com"
-        }), ComplianceCoreJsonContext.Default.RevisePerson)!;
+        }), ComplianceCoreJsonContext.Default.ChangePersonDetails)!;
         await using var scope = fixture.Provider.CreateAsyncScope();
         var bus = scope.ServiceProvider.GetRequiredService<IRequestBus>();
         var actor = ProgramManagementServices.Actor(fixture.UserId);

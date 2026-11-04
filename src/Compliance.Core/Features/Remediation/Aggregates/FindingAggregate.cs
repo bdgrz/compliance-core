@@ -80,6 +80,7 @@ public sealed class FindingAggregate : Aggregate
     DomainEvent? _selectedTerminal;
     DomainEvent? _latest;
     long _admittedCount;
+    readonly Dictionary<Uuid, FindingCorrectiveActionResolved?> _actionOutcomes = [];
     FindingRaisedV2? _raised;
     FindingRevisedV2? _revised;
     FindingClosureAccepted? _pending;
@@ -101,6 +102,7 @@ public sealed class FindingAggregate : Aggregate
         On<FindingRaisedV2>(Apply);
         On<FindingRevisedV2>(Apply);
         On<CorrectiveActionAdmitted>(Apply);
+        On<FindingCorrectiveActionResolved>(Apply);
         On<FindingAcceptanceLinkedV2>(Apply);
         On<FindingClosureAccepted>(Apply);
         On<FindingClosedV2>(Apply);
@@ -155,6 +157,9 @@ public sealed class FindingAggregate : Aggregate
     /// <summary>The number of admitted actions across this finding's generations.</summary>
     public long AdmittedCount => _admittedCount;
 
+    /// <summary>The admitted actions whose terminal outcome has not been recorded in this finding.</summary>
+    public long UnresolvedActionCount => _actionOutcomes.Count(static item => item.Value is null);
+
     /// <summary>The closure accepted and not yet closed or canceled, which seals action admission.</summary>
     public FindingClosureAccepted? PendingClosure => _pending;
 
@@ -198,7 +203,7 @@ public sealed class FindingAggregate : Aggregate
             : Result.Success;
     }
 
-    /// <summary>Checks that a closure can be accepted: the write guards and at least one admitted action.</summary>
+    /// <summary>Checks closure against the finding's own admitted actions and their recorded outcomes.</summary>
     public Result PrepareClosure(long expectedRevision)
     {
         var prepared = PrepareWrite(expectedRevision);
@@ -207,6 +212,8 @@ public sealed class FindingAggregate : Aggregate
         return _admittedCount == 0
             ? Fail(CommandFailure.StateConflict(
                 "Closing a finding requires completed corrective work; an acceptance is not remediation."))
+            : UnresolvedActionCount != 0
+                ? Fail(CommandFailure.StateConflict("Every planned corrective action must have its outcome recorded in this finding before closure."))
             : Result.Success;
     }
 
@@ -243,6 +250,9 @@ public sealed class FindingAggregate : Aggregate
         var prepared = PrepareRaise();
         if (!prepared.IsSuccess)
             return prepared;
+        if (!FindingRules.IsSeverity(terms.Severity))
+            return Result.Failure(new RequestError(RequestErrorKind.Validation,
+                "A finding severity must be low, moderate, or high."));
         RaiseEvent(new FindingRaisedV2(operation.LogicalId, _tenantId, _programId, _findingId, 1, terms.Source,
             terms.Title, terms.Description, terms.Severity, terms.AffectedScope, terms.OwnerMemberId, terms.DueOn,
             links, terms.RaisedBy, terms.RaisedAt, terms.CreationKind, terms.InitialActionSha256, operation,
@@ -261,6 +271,9 @@ public sealed class FindingAggregate : Aggregate
         var prepared = PrepareOwnWrite(operation);
         if (!prepared.IsSuccess)
             return prepared;
+        if (!FindingRules.IsSeverity(revision.Severity))
+            return Result.Failure(new RequestError(RequestErrorKind.Validation,
+                "A finding severity must be low, moderate, or high."));
         RaiseEvent(new FindingRevisedV2(operation.LogicalId, _tenantId, _programId, _findingId, _revision + 1,
             revision.Severity, revision.OwnerMemberId, revision.DueOn, revision.AffectedScope, revision.RootCause,
             revision.Reason, revision.RevisedBy, revision.RevisedAt, operation, firstResponse, operationResult));
@@ -289,10 +302,33 @@ public sealed class FindingAggregate : Aggregate
         var prepared = PrepareOwnWrite(operation);
         if (!prepared.IsSuccess)
             return prepared;
-        if (HasAdmitted(operation.LogicalId))
+        if (_actionOutcomes.ContainsKey(operation.LogicalId))
             return Fail(CommandFailure.StateConflict("A corrective action identity cannot be reused."));
         RaiseEvent(new CorrectiveActionAdmitted(Stream, _revision + 1, _generation, intent, null, operation,
             firstResponse, null));
+        return Result.Success;
+    }
+
+    /// <summary>Records the exact terminal outcome of an action admitted by this finding.</summary>
+    public Result RecordActionOutcome(OperationProvenance operation, Uuid actionId, string outcome,
+        NativeFactReference source, ImmutableContentRef sourceProof)
+    {
+        ArgumentNullException.ThrowIfNull(operation);
+        if (!ValidOutcome(operation, actionId, outcome, source, sourceProof))
+            return Result.Failure(new RequestError(RequestErrorKind.Validation,
+                "An outcome requires its exact terminal action source and stable system reporting operation."));
+        if (_raised is null)
+            return Result.Failure(new RequestError(RequestErrorKind.NotFound, "The finding is not visible yet.", true));
+        if (!_actionOutcomes.TryGetValue(actionId, out var prior))
+            return Fail(CommandFailure.StateConflict("The corrective action was not planned by this finding."));
+        if (prior is not null)
+            return prior.Outcome == outcome && prior.Source == source && prior.SourceProof == sourceProof
+                ? Result.Success
+                : Fail(CommandFailure.StateConflict("The corrective action already has a different recorded outcome."));
+        if (_pending is not null || _closed is not null)
+            return Fail(CommandFailure.StateConflict("A new action outcome cannot change a closing or closed finding."));
+        RaiseEvent(new FindingCorrectiveActionResolved(operation.LogicalId, _tenantId, _programId, _findingId,
+            _revision + 1, actionId, outcome, source, sourceProof, operation));
         return Result.Success;
     }
 
@@ -318,7 +354,7 @@ public sealed class FindingAggregate : Aggregate
         ImmutableContentRef actionCompletionProofs, ImmutableContentRef intent, ImmutableContentRef operationResult)
     {
         ArgumentNullException.ThrowIfNull(operation);
-        if (_pending is null || _pending.Operation.RootOperationId != operation.RootOperationId ||
+        if (_pending is null || UnresolvedActionCount != 0 || _pending.Operation.RootOperationId != operation.RootOperationId ||
             _pending.Intent != intent || operation.Owner != Stream)
             return Result.Failure(new RequestError(RequestErrorKind.Conflict,
                 "Only the exact pending closure can close the finding.", false));
@@ -361,7 +397,7 @@ public sealed class FindingAggregate : Aggregate
         Acceptance.Observe(ev);
         if (_raised is not null || ev.TenantId != _tenantId || ev.ProgramId != _programId ||
             ev.FindingId != _findingId || ev.Revision != 1 || ev.Operation.Owner != Stream ||
-            ev.Operation.LogicalId != _findingId)
+            ev.Operation.LogicalId != _findingId || !FindingRules.IsSeverity(ev.Severity))
             throw new InvalidOperationException("A finding stream is raised once, at revision one, by its own operation.");
         _raised = ev;
         _revision = 1;
@@ -373,6 +409,8 @@ public sealed class FindingAggregate : Aggregate
     {
         Acceptance.Observe(ev);
         EnsureWritable(ev.TenantId, ev.ProgramId, ev.FindingId, ev.Revision, ev.Operation);
+        if (!FindingRules.IsSeverity(ev.Severity))
+            throw new InvalidOperationException("A finding revision must name low, moderate, or high severity.");
         _revised = ev;
         Advance(ev);
     }
@@ -382,12 +420,25 @@ public sealed class FindingAggregate : Aggregate
         Acceptance.Observe(ev);
         if (_raised is null || _pending is not null || _closed is not null || ev.Owner != Stream ||
             ev.Revision != _revision + 1 || ev.Generation != _generation || ev.Operation.Owner != Stream ||
-            ev.Operation.LogicalId == Acceptance.SelectedLogicalId && _selectedAdmission is not null)
+            _actionOutcomes.ContainsKey(ev.Operation.LogicalId))
             throw new InvalidOperationException(
                 "An action is admitted once, for the current open generation, at the next revision.");
         _admittedCount = checked(_admittedCount + 1);
+        _actionOutcomes.Add(ev.Operation.LogicalId, null);
         if (ev.Operation.LogicalId == Acceptance.SelectedLogicalId)
             _selectedAdmission = ev;
+        Advance(ev);
+    }
+
+    void Apply(FindingCorrectiveActionResolved ev)
+    {
+        Acceptance.Observe(ev);
+        EnsureWritable(ev.TenantId, ev.ProgramId, ev.FindingId, ev.Revision, ev.Operation);
+        if (ev.RequestId != ev.Operation.LogicalId ||
+            !ValidOutcome(ev.Operation, ev.ActionId, ev.Outcome, ev.Source, ev.SourceProof) ||
+            !_actionOutcomes.TryGetValue(ev.ActionId, out var prior) || prior is not null)
+            throw new InvalidOperationException("An admitted action has one exact terminal outcome in its finding.");
+        _actionOutcomes[ev.ActionId] = ev;
         Advance(ev);
     }
 
@@ -401,7 +452,7 @@ public sealed class FindingAggregate : Aggregate
     void Apply(FindingClosureAccepted ev)
     {
         Acceptance.Observe(ev);
-        if (_raised is null || _pending is not null || _closed is not null || _admittedCount == 0 ||
+        if (_raised is null || _pending is not null || _closed is not null || _admittedCount == 0 || UnresolvedActionCount != 0 ||
             ev.Owner != Stream || ev.Revision != _revision + 1 || ev.Generation != _generation ||
             ev.Operation.Owner != Stream || ev.Operation.RootOperationId != ev.Operation.LogicalId ||
             ev.Operation.RootOperationId == _selectedClosureRoot && _selectedClosure is not null)
@@ -416,7 +467,7 @@ public sealed class FindingAggregate : Aggregate
     void Apply(FindingClosedV2 ev)
     {
         Acceptance.Observe(ev);
-        if (_pending is null || ev.TenantId != _tenantId || ev.ProgramId != _programId || ev.FindingId != _findingId ||
+        if (_pending is null || UnresolvedActionCount != 0 || ev.TenantId != _tenantId || ev.ProgramId != _programId || ev.FindingId != _findingId ||
             ev.Revision != _revision + 1 || ev.FindingGeneration != _generation || ev.Intent != _pending.Intent ||
             ev.Operation.RootOperationId != _pending.Operation.RootOperationId || ev.Operation.Owner != Stream)
             throw new InvalidOperationException("Only the exact pending closure of the current generation closes the finding.");
@@ -464,6 +515,17 @@ public sealed class FindingAggregate : Aggregate
         _revision++;
         _latest = fact;
     }
+
+    bool ValidOutcome(OperationProvenance operation, Uuid actionId, string? outcome,
+        NativeFactReference? source, ImmutableContentRef? sourceProof) =>
+        actionId != Uuid.Empty && outcome is "completed" or "cancelled" && source is not null &&
+        source.EventId != Uuid.Empty && source.AggregateVersion > 0 &&
+        source.Stream == new CorrectiveAction(_tenantId, _programId, _findingId, actionId).Stream &&
+        sourceProof is { Schema: SourceFactProofs.RequiredFactsSchema } &&
+        operation.Owner == Stream && operation.RootOperationId == operation.LogicalId &&
+        operation.LogicalId == Uuid.CreateVersion5(source.EventId, nameof(RecordCorrectiveActionOutcome)) &&
+        operation.CommandKind == nameof(RecordCorrectiveActionOutcome) && operation.OriginalExpectedRevision is null &&
+        operation.CausationEventId == source.EventId && operation.Actor.Kind == "system_process";
 
     Result PrepareOwnWrite(OperationProvenance operation)
     {

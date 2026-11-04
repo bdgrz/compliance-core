@@ -16,5 +16,6 @@ using Bdgrz.Compliance.Features.Work.Models;
 using Bdgrz.Compliance.Features.NativeOperations.Models;
 namespace Bdgrz.Compliance.Features.Remediation.Models;
 
-/// <summary>The held completion of one action: the completion fact and the grant that holds it.</summary>
-public sealed record ClosureActionProof(Uuid ActionId, NativeFactReference Completion, NativeFactReference Grant);
+/// <summary>The terminal fact of one resolved action and the grant that holds it for closure.</summary>
+public sealed record ClosureActionProof(Uuid ActionId, NativeFactReference Completion, NativeFactReference Grant,
+    string Outcome = "completed");

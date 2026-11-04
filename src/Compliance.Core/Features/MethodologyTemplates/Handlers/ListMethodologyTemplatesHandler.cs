@@ -51,7 +51,7 @@ public sealed class ListMethodologyTemplatesHandler(IMethodologyTemplateDirector
         {
             var identities = await directory.ListAsync(request.Limit ?? 50, cursor, ct).ConfigureAwait(false);
             var summaries = new List<MethodologyTemplateSummaryView>(identities.Items.Count);
-            foreach (var identity in identities.Items)
+            foreach (var identity in identities.Items.Where(identity => !identity.SeparateDraftLine))
             {
                 var current = await templates.PublicationAsync(identity.TemplateId, ct).ConfigureAwait(false);
                 var published = current.Version;
@@ -68,7 +68,7 @@ public sealed class ListMethodologyTemplatesHandler(IMethodologyTemplateDirector
                     MethodologyTemplateCatalogCursor.Wrap(request.TenantId, request.ProgramId, identities.NextCursor)))
                 : Result<Page<MethodologyTemplateSummaryView>>.Failure(confirmed.Error!);
         }
-        catch (KvDirectoryQueryException)
+        catch (MethodologyTemplateDirectoryQueryException)
         {
             return Result<Page<MethodologyTemplateSummaryView>>.Failure(new RequestError(RequestErrorKind.Validation,
                 "The methodology page cursor is invalid."));

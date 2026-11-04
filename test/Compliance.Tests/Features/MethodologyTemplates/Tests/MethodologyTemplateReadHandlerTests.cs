@@ -1,5 +1,5 @@
+using Bdgrz.Compliance.Features.MethodologyTemplates.Projections;
 using Bdgrz.Compliance.Tests.Testing;
-using Cntryl.Fitz.Testing;
 using Cntryl.Portia;
 using Bdgrz.Compliance.Features.AccessControl.Models;
 using Bdgrz.Compliance.Features.AccessControl.Readers;
@@ -95,7 +95,7 @@ public sealed class MethodologyTemplateReadHandlerTests
     public async Task ShouldReturnOnlyPublishedIdentitiesGivenDraftAndPublishedTemplates()
     {
         // Arrange
-        await using var fixture = new Fixture();
+        await using var fixture = await Fixture.CreateAsync();
         var published = await fixture.PublishAsync("Published", Now);
         var draftId = Uuid.CreateVersion4();
         Assert.True((await fixture.Source.CreateAsync(new CreateMethodologyTemplate(draftId,
@@ -125,7 +125,7 @@ public sealed class MethodologyTemplateReadHandlerTests
     public async Task ShouldReadExactPublicationGivenUnpublishedSuccessorBodyUnavailable()
     {
         // Arrange
-        await using var fixture = new Fixture();
+        await using var fixture = await Fixture.CreateAsync();
         var published = await fixture.PublishAsync("Public name", Now);
         fixture.Source.Clock.Now = Now.AddMinutes(5);
         Assert.True((await fixture.Source.ReviseAsync(new ReviseMethodologyTemplateDraft(Uuid.CreateVersion4(),
@@ -151,7 +151,7 @@ public sealed class MethodologyTemplateReadHandlerTests
     public async Task ShouldPageStableFirstPublicationsGivenLaterNewVersionAndDifferentCallerScopes()
     {
         // Arrange
-        await using var fixture = new Fixture();
+        await using var fixture = await Fixture.CreateAsync();
         var first = await fixture.PublishAsync("First", Now);
         var second = await fixture.PublishAsync("Second", Now.AddDays(1));
         var third = await fixture.PublishAsync("Third", Now.AddDays(2));
@@ -185,7 +185,7 @@ public sealed class MethodologyTemplateReadHandlerTests
     public async Task ShouldReturnTransientConflictGivenPublicationDirectoryBehindNativeSource()
     {
         // Arrange
-        await using var fixture = new Fixture();
+        await using var fixture = await Fixture.CreateAsync();
         var published = await fixture.PublishAsync("Published", Now);
 
         // Act
@@ -205,7 +205,7 @@ public sealed class MethodologyTemplateReadHandlerTests
     public async Task ShouldReturnNoPartialPublicationPageGivenSelectedContentUnavailableOrCorrupt(bool unavailable)
     {
         // Arrange
-        await using var fixture = new Fixture();
+        await using var fixture = await Fixture.CreateAsync();
         await fixture.PublishAsync("Readable first", Now);
         var second = await fixture.PublishAsync("Unreadable second", Now.AddDays(1));
         await fixture.ProjectAsync();
@@ -227,7 +227,7 @@ public sealed class MethodologyTemplateReadHandlerTests
     public async Task ShouldShowRetiredStatusAndRetainHistoricalVersionGivenNativeRetirement()
     {
         // Arrange
-        await using var fixture = new Fixture();
+        await using var fixture = await Fixture.CreateAsync();
         var published = await fixture.PublishAsync("Historical", Now);
         fixture.Source.Clock.Now = Now.AddDays(1);
         Assert.True((await new RetireMethodologyTemplateHandler(fixture.Source.Operations()).HandleAsync(
@@ -252,7 +252,7 @@ public sealed class MethodologyTemplateReadHandlerTests
     public async Task ShouldReturnValidationGivenInvalidPublicationPagination(int limit, string? cursor)
     {
         // Arrange
-        await using var fixture = new Fixture();
+        await using var fixture = await Fixture.CreateAsync();
 
         // Act
         var result = await fixture.ListAsync(limit, cursor);
@@ -265,7 +265,7 @@ public sealed class MethodologyTemplateReadHandlerTests
     public async Task ShouldRejectPageGivenNativeSourceChangesDuringDiscovery()
     {
         // Arrange
-        await using var fixture = new Fixture();
+        await using var fixture = await Fixture.CreateAsync();
         await fixture.PublishAsync("First", Now);
         await fixture.ProjectAsync();
         var directory = new HookedDirectory(fixture.Directory, async () =>
@@ -289,14 +289,14 @@ public sealed class MethodologyTemplateReadHandlerTests
     public async Task ShouldRefuseChangedPublishedIdentityGivenProjectionReplay()
     {
         // Arrange
-        await using var fixture = new Fixture();
+        await using var fixture = await Fixture.CreateAsync();
         var version = await fixture.PublishAsync("First", Now);
         await fixture.ProjectAsync();
         var published = Assert.IsType<MethodologyTemplateVersionPublished>((await fixture.Source.FactsAsync(version.TemplateId))[^1]);
         var checkpoint = await fixture.Directory.LoadCheckpointAsync();
         // Act
         await using (var batch = await fixture.Directory.BeginAsync(new ProjectionBatchContext(
-            new CheckpointIdentity(FitzMethodologyTemplateDirectory.ProjectorName, FitzMethodologyTemplateDirectory.Pattern), checkpoint)))
+            new CheckpointIdentity(CassieMethodologyTemplateDirectory.ProjectorName, CassieMethodologyTemplateDirectory.Pattern), checkpoint)))
         {
             await fixture.Directory.ApplyAsync(published);
             var changed = await Assert.ThrowsAsync<InvalidOperationException>(() => fixture.Directory.ApplyAsync(
@@ -316,7 +316,15 @@ public sealed class MethodologyTemplateReadHandlerTests
     sealed class Fixture : IAsyncDisposable
     {
         public MethodologyTemplateScenario Source { get; } = new(Now);
-        public FitzMethodologyTemplateDirectory Directory { get; } = new(new InMemoryKvClient());
+        readonly CassieRepositoryTestDatabase _database;
+        public CassieMethodologyTemplateDirectory Directory { get; }
+        Fixture(CassieRepositoryTestDatabase database)
+        {
+            _database = database;
+            Directory = new CassieMethodologyTemplateDirectory(database.Database);
+        }
+        public static async Task<Fixture> CreateAsync() =>
+            new(await CassieRepositoryTestDatabase.OpenAsync(CassieMethodologyTemplateSchema.Statements));
         public Uuid Tenant { get; } = Uuid.CreateVersion4();
         public Uuid Program { get; } = Uuid.CreateVersion4();
         public Uuid Author { get; } = Uuid.CreateVersion4();
@@ -356,9 +364,9 @@ public sealed class MethodologyTemplateReadHandlerTests
         {
             var checkpoint = await Directory.LoadCheckpointAsync();
             await using var batch = await Directory.BeginAsync(new ProjectionBatchContext(new CheckpointIdentity(
-                FitzMethodologyTemplateDirectory.ProjectorName, FitzMethodologyTemplateDirectory.Pattern), checkpoint));
+                CassieMethodologyTemplateDirectory.ProjectorName, CassieMethodologyTemplateDirectory.Pattern), checkpoint));
             var cursor = checkpoint.Cursor;
-            await foreach (var record in Source.Events.ReadAsync(FitzMethodologyTemplateDirectory.Pattern, cursor, CancellationToken.None))
+            await foreach (var record in Source.Events.ReadAsync(CassieMethodologyTemplateDirectory.Pattern, cursor, CancellationToken.None))
             {
                 if (record.Event is MethodologyTemplateVersionPublished published)
                     await Directory.ApplyAsync(published);
@@ -366,7 +374,12 @@ public sealed class MethodologyTemplateReadHandlerTests
             }
             await batch.CommitAsync(new ProjectionCheckpoint(cursor));
         }
-        public ValueTask DisposeAsync() => Source.DisposeAsync();
+        public async ValueTask DisposeAsync()
+        {
+            await Directory.DisposeAsync();
+            await _database.DisposeAsync();
+            await Source.DisposeAsync();
+        }
     }
 
     sealed class UnreadableContent(IImmutableContentStore inner, Uuid failedContent, bool unavailable) : IImmutableContentStore

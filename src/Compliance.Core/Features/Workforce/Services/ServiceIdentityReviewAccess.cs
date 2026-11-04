@@ -10,12 +10,15 @@ namespace Bdgrz.Compliance.Features.Workforce.Services;
 public static class ServiceIdentityReviewAccess
 {
     public static async ValueTask<bool> IsAllowedAsync(IAggregateReader reader, IPermissionAuthorizer permissions,
-        Uuid tenantId, ServiceIdentity identity, Uuid userId, CancellationToken ct)
+        Uuid tenantId, ServiceIdentity identity, Uuid userId, DateOnly today, CancellationToken ct)
     {
         var memberId = RbacIds.Member(tenantId, userId);
         if (await permissions.IsAllowedAsync(tenantId, userId, memberId, ServiceIdentityPermissions.Review, ct).ConfigureAwait(false))
             return true;
         if (!identity.IsCreated)
+            return false;
+        var member = await reader.HydrateAsync(Member.ForVerification(tenantId, memberId), ct).ConfigureAwait(false);
+        if (!member.IsAccessEligibleOn(today) || member.Affiliation == "firm_staff" || member.UserId != userId)
             return false;
         if (identity.OwnerKind == "person")
         {
@@ -26,9 +29,7 @@ public static class ServiceIdentityReviewAccess
             return false;
         var team = await reader.HydrateAsync(new Team(tenantId, identity.OwnerId), ct).ConfigureAwait(false);
         var assignment = await reader.HydrateAsync(new TeamMember(tenantId, identity.OwnerId, memberId), ct).ConfigureAwait(false);
-        var member = await reader.HydrateAsync(Member.ForVerification(tenantId, memberId), ct).ConfigureAwait(false);
-        return team.IsActive && assignment.IsAssigned && member.IsRegistered && !member.IsSuspended &&
-               !member.IsDeprovisioned && member.Affiliation != "firm_staff" && member.UserId == userId &&
+        return team.IsActive && assignment.IsAssigned &&
                assignment.MembershipEpisodeId == member.MembershipEpisodeId;
     }
 }

@@ -75,6 +75,7 @@ public sealed class FindingReader(IAggregateReader reader, IDomainEventReader ev
             .ConfigureAwait(false);
         var actions = new List<CorrectiveActionView>();
         var completions = new List<(CorrectiveActionView Action, long Order)>();
+        var actionChanges = new List<FindingHistoryEntryView>();
         var acceptances = new List<FindingAcceptanceView>();
         var history = new List<(FindingHistoryEntryView Entry, int Order)>();
         FindingClosureView? closure = null;
@@ -94,10 +95,10 @@ public sealed class FindingReader(IAggregateReader reader, IDomainEventReader ev
                         ev.RevisedBy, ev.RevisedAt), order));
                     break;
                 case CorrectiveActionAdmitted ev:
-                    var action = await ComposeActionAsync(finding, ev, ct).ConfigureAwait(false);
+                    var action = await ComposeActionAsync(finding, ev, actionChanges, ct).ConfigureAwait(false);
                     actions.Add(action.View);
                     history.Add((new FindingHistoryEntryView(ev.Revision, "corrective_action_added",
-                        action.View.Description, action.View.AddedBy, action.View.AddedAt), order));
+                        action.AddedDescription, action.View.AddedBy, action.View.AddedAt), order));
                     if (action.Completion is { } completion)
                         completions.Add((completion, order));
                     break;
@@ -108,6 +109,10 @@ public sealed class FindingReader(IAggregateReader reader, IDomainEventReader ev
                     history.Add((new FindingHistoryEntryView(ev.Revision, "acceptance_linked",
                         $"{acceptance.Kind} {acceptance.RecordId} until {acceptance.ExpiresAt:O}", acceptance.LinkedBy,
                         acceptance.LinkedAt), order));
+                    break;
+                case FindingCorrectiveActionResolved ev:
+                    history.Add((new FindingHistoryEntryView(ev.Revision, "corrective_action_resolved",
+                        $"Action {ev.ActionId}: {ev.Outcome}", ev.Operation.Actor, ev.Operation.AcceptedAt), order));
                     break;
                 case FindingClosedV2 ev:
                     closure = await FindingContent.ReadAsync<FindingClosureView>(content, tenant, ev.ClosureContent, ct)
@@ -125,13 +130,20 @@ public sealed class FindingReader(IAggregateReader reader, IDomainEventReader ev
             order++;
         }
 
+        foreach (var change in actionChanges)
+        {
+            var position = history.FindLastIndex(item => item.Entry.At <= change.At) + 1;
+            history.Insert(position, (change, -1));
+        }
         foreach (var (completed, _) in completions)
         {
             // A completion belongs after the last finding fact that did not happen after it.
-            var at = completed.CompletedAt!.Value;
+            var at = completed.CompletedAt ?? completed.CancelledAt!.Value;
             var position = history.FindLastIndex(item => item.Entry.At <= at) + 1;
-            history.Insert(position, (new FindingHistoryEntryView(completed.Revision, "corrective_action_completed",
-                completed.ResolutionNotes!, completed.CompletedBy!, at), -1));
+            var change = completed.Status == FindingStates.Cancelled
+                ? "corrective_action_cancelled" : "corrective_action_completed";
+            history.Insert(position, (new FindingHistoryEntryView(completed.Revision, change,
+                completed.ResolutionNotes ?? completed.CancellationReason!, completed.CompletedBy ?? completed.CancelledBy!, at), -1));
         }
 
         var view = new FindingView(tenant, raised.ProgramId, raised.FindingId, finding.Revision, raised.Source,
@@ -220,21 +232,45 @@ public sealed class FindingReader(IAggregateReader reader, IDomainEventReader ev
         return (intent, authored);
     }
 
-    async ValueTask<(CorrectiveActionView View, CorrectiveActionView? Completion)> ComposeActionAsync(
-        FindingAggregate finding, CorrectiveActionAdmitted admitted, CancellationToken ct)
+    async ValueTask<(CorrectiveActionView View, CorrectiveActionView? Completion, string AddedDescription)> ComposeActionAsync(
+        FindingAggregate finding, CorrectiveActionAdmitted admitted, List<FindingHistoryEntryView> changes,
+        CancellationToken ct)
     {
         var raised = finding.Raised!;
         var (intent, authored) = await ReadAdmissionAsync(raised.TenantId, admitted, ct).ConfigureAwait(false);
         var actionId = admitted.Operation.LogicalId;
-        var open = new CorrectiveActionView(actionId, authored.Description.Trim(), authored.OwnerMemberId, authored.DueOn,
+        var addedDescription = authored.Description.Trim();
+        var open = new CorrectiveActionView(actionId, addedDescription, authored.OwnerMemberId, authored.DueOn,
             FindingStates.Open, intent.Header.OriginalActor, intent.Header.AcceptedAt);
         var action = await reader.HydrateAsync(new CorrectiveAction(raised.TenantId, raised.ProgramId,
             raised.FindingId, actionId), ct).ConfigureAwait(false);
         if (!action.IsMaterialized)
-            return (open, null);
+            return (open, null, addedDescription);
         open = open with { Revision = action.Revision };
+        if (action.Changed is { } changed)
+        {
+            open = open with { Description = changed.Description, OwnerMemberId = changed.OwnerMemberId, DueOn = changed.DueOn };
+            var history = await NativeOwnerHistory.ReadAsync<DomainEvent>(events, action, ct).ConfigureAwait(false);
+            foreach (var fact in history.OfType<CorrectiveActionChanged>())
+                changes.Add(new FindingHistoryEntryView(fact.Revision, "corrective_action_changed",
+                    $"Action {fact.ActionId}: owner {fact.OwnerMemberId}, due {FindingViews.Date(fact.DueOn)}: {fact.Description}",
+                    fact.ChangedBy, fact.ChangedAt));
+        }
+        if (action.Cancelled is { } cancelled)
+        {
+            var resolved = open with
+            {
+                Status = FindingStates.Cancelled,
+                CancellationReason = cancelled.Reason,
+                CancelledByMemberId = cancelled.CancelledByMemberId,
+                CancelledBy = cancelled.CancelledBy,
+                CancelledAt = cancelled.CancelledAt,
+                Revision = cancelled.Revision,
+            };
+            return (resolved, resolved, addedDescription);
+        }
         if (action.Completed is not { } completed)
-            return (open, null);
+            return (open, null, addedDescription);
         var evidence = await FindingContent.ReadAsync<IReadOnlyList<Operations.Models.EvidenceReference>>(content,
             raised.TenantId, completed.EvidenceManifest, ct).ConfigureAwait(false);
         var done = open with
@@ -247,6 +283,6 @@ public sealed class FindingReader(IAggregateReader reader, IDomainEventReader ev
             CompletedAt = completed.CompletedAt,
             Revision = completed.Revision,
         };
-        return (done, done);
+        return (done, done, addedDescription);
     }
 }

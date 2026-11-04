@@ -15,4 +15,4 @@ namespace Bdgrz.Compliance.Features.MethodologyTemplates.Models;
 
 /// <summary>Immutable lookup of an exact published version identity, never a current-state authorization source.</summary>
 public sealed record MethodologyTemplatePublishedIdentity(Uuid VersionId, Uuid TemplateId, long VersionNumber,
-    DateTimeOffset PublishedAt);
+    DateTimeOffset PublishedAt, bool SeparateDraftLine = false);

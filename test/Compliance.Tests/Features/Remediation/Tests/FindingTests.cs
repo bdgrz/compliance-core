@@ -67,7 +67,7 @@ public sealed class FindingTests
         var fixture = await OperationsFixture.CreateAsync();
         var finding = await fixture.RaiseFindingAsync(fixture.LeadMemberId);
         var first = new ReviseFinding(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId, finding.FindingId, 1,
-            "critical", fixture.LeadMemberId, fixture.Today.AddDays(6), "All", null, "First triage");
+            "moderate", fixture.LeadMemberId, fixture.Today.AddDays(6), "All", null, "First triage");
         var original = await fixture.AsAsync(fixture.LeadUserId, first);
         await fixture.AsAsync(fixture.LeadUserId, first with
         {
@@ -99,7 +99,7 @@ public sealed class FindingTests
         var fixture = await OperationsFixture.CreateAsync();
         var finding = await fixture.RaiseFindingAsync(fixture.LeadMemberId);
         var revise = new ReviseFinding(Uuid.CreateVersion4(), fixture.TenantId, fixture.ProgramId, finding.FindingId, 1,
-            "critical", fixture.LeadMemberId, fixture.Today.AddDays(6), "All", null, "First triage");
+            "moderate", fixture.LeadMemberId, fixture.Today.AddDays(6), "All", null, "First triage");
         await fixture.AsAsync(fixture.LeadUserId, revise);
 
         // Act
@@ -128,7 +128,7 @@ public sealed class FindingTests
         Assert.All(closed.Closure.ResolutionEvidence, item => Assert.Equal("unresolved", item.Resolution));
         Assert.Equal("remediated", reopened.Status);
         Assert.Null(reopened.Closure);
-        Assert.Equal(["raised", "corrective_action_added", "corrective_action_completed", "closed", "reopened"],
+        Assert.Equal(["raised", "corrective_action_added", "corrective_action_completed", "corrective_action_resolved", "closed", "reopened"],
             reopened.History.Select(entry => entry.Change));
     }
 
@@ -220,12 +220,12 @@ public sealed class FindingTests
 
         // Act
         var revised = await fixture.AsAsync(fixture.LeadUserId, new ReviseFinding(Uuid.CreateVersion4(),
-            fixture.TenantId, fixture.ProgramId, finding.FindingId, 1, "critical", fixture.BackupMemberId,
+            fixture.TenantId, fixture.ProgramId, finding.FindingId, 1, "moderate", fixture.BackupMemberId,
             fixture.Today.AddDays(3), "VPN and SSO", "Manual offboarding", "Scope widened after triage."));
 
         // Assert
         Assert.Equal("Terminated users kept VPN access.", revised.Source.SourceText);
-        Assert.Equal("critical", revised.Severity);
+        Assert.Equal("moderate", revised.Severity);
         Assert.Equal(fixture.BackupMemberId, revised.OwnerMemberId);
         var change = revised.History[^1];
         Assert.Equal("revised", change.Change);

@@ -1,0 +1,18 @@
+{
+  "base": "a3e501f3",
+  "tests_commit": "6307b091",
+  "implementation_commit": "3c81d366",
+  "branch": "work/evidence-support-withdrawal",
+  "source_matches_review": true,
+  "sha256": {
+    "src/Compliance.Common/Features/Evidence/Commands/WithdrawEvidenceSupport.cs": "27c5f5f71900b841c21eb7f397d0e6c9b856142513feee55b8d31306869e342b",
+    "src/Compliance.Common/Features/Evidence/Events/EvidenceSupportWithdrawn.cs": "96eb0387309fa3a78d66d3dcb3ce4c151e830ed83e6d7331b1a9b1431f358218",
+    "src/Compliance.Common/Features/Evidence/Models/EvidenceSupportView.cs": "9de42ef293e9aad3c7ad092c558223687ccbe961357d70cb9e7b7051d82204d7",
+    "src/Compliance.Core/Features/Evidence/Aggregates/EvidenceSupport.cs": "6ba727a83a8a7f2532bd9d1cce90385d68acfc445c71b9f17095d5e0608a05c6",
+    "src/Compliance.Core/Features/Evidence/Readers/EvidenceSupportReader.cs": "7908a9aef42f6a8d6b18dcdc7733304163a99738c28cf0e01e44b0ba3dd20518",
+    "src/Compliance.Core/Features/Evidence/Handlers/WithdrawEvidenceSupportHandler.cs": "a34224d25b22babe1e7fd442f371bfb8505cf79c735c3a8bf76cf688dea389b1",
+    "src/Compliance.Core/Features/Evidence/Services/EvidenceSupportPermissions.cs": "1117b9701c75e390123a68852a267a1eab42f692ae8a5c5d6557f3bc8243a500",
+    "test/Compliance.Tests/Features/Evidence/Tests/EvidenceSupportWithdrawalTests.cs": "27fbc8bab841b75fc523e3ff243ba9a515056a8b90dc7500308ec3cc04e4d559",
+    "test/Compliance.Tests/Features/Evidence/Tests/WithdrawEvidenceSupportHandlerTests.cs": "a1e08143940edb4ce9d8f844504eb3a912f94202b8620823fa27f351500371e7"
+  }
+}

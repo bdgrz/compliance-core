@@ -24,14 +24,15 @@ public static class FindingStates
     public const string Overdue = "overdue";
     public const string Unresolved = "unresolved";
     public const string Completed = "completed";
+    public const string Cancelled = "cancelled";
     public const string RiskAcceptance = "risk_acceptance";
     public const string Waiver = "waiver";
 
     /// <summary>The work-queue materiality of a finding severity.</summary>
     public static string Materiality(string severity) => severity switch
     {
-        "critical" or "high" => "high",
-        "medium" => "medium",
+        "high" => "high",
+        "moderate" => "medium",
         _ => "low",
     };
 }

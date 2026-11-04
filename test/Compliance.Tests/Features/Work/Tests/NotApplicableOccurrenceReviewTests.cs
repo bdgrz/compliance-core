@@ -104,7 +104,8 @@ public sealed class NotApplicableOccurrenceReviewTests
         await using var sourceProvider = source.Provider;
         await source.PlanAsync(cadence: new ControlCadence("ad_hoc", DueWithinDays: 10));
         var opened = await source.AsAsync(source.OwnerUserId, source.Open("No production changes", source.Today));
-        await using var provider = Compose(source);
+        await using var database = await CassieRepositoryTestDatabase.OpenAsync();
+        await using var provider = Compose(source, database.ConnectionString);
         var attested = await PersonalOccurrenceProofTransportTests.HttpAsync(provider, source.OwnerUserId,
             source.Attest(opened, "not_applicable", [], "No production changes occurred in this period."));
         await ProjectAsync(provider, source.TenantId);
@@ -124,7 +125,8 @@ public sealed class NotApplicableOccurrenceReviewTests
             source.Review(attested.Value, outcome));
         await ProjectAsync(provider, source.TenantId);
         var after = await ReviewWorkAsync(provider, source, source.ReviewerUserId);
-        await using var replayProvider = Compose(source);
+        await using var replayDatabase = await CassieRepositoryTestDatabase.OpenAsync();
+        await using var replayProvider = Compose(source, replayDatabase.ConnectionString);
         await ProjectAsync(replayProvider, source.TenantId);
         await ProjectAsync(replayProvider, source.TenantId);
         var replayed = await ReviewWorkAsync(replayProvider, source, source.ReviewerUserId);
@@ -159,7 +161,8 @@ public sealed class NotApplicableOccurrenceReviewTests
         await using var sourceProvider = source.Provider;
         await source.PlanAsync(cadence: new ControlCadence("ad_hoc", DueWithinDays: 10));
         var opened = await source.AsAsync(source.OwnerUserId, source.Open("Period applicability", source.Today));
-        await using var provider = Compose(source);
+        await using var database = await CassieRepositoryTestDatabase.OpenAsync();
+        await using var provider = Compose(source, database.ConnectionString);
         var attested = await PersonalOccurrenceProofTransportTests.HttpAsync(provider, source.OwnerUserId,
             source.Attest(opened, "not_applicable", [], "No changes."));
         await ProjectAsync(provider, source.TenantId);
@@ -185,7 +188,8 @@ public sealed class NotApplicableOccurrenceReviewTests
             new ControlOccurrence(source.TenantId, source.ProgramId, source.ControlId, opened.OccurrenceId));
         var approved = await PersonalOccurrenceProofTransportTests.HttpAsync(provider, source.ReviewerUserId,
             source.Review(corrected.Value, "approved"));
-        await using var replayProvider = Compose(source);
+        await using var replayDatabase = await CassieRepositoryTestDatabase.OpenAsync();
+        await using var replayProvider = Compose(source, replayDatabase.ConnectionString);
         await ProjectAsync(replayProvider, source.TenantId);
         var final = await ReviewWorkAsync(replayProvider, source, source.ReviewerUserId);
 
@@ -204,13 +208,14 @@ public sealed class NotApplicableOccurrenceReviewTests
         Assert.Empty(final.Value.Items);
     }
 
-    static ServiceProvider Compose(OperationsFixture source)
+    static ServiceProvider Compose(OperationsFixture source, string cassieConnectionString)
     {
         var services = new ServiceCollection();
         services.AddCompliance(new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
         {
             ["Fitz:Endpoint"] = "ws://fitz:4090/ws",
-            ["Fitz:ApplicationName"] = "compliance"
+            ["Fitz:ApplicationName"] = "compliance",
+            ["Cassie:ConnectionString"] = cassieConnectionString
         }).Build(), developerAuthentication: true);
         var events = source.Provider.GetRequiredService<IEventStore>();
         services.AddSingleton(events);

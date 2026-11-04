@@ -8,12 +8,13 @@ using Bdgrz.Compliance.Features.Work.Commands;
 namespace Bdgrz.Compliance.Features.Remediation.Models;
 
 /// <summary>
-///     Owned corrective work for a finding; status is open or completed. <paramref name="Revision" /> is the
-///     revision of the action's own owner: zero while the admitted action is not materialized, one when open and
-///     two when completed. It is the expected revision of <c>CompleteCorrectiveAction</c>.
+///     Owned corrective work for a finding; status is open, completed or cancelled. <paramref name="Revision" /> is the
+///     revision of the action's own owner: zero before materialization, one when added, then advanced by each edit
+///     and resolution. Change, completion and cancellation commands use this action revision.
 /// </summary>
 public sealed record CorrectiveActionView(Uuid ActionId, string Description, Uuid OwnerMemberId,
     DateOnly DueOn, string Status, ActorReference AddedBy, DateTimeOffset AddedAt,
     string? ResolutionNotes = null, IReadOnlyList<EvidenceReference>? Evidence = null,
     Uuid? CompletedByMemberId = null, ActorReference? CompletedBy = null,
-    DateTimeOffset? CompletedAt = null, long Revision = 0);
+    DateTimeOffset? CompletedAt = null, long Revision = 0, string? CancellationReason = null,
+    Uuid? CancelledByMemberId = null, ActorReference? CancelledBy = null, DateTimeOffset? CancelledAt = null);

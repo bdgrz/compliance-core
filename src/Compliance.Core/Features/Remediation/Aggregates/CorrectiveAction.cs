@@ -55,7 +55,7 @@ namespace Bdgrz.Compliance.Features.Remediation.Aggregates;
 
 /// <summary>
 ///     One corrective action of a finding, identified by its finding and action. It is materialized from the
-///     finding's admission at revision one, completed at revision two, and held by finding closures through
+///     finding's admission at revision one, changed while open, then completed or cancelled, and held by finding closures through
 ///     <see cref="SourceUseReservations" />: an active use does not advance the public revision but blocks completion
 ///     until it is settled, and a settlement for a closed parent installs the closed-generation fence that releasing
 ///     the temporary use never removes. The logical revision counts content facts of this action only.
@@ -75,6 +75,8 @@ public sealed class CorrectiveAction : Aggregate, ISourceUseOwner
     long? _closedByGeneration;
     CorrectiveActionAddedV2? _added;
     CorrectiveActionCompletedV2? _completed;
+    CorrectiveActionCancelled? _cancelled;
+    CorrectiveActionChanged? _changed;
     long _revision;
 
     /// <summary>Opens one action, selecting the logical operation to resolve.</summary>
@@ -87,6 +89,8 @@ public sealed class CorrectiveAction : Aggregate, ISourceUseOwner
         Uses = new SourceUseReservations(Stream);
         On<CorrectiveActionAddedV2>(Apply);
         On<CorrectiveActionCompletedV2>(Apply);
+        On<CorrectiveActionCancelled>(Apply);
+        On<CorrectiveActionChanged>(Apply);
         On<CorrectiveActionFindingClosureUseAuthorized>(granted =>
         {
             Acceptance.Observe(granted);
@@ -120,7 +124,7 @@ public sealed class CorrectiveAction : Aggregate, ISourceUseOwner
     /// <summary>The finding this action belongs to.</summary>
     public Uuid FindingId => _findingId;
 
-    /// <summary>The logical revision: zero before materialization, one when open, two when completed.</summary>
+    /// <summary>The logical revision: one at materialization, then advanced by each edit and terminal resolution.</summary>
     public long Revision => _revision;
 
     /// <summary>True once the action was materialized.</summary>
@@ -129,21 +133,35 @@ public sealed class CorrectiveAction : Aggregate, ISourceUseOwner
     /// <summary>True once the action was completed.</summary>
     public bool IsCompleted => _completed is not null;
 
+    /// <summary>True once the action was cancelled.</summary>
+    public bool IsCancelled => Cancelled is not null;
+
+    /// <summary>The cancellation fact, once recorded.</summary>
+    public CorrectiveActionCancelled? Cancelled => _cancelled;
+
+    /// <summary>The latest change of the action's editable terms.</summary>
+    public CorrectiveActionChanged? Changed => _changed;
+
+    /// <summary>The terminal completion or cancellation, once the action is resolved.</summary>
+    public DomainEvent? Resolution => (DomainEvent?)_completed ?? _cancelled;
+
     /// <summary>The materialization fact, once recorded.</summary>
     public CorrectiveActionAddedV2? Added => _added;
 
     /// <summary>The completion fact, once recorded.</summary>
     public CorrectiveActionCompletedV2? Completed => _completed;
 
-    /// <summary>The latest content fact: the completion when completed, else the materialization.</summary>
-    public DomainEvent? Latest => (DomainEvent?)_completed ?? _added;
+    /// <summary>The latest content fact: the terminal resolution, or the materialization while open.</summary>
+    public DomainEvent? Latest => Resolution ?? (DomainEvent?)_changed ?? _added;
 
     /// <summary>The first parent generation whose verified closed settlement permanently fenced this action.</summary>
     public long? ClosedByGeneration => _closedByGeneration;
 
     /// <summary>The original lifecycle content fact; technical use history is resolved by its verified selection.</summary>
     public DomainEvent? ContentFactById(Uuid eventId) => _added?.Metadata.EventId == eventId ? _added
-        : _completed?.Metadata.EventId == eventId ? _completed : null;
+        : _completed?.Metadata.EventId == eventId ? _completed
+        : _cancelled?.Metadata.EventId == eventId ? _cancelled
+        : _changed?.Metadata.EventId == eventId ? _changed : null;
 
     /// <summary>Checks that the action can be materialized.</summary>
     public Result PrepareMaterialize() => _added is null
@@ -178,8 +196,9 @@ public sealed class CorrectiveAction : Aggregate, ISourceUseOwner
                 "A finding closure holds this corrective action; retry when it settles.", true));
         if (expectedRevision != _revision)
             return Fail(CommandFailure.ForVersion(VersionedRecordRules.StaleRevision("corrective action", _revision)));
-        return _completed is not null
-            ? Fail(CommandFailure.StateConflict("The corrective action is already completed."))
+        return Resolution is not null
+            ? Fail(CommandFailure.StateConflict(_completed is not null
+                ? "The corrective action is already completed." : "The corrective action is already cancelled."))
             : Result.Success;
     }
 
@@ -198,6 +217,49 @@ public sealed class CorrectiveAction : Aggregate, ISourceUseOwner
         RaiseEvent(new CorrectiveActionCompletedV2(operation.LogicalId, _tenantId, _programId, _findingId,
             _revision + 1, _actionId, resolutionNotes, evidenceManifest, completedByMemberId, completedBy,
             completedAt, operation, firstResponse, operationResult));
+        return Result.Success;
+    }
+
+    /// <summary>Cancels an open action with a reason on its own owner.</summary>
+    public Result Cancel(OperationProvenance operation, string reason, Uuid cancelledByMemberId,
+        ActorReference cancelledBy, DateTimeOffset cancelledAt, ImmutableContentRef firstResponse,
+        ImmutableContentRef operationResult)
+    {
+        ArgumentNullException.ThrowIfNull(operation);
+        if (operation.Owner != Stream || operation.OriginalExpectedRevision is not { } expected)
+            return Result.Failure(new RequestError(RequestErrorKind.Validation,
+                "A cancellation is a root operation of its own action with an expected revision."));
+        var prepared = PrepareComplete((long)expected);
+        if (!prepared.IsSuccess)
+            return prepared;
+        if (!ValidCancellation(reason, cancelledByMemberId, cancelledBy, cancelledAt))
+            return Result.Failure(new RequestError(RequestErrorKind.Validation,
+                "Cancelling a corrective action requires a reason of at most 4000 characters and an attributable member."));
+        RaiseEvent(new CorrectiveActionCancelled(operation.LogicalId, _tenantId, _programId, _findingId,
+            _revision + 1, _actionId, reason.Trim(), cancelledByMemberId, cancelledBy, cancelledAt,
+            operation, firstResponse, operationResult));
+        return Result.Success;
+    }
+
+    /// <summary>Changes the editable terms of an open action on its own owner.</summary>
+    public Result Change(OperationProvenance operation, string description, Uuid ownerMemberId, DateOnly dueOn,
+        ActorReference changedBy, DateTimeOffset changedAt, ImmutableContentRef firstResponse,
+        ImmutableContentRef operationResult)
+    {
+        ArgumentNullException.ThrowIfNull(operation);
+        if (operation.Owner != Stream || operation.OriginalExpectedRevision is not { } expected)
+            return Result.Failure(new RequestError(RequestErrorKind.Validation,
+                "A change is a root operation of its own action with an expected revision."));
+        var prepared = PrepareComplete((long)expected);
+        if (!prepared.IsSuccess)
+            return prepared;
+        if (!ValidChange(description, ownerMemberId, dueOn, changedBy, changedAt) ||
+            operation.Actor != changedBy || operation.AcceptedAt != changedAt)
+            return Result.Failure(new RequestError(RequestErrorKind.Validation,
+                "Changing corrective work requires a description, owner, due date and attributable member."));
+        RaiseEvent(new CorrectiveActionChanged(operation.LogicalId, _tenantId, _programId, _findingId,
+            _revision + 1, _actionId, description.Trim(), ownerMemberId, dueOn, changedBy, changedAt,
+            operation, firstResponse, operationResult));
         return Result.Success;
     }
 
@@ -243,12 +305,48 @@ public sealed class CorrectiveAction : Aggregate, ISourceUseOwner
     void Apply(CorrectiveActionCompletedV2 ev)
     {
         Acceptance.Observe(ev);
-        if (_added is null || _completed is not null || ev.ActionId != _actionId || ev.FindingId != _findingId ||
+        if (_added is null || Resolution is not null || ev.ActionId != _actionId || ev.FindingId != _findingId ||
             ev.TenantId != _tenantId || ev.ProgramId != _programId || ev.Revision != _revision + 1 || ev.Operation.Owner != Stream)
             throw new InvalidOperationException("An action completes once, at the next revision after its materialization.");
         _completed = ev;
         _revision = ev.Revision;
     }
+
+    void Apply(CorrectiveActionCancelled ev)
+    {
+        Acceptance.Observe(ev);
+        if (_added is null || Resolution is not null || ev.ActionId != _actionId || ev.FindingId != _findingId ||
+            ev.TenantId != _tenantId || ev.ProgramId != _programId || ev.Revision != _revision + 1 ||
+            ev.Operation.Owner != Stream || !ValidCancellation(ev.Reason, ev.CancelledByMemberId, ev.CancelledBy,
+                ev.CancelledAt) || ev.Reason != ev.Reason.Trim())
+            throw new InvalidOperationException("An open action is cancelled once, at its next revision, with a reason and member.");
+        _cancelled = ev;
+        _revision = ev.Revision;
+    }
+
+    static bool ValidCancellation(string? reason, Uuid memberId, ActorReference? actor, DateTimeOffset at) =>
+        FindingRules.IsBoundedText(reason, FindingRules.MaximumTextLength) && memberId != Uuid.Empty &&
+        actor is { Kind: "member" } && Uuid.TryParse(actor.Id, null, out var actorId) && actorId == memberId &&
+        at != default;
+
+    void Apply(CorrectiveActionChanged ev)
+    {
+        Acceptance.Observe(ev);
+        if (_added is null || Resolution is not null || Uses.HasActiveUse || _closedByGeneration is not null ||
+            ev.TenantId != _tenantId || ev.ProgramId != _programId || ev.FindingId != _findingId || ev.ActionId != _actionId ||
+            ev.Revision != _revision + 1 || ev.Operation.Owner != Stream || ev.RequestId != ev.Operation.LogicalId ||
+            ev.Operation.OriginalExpectedRevision != (ulong)_revision || ev.ChangedBy != ev.Operation.Actor ||
+            ev.ChangedAt != ev.Operation.AcceptedAt ||
+            !ValidChange(ev.Description, ev.OwnerMemberId, ev.DueOn, ev.ChangedBy, ev.ChangedAt) || ev.Description != ev.Description.Trim())
+            throw new InvalidOperationException("Only an open, unfenced action changes its owned terms at the next revision.");
+        _changed = ev;
+        _revision = ev.Revision;
+    }
+
+    bool ValidChange(string? description, Uuid ownerMemberId, DateOnly dueOn, ActorReference? actor, DateTimeOffset at) =>
+        FindingRules.ValidateAction(_actionId, description, ownerMemberId, dueOn) is null &&
+        actor is { Kind: "member" } && Uuid.TryParse(actor.Id, null, out var memberId) && memberId != Uuid.Empty &&
+        at != default;
 
     static Result Fail(CommandFailure failure) => Result.Failure(failure.ToRequestError());
     protected override void Apply(DomainEvent ev)

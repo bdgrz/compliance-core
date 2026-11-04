@@ -17,6 +17,7 @@ x-app-environment: &app-environment
   Fitz__Endpoint: ws://broker:4090/ws
   Fitz__ApplicationName: bdgrz
   Fitz__StartupTimeoutSeconds: "30"
+  Cassie__ConnectionString: Host=cassie;Port=5432;Database=postgres;Username=root;Password=${CASSIE_ROOT_PASSWORD:-compliance-local-secret};SSL Mode=Disable;Timeout=30
 
 x-app-common: &app-common
   build:
@@ -29,6 +30,7 @@ x-app-common: &app-common
   restart: unless-stopped
   depends_on:
     - broker
+    - cassie
 
 services:
   api:
@@ -76,6 +78,21 @@ services:
     volumes:
       - fitz_cache:/data
 
+  cassie:
+    image: ghcr.io/cntryl/cassie@sha256:c179afabb7051e19629cfd1ecc6b83fa88bfb4deb6a391060aa1f472f7a0d1de
+    restart: unless-stopped
+    init: true
+    environment:
+      CASSIE_STORAGE_MODE: local
+      CASSIE_STORAGE_PATH: /data/cassie
+      CASSIE_ROOT_PASSWORD: ${CASSIE_ROOT_PASSWORD:-compliance-local-secret}
+      CASSIE_ALLOW_INSECURE_NON_LOOPBACK_LISTEN: "1"
+    ports:
+      - "127.0.0.1:${CASSIE_SQL_PORT:-55432}:5432"
+      - "127.0.0.1:${CASSIE_HTTP_PORT:-58080}:8080"
+    volumes:
+      - cassie_data:/data
+
   storage:
     container_name: storage
     image: ghcr.io/sqrzl/sqrzl-emulator:latest@sha256:da1a2a731fe6de71ce8241e3d9fda9ae48dec6015f8b531f4f3129e4ca9969a8
@@ -94,6 +111,7 @@ services:
 volumes:
   fitz_cache:
   sqrzl_blobs:
+  cassie_data:
 
 secrets:
   github_token:

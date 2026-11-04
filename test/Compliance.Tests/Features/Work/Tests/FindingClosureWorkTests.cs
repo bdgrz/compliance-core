@@ -1,4 +1,4 @@
-using Cntryl.Fitz.Testing;
+using Bdgrz.Compliance.Tests.Testing;
 using Microsoft.Extensions.DependencyInjection;
 using Cntryl.Portia;
 using Bdgrz.Compliance.Features.AccessControl.Services;
@@ -179,7 +179,7 @@ public sealed class FindingClosureWorkTests
 
         // Act
         finding = await fixture.AsAsync(fixture.LeadUserId, new ReviseFinding(Uuid.CreateVersion4(), fixture.TenantId,
-            fixture.ProgramId, finding.FindingId, finding.Revision, "medium", fixture.LeadMemberId,
+            fixture.ProgramId, finding.FindingId, finding.Revision, "moderate", fixture.LeadMemberId,
             finding.DueOn, "VPN", null, "Severity reassessed."));
         var queue = await fixture.AsAsync(fixture.ApproverUserId,
             new ListWork(fixture.TenantId, fixture.ProgramId, "unassigned"));
@@ -218,17 +218,18 @@ public sealed class FindingClosureWorkTests
     public async Task ShouldFenceClosureCountsGivenLaggingOrChangingSourceProjection()
     {
         // Arrange
+        await using var database = await CassieRepositoryTestDatabase.OpenAsync();
         var fixture = await OperationsFixture.CreateAsync();
         var finding = await ReadyAsync(fixture, fixture.OwnerUserId);
         var events = fixture.Provider.GetRequiredService<IDomainEventReader>();
         await using var findingScope = fixture.Provider.CreateAsyncScope();
-        var directory = new FitzFindingClosureWorkItemDirectory(new InMemoryKvClient(),
+        await using var directory = new CassieFindingClosureWorkItemDirectory(database.Database,
             findingScope.ServiceProvider.GetRequiredService<FindingReader>(), TimeProvider.System);
         var consistency = new WorkQueueReadConsistency(events, [directory]);
         var lagging = await consistency.CaptureAsync(fixture.TenantId, CancellationToken.None);
         var pattern = directory.SourcePattern(fixture.TenantId);
         await using (var batch = await directory.BeginAsync(new ProjectionBatchContext(
-                         new CheckpointIdentity(FitzFindingClosureWorkItemDirectory.ProjectorName,
+                         new CheckpointIdentity(CassieFindingClosureWorkItemDirectory.ProjectorName,
                              pattern), ProjectionCheckpoint.Start)))
         {
             var cursor = ProjectionCheckpoint.Start.Cursor;
@@ -257,7 +258,7 @@ public sealed class FindingClosureWorkTests
             new OperationsActor(fixture.ApproverUserId, fixture.ApproverMemberId, "Reviewer"),
             30, CancellationToken.None);
         await fixture.AsAsync(fixture.LeadUserId, new ReviseFinding(Uuid.CreateVersion4(), fixture.TenantId,
-            fixture.ProgramId, finding.FindingId, finding.Revision, "medium", fixture.LeadMemberId,
+            fixture.ProgramId, finding.FindingId, finding.Revision, "moderate", fixture.LeadMemberId,
             finding.DueOn, "VPN", null, "Review inputs changed."));
         var changed = await consistency.ConfirmUnchangedAndCaughtUpAsync(fixture.TenantId,
             captured.Value, CancellationToken.None);

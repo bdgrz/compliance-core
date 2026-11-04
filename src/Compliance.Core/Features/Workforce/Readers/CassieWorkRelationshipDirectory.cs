@@ -38,19 +38,19 @@ sealed class CassieWorkRelationshipDirectory(CassieProjectionDatabase database)
                     throw new InvalidOperationException(
                         "A work relationship revision cannot project before its predecessor.");
                 await ReplaceRelationshipAsync(current with
-                    {
-                        Revision = revised.Revision,
-                        WorkerType = revised.Terms.WorkerType,
-                        LifecycleStatus = revised.Terms.LifecycleStatus,
-                        StartDate = revised.Terms.StartDate,
-                        EndDate = revised.Terms.EndDate,
-                        Department = revised.Terms.Department,
-                        ManagerPersonId = revised.Terms.ManagerPersonId,
-                        SponsorPersonId = revised.Terms.SponsorPersonId,
-                        EmploymentStatusReason = revised.Terms.EmploymentStatusReason,
-                        LastChangedBy = revised.Actor,
-                        LastChangedAt = revised.ChangedAt,
-                    }, ct).ConfigureAwait(false);
+                {
+                    Revision = revised.Revision,
+                    WorkerType = revised.Terms.WorkerType,
+                    LifecycleStatus = revised.Terms.LifecycleStatus,
+                    StartDate = revised.Terms.StartDate,
+                    EndDate = revised.Terms.EndDate,
+                    Department = revised.Terms.Department,
+                    ManagerPersonId = revised.Terms.ManagerPersonId,
+                    SponsorPersonId = revised.Terms.SponsorPersonId,
+                    EmploymentStatusReason = revised.Terms.EmploymentStatusReason,
+                    LastChangedBy = revised.Actor,
+                    LastChangedAt = revised.ChangedAt,
+                }, ct).ConfigureAwait(false);
                 break;
             case WorkRelationshipStarted started:
                 await ReplaceLifecycleAsync(started.TenantId, started.RelationshipId, started.WorkerIdentifier,

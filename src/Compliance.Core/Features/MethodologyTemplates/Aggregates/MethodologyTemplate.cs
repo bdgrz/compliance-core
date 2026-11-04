@@ -55,6 +55,16 @@ public sealed class MethodologyTemplate : Aggregate
     long _revision;
     bool _retired;
     bool _hasPublished;
+    bool _lineCreated;
+    string? _lineName;
+    string? _linePurpose;
+    Uuid _lineCreatedBy;
+    Uuid _lineRetiredBy;
+    string? _lineRetireReason;
+    readonly Dictionary<Uuid, MethodologyTemplateDraftStarted> _lineDraftStarts = [];
+    readonly Dictionary<Uuid, MethodologyTemplateVersionPublishedV4> _linePublications = [];
+    readonly Dictionary<Uuid, MethodologyTemplateDraftClosed> _lineClosures = [];
+    string[] _publishedEntryKeys = [];
 
     public MethodologyTemplate(Uuid templateId, Uuid selectedLogicalId = default)
         : base(templateId, new EventStreamAddress(Realm, Area, templateId.ToString()))
@@ -67,6 +77,11 @@ public sealed class MethodologyTemplate : Aggregate
         On<MethodologyTemplateDraftReviewed>(ApplyFact);
         On<MethodologyTemplateVersionPublished>(ApplyFact);
         On<MethodologyTemplateRetired>(ApplyFact);
+        On<MethodologyTemplateCreatedV4>(ApplyLine);
+        On<MethodologyTemplateDraftStarted>(ApplyLine);
+        On<MethodologyTemplateVersionPublishedV4>(ApplyLine);
+        On<MethodologyTemplateDraftClosed>(ApplyLine);
+        On<MethodologyTemplateRetiredV4>(ApplyLine);
     }
 
     public NativeAcceptance Acceptance { get; }
@@ -85,19 +100,19 @@ public sealed class MethodologyTemplate : Aggregate
     public Uuid PublishedVersionId { get; private set; }
 
     public Result PrepareCreate() => _revision == 0 ? Result.Success : Conflict("The template identity already exists.");
-    public Result PrepareRevise(long expectedRevision) => Target(expectedRevision) is { IsSuccess: false } failure
+    public Result PrepareRevise(long expectedRevision) => _lineCreated ? LineOnly() : Target(expectedRevision) is { IsSuccess: false } failure
         ? failure : _retired || VersionStatus == "reviewed"
             ? Conflict("Only an active draft, returned draft or published template can be revised.") : Result.Success;
-    public Result PrepareReview(long version, Uuid memberId) => _revision == 0 ? Missing()
+    public Result PrepareReview(long version, Uuid memberId) => _lineCreated ? LineOnly() : _revision == 0 ? Missing()
         : _retired || version != VersionNumber || VersionStatus != "draft"
             ? Conflict("Review must answer the current active draft.")
             : memberId == AuthorMemberId ? Forbidden("A template author cannot review their own draft.") : Result.Success;
-    public Result PreparePublish(long version, Uuid memberId) => _revision == 0 ? Missing()
+    public Result PreparePublish(long version, Uuid memberId) => _lineCreated ? LineOnly() : _revision == 0 ? Missing()
         : _retired || version != VersionNumber || VersionStatus != "reviewed"
             ? Conflict("Publication requires the independently reviewed current draft.")
             : memberId == AuthorMemberId || memberId == ReviewerMemberId
                 ? Forbidden("The author and reviewer cannot approve this template version.") : Result.Success;
-    public Result PrepareRetire(long expectedRevision) => Target(expectedRevision) is { IsSuccess: false } failure
+    public Result PrepareRetire(long expectedRevision) => _lineCreated ? LineOnly() : Target(expectedRevision) is { IsSuccess: false } failure
         ? failure : _retired || !_hasPublished ? Conflict("Retirement requires an active published template.") : Result.Success;
 
     public Result Append(string kind, long preparedRevision, OperationProvenance operation, Uuid memberId,
@@ -218,6 +233,193 @@ public sealed class MethodologyTemplate : Aggregate
             (fact.Revision, fact.VersionNumber, fact.VersionId, fact.VersionStatus, fact.AuthorMemberId,
                 fact.ReviewerMemberId, fact.ContentSha256, fact.OccurredAt);
     }
+
+    public bool IsLineCreated => _lineCreated;
+    public Uuid? OpenDraftId { get; private set; }
+    public ImmutableContentRef? PublishedEntriesContent { get; private set; }
+    public string LineStatus => !_lineCreated ? "uncreated" : _retired ? "retired" : OpenDraftId is null ? "idle" : "drafting";
+
+    internal MethodologyTemplateDraftStarted? DraftStartFor(Uuid draftId) => _lineDraftStarts.GetValueOrDefault(draftId);
+    internal MethodologyTemplateVersionPublishedV4? PublicationFor(Uuid draftId) => _linePublications.GetValueOrDefault(draftId);
+
+    public Result CreateLine(string name, string purpose, Uuid createdBy)
+    {
+        if (!LineText(name, 200) || !LineText(purpose, 2000) || createdBy == Uuid.Empty)
+            return InvalidLine("A template line requires a name, purpose and personal creator.");
+        name = name.Trim();
+        purpose = purpose.Trim();
+        if (_lineCreated)
+            return _lineName == name && _linePurpose == purpose && _lineCreatedBy == createdBy
+                ? Result.Success : Conflict("The template identity already names another line.");
+        if (_revision != 0)
+            return Conflict("A legacy template identity cannot be recreated as a separate-draft line.");
+        RaiseEvent(new MethodologyTemplateCreatedV4(Id, name, purpose, createdBy));
+        return Result.Success;
+    }
+
+    public Result StartDraft(Uuid draftId, long basedOnVersion, IReadOnlyList<MethodologyTemplateRecordContent> entries,
+        ImmutableContentRef content, Uuid startedBy)
+    {
+        if (!_lineCreated)
+            return Missing();
+        if (draftId == Uuid.Empty || startedBy == Uuid.Empty || !MethodologyTemplateDraft.ValidManifest(entries, content))
+            return InvalidLine("A draft requires its exact identity, operator and original entry snapshot.");
+        if (_lineDraftStarts.TryGetValue(draftId, out var prior))
+            return prior.BasedOnVersion == basedOnVersion && prior.EntriesContent == content && prior.StartedBy == startedBy
+                ? Result.Success : Conflict("The draft identity is already bound to another start.");
+        if (_retired || OpenDraftId is not null)
+            return Conflict("A draft starts only on an active idle template line.");
+        if (basedOnVersion != PublishedVersionNumber)
+            return Conflict("A draft starts from the line's exact latest published version.");
+        if (PublishedVersionNumber == 0 && entries.Count != 0)
+            return Conflict("The first draft starts empty because the line has no published entries.");
+        if (PublishedVersionNumber > 0 && content != PublishedEntriesContent)
+            return Conflict("A draft must preserve its latest published version's exact immutable entries.");
+        RaiseEvent(new MethodologyTemplateDraftStarted(Id, draftId, basedOnVersion, content, startedBy));
+        return Result.Success;
+    }
+
+    public Result PublishDraft(Uuid draftId, Uuid approvalEventId, long draftRevision, long expectedPublishedVersion,
+        IReadOnlyList<MethodologyTemplateRecordContent> entries, ImmutableContentRef content,
+        IReadOnlyList<string> changedEntryKeys, Uuid approvedBy)
+    {
+        if (!_lineCreated)
+            return Missing();
+        if (draftId == Uuid.Empty || approvalEventId == Uuid.Empty || draftRevision < 0 || approvedBy == Uuid.Empty ||
+            !MethodologyTemplateDraft.ValidManifest(entries, content) || !LineKeys(changedEntryKeys, 200))
+            return InvalidLine("Publication requires the exact approved immutable draft revision and changed entry keys.");
+        if (_linePublications.TryGetValue(draftId, out var prior))
+            return prior.ApprovalEventId == approvalEventId && prior.DraftRevision == draftRevision &&
+                prior.EntriesContent == content && prior.ApprovedBy == approvedBy &&
+                prior.ChangedEntryKeys.SequenceEqual(changedEntryKeys)
+                ? Result.Success : Conflict("A published draft cannot answer another approval or changed snapshot.");
+        if (_retired || OpenDraftId != draftId || expectedPublishedVersion != PublishedVersionNumber ||
+            PublishedVersionNumber == long.MaxValue || changedEntryKeys.Except(_publishedEntryKeys.Concat(entries.Select(entry => entry.EntryKey)),
+                StringComparer.Ordinal).Any())
+            return Conflict("Publication must answer the line's open draft against its current immutable version.");
+        RaiseEvent(new MethodologyTemplateVersionPublishedV4(Id, PublishedVersionNumber + 1, draftId, draftRevision,
+            approvalEventId, content, entries.Select(entry => entry.EntryKey).ToArray(), changedEntryKeys.ToArray(), approvedBy));
+        return Result.Success;
+    }
+
+    public Result CloseDraft(Uuid draftId, Uuid discardEventId, string reason)
+    {
+        if (!_lineCreated)
+            return Missing();
+        if (draftId == Uuid.Empty || discardEventId == Uuid.Empty || !LineText(reason, 2000))
+            return InvalidLine("Closing requires the exact discarded draft and its reason.");
+        reason = reason.Trim();
+        if (_lineClosures.TryGetValue(draftId, out var prior))
+            return prior.DiscardEventId == discardEventId && prior.Reason == reason
+                ? Result.Success : Conflict("A closed draft cannot answer another discard or reason.");
+        if (_retired || OpenDraftId != draftId)
+            return Conflict("Only the line's open draft may be closed.");
+        RaiseEvent(new MethodologyTemplateDraftClosed(Id, draftId, discardEventId, reason));
+        return Result.Success;
+    }
+
+    public Result RetireLine(Uuid retiredBy, string reason)
+    {
+        if (!_lineCreated)
+            return Missing();
+        if (retiredBy == Uuid.Empty || !LineText(reason, 2000))
+            return InvalidLine("Retirement requires a personal operator and reason.");
+        reason = reason.Trim();
+        if (_retired)
+            return _lineRetiredBy == retiredBy && _lineRetireReason == reason
+                ? Result.Success : Conflict("Retirement is already bound to another operator or reason.");
+        if (OpenDraftId is not null)
+            return Conflict("A template with an open draft cannot be retired.");
+        RaiseEvent(new MethodologyTemplateRetiredV4(Id, reason, retiredBy));
+        return Result.Success;
+    }
+
+    void ApplyLine(MethodologyTemplateCreatedV4 fact)
+    {
+        if (fact.TemplateId != Id || _revision != 0 || !LineText(fact.Name, 200) ||
+            !LineText(fact.Purpose, 2000) || fact.CreatedBy == Uuid.Empty)
+            throw new InvalidOperationException("A separate-draft methodology line starts idle once with its own identity.");
+        _lineCreated = true;
+        _lineName = fact.Name;
+        _linePurpose = fact.Purpose;
+        _lineCreatedBy = fact.CreatedBy;
+        _revision++;
+    }
+
+    void ApplyLine(MethodologyTemplateDraftStarted fact)
+    {
+        if (!_lineCreated || fact.TemplateId != Id || _retired || OpenDraftId is not null ||
+            fact.DraftId == Uuid.Empty || _lineDraftStarts.ContainsKey(fact.DraftId) || fact.StartedBy == Uuid.Empty ||
+            fact.BasedOnVersion != PublishedVersionNumber || !MethodologyTemplateDraft.ValidReference(fact.EntriesContent) ||
+            (PublishedVersionNumber == 0 ? !MethodologyTemplateDraft.ValidManifest([], fact.EntriesContent)
+                : fact.EntriesContent != PublishedEntriesContent))
+            throw new InvalidOperationException("A line starts one new draft from its exact latest published version.");
+        OpenDraftId = fact.DraftId;
+        _lineDraftStarts.Add(fact.DraftId, fact);
+        _revision++;
+    }
+
+    void ApplyLine(MethodologyTemplateVersionPublishedV4 fact)
+    {
+        if (!_lineCreated || fact.TemplateId != Id || _retired || OpenDraftId != fact.DraftId ||
+            fact.Version != PublishedVersionNumber + 1 || fact.DraftRevision < 0 || fact.ApprovalEventId == Uuid.Empty ||
+            fact.ApprovedBy == Uuid.Empty || !MethodologyTemplateDraft.ValidReference(fact.EntriesContent) ||
+            !LineKeys(fact.EntryKeys, 100) || !LineKeys(fact.ChangedEntryKeys, 200) ||
+            fact.ChangedEntryKeys.Except(_publishedEntryKeys.Concat(fact.EntryKeys), StringComparer.Ordinal).Any())
+            throw new InvalidOperationException("Publication must preserve the exact open draft's approved immutable revision.");
+        PublishedVersionNumber = fact.Version;
+        PublishedVersionId = PublishedVersionIdentity(Id, fact.Version);
+        PublishedEntriesContent = fact.EntriesContent;
+        _publishedEntryKeys = fact.EntryKeys.ToArray();
+        _linePublications.Add(fact.DraftId, fact);
+        _hasPublished = true;
+        OpenDraftId = null;
+        _revision++;
+    }
+
+    void ApplyLine(MethodologyTemplateDraftClosed fact)
+    {
+        if (!_lineCreated || fact.TemplateId != Id || _retired || OpenDraftId != fact.DraftId ||
+            fact.DiscardEventId == Uuid.Empty || !LineText(fact.Reason, 2000))
+            throw new InvalidOperationException("Closing must answer the line's exact open discarded draft.");
+        _lineClosures.Add(fact.DraftId, fact);
+        OpenDraftId = null;
+        _revision++;
+    }
+
+    void ApplyLine(MethodologyTemplateRetiredV4 fact)
+    {
+        if (!_lineCreated || fact.TemplateId != Id || _retired || OpenDraftId is not null ||
+            fact.RetiredBy == Uuid.Empty || !LineText(fact.Reason, 2000))
+            throw new InvalidOperationException("A line retires only while idle with its exact actor and reason.");
+        _retired = true;
+        _lineRetiredBy = fact.RetiredBy;
+        _lineRetireReason = fact.Reason;
+        _revision++;
+    }
+
+    // Read-only line composition reuses the domain's own transition handlers at a captured source cut.
+    // This instance is never executed or persisted, so Portia's live aggregate version is not changed here.
+    internal void ReplayLineFact(DomainEvent fact)
+    {
+        if (fact is not (MethodologyTemplateCreatedV4 or MethodologyTemplateDraftStarted or
+            MethodologyTemplateVersionPublishedV4 or MethodologyTemplateDraftClosed or MethodologyTemplateRetiredV4) ||
+            fact.Metadata.IsAudit || fact.Metadata.AggregateId != Id || fact.Metadata.AggregateVersion != (ulong)_revision + 1)
+            throw new InvalidOperationException("A line read requires its ordered exact state-changing native facts.");
+        Apply(fact);
+    }
+
+    internal static Uuid PublishedVersionIdentity(Uuid templateId, long version) =>
+        Uuid.CreateVersion5(templateId, $"methodology-template-version:{version}");
+
+    static bool LineText(string? text, int maximum) => text is { Length: > 0 } && text.Length <= maximum &&
+        !string.IsNullOrWhiteSpace(text);
+    static bool LineKeys(IReadOnlyList<string>? keys, int maximum) => keys is not null && keys.Count <= maximum &&
+        keys.All(key => key is { Length: > 0 and <= 100 } && key == key.Trim() &&
+            key.All(character => char.IsAsciiLetterOrDigit(character) || character is '-' or '_' or '.')) &&
+        keys.Distinct(StringComparer.Ordinal).Count() == keys.Count;
+    static Result InvalidLine(string message) => Result.Failure(new RequestError(RequestErrorKind.Validation, message));
+    static Result LineOnly() => Conflict("This template uses the separate-draft line lifecycle.");
 
     Result Target(long expectedRevision) => _revision == 0 ? Missing()
         : expectedRevision != _revision ? Conflict("The template revision is stale.") : Result.Success;

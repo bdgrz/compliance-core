@@ -64,6 +64,16 @@ public sealed class FindingNativeHistoryTests
             NativeFacts.Ref(FindingContent.LinksSchema), NativeFacts.Ref(), NativeFacts.Ref(), null).IsSuccess);
         Assert.True(source.AdmitAction(Root(actionId, nameof(AddCorrectiveAction), 1),
             NativeFacts.Ref(ChildAdmissionIntent.Schema), NativeFacts.Ref()).IsSuccess);
+        var terminal = new NativeFactReference(new CorrectiveAction(tenant, program, id, actionId).Stream,
+            Uuid.CreateVersion4(), 2);
+        var report = Root(Uuid.CreateVersion5(terminal.EventId, nameof(RecordCorrectiveActionOutcome)),
+            nameof(RecordCorrectiveActionOutcome), null) with
+        {
+            Actor = ActorReference.ForSystemProcess("report_action_outcome", "Report outcome"),
+            CausationEventId = terminal.EventId,
+        };
+        Assert.True(source.RecordActionOutcome(report, actionId, "completed", terminal,
+            NativeFacts.Ref("source-fact-locator.v1")).IsSuccess);
         for (var index = 0; index < 128; index++)
         {
             var root = Uuid.CreateVersion4();
@@ -86,7 +96,7 @@ public sealed class FindingNativeHistoryTests
 
         // Assert
         Assert.Empty(retained);
-        Assert.Equal(258, owner.Revision);
+        Assert.Equal(259, owner.Revision);
         Assert.Equal(1, owner.Generation);
         Assert.Null(owner.PendingClosure);
         Assert.Null(owner.Closed);

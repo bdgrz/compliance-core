@@ -71,10 +71,10 @@ static class FindingClosureProofs
             if (action.Uses.Find(FindingClosureEffects.UseKey(intent, action.Stream)) is not
                 { GrantFact: { } grant, IsActive: true })
                 return Failure("A corrective action is not held by this closure yet.", true);
-            if (action.Completed is not { } completed)
-                return Failure("A held corrective action is not completed.", false);
-            proofs.Add(new ClosureActionProof(child.ChildId, NativeFactReference.Of(action.Stream, completed),
-                NativeFactReference.Of(action.Stream, grant)));
+            if (action.Resolution is not { } resolution)
+                return Failure("A held corrective action is not completed or cancelled.", false);
+            proofs.Add(new ClosureActionProof(child.ChildId, NativeFactReference.Of(action.Stream, resolution),
+                NativeFactReference.Of(action.Stream, grant), action.IsCancelled ? "cancelled" : "completed"));
         }
 
         return Result<IReadOnlyList<ClosureActionProof>>.Success(proofs);

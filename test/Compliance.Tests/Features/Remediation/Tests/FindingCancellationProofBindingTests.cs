@@ -31,6 +31,9 @@ using Bdgrz.Compliance.Features.Examinations.Aggregates;
 using Bdgrz.Compliance.Features.Processes.Models;
 using Bdgrz.Compliance.Features.Providers.Aggregates;
 using Bdgrz.Compliance.Features.Remediation.Commands;
+using Bdgrz.Compliance.Features.Remediation.Events;
+using Bdgrz.Compliance.Features.Remediation.Models;
+using Bdgrz.Compliance.Features.Content.Persistence;
 using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
 namespace Bdgrz.Compliance.Tests.Features.Remediation.Tests;
 
@@ -39,19 +42,26 @@ public sealed class FindingCancellationProofBindingTests
     [Fact]
     public async Task ShouldPreserveLaterPendingClosureAndHeldSourcesGivenEarlierUnboundFailureProof()
     {
-        // Arrange: an unfinished action causes the first real closure to cancel and settle.
+        // Arrange: resolved work is admitted for closure, but its completer's self-review causes a bound refusal.
         var fixture = await OperationsFixture.CreateAsync();
         await using var provider = fixture.Provider;
         var finding = await fixture.RaiseFindingAsync(fixture.OwnerMemberId);
         finding = await fixture.AddActionAsync(finding, fixture.OwnerMemberId, fixture.Today.AddDays(7));
         var actionId = Assert.Single(finding.CorrectiveActions).ActionId;
+        finding = await fixture.CompleteActionAsync(fixture.ApproverUserId, finding, actionId);
         var first = fixture.Close(finding);
         await PersonalReadinessClosureTransportTests.CloseHttpAsync(provider, fixture.ApproverUserId, first);
         Assert.Equal(ProcessState.Completed, (await fixture.RunClosureAsync(finding.FindingId, first.CommandId)).State);
+        var firstOwner = await fixture.FindingStreamAsync(finding.FindingId, first.CommandId);
+        var firstCanceled = Assert.IsType<FindingClosureCanceled>(firstOwner.TerminalClosure(first.CommandId));
+        var bound = await fixture.Content.ReadJsonAsync<FindingClosureFailureProof>(fixture.TenantId.ToString(),
+            firstCanceled.SourceProofs!);
+        Assert.Equal(first.CommandId, bound.RootOperationId);
+        Assert.Equal(actionId, bound.ActionId);
+        Assert.Contains("resolution author", bound.Reason, StringComparison.Ordinal);
         finding = await fixture.GetFindingAsync(finding.FindingId);
-        finding = await fixture.CompleteActionAsync(fixture.OwnerUserId, finding, actionId);
         var later = fixture.Close(finding);
-        await PersonalReadinessClosureTransportTests.CloseHttpAsync(provider, fixture.ApproverUserId, later);
+        await PersonalReadinessClosureTransportTests.CloseHttpAsync(provider, fixture.LeadUserId, later);
         var process = await fixture.StartClosureAsync(finding.FindingId, later.CommandId);
         var acquire = await fixture.ClosureStepAsync(process, "acquire", nameof(AuthorizeCorrectiveActionFindingClosureUse),
             Assert.Single(process.Targets));
@@ -63,7 +73,7 @@ public sealed class FindingCancellationProofBindingTests
         {
             program_id = fixture.ProgramId.ToString(),
             finding_id = finding.FindingId.ToString(),
-            reason = "The earlier action was not completed.",
+            reason = "The earlier completer could not verify their own work.",
             action_id = actionId.ToString(),
         });
         var oldProof = await fixture.Content.WriteVerifiedAsync(fixture.TenantId.ToString(), Uuid.CreateVersion4(),

@@ -42,21 +42,21 @@ sealed class CassieServiceIdentityDirectory(CassieProjectionDatabase database)
                     throw new InvalidOperationException(
                         "A service identity revision cannot project before its predecessor.");
                 await ReplaceIdentityAsync(current with
-                    {
-                        Revision = revised.Revision,
-                        DisplayName = revised.Terms.DisplayName,
-                        IdentityKind = revised.Terms.IdentityKind,
-                        Purpose = revised.Terms.Purpose,
-                        Environment = revised.Terms.Environment,
-                        LifecycleStatus = revised.Terms.LifecycleStatus,
-                        OwnerKind = revised.Terms.OwnerKind,
-                        OwnerId = revised.Terms.OwnerId,
-                        ReviewBy = revised.Terms.ReviewBy,
-                        ExpiresOn = revised.Terms.ExpiresOn,
-                        SharedJustification = revised.Terms.SharedJustification,
-                        LastChangedBy = revised.Actor,
-                        LastChangedAt = revised.ChangedAt,
-                    }, ct).ConfigureAwait(false);
+                {
+                    Revision = revised.Revision,
+                    DisplayName = revised.Terms.DisplayName,
+                    IdentityKind = revised.Terms.IdentityKind,
+                    Purpose = revised.Terms.Purpose,
+                    Environment = revised.Terms.Environment,
+                    LifecycleStatus = revised.Terms.LifecycleStatus,
+                    OwnerKind = revised.Terms.OwnerKind,
+                    OwnerId = revised.Terms.OwnerId,
+                    ReviewBy = revised.Terms.ReviewBy,
+                    ExpiresOn = revised.Terms.ExpiresOn,
+                    SharedJustification = revised.Terms.SharedJustification,
+                    LastChangedBy = revised.Actor,
+                    LastChangedAt = revised.ChangedAt,
+                }, ct).ConfigureAwait(false);
                 break;
             case ServiceIdentityOwnerChanged owner:
                 await ApplyNamedAsync(owner.TenantId, owner.ServiceIdentityId, owner.Revision, current =>

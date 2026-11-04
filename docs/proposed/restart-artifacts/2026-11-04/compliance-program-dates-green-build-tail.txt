@@ -1,0 +1,11 @@
+  Compliance.Common -> /Users/jrepanich/Code/bdgrz/compliance-core/src/Compliance.Common/bin/Release/net10.0/Bdgrz.Compliance.Common.dll
+  Compliance.Core -> /Users/jrepanich/Code/bdgrz/compliance-core/src/Compliance.Core/bin/Release/net10.0/Bdgrz.Compliance.Core.dll
+  Compliance.App -> /Users/jrepanich/Code/bdgrz/compliance-core/src/Compliance.App/bin/Release/net10.0/Bdgrz.Compliance.App.dll
+  Compliance.Tests -> /Users/jrepanich/Code/bdgrz/compliance-core/test/Compliance.Tests/bin/Release/net10.0/Bdgrz.Compliance.Tests.dll
+  Compliance.OpenApiExport -> /Users/jrepanich/Code/bdgrz/compliance-core/tools/Compliance.OpenApiExport/bin/Release/net10.0/Bdgrz.Compliance.OpenApiExport.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:01:06.81

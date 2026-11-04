@@ -4,6 +4,9 @@ This folder is the source of truth for Compliance Core's domain rules and write
 model. The write model is designed one bounded context at a time, in
 hand-authored context docs; code follows the docs.
 
+Implementation is paused. Read the [restart handoff and concurrent-agent plan](restart-handoff.md)
+before resuming; source checkpoints and audits are not completed domain acceptance.
+
 - [Domain model](domain-model.md): modeling rules, process spine and context map.
 - [Context conventions](contexts/conventions.md): rules every context cites.
 - [Decisions](decisions): product decisions the contexts apply.
@@ -51,6 +54,12 @@ conventions and the later decision rows fixed.
 Organization commercial operations (subscription, billing and add-ons) is not
 designed yet; it awaits the business-operations decisions.
 
+The [implementation progress ledger](implementation-progress.md) tracks assembled
+behavior, deferred wiring, remaining work and validation failures across contexts.
+The [requirement coverage map](requirement-coverage.md) records reviewed behavior
+and concrete remaining acceptance per requirement; its initial eight contexts are
+source-reviewed and still require execution at the acceptance head.
+
 ## Aggregate implementation evidence
 
 Context design status does not establish implementation or workflow delivery.
@@ -59,6 +68,10 @@ work.
 
 | Owner | Implementation status | Evidence |
 | --- | --- | --- |
+| Program | Partial: all-present target-date ordering passes focused/native tests; full gate and canonical Program workflow remain | [Date invariant](reviews/program-target-date-ordering.md) |
+| Person | Partial: named details and generic-writer retirement locally qualified; member linkage and accepted HRIS application remain | [Writer cutover](reviews/person-named-writer-cutover.md) |
 | RiskControlTreatment (`RiskTreatmentAssertion` in current source) | Partial: reviewer independence enforced in the owner; control-retirement coordination and proposed-owner migration remain | [Review](reviews/risk-control-treatment.md) |
-| WorkRelationship | Partial: ending is terminal for new revisions; full identity/lifecycle and named-event migration remain | [Review](reviews/work-relationship-terminal-status.md) |
-| ServiceIdentity | Partial: retirement freezes changed terms; full owner/review model and named-event migration remain | [Review](reviews/service-identity-retirement.md) |
+| WorkRelationship | Partial: named lifecycle/changes and computed sponsorship; initial/source conformance and whole-owner qualification remain | [Terminal review](reviews/work-relationship-terminal-status.md), [named changes and sponsorship](reviews/workforce-named-and-sponsorship.md) |
+| ServiceIdentity | Partial: named owner/purpose/review/lifecycle operations assembled; full proposed owner and workflow qualification remain | [Review](reviews/service-identity-retirement.md), [assembled evidence](implementation-progress.md) |
+| MethodologyTemplateDraft | Partial: source-bound draft, personal review and published line reads assembled; name admission, ordered applications and full qualification remain | [Review](reviews/methodology-template-draft.md), [assembled evidence](implementation-progress.md) |
+| CorrectiveAction / Finding | Partial: cancellation and severity vocabulary; finding-owned outcomes and proposed closure migration remain | [Review](reviews/corrective-action-cancellation.md) |

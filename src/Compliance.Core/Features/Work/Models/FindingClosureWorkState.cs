@@ -6,4 +6,4 @@ public sealed record FindingClosureWorkState(Uuid TenantId, Uuid ProgramId, Uuid
     FindingClosureActionState[] Actions, bool Closed, DateTimeOffset ChangedAt);
 
 public sealed record FindingClosureActionState(Uuid ActionId, Uuid OwnerMemberId, string Status,
-    Uuid? CompletedByMemberId);
+    Uuid? CompletedByMemberId, Uuid? CancelledByMemberId = null, string? CancellationReason = null);

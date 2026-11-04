@@ -54,7 +54,8 @@ sealed class CassiePersonDirectory(CassieProjectionDatabase database, PersonRead
                 }
                 else
                 {
-                    if (prior.TenantId != verified.TenantId || verified.Revision != prior.Revision + (native.Changed ? 1 : 0) ||
+                    if (prior.PersonId != verified.PersonId || prior.TenantId != verified.TenantId ||
+                        verified.Revision != prior.Revision + (native.Changed ? 1 : 0) ||
                         !native.Changed && (prior with { PersonalContact = null, RestrictedFieldsRedacted = true }) != verified)
                         throw new InvalidOperationException("A native person projection requires its exact preceding revision.");
                     if (prior != verified)
@@ -73,14 +74,14 @@ sealed class CassiePersonDirectory(CassieProjectionDatabase database, PersonRead
                     throw new InvalidOperationException(
                         "A person revision cannot project before its predecessor.");
                 await ReplacePersonAsync(current with
-                    {
-                        Revision = revised.Revision,
-                        DisplayName = revised.DisplayName,
-                        WorkEmail = revised.WorkEmail,
-                        PersonalContact = revised.PersonalContact,
-                        LastChangedBy = revised.Actor,
-                        LastChangedAt = revised.ChangedAt,
-                    }, ct).ConfigureAwait(false);
+                {
+                    Revision = revised.Revision,
+                    DisplayName = revised.DisplayName,
+                    WorkEmail = revised.WorkEmail,
+                    PersonalContact = revised.PersonalContact,
+                    LastChangedBy = revised.Actor,
+                    LastChangedAt = revised.ChangedAt,
+                }, ct).ConfigureAwait(false);
                 break;
             case PersonMembershipCorrelated correlated:
                 var linked = await FindPersonAsync(correlated.PersonId, ct).ConfigureAwait(false);
@@ -89,12 +90,12 @@ sealed class CassiePersonDirectory(CassieProjectionDatabase database, PersonRead
                     throw new InvalidOperationException(
                         "A person correlation cannot project before its predecessor.");
                 await ReplacePersonAsync(linked with
-                    {
-                        Revision = correlated.Revision,
-                        CorrelatedUserId = correlated.UserId,
-                        LastChangedBy = correlated.Actor,
-                        LastChangedAt = correlated.ChangedAt,
-                    }, ct).ConfigureAwait(false);
+                {
+                    Revision = correlated.Revision,
+                    CorrelatedUserId = correlated.UserId,
+                    LastChangedBy = correlated.Actor,
+                    LastChangedAt = correlated.ChangedAt,
+                }, ct).ConfigureAwait(false);
                 break;
         }
     }

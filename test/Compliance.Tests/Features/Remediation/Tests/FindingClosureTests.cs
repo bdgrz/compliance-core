@@ -182,7 +182,7 @@ public sealed class FindingClosureTests
     }
 
     [Fact]
-    public async Task ShouldBlockClosureGivenAcceptedButUnmaterializedAction()
+    public async Task ShouldRefuseClosureAdmissionGivenPlannedActionNotMaterialized()
     {
         // Arrange
         var fixture = await OperationsFixture.CreateAsync();
@@ -191,52 +191,56 @@ public sealed class FindingClosureTests
             materialize: false);
         var second = finding.CorrectiveActions.Single(item => item.Revision == 0);
         var close = fixture.Close(finding);
-        await PersonalReadinessClosureTransportTests.CloseHttpAsync(fixture.Provider, fixture.ApproverUserId, close);
+        var before = await fixture.FindingStreamAsync(finding.FindingId);
 
         // Act
-        var waiting = await fixture.RunClosureAsync(finding.FindingId, close.CommandId);
+        var refused = await PersonalReadinessClosureTransportTests.CloseHttpAsync(fixture.Provider, fixture.ApproverUserId,
+            close, RequestErrorKind.Conflict);
         var pending = await fixture.FindingStreamAsync(finding.FindingId, close.CommandId);
 
         // Assert
-        Assert.Equal(ProcessState.Pending, waiting.State);
-        Assert.Contains("not materialized yet", waiting.Note, StringComparison.Ordinal);
-        Assert.NotNull(pending.PendingClosure);
+        Assert.False(refused.IsSuccess);
+        Assert.Equal(RequestErrorKind.Conflict, refused.Error?.Kind);
+        Assert.Equal(before.Version, pending.Version);
+        Assert.Equal(1, pending.UnresolvedActionCount);
+        Assert.Null(pending.PendingClosure);
         Assert.Null(pending.Closed);
         Assert.Null(pending.TerminalClosure(close.CommandId));
 
-        // Act: the admitted action materializes and completes, then the same closure resumes.
+        // Act: the admitted action materializes and reports completion, then a new closure is proposed.
         await fixture.MaterializeAsync(finding.FindingId);
         finding = await fixture.GetFindingAsync(finding.FindingId);
-        await fixture.CompleteActionAsync(fixture.OwnerUserId, finding, second.ActionId);
-        var resumed = await fixture.RunClosureAsync(finding.FindingId, close.CommandId);
-        var closed = await fixture.GetFindingAsync(finding.FindingId);
+        finding = await fixture.CompleteActionAsync(fixture.OwnerUserId, finding, second.ActionId);
+        var closed = await fixture.CloseAsync(fixture.ApproverUserId, finding);
 
         // Assert
-        Assert.Equal(ProcessState.Completed, resumed.State);
         Assert.Equal("closed", closed.Status);
         Assert.Equal(2, closed.CorrectiveActions.Count(item => item.Status == "completed"));
     }
 
     [Fact]
-    public async Task ShouldCancelClosureAndSettleEveryUseGivenUnfinishedAction()
+    public async Task ShouldRefuseClosureBeforeHoldingAnyActionGivenUnfinishedAction()
     {
         // Arrange
         var fixture = await OperationsFixture.CreateAsync();
         var finding = await FindingTests.RaiseWithCompletedActionAsync(fixture);
         finding = await fixture.AddActionAsync(finding, fixture.OwnerMemberId, fixture.Today.AddDays(5), "Second.");
         var close = fixture.Close(finding);
-        await PersonalReadinessClosureTransportTests.CloseHttpAsync(fixture.Provider, fixture.ApproverUserId, close);
+        var before = await fixture.FindingStreamAsync(finding.FindingId);
 
         // Act
-        var ended = await fixture.RunClosureAsync(finding.FindingId, close.CommandId);
+        var refused = await PersonalReadinessClosureTransportTests.CloseHttpAsync(fixture.Provider, fixture.ApproverUserId,
+            close, RequestErrorKind.Conflict);
         var canceled = await fixture.FindingStreamAsync(finding.FindingId, close.CommandId);
         var actions = new List<CorrectiveAction>();
         foreach (var action in finding.CorrectiveActions)
             actions.Add(await fixture.ActionAsync(finding.FindingId, action.ActionId));
 
         // Assert
-        Assert.Equal(ProcessState.Completed, ended.State);
-        Assert.IsType<FindingClosureCanceled>(canceled.TerminalClosure(close.CommandId));
+        Assert.False(refused.IsSuccess);
+        Assert.Equal(RequestErrorKind.Conflict, refused.Error?.Kind);
+        Assert.Equal(before.Version, canceled.Version);
+        Assert.Null(canceled.TerminalClosure(close.CommandId));
         Assert.Null(canceled.PendingClosure);
         Assert.Null(canceled.Closed);
         Assert.All(actions, action =>

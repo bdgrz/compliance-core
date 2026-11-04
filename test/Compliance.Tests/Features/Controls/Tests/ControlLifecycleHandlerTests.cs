@@ -853,7 +853,7 @@ public sealed class ControlLifecycleHandlerTests
                 sourceOccurrenceId is { } sourceId
                     ? new FindingSource("control_occurrence", sourceId, null, "Access was retained.")
                     : new FindingSource("manual", null, null, "Access was retained."),
-                "Stale access", "A leaver retained access.", "medium", "Accounts", OwnerMemberId,
+                "Stale access", "A leaver retained access.", "moderate", "Accounts", OwnerMemberId,
                 EffectiveFrom.AddMonths(1),
                 sourceOccurrenceId is null
                     ? [new FindingLink("control", linkReference ?? (controlId ?? ControlId).ToString())]
