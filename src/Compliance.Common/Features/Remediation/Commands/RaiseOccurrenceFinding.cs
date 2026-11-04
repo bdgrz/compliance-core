@@ -5,7 +5,7 @@ using Bdgrz.Compliance.Features.Remediation.Models;
 namespace Bdgrz.Compliance.Features.Remediation.Commands;
 
 /// <summary>
-///     Converts a failed or skipped attestation or a reviewer's requested action into a finding.
+///     Converts a committed reviewer's explicit finding decision into a finding.
 ///     Dispatched only by the operations reactor; the finding ID is derived from the source and is the logical
 ///     identity. A requested action is admitted atomically with the finding under a deterministic action id.
 /// </summary>
