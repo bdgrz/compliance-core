@@ -141,7 +141,7 @@ public sealed class FindingTypeIBaselineSourceContributor(
                 if (!(context.RecordedThrough is null ? InsideCutoff(admitted, through) :
                     await context.IncludesAsync(finding.Stream, admitted, ct).ConfigureAwait(false)))
                     continue;
-                foreach (var fact in ActionFacts(action))
+                foreach (var fact in await ActionFactsAsync(action, ct).ConfigureAwait(false))
                     if (context.RecordedThrough is null ? InsideCutoff(fact, through) :
                         await context.IncludesAsync(action.Stream, fact, ct).ConfigureAwait(false))
                         history.Add(await CaptureAsync(engagement.TenantId, fact, ct).ConfigureAwait(false));
@@ -165,14 +165,11 @@ public sealed class FindingTypeIBaselineSourceContributor(
             new TypeIBaselineSourceContribution(Family, sources.AsReadOnly(), [], []));
     }
 
-    static IEnumerable<DomainEvent> ActionFacts(CorrectiveAction action)
+    async Task<DomainEvent[]> ActionFactsAsync(CorrectiveAction action, CancellationToken ct)
     {
-        if (action.Added is { } added)
-            yield return added;
-        if (action.Completed is { } completed)
-            yield return completed;
-        if (action.Cancelled is { } cancelled)
-            yield return cancelled;
+        var facts = await NativeOwnerHistory.ReadAsync<DomainEvent>(events, action, ct).ConfigureAwait(false);
+        return facts.Where(static fact => fact is CorrectiveActionAddedV2 or CorrectiveActionChanged or
+            CorrectiveActionCompletedV2 or CorrectiveActionCancelled).ToArray();
     }
 
     static bool InsideCutoff(DomainEvent fact, DateTimeOffset through) =>
@@ -192,6 +189,7 @@ public sealed class FindingTypeIBaselineSourceContributor(
         CorrectiveActionAddedV2 ev => ev.Revision,
         CorrectiveActionCompletedV2 ev => ev.Revision,
         CorrectiveActionCancelled ev => ev.Revision,
+        CorrectiveActionChanged ev => ev.Revision,
         FindingCorrectiveActionResolved ev => ev.Revision,
         _ => throw new InvalidOperationException($"{fact.GetType().Name} is not a remediation fact."),
     };
@@ -227,6 +225,7 @@ public sealed class FindingTypeIBaselineSourceContributor(
                 Add(value.EvidenceManifest);
                 break;
             case CorrectiveActionCancelled:
+            case CorrectiveActionChanged:
                 break;
             case FindingCorrectiveActionResolved value:
                 Add(value.SourceProof);
@@ -297,6 +296,7 @@ public sealed class FindingTypeIBaselineSourceContributor(
         CorrectiveActionAddedV2 => "corrective_action_added",
         CorrectiveActionCompletedV2 => "corrective_action_completed",
         CorrectiveActionCancelled => "corrective_action_cancelled",
+        CorrectiveActionChanged => "corrective_action_changed",
         FindingCorrectiveActionResolved => "finding_corrective_action_resolved",
         _ => throw new JsonException("The remediation stream contains an unknown event."),
     };

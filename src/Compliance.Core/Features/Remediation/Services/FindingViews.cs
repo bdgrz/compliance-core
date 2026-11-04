@@ -110,4 +110,13 @@ static class FindingViews
             History = [.. view.History, new FindingHistoryEntryView(action.Revision, "corrective_action_cancelled",
                 action.CancellationReason!, action.CancelledBy!, action.CancelledAt!.Value)],
         }, now);
+
+    public static FindingView WithChangedAction(FindingView view, CorrectiveActionView action,
+        ActorReference actor, DateTimeOffset now) => Settle(view with
+        {
+            CorrectiveActions = view.CorrectiveActions.Select(item => item.ActionId == action.ActionId ? action : item)
+                .ToArray(),
+            History = [.. view.History, new FindingHistoryEntryView(action.Revision, "corrective_action_changed",
+                $"Action {action.ActionId}: owner {action.OwnerMemberId}, due {Date(action.DueOn)}: {action.Description}", actor, now)],
+        }, now);
 }

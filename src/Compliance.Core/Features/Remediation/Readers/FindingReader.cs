@@ -75,6 +75,7 @@ public sealed class FindingReader(IAggregateReader reader, IDomainEventReader ev
             .ConfigureAwait(false);
         var actions = new List<CorrectiveActionView>();
         var completions = new List<(CorrectiveActionView Action, long Order)>();
+        var actionChanges = new List<FindingHistoryEntryView>();
         var acceptances = new List<FindingAcceptanceView>();
         var history = new List<(FindingHistoryEntryView Entry, int Order)>();
         FindingClosureView? closure = null;
@@ -94,7 +95,7 @@ public sealed class FindingReader(IAggregateReader reader, IDomainEventReader ev
                         ev.RevisedBy, ev.RevisedAt), order));
                     break;
                 case CorrectiveActionAdmitted ev:
-                    var action = await ComposeActionAsync(finding, ev, ct).ConfigureAwait(false);
+                    var action = await ComposeActionAsync(finding, ev, actionChanges, ct).ConfigureAwait(false);
                     actions.Add(action.View);
                     history.Add((new FindingHistoryEntryView(ev.Revision, "corrective_action_added",
                         action.View.Description, action.View.AddedBy, action.View.AddedAt), order));
@@ -129,6 +130,11 @@ public sealed class FindingReader(IAggregateReader reader, IDomainEventReader ev
             order++;
         }
 
+        foreach (var change in actionChanges)
+        {
+            var position = history.FindLastIndex(item => item.Entry.At <= change.At) + 1;
+            history.Insert(position, (change, -1));
+        }
         foreach (var (completed, _) in completions)
         {
             // A completion belongs after the last finding fact that did not happen after it.
@@ -227,7 +233,8 @@ public sealed class FindingReader(IAggregateReader reader, IDomainEventReader ev
     }
 
     async ValueTask<(CorrectiveActionView View, CorrectiveActionView? Completion)> ComposeActionAsync(
-        FindingAggregate finding, CorrectiveActionAdmitted admitted, CancellationToken ct)
+        FindingAggregate finding, CorrectiveActionAdmitted admitted, List<FindingHistoryEntryView> changes,
+        CancellationToken ct)
     {
         var raised = finding.Raised!;
         var (intent, authored) = await ReadAdmissionAsync(raised.TenantId, admitted, ct).ConfigureAwait(false);
@@ -239,6 +246,15 @@ public sealed class FindingReader(IAggregateReader reader, IDomainEventReader ev
         if (!action.IsMaterialized)
             return (open, null);
         open = open with { Revision = action.Revision };
+        if (action.Changed is { } changed)
+        {
+            open = open with { Description = changed.Description, OwnerMemberId = changed.OwnerMemberId, DueOn = changed.DueOn };
+            var history = await NativeOwnerHistory.ReadAsync<DomainEvent>(events, action, ct).ConfigureAwait(false);
+            foreach (var fact in history.OfType<CorrectiveActionChanged>())
+                changes.Add(new FindingHistoryEntryView(fact.Revision, "corrective_action_changed",
+                    $"Action {fact.ActionId}: owner {fact.OwnerMemberId}, due {FindingViews.Date(fact.DueOn)}: {fact.Description}",
+                    fact.ChangedBy, fact.ChangedAt));
+        }
         if (action.Cancelled is { } cancelled)
         {
             var resolved = open with

@@ -4,4 +4,5 @@ namespace Bdgrz.Compliance.Features.Remediation.Contracts;
 public static class CorrectiveActionPermissions
 {
     public const string Cancel = "corrective_action.cancel";
+    public const string Change = "corrective_action.change";
 }
