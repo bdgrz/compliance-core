@@ -125,8 +125,10 @@ public sealed class FitzWorkRelationshipDirectoryTests
         var tenantId = Uuid.CreateVersion4();
         var recorded = Recorded(tenantId, "E-100");
         await ApplyAsync(directory, tenantId, recorded);
+        var roster = new FitzWorkforceObservationDirectory(new InMemoryKvClient());
         var handler = new ListWorkRelationshipsHandler(directory,
-            new WorkRelationshipReadConsistency(directory, new NoSource(), new InMemoryEventStore()));
+            new WorkRelationshipReadConsistency(directory, new NoSource(), new InMemoryEventStore()),
+            new WorkRelationshipSponsorship(roster, new WorkforceObservationReadConsistency(roster, new InMemoryEventStore())));
         var context = new RequestContext<ListWorkRelationships>(new ListWorkRelationships(tenantId), Actor());
 
         // Act

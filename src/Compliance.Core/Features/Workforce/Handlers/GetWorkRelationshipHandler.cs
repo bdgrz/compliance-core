@@ -25,11 +25,13 @@ namespace Bdgrz.Compliance.Features.Workforce.Handlers;
 ///     the <c>workforce.manager_chain</c> field grant (M0-D06).
 /// </summary>
 public sealed class GetWorkRelationshipHandler(WorkRelationshipReadConsistency consistency,
-    IPermissionAuthorizer permissions) : IRequestHandler<GetWorkRelationship, WorkRelationshipView>
+    IPermissionAuthorizer permissions, WorkRelationshipSponsorship sponsorship)
+    : IRequestHandler<GetWorkRelationship, WorkRelationshipView>
 {
     public async ValueTask<Result<WorkRelationshipView>> HandleAsync(
         IRequestContext<GetWorkRelationship> context, CancellationToken ct)
     {
+        _ = sponsorship;
         var request = context.Request;
         var view = await consistency.GetAsync(request.TenantId, request.RelationshipId,
             request.MinimumRevision, ct).ConfigureAwait(false);

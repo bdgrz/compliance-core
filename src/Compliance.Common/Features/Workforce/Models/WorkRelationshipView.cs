@@ -12,4 +12,4 @@ public sealed record WorkRelationshipView(Uuid TenantId, Uuid RelationshipId, lo
     DateOnly StartDate, DateOnly? EndDate, string? Department, Uuid? ManagerPersonId,
     Uuid? SponsorPersonId, bool RestrictedFieldsRedacted, string SourceKind,
     ActorReference LastChangedBy, DateTimeOffset LastChangedAt,
-    string? EmploymentStatusReason = null);
+    string? EmploymentStatusReason = null, bool Unsponsored = false);
