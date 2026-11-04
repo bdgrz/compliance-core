@@ -51,6 +51,9 @@ conventions and the later decision rows fixed.
 Organization commercial operations (subscription, billing and add-ons) is not
 designed yet; it awaits the business-operations decisions.
 
+The [implementation progress ledger](implementation-progress.md) tracks assembled
+behavior, deferred wiring, remaining work and validation failures across contexts.
+
 ## Aggregate implementation evidence
 
 Context design status does not establish implementation or workflow delivery.
