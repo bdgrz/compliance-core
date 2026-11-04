@@ -83,6 +83,7 @@ sealed class FindingClosureVerifier(IAggregateReader reader, IImmutableContentSt
         {
             FindingClosedV2 closed => closed.Intent,
             FindingClosureCanceled canceled => canceled.Intent,
+            FindingClosureWithdrawn withdrawn => withdrawn.CanceledReview?.Intent,
             _ => null,
         };
         return source.Stream != finding.Stream || terminal.Metadata.EventId != source.EventId ||

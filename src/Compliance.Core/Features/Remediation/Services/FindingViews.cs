@@ -120,6 +120,15 @@ static class FindingViews
             History = [.. view.History, new FindingHistoryEntryView(number, "closure_returned", comments, reviewer, reviewedAt)],
         }, reviewedAt);
 
+    public static FindingView WithWithdrawnProposal(FindingView view, long number, ActorReference proposer, DateTimeOffset withdrawnAt) =>
+        Settle(view with
+        {
+            Revision = number,
+            ClosureProposal = null,
+            History = [.. view.History, new FindingHistoryEntryView(number, "closure_withdrawn",
+                $"Closure {view.ClosureProposal!.ClosureId} withdrawn.", proposer, withdrawnAt)],
+        }, withdrawnAt);
+
     public static string Date(DateOnly date) => date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
 
     public static FindingView WithCancelledAction(FindingView view, CorrectiveActionView action, DateTimeOffset now) =>

@@ -34,6 +34,7 @@ using Bdgrz.Compliance.Features.NativeOperations.Models;
 using Bdgrz.Compliance.Features.Remediation.Aggregates;
 using Bdgrz.Compliance.Features.Remediation.Commands;
 using Bdgrz.Compliance.Features.Remediation.Events;
+using Bdgrz.Compliance.Features.Remediation.Models;
 namespace Bdgrz.Compliance.Features.Remediation.History;
 
 /// <summary>Verifies full immutable finding history transiently at a compact owner's exact hydrated cut.</summary>
@@ -149,7 +150,7 @@ public static class FindingHistory
                     authors.Add(FindingClosureProposalRules.MemberId(proposed.ProposedBy));
                     break;
                 case FindingClosureWithdrawn withdrawn:
-                    valid = proposal is not null && pending is null && closed is null &&
+                    valid = proposal is not null && closed is null && CancellationMatches(pending, withdrawn.CanceledReview) &&
                         Scope(withdrawn.TenantId, withdrawn.ProgramId, withdrawn.FindingId) &&
                         withdrawn.Revision == revision && withdrawn.RequestId == operation.LogicalId &&
                         withdrawn.ClosureId == proposal.ClosureId && withdrawn.ProposalRevision == proposal.ProposalRevision &&
@@ -157,6 +158,7 @@ public static class FindingHistory
                         FindingClosureProposalRules.MemberId(withdrawn.WithdrawnBy) == FindingClosureProposalRules.MemberId(proposal.ProposedBy) &&
                         NativeOwnerHistory.IsOwnRoot(owner, operation, nameof(WithdrawFindingClosure), (ulong)index);
                     proposal = null;
+                    pending = null;
                     break;
                 case FindingClosureReturned returned:
                     valid = proposal is not null && pending is null && closed is null &&
@@ -211,6 +213,9 @@ public static class FindingHistory
 
         bool Scope(Uuid tenant, Uuid program, Uuid finding) => tenant == owner.TenantId &&
             program == owner.ProgramId && finding == owner.FindingId;
+        bool CancellationMatches(FindingClosureAccepted? accepted, FindingClosureReviewCancellation? canceled) => accepted is null
+            ? canceled is null : accepted.Review is not null && canceled == new FindingClosureReviewCancellation(
+                NativeFactReference.Of(owner.Stream, accepted), accepted.Intent, accepted.Operation.RootOperationId, accepted.Generation);
         bool Child(OperationProvenance operation, FindingClosureAccepted admission, string kind) =>
             operation.Owner == owner.Stream && (operation.FirstOwner ?? operation.Owner) == owner.Stream &&
             operation.AffectedOwner == owner.Stream && operation.ExpectedRevisionOwner == owner.Stream &&
