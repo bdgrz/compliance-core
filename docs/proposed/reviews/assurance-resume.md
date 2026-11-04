@@ -23,6 +23,10 @@ RED or GREEN. The coordinator owns assembled execution and shared wiring.
 - `FindingClosureProposalView.Authors` exposes every author of that closure's
   proposal revisions, sorted and deduplicated. Both immediate frozen proposal
   responses and authoritative current reads carry the same lineage for Work.
+- The retired generic `ReviseFinding` and one-step `CloseFinding` handlers now
+  unconditionally return typed Validation refusal without source/content/execution
+  dependencies, including system and anonymous requests. Historical command/fact
+  decoding and already-accepted process completion remain.
 - Control occurrences raise findings only from committed explicit reviewer
   decisions. Attestation failure/skipping is retained for review and emits no
   finding. Explicit requested actions retain deterministic per-action identities;
@@ -30,8 +34,8 @@ RED or GREEN. The coordinator owns assembled execution and shared wiring.
 
 Authored tests cover immutable source and owner, invalid/no-op analysis, competing
 analysis appends, suspended accepted proposal retry, dedicated reopen refusal,
-full proposal author lineage, failed/skipped no-finding reactions, and deterministic
-raise/none review replay. Existing held source has proposal, independence, waiver,
+full proposal author lineage, failed/skipped no-finding reactions, deterministic
+raise/none review replay and uniform retired-writer refusal. Existing held source has proposal, independence, waiver,
 withdrawal/final-proof/source-settlement and native retry tests.
 
 ## Exact integration
@@ -39,7 +43,7 @@ withdrawal/final-proof/source-settlement and native retry tests.
 Apply only held closure commits `62b592f8`, `06f54d04`, `d38f0231`, `e6b1913c`,
 `bd248387`, `95ba1654`, `f0cc18ae`, `527fda47`, then resumed commits
 `ef3fb5ed`, `25e1c464`, `eca3076a`, `8832e242`, `753b18dc`, `1de53779`,
-`f15b3a7a`. Intervening old native-storage and already-delivered commits are not
+`f15b3a7a`, `85297187`, `ade97cb1`, `7e971cc9`. Intervening old native-storage and already-delivered commits are not
 part of this selection. Preserve main's newer ChangeCorrectiveAction current
 membership/accepted-retry authorization fix; this branch's old ancestor lacks it.
 
@@ -60,14 +64,18 @@ Coordinator wiring:
   source checked in its handler. Generic `program.manage` is insufficient.
 - Public named analysis/proposal/withdraw and HTTP-only personal review surfaces;
   use the actual native typed response contract (review returns accepted status).
-  Retire public generic `ReviseFinding` and one-step `CloseFinding` writers in the
-  same cutover. Historical decoding and completion of recorded accepted work are
+  Remove public generic `ReviseFinding` and one-step `CloseFinding` routes/tools in
+  the same cutover; their handlers already refuse unconditionally. Historical decoding and completion of recorded accepted work are
   separate from accepting new legacy operations.
 - Include full author lineage and new facts in Work current-state refresh and
   project source fixtures/catalogs as appropriate.
 
 Focused filter:
-`FindingAnalysisTests|FindingCurrentAuthorityTests|FindingClosureProposalTests|ProposeFindingClosureHandlerTests|FindingClosureReviewHandlerTests|FindingClosureWithdrawalWorkflowTests|OccurrenceFindingTests`.
+`FindingAnalysisTests|FindingCurrentAuthorityTests|FindingClosureProposalTests|ProposeFindingClosureHandlerTests|FindingClosureReviewHandlerTests|FindingClosureWithdrawalWorkflowTests|OccurrenceFindingTests|RetiredFindingWriterTests`.
+Existing legacy tests and shared `OperationsFixture.CloseAsync` still drive the
+retired commands and require a target proposal/review fixture cutover before a
+full green gate. A failure of those obsolete writer expectations is not a reason
+to restore their live bypass.
 Run with FullyQualifiedName selectors in the coordinator lane, then the assembled
 unit suite/build/format. No .NET command ran in this worker.
 
