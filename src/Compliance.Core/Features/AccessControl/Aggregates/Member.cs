@@ -47,6 +47,8 @@ using Bdgrz.Compliance.Features.Tenants.Processes;
 using Bdgrz.Compliance.Features.UserIdentities.Models;
 using Bdgrz.Compliance.Features.UserIdentities.Processes;
 using Bdgrz.Compliance.Features.Work.Models;
+using Bdgrz.Compliance.Features.Workforce.Events;
+using Bdgrz.Compliance.Features.Workforce.Models;
 using Bdgrz.Compliance.Features.AccessControl.Events;
 using Bdgrz.Compliance.Features.AccessControl.Handlers;
 using Bdgrz.Compliance.Features.AttestRecords.Commands;
@@ -78,6 +80,10 @@ public sealed class Member : Aggregate
     /// <summary>Acceptance of the logical registration this hydration was selected for.</summary>
     public NativeAcceptance Acceptance { get; }
 
+    public Uuid? LinkedPersonId => Id == Uuid.Empty ? Id : default(Uuid?);
+    public Uuid? PendingPersonId => Id == Uuid.Empty ? Id : default(Uuid?);
+    public long PersonLinkGeneration => Id == Uuid.Empty ? -1 : 0;
+    public MemberPersonLinkAdmitted? PersonLinkAdmission => Acceptance.SelectedFact as MemberPersonLinkAdmitted;
     public bool IsRegistered => _isRegistered;
     public string? Affiliation => _affiliation;
     public DateOnly? MembershipExpiresOn => _membershipExpiresOn;
@@ -432,6 +438,22 @@ public sealed class Member : Aggregate
                 "A member identity is required for the lifecycle history."))
             : Result.Success;
     }
+
+    public Result RequestPersonLink(OperationProvenance operation, ImmutableContentRef firstResponse,
+        Uuid personId, long expectedGeneration) => Result.Failure(new RequestError(RequestErrorKind.Conflict,
+            $"Member person-link admission is not implemented for {Id}."));
+
+    public Result ConfirmPersonLink(OperationProvenance operation, ImmutableContentRef firstResponse,
+        VerifiedSourceProof<PersonLinkedToMember> source) => Result.Failure(new RequestError(RequestErrorKind.Conflict,
+            $"Member person-link confirmation is not implemented for {Id}."));
+
+    public Result CancelPersonLinkAdmission(OperationProvenance operation, ImmutableContentRef firstResponse,
+        VerifiedSourceProof<PersonMemberLinkRefused> source) => Result.Failure(new RequestError(RequestErrorKind.Conflict,
+            $"Member person-link cancellation is not implemented for {Id}."));
+
+    public Result ReleasePersonLink(OperationProvenance operation, ImmutableContentRef firstResponse,
+        VerifiedSourceProof<PersonUnlinkedFromMember> source) => Result.Failure(new RequestError(RequestErrorKind.Conflict,
+            $"Member person-link release is not implemented for {Id}."));
 
     void RequireOwnOperation(OperationProvenance operation)
     {
