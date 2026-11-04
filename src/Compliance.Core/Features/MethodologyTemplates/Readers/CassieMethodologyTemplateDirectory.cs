@@ -48,12 +48,14 @@ sealed class CassieMethodologyTemplateDirectory(CassieProjectionDatabase databas
         var key = CurrentProjectionKey;
         await using (var insert = CreateCommand($"""
             INSERT INTO {CassieMethodologyTemplateSchema.Versions}
-                (projection_key, version_id, template_id, version_number, published_ticks, separate_draft_line)
-            VALUES (@scope, @version, @template, @number, @ticks, @separate)
-            ON CONFLICT (projection_key, version_id) DO NOTHING
+                (row_key, version_key, projection_key, version_id, template_id, version_number, published_ticks, separate_draft_line)
+            VALUES (@row, @unique, @scope, @version, @template, @number, @ticks, @separate)
+            ON CONFLICT (row_key) DO NOTHING
             """))
         {
-            Bind(insert, ("scope", key), ("version", version.VersionId.ToString()), ("template", version.TemplateId.ToString()),
+            Bind(insert, ("row", RowKey(key, version.VersionId.ToString())),
+                ("unique", RowKey(key, $"{version.TemplateId}:{version.VersionNumber.ToString(CultureInfo.InvariantCulture)}")),
+                ("scope", key), ("version", version.VersionId.ToString()), ("template", version.TemplateId.ToString()),
                 ("number", version.VersionNumber), ("ticks", version.PublishedAt.UtcTicks), ("separate", version.SeparateDraftLine));
             _ = await insert.ExecuteNonQueryAsync(ct).ConfigureAwait(false);
         }
@@ -69,12 +71,12 @@ sealed class CassieMethodologyTemplateDirectory(CassieProjectionDatabase databas
         }
         await using (var insert = CreateCommand($"""
             INSERT INTO {CassieMethodologyTemplateSchema.Catalog}
-                (projection_key, template_id, first_published_ticks, separate_draft_line)
-            VALUES (@scope, @template, @ticks, @separate)
-            ON CONFLICT (projection_key, template_id) DO NOTHING
+                (row_key, projection_key, template_id, first_published_ticks, separate_draft_line)
+            VALUES (@row, @scope, @template, @ticks, @separate)
+            ON CONFLICT (row_key) DO NOTHING
             """))
         {
-            Bind(insert, ("scope", key), ("template", version.TemplateId.ToString()),
+            Bind(insert, ("row", RowKey(key, version.TemplateId.ToString())), ("scope", key), ("template", version.TemplateId.ToString()),
                 ("ticks", version.PublishedAt.UtcTicks), ("separate", version.SeparateDraftLine));
             _ = await insert.ExecuteNonQueryAsync(ct).ConfigureAwait(false);
         }
@@ -130,6 +132,9 @@ sealed class CassieMethodologyTemplateDirectory(CassieProjectionDatabase databas
             items[^1].TemplateId) : null;
         return new Page<MethodologyTemplateCatalogIdentity>(items, next);
     }
+
+    static string RowKey(string projectionKey, string identity) =>
+        $"{projectionKey.Length.ToString(CultureInfo.InvariantCulture)}:{projectionKey}{identity.Length.ToString(CultureInfo.InvariantCulture)}:{identity}";
 
     static MethodologyTemplatePublishedIdentity ReadVersion(DbDataReader row, Uuid versionId) => new(versionId,
         Uuid.Parse(row.GetString(0), CultureInfo.InvariantCulture), row.GetInt64(1),

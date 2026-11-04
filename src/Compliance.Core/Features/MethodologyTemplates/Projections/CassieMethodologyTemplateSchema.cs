@@ -9,11 +9,11 @@ static class CassieMethodologyTemplateSchema
     [
         """
         CREATE TABLE IF NOT EXISTS methodology_template_catalog (
+            row_key TEXT PRIMARY KEY,
             projection_key TEXT NOT NULL,
             template_id TEXT NOT NULL,
             first_published_ticks BIGINT NOT NULL,
-            separate_draft_line BOOLEAN NOT NULL,
-            PRIMARY KEY (projection_key, template_id)
+            separate_draft_line BOOLEAN NOT NULL
         )
         """,
         """
@@ -22,18 +22,19 @@ static class CassieMethodologyTemplateSchema
         """,
         """
         CREATE TABLE IF NOT EXISTS methodology_template_versions (
+            row_key TEXT PRIMARY KEY,
+            version_key TEXT NOT NULL,
             projection_key TEXT NOT NULL,
             version_id TEXT NOT NULL,
             template_id TEXT NOT NULL,
             version_number BIGINT NOT NULL,
             published_ticks BIGINT NOT NULL,
-            separate_draft_line BOOLEAN NOT NULL,
-            PRIMARY KEY (projection_key, version_id)
+            separate_draft_line BOOLEAN NOT NULL
         )
         """,
         """
         CREATE UNIQUE INDEX IF NOT EXISTS methodology_template_versions_number
-            ON methodology_template_versions (projection_key, template_id, version_number)
+            ON methodology_template_versions (version_key)
         """,
     ];
 }
