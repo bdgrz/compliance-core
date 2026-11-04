@@ -10,11 +10,11 @@ Tracking issue: [#1176](https://github.com/bdgrz/compliance-core/issues/1176).
 
 - Integration branch: `feat/proposed-domain-impl`.
 - Starting commit: `c6d16cdb` (Portia dependency prerequisite, issue #1175).
-- Dependency validation: Release build and format passed; 12 focused migration checks
-  passed. The first full run exposed processor-wrapper assertion changes. The latest
-  run passed 8,048 of 8,053 tests; the five remaining assertions were corrected and
-  passed their focused recheck. The full suite is running again. This is not a
-  green full-suite baseline yet.
+- Dependency validation: Release build and format passed; all 8,053 backend units
+  passed on `c6d16cdb`. Twelve focused migration cases and the five corrected processor
+  assertions also passed. Dependency PR #1177 is awaiting its final hosted result.
+  Isolated broker validation passed startup and failed two assertion probes; those
+  failures are parked explicitly in #1178, without an end-to-end acceptance claim.
 - Business scope includes documented aggregates, events, commands, handlers, reactors,
   read models, authorization and API behavior. Client implementation stays in client repositories.
 - Suspected design problems are recorded for later evaluation; they do not authorize
@@ -29,9 +29,9 @@ wiring requirements and edit only their assigned business slice.
 
 | Worker worktree | Exclusive business paths | First bounded batch | State |
 | --- | --- | --- | --- |
-| `workforce` | `Features/Workforce/**` in Common, Core, App and feature tests | Start, leave, return and end WorkRelationship lifecycle | Qualified; RED pending |
-| `assurance` | `Features/Remediation/**` in Common, Core, App and feature tests | Product Waiver request, independent review and revocation | Qualified; RED pending |
-| `methodology` | `Features/MethodologyTemplates/**` in Common, Core, App and feature tests | TemplateVersionApplication per-version entry outcomes | RED commit `badff5d7`; assembled execution pending |
+| `workforce` | `Features/Workforce/**` in Common, Core, App and feature tests | Start, leave, return and end WorkRelationship lifecycle | Assembled behavioral RED observed; GREEN/wiring pending |
+| `assurance` | `Features/Remediation/**` in Common, Core, App and feature tests | Product Waiver request, independent review and revocation | Assembled behavioral RED observed; GREEN/wiring pending |
+| `methodology` | `Features/MethodologyTemplates/**` in Common, Core, App and feature tests | TemplateVersionApplication per-version entry outcomes | Assembled behavioral RED observed; GREEN/wiring pending |
 
 Workers submit separate RED and GREEN commits. The coordinator observes focused
 RED before applying GREEN, wires the assembled batch, runs the required checks,
@@ -76,6 +76,14 @@ operations are not designed in this proposal; context-specific documented deferr
 remain explicit rather than silently counted as delivered.
 
 ## Batch evidence
+
+Batch 1 RED assembled WorkRelationship lifecycle, product Waiver and
+TemplateVersionApplication requirements: 78 focused cases executed, 54 failed and
+24 passed against the missing-behavior stubs. Failures include rejected valid
+lifecycle transitions, missing waiver facts and ignored lifecycle projection facts.
+Initial harness compilation exposed static-member analyzer diagnostics and a missing
+test import; those are harness failures, not behavioral RED evidence. No analyzer
+rules were changed. GREEN and all shared wiring remain pending.
 
 No proposed-domain batch has been accepted on the integration branch yet. Each
 accepted batch will record its requirement rows, behavior, source paths, RED and
