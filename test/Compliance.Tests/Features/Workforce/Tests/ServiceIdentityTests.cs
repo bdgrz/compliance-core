@@ -72,7 +72,9 @@ public sealed class ServiceIdentityTests
         var facts = scenario.PendingEvents.ToArray();
 
         // Act
-        var failure = identity.Revise(revision, Terms(status: status), Today, Author, Now.AddMinutes(2));
+        var failure = status == "active"
+            ? identity.Enable(revision, Author, Now.AddMinutes(2))
+            : identity.Disable(revision, null, Author, Now.AddMinutes(2));
 
         // Assert
         Assert.Equal(CommandFailureCode.StateConflict, Assert.IsType<CommandFailure>(failure).Code);
@@ -111,7 +113,13 @@ public sealed class ServiceIdentityTests
         };
 
         // Act
-        var failure = identity.Revise(revision, changed, Today, Author, Now.AddMinutes(2));
+        var failure = change switch
+        {
+            "owner" => identity.ChangeOwner(revision, changed.OwnerKind, changed.OwnerId, Author, Now.AddMinutes(2)),
+            "purpose" => identity.ChangePurpose(revision, changed.Purpose, Author, Now.AddMinutes(2)),
+            "review" => identity.Review(revision, changed.ReviewBy, null, Author, Now.AddMinutes(2)),
+            _ => throw new ArgumentOutOfRangeException(nameof(change)),
+        };
 
         // Assert
         Assert.Equal(CommandFailureCode.StateConflict, Assert.IsType<CommandFailure>(failure).Code);
@@ -124,7 +132,7 @@ public sealed class ServiceIdentityTests
     [InlineData(false, true)]
     [InlineData(true, false)]
     [InlineData(true, true)]
-    public void ShouldNoOpCanonicalRetryGivenRetiredIdentityAndElapsedReviewDate(bool initiallyRetired,
+    public void ShouldRefuseCanonicalNamedChangeGivenRetiredIdentityAndElapsedReviewDate(bool initiallyRetired,
         bool replayed)
     {
         // Arrange
@@ -136,10 +144,10 @@ public sealed class ServiceIdentityTests
         { DisplayName = " billing-exporter ", Purpose = " Nightly billing export ", Environment = " production " };
 
         // Act
-        var failure = identity.Revise(revision, same, Today.AddMonths(7), Author, Now.AddMonths(7));
+        var failure = identity.ChangePurpose(revision, same.Purpose, Author, Now.AddMonths(7));
 
         // Assert
-        Assert.Null(failure);
+        Assert.Equal(CommandFailureCode.StateConflict, Assert.IsType<CommandFailure>(failure).Code);
         Assert.Equal(revision, identity.Revision);
         Assert.Equal(facts, scenario.PendingEvents);
     }
@@ -186,14 +194,19 @@ public sealed class ServiceIdentityTests
             NativeFacts.Raised(retired).Append(legacy));
         var scenario = new AggregateScenario<ServiceIdentity>(identity);
         Assert.Equal(3, identity.Revision);
-        var changed = Terms(status: status) with { Purpose = "A changed legacy purpose" };
 
         // Act
-        var noOp = identity.Revise(3, Terms(), Today, Author, Now.AddMinutes(3));
-        var failure = identity.Revise(3, changed, Today, Author, Now.AddMinutes(3));
+        var retry = identity.Record(Terms(), Today, Author, Now.AddMinutes(3));
+        var failure = status switch
+        {
+            "active" => identity.Enable(3, Author, Now.AddMinutes(3)),
+            "disabled" => identity.Disable(3, null, Author, Now.AddMinutes(3)),
+            "retired" => identity.Retire(3, null, Author, Now.AddMinutes(3)),
+            _ => throw new ArgumentOutOfRangeException(nameof(status)),
+        };
 
         // Assert
-        Assert.Null(noOp);
+        Assert.True(retry.IsSuccess);
         Assert.Equal(CommandFailureCode.StateConflict, Assert.IsType<CommandFailure>(failure).Code);
         Assert.Equal(3, identity.Revision);
         Assert.Empty(scenario.PendingEvents);
@@ -202,7 +215,7 @@ public sealed class ServiceIdentityTests
     [Theory]
     [InlineData(false)]
     [InlineData(true)]
-    public void ShouldPreserveErrorPrecedenceWithoutFactGivenRetiredServiceIdentity(bool replayed)
+    public void ShouldPreserveVersionAndTerminalRefusalWithoutFactGivenRetiredServiceIdentity(bool replayed)
     {
         // Arrange
         var identity = Retired(false, replayed);
@@ -210,12 +223,12 @@ public sealed class ServiceIdentityTests
         var facts = scenario.PendingEvents.ToArray();
 
         // Act
-        var stale = identity.Revise(1, Terms(), Today, Author, Now.AddMinutes(2));
-        var invalid = identity.Revise(2, Terms("group", status: "retired"), Today, Author, Now.AddMinutes(2));
+        var stale = identity.ChangeOwner(1, "person", OwnerId, Author, Now.AddMinutes(2));
+        var terminal = identity.ChangeOwner(2, "group", OwnerId, Author, Now.AddMinutes(2));
 
         // Assert
         Assert.Equal(CommandFailureCode.VersionConflict, Assert.IsType<CommandFailure>(stale).Code);
-        Assert.Equal(CommandFailureCode.InvalidContent, Assert.IsType<CommandFailure>(invalid).Code);
+        Assert.Equal(CommandFailureCode.StateConflict, Assert.IsType<CommandFailure>(terminal).Code);
         Assert.Equal(2, identity.Revision);
         Assert.Equal(facts, scenario.PendingEvents);
     }
@@ -229,22 +242,21 @@ public sealed class ServiceIdentityTests
         var scenario = new AggregateScenario<ServiceIdentity>(identity);
 
         // Act
-        var disabled = identity.Revise(1, Terms(status: "disabled"), Today, Author, Now.AddMinutes(1));
-        var enabled = identity.Revise(2, Terms(), Today, Author, Now.AddMinutes(2));
-        var reassigned = identity.Revise(3, Terms("team"), Today, Author, Now.AddMinutes(3));
-        var retired = identity.Revise(4, Terms("team", status: "retired"), Today, Author, Now.AddMinutes(4));
-        var noOp = identity.Revise(5, Terms("team", status: "retired"), Today, Author, Now.AddMinutes(5));
+        var disabled = identity.Disable(1, null, Author, Now.AddMinutes(1));
+        var enabled = identity.Enable(2, Author, Now.AddMinutes(2));
+        var reassigned = identity.ChangeOwner(3, "team", OwnerId, Author, Now.AddMinutes(3));
+        var retired = identity.Retire(4, null, Author, Now.AddMinutes(4));
+        var retry = identity.Record(Terms(), Today, Author, Now.AddMinutes(5));
 
         // Assert
         Assert.Null(disabled);
         Assert.Null(enabled);
         Assert.Null(reassigned);
         Assert.Null(retired);
-        Assert.Null(noOp);
+        Assert.True(retry.IsSuccess);
         Assert.Equal(5, identity.Revision);
         Assert.Equal(5, scenario.PendingEvents.Count);
-        Assert.Equal("retired", Assert.IsType<ServiceIdentityRevised>(scenario.PendingEvents[^1])
-            .Terms.LifecycleStatus);
+        Assert.IsType<ServiceIdentityRetired>(scenario.PendingEvents[^1]);
     }
 
     static ServiceIdentity Retired(bool initiallyRetired, bool replayed)
@@ -253,7 +265,7 @@ public sealed class ServiceIdentityTests
         Assert.True(identity.Record(Terms(status: initiallyRetired ? "retired" : "active"), Today,
             Author, Now).IsSuccess);
         if (!initiallyRetired)
-            Assert.Null(identity.Revise(1, Terms(status: "retired"), Today, Author, Now.AddMinutes(1)));
+            Assert.Null(identity.Retire(1, null, Author, Now.AddMinutes(1)));
         return replayed
             ? NativeFacts.Replay(new ServiceIdentity(TenantId, identity.Id), NativeFacts.Raised(identity))
             : identity;
@@ -327,7 +339,7 @@ public sealed class ServiceIdentityTests
     }
 
     [Fact]
-    public void ShouldReviseOwnerAndRejectStaleGivenRecordedIdentity()
+    public void ShouldChangeOwnerAndRejectStaleGivenRecordedIdentity()
     {
         // Arrange
         var identity = New();
@@ -335,11 +347,10 @@ public sealed class ServiceIdentityTests
         Assert.True(identity.Record(Terms(), Today, Author, Now).IsSuccess);
 
         // Act
-        var moved = identity.Revise(1, Terms("team"), Today, Author, Now.AddMinutes(1));
-        var stale = identity.Revise(1, Terms(), Today, Author, Now.AddMinutes(2));
-        var absent = missing.Revise(1, Terms(), Today, Author, Now);
-        var retired = identity.Revise(2, Terms(status: "retired", reviewBy: Today.AddDays(-1)),
-            Today, Author, Now.AddMinutes(3));
+        var moved = identity.ChangeOwner(1, "team", OwnerId, Author, Now.AddMinutes(1));
+        var stale = identity.ChangeOwner(1, "person", OwnerId, Author, Now.AddMinutes(2));
+        var absent = missing.ChangeOwner(1, "person", OwnerId, Author, Now);
+        var retired = identity.Retire(2, null, Author, Now.AddMinutes(3));
 
         // Assert
         Assert.Null(moved);
@@ -424,14 +435,14 @@ public sealed class ServiceIdentityTests
     }
 
     [Fact]
-    public void ShouldAppendNothingGivenRevisionWithUnchangedTerms()
+    public void ShouldAppendNothingGivenNamedOwnerUnchanged()
     {
         // Arrange
         var identity = New();
         Assert.True(identity.Record(Terms(), Today, Author, Now).IsSuccess);
 
         // Act
-        var noOp = identity.Revise(1, Terms(), Today, Author, Now.AddMinutes(1));
+        var noOp = identity.ChangeOwner(1, "person", OwnerId, Author, Now.AddMinutes(1));
 
         // Assert
         Assert.Null(noOp);
@@ -440,7 +451,7 @@ public sealed class ServiceIdentityTests
     }
 
     [Fact]
-    public void ShouldAppendNoFactGivenInvalidStaleOrMissingRevision()
+    public void ShouldAppendNoFactGivenInvalidStaleOrMissingOwnerChange()
     {
         // Arrange
         var identity = New();
@@ -448,9 +459,9 @@ public sealed class ServiceIdentityTests
         Assert.True(identity.Record(Terms(), Today, Author, Now).IsSuccess);
 
         // Act
-        var invalid = identity.Revise(1, Terms("group"), Today, Author, Now.AddMinutes(1));
-        var stale = identity.Revise(7, Terms("team"), Today, Author, Now.AddMinutes(2));
-        var absent = missing.Revise(1, Terms(), Today, Author, Now);
+        var invalid = identity.ChangeOwner(1, "group", OwnerId, Author, Now.AddMinutes(1));
+        var stale = identity.ChangeOwner(7, "team", OwnerId, Author, Now.AddMinutes(2));
+        var absent = missing.ChangeOwner(1, "person", OwnerId, Author, Now);
 
         // Assert
         Assert.Equal(CommandFailureCode.MissingRecord, Assert.IsType<CommandFailure>(absent).Code);
@@ -467,7 +478,7 @@ public sealed class ServiceIdentityTests
         // Arrange
         var identity = New();
         Assert.True(identity.Record(Terms(), Today, Author, Now).IsSuccess);
-        Assert.Null(identity.Revise(1, Terms("team"), Today, Author, Now.AddMinutes(1)));
+        Assert.Null(identity.ChangeOwner(1, "team", OwnerId, Author, Now.AddMinutes(1)));
 
         // Act
         var retry = identity.Record(Terms(), Today, Author, Now);
@@ -508,9 +519,9 @@ public sealed class ServiceIdentityTests
         // Act
         var identity = new AggregateScenario<ServiceIdentity>(new ServiceIdentity(TenantId, id))
             .Given(new DomainEvent[] { recorded, revised }).Aggregate;
-        var stale = identity.Revise(1, Terms(), Today, Author, Now.AddMinutes(2));
-        var noOp = identity.Revise(2, Terms("team"), Today, Author, Now.AddMinutes(2));
-        var next = identity.Revise(2, Terms(status: "disabled"), Today, Author, Now.AddMinutes(2));
+        var stale = identity.ChangeOwner(1, "person", OwnerId, Author, Now.AddMinutes(2));
+        var noOp = identity.ChangeOwner(2, "team", OwnerId, Author, Now.AddMinutes(2));
+        var next = identity.Disable(2, null, Author, Now.AddMinutes(2));
 
         // Assert
         Assert.True(identity.IsCreated);

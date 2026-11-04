@@ -1,3 +1,4 @@
+using System.Text.Json;
 using System.Security.Claims;
 using Bdgrz.Compliance.Features.AccessControl.Models;
 using Bdgrz.Compliance.Features.Workforce.Aggregates;
@@ -71,10 +72,13 @@ public sealed class ServiceIdentityLegacyMutationTests
         var id = Uuid.CreateVersion4();
         var terms = new ServiceIdentityTerms("Bot", "bot", "Approved purpose", null, "active",
             "person", Uuid.CreateVersion4(), Today.AddMonths(6));
-        var original = new ServiceIdentity(tenant, id);
-        Assert.True(original.Record(terms, Today, Author, Now).IsSuccess);
-        Assert.Null(original.Revise(1, terms with { LifecycleStatus = "disabled" }, Today, Author, Now));
-        var replayed = NativeFacts.Replay(new ServiceIdentity(tenant, id), NativeFacts.Raised(original));
+        DomainEvent[] historical =
+        [
+            new ServiceIdentityRecorded(tenant, id, terms, Author, Now),
+            new ServiceIdentityRevised(tenant, id, 2, terms with { LifecycleStatus = "disabled" }, Author, Now),
+        ];
+        var replayed = NativeFacts.Replay(new ServiceIdentity(tenant, id), historical.Select((fact, index) =>
+            DomainEventSeed.Attach(RoundTrip(fact), id, (ulong)index + 1)));
 
         // Act
         var retry = replayed.Record(terms, Today, Author, Now);
@@ -84,5 +88,9 @@ public sealed class ServiceIdentityLegacyMutationTests
         Assert.Equal(2, replayed.Revision);
         Assert.Empty(new AggregateScenario<ServiceIdentity>(replayed).PendingEvents);
     }
+
+    static DomainEvent RoundTrip(DomainEvent fact) => (DomainEvent)JsonSerializer.Deserialize(
+        JsonSerializer.Serialize(fact, fact.GetType(), ComplianceCoreJsonContext.Default), fact.GetType(),
+        ComplianceCoreJsonContext.Default)!;
 
 }
