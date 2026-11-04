@@ -38,7 +38,7 @@ public sealed class PublishMethodologyTemplateVersionHandler(IAggregateExecutor 
             changed = prior.ChangedEntryKeys;
         else
         {
-            IReadOnlyList<MethodologyTemplateRecordContent> previous = line.PublishedEntriesContent is { } previousContent
+            var previous = line.PublishedEntriesContent is { } previousContent
                 ? await content.ReadJsonAsync<IReadOnlyList<MethodologyTemplateRecordContent>>(MethodologyTemplate.Realm,
                     previousContent, ct).ConfigureAwait(false) : [];
             changed = ChangedKeys(previous, entries);
