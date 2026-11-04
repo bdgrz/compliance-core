@@ -26,7 +26,8 @@ public sealed class WorkforceLifecycleObservationTests
         string after)
     {
         // Arrange
-        var directory = new CassieWorkforceObservationDirectory(database.Database);
+        await using var database = await CassieRepositoryTestDatabase.OpenAsync(CassieWorkforceSchema.Statements);
+        await using var directory = new CassieWorkforceObservationDirectory(database.Database);
         var recorded = Recorded(before);
         await ApplyAsync(directory, recorded.TenantId, recorded);
 
