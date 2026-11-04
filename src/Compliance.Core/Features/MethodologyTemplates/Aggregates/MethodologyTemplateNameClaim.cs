@@ -19,6 +19,7 @@ public sealed class MethodologyTemplateNameClaim : NameClaim
     public const string Area = "methodology-template-names";
     public const string CreationSchema = "methodology-template-creation-intent.v1";
     public const string ConflictSchema = "methodology-template-creation-conflict.v1";
+    public const string LegacyConflictSchema = "methodology-template-legacy-creation-conflict.v1";
     public const string CreationCommandKind = "CreateMethodologyTemplateV3";
     public const string RefusalCommandKind = "RefuseMethodologyTemplateCreation";
     public const string ProcessId = "methodology-template-creation";
@@ -91,8 +92,20 @@ public sealed class MethodologyTemplateNameClaim : NameClaim
 
     public Result RefuseLegacyCreation(OperationProvenance operation, MethodologyTemplateNameClaimed claim,
         MethodologyTemplateCreationIntent intent, MethodologyTemplateCreated existing,
-        MethodologyTemplateLegacyCreationConflictProofs proofs, ImmutableContentRef proofContent) =>
-        Invalid($"Name {NormalizedName} legacy identity refusal is not implemented.");
+        MethodologyTemplateLegacyCreationConflictProofs proofs, ImmutableContentRef proofContent)
+    {
+        if (!MatchesAdmission(claim, intent) || existing.SubjectId != intent.TemplateId || existing.TenantId != Uuid.Empty ||
+            existing.Operation.CommandKind != "CreateMethodologyTemplate" || !Proof(proofs.Claim, claim, Stream) ||
+            !Proof(proofs.ExistingCreation, existing, claim.Owner) || !Manifest(proofs, proofContent, LegacyConflictSchema) ||
+            operation.RootOperationId != claim.Operation.RootOperationId ||
+            !RefusalOperation(operation, claim.Owner, proofContent, existing.Metadata.EventId))
+            return Invalid("A legacy identity refusal requires its exact committed original creation and admitted name.");
+        if (Replay(operation) is { } replay)
+            return replay;
+        RaiseEvent(new MethodologyTemplateCreationRefused(claim.Owner, 0, claim.Generation, claim.Intent, proofContent,
+            operation, claim.Metadata.EventId, existing.Metadata.EventId, IsHeldBy(claim.Owner, claim.Generation), RefusalReason));
+        return Result.Success;
+    }
 
     // The generic tenant-family signatures do not carry the original response or the two exact conflict proofs.
     public override Result Claim(OperationProvenance operation, EventStreamAddress holder, long expectedRevision,
@@ -111,7 +124,8 @@ public sealed class MethodologyTemplateNameClaim : NameClaim
     void Apply(MethodologyTemplateCreationRefused fact)
     {
         if (!HolderScope(fact.Owner) || fact.Revision != 0 || fact.Generation <= 0 ||
-            !Reference(fact.Intent, CreationSchema) || !Reference(fact.SourceProofs, ConflictSchema) ||
+            !Reference(fact.Intent, CreationSchema) ||
+            (!Reference(fact.SourceProofs, ConflictSchema) && !Reference(fact.SourceProofs, LegacyConflictSchema)) ||
             fact.ClaimEventId == Uuid.Empty || fact.ExistingCreationEventId == Uuid.Empty || fact.Reason != RefusalReason ||
             !RefusalOperation(fact.Operation, fact.Owner, fact.SourceProofs, fact.ExistingCreationEventId))
             throw new InvalidOperationException("A creation refusal must preserve its exact source-bound losing claim outcome.");
@@ -130,15 +144,17 @@ public sealed class MethodologyTemplateNameClaim : NameClaim
         operation.AuthoredIntentSha256 == intent.Sha256 && operation.AcceptedAt != default &&
         operation.Actor.Kind == "platform_operator" && Uuid.TryParse(operation.Actor.Id, out var actor) && actor != Uuid.Empty;
 
-    bool RefusalBinding(OperationProvenance operation, MethodologyTemplateNameClaimed claim,
-        MethodologyTemplateCreationIntent intent, MethodologyTemplateCreatedV4 existing,
-        MethodologyTemplateCreationConflictProofs proofs, ImmutableContentRef proofContent) =>
+    internal bool MatchesAdmission(MethodologyTemplateNameClaimed claim, MethodologyTemplateCreationIntent intent) =>
         ValidIntent(intent) && NameNormalization.Normalize(intent.Name) == NormalizedName &&
         claim.Owner == new MethodologyTemplate(intent.TemplateId).Stream && claim.Revision == 0 && claim.Generation > 0 &&
         claim.Metadata.AggregateId == Id && claim.Generation == (long)claim.Metadata.AggregateVersion &&
         CreationBinding(claim.Operation, claim.Owner, claim.Intent) && claim.Operation.LogicalId == intent.CommandId &&
-        claim.Operation.Actor.Id == intent.CreatedBy.ToString() && Manifest(intent, claim.Intent, CreationSchema) &&
-        existing.TemplateId == intent.TemplateId && existing.CreatedBy != Uuid.Empty &&
+        claim.Operation.Actor.Id == intent.CreatedBy.ToString() && Manifest(intent, claim.Intent, CreationSchema);
+
+    bool RefusalBinding(OperationProvenance operation, MethodologyTemplateNameClaimed claim,
+        MethodologyTemplateCreationIntent intent, MethodologyTemplateCreatedV4 existing,
+        MethodologyTemplateCreationConflictProofs proofs, ImmutableContentRef proofContent) =>
+        MatchesAdmission(claim, intent) && existing.TemplateId == intent.TemplateId && existing.CreatedBy != Uuid.Empty &&
         Text(existing.Name, 200) && Text(existing.Purpose, 2000) &&
         (existing.Name != intent.Name || existing.Purpose != intent.Purpose || existing.CreatedBy != intent.CreatedBy) &&
         Proof(proofs.Claim, claim, Stream) && Proof(proofs.ExistingCreation, existing, claim.Owner) &&

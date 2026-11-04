@@ -145,12 +145,14 @@ public sealed class MethodologyTemplateNameClaimTests
         Assert.Equal(refusal.Content, fact.SourceProofs);
     }
 
-    [Fact]
-    public void ShouldRecordRefusalAndRetainUsedNameGivenSameNameWithChangedCreationIntent()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void ShouldRecordRefusalAndRetainUsedNameGivenSameNameWithChangedCreationIntent(bool differentCase)
     {
         // Arrange
         var claim = Claimed();
-        var refusal = Refusal(claim, Existing(claim.Intent, Name));
+        var refusal = Refusal(claim, Existing(claim.Intent, differentCase ? Name.ToUpperInvariant() : Name));
         var scenario = Scenario(refusal.Operation.LogicalId).Given(claim.Scenario.PendingEvents.ToArray());
 
         // Act

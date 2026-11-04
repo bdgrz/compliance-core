@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using Cntryl.Portia;
+using Cntryl.Portia.Testing;
 using Microsoft.Extensions.DependencyInjection;
 using Bdgrz.Compliance.Features.Content.Contracts;
 using Bdgrz.Compliance.Features.Content.Persistence;
@@ -197,6 +198,70 @@ public sealed class MethodologyTemplateCreationWorkflowTests
         // Assert
         Assert.False(owner.IsLineCreated);
         Assert.Equal(0UL, owner.Version);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task ShouldRefuseWithoutEffectGivenPersonalCallerToInternalCreationOrRefusal(bool refusal)
+    {
+        // Arrange
+        await using var fixture = new Fixture();
+        var request = fixture.Request("Firm methodology");
+        Assert.True((await fixture.SendAsync(request)).IsSuccess);
+        var claim = await fixture.ClaimAsync(request.Name);
+        var create = Fixture.Creation(claim);
+        var existingId = Uuid.CreateVersion4();
+        IRequest command = refusal ? new RefuseMethodologyTemplateCreation(request.TemplateId, create.Claim,
+            create.ClaimPosition, new NativeFactReference(new MethodologyTemplate(request.TemplateId).Stream, existingId, 1), 0,
+            Uuid.CreateVersion5(create.Claim.EventId, $"{nameof(RefuseMethodologyTemplateCreation)}:{existingId}")) : create;
+
+        // Act
+        var result = await fixture.Bus.DispatchAsync(command, new RequestDispatchContext(Person(fixture.Operator),
+            new McpInvocation("methodology.internal")));
+        var owner = await fixture.Source.Reader.HydrateAsync(new MethodologyTemplate(request.TemplateId));
+        var facts = await fixture.NameFactsAsync(request.Name);
+
+        // Assert
+        Assert.False(result.IsSuccess);
+        Assert.Equal(RequestErrorKind.Forbidden, result.Error.Kind);
+        Assert.False(owner.IsLineCreated);
+        Assert.Empty(facts.OfType<MethodologyTemplateCreationRefused>());
+    }
+
+    [Fact]
+    public async Task ShouldPropagateRefusalFailureAndKeepClaimUntilRetryGivenDownstreamOutcomeCannotCommit()
+    {
+        // Arrange
+        await using var fixture = new Fixture();
+        var winner = fixture.Request("Original name");
+        var loser = fixture.Request("Losing name") with { TemplateId = winner.TemplateId };
+        Assert.True((await fixture.SendAsync(winner)).IsSuccess);
+        Assert.True((await fixture.SendAsync(loser)).IsSuccess);
+        Assert.True((await fixture.CreateAsync(await fixture.ClaimAsync(winner.Name))).IsSuccess);
+        var claim = await fixture.ClaimAsync(loser.Name);
+        var failure = new RequestError(RequestErrorKind.Conflict, "Outcome source is pending.", true);
+        var responses = new ReactorScenario().RespondTo<RefuseMethodologyTemplateCreation>(Result.Failure(failure));
+        var handler = new CreateMethodologyTemplateLineHandler(fixture.Source.Executor,
+            new EventStoreSourceFactResolver(fixture.Source.Events), fixture.Source.Content,
+            new MethodologyTemplateLineReader(new EventStoreSnapshotReader(fixture.Source.Events), fixture.Source.Content), responses.Requests);
+
+        // Act
+        var refused = await handler.HandleAsync(new RequestContext<CreateMethodologyTemplateLine>(Fixture.Creation(claim),
+            RequestActor.System), CancellationToken.None);
+        var held = await fixture.NameAsync(loser.Name);
+        var retried = await fixture.CreateAsync(claim);
+        var current = await fixture.NameAsync(loser.Name);
+        var facts = await fixture.NameFactsAsync(loser.Name);
+
+        // Assert
+        Assert.False(refused.IsSuccess);
+        Assert.Same(failure, refused.Error);
+        Assert.Equal(new MethodologyTemplate(loser.TemplateId).Stream, held.Holder);
+        Assert.True(retried.IsSuccess, retried.Error?.Message);
+        Assert.Null(current.Holder);
+        var sent = Assert.Single(responses.SentRequests.OfType<RefuseMethodologyTemplateCreation>());
+        Assert.Equal(sent.CommandId, Assert.Single(facts.OfType<MethodologyTemplateCreationRefused>()).Operation.LogicalId);
     }
 
     [Theory]

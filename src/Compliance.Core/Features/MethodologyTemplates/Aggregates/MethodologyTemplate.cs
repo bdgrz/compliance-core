@@ -45,6 +45,8 @@ using Bdgrz.Compliance.Features.MethodologyTemplates.Events;
 using Bdgrz.Compliance.Features.MethodologyTemplates.Models;
 using Bdgrz.Compliance.Features.MethodologyTemplates.Rules;
 using Bdgrz.Compliance.Features.Proofs.Models;
+using Bdgrz.Compliance.Features.Kernel.Services;
+using Bdgrz.Compliance.Features.SourceFacts.History;
 namespace Bdgrz.Compliance.Features.MethodologyTemplates.Aggregates;
 
 /// <summary>The compact current version/publication authority of a platform template; history is not command state.</summary>
@@ -242,7 +244,9 @@ public sealed class MethodologyTemplate : Aggregate
     internal MethodologyTemplateDraftStarted? DraftStartFor(Uuid draftId) => _lineDraftStarts.GetValueOrDefault(draftId);
     internal MethodologyTemplateVersionPublishedV4? PublicationFor(Uuid draftId) => _linePublications.GetValueOrDefault(draftId);
 
-    public Result CreateLine(string name, string purpose, Uuid createdBy)
+    public Result CreateLine(string name, string purpose, Uuid createdBy) => CreateLine(name, purpose, createdBy, null);
+
+    Result CreateLine(string name, string purpose, Uuid createdBy, SourceFactProof<MethodologyTemplateNameClaimed>? proof)
     {
         if (!LineText(name, 200) || !LineText(purpose, 2000) || createdBy == Uuid.Empty)
             return InvalidLine("A template line requires a name, purpose and personal creator.");
@@ -253,12 +257,20 @@ public sealed class MethodologyTemplate : Aggregate
                 ? Result.Success : Conflict("The template identity already names another line.");
         if (_revision != 0)
             return Conflict("A legacy template identity cannot be recreated as a separate-draft line.");
-        RaiseEvent(new MethodologyTemplateCreatedV4(Id, name, purpose, createdBy));
+        RaiseEvent(new MethodologyTemplateCreatedV4(Id, name, purpose, createdBy, proof));
         return Result.Success;
     }
 
-    public Result CreateLineFromClaim(string name, string purpose, Uuid createdBy,
-        SourceFactProof<MethodologyTemplateNameClaimed> proof) => Missing();
+    public Result CreateLineFromClaim(MethodologyTemplateNameClaimed claim, MethodologyTemplateCreationIntent intent,
+        SourceFactProof<MethodologyTemplateNameClaimed> proof)
+    {
+        if (!MethodologyTemplateNameClaim.ValidIntent(intent) || intent.TemplateId != Id ||
+            !new MethodologyTemplateNameClaim(intent.Name).MatchesAdmission(claim, intent) ||
+            !AdmissionReference(proof, intent.Name) || proof.EventId != claim.Metadata.EventId ||
+            proof.OwnerRevision != claim.Metadata.AggregateVersion || proof.PayloadSha256 != ContentDigest.Sha256(claim, typeof(MethodologyTemplateNameClaimed)))
+            return InvalidLine("A template line must preserve its exact admitted name, original operator and verified claim source.");
+        return CreateLine(intent.Name, intent.Purpose, intent.CreatedBy, proof);
+    }
 
     public Result StartDraft(Uuid draftId, long basedOnVersion, IReadOnlyList<MethodologyTemplateRecordContent> entries,
         ImmutableContentRef content, Uuid startedBy)
@@ -340,7 +352,8 @@ public sealed class MethodologyTemplate : Aggregate
     void ApplyLine(MethodologyTemplateCreatedV4 fact)
     {
         if (fact.TemplateId != Id || _revision != 0 || !LineText(fact.Name, 200) ||
-            !LineText(fact.Purpose, 2000) || fact.CreatedBy == Uuid.Empty)
+            !LineText(fact.Purpose, 2000) || fact.CreatedBy == Uuid.Empty ||
+            fact.NameAdmission is { } proof && !AdmissionReference(proof, fact.Name))
             throw new InvalidOperationException("A separate-draft methodology line starts idle once with its own identity.");
         _lineCreated = true;
         _lineName = fact.Name;
@@ -414,6 +427,13 @@ public sealed class MethodologyTemplate : Aggregate
 
     internal static Uuid PublishedVersionIdentity(Uuid templateId, long version) =>
         Uuid.CreateVersion5(templateId, $"methodology-template-version:{version}");
+
+    static bool AdmissionReference(SourceFactProof<MethodologyTemplateNameClaimed> proof, string name) =>
+        proof.Source == MethodologyTemplateNameClaim.AddressOf(name) && proof.EventId != Uuid.Empty && proof.OwnerRevision > 0 &&
+        proof.PhysicalPosition >= proof.OwnerRevision - 1 && proof.EventKind == EventKind.Of(typeof(MethodologyTemplateNameClaimed)) &&
+        proof.PayloadSha256 is { Length: 64 } hash && hash.All(Uri.IsHexDigit) && proof.RequiredFacts is { } required &&
+        required.ContentId != Uuid.Empty && required.Schema == SourceFactProofs.RequiredFactsSchema &&
+        required.MediaType == "application/json" && required.Bytes > 0 && required.Sha256 is { Length: 64 } digest && digest.All(Uri.IsHexDigit);
 
     static bool LineText(string? text, int maximum) => text is { Length: > 0 } && text.Length <= maximum &&
         !string.IsNullOrWhiteSpace(text);
