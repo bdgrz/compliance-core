@@ -364,6 +364,64 @@ public sealed class ServiceIdentityNamedOperationsTests
         Assert.Equal(2, new AggregateScenario<ServiceIdentity>(identity).PendingEvents.Count);
     }
 
+    [Theory]
+    [InlineData("review")]
+    [InlineData("disable")]
+    [InlineData("retire")]
+    public void ShouldRefuseWithoutFactGivenOversizedNamedExplanation(string operation)
+    {
+        // Arrange
+        var identity = Recorded();
+        var explanation = new string('x', 1001);
+
+        // Act
+        var failure = operation switch
+        {
+            "review" => identity.Review(1, Today.AddYears(1), explanation, Author, Now),
+            "disable" => identity.Disable(1, explanation, Author, Now),
+            "retire" => identity.Retire(1, explanation, Author, Now),
+            _ => throw new ArgumentOutOfRangeException(nameof(operation)),
+        };
+
+        // Assert
+        Assert.Equal(CommandFailureCode.InvalidContent, Assert.IsType<CommandFailure>(failure).Code);
+        Assert.Single(new AggregateScenario<ServiceIdentity>(identity).PendingEvents);
+        Assert.Equal(1, identity.Revision);
+    }
+
+    [Theory]
+    [InlineData("review")]
+    [InlineData("disable")]
+    [InlineData("retire")]
+    public void ShouldPreserveExplanationGivenMaximumNamedTextLength(string operation)
+    {
+        // Arrange
+        var identity = Recorded();
+        var explanation = new string('x', 1000);
+
+        // Act
+        var failure = operation switch
+        {
+            "review" => identity.Review(1, Today.AddYears(1), explanation, Author, Now),
+            "disable" => identity.Disable(1, explanation, Author, Now),
+            "retire" => identity.Retire(1, explanation, Author, Now),
+            _ => throw new ArgumentOutOfRangeException(nameof(operation)),
+        };
+
+        // Assert
+        Assert.Null(failure);
+        var fact = new AggregateScenario<ServiceIdentity>(identity).PendingEvents[^1];
+        var actual = fact switch
+        {
+            ServiceIdentityReviewed review => review.Notes,
+            ServiceIdentityDisabled disabled => disabled.Reason,
+            ServiceIdentityRetired retired => retired.Reason,
+            _ => throw new InvalidOperationException("Expected named explanation."),
+        };
+        Assert.Equal(explanation, actual);
+        Assert.Equal(2, identity.Revision);
+    }
+
     static ServiceIdentity New() => new(Tenant, Uuid.CreateVersion4());
 
     static ServiceIdentity Recorded(string status = "active")
