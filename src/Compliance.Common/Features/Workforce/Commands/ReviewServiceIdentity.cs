@@ -6,4 +6,4 @@ namespace Bdgrz.Compliance.Features.Workforce.Commands;
 
 [Discriminator("bdgrz.workforce.service-identity.review", 1)]
 public sealed record ReviewServiceIdentity(Uuid TenantId, Uuid ServiceIdentityId, long ExpectedRevision, DateOnly NextReviewDate, string? Notes = null)
-    : IRequest, IWorkforceRequest, IClientManagementMutationRequest;
+    : IRequest, IWorkforceRequest, IClientManagementMutationRequest, ICallable;
