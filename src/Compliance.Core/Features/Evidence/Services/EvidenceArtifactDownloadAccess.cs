@@ -60,7 +60,7 @@ sealed class EvidenceArtifactDownloadAccess(IAccessGrantScopePermissionAuthorize
                 !await advisorSources.CanReadSelectedSourceAsync(tenantId, scopedProgram,
                     activeHandoff, source, userId, ct).ConfigureAwait(false))
                 return Missing();
-            var exactSource = await sourceVersions.RequireCurrentAsync(tenantId, scopedProgram,
+            var exactSource = await sourceVersions.RequireRetainedAsync(tenantId, scopedProgram,
                 [source], ct).ConfigureAwait(false);
             return exactSource.IsSuccess ? Result.Success : Result.Failure(exactSource.Error);
         }
