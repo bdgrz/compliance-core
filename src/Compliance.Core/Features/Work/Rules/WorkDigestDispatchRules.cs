@@ -104,7 +104,7 @@ public sealed class WorkDigestDispatchRules
 
     public WorkDigestDispatchStatusView? FindPending() =>
         _dispatches.Values.Where(static state => state.Status is
-                Scheduled or InFlight or RetryPending)
+                Scheduled or InFlight or RetryPending or Unknown)
             .OrderBy(static state => state.ScheduledAt)
             .FirstOrDefault()?.View(_tenantId, Id);
 
@@ -143,6 +143,21 @@ public sealed class WorkDigestDispatchRules
     public bool RecordInterruptedAttempt(DateOnly weekOf, DateTimeOffset recordedAt) =>
         _dispatches.TryGetValue(weekOf, out var state) && state.Status == InFlight &&
         Record(weekOf, Unknown, recordedAt, null, "worker_interrupted");
+
+    public bool RetryUnknownAutomatically(DateOnly weekOf, DateTimeOffset now,
+        int maximumAttempts, TimeSpan retryDelay)
+    {
+        if (!_dispatches.TryGetValue(weekOf, out var state) || state.Status != Unknown ||
+            now < state.LastUpdatedAt || retryDelay <= TimeSpan.Zero || maximumAttempts <= 0)
+            return false;
+        if (now >= state.RetryDeadline || !WorkDigestSchedule.IsCurrentWeek(weekOf, state.TimeZoneId, now) ||
+            state.Attempts >= maximumAttempts)
+            return RecordOutcome(weekOf, RetryExhausted, now, null, "unknown_retry_window_ended");
+        var retryAt = state.LastUpdatedAt + retryDelay;
+        if (retryAt >= state.RetryDeadline)
+            return RecordOutcome(weekOf, RetryExhausted, now, null, "unknown_retry_window_ended");
+        return RecordOutcome(weekOf, RetryPending, now, retryAt, "automatic_unknown_retry");
+    }
 
     public bool AuthorizeUnknownRetry(DateOnly weekOf, Uuid authorizedBy,
         string evidenceReference, string rationale, DateTimeOffset authorizedAt,

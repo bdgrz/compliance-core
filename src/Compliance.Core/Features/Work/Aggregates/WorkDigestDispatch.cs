@@ -120,6 +120,8 @@ public sealed class WorkDigestDispatch : Aggregate
     public bool RecordPermanentRejection(DateOnly week, DateTimeOffset at, string code) => Change(week, rules => rules.RecordPermanentRejection(week, at, code));
     public bool RecordUnknown(DateOnly week, DateTimeOffset at, string code) => Change(week, rules => rules.RecordUnknown(week, at, code));
     public bool RecordInterruptedAttempt(DateOnly week, DateTimeOffset at) => Change(week, rules => rules.RecordInterruptedAttempt(week, at));
+    public bool RetryUnknownAutomatically(DateOnly week, DateTimeOffset at, int maximumAttempts, TimeSpan retryDelay) =>
+        Change(week, rules => rules.RetryUnknownAutomatically(week, at, maximumAttempts, retryDelay));
     internal Result<WorkDigestRetryPreparation> PrepareRetry(AuthorizeWorkDigestUnknownRetry request,
         OperationProvenance operation, int maximumAttempts)
     {
