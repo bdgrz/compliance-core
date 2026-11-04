@@ -97,7 +97,7 @@ public sealed class RiskGovernanceSnapshot(Uuid tenantId, Uuid programId,
     public Uuid? SubmitterMemberId(Uuid riskId, Uuid actionId, Uuid submissionId) =>
         Record(riskId).Submitters.TryGetValue((actionId, submissionId), out var memberId) ? memberId : null;
 
-    /// <summary>Triggers not yet answered by an inherent assessment recorded at or after them.</summary>
+    /// <summary>Triggers not yet answered by a residual assessment recorded after them.</summary>
     public IReadOnlyList<RiskReassessmentTriggerView> OpenTriggers(Uuid riskId,
         IReadOnlyList<RiskAssessmentView> assessments)
     {
@@ -126,8 +126,8 @@ public sealed class RiskGovernanceSnapshot(Uuid tenantId, Uuid programId,
     static RiskReassessmentTriggerView WithStatus(RiskReassessmentTriggerView trigger,
         IReadOnlyList<RiskAssessmentView> assessments) => trigger with
         {
-            Status = assessments.Any(assessment => assessment.Phase == RiskEvaluation.Inherent &&
-                assessment.AssessedAt >= trigger.RaisedAt)
+            Status = assessments.Any(assessment => assessment.Phase == RiskEvaluation.Residual &&
+                assessment.AssessedAt > trigger.RaisedAt)
             ? "resolved"
             : "open",
         };
