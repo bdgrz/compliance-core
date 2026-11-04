@@ -134,6 +134,11 @@ public sealed partial class WorkQueueReader(IAggregateReader reader, WorkAssignm
         CancellationToken ct) =>
         ReadAsync(tenantId, programId, actor, horizonDays, null, selectionDate, ct);
 
+    /// <summary>Internal source-checked scheduler read; it is never a caller visibility grant.</summary>
+    internal ValueTask<Result<WorkQueueSnapshot>> ReadForEscalationAsync(Uuid tenantId, Uuid programId,
+        Uuid? workItemId, CancellationToken ct) =>
+        ReadAsync(tenantId, programId, default, DefaultHorizonDays, workItemId, null, ct, scheduler: true);
+
     /// <summary>Resolves one work item the actor may see, loading only that item's eligibility.</summary>
     internal async ValueTask<Result<(WorkQueueSnapshot Snapshot, WorkQueueEntry Entry)>> FindAsync(
         Uuid tenantId, Uuid programId, OperationsActor actor, Uuid workItemId,
@@ -151,11 +156,11 @@ public sealed partial class WorkQueueReader(IAggregateReader reader, WorkAssignm
 
     async ValueTask<Result<WorkQueueSnapshot>> ReadAsync(Uuid tenantId, Uuid programId,
         OperationsActor actor, int horizonDays, Uuid? workItemId,
-        DateOnly? todayOverride, CancellationToken ct)
+        DateOnly? todayOverride, CancellationToken ct, bool scheduler = false)
     {
         try
         {
-            return await ReadCoreAsync(tenantId, programId, actor, horizonDays, workItemId, todayOverride, ct).ConfigureAwait(false);
+            return await ReadCoreAsync(tenantId, programId, actor, horizonDays, workItemId, todayOverride, ct, scheduler).ConfigureAwait(false);
         }
         catch (ImmutableContentIntegrityException error)
         {
@@ -166,7 +171,7 @@ public sealed partial class WorkQueueReader(IAggregateReader reader, WorkAssignm
 
     async ValueTask<Result<WorkQueueSnapshot>> ReadCoreAsync(Uuid tenantId, Uuid programId,
         OperationsActor actor, int horizonDays, Uuid? workItemId,
-        DateOnly? todayOverride, CancellationToken ct)
+        DateOnly? todayOverride, CancellationToken ct, bool scheduler)
     {
         var captured = await queueConsistency.CaptureAsync(tenantId, ct).ConfigureAwait(false);
         if (!captured.IsSuccess)
@@ -251,7 +256,7 @@ public sealed partial class WorkQueueReader(IAggregateReader reader, WorkAssignm
                 return Result<WorkQueueSnapshot>.Failure(decisions.Error);
             candidates.AddRange(decisions.Value);
         }
-        var manages = await authority.ManagesProgramAsync(tenantId, actor, programId, ct)
+        var manages = !scheduler && await authority.ManagesProgramAsync(tenantId, actor, programId, ct)
             .ConfigureAwait(false);
         var entries = new List<WorkQueueEntry>();
         foreach (var candidate in candidates)
@@ -274,6 +279,11 @@ public sealed partial class WorkQueueReader(IAggregateReader reader, WorkAssignm
             {
                 IsOrphaned = accessReviewWork && !responsibilityEligible,
             };
+            if (scheduler)
+            {
+                entries.Add(new WorkQueueEntry(candidate, state, legacyState, item, false, false, assignment));
+                continue;
+            }
             var eligible = await IsEligibleAsync(tenantId, candidate, actor.MemberId, ct)
                 .ConfigureAwait(false);
             var sourceVisible = await CanReadSourceAsync(tenantId, candidate, actor.MemberId, ct)
@@ -487,17 +497,16 @@ public sealed partial class WorkQueueReader(IAggregateReader reader, WorkAssignm
         return active;
     }
 
-    /// <summary>The item as read. Seven days overdue escalates by system rule.</summary>
+    /// <summary>The item as read; escalation is visible only after its owning fact commits.</summary>
     public static WorkQueueItemView Compose(WorkCandidate candidate, WorkAssignmentState state,
         Uuid? assignee, DateOnly today)
     {
         ArgumentNullException.ThrowIfNull(candidate);
         ArgumentNullException.ThrowIfNull(state);
         var escalatedBy = state.Escalated
-            ? "member"
-            : candidate.DueOn is { } due && today.DayNumber - due.DayNumber >= SystemEscalationDays
-                ? "system"
-                : null;
+            ? state.History.LastOrDefault(entry => entry.Action == WorkItemAssignment.Escalate)?.By.Kind == "system_process"
+                ? "system" : "member"
+            : null;
         return new WorkQueueItemView(candidate.WorkItemId, candidate.Kind, candidate.SourceId,
             candidate.ControlId, candidate.FindingId, candidate.Summary, candidate.Reason,
             candidate.DueOn, candidate.DueOn < today, candidate.Materiality,

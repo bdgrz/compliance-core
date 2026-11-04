@@ -38,6 +38,7 @@ public sealed class WorkReminderTests
         // Arrange
         var fixture = await OperationsFixture.CreateAsync();
         await WorkTestData.AddActionsAsync(fixture, fixture.OwnerMemberId, fixture.Today.AddDays(-9));
+        await WorkAutomaticEscalationTests.RunAsync(fixture);
 
         // Act
         var reminders = await fixture.AsAsync(fixture.LeadUserId,

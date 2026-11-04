@@ -217,7 +217,7 @@ public sealed class WorkQueueTests
             new GetWorkDigest(fixture.TenantId, fixture.ProgramId));
 
         // Assert
-        Assert.Equal(new WorkCountsView(4, 2, 1, 1), queue.Counts);
+        Assert.Equal(new WorkCountsView(4, 2, 1, 0), queue.Counts);
         Assert.Equal(4, queue.Items.Count);
         var item = Assert.Single(queue.Items, item => item.Kind == "evidence_request");
         Assert.Equal(evidence.EvidenceRequestId, item.SourceId);

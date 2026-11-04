@@ -2,6 +2,15 @@ using Bdgrz.Compliance.Features.Work.Aggregates;
 using Bdgrz.Compliance.Features.Work.Events;
 using Cntryl.Portia;
 using Cntryl.Portia.Testing;
+using Bdgrz.Compliance.Features.Work.Commands;
+using Bdgrz.Compliance.Features.Work.Queries;
+using Bdgrz.Compliance.Features.Work.Readers;
+using Bdgrz.Compliance.Features.Work.Services;
+using Bdgrz.Compliance.Features.Programs.Readers;
+using Bdgrz.Compliance.Features.Tenants.Readers;
+using Bdgrz.Compliance.Features.Tenants.Contracts;
+using Bdgrz.Compliance.Tests.Features.Operations.Tests;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Bdgrz.Compliance.Tests.Features.Work.Tests;
 
@@ -71,6 +80,45 @@ public sealed class WorkAutomaticEscalationTests
         Assert.False(foreign.IsSuccess);
         Assert.Empty(new AggregateScenario<WorkItemAssignment>(owner).PendingEvents);
         Assert.Equal(0, owner.Revision);
+    }
+
+    [Fact]
+    public async Task ShouldPreserveRecordedAssigneeAndOneFactGivenRepeatedSchedulerPass()
+    {
+        // Arrange
+        var fixture = await OperationsFixture.CreateAsync();
+        await using var provider = fixture.Provider;
+        await WorkTestData.AddActionsAsync(fixture, fixture.OwnerMemberId, fixture.Today.AddDays(-7));
+        var item = Assert.Single((await fixture.AsAsync(fixture.OwnerUserId,
+            new ListWork(fixture.TenantId, fixture.ProgramId))).Items);
+        Assert.False(item.Escalated);
+        await fixture.AsAsync(fixture.LeadUserId, new AssignWorkItem(Uuid.CreateVersion4(),
+            fixture.TenantId, fixture.ProgramId, item.WorkItemId, 0, fixture.BackupMemberId));
+
+        // Act
+        await RunAsync(fixture);
+        await RunAsync(fixture);
+        var detail = await fixture.AsAsync(fixture.LeadUserId,
+            new GetWorkItem(fixture.TenantId, fixture.ProgramId, item.WorkItemId));
+
+        // Assert
+        Assert.True(detail.Item.Escalated);
+        Assert.Equal("system", detail.Item.EscalatedBy);
+        Assert.Equal(fixture.BackupMemberId, detail.Item.AssigneeMemberId);
+        Assert.Equal(2, detail.Item.AssignmentRevision);
+        Assert.Single(detail.History, value => value.Action == WorkItemAssignment.Escalate);
+        Assert.Equal("system_process", detail.History[^1].By.Kind);
+    }
+
+    internal static async Task RunAsync(OperationsFixture fixture)
+    {
+        await using var scope = fixture.Provider.CreateAsyncScope();
+        var services = scope.ServiceProvider;
+        var sweep = new WorkEscalationSweep(services.GetRequiredService<ITenantDirectoryReader>(),
+            services.GetRequiredService<ITenantActivity>(), services.GetRequiredService<IProgramDirectoryReader>(),
+            services.GetRequiredService<WorkQueueReader>(), services.GetRequiredService<IAggregateExecutor>(),
+            services.GetRequiredService<TimeProvider>());
+        await sweep.ProcessProgramAsync(fixture.TenantId, fixture.ProgramId, CancellationToken.None);
     }
 
     static WorkItemAssignment NewOwner() => new(Uuid.CreateVersion4(), Uuid.CreateVersion4(), Uuid.CreateVersion4());
