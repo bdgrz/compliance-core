@@ -177,7 +177,7 @@ public sealed class PersonNamedDetailsNativeTests
     {
         await using var scope = fixture.Provider.CreateAsyncScope();
         var handler = new ChangePersonDetailsHandler(scope.ServiceProvider.GetRequiredService<PersonOperations>());
-        return await handler.HandleAsync(new RequestContext<ChangePersonDetails>(request,
+        return await handler.HandleAsync(new Cntryl.Portia.RequestContext<ChangePersonDetails>(request,
             ProgramManagementServices.Actor(fixture.UserId),
             new HttpInvocation("POST", "/synthetic/person/details", "/synthetic/person/details", "synthetic")), CancellationToken.None);
     }

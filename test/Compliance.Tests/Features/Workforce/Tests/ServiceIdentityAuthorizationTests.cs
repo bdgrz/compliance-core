@@ -167,7 +167,7 @@ public sealed class ServiceIdentityAuthorizationTests
             _ => throw new ArgumentOutOfRangeException(nameof(action)),
         };
 
-        public RequestContext<IWorkforceRequest> Context(IWorkforceRequest request, RequestInvocation? invocation = null) =>
+        public Cntryl.Portia.RequestContext<IWorkforceRequest> Context(IWorkforceRequest request, RequestInvocation? invocation = null) =>
             new(request, new ClaimsPrincipal(new ClaimsIdentity([new Claim("iss", "bdgrz"),
                 new Claim("sub", User.ToString())], "BdgrzSession")), invocation ??
                 new HttpInvocation("POST", "/synthetic/review", "/synthetic/review", "synthetic"));
