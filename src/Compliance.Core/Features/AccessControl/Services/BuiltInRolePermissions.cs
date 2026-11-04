@@ -61,6 +61,8 @@ static class BuiltInRolePermissions
         foreach (var role in new[] { administrator, lead })
             yield return RbacPermissionEffects.Assign(sourceEventId, tenantId, role,
                 Bdgrz.Compliance.Features.Remediation.Contracts.WaiverPermissions.Review);
+        yield return RbacPermissionEffects.Assign(sourceEventId, tenantId, lead,
+            Bdgrz.Compliance.Features.Remediation.Contracts.CorrectiveActionPermissions.Cancel);
         yield return RbacPermissionEffects.Assign(sourceEventId, tenantId, viewer, RbacPermissions.EvidenceArtifactRead);
     }
 }

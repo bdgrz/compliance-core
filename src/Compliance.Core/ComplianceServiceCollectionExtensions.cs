@@ -653,6 +653,7 @@ public static class ComplianceServiceCollectionExtensions
         services.AddScoped<PersonReader>();
         services.AddScoped<PersonOperations>();
         services.AddScoped<WorkRelationshipReadConsistency>();
+        services.AddScoped<WorkRelationshipSponsorship>();
         services.AddScoped<FitzWorkforceObservationDirectory>();
         services.AddScoped<IWorkforceObservationProjection>(provider =>
             provider.GetRequiredService<FitzWorkforceObservationDirectory>());
@@ -1716,6 +1717,7 @@ public static class ComplianceServiceCollectionExtensions
             .AddRequestHandler<ReviseFindingHandler>()
             .AddRequestHandler<AddCorrectiveActionHandler>()
             .AddRequestHandler<CompleteCorrectiveActionHandler>()
+            .AddRequestHandler<CancelCorrectiveActionHandler>()
             .AddRequestHandler<LinkFindingAcceptanceHandler>()
             .AddRequestHandler<CloseFindingHandler>()
             .AddRequestHandler<ReopenFindingHandler>()

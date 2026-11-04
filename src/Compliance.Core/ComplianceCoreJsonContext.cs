@@ -1535,6 +1535,8 @@ namespace Bdgrz.Compliance;
 [JsonSerializable(typeof(AddCorrectiveAction))]
 [JsonSerializable(typeof(CloseFinding))]
 [JsonSerializable(typeof(CompleteCorrectiveAction))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Remediation.Commands.CancelCorrectiveAction))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Remediation.Events.CorrectiveActionCancelled))]
 [JsonSerializable(typeof(CorrectiveActionAddedV2))]
 [JsonSerializable(typeof(CorrectiveActionCompletedV2))]
 [JsonSerializable(typeof(CorrectiveActionView))]

@@ -97,6 +97,7 @@ namespace Bdgrz.Compliance;
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.Workforce.Commands.EndLeave))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.Workforce.Commands.EndWorkRelationship))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.Remediation.Commands.RequestWaiver))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Remediation.Commands.CancelCorrectiveAction))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.Remediation.Commands.ReviewWaiver))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.Remediation.Commands.RevokeWaiver))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.Remediation.Queries.GetWaiver))]

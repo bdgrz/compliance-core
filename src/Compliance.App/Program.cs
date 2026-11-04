@@ -392,6 +392,7 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
         .AddMcpTool<GetControlEvaluation>(tool => tool.ReadOnly())
         .AddMcpTool<ListControlEvaluations>(tool => tool.ReadOnly())
         .AddMcpTool<RaiseFinding>()
+        .AddMcpTool<CancelCorrectiveAction>(tool => tool.Idempotent())
         .AddMcpTool<RequestWaiver>(tool => tool.Idempotent())
         .AddMcpTool<Bdgrz.Compliance.Features.Remediation.Queries.GetWaiver>(tool => tool.ReadOnly())
         .AddMcpTool<GetFinding>(tool => tool.ReadOnly())
@@ -1615,6 +1616,10 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
         .WithTags("Findings");
     app.MapPortiaPut<CompleteCorrectiveAction, FindingView>(
             "/api/v1/tenants/{tenant_id}/programs/{program_id}/findings/{finding_id}/corrective-actions/{action_id}/completions/{command_id}", config => config.OnNativeResult()).WithNativeFirstResponse<CompleteCorrectiveAction>()
+        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
+        .WithTags("Findings");
+    app.MapPortiaPut<CancelCorrectiveAction, FindingView>(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/findings/{finding_id}/corrective-actions/{action_id}/cancellations/{command_id}", config => config.OnNativeResult()).WithNativeFirstResponse<CancelCorrectiveAction>()
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Findings");
     app.MapPortiaPut<LinkFindingAcceptance, FindingView>(
