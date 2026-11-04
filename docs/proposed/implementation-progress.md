@@ -224,3 +224,34 @@ and all 8,431 units passed after those corrections; these failures were not coun
 as observed behavioral RED. The inspected inventory has five additional facts,
 eight additional registered requests (three internal-only), and explicit missing
 new-line creation/retirement routes. Counts remain navigation evidence only.
+
+Batch 3 PR [#1182](https://github.com/bdgrz/compliance-core/pull/1182) passed exact-head
+Backend CI and adversarial/source/Jev review, then merged as `97cecc07`.
+
+## Batch 4 assembled source checkpoint (unvalidated)
+
+Prepared source includes 175 authored cases: generic WorkRelationship retirement
+(16), named ServiceIdentity behavior/authorization/legacy preservation (105),
+corrective-action changes (22), truthful V4 line queries (14), and named Person
+details (18). No compilation or test execution has occurred for this batch.
+
+Central wiring adds explicit Lead/Contributor grants and typed routes/JSON/handlers.
+ReviewServiceIdentity is typed HTTP callable and invocation-guarded, with no MCP
+registration. Broad generic WorkRelationship/ServiceIdentity routes/tools are
+removed; registered legacy handlers uniformly refuse and historical reducers remain.
+The service-specific defaults add four grants and corrective change adds one, for
+47 bootstrap grants; explicit role assertions cover each.
+
+V4 public methodology query DTOs replace the old authored-version shape without
+fabricated attribution. The directory uses MethodologyPublicationDirectoryV2 and
+projection-v2 storage to replay both event families. Ordered applications and new
+line creation/name admission remain pending, alongside Person member cardinality
+and source reconciliation. Legacy RevisePerson remains an explicitly partial path.
+
+Live Jev shared-wiring first review flagged an uncertain broad-grant question0.51.
+Narrow followup returned contradictory judgments (broad-only allowed0.92, specific
+manage key queried0.98). Direct source selects the specific permission, whose string
+differs from the broad key; the authored authorization regression explicitly denies
+the broad-only grant. This advisory candidate remains for the assembled runtime
+check; no implementation change is justified without a failing source-backed test.
+Other assembled adverse signals ranged0.03–0.23.

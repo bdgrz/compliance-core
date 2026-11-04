@@ -1029,6 +1029,7 @@ public static class ComplianceServiceCollectionExtensions
         services.AddScoped<TemplateApplicationReader>()
             .AddScoped<TemplateApplicationOperations>()
             .AddScoped<MethodologyTemplateReader>();
+        services.AddScoped<MethodologyTemplateLineReader>();
         services.AddScoped<Bdgrz.Compliance.Features.Remediation.Readers.WaiverReader>();
         services.AddScoped<MethodologyTemplateOperations>();
         services.AddScoped<MethodologyTemplateContributionReader>();
@@ -1459,6 +1460,7 @@ public static class ComplianceServiceCollectionExtensions
             .AddRequestAuthorizer<ProviderAuthorizer>()
             .AddRequestHandler<RecordPersonHandler>()
             .AddRequestHandler<RevisePersonHandler>()
+            .AddRequestHandler<ChangePersonDetailsHandler>()
             .AddRequestHandler<CorrelatePersonMembershipHandler>()
             .AddRequestHandler<GetPersonHandler>()
             .AddRequestHandler<ListPeopleHandler>()
@@ -1484,6 +1486,12 @@ public static class ComplianceServiceCollectionExtensions
             .AddRequestHandler<ReconcileWorkforceSourceObservationHandler>()
             .AddRequestHandler<RecordServiceIdentityHandler>()
             .AddRequestHandler<ReviseServiceIdentityHandler>()
+            .AddRequestHandler<ChangeServiceIdentityOwnerHandler>()
+            .AddRequestHandler<ChangeServiceIdentityPurposeHandler>()
+            .AddRequestHandler<ReviewServiceIdentityHandler>()
+            .AddRequestHandler<DisableServiceIdentityHandler>()
+            .AddRequestHandler<EnableServiceIdentityHandler>()
+            .AddRequestHandler<RetireServiceIdentityHandler>()
             .AddRequestHandler<GetServiceIdentityHandler>()
             .AddRequestHandler<ListServiceIdentitiesHandler>()
             .AddRequestAuthorizer<WorkforceAuthorizer>()
@@ -1718,6 +1726,7 @@ public static class ComplianceServiceCollectionExtensions
             .AddRequestHandler<AddCorrectiveActionHandler>()
             .AddRequestHandler<CompleteCorrectiveActionHandler>()
             .AddRequestHandler<CancelCorrectiveActionHandler>()
+            .AddRequestHandler<ChangeCorrectiveActionHandler>()
             .AddRequestHandler<RecordCorrectiveActionOutcomeHandler>()
             .AddRequestHandler<LinkFindingAcceptanceHandler>()
             .AddRequestHandler<CloseFindingHandler>()
@@ -1909,6 +1918,9 @@ public static class ComplianceServiceCollectionExtensions
             .AddRequestAuthorizer<Bdgrz.Compliance.Features.Evidence.Authorizers.EvidenceRequestReceiverAuthorizer>()
             .AddRequestHandler<GetMethodologyTemplateVersionHandler>()
             .AddRequestHandler<ListMethodologyTemplatesHandler>()
+            .AddRequestHandler<GetMethodologyTemplateLineHandler>()
+            .AddRequestHandler<GetMethodologyTemplateVersionV2Handler>()
+            .AddRequestHandler<ListMethodologyTemplatesV2Handler>()
             .AddRequestHandler<CreateMethodologyTemplateHandler>()
             .AddRequestHandler<ReviseMethodologyTemplateDraftHandler>()
             .AddRequestHandler<ReviseMethodologyTemplateDraftV3Handler>()
