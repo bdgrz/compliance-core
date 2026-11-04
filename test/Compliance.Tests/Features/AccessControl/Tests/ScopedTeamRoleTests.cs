@@ -1,4 +1,6 @@
 using Bdgrz.Compliance.Features.AccessControl.Aggregates;
+using Bdgrz.Compliance.Features.AccessControl.Events;
+using Bdgrz.Compliance.Tests.Testing;
 using Bdgrz.Compliance.Features.AccessControl.Models;
 using Bdgrz.Compliance.Features.AccessControl.Services;
 using Cntryl.Portia;
@@ -72,14 +74,18 @@ public sealed class ScopedTeamRoleTests
         var command = Uuid.CreateVersion4();
         var owner = new TeamRole(tenant, BuiltInRbac.AdministratorsTeamId(tenant),
             BuiltInRbac.TenantAdministrationRoleId(tenant), command);
-        Assert.True(owner.Assign(command, 0, Actor).IsSuccess);
+        var removal = Uuid.CreateVersion4();
+        var restored = new TeamRole(tenant, BuiltInRbac.AdministratorsTeamId(tenant),
+            BuiltInRbac.TenantAdministrationRoleId(tenant), removal);
+        var fact = new TeamRoleAssigned(tenant, restored.TeamId, restored.RoleId, command, 0, Actor);
+        var scenario = new AggregateScenario<TeamRole>(restored).Given(DomainEventSeed.Attach(fact, restored.Id, 1));
 
         // Act
-        var result = owner.Remove(command, 1, command, Actor);
+        var result = restored.Remove(removal, 1, command, Actor);
 
         // Assert
         Assert.False(result.IsSuccess);
-        Assert.True(owner.IsAssigned);
-        Assert.Single(new AggregateScenario<TeamRole>(owner).PendingEvents);
+        Assert.True(restored.IsAssigned);
+        Assert.Empty(scenario.PendingEvents);
     }
 }
