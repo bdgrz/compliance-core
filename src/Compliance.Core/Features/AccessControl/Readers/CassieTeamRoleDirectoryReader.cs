@@ -50,17 +50,16 @@ sealed class CassieTeamRoleDirectoryReader(CassieProjectionDatabase database)
         var cursorScope = AccessControlDirectoryCursor.Scope(projectionKey, "access_team_roles", teamId.ToString(), search, descending);
         var after = AccessControlDirectoryCursor.Decode(cursor, cursorScope);
         var take = Math.Clamp(limit ?? DefaultLimit, 1, MaxLimit);
+        var fetchLimit = (take + 1).ToString(CultureInfo.InvariantCulture);
         var direction = descending ? "DESC" : "ASC";
         var comparison = descending ? "<" : ">";
         await using var read = await OpenReadAsync(ct).ConfigureAwait(false);
         await using var command = read.CreateCommand("SELECT team_id, role_id, assignment_id, revision FROM access_team_roles WHERE projection_key = @scope" +
             " AND team_id = @parent" +
             (after is null ? "" : $" AND role_id {comparison} @after") +
-            $" ORDER BY role_id {direction}" + (search is null ? " LIMIT @take" : ""));
+            $" ORDER BY role_id {direction}" + (search is null ? " LIMIT " + fetchLimit : ""));
         CassieAccessControlSql.Bind(command, ("scope", projectionKey));
         CassieAccessControlSql.Bind(command, ("parent", teamId.ToString()));
-        if (search is null)
-            CassieAccessControlSql.Bind(command, ("take", take + 1));
         if (after is { } position)
             CassieAccessControlSql.Bind(command, ("after", position.Sort));
         var matches = new List<TeamRoleView>();
