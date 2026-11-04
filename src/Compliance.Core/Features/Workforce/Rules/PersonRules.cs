@@ -167,6 +167,10 @@ public sealed class PersonRules
         return null;
     }
 
+    public CommandFailure? ChangeDetails(long expectedRevision, string displayName, string? workEmail,
+        PersonalContactDetails? personalContact, ActorReference actor, DateTimeOffset changedAt) =>
+        CommandFailure.StateConflict($"Named details change is not implemented for {Id}.");
+
     /// <summary>
     ///     Links this person to one platform member, or clears the link. Re-stating the current link
     ///     succeeds without a new revision. The link never grants or revokes platform access.
