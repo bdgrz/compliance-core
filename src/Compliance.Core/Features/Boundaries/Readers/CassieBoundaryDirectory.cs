@@ -1,5 +1,5 @@
+using Bdgrz.Compliance.Features.Programs.Readers;
 using System.Globalization;
-using Cntryl.Fitz;
 using Cntryl.Portia;
 using Bdgrz.Compliance.Features.AccessControl.Contracts;
 using Bdgrz.Compliance.Features.AccessControl.Models;
@@ -48,24 +48,11 @@ using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
 using Bdgrz.Compliance.Features.Boundaries.Readers;
 namespace Bdgrz.Compliance.Features.Boundaries.Readers;
 
-sealed class FitzBoundaryDirectory(IKvClient client, BoundaryReader boundaries)
-    : FitzKvProjectionStore(client, "kv://bdgrz/boundary-directory-v3/projection", ProjectorName),
+sealed class CassieBoundaryDirectory(CassieProjectionDatabase database, BoundaryReader boundaries)
+    : CassieProgramScopeRepository(database, ProjectorName),
         IBoundaryDirectoryReader, IBoundaryDirectoryProjection
 {
     public const string ProjectorName = "BoundaryDirectoryV3";
-    Uuid? _batchTenantId;
-    public new ValueTask<IProjectionBatch> BeginAsync(ProjectionBatchContext context, CancellationToken ct = default) =>
-        BeginBoundaryBatchAsync(context, ct);
-    ValueTask<IProjectionBatch> IProjectionStore.BeginAsync(ProjectionBatchContext context, CancellationToken ct) =>
-        BeginBoundaryBatchAsync(context, ct);
-    async ValueTask<IProjectionBatch> BeginBoundaryBatchAsync(ProjectionBatchContext context, CancellationToken ct)
-    {
-        if (!Uuid.TryParse(context.Identity.Pattern.Realm, CultureInfo.InvariantCulture, out var tenant) || tenant == Uuid.Empty)
-            throw new InvalidOperationException("A boundary directory batch requires its exact tenant scope.");
-        var batch = await base.BeginAsync(context, ct).ConfigureAwait(false);
-        _batchTenantId = tenant;
-        return batch;
-    }
     public ValueTask<ProjectionCheckpoint> LoadCheckpointAsync(Uuid tenantId, CancellationToken ct = default) =>
         base.LoadCheckpointAsync(new CheckpointIdentity(ProjectorName, EventStreamPattern.ForPattern(tenantId.ToString())), ct);
 
@@ -76,9 +63,9 @@ sealed class FitzBoundaryDirectory(IKvClient client, BoundaryReader boundaries)
             return;
         BoundaryFactContent.ValidateScope(fact);
         var header = fact.Header;
-        if (_batchTenantId != header.TenantId || fact.ChangeCount != 1 || fact.NativeSequence < 1 || header.Revision < 1 || !header.IsCreated)
+        if (Identity.Pattern != EventStreamPattern.ForPattern(header.TenantId.ToString()) || fact.ChangeCount != 1 || fact.NativeSequence < 1 || header.Revision < 1 || !header.IsCreated)
             throw new InvalidOperationException("A boundary directory fact requires its exact native owner and batch tenant.");
-        var current = await BoundaryDirectorySchema.Directory.GetAsync(Transaction, header.BoundaryId, ct).ConfigureAwait(false);
+        var current = await CurrentBoundaryAsync( header.BoundaryId, ct).ConfigureAwait(false);
         if (current is not null && current.Header == header && current.NativeSequence == fact.NativeSequence)
             return;
         if (value is BoundaryDraftCreated)
@@ -113,38 +100,34 @@ sealed class FitzBoundaryDirectory(IKvClient client, BoundaryReader boundaries)
         if (!header.IsVisible)
         {
             if (current is not null)
-                await BoundaryDirectorySchema.Directory.DeleteAsync(Transaction, current, ct).ConfigureAwait(false);
+                await DeleteAsync("boundary_current_identities", current.Header.TenantId, current.Header.BoundaryId.ToString(), ct).ConfigureAwait(false);
         }
         else if (current is null)
-            await BoundaryDirectorySchema.Directory.InsertAsync(Transaction, row, ct).ConfigureAwait(false);
+            await InsertIdentityAsync("boundary_current_identities", row, ct).ConfigureAwait(false);
         else
-            await BoundaryDirectorySchema.Directory.ReplaceAsync(Transaction, current, row, ct).ConfigureAwait(false);
+            await ReplaceIdentityAsync(row, ct).ConfigureAwait(false);
         if (value is BoundaryReviewed review)
-            await BoundaryDirectorySchema.Decisions.InsertAsync(Transaction,
+            await InsertDecisionAsync(
                 row with { DecisionId = review.DecisionId, VersionId = review.DraftVersionId, DecidedAt = review.DecidedAt }, ct).ConfigureAwait(false);
         else if (value is BoundaryApproved approval)
         {
-            await BoundaryDirectorySchema.Versions.InsertAsync(Transaction,
+            await InsertVersionAsync(
                 row with { VersionId = approval.DraftVersionId, EffectiveFrom = approval.EffectiveFrom }, ct).ConfigureAwait(false);
-            await BoundaryDirectorySchema.Decisions.InsertAsync(Transaction,
+            await InsertDecisionAsync(
                 row with { DecisionId = approval.ApprovalDecisionId, VersionId = approval.DraftVersionId, DecidedAt = approval.DecidedAt }, ct).ConfigureAwait(false);
         }
     }
 
     public async ValueTask<BoundaryView?> GetAsync(Uuid tenantId, Uuid boundaryId, CancellationToken ct = default)
     {
-        BoundaryDirectoryIdentity? row;
-        await using (var tx = await BeginReadAsync(tenantId.ToString(), ct).ConfigureAwait(false))
-            row = await BoundaryDirectorySchema.Directory.GetAsync(tx, boundaryId, ct).ConfigureAwait(false);
+        var row = await ReadIdentityAsync("boundary_current_identities", tenantId, boundaryId.ToString(), ct).ConfigureAwait(false);
         return row is null ? null : (await SourceAsync(tenantId, boundaryId, row, ct).ConfigureAwait(false)).ToView();
     }
     public async ValueTask<Page<BoundaryView>> ListProgramAsync(Uuid tenantId, Uuid programId, int limit, string? cursor,
         CancellationToken ct = default)
     {
-        Page<BoundaryDirectoryIdentity> page;
-        await using (var tx = await BeginReadAsync(tenantId.ToString(), ct).ConfigureAwait(false))
-            page = await BoundaryDirectorySchema.Directory.QueryAsync(tx, BoundaryDirectorySchema.ByProgram.Query()
-                .WithPrefix(programId.ToString()).Take(Math.Clamp(limit, 1, 200)).After(cursor), ct).ConfigureAwait(false);
+        var page = await PageAsync("boundary_current_identities", tenantId, programId.ToString(), limit, cursor,
+            ComplianceCoreJsonContext.Default.BoundaryDirectoryIdentity, ct).ConfigureAwait(false);
         var values = new List<BoundaryView>(page.Items.Count);
         foreach (var row in page.Items)
         {
@@ -159,9 +142,7 @@ sealed class FitzBoundaryDirectory(IKvClient client, BoundaryReader boundaries)
     public async ValueTask<BoundaryVersionView?> GetVersionAsync(Uuid tenantId, Uuid boundaryId, Uuid versionId,
         CancellationToken ct = default)
     {
-        BoundaryDirectoryIdentity? row;
-        await using (var tx = await BeginReadAsync(tenantId.ToString(), ct).ConfigureAwait(false))
-            row = await BoundaryDirectorySchema.Versions.GetAsync(tx, BoundaryDirectorySchema.ScopedKey(boundaryId, versionId), ct).ConfigureAwait(false);
+        var row = await ReadIdentityAsync("boundary_version_identities", tenantId, ScopedKey(boundaryId, versionId), ct).ConfigureAwait(false);
         return row is null || row.Header.BoundaryId != boundaryId ? null
             : (await SourceAsync(tenantId, boundaryId, row, ct).ConfigureAwait(false)).FindVersion(versionId)
                 ?? throw new ImmutableContentUnavailableException("The projected boundary version is not visible at its native source.");
@@ -169,14 +150,10 @@ sealed class FitzBoundaryDirectory(IKvClient client, BoundaryReader boundaries)
     public async ValueTask<Page<BoundaryVersionView>?> ListVersionsAsync(Uuid tenantId, Uuid boundaryId, int limit,
         string? cursor, CancellationToken ct = default)
     {
-        Page<BoundaryDirectoryIdentity> page;
-        await using (var tx = await BeginReadAsync(tenantId.ToString(), ct).ConfigureAwait(false))
-        {
-            if (await BoundaryDirectorySchema.Directory.GetAsync(tx, boundaryId, ct).ConfigureAwait(false) is null)
-                return null;
-            page = await BoundaryDirectorySchema.Versions.QueryAsync(tx, BoundaryDirectorySchema.VersionsByBoundary.Query()
-                .WithPrefix(boundaryId.ToString()).Take(Math.Clamp(limit, 1, 200)).After(cursor), ct).ConfigureAwait(false);
-        }
+        if (await ReadIdentityAsync("boundary_current_identities", tenantId, boundaryId.ToString(), ct).ConfigureAwait(false) is null)
+            return null;
+        var page = await PageAsync("boundary_version_identities", tenantId, boundaryId.ToString(), limit, cursor,
+            ComplianceCoreJsonContext.Default.BoundaryDirectoryIdentity, ct).ConfigureAwait(false);
         var values = new List<BoundaryVersionView>(page.Items.Count);
         BoundaryReadSnapshot? source = null;
         foreach (var row in page.Items)
@@ -190,17 +167,13 @@ sealed class FitzBoundaryDirectory(IKvClient client, BoundaryReader boundaries)
     public async ValueTask<BoundaryVersionView?> GetEffectiveVersionAsync(Uuid tenantId, Uuid boundaryId, DateOnly effectiveOn,
         CancellationToken ct = default)
     {
-        BoundaryDirectoryIdentity? row;
-        await using (var tx = await BeginReadAsync(tenantId.ToString(), ct).ConfigureAwait(false))
-            row = await BoundaryDirectorySchema.Directory.GetAsync(tx, boundaryId, ct).ConfigureAwait(false);
+        var row = await ReadIdentityAsync("boundary_current_identities", tenantId, boundaryId.ToString(), ct).ConfigureAwait(false);
         return row is null ? null : (await SourceAsync(tenantId, boundaryId, row, ct).ConfigureAwait(false)).EffectiveVersion(effectiveOn);
     }
     public async ValueTask<BoundaryDecisionView?> GetDecisionAsync(Uuid tenantId, Uuid boundaryId, Uuid decisionId,
         CancellationToken ct = default)
     {
-        BoundaryDirectoryIdentity? row;
-        await using (var tx = await BeginReadAsync(tenantId.ToString(), ct).ConfigureAwait(false))
-            row = await BoundaryDirectorySchema.Decisions.GetAsync(tx, BoundaryDirectorySchema.ScopedKey(boundaryId, decisionId), ct).ConfigureAwait(false);
+        var row = await ReadIdentityAsync("boundary_decision_identities", tenantId, ScopedKey(boundaryId, decisionId), ct).ConfigureAwait(false);
         return row is null || row.Header.BoundaryId != boundaryId ? null
             : (await SourceAsync(tenantId, boundaryId, row, ct).ConfigureAwait(false)).FindDecision(decisionId)
                 ?? throw new ImmutableContentUnavailableException("The projected boundary decision is not visible at its native source.");
@@ -208,14 +181,10 @@ sealed class FitzBoundaryDirectory(IKvClient client, BoundaryReader boundaries)
     public async ValueTask<Page<BoundaryDecisionView>?> ListDecisionsAsync(Uuid tenantId, Uuid boundaryId, int limit,
         string? cursor, CancellationToken ct = default)
     {
-        Page<BoundaryDirectoryIdentity> page;
-        await using (var tx = await BeginReadAsync(tenantId.ToString(), ct).ConfigureAwait(false))
-        {
-            if (await BoundaryDirectorySchema.Directory.GetAsync(tx, boundaryId, ct).ConfigureAwait(false) is null)
-                return null;
-            page = await BoundaryDirectorySchema.Decisions.QueryAsync(tx, BoundaryDirectorySchema.DecisionsByBoundary.Query()
-                .WithPrefix(boundaryId.ToString()).Take(Math.Clamp(limit, 1, 200)).After(cursor), ct).ConfigureAwait(false);
-        }
+        if (await ReadIdentityAsync("boundary_current_identities", tenantId, boundaryId.ToString(), ct).ConfigureAwait(false) is null)
+            return null;
+        var page = await PageAsync("boundary_decision_identities", tenantId, boundaryId.ToString(), limit, cursor,
+            ComplianceCoreJsonContext.Default.BoundaryDirectoryIdentity, ct).ConfigureAwait(false);
         var values = new List<BoundaryDecisionView>(page.Items.Count);
         BoundaryReadSnapshot? source = null;
         foreach (var row in page.Items)
@@ -226,6 +195,23 @@ sealed class FitzBoundaryDirectory(IKvClient client, BoundaryReader boundaries)
         }
         return new(values, page.NextCursor);
     }
+    ValueTask<BoundaryDirectoryIdentity?> CurrentBoundaryAsync(Uuid id, CancellationToken ct) =>
+        CurrentAsync("boundary_current_identities", id.ToString(), ComplianceCoreJsonContext.Default.BoundaryDirectoryIdentity, ct);
+    ValueTask<BoundaryDirectoryIdentity?> ReadIdentityAsync(string table, Uuid tenantId, string id, CancellationToken ct) =>
+        ReadAsync(table, tenantId, id, ComplianceCoreJsonContext.Default.BoundaryDirectoryIdentity, ct);
+    ValueTask InsertIdentityAsync(string table, BoundaryDirectoryIdentity row, CancellationToken ct) =>
+        InsertAsync(table, row.Header.TenantId, row.Header.BoundaryId.ToString(), row.Header.ProgramId.ToString(),
+            row.Header.BoundaryId.ToString(), row, ComplianceCoreJsonContext.Default.BoundaryDirectoryIdentity, ct);
+    ValueTask ReplaceIdentityAsync(BoundaryDirectoryIdentity row, CancellationToken ct) =>
+        ReplaceAsync("boundary_current_identities", row.Header.TenantId, row.Header.BoundaryId.ToString(), row.Header.ProgramId.ToString(),
+            row.Header.BoundaryId.ToString(), row, ComplianceCoreJsonContext.Default.BoundaryDirectoryIdentity, ct);
+    ValueTask InsertVersionAsync(BoundaryDirectoryIdentity row, CancellationToken ct) =>
+        InsertAsync("boundary_version_identities", row.Header.TenantId, ScopedKey(row.Header.BoundaryId, row.VersionId!.Value), row.Header.BoundaryId.ToString(),
+            row.EffectiveFrom!.Value.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture), row, ComplianceCoreJsonContext.Default.BoundaryDirectoryIdentity, ct);
+    ValueTask InsertDecisionAsync(BoundaryDirectoryIdentity row, CancellationToken ct) =>
+        InsertAsync("boundary_decision_identities", row.Header.TenantId, ScopedKey(row.Header.BoundaryId, row.DecisionId!.Value), row.Header.BoundaryId.ToString(),
+            row.DecidedAt!.Value.UtcTicks.ToString("D20", CultureInfo.InvariantCulture), row, ComplianceCoreJsonContext.Default.BoundaryDirectoryIdentity, ct);
+    static string ScopedKey(Uuid boundaryId, Uuid localId) => $"{boundaryId}:{localId}";
     async ValueTask<BoundaryReadSnapshot> SourceAsync(Uuid tenantId, Uuid boundaryId, BoundaryDirectoryIdentity row,
         CancellationToken ct, BoundaryReadSnapshot? pinned = null)
     {

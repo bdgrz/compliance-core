@@ -56,7 +56,7 @@ public sealed class ListClientServicesHandler(IClientServiceDirectoryReader dire
                     request.Cursor, ct).ConfigureAwait(false);
                 return ValidatePage(request.TenantId, page);
             }
-            catch (KvDirectoryQueryException)
+            catch (ProgramScopeDirectoryQueryException)
             {
                 return CursorError();
             }
@@ -73,7 +73,7 @@ public sealed class ListClientServicesHandler(IClientServiceDirectoryReader dire
                 page = await directory.ListAsync(request.TenantId, remaining, cursor, ct)
                     .ConfigureAwait(false);
             }
-            catch (KvDirectoryQueryException)
+            catch (ProgramScopeDirectoryQueryException)
             {
                 return CursorError();
             }

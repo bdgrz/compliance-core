@@ -1,5 +1,4 @@
 using System.Globalization;
-using Cntryl.Fitz;
 using Cntryl.Portia;
 using Bdgrz.Compliance.Features.AccessControl.Models;
 using Bdgrz.Compliance.Features.AccessControl.Readers;
@@ -47,8 +46,8 @@ using Bdgrz.Compliance.Features.UserIdentities.Aggregates;
 using Bdgrz.Compliance.Features.Content.Persistence;
 namespace Bdgrz.Compliance.Features.Programs.Readers;
 
-sealed class FitzProgramDirectory(IKvClient client, IImmutableContentStore content)
-    : FitzKvProjectionStore(client, "kv://bdgrz/program-directory/projection", "ProgramDirectory"),
+sealed class CassieProgramDirectory(CassieProjectionDatabase database, IImmutableContentStore content)
+    : CassieProgramScopeRepository(database, "ProgramDirectory"),
         IProgramDirectoryReader, IProgramDirectoryProjection
 {
     public async ValueTask ApplyAsync(DomainEvent domainEvent, CancellationToken ct = default)
@@ -59,7 +58,7 @@ sealed class FitzProgramDirectory(IKvClient client, IImmutableContentStore conte
         {
             case ProgramCreated created:
                 var creation = await ProgramReader.ReadContentAsync(content, created, ct).ConfigureAwait(false);
-                await ProgramDirectorySchema.Directory.InsertAsync(Transaction,
+                await InsertValueAsync(
                         new ProgramView(created.TenantId, created.ProgramId, creation.Name,
                             "readiness", "type_i", 1, creation.Plan,
                             created.ActorMemberId, created.ActorDisplay, created.ChangedAt,
@@ -72,19 +71,19 @@ sealed class FitzProgramDirectory(IKvClient client, IImmutableContentStore conte
                                     "Close the operating period and record the examination outcome."),
                             ]), ct)
                     .ConfigureAwait(false);
-                await ProgramDirectorySchema.Revisions.InsertAsync(Transaction,
+                await InsertRevisionAsync(
                         new ProgramRevisionView(created.ProgramId, 1, creation.Name, creation.Plan,
                             created.ActorMemberId, created.ActorDisplay, created.ChangedAt), ct)
                     .ConfigureAwait(false);
                 break;
             case ProgramRevised revised:
                 var revision = await ProgramReader.ReadContentAsync(content, revised, ct).ConfigureAwait(false);
-                var current = await ProgramDirectorySchema.Directory.GetAsync(Transaction,
+                var current = await CurrentValueAsync(
                     revised.ProgramId, ct).ConfigureAwait(false);
                 if (current is null)
                     throw new InvalidOperationException(
                         "A program revision cannot project before its creation.");
-                await ProgramDirectorySchema.Directory.ReplaceAsync(Transaction, current,
+                await ReplaceValueAsync(
                     current with
                     {
                         Name = revision.Name,
@@ -94,7 +93,7 @@ sealed class FitzProgramDirectory(IKvClient client, IImmutableContentStore conte
                         LastChangedByDisplay = revised.ActorDisplay,
                         LastChangedAt = revised.ChangedAt,
                     }, ct).ConfigureAwait(false);
-                await ProgramDirectorySchema.Revisions.InsertAsync(Transaction,
+                await InsertRevisionAsync(
                     new ProgramRevisionView(revised.ProgramId, revised.Revision,
                         revision.Name, revision.Plan, revised.ActorMemberId,
                         revised.ActorDisplay, revised.ChangedAt)
@@ -106,12 +105,12 @@ sealed class FitzProgramDirectory(IKvClient client, IImmutableContentStore conte
                 if (selected.ChangeCount == 0)
                     break;
                 _ = await ProgramReader.ReadContentAsync(content, selected, ct).ConfigureAwait(false);
-                var beforeSelection = await ProgramDirectorySchema.Directory.GetAsync(Transaction,
+                var beforeSelection = await CurrentValueAsync(
                     selected.ProgramId, ct).ConfigureAwait(false);
                 if (beforeSelection is null)
                     throw new InvalidOperationException(
                         "A program criteria selection cannot project before its creation.");
-                await ProgramDirectorySchema.Directory.ReplaceAsync(Transaction, beforeSelection,
+                await ReplaceValueAsync(
                     beforeSelection with
                     {
                         Revision = selected.Revision,
@@ -120,7 +119,7 @@ sealed class FitzProgramDirectory(IKvClient client, IImmutableContentStore conte
                         LastChangedByDisplay = selected.ActorDisplay,
                         LastChangedAt = selected.ChangedAt,
                     }, ct).ConfigureAwait(false);
-                await ProgramDirectorySchema.Revisions.InsertAsync(Transaction,
+                await InsertRevisionAsync(
                     new ProgramRevisionView(selected.ProgramId, selected.Revision,
                         beforeSelection.Name, beforeSelection.Plan, selected.ActorMemberId,
                         selected.ActorDisplay, selected.ChangedAt)
@@ -135,11 +134,11 @@ sealed class FitzProgramDirectory(IKvClient client, IImmutableContentStore conte
                     recorded.DecisionContent, ct).ConfigureAwait(false);
                 if (entry.Outcome == ProgramReadiness.Defer)
                     break;
-                var beforeEntry = await ProgramDirectorySchema.Directory.GetAsync(Transaction,
+                var beforeEntry = await CurrentValueAsync(
                     recorded.ProgramId, ct).ConfigureAwait(false);
                 if (beforeEntry is null || beforeEntry.StageDecisionId == entry.DecisionId)
                     break;
-                await ProgramDirectorySchema.Directory.ReplaceAsync(Transaction, beforeEntry,
+                await ReplaceValueAsync(
                     beforeEntry with
                     {
                         Stage = "type_i",
@@ -152,45 +151,37 @@ sealed class FitzProgramDirectory(IKvClient client, IImmutableContentStore conte
         }
     }
 
-    public async ValueTask<ProgramView?> GetAsync(Uuid tenantId, Uuid programId,
-        CancellationToken ct = default)
-    {
-        await using var tx = await BeginReadAsync(tenantId.ToString(), ct).ConfigureAwait(false);
-        return await ProgramDirectorySchema.Directory.GetAsync(tx, programId, ct).ConfigureAwait(false);
-    }
+    public ValueTask<ProgramView?> GetAsync(Uuid tenantId, Uuid programId, CancellationToken ct = default) =>
+        ReadAsync("program_directory", tenantId, programId.ToString(), ComplianceCoreJsonContext.Default.ProgramView, ct);
 
-    public async ValueTask<Page<ProgramView>> ListAsync(Uuid tenantId, int limit, string? cursor,
-        CancellationToken ct = default)
-    {
-        await using var tx = await BeginReadAsync(tenantId.ToString(), ct).ConfigureAwait(false);
-        return await ProgramDirectorySchema.Directory.QueryAsync(tx,
-                ProgramDirectorySchema.ByName.Query().Take(Math.Clamp(limit, 1, 200)).After(cursor), ct)
-            .ConfigureAwait(false);
-    }
+    public ValueTask<Page<ProgramView>> ListAsync(Uuid tenantId, int limit, string? cursor, CancellationToken ct = default) =>
+        PageAsync("program_directory", tenantId, null, limit, cursor, ComplianceCoreJsonContext.Default.ProgramView, ct);
 
-    public async ValueTask<Page<ProgramRevisionView>?> ListRevisionsAsync(Uuid tenantId,
-        Uuid programId, int limit, string? cursor, CancellationToken ct = default)
+    public async ValueTask<Page<ProgramRevisionView>?> ListRevisionsAsync(Uuid tenantId, Uuid programId, int limit, string? cursor, CancellationToken ct = default)
     {
-        await using var tx = await BeginReadAsync(tenantId.ToString(), ct).ConfigureAwait(false);
-        if (await ProgramDirectorySchema.Directory.GetAsync(tx, programId, ct).ConfigureAwait(false) is null)
+        if (await GetAsync(tenantId, programId, ct).ConfigureAwait(false) is null)
             return null;
-        return await ProgramDirectorySchema.Revisions.QueryAsync(tx,
-                ProgramDirectorySchema.RevisionsByProgram.Query()
-                    .WithPrefix(programId.ToString()).Take(Math.Clamp(limit, 1, 200)).After(cursor), ct)
-            .ConfigureAwait(false);
+        return await PageAsync("program_revisions", tenantId, programId.ToString(), limit, cursor,
+            ComplianceCoreJsonContext.Default.ProgramRevisionView, ct).ConfigureAwait(false);
     }
 
-    public async ValueTask<ProgramRevisionView?> GetRevisionAsync(Uuid tenantId,
-        Uuid programId, long revision, CancellationToken ct = default)
-    {
-        await using var tx = await BeginReadAsync(tenantId.ToString(), ct).ConfigureAwait(false);
-        return await ProgramDirectorySchema.Revisions.GetAsync(tx,
-                $"{programId}:{revision.ToString("D20", CultureInfo.InvariantCulture)}", ct)
-            .ConfigureAwait(false);
-    }
+    public ValueTask<ProgramRevisionView?> GetRevisionAsync(Uuid tenantId, Uuid programId, long revision, CancellationToken ct = default) =>
+        ReadAsync("program_revisions", tenantId, $"{programId}:{revision.ToString("D20", CultureInfo.InvariantCulture)}",
+            ComplianceCoreJsonContext.Default.ProgramRevisionView, ct);
 
-    public ValueTask<ProjectionCheckpoint> LoadCheckpointAsync(Uuid tenantId,
-        CancellationToken ct = default) =>
-        base.LoadCheckpointAsync(new CheckpointIdentity("ProgramDirectory",
-            EventStreamPattern.ForPattern(tenantId.ToString())), ct);
+    public ValueTask<ProjectionCheckpoint> LoadCheckpointAsync(Uuid tenantId, CancellationToken ct = default) =>
+        base.LoadCheckpointAsync(new CheckpointIdentity("ProgramDirectory", EventStreamPattern.ForPattern(tenantId.ToString())), ct);
+
+    ValueTask<ProgramView?> CurrentValueAsync(Uuid id, CancellationToken ct) =>
+        CurrentAsync("program_directory", id.ToString(), ComplianceCoreJsonContext.Default.ProgramView, ct);
+    ValueTask InsertValueAsync(ProgramView value, CancellationToken ct) =>
+        InsertAsync("program_directory", value.TenantId, value.ProgramId.ToString(), "",
+            value.Name.ToUpperInvariant(), value, ComplianceCoreJsonContext.Default.ProgramView, ct);
+    ValueTask ReplaceValueAsync(ProgramView value, CancellationToken ct) =>
+        ReplaceAsync("program_directory", value.TenantId, value.ProgramId.ToString(), "",
+            value.Name.ToUpperInvariant(), value, ComplianceCoreJsonContext.Default.ProgramView, ct);
+    ValueTask InsertRevisionAsync(ProgramRevisionView value, CancellationToken ct) =>
+        InsertAsync("program_revisions", BatchTenant(), $"{value.ProgramId}:{value.Revision.ToString("D20", CultureInfo.InvariantCulture)}", value.ProgramId.ToString(),
+            value.Revision.ToString("D20", CultureInfo.InvariantCulture), value, ComplianceCoreJsonContext.Default.ProgramRevisionView, ct);
+    Uuid BatchTenant() => Uuid.Parse(Identity.Pattern.Realm, CultureInfo.InvariantCulture);
 }

@@ -1,5 +1,5 @@
-using Cntryl.Fitz;
-using Cntryl.Fitz.Extensions;
+using System.Globalization;
+using Bdgrz.Compliance.Features.Programs.Readers;
 using Cntryl.Portia;
 using Bdgrz.Compliance.Features.AuditPackages.Rules;
 using Bdgrz.Compliance.Features.Incidents.Rules;
@@ -13,8 +13,8 @@ using Bdgrz.Compliance.Features.Snapshots.Models;
 using Bdgrz.Compliance.Features.Snapshots.Projections;
 namespace Bdgrz.Compliance.Features.Snapshots.Readers;
 
-sealed class FitzSnapshotDirectory(IKvClient client)
-    : FitzKvProjectionStore(client, "kv://bdgrz/snapshot-directory/projection", "SnapshotDirectory"),
+sealed class CassieSnapshotDirectory(CassieProjectionDatabase database)
+    : CassieProgramScopeRepository(database, "SnapshotDirectory", "snapshots"),
         ISnapshotDirectoryReader, ISnapshotDirectoryProjection
 {
     public ValueTask ApplyAsync(DomainEvent domainEvent, CancellationToken ct = default)
@@ -22,7 +22,7 @@ sealed class FitzSnapshotDirectory(IKvClient client)
         if (domainEvent is not SnapshotFrozen frozen)
             throw new ArgumentException("The snapshot directory requires a frozen snapshot event.",
                 nameof(domainEvent));
-        return SnapshotDirectorySchema.Directory.InsertAsync(Transaction,
+        return InsertValueAsync(
             new SnapshotView(frozen.TenantId, frozen.SnapshotId, frozen.RootSnapshotId,
                 frozen.AmendsSnapshotId, frozen.ProgramId, frozen.Kind, 1,
                 frozen.Manifest, frozen.CanonicalManifest, frozen.ContentSha256,
@@ -35,20 +35,11 @@ sealed class FitzSnapshotDirectory(IKvClient client)
         base.LoadCheckpointAsync(new CheckpointIdentity("SnapshotDirectory",
             EventStreamPattern.ForPattern(tenantId.ToString(), "snapshots")), ct);
 
-    public async ValueTask<SnapshotView?> GetAsync(Uuid tenantId, Uuid snapshotId,
-        CancellationToken ct = default)
-    {
-        await using var tx = await BeginReadAsync(tenantId.ToString(), ct).ConfigureAwait(false);
-        return await SnapshotDirectorySchema.Directory.GetAsync(tx, snapshotId, ct)
-            .ConfigureAwait(false);
-    }
-
-    public async ValueTask<Page<SnapshotView>> ListProgramAsync(Uuid tenantId,
-        Uuid programId, int limit, string? cursor, CancellationToken ct = default)
-    {
-        await using var tx = await BeginReadAsync(tenantId.ToString(), ct).ConfigureAwait(false);
-        return await SnapshotDirectorySchema.Directory.QueryAsync(tx,
-            SnapshotDirectorySchema.ByProgram.Query().WithPrefix(programId.ToString())
-                .Take(Math.Clamp(limit, 1, 200)).After(cursor), ct).ConfigureAwait(false);
-    }
+    public ValueTask<SnapshotView?> GetAsync(Uuid tenantId, Uuid snapshotId, CancellationToken ct = default) =>
+        ReadAsync("scope_snapshots", tenantId, snapshotId.ToString(), ComplianceCoreJsonContext.Default.SnapshotView, ct);
+    public ValueTask<Page<SnapshotView>> ListProgramAsync(Uuid tenantId, Uuid programId, int limit, string? cursor, CancellationToken ct = default) =>
+        PageAsync("scope_snapshots", tenantId, programId.ToString(), limit, cursor, ComplianceCoreJsonContext.Default.SnapshotView, ct);
+    ValueTask InsertValueAsync(SnapshotView value, CancellationToken ct) =>
+        InsertAsync("scope_snapshots", value.TenantId, value.SnapshotId.ToString(), value.ProgramId.ToString(),
+            value.FrozenAt.UtcTicks.ToString("D20", CultureInfo.InvariantCulture), value, ComplianceCoreJsonContext.Default.SnapshotView, ct);
 }

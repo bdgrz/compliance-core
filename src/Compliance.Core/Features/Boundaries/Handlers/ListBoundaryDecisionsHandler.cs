@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.Programs.Readers;
 using Cntryl.Portia;
 using Bdgrz.Compliance.Features.AccessControl.Models;
 using Bdgrz.Compliance.Features.Applications.Models;
@@ -43,7 +44,7 @@ public sealed class ListBoundaryDecisionsHandler(IBoundaryDirectoryReader direct
                 page = await directory.ListDecisionsAsync(request.TenantId,
                     request.BoundaryId, request.Limit ?? 50, request.Cursor, ct).ConfigureAwait(false);
             }
-            catch (KvDirectoryQueryException)
+            catch (ProgramScopeDirectoryQueryException)
             {
                 return Result<Page<BoundaryDecisionView>>.Failure(new RequestError(
                     RequestErrorKind.Validation, "The boundary decision cursor is invalid."));
