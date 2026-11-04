@@ -29,7 +29,6 @@ using Bdgrz.Compliance.Features.Work.Models;
 using Bdgrz.Compliance.Features.AccessReviews.Aggregates;
 using Bdgrz.Compliance.Features.AccessReviews.Events;
 namespace Bdgrz.Compliance.Features.AccessReviews.Reactors;
-
 /// <summary>
 ///     Starts <c>AccessReviewCampaignCompletionProcess</c> from a committed completion admission. The process record,
 ///     with the complete canonical target list of the drained item set, exists before the source checkpoint advances;
@@ -42,7 +41,7 @@ sealed partial class AccessReviewCompletionReactor(IProjectionCheckpointStore ch
 {
     public const string WorkloadName = "AccessReviewCampaignCompletionV1";
 
-    public async ValueTask HandleAsync(IReactorContext<AccessReviewCampaignCompletionAccepted> context,
+    public async ValueTask<Result> HandleAsync(IReactorContext<AccessReviewCampaignCompletionAccepted> context,
         CancellationToken ct)
     {
         await AccessReviewReactorSources.VerifyAsync(sources, content, Pattern, context, context.Trigger.Operation.Owner, ct)
@@ -74,5 +73,6 @@ sealed partial class AccessReviewCompletionReactor(IProjectionCheckpointStore ch
 
         _ = await process.StartAsync(AccessReviewEffects.CompletionProcessName, context, context.Trigger.Intent, targets,
             $"reactor:{WorkloadName}", ct).ConfigureAwait(false);
+        return Result.Success;
     }
 }

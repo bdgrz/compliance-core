@@ -256,9 +256,11 @@ public sealed class EvidenceArtifactInspectionEffectsReactorTests
         var target = await fixture.SeedMalformedAsync(fault);
 
         // Act
-        await Assert.ThrowsAsync<InvalidOperationException>(() => fixture.RunAsync(fixture.TenantId));
+        var failure = await Assert.ThrowsAsync<ProcessorFailureException>(() => fixture.RunAsync(fixture.TenantId));
 
         // Assert
+        Assert.IsType<InvalidOperationException>(failure.InnerException);
+        Assert.Null(failure.Error);
         Assert.Empty(fixture.Store.Calls);
         await using var available = await fixture.Local.OpenVerifiedAsync(target.Content);
         Assert.NotNull(available);
@@ -280,9 +282,11 @@ public sealed class EvidenceArtifactInspectionEffectsReactorTests
             target.Id, state, reason, Now.AddMinutes(2))], 2);
 
         // Act
-        await Assert.ThrowsAsync<InvalidOperationException>(() => fixture.RunAsync(fixture.TenantId));
+        var failure = await Assert.ThrowsAsync<ProcessorFailureException>(() => fixture.RunAsync(fixture.TenantId));
 
         // Assert
+        Assert.IsType<InvalidOperationException>(failure.InnerException);
+        Assert.Null(failure.Error);
         Assert.Empty(fixture.Store.Calls);
         await using var available = await fixture.Local.OpenVerifiedAsync(target.Content);
         Assert.NotNull(available);
@@ -331,7 +335,7 @@ public sealed class EvidenceArtifactInspectionEffectsReactorTests
         var history = await fixture.HistoryAsync(failed);
 
         // Act
-        await Assert.ThrowsAsync<IOException>(() => fixture.RunAsync(fixture.TenantId));
+        var failure = await Assert.ThrowsAsync<ProcessorFailureException>(() => fixture.RunAsync(fixture.TenantId));
         var saved = await fixture.Checkpoints.LoadAsync(Identity(fixture.TenantId));
         fixture.Store.ThrowBeforeEffect = false;
         fixture.Store.ThrowAfterEffect = false;
@@ -340,6 +344,8 @@ public sealed class EvidenceArtifactInspectionEffectsReactorTests
         await fixture.RunAsync(fixture.TenantId);
 
         // Assert
+        Assert.IsType<IOException>(failure.InnerException);
+        Assert.Null(failure.Error);
         Assert.Equal(await fixture.CheckpointAfterAsync(fixture.TenantId, 3), saved);
         Assert.Equal(await fixture.CheckpointAfterAsync(fixture.TenantId, 4),
             await fixture.Checkpoints.LoadAsync(Identity(fixture.TenantId)));
@@ -367,12 +373,14 @@ public sealed class EvidenceArtifactInspectionEffectsReactorTests
         fixture.Checkpoints.RefusedCursor = completed.Cursor.Value;
 
         // Act
-        await Assert.ThrowsAsync<IOException>(() => fixture.RunAsync(fixture.TenantId));
+        var failure = await Assert.ThrowsAsync<ProcessorFailureException>(() => fixture.RunAsync(fixture.TenantId));
         var saved = await fixture.Checkpoints.LoadAsync(Identity(fixture.TenantId));
         fixture.Checkpoints.RefusedCursor = null;
         await fixture.RunAsync(fixture.TenantId);
 
         // Assert
+        Assert.IsType<IOException>(failure.InnerException);
+        Assert.Null(failure.Error);
         Assert.Equal(await fixture.CheckpointAfterAsync(fixture.TenantId, 1), saved);
         Assert.Equal(completed, await fixture.Checkpoints.LoadAsync(Identity(fixture.TenantId)));
         Assert.Null(await fixture.Local.OpenVerifiedAsync(target.Content));
@@ -395,12 +403,14 @@ public sealed class EvidenceArtifactInspectionEffectsReactorTests
             fixture.Store.RefuseQuarantine = true;
 
         // Act
-        if (corrupt)
-            await Assert.ThrowsAsync<InvalidDataException>(() => fixture.RunAsync(fixture.TenantId));
-        else
-            await Assert.ThrowsAsync<InvalidOperationException>(() => fixture.RunAsync(fixture.TenantId));
+        var failure = await Assert.ThrowsAsync<ProcessorFailureException>(() => fixture.RunAsync(fixture.TenantId));
 
         // Assert
+        if (corrupt)
+            Assert.IsType<InvalidDataException>(failure.InnerException);
+        else
+            Assert.IsType<InvalidOperationException>(failure.InnerException);
+        Assert.Null(failure.Error);
         Assert.Equal(await fixture.CheckpointAfterAsync(fixture.TenantId, 1),
             await fixture.Checkpoints.LoadAsync(Identity(fixture.TenantId)));
         Assert.Equal(["quarantine", "open_quarantine"], fixture.Store.Calls.Select(call => call.Operation));
@@ -415,9 +425,11 @@ public sealed class EvidenceArtifactInspectionEffectsReactorTests
         Assert.True(await fixture.Local.PlaceHoldAsync(target.Content, Uuid.CreateVersion4()));
 
         // Act
-        await Assert.ThrowsAsync<InvalidOperationException>(() => fixture.RunAsync(fixture.TenantId));
+        var failure = await Assert.ThrowsAsync<ProcessorFailureException>(() => fixture.RunAsync(fixture.TenantId));
 
         // Assert
+        Assert.IsType<InvalidOperationException>(failure.InnerException);
+        Assert.Null(failure.Error);
         Assert.Equal(await fixture.CheckpointAfterAsync(fixture.TenantId, 1),
             await fixture.Checkpoints.LoadAsync(Identity(fixture.TenantId)));
         Assert.Equal("delete", Assert.Single(fixture.Store.Calls).Operation);

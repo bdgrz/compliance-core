@@ -29,7 +29,6 @@ using Bdgrz.Compliance.Features.Examinations.Aggregates;
 using Bdgrz.Compliance.Features.PolicyDistribution.Aggregates;
 using Bdgrz.Compliance.Features.PolicyDistribution.Events;
 namespace Bdgrz.Compliance.Features.PolicyDistribution.Reactors;
-
 /// <summary>
 ///     Starts <c>PolicyCampaignClosureProcess</c> from a committed closure acceptance. The process record, with the
 ///     complete canonical participant list of the frozen intent, exists before the source checkpoint advances; the
@@ -43,7 +42,7 @@ sealed partial class PolicyCampaignClosureReactor(IProjectionCheckpointStore che
 {
     public const string WorkloadName = "PolicyCampaignClosureV1";
 
-    public async ValueTask HandleAsync(IReactorContext<PolicyCampaignClosureAccepted> context, CancellationToken ct)
+    public async ValueTask<Result> HandleAsync(IReactorContext<PolicyCampaignClosureAccepted> context, CancellationToken ct)
     {
         IReadOnlyList<ClosureParticipant> participants;
         try
@@ -62,5 +61,6 @@ sealed partial class PolicyCampaignClosureReactor(IProjectionCheckpointStore che
         _ = await process.StartAsync(PolicyCampaignClosureEffects.ProcessName, context, context.Trigger.Intent,
             participants.Select(static participant => participant.Target), $"reactor:{WorkloadName}", ct)
             .ConfigureAwait(false);
+        return Result.Success;
     }
 }

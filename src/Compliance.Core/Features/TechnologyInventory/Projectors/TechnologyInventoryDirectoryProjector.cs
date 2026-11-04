@@ -13,12 +13,26 @@ public sealed partial class TechnologyInventoryDirectoryProjector(
         IProjectorHandler<InformationAssetRevisionRecorded>,
         IProjectorHandler<DataFlowRevisionRecorded>
 {
-    public ValueTask HandleAsync(TechnologyComponentRevisionRecorded ev,
-        IProjectorContext context, CancellationToken ct) => projection.ApplyAsync(ev, ct);
+    public async ValueTask<Result> HandleAsync(IProjectorContext<TechnologyComponentRevisionRecorded> context, CancellationToken ct)
+    {
+        var ev = context.Trigger;
+        await projection.ApplyAsync(ev, ct).ConfigureAwait(false);
+        return Result.Success;
+    }
 
-    public ValueTask HandleAsync(InformationAssetRevisionRecorded ev, IProjectorContext context,
-        CancellationToken ct) => projection.ApplyAsync(ev, ct);
+    public async ValueTask<Result> HandleAsync(IProjectorContext<InformationAssetRevisionRecorded> context,
+        CancellationToken ct)
+    {
+        var ev = context.Trigger;
+        await projection.ApplyAsync(ev, ct).ConfigureAwait(false);
+        return Result.Success;
+    }
 
-    public ValueTask HandleAsync(DataFlowRevisionRecorded ev, IProjectorContext context,
-        CancellationToken ct) => projection.ApplyAsync(ev, ct);
+    public async ValueTask<Result> HandleAsync(IProjectorContext<DataFlowRevisionRecorded> context,
+        CancellationToken ct)
+    {
+        var ev = context.Trigger;
+        await projection.ApplyAsync(ev, ct).ConfigureAwait(false);
+        return Result.Success;
+    }
 }

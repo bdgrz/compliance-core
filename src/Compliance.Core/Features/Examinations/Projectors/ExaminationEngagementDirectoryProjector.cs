@@ -13,15 +13,35 @@ public sealed partial class ExaminationEngagementDirectoryProjector(
       IProjectorHandler<TypeIBaselineFrozen>,
       IProjectorHandler<TypeIBaselineAmended>
 {
-    public ValueTask HandleAsync(ExaminationEngagementOpened ev, IProjectorContext context,
-        CancellationToken ct) => projection.ApplyAsync(ev, ct);
+    public async ValueTask<Result> HandleAsync(IProjectorContext<ExaminationEngagementOpened> context,
+        CancellationToken ct)
+    {
+        var ev = context.Trigger;
+        await projection.ApplyAsync(ev, ct).ConfigureAwait(false);
+        return Result.Success;
+    }
 
-    public ValueTask HandleAsync(ExaminationEngagementRevised ev, IProjectorContext context,
-        CancellationToken ct) => projection.ApplyAsync(ev, ct);
+    public async ValueTask<Result> HandleAsync(IProjectorContext<ExaminationEngagementRevised> context,
+        CancellationToken ct)
+    {
+        var ev = context.Trigger;
+        await projection.ApplyAsync(ev, ct).ConfigureAwait(false);
+        return Result.Success;
+    }
 
-    public ValueTask HandleAsync(TypeIBaselineFrozen ev, IProjectorContext context,
-        CancellationToken ct) => projection.ApplyAsync(ev, ct);
+    public async ValueTask<Result> HandleAsync(IProjectorContext<TypeIBaselineFrozen> context,
+        CancellationToken ct)
+    {
+        var ev = context.Trigger;
+        await projection.ApplyAsync(ev, ct).ConfigureAwait(false);
+        return Result.Success;
+    }
 
-    public ValueTask HandleAsync(TypeIBaselineAmended ev, IProjectorContext context,
-        CancellationToken ct) => projection.ApplyAsync(ev, ct);
+    public async ValueTask<Result> HandleAsync(IProjectorContext<TypeIBaselineAmended> context,
+        CancellationToken ct)
+    {
+        var ev = context.Trigger;
+        await projection.ApplyAsync(ev, ct).ConfigureAwait(false);
+        return Result.Success;
+    }
 }

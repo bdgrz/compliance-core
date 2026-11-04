@@ -32,7 +32,6 @@ using Bdgrz.Compliance.Features.AuditorRequests.Events;
 using Bdgrz.Compliance.Features.Examinations.Aggregates;
 using Bdgrz.Compliance.Features.Providers.Projections;
 namespace Bdgrz.Compliance.Features.AuditorRequests.Reactors;
-
 /// <summary>
 ///     Starts <c>AuditorRequestResolutionProcess</c> from a committed resolution acceptance. The process record, with the
 ///     complete canonical response key list of the frozen manifest, exists before the source checkpoint advances; the
@@ -46,7 +45,7 @@ sealed partial class AuditorRequestResolutionReactor(IProjectionCheckpointStore 
 {
     public const string WorkloadName = "AuditorRequestResolutionV1";
 
-    public async ValueTask HandleAsync(IReactorContext<AuditorRequestResolutionAccepted> context, CancellationToken ct)
+    public async ValueTask<Result> HandleAsync(IReactorContext<AuditorRequestResolutionAccepted> context, CancellationToken ct)
     {
         var accepted = context.Trigger;
         await AuditorRequestReactorSources.VerifyAsync(sources, content, Pattern, context, accepted.Owner, ct)
@@ -73,5 +72,6 @@ sealed partial class AuditorRequestResolutionReactor(IProjectionCheckpointStore 
         _ = await process.StartAsync(AuditorRequestResolutionEffects.ProcessName, context, accepted.Intent,
             AuditorRequestResolutionProcess.ResponseKeys(tenant, decision.ProgramId, intent.ParentId, children),
             $"reactor:{WorkloadName}", ct).ConfigureAwait(false);
+        return Result.Success;
     }
 }

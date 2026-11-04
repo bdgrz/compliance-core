@@ -15,7 +15,7 @@ public sealed partial class RetiredTeamAssignmentReactor(IProjectionCheckpointSt
     : Reactor(checkpoints, EventStreamPattern.ForTenant("rbac-team-members"), "RetiredTeamAssignmentV1"),
       IReactorHandler<TeamMemberAssigned>
 {
-    public async ValueTask HandleAsync(IReactorContext<TeamMemberAssigned> context, CancellationToken ct)
+    public async ValueTask<Result> HandleAsync(IReactorContext<TeamMemberAssigned> context, CancellationToken ct)
     {
         var source = context.Trigger;
         if (context.Source.Stream != new TeamMember(source.TenantId, source.TeamId, source.MemberId).Stream)
@@ -25,11 +25,14 @@ public sealed partial class RetiredTeamAssignmentReactor(IProjectionCheckpointSt
         if (member.TerminationProof is not { } proof)
         {
             if (member.IsRegistered && member.MembershipEpisodeId == source.MembershipEpisodeId)
-                return;
+                return Result.Success;
             throw new ReactionCommandFailedException(new RequestError(RequestErrorKind.Conflict,
                 "Membership retirement authority is not available yet.", isTransient: true));
         }
         var request = MemberRetirementEffects.Team(source, context.Source.ResourceOffset, proof.EventId);
-        await bus.SendReactionAsync(request, context, ct).ConfigureAwait(false);
+        var reactionOutcome1 = await bus.SendReactionAsync(request, context, ct).ConfigureAwait(false);
+        if (!reactionOutcome1.IsSuccess)
+            return reactionOutcome1;
+        return Result.Success;
     }
 }

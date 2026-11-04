@@ -18,7 +18,6 @@ using Bdgrz.Compliance.Features.UserIdentities.Models;
 using Bdgrz.Compliance.Features.Work.Models;
 using Bdgrz.Compliance.Features.Providers.Events;
 namespace Bdgrz.Compliance.Features.Providers.Reactors;
-
 /// <summary>
 ///     Starts <c>IndependentChildMaterialization</c> from a committed link admission. The process record, with its
 ///     frozen intent, exists before the source checkpoint advances; the sweep resumes it if this reactor stops.
@@ -30,8 +29,11 @@ sealed partial class ProviderRiskAcceptanceLinkReactor(IProjectionCheckpointStor
 {
     public const string WorkloadName = "ProviderRiskAcceptanceLinkV1";
 
-    public async ValueTask HandleAsync(IReactorContext<ProviderCoverageGapRiskAcceptanceAdmitted> context,
-        CancellationToken ct) =>
+    public async ValueTask<Result> HandleAsync(IReactorContext<ProviderCoverageGapRiskAcceptanceAdmitted> context,
+        CancellationToken ct)
+    {
         _ = await process.StartAsync(IndependentChildMaterializationProcess.Name, context, context.Trigger.Intent, [],
             $"reactor:{WorkloadName}", ct).ConfigureAwait(false);
+        return Result.Success;
+    }
 }

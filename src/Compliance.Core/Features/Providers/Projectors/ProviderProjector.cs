@@ -30,22 +30,30 @@ public sealed partial class ProviderProjector(IProviderProjection projection, II
       IProjectorHandler<ProviderChangeAccepted>, IProjectorHandler<ProviderChangeCanceled>
 {
     /// <inheritdoc />
-    public async ValueTask HandleAsync(ProviderRecorded ev, IProjectorContext context, CancellationToken ct) =>
+    public async ValueTask<Result> HandleAsync(IProjectorContext<ProviderRecorded> context, CancellationToken ct)
+    {
+        var ev = context.Trigger;
         await projection.ApplyAsync(ev, await ReadAsync(ev.TenantId, ev.ContentContent, ct).ConfigureAwait(false), ct)
             .ConfigureAwait(false);
+        return Result.Success;
+    }
 
     /// <inheritdoc />
-    public async ValueTask HandleAsync(ProviderRevised ev, IProjectorContext context, CancellationToken ct) =>
+    public async ValueTask<Result> HandleAsync(IProjectorContext<ProviderRevised> context, CancellationToken ct)
+    {
+        var ev = context.Trigger;
         await projection.ApplyAsync(ev, await ReadAsync(ev.TenantId, ev.ContentContent, ct).ConfigureAwait(false), ct)
             .ConfigureAwait(false);
+        return Result.Success;
+    }
 
     /// <inheritdoc />
-    public ValueTask HandleAsync(ProviderChangeAccepted ev, IProjectorContext context, CancellationToken ct) =>
-        ValueTask.CompletedTask;
+    public ValueTask<Result> HandleAsync(IProjectorContext<ProviderChangeAccepted> context, CancellationToken ct) =>
+        ValueTask.FromResult(Result.Success);
 
     /// <inheritdoc />
-    public ValueTask HandleAsync(ProviderChangeCanceled ev, IProjectorContext context, CancellationToken ct) =>
-        ValueTask.CompletedTask;
+    public ValueTask<Result> HandleAsync(IProjectorContext<ProviderChangeCanceled> context, CancellationToken ct) =>
+        ValueTask.FromResult(Result.Success);
 
     async ValueTask<ProviderContent> ReadAsync(Uuid tenantId, Bdgrz.Compliance.Features.Proofs.Models.ImmutableContentRef reference,
         CancellationToken ct)

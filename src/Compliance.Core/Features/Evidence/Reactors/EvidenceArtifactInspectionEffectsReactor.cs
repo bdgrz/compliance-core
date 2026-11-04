@@ -11,7 +11,6 @@ using Bdgrz.Compliance.Features.UserIdentities.Models;
 using Bdgrz.Compliance.Features.Evidence.Events;
 using Bdgrz.Compliance.Features.Retention.Commands;
 namespace Bdgrz.Compliance.Features.Evidence.Reactors;
-
 /// <summary>Recovers verdict storage effects from tenant artifact history without rescanning or changing events.</summary>
 public sealed partial class EvidenceArtifactInspectionEffectsReactor(IProjectionCheckpointStore checkpoints,
     EvidenceArtifactStorageReconciler reconciler)
@@ -20,7 +19,7 @@ public sealed partial class EvidenceArtifactInspectionEffectsReactor(IProjection
 {
     public const string WorkloadName = "EvidenceArtifactInspectionEffectsV1";
 
-    public async ValueTask HandleAsync(IReactorContext<EvidenceArtifactInspected> context, CancellationToken ct)
+    public async ValueTask<Result> HandleAsync(IReactorContext<EvidenceArtifactInspected> context, CancellationToken ct)
     {
         var trigger = context.Trigger;
         if (Pattern.IsTenantTemplate || Pattern.Realm != trigger.TenantId.ToString() ||
@@ -31,5 +30,6 @@ public sealed partial class EvidenceArtifactInspectionEffectsReactor(IProjection
             .ConfigureAwait(false);
         if (!result.IsSuccess)
             throw new InvalidOperationException(result.Error!.Message);
+        return Result.Success;
     }
 }

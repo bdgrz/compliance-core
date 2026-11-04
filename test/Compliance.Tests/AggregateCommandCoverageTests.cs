@@ -830,6 +830,8 @@ public sealed partial class AggregateCommandCoverageTests
         var registeredHandlers = services.Where(static descriptor =>
                 descriptor.ServiceType == typeof(RequestHandlerRegistration))
             .Select(static descriptor => (RequestHandlerRegistration)descriptor.ImplementationInstance!)
+            // This inventory covers this repository's contracts; Portia also registers its own operations queries.
+            .Where(static registration => ContractAssemblies().Contains(registration.RequestType.Assembly))
             .Select(static registration =>
                 (Request: registration.RequestType.Name, Handler: registration.HandlerType.Name))
             .ToArray();

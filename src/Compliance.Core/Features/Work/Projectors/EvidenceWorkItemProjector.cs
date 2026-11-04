@@ -10,12 +10,27 @@ public sealed partial class EvidenceWorkItemProjector(IEvidenceWorkItemProjectio
       IProjectorHandler<EvidenceRequestOpened>, IProjectorHandler<EvidenceRequestFulfilled>,
       IProjectorHandler<EvidenceRequestCancelled>
 {
-    public ValueTask HandleAsync(EvidenceRequestOpened ev, IProjectorContext context,
-        CancellationToken ct) => projection.ApplyAsync(ev, ct);
+    public async ValueTask<Result> HandleAsync(IProjectorContext<EvidenceRequestOpened> context,
+        CancellationToken ct)
+    {
+        var ev = context.Trigger;
+        await projection.ApplyAsync(ev, ct).ConfigureAwait(false);
+        return Result.Success;
+    }
 
-    public ValueTask HandleAsync(EvidenceRequestFulfilled ev, IProjectorContext context,
-        CancellationToken ct) => projection.ApplyAsync(ev, ct);
+    public async ValueTask<Result> HandleAsync(IProjectorContext<EvidenceRequestFulfilled> context,
+        CancellationToken ct)
+    {
+        var ev = context.Trigger;
+        await projection.ApplyAsync(ev, ct).ConfigureAwait(false);
+        return Result.Success;
+    }
 
-    public ValueTask HandleAsync(EvidenceRequestCancelled ev, IProjectorContext context,
-        CancellationToken ct) => projection.ApplyAsync(ev, ct);
+    public async ValueTask<Result> HandleAsync(IProjectorContext<EvidenceRequestCancelled> context,
+        CancellationToken ct)
+    {
+        var ev = context.Trigger;
+        await projection.ApplyAsync(ev, ct).ConfigureAwait(false);
+        return Result.Success;
+    }
 }

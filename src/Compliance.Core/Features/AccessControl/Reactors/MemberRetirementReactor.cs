@@ -10,7 +10,7 @@ public sealed partial class MemberRetirementReactor(IProjectionCheckpointStore c
     : Reactor(checkpoints, EventStreamPattern.ForTenant("rbac-members"), "MemberRetirementV1"),
       IReactorHandler<MemberDeprovisioned>
 {
-    public async ValueTask HandleAsync(IReactorContext<MemberDeprovisioned> context, CancellationToken ct)
+    public async ValueTask<Result> HandleAsync(IReactorContext<MemberDeprovisioned> context, CancellationToken ct)
     {
         var source = context.Trigger;
         if (context.Source.Stream != new Member(source.TenantId, source.UserId).Stream ||
@@ -20,6 +20,9 @@ public sealed partial class MemberRetirementReactor(IProjectionCheckpointStore c
         var request = new CompleteMemberRetirement(source.TenantId, source.MemberId, source.MembershipEpisodeId,
             source.Metadata.EventId, MemberRetirementEffects.CompletionId(source.Metadata.EventId,
                 source.MemberId, source.MembershipEpisodeId));
-        await bus.SendReactionAsync(request, context, ct).ConfigureAwait(false);
+        var reactionOutcome1 = await bus.SendReactionAsync(request, context, ct).ConfigureAwait(false);
+        if (!reactionOutcome1.IsSuccess)
+            return reactionOutcome1;
+        return Result.Success;
     }
 }

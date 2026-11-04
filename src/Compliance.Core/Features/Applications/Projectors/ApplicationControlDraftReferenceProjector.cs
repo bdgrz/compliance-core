@@ -17,17 +17,43 @@ public sealed partial class ApplicationControlDraftReferenceProjector(
       IProjectorHandler<ControlDraftDiscarded>, IProjectorHandler<ControlSuccessorProposed>,
       IProjectorHandler<ControlProposalWithdrawn>
 {
-    public ValueTask HandleAsync(ControlDraftCreated ev, IProjectorContext context,
-        CancellationToken ct) => projection.ApplyAsync(ev, ct);
+    public async ValueTask<Result> HandleAsync(IProjectorContext<ControlDraftCreated> context,
+        CancellationToken ct)
+    {
+        var ev = context.Trigger;
+        await projection.ApplyAsync(ev, ct).ConfigureAwait(false);
+        return Result.Success;
+    }
 
-    public ValueTask HandleAsync(ControlDraftRevised ev, IProjectorContext context,
-        CancellationToken ct) => projection.ApplyAsync(ev, ct);
+    public async ValueTask<Result> HandleAsync(IProjectorContext<ControlDraftRevised> context,
+        CancellationToken ct)
+    {
+        var ev = context.Trigger;
+        await projection.ApplyAsync(ev, ct).ConfigureAwait(false);
+        return Result.Success;
+    }
 
-    public ValueTask HandleAsync(ControlDraftDiscarded ev, IProjectorContext context,
-        CancellationToken ct) => projection.ApplyAsync(ev, ct);
-    public ValueTask HandleAsync(ControlSuccessorProposed ev, IProjectorContext context,
-        CancellationToken ct) => projection.ApplyAsync(ev, ct);
+    public async ValueTask<Result> HandleAsync(IProjectorContext<ControlDraftDiscarded> context,
+        CancellationToken ct)
+    {
+        var ev = context.Trigger;
+        await projection.ApplyAsync(ev, ct).ConfigureAwait(false);
+        return Result.Success;
+    }
 
-    public ValueTask HandleAsync(ControlProposalWithdrawn ev, IProjectorContext context,
-        CancellationToken ct) => projection.ApplyAsync(ev, ct);
+    public async ValueTask<Result> HandleAsync(IProjectorContext<ControlSuccessorProposed> context,
+        CancellationToken ct)
+    {
+        var ev = context.Trigger;
+        await projection.ApplyAsync(ev, ct).ConfigureAwait(false);
+        return Result.Success;
+    }
+
+    public async ValueTask<Result> HandleAsync(IProjectorContext<ControlProposalWithdrawn> context,
+        CancellationToken ct)
+    {
+        var ev = context.Trigger;
+        await projection.ApplyAsync(ev, ct).ConfigureAwait(false);
+        return Result.Success;
+    }
 }

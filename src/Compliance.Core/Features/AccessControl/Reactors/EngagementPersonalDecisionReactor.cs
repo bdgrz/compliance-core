@@ -21,7 +21,6 @@ using Bdgrz.Compliance.Features.AccessControl.Aggregates;
 using Bdgrz.Compliance.Features.AccessControl.Events;
 using Bdgrz.Compliance.Features.Retention.Models;
 namespace Bdgrz.Compliance.Features.AccessControl.Reactors;
-
 /// <summary>
 ///     Starts <c>EngagementPersonalDecisionProcess</c> from a committed personal decision admission. The process
 ///     record, with its frozen intent, exists before the source checkpoint advances; the sweep resumes it if this
@@ -34,12 +33,13 @@ sealed partial class EngagementPersonalDecisionReactor(IProjectionCheckpointStor
 {
     public const string WorkloadName = "EngagementPersonalDecisionV1";
 
-    public async ValueTask HandleAsync(IReactorContext<EngagementPersonalDecisionAdmitted> context,
+    public async ValueTask<Result> HandleAsync(IReactorContext<EngagementPersonalDecisionAdmitted> context,
         CancellationToken ct)
     {
         await EngagementNativeSource.VerifyAsync(sources, content, context.Source.Stream,
             context.Source.ResourceOffset, context.Trigger, ct).ConfigureAwait(false);
         _ = await process.StartAsync(EngagementPersonalDecisionEffects.ProcessName, context,
             context.Trigger.Intent, [], $"reactor:{WorkloadName}", ct).ConfigureAwait(false);
+        return Result.Success;
     }
 }

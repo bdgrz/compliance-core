@@ -32,7 +32,6 @@ using Bdgrz.Compliance.Features.Proofs.Models;
 using Bdgrz.Compliance.Features.SourceUse.Models;
 using Bdgrz.Compliance.Features.Content.Persistence;
 namespace Bdgrz.Compliance.Features.AccessControl.Reactors;
-
 /// <summary>
 ///     Starts <c>EngagementAcceptanceProcess</c> from a committed acceptance or staff assignment admission. The process
 ///     record, with its frozen intent and the canonical acquisition keys of its frozen manifests, exists before the
@@ -46,21 +45,24 @@ sealed partial class EngagementAcceptanceReactor(IProjectionCheckpointStore chec
 {
     public const string WorkloadName = "EngagementAcceptanceV1";
 
-    public ValueTask HandleAsync(IReactorContext<ServiceEngagementAcceptanceRequested> context, CancellationToken ct) =>
+    public ValueTask<Result> HandleAsync(IReactorContext<ServiceEngagementAcceptanceRequested> context, CancellationToken ct) =>
         VerifyAndStartAsync(context, context.Trigger, context.Trigger.Intent, ct);
 
-    public ValueTask HandleAsync(IReactorContext<ServiceEngagementStaffAssignmentRequested> context,
+    public ValueTask<Result> HandleAsync(IReactorContext<ServiceEngagementStaffAssignmentRequested> context,
         CancellationToken ct) => StartAsync(context, context.Trigger.Intent, ct);
 
-    async ValueTask VerifyAndStartAsync<T>(IReactorContext context, T trigger, ImmutableContentRef intent, CancellationToken ct)
+    async ValueTask<Result> VerifyAndStartAsync<T>(IReactorContext context, T trigger, ImmutableContentRef intent, CancellationToken ct)
         where T : DomainEvent, Bdgrz.Compliance.Features.NativeOperations.Contracts.INativeOperationFact
     {
         await EngagementNativeSource.VerifyAsync(sources, content, context.Source.Stream,
             context.Source.ResourceOffset, trigger, ct).ConfigureAwait(false);
-        await StartAsync(context, intent, ct).ConfigureAwait(false);
+        var reactionOutcome1 = await StartAsync(context, intent, ct).ConfigureAwait(false);
+        if (!reactionOutcome1.IsSuccess)
+            return reactionOutcome1;
+        return Result.Success;
     }
 
-    async ValueTask StartAsync(IReactorContext context, ImmutableContentRef intentReference, CancellationToken ct)
+    async ValueTask<Result> StartAsync(IReactorContext context, ImmutableContentRef intentReference, CancellationToken ct)
     {
         IReadOnlyList<string> targets;
         try
@@ -82,5 +84,6 @@ sealed partial class EngagementAcceptanceReactor(IProjectionCheckpointStore chec
 
         _ = await process.StartAsync(EngagementAcceptanceEffects.ProcessName, context, intentReference, targets,
             $"reactor:{WorkloadName}", ct).ConfigureAwait(false);
+        return Result.Success;
     }
 }

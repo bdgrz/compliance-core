@@ -34,7 +34,6 @@ using Bdgrz.Compliance.Features.Remediation.Commands;
 using Bdgrz.Compliance.Features.Workforce.Models;
 using Bdgrz.Compliance.Features.Content.Persistence;
 namespace Bdgrz.Compliance.Features.Remediation.Reactors;
-
 /// <summary>
 ///     Routes control-operation exceptions into the shared finding path: a failed or skipped
 ///     attestation and each action a reviewer requests become a finding whose identity derives
@@ -48,7 +47,7 @@ public sealed partial class ControlOccurrenceFindingReactor(IProjectionCheckpoin
 {
     public const string WorkloadName = "ControlOccurrenceFindingsV1";
 
-    public async ValueTask HandleAsync(IReactorContext<ControlOccurrenceAttested> context,
+    public async ValueTask<Result> HandleAsync(IReactorContext<ControlOccurrenceAttested> context,
         CancellationToken ct)
     {
         var ev = context.Trigger;
@@ -57,14 +56,17 @@ public sealed partial class ControlOccurrenceFindingReactor(IProjectionCheckpoin
         var attestation = await ReadAsync<ControlAttestationView>(context, ev.AttestationContent, ct)
             .ConfigureAwait(false);
         if (attestation.Result is not (ControlOperationStates.Failed or ControlOperationStates.Skipped))
-            return;
-        await bus.SendReactionAsync(new RaiseOccurrenceFinding(ev.TenantId, ev.ProgramId,
+            return Result.Success;
+        var reactionOutcome1 = await bus.SendReactionAsync(new RaiseOccurrenceFinding(ev.TenantId, ev.ProgramId,
             Uuid.CreateVersion5(attestation.AttestationId, "finding"), ev.ControlId,
             ev.OccurrenceId, attestation.AttestationId.ToString(), "control_occurrence",
             $"{attestation.Result}: {attestation.Rationale}"), context, ct).ConfigureAwait(false);
+        if (!reactionOutcome1.IsSuccess)
+            return reactionOutcome1;
+        return Result.Success;
     }
 
-    public async ValueTask HandleAsync(IReactorContext<ControlOccurrenceReviewed> context,
+    public async ValueTask<Result> HandleAsync(IReactorContext<ControlOccurrenceReviewed> context,
         CancellationToken ct)
     {
         var ev = context.Trigger;
@@ -73,13 +75,19 @@ public sealed partial class ControlOccurrenceFindingReactor(IProjectionCheckpoin
         var review = await ReadAsync<ControlOccurrenceReviewView>(context, ev.ReviewContent, ct)
             .ConfigureAwait(false);
         if (review.Outcome != ControlOperationStates.ActionRequested)
-            return;
+            return Result.Success;
         for (var index = 0; index < review.RequestedActions.Count; index++)
-            await bus.SendReactionAsync(new RaiseOccurrenceFinding(ev.TenantId, ev.ProgramId,
+        {
+            var reactionOutcome1 = await bus.SendReactionAsync(new RaiseOccurrenceFinding(ev.TenantId, ev.ProgramId,
                 Uuid.CreateVersion5(review.DecisionId, "requested-action-" +
                     index.ToString(CultureInfo.InvariantCulture)), ev.ControlId, ev.OccurrenceId,
                 review.DecisionId.ToString(), "occurrence_review", review.RequestedActions[index]),
                 context, ct).ConfigureAwait(false);
+            if (!reactionOutcome1.IsSuccess)
+                return reactionOutcome1;
+        }
+
+        return Result.Success;
     }
 
     async ValueTask<T> ReadAsync<T>(IReactorContext context, ImmutableContentRef reference, CancellationToken ct)

@@ -45,7 +45,6 @@ using Bdgrz.Compliance.Features.AccessReviews.Commands;
 using Bdgrz.Compliance.Features.AccessReviews.Events;
 using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
 namespace Bdgrz.Compliance.Features.AccessReviews.Reactors;
-
 /// <summary>
 ///     Fences every selected item of a batch whose cancellation was accepted, including the items the batch never held,
 ///     before any hold is released. Each fence is the deterministic effect of the cancellation for that item, so a
@@ -59,7 +58,7 @@ sealed partial class AccessReviewBulkCancellationReactor(IProjectionCheckpointSt
 {
     public const string WorkloadName = "AccessReviewBulkCancellationV1";
 
-    public async ValueTask HandleAsync(IReactorContext<AccessReviewDecisionBatchCancellationAccepted> context,
+    public async ValueTask<Result> HandleAsync(IReactorContext<AccessReviewDecisionBatchCancellationAccepted> context,
         CancellationToken ct)
     {
         await AccessReviewReactorSources.VerifyAsync(sources, content, Pattern, context, context.Trigger.Operation.Owner, ct)
@@ -80,5 +79,7 @@ sealed partial class AccessReviewBulkCancellationReactor(IProjectionCheckpointSt
             if (!fenced.IsSuccess)
                 throw new ReactionCommandFailedException(fenced.Error!);
         }
+
+        return Result.Success;
     }
 }

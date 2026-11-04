@@ -10,6 +10,10 @@ public sealed partial class TrainingRequirementDirectoryProjector(ITrainingRequi
             FitzTrainingRequirementDirectory.ProjectorName),
         IProjectorHandler<TrainingRequirementDefined>
 {
-    public ValueTask HandleAsync(TrainingRequirementDefined ev, IProjectorContext context, CancellationToken ct) =>
-        projection.ApplyAsync(ev, ct);
+    public async ValueTask<Result> HandleAsync(IProjectorContext<TrainingRequirementDefined> context, CancellationToken ct)
+    {
+        var ev = context.Trigger;
+        await projection.ApplyAsync(ev, ct).ConfigureAwait(false);
+        return Result.Success;
+    }
 }

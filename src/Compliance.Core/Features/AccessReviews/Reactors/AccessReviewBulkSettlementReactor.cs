@@ -50,7 +50,6 @@ using Bdgrz.Compliance.Features.Examinations.Aggregates;
 using Bdgrz.Compliance.Features.Proofs.Models;
 using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
 namespace Bdgrz.Compliance.Features.AccessReviews.Reactors;
-
 /// <summary>
 ///     Settles every item use of a batch that ended: a published batch settles with <c>irreversible_decision</c>, which
 ///     makes the decisions visible, and a canceled batch settles with <c>canceled</c> after every item fence. Each
@@ -66,23 +65,29 @@ sealed partial class AccessReviewBulkSettlementReactor(IProjectionCheckpointStor
 {
     public const string WorkloadName = "AccessReviewBulkSettlementV1";
 
-    public async ValueTask HandleAsync(IReactorContext<AccessReviewDecisionBatchPublished> context, CancellationToken ct)
+    public async ValueTask<Result> HandleAsync(IReactorContext<AccessReviewDecisionBatchPublished> context, CancellationToken ct)
     {
         await AccessReviewReactorSources.VerifyAsync(sources, content, Pattern, context, context.Trigger.Operation.Owner, ct)
             .ConfigureAwait(false);
-        await SettleAsync(context.Source.Stream.Realm, context.Trigger.Intent, SourceUseSettlementDisposition.IrreversibleDecision,
+        var reactionOutcome1 = await SettleAsync(context.Source.Stream.Realm, context.Trigger.Intent, SourceUseSettlementDisposition.IrreversibleDecision,
             context, ct).ConfigureAwait(false);
+        if (!reactionOutcome1.IsSuccess)
+            return reactionOutcome1;
+        return Result.Success;
     }
 
-    public async ValueTask HandleAsync(IReactorContext<AccessReviewDecisionBatchCanceled> context, CancellationToken ct)
+    public async ValueTask<Result> HandleAsync(IReactorContext<AccessReviewDecisionBatchCanceled> context, CancellationToken ct)
     {
         await AccessReviewReactorSources.VerifyAsync(sources, content, Pattern, context, context.Trigger.Operation.Owner, ct)
             .ConfigureAwait(false);
-        await SettleAsync(context.Source.Stream.Realm, context.Trigger.Intent, SourceUseSettlementDisposition.Canceled, context,
+        var reactionOutcome1 = await SettleAsync(context.Source.Stream.Realm, context.Trigger.Intent, SourceUseSettlementDisposition.Canceled, context,
             ct).ConfigureAwait(false);
+        if (!reactionOutcome1.IsSuccess)
+            return reactionOutcome1;
+        return Result.Success;
     }
 
-    async ValueTask SettleAsync(string realm, ImmutableContentRef intentReference,
+    async ValueTask<Result> SettleAsync(string realm, ImmutableContentRef intentReference,
         SourceUseSettlementDisposition disposition, IExecutionContext context, CancellationToken ct)
     {
         var (tenant, intent, source) = await AccessReviewBulkReactions.ResolveAsync(realm, intentReference, content,
@@ -98,5 +103,7 @@ sealed partial class AccessReviewBulkSettlementReactor(IProjectionCheckpointStor
             if (!settled.IsSuccess)
                 throw new ReactionCommandFailedException(settled.Error!);
         }
+
+        return Result.Success;
     }
 }

@@ -9,9 +9,19 @@ public sealed partial class RiskDraftHistoryProjectorV1(
             FitzRiskDraftHistoryDirectoryV1.ProjectorName),
       IProjectorHandler<RiskDraftCreated>, IProjectorHandler<RiskDraftRevised>
 {
-    public ValueTask HandleAsync(RiskDraftCreated ev, IProjectorContext context,
-        CancellationToken ct) => projection.ApplyAsync(ev, ct);
+    public async ValueTask<Result> HandleAsync(IProjectorContext<RiskDraftCreated> context,
+        CancellationToken ct)
+    {
+        var ev = context.Trigger;
+        await projection.ApplyAsync(ev, ct).ConfigureAwait(false);
+        return Result.Success;
+    }
 
-    public ValueTask HandleAsync(RiskDraftRevised ev, IProjectorContext context,
-        CancellationToken ct) => projection.ApplyAsync(ev, ct);
+    public async ValueTask<Result> HandleAsync(IProjectorContext<RiskDraftRevised> context,
+        CancellationToken ct)
+    {
+        var ev = context.Trigger;
+        await projection.ApplyAsync(ev, ct).ConfigureAwait(false);
+        return Result.Success;
+    }
 }

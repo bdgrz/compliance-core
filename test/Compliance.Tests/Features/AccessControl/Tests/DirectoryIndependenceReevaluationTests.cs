@@ -130,7 +130,7 @@ public sealed class DirectoryIndependenceReevaluationTests
         await fixture.SetStatusAsync(fixture.Lead, false);
 
         // Act
-        var pending = await Assert.ThrowsAsync<ReactionCommandFailedException>(() =>
+        var failure = await Assert.ThrowsAsync<ProcessorFailureException>(() =>
             fixture.RunReactorAsync("FirmStaffStatusReevaluationV1"));
         var heldBack = await fixture.CheckpointAsync("FirmStaffStatusReevaluationV1");
         var receiptsWhilePending = await fixture.ReceiptsAsync();
@@ -141,6 +141,8 @@ public sealed class DirectoryIndependenceReevaluationTests
             .ReadJsonAsync<DirectoryIndependenceReevaluationView>(fixture.Tenant.ToString(), receipt.ReevaluationContent);
 
         // Assert
+        var pending = Assert.IsType<ReactionCommandFailedException>(failure.InnerException);
+        Assert.Same(pending.Error, failure.Error);
         Assert.True(pending.Error.IsTransient);
         Assert.Equal(before, heldBack);
         Assert.Empty(receiptsWhilePending);

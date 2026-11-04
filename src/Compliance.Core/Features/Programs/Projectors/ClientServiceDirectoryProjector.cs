@@ -8,12 +8,24 @@ public sealed partial class ClientServiceDirectoryProjector(IClientServiceDirect
       IProjectorHandler<ClientServiceCreated>, IProjectorHandler<ClientServiceRevised>,
       IProjectorHandler<ClientServiceRetired>
 {
-    public ValueTask HandleAsync(ClientServiceCreated ev, IProjectorContext context, CancellationToken ct) =>
-        projection.ApplyAsync(ev, ct);
+    public async ValueTask<Result> HandleAsync(IProjectorContext<ClientServiceCreated> context, CancellationToken ct)
+    {
+        var ev = context.Trigger;
+        await projection.ApplyAsync(ev, ct).ConfigureAwait(false);
+        return Result.Success;
+    }
 
-    public ValueTask HandleAsync(ClientServiceRevised ev, IProjectorContext context, CancellationToken ct) =>
-        projection.ApplyAsync(ev, ct);
+    public async ValueTask<Result> HandleAsync(IProjectorContext<ClientServiceRevised> context, CancellationToken ct)
+    {
+        var ev = context.Trigger;
+        await projection.ApplyAsync(ev, ct).ConfigureAwait(false);
+        return Result.Success;
+    }
 
-    public ValueTask HandleAsync(ClientServiceRetired ev, IProjectorContext context, CancellationToken ct) =>
-        projection.ApplyAsync(ev, ct);
+    public async ValueTask<Result> HandleAsync(IProjectorContext<ClientServiceRetired> context, CancellationToken ct)
+    {
+        var ev = context.Trigger;
+        await projection.ApplyAsync(ev, ct).ConfigureAwait(false);
+        return Result.Success;
+    }
 }

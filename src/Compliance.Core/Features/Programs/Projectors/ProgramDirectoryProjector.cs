@@ -10,15 +10,33 @@ public sealed partial class ProgramDirectoryProjector(IProgramDirectoryProjectio
       IProjectorHandler<ProgramCriteriaEditionSelected>,
       IProjectorHandler<TypeIEntryDecisionRecorded>
 {
-    public ValueTask HandleAsync(ProgramCreated ev, IProjectorContext context, CancellationToken ct) =>
-        projection.ApplyAsync(ev, ct);
+    public async ValueTask<Result> HandleAsync(IProjectorContext<ProgramCreated> context, CancellationToken ct)
+    {
+        var ev = context.Trigger;
+        await projection.ApplyAsync(ev, ct).ConfigureAwait(false);
+        return Result.Success;
+    }
 
-    public ValueTask HandleAsync(ProgramRevised ev, IProjectorContext context, CancellationToken ct) =>
-        projection.ApplyAsync(ev, ct);
+    public async ValueTask<Result> HandleAsync(IProjectorContext<ProgramRevised> context, CancellationToken ct)
+    {
+        var ev = context.Trigger;
+        await projection.ApplyAsync(ev, ct).ConfigureAwait(false);
+        return Result.Success;
+    }
 
-    public ValueTask HandleAsync(ProgramCriteriaEditionSelected ev, IProjectorContext context,
-        CancellationToken ct) => projection.ApplyAsync(ev, ct);
+    public async ValueTask<Result> HandleAsync(IProjectorContext<ProgramCriteriaEditionSelected> context,
+        CancellationToken ct)
+    {
+        var ev = context.Trigger;
+        await projection.ApplyAsync(ev, ct).ConfigureAwait(false);
+        return Result.Success;
+    }
 
-    public ValueTask HandleAsync(TypeIEntryDecisionRecorded ev, IProjectorContext context,
-        CancellationToken ct) => projection.ApplyAsync(ev, ct);
+    public async ValueTask<Result> HandleAsync(IProjectorContext<TypeIEntryDecisionRecorded> context,
+        CancellationToken ct)
+    {
+        var ev = context.Trigger;
+        await projection.ApplyAsync(ev, ct).ConfigureAwait(false);
+        return Result.Success;
+    }
 }

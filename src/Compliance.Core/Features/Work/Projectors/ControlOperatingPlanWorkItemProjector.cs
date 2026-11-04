@@ -12,9 +12,19 @@ public sealed partial class ControlOperatingPlanWorkItemProjector(
       IProjectorHandler<ControlOperatingPlanProposed>,
       IProjectorHandler<ControlOperatingPlanApproved>
 {
-    public ValueTask HandleAsync(ControlOperatingPlanProposed ev, IProjectorContext context,
-        CancellationToken ct) => projection.ApplyAsync(ev, ct);
+    public async ValueTask<Result> HandleAsync(IProjectorContext<ControlOperatingPlanProposed> context,
+        CancellationToken ct)
+    {
+        var ev = context.Trigger;
+        await projection.ApplyAsync(ev, ct).ConfigureAwait(false);
+        return Result.Success;
+    }
 
-    public ValueTask HandleAsync(ControlOperatingPlanApproved ev, IProjectorContext context,
-        CancellationToken ct) => projection.ApplyAsync(ev, ct);
+    public async ValueTask<Result> HandleAsync(IProjectorContext<ControlOperatingPlanApproved> context,
+        CancellationToken ct)
+    {
+        var ev = context.Trigger;
+        await projection.ApplyAsync(ev, ct).ConfigureAwait(false);
+        return Result.Success;
+    }
 }

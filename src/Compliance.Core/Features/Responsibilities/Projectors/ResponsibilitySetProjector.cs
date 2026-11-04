@@ -7,9 +7,19 @@ public sealed partial class ResponsibilitySetProjector(IResponsibilitySetProject
     : Projector(projection, EventStreamPattern.ForTenant(), "ResponsibilitySetsV1"),
       IProjectorHandler<ResponsibilityAssigned>, IProjectorHandler<ResponsibilityRevoked>
 {
-    public ValueTask HandleAsync(ResponsibilityAssigned ev, IProjectorContext context,
-        CancellationToken ct) => projection.ApplyAsync(ev, ct);
+    public async ValueTask<Result> HandleAsync(IProjectorContext<ResponsibilityAssigned> context,
+        CancellationToken ct)
+    {
+        var ev = context.Trigger;
+        await projection.ApplyAsync(ev, ct).ConfigureAwait(false);
+        return Result.Success;
+    }
 
-    public ValueTask HandleAsync(ResponsibilityRevoked ev, IProjectorContext context,
-        CancellationToken ct) => projection.ApplyAsync(ev, ct);
+    public async ValueTask<Result> HandleAsync(IProjectorContext<ResponsibilityRevoked> context,
+        CancellationToken ct)
+    {
+        var ev = context.Trigger;
+        await projection.ApplyAsync(ev, ct).ConfigureAwait(false);
+        return Result.Success;
+    }
 }

@@ -262,10 +262,11 @@ public sealed class TenantRbacBootstrapReactorTests
         var reactor = new TenantRbacBootstrapReactor(checkpoints, TypedReactionBus.For(scenario));
 
         // Act
-        var error = await Assert.ThrowsAsync<ReactionCommandFailedException>(() => scenario.RunAsync(reactor));
+        var failure = await Assert.ThrowsAsync<ProcessorFailureException>(() => scenario.RunAsync(reactor));
 
         // Assert
-        Assert.Equal(kind, error.Error.Kind);
+        Assert.Equal(kind, Assert.IsType<RequestError>(failure.Error).Kind);
+        Assert.Null(failure.InnerException);
         Assert.Equal(ProjectionCheckpoint.Start,
             await checkpoints.LoadAsync(new CheckpointIdentity(reactor.Name, reactor.Pattern)));
         Assert.DoesNotContain(TypedReactionBus.Sent(scenario), request => request is AssignTeamMember);
@@ -307,9 +308,11 @@ public sealed class TenantRbacBootstrapReactorTests
         var reactor = new TenantRbacBootstrapReactor(checkpoints, TypedReactionBus.For(scenario));
 
         // Act
-        var error = await Assert.ThrowsAsync<ReactionCommandFailedException>(() => scenario.RunAsync(reactor));
+        var failure = await Assert.ThrowsAsync<ProcessorFailureException>(() => scenario.RunAsync(reactor));
 
         // Assert
+        var error = Assert.IsType<ReactionCommandFailedException>(failure.InnerException);
+        Assert.Same(error.Error, failure.Error);
         Assert.Equal(RequestErrorKind.Validation, error.Error.Kind);
         Assert.Equal(ProjectionCheckpoint.Start,
             await checkpoints.LoadAsync(new CheckpointIdentity(reactor.Name, reactor.Pattern)));
@@ -337,7 +340,9 @@ public sealed class TenantRbacBootstrapReactorTests
             "Acme", "acme", "Acme LLC", "admin@example.com"));
         var checkpoints = new InMemoryProjectionCheckpointStore();
         var reactor = new TenantRbacBootstrapReactor(checkpoints, bus);
-        await Assert.ThrowsAsync<IOException>(() => scenario.RunAsync(reactor));
+        var failure = await Assert.ThrowsAsync<ProcessorFailureException>(() => scenario.RunAsync(reactor));
+        Assert.IsType<IOException>(failure.InnerException);
+        Assert.Null(failure.Error);
         var interrupted = bus.Grants[^1];
         Assert.Equal(ProjectionCheckpoint.Start,
             await checkpoints.LoadAsync(new CheckpointIdentity(reactor.Name, reactor.Pattern)));
@@ -407,7 +412,9 @@ public sealed class TenantRbacBootstrapReactorTests
             "Acme", "acme", "Acme LLC", "admin@example.com"));
         var checkpoints = new InMemoryProjectionCheckpointStore();
         var reactor = new TenantRbacBootstrapReactor(checkpoints, bus);
-        await Assert.ThrowsAsync<IOException>(() => scenario.RunAsync(reactor));
+        var failure = await Assert.ThrowsAsync<ProcessorFailureException>(() => scenario.RunAsync(reactor));
+        Assert.IsType<IOException>(failure.InnerException);
+        Assert.Null(failure.Error);
         var interrupted = bus.RoleGrants[^1];
         Assert.Equal(ProjectionCheckpoint.Start,
             await checkpoints.LoadAsync(new CheckpointIdentity(reactor.Name, reactor.Pattern)));

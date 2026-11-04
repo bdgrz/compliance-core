@@ -533,20 +533,29 @@ static class AssuranceProjectionCatchUp
         var cursor = checkpoint.Cursor;
         await foreach (var record in events.ReadAsync(pattern, checkpoint.Cursor, CancellationToken.None))
         {
+            var context = new ProjectionContext(new CheckpointIdentity(FitzAssuranceDirectory.ProjectorName, pattern));
             var task = record.Event switch
             {
-                AssuranceReportRecorded ev => projector.HandleAsync(ev, null!, default),
-                AssuranceReportRevised ev => projector.HandleAsync(ev, null!, default),
-                ProviderReviewRecorded ev => projector.HandleAsync(ev, null!, default),
-                ProviderCoverageGapRecorded ev => projector.HandleAsync(ev, null!, default),
-                ProviderCoverageGapClosed ev => projector.HandleAsync(ev, null!, default),
-                ProviderCoverageGapRiskAcceptanceAdmitted ev => projector.HandleAsync(ev, null!, default),
-                ProviderCoverageGapRiskAcceptanceLinked ev => projector.HandleAsync(ev, null!, default),
-                _ => ValueTask.CompletedTask,
+                AssuranceReportRecorded ev => projector.HandleAsync(new ProjectorContext<AssuranceReportRecorded>(ev, record, context), default),
+                AssuranceReportRevised ev => projector.HandleAsync(new ProjectorContext<AssuranceReportRevised>(ev, record, context), default),
+                ProviderReviewRecorded ev => projector.HandleAsync(new ProjectorContext<ProviderReviewRecorded>(ev, record, context), default),
+                ProviderCoverageGapRecorded ev => projector.HandleAsync(new ProjectorContext<ProviderCoverageGapRecorded>(ev, record, context), default),
+                ProviderCoverageGapClosed ev => projector.HandleAsync(new ProjectorContext<ProviderCoverageGapClosed>(ev, record, context), default),
+                ProviderCoverageGapRiskAcceptanceAdmitted ev => projector.HandleAsync(new ProjectorContext<ProviderCoverageGapRiskAcceptanceAdmitted>(ev, record, context), default),
+                ProviderCoverageGapRiskAcceptanceLinked ev => projector.HandleAsync(new ProjectorContext<ProviderCoverageGapRiskAcceptanceLinked>(ev, record, context), default),
+                _ => ValueTask.FromResult(Result.Success),
             };
-            await task;
+            var result = await task;
+            if (!result.IsSuccess)
+                throw new InvalidOperationException(result.Error.Message);
             cursor = record.NextCursor;
         }
         await batch.CommitAsync(new ProjectionCheckpoint(cursor));
     }
+
+    sealed record ProjectionContext(CheckpointIdentity Identity) : IProjectorContext
+    {
+        public bool IsRebuild => Identity.RebuildId is not null;
+    }
+
 }

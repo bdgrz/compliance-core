@@ -37,7 +37,6 @@ using Bdgrz.Compliance.Features.AdvisorCollaboration.Events;
 using Bdgrz.Compliance.Features.Examinations.Aggregates;
 using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
 namespace Bdgrz.Compliance.Features.AdvisorCollaboration.Reactors;
-
 /// <summary>
 ///     Starts <c>IndependentChildMaterialization</c> from a committed advisor feedback admission. The process record
 ///     exists before the source checkpoint advances and the sweep resumes it if this reactor stops, so an admission is
@@ -51,7 +50,10 @@ sealed partial class AdvisorFeedbackMaterializationReactor(IProjectionCheckpoint
 {
     public const string WorkloadName = "AdvisorFeedbackMaterializationV1";
 
-    public async ValueTask HandleAsync(IReactorContext<AdvisorFeedbackAdmitted> context, CancellationToken ct) =>
+    public async ValueTask<Result> HandleAsync(IReactorContext<AdvisorFeedbackAdmitted> context, CancellationToken ct)
+    {
         _ = await process.StartAsync(FindingClosureEffects.MaterializationProcessName, context, context.Trigger.Intent,
             [context.Trigger.Operation.LogicalId.ToString()], $"reactor:{WorkloadName}", ct).ConfigureAwait(false);
+        return Result.Success;
+    }
 }

@@ -56,11 +56,11 @@ public sealed partial class TenantInvitationReactor(IProjectionCheckpointStore c
 {
     readonly TenantActivationPolicy _policy = policy ?? TenantActivationPolicy.Default;
 
-    public ValueTask HandleAsync(IReactorContext<TenantInvitationAccepted> context, CancellationToken ct) =>
+    public ValueTask<Result> HandleAsync(IReactorContext<TenantInvitationAccepted> context, CancellationToken ct) =>
         _policy.ReactAsync(nameof(TenantInvitationReactor), context.Trigger.TenantId, context.Trigger,
             logger, token => ReactAsync(context, token), ct);
 
-    async ValueTask ReactAsync(IReactorContext<TenantInvitationAccepted> context, CancellationToken ct)
+    async ValueTask<Result> ReactAsync(IReactorContext<TenantInvitationAccepted> context, CancellationToken ct)
     {
         var accepted = context.Trigger;
         var invitedByDisplay = accepted.InvitedByDisplay;
@@ -93,9 +93,11 @@ public sealed partial class TenantInvitationReactor(IProjectionCheckpointStore c
         {
             foreach (var programId in guestPrograms)
             {
-                await bus.SendReactionAsync(new ProvisionGuestProgramAccess(accepted.TenantId, accepted.UserId,
+                var reactionOutcome1 = await bus.SendReactionAsync(new ProvisionGuestProgramAccess(accepted.TenantId, accepted.UserId,
                     programId, accepted.InvitationId, endDate, accepted.AcceptedAt, accepted.InvitedBy,
                     invitedByDisplay!), context, ct);
+                if (!reactionOutcome1.IsSuccess)
+                    return reactionOutcome1;
             }
         }
 
@@ -104,27 +106,35 @@ public sealed partial class TenantInvitationReactor(IProjectionCheckpointStore c
         {
             var teamId = BuiltInRbac.TeamIdForRole(accepted.TenantId, role) ??
                 throw new InvalidOperationException("The accepted invitation has an unknown built-in role.");
-            await AssignAsync(context, teamId, memberId, episodeId, ct).ConfigureAwait(false);
+            var reactionOutcome2 = await AssignAsync(context, teamId, memberId, episodeId, ct).ConfigureAwait(false);
+            if (!reactionOutcome2.IsSuccess)
+                return reactionOutcome2;
         }
 
         if (accepted.Administrator)
         {
-            // The administrators team is admitted on the tenant manager guard; the guard's process applies it.
-            await AssignAsync(context, BuiltInRbac.AdministratorsTeamId(accepted.TenantId), memberId, episodeId, ct)
+            var reactionOutcome3 = await AssignAsync(context, BuiltInRbac.AdministratorsTeamId(accepted.TenantId), memberId, episodeId, ct)
                 .ConfigureAwait(false);
-            await _policy.SendActivationAsync(bus,
+            if (!reactionOutcome3.IsSuccess)
+                return reactionOutcome3;
+            var reactionOutcome4 = await _policy.SendActivationAsync(bus,
                 TenantActivationEffects.Activate(accepted.Metadata.EventId, accepted.TenantId, accepted.UserId, accepted.EmailAddress), context, logger, ct);
+            if (!reactionOutcome4.IsSuccess)
+                return reactionOutcome4;
         }
+
+        return Result.Success;
     }
 
     // A user re-invited while already on the team keeps that assignment; the owner reports the exact
     // already-assigned conflict and the rest of the acceptance still applies.
-    async ValueTask AssignAsync(IReactorContext<TenantInvitationAccepted> context, Uuid teamId, Uuid memberId,
+    async ValueTask<Result> AssignAsync(IReactorContext<TenantInvitationAccepted> context, Uuid teamId, Uuid memberId,
         Uuid episodeId, CancellationToken ct)
     {
         var assignment = await bus.SendAsync(TeamMemberEffects.Assign(context.Trigger.Metadata.EventId,
             context.Trigger.TenantId, teamId, memberId, episodeId), context, ct).ConfigureAwait(false);
         if (!assignment.IsSuccess && assignment.Error != TeamMember.AlreadyAssignedConflict)
             throw new ReactionCommandFailedException(assignment.Error);
+        return Result.Success;
     }
 }

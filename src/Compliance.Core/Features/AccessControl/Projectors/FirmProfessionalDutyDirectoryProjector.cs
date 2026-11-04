@@ -18,11 +18,21 @@ sealed partial class FirmProfessionalDutyDirectoryProjector(IFirmProfessionalDut
         IProjectorHandler<FirmProfessionalDutyDesignationRecorded>,
         IProjectorHandler<FirmProfessionalDutyDesignationRevoked>
 {
-    public ValueTask HandleAsync(FirmProfessionalDutyDesignationRecorded ev, IProjectorContext context,
-        CancellationToken ct) => ProjectAsync(ev, ct);
+    public async ValueTask<Result> HandleAsync(IProjectorContext<FirmProfessionalDutyDesignationRecorded> context,
+        CancellationToken ct)
+    {
+        var ev = context.Trigger;
+        await ProjectAsync(ev, ct).ConfigureAwait(false);
+        return Result.Success;
+    }
 
-    public ValueTask HandleAsync(FirmProfessionalDutyDesignationRevoked ev, IProjectorContext context,
-        CancellationToken ct) => ProjectAsync(ev, ct);
+    public async ValueTask<Result> HandleAsync(IProjectorContext<FirmProfessionalDutyDesignationRevoked> context,
+        CancellationToken ct)
+    {
+        var ev = context.Trigger;
+        await ProjectAsync(ev, ct).ConfigureAwait(false);
+        return Result.Success;
+    }
 
     async ValueTask ProjectAsync(DomainEvent designation, CancellationToken ct) =>
         await projection.ApplyAsync(await dutyViews.ReadAsync(designation, ct)

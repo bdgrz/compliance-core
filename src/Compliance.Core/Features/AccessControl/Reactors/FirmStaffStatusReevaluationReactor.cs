@@ -28,7 +28,6 @@ using Bdgrz.Compliance.Features.AccessControl.Aggregates;
 using Bdgrz.Compliance.Features.AccessControl.Events;
 using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
 namespace Bdgrz.Compliance.Features.AccessControl.Reactors;
-
 /// <summary>Reevaluates accepted engagements when one staff record's status changes.</summary>
 sealed partial class FirmStaffStatusReevaluationReactor(IProjectionCheckpointStore checkpoints,
     ITenantDirectory tenants, IAggregateReader reader, FirmStaffViews staffViews,
@@ -39,7 +38,7 @@ sealed partial class FirmStaffStatusReevaluationReactor(IProjectionCheckpointSto
 {
     public const string WorkloadName = "FirmStaffStatusReevaluationV1";
 
-    public async ValueTask HandleAsync(IReactorContext<FirmStaffChangeRecorded> context, CancellationToken ct)
+    public async ValueTask<Result> HandleAsync(IReactorContext<FirmStaffChangeRecorded> context, CancellationToken ct)
     {
         await FirmStaffSource.VerifyAsync(sources, content, context.Source.Stream, context.Source.ResourceOffset,
             context.Trigger, ct).ConfigureAwait(false);
@@ -47,7 +46,7 @@ sealed partial class FirmStaffStatusReevaluationReactor(IProjectionCheckpointSto
             context.Source.Stream != new FirmStaffRecord(staffMemberId).Stream)
             throw new InvalidOperationException("Staff status reconciliation requires its authoritative record stream.");
         if (context.Trigger.ChangeKind != "status")
-            return;
+            return Result.Success;
         var record = await reader.HydrateAsync(new FirmStaffRecord(staffMemberId), ct).ConfigureAwait(false);
         var history = await FirmStaffHistory.ReadAsync(events, record, ct).ConfigureAwait(false);
         if (!history.Matches(context.Trigger))
@@ -59,7 +58,13 @@ sealed partial class FirmStaffStatusReevaluationReactor(IProjectionCheckpointSto
             if (!Uuid.TryParse(tenant.Value, null, out var tenantId) || tenantId == Uuid.Empty)
                 throw new InvalidOperationException("Registered assignment discovery requires canonical tenant identities.");
             if (seen.Add(tenantId))
-                await discovery.ReconcileStatusAsync(tenantId, context, changed, ct).ConfigureAwait(false);
+            {
+                var reactionOutcome1 = await discovery.ReconcileStatusAsync(tenantId, context, changed, ct).ConfigureAwait(false);
+                if (!reactionOutcome1.IsSuccess)
+                    return reactionOutcome1;
+            }
         }
+
+        return Result.Success;
     }
 }

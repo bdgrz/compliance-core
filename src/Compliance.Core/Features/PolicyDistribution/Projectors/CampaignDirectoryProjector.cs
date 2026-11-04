@@ -9,9 +9,19 @@ public sealed partial class CampaignDirectoryProjector(ICampaignDirectoryProject
             FitzCampaignDirectory.ProjectorName),
       IProjectorHandler<PolicyCampaignLaunched>, IProjectorHandler<PolicyCampaignClosed>
 {
-    public ValueTask HandleAsync(PolicyCampaignLaunched ev, IProjectorContext context,
-        CancellationToken ct) => projection.ApplyAsync(ev, ct);
+    public async ValueTask<Result> HandleAsync(IProjectorContext<PolicyCampaignLaunched> context,
+        CancellationToken ct)
+    {
+        var ev = context.Trigger;
+        await projection.ApplyAsync(ev, ct).ConfigureAwait(false);
+        return Result.Success;
+    }
 
-    public ValueTask HandleAsync(PolicyCampaignClosed ev, IProjectorContext context,
-        CancellationToken ct) => projection.ApplyAsync(ev, ct);
+    public async ValueTask<Result> HandleAsync(IProjectorContext<PolicyCampaignClosed> context,
+        CancellationToken ct)
+    {
+        var ev = context.Trigger;
+        await projection.ApplyAsync(ev, ct).ConfigureAwait(false);
+        return Result.Success;
+    }
 }

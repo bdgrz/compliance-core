@@ -24,7 +24,7 @@ public sealed partial class LinkImpactReviewWorkReactor(IProjectionCheckpointSto
     : Reactor(checkpoints, EventStreamPattern.ForTenant(SignificantChange.Area), WorkloadName), IReactorHandler<SignificantChangeImpactAssessed>
 {
     public const string WorkloadName = "SignificantChangeImpactWorkLinksV2";
-    public async ValueTask HandleAsync(IReactorContext<SignificantChangeImpactAssessed> context, CancellationToken ct)
+    public async ValueTask<Result> HandleAsync(IReactorContext<SignificantChangeImpactAssessed> context, CancellationToken ct)
     {
         var ev = context.Trigger;
         if (Pattern.IsTenantTemplate || Pattern.Realm != ev.TenantId.ToString() ||
@@ -39,9 +39,10 @@ public sealed partial class LinkImpactReviewWorkReactor(IProjectionCheckpointSto
             view.CurrentAssessment is not { } assessment || assessment.ContentVersion != ev.Header.CurrentVersionNumber)
             throw new ImmutableContentIntegrityException("The work-link source content differs from its native exact assessment.");
         if (assessment.RelatedReviewWorkIds.Count == 0 && assessment.RelatedCorrectiveActionIds.Count == 0)
-            return;
+            return Result.Success;
         await ImpactReactionOutcomes.SendAsync(bus, new LinkImpactReviewWork(
             EffectIdentity.CommandId(ev.Metadata.EventId, "change:impact-work-links", ev.SubjectId.ToString(), null),
             ev.TenantId, ev.Header.ProgramId, ev.SubjectId, assessment.ContentVersion), context, ct).ConfigureAwait(false);
+        return Result.Success;
     }
 }

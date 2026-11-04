@@ -18,7 +18,6 @@ using Bdgrz.Compliance.Features.Boundaries.Aggregates;
 using Bdgrz.Compliance.Features.Boundaries.Events;
 using Bdgrz.Compliance.Features.Risks.Readers;
 namespace Bdgrz.Compliance.Features.Risks.Reactors;
-
 /// <summary>
 ///     Raises M0-D10 boundary-change reassessment triggers when a successor boundary version is approved, one command
 ///     per assessed risk of the program. The initial approval defines scope rather than changing it, so it is skipped.
@@ -34,16 +33,19 @@ public sealed partial class BoundaryRiskReassessmentReactor(
 {
     public const string WorkloadName = "BoundaryRiskReassessmentV1";
 
-    public async ValueTask HandleAsync(IReactorContext<BoundaryApproved> context,
+    public async ValueTask<Result> HandleAsync(IReactorContext<BoundaryApproved> context,
         CancellationToken ct)
     {
         var approved = context.Trigger;
         var boundary = await reader.HydrateAsync(new SystemBoundary(approved.TenantId,
             approved.BoundaryId), ct).ConfigureAwait(false);
         if (!boundary.IsCreated || boundary.FirstApprovedVersionId == approved.DraftVersionId)
-            return;
-        await RiskReassessmentFanOut.SendAsync(bus, reader, risks, consistency, context, approved.Metadata.EventId,
+            return Result.Success;
+        var reactionOutcome1 = await RiskReassessmentFanOut.SendAsync(bus, reader, risks, consistency, context, approved.Metadata.EventId,
             approved.TenantId, boundary.ProgramId, RiskStates.BoundaryChanged, approved.DraftVersionId.ToString(),
             approved.DecidedAt, null, ct).ConfigureAwait(false);
+        if (!reactionOutcome1.IsSuccess)
+            return reactionOutcome1;
+        return Result.Success;
     }
 }

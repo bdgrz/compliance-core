@@ -31,7 +31,6 @@ using Bdgrz.Compliance.Features.Providers.Projections;
 using Bdgrz.Compliance.Features.Remediation.Aggregates;
 using Bdgrz.Compliance.Features.Remediation.Events;
 namespace Bdgrz.Compliance.Features.Remediation.Reactors;
-
 /// <summary>
 ///     Starts <c>FindingClosureProcess</c> from a committed closure acceptance. The process record, with the complete
 ///     canonical action key list of the frozen manifest, exists before the source checkpoint advances; the sweep resumes
@@ -45,7 +44,7 @@ sealed partial class FindingClosureReactor(IProjectionCheckpointStore checkpoint
 {
     public const string WorkloadName = "FindingClosureV1";
 
-    public async ValueTask HandleAsync(IReactorContext<FindingClosureAccepted> context, CancellationToken ct)
+    public async ValueTask<Result> HandleAsync(IReactorContext<FindingClosureAccepted> context, CancellationToken ct)
     {
         var accepted = context.Trigger;
         await FindingReactorSources.VerifyAsync(sources, content, Pattern, context, accepted.Owner, ct)
@@ -72,5 +71,6 @@ sealed partial class FindingClosureReactor(IProjectionCheckpointStore checkpoint
         _ = await process.StartAsync(FindingClosureEffects.ProcessName, context, accepted.Intent,
             children.Select(child => FindingClosureEffects.ActionKey(tenant, decision.ProgramId, intent.ParentId,
                 child.ChildId)), $"reactor:{WorkloadName}", ct).ConfigureAwait(false);
+        return Result.Success;
     }
 }

@@ -31,7 +31,6 @@ using Bdgrz.Compliance.Features.AccessReviews.Models;
 using Bdgrz.Compliance.Features.Examinations.Aggregates;
 using Bdgrz.Compliance.Features.Content.Persistence;
 namespace Bdgrz.Compliance.Features.AccessReviews.Reactors;
-
 /// <summary>
 ///     Starts <c>AccessReviewLaunchFanOut</c> from a committed launch. The process record, with the complete canonical
 ///     item list of the launch's intent manifest, exists before the source checkpoint advances; the sweep resumes it
@@ -45,7 +44,7 @@ sealed partial class AccessReviewLaunchFanOutReactor(IProjectionCheckpointStore 
 {
     public const string WorkloadName = "AccessReviewLaunchFanOutV1";
 
-    public async ValueTask HandleAsync(IReactorContext<AccessReviewCampaignLaunched> context, CancellationToken ct)
+    public async ValueTask<Result> HandleAsync(IReactorContext<AccessReviewCampaignLaunched> context, CancellationToken ct)
     {
         await AccessReviewReactorSources.VerifyAsync(sources, content, Pattern, context, context.Trigger.Operation.Owner, ct)
             .ConfigureAwait(false);
@@ -65,5 +64,6 @@ sealed partial class AccessReviewLaunchFanOutReactor(IProjectionCheckpointStore 
         _ = await process.StartAsync(AccessReviewEffects.LaunchFanOutName, context, launched.ItemIntentManifest,
             manifest.Selections.Select(static selection => selection.ItemId.ToString()), $"reactor:{WorkloadName}", ct)
             .ConfigureAwait(false);
+        return Result.Success;
     }
 }

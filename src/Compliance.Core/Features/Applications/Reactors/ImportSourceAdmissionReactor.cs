@@ -32,7 +32,6 @@ using Bdgrz.Compliance.Features.Applications.Aggregates;
 using Bdgrz.Compliance.Features.Applications.Events;
 using Bdgrz.Compliance.Features.Examinations.Aggregates;
 namespace Bdgrz.Compliance.Features.Applications.Reactors;
-
 /// <summary>
 ///     Starts <c>ApplicationImportExecutionProcess</c> from a committed plan seal. The process record, with the
 ///     canonical target list of the source and every frozen group, exists before the source checkpoint advances; the
@@ -46,7 +45,7 @@ sealed partial class ImportSourceAdmissionReactor(IProjectionCheckpointStore che
 {
     public const string WorkloadName = "ImportSourceAdmissionV1";
 
-    public async ValueTask HandleAsync(IReactorContext<ApplicationImportPlanSealed> context, CancellationToken ct)
+    public async ValueTask<Result> HandleAsync(IReactorContext<ApplicationImportPlanSealed> context, CancellationToken ct)
     {
         await ApplicationImportReactorSources.VerifyAsync(sources, content, Pattern, context, context.Trigger.Operation.Owner, ct)
             .ConfigureAwait(false);
@@ -79,5 +78,6 @@ sealed partial class ImportSourceAdmissionReactor(IProjectionCheckpointStore che
 
         _ = await process.StartAsync(ApplicationImportEffects.ProcessName, context, sealedPlan.FrozenPlan, targets,
             $"reactor:{WorkloadName}", ct).ConfigureAwait(false);
+        return Result.Success;
     }
 }

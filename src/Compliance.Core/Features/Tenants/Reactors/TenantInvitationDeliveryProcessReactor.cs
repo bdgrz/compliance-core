@@ -22,7 +22,6 @@ using Bdgrz.Compliance.Features.Content.Persistence;
 using Bdgrz.Compliance.Features.Examinations.Aggregates;
 using Bdgrz.Compliance.Features.Tenants.Events;
 namespace Bdgrz.Compliance.Features.Tenants.Reactors;
-
 /// <summary>
 ///     Starts the delivery process of an invitation from its fact: freezes the one immutable effect payload, makes the
 ///     durable process record exist before the checkpoint can advance, and drives it. It replaces the reactor that
@@ -33,7 +32,7 @@ public sealed partial class TenantInvitationDeliveryProcessReactor(IProjectionCh
     : Reactor(checkpoints, EventStreamPattern.ForTenant("tenant-invitations"), "TenantInvitationDeliveryProcessV1"),
       IReactorHandler<TenantMemberInvited>
 {
-    public async ValueTask HandleAsync(IReactorContext<TenantMemberInvited> context, CancellationToken ct)
+    public async ValueTask<Result> HandleAsync(IReactorContext<TenantMemberInvited> context, CancellationToken ct)
     {
         var invited = context.Trigger;
         var payload = await content.WriteJsonAsync(context.Source.Stream.Realm,
@@ -42,5 +41,6 @@ public sealed partial class TenantInvitationDeliveryProcessReactor(IProjectionCh
             .ConfigureAwait(false);
         await process.StartAsync(TenantInvitationDeliveryProcess.Name, context, payload, [],
             nameof(TenantInvitationDeliveryProcessReactor), ct).ConfigureAwait(false);
+        return Result.Success;
     }
 }

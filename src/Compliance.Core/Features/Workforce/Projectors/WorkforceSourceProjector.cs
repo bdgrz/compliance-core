@@ -7,9 +7,17 @@ public sealed partial class WorkforceSourceProjector(IWorkforceSourceProjection 
     : Projector(projection, EventStreamPattern.ForTenant("workforce-source-observations"), "WorkforceSourcesV1"),
       IProjectorHandler<WorkforceSourceObserved>, IProjectorHandler<WorkforceSourceReconciled>
 {
-    public ValueTask HandleAsync(WorkforceSourceObserved ev, IProjectorContext context, CancellationToken ct) =>
-        projection.ApplyAsync(ev, ct);
+    public async ValueTask<Result> HandleAsync(IProjectorContext<WorkforceSourceObserved> context, CancellationToken ct)
+    {
+        var ev = context.Trigger;
+        await projection.ApplyAsync(ev, ct).ConfigureAwait(false);
+        return Result.Success;
+    }
 
-    public ValueTask HandleAsync(WorkforceSourceReconciled ev, IProjectorContext context, CancellationToken ct) =>
-        projection.ApplyAsync(ev, ct);
+    public async ValueTask<Result> HandleAsync(IProjectorContext<WorkforceSourceReconciled> context, CancellationToken ct)
+    {
+        var ev = context.Trigger;
+        await projection.ApplyAsync(ev, ct).ConfigureAwait(false);
+        return Result.Success;
+    }
 }

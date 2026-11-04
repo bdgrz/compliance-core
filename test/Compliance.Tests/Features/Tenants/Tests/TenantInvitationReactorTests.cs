@@ -274,7 +274,7 @@ public sealed class TenantInvitationReactorTests
 
         // Act
         var started = Stopwatch.GetTimestamp();
-        await Assert.ThrowsAsync<ReactionCommandFailedException>(async () =>
+        var failure = await Assert.ThrowsAsync<ProcessorFailureException>(async () =>
             await scenario.RunAsync(reactor, deadline.Token));
         var elapsed = Stopwatch.GetElapsedTime(started);
         var identity = new CheckpointIdentity(reactor.Name, reactor.Pattern);
@@ -284,6 +284,8 @@ public sealed class TenantInvitationReactorTests
         var checkpointAfterReplay = await checkpoints.LoadAsync(identity);
 
         // Assert
+        Assert.True(Assert.IsType<RequestError>(failure.Error).IsTransient);
+        Assert.Null(failure.InnerException);
         Assert.True(elapsed >= TimeSpan.FromSeconds(8),
             "A transient activation must retry for the bounded local window before durable replay.");
         Assert.Equal(ProjectionCheckpoint.Start, checkpointBeforeReplay);
@@ -373,7 +375,9 @@ public sealed class TenantInvitationReactorTests
         var failure = await Record.ExceptionAsync(async () => await scenario.RunAsync(reactor));
 
         // Assert
-        Assert.IsType<ReactionCommandFailedException>(failure);
+        var processorFailure = Assert.IsType<ProcessorFailureException>(failure);
+        Assert.Equal(RequestErrorKind.Conflict, Assert.IsType<RequestError>(processorFailure.Error).Kind);
+        Assert.Null(processorFailure.InnerException);
         Assert.Empty(TypedReactionBus.Sent(scenario).OfType<ActivateTenant>());
     }
 
@@ -394,7 +398,9 @@ public sealed class TenantInvitationReactorTests
         var failure = await Record.ExceptionAsync(async () => await scenario.RunAsync(reactor));
 
         // Assert
-        Assert.IsType<ReactionCommandFailedException>(failure);
+        var processorFailure = Assert.IsType<ProcessorFailureException>(failure);
+        Assert.Equal(RequestErrorKind.Conflict, Assert.IsType<RequestError>(processorFailure.Error).Kind);
+        Assert.Null(processorFailure.InnerException);
         Assert.Empty(TypedReactionBus.Sent(scenario).OfType<AssignTeamMember>());
     }
 
@@ -414,7 +420,7 @@ public sealed class TenantInvitationReactorTests
             NullLogger<TenantInvitationReactor>.Instance);
 
         // Act
-        await Assert.ThrowsAsync<ReactionCommandFailedException>(async () => await scenario.RunAsync(reactor));
+        var failure = await Assert.ThrowsAsync<ProcessorFailureException>(async () => await scenario.RunAsync(reactor));
         var identity = new CheckpointIdentity(reactor.Name, reactor.Pattern);
         var firstPassAttempts = TypedReactionBus.Sent(scenario).Count(request => request is ActivateTenant);
         var checkpointAfterFailure = await checkpoints.LoadAsync(identity);
@@ -423,6 +429,8 @@ public sealed class TenantInvitationReactorTests
         var checkpointAfterReplay = await checkpoints.LoadAsync(identity);
 
         // Assert
+        Assert.False(Assert.IsType<RequestError>(failure.Error).IsTransient);
+        Assert.Null(failure.InnerException);
         Assert.Equal(1, firstPassAttempts);
         Assert.Equal(ProjectionCheckpoint.Start, checkpointAfterFailure);
         Assert.NotEqual(ProjectionCheckpoint.Start, checkpointAfterReplay);
@@ -450,14 +458,18 @@ public sealed class TenantInvitationReactorTests
             loggerFactory.CreateLogger<TenantInvitationReactor>(), policy);
 
         // Act
-        await Assert.ThrowsAsync<ReactionCommandFailedException>(async () => await scenario.RunAsync(reactor));
+        var firstFailure = await Assert.ThrowsAsync<ProcessorFailureException>(async () => await scenario.RunAsync(reactor));
         var identity = new CheckpointIdentity(reactor.Name, reactor.Pattern);
-        await Assert.ThrowsAsync<ReactionCommandFailedException>(async () => await scenario.RunAsync(reactor));
+        var secondFailure = await Assert.ThrowsAsync<ProcessorFailureException>(async () => await scenario.RunAsync(reactor));
         var checkpointBeforeBudget = await checkpoints.LoadAsync(identity);
         await scenario.RunAsync(reactor);
         var checkpointAfterBudget = await checkpoints.LoadAsync(identity);
 
         // Assert
+        Assert.False(Assert.IsType<RequestError>(firstFailure.Error).IsTransient);
+        Assert.False(Assert.IsType<RequestError>(secondFailure.Error).IsTransient);
+        Assert.Null(firstFailure.InnerException);
+        Assert.Null(secondFailure.InnerException);
         Assert.Equal(ProjectionCheckpoint.Start, checkpointBeforeBudget);
         Assert.NotEqual(ProjectionCheckpoint.Start, checkpointAfterBudget);
         Assert.Equal(3, TypedReactionBus.Sent(scenario).Count(request => request is ActivateTenant));
@@ -487,7 +499,7 @@ public sealed class TenantInvitationReactorTests
         for (var pass = 0; pass < 30; pass++)
         {
             if (await Record.ExceptionAsync(async () => await scenario.RunAsync(reactor)) is
-                ReactionCommandFailedException)
+                ProcessorFailureException { Error: { IsTransient: true }, InnerException: null })
                 failures++;
         }
         var elapsed = Stopwatch.GetElapsedTime(started);

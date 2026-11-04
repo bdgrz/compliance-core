@@ -32,7 +32,6 @@ using Bdgrz.Compliance.Features.Operations.Commands;
 using Bdgrz.Compliance.Features.Operations.Events;
 using Bdgrz.Compliance.Features.Content.Persistence;
 namespace Bdgrz.Compliance.Features.Operations.Reactors;
-
 /// <summary>
 ///     Starts <c>ControlOccurrenceFanOut</c> from a committed Type II selection. The process record, with the complete
 ///     canonical target list of the selection's manifest, exists before the source checkpoint advances; the sweep
@@ -46,7 +45,7 @@ sealed partial class ControlOccurrenceFanOutReactor(IProjectionCheckpointStore c
 {
     public const string WorkloadName = "ControlOccurrenceFanOutV1";
 
-    public async ValueTask HandleAsync(IReactorContext<DueControlOccurrencesGenerated> context, CancellationToken ct)
+    public async ValueTask<Result> HandleAsync(IReactorContext<DueControlOccurrencesGenerated> context, CancellationToken ct)
     {
         var selected = context.Trigger;
         if (selected.Operation.Owner != context.Source.Stream ||
@@ -73,5 +72,6 @@ sealed partial class ControlOccurrenceFanOutReactor(IProjectionCheckpointStore c
         _ = await process.StartAsync(ControlOccurrenceFanOut.ProcessName, context, selected.CreationIntentManifest,
             manifest.Selections.Select(static selection => selection.OccurrenceId.ToString()),
             $"reactor:{WorkloadName}", ct).ConfigureAwait(false);
+        return Result.Success;
     }
 }

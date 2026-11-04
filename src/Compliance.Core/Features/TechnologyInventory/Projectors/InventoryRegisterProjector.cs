@@ -36,31 +36,43 @@ public sealed partial class InventoryRegisterProjector(IInventoryRegisterProject
         IProjectorHandler<OperationalProcessChangeCanceled>
 {
     /// <inheritdoc />
-    public async ValueTask HandleAsync(LocationRevisionRecorded ev, IProjectorContext context,
-        CancellationToken ct) => await projection.ApplyAsync(ev, await ReadAsync(ev.TenantId, ev.ContentContent,
+    public async ValueTask<Result> HandleAsync(IProjectorContext<LocationRevisionRecorded> context,
+        CancellationToken ct)
+    {
+        var ev = context.Trigger;
+        await projection.ApplyAsync(ev, await ReadAsync(ev.TenantId, ev.ContentContent,
             ComplianceCoreJsonContext.Default.LocationContent, ct).ConfigureAwait(false), ct).ConfigureAwait(false);
+        return Result.Success;
+    }
 
     /// <inheritdoc />
-    public async ValueTask HandleAsync(OperationalProcessRevisionRecorded ev, IProjectorContext context,
-        CancellationToken ct) => await projection.ApplyAsync(ev, await ReadAsync(ev.TenantId, ev.ContentContent,
+    public async ValueTask<Result> HandleAsync(IProjectorContext<OperationalProcessRevisionRecorded> context,
+        CancellationToken ct)
+    {
+        var ev = context.Trigger;
+        await projection.ApplyAsync(ev, await ReadAsync(ev.TenantId, ev.ContentContent,
             ComplianceCoreJsonContext.Default.OperationalProcessContent, ct).ConfigureAwait(false), ct)
-        .ConfigureAwait(false);
+            .ConfigureAwait(false);
+        return Result.Success;
+    }
 
     /// <inheritdoc />
-    public ValueTask HandleAsync(LocationChangeAccepted ev, IProjectorContext context, CancellationToken ct) =>
-        ValueTask.CompletedTask;
+    public ValueTask<Result> HandleAsync(IProjectorContext<LocationChangeAccepted> context, CancellationToken ct) =>
+        ValueTask.FromResult(Result.Success);
 
     /// <inheritdoc />
-    public ValueTask HandleAsync(LocationChangeCanceled ev, IProjectorContext context, CancellationToken ct) =>
-        ValueTask.CompletedTask;
+    public ValueTask<Result> HandleAsync(IProjectorContext<LocationChangeCanceled> context, CancellationToken ct) =>
+        ValueTask.FromResult(Result.Success);
 
     /// <inheritdoc />
-    public ValueTask HandleAsync(OperationalProcessChangeAccepted ev, IProjectorContext context,
-        CancellationToken ct) => ValueTask.CompletedTask;
+    public ValueTask<Result> HandleAsync(IProjectorContext<OperationalProcessChangeAccepted> context,
+        CancellationToken ct) =>
+        ValueTask.FromResult(Result.Success);
 
     /// <inheritdoc />
-    public ValueTask HandleAsync(OperationalProcessChangeCanceled ev, IProjectorContext context,
-        CancellationToken ct) => ValueTask.CompletedTask;
+    public ValueTask<Result> HandleAsync(IProjectorContext<OperationalProcessChangeCanceled> context,
+        CancellationToken ct) =>
+        ValueTask.FromResult(Result.Success);
 
     async ValueTask<T> ReadAsync<T>(Uuid tenantId, ImmutableContentRef reference,
         System.Text.Json.Serialization.Metadata.JsonTypeInfo<T> info, CancellationToken ct) where T : class

@@ -26,9 +26,10 @@ public sealed partial class ApplicationImportProjector(IApplicationImportDirecto
         IProjectorHandler<ApplicationImportExecutionAuthorized>, IProjectorHandler<ApplicationImportCancellationAccepted>,
         IProjectorHandler<ApplicationImportCommitted>, IProjectorHandler<ApplicationImportRetirementProposalSealed>
 {
-    public async ValueTask HandleAsync(ApplicationImportStaged ev, IProjectorContext context,
+    public async ValueTask<Result> HandleAsync(IProjectorContext<ApplicationImportStaged> context,
         CancellationToken ct)
     {
+        var ev = context.Trigger;
         IReadOnlyList<ApplicationImportStagedRow> rows;
         try
         {
@@ -42,34 +43,72 @@ public sealed partial class ApplicationImportProjector(IApplicationImportDirecto
         }
 
         await projection.ApplyStagedAsync(ev, rows, ct).ConfigureAwait(false);
+        return Result.Success;
     }
 
-    public ValueTask HandleAsync(ApplicationImportCanceled ev, IProjectorContext context,
-        CancellationToken ct) => projection.ApplyAsync(ev, ct);
-
-    public ValueTask HandleAsync(ApplicationImportRowCorrelated ev, IProjectorContext context,
-        CancellationToken ct) => projection.ApplyAsync(ev, ct);
-
-    public ValueTask HandleAsync(ApplicationImportFailed ev, IProjectorContext context,
-        CancellationToken ct) => projection.ApplyAsync(ev, ct);
-
-    public ValueTask HandleAsync(ApplicationImportPlanSealed ev, IProjectorContext context,
-        CancellationToken ct) => projection.ApplyAsync(ev, ct);
-
-    public ValueTask HandleAsync(ApplicationImportExecutionAuthorized ev, IProjectorContext context,
-        CancellationToken ct) => projection.ApplyAsync(ev, ct);
-
-    public ValueTask HandleAsync(ApplicationImportCancellationAccepted ev, IProjectorContext context,
-        CancellationToken ct) => projection.ApplyAsync(ev, ct);
-
-    public ValueTask HandleAsync(ApplicationImportRetirementProposalSealed ev, IProjectorContext context,
-        CancellationToken ct) => projection.ApplyAsync(ev, ct);
-
-    public ValueTask HandleAsync(ApplicationImportCommitted ev, IProjectorContext context,
+    public async ValueTask<Result> HandleAsync(IProjectorContext<ApplicationImportCanceled> context,
         CancellationToken ct)
     {
+        var ev = context.Trigger;
+        await projection.ApplyAsync(ev, ct).ConfigureAwait(false);
+        return Result.Success;
+    }
+
+    public async ValueTask<Result> HandleAsync(IProjectorContext<ApplicationImportRowCorrelated> context,
+        CancellationToken ct)
+    {
+        var ev = context.Trigger;
+        await projection.ApplyAsync(ev, ct).ConfigureAwait(false);
+        return Result.Success;
+    }
+
+    public async ValueTask<Result> HandleAsync(IProjectorContext<ApplicationImportFailed> context,
+        CancellationToken ct)
+    {
+        var ev = context.Trigger;
+        await projection.ApplyAsync(ev, ct).ConfigureAwait(false);
+        return Result.Success;
+    }
+
+    public async ValueTask<Result> HandleAsync(IProjectorContext<ApplicationImportPlanSealed> context,
+        CancellationToken ct)
+    {
+        var ev = context.Trigger;
+        await projection.ApplyAsync(ev, ct).ConfigureAwait(false);
+        return Result.Success;
+    }
+
+    public async ValueTask<Result> HandleAsync(IProjectorContext<ApplicationImportExecutionAuthorized> context,
+        CancellationToken ct)
+    {
+        var ev = context.Trigger;
+        await projection.ApplyAsync(ev, ct).ConfigureAwait(false);
+        return Result.Success;
+    }
+
+    public async ValueTask<Result> HandleAsync(IProjectorContext<ApplicationImportCancellationAccepted> context,
+        CancellationToken ct)
+    {
+        var ev = context.Trigger;
+        await projection.ApplyAsync(ev, ct).ConfigureAwait(false);
+        return Result.Success;
+    }
+
+    public async ValueTask<Result> HandleAsync(IProjectorContext<ApplicationImportRetirementProposalSealed> context,
+        CancellationToken ct)
+    {
+        var ev = context.Trigger;
+        await projection.ApplyAsync(ev, ct).ConfigureAwait(false);
+        return Result.Success;
+    }
+
+    public async ValueTask<Result> HandleAsync(IProjectorContext<ApplicationImportCommitted> context,
+        CancellationToken ct)
+    {
+        var ev = context.Trigger;
         if (context.Identity.Pattern.Realm != ev.TenantId.ToString())
             throw new InvalidOperationException("An import commit must belong to its tenant projection workload.");
-        return projection.ApplyAsync(ev, ct);
+        await projection.ApplyAsync(ev, ct).ConfigureAwait(false);
+        return Result.Success;
     }
 }

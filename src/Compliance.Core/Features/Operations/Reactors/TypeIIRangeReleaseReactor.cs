@@ -38,7 +38,6 @@ using Bdgrz.Compliance.Features.Operations.Commands;
 using Bdgrz.Compliance.Features.Operations.Events;
 using Bdgrz.Compliance.Features.Proofs.Models;
 namespace Bdgrz.Compliance.Features.Operations.Reactors;
-
 /// <summary>
 ///     Settles the calendar from a period fact that ended a range: a canceled amendment or rejected opening releases
 ///     only its pending reservation (or fences it if it was never granted), and a frozen close releases the exact
@@ -54,18 +53,18 @@ sealed partial class TypeIIRangeReleaseReactor(IProjectionCheckpointStore checkp
 {
     public const string WorkloadName = "TypeIIRangeReleaseV1";
 
-    public ValueTask HandleAsync(IReactorContext<TypeIIPeriodAmendmentCanceled> context, CancellationToken ct) =>
+    public ValueTask<Result> HandleAsync(IReactorContext<TypeIIPeriodAmendmentCanceled> context, CancellationToken ct) =>
         SettleAsync(context, context.Trigger.Operation.RootOperationId, context.Trigger.Intent,
             context.Trigger.Operation.Episode, ct);
 
-    public ValueTask HandleAsync(IReactorContext<TypeIIPeriodOpeningRejected> context, CancellationToken ct) =>
+    public ValueTask<Result> HandleAsync(IReactorContext<TypeIIPeriodOpeningRejected> context, CancellationToken ct) =>
         SettleAsync(context, context.Trigger.Operation.RootOperationId, context.Trigger.Intent,
             context.Trigger.Operation.Episode, ct);
 
-    public ValueTask HandleAsync(IReactorContext<ObservationPeriodCloseFrozen> context, CancellationToken ct) =>
+    public ValueTask<Result> HandleAsync(IReactorContext<ObservationPeriodCloseFrozen> context, CancellationToken ct) =>
         SettleAsync(context, context.Trigger.CalendarAuthorizationId, context.Trigger.CalendarIntent, "initial", ct);
 
-    async ValueTask SettleAsync(IReactorContext context, Uuid operationId, ImmutableContentRef intentReference,
+    async ValueTask<Result> SettleAsync(IReactorContext context, Uuid operationId, ImmutableContentRef intentReference,
         string episode, CancellationToken ct)
     {
         var realm = context.Source.Stream.Realm;
@@ -90,5 +89,6 @@ sealed partial class TypeIIRangeReleaseReactor(IProjectionCheckpointStore checkp
             .ConfigureAwait(false);
         if (!settled.IsSuccess)
             throw new ReactionCommandFailedException(settled.Error!);
+        return Result.Success;
     }
 }

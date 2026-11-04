@@ -9,6 +9,11 @@ public sealed partial class WorkforceObservationResolutionProjector(
             "WorkforceObservationResolutionsV1"),
       IProjectorHandler<WorkforceObservationResolved>
 {
-    public ValueTask HandleAsync(WorkforceObservationResolved ev, IProjectorContext context,
-        CancellationToken ct) => projection.ApplyAsync(ev, ct);
+    public async ValueTask<Result> HandleAsync(IProjectorContext<WorkforceObservationResolved> context,
+        CancellationToken ct)
+    {
+        var ev = context.Trigger;
+        await projection.ApplyAsync(ev, ct).ConfigureAwait(false);
+        return Result.Success;
+    }
 }

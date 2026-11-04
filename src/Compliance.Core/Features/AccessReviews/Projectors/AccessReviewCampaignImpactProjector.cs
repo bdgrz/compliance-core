@@ -12,9 +12,19 @@ public sealed partial class AccessReviewCampaignImpactProjector(
         IProjectorHandler<AccessReviewCampaignLaunched>,
         IProjectorHandler<AccessReviewCampaignCompleted>
 {
-    public ValueTask HandleAsync(AccessReviewCampaignLaunched ev, IProjectorContext context,
-        CancellationToken ct) => projection.ApplyAsync(ev, ct);
+    public async ValueTask<Result> HandleAsync(IProjectorContext<AccessReviewCampaignLaunched> context,
+        CancellationToken ct)
+    {
+        var ev = context.Trigger;
+        await projection.ApplyAsync(ev, ct).ConfigureAwait(false);
+        return Result.Success;
+    }
 
-    public ValueTask HandleAsync(AccessReviewCampaignCompleted ev, IProjectorContext context,
-        CancellationToken ct) => projection.ApplyAsync(ev, ct);
+    public async ValueTask<Result> HandleAsync(IProjectorContext<AccessReviewCampaignCompleted> context,
+        CancellationToken ct)
+    {
+        var ev = context.Trigger;
+        await projection.ApplyAsync(ev, ct).ConfigureAwait(false);
+        return Result.Success;
+    }
 }

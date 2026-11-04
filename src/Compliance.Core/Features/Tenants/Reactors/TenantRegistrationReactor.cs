@@ -25,7 +25,6 @@ using Bdgrz.Compliance.Features.Tenants.Events;
 using Bdgrz.Compliance.Features.Tenants.Models;
 using Bdgrz.Compliance.Features.Work.Authorizers;
 namespace Bdgrz.Compliance.Features.Tenants.Reactors;
-
 /// <summary>
 ///     Starts the slug claims a tenant fact causes, and invites the first administrator. The tenant fact already
 ///     records its owner, so no separate owner relationship is registered. Every claim is the exact logical
@@ -40,31 +39,39 @@ public sealed partial class TenantRegistrationReactor(
       IReactorHandler<TenantSlugChanged>,
       IReactorHandler<TenantSlugSurrenderRequested>
 {
-    public async ValueTask HandleAsync(IReactorContext<TenantRegistered> context, CancellationToken ct)
+    public async ValueTask<Result> HandleAsync(IReactorContext<TenantRegistered> context, CancellationToken ct)
     {
-        await bus.SendReactionAsync(
+        var reactionOutcome1 = await bus.SendReactionAsync(
             TenantSlugEffects.Register(context.Trigger.Metadata.EventId, context.Trigger.TenantId,
                 context.Trigger.Slug), context, ct);
+        if (!reactionOutcome1.IsSuccess)
+            return reactionOutcome1;
         if (!context.Trigger.CreatorIsAdministrator &&
             context.Trigger.FirstAdministratorEmail is { } email)
-            // The tenant fixes the invitation id, so a replay is an exact retry of the same invitation.
-            await bus.SendReactionAsync(new InviteTenantMember(
+        // The tenant fixes the invitation id, so a replay is an exact retry of the same invitation.
+        {
+            var reactionOutcome2 = await bus.SendReactionAsync(new InviteTenantMember(
                 TenantInvitationIds.FirstAdministratorOf(context.Trigger.TenantId), context.Trigger.TenantId, email,
                 "client_personnel", Administrator: true),
                 context, ct);
+            if (!reactionOutcome2.IsSuccess)
+                return reactionOutcome2;
+        }
+
+        return Result.Success;
     }
 
-    public ValueTask HandleAsync(IReactorContext<TenantSlugSurrenderRequested> context, CancellationToken ct) =>
+    public ValueTask<Result> HandleAsync(IReactorContext<TenantSlugSurrenderRequested> context, CancellationToken ct) =>
         bus.SendReactionAsync(
             TenantSlugEffects.Surrender(context.Trigger.Metadata.EventId, context.Trigger.TenantId,
                 context.Trigger.Slug), context, ct);
 
-    public ValueTask HandleAsync(IReactorContext<TenantSlugChangeRequested> context, CancellationToken ct) =>
+    public ValueTask<Result> HandleAsync(IReactorContext<TenantSlugChangeRequested> context, CancellationToken ct) =>
         bus.SendReactionAsync(
             TenantSlugEffects.Register(context.Trigger.Metadata.EventId, context.Trigger.TenantId,
                 context.Trigger.NewSlug), context, ct);
 
-    public ValueTask HandleAsync(IReactorContext<TenantSlugChanged> context, CancellationToken ct) =>
+    public ValueTask<Result> HandleAsync(IReactorContext<TenantSlugChanged> context, CancellationToken ct) =>
         bus.SendReactionAsync(
             TenantSlugEffects.Surrender(context.Trigger.Metadata.EventId, context.Trigger.TenantId,
                 context.Trigger.OldSlug), context, ct);

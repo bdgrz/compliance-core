@@ -9,6 +9,11 @@ public sealed partial class ApplicationEvidenceSourceReferenceProjector(
         FitzApplicationEvidenceSourceReferenceDirectory.ProjectorName),
       IProjectorHandler<EvidenceSupportLinked>
 {
-    public ValueTask HandleAsync(EvidenceSupportLinked ev, IProjectorContext context,
-        CancellationToken ct) => projection.ApplyAsync(ev, ct);
+    public async ValueTask<Result> HandleAsync(IProjectorContext<EvidenceSupportLinked> context,
+        CancellationToken ct)
+    {
+        var ev = context.Trigger;
+        await projection.ApplyAsync(ev, ct).ConfigureAwait(false);
+        return Result.Success;
+    }
 }

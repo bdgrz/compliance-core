@@ -26,7 +26,6 @@ using Bdgrz.Compliance.Features.Work.Models;
 using Bdgrz.Compliance.Features.AccessControl.Aggregates;
 using Bdgrz.Compliance.Features.AccessControl.Events;
 namespace Bdgrz.Compliance.Features.AccessControl.Reactors;
-
 /// <summary>
 ///     Starts <c>FirmStaffRegistrationProcess</c> from a committed registration root fact. The process record exists
 ///     before the source checkpoint advances; the sweep resumes it if this reactor stops.
@@ -38,7 +37,7 @@ sealed partial class FirmStaffRegistrationReactor(IProjectionCheckpointStore che
 {
     public const string WorkloadName = "FirmStaffRegistrationV1";
 
-    public async ValueTask HandleAsync(IReactorContext<FirmStaffRegistrationAccepted> context, CancellationToken ct)
+    public async ValueTask<Result> HandleAsync(IReactorContext<FirmStaffRegistrationAccepted> context, CancellationToken ct)
     {
         await FirmStaffSource.VerifyAsync(sources, content, context.Source.Stream, context.Source.ResourceOffset,
             context.Trigger, ct).ConfigureAwait(false);
@@ -60,5 +59,6 @@ sealed partial class FirmStaffRegistrationReactor(IProjectionCheckpointStore che
 
         await process.StartAsync(FirmStaffEffects.ProcessName, context, context.Trigger.Intent,
             [intent.CanonicalUserId.ToString()], $"reactor:{WorkloadName}", ct).ConfigureAwait(false);
+        return Result.Success;
     }
 }

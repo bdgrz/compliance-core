@@ -63,7 +63,7 @@ sealed class DirectoryReevaluationDiscovery(IDomainEventReader events, IAggregat
     FirmStaffViews staffViews, IActualStaffEngagementLocatorReader locators, IImmutableContentStore content,
     IRequestBus bus)
 {
-    public async ValueTask ReconcileStatusAsync(Uuid tenantId, IReactorContext<FirmStaffChangeRecorded> context,
+    public async ValueTask<Result> ReconcileStatusAsync(Uuid tenantId, IReactorContext<FirmStaffChangeRecorded> context,
         FirmStaffMemberView changed, CancellationToken ct)
     {
         var sources = await SourcesAsync(tenantId, ct).ConfigureAwait(false);
@@ -111,8 +111,12 @@ sealed class DirectoryReevaluationDiscovery(IDomainEventReader events, IAggregat
                 if (!seen.Add(row.LocatorId))
                     throw Pending("Assignment discovery returned a duplicate immutable source row.");
                 if (row.DirectoryStaffRevision < changed.Revision)
-                    await bus.SendReactionAsync(Command(tenantId, context.Source, source, row.StaffMemberId, row.UserId),
+                {
+                    var result = await bus.SendReactionAsync(Command(tenantId, context.Source, source, row.StaffMemberId, row.UserId),
                         context, ct).ConfigureAwait(false);
+                    if (!result.IsSuccess)
+                        return result;
+                }
             }
             cursor = page.NextCursor;
         } while (cursor is not null);
@@ -121,9 +125,10 @@ sealed class DirectoryReevaluationDiscovery(IDomainEventReader events, IAggregat
         var after = (await SourcesAsync(tenantId, ct).ConfigureAwait(false)).Where(IsAcceptanceSource).ToArray();
         if (!accepted.Select(item => SourceIdentity(item.Record)).SequenceEqual(after.Select(SourceIdentity)))
             throw Pending("Authoritative acceptance sources changed while assignment discovery was paged.");
+        return Result.Success;
     }
 
-    public async ValueTask ReconcileAcceptanceAsync(IReactorContext context, DomainEvent trigger, CancellationToken ct)
+    public async ValueTask<Result> ReconcileAcceptanceAsync(IReactorContext context, DomainEvent trigger, CancellationToken ct)
     {
         if (trigger is not (ServiceEngagementAcceptanceRecorded or ServiceEngagementStaffAssigned) ||
             !Uuid.TryParse(context.Source.Stream.Realm, null, out var tenantId))
@@ -149,10 +154,15 @@ sealed class DirectoryReevaluationDiscovery(IDomainEventReader events, IAggregat
                 foreach (var staff in source.Assignees.Where(staff =>
                              staff.StaffMemberId == changed.StaffMemberId && staff.UserId == changed.UserId &&
                              staff.Practice == changed.Practice && staff.DirectoryStaffRevision < changed.Revision))
-                    await bus.SendReactionAsync(Command(tenantId, directory, source, staff.StaffMemberId, staff.UserId),
+                {
+                    var result = await bus.SendReactionAsync(Command(tenantId, directory, source, staff.StaffMemberId, staff.UserId),
                         context, ct).ConfigureAwait(false);
+                    if (!result.IsSuccess)
+                        return result;
+                }
             }
         }
+        return Result.Success;
     }
 
     async ValueTask<List<DomainEventRecord>> SourcesAsync(Uuid tenantId, CancellationToken ct)

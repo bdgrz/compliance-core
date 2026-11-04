@@ -8,6 +8,10 @@ sealed class ActualStaffEngagementLocatorProjector(IActualStaffEngagementLocator
 {
     public const string WorkloadName = "ActualStaffEngagementLocatorV1";
 
-    protected override ValueTask ProjectEventAsync(DomainEventRecord record, IProjectorContext context,
-        CancellationToken ct) => projection.ApplyAsync(record, context, ct);
+    protected override async ValueTask<Result> ProjectEventAsync(DomainEventRecord record, IProjectorContext context,
+        CancellationToken ct)
+    {
+        await projection.ApplyAsync(record, context, ct).ConfigureAwait(false);
+        return Result.Success;
+    }
 }

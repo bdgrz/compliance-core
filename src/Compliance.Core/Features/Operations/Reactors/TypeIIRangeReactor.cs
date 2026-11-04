@@ -19,7 +19,6 @@ using Bdgrz.Compliance.Features.AccessControl.Aggregates;
 using Bdgrz.Compliance.Features.Operations.Aggregates;
 using Bdgrz.Compliance.Features.Operations.Events;
 namespace Bdgrz.Compliance.Features.Operations.Reactors;
-
 /// <summary>
 ///     Starts <c>TypeIIRangeProcess</c> from a committed opening or amendment acceptance. The process record exists
 ///     before the source checkpoint advances; the sweep resumes it if this reactor stops. The intent is already
@@ -31,11 +30,16 @@ sealed partial class TypeIIRangeReactor(IProjectionCheckpointStore checkpoints, 
 {
     public const string WorkloadName = "TypeIIRangeV1";
 
-    public async ValueTask HandleAsync(IReactorContext<TypeIIPeriodOpeningAccepted> context, CancellationToken ct) =>
+    public async ValueTask<Result> HandleAsync(IReactorContext<TypeIIPeriodOpeningAccepted> context, CancellationToken ct)
+    {
         _ = await process.StartAsync(TypeIIRangeEffects.ProcessName, context, context.Trigger.Intent, [],
             $"reactor:{WorkloadName}", ct).ConfigureAwait(false);
-
-    public async ValueTask HandleAsync(IReactorContext<TypeIIPeriodAmendmentAccepted> context, CancellationToken ct) =>
+        return Result.Success;
+    }
+    public async ValueTask<Result> HandleAsync(IReactorContext<TypeIIPeriodAmendmentAccepted> context, CancellationToken ct)
+    {
         _ = await process.StartAsync(TypeIIRangeEffects.ProcessName, context, context.Trigger.Intent, [],
             $"reactor:{WorkloadName}", ct).ConfigureAwait(false);
+        return Result.Success;
+    }
 }

@@ -41,7 +41,6 @@ using Bdgrz.Compliance.Features.Examinations.Aggregates;
 using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
 using Bdgrz.Compliance.Features.Content.Persistence;
 namespace Bdgrz.Compliance.Features.AccessReviews.Reactors;
-
 /// <summary>
 ///     Completes the cancellation of a batch once every selected item carries its fence. The complete fence proof set is
 ///     read from the item streams; an item whose fence is not visible yet is a transient failure, so the batch is never
@@ -54,7 +53,7 @@ sealed partial class AccessReviewBulkCancellationCompletionReactor(IProjectionCh
 {
     public const string WorkloadName = "AccessReviewBulkCancellationCompletionV1";
 
-    public async ValueTask HandleAsync(IReactorContext<AccessReviewDecisionBatchCancellationAccepted> context,
+    public async ValueTask<Result> HandleAsync(IReactorContext<AccessReviewDecisionBatchCancellationAccepted> context,
         CancellationToken ct)
     {
         await AccessReviewReactorSources.VerifyAsync(sources, content, Pattern, context, context.Trigger.Operation.Owner, ct)
@@ -84,5 +83,6 @@ sealed partial class AccessReviewBulkCancellationCompletionReactor(IProjectionCh
             intent.DecisionBatchId, proofSet), context, ct).ConfigureAwait(false);
         if (!completed.IsSuccess)
             throw new ReactionCommandFailedException(completed.Error!);
+        return Result.Success;
     }
 }

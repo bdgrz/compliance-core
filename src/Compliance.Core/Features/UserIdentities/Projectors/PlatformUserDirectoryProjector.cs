@@ -9,9 +9,19 @@ public sealed partial class PlatformUserDirectoryProjector(IPlatformUserDirector
         "PlatformUserDirectoryV2"),
       IProjectorHandler<UserIdentityRegistered>, IProjectorHandler<UserIdentityProfileObserved>
 {
-    public ValueTask HandleAsync(UserIdentityRegistered ev, IProjectorContext context,
-        CancellationToken ct) => projection.ApplyAsync(ev, ct);
+    public async ValueTask<Result> HandleAsync(IProjectorContext<UserIdentityRegistered> context,
+        CancellationToken ct)
+    {
+        var ev = context.Trigger;
+        await projection.ApplyAsync(ev, ct).ConfigureAwait(false);
+        return Result.Success;
+    }
 
-    public ValueTask HandleAsync(UserIdentityProfileObserved ev, IProjectorContext context,
-        CancellationToken ct) => projection.ApplyAsync(ev, ct);
+    public async ValueTask<Result> HandleAsync(IProjectorContext<UserIdentityProfileObserved> context,
+        CancellationToken ct)
+    {
+        var ev = context.Trigger;
+        await projection.ApplyAsync(ev, ct).ConfigureAwait(false);
+        return Result.Success;
+    }
 }

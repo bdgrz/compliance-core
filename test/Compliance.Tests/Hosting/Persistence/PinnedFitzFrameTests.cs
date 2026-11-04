@@ -55,7 +55,7 @@ public sealed class PinnedFitzFrameTests
         else
         {
             Assert.NotNull(failure);
-            Assert.Contains("1 MiB Wire-2 limit", failure.Message, StringComparison.Ordinal);
+            Assert.Contains("1 MiB Wire 3 limit", failure.Message, StringComparison.Ordinal);
         }
     }
 

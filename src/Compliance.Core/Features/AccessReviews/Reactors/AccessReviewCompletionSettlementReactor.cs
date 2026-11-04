@@ -49,7 +49,6 @@ using Bdgrz.Compliance.Features.Examinations.Aggregates;
 using Bdgrz.Compliance.Features.Providers.Projections;
 using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
 namespace Bdgrz.Compliance.Features.AccessReviews.Reactors;
-
 /// <summary>
 ///     Settles every item use of a canceled completion. The cancellation is committed first, so a delayed acquisition
 ///     always meets the fence before any use is cleared; each settlement is the deterministic effect of the process
@@ -64,7 +63,7 @@ sealed partial class AccessReviewCompletionSettlementReactor(IProjectionCheckpoi
 {
     public const string WorkloadName = "AccessReviewCompletionSettlementV1";
 
-    public async ValueTask HandleAsync(IReactorContext<AccessReviewCampaignCompletionCanceled> context,
+    public async ValueTask<Result> HandleAsync(IReactorContext<AccessReviewCampaignCompletionCanceled> context,
         CancellationToken ct)
     {
         await AccessReviewReactorSources.VerifyAsync(sources, content, Pattern, context, context.Trigger.Operation.Owner, ct)
@@ -91,5 +90,7 @@ sealed partial class AccessReviewCompletionSettlementReactor(IProjectionCheckpoi
             if (!settled.IsSuccess)
                 throw new ReactionCommandFailedException(settled.Error!);
         }
+
+        return Result.Success;
     }
 }

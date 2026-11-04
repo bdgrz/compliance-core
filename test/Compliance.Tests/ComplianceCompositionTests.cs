@@ -44,6 +44,26 @@ public sealed class ComplianceCompositionTests
     }
 
     [Fact]
+    public async Task ShouldDenyProcessorStatusGivenNoOperationalRoleConfigured()
+    {
+        // Arrange
+        var builder = Compose();
+        builder.Configuration["PORTIA_SYSTEM_ADMIN_ROLE"] = "";
+        await using var provider = builder.Services.BuildServiceProvider(
+            new ServiceProviderOptions { ValidateScopes = true });
+        await using var scope = provider.CreateAsyncScope();
+        var bus = scope.ServiceProvider.GetRequiredService<IRequestBus>();
+
+        // Act
+        var result = await bus.AuthorizeAsync(new GetProcessorStatus("TenantRbacBootstrapReactor", null),
+            bus.CreateContext(RequestActor.System));
+
+        // Assert
+        Assert.False(result.IsSuccess);
+        Assert.Equal(RequestErrorKind.Forbidden, result.Error.Kind);
+    }
+
+    [Fact]
     public async Task ShouldComposeEveryTypeIBaselineSourceFamilyGivenSharedApplication()
     {
         // Arrange

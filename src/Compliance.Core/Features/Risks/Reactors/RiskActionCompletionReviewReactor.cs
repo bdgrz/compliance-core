@@ -32,7 +32,6 @@ using Bdgrz.Compliance.Features.Providers.Projections;
 using Bdgrz.Compliance.Features.Risks.Aggregates;
 using Bdgrz.Compliance.Features.Risks.Events;
 namespace Bdgrz.Compliance.Features.Risks.Reactors;
-
 /// <summary>
 ///     Starts <c>RiskActionCompletionReviewProcess</c> from a committed review acceptance. The process record, with the
 ///     complete canonical evidence request key list of the frozen selection, exists before the source checkpoint
@@ -46,7 +45,7 @@ sealed partial class RiskActionCompletionReviewReactor(IProjectionCheckpointStor
 {
     public const string WorkloadName = "RiskActionCompletionReviewV1";
 
-    public async ValueTask HandleAsync(IReactorContext<RiskTreatmentActionCompletionReviewAccepted> context,
+    public async ValueTask<Result> HandleAsync(IReactorContext<RiskTreatmentActionCompletionReviewAccepted> context,
         CancellationToken ct)
     {
         var accepted = context.Trigger;
@@ -77,5 +76,6 @@ sealed partial class RiskActionCompletionReviewReactor(IProjectionCheckpointStor
             cited.Select(item => RiskActionReviewEffects.EvidenceKey(tenant, decision.ProgramId, item.EvidenceRequestId))
                 .OrderBy(static key => key, Bdgrz.Compliance.Features.Kernel.Services.StreamKeyOrder.Instance),
             $"reactor:{WorkloadName}", ct).ConfigureAwait(false);
+        return Result.Success;
     }
 }

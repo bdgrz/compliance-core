@@ -9,6 +9,11 @@ public sealed partial class MethodologyTemplateDirectoryProjector(IMethodologyTe
     : Projector(projection, FitzMethodologyTemplateDirectory.Pattern, FitzMethodologyTemplateDirectory.ProjectorName),
         IProjectorHandler<MethodologyTemplateVersionPublished>
 {
-    public ValueTask HandleAsync(MethodologyTemplateVersionPublished fact, IProjectorContext context,
-        CancellationToken ct) => projection.ApplyAsync(fact, ct);
+    public async ValueTask<Result> HandleAsync(IProjectorContext<MethodologyTemplateVersionPublished> context,
+        CancellationToken ct)
+    {
+        var fact = context.Trigger;
+        await projection.ApplyAsync(fact, ct).ConfigureAwait(false);
+        return Result.Success;
+    }
 }

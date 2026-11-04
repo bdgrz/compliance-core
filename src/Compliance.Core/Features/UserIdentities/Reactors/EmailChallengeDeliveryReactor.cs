@@ -37,7 +37,6 @@ using Bdgrz.Compliance.Features.Providers.Projections;
 using Bdgrz.Compliance.Features.UserIdentities.Events;
 using Bdgrz.Compliance.Features.Work.Authorizers;
 namespace Bdgrz.Compliance.Features.UserIdentities.Reactors;
-
 /// <summary>
 ///     Starts the email challenge delivery process when a verification or identity recovery challenge is accepted on an
 ///     email address. The process record, with the effect payload frozen from the accepted fact, exists before the
@@ -49,26 +48,26 @@ public sealed partial class EmailChallengeDeliveryReactor(IProjectionCheckpointS
       IReactorHandler<EmailChallengeIssued>,
       IReactorHandler<IdentityRecoveryChallengeIssued>
 {
-    public ValueTask HandleAsync(IReactorContext<EmailChallengeIssued> context, CancellationToken ct)
+    public async ValueTask<Result> HandleAsync(IReactorContext<EmailChallengeIssued> context, CancellationToken ct)
     {
         var issued = context.Trigger;
-        return StartAsync(context, issued.Operation, issued.ChallengeId, issued.UserId, issued.ExpiresAt,
-            issued.TokenKeyId, EmailChallengeDeliveryIntent.Verification, ct);
+        return await (StartAsync(context, issued.Operation, issued.ChallengeId, issued.UserId, issued.ExpiresAt,
+            issued.TokenKeyId, EmailChallengeDeliveryIntent.Verification, ct)).ConfigureAwait(false);
     }
 
-    public ValueTask HandleAsync(IReactorContext<IdentityRecoveryChallengeIssued> context, CancellationToken ct)
+    public async ValueTask<Result> HandleAsync(IReactorContext<IdentityRecoveryChallengeIssued> context, CancellationToken ct)
     {
         var issued = context.Trigger;
-        return StartAsync(context, issued.Operation, issued.ChallengeId, issued.UserId, issued.ExpiresAt,
-            issued.TokenKeyId, EmailChallengeDeliveryIntent.Recovery, ct);
+        return await (StartAsync(context, issued.Operation, issued.ChallengeId, issued.UserId, issued.ExpiresAt,
+            issued.TokenKeyId, EmailChallengeDeliveryIntent.Recovery, ct)).ConfigureAwait(false);
     }
 
-    async ValueTask StartAsync(IReactorContext context, OperationProvenance operation, Uuid challengeId, Uuid userId,
+    async ValueTask<Result> StartAsync(IReactorContext context, OperationProvenance operation, Uuid challengeId, Uuid userId,
         DateTimeOffset expiresAt, string tokenKeyId, string purpose, CancellationToken ct)
     {
         // A challenge that expired before this reaction can never be used, so nothing is delivered for it.
         if (clock.GetUtcNow() >= expiresAt)
-            return;
+            return Result.Success;
         var intent = new EmailChallengeDeliveryIntent(new DurableIntentHeader(operation.RootOperationId,
             operation.Owner, operation.AffectedOwner, operation.ExpectedRevisionOwner, operation.Actor,
             operation.Episode, operation.OriginalExpectedRevision, operation.AuthoredIntentSha256,
@@ -79,5 +78,6 @@ public sealed partial class EmailChallengeDeliveryReactor(IProjectionCheckpointS
             EmailChallengeDeliveryIntent.Schema, intent, ct).ConfigureAwait(false);
         await process.StartAsync(EmailChallengeDeliveryProcess.Name, context, frozen, [],
             nameof(EmailChallengeDeliveryReactor), ct).ConfigureAwait(false);
+        return Result.Success;
     }
 }

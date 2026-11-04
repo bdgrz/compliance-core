@@ -28,7 +28,6 @@ using Bdgrz.Compliance.Features.Work.Models;
 using Bdgrz.Compliance.Features.AuditorRequests.Aggregates;
 using Bdgrz.Compliance.Features.AuditorRequests.Events;
 namespace Bdgrz.Compliance.Features.AuditorRequests.Reactors;
-
 /// <summary>
 ///     Starts <c>IndependentChildMaterialization</c> from a committed comment admission. The process record exists before
 ///     the source checkpoint advances and the sweep resumes it if this reactor stops, so a comment thread is always
@@ -41,11 +40,12 @@ sealed partial class AuditorCommentMaterializationReactor(IProjectionCheckpointS
 {
     public const string WorkloadName = "AuditorCommentMaterializationV1";
 
-    public async ValueTask HandleAsync(IReactorContext<AuditorCommentAdmitted> context, CancellationToken ct)
+    public async ValueTask<Result> HandleAsync(IReactorContext<AuditorCommentAdmitted> context, CancellationToken ct)
     {
         await AuditorRequestReactorSources.VerifyAsync(sources, content, Pattern, context, context.Trigger.Owner, ct)
             .ConfigureAwait(false);
         _ = await process.StartAsync(FindingClosureEffects.MaterializationProcessName, context, context.Trigger.Intent,
             [context.Trigger.Operation.LogicalId.ToString()], $"reactor:{WorkloadName}", ct).ConfigureAwait(false);
+        return Result.Success;
     }
 }

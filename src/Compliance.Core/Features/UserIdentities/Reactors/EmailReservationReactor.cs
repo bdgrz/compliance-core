@@ -36,11 +36,10 @@ public sealed partial class EmailReservationReactor(IProjectionCheckpointStore c
     : Reactor(checkpoints, EventStreamPattern.ForPattern("bdgrz", "user-identities")),
       IReactorHandler<UserIdentityRegistered>
 {
-    public async ValueTask HandleAsync(IReactorContext<UserIdentityRegistered> context, CancellationToken ct)
+    public async ValueTask<Result> HandleAsync(IReactorContext<UserIdentityRegistered> context, CancellationToken ct)
     {
         if (context.Trigger.EmailAddress is not { } address)
-            return;
-
+            return Result.Success;
         // The command id is derived from the registration it reacts to, so a replayed reaction is the same command;
         // the reactor reserves as the system and does not constrain the address revision.
         var commandId = EffectIdentity.CommandId(context.Trigger.Metadata.EventId, nameof(ReserveEmail), address, null);
@@ -50,5 +49,6 @@ public sealed partial class EmailReservationReactor(IProjectionCheckpointStore c
         // conflict is terminal for this event; retrying it would block all later registrations.
         if (!result.IsSuccess && result.Error.Kind != RequestErrorKind.Conflict)
             throw new ReactionCommandFailedException(result.Error);
+        return Result.Success;
     }
 }

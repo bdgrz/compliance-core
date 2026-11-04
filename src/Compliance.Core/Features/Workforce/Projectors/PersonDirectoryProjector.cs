@@ -9,16 +9,49 @@ public sealed partial class PersonDirectoryProjector(IPersonDirectoryProjection 
       IProjectorHandler<PersonMembershipCorrelated>, IProjectorHandler<PersonRegistrationRecorded>,
       IProjectorHandler<PersonDetailsRevised>, IProjectorHandler<PersonMembershipCorrelationRecorded>
 {
-    public ValueTask HandleAsync(PersonRecorded ev, IProjectorContext context,
-        CancellationToken ct) => projection.ApplyAsync(ev, ct);
+    public async ValueTask<Result> HandleAsync(IProjectorContext<PersonRecorded> context,
+        CancellationToken ct)
+    {
+        var ev = context.Trigger;
+        await projection.ApplyAsync(ev, ct).ConfigureAwait(false);
+        return Result.Success;
+    }
 
-    public ValueTask HandleAsync(PersonRevised ev, IProjectorContext context,
-        CancellationToken ct) => projection.ApplyAsync(ev, ct);
+    public async ValueTask<Result> HandleAsync(IProjectorContext<PersonRevised> context,
+        CancellationToken ct)
+    {
+        var ev = context.Trigger;
+        await projection.ApplyAsync(ev, ct).ConfigureAwait(false);
+        return Result.Success;
+    }
 
-    public ValueTask HandleAsync(PersonMembershipCorrelated ev, IProjectorContext context,
-        CancellationToken ct) => projection.ApplyAsync(ev, ct);
-    public ValueTask HandleAsync(PersonRegistrationRecorded ev, IProjectorContext context, CancellationToken ct) => projection.ApplyAsync(ev, ct);
-    public ValueTask HandleAsync(PersonDetailsRevised ev, IProjectorContext context, CancellationToken ct) => projection.ApplyAsync(ev, ct);
-    public ValueTask HandleAsync(PersonMembershipCorrelationRecorded ev, IProjectorContext context, CancellationToken ct) => projection.ApplyAsync(ev, ct);
+    public async ValueTask<Result> HandleAsync(IProjectorContext<PersonMembershipCorrelated> context,
+        CancellationToken ct)
+    {
+        var ev = context.Trigger;
+        await projection.ApplyAsync(ev, ct).ConfigureAwait(false);
+        return Result.Success;
+    }
+
+    public async ValueTask<Result> HandleAsync(IProjectorContext<PersonRegistrationRecorded> context, CancellationToken ct)
+    {
+        var ev = context.Trigger;
+        await projection.ApplyAsync(ev, ct).ConfigureAwait(false);
+        return Result.Success;
+    }
+
+    public async ValueTask<Result> HandleAsync(IProjectorContext<PersonDetailsRevised> context, CancellationToken ct)
+    {
+        var ev = context.Trigger;
+        await projection.ApplyAsync(ev, ct).ConfigureAwait(false);
+        return Result.Success;
+    }
+
+    public async ValueTask<Result> HandleAsync(IProjectorContext<PersonMembershipCorrelationRecorded> context, CancellationToken ct)
+    {
+        var ev = context.Trigger;
+        await projection.ApplyAsync(ev, ct).ConfigureAwait(false);
+        return Result.Success;
+    }
 
 }

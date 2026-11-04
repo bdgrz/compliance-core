@@ -441,8 +441,11 @@ public sealed class FitzApplicationDirectoryTests
         await using (var batch = await directory.BeginAsync(new ProjectionBatchContext(identity,
                          ProjectionCheckpoint.Start)))
         {
-            await revisionHandler.HandleAsync(revised, new ProjectionContext(identity),
-                CancellationToken.None);
+            var source = new DomainEventRecord(new EventStreamAddress(tenantId.ToString(), "applications",
+                applicationId.ToString()), revised, 0, new EventCursor("1"));
+            var result = await revisionHandler.HandleAsync(new ProjectorContext<SystemInstanceRevised>(
+                revised, source, new ProjectionContext(identity)), CancellationToken.None);
+            Assert.True(result.IsSuccess);
             await batch.CommitAsync(ProjectionCheckpoint.Start);
         }
         var instance = await directory.GetInstanceAsync(tenantId, instanceId);

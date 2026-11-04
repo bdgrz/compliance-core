@@ -10,6 +10,10 @@ public sealed partial class AuditPackageDirectoryProjector(IAuditPackageDirector
     : Projector(projection, EventStreamPattern.ForTenant(AuditPackageManifest.Area),
         FitzAuditPackageDirectory.ProjectorName), IProjectorHandler<AuditPackageCreated>
 {
-    public ValueTask HandleAsync(AuditPackageCreated fact, IProjectorContext context, CancellationToken ct) =>
-        projection.ApplyAsync(fact, ct);
+    public async ValueTask<Result> HandleAsync(IProjectorContext<AuditPackageCreated> context, CancellationToken ct)
+    {
+        var fact = context.Trigger;
+        await projection.ApplyAsync(fact, ct).ConfigureAwait(false);
+        return Result.Success;
+    }
 }

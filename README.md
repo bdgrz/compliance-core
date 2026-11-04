@@ -21,7 +21,7 @@ The [domain model](docs/proposed/README.md) is the source of truth for business 
 
 ## Prerequisites
 
-- .NET SDK 10.0.400 (pinned by `global.json`)
+- .NET SDK 10.0.403 (selected by `global.json`)
 - Docker with Compose
 - A GitHub token that can read the Cntryl package registry
 
@@ -33,7 +33,11 @@ dotnet build Compliance.slnx --configuration Release --no-restore
 dotnet test Compliance.slnx --configuration Release --no-build --no-restore --filter "Category!=BrokerIntegration&Category!=WebIntegration"
 ```
 
+`Directory.Packages.props` centrally selects direct package versions and compatible transitive versions through NuGet transitive pinning. Microsoft.OpenApi stays on its compatible 2.x line because ASP.NET Core 10 requires a version below 3.0.0.
+
 ## Running locally
+
+This checkout uses [Portia 0.10.0](https://github.com/cntryl/portia/blob/v0.10.0/docs/migration-0.10.0.md) and [Fitz .NET 4.0.0](https://github.com/cntryl/portia/blob/v0.10.0/docs/fitz-4-upgrade.md), which require Fitz broker 0.4.0 / Wire 3. Compose pins the published 0.4.0 broker image; its [tagged upstream release document](https://github.com/cntryl/fitz/blob/v0.4.0/docs/operations/release-0.4.0.md) still labels it Release Candidate. Existing 0.2.x stores require a [separate storage migration](https://github.com/cntryl/fitz/blob/v0.4.0/docs/operations/migration-guide.md#midge-050) or a fresh store before running this Compose version. This update does not migrate data or automatically delete existing volumes.
 
 Compose starts the standalone application, Fitz, and the Sqrzl S3 emulator:
 

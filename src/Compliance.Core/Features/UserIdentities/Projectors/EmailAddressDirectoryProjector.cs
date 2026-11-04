@@ -9,9 +9,17 @@ public sealed partial class EmailAddressDirectoryProjector(IEmailAddressDirector
       IProjectorHandler<EmailAddressReserved>,
       IProjectorHandler<EmailAddressVerified>
 {
-    public ValueTask HandleAsync(EmailAddressReserved ev, IProjectorContext context, CancellationToken ct) =>
-        projection.ApplyAsync(ev, ct);
+    public async ValueTask<Result> HandleAsync(IProjectorContext<EmailAddressReserved> context, CancellationToken ct)
+    {
+        var ev = context.Trigger;
+        await projection.ApplyAsync(ev, ct).ConfigureAwait(false);
+        return Result.Success;
+    }
 
-    public ValueTask HandleAsync(EmailAddressVerified ev, IProjectorContext context, CancellationToken ct) =>
-        projection.ApplyAsync(ev, ct);
+    public async ValueTask<Result> HandleAsync(IProjectorContext<EmailAddressVerified> context, CancellationToken ct)
+    {
+        var ev = context.Trigger;
+        await projection.ApplyAsync(ev, ct).ConfigureAwait(false);
+        return Result.Success;
+    }
 }

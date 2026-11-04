@@ -17,10 +17,10 @@ public sealed partial class RetiredMemberGrantReactor(IProjectionCheckpointStore
     : Reactor(checkpoints, EventStreamPattern.ForTenant("access-grants"), "RetiredMemberGrantV1"),
       IReactorHandler<AccessGrantIssued>
 {
-    public async ValueTask HandleAsync(IReactorContext<AccessGrantIssued> context, CancellationToken ct)
+    public async ValueTask<Result> HandleAsync(IReactorContext<AccessGrantIssued> context, CancellationToken ct)
     {
         if (context.Trigger.Terms.Principal.Kind != AccessGrantPrincipalKind.Member)
-            return;
+            return Result.Success;
         var source = context.Trigger;
         if (context.Source.Stream != new AccessGrant(source.TenantId, source.GrantId).Stream)
             throw new InvalidOperationException("Grant cleanup requires its exact issued source.");
@@ -32,11 +32,14 @@ public sealed partial class RetiredMemberGrantReactor(IProjectionCheckpointStore
         if (member.TerminationProof is not { } proof)
         {
             if (member.IsRegistered && member.MembershipEpisodeId == episodeId)
-                return;
+                return Result.Success;
             throw new ReactionCommandFailedException(new RequestError(RequestErrorKind.Conflict,
                 "Membership retirement authority is not available yet.", isTransient: true));
         }
         var request = MemberRetirementEffects.Grant(source, context.Source.ResourceOffset, proof.EventId);
-        await bus.SendReactionAsync(request, context, ct).ConfigureAwait(false);
+        var reactionOutcome1 = await bus.SendReactionAsync(request, context, ct).ConfigureAwait(false);
+        if (!reactionOutcome1.IsSuccess)
+            return reactionOutcome1;
+        return Result.Success;
     }
 }

@@ -31,7 +31,6 @@ using Bdgrz.Compliance.Features.AccessReviews.Events;
 using Bdgrz.Compliance.Features.AccessReviews.Models;
 using Bdgrz.Compliance.Features.Examinations.Aggregates;
 namespace Bdgrz.Compliance.Features.AccessReviews.Reactors;
-
 /// <summary>
 ///     Starts <c>BulkAccessDecisionProcess</c> from a committed bulk decision admission. The process record, with the
 ///     complete canonical target list of the frozen selection, exists before the source checkpoint advances; the sweep
@@ -45,7 +44,7 @@ sealed partial class AccessReviewBulkAdmissionReactor(IProjectionCheckpointStore
 {
     public const string WorkloadName = "AccessReviewDecisionBatchAdmissionV1";
 
-    public async ValueTask HandleAsync(IReactorContext<AccessReviewDecisionBatchAdmitted> context, CancellationToken ct)
+    public async ValueTask<Result> HandleAsync(IReactorContext<AccessReviewDecisionBatchAdmitted> context, CancellationToken ct)
     {
         await AccessReviewReactorSources.VerifyAsync(sources, content, Pattern, context, context.Trigger.Operation.Owner, ct)
             .ConfigureAwait(false);
@@ -72,5 +71,6 @@ sealed partial class AccessReviewBulkAdmissionReactor(IProjectionCheckpointStore
 
         _ = await process.StartAsync(AccessReviewEffects.BulkProcessName, context, context.Trigger.Intent, targets,
             $"reactor:{WorkloadName}", ct).ConfigureAwait(false);
+        return Result.Success;
     }
 }

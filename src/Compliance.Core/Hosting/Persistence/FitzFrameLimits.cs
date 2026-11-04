@@ -15,7 +15,7 @@ namespace Bdgrz.Compliance.Hosting.Persistence;
 static class FitzFrameLimits
 {
     // The application keeps a 65,535-byte operation cap, including route metadata.
-    // Fitz 3 encodes these operation payloads inside its larger Wire-2 frames.
+    // Fitz 4 encodes these extension-free operation payloads inside its larger Wire 3 frames.
     public static void CheckEvent(EventStreamAddress stream, int envelopeBytes)
     {
         var size = (long)envelopeBytes + Encoding.UTF8.GetByteCount(stream.ToString()) + 26;

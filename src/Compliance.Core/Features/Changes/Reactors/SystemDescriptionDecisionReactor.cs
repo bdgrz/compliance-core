@@ -64,7 +64,7 @@ public sealed partial class SystemDescriptionDecisionReactor(
 {
     public const string WorkloadName = "SystemDescriptionImpactDecisionsV1";
 
-    public async ValueTask HandleAsync(IReactorContext<SystemDescriptionApproved> context,
+    public async ValueTask<Result> HandleAsync(IReactorContext<SystemDescriptionApproved> context,
         CancellationToken ct)
     {
         var ev = context.Trigger;
@@ -72,7 +72,7 @@ public sealed partial class SystemDescriptionDecisionReactor(
         var description = await descriptions.ReadAsync(ev.TenantId, ev.ProgramId, ev.SystemDescriptionId, ct).ConfigureAwait(false);
         RequireSource(description, context.Source.Stream, ev);
         if (ev.ChangeCount == 0)
-            return;
+            return Result.Success;
         var approval = ((SystemDescriptionApprovedBody)await SystemDescriptionContent.ReadMutationAsync(content, ev, ct).ConfigureAwait(false)).Approval;
         var selected = await descriptions.VersionSourceAsync(ev.TenantId, ev.ProgramId, ev.SystemDescriptionId, approval.VersionId, ct).ConfigureAwait(false);
         var version = selected?.Version;
@@ -105,9 +105,11 @@ public sealed partial class SystemDescriptionDecisionReactor(
                 correlated.DecisionId, correlated.Decision, assessment.AssessmentSha256),
                 context, ct).ConfigureAwait(false);
         }
+
+        return Result.Success;
     }
 
-    public async ValueTask HandleAsync(IReactorContext<SystemDescriptionNoChangeRecorded> context,
+    public async ValueTask<Result> HandleAsync(IReactorContext<SystemDescriptionNoChangeRecorded> context,
         CancellationToken ct)
     {
         var ev = context.Trigger;
@@ -115,7 +117,7 @@ public sealed partial class SystemDescriptionDecisionReactor(
         var description = await descriptions.ReadAsync(ev.TenantId, ev.ProgramId, ev.SystemDescriptionId, ct).ConfigureAwait(false);
         RequireSource(description, context.Source.Stream, ev);
         if (ev.ChangeCount == 0)
-            return;
+            return Result.Success;
         var decision = ((SystemDescriptionNoChangeRecordedBody)await SystemDescriptionContent.ReadMutationAsync(content, ev, ct).ConfigureAwait(false)).Decision;
         if (description.FindVersion(decision.VersionId) is not { } version ||
             description.NoChangeDecisions.FirstOrDefault(item =>
@@ -156,7 +158,7 @@ public sealed partial class SystemDescriptionDecisionReactor(
                 decision.VersionId, decisionId, "no_change",
                 currentChangeAssessment.AssessmentSha256), context, ct)
                 .ConfigureAwait(false);
-            return;
+            return Result.Success;
         }
 
         if (incidentAssessment is { RequiresSystemDescriptionReview: true } currentIncidentAssessment)
@@ -175,6 +177,8 @@ public sealed partial class SystemDescriptionDecisionReactor(
                 decision.VersionId, decisionId, currentIncidentAssessment.AssessmentSha256),
                 context, ct).ConfigureAwait(false);
         }
+
+        return Result.Success;
     }
 
     static void RequireSource(SystemDescriptionReadSnapshot description, EventStreamAddress stream, DomainEvent source)

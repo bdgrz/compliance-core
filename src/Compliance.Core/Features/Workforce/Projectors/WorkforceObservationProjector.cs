@@ -9,9 +9,19 @@ public sealed partial class WorkforceObservationProjector(IWorkforceObservationP
             "WorkforceObservationsV1"),
       IProjectorHandler<WorkRelationshipRecorded>, IProjectorHandler<WorkRelationshipRevised>
 {
-    public ValueTask HandleAsync(WorkRelationshipRecorded ev, IProjectorContext context,
-        CancellationToken ct) => projection.ApplyAsync(ev, ct);
+    public async ValueTask<Result> HandleAsync(IProjectorContext<WorkRelationshipRecorded> context,
+        CancellationToken ct)
+    {
+        var ev = context.Trigger;
+        await projection.ApplyAsync(ev, ct).ConfigureAwait(false);
+        return Result.Success;
+    }
 
-    public ValueTask HandleAsync(WorkRelationshipRevised ev, IProjectorContext context,
-        CancellationToken ct) => projection.ApplyAsync(ev, ct);
+    public async ValueTask<Result> HandleAsync(IProjectorContext<WorkRelationshipRevised> context,
+        CancellationToken ct)
+    {
+        var ev = context.Trigger;
+        await projection.ApplyAsync(ev, ct).ConfigureAwait(false);
+        return Result.Success;
+    }
 }

@@ -38,9 +38,8 @@ using Bdgrz.Compliance.Features.Examinations.Aggregates;
 using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
 using Bdgrz.Compliance.Features.TechnologyInventory.Readers;
 namespace Bdgrz.Compliance.Features.AccessControl.Reactors;
-
 /// <summary>
-///     Removes a deleted team's members so no orphaned <see cref="TeamMember" /> assignment survives the team
+///     Removes a deleted team's members so no orphaned <see cref = "TeamMember"/> assignment survives the team
 ///     itself. Discovery is source-complete: the live assignments come from the authoritative team-member facts, never
 ///     from a directory row, so a lagging or empty projector cannot hide a member and the checkpoint cannot advance
 ///     past an unseen one. Every removal names the exact assignment episode it closes; an assignment that a newer
@@ -54,7 +53,7 @@ public sealed partial class TeamCleanupReactor(
     : Reactor(checkpoints, EventStreamPattern.ForTenant("rbac-teams"), "TeamCleanup"),
       IReactorHandler<TeamDeleted>
 {
-    public async ValueTask HandleAsync(IReactorContext<TeamDeleted> context, CancellationToken ct)
+    public async ValueTask<Result> HandleAsync(IReactorContext<TeamDeleted> context, CancellationToken ct)
     {
         var tenantId = context.Trigger.TenantId;
         var teamId = context.Trigger.TeamId;
@@ -72,5 +71,7 @@ public sealed partial class TeamCleanupReactor(
             if (owner.IsAssigned && owner.AssignmentEventId == assignment.AssignmentEventId)
                 throw new ReactionCommandFailedException(removal.Error);
         }
+
+        return Result.Success;
     }
 }

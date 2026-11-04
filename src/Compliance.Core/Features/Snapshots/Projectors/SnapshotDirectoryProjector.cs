@@ -7,6 +7,11 @@ public sealed partial class SnapshotDirectoryProjector(ISnapshotDirectoryProject
     : Projector(projection, EventStreamPattern.ForTenant("snapshots"), "SnapshotDirectory"),
       IProjectorHandler<SnapshotFrozen>
 {
-    public ValueTask HandleAsync(SnapshotFrozen ev, IProjectorContext context,
-        CancellationToken ct) => projection.ApplyAsync(ev, ct);
+    public async ValueTask<Result> HandleAsync(IProjectorContext<SnapshotFrozen> context,
+        CancellationToken ct)
+    {
+        var ev = context.Trigger;
+        await projection.ApplyAsync(ev, ct).ConfigureAwait(false);
+        return Result.Success;
+    }
 }

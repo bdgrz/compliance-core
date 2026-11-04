@@ -47,7 +47,6 @@ using Bdgrz.Compliance.Features.Providers.Projections;
 using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
 using Bdgrz.Compliance.Features.Workforce.Models;
 namespace Bdgrz.Compliance.Features.Evaluations.Reactors;
-
 /// <summary>
 ///     Routes every submitted material evaluation deviation into the shared finding path. It watches the evaluation
 ///     streams of the tenant and reads the verified submission content of each submitted round, so a deviation is
@@ -61,7 +60,7 @@ public sealed partial class ControlEvaluationDeviationFindingReactor(
 {
     public const string WorkloadName = "ControlEvaluationDeviationFindingsV1";
 
-    public async ValueTask HandleAsync(IReactorContext<ControlEvaluationSubmitted> context,
+    public async ValueTask<Result> HandleAsync(IReactorContext<ControlEvaluationSubmitted> context,
         CancellationToken ct)
     {
         var ev = context.Trigger;
@@ -81,8 +80,14 @@ public sealed partial class ControlEvaluationDeviationFindingReactor(
 
         foreach (var deviation in submission.Deviations.Where(static deviation =>
                      deviation.Classification == ControlEvaluationStates.Material))
-            await bus.SendReactionAsync(new RaiseEvaluationDeviationFinding(ev.TenantId,
+        {
+            var reactionOutcome1 = await bus.SendReactionAsync(new RaiseEvaluationDeviationFinding(ev.TenantId,
                 ev.ProgramId, Uuid.CreateVersion5(deviation.DeviationId, "finding"), ev.ControlId,
                 ev.EvaluationId, deviation.DeviationId), context, ct).ConfigureAwait(false);
+            if (!reactionOutcome1.IsSuccess)
+                return reactionOutcome1;
+        }
+
+        return Result.Success;
     }
 }

@@ -40,12 +40,10 @@ jobs:
         uses: actions/setup-dotnet@v6 # v6
         with:
           global-json-file: global.json
-          cache: true
-          cache-dependency-path: "**/packages.lock.json"
 
       - name: Validate
         run: |
-          dotnet restore Compliance.slnx --locked-mode
+          dotnet restore Compliance.slnx
           dotnet build Compliance.slnx --configuration Release --no-restore
           dotnet test Compliance.slnx --configuration Release --no-build --no-restore --filter "Category!=BrokerIntegration&Category!=WebIntegration"
 

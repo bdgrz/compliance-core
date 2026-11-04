@@ -10,16 +10,87 @@ public sealed partial class ControlDraftDirectoryV2Projector(IControlDraftDirect
     : Projector(projection, EventStreamPattern.ForTenant(ControlDraft.Area), FitzControlDraftDirectoryV2.ProjectorName),
         IProjectorHandler<ControlDraftCreated>, IProjectorHandler<ControlDraftRevised>, IProjectorHandler<ControlDraftDiscarded>, IProjectorHandler<ControlReviewed>, IProjectorHandler<ControlApproved>, IProjectorHandler<ControlSuccessorProposed>, IProjectorHandler<ControlRetirementProposed>, IProjectorHandler<ControlRetired>, IProjectorHandler<ControlProposalWithdrawn>, IProjectorHandler<ControlOwnerPersonDesignated>, IProjectorHandler<ResponsibilityAssigned>, IProjectorHandler<ResponsibilityRevoked>
 {
-    public ValueTask HandleAsync(ControlDraftCreated value, IProjectorContext context, CancellationToken ct) => projection.ApplyAsync(value, ct);
-    public ValueTask HandleAsync(ControlDraftRevised value, IProjectorContext context, CancellationToken ct) => projection.ApplyAsync(value, ct);
-    public ValueTask HandleAsync(ControlDraftDiscarded value, IProjectorContext context, CancellationToken ct) => projection.ApplyAsync(value, ct);
-    public ValueTask HandleAsync(ControlReviewed value, IProjectorContext context, CancellationToken ct) => projection.ApplyAsync(value, ct);
-    public ValueTask HandleAsync(ControlApproved value, IProjectorContext context, CancellationToken ct) => projection.ApplyAsync(value, ct);
-    public ValueTask HandleAsync(ControlSuccessorProposed value, IProjectorContext context, CancellationToken ct) => projection.ApplyAsync(value, ct);
-    public ValueTask HandleAsync(ControlRetirementProposed value, IProjectorContext context, CancellationToken ct) => projection.ApplyAsync(value, ct);
-    public ValueTask HandleAsync(ControlRetired value, IProjectorContext context, CancellationToken ct) => projection.ApplyAsync(value, ct);
-    public ValueTask HandleAsync(ControlProposalWithdrawn value, IProjectorContext context, CancellationToken ct) => projection.ApplyAsync(value, ct);
-    public ValueTask HandleAsync(ControlOwnerPersonDesignated value, IProjectorContext context, CancellationToken ct) => projection.ApplyAsync(value, ct);
-    public ValueTask HandleAsync(ResponsibilityAssigned value, IProjectorContext context, CancellationToken ct) => projection.ApplyAsync(value, ct);
-    public ValueTask HandleAsync(ResponsibilityRevoked value, IProjectorContext context, CancellationToken ct) => projection.ApplyAsync(value, ct);
+    public async ValueTask<Result> HandleAsync(IProjectorContext<ControlDraftCreated> context, CancellationToken ct)
+    {
+        var value = context.Trigger;
+        await projection.ApplyAsync(value, ct).ConfigureAwait(false);
+        return Result.Success;
+    }
+
+    public async ValueTask<Result> HandleAsync(IProjectorContext<ControlDraftRevised> context, CancellationToken ct)
+    {
+        var value = context.Trigger;
+        await projection.ApplyAsync(value, ct).ConfigureAwait(false);
+        return Result.Success;
+    }
+
+    public async ValueTask<Result> HandleAsync(IProjectorContext<ControlDraftDiscarded> context, CancellationToken ct)
+    {
+        var value = context.Trigger;
+        await projection.ApplyAsync(value, ct).ConfigureAwait(false);
+        return Result.Success;
+    }
+
+    public async ValueTask<Result> HandleAsync(IProjectorContext<ControlReviewed> context, CancellationToken ct)
+    {
+        var value = context.Trigger;
+        await projection.ApplyAsync(value, ct).ConfigureAwait(false);
+        return Result.Success;
+    }
+
+    public async ValueTask<Result> HandleAsync(IProjectorContext<ControlApproved> context, CancellationToken ct)
+    {
+        var value = context.Trigger;
+        await projection.ApplyAsync(value, ct).ConfigureAwait(false);
+        return Result.Success;
+    }
+
+    public async ValueTask<Result> HandleAsync(IProjectorContext<ControlSuccessorProposed> context, CancellationToken ct)
+    {
+        var value = context.Trigger;
+        await projection.ApplyAsync(value, ct).ConfigureAwait(false);
+        return Result.Success;
+    }
+
+    public async ValueTask<Result> HandleAsync(IProjectorContext<ControlRetirementProposed> context, CancellationToken ct)
+    {
+        var value = context.Trigger;
+        await projection.ApplyAsync(value, ct).ConfigureAwait(false);
+        return Result.Success;
+    }
+
+    public async ValueTask<Result> HandleAsync(IProjectorContext<ControlRetired> context, CancellationToken ct)
+    {
+        var value = context.Trigger;
+        await projection.ApplyAsync(value, ct).ConfigureAwait(false);
+        return Result.Success;
+    }
+
+    public async ValueTask<Result> HandleAsync(IProjectorContext<ControlProposalWithdrawn> context, CancellationToken ct)
+    {
+        var value = context.Trigger;
+        await projection.ApplyAsync(value, ct).ConfigureAwait(false);
+        return Result.Success;
+    }
+
+    public async ValueTask<Result> HandleAsync(IProjectorContext<ControlOwnerPersonDesignated> context, CancellationToken ct)
+    {
+        var value = context.Trigger;
+        await projection.ApplyAsync(value, ct).ConfigureAwait(false);
+        return Result.Success;
+    }
+
+    public async ValueTask<Result> HandleAsync(IProjectorContext<ResponsibilityAssigned> context, CancellationToken ct)
+    {
+        var value = context.Trigger;
+        await projection.ApplyAsync(value, ct).ConfigureAwait(false);
+        return Result.Success;
+    }
+
+    public async ValueTask<Result> HandleAsync(IProjectorContext<ResponsibilityRevoked> context, CancellationToken ct)
+    {
+        var value = context.Trigger;
+        await projection.ApplyAsync(value, ct).ConfigureAwait(false);
+        return Result.Success;
+    }
 }

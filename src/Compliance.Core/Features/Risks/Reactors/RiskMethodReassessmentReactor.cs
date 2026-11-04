@@ -31,7 +31,6 @@ using Bdgrz.Compliance.Features.Risks.Aggregates;
 using Bdgrz.Compliance.Features.Risks.Events;
 using Bdgrz.Compliance.Features.Risks.Readers;
 namespace Bdgrz.Compliance.Features.Risks.Reactors;
-
 /// <summary>
 ///     Raises M0-D10 method-change reassessment triggers when a later risk method version is published, one command per
 ///     assessed risk of the program. The first version has no predecessor, so it triggers nothing.
@@ -47,7 +46,7 @@ public sealed partial class RiskMethodReassessmentReactor(
 {
     public const string WorkloadName = "RiskMethodReassessmentV1";
 
-    public async ValueTask HandleAsync(IReactorContext<RiskMethodVersionPublished> context,
+    public async ValueTask<Result> HandleAsync(IReactorContext<RiskMethodVersionPublished> context,
         CancellationToken ct)
     {
         var source = context.Trigger;
@@ -63,9 +62,12 @@ public sealed partial class RiskMethodReassessmentReactor(
             throw new ImmutableContentIntegrityException("A method reaction differs from its exact committed publication.");
         var version = snapshot.GetVersion(actual.PublishedVersion)!;
         if (version.Version <= 1)
-            return;
-        await RiskReassessmentFanOut.SendAsync(bus, reader, risks, consistency, context, context.Trigger.Metadata.EventId,
+            return Result.Success;
+        var reactionOutcome1 = await RiskReassessmentFanOut.SendAsync(bus, reader, risks, consistency, context, context.Trigger.Metadata.EventId,
             context.Trigger.TenantId, context.Trigger.ProgramId, RiskStates.MethodChanged,
             version.MethodVersionId.ToString(), version.PublishedAt, version.MethodVersionId, ct).ConfigureAwait(false);
+        if (!reactionOutcome1.IsSuccess)
+            return reactionOutcome1;
+        return Result.Success;
     }
 }

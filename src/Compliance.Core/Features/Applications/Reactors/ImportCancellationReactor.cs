@@ -54,7 +54,6 @@ using Bdgrz.Compliance.Features.Processes.Models;
 using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
 using Bdgrz.Compliance.Features.Content.Persistence;
 namespace Bdgrz.Compliance.Features.Applications.Reactors;
-
 /// <summary>
 ///     Carries an accepted cancellation to its end. The batch's own cancellation fact already blocks a later commit;
 ///     here every target of the sealed plan is fenced (including targets whose hold was never acquired) so a delayed
@@ -70,7 +69,7 @@ sealed partial class ImportCancellationReactor(IProjectionCheckpointStore checkp
 {
     public const string WorkloadName = "ImportCancellationV1";
 
-    public async ValueTask HandleAsync(IReactorContext<ApplicationImportCancellationAccepted> context,
+    public async ValueTask<Result> HandleAsync(IReactorContext<ApplicationImportCancellationAccepted> context,
         CancellationToken ct)
     {
         await ApplicationImportReactorSources.VerifyAsync(sources, content, Pattern, context, context.Trigger.Operation.Owner, ct)
@@ -83,7 +82,7 @@ sealed partial class ImportCancellationReactor(IProjectionCheckpointStore checkp
         if (!batch.IsCreated || batch.CancellationAccepted?.Metadata?.EventId != accepted.Metadata.EventId)
             throw Transient("The accepted cancellation is not visible on its batch yet.");
         if (batch.Committed is not null)
-            return;
+            return Result.Success;
         ImportFrozenPlanIntent cancellation;
         IReadOnlyList<ImportTargetGroupIntent> groups = [];
         try
@@ -156,14 +155,13 @@ sealed partial class ImportCancellationReactor(IProjectionCheckpointStore checkp
         if (!completed.IsSuccess)
             throw new ReactionCommandFailedException(completed.Error!);
         if (completed.Value is ReceiverOutcome.Superseded)
-            return;
-
+            return Result.Success;
         // Release only after the cancellation fact is committed and every fence is recorded.
         batch = await reader.HydrateAsync(new ApplicationImportBatch(tenant, batchId), ct).ConfigureAwait(false);
         if (batch.Canceled is not { Metadata: not null } canceled)
             throw Transient("The completed cancellation is not visible on its batch yet.");
         if (batch.Plan is not { } plan0)
-            return;
+            return Result.Success;
         var terminal = NativeFactReference.Of(stream, canceled);
         foreach (var group in groups)
         {
@@ -183,6 +181,7 @@ sealed partial class ImportCancellationReactor(IProjectionCheckpointStore checkp
             ApplicationImportEffects.Generation, null, canceled.Intent, batchId), context, ct).ConfigureAwait(false);
         if (!sourceReleased.IsSuccess)
             throw new ReactionCommandFailedException(sourceReleased.Error!);
+        return Result.Success;
     }
 
     static ReactionCommandFailedException Transient(string message) =>
