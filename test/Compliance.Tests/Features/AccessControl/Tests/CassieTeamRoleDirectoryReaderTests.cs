@@ -1,5 +1,5 @@
-using Cntryl.Fitz;
-using Cntryl.Fitz.Testing;
+using Bdgrz.Compliance.Features.AccessControl.Projections;
+using Bdgrz.Compliance.Tests.Testing;
 using Cntryl.Portia;
 using Bdgrz.Compliance.Features.AccessControl.Models;
 using Bdgrz.Compliance.Features.Operations.History;
@@ -8,7 +8,8 @@ using Bdgrz.Compliance.Features.AccessControl.Readers;
 using Bdgrz.Compliance.Features.Exports.Commands;
 namespace Bdgrz.Compliance.Tests.Features.AccessControl.Tests;
 
-public sealed class FitzTeamRoleDirectoryReaderTests
+[Trait("Category", "CassieIntegration")]
+public sealed class CassieTeamRoleDirectoryReaderTests
 {
     static readonly Uuid TenantId = Uuid.CreateVersion4();
     static readonly Uuid TeamId = Uuid.CreateVersion4();
@@ -17,10 +18,10 @@ public sealed class FitzTeamRoleDirectoryReaderTests
     public async Task ShouldReturnEveryRoleGivenTeamQuery()
     {
         // Arrange
-        var client = new InMemoryKvClient();
-        await ApplyAsync(client, RbacTeamRoleFacts.Assigned(TenantId, TeamId, Uuid.CreateVersion4()));
-        await ApplyAsync(client, RbacTeamRoleFacts.Assigned(TenantId, TeamId, Uuid.CreateVersion4()));
-        var reader = new FitzTeamRoleDirectoryReader(client);
+        await using var database = await CassieRepositoryTestDatabase.OpenAsync(CassieAccessControlSchema.Statements);
+        await ApplyAsync(database.Database, RbacTeamRoleFacts.Assigned(TenantId, TeamId, Uuid.CreateVersion4()));
+        await ApplyAsync(database.Database, RbacTeamRoleFacts.Assigned(TenantId, TeamId, Uuid.CreateVersion4()));
+        await using var reader = new CassieTeamRoleDirectoryReader(database.Database);
 
         // Act
         var page = await reader.ListAsync(
@@ -36,11 +37,11 @@ public sealed class FitzTeamRoleDirectoryReaderTests
     public async Task ShouldReturnRolesOnlyGivenRequestedTeam()
     {
         // Arrange
-        var client = new InMemoryKvClient();
+        await using var database = await CassieRepositoryTestDatabase.OpenAsync(CassieAccessControlSchema.Statements);
         var role = Uuid.CreateVersion4();
-        await ApplyAsync(client, RbacTeamRoleFacts.Assigned(TenantId, TeamId, role));
-        await ApplyAsync(client, RbacTeamRoleFacts.Assigned(TenantId, Uuid.CreateVersion4(), Uuid.CreateVersion4()));
-        var reader = new FitzTeamRoleDirectoryReader(client);
+        await ApplyAsync(database.Database, RbacTeamRoleFacts.Assigned(TenantId, TeamId, role));
+        await ApplyAsync(database.Database, RbacTeamRoleFacts.Assigned(TenantId, Uuid.CreateVersion4(), Uuid.CreateVersion4()));
+        await using var reader = new CassieTeamRoleDirectoryReader(database.Database);
 
         // Act
         var page = await reader.ListAsync(
@@ -55,13 +56,13 @@ public sealed class FitzTeamRoleDirectoryReaderTests
     public async Task ShouldDropRoleGivenTeamRoleRemoved()
     {
         // Arrange
-        var client = new InMemoryKvClient();
+        await using var database = await CassieRepositoryTestDatabase.OpenAsync(CassieAccessControlSchema.Statements);
         var kept = Uuid.CreateVersion4();
         var removed = Uuid.CreateVersion4();
-        await ApplyAsync(client, RbacTeamRoleFacts.Assigned(TenantId, TeamId, kept));
-        await ApplyAsync(client, RbacTeamRoleFacts.Assigned(TenantId, TeamId, removed));
-        await ApplyAsync(client, RbacTeamRoleFacts.Removed(TenantId, TeamId, removed));
-        var reader = new FitzTeamRoleDirectoryReader(client);
+        await ApplyAsync(database.Database, RbacTeamRoleFacts.Assigned(TenantId, TeamId, kept));
+        await ApplyAsync(database.Database, RbacTeamRoleFacts.Assigned(TenantId, TeamId, removed));
+        await ApplyAsync(database.Database, RbacTeamRoleFacts.Removed(TenantId, TeamId, removed));
+        await using var reader = new CassieTeamRoleDirectoryReader(database.Database);
 
         // Act
         var page = await reader.ListAsync(
@@ -71,9 +72,9 @@ public sealed class FitzTeamRoleDirectoryReaderTests
         Assert.Equal(kept, Assert.Single(page.Items).RoleId);
     }
 
-    static async Task ApplyAsync(InMemoryKvClient client, DomainEvent domainEvent)
+    static async Task ApplyAsync(CassieProjectionDatabase database, DomainEvent domainEvent)
     {
-        var repository = new FitzTeamRoleDirectoryReader(client);
+        await using var repository = new CassieTeamRoleDirectoryReader(database);
         var identity = new CheckpointIdentity("TeamRoleDirectory", EventStreamPattern.ForPattern(TenantId.ToString()));
         await using var batch = await repository.BeginAsync(new ProjectionBatchContext(identity, ProjectionCheckpoint.Start));
         await repository.ApplyAsync(domainEvent);

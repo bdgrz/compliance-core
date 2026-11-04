@@ -1,5 +1,5 @@
-using Cntryl.Fitz;
-using Cntryl.Fitz.Testing;
+using Bdgrz.Compliance.Features.AccessControl.Projections;
+using Bdgrz.Compliance.Tests.Testing;
 using Cntryl.Portia;
 using Bdgrz.Compliance.Features.AccessControl.Models;
 using Bdgrz.Compliance.Features.AccessControl.Services;
@@ -11,7 +11,8 @@ using Bdgrz.Compliance.Features.Exports.Commands;
 using Bdgrz.Compliance.Features.Tenants.Authorizers;
 namespace Bdgrz.Compliance.Tests.Features.AccessControl.Tests;
 
-public sealed class FitzRolePermissionDirectoryReaderTests
+[Trait("Category", "CassieIntegration")]
+public sealed class CassieRolePermissionDirectoryReaderTests
 {
     static readonly Uuid TenantId = Uuid.CreateVersion4();
     static readonly Uuid RoleId = Uuid.CreateVersion4();
@@ -20,10 +21,10 @@ public sealed class FitzRolePermissionDirectoryReaderTests
     public async Task ShouldReturnEveryPermissionGivenRoleQuery()
     {
         // Arrange
-        var client = new InMemoryKvClient();
-        await SeedAsync(client, RoleId, "controls.read");
-        await SeedAsync(client, RoleId, "controls.manage");
-        var reader = new FitzRolePermissionDirectoryReader(client);
+        await using var database = await CassieRepositoryTestDatabase.OpenAsync(CassieAccessControlSchema.Statements);
+        await SeedAsync(database.Database, RoleId, "controls.read");
+        await SeedAsync(database.Database, RoleId, "controls.manage");
+        await using var reader = new CassieRolePermissionDirectoryReader(database.Database);
 
         // Act
         var page = await reader.ListAsync(
@@ -38,11 +39,11 @@ public sealed class FitzRolePermissionDirectoryReaderTests
     public async Task ShouldReturnPermissionsOnlyGivenRequestedRole()
     {
         // Arrange
-        var client = new InMemoryKvClient();
+        await using var database = await CassieRepositoryTestDatabase.OpenAsync(CassieAccessControlSchema.Statements);
         var otherRoleId = Uuid.CreateVersion4();
-        await SeedAsync(client, RoleId, "controls.read");
-        await SeedAsync(client, otherRoleId, "controls.manage");
-        var reader = new FitzRolePermissionDirectoryReader(client);
+        await SeedAsync(database.Database, RoleId, "controls.read");
+        await SeedAsync(database.Database, otherRoleId, "controls.manage");
+        await using var reader = new CassieRolePermissionDirectoryReader(database.Database);
 
         // Act
         var page = await reader.ListAsync(
@@ -57,10 +58,10 @@ public sealed class FitzRolePermissionDirectoryReaderTests
     public async Task ShouldFilterPermissionsGivenSubstring()
     {
         // Arrange
-        var client = new InMemoryKvClient();
-        await SeedAsync(client, RoleId, "controls.read");
-        await SeedAsync(client, RoleId, "tenant.access");
-        var reader = new FitzRolePermissionDirectoryReader(client);
+        await using var database = await CassieRepositoryTestDatabase.OpenAsync(CassieAccessControlSchema.Statements);
+        await SeedAsync(database.Database, RoleId, "controls.read");
+        await SeedAsync(database.Database, RoleId, "tenant.access");
+        await using var reader = new CassieRolePermissionDirectoryReader(database.Database);
 
         // Act
         var page = await reader.ListAsync(
@@ -75,7 +76,8 @@ public sealed class FitzRolePermissionDirectoryReaderTests
     public async Task ShouldExposeExactRemovalInputsGivenAReplacementAssignment()
     {
         // Arrange
-        var reader = new FitzRolePermissionDirectoryReader(new InMemoryKvClient());
+        await using var database = await CassieRepositoryTestDatabase.OpenAsync(CassieAccessControlSchema.Statements);
+        await using var reader = new CassieRolePermissionDirectoryReader(database.Database);
         var assignment = Uuid.CreateVersion4();
         var identity = new CheckpointIdentity("RolePermissionDirectory", EventStreamPattern.ForPattern(TenantId.ToString()));
         await using (var batch = await reader.BeginAsync(new ProjectionBatchContext(identity, ProjectionCheckpoint.Start)))
@@ -96,9 +98,9 @@ public sealed class FitzRolePermissionDirectoryReaderTests
         Assert.Equal(3UL, row.Revision);
     }
 
-    static async Task SeedAsync(InMemoryKvClient client, Uuid roleId, string permission)
+    static async Task SeedAsync(CassieProjectionDatabase database, Uuid roleId, string permission)
     {
-        var repository = new FitzRolePermissionDirectoryReader(client);
+        await using var repository = new CassieRolePermissionDirectoryReader(database);
         var identity = new CheckpointIdentity("RolePermissionDirectory", EventStreamPattern.ForPattern(TenantId.ToString()));
         await using var batch = await repository.BeginAsync(new ProjectionBatchContext(identity, ProjectionCheckpoint.Start));
         await repository.ApplyAsync(RbacPermissionFacts.Assigned(TenantId, roleId, permission));
