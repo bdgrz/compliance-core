@@ -55,6 +55,12 @@ sealed class FitzMethodologyTemplateDirectory(IKvClient client)
                 new MethodologyTemplateCatalogIdentity(fact.SubjectId, fact.OccurredAt), ct).ConfigureAwait(false);
     }
 
+    public ValueTask ApplyAsync(MethodologyTemplateVersionPublishedV4 fact, CancellationToken ct = default)
+    {
+        ArgumentNullException.ThrowIfNull(fact);
+        return ValueTask.CompletedTask;
+    }
+
     public async ValueTask<MethodologyTemplatePublishedIdentity?> FindVersionAsync(Uuid versionId,
         CancellationToken ct = default)
     {
