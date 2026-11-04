@@ -132,6 +132,67 @@ public sealed class CorrectiveActionCancellationWorkflowTests
         Assert.NotNull(closed.Closure);
     }
 
+    [Fact]
+    public async Task ShouldCloseFindingGivenMixedCompletedAndCancelledActions()
+    {
+        // Arrange
+        var fixture = await OperationsFixture.CreateAsync();
+        await using var provider = fixture.Provider;
+        var first = await WithActionAsync(fixture);
+        var cancelled = await fixture.AsAsync(fixture.LeadUserId, Cancel(fixture, first, "Duplicate work."));
+        var finding = await fixture.AddActionAsync(cancelled, fixture.OwnerMemberId, fixture.Today.AddDays(4),
+            "Remove remaining access.");
+        var open = Assert.Single(finding.CorrectiveActions, action => action.Status == "open");
+        var resolved = await fixture.CompleteActionAsync(fixture.OwnerUserId, finding, open.ActionId);
+
+        // Act
+        var closed = await fixture.CloseAsync(fixture.ApproverUserId, resolved);
+
+        // Assert
+        Assert.Equal("closed", closed.Status);
+        Assert.Single(closed.CorrectiveActions, action => action.Status == "completed");
+        Assert.Single(closed.CorrectiveActions, action => action.Status == "cancelled");
+    }
+
+    [Fact]
+    public async Task ShouldRefuseCancellationGivenActionBelongsToAnotherFinding()
+    {
+        // Arrange
+        var fixture = await OperationsFixture.CreateAsync();
+        await using var provider = fixture.Provider;
+        var original = await WithActionAsync(fixture);
+        var other = await fixture.RaiseFindingAsync(fixture.OwnerMemberId);
+        var request = Cancel(fixture, original, "Duplicate action.") with { FindingId = other.FindingId };
+
+        // Act
+        await fixture.Scenario(fixture.LeadUserId).When(request).ExpectFailure(RequestErrorKind.NotFound);
+        var after = await fixture.GetFindingAsync(original.FindingId);
+
+        // Assert
+        Assert.Equal("open", Assert.Single(after.CorrectiveActions).Status);
+        Assert.Equal(original.History.Count, after.History.Count);
+    }
+
+    [Fact]
+    public async Task ShouldKeepFindingUnclosedGivenCancellationAuthorAttemptsOwnVerification()
+    {
+        // Arrange
+        var fixture = await OperationsFixture.CreateAsync();
+        await using var provider = fixture.Provider;
+        var finding = await WithActionAsync(fixture);
+        var cancelled = await fixture.AsAsync(fixture.LeadUserId, Cancel(fixture, finding, "Duplicate work."));
+
+        // Act
+        var result = await fixture.CloseAsync(fixture.LeadUserId, cancelled);
+        var owner = await fixture.FindingStreamAsync(finding.FindingId);
+
+        // Assert
+        Assert.Null(result.Closure);
+        Assert.Null(owner.Closed);
+        Assert.Null(owner.PendingClosure);
+        Assert.Equal("cancelled", Assert.Single(result.CorrectiveActions).Status);
+    }
+
     static async Task<FindingView> WithActionAsync(OperationsFixture fixture)
     {
         var finding = await fixture.RaiseFindingAsync(fixture.OwnerMemberId);

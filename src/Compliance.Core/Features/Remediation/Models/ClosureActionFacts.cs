@@ -30,11 +30,13 @@ using Bdgrz.Compliance.Features.Workforce.Models;
 namespace Bdgrz.Compliance.Features.Remediation.Models;
 
 /// <summary>
-///     What a closure reads from one action: its owner and, when completed, the completer, the completion fact and the
-///     evidence manifest, with the closer and whether an exact waiver proof covers the closer. These are the required
+///     What a closure reads from one action: its owner and its terminal completion or cancellation, with the
+///     evidence manifest for completed work or the reason for cancelled work. The closer and exact waiver proof
+///     remain separate. These are the required
 ///     facts of the closure use and are verified content. <paramref name="Refusal" /> is the permanent reason the action
 ///     cannot be held for this closure, or null.
 /// </summary>
 public sealed record ClosureActionFacts(Uuid ActionId, Uuid OwnerMemberId, bool Completed, Uuid? CompletedByMemberId,
     NativeFactReference? CompletionFact, ImmutableContentRef? EvidenceManifest, Uuid CloserMemberId, bool WaiverProven,
-    string? Refusal);
+    string? Refusal, bool Cancelled = false, NativeFactReference? CancellationFact = null,
+    string? CancellationReason = null, Uuid? CancelledByMemberId = null);
