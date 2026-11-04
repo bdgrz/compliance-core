@@ -157,6 +157,25 @@ public sealed class MethodologyTemplateLineReadTests
     }
 
     [Fact]
+    public async Task ShouldCarryActualPhysicalPositionGivenSourceOffsetBeyondAggregateVersion()
+    {
+        // Arrange
+        await using var fixture = await Fixture.CreateAsync();
+        var fact = await fixture.PublishAsync("First entries");
+        var views = new MethodologyTemplateLineReader(new ChangedSnapshot(new EventStoreSnapshotReader(fixture.Source.Events), "physical"),
+            fixture.Source.Content);
+
+        // Act
+        var view = await views.VersionAsync(fixture.Template, 1);
+
+        // Assert
+        Assert.NotNull(view);
+        Assert.Equal(9UL, view.PublicationPosition);
+        Assert.Equal(fact.Metadata.AggregateVersion, view.PublicationSource.AggregateVersion);
+        Assert.NotEqual(view.PublicationSource.AggregateVersion - 1, view.PublicationPosition);
+    }
+
+    [Fact]
     public async Task ShouldRefuseUnverifiedEntriesGivenPublishedContentUnavailable()
     {
         // Arrange
@@ -189,7 +208,7 @@ public sealed class MethodologyTemplateLineReadTests
         {
             var owner = await OwnerAsync();
             var draft = Uuid.CreateVersion4();
-            IReadOnlyList<MethodologyTemplateRecordContent> before = owner.PublishedEntriesContent is { } prior
+            var before = owner.PublishedEntriesContent is { } prior
                 ? await Source.Content.ReadJsonAsync<IReadOnlyList<MethodologyTemplateRecordContent>>(MethodologyTemplate.Realm, prior, CancellationToken.None)
                 : [];
             var opening = owner.PublishedEntriesContent ?? await Source.Content.WriteJsonAsync(MethodologyTemplate.Realm,
@@ -221,13 +240,18 @@ public sealed class MethodologyTemplateLineReadTests
             var read = await inner.ReadAtAsync(selector, tenantScope, captured, cursor, ct);
             if (fault == "incomplete")
                 return read with { IsComplete = false };
+            if (fault == "physical")
+                return read with { Facts = read.Facts.Select(fact => fact with
+                {
+                    Locator = fact.Locator with { ResourcePosition = fact.Locator.ResourcePosition + 7 },
+                }).ToArray() };
             if (fault is not ("realm" or "payload"))
                 return read;
             return read with { Facts = read.Facts.Select((fact, index) => index == 0 ? fact with
             {
                 Locator = fault == "realm" ? fact.Locator with
                 {
-                    Source = fact.Locator.Source with { Realm = "other-realm" },
+                    Source = new EventStreamAddress("other-realm", fact.Locator.Source.Area, fact.Locator.Source.Resource),
                 } : fact.Locator with { PayloadSha256 = new string('0', 64) },
             } : fact).ToArray() };
         }
