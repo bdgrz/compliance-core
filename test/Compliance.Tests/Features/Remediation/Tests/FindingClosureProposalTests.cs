@@ -109,6 +109,8 @@ public sealed class FindingClosureProposalTests
         // Assert
         Assert.Equal(RequestErrorKind.Forbidden, result.Error?.Kind);
         Assert.Equal(2, owner.ClosureProposal!.ProposalRevision);
+        Assert.Equal(new[] { Uuid.Parse(Author.Id), Uuid.Parse(Other.Id) }.OrderBy(static id => id.ToString(), StringComparer.Ordinal),
+            owner.ProposalAuthors(closure));
         Assert.Empty(new AggregateScenario<FindingAggregate>(owner).PendingEvents);
     }
 
