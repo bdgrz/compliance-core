@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.Programs.Readers;
 using Bdgrz.Compliance.Tests.Testing;
 using System.Security.Claims;
 using Cntryl.Fitz.Extensions;
@@ -87,7 +88,7 @@ public sealed class SnapshotPagedReadContractTests
         public ValueTask<Page<SnapshotView>> ListProgramAsync(Uuid tenantId, Uuid programId,
             int limit, string? cursor, CancellationToken ct = default) =>
             RejectCursor
-                ? ValueTask.FromException<Page<SnapshotView>>(new KvDirectoryQueryException())
+                ? ValueTask.FromException<Page<SnapshotView>>(new ProgramScopeDirectoryQueryException())
                 : ValueTask.FromResult(new Page<SnapshotView>([], null));
     }
 

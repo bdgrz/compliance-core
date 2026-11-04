@@ -488,7 +488,7 @@ public sealed class ScopeSnapshotTests
     }
 
     [Fact]
-    public async Task ShouldProjectTenantScopedImmutableSnapshotGivenFitzBatch()
+    public async Task ShouldProjectTenantScopedImmutableSnapshotGivenNativeCassieBatch()
     {
         // Arrange
         var tenantId = Uuid.CreateVersion4();
@@ -501,9 +501,10 @@ public sealed class ScopeSnapshotTests
         Assert.True(snapshot.Freeze(snapshotId, null, programId, manifest, json,
             digest, null, Uuid.CreateVersion4(), "Lead", DateTimeOffset.UtcNow).IsSuccess);
         var frozen = Assert.Single(new AggregateScenario<ImmutableSnapshot>(snapshot).PendingEvents);
-        var directory = new FitzSnapshotDirectory(new InMemoryKvClient());
+        await using var database = await CassieRepositoryTestDatabase.OpenAsync(CassieSnapshotSchema.Statements);
+        await using var directory = new CassieSnapshotDirectory(database.Database);
         var identity = new CheckpointIdentity("SnapshotDirectory",
-            EventStreamPattern.ForPattern(tenantId.ToString()));
+            EventStreamPattern.ForPattern(tenantId.ToString(), "snapshots"));
 
         // Act
         await using (var uncommitted = await directory.BeginAsync(

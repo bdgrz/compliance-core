@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.Programs.Projections;
 using Bdgrz.Compliance.Tests.Testing;
 using Cntryl.Fitz.Testing;
 using Cntryl.Portia;
@@ -54,7 +55,8 @@ public sealed class ProgramNativeProjectionTests
         var wrong = missing ? second.Content with { ContentId = Uuid.CreateVersion4() } :
             await content.WriteJsonAsync(tenant.ToString(), Uuid.CreateVersion4(), ProgramContent.Schema, new ProgramContent("Another value", Plan()));
         var invalid = second with { Content = wrong };
-        var directory = new FitzProgramDirectory(kv, content);
+        await using var database = await CassieRepositoryTestDatabase.OpenAsync(CassieProgramSchema.Statements);
+        await using var directory = new CassieProgramDirectory(database.Database, content);
         var identity = new CheckpointIdentity("ProgramDirectory", EventStreamPattern.ForPattern(tenant.ToString()));
         Exception? failure;
 
