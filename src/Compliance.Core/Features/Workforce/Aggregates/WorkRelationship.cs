@@ -220,6 +220,22 @@ public sealed class WorkRelationship : Aggregate
             : null;
     }
 
+    public CommandFailure? ChangeManager(long expectedRevision, Uuid? managerPersonId,
+        ActorReference actor, DateTimeOffset changedAt) =>
+        CommandFailure.StateConflict($"Named changes for work relationship {Id} are not implemented.");
+
+    public CommandFailure? ChangeDepartment(long expectedRevision, string? department,
+        ActorReference actor, DateTimeOffset changedAt) =>
+        CommandFailure.StateConflict($"Named changes for work relationship {Id} are not implemented.");
+
+    public CommandFailure? ChangeSponsor(long expectedRevision, Uuid sponsorPersonId,
+        ActorReference actor, DateTimeOffset changedAt) =>
+        CommandFailure.StateConflict($"Named changes for work relationship {Id} are not implemented.");
+
+    public CommandFailure? CorrectDates(long expectedRevision, DateOnly startDate, DateOnly? endDate,
+        string reason, ActorReference actor, DateTimeOffset changedAt) =>
+        CommandFailure.StateConflict($"Named changes for work relationship {Id} are not implemented.");
+
     static RequestError? Validate(Uuid personId, WorkRelationshipTerms terms)
     {
         static RequestError Invalid(string message) => new(RequestErrorKind.Validation, message);
