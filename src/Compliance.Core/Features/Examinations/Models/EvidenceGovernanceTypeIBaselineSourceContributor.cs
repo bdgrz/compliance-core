@@ -95,24 +95,41 @@ public sealed class EvidenceGovernanceTypeIBaselineSourceContributor(
         if (!supportHistory.IsSuccess)
             return Result<TypeIBaselineSourceContribution>.Failure(supportHistory.Error);
 
+        if (!ValidSupportHistory(supportHistory.Value, engagement.TenantId))
+            return InvalidHistory();
+
         var supportLinks = new List<EvidenceSupportLinked>();
-        foreach (var record in supportHistory.Value)
+        var selectedSupportHistory = new Dictionary<Uuid, IReadOnlyList<DomainEvent>>();
+        var blockers = new List<string>();
+        var scopeDifferences = new List<string>();
+        foreach (var history in supportHistory.Value.GroupBy(static record => record.Stream))
         {
-            if (!ValidSupportRecord(record, engagement.TenantId))
-                return InvalidHistory();
-            var link = (EvidenceSupportLinked)record.Event!;
+            var records = history.ToArray();
+            var link = (EvidenceSupportLinked)records[0].Event!;
             if (link.ProgramId != engagement.ProgramId ||
-                (context.RecordedThrough is null ? link.OccurredAt > through || record.Event!.Metadata!.OccurredOn > through :
-                    !await context.IncludesAsync(record.Stream, record.Event!, ct).ConfigureAwait(false)) ||
                 link.PeriodStart > engagement.PeriodStart || link.PeriodEnd < engagement.PeriodStart ||
                 !effectiveSources.Value.Contains((link.SupportedRecordType!,
                     link.SupportedRecordId, link.SupportedRecordRevision)))
                 continue;
+
+            var linkIncluded = context.RecordedThrough is null
+                ? link.OccurredAt <= through && link.Metadata.OccurredOn <= through
+                : await context.IncludesAsync(records[0].Stream, link, ct).ConfigureAwait(false);
+            var withdrawal = records.Length == 2 ? (EvidenceSupportWithdrawn)records[1].Event! : null;
+            var withdrawalIncluded = withdrawal is not null && (context.RecordedThrough is null
+                ? withdrawal.OccurredAt <= through && withdrawal.Metadata.OccurredOn <= through
+                : await context.IncludesAsync(records[1].Stream, withdrawal, ct).ConfigureAwait(false));
+            if (!linkIncluded)
+                continue;
+            selectedSupportHistory.Add(link.SubjectId, withdrawalIncluded
+                ? [link, withdrawal!] : [link]);
+            if (withdrawalIncluded)
+            {
+                scopeDifferences.Add($"Evidence support {link.SubjectId} was withdrawn at the selected Type I source cut.");
+                continue;
+            }
             supportLinks.Add(link);
         }
-
-        var blockers = new List<string>();
-        var scopeDifferences = new List<string>();
         var sources = new List<TypeIBaselineSourceReference>();
         var artifactIds = supportLinks.Select(static link => link.ArtifactId).ToHashSet();
         var related = await ReadRelatedGovernanceAsync(context, engagement, artifactIds, through, ct)
@@ -129,7 +146,10 @@ public sealed class EvidenceGovernanceTypeIBaselineSourceContributor(
 
             if (artifact.Value.AsOfRevision == 0 || artifact.Value.Registration is null)
                 return InvalidHistory();
-            if (artifactGroup.Any(link => link.ArtifactContentSha256 !=
+            var artifactSupportHistory = selectedSupportHistory.Values
+                .Where(history => ((EvidenceSupportLinked)history[0]).ArtifactId == artifactGroup.Key).ToArray();
+            if (artifactSupportHistory.Select(static history => (EvidenceSupportLinked)history[0])
+                .Any(link => link.ArtifactContentSha256 !=
                     artifact.Value.Registration.ContentSha256 ||
                     (context.RecordedThrough is null ?
                         link.ArtifactRevision < artifact.Value.Events.Count(item => item.OccurredOn < link.OccurredAt) ||
@@ -142,10 +162,12 @@ public sealed class EvidenceGovernanceTypeIBaselineSourceContributor(
                 artifact.Value.Registration.Content.PeriodEnd < engagement.PeriodStart)
                 blockers.Add($"Evidence artifact {artifactGroup.Key} does not cover the Type I date.");
 
-            var supportEvents = artifactGroup.OrderBy(static link => link.OccurredAt)
-                .ThenBy(static link => link.SubjectId.ToString(), StringComparer.Ordinal)
-                .Select(link => Capture(link, SupportArea, link.SubjectId,
-                    link.Metadata!)).ToArray();
+            var supportEvents = artifactSupportHistory.SelectMany(static history => history)
+                .OrderBy(static fact => fact.Metadata.OccurredOn)
+                .ThenBy(static fact => fact.Metadata.AggregateId.ToString(), StringComparer.Ordinal)
+                .ThenBy(static fact => fact.Metadata.AggregateVersion)
+                .Select(fact => Capture(fact, SupportArea, fact.Metadata.AggregateId,
+                    fact.Metadata)).ToArray();
             if (supportEvents.Any(static item => item is null))
                 return InvalidHistory();
 
@@ -774,7 +796,7 @@ public sealed class EvidenceGovernanceTypeIBaselineSourceContributor(
         {
             if (records.Count >= MaximumEvents)
                 return InvalidHistory<IReadOnlyList<ReadRecord>>();
-            records.Add(new ReadRecord(record.Stream, record.Event, record.NextCursor));
+            records.Add(new ReadRecord(record.Stream, record.Event, record.ResourceOffset, record.NextCursor));
         }
         return Result<IReadOnlyList<ReadRecord>>.Success(records.AsReadOnly());
     }
@@ -787,17 +809,58 @@ public sealed class EvidenceGovernanceTypeIBaselineSourceContributor(
         {
             if (records.Count >= MaximumEvents)
                 return InvalidHistory<IReadOnlyList<ReadRecord>>();
-            records.Add(new ReadRecord(record.Stream, record.Event, record.NextCursor));
+            records.Add(new ReadRecord(record.Stream, record.Event, record.ResourceOffset, record.NextCursor));
         }
         return Result<IReadOnlyList<ReadRecord>>.Success(records.AsReadOnly());
     }
 
     static bool SameHistory(IReadOnlyList<ReadRecord> left, IReadOnlyList<ReadRecord> right) =>
         left.Count == right.Count && left.Zip(right).All(pair =>
-            pair.First.Stream == pair.Second.Stream && pair.First.NextCursor == pair.Second.NextCursor &&
+            pair.First.Stream == pair.Second.Stream && pair.First.ResourceOffset == pair.Second.ResourceOffset &&
+            pair.First.NextCursor == pair.Second.NextCursor &&
             pair.First.Event?.GetType() == pair.Second.Event?.GetType() &&
             pair.First.Event?.Metadata == pair.Second.Event?.Metadata &&
             Equals(pair.First.Event, pair.Second.Event));
+
+    static bool ValidSupportHistory(IReadOnlyList<ReadRecord> records, Uuid tenantId)
+    {
+        var links = new Dictionary<Uuid, EvidenceSupportLinked>();
+        var withdrawals = new HashSet<Uuid>();
+        var eventIds = new HashSet<Uuid>();
+        foreach (var record in records)
+        {
+            if (record.Stream.Realm != tenantId.ToString() || record.Stream.Area != SupportArea ||
+                !Uuid.TryParse(record.Stream.Resource, null, out var resourceId) || resourceId == Uuid.Empty ||
+                record.Stream.Resource != resourceId.ToString() || record.Event?.Metadata is not { } metadata ||
+                metadata.EventId == Uuid.Empty || !eventIds.Add(metadata.EventId) ||
+                metadata.AggregateId != resourceId || metadata.IsAudit || metadata.OccurredOn == default)
+                return false;
+            switch (record.Event)
+            {
+                case EvidenceSupportLinked link:
+                    if (record.ResourceOffset != 0 || !ValidSupportRecord(record, tenantId) ||
+                        !links.TryAdd(resourceId, link))
+                        return false;
+                    break;
+                case EvidenceSupportWithdrawn withdrawal:
+                    if (record.ResourceOffset != 1 || metadata.AggregateVersion != 2 ||
+                        !links.TryGetValue(resourceId, out var original) || !withdrawals.Add(resourceId) ||
+                        withdrawal.TenantId != tenantId || withdrawal.SubjectId != resourceId ||
+                        withdrawal.ProgramId != original.ProgramId || withdrawal.Revision != 2 ||
+                        withdrawal.OriginalExpectedRevision != 1 || withdrawal.CommandId == Uuid.Empty ||
+                        !IsDigest(withdrawal.AuthoredIntentSha256) || withdrawal.ActorMemberId == Uuid.Empty ||
+                        string.IsNullOrWhiteSpace(withdrawal.Reason) || withdrawal.Reason != withdrawal.Reason.Trim() ||
+                        withdrawal.Reason.Length > 2000 || string.IsNullOrWhiteSpace(withdrawal.ActorDisplay) ||
+                        withdrawal.ActorDisplay != withdrawal.ActorDisplay.Trim() || withdrawal.ActorDisplay.Length > 200 ||
+                        withdrawal.OccurredAt < original.OccurredAt || metadata.OccurredOn != withdrawal.OccurredAt)
+                        return false;
+                    break;
+                default:
+                    return false;
+            }
+        }
+        return true;
+    }
 
     static bool ValidSupportRecord(ReadRecord record, Uuid tenantId)
     {
@@ -816,8 +879,10 @@ public sealed class EvidenceGovernanceTypeIBaselineSourceContributor(
             string.IsNullOrWhiteSpace(link.Purpose) || link.Purpose != link.Purpose.Trim() ||
             string.IsNullOrWhiteSpace(link.SufficiencyRationale) ||
             link.SufficiencyRationale != link.SufficiencyRationale.Trim() ||
+            link.Purpose.Length > 2000 || link.SufficiencyRationale.Length > 2000 ||
             link.ActorMemberId is not { } actorId || actorId == Uuid.Empty ||
-            string.IsNullOrWhiteSpace(link.ActorDisplay) || link.ActorDisplay != link.ActorDisplay.Trim())
+            string.IsNullOrWhiteSpace(link.ActorDisplay) || link.ActorDisplay != link.ActorDisplay.Trim() ||
+            link.ActorDisplay.Length > 200)
             return false;
         return true;
     }
@@ -830,6 +895,8 @@ public sealed class EvidenceGovernanceTypeIBaselineSourceContributor(
         {
             EvidenceSupportLinked ev => ("evidence_support_linked",
                 JsonSerializer.SerializeToElement(ev, context.EvidenceSupportLinked)),
+            EvidenceSupportWithdrawn ev => ("evidence_support_withdrawn",
+                JsonSerializer.SerializeToElement(ev, context.EvidenceSupportWithdrawn)),
             EvidenceArtifactRegistered ev => ("evidence_artifact_registered",
                 JsonSerializer.SerializeToElement(ev, context.EvidenceArtifactRegistered)),
             EvidenceArtifactInspected ev => ("evidence_artifact_inspected",
@@ -931,5 +998,6 @@ public sealed class EvidenceGovernanceTypeIBaselineSourceContributor(
         IReadOnlyDictionary<Uuid, IReadOnlyList<EvidenceGovernanceSourceEvent>> ByArtifact,
         IReadOnlyDictionary<Uuid, IReadOnlyList<EvidenceGovernanceSourceEvent>> EngagementHolds);
 
-    sealed record ReadRecord(EventStreamAddress Stream, DomainEvent? Event, EventCursor NextCursor);
+    sealed record ReadRecord(EventStreamAddress Stream, DomainEvent? Event, ulong ResourceOffset,
+        EventCursor NextCursor);
 }
