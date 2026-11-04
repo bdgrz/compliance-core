@@ -1,0 +1,153 @@
+# Paused implementation and agent plan
+
+Saved 2026-11-04 for a Codex restart. **Implementation is paused at the user's
+explicit request. Saving this checkpoint does not authorize resuming it.**
+
+## Start here after restart
+
+1. Read this document, `AGENTS.md`, [delivery state](delivery-reset.md), and
+   [requirement coverage](requirement-coverage.md).
+2. Inspect `git status`, branch/head, worktrees and live GitHub state before
+   changing anything. Preserve all work. Local `main` was stale at `97cecc07`;
+   last verified `origin/main` was `4e4c9d01`. Do not reset or clean worktrees.
+3. Stay paused until the user explicitly resumes implementation. Existing agent
+   sessions/tool IDs should not be assumed to survive restart.
+4. When resumed, use the saved queue and operating plan below. Do not interpret
+   prepared branches, names, audits or focused GREEN as completed workflows.
+
+Suggested restart prompt:
+
+> Read docs/proposed/restart-handoff.md, verify the saved state, and report back.
+> Keep implementation paused until I explicitly resume it.
+
+## Objective and continuing constraints
+
+- Implement the full reviewed `docs/proposed/contexts/*` backend domain. The locked
+  proposal is the specification. Full layers were explicitly authorized: owners,
+  events, handlers, reactors, read models and API/MCP wiring. Aggregate-only defaults
+  do not narrow that earlier full-scope authorization.
+- Work in this backend repository. Client and upstream framework implementation
+  are outside scope. Backward compatibility and rollback were explicitly waived.
+- Write business behavior: aggregate invariants, handlers invoking owners, reactors
+  mapping committed facts to commands. Portia owns framework execution, persistence,
+  concurrency and delivery/retry mechanics. Avoid another application framework.
+- Use Portia.Cassie for read-model repositories; Fitz remains the event store.
+  Authoritative aggregate/history readers remain authoritative. Do not blindly
+  migrate every legacy store; some owners are superseded by the approved model.
+- Use exclusive file ownership/worktrees. The coordinator alone edits shared
+  registrations, serializers, composition roots, schema composition, catalogs and
+  aggregate audit ledgers. Workers supply exact shared-change instructions.
+- Preserve real behavioral TDD and bounded Jev review. Authored/uncompiled tests
+  are preparation, not observed RED. Jev signals never replace source or execution.
+- Commit/push bounded checkpoints with honest validation status. Delivery still
+  needs final-head review/CI, squash merge and post-merge readback. Do not close
+  umbrella [#1176](https://github.com/bdgrz/compliance-core/issues/1176) while partial.
+
+## Last verified delivery
+
+Person generic-writer retirement merged through
+[PR #1187](https://github.com/bdgrz/compliance-core/pull/1187) as
+`4e4c9d0129e0390df270695565ea4b21291df66c`. The merged tree matched reviewed
+`a3e501f3`; local, final-head hosted and independent post-merge acceptance each
+passed **8,707/8,707** units. Integration branch readback/push completed.
+
+The preceding PR #1186 delivered named business behavior and the first **nine**
+Cassie repositories / twelve application tables. This is not whole-domain or
+deployment qualification. Person member-link cardinality/reverse uniqueness and
+accepted HRIS application remain open.
+
+## Paused checkpoint and queue
+
+The captured integration base was `1deb9cf7121f9d49ab1ee0e60bda4ea52f223455`
+on `feat/proposed-domain-impl`. This save checkpoint preserves the already-authored
+Program work and documentation; it does not mark that work accepted or merge it.
+
+| Packet | Preserved source | Actual status / remaining acceptance |
+| --- | --- | --- |
+| Program date ordering | Existing worktree changes saved in this checkpoint; original preparation `f818f45f` then `784bfca2` | Six-line rule repair, 35 new cases. Actual RED: 29 passed / 6 failed. GREEN: 65 focused/native/history/HTTP passed. Build/whitespace passed. Full run was canceled on pause: **no completed full gate**. No PR/merge for this repair. |
+| Evidence Support withdrawal | `work/evidence-support-withdrawal`: tests/contracts `6307b091`, implementation/review `3c81d366` | Authored/unexecuted and held. JSON/DI/Lead grants/transport plus cut-safe Examinations history, active Advisor admission, Applications current status/freshness and public Get/list status need coordinated completion before enablement. |
+| Access Cassie | `work/proposed-access-cassie` at `226d00d6`; isolated commits `f6cdc122`, `d0d29064`, `6d880189`, `226d00d6` | Seven repositories/eight tables, unvalidated. Shared schema/DI and feature fixtures need integration. Preserves legacy permission behavior; does not complete scoped/custom roles or AccessGrant retirement. Local branch had no upstream, though cached origin ref matched. |
+| Program/scope Cassie | `work/proposed-program-scope-cassie` at `f283c48b`; isolated commits `132a49ad`, `2a9be0d4`, `f283c48b` | Five repositories/nine tables, unvalidated; shared wiring/fixtures and explicit row/body identity qualification remain. |
+| Finding closure | `work/proposed-assurance` at `527fda47` | Held source, not accepted. Reopen authority, Work/Examinations consumers, public cutover, wiring and execution remain. Do not import owner-only changes that break old closure without the coordinated cutover. |
+| Methodology name admission | `work/proposed-methodology`; worktree tip at capture `65d57ff9` | Held and unvalidated. Inspect exact candidate commits/reviews, not whole ancestry. Earlier isolated chain: `ee93911f`, `bc880ad8`, `f30019be`, `ff5f644d`, `b636ed03`, `92d03d20`. |
+| Member/person linkage | Held `f17ae8a7` draft on workforce ancestry | Tests/stubs are not implementation. Authoritative uniqueness, multiple links and full wiring remain. |
+
+Do not sweep broad worker commit ranges. Some branches contain unrelated held
+work or already-delivered ancestors. The artifact manifest includes the captured
+worktree inventory; reverify refs before integration.
+
+Program historical-data qualification: strengthened validation rejects previously
+stored reversed-across-null plans on historical reads/reconstruction; fresh replay
+can stop at an old invalid fact even after a later valid correction. This is
+accepted under no-backcompat scope. Fresh data or explicit conversion may be
+needed; no conversion/deployment is claimed. See the
+[date review](reviews/program-target-date-ordering.md).
+
+## Proposed concurrent agent structure
+
+Use concurrency to complete integration packets and separate validation from
+integration. The following is a saved recommendation, not a resumed execution.
+
+| Persistent role | Ownership |
+| --- | --- |
+| Coordinator | Dependency/scope decisions, shared files, assembled integration, final CI/merge and truthful coverage. |
+| Business-slice worker | Complete one capability's owners, handlers, feature-local consumers/read behavior/tests; supply exact shared wiring. Initial candidate: Support withdrawal. |
+| Second slice worker | Complete another independent packet including its feature-local fixtures. Initial candidate: Access Cassie, with the prepared fixture checklist. |
+| Validation/review worker | One serialized local .NET lane in an isolated, immutable validation worktree: actual RED/GREEN, strict build, full units, formatting, failure classification and independent head review. |
+
+- One candidate validating, at most two ready packets. When the queue fills,
+  agents help close its gaps instead of starting another slice.
+- Shared-file ownership stays with the coordinator. Handoffs must include explicit
+  owned commits, interfaces/contracts, consumer effects, fixture needs, test filters,
+  shared changes, retirements and remaining acceptance.
+- Freeze the validating checkout at an exact SHA. Workers continue only in their
+  own worktrees; never edit the tree whose tests are running.
+- Assemble coherent batches before full validation, preserving focused behavioral
+  RED. Run the required full suite and final-head CI. Repeat after justified source
+  changes/failures, not on every agent's partial handoff.
+- Overlap hosted CI for an immutable reviewed head with preparation of the next
+  local candidate. A changed head requires qualification of that head.
+- Start by qualifying the saved Program-date packet; finish Support's consumer
+  gaps and Access's fixture preparation concurrently when the user resumes.
+
+The machine Codex config was changed, at the user's request, from 12 to **20** at
+`features.multi_agent_v2.max_concurrent_threads_per_session` in
+`~/.codex/config.toml`. Other settings and mode 0600 were preserved; TOML parsing
+and `codex features list` succeeded with installed codex-cli 0.145.0. No global
+config contents or credentials are included here. This conversation's enforced
+runtime limit was four active agents total; verify the new session's actual limit.
+Capacity does not require twenty simultaneous implementation packets.
+
+## Durable evidence and restart checks
+
+[Artifact manifest](restart-artifacts/2026-11-04/manifest.json) lists hashes and
+captured source paths. This folder preserves 16 context source/assertion handoffs
+alongside the eight already recorded in requirement coverage, plus Support/Access
+integration reviews, source hashes and Program RED/GREEN/canceled-run excerpts.
+Use the [portable coverage index](restart-artifacts/2026-11-04/coverage-index.json).
+Historical `/tmp` paths inside copied artifacts are original evidence pointers;
+the copied basenames here are the durable versions. These maps are not fresh
+runtime acceptance or proof that a context is complete.
+
+The recovery patch is only a backup of the original paused Program code diff.
+That code is also preserved by this checkpoint. **Do not blindly reapply it.**
+
+After explicit resume: inspect the working tree, reverify live branch/CI state,
+confirm source hashes, and allocate ownership before running commands. Use the SDK
+from `global.json`; serialize local .NET commands (`-m:1`), retain ordinary xUnit
+collection parallelism and the existing native schema setup gate. Use the pinned
+native Cassie test service and isolated database leases. Do not weaken analyzers,
+replace real authorization/projection tests with permissive fakes, or manufacture
+success from an interrupted run.
+
+Jev wrapper `scripts/backlog-jev.mjs` was absent in this checkout. Prior bounded
+reviews used the TypeSafe System One API with `jev-latest` resolving to
+`jev-1.14.0`. Recheck available tooling when needed; keep the key only in the
+command environment, never in logs, artifacts or Git. The configured key file path
+is `~/.config/typesafe/jev.key`, not a checked-in credential.
+
+Open qualifications include #1178 (broker integration), #1180 (Finding source
+vocabulary), #1183 (native teardown), #1184 (concurrent schema startup), and #1185
+(native fact-factory inventory). Full-domain, client, deployment and release
+qualification remain separate. No implementation should restart merely because
+this document was loaded.

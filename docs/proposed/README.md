@@ -4,6 +4,9 @@ This folder is the source of truth for Compliance Core's domain rules and write
 model. The write model is designed one bounded context at a time, in
 hand-authored context docs; code follows the docs.
 
+Implementation is paused. Read the [restart handoff and concurrent-agent plan](restart-handoff.md)
+before resuming; source checkpoints and audits are not completed domain acceptance.
+
 - [Domain model](domain-model.md): modeling rules, process spine and context map.
 - [Context conventions](contexts/conventions.md): rules every context cites.
 - [Decisions](decisions): product decisions the contexts apply.
@@ -65,6 +68,7 @@ work.
 
 | Owner | Implementation status | Evidence |
 | --- | --- | --- |
+| Program | Partial: all-present target-date ordering passes focused/native tests; full gate and canonical Program workflow remain | [Date invariant](reviews/program-target-date-ordering.md) |
 | Person | Partial: named details and generic-writer retirement locally qualified; member linkage and accepted HRIS application remain | [Writer cutover](reviews/person-named-writer-cutover.md) |
 | RiskControlTreatment (`RiskTreatmentAssertion` in current source) | Partial: reviewer independence enforced in the owner; control-retirement coordination and proposed-owner migration remain | [Review](reviews/risk-control-treatment.md) |
 | WorkRelationship | Partial: named lifecycle/changes and computed sponsorship; initial/source conformance and whole-owner qualification remain | [Terminal review](reviews/work-relationship-terminal-status.md), [named changes and sponsorship](reviews/workforce-named-and-sponsorship.md) |

@@ -1,0 +1,91 @@
+{
+  "status": "Source/assertion review handoffs only; not target implementation, executed acceptance, or merged documentation.",
+  "context_count": 24,
+  "committed_map": "docs/proposed/requirement-coverage.md",
+  "committed_context_count": 8,
+  "handoff_context_count": 16,
+  "reviewed_main": "baffd1badc29817d4759e3bc2d03cbc4e79617f9",
+  "runtime_current_person_pr": 1187,
+  "handoffs": [
+    {
+      "path": "compliance-coverage-advisor-collaboration-handoff.md",
+      "bytes": 13110,
+      "sha256": "ad5ae35bbb6836d91e7c0418944166a720bd72b543a3f3e2724c1bd00d5338d7"
+    },
+    {
+      "path": "compliance-coverage-application-inventory-handoff.md",
+      "bytes": 7256,
+      "sha256": "afe3dab6e0007a52096346f2a219decb20b6537f9b1682f42f3bb472f9768acf"
+    },
+    {
+      "path": "compliance-coverage-auditor-collaboration-handoff.md",
+      "bytes": 14789,
+      "sha256": "bd31321272421f59b32c34831106b249eed1cd724265c4fdc8766150aeb94977"
+    },
+    {
+      "path": "compliance-coverage-change-and-incident-oversight-handoff.md",
+      "bytes": 10564,
+      "sha256": "3d62d5ae696bea31a23283e18ec1c81a9865cee8ef5ff825ff83e32dd271a945"
+    },
+    {
+      "path": "compliance-coverage-commitments-handoff.md",
+      "bytes": 7188,
+      "sha256": "9c8481f559402440e928d5c6114b43b82e9bc87328add3c38e8defd7254af671"
+    },
+    {
+      "path": "compliance-coverage-criteria-handoff.md",
+      "bytes": 6903,
+      "sha256": "4565893388193db4b62a490c3a815624d231d498cf5fda7cd476f872ee71d9c0"
+    },
+    {
+      "path": "compliance-coverage-evidence-handoff.md",
+      "bytes": 13427,
+      "sha256": "4b9a46d2009022de13fa8a9efe000b3652efd734e1d99445be2c8fa581502973"
+    },
+    {
+      "path": "compliance-coverage-examinations-handoff.md",
+      "bytes": 13725,
+      "sha256": "ac18b7e4abb152d9e352a462a8196bc4c8a506dd83fe1f71dce1b6fd3da62527"
+    },
+    {
+      "path": "compliance-coverage-exports-handoff.md",
+      "bytes": 9244,
+      "sha256": "e0bd3a6a655b10c7746c9ba9c6cb1f1be90f9522fa794cbd41932c0596f3a1a6"
+    },
+    {
+      "path": "compliance-coverage-external-access-governance-handoff.md",
+      "bytes": 11329,
+      "sha256": "1c5f1338c61eada8f106f1313a85c80b829ecdde2655bf5ffa8e2c51a481d0d6"
+    },
+    {
+      "path": "compliance-coverage-policies-handoff.md",
+      "bytes": 10553,
+      "sha256": "423545795f87ff93a7f0575a69fb12abd8678cf38e50776acc874afcd3875fbf"
+    },
+    {
+      "path": "compliance-coverage-readiness-handoff.md",
+      "bytes": 13218,
+      "sha256": "3a9c023b17fae656a4a3ce60f4564ad0cddef1d5ea468426116fca9ad9edca13"
+    },
+    {
+      "path": "compliance-coverage-retention-handoff.md",
+      "bytes": 6875,
+      "sha256": "bc974f79ca366efa1275c277b1e77a29822c1b979b525f0827fe1a72cc8c0341"
+    },
+    {
+      "path": "compliance-coverage-risk-and-provider-oversight-handoff.md",
+      "bytes": 12694,
+      "sha256": "addf123460f0839a5e196570b6ef9818691d8fdaf0344cfd7e30fa47224d01d6"
+    },
+    {
+      "path": "compliance-coverage-system-description-handoff.md",
+      "bytes": 9780,
+      "sha256": "c5776e67cc2e41b07274f771bc3586223222e40a9615693fc467b09df73c44d2"
+    },
+    {
+      "path": "compliance-coverage-technology-and-information-inventory-handoff.md",
+      "bytes": 8584,
+      "sha256": "95c2f86a66c95d87fe1bb1265870c23813278168a955ae8b89628121eea6dd10"
+    }
+  ]
+}

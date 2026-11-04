@@ -1,0 +1,54 @@
+{
+  "status": "partial source-authored owner/handler boundary; unvalidated; public enablement blocked on mandatory consumer/wiring qualification",
+  "worktree": "/Users/jrepanich/Code/bdgrz/compliance-core-worktrees/evidence-support-withdrawal",
+  "branch": "work/evidence-support-withdrawal",
+  "base": "a3e501f3",
+  "tests_commit": "6307b091",
+  "implementation_commit": "3c81d366",
+  "dotnet_execution": "None: restore/build/test/format explicitly deferred. Tests are authored, not observed RED/GREEN. Tests-first preparation commit references subsequent implementation APIs and is not independently compilable.",
+  "owned_paths": [
+    "src/Compliance.Common/Features/Evidence/Commands/WithdrawEvidenceSupport.cs",
+    "src/Compliance.Common/Features/Evidence/Events/EvidenceSupportWithdrawn.cs",
+    "src/Compliance.Common/Features/Evidence/Models/EvidenceSupportView.cs",
+    "src/Compliance.Core/Features/Evidence/Aggregates/EvidenceSupport.cs",
+    "src/Compliance.Core/Features/Evidence/Readers/EvidenceSupportReader.cs",
+    "src/Compliance.Core/Features/Evidence/Handlers/WithdrawEvidenceSupportHandler.cs",
+    "src/Compliance.Core/Features/Evidence/Services/EvidenceSupportPermissions.cs",
+    "test/Compliance.Tests/Features/Evidence/Tests/EvidenceSupportWithdrawalTests.cs",
+    "test/Compliance.Tests/Features/Evidence/Tests/WithdrawEvidenceSupportHandlerTests.cs",
+    "docs/proposed/reviews/evidence-support-withdrawal.md"
+  ],
+  "new_api": {
+    "command": "WithdrawEvidenceSupport(Uuid CommandId, Uuid TenantId, Uuid ProgramId, Uuid SupportId, long ExpectedRevision, string Reason) : IRequest, IProgramScopedRequest, IClientManagementMutationRequest, ICallable",
+    "event": "EvidenceSupportWithdrawn(TenantId, SubjectId, Revision, ActorMemberId, OccurredAt, ProgramId, CommandId, OriginalExpectedRevision, AuthoredIntentSha256, Reason, ActorDisplay) : DomainEvent",
+    "permission": "EvidenceSupportPermissions.Withdraw = evidence_support.withdraw (Lead built-in role only)",
+    "handler": "WithdrawEvidenceSupportHandler(IAggregateExecutor, IAggregateReader, IPermissionAuthorizer, TimeProvider)",
+    "reader": "EvidenceSupportReader(IAggregateReader): ReadOriginalAsync / RequireActiveAsync (tenant,program,supportId,ct) -> ValueTask<Result<EvidenceSupportView>>",
+    "owner": "EvidenceSupport.Withdraw(...)->CommandFailure?; Withdrawal, IsActive, Revision; ForVerification(tenant,support) learns original program during source replay"
+  },
+  "coordinator_required": [
+    "Core JSON metadata: new command and event",
+    "DI: handler + reader",
+    "Lead-only built-in permission grant and existing program/client-management authorization wiring",
+    "Public route/tool/catalog/coverage and event schema registration only after consumer completion",
+    "Examinations baseline contributor must validate withdrawal lifecycle and apply exact fixed/as-of cut; retain historical/frozen reliance",
+    "Advisor new handoffs must refuse !support.IsActive; preserve frozen/delivered history",
+    "Applications advisory/reference read-side contract classification parked; if new withdrawal/status projection is needed, use Portia.Cassie, not Fitz expansion"
+  ],
+  "known_limit": "Authoritative active-reader check is not a cross-owner admission protocol. No claim of concurrent selection/withdrawal coordination.",
+  "focused_filter": "FullyQualifiedName~EvidenceSupportWithdrawalTests|FullyQualifiedName~WithdrawEvidenceSupportHandlerTests|FullyQualifiedName~EvidenceSupportTests|FullyQualifiedName~LinkEvidenceSupportHandlerTests",
+  "jev": {
+    "requested_model": "jev-latest",
+    "resolved_model": "jev-1.14.0",
+    "requests": [
+      "/tmp/compliance-evidence-support-withdrawal-jev-request.json",
+      "/tmp/compliance-evidence-support-withdrawal-jev-followup-request.json"
+    ],
+    "responses": [
+      "/tmp/compliance-evidence-support-withdrawal-jev-response.json",
+      "/tmp/compliance-evidence-support-withdrawal-jev-followup-response.json"
+    ],
+    "fixture_readiness_unresolved": 0.54
+  },
+  "review_manifest_matches_final_source": true
+}

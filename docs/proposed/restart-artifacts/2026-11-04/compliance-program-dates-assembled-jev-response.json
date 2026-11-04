@@ -1,0 +1,29 @@
+{
+  "model": "jev-1.14.0",
+  "answers": {
+    "known_date_pair_gap_remains": {
+      "type": "noul",
+      "noul": 0.26
+    },
+    "permitted_equal_or_unknown_values_regress": {
+      "type": "noul",
+      "noul": 0.13
+    },
+    "refusal_mutates_program": {
+      "type": "noul",
+      "noul": 0.09
+    },
+    "new_tests_prove_gap_and_state_preservation": {
+      "type": "noul",
+      "noul": 0.49
+    },
+    "framework_or_receipt_execution_changed": {
+      "type": "noul",
+      "noul": 0.05
+    }
+  },
+  "usage": {
+    "input_tokens": 4760,
+    "output_tokens": 114
+  }
+}

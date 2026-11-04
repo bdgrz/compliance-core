@@ -64,7 +64,7 @@ dependent on named facts from other contexts.
 | PS-06 | ClientService owner binds permanent Program and terminal retirement; ProductClientServiceNativeHistoryTests covers rebind/mutation/retry refusals | Qualify real bus/actor behavior and competing appends. Native SQL migration is a separate gate. |
 | PS-07 | Generic assignments dispatch control scopes to ControlOperations; boundary still owns assignment/revocation facts | Deliver specified ControlResponsibility effective tenure and work consumers; remove obsolete boundary responsibility ownership during coordinated cutover. |
 | Body: criteria at creation | Program criteria selection exists after creation | Require exactly one published criteria edition at creation and qualify actor/source authority. |
-| Body: target dates | ProgramRules validates adjacent target-date pairs | Compare all present dates across null intermediates; named changes must preserve ordering and retries. |
+| Body: target dates | ProgramRules now validates all six present date pairs; 6 intended RED failures, then 65 focused/native/history/HTTP cases passed | Full gate pending. Named target-change command/fact remains separate; old invalid historical plans are unsupported under the no-backcompat scope. |
 | Body: resolved scope | Boundary draft/version/source checks exist | Exact-version references and provider resolution remain incomplete; qualify source authority and actor matrix. |
 
 Small independent repairs include target-date ordering, all-author review

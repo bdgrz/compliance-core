@@ -366,3 +366,36 @@ unchanged inputs. The next fresh native run passed **8,707/8,707**, zero
 failures/skips, in 12m47s. All 14 compiler/runtime-fixture input hashes remained
 unchanged. This second run supplies current local acceptance; final committed-head
 review, hosted CI and merge remain separate delivery gates.
+
+
+## Person retirement delivered; Program target ordering checkpoint
+
+This checkpoint is paused at the user's request. The Program full run described
+below was later canceled; no completed full acceptance is claimed. See the
+[restart handoff](restart-handoff.md) before taking further action.
+
+[PR #1187](https://github.com/bdgrz/compliance-core/pull/1187) merged Person
+writer retirement as `4e4c9d01`. The merged tree matches reviewed `a3e501f3`;
+local, exact-head hosted and independent post-merge gates each passed 8,707 units.
+Integration branch readback/push is complete. Person links and accepted HRIS
+application remain separate missing behavior.
+
+The next bounded repair compares every present Program target date across unknown
+intermediates. Clean RED passed29/failed6, then the six-line repair passed65
+focused/native/history/HTTP cases. Scaffold import/style fixes are not RED.
+All six date pairs, all16 present/null patterns and equality are covered; unchanged
+native handlers still provide original receipt/current authorization behavior.
+Strict build/whitespace pass; the assembled full gate is running. The
+[review](reviews/program-target-date-ordering.md) records the accepted breaking
+qualification for old invalid stored plans, which may stop historical reads and
+fresh projection rebuild. No data conversion/deployment is claimed.
+
+Evidence Support withdrawal is held at `3c81d366`, tests/contracts `6307b091`, on
+`work/evidence-support-withdrawal`. It is source-authored and unexecuted. Original
+assertion reads and new-use eligibility are separate authoritative seams; public
+wiring is not enabled. Examinations fixed-cut history, Advisor new-use checks and
+Applications/read-status qualification remain before a coherent public workflow.
+No new Fitz projection behavior is accepted as the target. The held Access Cassie
+slice also has a source-reviewed integration checklist covering shared schema/DI,
+real native authorization fixtures, cursor exception doubles and compiled E2E type
+references; source review is not executed migration acceptance.
