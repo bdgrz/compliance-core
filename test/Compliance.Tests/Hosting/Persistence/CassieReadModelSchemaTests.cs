@@ -76,7 +76,10 @@ public sealed class CassieReadModelSchemaTests
             "workforce_observation_resolutions", "methodology_template_catalog", "methodology_template_versions",
             "work_corrective_actions", "work_corrective_action_revisions", "work_finding_closures",
             "access_teams", "access_team_members", "access_roles", "access_role_permissions",
-            "access_role_teams", "access_team_roles", "access_permission_states", "access_permission_grants"];
+            "access_role_teams", "access_team_roles", "access_permission_states", "access_permission_grants",
+            "program_directory", "program_revisions", "client_service_directory", "client_service_revisions",
+            "boundary_current_identities", "boundary_version_identities", "boundary_decision_identities",
+            "scope_snapshots", "population_snapshots"];
         await using var connection = await database.DataSource.OpenConnectionAsync();
         await using var command = connection.CreateCommand();
         command.CommandText = "SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' AND table_type = 'BASE TABLE'";

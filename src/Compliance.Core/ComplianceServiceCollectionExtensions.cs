@@ -454,7 +454,8 @@ public static class ComplianceServiceCollectionExtensions
             provider => provider.GetRequiredService<FitzTenantInvitationDirectory>());
         services.AddScoped<ProgramReader>();
         services.AddScoped<ProgramOperations>();
-        services.AddScoped<FitzProgramDirectory>();
+        services.AddScoped<CassieProgramDirectory>();
+        services.AddScoped<Bdgrz.Compliance.Features.Programs.Services.ProgramApplicationAdmission>();
         services.AddScoped<ProgramDirectoryReadConsistency>();
         services.AddScoped<FitzApplicationDirectory>();
         services.AddScoped<IApplicationDirectoryProjection>(provider =>
@@ -529,9 +530,9 @@ public static class ComplianceServiceCollectionExtensions
         services.AddScoped<ApplicationEvidenceSourceReferenceReadConsistency>();
         services.AddScoped<IApplicationEvidenceSourceAccess, ApplicationEvidenceSourceAccess>();
         services.AddScoped<IProgramDirectoryProjection>(
-            provider => provider.GetRequiredService<FitzProgramDirectory>());
+            provider => provider.GetRequiredService<CassieProgramDirectory>());
         services.AddScoped<IProgramDirectoryReader>(
-            provider => provider.GetRequiredService<FitzProgramDirectory>());
+            provider => provider.GetRequiredService<CassieProgramDirectory>());
         services.AddScoped<ProgramHistoryReadConsistency>();
         services.AddScoped<ProgramSetupWorkReadConsistency>();
         services.AddScoped<ControlReader>();
@@ -720,20 +721,20 @@ public static class ComplianceServiceCollectionExtensions
         services.AddScoped<CriteriaCoverageReadConsistency>();
         services.AddScoped<ProductClientServiceReader>();
         services.AddScoped<ProductClientServiceOperations>();
-        services.AddScoped<FitzClientServiceDirectory>();
+        services.AddScoped<CassieClientServiceDirectory>();
         services.AddScoped<IClientServiceDirectoryProjection>(
-            provider => provider.GetRequiredService<FitzClientServiceDirectory>());
+            provider => provider.GetRequiredService<CassieClientServiceDirectory>());
         services.AddScoped<IClientServiceDirectoryReader>(
-            provider => provider.GetRequiredService<FitzClientServiceDirectory>());
+            provider => provider.GetRequiredService<CassieClientServiceDirectory>());
         services.AddScoped<ClientServiceHistoryReadConsistency>();
         services.AddScoped<IClientServiceActivity, EventSourcedClientServiceActivity>();
         services.AddScoped<BoundaryReader>();
         services.AddScoped<BoundaryOperations>();
-        services.AddScoped<FitzBoundaryDirectory>();
+        services.AddScoped<CassieBoundaryDirectory>();
         services.AddScoped<IBoundaryDirectoryProjection>(
-            provider => provider.GetRequiredService<FitzBoundaryDirectory>());
+            provider => provider.GetRequiredService<CassieBoundaryDirectory>());
         services.AddScoped<IBoundaryDirectoryReader>(
-            provider => provider.GetRequiredService<FitzBoundaryDirectory>());
+            provider => provider.GetRequiredService<CassieBoundaryDirectory>());
         services.AddScoped<FitzEvidenceWorkItemDirectory>();
         services.AddScoped<IEvidenceWorkItemProjection>(
             provider => provider.GetRequiredService<FitzEvidenceWorkItemDirectory>());
@@ -774,11 +775,11 @@ public static class ComplianceServiceCollectionExtensions
             provider => provider.GetRequiredService<FitzCriterionApplicabilityWorkItemDirectory>());
         services.AddScoped<IAccountableWorkItemDirectoryReader>(
             provider => provider.GetRequiredService<FitzCriterionApplicabilityWorkItemDirectory>());
-        services.AddScoped<FitzSnapshotDirectory>();
+        services.AddScoped<CassieSnapshotDirectory>();
         services.AddScoped<ISnapshotDirectoryProjection>(
-            provider => provider.GetRequiredService<FitzSnapshotDirectory>());
+            provider => provider.GetRequiredService<CassieSnapshotDirectory>());
         services.AddScoped<ISnapshotDirectoryReader>(
-            provider => provider.GetRequiredService<FitzSnapshotDirectory>());
+            provider => provider.GetRequiredService<CassieSnapshotDirectory>());
         services.AddScoped<ScopeSnapshotFreezer>();
         services.AddScoped<FitzAccessPopulationDirectory>();
         services.AddScoped<IAccessPopulationDirectoryProjection>(
@@ -805,11 +806,11 @@ public static class ComplianceServiceCollectionExtensions
             provider.GetRequiredService<FitzAccessReviewCampaignWorkItemDirectory>());
         services.AddScoped<IAccessReviewSources, GovernedAccessReviewSources>();
         services.AddScoped<AccessReviewQueueEligibility>();
-        services.AddScoped<FitzPopulationSnapshotDirectory>();
+        services.AddScoped<CassiePopulationSnapshotDirectory>();
         services.AddScoped<IPopulationSnapshotDirectoryProjection>(
-            provider => provider.GetRequiredService<FitzPopulationSnapshotDirectory>());
+            provider => provider.GetRequiredService<CassiePopulationSnapshotDirectory>());
         services.AddScoped<IPopulationSnapshotDirectoryReader>(
-            provider => provider.GetRequiredService<FitzPopulationSnapshotDirectory>());
+            provider => provider.GetRequiredService<CassiePopulationSnapshotDirectory>());
         services.AddScoped<PopulationSnapshotDirectoryReadConsistency>();
         services.AddScoped<PopulationSnapshotFreezer>();
         services.TryAddSingleton(TenantActivationPolicy.Default);
@@ -2231,7 +2232,7 @@ public static class ComplianceServiceCollectionExtensions
             .AddProjector<TenantMembershipProjector>("TenantMembership", WorkloadScope.PerTenant)
             .AddProjector<TenantInvitationDirectoryProjector>("TenantInvitationDirectory",
                 WorkloadScope.PerTenant)
-            .AddProjector<ProgramDirectoryProjector>("ProgramDirectory", WorkloadScope.PerTenant)
+            .AddCassieProjection<ProgramDirectoryProjector, CassieProgramDirectory>("ProgramDirectory", WorkloadScope.PerTenant)
             .AddProjector<ExaminationEngagementDirectoryProjector>(
                 FitzExaminationEngagementDirectory.ProjectorName, WorkloadScope.PerTenant)
             .AddProjector<SignificantChangeDirectoryProjector>(
@@ -2313,8 +2314,8 @@ public static class ComplianceServiceCollectionExtensions
                 WorkloadScope.PerTenant)
             .AddProjector<ProviderProjector>(FitzProviderDirectory.ProjectorName, WorkloadScope.PerTenant)
             .AddProjector<AssuranceProjector>(FitzAssuranceDirectory.ProjectorName, WorkloadScope.PerTenant)
-            .AddProjector<ClientServiceDirectoryProjector>("ClientServiceDirectory", WorkloadScope.PerTenant)
-            .AddProjector<BoundaryDirectoryProjector>("BoundaryDirectoryV3", WorkloadScope.PerTenant)
+            .AddCassieProjection<ClientServiceDirectoryProjector, CassieClientServiceDirectory>("ClientServiceDirectory", WorkloadScope.PerTenant)
+            .AddCassieProjection<BoundaryDirectoryProjector, CassieBoundaryDirectory>("BoundaryDirectoryV3", WorkloadScope.PerTenant)
             .AddProjector<BoundaryDecisionWorkItemProjector>(
                 FitzBoundaryDecisionWorkItemDirectory.ProjectorName, WorkloadScope.PerTenant)
             .AddProjector<CommitmentDecisionWorkItemProjector>(
@@ -2340,8 +2341,8 @@ public static class ComplianceServiceCollectionExtensions
             .AddProjector<ResponsibilitySetProjector>("ResponsibilitySetsV1", WorkloadScope.PerTenant)
             .AddProjector<MemberResponsibilityProjector>(FitzMemberResponsibilityIndex.ProjectorName, WorkloadScope.PerTenant)
             .AddProjector<AccessGrantProjector>("AccessGrantsV1", WorkloadScope.PerTenant)
-            .AddProjector<SnapshotDirectoryProjector>("SnapshotDirectory", WorkloadScope.PerTenant)
-            .AddProjector<PopulationSnapshotDirectoryProjector>("PopulationSnapshotDirectoryV2",
+            .AddCassieProjection<SnapshotDirectoryProjector, CassieSnapshotDirectory>("SnapshotDirectory", WorkloadScope.PerTenant)
+            .AddCassieProjection<PopulationSnapshotDirectoryProjector, CassiePopulationSnapshotDirectory>("PopulationSnapshotDirectoryV2",
                 WorkloadScope.PerTenant)
             .AddProjector<CriteriaTextOverlayDirectoryProjector>(
                 FitzCriteriaTextOverlayDirectory.ProjectorName, WorkloadScope.PerTenant)
