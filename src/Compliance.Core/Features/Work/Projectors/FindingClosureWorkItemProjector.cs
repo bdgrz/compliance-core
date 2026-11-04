@@ -12,7 +12,7 @@ namespace Bdgrz.Compliance.Features.Work.Projectors;
 public sealed class FindingClosureWorkItemProjector(
     IFindingClosureWorkItemProjection projection)
     : Projector(projection, EventStreamPattern.ForTenant(),
-        FitzFindingClosureWorkItemDirectory.ProjectorName)
+        CassieFindingClosureWorkItemDirectory.ProjectorName)
 {
     protected override async ValueTask<Result> ProjectEventAsync(DomainEventRecord record, IProjectorContext context,
         CancellationToken ct)

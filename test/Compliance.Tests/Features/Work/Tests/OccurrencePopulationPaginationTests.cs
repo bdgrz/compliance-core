@@ -95,7 +95,8 @@ public sealed class OccurrencePopulationPaginationTests
         var firstStart = today.AddDays(-28);
         await source.PlanAsync(cadence: new ControlCadence("recurring", "weekly", firstStart, 0),
             effectiveFrom: firstStart);
-        await using var provider = Compose(source, now);
+        await using var database = await CassieRepositoryTestDatabase.OpenAsync();
+        await using var provider = Compose(source, now, database.ConnectionString);
         var before = await ListAsync(provider, source, 200);
         Assert.Null(before.NextCursor);
         Assert.Equal(17, before.Items.Count);
@@ -125,7 +126,8 @@ public sealed class OccurrencePopulationPaginationTests
         var fresh = await TraverseAsync(provider, source);
         await ProjectAsync(provider, source.TenantId);
         var review = await ReviewWorkAsync(provider, source, source.ReviewerUserId);
-        await using var replayProvider = Compose(source, now);
+        await using var replayDatabase = await CassieRepositoryTestDatabase.OpenAsync();
+        await using var replayProvider = Compose(source, now, replayDatabase.ConnectionString);
         await ProjectAsync(replayProvider, source.TenantId);
         await ProjectAsync(replayProvider, source.TenantId);
         var replayedPopulation = await TraverseAsync(replayProvider, source);
@@ -191,13 +193,14 @@ public sealed class OccurrencePopulationPaginationTests
         public override DateTimeOffset GetUtcNow() => now;
     }
 
-    static ServiceProvider Compose(OperationsFixture source, DateTimeOffset now)
+    static ServiceProvider Compose(OperationsFixture source, DateTimeOffset now, string cassieConnectionString)
     {
         var services = new ServiceCollection();
         services.AddCompliance(new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
         {
             ["Fitz:Endpoint"] = "ws://fitz:4090/ws",
-            ["Fitz:ApplicationName"] = "compliance"
+            ["Fitz:ApplicationName"] = "compliance",
+            ["Cassie:ConnectionString"] = cassieConnectionString
         }).Build(), developerAuthentication: true);
         var events = source.Provider.GetRequiredService<IEventStore>();
         services.AddSingleton(events);

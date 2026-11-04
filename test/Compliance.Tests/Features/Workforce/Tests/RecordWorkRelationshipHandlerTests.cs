@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.Workforce.Projections;
 using System.Security.Claims;
 using Bdgrz.Compliance.Tests.Testing;
 using Cntryl.Fitz.Testing;
@@ -86,6 +87,67 @@ namespace Bdgrz.Compliance.Tests.Features.Workforce.Tests;
 
 public sealed class RecordWorkRelationshipHandlerTests
 {
+    [Theory]
+    [InlineData("unchanged")]
+    [InlineData("worker_type")]
+    [InlineData("lifecycle")]
+    [InlineData("manager")]
+    [InlineData("department")]
+    [InlineData("sponsor")]
+    [InlineData("dates")]
+    [InlineData("restricted_reason")]
+    public async Task ShouldRefuseWithoutFactGivenLegacyGenericMutation(string change)
+    {
+        // Arrange
+        await using var scenario = await Scenario.CreateAsync();
+        var initial = scenario.Request(null, null);
+        Assert.True((await scenario.RecordAsync(initial, new GrantedPermissions())).IsSuccess);
+        var generic = new ReviseWorkRelationship(scenario.TenantId,
+            WorkRelationship.IdFor(scenario.TenantId, initial.SourceWorkerId), 1,
+            initial.WorkerType, initial.LifecycleStatus, initial.StartDate,
+            Department: initial.Department);
+        generic = change switch
+        {
+            "unchanged" => generic,
+            "worker_type" => generic with { WorkerType = "contractor" },
+            "lifecycle" => generic with { LifecycleStatus = "on_leave" },
+            "manager" => generic with { ManagerPersonId = scenario.ManagerId },
+            "department" => generic with { Department = "Finance" },
+            "sponsor" => generic with { SponsorPersonId = scenario.ManagerId },
+            "dates" => generic with { StartDate = initial.StartDate.AddDays(1) },
+            "restricted_reason" => generic with { EmploymentStatusReason = "A new restricted reason" },
+            _ => throw new ArgumentOutOfRangeException(nameof(change)),
+        };
+        var before = await scenario.RelationshipEventsAsync();
+
+        // Act
+        var result = await Scenario.SendLegacyRevisionAsync(generic);
+
+        // Assert
+        var error = Assert.IsType<RequestError>(result.Error);
+        Assert.Equal(RequestErrorKind.Conflict, error.Kind);
+        Assert.Contains("named", error.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Equal(before, await scenario.RelationshipEventsAsync());
+    }
+
+    [Fact]
+    public async Task ShouldRefuseWithoutFactGivenLegacyRevisionForMissingRecord()
+    {
+        // Arrange
+        await using var scenario = await Scenario.CreateAsync();
+        var request = new ReviseWorkRelationship(scenario.TenantId,
+            WorkRelationship.IdFor(scenario.TenantId, "E-100"), 0, "employee", "active", new DateOnly(2025, 1, 6));
+
+        // Act
+        var result = await Scenario.SendLegacyRevisionAsync(request);
+
+        // Assert
+        var error = Assert.IsType<RequestError>(result.Error);
+        Assert.Equal(RequestErrorKind.Conflict, error.Kind);
+        Assert.Contains("named", error.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Empty(await scenario.RelationshipEventsAsync());
+    }
+
     [Theory]
     [InlineData("active", "employee", true)]
     [InlineData("active", "contractor", true)]
@@ -310,7 +372,7 @@ public sealed class RecordWorkRelationshipHandlerTests
         await using var scenario = await Scenario.CreateAsync();
         var initial = scenario.Request(scenario.ManagerId, "retirement");
         Assert.True((await scenario.RecordAsync(initial, new GrantedPermissions())).IsSuccess);
-        await scenario.ReviseAsync(initial with
+        await scenario.SeedLegacyRevisionAsync(initial with
         {
             Department = "Operations",
             ManagerPersonId = scenario.OtherManagerId,
@@ -439,16 +501,19 @@ public sealed class RecordWorkRelationshipHandlerTests
     sealed class Scenario : IAsyncDisposable
     {
         readonly ServiceProvider _provider;
+        readonly CassieRepositoryTestDatabase _database;
         readonly AsyncServiceScope _scope;
         bool _sponsorProjected;
 
-        Scenario(ServiceProvider provider)
+        Scenario(ServiceProvider provider, CassieRepositoryTestDatabase database)
         {
             _provider = provider;
+            _database = database;
+            Roster = new CassieWorkforceObservationDirectory(database.Database);
             _scope = provider.CreateAsyncScope();
         }
 
-        public FitzWorkforceObservationDirectory Roster { get; } = new(new InMemoryKvClient());
+        public CassieWorkforceObservationDirectory Roster { get; }
         public Uuid TenantId { get; } = Uuid.CreateVersion4();
         public Uuid PersonId { get; } = Uuid.CreateVersion4();
         public Uuid ManagerId { get; } = Uuid.CreateVersion4();
@@ -468,7 +533,8 @@ public sealed class RecordWorkRelationshipHandlerTests
             services.AddPortia();
             services.AddPersonNativeFixtures();
             var scenario = new Scenario(services.BuildServiceProvider(
-                new ServiceProviderOptions { ValidateScopes = true }));
+                new ServiceProviderOptions { ValidateScopes = true }),
+                await CassieRepositoryTestDatabase.OpenAsync(CassieWorkforceSchema.Statements));
             foreach (var id in new[] { scenario.PersonId, scenario.ManagerId, scenario.OtherManagerId })
             {
                 var person = new PersonRules(scenario.TenantId, id);
@@ -531,16 +597,25 @@ public sealed class RecordWorkRelationshipHandlerTests
             await Events.AppendAsync(new WorkRelationship(TenantId, id).Stream, 0, [fact]);
         }
 
-        public async Task ReviseAsync(RecordWorkRelationship terms)
+        public static ValueTask<Result> SendLegacyRevisionAsync(ReviseWorkRelationship request)
+        {
+            IRequestHandler<ReviseWorkRelationship> handler = new ReviseWorkRelationshipHandler();
+            var actor = new ClaimsPrincipal(new ClaimsIdentity(
+                [new Claim("iss", "bdgrz"), new Claim("sub", Uuid.CreateVersion4().ToString())], "BdgrzSession"));
+            return handler.HandleAsync(new RequestContext<ReviseWorkRelationship>(request, actor), CancellationToken.None);
+        }
+
+        public async Task SeedLegacyRevisionAsync(RecordWorkRelationship terms)
         {
             var relationship = await Reader.HydrateAsync(new WorkRelationship(TenantId,
                 WorkRelationship.IdFor(TenantId, terms.SourceWorkerId)));
-            Assert.Null(relationship.Revise(relationship.Revision,
+            var fact = DomainEventSeed.Attach(new WorkRelationshipRevised(TenantId, relationship.Id,
+                relationship.Revision + 1,
                 new WorkRelationshipTerms(terms.WorkerType, terms.LifecycleStatus, terms.StartDate,
                     terms.EndDate, terms.Department, terms.ManagerPersonId, terms.SponsorPersonId,
-                    terms.EmploymentStatusReason),
-                ActorReference.ForMember(Uuid.CreateVersion4(), "Editor"), DateTimeOffset.UtcNow));
-            await Writer.SaveAsync(relationship, new RequestDispatchContext(RequestActor.System));
+                    terms.EmploymentStatusReason), ActorReference.ForMember(Uuid.CreateVersion4(), "Editor"),
+                DateTimeOffset.UtcNow), relationship.Id, (ulong)relationship.Revision + 1);
+            await Events.AppendAsync(relationship.Stream, (ulong)relationship.Revision, [fact]);
         }
 
         public async Task<List<DomainEvent>> RelationshipEventsAsync()
@@ -557,6 +632,8 @@ public sealed class RecordWorkRelationshipHandlerTests
         {
             await _scope.DisposeAsync();
             await _provider.DisposeAsync();
+            await Roster.DisposeAsync();
+            await _database.DisposeAsync();
         }
     }
 

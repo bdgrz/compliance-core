@@ -21,6 +21,8 @@ Tracking issue: [#1176](https://github.com/bdgrz/compliance-core/issues/1176).
   changing the reviewed proposal. Portia owns execution, persistence, concurrency,
   delivery and retries.
 
+See the [delivery reset](delivery-reset.md) for the current implementation freeze, preserved worker checkpoints and reduced work-in-progress limits.
+
 ## Active batches and exclusive ownership
 
 The coordinator owns registrations, serialization contexts, composition roots,
@@ -39,6 +41,72 @@ execution. The coordinator accumulates completed source slices, wires one assemb
 batch, then runs the required checks. Authored tests are not recorded as observed
 RED, and prepared source is not recorded as validated GREEN. Blocked work is parked with a named missing condition
 while independent work continues.
+
+## Cassie read-model direction
+
+The user selected **Portia.Cassie for read models** after the existing Fitz KV
+implementation was identified. The [migration inventory](read-model-migration.md)
+records 82 existing KV projection stores, with nine assigned to the first conversion
+batch and 73 still remaining. The coordinator owns the native package, configuration,
+application schema startup, Compose/CI service and real database test seam. Feature
+workers own business SQL repositories and queries. Fitz retains event persistence.
+The next merge is held until the assembled Cassie path is validated. Existing
+source batches and prior green Fitz-backed tests do not qualify the new database path.
+
+The latest pre-conversion batch-4 checkpoint built with zero warnings/errors and
+ran 1,928 affected cases: 1,920 passed and eight failed. Two failures exposed a
+historical CorrectiveAction summary being reconstructed from changed terms;
+the source repair preserves the original authored description. Six Workforce
+failures involve retired generic mutation fixtures and refusal-message compatibility;
+source fixes passed the subsequent 56 business cases (the same run failed two new native-fixture cleanup cases). The native seam then passed four schema/data/database-isolation checks after table cleanup was corrected and the pinned engine database-drop problem was parked in #1183. The strict Release build passed with zero warnings and errors. No full-suite or feature-repository Cassie acceptance
+is claimed for batch 4 yet. Jev's contradictory broad-versus-specific service
+permission judgments remain advisory; the actual authorization cases passed in
+this checkpoint and no authorization rule was weakened on that model signal.
+
+The resumed assembled gate is now locally GREEN: strict Release build has zero
+warnings/errors; whole-solution whitespace verification and all six Node tooling
+cases pass; proposal and runtime-fixture validators pass. The full backend suite
+passed **8,673/8,673** with BrokerIntegration/WebIntegration excluded, using a fresh
+pinned native Cassie service and ordinary xUnit collection parallelism. Changed
+compiler inputs were hashed before the run and verified unchanged afterward.
+Local log: `/tmp/compliance-cassie-integration-full-unit.log`; TRX:
+`/tmp/compliance-cassie-integration-green-results/backend.trx`. Hosted final-head CI,
+merge and post-merge readback remain pending.
+
+Five old production-composition fixtures now lease native databases and run real
+registered projectors. Incomplete leases are discarded without further DDL.
+Mixed-source list/detail verification freezes query time after historical setup,
+preventing responsibility activation from legitimately changing a work identity
+mid-assertion. The bounded Person projection identity regression was observed RED
+before restoring the previous replacement guard and is GREEN in the full run.
+These repairs do not implement any of the separately mapped remaining domain rules.
+
+Exact-head adversarial review of PR [#1186](https://github.com/bdgrz/compliance-core/pull/1186)
+then found two current-authorization gaps outside that test selection: a linked
+person-owner could review through stale projected membership, and native accepted
+corrective-action retries skipped the prepare-only permission check. New source
+membership and retry cases produced a clean **14 passed / 13 failed** RED selection.
+After the repairs, **58/58** relevant cases and the expanded full backend suite
+**8,700/8,700** passed (14m15s), with unchanged compiler inputs. The strict build
+and whole-solution whitespace verification pass. Service person/team owner paths
+now use authoritative current membership and UTC expiry; corrective changes check
+acting membership and current authority before receipt replay while retaining
+new-write checks. Privileged frozen retries do not require the current Finding body.
+
+Hosted CI at `cbaaba5f` passed spec/restore/format/build but stopped before unit
+execution on native readiness connection reset (curl56). Its idempotent readiness
+GET now retries all startup errors. A local restart also reproduced and recovered
+from an empty reply. Final-head hosted CI and merge evidence are tracked in PR1186;
+the earlier hosted failure is not counted as unit acceptance. The separate Person
+generic-writer source preparation remains held and unvalidated.
+
+Source inventory caveat: the batch-4 export contains 568 facts, 136 aggregate types,
+819 requests and 777 Core handler registrations. It still reports 66 unwired producer
+operations. These are syntactic navigation counts. In particular, it misses the
+native Person.Append → PersonContent.Fact factory path and underreports four native
+person publishers/command paths; fixture notes and #1185 record that limitation.
+The exporter result is not a runtime completion claim, and reverse membership-link
+work remains partial.
 
 ## Context coverage
 
@@ -224,3 +292,36 @@ and all 8,431 units passed after those corrections; these failures were not coun
 as observed behavioral RED. The inspected inventory has five additional facts,
 eight additional registered requests (three internal-only), and explicit missing
 new-line creation/retirement routes. Counts remain navigation evidence only.
+
+Batch 3 PR [#1182](https://github.com/bdgrz/compliance-core/pull/1182) passed exact-head
+Backend CI and adversarial/source/Jev review, then merged as `97cecc07`.
+
+## Batch 4 assembled source checkpoint
+
+Prepared source includes 175 authored cases: generic WorkRelationship retirement
+(16), named ServiceIdentity behavior/authorization/legacy preservation (105),
+corrective-action changes (22), truthful V4 line queries (14), and named Person
+details (18). These were authored before coordinator compilation; they were not
+observed RED at that source handoff. Subsequent build/test evidence and remaining
+validation are recorded above and in the read-model migration ledger.
+
+Central wiring adds explicit Lead/Contributor grants and typed routes/JSON/handlers.
+ReviewServiceIdentity is typed HTTP callable and invocation-guarded, with no MCP
+registration. Broad generic WorkRelationship/ServiceIdentity routes/tools are
+removed; registered legacy handlers uniformly refuse and historical reducers remain.
+The service-specific defaults add four grants and corrective change adds one, for
+47 bootstrap grants; explicit role assertions cover each.
+
+V4 public methodology query DTOs replace the old authored-version shape without
+fabricated attribution. The directory uses MethodologyPublicationDirectoryV2 and
+projection-v2 storage to replay both event families. Ordered applications and new
+line creation/name admission remain pending, alongside Person member cardinality
+and source reconciliation. Legacy RevisePerson remains an explicitly partial path.
+
+Live Jev shared-wiring first review flagged an uncertain broad-grant question0.51.
+Narrow followup returned contradictory judgments (broad-only allowed0.92, specific
+manage key queried0.98). Direct source selects the specific permission, whose string
+differs from the broad key; the authored authorization regression explicitly denies
+the broad-only grant. This advisory candidate remains for the assembled runtime
+check; no implementation change is justified without a failing source-backed test.
+Other assembled adverse signals ranged0.03–0.23.

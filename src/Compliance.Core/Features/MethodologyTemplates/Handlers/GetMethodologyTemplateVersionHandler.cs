@@ -35,12 +35,12 @@ public sealed class GetMethodologyTemplateVersionHandler(IMethodologyTemplateDir
         try
         {
             var identity = await directory.FindVersionAsync(request.MethodologyTemplateVersionId, ct).ConfigureAwait(false);
-            var version = identity is null ? null : await templates.VersionAsync(identity.TemplateId,
+            var version = identity is null || identity.SeparateDraftLine ? null : await templates.VersionAsync(identity.TemplateId,
                 identity.VersionNumber, ct).ConfigureAwait(false);
             var confirmed = await consistency.ConfirmAsync(fence.Value, ct).ConfigureAwait(false);
             if (!confirmed.IsSuccess)
                 return Result<MethodologyTemplateVersionView>.Failure(confirmed.Error!);
-            if (identity is null)
+            if (identity is null || identity.SeparateDraftLine)
                 return Result<MethodologyTemplateVersionView>.Failure(new RequestError(RequestErrorKind.NotFound,
                     "The published methodology-template version was not found."));
             if (version is null || version.TemplateId != identity.TemplateId ||

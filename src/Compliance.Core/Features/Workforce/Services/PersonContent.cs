@@ -82,6 +82,11 @@ public static class PersonContent
                     value.View.PersonalContact, operation.Actor, operation.AcceptedAt) is not null)
                     return false;
                 break;
+            case nameof(ChangePersonDetails):
+                if (rules.ChangeDetails(value.Before?.Revision ?? 0, value.View.DisplayName, value.View.WorkEmail,
+                    value.View.PersonalContact, operation.Actor, operation.AcceptedAt) is not null)
+                    return false;
+                break;
             case nameof(CorrelatePersonMembership):
                 if (rules.CorrelateMembership(value.Before?.Revision ?? 0, value.View.CorrelatedUserId,
                     operation.Actor, operation.AcceptedAt) is not null)
@@ -96,9 +101,14 @@ public static class PersonContent
     {
         nameof(RecordPerson) => new PersonRegistrationRecorded(Header(value.View), value.Content, value.Change, value.Changed, operation, frozen, value.Result),
         nameof(RevisePerson) => new PersonDetailsRevised(Header(value.View), value.Content, value.Change, value.Changed, operation, frozen, value.Result),
+        nameof(ChangePersonDetails) => new PersonDetailsChanged(Header(value.View), value.Content, value.Change,
+            value.Changed, operation, frozen, value.Result, DetailChanges(value.BeforeView!, value.View)),
         nameof(CorrelatePersonMembership) => new PersonMembershipCorrelationRecorded(Header(value.View), value.Content, value.Change, value.Changed, operation, frozen, value.Result),
         _ => throw new ImmutableContentIntegrityException("Another person native command kind."),
     };
+    public static PersonDetailChanges DetailChanges(PersonView before, PersonView after) => new(
+        before.DisplayName != after.DisplayName, before.WorkEmail != after.WorkEmail,
+        before.PersonalContact != after.PersonalContact);
     public static bool Reference(ImmutableContentRef? value, string schema) => value is not null && value.ContentId != Uuid.Empty &&
         value.Schema == schema && value.MediaType == ImmutableContentStoreExtensions.JsonMediaType && value.Bytes >= 0 &&
         value.Sha256 is { Length: 64 } && value.Sha256.All(Uri.IsHexDigit);

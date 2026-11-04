@@ -337,11 +337,13 @@ public sealed class ReviewerWorkAuthorityTests
         public required OperationsFixture Operations { get; init; }
         public required ServiceProvider Provider { get; init; }
         public required Uuid GuestUserId { get; init; }
+        public CassieRepositoryTestDatabase? CassieDatabase { get; init; }
         public Uuid GuestMemberId => Operations.Member(GuestUserId);
         public string? RiskConflictRole { get; set; }
 
         public static async Task<Fixture> CreateAsync(bool projected = false)
         {
+            var database = projected ? await CassieRepositoryTestDatabase.OpenAsync() : null;
             var operations = await OperationsFixture.CreateAsync();
             var guestUserId = Uuid.CreateVersion4();
             var guestMemberId = operations.Member(guestUserId);
@@ -397,7 +399,7 @@ public sealed class ReviewerWorkAuthorityTests
                             new FitzControlDecisionWorkItemDirectory(client, provider.GetRequiredService<ControlReader>(),
                                 provider.GetRequiredService<OperatingAuthority>(), new(true), new(true)));
                         services.AddScoped<IAccountableWorkItemDirectoryReader>(provider =>
-                            new FitzFindingClosureWorkItemDirectory(client, provider.GetRequiredService<FindingReader>(), TimeProvider.System));
+                            new CassieFindingClosureWorkItemDirectory(database!.Database, provider.GetRequiredService<FindingReader>(), TimeProvider.System));
                         services.AddScoped<IAccountableWorkItemDirectoryReader>(provider =>
                             new FitzControlEvaluationWorkItemDirectory(client,
                                 provider.GetRequiredService<IImmutableContentStore>()));
@@ -411,7 +413,7 @@ public sealed class ReviewerWorkAuthorityTests
                             new FitzCriterionApplicabilityWorkItemDirectory(client));
                     }
                 });
-            return new Fixture { Operations = operations, Provider = provider, GuestUserId = guestUserId };
+            return new Fixture { Operations = operations, Provider = provider, GuestUserId = guestUserId, CassieDatabase = database };
         }
 
         public RequestScenario Scenario(Uuid? userId = null) => RequestScenario.For(Provider)
@@ -659,7 +661,7 @@ public sealed class ReviewerWorkAuthorityTests
                 {
                     await (directory switch
                     {
-                        FitzFindingClosureWorkItemDirectory finding => finding.ApplyAsync(record.Event),
+                        CassieFindingClosureWorkItemDirectory finding => finding.ApplyAsync(record.Event),
                         FitzPolicyDecisionWorkItemDirectory policy => policy.ApplyAsync(record.Event),
                         FitzCommitmentDecisionWorkItemDirectory commitment => commitment.ApplyAsync(record.Event),
                         FitzControlDecisionWorkItemDirectory control => control.ApplyAsync(record.Event),
@@ -679,6 +681,8 @@ public sealed class ReviewerWorkAuthorityTests
         {
             await Provider.DisposeAsync();
             await Operations.Provider.DisposeAsync();
+            if (CassieDatabase is not null)
+                await CassieDatabase.DisposeAsync();
         }
     }
 

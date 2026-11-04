@@ -4,6 +4,7 @@ using System.Net.Http.Json;
 using System.Security.Claims;
 using System.Text.Json;
 using Cntryl.Fitz;
+using Cntryl.Cassie.Commands;
 using Cntryl.Portia;
 using Cntryl.Portia.Testing;
 using Microsoft.AspNetCore.TestHost;
@@ -218,8 +219,7 @@ public sealed class MemberPresentationE2ETests(BrokerStackFixture broker) : ICla
                     {
                         var client = scope.ServiceProvider.GetRequiredService<IKvClient>();
                         var capture = new RouteCapture(client);
-                        _ = await new FitzPersonDirectory(capture).ReadAsync(tenantId, userId);
-                        await ClearProjectionAsync(client, capture.LastRoute!, "kv://bdgrz/person-directory-v2/projection-");
+                        await ClearPersonProjectionAsync(scope.ServiceProvider, tenantId);
                         _ = await new FitzPlatformUserDirectory(capture).ReadAsync(userId);
                         await ClearProjectionAsync(client, capture.LastRoute!, "kv://bdgrz/platform-user-directory-v2/projection-");
                     }
@@ -308,6 +308,27 @@ public sealed class MemberPresentationE2ETests(BrokerStackFixture broker) : ICla
         });
         Assert.Equal(HttpStatusCode.OK, created.StatusCode);
         return Uuid.Parse((await ReadAsync(created)).GetProperty("tenant_id").GetString()!, CultureInfo.InvariantCulture);
+    }
+
+    static async Task ClearPersonProjectionAsync(IServiceProvider services, Uuid tenantId)
+    {
+        var database = services.GetRequiredService<CassieProjectionDatabase>();
+        await using var projection = new PersonProjectionScope(database);
+        var key = projection.Key(tenantId);
+        await using var connection = await database.DataSource.OpenConnectionAsync();
+        await using var command = connection.CreateCommand();
+        command.Parameters.Add(new CassieParameter { ParameterName = "scope", Value = key });
+        command.CommandText = "DELETE FROM workforce_people WHERE projection_key = @scope";
+        _ = await command.ExecuteNonQueryAsync();
+        command.CommandText = "DELETE FROM portia_projection_checkpoints WHERE identity = @scope";
+        _ = await command.ExecuteNonQueryAsync();
+    }
+
+    sealed class PersonProjectionScope(CassieProjectionDatabase database)
+        : CassieProjectionRepository(database, "PersonDirectoryV2")
+    {
+        public string Key(Uuid tenantId) => GetProjectionKey(new CheckpointIdentity("PersonDirectoryV2",
+            EventStreamPattern.ForPattern(tenantId.ToString(), "people")));
     }
 
     static async Task ClearProjectionAsync(IKvClient client, string route, string prefix)

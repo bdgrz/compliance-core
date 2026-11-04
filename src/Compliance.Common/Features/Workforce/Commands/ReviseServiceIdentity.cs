@@ -4,8 +4,7 @@ using Bdgrz.Compliance.Features.AccessControl.Contracts;
 using Bdgrz.Compliance.Features.AccessControl.Models;
 namespace Bdgrz.Compliance.Features.Workforce.Commands;
 
-/// <summary>Replaces a non-human identity's terms, including its owner, review date, and
-///     optional expiry date.</summary>
+/// <summary>Retired generic mutation contract; the registered handler directs callers to named commands.</summary>
 [Discriminator("bdgrz.workforce.service-identity.revise", 1)]
 public sealed record ReviseServiceIdentity(Uuid TenantId, Uuid ServiceIdentityId,
     long ExpectedRevision, string DisplayName, string IdentityKind, string Purpose,

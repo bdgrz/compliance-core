@@ -114,7 +114,7 @@ sealed class AuthorizeCorrectiveActionFindingClosureUseHandler(IAggregateReader 
         {
             var admission = await FindingContent.ReadAsync<ChildAdmissionIntent>(Content, tenant, admitted.Intent, ct)
                 .ConfigureAwait(false);
-            actionOwner = (await FindingContent.ReadAsync<AddCorrectiveAction>(Content, tenant,
+            actionOwner = action.Changed?.OwnerMemberId ?? (await FindingContent.ReadAsync<AddCorrectiveAction>(Content, tenant,
                 admission.CanonicalAuthoredContent, ct).ConfigureAwait(false)).OwnerMemberId;
         }
         catch (ImmutableContentUnavailableException exception)

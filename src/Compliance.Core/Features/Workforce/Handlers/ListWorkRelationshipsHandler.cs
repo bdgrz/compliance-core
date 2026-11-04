@@ -42,7 +42,7 @@ public sealed class ListWorkRelationshipsHandler(IWorkRelationshipDirectoryReade
             page = await directory.ListAsync(request.TenantId, request.Limit ?? 50,
                 request.Cursor, ct).ConfigureAwait(false);
         }
-        catch (KvDirectoryQueryException)
+        catch (WorkforceDirectoryQueryException)
         {
             return Result<Page<WorkRelationshipView>>.Failure(new RequestError(RequestErrorKind.Validation,
                 "The work relationship cursor is invalid."));

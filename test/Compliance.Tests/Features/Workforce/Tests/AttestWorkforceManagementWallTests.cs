@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.Workforce.Projections;
 using Bdgrz.Compliance.Hosting.Persistence;
 using Bdgrz.Compliance.Tests.Testing;
 using Cntryl.Fitz;
@@ -94,12 +95,12 @@ public sealed class AttestWorkforceManagementWallTests
 {
     [Theory]
     [InlineData("person_record")]
-    [InlineData("person_revise")]
+    [InlineData("person_details")]
     [InlineData("person_correlate")]
     [InlineData("relationship_record")]
-    [InlineData("relationship_revise")]
+    [InlineData("relationship_department")]
     [InlineData("identity_record")]
-    [InlineData("identity_revise")]
+    [InlineData("identity_purpose")]
     [InlineData("source_record")]
     [InlineData("source_reconcile")]
     [InlineData("observation_resolve")]
@@ -126,12 +127,12 @@ public sealed class AttestWorkforceManagementWallTests
 
     [Theory]
     [InlineData("person_record")]
-    [InlineData("person_revise")]
+    [InlineData("person_details")]
     [InlineData("person_correlate")]
     [InlineData("relationship_record")]
-    [InlineData("relationship_revise")]
+    [InlineData("relationship_department")]
     [InlineData("identity_record")]
-    [InlineData("identity_revise")]
+    [InlineData("identity_purpose")]
     [InlineData("source_record")]
     [InlineData("source_reconcile")]
     [InlineData("observation_resolve")]
@@ -249,6 +250,7 @@ public sealed class AttestWorkforceManagementWallTests
 
     internal sealed class Fixture : IAsyncDisposable
     {
+        CassieRepositoryTestDatabase _database = null!;
         public Uuid TenantId { get; } = Uuid.CreateVersion4();
         public Uuid UserId { get; } = Uuid.CreateVersion4();
         public Uuid PersonId { get; } = Uuid.CreateVersion4();
@@ -269,12 +271,16 @@ public sealed class AttestWorkforceManagementWallTests
         public static async Task<Fixture> CreateAsync(string affiliation = "client_personnel",
             Func<IImmutableContentStore, IImmutableContentStore>? configureContent = null)
         {
-            var fixture = new Fixture();
+            var fixture = new Fixture
+            {
+                _database = await CassieRepositoryTestDatabase.OpenAsync(CassieWorkforceSchema.Statements),
+            };
             var services = new ServiceCollection();
             _ = services.AddCompliance(new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
             {
                 ["Fitz:Endpoint"] = "ws://fitz:4090/ws",
-                ["Fitz:ApplicationName"] = "compliance"
+                ["Fitz:ApplicationName"] = "compliance",
+                ["Cassie:ConnectionString"] = fixture._database.ConnectionString
             }).Build(), developerAuthentication: true);
             var store = new InMemoryEventStore();
             services.AddSingleton<IEventStore>(store);
@@ -341,16 +347,15 @@ public sealed class AttestWorkforceManagementWallTests
         public Task<Result> ExecuteAsync(string operation) => operation switch
         {
             "person_record" => SendAsync(new RecordPerson(Uuid.CreateVersion4(), TenantId, "Grace", "grace@example.com")),
-            "person_revise" => SendAsync(new RevisePerson(Uuid.CreateVersion4(), TenantId, PersonId, 1, "Ada King", "ada@example.com")),
+            "person_details" => SendAsync(new ChangePersonDetails(Uuid.CreateVersion4(), TenantId, PersonId, 1, "Ada King", "ada@example.com")),
             "person_correlate" => SendAsync(new CorrelatePersonMembership(Uuid.CreateVersion4(), TenantId, PersonId, 1, UserId)),
             "relationship_record" => SendAsync(new RecordWorkRelationship(TenantId, PersonId, "E-200", "employee",
                 "active", Today.AddYears(-1), Department: "Engineering")),
-            "relationship_revise" => BusAsync(new ReviseWorkRelationship(TenantId, RelationshipId, 1, "employee",
-                "active", Today.AddYears(-1), Department: "Finance")),
+            "relationship_department" => BusAsync(new ChangeDepartment(TenantId, RelationshipId, 1, "Finance")),
             "identity_record" => SendAsync(new RecordServiceIdentity(TenantId, "CI bot", "bot", "Approved CI purpose",
                 "person", PersonId, Today.AddDays(90))),
-            "identity_revise" => BusAsync(new ReviseServiceIdentity(TenantId, IdentityId, 1, "Deploy bot", "bot",
-                "Approved deployment purpose", "person", PersonId, Today.AddDays(100), "active", "production")),
+            "identity_purpose" => BusAsync(new ChangeServiceIdentityPurpose(TenantId, IdentityId, 1,
+                "Approved CI deployment purpose")),
             "source_record" => SendAsync(new RecordWorkforceSourceObservation(TenantId, Source with { SourceRevision = "v2" },
                 "person", PersonId, 1, Facts, DateTimeOffset.UtcNow.AddHours(-1))),
             "source_reconcile" => BusAsync(new ReconcileWorkforceSourceObservation(TenantId, SourceId, 1, 1,
@@ -367,8 +372,12 @@ public sealed class AttestWorkforceManagementWallTests
             var count = 0;
             await foreach (var record in Provider.GetRequiredService<IDomainEventReader>().ReadAsync(
                 EventStreamPattern.ForPattern(TenantId.ToString()), EventCursor.Start, CancellationToken.None))
-                if (record.Event is PersonRecorded or PersonRevised or PersonMembershipCorrelated or PersonRegistrationRecorded or PersonDetailsRevised or PersonMembershipCorrelationRecorded or
-                    WorkRelationshipRecorded or WorkRelationshipRevised or ServiceIdentityRecorded or ServiceIdentityRevised or
+                if (record.Event is PersonRecorded or PersonRevised or PersonMembershipCorrelated or PersonRegistrationRecorded or PersonDetailsRevised or PersonDetailsChanged or PersonMembershipCorrelationRecorded or
+                    WorkRelationshipRecorded or WorkRelationshipRevised or WorkRelationshipStarted or WorkRelationshipLeaveStarted or
+                    WorkRelationshipLeaveEnded or WorkRelationshipEnded or WorkRelationshipManagerChanged or WorkRelationshipDepartmentChanged or
+                    WorkRelationshipSponsorChanged or WorkRelationshipDatesCorrected or ServiceIdentityRecorded or ServiceIdentityRevised or
+                    ServiceIdentityOwnerChanged or ServiceIdentityPurposeChanged or ServiceIdentityReviewed or ServiceIdentityDisabled or
+                    ServiceIdentityEnabled or ServiceIdentityRetired or
                     WorkforceSourceObserved or WorkforceSourceReconciled or WorkforceObservationResolved or PopulationSnapshotFrozen)
                     count++;
             return count;
@@ -378,11 +387,11 @@ public sealed class AttestWorkforceManagementWallTests
         {
             await using var scope = Provider.CreateAsyncScope();
             var services = scope.ServiceProvider;
-            var people = services.GetRequiredService<FitzPersonDirectory>();
-            var jobs = services.GetRequiredService<FitzWorkRelationshipDirectory>();
-            var identities = services.GetRequiredService<FitzServiceIdentityDirectory>();
-            var sources = services.GetRequiredService<FitzWorkforceSourceDirectory>();
-            var observations = services.GetRequiredService<FitzWorkforceObservationDirectory>();
+            var people = services.GetRequiredService<CassiePersonDirectory>();
+            var jobs = services.GetRequiredService<CassieWorkRelationshipDirectory>();
+            var identities = services.GetRequiredService<CassieServiceIdentityDirectory>();
+            var sources = services.GetRequiredService<CassieWorkforceSourceDirectory>();
+            var observations = services.GetRequiredService<CassieWorkforceObservationDirectory>();
             await ProjectAsync("PersonDirectoryV2", "people", people, people.ApplyAsync, people.LoadCheckpointAsync);
             await ProjectAsync("WorkRelationshipDirectoryV1", "work-relationships", jobs, jobs.ApplyAsync, jobs.LoadCheckpointAsync);
             await ProjectAsync("ServiceIdentityDirectoryV1", "service-identities", identities, identities.ApplyAsync, identities.LoadCheckpointAsync);
@@ -406,7 +415,11 @@ public sealed class AttestWorkforceManagementWallTests
             }
         }
 
-        public ValueTask DisposeAsync() => Provider.DisposeAsync();
+        public async ValueTask DisposeAsync()
+        {
+            await Provider.DisposeAsync();
+            await _database.DisposeAsync();
+        }
     }
 
     internal sealed class Permissions : IPermissionAuthorizer

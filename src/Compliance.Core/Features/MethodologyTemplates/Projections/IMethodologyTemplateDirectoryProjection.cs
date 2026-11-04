@@ -6,4 +6,5 @@ namespace Bdgrz.Compliance.Features.MethodologyTemplates.Projections;
 public interface IMethodologyTemplateDirectoryProjection : IProjectionStore
 {
     ValueTask ApplyAsync(MethodologyTemplateVersionPublished fact, CancellationToken ct = default);
+    ValueTask ApplyAsync(MethodologyTemplateVersionPublishedV4 fact, CancellationToken ct = default);
 }

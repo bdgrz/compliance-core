@@ -167,6 +167,23 @@ public sealed class PersonRules
         return null;
     }
 
+    public CommandFailure? ChangeDetails(long expectedRevision, string displayName, string? workEmail,
+        PersonalContactDetails? personalContact, ActorReference actor, DateTimeOffset changedAt)
+    {
+        if (!_created)
+            return CommandFailure.MissingRecord("The person was not found.");
+        if (expectedRevision != _revision)
+            return CommandFailure.ForVersion(VersionedRecordRules.StaleRevision("person", _revision));
+        var validation = Validate(displayName, workEmail);
+        if (validation is not null)
+            return CommandFailure.InvalidContent(validation.Message!);
+        var current = Current!;
+        if (current.DisplayName == displayName.Trim() && current.WorkEmail == NormalizeOptional(workEmail) &&
+            current.PersonalContact == Normalize(personalContact))
+            return CommandFailure.StateConflict("The person details already match; no change was recorded.");
+        return Revise(expectedRevision, displayName, workEmail, personalContact, actor, changedAt);
+    }
+
     /// <summary>
     ///     Links this person to one platform member, or clears the link. Re-stating the current link
     ///     succeeds without a new revision. The link never grants or revokes platform access.

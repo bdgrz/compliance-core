@@ -63,6 +63,15 @@ static class BuiltInRolePermissions
                 Bdgrz.Compliance.Features.Remediation.Contracts.WaiverPermissions.Review);
         yield return RbacPermissionEffects.Assign(sourceEventId, tenantId, lead,
             Bdgrz.Compliance.Features.Remediation.Contracts.CorrectiveActionPermissions.Cancel);
+        yield return RbacPermissionEffects.Assign(sourceEventId, tenantId, lead,
+            Bdgrz.Compliance.Features.Remediation.Contracts.CorrectiveActionPermissions.Change);
+        foreach (var role in new[] { lead, contributor })
+            yield return RbacPermissionEffects.Assign(sourceEventId, tenantId, role,
+                Bdgrz.Compliance.Features.Workforce.Services.ServiceIdentityPermissions.Record);
+        yield return RbacPermissionEffects.Assign(sourceEventId, tenantId, lead,
+            Bdgrz.Compliance.Features.Workforce.Services.ServiceIdentityPermissions.Manage);
+        yield return RbacPermissionEffects.Assign(sourceEventId, tenantId, lead,
+            Bdgrz.Compliance.Features.Workforce.Services.ServiceIdentityPermissions.Review);
         yield return RbacPermissionEffects.Assign(sourceEventId, tenantId, viewer, RbacPermissions.EvidenceArtifactRead);
     }
 }

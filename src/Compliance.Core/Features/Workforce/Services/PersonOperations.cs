@@ -77,6 +77,15 @@ public sealed class PersonOperations(NativeOperationExecutor operations, PersonR
                 request.WorkEmail, request.PersonalContact, operation.Actor, operation.AcceptedAt))), ct).ConfigureAwait(false);
         return await NativeContent.ResponseAsync<UnitResult>(content, request.TenantId, accepted, ct).ConfigureAwait(false);
     }
+    public async ValueTask<Result<UnitResult>> ChangeDetailsAsync(IRequestContext<ChangePersonDetails> context, CancellationToken ct)
+    {
+        var request = context.Request;
+        var accepted = await ExecuteAsync(context, request.CommandId, request.PersonId, request.ExpectedRevision,
+            nameof(ChangePersonDetails), (rules, operation, _) => ValueTask.FromResult(ToResult(rules.ChangeDetails(
+                request.ExpectedRevision, request.DisplayName, request.WorkEmail, request.PersonalContact,
+                operation.Actor, operation.AcceptedAt))), ct).ConfigureAwait(false);
+        return await NativeContent.ResponseAsync<UnitResult>(content, request.TenantId, accepted, ct).ConfigureAwait(false);
+    }
     public async ValueTask<Result<UnitResult>> CorrelateAsync(IRequestContext<CorrelatePersonMembership> context, CancellationToken ct)
     {
         var request = context.Request;

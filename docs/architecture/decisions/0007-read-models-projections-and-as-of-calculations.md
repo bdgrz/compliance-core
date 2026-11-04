@@ -7,6 +7,12 @@ boundary-reference reads, and the dedicated projection-derived-read spike that
 proves it in standalone and split API/worker hosts. M0-A01 is accepted; its
 whole-platform recovery delivery remains a separate Portia/DevOps gate.
 
+Storage update, 2026-11-04: the user selected Portia.Cassie for read-model
+repositories. The [conversion inventory](../../proposed/read-model-migration.md)
+separates prepared SQL repositories, native validation and remaining Fitz stores.
+The older Fitz-backed evidence below remains evidence for its original revision;
+it does not qualify the Cassie conversion.
+
 Decision owner: Jeff Repanich, tech lead, 2026-09-22. Product-owned
 calculation semantics and any cross-client authority remain with the owners
 named under [Deferred ownership](#deferred-ownership).
@@ -25,7 +31,9 @@ named under [Deferred ownership](#deferred-ownership).
 
 Portia aggregates and Fitz event streams remain authoritative for command
 invariants and business history. Read models are asynchronous Portia projectors
-that write tenant-scoped Fitz KV data. A projector runs through the supported
+that write scoped native Cassie SQL data through `CassieProjectionRepository`.
+The application owns business queries, tables and indexes; Portia.Cassie owns
+projection transactions, checkpoint persistence and concurrency. A projector runs through the supported
 tenant workload path and commits its projection rows and its checkpoint in one
 transaction. A failed batch makes neither visible; retry and retained-event
 replay rebuild the same projection.
@@ -33,8 +41,10 @@ replay rebuild the same projection.
 Every projector has a named component identity, event pattern, and projection
 resource identity. A schema or interpretation change receives a new identity
 and replays retained source events into a new resource. It does not reinterpret
-or reuse the older checkpoint. A cutover keeps the prior projection readable
-until the new projection is reconciled and authorized consumers have moved.
+or reuse the older checkpoint. Cassie conversion starts with new native
+checkpoints and replays source events; the old Fitz checkpoint does not establish
+that SQL rows exist. The user does not require backward compatibility or rollback
+for this conversion. Existing data is not automatically deleted.
 
 Each projection maintains a simple, deterministic, monotonically increasing
 numeric revision for its published state. The projector increments it once

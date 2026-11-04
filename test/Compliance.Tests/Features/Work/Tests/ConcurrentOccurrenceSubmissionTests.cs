@@ -103,7 +103,8 @@ public sealed class ConcurrentOccurrenceSubmissionTests
             occurrence.OccurrenceId);
         var before = await ProgramManagementServices.HydrateAsync(source.Provider, target);
         var barrier = new CompetingAppendStore(events, target.Stream, before.CommittedStreamPosition);
-        await using var provider = Compose(source, barrier);
+        await using var database = await CassieRepositoryTestDatabase.OpenAsync();
+        await using var provider = Compose(source, barrier, database.ConnectionString);
         var owner = source.Attest(occurrence) with { Notes = "Owner submission" };
         var backup = source.Attest(occurrence) with { Notes = "Backup submission" };
 
@@ -118,7 +119,8 @@ public sealed class ConcurrentOccurrenceSubmissionTests
             records.Add(record);
         await ProjectAsync(provider, source.TenantId);
         var queue = await ReviewWorkAsync(provider, source, source.ReviewerUserId);
-        await using var replayProvider = Compose(source, events);
+        await using var replayDatabase = await CassieRepositoryTestDatabase.OpenAsync();
+        await using var replayProvider = Compose(source, events, replayDatabase.ConnectionString);
         await ProjectAsync(replayProvider, source.TenantId);
         await ProjectAsync(replayProvider, source.TenantId);
         var replayed = await ReviewWorkAsync(replayProvider, source, source.ReviewerUserId);
@@ -204,13 +206,14 @@ public sealed class ConcurrentOccurrenceSubmissionTests
         }
     }
 
-    static ServiceProvider Compose(OperationsFixture source, IEventStore events)
+    static ServiceProvider Compose(OperationsFixture source, IEventStore events, string cassieConnectionString)
     {
         var services = new ServiceCollection();
         services.AddCompliance(new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
         {
             ["Fitz:Endpoint"] = "ws://fitz:4090/ws",
-            ["Fitz:ApplicationName"] = "compliance"
+            ["Fitz:ApplicationName"] = "compliance",
+            ["Cassie:ConnectionString"] = cassieConnectionString
         }).Build(), developerAuthentication: true);
         services.AddSingleton(events);
         services.AddSingleton<IDomainEventReader>((IDomainEventReader)events);

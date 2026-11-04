@@ -108,6 +108,9 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
         .AddMcpTool<ReviseMethodologyTemplateDraftV3>(tool => tool.Idempotent())
         .AddMcpTool<DiscardMethodologyTemplateDraft>(tool => tool.Destructive())
         .AddMcpTool<StartMethodologyTemplateDraft>(tool => tool.Idempotent())
+        .AddMcpTool<GetMethodologyTemplateLine>(tool => tool.ReadOnly())
+        .AddMcpTool<GetMethodologyTemplateVersionV2>(tool => tool.ReadOnly())
+        .AddMcpTool<ListMethodologyTemplatesV2>(tool => tool.ReadOnly())
         .AddMcpTool<GetWorkDigestDispatchStatus>(tool => tool.ReadOnly())
         .AddMcpTool<InviteTenantMember>(tool => tool.Idempotent())
         .AddMcpTool<InviteOrganizationMember>(tool => tool.Idempotent())
@@ -268,11 +271,11 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
         .AddMcpTool<GetApplicationImportRejectedReport>(tool => tool.ReadOnly())
         .AddMcpTool<RecordPerson>(tool => tool.Idempotent())
         .AddMcpTool<RevisePerson>(tool => tool.Idempotent())
+        .AddMcpTool<ChangePersonDetails>(tool => tool.Idempotent())
         .AddMcpTool<CorrelatePersonMembership>(tool => tool.Idempotent())
         .AddMcpTool<GetPerson>(tool => tool.ReadOnly())
         .AddMcpTool<ListPeople>(tool => tool.ReadOnly())
         .AddMcpTool<RecordWorkRelationship>()
-        .AddMcpTool<ReviseWorkRelationship>(tool => tool.Idempotent())
         .AddMcpTool<StartWorkRelationship>(tool => tool.Idempotent())
         .AddMcpTool<StartLeave>(tool => tool.Idempotent())
         .AddMcpTool<EndLeave>(tool => tool.Idempotent())
@@ -290,7 +293,11 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
         .AddMcpTool<ListWorkforceSourceObservations>(tool => tool.ReadOnly())
         .AddMcpTool<PreviewWorkforceSourceObservation>(tool => tool.ReadOnly())
         .AddMcpTool<RecordServiceIdentity>()
-        .AddMcpTool<ReviseServiceIdentity>(tool => tool.Idempotent())
+        .AddMcpTool<ChangeServiceIdentityOwner>(tool => tool.Idempotent())
+        .AddMcpTool<ChangeServiceIdentityPurpose>(tool => tool.Idempotent())
+        .AddMcpTool<DisableServiceIdentity>(tool => tool.Idempotent())
+        .AddMcpTool<EnableServiceIdentity>(tool => tool.Idempotent())
+        .AddMcpTool<RetireServiceIdentity>(tool => tool.Idempotent())
         .AddMcpTool<GetServiceIdentity>(tool => tool.ReadOnly())
         .AddMcpTool<ListServiceIdentities>(tool => tool.ReadOnly())
         .AddMcpTool<RecordProvider>()
@@ -397,6 +404,7 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
         .AddMcpTool<ListControlEvaluations>(tool => tool.ReadOnly())
         .AddMcpTool<RaiseFinding>()
         .AddMcpTool<CancelCorrectiveAction>(tool => tool.Idempotent())
+        .AddMcpTool<ChangeCorrectiveAction>(tool => tool.Idempotent())
         .AddMcpTool<RequestWaiver>(tool => tool.Idempotent())
         .AddMcpTool<Bdgrz.Compliance.Features.Remediation.Queries.GetWaiver>(tool => tool.ReadOnly())
         .AddMcpTool<GetFinding>(tool => tool.ReadOnly())
@@ -577,6 +585,10 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
     app.MapPortiaGet<ListPlatformOperators, PlatformOperatorRosterView>("/api/v1/platform/operators")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Platform operators");
+    app.MapPortiaGet<GetMethodologyTemplateLine, MethodologyTemplateLineView>(
+            "/api/v1/platform/methodology-templates/{template_id}")
+        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
+        .WithTags("Methodology templates");
     app.MapPortiaPut<ReviseMethodologyTemplateDraftV3>(
             "/api/v1/platform/methodology-templates/{template_id}/drafts/{draft_id}/revisions/{command_id}", config => config.OnNativeResult()).WithNativeFirstResponse<ReviseMethodologyTemplateDraftV3>()
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
@@ -1642,6 +1654,10 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
             "/api/v1/tenants/{tenant_id}/programs/{program_id}/findings/{finding_id}/corrective-actions/{action_id}/completions/{command_id}", config => config.OnNativeResult()).WithNativeFirstResponse<CompleteCorrectiveAction>()
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Findings");
+    app.MapPortiaPut<ChangeCorrectiveAction, FindingView>(
+            "/api/v1/tenants/{tenant_id}/programs/{program_id}/findings/{finding_id}/corrective-actions/{action_id}/changes/{command_id}", config => config.OnNativeResult()).WithNativeFirstResponse<ChangeCorrectiveAction>()
+        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
+        .WithTags("Findings");
     app.MapPortiaPut<CancelCorrectiveAction, FindingView>(
             "/api/v1/tenants/{tenant_id}/programs/{program_id}/findings/{finding_id}/corrective-actions/{action_id}/cancellations/{command_id}", config => config.OnNativeResult()).WithNativeFirstResponse<CancelCorrectiveAction>()
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
@@ -2020,6 +2036,16 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
                 .OnNativeResult()).WithNativeFirstResponse<RevisePerson>()
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Workforce");
+    app.MapPortiaPost<ChangePersonDetails, UnitResult>(
+            "/api/v1/tenants/{tenant_id}/people/{person_id}/detail-changes/{command_id}", config => config
+                .OnBind(PersonHttp.BindChangeDetailsAsync)
+                .Accepts<PersonHttp.ChangeDetailsBody>("application/json", isOptional: false)
+                .Parameter<Uuid>("tenant_id", PortiaHttpParameterLocation.Route, required: true)
+                .Parameter<Uuid>("person_id", PortiaHttpParameterLocation.Route, required: true)
+                .Parameter<Uuid>("command_id", PortiaHttpParameterLocation.Route, required: true)
+                .OnNativeResult()).WithNativeFirstResponse<ChangePersonDetails>()
+        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
+        .WithTags("Workforce");
     app.MapPortiaPut<CorrelatePersonMembership, UnitResult>(
             "/api/v1/tenants/{tenant_id}/people/{person_id}/membership-correlations/{command_id}", config => config
                 .OnBind(PersonHttp.BindCorrelateAsync)
@@ -2056,10 +2082,6 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
         .WithTags("Assurance work");
     app.MapPortiaPost<RecordWorkRelationship, WorkRelationshipRegistration>(
             "/api/v1/tenants/{tenant_id}/work-relationships", config => config.OnNativeResult()).WithNativeFirstResponse<RecordWorkRelationship>()
-        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
-        .WithTags("Workforce");
-    app.MapPortiaPut<ReviseWorkRelationship>(
-            "/api/v1/tenants/{tenant_id}/work-relationships/{relationship_id}", config => config.OnNativeResult()).WithNativeFirstResponse<ReviseWorkRelationship>()
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Workforce");
     app.MapPortiaPost<StartWorkRelationship>(
@@ -2139,12 +2161,32 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
             "/api/v1/tenants/{tenant_id}/service-identities", config => config.OnNativeResult()).WithNativeFirstResponse<RecordServiceIdentity>()
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Workforce");
-    app.MapPortiaPut<ReviseServiceIdentity>(
-            "/api/v1/tenants/{tenant_id}/service-identities/{service_identity_id}", config => config.OnNativeResult()).WithNativeFirstResponse<ReviseServiceIdentity>()
-        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
-        .WithTags("Workforce");
     app.MapPortiaGet<GetServiceIdentity, ServiceIdentityView>(
             "/api/v1/tenants/{tenant_id}/service-identities/{service_identity_id}")
+        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
+        .WithTags("Workforce");
+    app.MapPortiaPost<ChangeServiceIdentityOwner>(
+            "/api/v1/tenants/{tenant_id}/service-identities/{service_identity_id}/owner/change", config => config.OnNativeResult()).WithNativeFirstResponse<ChangeServiceIdentityOwner>()
+        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
+        .WithTags("Workforce");
+    app.MapPortiaPost<ChangeServiceIdentityPurpose>(
+            "/api/v1/tenants/{tenant_id}/service-identities/{service_identity_id}/purpose/change", config => config.OnNativeResult()).WithNativeFirstResponse<ChangeServiceIdentityPurpose>()
+        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
+        .WithTags("Workforce");
+    app.MapPortiaPost<ReviewServiceIdentity>(
+            "/api/v1/tenants/{tenant_id}/service-identities/{service_identity_id}/review", config => config.OnNativeResult()).WithNativeFirstResponse<ReviewServiceIdentity>()
+        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
+        .WithTags("Workforce");
+    app.MapPortiaPost<DisableServiceIdentity>(
+            "/api/v1/tenants/{tenant_id}/service-identities/{service_identity_id}/disable", config => config.OnNativeResult()).WithNativeFirstResponse<DisableServiceIdentity>()
+        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
+        .WithTags("Workforce");
+    app.MapPortiaPost<EnableServiceIdentity>(
+            "/api/v1/tenants/{tenant_id}/service-identities/{service_identity_id}/enable", config => config.OnNativeResult()).WithNativeFirstResponse<EnableServiceIdentity>()
+        .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
+        .WithTags("Workforce");
+    app.MapPortiaPost<RetireServiceIdentity>(
+            "/api/v1/tenants/{tenant_id}/service-identities/{service_identity_id}/retire", config => config.OnNativeResult()).WithNativeFirstResponse<RetireServiceIdentity>()
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Workforce");
     app.MapPortiaGet<ListServiceIdentities, Page<ServiceIdentityView>>(
@@ -2883,11 +2925,11 @@ static async Task RunApiAsync(string[] args, ComplianceHostMode hostMode)
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Methodology templates");
 
-    app.MapPortiaGet<GetMethodologyTemplateVersion, MethodologyTemplateVersionView>(
+    app.MapPortiaGet<GetMethodologyTemplateVersionV2, MethodologyTemplatePublishedVersionView>(
             "/api/v1/tenants/{tenant_id}/programs/{program_id}/methodology-template-versions/{methodology_template_version_id}")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Methodology templates");
-    app.MapPortiaGet<ListMethodologyTemplates, Page<MethodologyTemplateSummaryView>>(
+    app.MapPortiaGet<ListMethodologyTemplatesV2, Page<MethodologyTemplateSummaryView>>(
             "/api/v1/tenants/{tenant_id}/programs/{program_id}/methodology-templates")
         .RequireAuthorization(ComplianceAuthorizationPolicies.ApiUser)
         .WithTags("Methodology templates");

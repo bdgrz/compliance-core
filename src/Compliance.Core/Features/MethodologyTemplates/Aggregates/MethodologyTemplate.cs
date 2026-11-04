@@ -368,7 +368,7 @@ public sealed class MethodologyTemplate : Aggregate
             fact.ChangedEntryKeys.Except(_publishedEntryKeys.Concat(fact.EntryKeys), StringComparer.Ordinal).Any())
             throw new InvalidOperationException("Publication must preserve the exact open draft's approved immutable revision.");
         PublishedVersionNumber = fact.Version;
-        PublishedVersionId = Uuid.CreateVersion5(Id, $"methodology-template-version:{fact.Version}");
+        PublishedVersionId = PublishedVersionIdentity(Id, fact.Version);
         PublishedEntriesContent = fact.EntriesContent;
         _publishedEntryKeys = fact.EntryKeys.ToArray();
         _linePublications.Add(fact.DraftId, fact);
@@ -397,6 +397,20 @@ public sealed class MethodologyTemplate : Aggregate
         _lineRetireReason = fact.Reason;
         _revision++;
     }
+
+    // Read-only line composition reuses the domain's own transition handlers at a captured source cut.
+    // This instance is never executed or persisted, so Portia's live aggregate version is not changed here.
+    internal void ReplayLineFact(DomainEvent fact)
+    {
+        if (fact is not (MethodologyTemplateCreatedV4 or MethodologyTemplateDraftStarted or
+            MethodologyTemplateVersionPublishedV4 or MethodologyTemplateDraftClosed or MethodologyTemplateRetiredV4) ||
+            fact.Metadata.IsAudit || fact.Metadata.AggregateId != Id || fact.Metadata.AggregateVersion != (ulong)_revision + 1)
+            throw new InvalidOperationException("A line read requires its ordered exact state-changing native facts.");
+        Apply(fact);
+    }
+
+    internal static Uuid PublishedVersionIdentity(Uuid templateId, long version) =>
+        Uuid.CreateVersion5(templateId, $"methodology-template-version:{version}");
 
     static bool LineText(string? text, int maximum) => text is { Length: > 0 } && text.Length <= maximum &&
         !string.IsNullOrWhiteSpace(text);

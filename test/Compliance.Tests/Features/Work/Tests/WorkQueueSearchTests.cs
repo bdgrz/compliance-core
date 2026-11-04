@@ -275,6 +275,7 @@ public sealed class WorkQueueSearchTests
         string search, int total, int overdue, int dueToday, int escalated)
     {
         // Arrange
+        await using var database = await CassieRepositoryTestDatabase.OpenAsync();
         var fixture = await OperationsFixture.CreateAsync();
         await WorkTestData.AddActionsAsync(fixture, fixture.OwnerMemberId,
             fixture.Today.AddDays(-7));
@@ -288,8 +289,8 @@ public sealed class WorkQueueSearchTests
         var evidence = new FitzEvidenceWorkItemDirectory(client);
         await using var findingScope = fixture.Provider.CreateAsyncScope();
         var findingSource = findingScope.ServiceProvider.GetRequiredService<FindingReader>();
-        var corrective = new FitzCorrectiveActionWorkItemDirectory(client, findingSource, TimeProvider.System);
-        var closure = new FitzFindingClosureWorkItemDirectory(client, findingSource, TimeProvider.System);
+        await using var corrective = new CassieCorrectiveActionWorkItemDirectory(database.Database, findingSource, TimeProvider.System);
+        await using var closure = new CassieFindingClosureWorkItemDirectory(database.Database, findingSource, TimeProvider.System);
         await CatchUpAsync(events, fixture.TenantId, evidence, evidence, evidence.ApplyAsync);
         await CatchUpAsync(events, fixture.TenantId, corrective, corrective, corrective.ApplyAsync);
         await CatchUpAsync(events, fixture.TenantId, closure, closure, closure.ApplyAsync);

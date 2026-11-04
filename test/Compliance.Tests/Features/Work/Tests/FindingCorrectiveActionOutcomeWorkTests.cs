@@ -1,4 +1,4 @@
-using Cntryl.Fitz.Testing;
+using Bdgrz.Compliance.Tests.Testing;
 using Cntryl.Portia;
 using Cntryl.Portia.Testing;
 using Microsoft.Extensions.DependencyInjection;
@@ -15,12 +15,13 @@ public sealed class FindingCorrectiveActionOutcomeWorkTests
     public async Task ShouldRefreshClosureWorkIdentityGivenFindingRecordsActionOutcome()
     {
         // Arrange
+        await using var database = await CassieRepositoryTestDatabase.OpenAsync();
         var fixture = await OperationsFixture.CreateAsync();
         await using var provider = fixture.Provider;
         var (finding, source) = await FindingCorrectiveActionOutcomeWorkflowTests.TerminalAsync(fixture, "completed");
         await using var scope = provider.CreateAsyncScope();
         var events = scope.ServiceProvider.GetRequiredService<IDomainEventReader>();
-        var directory = new FitzFindingClosureWorkItemDirectory(new InMemoryKvClient(),
+        await using var directory = new CassieFindingClosureWorkItemDirectory(database.Database,
             scope.ServiceProvider.GetRequiredService<FindingReader>(), TimeProvider.System);
         var pattern = directory.SourcePattern(fixture.TenantId);
         await ProjectAsync(directory, events, pattern, ProjectionCheckpoint.Start);
@@ -42,11 +43,11 @@ public sealed class FindingCorrectiveActionOutcomeWorkTests
         Assert.Equal(finding.Revision + 1, refreshed.Revision);
     }
 
-    static async Task ProjectAsync(FitzFindingClosureWorkItemDirectory directory, IDomainEventReader events,
+    static async Task ProjectAsync(CassieFindingClosureWorkItemDirectory directory, IDomainEventReader events,
         EventStreamPattern pattern, ProjectionCheckpoint checkpoint)
     {
         await using var batch = await directory.BeginAsync(new ProjectionBatchContext(new CheckpointIdentity(
-            FitzFindingClosureWorkItemDirectory.ProjectorName, pattern), checkpoint));
+            CassieFindingClosureWorkItemDirectory.ProjectorName, pattern), checkpoint));
         var cursor = checkpoint.Cursor;
         await foreach (var record in events.ReadAsync(pattern, cursor, CancellationToken.None))
         {

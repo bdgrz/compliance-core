@@ -1,3 +1,5 @@
+using Bdgrz.Compliance.Features.Workforce.Projections;
+using Bdgrz.Compliance.Tests.Testing;
 using Bdgrz.Compliance.Features.AccessControl.Models;
 using Bdgrz.Compliance.Features.Workforce.Aggregates;
 using Bdgrz.Compliance.Features.Workforce.Events;
@@ -18,7 +20,8 @@ public sealed class WorkRelationshipLifecycleProjectionTests
     public async Task ShouldProjectNamedLifecycleGivenRecordedRelationship()
     {
         // Arrange
-        var directory = new FitzWorkRelationshipDirectory(new InMemoryKvClient());
+        await using var database = await CassieRepositoryTestDatabase.OpenAsync(CassieWorkforceSchema.Statements);
+        await using var directory = new CassieWorkRelationshipDirectory(database.Database);
         var recorded = Recorded();
         await ApplyAsync(directory, recorded.TenantId, recorded);
         var actualStart = Start.AddDays(1);
@@ -59,7 +62,8 @@ public sealed class WorkRelationshipLifecycleProjectionTests
     public async Task ShouldRefuseNamedFactGivenMissingPredecessor(string kind)
     {
         // Arrange
-        var directory = new FitzWorkRelationshipDirectory(new InMemoryKvClient());
+        await using var database = await CassieRepositoryTestDatabase.OpenAsync(CassieWorkforceSchema.Statements);
+        await using var directory = new CassieWorkRelationshipDirectory(database.Database);
         var recorded = Recorded();
         await ApplyAsync(directory, recorded.TenantId, recorded);
         DomainEvent fact = kind switch
@@ -87,7 +91,7 @@ public sealed class WorkRelationshipLifecycleProjectionTests
                 null, "Engineering", Uuid.CreateVersion4(), null), Author, Now);
     }
 
-    static async ValueTask ApplyAsync(FitzWorkRelationshipDirectory directory, Uuid tenant,
+    static async ValueTask ApplyAsync(CassieWorkRelationshipDirectory directory, Uuid tenant,
         params DomainEvent[] events)
     {
         await using var batch = await directory.BeginAsync(new ProjectionBatchContext(

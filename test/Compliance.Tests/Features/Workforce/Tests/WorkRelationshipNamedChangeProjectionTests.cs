@@ -1,3 +1,5 @@
+using Bdgrz.Compliance.Features.Workforce.Projections;
+using Bdgrz.Compliance.Tests.Testing;
 using Bdgrz.Compliance.Features.AccessControl.Models;
 using Bdgrz.Compliance.Features.Workforce.Aggregates;
 using Bdgrz.Compliance.Features.Workforce.Events;
@@ -23,8 +25,9 @@ public sealed class WorkRelationshipNamedChangeProjectionTests
     public async Task ShouldProjectNamedChangeWithoutPrivateObservationGivenRecordedRelationship(string kind)
     {
         // Arrange
-        var primary = new FitzWorkRelationshipDirectory(new InMemoryKvClient());
-        var observations = new FitzWorkforceObservationDirectory(new InMemoryKvClient());
+        await using var database = await CassieRepositoryTestDatabase.OpenAsync(CassieWorkforceSchema.Statements);
+        await using var primary = new CassieWorkRelationshipDirectory(database.Database);
+        await using var observations = new CassieWorkforceObservationDirectory(database.Database);
         var recorded = Recorded();
         await ApplyAsync(primary, observations, recorded.TenantId, recorded);
 
@@ -64,8 +67,9 @@ public sealed class WorkRelationshipNamedChangeProjectionTests
     public async Task ShouldRefuseNamedChangeGivenMissingPredecessor(string kind)
     {
         // Arrange
-        var primary = new FitzWorkRelationshipDirectory(new InMemoryKvClient());
-        var observations = new FitzWorkforceObservationDirectory(new InMemoryKvClient());
+        await using var database = await CassieRepositoryTestDatabase.OpenAsync(CassieWorkforceSchema.Statements);
+        await using var primary = new CassieWorkRelationshipDirectory(database.Database);
+        await using var observations = new CassieWorkforceObservationDirectory(database.Database);
         var recorded = Recorded();
         await ApplyAsync(primary, observations, recorded.TenantId, recorded);
         var fact = Fact(kind, recorded, 3);
@@ -83,8 +87,9 @@ public sealed class WorkRelationshipNamedChangeProjectionTests
     public async Task ShouldPreserveEndingReasonWithoutAnotherLeaverGivenDateCorrection()
     {
         // Arrange
-        var primary = new FitzWorkRelationshipDirectory(new InMemoryKvClient());
-        var observations = new FitzWorkforceObservationDirectory(new InMemoryKvClient());
+        await using var database = await CassieRepositoryTestDatabase.OpenAsync(CassieWorkforceSchema.Statements);
+        await using var primary = new CassieWorkRelationshipDirectory(database.Database);
+        await using var observations = new CassieWorkforceObservationDirectory(database.Database);
         var recorded = Recorded("ended");
         await ApplyAsync(primary, observations, recorded.TenantId, recorded);
 
@@ -112,7 +117,8 @@ public sealed class WorkRelationshipNamedChangeProjectionTests
     public async Task ShouldFindEligibleSponsorGivenRelationshipTerms(string workerType, string status, bool expected)
     {
         // Arrange
-        var directory = new FitzWorkforceObservationDirectory(new InMemoryKvClient());
+        await using var database = await CassieRepositoryTestDatabase.OpenAsync(CassieWorkforceSchema.Statements);
+        await using var directory = new CassieWorkforceObservationDirectory(database.Database);
         var original = Recorded(status);
         var recorded = original with { Terms = original.Terms with { WorkerType = workerType } };
         await ApplyObservationAsync(directory, recorded.TenantId, recorded);
@@ -144,14 +150,14 @@ public sealed class WorkRelationshipNamedChangeProjectionTests
         _ => throw new ArgumentOutOfRangeException(nameof(kind)),
     };
 
-    static async ValueTask ApplyAsync(FitzWorkRelationshipDirectory primary,
-        FitzWorkforceObservationDirectory observations, Uuid tenant, DomainEvent fact)
+    static async ValueTask ApplyAsync(CassieWorkRelationshipDirectory primary,
+        CassieWorkforceObservationDirectory observations, Uuid tenant, DomainEvent fact)
     {
         await ApplyPrimaryAsync(primary, tenant, fact);
         await ApplyObservationAsync(observations, tenant, fact);
     }
 
-    static async ValueTask ApplyPrimaryAsync(FitzWorkRelationshipDirectory directory, Uuid tenant, DomainEvent fact)
+    static async ValueTask ApplyPrimaryAsync(CassieWorkRelationshipDirectory directory, Uuid tenant, DomainEvent fact)
     {
         await using var batch = await directory.BeginAsync(new ProjectionBatchContext(
             new CheckpointIdentity("WorkRelationshipDirectoryV1",
@@ -160,7 +166,7 @@ public sealed class WorkRelationshipNamedChangeProjectionTests
         await batch.CommitAsync(ProjectionCheckpoint.Start);
     }
 
-    static async ValueTask ApplyObservationAsync(FitzWorkforceObservationDirectory directory, Uuid tenant, DomainEvent fact)
+    static async ValueTask ApplyObservationAsync(CassieWorkforceObservationDirectory directory, Uuid tenant, DomainEvent fact)
     {
         await using var batch = await directory.BeginAsync(new ProjectionBatchContext(
             new CheckpointIdentity("WorkforceObservationsV1",

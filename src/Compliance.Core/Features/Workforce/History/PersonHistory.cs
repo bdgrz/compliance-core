@@ -121,6 +121,7 @@ public static class PersonHistory
         {
             PersonRegistrationRecorded => nameof(RecordPerson),
             PersonDetailsRevised => nameof(RevisePerson),
+            PersonDetailsChanged => nameof(ChangePersonDetails),
             PersonMembershipCorrelationRecorded => nameof(CorrelatePersonMembership),
             _ => throw Invalid("Another native person transition kind."),
         };
@@ -128,7 +129,11 @@ public static class PersonHistory
                 command == nameof(RecordPerson) ? null : (ulong?)before?.Revision) ||
             command == nameof(RecordPerson) && (before is not null || native.Operation.LogicalId != person || !native.Changed || header.Revision != 1 || header.CorrelatedUserId is not null) ||
             command != nameof(RecordPerson) && (before is null || header.Revision != before.Revision + (native.Changed ? 1 : 0)) ||
-            command == nameof(RevisePerson) && (!native.Changed || header.CorrelatedUserId != before!.CorrelatedUserId) ||
+            (command == nameof(RevisePerson) || command == nameof(ChangePersonDetails)) &&
+                (!native.Changed || header.CorrelatedUserId != before!.CorrelatedUserId) ||
+            fact is PersonDetailsChanged details && (details.ChangedFields is null ||
+                !(details.ChangedFields.DisplayName || details.ChangedFields.WorkEmail || details.ChangedFields.PersonalContact) ||
+                header.ValuesSha256 == before!.ValuesSha256) ||
             command == nameof(CorrelatePersonMembership) && header.ValuesSha256 != before!.ValuesSha256 ||
             command == nameof(CorrelatePersonMembership) && native.Changed == (header.CorrelatedUserId == before!.CorrelatedUserId) ||
             native.Changed && (header.LastChangedBy != native.Operation.Actor || header.LastChangedAt != native.Operation.AcceptedAt) ||

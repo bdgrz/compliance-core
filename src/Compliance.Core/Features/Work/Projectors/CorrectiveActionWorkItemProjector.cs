@@ -12,7 +12,7 @@ namespace Bdgrz.Compliance.Features.Work.Projectors;
 public sealed class CorrectiveActionWorkItemProjector(
     ICorrectiveActionWorkItemProjection projection)
     : Projector(projection, EventStreamPattern.ForTenant(),
-        FitzCorrectiveActionWorkItemDirectory.ProjectorName)
+        CassieCorrectiveActionWorkItemDirectory.ProjectorName)
 {
     protected override async ValueTask<Result> ProjectEventAsync(DomainEventRecord record, IProjectorContext context,
         CancellationToken ct)

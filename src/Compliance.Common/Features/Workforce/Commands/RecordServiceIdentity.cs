@@ -16,5 +16,5 @@ namespace Bdgrz.Compliance.Features.Workforce.Commands;
 [Discriminator("bdgrz.workforce.service-identity.record", 1)]
 public sealed record RecordServiceIdentity(Uuid TenantId, string DisplayName, string IdentityKind,
     string Purpose, string OwnerKind, Uuid OwnerId, DateOnly ReviewBy, string? Environment = null,
-    DateOnly? ExpiresOn = null)
+    DateOnly? ExpiresOn = null, string? SharedJustification = null)
     : IRequest<ServiceIdentityRegistration>, IWorkforceRequest, IClientManagementMutationRequest, ICallable;

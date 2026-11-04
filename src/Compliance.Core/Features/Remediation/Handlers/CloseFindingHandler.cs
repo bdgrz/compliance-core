@@ -70,7 +70,8 @@ namespace Bdgrz.Compliance.Features.Remediation.Handlers;
 ///     itself is appended by <c>FindingClosureProcess</c> once every action is held, so the first response is a 202.
 /// </summary>
 public sealed class CloseFindingHandler(NativeOperationExecutor operations, IDomainEventReader events,
-    ISeparationOfDutiesWaiverProofResolver waivers, IImmutableContentStore content, TimeProvider clock)
+    ISeparationOfDutiesWaiverProofResolver waivers, IImmutableContentStore content, TimeProvider clock,
+    IAggregateReader reader)
     : IRequestHandler<CloseFinding, OperationAcceptedResponse>
 {
     public async ValueTask<Result<OperationAcceptedResponse>> HandleAsync(IRequestContext<CloseFinding> context,
@@ -138,8 +139,11 @@ public sealed class CloseFindingHandler(NativeOperationExecutor operations, IDom
             {
                 var admission = await FindingContent.ReadAsync<ChildAdmissionIntent>(content, tenant, admitted.Intent, ct)
                     .ConfigureAwait(false);
-                owners.Add((await FindingContent.ReadAsync<AddCorrectiveAction>(content, tenant,
-                    admission.CanonicalAuthoredContent, ct).ConfigureAwait(false)).OwnerMemberId);
+                var authored = await FindingContent.ReadAsync<AddCorrectiveAction>(content, tenant,
+                    admission.CanonicalAuthoredContent, ct).ConfigureAwait(false);
+                var action = await reader.HydrateAsync(new CorrectiveAction(tenant, request.ProgramId,
+                    request.FindingId, admitted.Operation.LogicalId), ct).ConfigureAwait(false);
+                owners.Add(action.Changed?.OwnerMemberId ?? authored.OwnerMemberId);
             }
             catch (ImmutableContentIntegrityException exception)
             {

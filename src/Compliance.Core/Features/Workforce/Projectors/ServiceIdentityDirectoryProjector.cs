@@ -8,7 +8,8 @@ public sealed partial class ServiceIdentityDirectoryProjector(
     IServiceIdentityDirectoryProjection projection)
     : Projector(projection, EventStreamPattern.ForTenant("service-identities"),
             "ServiceIdentityDirectoryV1"),
-      IProjectorHandler<ServiceIdentityRecorded>, IProjectorHandler<ServiceIdentityRevised>
+      IProjectorHandler<ServiceIdentityRecorded>, IProjectorHandler<ServiceIdentityRevised>,
+      IProjectorHandler<ServiceIdentityOwnerChanged>, IProjectorHandler<ServiceIdentityPurposeChanged>, IProjectorHandler<ServiceIdentityReviewed>, IProjectorHandler<ServiceIdentityDisabled>, IProjectorHandler<ServiceIdentityEnabled>, IProjectorHandler<ServiceIdentityRetired>
 {
     public async ValueTask<Result> HandleAsync(IProjectorContext<ServiceIdentityRecorded> context,
         CancellationToken ct)
@@ -25,4 +26,40 @@ public sealed partial class ServiceIdentityDirectoryProjector(
         await projection.ApplyAsync(ev, ct).ConfigureAwait(false);
         return Result.Success;
     }
+    public async ValueTask<Result> HandleAsync(IProjectorContext<ServiceIdentityOwnerChanged> context, CancellationToken ct)
+    {
+        await projection.ApplyAsync(context.Trigger, ct).ConfigureAwait(false);
+        return Result.Success;
+    }
+
+    public async ValueTask<Result> HandleAsync(IProjectorContext<ServiceIdentityPurposeChanged> context, CancellationToken ct)
+    {
+        await projection.ApplyAsync(context.Trigger, ct).ConfigureAwait(false);
+        return Result.Success;
+    }
+
+    public async ValueTask<Result> HandleAsync(IProjectorContext<ServiceIdentityReviewed> context, CancellationToken ct)
+    {
+        await projection.ApplyAsync(context.Trigger, ct).ConfigureAwait(false);
+        return Result.Success;
+    }
+
+    public async ValueTask<Result> HandleAsync(IProjectorContext<ServiceIdentityDisabled> context, CancellationToken ct)
+    {
+        await projection.ApplyAsync(context.Trigger, ct).ConfigureAwait(false);
+        return Result.Success;
+    }
+
+    public async ValueTask<Result> HandleAsync(IProjectorContext<ServiceIdentityEnabled> context, CancellationToken ct)
+    {
+        await projection.ApplyAsync(context.Trigger, ct).ConfigureAwait(false);
+        return Result.Success;
+    }
+
+    public async ValueTask<Result> HandleAsync(IProjectorContext<ServiceIdentityRetired> context, CancellationToken ct)
+    {
+        await projection.ApplyAsync(context.Trigger, ct).ConfigureAwait(false);
+        return Result.Success;
+    }
+
 }

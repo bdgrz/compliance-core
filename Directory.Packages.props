@@ -13,6 +13,7 @@
     <PackageVersion Include="Cntryl.Portia.Abstractions" Version="0.10.0" />
     <PackageVersion Include="Cntryl.Portia.Analyzers" Version="0.10.0" />
     <PackageVersion Include="Cntryl.Portia.AspNetCore" Version="0.10.0" />
+    <PackageVersion Include="Cntryl.Portia.Cassie" Version="0.10.0" />
     <PackageVersion Include="Cntryl.Portia.Fitz" Version="0.10.0" />
     <PackageVersion Include="Cntryl.Portia.Mcp" Version="0.10.0" />
     <PackageVersion Include="Cntryl.Portia.Mcp.AspNetCore" Version="0.10.0" />

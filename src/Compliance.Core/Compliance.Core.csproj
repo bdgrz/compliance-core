@@ -2,6 +2,7 @@
   <ItemGroup>
     <PackageReference Include="Cntryl.Fitz.Extensions" />
     <PackageReference Include="Cntryl.LexKey" />
+    <PackageReference Include="Cntryl.Portia.Cassie" />
     <PackageReference Include="Cntryl.Portia.Fitz" />
     <PackageReference Include="Cntryl.Portia.Analyzers" PrivateAssets="all" />
   </ItemGroup>
