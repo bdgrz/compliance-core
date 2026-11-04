@@ -1,4 +1,6 @@
 using Cntryl.Portia;
+using Cntryl.Cassie.Commands;
+using Bdgrz.Compliance.Features.Content.Services;
 using Bdgrz.Compliance.Features.AccessControl.Models;
 using Bdgrz.Compliance.Features.Boundaries.Projections;
 using Bdgrz.Compliance.Features.Boundaries.Readers;
@@ -216,6 +218,134 @@ public sealed class CassieProgramScopeRepositoryTests
         // Assert
         Assert.IsType<ProgramScopeDirectoryQueryException>(failure);
     }
+
+    public static IEnumerable<object[]> CorruptRows()
+    {
+        foreach (var kind in new[] { "program", "service", "boundary", "snapshot", "population" })
+            foreach (var corruption in new[] { "row_id", "scope_id", "sort_key", "tenant", "identity" })
+                yield return [kind, corruption];
+    }
+
+    [Theory]
+    [MemberData(nameof(CorruptRows))]
+    public async Task ShouldRefuseStoredRowWithoutChangingProgressGivenBodyOrIndexIdentityMismatch(string kind, string corruption)
+    {
+        // Arrange
+        await using var database = await CassieRepositoryTestDatabase.OpenAsync(Schema);
+        await using var source = new BoundaryProjectionScenario();
+        var tenant = Uuid.CreateVersion4();
+        await using var scenario = await CreateAsync(kind, database.Database, source, tenant);
+        var progress = new ProjectionCheckpoint(new EventCursor("before-corruption"));
+        await using (var batch = await scenario.Store.BeginAsync(new ProjectionBatchContext(scenario.Identity, ProjectionCheckpoint.Start)))
+        {
+            await scenario.Apply();
+            await batch.CommitAsync(progress);
+        }
+        var table = CurrentTable(kind);
+        var before = await StoredRowAsync(database, table);
+        var after = corruption switch
+        {
+            "row_id" => before with { Id = Uuid.CreateVersion4().ToString() },
+            "scope_id" => before with { Scope = "another-scope" },
+            "sort_key" => before with { Sort = "another-sort" },
+            "tenant" => before with { Payload = before.Payload.Replace(tenant.ToString(), Uuid.CreateVersion4().ToString(), StringComparison.Ordinal) },
+            "identity" => before with { Payload = before.Payload.Replace(scenario.Id.ToString(), Uuid.CreateVersion4().ToString(), StringComparison.Ordinal) },
+            _ => throw new ArgumentOutOfRangeException(nameof(corruption)),
+        };
+        await ReplaceStoredRowAsync(database, table, after);
+
+        // Act
+        var pointFailure = await Record.ExceptionAsync(() => scenario.Exists(tenant));
+        var listFailure = await Record.ExceptionAsync(() => scenario.ListAsync(tenant, 10, null));
+        await ReplaceStoredRowAsync(database, table, before);
+
+        // Assert
+        Assert.IsType<ImmutableContentIntegrityException>(pointFailure);
+        Assert.IsType<ImmutableContentIntegrityException>(listFailure);
+        Assert.True(await scenario.Exists(tenant));
+        Assert.Single((await scenario.ListAsync(tenant, 10, null)).Items);
+        Assert.Equal(progress, await scenario.Store.LoadCheckpointAsync(scenario.Identity));
+    }
+
+    [Theory]
+    [InlineData("program", false)]
+    [InlineData("program", true)]
+    [InlineData("service", false)]
+    [InlineData("service", true)]
+    public async Task ShouldRefuseRevisionGivenStoredCompositeIdentityDiffersFromPayload(string kind, bool changeRevision)
+    {
+        // Arrange
+        await using var database = await CassieRepositoryTestDatabase.OpenAsync(Schema);
+        await using var source = new BoundaryProjectionScenario();
+        var tenant = Uuid.CreateVersion4();
+        await using var scenario = await CreateAsync(kind, database.Database, source, tenant);
+        await using (var batch = await scenario.Store.BeginAsync(new ProjectionBatchContext(scenario.Identity, ProjectionCheckpoint.Start)))
+        {
+            await scenario.Apply();
+            await batch.CommitAsync(ProjectionCheckpoint.Start);
+        }
+        var table = kind == "program" ? "program_revisions" : "client_service_revisions";
+        var before = await StoredRowAsync(database, table);
+        var after = changeRevision
+            ? before with { Id = scenario.Id + ":00000000000000000002" }
+            : before with { Payload = before.Payload.Replace(scenario.Id.ToString(), Uuid.CreateVersion4().ToString(), StringComparison.Ordinal) };
+        await ReplaceStoredRowAsync(database, table, after);
+
+        // Act
+        var failure = await Record.ExceptionAsync(async () =>
+        {
+            if (scenario.Store is CassieProgramDirectory programs)
+                _ = await programs.GetRevisionAsync(tenant, scenario.Id, 1);
+            else if (scenario.Store is CassieClientServiceDirectory services)
+                _ = await services.GetRevisionAsync(tenant, scenario.Id, 1);
+        });
+        var pageFailure = await Record.ExceptionAsync(async () =>
+        {
+            if (scenario.Store is CassieProgramDirectory programs)
+                _ = await programs.ListRevisionsAsync(tenant, scenario.Id, 10, null);
+            else if (scenario.Store is CassieClientServiceDirectory services)
+                _ = await services.ListRevisionsAsync(tenant, scenario.Id, 10, null);
+        });
+
+        // Assert
+        Assert.IsType<ImmutableContentIntegrityException>(failure);
+        Assert.IsType<ImmutableContentIntegrityException>(pageFailure);
+        Assert.Equal(ProjectionCheckpoint.Start, await scenario.Store.LoadCheckpointAsync(scenario.Identity));
+    }
+
+    static string CurrentTable(string kind) => kind switch
+    {
+        "program" => "program_directory",
+        "service" => "client_service_directory",
+        "boundary" => "boundary_current_identities",
+        "snapshot" => "scope_snapshots",
+        "population" => "population_snapshots",
+        _ => throw new ArgumentOutOfRangeException(nameof(kind)),
+    };
+
+    static async Task<StoredRow> StoredRowAsync(CassieRepositoryTestDatabase database, string table)
+    {
+        await using var connection = await database.DataSource.OpenConnectionAsync();
+        await using var command = connection.CreateCommand();
+        command.CommandText = $"SELECT row_key, row_id, scope_id, sort_key, payload FROM {table}";
+        await using var rows = await command.ExecuteReaderAsync();
+        Assert.True(await rows.ReadAsync());
+        var result = new StoredRow(rows.GetString(0), rows.GetString(1), rows.GetString(2), rows.GetString(3), rows.GetString(4));
+        Assert.False(await rows.ReadAsync());
+        return result;
+    }
+
+    static async Task ReplaceStoredRowAsync(CassieRepositoryTestDatabase database, string table, StoredRow row)
+    {
+        await using var connection = await database.DataSource.OpenConnectionAsync();
+        await using var command = connection.CreateCommand();
+        command.CommandText = $"UPDATE {table} SET row_id = @id, scope_id = @scope, sort_key = @sort, payload = @payload WHERE row_key = @key";
+        foreach (var (name, value) in new[] { ("id", row.Id), ("scope", row.Scope), ("sort", row.Sort), ("payload", row.Payload), ("key", row.Key) })
+            _ = command.Parameters.Add(new CassieParameter { ParameterName = name, Value = value });
+        Assert.Equal(1, await command.ExecuteNonQueryAsync());
+    }
+
+    sealed record StoredRow(string Key, string Id, string Scope, string Sort, string Payload);
 
     static async Task<Scenario> CreateAsync(string kind, CassieProjectionDatabase database, BoundaryProjectionScenario source, Uuid tenant,
         Uuid? selectedProgram = null, DateTimeOffset? frozenAt = null)
