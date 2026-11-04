@@ -33,6 +33,7 @@ static class BuiltInRolePermissions
         string[] managerPermissions =
         [
             RbacPermissions.ProgramManage,
+            "policies.approve",
             RbacPermissions.ApplicationInventoryManage,
             RbacPermissions.ApplicationRestrictedRead,
             RbacPermissions.ComplianceRecordRestrictedRead,
