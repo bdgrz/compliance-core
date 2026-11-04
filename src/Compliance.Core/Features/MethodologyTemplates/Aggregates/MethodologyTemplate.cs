@@ -219,6 +219,20 @@ public sealed class MethodologyTemplate : Aggregate
                 fact.ReviewerMemberId, fact.ContentSha256, fact.OccurredAt);
     }
 
+    public bool IsLineCreated => _revision < 0;
+    public Uuid? OpenDraftId => IsLineCreated ? Id : null;
+    public ImmutableContentRef? PublishedEntriesContent => IsLineCreated ? CurrentContent : null;
+    public string LineStatus => IsRetired ? "retired" : "uncreated";
+
+    public Result CreateLine(string name, string purpose, Uuid createdBy) => Missing();
+    public Result StartDraft(Uuid draftId, long basedOnVersion, IReadOnlyList<MethodologyTemplateRecordContent> entries,
+        ImmutableContentRef content, Uuid startedBy) => Missing();
+    public Result PublishDraft(Uuid draftId, Uuid approvalEventId, long draftRevision, long expectedPublishedVersion,
+        IReadOnlyList<MethodologyTemplateRecordContent> entries, ImmutableContentRef content,
+        IReadOnlyList<string> changedEntryKeys, Uuid approvedBy) => Missing();
+    public Result CloseDraft(Uuid draftId, Uuid discardEventId, string reason) => Missing();
+    public Result RetireLine(Uuid retiredBy, string reason) => Missing();
+
     Result Target(long expectedRevision) => _revision == 0 ? Missing()
         : expectedRevision != _revision ? Conflict("The template revision is stale.") : Result.Success;
     static Result Missing() => Result.Failure(new RequestError(RequestErrorKind.NotFound, "The methodology template was not found."));
