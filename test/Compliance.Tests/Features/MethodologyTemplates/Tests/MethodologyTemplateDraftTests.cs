@@ -223,6 +223,68 @@ public sealed class MethodologyTemplateDraftTests
         Assert.Equal("approved", replay.Aggregate.Status);
     }
 
+    [Fact]
+    public void ShouldKeepOriginalOpeningRetryFactFreeGivenDraftAlreadyRevised()
+    {
+        // Arrange
+        var scenario = new AggregateScenario<MethodologyTemplateDraft>(new MethodologyTemplateDraft(TemplateId, DraftId));
+        var source = Uuid.CreateVersion4();
+        var initial = Content([]);
+        Assert.True(scenario.Aggregate.Open(source, 0, [], initial).IsSuccess);
+        Assert.True(Revise(scenario.Aggregate, 0, "First", FirstAuthor).IsSuccess);
+        var count = scenario.PendingEvents.Count;
+
+        // Act
+        var repeated = scenario.Aggregate.Open(source, 0, [], initial);
+        var changed = scenario.Aggregate.Open(Uuid.CreateVersion4(), 0, [], initial);
+
+        // Assert
+        Assert.True(repeated.IsSuccess);
+        Assert.False(changed.IsSuccess);
+        Assert.Equal(count, scenario.PendingEvents.Count);
+        Assert.Equal(1, scenario.Aggregate.Revision);
+    }
+
+    [Fact]
+    public void ShouldPreserveAcceptanceGivenExactRevisionAndReviewRetries()
+    {
+        // Arrange
+        var scenario = Opened();
+        IReadOnlyList<MethodologyTemplateRecordContent> entries = [Entry("First")];
+        var content = Content(entries);
+        Assert.True(scenario.Aggregate.Revise(0, entries, content, FirstAuthor).IsSuccess);
+        Assert.True(scenario.Aggregate.Review(1, Reviewer, true, "Accept").IsSuccess);
+        var count = scenario.PendingEvents.Count;
+
+        // Act
+        var revisionRetry = scenario.Aggregate.Revise(0, entries, content, FirstAuthor);
+        var reviewRetry = scenario.Aggregate.Review(1, Reviewer, true, "Accept");
+        var changedReview = scenario.Aggregate.Review(1, Reviewer, false, "Return instead");
+
+        // Assert
+        Assert.True(revisionRetry.IsSuccess);
+        Assert.True(reviewRetry.IsSuccess);
+        Assert.False(changedReview.IsSuccess);
+        Assert.Equal(count, scenario.PendingEvents.Count);
+        Assert.Equal("reviewed", scenario.Aggregate.Status);
+        Assert.Equal(Reviewer, scenario.Aggregate.AcceptedReviewer);
+    }
+
+    [Fact]
+    public void ShouldRefuseReplayGivenFactsBelongToAnotherDraft()
+    {
+        // Arrange
+        var scenario = Opened();
+        Assert.True(Revise(scenario.Aggregate, 0, "First", FirstAuthor).IsSuccess);
+
+        // Act
+        Action replay = () => new AggregateScenario<MethodologyTemplateDraft>(
+            new MethodologyTemplateDraft(TemplateId, Uuid.CreateVersion4())).Given(scenario.PendingEvents.ToArray());
+
+        // Assert
+        Assert.Throws<InvalidOperationException>(replay);
+    }
+
     static AggregateScenario<MethodologyTemplateDraft> Opened()
     {
         var scenario = new AggregateScenario<MethodologyTemplateDraft>(new MethodologyTemplateDraft(TemplateId, DraftId));
