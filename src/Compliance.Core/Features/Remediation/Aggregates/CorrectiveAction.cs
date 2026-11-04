@@ -129,6 +129,12 @@ public sealed class CorrectiveAction : Aggregate, ISourceUseOwner
     /// <summary>True once the action was completed.</summary>
     public bool IsCompleted => _completed is not null;
 
+    /// <summary>True once the action was cancelled.</summary>
+    public bool IsCancelled => Cancelled is not null;
+
+    /// <summary>The cancellation fact, once recorded.</summary>
+    public CorrectiveActionCancelled? Cancelled => Latest as CorrectiveActionCancelled;
+
     /// <summary>The materialization fact, once recorded.</summary>
     public CorrectiveActionAddedV2? Added => _added;
 
@@ -199,6 +205,16 @@ public sealed class CorrectiveAction : Aggregate, ISourceUseOwner
             _revision + 1, _actionId, resolutionNotes, evidenceManifest, completedByMemberId, completedBy,
             completedAt, operation, firstResponse, operationResult));
         return Result.Success;
+    }
+
+    /// <summary>Cancels an open action with a reason on its own owner.</summary>
+    public Result Cancel(OperationProvenance operation, string reason, Uuid cancelledByMemberId,
+        ActorReference cancelledBy, DateTimeOffset cancelledAt, ImmutableContentRef firstResponse,
+        ImmutableContentRef operationResult)
+    {
+        ArgumentNullException.ThrowIfNull(operation);
+        return Result.Failure(new RequestError(RequestErrorKind.Conflict,
+            $"Cancellation of corrective action {_actionId} is not implemented."));
     }
 
     /// <summary>Holds this exact completed action for a finding closure; the revision does not advance.</summary>

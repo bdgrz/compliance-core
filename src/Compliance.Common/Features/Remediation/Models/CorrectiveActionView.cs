@@ -16,4 +16,5 @@ public sealed record CorrectiveActionView(Uuid ActionId, string Description, Uui
     DateOnly DueOn, string Status, ActorReference AddedBy, DateTimeOffset AddedAt,
     string? ResolutionNotes = null, IReadOnlyList<EvidenceReference>? Evidence = null,
     Uuid? CompletedByMemberId = null, ActorReference? CompletedBy = null,
-    DateTimeOffset? CompletedAt = null, long Revision = 0);
+    DateTimeOffset? CompletedAt = null, long Revision = 0, string? CancellationReason = null,
+    Uuid? CancelledByMemberId = null, ActorReference? CancelledBy = null, DateTimeOffset? CancelledAt = null);
