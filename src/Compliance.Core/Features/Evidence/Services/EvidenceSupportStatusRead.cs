@@ -8,8 +8,14 @@ sealed class EvidenceSupportStatusRead(IAggregateReader reader, IDomainEventRead
     EvidenceArtifactReadAccess access)
 {
     public ValueTask<Result<EvidenceSupportStatusView>> GetAsync(IRequestContext context, Uuid tenantId,
-        Uuid programId, Uuid supportId, CancellationToken ct) => ValueTask.FromResult(
-            Result<EvidenceSupportStatusView>.Failure(new RequestError(RequestErrorKind.NotFound, "Not implemented.")));
+        Uuid programId, Uuid supportId, CancellationToken ct)
+    {
+        _ = reader;
+        _ = events;
+        _ = access;
+        return ValueTask.FromResult(Result<EvidenceSupportStatusView>.Failure(
+            new RequestError(RequestErrorKind.NotFound, "Not implemented.")));
+    }
 
     public ValueTask<Result<Page<EvidenceSupportStatusView>>> ListAsync(IRequestContext context,
         ListEvidenceSupports request, CancellationToken ct) => ValueTask.FromResult(
