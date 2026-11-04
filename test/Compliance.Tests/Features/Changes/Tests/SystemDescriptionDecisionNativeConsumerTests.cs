@@ -88,10 +88,12 @@ public sealed class SystemDescriptionDecisionNativeConsumerTests
             fixture.Descriptions, fixture.Content, new UnusedAssessments());
 
         // Act
-        await Assert.ThrowsAsync<ImmutableContentIntegrityException>(() => scenario.RunAsync(reactor));
+        var failure = await Assert.ThrowsAsync<ProcessorFailureException>(() => scenario.RunAsync(reactor));
         var after = await checkpoints.LoadAsync(new CheckpointIdentity(reactor.Name, reactor.Pattern));
 
         // Assert
+        Assert.IsType<ImmutableContentIntegrityException>(failure.InnerException);
+        Assert.Null(failure.Error);
         Assert.Empty(TypedReactionBus.Sent(scenario));
         Assert.Equal(ProjectionCheckpoint.Start, after);
     }

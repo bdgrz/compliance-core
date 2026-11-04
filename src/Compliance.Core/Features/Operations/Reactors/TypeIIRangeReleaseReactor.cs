@@ -37,7 +37,6 @@ using Bdgrz.Compliance.Features.Operations.Aggregates;
 using Bdgrz.Compliance.Features.Operations.Commands;
 using Bdgrz.Compliance.Features.Operations.Events;
 using Bdgrz.Compliance.Features.Proofs.Models;
-
 namespace Bdgrz.Compliance.Features.Operations.Reactors;
 /// <summary>
 ///     Settles the calendar from a period fact that ended a range: a canceled amendment or rejected opening releases
@@ -46,28 +45,48 @@ namespace Bdgrz.Compliance.Features.Operations.Reactors;
 ///     the fence before any release. Each settlement is a deterministic effect of its source fact, so a restarted
 ///     reactor replays the same command. An unreadable period or intent is a transient failure, never a release.
 /// </summary>
-sealed partial class TypeIIRangeReleaseReactor(IProjectionCheckpointStore checkpoints, IRequestBus bus, IImmutableContentStore content) : Reactor(checkpoints, EventStreamPattern.ForTenant(TypeIIPeriod.Area), WorkloadName), IReactorHandler<TypeIIPeriodAmendmentCanceled>, IReactorHandler<TypeIIPeriodOpeningRejected>, IReactorHandler<ObservationPeriodCloseFrozen>
+sealed partial class TypeIIRangeReleaseReactor(IProjectionCheckpointStore checkpoints, IRequestBus bus,
+    IImmutableContentStore content)
+    : Reactor(checkpoints, EventStreamPattern.ForTenant(TypeIIPeriod.Area), WorkloadName),
+        IReactorHandler<TypeIIPeriodAmendmentCanceled>, IReactorHandler<TypeIIPeriodOpeningRejected>,
+        IReactorHandler<ObservationPeriodCloseFrozen>
 {
     public const string WorkloadName = "TypeIIRangeReleaseV1";
-    public ValueTask<Result> HandleAsync(IReactorContext<TypeIIPeriodAmendmentCanceled> context, CancellationToken ct) => SettleAsync(context, context.Trigger.Operation.RootOperationId, context.Trigger.Intent, context.Trigger.Operation.Episode, ct);
-    public ValueTask<Result> HandleAsync(IReactorContext<TypeIIPeriodOpeningRejected> context, CancellationToken ct) => SettleAsync(context, context.Trigger.Operation.RootOperationId, context.Trigger.Intent, context.Trigger.Operation.Episode, ct);
-    public ValueTask<Result> HandleAsync(IReactorContext<ObservationPeriodCloseFrozen> context, CancellationToken ct) => SettleAsync(context, context.Trigger.CalendarAuthorizationId, context.Trigger.CalendarIntent, "initial", ct);
-    async ValueTask<Result> SettleAsync(IReactorContext context, Uuid operationId, ImmutableContentRef intentReference, string episode, CancellationToken ct)
+
+    public ValueTask<Result> HandleAsync(IReactorContext<TypeIIPeriodAmendmentCanceled> context, CancellationToken ct) =>
+        SettleAsync(context, context.Trigger.Operation.RootOperationId, context.Trigger.Intent,
+            context.Trigger.Operation.Episode, ct);
+
+    public ValueTask<Result> HandleAsync(IReactorContext<TypeIIPeriodOpeningRejected> context, CancellationToken ct) =>
+        SettleAsync(context, context.Trigger.Operation.RootOperationId, context.Trigger.Intent,
+            context.Trigger.Operation.Episode, ct);
+
+    public ValueTask<Result> HandleAsync(IReactorContext<ObservationPeriodCloseFrozen> context, CancellationToken ct) =>
+        SettleAsync(context, context.Trigger.CalendarAuthorizationId, context.Trigger.CalendarIntent, "initial", ct);
+
+    async ValueTask<Result> SettleAsync(IReactorContext context, Uuid operationId, ImmutableContentRef intentReference,
+        string episode, CancellationToken ct)
     {
         var realm = context.Source.Stream.Realm;
         TypeIIRangeIntent intent;
         try
         {
-            intent = await TypeIIRangeContent.ReadIntentAsync(content, realm, intentReference, ct).ConfigureAwait(false);
+            intent = await TypeIIRangeContent.ReadIntentAsync(content, realm, intentReference, ct)
+                .ConfigureAwait(false);
         }
         catch (ImmutableContentIntegrityException exception)
         {
-            throw new ReactionCommandFailedException(new RequestError(RequestErrorKind.Conflict, "The frozen range intent cannot be verified.", exception is ImmutableContentUnavailableException));
+            throw new ReactionCommandFailedException(new RequestError(RequestErrorKind.Conflict,
+                "The frozen range intent cannot be verified.", exception is ImmutableContentUnavailableException));
         }
 
         var tenant = Uuid.Parse(realm, CultureInfo.InvariantCulture);
         var source = NativeFactReference.Of(context.Source.Stream, context.Source.Event);
-        var settled = await bus.SendAsync(new SettleTypeIIPeriodRange(TypeIIRangeEffects.ReceiverCommandId(source.EventId, nameof(SettleTypeIIPeriodRange), episode), source, new TypeIIObservationCalendar(tenant, intent.ProgramId).Stream, operationId, TypeIIRangeEffects.Generation, null, intentReference, intent.PeriodId), context, ct).ConfigureAwait(false);
+        var settled = await bus.SendAsync(new SettleTypeIIPeriodRange(TypeIIRangeEffects.ReceiverCommandId(
+            source.EventId, nameof(SettleTypeIIPeriodRange), episode), source,
+            new TypeIIObservationCalendar(tenant, intent.ProgramId).Stream, operationId,
+            TypeIIRangeEffects.Generation, null, intentReference, intent.PeriodId), context, ct)
+            .ConfigureAwait(false);
         if (!settled.IsSuccess)
             throw new ReactionCommandFailedException(settled.Error!);
         return Result.Success;

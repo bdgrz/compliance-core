@@ -30,7 +30,6 @@ using Bdgrz.Compliance.Features.AccessReviews.Events;
 using Bdgrz.Compliance.Features.AccessReviews.Models;
 using Bdgrz.Compliance.Features.Examinations.Aggregates;
 using Bdgrz.Compliance.Features.Content.Persistence;
-
 namespace Bdgrz.Compliance.Features.AccessReviews.Reactors;
 /// <summary>
 ///     Starts <c>AccessReviewLaunchFanOut</c> from a committed launch. The process record, with the complete canonical
@@ -38,24 +37,33 @@ namespace Bdgrz.Compliance.Features.AccessReviews.Reactors;
 ///     if this reactor stops. A manifest that cannot be read yet is transient: no record is created from an
 ///     unverified launch.
 /// </summary>
-sealed partial class AccessReviewLaunchFanOutReactor(IProjectionCheckpointStore checkpoints, ProcessRootReaction process, IImmutableContentStore content, ISourceFactResolver sources) : Reactor(checkpoints, EventStreamPattern.ForTenant(AccessReviewCampaign.Area), WorkloadName), IReactorHandler<AccessReviewCampaignLaunched>
+sealed partial class AccessReviewLaunchFanOutReactor(IProjectionCheckpointStore checkpoints,
+    ProcessRootReaction process, IImmutableContentStore content, ISourceFactResolver sources)
+    : Reactor(checkpoints, EventStreamPattern.ForTenant(AccessReviewCampaign.Area), WorkloadName),
+        IReactorHandler<AccessReviewCampaignLaunched>
 {
     public const string WorkloadName = "AccessReviewLaunchFanOutV1";
+
     public async ValueTask<Result> HandleAsync(IReactorContext<AccessReviewCampaignLaunched> context, CancellationToken ct)
     {
-        await AccessReviewReactorSources.VerifyAsync(sources, content, Pattern, context, context.Trigger.Operation.Owner, ct).ConfigureAwait(false);
+        await AccessReviewReactorSources.VerifyAsync(sources, content, Pattern, context, context.Trigger.Operation.Owner, ct)
+            .ConfigureAwait(false);
         var launched = context.Trigger;
         AccessReviewItemIntentManifest manifest;
         try
         {
-            manifest = await content.ReadJsonAsync<AccessReviewItemIntentManifest>(context.Source.Stream.Realm, launched.ItemIntentManifest, ct).ConfigureAwait(false);
+            manifest = await content.ReadJsonAsync<AccessReviewItemIntentManifest>(context.Source.Stream.Realm,
+                launched.ItemIntentManifest, ct).ConfigureAwait(false);
         }
         catch (ImmutableContentIntegrityException exception)
         {
-            throw new ReactionCommandFailedException(new RequestError(RequestErrorKind.Conflict, $"The launch manifest cannot be verified: {exception.Message}", exception is ImmutableContentUnavailableException));
+            throw new ReactionCommandFailedException(new RequestError(RequestErrorKind.Conflict,
+                $"The launch manifest cannot be verified: {exception.Message}", exception is ImmutableContentUnavailableException));
         }
 
-        _ = await process.StartAsync(AccessReviewEffects.LaunchFanOutName, context, launched.ItemIntentManifest, manifest.Selections.Select(static selection => selection.ItemId.ToString()), $"reactor:{WorkloadName}", ct).ConfigureAwait(false);
+        _ = await process.StartAsync(AccessReviewEffects.LaunchFanOutName, context, launched.ItemIntentManifest,
+            manifest.Selections.Select(static selection => selection.ItemId.ToString()), $"reactor:{WorkloadName}", ct)
+            .ConfigureAwait(false);
         return Result.Success;
     }
 }

@@ -10,10 +10,12 @@ using Bdgrz.Compliance.Features.Tenants.Processes;
 using Bdgrz.Compliance.Features.AccessControl.Aggregates;
 using Bdgrz.Compliance.Features.AccessControl.Events;
 using Bdgrz.Compliance.Features.Tenants.Authorizers;
-
 namespace Bdgrz.Compliance.Features.AccessControl.Reactors;
 
-public sealed partial class RetiredMemberGrantReactor(IProjectionCheckpointStore checkpoints, IRequestBus bus, IAggregateReader reader) : Reactor(checkpoints, EventStreamPattern.ForTenant("access-grants"), "RetiredMemberGrantV1"), IReactorHandler<AccessGrantIssued>
+public sealed partial class RetiredMemberGrantReactor(IProjectionCheckpointStore checkpoints, IRequestBus bus,
+    IAggregateReader reader)
+    : Reactor(checkpoints, EventStreamPattern.ForTenant("access-grants"), "RetiredMemberGrantV1"),
+      IReactorHandler<AccessGrantIssued>
 {
     public async ValueTask<Result> HandleAsync(IReactorContext<AccessGrantIssued> context, CancellationToken ct)
     {
@@ -25,14 +27,15 @@ public sealed partial class RetiredMemberGrantReactor(IProjectionCheckpointStore
         var episodeId = source.MembershipEpisodeId ?? Uuid.Empty;
         if (episodeId == Uuid.Empty)
             throw new InvalidOperationException("A member grant requires its exact membership episode.");
-        var member = await reader.HydrateAsync(Member.ForVerification(source.TenantId, source.Terms.Principal.Id, episodeId), ct).ConfigureAwait(false);
+        var member = await reader.HydrateAsync(Member.ForVerification(source.TenantId, source.Terms.Principal.Id,
+            episodeId), ct).ConfigureAwait(false);
         if (member.TerminationProof is not { } proof)
         {
             if (member.IsRegistered && member.MembershipEpisodeId == episodeId)
                 return Result.Success;
-            throw new ReactionCommandFailedException(new RequestError(RequestErrorKind.Conflict, "Membership retirement authority is not available yet.", isTransient: true));
+            throw new ReactionCommandFailedException(new RequestError(RequestErrorKind.Conflict,
+                "Membership retirement authority is not available yet.", isTransient: true));
         }
-
         var request = MemberRetirementEffects.Grant(source, context.Source.ResourceOffset, proof.EventId);
         var reactionOutcome1 = await bus.SendReactionAsync(request, context, ct).ConfigureAwait(false);
         if (!reactionOutcome1.IsSuccess)

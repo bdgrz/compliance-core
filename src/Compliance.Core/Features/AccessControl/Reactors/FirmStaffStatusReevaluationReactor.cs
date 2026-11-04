@@ -27,16 +27,23 @@ using Bdgrz.Compliance.Features.Tenants.Models;
 using Bdgrz.Compliance.Features.AccessControl.Aggregates;
 using Bdgrz.Compliance.Features.AccessControl.Events;
 using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
-
 namespace Bdgrz.Compliance.Features.AccessControl.Reactors;
 /// <summary>Reevaluates accepted engagements when one staff record's status changes.</summary>
-sealed partial class FirmStaffStatusReevaluationReactor(IProjectionCheckpointStore checkpoints, ITenantDirectory tenants, IAggregateReader reader, FirmStaffViews staffViews, DirectoryReevaluationDiscovery discovery, IDomainEventReader events, ISourceFactResolver sources, IImmutableContentStore content) : Reactor(checkpoints, EventStreamPattern.ForPattern(FirmStaffContent.Realm, FirmStaffRecord.Area), WorkloadName), IReactorHandler<FirmStaffChangeRecorded>
+sealed partial class FirmStaffStatusReevaluationReactor(IProjectionCheckpointStore checkpoints,
+    ITenantDirectory tenants, IAggregateReader reader, FirmStaffViews staffViews,
+    DirectoryReevaluationDiscovery discovery, IDomainEventReader events, ISourceFactResolver sources,
+    IImmutableContentStore content)
+    : Reactor(checkpoints, EventStreamPattern.ForPattern(FirmStaffContent.Realm, FirmStaffRecord.Area), WorkloadName),
+        IReactorHandler<FirmStaffChangeRecorded>
 {
     public const string WorkloadName = "FirmStaffStatusReevaluationV1";
+
     public async ValueTask<Result> HandleAsync(IReactorContext<FirmStaffChangeRecorded> context, CancellationToken ct)
     {
-        await FirmStaffSource.VerifyAsync(sources, content, context.Source.Stream, context.Source.ResourceOffset, context.Trigger, ct).ConfigureAwait(false);
-        if (!Uuid.TryParse(context.Source.Stream.Resource, null, out var staffMemberId) || context.Source.Stream != new FirmStaffRecord(staffMemberId).Stream)
+        await FirmStaffSource.VerifyAsync(sources, content, context.Source.Stream, context.Source.ResourceOffset,
+            context.Trigger, ct).ConfigureAwait(false);
+        if (!Uuid.TryParse(context.Source.Stream.Resource, null, out var staffMemberId) ||
+            context.Source.Stream != new FirmStaffRecord(staffMemberId).Stream)
             throw new InvalidOperationException("Staff status reconciliation requires its authoritative record stream.");
         if (context.Trigger.ChangeKind != "status")
             return Result.Success;

@@ -20,20 +20,26 @@ using Bdgrz.Compliance.Features.Work.Models;
 using Bdgrz.Compliance.Features.AccessControl.Aggregates;
 using Bdgrz.Compliance.Features.AccessControl.Events;
 using Bdgrz.Compliance.Features.Retention.Models;
-
 namespace Bdgrz.Compliance.Features.AccessControl.Reactors;
 /// <summary>
 ///     Starts <c>EngagementPersonalDecisionProcess</c> from a committed personal decision admission. The process
 ///     record, with its frozen intent, exists before the source checkpoint advances; the sweep resumes it if this
 ///     reactor stops.
 /// </summary>
-sealed partial class EngagementPersonalDecisionReactor(IProjectionCheckpointStore checkpoints, ProcessRootReaction process, ISourceFactResolver sources, IImmutableContentStore content) : Reactor(checkpoints, EventStreamPattern.ForTenant(ServiceEngagementIndependence.Area), WorkloadName), IReactorHandler<EngagementPersonalDecisionAdmitted>
+sealed partial class EngagementPersonalDecisionReactor(IProjectionCheckpointStore checkpoints,
+    ProcessRootReaction process, ISourceFactResolver sources, IImmutableContentStore content)
+    : Reactor(checkpoints, EventStreamPattern.ForTenant(ServiceEngagementIndependence.Area), WorkloadName),
+        IReactorHandler<EngagementPersonalDecisionAdmitted>
 {
     public const string WorkloadName = "EngagementPersonalDecisionV1";
-    public async ValueTask<Result> HandleAsync(IReactorContext<EngagementPersonalDecisionAdmitted> context, CancellationToken ct)
+
+    public async ValueTask<Result> HandleAsync(IReactorContext<EngagementPersonalDecisionAdmitted> context,
+        CancellationToken ct)
     {
-        await EngagementNativeSource.VerifyAsync(sources, content, context.Source.Stream, context.Source.ResourceOffset, context.Trigger, ct).ConfigureAwait(false);
-        _ = await process.StartAsync(EngagementPersonalDecisionEffects.ProcessName, context, context.Trigger.Intent, [], $"reactor:{WorkloadName}", ct).ConfigureAwait(false);
+        await EngagementNativeSource.VerifyAsync(sources, content, context.Source.Stream,
+            context.Source.ResourceOffset, context.Trigger, ct).ConfigureAwait(false);
+        _ = await process.StartAsync(EngagementPersonalDecisionEffects.ProcessName, context,
+            context.Trigger.Intent, [], $"reactor:{WorkloadName}", ct).ConfigureAwait(false);
         return Result.Success;
     }
 }

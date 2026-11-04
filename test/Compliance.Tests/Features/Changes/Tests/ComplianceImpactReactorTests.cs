@@ -67,7 +67,7 @@ public sealed class ComplianceImpactReactorTests
         using var deadline = new CancellationTokenSource(TimeSpan.FromSeconds(5));
 
         // Act
-        var failure = await Assert.ThrowsAsync<ReactionCommandFailedException>(
+        var failure = await Assert.ThrowsAsync<ProcessorFailureException>(
             () => scenario.RunAsync(reactor, deadline.Token));
         var identity = new CheckpointIdentity(reactor.Name, reactor.Pattern);
         var before = await checkpoints.LoadAsync(identity, deadline.Token);
@@ -76,7 +76,9 @@ public sealed class ComplianceImpactReactorTests
         var afterRecovery = await checkpoints.LoadAsync(identity);
 
         // Assert
-        Assert.True(failure.Error.IsTransient);
+        var refusal = Assert.IsType<ReactionCommandFailedException>(failure.InnerException);
+        Assert.True(refusal.Error.IsTransient);
+        Assert.Null(failure.Error);
         Assert.Equal(ProjectionCheckpoint.Start, before);
         Assert.NotEqual(ProjectionCheckpoint.Start, afterRecovery);
         Assert.Equal(2, TypedReactionBus.Sent(scenario).OfType<LinkImpactReviewWork>().Count());

@@ -174,7 +174,9 @@ public sealed class MemberRetirementRecoveryTests
         var reactor = new MemberRetirementReactor(fixture.Cuts, fixture.Bus);
 
         // Act
-        await Assert.ThrowsAsync<IOException>(() => fixture.RunAsync(reactor));
+        var failure = await Assert.ThrowsAsync<ProcessorFailureException>(() => fixture.RunAsync(reactor));
+        Assert.IsType<IOException>(failure.InnerException);
+        Assert.Null(failure.Error);
         await fixture.RunAsync(reactor);
         await fixture.RunAsync(reactor);
         var member = await fixture.MemberAsync(episode);
@@ -320,7 +322,9 @@ public sealed class MemberRetirementRecoveryTests
         var reactor = new MemberRetirementReactor(cuts, fixture.Bus);
 
         // Act
-        await Assert.ThrowsAsync<IOException>(() => fixture.RunAsync(reactor));
+        var failure = await Assert.ThrowsAsync<ProcessorFailureException>(() => fixture.RunAsync(reactor));
+        Assert.IsType<IOException>(failure.InnerException);
+        Assert.Null(failure.Error);
         var interrupted = await fixture.MemberAsync(episode);
         var admission = interrupted.Register();
         await fixture.RunAsync(reactor);
