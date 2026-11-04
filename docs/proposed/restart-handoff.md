@@ -1,3 +1,26 @@
+# Worktree cleanup — latest recovery locations
+
+All uncommitted source was committed before cleanup. The 23 auxiliary worktrees
+were removed at the user's request; their historical paths below no longer exist.
+Unique committed work is preserved on **21 local and remote `wip/*` branches**,
+verified at exact commit tips. The primary checkout remains on
+`feat/proposed-domain-impl`. Obsolete local branches and remote aliases were pruned.
+Implementation stays stopped under the user's usage/credit constraint.
+
+Use the [cleanup manifest](restart-artifacts/2026-11-04/worktree-cleanup-manifest.json)
+for old-branch → WIP-branch mappings, exact tips and the verified full recovery
+bundle. Recreate only the worktrees needed after an explicit resume, for example:
+
+```sh
+git worktree add ../compliance-core-worktrees/readiness-code wip/resume-readiness-code
+```
+
+These are preservation checkpoints, including incomplete and unvalidated code.
+They are not a whole-domain build, test or delivery claim. Do not sweep broad WIP
+ancestry when integrating. Earlier state inventories below are historical.
+
+---
+
 # Usage-boundary stop — latest checkpoint
 
 The user instructed: “stop when we hit our usage limit, do not consume credits.”

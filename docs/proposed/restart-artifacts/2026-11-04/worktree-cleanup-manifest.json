@@ -1,0 +1,280 @@
+{
+  "saved_at_utc": "2026-11-04T22:33:47.476104+00:00",
+  "status": "cleanup complete; implementation remains stopped",
+  "backup_directory": "/Users/jrepanich/.codex/backups/compliance-core-cleanup-20261104-173118",
+  "verified_bundle": "/Users/jrepanich/.codex/backups/compliance-core-cleanup-20261104-173118/all-refs.bundle",
+  "primary_checkout": "/Users/jrepanich/Code/bdgrz/compliance-core",
+  "integration_branch": "feat/proposed-domain-impl",
+  "removed_auxiliary_worktrees": 23,
+  "obsolete_local_branches_deleted": 11,
+  "obsolete_remote_branch_names_deleted": 10,
+  "remote_wip_branches_verified": 21,
+  "recovery": "Unique source remains on local wip/* branches tracking identical origin/wip/* tips. Recreate a worktree with git worktree add <path> <wip-branch>. Do not bulk-merge branch ancestry; integrate isolated commits as documented.",
+  "branches": [
+    {
+      "branch": "chore/dependency-refresh-portia-010",
+      "head": "c6d16cdb64a69431dc1d4fb27dfceeacf7733fea",
+      "ancestor_of_integration": true,
+      "unmatched_commit_count": 0,
+      "archive_branch": null,
+      "merged_pr": 1177,
+      "reason": "Exact branch head delivered by merged PR"
+    },
+    {
+      "branch": "feat/access-cassie-resume",
+      "head": "2f98bf88098566d8740720449e325a31d97ee1b2",
+      "ancestor_of_integration": true,
+      "unmatched_commit_count": 0,
+      "archive_branch": null,
+      "reason": "Ancestry or all patches already present on integration branch"
+    },
+    {
+      "branch": "feat/program-target-date-ordering-resume",
+      "head": "5feb9922d4a30d226f1706173398212146c1deb9",
+      "ancestor_of_integration": false,
+      "unmatched_commit_count": 1,
+      "archive_branch": "wip/program-target-date-ordering-resume",
+      "reason": "Unique committed work; preserve exact tip on remote WIP branch"
+    },
+    {
+      "branch": "feat/proposed-domain-batch-1",
+      "head": "a27a4f49dfa127e56a74ddc8d19938b668d31845",
+      "ancestor_of_integration": true,
+      "unmatched_commit_count": 0,
+      "archive_branch": null,
+      "merged_pr": 1179,
+      "reason": "Exact branch head delivered by merged PR"
+    },
+    {
+      "branch": "feat/proposed-domain-batch-2",
+      "head": "ccdfcf349ebc12dfa83494c1fc3bb3c3008d68d8",
+      "ancestor_of_integration": true,
+      "unmatched_commit_count": 0,
+      "archive_branch": null,
+      "merged_pr": 1181,
+      "reason": "Exact branch head delivered by merged PR"
+    },
+    {
+      "branch": "feat/proposed-domain-batch-3",
+      "head": "d4a2a38850cfdad5f9da5a2f491e9be22e19f492",
+      "ancestor_of_integration": true,
+      "unmatched_commit_count": 0,
+      "archive_branch": null,
+      "merged_pr": 1182,
+      "reason": "Exact branch head delivered by merged PR"
+    },
+    {
+      "branch": "feat/risk-treatment-independent-review",
+      "head": "9be730f1e5f7f979fd1bc02c10a71c2a34f67c25",
+      "ancestor_of_integration": false,
+      "unmatched_commit_count": 2,
+      "archive_branch": null,
+      "merged_pr": 1167,
+      "reason": "Exact branch head delivered by merged PR"
+    },
+    {
+      "branch": "fix/cassie-person-identity-guard",
+      "head": "2737df4a6ecdb1923eb27f33d5ecec140b47f396",
+      "ancestor_of_integration": false,
+      "unmatched_commit_count": 2,
+      "archive_branch": "wip/cassie-person-identity-guard",
+      "reason": "Unique committed work; preserve exact tip on remote WIP branch"
+    },
+    {
+      "branch": "fix/nullable-result-build",
+      "head": "eed44954294b0c2a5f0ed84ff3a73abad3e3da14",
+      "ancestor_of_integration": false,
+      "unmatched_commit_count": 6,
+      "archive_branch": null,
+      "merged_pr": 1166,
+      "reason": "Exact branch head delivered by merged PR"
+    },
+    {
+      "branch": "fix/service-identity-retirement",
+      "head": "bde08871de6d932f4c5822a0a8452e4fc0422431",
+      "ancestor_of_integration": false,
+      "unmatched_commit_count": 0,
+      "archive_branch": null,
+      "merged_pr": 1173,
+      "reason": "Exact branch head delivered by merged PR"
+    },
+    {
+      "branch": "fix/work-relationship-terminal-status",
+      "head": "3a36a362eb496b98138f5d4ed4a14737e6738ddb",
+      "ancestor_of_integration": false,
+      "unmatched_commit_count": 1,
+      "archive_branch": null,
+      "merged_pr": 1171,
+      "reason": "Exact branch head delivered by merged PR"
+    },
+    {
+      "branch": "perf/contract-route-analysis",
+      "head": "b1592ffec4fe18f0efc70e8d8251633f0542973b",
+      "ancestor_of_integration": false,
+      "unmatched_commit_count": 0,
+      "archive_branch": null,
+      "merged_pr": 1169,
+      "reason": "Exact branch head delivered by merged PR"
+    },
+    {
+      "branch": "work/evidence-support-withdrawal",
+      "head": "aa102abc2af4cda09b097b6aa4dfada71f8f0b03",
+      "ancestor_of_integration": false,
+      "unmatched_commit_count": 0,
+      "archive_branch": null,
+      "reason": "Ancestry or all patches already present on integration branch"
+    },
+    {
+      "branch": "work/person-named-writer-cutover",
+      "head": "c2e06cf77bf9ae9070bb6e7f384804990e85404a",
+      "ancestor_of_integration": false,
+      "unmatched_commit_count": 2,
+      "archive_branch": "wip/person-named-writer-cutover",
+      "reason": "Unique committed work; preserve exact tip on remote WIP branch"
+    },
+    {
+      "branch": "work/proposed-access-cassie",
+      "head": "686b415c6c6865f0367a4c5a55f756fb42d16376",
+      "ancestor_of_integration": false,
+      "unmatched_commit_count": 12,
+      "archive_branch": "wip/proposed-access-cassie",
+      "reason": "Unique committed work; preserve exact tip on remote WIP branch"
+    },
+    {
+      "branch": "work/proposed-assurance",
+      "head": "ffd926ec855766f8cc39de9b83ac789c2921142a",
+      "ancestor_of_integration": false,
+      "unmatched_commit_count": 17,
+      "archive_branch": "wip/proposed-assurance",
+      "reason": "Unique committed work; preserve exact tip on remote WIP branch"
+    },
+    {
+      "branch": "work/proposed-methodology",
+      "head": "531798f3a128e8d0e2a2e381f185554dc5e40f14",
+      "ancestor_of_integration": false,
+      "unmatched_commit_count": 29,
+      "archive_branch": "wip/proposed-methodology",
+      "reason": "Unique committed work; preserve exact tip on remote WIP branch"
+    },
+    {
+      "branch": "work/proposed-program-dates",
+      "head": "784bfca2a4c8dbc222466fbf2b3b362aa5a6f385",
+      "ancestor_of_integration": false,
+      "unmatched_commit_count": 2,
+      "archive_branch": "wip/proposed-program-dates",
+      "reason": "Unique committed work; preserve exact tip on remote WIP branch"
+    },
+    {
+      "branch": "work/proposed-program-scope-cassie",
+      "head": "44c8cb49a46678756d438a1aab6ad08247e357eb",
+      "ancestor_of_integration": false,
+      "unmatched_commit_count": 3,
+      "archive_branch": "wip/proposed-program-scope-cassie",
+      "reason": "Unique committed work; preserve exact tip on remote WIP branch"
+    },
+    {
+      "branch": "work/proposed-service-review-membership",
+      "head": "0acd25ddb32e4fb91def4fd27ad3f5f8d741ccce",
+      "ancestor_of_integration": false,
+      "unmatched_commit_count": 2,
+      "archive_branch": "wip/proposed-service-review-membership",
+      "reason": "Unique committed work; preserve exact tip on remote WIP branch"
+    },
+    {
+      "branch": "work/proposed-workforce",
+      "head": "c7277f6bd0e2dc1331f1e838d0e430e0b1078b78",
+      "ancestor_of_integration": false,
+      "unmatched_commit_count": 43,
+      "archive_branch": "wip/proposed-workforce",
+      "reason": "Unique committed work; preserve exact tip on remote WIP branch"
+    },
+    {
+      "branch": "work/resume-combined-validation",
+      "head": "f7e4d495fe0b5d726b6f1f05fc83126603f33724",
+      "ancestor_of_integration": false,
+      "unmatched_commit_count": 1,
+      "archive_branch": "wip/resume-combined-validation",
+      "reason": "Unique committed work; preserve exact tip on remote WIP branch"
+    },
+    {
+      "branch": "work/resume-controls-code",
+      "head": "6ae2677454f910fa67e09a42bd4e17f8f59e79a1",
+      "ancestor_of_integration": false,
+      "unmatched_commit_count": 7,
+      "archive_branch": "wip/resume-controls-code",
+      "reason": "Unique committed work; preserve exact tip on remote WIP branch"
+    },
+    {
+      "branch": "work/resume-evidence-code",
+      "head": "2322936ab97ce41705a7ade30533018e4eb8da71",
+      "ancestor_of_integration": false,
+      "unmatched_commit_count": 6,
+      "archive_branch": "wip/resume-evidence-code",
+      "reason": "Unique committed work; preserve exact tip on remote WIP branch"
+    },
+    {
+      "branch": "work/resume-examinations-code",
+      "head": "f90bb360e36e1af7b8dbfaf670f4630c686331a1",
+      "ancestor_of_integration": false,
+      "unmatched_commit_count": 5,
+      "archive_branch": "wip/resume-examinations-code",
+      "reason": "Unique committed work; preserve exact tip on remote WIP branch"
+    },
+    {
+      "branch": "work/resume-firm-services",
+      "head": "863df173e7225cc4fe912b9c5d2bc3f3dc782613",
+      "ancestor_of_integration": false,
+      "unmatched_commit_count": 11,
+      "archive_branch": "wip/resume-firm-services",
+      "reason": "Unique committed work; preserve exact tip on remote WIP branch"
+    },
+    {
+      "branch": "work/resume-policies-code",
+      "head": "a775f1e14c0ee8ecaee66b3bc62757b0fda2cda3",
+      "ancestor_of_integration": false,
+      "unmatched_commit_count": 5,
+      "archive_branch": "wip/resume-policies-code",
+      "reason": "Unique committed work; preserve exact tip on remote WIP branch"
+    },
+    {
+      "branch": "work/resume-readiness-code",
+      "head": "1815d1f2967549d8f0ef5c6391589f3f4a9d0dfc",
+      "ancestor_of_integration": false,
+      "unmatched_commit_count": 4,
+      "archive_branch": "wip/resume-readiness-code",
+      "reason": "Unique committed work; preserve exact tip on remote WIP branch"
+    },
+    {
+      "branch": "work/resume-record-governance-code",
+      "head": "e826f773c7d6cc269d57d50b047e3b35e6797ae0",
+      "ancestor_of_integration": false,
+      "unmatched_commit_count": 3,
+      "archive_branch": "wip/resume-record-governance-code",
+      "reason": "Unique committed work; preserve exact tip on remote WIP branch"
+    },
+    {
+      "branch": "work/resume-risk-provider-code",
+      "head": "d88c6fa7eb4dca699c93ad8eaa44731a4bfeca30",
+      "ancestor_of_integration": false,
+      "unmatched_commit_count": 4,
+      "archive_branch": "wip/resume-risk-provider-code",
+      "reason": "Unique committed work; preserve exact tip on remote WIP branch"
+    },
+    {
+      "branch": "work/resume-technology-code",
+      "head": "56021f776ba0d7003faef14eeafb8779b33d8e5a",
+      "ancestor_of_integration": false,
+      "unmatched_commit_count": 4,
+      "archive_branch": "wip/resume-technology-code",
+      "reason": "Unique committed work; preserve exact tip on remote WIP branch"
+    },
+    {
+      "branch": "work/resume-work-code",
+      "head": "e6545f2098a757b73d857c4f42df38b604602e01",
+      "ancestor_of_integration": false,
+      "unmatched_commit_count": 6,
+      "archive_branch": "wip/resume-work-code",
+      "reason": "Unique committed work; preserve exact tip on remote WIP branch"
+    }
+  ]
+}
