@@ -816,8 +816,8 @@ public sealed class AdvisorRecordVersionResolverTests
         public async ValueTask<Result<AdvisorSharedSourceView>> GetAsync(Uuid tenantId, Uuid programId,
             Uuid handoffId, AdvisorRecordVersion selectedSource, CancellationToken ct = default)
         {
-            var result = await inner.GetAsync(tenantId, programId, handoffId, selectedSource, ct);
-            await afterRead();
+            var result = await inner.GetAsync(tenantId, programId, handoffId, selectedSource, ct).ConfigureAwait(false);
+            await afterRead().ConfigureAwait(false);
             return result;
         }
     }
