@@ -130,7 +130,7 @@ public sealed class RecordWorkRelationshipHandlerTests
     }
 
     [Fact]
-    public async Task ShouldRefuseWithoutLoadingRelationshipGivenLegacyRevisionForMissingRecord()
+    public async Task ShouldRefuseWithoutFactGivenLegacyRevisionForMissingRecord()
     {
         // Arrange
         await using var scenario = await Scenario.CreateAsync();
@@ -366,7 +366,7 @@ public sealed class RecordWorkRelationshipHandlerTests
         await using var scenario = await Scenario.CreateAsync();
         var initial = scenario.Request(scenario.ManagerId, "retirement");
         Assert.True((await scenario.RecordAsync(initial, new GrantedPermissions())).IsSuccess);
-        await scenario.ReviseAsync(initial with
+        await scenario.SeedLegacyRevisionAsync(initial with
         {
             Department = "Operations",
             ManagerPersonId = scenario.OtherManagerId,
@@ -589,22 +589,23 @@ public sealed class RecordWorkRelationshipHandlerTests
 
         public ValueTask<Result> SendLegacyRevisionAsync(ReviseWorkRelationship request)
         {
-            IRequestHandler<ReviseWorkRelationship> handler = new ReviseWorkRelationshipHandler(Executor, Reader, TimeProvider.System);
+            IRequestHandler<ReviseWorkRelationship> handler = new ReviseWorkRelationshipHandler();
             var actor = new ClaimsPrincipal(new ClaimsIdentity(
                 [new Claim("iss", "bdgrz"), new Claim("sub", Uuid.CreateVersion4().ToString())], "BdgrzSession"));
             return handler.HandleAsync(new RequestContext<ReviseWorkRelationship>(request, actor), CancellationToken.None);
         }
 
-        public async Task ReviseAsync(RecordWorkRelationship terms)
+        public async Task SeedLegacyRevisionAsync(RecordWorkRelationship terms)
         {
             var relationship = await Reader.HydrateAsync(new WorkRelationship(TenantId,
                 WorkRelationship.IdFor(TenantId, terms.SourceWorkerId)));
-            Assert.Null(relationship.Revise(relationship.Revision,
+            var fact = DomainEventSeed.Attach(new WorkRelationshipRevised(TenantId, relationship.Id,
+                relationship.Revision + 1,
                 new WorkRelationshipTerms(terms.WorkerType, terms.LifecycleStatus, terms.StartDate,
                     terms.EndDate, terms.Department, terms.ManagerPersonId, terms.SponsorPersonId,
-                    terms.EmploymentStatusReason),
-                ActorReference.ForMember(Uuid.CreateVersion4(), "Editor"), DateTimeOffset.UtcNow));
-            await Writer.SaveAsync(relationship, new RequestDispatchContext(RequestActor.System));
+                    terms.EmploymentStatusReason), ActorReference.ForMember(Uuid.CreateVersion4(), "Editor"),
+                DateTimeOffset.UtcNow), relationship.Id, (ulong)relationship.Revision + 1);
+            await Events.AppendAsync(relationship.Stream, (ulong)relationship.Revision, [fact]);
         }
 
         public async Task<List<DomainEvent>> RelationshipEventsAsync()
