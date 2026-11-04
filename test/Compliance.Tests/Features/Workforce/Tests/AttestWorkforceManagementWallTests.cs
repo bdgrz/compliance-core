@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.Workforce.Projections;
 using Bdgrz.Compliance.Hosting.Persistence;
 using Bdgrz.Compliance.Tests.Testing;
 using Cntryl.Fitz;
@@ -249,6 +250,7 @@ public sealed class AttestWorkforceManagementWallTests
 
     internal sealed class Fixture : IAsyncDisposable
     {
+        CassieRepositoryTestDatabase _database = null!;
         public Uuid TenantId { get; } = Uuid.CreateVersion4();
         public Uuid UserId { get; } = Uuid.CreateVersion4();
         public Uuid PersonId { get; } = Uuid.CreateVersion4();
@@ -269,12 +271,16 @@ public sealed class AttestWorkforceManagementWallTests
         public static async Task<Fixture> CreateAsync(string affiliation = "client_personnel",
             Func<IImmutableContentStore, IImmutableContentStore>? configureContent = null)
         {
-            var fixture = new Fixture();
+            var fixture = new Fixture
+            {
+                _database = await CassieRepositoryTestDatabase.OpenAsync(CassieWorkforceSchema.Statements),
+            };
             var services = new ServiceCollection();
             _ = services.AddCompliance(new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
             {
                 ["Fitz:Endpoint"] = "ws://fitz:4090/ws",
-                ["Fitz:ApplicationName"] = "compliance"
+                ["Fitz:ApplicationName"] = "compliance",
+                ["Cassie:ConnectionString"] = fixture._database.ConnectionString
             }).Build(), developerAuthentication: true);
             var store = new InMemoryEventStore();
             services.AddSingleton<IEventStore>(store);
@@ -381,11 +387,11 @@ public sealed class AttestWorkforceManagementWallTests
         {
             await using var scope = Provider.CreateAsyncScope();
             var services = scope.ServiceProvider;
-            var people = services.GetRequiredService<FitzPersonDirectory>();
-            var jobs = services.GetRequiredService<FitzWorkRelationshipDirectory>();
-            var identities = services.GetRequiredService<FitzServiceIdentityDirectory>();
-            var sources = services.GetRequiredService<FitzWorkforceSourceDirectory>();
-            var observations = services.GetRequiredService<FitzWorkforceObservationDirectory>();
+            var people = services.GetRequiredService<CassiePersonDirectory>();
+            var jobs = services.GetRequiredService<CassieWorkRelationshipDirectory>();
+            var identities = services.GetRequiredService<CassieServiceIdentityDirectory>();
+            var sources = services.GetRequiredService<CassieWorkforceSourceDirectory>();
+            var observations = services.GetRequiredService<CassieWorkforceObservationDirectory>();
             await ProjectAsync("PersonDirectoryV2", "people", people, people.ApplyAsync, people.LoadCheckpointAsync);
             await ProjectAsync("WorkRelationshipDirectoryV1", "work-relationships", jobs, jobs.ApplyAsync, jobs.LoadCheckpointAsync);
             await ProjectAsync("ServiceIdentityDirectoryV1", "service-identities", identities, identities.ApplyAsync, identities.LoadCheckpointAsync);
@@ -409,7 +415,11 @@ public sealed class AttestWorkforceManagementWallTests
             }
         }
 
-        public ValueTask DisposeAsync() => Provider.DisposeAsync();
+        public async ValueTask DisposeAsync()
+        {
+            await Provider.DisposeAsync();
+            await _database.DisposeAsync();
+        }
     }
 
     internal sealed class Permissions : IPermissionAuthorizer

@@ -1,8 +1,12 @@
+using Bdgrz.Compliance.Features.Workforce.Projections;
+using Bdgrz.Compliance.Tests.Testing;
+using System.Security.Claims;
+using Cntryl.Fitz.Extensions;
 using Cntryl.Fitz.Testing;
 using Cntryl.Portia;
+using Cntryl.Portia.Testing;
 using Bdgrz.Compliance.Features.AccessControl.Models;
 using Bdgrz.Compliance.Features.Applications.Models;
-using Bdgrz.Compliance.Features.Applications.Services;
 using Bdgrz.Compliance.Features.AuditPopulations.Models;
 using Bdgrz.Compliance.Features.AuditorRequests.Processes;
 using Bdgrz.Compliance.Features.ControlMappings.History;
@@ -20,6 +24,7 @@ using Bdgrz.Compliance.Features.SystemDescription.Projections;
 using Bdgrz.Compliance.Features.Tenants.Models;
 using Bdgrz.Compliance.Features.Tenants.Processes;
 using Bdgrz.Compliance.Features.Workforce.Readers;
+using Bdgrz.Compliance.Features.Workforce.Services;
 using Bdgrz.Compliance.Tests.Features.AccessControl.Tests;
 using Bdgrz.Compliance.Tests.Features.AccessReviews.Tests;
 using Bdgrz.Compliance.Tests.Features.Applications.Tests;
@@ -63,85 +68,109 @@ using Bdgrz.Compliance.Features.SystemDescription.Aggregates;
 using Bdgrz.Compliance.Features.Work.Commands;
 using Bdgrz.Compliance.Features.Workforce.Aggregates;
 using Bdgrz.Compliance.Features.Workforce.Events;
+using Bdgrz.Compliance.Features.Workforce.Handlers;
 using Bdgrz.Compliance.Features.Workforce.Models;
+using Bdgrz.Compliance.Features.Workforce.Queries;
 namespace Bdgrz.Compliance.Tests.Features.Workforce.Tests;
 
-public sealed class FitzWorkforceObservationDirectoryTests
+public sealed class CassieWorkRelationshipDirectoryTests
 {
     static readonly DateTimeOffset Now = new(2026, 9, 30, 12, 0, 0, TimeSpan.Zero);
     static readonly ActorReference Author = ActorReference.ForMember(Uuid.CreateVersion4(), "Author");
-    static readonly DateOnly Start = new(2025, 1, 6);
 
     [Fact]
-    public async Task ShouldObserveJoinerMoverAndLeaverGivenRosterRevisions()
+    public async Task ShouldOrderByWorkerIdAndKeepTenantsSeparateGivenSharedProjection()
     {
         // Arrange
-        var directory = new FitzWorkforceObservationDirectory(new InMemoryKvClient());
+        await using var database = await CassieRepositoryTestDatabase.OpenAsync(CassieWorkforceSchema.Statements);
+        await using var directory = new CassieWorkRelationshipDirectory(database.Database);
         var tenantId = Uuid.CreateVersion4();
-        var recorded = Recorded(tenantId, "E-100");
-        var moved = recorded.Terms with { Department = "Finance" };
-        var managerOnly = moved with { ManagerPersonId = Uuid.CreateVersion4() };
-        var ended = managerOnly with { LifecycleStatus = "ended", EndDate = new DateOnly(2026, 9, 1) };
-        var rehired = ended with { LifecycleStatus = "active", EndDate = null };
+        await ApplyAsync(directory, tenantId, Recorded(tenantId, "E-200"), Recorded(tenantId, "E-100"));
 
         // Act
-        await ApplyAsync(directory, tenantId, recorded,
-            Revised(recorded, 2, moved, 1), Revised(recorded, 3, managerOnly, 2),
-            Revised(recorded, 4, ended, 3), Revised(recorded, 5, rehired, 4));
-        var all = await directory.ListAsync(tenantId, null, 50, null);
-        var leavers = await directory.ListAsync(tenantId, "leaver", 50, null);
+        var page = await directory.ListAsync(tenantId, 50, null);
+        var alien = await directory.ListAsync(Uuid.CreateVersion4(), 50, null);
 
         // Assert
-        Assert.Equal(["joiner", "mover", "leaver", "joiner"], all.Items.Select(item => item.Kind));
-        Assert.Equal([1L, 2L, 4L, 5L], all.Items.Select(item => item.RelationshipRevision));
-        Assert.Equal(["department"], all.Items[1].ChangedFields);
-        Assert.All(all.Items, item => Assert.Equal("open", item.Status));
-        var leaver = Assert.Single(leavers.Items);
-        Assert.Equal(new DateOnly(2026, 9, 1), leaver.EffectiveDate);
-        Assert.Equal(recorded.PersonId, leaver.PersonId);
+        Assert.Equal(["E-100", "E-200"], page.Items.Select(item => item.SourceWorkerId));
+        Assert.All(page.Items, item => Assert.Equal("manual", item.SourceKind));
+        Assert.Empty(alien.Items);
     }
 
     [Fact]
-    public async Task ShouldReportOwnerStatusesAndKeepTenantsSeparateGivenSharedProjection()
+    public async Task ShouldApplyLeaverRevisionAndRejectOutOfOrderGivenRecordedRelationship()
     {
         // Arrange
-        var directory = new FitzWorkforceObservationDirectory(new InMemoryKvClient());
+        await using var database = await CassieRepositoryTestDatabase.OpenAsync(CassieWorkforceSchema.Statements);
+        await using var directory = new CassieWorkRelationshipDirectory(database.Database);
         var tenantId = Uuid.CreateVersion4();
         var recorded = Recorded(tenantId, "E-100");
         var ended = recorded.Terms with { LifecycleStatus = "ended", EndDate = new DateOnly(2026, 9, 1) };
-        await ApplyAsync(directory, tenantId, recorded, Revised(recorded, 2, ended, 1));
+        await ApplyAsync(directory, tenantId, recorded,
+            new WorkRelationshipRevised(tenantId, recorded.RelationshipId, 2, ended, Author, Now));
 
         // Act
-        var statuses = await directory.ListRelationshipStatusesAsync(tenantId, recorded.PersonId);
-        var alien = await directory.ListAsync(Uuid.CreateVersion4(), null, 50, null);
-        var alienStatuses = await directory.ListRelationshipStatusesAsync(Uuid.CreateVersion4(),
-            recorded.PersonId);
+        var view = await directory.GetAsync(tenantId, recorded.RelationshipId);
+        var outOfOrder = await Record.ExceptionAsync(() => ApplyAsync(directory, tenantId,
+            new WorkRelationshipRevised(tenantId, recorded.RelationshipId, 4, ended, Author, Now)).AsTask());
 
         // Assert
-        Assert.Equal(["ended"], statuses);
-        Assert.Empty(alien.Items);
-        Assert.Empty(alienStatuses);
+        Assert.Equal(2, view!.Revision);
+        Assert.Equal("ended", view.LifecycleStatus);
+        Assert.Equal(new DateOnly(2026, 9, 1), view.EndDate);
+        Assert.IsType<InvalidOperationException>(outOfOrder);
+    }
+
+    [Fact]
+    public async Task ShouldRedactManagerGivenListButNotGivenSingleRead()
+    {
+        // Arrange
+        await using var database = await CassieRepositoryTestDatabase.OpenAsync(CassieWorkforceSchema.Statements);
+        await using var directory = new CassieWorkRelationshipDirectory(database.Database);
+        var tenantId = Uuid.CreateVersion4();
+        var recorded = Recorded(tenantId, "E-100");
+        await ApplyAsync(directory, tenantId, recorded);
+        await using var roster = new CassieWorkforceObservationDirectory(database.Database);
+        var handler = new ListWorkRelationshipsHandler(directory,
+            new WorkRelationshipReadConsistency(directory, new NoSource(), new InMemoryEventStore()),
+            new WorkRelationshipSponsorship(roster, new WorkforceObservationReadConsistency(roster, new InMemoryEventStore())));
+        var context = new RequestContext<ListWorkRelationships>(new ListWorkRelationships(tenantId), Actor());
+
+        // Act
+        var listed = await handler.HandleAsync(context, CancellationToken.None);
+        var single = await directory.GetAsync(tenantId, recorded.RelationshipId);
+
+        // Assert
+        var item = Assert.Single(listed.Value.Items);
+        Assert.Null(item.ManagerPersonId);
+        Assert.True(item.RestrictedFieldsRedacted);
+        Assert.Equal(recorded.Terms.ManagerPersonId, single!.ManagerPersonId);
+        Assert.False(single.RestrictedFieldsRedacted);
     }
 
     static WorkRelationshipRecorded Recorded(Uuid tenantId, string workerId) =>
         new(tenantId, WorkRelationship.IdFor(tenantId, workerId), Uuid.CreateVersion4(), workerId,
-            new WorkRelationshipTerms("employee", "active", Start, null, "Engineering",
-                Uuid.CreateVersion4(), null), Author, Now);
+            new WorkRelationshipTerms("employee", "active", new DateOnly(2025, 1, 6), null,
+                "Engineering", Uuid.CreateVersion4(), null), Author, Now);
 
-    static WorkRelationshipRevised Revised(WorkRelationshipRecorded recorded, long revision,
-        WorkRelationshipTerms terms, int minutes) =>
-        new(recorded.TenantId, recorded.RelationshipId, revision, terms, Author,
-            Now.AddMinutes(minutes));
-
-    static async ValueTask ApplyAsync(FitzWorkforceObservationDirectory directory, Uuid tenantId,
+    static async ValueTask ApplyAsync(CassieWorkRelationshipDirectory directory, Uuid tenantId,
         params DomainEvent[] events)
     {
         await using var batch = await directory.BeginAsync(new ProjectionBatchContext(
-            new CheckpointIdentity("WorkforceObservationsV1",
+            new CheckpointIdentity("WorkRelationshipDirectoryV1",
                 EventStreamPattern.ForPattern(tenantId.ToString(), "work-relationships")),
             ProjectionCheckpoint.Start));
         foreach (var domainEvent in events)
             await directory.ApplyAsync(domainEvent);
         await batch.CommitAsync(ProjectionCheckpoint.Start);
     }
+
+    sealed class NoSource : IAggregateReader
+    {
+        public ValueTask<TAggregate> HydrateAsync<TAggregate>(TAggregate aggregate,
+            CancellationToken ct = default) where TAggregate : Aggregate => ValueTask.FromResult(aggregate);
+    }
+
+    static ClaimsPrincipal Actor() => new(new ClaimsIdentity(
+        [new Claim("iss", "bdgrz"), new Claim("sub", Uuid.CreateVersion4().ToString())], "BdgrzSession"));
 }

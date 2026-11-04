@@ -30,7 +30,10 @@ Copy `.env.example` to `.env` and set `GITHUB_ACTOR` and `GITHUB_TOKEN` for .NET
 ```console
 dotnet restore Compliance.slnx
 dotnet build Compliance.slnx --configuration Release --no-restore
-dotnet test Compliance.slnx --configuration Release --no-build --no-restore --filter "Category!=BrokerIntegration&Category!=WebIntegration"
+docker compose -f test/Compliance.Tests/Cassie/compose.yml up -d
+export COMPLIANCE_CASSIE_TEST_CONNECTION_STRING='Host=127.0.0.1;Port=55432;Database=postgres;Username=root;Password=compliance-cassie-test;SSL Mode=Disable;Timeout=15'
+export Cassie__ConnectionString="$COMPLIANCE_CASSIE_TEST_CONNECTION_STRING"
+dotnet test Compliance.slnx --configuration Release --no-build --no-restore --filter "Category!=BrokerIntegration&Category!=WebIntegration" -- xUnit.ParallelizeTestCollections=false
 ```
 
 `Directory.Packages.props` centrally selects direct package versions and compatible transitive versions through NuGet transitive pinning. Microsoft.OpenApi stays on its compatible 2.x line because ASP.NET Core 10 requires a version below 3.0.0.
@@ -39,7 +42,11 @@ dotnet test Compliance.slnx --configuration Release --no-build --no-restore --fi
 
 This checkout uses [Portia 0.10.0](https://github.com/cntryl/portia/blob/v0.10.0/docs/migration-0.10.0.md) and [Fitz .NET 4.0.0](https://github.com/cntryl/portia/blob/v0.10.0/docs/fitz-4-upgrade.md), which require Fitz broker 0.4.0 / Wire 3. Compose pins the published 0.4.0 broker image; its [tagged upstream release document](https://github.com/cntryl/fitz/blob/v0.4.0/docs/operations/release-0.4.0.md) still labels it Release Candidate. Existing 0.2.x stores require a [separate storage migration](https://github.com/cntryl/fitz/blob/v0.4.0/docs/operations/migration-guide.md#midge-050) or a fresh store before running this Compose version. This update does not migrate data or automatically delete existing volumes.
 
-Compose starts the standalone application, Fitz, and the Sqrzl S3 emulator:
+The read-model migration uses `Cntryl.Portia.Cassie` 0.10.0 and its native Cassie client. Fitz remains the event store. The Cassie image is pinned to the same digest qualified by Portia 0.10.0. Application startup creates the application read-model tables before workers start; Portia owns projection transactions, checkpointing, concurrency and retry behavior. Configure `Cassie:ConnectionString` (or `Cassie__ConnectionString`) on API and worker hosts. The [implementation ledger](docs/proposed/implementation-progress.md) tracks the remaining Fitz read-store conversions.
+
+The repository tests above use a separate memory-backed Cassie service and isolated native databases. Stop that service with `docker compose -f test/Compliance.Tests/Cassie/compose.yml down` before starting the development topology on the same ports. Development Compose uses persistent Cassie storage.
+
+Compose starts the standalone application, Fitz, Cassie, and the Sqrzl S3 emulator:
 
 ```console
 docker compose up --build
@@ -54,7 +61,8 @@ docker compose --profile split up --build api worker
 To run the app directly while its dependencies remain in Compose:
 
 ```console
-docker compose up --detach storage broker
+docker compose up --detach storage broker cassie
+export Cassie__ConnectionString='Host=127.0.0.1;Port=55432;Database=postgres;Username=root;Password=compliance-local-secret;SSL Mode=Disable;Timeout=30'
 ASPNETCORE_ENVIRONMENT=Development dotnet run --project src/Compliance.App
 ```
 
@@ -167,7 +175,7 @@ Backend feature development uses TDD with unit tests. The backend unit-test
 command is:
 
 ```console
-dotnet test Compliance.slnx --configuration Release --no-build --no-restore --filter "Category!=BrokerIntegration&Category!=WebIntegration"
+dotnet test Compliance.slnx --configuration Release --no-build --no-restore --filter "Category!=BrokerIntegration&Category!=WebIntegration" -- xUnit.ParallelizeTestCollections=false
 ```
 
 This repository's pull request CI runs formatting, build, and backend unit

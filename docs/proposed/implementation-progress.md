@@ -21,6 +21,8 @@ Tracking issue: [#1176](https://github.com/bdgrz/compliance-core/issues/1176).
   changing the reviewed proposal. Portia owns execution, persistence, concurrency,
   delivery and retries.
 
+See the [delivery reset](delivery-reset.md) for the current implementation freeze, preserved worker checkpoints and reduced work-in-progress limits.
+
 ## Active batches and exclusive ownership
 
 The coordinator owns registrations, serialization contexts, composition roots,
@@ -39,6 +41,35 @@ execution. The coordinator accumulates completed source slices, wires one assemb
 batch, then runs the required checks. Authored tests are not recorded as observed
 RED, and prepared source is not recorded as validated GREEN. Blocked work is parked with a named missing condition
 while independent work continues.
+
+## Cassie read-model direction
+
+The user selected **Portia.Cassie for read models** after the existing Fitz KV
+implementation was identified. The [migration inventory](read-model-migration.md)
+records 82 existing KV projection stores, with nine assigned to the first conversion
+batch and 73 still remaining. The coordinator owns the native package, configuration,
+application schema startup, Compose/CI service and real database test seam. Feature
+workers own business SQL repositories and queries. Fitz retains event persistence.
+The next merge is held until the assembled Cassie path is validated. Existing
+source batches and prior green Fitz-backed tests do not qualify the new database path.
+
+The latest pre-conversion batch-4 checkpoint built with zero warnings/errors and
+ran 1,928 affected cases: 1,920 passed and eight failed. Two failures exposed a
+historical CorrectiveAction summary being reconstructed from changed terms;
+the source repair preserves the original authored description. Six Workforce
+failures involve retired generic mutation fixtures and refusal-message compatibility;
+source fixes passed the subsequent 56 business cases (the same run failed two new native-fixture cleanup cases). The native seam then passed four schema/data/database-isolation checks after table cleanup was corrected and the pinned engine database-drop problem was parked in #1183. The strict Release build passed with zero warnings and errors. No full-suite or feature-repository Cassie acceptance
+is claimed for batch 4 yet. Jev's contradictory broad-versus-specific service
+permission judgments remain advisory; the actual authorization cases passed in
+this checkpoint and no authorization rule was weakened on that model signal.
+
+Source inventory caveat: the batch-4 export contains 568 facts, 136 aggregate types,
+819 requests and 777 Core handler registrations. It still reports 66 unwired producer
+operations. These are syntactic navigation counts. In particular, it misses the
+native Person.Append → PersonContent.Fact factory path and underreports four native
+person publishers/command paths; fixture notes and #1185 record that limitation.
+The exporter result is not a runtime completion claim, and reverse membership-link
+work remains partial.
 
 ## Context coverage
 

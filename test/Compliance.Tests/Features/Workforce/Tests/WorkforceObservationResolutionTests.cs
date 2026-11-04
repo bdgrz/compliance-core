@@ -1,3 +1,5 @@
+using Bdgrz.Compliance.Features.Workforce.Projections;
+using Bdgrz.Compliance.Tests.Testing;
 using Cntryl.Fitz.Testing;
 using Cntryl.Portia;
 using Cntryl.Portia.Testing;
@@ -116,7 +118,8 @@ public sealed class WorkforceObservationResolutionTests
     public async Task ShouldProjectResolutionsPerTenantGivenResolvedObservations()
     {
         // Arrange
-        var directory = new FitzWorkforceObservationResolutionDirectory(new InMemoryKvClient());
+        await using var database = await CassieRepositoryTestDatabase.OpenAsync(CassieWorkforceSchema.Statements);
+        await using var directory = new CassieWorkforceObservationResolutionDirectory(database.Database);
         var tenantId = Uuid.CreateVersion4();
         var observationId = Uuid.CreateVersion4();
         var open = Uuid.CreateVersion4();

@@ -7,7 +7,7 @@ using Bdgrz.Compliance.Features.MethodologyTemplates.Projections;
 namespace Bdgrz.Compliance.Features.MethodologyTemplates.Projectors;
 
 public sealed partial class MethodologyTemplateDirectoryProjector(IMethodologyTemplateDirectoryProjection projection)
-    : Projector(projection, FitzMethodologyTemplateDirectory.Pattern, FitzMethodologyTemplateDirectory.ProjectorName),
+    : Projector(projection, CassieMethodologyTemplateDirectory.Pattern, CassieMethodologyTemplateDirectory.ProjectorName),
         IProjectorHandler<MethodologyTemplateVersionPublished>, IProjectorHandler<MethodologyTemplateVersionPublishedV4>
 {
     public async ValueTask<Result> HandleAsync(IProjectorContext<MethodologyTemplateVersionPublished> context,

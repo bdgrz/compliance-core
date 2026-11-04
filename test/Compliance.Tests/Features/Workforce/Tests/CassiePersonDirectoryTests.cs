@@ -1,3 +1,5 @@
+using Bdgrz.Compliance.Features.Workforce.Projections;
+using Bdgrz.Compliance.Tests.Testing;
 using Cntryl.Fitz.Testing;
 using Cntryl.Portia;
 using Bdgrz.Compliance.Features.Applications.Models;
@@ -62,7 +64,7 @@ using Bdgrz.Compliance.Features.Workforce.Aggregates;
 using Bdgrz.Compliance.Features.Workforce.Events;
 namespace Bdgrz.Compliance.Tests.Features.Workforce.Tests;
 
-public sealed class FitzPersonDirectoryTests
+public sealed class CassiePersonDirectoryTests
 {
     static readonly DateTimeOffset Now = new(2026, 9, 26, 12, 0, 0, TimeSpan.Zero);
 
@@ -70,7 +72,8 @@ public sealed class FitzPersonDirectoryTests
     public async Task ShouldUseOnlyUniqueTenantCorrelationGivenNameChangesAndUnlinking()
     {
         // Arrange
-        var directory = new FitzPersonDirectory(new InMemoryKvClient());
+        await using var database = await CassieRepositoryTestDatabase.OpenAsync(CassieWorkforceSchema.Statements);
+        await using var directory = new CassiePersonDirectory(database.Database);
         var tenantId = Uuid.CreateVersion4();
         var userId = Uuid.CreateVersion4();
         var first = Recorded(tenantId, "Ada");
@@ -115,7 +118,8 @@ public sealed class FitzPersonDirectoryTests
     public async Task ShouldPageByNameAndKeepTenantsSeparateGivenSharedProjection()
     {
         // Arrange
-        var directory = new FitzPersonDirectory(new InMemoryKvClient());
+        await using var database = await CassieRepositoryTestDatabase.OpenAsync(CassieWorkforceSchema.Statements);
+        await using var directory = new CassiePersonDirectory(database.Database);
         var tenantId = Uuid.CreateVersion4();
         var otherTenantId = Uuid.CreateVersion4();
         await using (var batch = await directory.BeginAsync(new ProjectionBatchContext(
@@ -143,7 +147,8 @@ public sealed class FitzPersonDirectoryTests
     public async Task ShouldApplyRevisionAndRejectOutOfOrderRevisionGivenRecordedPerson()
     {
         // Arrange
-        var directory = new FitzPersonDirectory(new InMemoryKvClient());
+        await using var database = await CassieRepositoryTestDatabase.OpenAsync(CassieWorkforceSchema.Statements);
+        await using var directory = new CassiePersonDirectory(database.Database);
         var tenantId = Uuid.CreateVersion4();
         var recorded = Recorded(tenantId, "Ada Lovelace");
         var editor = ActorReference.ForMember(Uuid.CreateVersion4(), "Editor");
@@ -177,7 +182,8 @@ public sealed class FitzPersonDirectoryTests
     public async Task ShouldProjectMembershipCorrelationAndKeepItAcrossRevisionGivenRecordedPerson()
     {
         // Arrange
-        var directory = new FitzPersonDirectory(new InMemoryKvClient());
+        await using var database = await CassieRepositoryTestDatabase.OpenAsync(CassieWorkforceSchema.Statements);
+        await using var directory = new CassiePersonDirectory(database.Database);
         var tenantId = Uuid.CreateVersion4();
         var recorded = Recorded(tenantId, "Ada Lovelace");
         var editor = ActorReference.ForMember(Uuid.CreateVersion4(), "Editor");

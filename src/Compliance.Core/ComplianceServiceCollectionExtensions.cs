@@ -607,18 +607,18 @@ public static class ComplianceServiceCollectionExtensions
         services.AddScoped<ICampaignDirectoryReader>(provider =>
             provider.GetRequiredService<FitzCampaignDirectory>());
         services.AddScoped<CampaignDirectoryReadConsistency>();
-        services.AddScoped<FitzPersonDirectory>();
+        services.AddScoped<CassiePersonDirectory>();
         services.AddScoped<IPersonMemberDisplayReader>(
-            provider => provider.GetRequiredService<FitzPersonDirectory>());
+            provider => provider.GetRequiredService<CassiePersonDirectory>());
         services.AddScoped<IPersonDirectoryProjection>(provider =>
-            provider.GetRequiredService<FitzPersonDirectory>());
+            provider.GetRequiredService<CassiePersonDirectory>());
         services.AddScoped<IPersonDirectoryReader>(provider =>
-            provider.GetRequiredService<FitzPersonDirectory>());
-        services.AddScoped<FitzWorkRelationshipDirectory>();
+            provider.GetRequiredService<CassiePersonDirectory>());
+        services.AddScoped<CassieWorkRelationshipDirectory>();
         services.AddScoped<IWorkRelationshipDirectoryProjection>(provider =>
-            provider.GetRequiredService<FitzWorkRelationshipDirectory>());
+            provider.GetRequiredService<CassieWorkRelationshipDirectory>());
         services.AddScoped<IWorkRelationshipDirectoryReader>(provider =>
-            provider.GetRequiredService<FitzWorkRelationshipDirectory>());
+            provider.GetRequiredService<CassieWorkRelationshipDirectory>());
         services.AddScoped<FitzTechnologyInventoryDirectory>();
         services.AddScoped<ITechnologyInventoryProjection>(provider =>
             provider.GetRequiredService<FitzTechnologyInventoryDirectory>());
@@ -654,31 +654,31 @@ public static class ComplianceServiceCollectionExtensions
         services.AddScoped<PersonOperations>();
         services.AddScoped<WorkRelationshipReadConsistency>();
         services.AddScoped<WorkRelationshipSponsorship>();
-        services.AddScoped<FitzWorkforceObservationDirectory>();
+        services.AddScoped<CassieWorkforceObservationDirectory>();
         services.AddScoped<IWorkforceObservationProjection>(provider =>
-            provider.GetRequiredService<FitzWorkforceObservationDirectory>());
+            provider.GetRequiredService<CassieWorkforceObservationDirectory>());
         services.AddScoped<IWorkforceObservationDirectoryReader>(provider =>
-            provider.GetRequiredService<FitzWorkforceObservationDirectory>());
+            provider.GetRequiredService<CassieWorkforceObservationDirectory>());
         services.AddScoped<WorkforceObservationReadConsistency>();
-        services.AddScoped<FitzWorkforceObservationResolutionDirectory>();
+        services.AddScoped<CassieWorkforceObservationResolutionDirectory>();
         services.AddScoped<IWorkforceObservationResolutionProjection>(provider =>
-            provider.GetRequiredService<FitzWorkforceObservationResolutionDirectory>());
+            provider.GetRequiredService<CassieWorkforceObservationResolutionDirectory>());
         services.AddScoped<IWorkforceObservationResolutionReader>(provider =>
-            provider.GetRequiredService<FitzWorkforceObservationResolutionDirectory>());
+            provider.GetRequiredService<CassieWorkforceObservationResolutionDirectory>());
         services.AddScoped<WorkforceObservationResolutions>();
-        services.AddScoped<FitzWorkforceSourceDirectory>();
+        services.AddScoped<CassieWorkforceSourceDirectory>();
         services.AddScoped<IWorkforceSourceDirectoryReader>(provider =>
-            provider.GetRequiredService<FitzWorkforceSourceDirectory>());
+            provider.GetRequiredService<CassieWorkforceSourceDirectory>());
         services.AddScoped<IWorkforceSourceProjection>(provider =>
-            provider.GetRequiredService<FitzWorkforceSourceDirectory>());
+            provider.GetRequiredService<CassieWorkforceSourceDirectory>());
         services.AddScoped<WorkforceSourceReadConsistency>();
         services.AddScoped<WorkforceSourceTargets>();
         services.AddScoped<WorkforceRosterReconciler>();
-        services.AddScoped<FitzServiceIdentityDirectory>();
+        services.AddScoped<CassieServiceIdentityDirectory>();
         services.AddScoped<IServiceIdentityDirectoryProjection>(provider =>
-            provider.GetRequiredService<FitzServiceIdentityDirectory>());
+            provider.GetRequiredService<CassieServiceIdentityDirectory>());
         services.AddScoped<IServiceIdentityDirectoryReader>(provider =>
-            provider.GetRequiredService<FitzServiceIdentityDirectory>());
+            provider.GetRequiredService<CassieServiceIdentityDirectory>());
         services.AddScoped<ServiceIdentityReadConsistency>();
         services.AddScoped<ServiceIdentityOwnership>();
         services.AddScoped<RiskDraftReader>();
@@ -739,16 +739,16 @@ public static class ComplianceServiceCollectionExtensions
             provider => provider.GetRequiredService<FitzEvidenceWorkItemDirectory>());
         services.AddScoped<IAccountableWorkItemDirectoryReader>(
             provider => provider.GetRequiredService<FitzEvidenceWorkItemDirectory>());
-        services.AddScoped<FitzFindingClosureWorkItemDirectory>();
+        services.AddScoped<CassieFindingClosureWorkItemDirectory>();
         services.AddScoped<IFindingClosureWorkItemProjection>(
-            provider => provider.GetRequiredService<FitzFindingClosureWorkItemDirectory>());
+            provider => provider.GetRequiredService<CassieFindingClosureWorkItemDirectory>());
         services.AddScoped<IAccountableWorkItemDirectoryReader>(
-            provider => provider.GetRequiredService<FitzFindingClosureWorkItemDirectory>());
-        services.AddScoped<FitzCorrectiveActionWorkItemDirectory>();
+            provider => provider.GetRequiredService<CassieFindingClosureWorkItemDirectory>());
+        services.AddScoped<CassieCorrectiveActionWorkItemDirectory>();
         services.AddScoped<ICorrectiveActionWorkItemProjection>(
-            provider => provider.GetRequiredService<FitzCorrectiveActionWorkItemDirectory>());
+            provider => provider.GetRequiredService<CassieCorrectiveActionWorkItemDirectory>());
         services.AddScoped<IAccountableWorkItemDirectoryReader>(
-            provider => provider.GetRequiredService<FitzCorrectiveActionWorkItemDirectory>());
+            provider => provider.GetRequiredService<CassieCorrectiveActionWorkItemDirectory>());
         services.AddScoped<FitzControlEvaluationWorkItemDirectory>();
         services.AddScoped<IControlEvaluationWorkItemProjection>(
             provider => provider.GetRequiredService<FitzControlEvaluationWorkItemDirectory>());
@@ -1022,9 +1022,9 @@ public static class ComplianceServiceCollectionExtensions
         services.AddScoped<NativeOperationExecutor>();
         services.AddScoped<TenantLifecycleOperations>();
         services.AddScoped<MethodologyTemplateContributionOperations>();
-        services.AddScoped<FitzMethodologyTemplateDirectory>();
-        services.AddScoped<IMethodologyTemplateDirectoryReader>(provider => provider.GetRequiredService<FitzMethodologyTemplateDirectory>());
-        services.AddScoped<IMethodologyTemplateDirectoryProjection>(provider => provider.GetRequiredService<FitzMethodologyTemplateDirectory>());
+        services.AddScoped<CassieMethodologyTemplateDirectory>();
+        services.AddScoped<IMethodologyTemplateDirectoryReader>(provider => provider.GetRequiredService<CassieMethodologyTemplateDirectory>());
+        services.AddScoped<IMethodologyTemplateDirectoryProjection>(provider => provider.GetRequiredService<CassieMethodologyTemplateDirectory>());
         services.AddScoped<MethodologyTemplateDirectoryReadConsistency>();
         services.AddScoped<TemplateApplicationReader>()
             .AddScoped<TemplateApplicationOperations>()
@@ -1185,6 +1185,7 @@ public static class ComplianceServiceCollectionExtensions
 
         var portia = services
             .AddPortia()
+            .AddCassie(CassieReadModelSettings.ConnectionString(configuration))
             .AddRequestHandler<ContinueWithDeveloperIdentityHandler>()
             .AddRequestAuthorizer<ContinueWithDeveloperIdentityAuthorizer>()
             .AddRequestHandler<ContinueWithOidcProviderHandler>()
@@ -2070,7 +2071,7 @@ public static class ComplianceServiceCollectionExtensions
                 options => options.FailureAttemptLimit = int.MaxValue)
             .AddReactor<IdentityRecoveryAcceptanceReactor>("IdentityRecoveryAcceptanceV1", WorkloadScope.Global,
                 options => options.FailureAttemptLimit = int.MaxValue)
-            .AddProjector<MethodologyTemplateDirectoryProjector>(FitzMethodologyTemplateDirectory.ProjectorName, WorkloadScope.Global)
+            .AddCassieProjection<MethodologyTemplateDirectoryProjector, CassieMethodologyTemplateDirectory>(CassieMethodologyTemplateDirectory.ProjectorName, WorkloadScope.Global)
             .AddReactor<Bdgrz.Compliance.Features.MethodologyTemplates.Reactors.MethodologyTemplateDraftOpeningReactor>(
                 Bdgrz.Compliance.Features.MethodologyTemplates.Reactors.MethodologyTemplateDraftOpeningReactor.WorkloadName, WorkloadScope.Global)
             .AddReactor<Bdgrz.Compliance.Features.MethodologyTemplates.Reactors.MethodologyTemplateDraftConclusionReactor>(
@@ -2255,19 +2256,19 @@ public static class ComplianceServiceCollectionExtensions
             .AddProjector<CommitmentDraftHistoryDirectoryProjectorV1>(
                 FitzCommitmentDraftHistoryDirectoryV1.ProjectorName, WorkloadScope.PerTenant)
             .AddProjector<RiskDraftDirectoryProjector>(FitzRiskDraftDirectory.ProjectorName, WorkloadScope.PerTenant)
-            .AddProjector<PersonDirectoryProjector>("PersonDirectoryV2", WorkloadScope.PerTenant)
+            .AddCassieProjection<PersonDirectoryProjector, CassiePersonDirectory>("PersonDirectoryV2", WorkloadScope.PerTenant)
             .AddProjector<TechnologyInventoryDirectoryProjector>(
                 FitzTechnologyInventoryDirectory.ProjectorName, WorkloadScope.PerTenant)
             .AddProjector<InventoryRegisterProjector>(
                 FitzInventoryRegisterDirectory.ProjectorName, WorkloadScope.PerTenant)
-            .AddProjector<WorkRelationshipDirectoryProjector>("WorkRelationshipDirectoryV1",
+            .AddCassieProjection<WorkRelationshipDirectoryProjector, CassieWorkRelationshipDirectory>("WorkRelationshipDirectoryV1",
                 WorkloadScope.PerTenant)
-            .AddProjector<WorkforceObservationProjector>("WorkforceObservationsV1",
+            .AddCassieProjection<WorkforceObservationProjector, CassieWorkforceObservationDirectory>("WorkforceObservationsV1",
                 WorkloadScope.PerTenant)
-            .AddProjector<WorkforceObservationResolutionProjector>(
+            .AddCassieProjection<WorkforceObservationResolutionProjector, CassieWorkforceObservationResolutionDirectory>(
                 "WorkforceObservationResolutionsV1", WorkloadScope.PerTenant)
-            .AddProjector<WorkforceSourceProjector>("WorkforceSourcesV1", WorkloadScope.PerTenant)
-            .AddProjector<ServiceIdentityDirectoryProjector>("ServiceIdentityDirectoryV1",
+            .AddCassieProjection<WorkforceSourceProjector, CassieWorkforceSourceDirectory>("WorkforceSourcesV1", WorkloadScope.PerTenant)
+            .AddCassieProjection<ServiceIdentityDirectoryProjector, CassieServiceIdentityDirectory>("ServiceIdentityDirectoryV1",
                 WorkloadScope.PerTenant)
             .AddProjector<RiskDraftHistoryProjectorV1>(FitzRiskDraftHistoryDirectoryV1.ProjectorName,
                 WorkloadScope.PerTenant)
@@ -2317,10 +2318,10 @@ public static class ComplianceServiceCollectionExtensions
                 FitzControlDecisionWorkItemDirectory.ProjectorName, WorkloadScope.PerTenant)
             .AddProjector<EvidenceWorkItemProjector>(FitzEvidenceWorkItemDirectory.ProjectorName,
                 WorkloadScope.PerTenant)
-            .AddProjector<FindingClosureWorkItemProjector>(
-                FitzFindingClosureWorkItemDirectory.ProjectorName, WorkloadScope.PerTenant)
-            .AddProjector<CorrectiveActionWorkItemProjector>(
-                FitzCorrectiveActionWorkItemDirectory.ProjectorName, WorkloadScope.PerTenant)
+            .AddCassieProjection<FindingClosureWorkItemProjector, CassieFindingClosureWorkItemDirectory>(
+                CassieFindingClosureWorkItemDirectory.ProjectorName, WorkloadScope.PerTenant)
+            .AddCassieProjection<CorrectiveActionWorkItemProjector, CassieCorrectiveActionWorkItemDirectory>(
+                CassieCorrectiveActionWorkItemDirectory.ProjectorName, WorkloadScope.PerTenant)
             .AddProjector<ControlEvaluationWorkItemProjector>(
                 FitzControlEvaluationWorkItemDirectory.ProjectorName, WorkloadScope.PerTenant)
             .AddProjector<ControlOperatingPlanWorkItemProjector>(
@@ -2346,6 +2347,7 @@ public static class ComplianceServiceCollectionExtensions
             .RequireAuthorization(options => options.AllowAnonymous<StartIdentityRecovery>());
 
         services.AddPersistenceSafety();
+        services.AddHostedService<CassieReadModelStartup>();
         services.AddHostedService<PlatformOperatorRosterBootstrap>();
         return portia;
     }

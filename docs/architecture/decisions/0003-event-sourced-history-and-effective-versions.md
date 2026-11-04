@@ -43,7 +43,7 @@ Decision owner: tech lead and product owner. Date: 2026-09-19.
   a successor never changes its predecessor's immutable version payload or a
   frozen snapshot's content identity. The boundary projector also rejects an
   overlapping approval during replay, rolling back that projection batch.
-- Fitz KV read models and Portia projectors serve lists, search, and historical
+- Cassie read-model repositories and Portia projectors serve lists, search, and historical
   version queries. Projection data and its checkpoint commit atomically. A
   read model can lag its source stream, so a command's invariant uses the
   aggregate rather than a projection. A query that promises a minimum version

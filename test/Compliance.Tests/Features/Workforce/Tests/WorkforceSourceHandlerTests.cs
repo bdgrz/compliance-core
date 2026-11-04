@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.Workforce.Projections;
 using Bdgrz.Compliance.Tests.Testing;
 using Cntryl.Fitz.Testing;
 using Cntryl.Portia;
@@ -445,20 +446,28 @@ public sealed class WorkforceSourceHandlerTests
     sealed class Fixture : IAsyncDisposable
     {
         AsyncServiceScope _personScope;
+        CassieRepositoryTestDatabase _database = null!;
         public ServiceProvider Provider { get; private set; } = null!;
         public SourcePermissions Permissions { get; } = new();
         public Uuid TenantId { get; } = Uuid.CreateVersion4();
         public Uuid UserId { get; } = Uuid.CreateVersion4();
         public Uuid PersonId { get; } = Uuid.CreateVersion4();
         public ActorReference Author => ActorReference.ForMember(RbacIds.Member(TenantId, UserId), "Author");
-        public FitzPersonDirectory People { get; private set; } = null!;
-        public FitzWorkRelationshipDirectory Relationships { get; } = new(new InMemoryKvClient());
-        public FitzServiceIdentityDirectory Identities { get; } = new(new InMemoryKvClient());
-        public FitzWorkforceSourceDirectory Sources { get; } = new(new InMemoryKvClient());
+        public CassiePersonDirectory People { get; private set; } = null!;
+        public CassieWorkRelationshipDirectory Relationships { get; private set; } = null!;
+        public CassieServiceIdentityDirectory Identities { get; private set; } = null!;
+        public CassieWorkforceSourceDirectory Sources { get; private set; } = null!;
 
         public static async Task<Fixture> CreateAsync()
         {
-            var fixture = new Fixture();
+            var database = await CassieRepositoryTestDatabase.OpenAsync(CassieWorkforceSchema.Statements);
+            var fixture = new Fixture
+            {
+                _database = database,
+                Relationships = new CassieWorkRelationshipDirectory(database.Database),
+                Identities = new CassieServiceIdentityDirectory(database.Database),
+                Sources = new CassieWorkforceSourceDirectory(database.Database),
+            };
             fixture.Permissions.UserId = fixture.UserId;
             fixture.Provider = ProgramManagementServices.Build(fixture.Permissions,
                 portia => portia.AddRequestAuthorizer<WorkforceAuthorizer>()
@@ -484,7 +493,7 @@ public sealed class WorkforceSourceHandlerTests
                     services.AddScoped<WorkforceSourceTargets>();
                 });
             fixture._personScope = fixture.Provider.CreateAsyncScope();
-            fixture.People = new FitzPersonDirectory(new InMemoryKvClient(),
+            fixture.People = new CassiePersonDirectory(fixture._database.Database,
                 fixture._personScope.ServiceProvider.GetRequiredService<PersonReader>());
             await ProgramManagementServices.SeedAsync(fixture.Provider, new PersonRules(fixture.TenantId,
                 fixture.PersonId), person => person.Record("Ada", "ada@example.com", fixture.Author, DateTimeOffset.UtcNow));
@@ -528,6 +537,11 @@ public sealed class WorkforceSourceHandlerTests
         {
             await _personScope.DisposeAsync();
             await Provider.DisposeAsync();
+            await People.DisposeAsync();
+            await Relationships.DisposeAsync();
+            await Identities.DisposeAsync();
+            await Sources.DisposeAsync();
+            await _database.DisposeAsync();
         }
     }
 

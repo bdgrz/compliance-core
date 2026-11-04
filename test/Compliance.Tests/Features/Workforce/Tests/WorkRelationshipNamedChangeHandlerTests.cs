@@ -1,3 +1,5 @@
+using Bdgrz.Compliance.Features.Workforce.Projections;
+using Bdgrz.Compliance.Tests.Testing;
 using System.Security.Claims;
 using Bdgrz.Compliance.Features.AccessControl.Models;
 using Bdgrz.Compliance.Features.AccessControl.Authorizers;
@@ -30,7 +32,7 @@ public sealed class WorkRelationshipNamedChangeHandlerTests
     public async Task ShouldRequireActiveSponsorGivenNamedSponsorChange(string? status, string workerType, bool accepted)
     {
         // Arrange
-        var fixture = new Fixture();
+        await using var fixture = await Fixture.CreateAsync();
         if (status is not null)
             await fixture.ProjectSponsorAsync(status, workerType);
         var handler = new ChangeSponsorHandler(fixture.Executor, fixture.Reader, fixture.Roster,
@@ -62,7 +64,7 @@ public sealed class WorkRelationshipNamedChangeHandlerTests
     public async Task ShouldCheckManagerPersonGivenNamedManagerChange(bool recorded)
     {
         // Arrange
-        var fixture = new Fixture();
+        await using var fixture = await Fixture.CreateAsync();
         var manager = recorded ? fixture.OtherPerson : Uuid.CreateVersion4();
         var handler = new ChangeManagerHandler(fixture.Executor, fixture.Reader, new FieldPermissions(), TimeProvider.System);
 
@@ -88,7 +90,7 @@ public sealed class WorkRelationshipNamedChangeHandlerTests
     public async Task ShouldRefuseWithoutFactGivenManagerComparisonWithoutRestrictedGrant(bool matching)
     {
         // Arrange
-        var fixture = new Fixture();
+        await using var fixture = await Fixture.CreateAsync();
         var handler = new ChangeManagerHandler(fixture.Executor, fixture.Reader,
             new FieldPermissions(false), TimeProvider.System);
 
@@ -109,7 +111,7 @@ public sealed class WorkRelationshipNamedChangeHandlerTests
     public async Task ShouldInvokeOwnerWithActorGivenNamedChange(string kind)
     {
         // Arrange
-        var fixture = new Fixture();
+        await using var fixture = await Fixture.CreateAsync();
 
         // Act
         var result = kind == "department"
@@ -135,7 +137,7 @@ public sealed class WorkRelationshipNamedChangeHandlerTests
     public async Task ShouldRefuseWithoutFactGivenSponsorPersonNotRecorded()
     {
         // Arrange
-        var fixture = new Fixture();
+        await using var fixture = await Fixture.CreateAsync();
         var handler = new ChangeSponsorHandler(fixture.Executor, fixture.Reader, fixture.Roster,
             fixture.Consistency, TimeProvider.System);
 
@@ -149,8 +151,10 @@ public sealed class WorkRelationshipNamedChangeHandlerTests
         Assert.Single(fixture.Facts);
     }
 
-    sealed class Fixture
+    sealed class Fixture : IAsyncDisposable
     {
+        readonly CassieRepositoryTestDatabase _database;
+
         public Uuid Tenant { get; } = Uuid.CreateVersion4();
         public Uuid User { get; } = Uuid.CreateVersion4();
         public Uuid Person { get; } = Uuid.CreateVersion4();
@@ -158,17 +162,28 @@ public sealed class WorkRelationshipNamedChangeHandlerTests
         public WorkRelationship Owner { get; }
         public OwnerExecutor Executor { get; }
         public RecordedPeopleReader Reader { get; }
-        public FitzWorkforceObservationDirectory Roster { get; } = new(new InMemoryKvClient());
+        public CassieWorkforceObservationDirectory Roster { get; }
         public WorkforceObservationReadConsistency Consistency => new(Roster, new InMemoryEventStore());
         public IReadOnlyList<DomainEvent> Facts => new AggregateScenario<WorkRelationship>(Owner).PendingEvents;
 
-        public Fixture()
+        Fixture(CassieRepositoryTestDatabase database)
         {
+            _database = database;
+            Roster = new CassieWorkforceObservationDirectory(database.Database);
             Owner = new WorkRelationship(Tenant, WorkRelationship.IdFor(Tenant, "E-100"));
             Assert.True(Owner.Record(Person, "E-100", new WorkRelationshipTerms("external_collaborator",
                 "active", Start, null, "Engineering", null, Uuid.CreateVersion4()), Author, DateTimeOffset.UtcNow).IsSuccess);
             Executor = new OwnerExecutor(Owner);
             Reader = new RecordedPeopleReader(Owner, [Person, OtherPerson]);
+        }
+
+        public static async Task<Fixture> CreateAsync() =>
+            new(await CassieRepositoryTestDatabase.OpenAsync(CassieWorkforceSchema.Statements));
+
+        public async ValueTask DisposeAsync()
+        {
+            await Roster.DisposeAsync();
+            await _database.DisposeAsync();
         }
 
         public RequestContext<T> Context<T>(T request) where T : IRequestBase => new(request,
