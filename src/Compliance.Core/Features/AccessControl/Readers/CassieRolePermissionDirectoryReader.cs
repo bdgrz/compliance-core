@@ -50,17 +50,16 @@ sealed class CassieRolePermissionDirectoryReader(CassieProjectionDatabase databa
         var cursorScope = AccessControlDirectoryCursor.Scope(projectionKey, "access_role_permissions", roleId.ToString(), search, descending);
         var after = AccessControlDirectoryCursor.Decode(cursor, cursorScope);
         var take = Math.Clamp(limit ?? DefaultLimit, 1, MaxLimit);
+        var fetchLimit = (take + 1).ToString(CultureInfo.InvariantCulture);
         var direction = descending ? "DESC" : "ASC";
         var comparison = descending ? "<" : ">";
         await using var read = await OpenReadAsync(ct).ConfigureAwait(false);
         await using var command = read.CreateCommand("SELECT role_id, permission, assignment_id, revision FROM access_role_permissions WHERE projection_key = @scope" +
             " AND role_id = @parent" +
             (after is null ? "" : $" AND permission {comparison} @after") +
-            $" ORDER BY permission {direction}" + (search is null ? " LIMIT @take" : ""));
+            $" ORDER BY permission {direction}" + (search is null ? " LIMIT " + fetchLimit : ""));
         CassieAccessControlSql.Bind(command, ("scope", projectionKey));
         CassieAccessControlSql.Bind(command, ("parent", roleId.ToString()));
-        if (search is null)
-            CassieAccessControlSql.Bind(command, ("take", take + 1));
         if (after is { } position)
             CassieAccessControlSql.Bind(command, ("after", position.Sort));
         var matches = new List<RolePermissionView>();
