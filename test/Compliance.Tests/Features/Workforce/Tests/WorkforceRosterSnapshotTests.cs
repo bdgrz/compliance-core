@@ -535,18 +535,18 @@ public sealed class WorkforceRosterSnapshotTests
             bool canReadManagerChain)
             => GetRelationshipAsync(relationshipId, new FixedPermissions(canReadManagerChain));
 
-        public ValueTask<Result<WorkRelationshipView>> GetRelationshipAsync(Uuid relationshipId,
+        public async ValueTask<Result<WorkRelationshipView>> GetRelationshipAsync(Uuid relationshipId,
             IPermissionAuthorizer permissions)
         {
             var consistency = new WorkRelationshipReadConsistency(_relationships, Reader,
                 _provider.GetRequiredService<IDomainEventReader>());
             await using var roster = new CassieWorkforceObservationDirectory(_database.Database);
-            return new GetWorkRelationshipHandler(consistency, permissions,
+            return await new GetWorkRelationshipHandler(consistency, permissions,
                     new WorkRelationshipSponsorship(roster,
                         new WorkforceObservationReadConsistency(roster, new InMemoryEventStore())))
                 .HandleAsync(new RequestContext<GetWorkRelationship>(
                     new GetWorkRelationship(TenantId, relationshipId), Actor(_userId)),
-                    CancellationToken.None);
+                    CancellationToken.None).ConfigureAwait(false);
         }
 
         sealed class AdvancingRelationshipReader(Harness harness, WorkRelationshipView revision)

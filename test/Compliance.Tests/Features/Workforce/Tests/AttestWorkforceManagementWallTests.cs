@@ -271,8 +271,10 @@ public sealed class AttestWorkforceManagementWallTests
         public static async Task<Fixture> CreateAsync(string affiliation = "client_personnel",
             Func<IImmutableContentStore, IImmutableContentStore>? configureContent = null)
         {
-            var fixture = new Fixture();
-            fixture._database = await CassieRepositoryTestDatabase.OpenAsync(CassieWorkforceSchema.Statements);
+            var fixture = new Fixture
+            {
+                _database = await CassieRepositoryTestDatabase.OpenAsync(CassieWorkforceSchema.Statements),
+            };
             var services = new ServiceCollection();
             _ = services.AddCompliance(new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
             {

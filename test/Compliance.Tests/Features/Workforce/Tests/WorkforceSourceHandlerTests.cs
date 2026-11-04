@@ -460,11 +460,14 @@ public sealed class WorkforceSourceHandlerTests
 
         public static async Task<Fixture> CreateAsync()
         {
-            var fixture = new Fixture();
-            fixture._database = await CassieRepositoryTestDatabase.OpenAsync(CassieWorkforceSchema.Statements);
-            fixture.Relationships = new CassieWorkRelationshipDirectory(fixture._database.Database);
-            fixture.Identities = new CassieServiceIdentityDirectory(fixture._database.Database);
-            fixture.Sources = new CassieWorkforceSourceDirectory(fixture._database.Database);
+            var database = await CassieRepositoryTestDatabase.OpenAsync(CassieWorkforceSchema.Statements);
+            var fixture = new Fixture
+            {
+                _database = database,
+                Relationships = new CassieWorkRelationshipDirectory(database.Database),
+                Identities = new CassieServiceIdentityDirectory(database.Database),
+                Sources = new CassieWorkforceSourceDirectory(database.Database),
+            };
             fixture.Permissions.UserId = fixture.UserId;
             fixture.Provider = ProgramManagementServices.Build(fixture.Permissions,
                 portia => portia.AddRequestAuthorizer<WorkforceAuthorizer>()
