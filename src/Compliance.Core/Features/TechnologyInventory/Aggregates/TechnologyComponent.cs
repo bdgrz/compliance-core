@@ -87,11 +87,7 @@ public sealed class TechnologyComponent : Aggregate
         {
             Lifecycle = TechnologyInventoryRules.Active,
         });
-        var error = TechnologyInventoryRules.Validate(content) ??
-                    (content.Category == TechnologyInventoryRules.CloudAccount &&
-                     content.SystemInstanceId != Id
-                        ? "A cloud_account component shares its system instance identity."
-                        : null);
+        var error = TechnologyInventoryRules.Validate(content);
         if (error is not null)
             return Result<TechnologyComponentContent>.Failure(new RequestError(RequestErrorKind.Validation, error));
         if (_foreign)

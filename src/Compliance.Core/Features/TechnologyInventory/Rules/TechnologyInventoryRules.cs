@@ -53,7 +53,7 @@ public static class TechnologyInventoryRules
     public const string ExternalPartyReference = "external_party";
 
     static readonly string[] Categories =
-        [CloudAccount, "environment", "network", DataStore, "repository", EndpointClass];
+        ["environment", "network", DataStore, "repository", EndpointClass];
 
     static readonly string[] Classifications = ["public", "internal", "confidential", "restricted"];
 
@@ -81,7 +81,7 @@ public static class TechnologyInventoryRules
     public static string? Validate(TechnologyComponentContent content)
     {
         if (!Categories.Contains(content.Category, StringComparer.Ordinal))
-            return "The component category must be cloud_account, environment, network, data_store, repository, or endpoint_class.";
+            return "The component category must be environment, network, data_store, repository, or endpoint_class. Cloud accounts are system instances.";
         if (content.Name.Length is < 1 or > 200)
             return "A component requires a name of at most 200 characters.";
         if (content.OwnerPersonId == Uuid.Empty)
@@ -89,9 +89,8 @@ public static class TechnologyInventoryRules
         if (content.EnvironmentReference is { Length: > 200 } ||
             content.LocationReference is { Length: > 200 })
             return "Environment and location references must be at most 200 characters.";
-        if ((content.Category == CloudAccount) != content.SystemInstanceId is { } instanceId ||
-            content.SystemInstanceId == Uuid.Empty)
-            return "Exactly the cloud_account category references its system instance.";
+        if (content.SystemInstanceId == Uuid.Empty)
+            return "A cloud account reference must identify a system instance.";
         if (content.Category == EndpointClass
                 ? content.EndpointCount is not >= 0 || content.ManagementSource is null ||
                   content.ManagementSource.Length > 200
