@@ -53,6 +53,7 @@ static class BuiltInRolePermissions
             yield return RbacPermissionEffects.Assign(sourceEventId, tenantId, role, RbacPermissions.EvidenceRedactionPrepare);
         }
         yield return RbacPermissionEffects.Assign(sourceEventId, tenantId, administrator, FieldClasses.WorkforceManagerChain.ReadPermission);
+        yield return RbacPermissionEffects.Assign(sourceEventId, tenantId, lead, FieldClasses.WorkforceManagerChain.ReadPermission);
         yield return RbacPermissionEffects.Assign(sourceEventId, tenantId, lead, RbacPermissions.EvidenceRedactionApprove);
         foreach (var role in new[] { lead, contributor })
             yield return RbacPermissionEffects.Assign(sourceEventId, tenantId, role,

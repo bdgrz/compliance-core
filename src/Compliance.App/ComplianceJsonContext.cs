@@ -103,4 +103,8 @@ namespace Bdgrz.Compliance;
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.Remediation.Models.WaiverView))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.Remediation.Models.WaiverRegistration))]
 [JsonSerializable(typeof(Bdgrz.Compliance.Features.Remediation.Models.WaiverScopeRecord))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Workforce.Commands.ChangeManager))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Workforce.Commands.ChangeDepartment))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Workforce.Commands.ChangeSponsor))]
+[JsonSerializable(typeof(Bdgrz.Compliance.Features.Workforce.Commands.CorrectWorkRelationshipDates))]
 sealed partial class ComplianceJsonContext : JsonSerializerContext;

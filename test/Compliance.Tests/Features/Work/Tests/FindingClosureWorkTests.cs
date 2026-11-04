@@ -179,7 +179,7 @@ public sealed class FindingClosureWorkTests
 
         // Act
         finding = await fixture.AsAsync(fixture.LeadUserId, new ReviseFinding(Uuid.CreateVersion4(), fixture.TenantId,
-            fixture.ProgramId, finding.FindingId, finding.Revision, "medium", fixture.LeadMemberId,
+            fixture.ProgramId, finding.FindingId, finding.Revision, "moderate", fixture.LeadMemberId,
             finding.DueOn, "VPN", null, "Severity reassessed."));
         var queue = await fixture.AsAsync(fixture.ApproverUserId,
             new ListWork(fixture.TenantId, fixture.ProgramId, "unassigned"));
@@ -257,7 +257,7 @@ public sealed class FindingClosureWorkTests
             new OperationsActor(fixture.ApproverUserId, fixture.ApproverMemberId, "Reviewer"),
             30, CancellationToken.None);
         await fixture.AsAsync(fixture.LeadUserId, new ReviseFinding(Uuid.CreateVersion4(), fixture.TenantId,
-            fixture.ProgramId, finding.FindingId, finding.Revision, "medium", fixture.LeadMemberId,
+            fixture.ProgramId, finding.FindingId, finding.Revision, "moderate", fixture.LeadMemberId,
             finding.DueOn, "VPN", null, "Review inputs changed."));
         var changed = await consistency.ConfirmUnchangedAndCaughtUpAsync(fixture.TenantId,
             captured.Value, CancellationToken.None);

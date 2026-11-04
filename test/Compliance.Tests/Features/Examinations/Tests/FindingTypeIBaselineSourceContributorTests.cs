@@ -120,7 +120,7 @@ public sealed class FindingTypeIBaselineSourceContributorTests
 
         // Act
         await fixture.AsAsync(fixture.LeadUserId, new ReviseFinding(Uuid.CreateVersion4(), fixture.TenantId,
-            fixture.ProgramId, finding.FindingId, 1, "critical", fixture.OwnerMemberId, fixture.Today.AddDays(3), "All",
+            fixture.ProgramId, finding.FindingId, 1, "moderate", fixture.OwnerMemberId, fixture.Today.AddDays(3), "All",
             null, "Escalated."));
         var after = await contributor.ReadAsync(engagement, new TypeIBaselineSourceReadContext(fixture.LeadMemberId, []),
             CancellationToken.None);
