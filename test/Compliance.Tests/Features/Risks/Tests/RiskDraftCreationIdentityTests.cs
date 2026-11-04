@@ -97,4 +97,35 @@ public sealed class RiskDraftCreationIdentityTests
         Assert.Equal(0, risk.Revision);
         Assert.Empty(new AggregateScenario<RiskDraft>(risk).PendingEvents);
     }
+    [Fact]
+    public async Task ShouldRefuseCrossTemplateRetryGivenIdenticalRiskContentAndIdentifier()
+    {
+        // Arrange
+        await using var fixture = new RiskDraftSourceFixture();
+        var tenant = Uuid.CreateVersion4();
+        var program = Uuid.CreateVersion4();
+        var user = Uuid.CreateVersion4();
+        var id = RiskDraft.IdFor(tenant, program, "R-TEMPLATE");
+        await fixture.SeedProgramAsync(tenant, program, RbacIds.Member(tenant, user));
+        var request = new CreateRiskDraft(id, tenant, program, "R-TEMPLATE", "Risk", "Scenario", "Effect")
+        {
+            TemplateOrigin = new(Uuid.CreateVersion4(), 1, "risk-entry"),
+        };
+        var handler = new CreateRiskDraftHandler(fixture.Operations());
+        Assert.True((await handler.HandleAsync(RiskDraftSourceFixture.Context(request, user), CancellationToken.None)).IsSuccess);
+
+        // Act
+        var retry = await handler.HandleAsync(RiskDraftSourceFixture.Context(request, user), CancellationToken.None);
+        var other = await handler.HandleAsync(RiskDraftSourceFixture.Context(request with
+        {
+            TemplateOrigin = request.TemplateOrigin with { TemplateId = Uuid.CreateVersion4() },
+        }, user), CancellationToken.None);
+        var read = await fixture.Reader.HydrateAsync(new RiskDraft(tenant, id));
+
+        // Assert
+        Assert.True(retry.IsSuccess, retry.Error?.Message);
+        Assert.Equal(RequestErrorKind.Conflict, other.Error?.Kind);
+        Assert.Equal(1, read.Revision);
+    }
+
 }
