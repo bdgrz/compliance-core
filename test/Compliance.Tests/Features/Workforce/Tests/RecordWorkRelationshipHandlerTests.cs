@@ -83,6 +83,25 @@ namespace Bdgrz.Compliance.Tests.Features.Workforce.Tests;
 
 public sealed class RecordWorkRelationshipHandlerTests
 {
+    [Fact]
+    public async Task ShouldPassExternalProvenanceToOwnerGivenInitialRecordRequest()
+    {
+        // Arrange
+        await using var scenario = await Scenario.CreateAsync();
+        var source = new WorkforceSourceIdentity("hris", "PeopleSystem", "External-record-99", "Revision-7");
+        var request = scenario.Request(null, null) with { Source = source };
+
+        // Act
+        var result = await scenario.RecordAsync(request, new GrantedPermissions());
+
+        // Assert
+        Assert.True(result.IsSuccess, result.Error?.Message);
+        var fact = Assert.IsType<WorkRelationshipRecorded>(Assert.Single(await scenario.RelationshipEventsAsync()));
+        Assert.Equal(source, fact.Source);
+        Assert.Equal(WorkRelationship.IdFor(scenario.TenantId, "E-100"), fact.RelationshipId);
+        Assert.Equal("E-100", fact.SourceWorkerId);
+    }
+
     [Theory]
     [InlineData(false, true, false)]
     [InlineData(true, false, false)]

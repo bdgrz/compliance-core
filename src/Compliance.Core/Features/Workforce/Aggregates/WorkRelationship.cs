@@ -134,8 +134,10 @@ public sealed class WorkRelationship : Aggregate
             NormalizeWorkerId(sourceWorkerId));
 
     public Result<WorkRelationshipRegistration> Record(Uuid personId, string sourceWorkerId,
-        WorkRelationshipTerms terms, ActorReference actor, DateTimeOffset changedAt)
+        WorkRelationshipTerms terms, ActorReference actor, DateTimeOffset changedAt,
+        WorkforceSourceIdentity? source = null)
     {
+        _ = source;
         var workerId = NormalizeWorkerId(sourceWorkerId);
         if (workerId.Length is 0 or > 100)
             return Result<WorkRelationshipRegistration>.Failure(new RequestError(
