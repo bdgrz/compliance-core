@@ -46,7 +46,7 @@ public sealed class MethodologyTemplateNameClaimTests
         var operation = Root(scenario.Aggregate, second, content);
 
         // Act
-        var result = scenario.Aggregate.ClaimCreation(operation, Target(second.TemplateId), content, Response());
+        var result = scenario.Aggregate.ClaimCreation(operation, second, content, Response());
 
         // Assert
         Assert.False(result.IsSuccess);
@@ -65,9 +65,9 @@ public sealed class MethodologyTemplateNameClaimTests
         var changedContent = Content(changed, MethodologyTemplateNameClaim.CreationSchema);
 
         // Act
-        var repeated = fixture.Scenario.Aggregate.ClaimCreation(fixture.Operation, Target(fixture.Intent.TemplateId), fixture.Content, Response());
+        var repeated = fixture.Scenario.Aggregate.ClaimCreation(fixture.Operation, fixture.Intent, fixture.Content, Response());
         var changedIntent = fixture.Scenario.Aggregate.ClaimCreation(Root(fixture.Scenario.Aggregate, changed, changedContent),
-            Target(changed.TemplateId), changedContent, Response());
+            changed, changedContent, Response());
 
         // Assert
         Assert.True(repeated.IsSuccess, repeated.Error?.Message);
@@ -88,10 +88,36 @@ public sealed class MethodologyTemplateNameClaimTests
         };
 
         // Act
-        var result = scenario.Aggregate.ClaimCreation(operation, Target(intent.TemplateId), content, Response());
+        var result = scenario.Aggregate.ClaimCreation(operation, intent, content, Response());
 
         // Assert
         Assert.False(result.IsSuccess);
+        Assert.Empty(scenario.PendingEvents);
+        Assert.Null(scenario.Aggregate.Holder);
+    }
+
+    [Fact]
+    public void ShouldRefuseWithoutFactGivenFrozenCreationDoesNotNameThisAuthorityOrActor()
+    {
+        // Arrange
+        var intent = Intent() with { Name = "Another methodology" };
+        var scenario = Scenario(intent.CommandId);
+        var content = Content(intent, MethodologyTemplateNameClaim.CreationSchema);
+        var operation = Root(scenario.Aggregate, intent, content);
+
+        // Act
+        var wrongName = scenario.Aggregate.ClaimCreation(operation, intent, content, Response());
+        var original = intent with { Name = Name };
+        var originalContent = Content(original, MethodologyTemplateNameClaim.CreationSchema);
+        var wrongActor = Root(scenario.Aggregate, original, originalContent) with
+        {
+            Actor = ActorReference.ForPlatformOperator(Uuid.CreateVersion4(), "Another operator"),
+        };
+        var forgedActor = scenario.Aggregate.ClaimCreation(wrongActor, original, originalContent, Response());
+
+        // Assert
+        Assert.False(wrongName.IsSuccess);
+        Assert.False(forgedActor.IsSuccess);
         Assert.Empty(scenario.PendingEvents);
         Assert.Null(scenario.Aggregate.Holder);
     }
@@ -137,6 +163,30 @@ public sealed class MethodologyTemplateNameClaimTests
     }
 
     [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void ShouldRefuseFalseConflictWithoutFactGivenCommittedCreationMatchesIntent(bool differentEventId)
+    {
+        // Arrange
+        var claim = Claimed();
+        var existing = new MethodologyTemplateCreatedV4(claim.Intent.TemplateId, claim.Intent.Name,
+            claim.Intent.Purpose, claim.Intent.CreatedBy);
+        existing.AttachMetadata(new DomainEventMetadata(differentEventId ? Uuid.CreateVersion4() : claim.Fact.Metadata.EventId,
+            claim.Intent.TemplateId, 1, Now));
+        var refusal = Refusal(claim, existing);
+        var scenario = Scenario(refusal.Operation.LogicalId).Given(claim.Scenario.PendingEvents.ToArray());
+
+        // Act
+        var result = scenario.Aggregate.RefuseCreation(refusal.Operation, claim.Fact, claim.Intent, existing,
+            refusal.Proofs, refusal.Content);
+
+        // Assert
+        Assert.False(result.IsSuccess);
+        Assert.Empty(scenario.PendingEvents);
+        Assert.Equal(Target(claim.Intent.TemplateId), scenario.Aggregate.Holder);
+    }
+
+    [Theory]
     [InlineData("claim_event")]
     [InlineData("creation_event")]
     [InlineData("realm")]
@@ -176,7 +226,7 @@ public sealed class MethodologyTemplateNameClaimTests
     }
 
     [Fact]
-    public void ShouldKeepRefusalRetryFactFreeGivenNameReleasedAndAcquiredByAnotherLine()
+    public void ShouldKeepOldAdmissionAndRefusalRetriesFactFreeGivenNameReleasedAndAcquiredByAnotherLine()
     {
         // Arrange
         var original = Claimed();
@@ -187,7 +237,7 @@ public sealed class MethodologyTemplateNameClaimTests
         var next = Intent();
         var nextContent = Content(next, MethodologyTemplateNameClaim.CreationSchema);
         var reacquired = Scenario(next.CommandId).Given(original.Scenario.PendingEvents.Concat(released.PendingEvents).ToArray());
-        Assert.True(reacquired.Aggregate.ClaimCreation(Root(reacquired.Aggregate, next, nextContent), Target(next.TemplateId),
+        Assert.True(reacquired.Aggregate.ClaimCreation(Root(reacquired.Aggregate, next, nextContent), next,
             nextContent, Response()).IsSuccess);
         var replay = Scenario(refusal.Operation.LogicalId).Given(original.Scenario.PendingEvents.Concat(released.PendingEvents)
             .Concat(reacquired.PendingEvents).ToArray());
@@ -195,11 +245,17 @@ public sealed class MethodologyTemplateNameClaimTests
         // Act
         var repeated = replay.Aggregate.RefuseCreation(refusal.Operation, original.Fact, original.Intent,
             refusal.Existing, refusal.Proofs, refusal.Content);
+        var rootReplay = Scenario(original.Intent.CommandId).Given(original.Scenario.PendingEvents.Concat(released.PendingEvents)
+            .Concat(reacquired.PendingEvents).ToArray());
+        var oldAdmission = rootReplay.Aggregate.ClaimCreation(original.Operation, original.Intent, original.Content, Response());
 
         // Assert
         Assert.True(repeated.IsSuccess, repeated.Error?.Message);
+        Assert.True(oldAdmission.IsSuccess, oldAdmission.Error?.Message);
         Assert.Empty(replay.PendingEvents);
+        Assert.Empty(rootReplay.PendingEvents);
         Assert.Equal(Target(next.TemplateId), replay.Aggregate.Holder);
+        Assert.Equal(Target(next.TemplateId), rootReplay.Aggregate.Holder);
     }
 
     [Fact]
@@ -210,7 +266,7 @@ public sealed class MethodologyTemplateNameClaimTests
         var next = original.Intent with { CommandId = Uuid.CreateVersion4(), Purpose = "Second intent" };
         var nextContent = Content(next, MethodologyTemplateNameClaim.CreationSchema);
         var repinned = Scenario(next.CommandId).Given(original.Scenario.PendingEvents.ToArray());
-        Assert.True(repinned.Aggregate.ClaimCreation(Root(repinned.Aggregate, next, nextContent), Target(next.TemplateId),
+        Assert.True(repinned.Aggregate.ClaimCreation(Root(repinned.Aggregate, next, nextContent), next,
             nextContent, Response()).IsSuccess);
         var refusal = Refusal(original, Existing(original.Intent, "Another methodology"));
         var scenario = Scenario(refusal.Operation.LogicalId).Given(original.Scenario.PendingEvents.Concat(repinned.PendingEvents).ToArray());
@@ -238,15 +294,15 @@ public sealed class MethodologyTemplateNameClaimTests
         var right = await store.Reader.HydrateAsync(new MethodologyTemplateNameClaim(Name, second.CommandId));
         var leftContent = Content(first, MethodologyTemplateNameClaim.CreationSchema);
         var rightContent = Content(second, MethodologyTemplateNameClaim.CreationSchema);
-        Assert.True(left.ClaimCreation(Root(left, first, leftContent), Target(first.TemplateId), leftContent, Response()).IsSuccess);
-        Assert.True(right.ClaimCreation(Root(right, second, rightContent), Target(second.TemplateId), rightContent, Response()).IsSuccess);
+        Assert.True(left.ClaimCreation(Root(left, first, leftContent), first, leftContent, Response()).IsSuccess);
+        Assert.True(right.ClaimCreation(Root(right, second, rightContent), second, rightContent, Response()).IsSuccess);
 
         // Act
         await store.Writer.SaveAsync(left, new RequestDispatchContext(RequestActor.System));
         await Assert.ThrowsAsync<EventStreamConcurrencyException>(() => store.Writer.SaveAsync(right,
             new RequestDispatchContext(RequestActor.System)).AsTask());
         var current = await store.Reader.HydrateAsync(new MethodologyTemplateNameClaim(Name, second.CommandId));
-        var refused = current.ClaimCreation(Root(current, second, rightContent), Target(second.TemplateId), rightContent, Response());
+        var refused = current.ClaimCreation(Root(current, second, rightContent), second, rightContent, Response());
 
         // Assert
         Assert.False(refused.IsSuccess);
@@ -268,7 +324,7 @@ public sealed class MethodologyTemplateNameClaimTests
         var content = Content(intent, MethodologyTemplateNameClaim.CreationSchema);
         var scenario = Scenario(intent.CommandId);
         var operation = Root(scenario.Aggregate, intent, content);
-        Assert.True(scenario.Aggregate.ClaimCreation(operation, Target(intent.TemplateId), content, Response()).IsSuccess);
+        Assert.True(scenario.Aggregate.ClaimCreation(operation, intent, content, Response()).IsSuccess);
         return new ClaimedCreation(scenario, intent, content, operation,
             Assert.IsType<MethodologyTemplateNameClaimed>(Assert.Single(scenario.PendingEvents)));
     }
