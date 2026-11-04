@@ -163,6 +163,9 @@ public sealed class FindingAggregate : Aggregate
     /// <summary>The closure accepted and not yet closed or canceled, which seals action admission.</summary>
     public FindingClosureAccepted? PendingClosure => _pending;
 
+    /// <summary>The current unclosed proposal revision.</summary>
+    public FindingClosureProposed? ClosureProposal => _latest as FindingClosureProposed;
+
     /// <summary>The closure fact of the current generation; null while open or after a reopen.</summary>
     public FindingClosedV2? Closed => _closed;
 
@@ -227,6 +230,32 @@ public sealed class FindingAggregate : Aggregate
         return _closed is null
             ? Fail(CommandFailure.StateConflict("Only a closed finding can be reopened."))
             : Result.Success;
+    }
+
+    /// <summary>Records a proposal using the finding's own resolved action set.</summary>
+    public Result ProposeClosure(OperationProvenance operation, Uuid closureId, long previousProposalRevision,
+        FindingClosureTerms terms, ImmutableSelectionManifest actions, ImmutableContentRef firstResponse,
+        ImmutableContentRef operationResult)
+    {
+        ArgumentNullException.ThrowIfNull(operation);
+        return Fail(CommandFailure.StateConflict($"Closure proposal for {_findingId} is not implemented."));
+    }
+
+    /// <summary>The proposer withdraws the exact current proposal.</summary>
+    public Result WithdrawClosure(OperationProvenance operation, Uuid closureId, long proposalRevision,
+        ImmutableContentRef firstResponse, ImmutableContentRef operationResult)
+    {
+        ArgumentNullException.ThrowIfNull(operation);
+        return Fail(CommandFailure.StateConflict($"Closure withdrawal for {_findingId} is not implemented."));
+    }
+
+    /// <summary>Returns a proposal or admits its exact independent review to the existing final proof path.</summary>
+    public Result ReviewClosure(OperationProvenance operation, Uuid closureId, long proposalRevision, bool approve,
+        string? comments, SeparationOfDutiesWaiverProof? waiver, ImmutableContentRef? intent,
+        ImmutableContentRef firstResponse, ImmutableContentRef operationResult)
+    {
+        ArgumentNullException.ThrowIfNull(operation);
+        return Fail(CommandFailure.StateConflict($"Closure review for {_findingId} is not implemented."));
     }
 
     /// <summary>Checks that the finding does not exist yet.</summary>
