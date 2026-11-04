@@ -52,8 +52,11 @@ public static class FindingHistory
         var actions = new HashSet<Uuid>();
         var resolvedActions = new HashSet<Uuid>();
         var closures = new HashSet<Uuid>();
+        var proposalRevisions = new Dictionary<Uuid, long>();
+        var proposalAuthors = new Dictionary<Uuid, HashSet<Uuid>>();
         long generation = 0;
         FindingClosureAccepted? pending = null;
+        FindingClosureProposed? proposal = null;
         FindingClosedV2? closed = null;
         for (var index = 0; index < facts.Count; index++)
         {
@@ -63,7 +66,7 @@ public static class FindingHistory
                 throw Invalid("The finding history has another owner or repeats a logical operation.");
             var operation = native.Operation;
             var revision = index + 1L;
-            var writable = index > 0 && pending is null && closed is null;
+            var writable = index > 0 && pending is null && closed is null && proposal is null;
             var valid = false;
             switch (fact)
             {
@@ -111,17 +114,70 @@ public static class FindingHistory
                             nameof(RecordCorrectiveActionOutcome), null);
                     break;
                 case FindingClosureAccepted accepted:
-                    valid = writable && actions.Count > 0 && resolvedActions.Count == actions.Count && accepted.Owner == owner.Stream &&
+                    valid = index > 0 && pending is null && closed is null && resolvedActions.Count == actions.Count && accepted.Owner == owner.Stream &&
                         accepted.Revision == revision && accepted.Generation == generation &&
-                        NativeOwnerHistory.IsOwnRoot(owner, operation, nameof(CloseFinding), (ulong)index) &&
+                        (accepted.Review is null ? writable && actions.Count > 0 &&
+                            NativeOwnerHistory.IsOwnRoot(owner, operation, nameof(CloseFinding), (ulong)index) :
+                            proposal is not null && accepted.Review.ReviewedBy == operation.Actor &&
+                            accepted.Review.ReviewedAt == operation.AcceptedAt &&
+                            accepted.Intent.Schema == ClosureIntent.Schema &&
+                            FindingClosureProposalRules.CanReview(owner.TenantId, owner.FindingId, proposal,
+                                proposalAuthors[proposal.ClosureId], accepted.Review, true) &&
+                            NativeOwnerHistory.IsOwnRoot(owner, operation, nameof(ReviewFindingClosure), (ulong)index)) &&
                         closures.Add(operation.RootOperationId);
                     pending = accepted;
+                    break;
+                case FindingClosureProposed proposed:
+                    valid = writable && Scope(proposed.TenantId, proposed.ProgramId, proposed.FindingId) &&
+                        proposed.Revision == revision && proposed.RequestId == operation.LogicalId &&
+                        proposed.ClosureId != Uuid.Empty && resolvedActions.Count == actions.Count &&
+                        proposed.ProposalRevision == checked(proposalRevisions.GetValueOrDefault(proposed.ClosureId) + 1) &&
+                        FindingClosureProposalRules.MemberId(proposed.ProposedBy) != Uuid.Empty &&
+                        proposed.ProposedBy == operation.Actor && proposed.ProposedAt == operation.AcceptedAt &&
+                        FindingClosureProposalRules.ValidTerms(proposed.Terms) &&
+                        proposed.Terms.VerificationRationale == proposed.Terms.VerificationRationale.Trim() &&
+                        proposed.Terms.Rationale == proposed.Terms.Rationale.Trim() &&
+                        FindingClosureProposalRules.ValidActions(proposed.ActionsReliedOn, actions.Count) &&
+                        NativeOwnerHistory.IsOwnRoot(owner, operation, nameof(ProposeFindingClosure), (ulong)index);
+                    proposal = proposed;
+                    proposalRevisions[proposed.ClosureId] = proposed.ProposalRevision;
+                    if (!proposalAuthors.TryGetValue(proposed.ClosureId, out var authors))
+                    {
+                        authors = [];
+                        proposalAuthors.Add(proposed.ClosureId, authors);
+                    }
+                    authors.Add(FindingClosureProposalRules.MemberId(proposed.ProposedBy));
+                    break;
+                case FindingClosureWithdrawn withdrawn:
+                    valid = proposal is not null && pending is null && closed is null &&
+                        Scope(withdrawn.TenantId, withdrawn.ProgramId, withdrawn.FindingId) &&
+                        withdrawn.Revision == revision && withdrawn.RequestId == operation.LogicalId &&
+                        withdrawn.ClosureId == proposal.ClosureId && withdrawn.ProposalRevision == proposal.ProposalRevision &&
+                        withdrawn.WithdrawnBy == operation.Actor && withdrawn.WithdrawnAt == operation.AcceptedAt &&
+                        FindingClosureProposalRules.MemberId(withdrawn.WithdrawnBy) == FindingClosureProposalRules.MemberId(proposal.ProposedBy) &&
+                        NativeOwnerHistory.IsOwnRoot(owner, operation, nameof(WithdrawFindingClosure), (ulong)index);
+                    proposal = null;
+                    break;
+                case FindingClosureReturned returned:
+                    valid = proposal is not null && pending is null && closed is null &&
+                        Scope(returned.TenantId, returned.ProgramId, returned.FindingId) &&
+                        returned.Revision == revision && returned.RequestId == operation.LogicalId &&
+                        returned.Review.ReviewedBy == operation.Actor && returned.Review.ReviewedAt == operation.AcceptedAt &&
+                        FindingRules.IsBoundedText(returned.Comments, FindingRules.MaximumTextLength) && returned.Comments == returned.Comments.Trim() &&
+                        FindingClosureProposalRules.CanReview(owner.TenantId, owner.FindingId, proposal,
+                            proposalAuthors[proposal.ClosureId], returned.Review, false) &&
+                        NativeOwnerHistory.IsOwnRoot(owner, operation, nameof(ReviewFindingClosure), (ulong)index);
+                    proposal = null;
                     break;
                 case FindingClosedV2 finished:
                     valid = pending is not null && Scope(finished.TenantId, finished.ProgramId, finished.FindingId) &&
                         finished.Revision == revision && finished.FindingGeneration == generation &&
-                        finished.Intent == pending.Intent && Child(operation, pending, nameof(CompleteFindingClosure));
+                        finished.Intent == pending.Intent && finished.Review == pending.Review &&
+                        (finished.Review is null || proposal is not null && finished.Review.ClosureId == proposal.ClosureId &&
+                            finished.Review.ProposalRevision == proposal.ProposalRevision) &&
+                        Child(operation, pending, nameof(CompleteFindingClosure));
                     pending = null;
+                    proposal = null;
                     closed = finished;
                     break;
                 case FindingClosureCanceled canceled:
@@ -134,6 +190,9 @@ public static class FindingHistory
                     valid = index > 0 && closed is not null && Scope(reopened.TenantId, reopened.ProgramId,
                         reopened.FindingId) && reopened.Revision == revision &&
                         reopened.ReopenedBy == operation.Actor && reopened.ReopenedAt == operation.AcceptedAt &&
+                        FindingRules.IsBoundedText(reopened.Reason, FindingRules.MaximumTextLength) &&
+                        (reopened.PreviousClosureId is null || reopened.PreviousClosureId == (closed.Review?.ClosureId ?? closed.RequestId)) &&
+                        (reopened.PreviousProposalRevision is null || reopened.PreviousProposalRevision == closed.Review?.ProposalRevision) &&
                         NativeOwnerHistory.IsOwnRoot(owner, operation, nameof(ReopenFinding), (ulong)index);
                     closed = null;
                     generation++;
@@ -145,6 +204,7 @@ public static class FindingHistory
         if (generation != owner.Generation || actions.Count != owner.AdmittedCount ||
             actions.Count - resolvedActions.Count != owner.UnresolvedActionCount ||
             pending?.Metadata.EventId != owner.PendingClosure?.Metadata.EventId ||
+            proposal?.Metadata.EventId != owner.ClosureProposal?.Metadata.EventId ||
             closed?.Metadata.EventId != owner.Closed?.Metadata.EventId)
             throw Invalid("The finding history does not reproduce current compact authority.");
         return new FindingHistorySnapshot(facts);
