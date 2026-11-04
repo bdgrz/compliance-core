@@ -92,6 +92,8 @@ public sealed class GetMemberAccessHandler(ITenantMembershipDirectoryReader memb
         var paths = new List<MemberAccessPath>(edges.Count);
         foreach (var edge in edges)
         {
+            if (TeamRoleScopes.Normalize(tenantId, edge.Scope).Kind != AccessGrantScopeKind.Organization)
+                continue;
             var team = await teams.GetAsync(request.TenantId, edge.TeamId, ct).ConfigureAwait(false);
             var roleView = await roles.GetAsync(request.TenantId, edge.RoleId, ct).ConfigureAwait(false);
             if (team is null || roleView is null)
@@ -272,7 +274,7 @@ public sealed class GetMemberAccessHandler(ITenantMembershipDirectoryReader memb
                 member.MembershipEpisodeId != episodeId)
                 continue;
             var teamRole = await reader.HydrateAsync(new TeamRole(tenantId, edge.TeamId,
-                    edge.RoleId), ct).ConfigureAwait(false);
+                    edge.RoleId, scope: edge.Scope), ct).ConfigureAwait(false);
             if (!teamRole.IsAssigned)
                 continue;
             var role = await reader.HydrateAsync(new Role(tenantId, edge.RoleId), ct)

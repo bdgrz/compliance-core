@@ -1,4 +1,5 @@
 using System.Globalization;
+using Bdgrz.Compliance.Features.AccessControl.Models;
 using Cntryl.Portia;
 using Bdgrz.Compliance.Features.AccessControl.Aggregates;
 namespace Bdgrz.Compliance.Features.AccessControl.Services;
@@ -20,8 +21,14 @@ static class RbacIds
     public static Uuid TeamMember(Uuid tenantId, Uuid teamId, Uuid memberId) =>
         Uuid.CreateVersion5(TeamMemberNamespaceId, $"{tenantId}\n{teamId}\n{memberId}");
 
-    public static Uuid TeamRole(Uuid tenantId, Uuid teamId, Uuid roleId) =>
-        Uuid.CreateVersion5(TeamRoleNamespaceId, $"{tenantId}\n{teamId}\n{roleId}");
+    public static Uuid TeamRole(Uuid tenantId, Uuid teamId, Uuid roleId, AccessGrantScope? scope = null)
+    {
+        var normalized = TeamRoleScopes.Normalize(tenantId, scope);
+        var identity = $"{tenantId}\n{teamId}\n{roleId}";
+        if (normalized.Kind != AccessGrantScopeKind.Organization || normalized.Id != tenantId || normalized.ResourceType is not null)
+            identity += "\n" + TeamRoleScopes.Key(normalized);
+        return Uuid.CreateVersion5(TeamRoleNamespaceId, identity);
+    }
 
     public static Uuid RolePermission(Uuid tenantId, Uuid roleId, string permission) =>
         Uuid.CreateVersion5(RolePermissionNamespaceId, $"{tenantId}\n{roleId}\n{permission}");

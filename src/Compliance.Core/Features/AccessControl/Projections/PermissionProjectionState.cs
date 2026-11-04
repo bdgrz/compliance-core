@@ -124,10 +124,10 @@ sealed class PermissionProjectionState
                 RolePermissions.Remove(new RolePermissionEdge(rolePermission.RoleId, rolePermission.Permission));
                 break;
             case TeamRoleAssigned teamRole:
-                TeamRoles.Add(new TeamRoleEdge(teamRole.TeamId, teamRole.RoleId));
+                TeamRoles.Add(new TeamRoleEdge(teamRole.TeamId, teamRole.RoleId, TeamRoleScopes.Normalize(teamRole.TenantId, teamRole.Scope)));
                 break;
             case TeamRoleRemoved teamRole:
-                TeamRoles.Remove(new TeamRoleEdge(teamRole.TeamId, teamRole.RoleId));
+                TeamRoles.Remove(new TeamRoleEdge(teamRole.TeamId, teamRole.RoleId, TeamRoleScopes.Normalize(teamRole.TenantId, teamRole.Scope)));
                 break;
         }
         Revision = checked(Revision + 1);
@@ -139,7 +139,8 @@ sealed class PermissionProjectionState
             .Where(item => Members.Contains(item.MemberId) && Teams.Contains(item.TeamId) &&
                 GetMembershipEpisodeId(item.MemberId) == item.MembershipEpisodeId);
         var activeTeamRoles = TeamRoles
-            .Where(item => Teams.Contains(item.TeamId) && Roles.Contains(item.RoleId))
+            .Where(item => Teams.Contains(item.TeamId) && Roles.Contains(item.RoleId) &&
+                TeamRoleScopes.Normalize(TenantId, item.Scope).Kind == AccessGrantScopeKind.Organization)
             .ToLookup(item => item.TeamId);
         var rolePermissions = RolePermissions.ToLookup(item => item.RoleId);
         var grants = new HashSet<PermissionGrant>();
@@ -168,7 +169,8 @@ sealed class PermissionProjectionState
             .SelectMany(item => rolesByTeam[item.TeamId].Select(role => new MemberAccessEdge(
                 item.TeamId, role.RoleId, permissionsByRole[role.RoleId]
                     .Select(permission => permission.Permission)
-                    .Distinct(StringComparer.Ordinal).Order(StringComparer.Ordinal).ToArray())))
+                    .Distinct(StringComparer.Ordinal).Order(StringComparer.Ordinal).ToArray(),
+                TeamRoleScopes.Normalize(TenantId, role.Scope))))
             .OrderBy(item => item.TeamId.ToString(), StringComparer.Ordinal)
             .ThenBy(item => item.RoleId.ToString(), StringComparer.Ordinal)
             .ToArray();

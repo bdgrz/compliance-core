@@ -67,11 +67,47 @@ public interface IAccessGrantScopePermissionAuthorizer
 sealed class AccessGrantPermissionAuthorizer(IAccessGrantDirectory grants,
     ITenantMembershipDirectoryReader memberships, ITeamMemberDirectoryReader teamMembers,
     IRolePermissionDirectoryReader rolePermissions, IAggregateReader reader, TimeProvider clock,
-    IMemberAccessEligibility sourceMember)
+    IMemberAccessEligibility sourceMember, IDomainEventReader? events = null)
     : IAccessGrantPermissionAuthorizer, IAccessGrantScopePermissionAuthorizer,
         IAccessGrantRolePermissionAuthorizer
 {
     const int PageSize = 200;
+
+    public async ValueTask<bool> IsAllowedAsOrganizationRoleAsync(Uuid tenantId, Uuid userId,
+        Uuid memberId, Uuid roleId, string permission, CancellationToken ct = default)
+    {
+        if (events is null || tenantId == Uuid.Empty || userId == Uuid.Empty || roleId == Uuid.Empty ||
+            memberId != RbacIds.Member(tenantId, userId) || string.IsNullOrWhiteSpace(permission))
+            return false;
+        var membership = await memberships.GetAsync(tenantId.ToString(), userId, ct).ConfigureAwait(false);
+        if (membership is not { Affiliation: "client_personnel", IsSuspended: false, IsDeprovisioned: false } ||
+            membership.TenantId != tenantId || membership.UserId != userId ||
+            !await sourceMember.IsEligibleAsync(tenantId, userId, ct).ConfigureAwait(false))
+            return false;
+        var episode = await sourceMember.GetMembershipEpisodeIdAsync(tenantId, memberId, ct).ConfigureAwait(false);
+        if (episode is null || episode == Uuid.Empty ||
+            !await HasCurrentRolePermissionAsync(tenantId, roleId, Permissions.Normalize(permission), ct).ConfigureAwait(false))
+            return false;
+        foreach (var assignment in await RbacRelationshipSource.LiveTeamsAsync(events, tenantId, roleId, ct).ConfigureAwait(false))
+        {
+            var assignmentScope = TeamRoleScopes.Normalize(tenantId, assignment.Scope);
+            if (assignmentScope.Kind != AccessGrantScopeKind.Organization || assignmentScope.Id != tenantId)
+                continue;
+            var team = await reader.HydrateAsync(new Team(tenantId, assignment.TeamId), ct).ConfigureAwait(false);
+            if (!team.IsActive)
+                continue;
+            var memberTeam = await reader.HydrateAsync(new TeamMember(tenantId, assignment.TeamId, memberId), ct)
+                .ConfigureAwait(false);
+            if (!memberTeam.IsAssigned || memberTeam.MembershipEpisodeId != episode)
+                continue;
+            var teamRole = await reader.HydrateAsync(new TeamRole(tenantId, assignment.TeamId, roleId,
+                scope: assignmentScope), ct).ConfigureAwait(false);
+            if (teamRole.IsAssigned && teamRole.AssignmentId == assignment.AssignmentId &&
+                await sourceMember.IsEligibleAsync(tenantId, userId, ct).ConfigureAwait(false))
+                return true;
+        }
+        return false;
+    }
 
     public async ValueTask<bool> IsAllowedAsync(Uuid tenantId, Uuid userId, Uuid memberId,
         Uuid programId, string permission, CancellationToken ct = default)
