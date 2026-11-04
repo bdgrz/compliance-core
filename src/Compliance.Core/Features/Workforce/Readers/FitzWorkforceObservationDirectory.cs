@@ -87,17 +87,17 @@ sealed class FitzWorkforceObservationDirectory(IKvClient client)
             case WorkRelationshipStarted started:
                 await ApplyLifecycleAsync(started.TenantId, started.RelationshipId, started.WorkerIdentifier,
                     started.Revision, terms => terms with { LifecycleStatus = "active", StartDate = started.StartDate },
-                    null, started.StartDate, started.Actor, started.ChangedAt, ct).ConfigureAwait(false);
+                    null, started.StartDate, started.Actor, started.ChangedAt, [], ct).ConfigureAwait(false);
                 break;
             case WorkRelationshipLeaveStarted leave:
                 await ApplyLifecycleAsync(leave.TenantId, leave.RelationshipId, leave.WorkerIdentifier,
                     leave.Revision, terms => terms with { LifecycleStatus = "on_leave" },
-                    null, leave.FromDate, leave.Actor, leave.ChangedAt, ct).ConfigureAwait(false);
+                    null, leave.FromDate, leave.Actor, leave.ChangedAt, [], ct).ConfigureAwait(false);
                 break;
             case WorkRelationshipLeaveEnded returned:
                 await ApplyLifecycleAsync(returned.TenantId, returned.RelationshipId, returned.WorkerIdentifier,
                     returned.Revision, terms => terms with { LifecycleStatus = "active" },
-                    null, returned.ReturnDate, returned.Actor, returned.ChangedAt, ct).ConfigureAwait(false);
+                    null, returned.ReturnDate, returned.Actor, returned.ChangedAt, [], ct).ConfigureAwait(false);
                 break;
             case WorkRelationshipEnded ending:
                 await ApplyLifecycleAsync(ending.TenantId, ending.RelationshipId, ending.WorkerIdentifier,
@@ -106,7 +106,31 @@ sealed class FitzWorkforceObservationDirectory(IKvClient client)
                         LifecycleStatus = "ended",
                         EndDate = ending.EndDate,
                         EmploymentStatusReason = ending.Reason,
-                    }, "leaver", ending.EndDate, ending.Actor, ending.ChangedAt, ct).ConfigureAwait(false);
+                    }, "leaver", ending.EndDate, ending.Actor, ending.ChangedAt, [], ct).ConfigureAwait(false);
+                break;
+            case WorkRelationshipManagerChanged manager:
+                await ApplyLifecycleAsync(manager.TenantId, manager.RelationshipId, manager.WorkerIdentifier,
+                    manager.Revision, terms => terms with { ManagerPersonId = manager.ManagerPersonId },
+                    null, DateOnly.FromDateTime(manager.ChangedAt.UtcDateTime), manager.Actor, manager.ChangedAt,
+                    [], ct).ConfigureAwait(false);
+                break;
+            case WorkRelationshipDepartmentChanged department:
+                await ApplyLifecycleAsync(department.TenantId, department.RelationshipId, department.WorkerIdentifier,
+                    department.Revision, terms => terms with { Department = department.Department },
+                    "mover", DateOnly.FromDateTime(department.ChangedAt.UtcDateTime), department.Actor, department.ChangedAt,
+                    ["department"], ct).ConfigureAwait(false);
+                break;
+            case WorkRelationshipSponsorChanged sponsor:
+                await ApplyLifecycleAsync(sponsor.TenantId, sponsor.RelationshipId, sponsor.WorkerIdentifier,
+                    sponsor.Revision, terms => terms with { SponsorPersonId = sponsor.SponsorPersonId },
+                    "mover", DateOnly.FromDateTime(sponsor.ChangedAt.UtcDateTime), sponsor.Actor, sponsor.ChangedAt,
+                    ["sponsor"], ct).ConfigureAwait(false);
+                break;
+            case WorkRelationshipDatesCorrected dates:
+                await ApplyLifecycleAsync(dates.TenantId, dates.RelationshipId, dates.WorkerIdentifier,
+                    dates.Revision, terms => terms with { StartDate = dates.StartDate, EndDate = dates.EndDate },
+                    null, DateOnly.FromDateTime(dates.ChangedAt.UtcDateTime), dates.Actor, dates.ChangedAt,
+                    [], ct).ConfigureAwait(false);
                 break;
         }
     }
@@ -114,7 +138,7 @@ sealed class FitzWorkforceObservationDirectory(IKvClient client)
     async ValueTask ApplyLifecycleAsync(Uuid tenantId, Uuid relationshipId, string workerIdentifier,
         long revision, Func<WorkRelationshipTerms, WorkRelationshipTerms> change,
         string? observationKind, DateOnly effectiveDate, ActorReference actor, DateTimeOffset changedAt,
-        CancellationToken ct)
+        IReadOnlyList<string> changedFields, CancellationToken ct)
     {
         var current = await WorkforceObservationSchema.Relationships.GetAsync(Transaction, relationshipId, ct)
             .ConfigureAwait(false);
@@ -126,7 +150,7 @@ sealed class FitzWorkforceObservationDirectory(IKvClient client)
         await WorkforceObservationSchema.Relationships.ReplaceAsync(Transaction, current, next, ct)
             .ConfigureAwait(false);
         if (observationKind is not null)
-            await ObserveAsync(next, observationKind, effectiveDate, [], actor, changedAt, ct).ConfigureAwait(false);
+            await ObserveAsync(next, observationKind, effectiveDate, changedFields, actor, changedAt, ct).ConfigureAwait(false);
     }
 
     public async ValueTask<Page<WorkforceObservationView>> ListAsync(Uuid tenantId, string? kind,
@@ -152,8 +176,23 @@ sealed class FitzWorkforceObservationDirectory(IKvClient client)
         return view?.TenantId == tenantId ? view : null;
     }
 
-    public ValueTask<bool> HasActiveInternalRelationshipAsync(Uuid tenantId, Uuid personId,
-        CancellationToken ct = default) => ValueTask.FromResult(false);
+    public async ValueTask<bool> HasActiveInternalRelationshipAsync(Uuid tenantId, Uuid personId,
+        CancellationToken ct = default)
+    {
+        await using var tx = await BeginReadAsync(tenantId.ToString(), ct).ConfigureAwait(false);
+        string? cursor = null;
+        do
+        {
+            var page = await WorkforceObservationSchema.Relationships.QueryAsync(tx,
+                WorkforceObservationSchema.ByPerson.Query().WithPrefix(personId.ToString())
+                    .Take(200).After(cursor), ct).ConfigureAwait(false);
+            if (page.Items.Any(item => item.TenantId == tenantId && item.Terms.LifecycleStatus == "active" &&
+                    item.Terms.WorkerType is "employee" or "contractor"))
+                return true;
+            cursor = page.NextCursor;
+        } while (cursor is not null);
+        return false;
+    }
 
     public async ValueTask<IReadOnlyList<string>> ListRelationshipStatusesAsync(Uuid tenantId,
         Uuid personId, CancellationToken ct = default)

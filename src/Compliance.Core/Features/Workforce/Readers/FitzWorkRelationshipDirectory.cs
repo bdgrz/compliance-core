@@ -91,6 +91,26 @@ sealed class FitzWorkRelationshipDirectory(IKvClient client)
                         EmploymentStatusReason = ended.Reason,
                     }, ct).ConfigureAwait(false);
                 break;
+            case WorkRelationshipManagerChanged manager:
+                await ReplaceLifecycleAsync(manager.TenantId, manager.RelationshipId, manager.WorkerIdentifier,
+                    manager.Revision, manager.Actor, manager.ChangedAt,
+                    view => view with { ManagerPersonId = manager.ManagerPersonId }, ct).ConfigureAwait(false);
+                break;
+            case WorkRelationshipDepartmentChanged department:
+                await ReplaceLifecycleAsync(department.TenantId, department.RelationshipId, department.WorkerIdentifier,
+                    department.Revision, department.Actor, department.ChangedAt,
+                    view => view with { Department = department.Department }, ct).ConfigureAwait(false);
+                break;
+            case WorkRelationshipSponsorChanged sponsor:
+                await ReplaceLifecycleAsync(sponsor.TenantId, sponsor.RelationshipId, sponsor.WorkerIdentifier,
+                    sponsor.Revision, sponsor.Actor, sponsor.ChangedAt,
+                    view => view with { SponsorPersonId = sponsor.SponsorPersonId }, ct).ConfigureAwait(false);
+                break;
+            case WorkRelationshipDatesCorrected dates:
+                await ReplaceLifecycleAsync(dates.TenantId, dates.RelationshipId, dates.WorkerIdentifier,
+                    dates.Revision, dates.Actor, dates.ChangedAt,
+                    view => view with { StartDate = dates.StartDate, EndDate = dates.EndDate }, ct).ConfigureAwait(false);
+                break;
         }
     }
 
