@@ -80,8 +80,10 @@ public sealed class FindingCorrectiveActionOutcomeTests
         Assert.Empty(new AggregateScenario<FindingAggregate>(owner).PendingEvents);
     }
 
-    [Fact]
-    public void ShouldKeepExactRepeatedOutcomeAsNoOpGivenFindingAlreadyClosing()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void ShouldKeepExactRepeatedOutcomeAsNoOpGivenFindingAlreadyClosingOrClosed(bool closed)
     {
         // Arrange
         var owner = Planned(out var action);
@@ -91,6 +93,12 @@ public sealed class FindingCorrectiveActionOutcomeTests
         Assert.True(owner.RecordActionOutcome(operation, action, "completed", source, proof).IsSuccess);
         Assert.True(owner.AcceptClosure(Root(owner, Uuid.CreateVersion4(), nameof(CloseFinding), owner.Revision),
             NativeFacts.Ref(ClosureIntent.Schema), NativeFacts.Ref()).IsSuccess);
+        if (closed)
+            Assert.True(owner.CompleteClosure(owner.PendingClosure!.Operation with
+            {
+                LogicalId = Uuid.CreateVersion4(),
+                CommandKind = nameof(CompleteFindingClosure),
+            }, NativeFacts.Ref(), NativeFacts.Ref(), owner.PendingClosure!.Intent, NativeFacts.Ref()).IsSuccess);
         var revision = owner.Revision;
         new AggregateScenario<FindingAggregate>(owner).Given();
 
@@ -174,6 +182,37 @@ public sealed class FindingCorrectiveActionOutcomeTests
         Assert.Equal(RequestErrorKind.Validation, result.Error?.Kind);
         Assert.Equal(1, owner.UnresolvedActionCount);
         Assert.Empty(new AggregateScenario<FindingAggregate>(owner).PendingEvents);
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void ShouldPreserveClosureAdmissionRuleGivenPlanningAndClosureAreOrdered(bool closureFirst)
+    {
+        // Arrange
+        var owner = Planned(out var action);
+        var source = Source(owner, action);
+        Assert.True(owner.RecordActionOutcome(Report(owner, source), action, "completed", source, Proof()).IsSuccess);
+        new AggregateScenario<FindingAggregate>(owner).Given();
+        var next = Uuid.CreateVersion4();
+
+        // Act
+        var first = closureFirst
+            ? owner.AcceptClosure(Root(owner, Uuid.CreateVersion4(), nameof(CloseFinding), owner.Revision),
+                NativeFacts.Ref(ClosureIntent.Schema), NativeFacts.Ref())
+            : owner.AdmitAction(Root(owner, next, nameof(AddCorrectiveAction), owner.Revision),
+                NativeFacts.Ref(ChildAdmissionIntent.Schema), NativeFacts.Ref());
+        var second = closureFirst
+            ? owner.AdmitAction(Root(owner, next, nameof(AddCorrectiveAction), owner.Revision),
+                NativeFacts.Ref(ChildAdmissionIntent.Schema), NativeFacts.Ref())
+            : owner.AcceptClosure(Root(owner, Uuid.CreateVersion4(), nameof(CloseFinding), owner.Revision),
+                NativeFacts.Ref(ClosureIntent.Schema), NativeFacts.Ref());
+
+        // Assert
+        Assert.True(first.IsSuccess);
+        Assert.Equal(RequestErrorKind.Conflict, second.Error?.Kind);
+        Assert.Single(new AggregateScenario<FindingAggregate>(owner).PendingEvents);
+        Assert.Equal(closureFirst ? 0 : 1, owner.UnresolvedActionCount);
     }
 
     static FindingAggregate Planned(out Uuid action)

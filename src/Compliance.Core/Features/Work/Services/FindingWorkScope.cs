@@ -53,6 +53,8 @@ static class FindingWorkScope
                 return (ev.TenantId, ev.ProgramId, ev.FindingId);
             case CorrectiveActionCancelled ev:
                 return (ev.TenantId, ev.ProgramId, ev.FindingId);
+            case FindingCorrectiveActionResolved ev:
+                return (ev.TenantId, ev.ProgramId, ev.FindingId);
             case CorrectiveActionAdmitted ev:
                 var tenant = Uuid.Parse(ev.Owner.Realm, System.Globalization.CultureInfo.InvariantCulture);
                 var (intent, authored) = await findings.ReadAdmissionAsync(tenant, ev, ct).ConfigureAwait(false);
