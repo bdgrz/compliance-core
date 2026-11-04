@@ -139,7 +139,7 @@ public sealed class WorkRelationshipProvenanceTests
     [Theory]
     [InlineData("hris")]
     [InlineData("idp")]
-    public async Task ShouldProjectExternalProvenanceWithoutReplacingWorkerIdentifier(string kind)
+    public async Task ShouldProjectExternalProvenanceWithoutReplacingWorkerIdentifierGivenExternalSource(string kind)
     {
         // Arrange
         var directory = new FitzWorkRelationshipDirectory(new InMemoryKvClient());
