@@ -10,7 +10,7 @@ namespace Bdgrz.Compliance.Features.FirmServices.Aggregates;
 public sealed class IndependenceRuleSet : Aggregate
 {
     public const string Area = "firm-independence-rule-set";
-    static readonly string[] ServiceKinds = ["readiness_assessment", "control_design", "control_implementation", "operating_controls", "vciso"];
+    static readonly string[] ServiceKinds = ["readiness_assessment", "control_design", "control_implementation", "control_operation", "vciso"];
     readonly long _version;
     readonly Uuid _selectedCommandId;
     readonly HashSet<Uuid> _commands = [];

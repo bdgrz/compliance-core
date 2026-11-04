@@ -9,7 +9,7 @@ public sealed record IndependenceRuleSetTerms(int LookBackMonths,
         new("readiness_assessment", "conditionally_compatible"),
         new("control_design", "impairing"),
         new("control_implementation", "impairing"),
-        new("operating_controls", "impairing"),
+        new("control_operation", "impairing"),
         new("vciso", "impairing"),
     ]);
 }

@@ -170,7 +170,7 @@ public sealed class NonattestServiceRecord : Aggregate
 
     public static bool ValidTerms(NonattestServiceTerms? terms) => terms is not null &&
         terms.ServiceKind is "readiness_assessment" or "control_design" or "control_implementation" or
-            "operating_controls" or "vciso" && terms.StartedOn != default &&
+            "control_operation" or "vciso" && terms.StartedOn != default &&
         (terms.EndedOn is null || terms.EndedOn >= terms.StartedOn) && terms.EngagementId != Uuid.Empty;
 
     static bool ValidReason(string? reason) => !string.IsNullOrWhiteSpace(reason) && reason.Trim().Length <= 2000;
