@@ -29,6 +29,8 @@ using Bdgrz.Compliance.Features.Workforce.Services;
 using Bdgrz.Compliance.Features.AccessControl.Aggregates;
 using Bdgrz.Compliance.Features.Proofs.Models;
 using Bdgrz.Compliance.Features.Workforce.Events;
+using Bdgrz.Compliance.Features.Workforce.Commands;
+using Bdgrz.Compliance.Features.AccessControl.Events;
 namespace Bdgrz.Compliance.Features.Workforce.Aggregates;
 
 /// <summary>One native person: bounded current header/reference and one selected receipt; full values/history are external.</summary>
@@ -47,6 +49,8 @@ public sealed class Person : Aggregate
         On<PersonDetailsRevised>(ObserveNative);
         On<PersonDetailsChanged>(ObserveNative);
         On<PersonMembershipCorrelationRecorded>(ObserveNative);
+        On<PersonLinkedToMember>(ObserveNative);
+        On<PersonUnlinkedFromMember>(ObserveNative);
     }
     public Uuid TenantId { get; }
     public NativeAcceptance Acceptance { get; }
@@ -56,8 +60,16 @@ public sealed class Person : Aggregate
     public long Revision => Header?.Revision ?? 0;
     public Uuid? CorrelatedUserId => Header?.CorrelatedUserId;
     internal NativeReplayCommitment ReplayCut { get; } = new();
-    public Result Append(PersonPrepared prepared, OperationProvenance operation, ImmutableContentRef frozen)
+    public Result Append(PersonPrepared prepared, OperationProvenance operation, ImmutableContentRef frozen,
+        VerifiedSourceProof<MemberPersonLinkAdmitted>? admission = null)
     {
+        if (operation.CommandKind == nameof(LinkPersonToMember) &&
+            (admission is null || prepared.Mutation.MemberLink is not { } link || admission.Facts.TenantId != TenantId ||
+                admission.Facts.PersonId != Id || admission.Facts.UserId != link.UserId || admission.Facts.MemberId != link.MemberId ||
+                admission.Facts.LinkId != operation.LogicalId || admission.Facts.LinkId != link.LinkId ||
+                admission.Facts.Generation != link.Generation || admission.EventId != link.AdmissionEventId ||
+                admission.Source != Member.ForVerification(TenantId, link.MemberId).Stream))
+            return Result.Failure(new RequestError(RequestErrorKind.Conflict, "The person link requires its exact authoritative Member admission."));
         var ready = ReplayCut.Require(this, Acceptance, operation);
         if (!ready.IsSuccess)
             return ready;

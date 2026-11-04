@@ -6,10 +6,11 @@ using Bdgrz.Compliance.Features.Workforce.Models;
 using Bdgrz.Compliance.Features.Workforce.Projections;
 using Bdgrz.Compliance.Features.AccessControl.Readers;
 using Bdgrz.Compliance.Features.Workforce.Contracts;
+using Bdgrz.Compliance.Features.AccessControl.Aggregates;
 
 namespace Bdgrz.Compliance.Features.Workforce.Readers;
 
-sealed class CassiePersonDirectory(CassieProjectionDatabase database, PersonReader? people = null)
+sealed class CassiePersonDirectory(CassieProjectionDatabase database, PersonReader? people = null, IAggregateReader? members = null)
     : CassieWorkforceRepository(database, "PersonDirectoryV2", "people"),
         IPersonDirectoryReader, IPersonDirectoryProjection, IPersonMemberDisplayReader
 {
@@ -19,6 +20,16 @@ sealed class CassiePersonDirectory(CassieProjectionDatabase database, PersonRead
     {
         if (tenantId == Uuid.Empty || userId == Uuid.Empty)
             return null;
+        if (members is not null)
+        {
+            var member = await members.HydrateAsync(new Member(tenantId, userId), ct).ConfigureAwait(false);
+            if (member.LinkedPersonId is { } personId)
+            {
+                var person = await GetAsync(tenantId, personId, ct).ConfigureAwait(false);
+                return person?.MemberLinks?.Any(value => value.UserId == userId && value.MemberId == member.Id &&
+                    value.Generation == member.PersonLinkGeneration) == true ? person.DisplayName : null;
+            }
+        }
         await using var read = await OpenReadAsync(ct).ConfigureAwait(false);
         await using var command = read.CreateCommand("SELECT row_json FROM workforce_people WHERE projection_key = @scope AND correlated_user_id = @user ORDER BY model_id LIMIT 2");
         Bind(command, ("scope", LiveProjectionKey(tenantId)), ("user", userId.ToString()));

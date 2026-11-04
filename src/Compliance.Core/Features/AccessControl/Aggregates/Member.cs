@@ -543,7 +543,7 @@ public sealed class Member : Aggregate
             person.TenantId != _tenantId || link.UserId != _userId || link.MemberId != Id ||
             link.Generation != _personLinkGeneration || _personLinkAdmission is not { } admission ||
             link.LinkId != admission.LinkId || link.AdmissionEventId != admission.Metadata.EventId ||
-            person.PersonId != admission.PersonId || sourceOperation.RootOperationId != link.LinkId ||
+            person.PersonId != admission.PersonId || conclusion != "release" && sourceOperation.RootOperationId != link.LinkId ||
             (conclusion == "confirm" || conclusion == "cancel" ? _pendingPersonId : _pendingPersonId ?? _linkedPersonId) != person.PersonId)
             return Result.Failure(new RequestError(RequestErrorKind.Conflict, "The person conclusion must match the exact current member admission."));
         var reference = new NativeFactReference(source.Source, source.EventId, source.OwnerRevision);

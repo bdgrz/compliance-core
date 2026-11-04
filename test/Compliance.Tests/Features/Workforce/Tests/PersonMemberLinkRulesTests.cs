@@ -1,4 +1,5 @@
 using Bdgrz.Compliance.Features.AccessControl.Models;
+using Bdgrz.Compliance.Features.AccessControl.Services;
 using Bdgrz.Compliance.Features.Workforce.Models;
 using Bdgrz.Compliance.Features.Workforce.Rules;
 using Cntryl.Portia;
@@ -108,5 +109,9 @@ public sealed class PersonMemberLinkRulesTests
         return person;
     }
 
-    static PersonMemberLink Link() => new(Uuid.CreateVersion4(), Uuid.CreateVersion4(), Uuid.CreateVersion4(), 1, Uuid.CreateVersion4());
+    static PersonMemberLink Link()
+    {
+        var user = Uuid.CreateVersion4();
+        return new(user, RbacIds.Member(Tenant, user), Uuid.CreateVersion4(), 1, Uuid.CreateVersion4());
+    }
 }

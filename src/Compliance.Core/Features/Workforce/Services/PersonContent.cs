@@ -38,13 +38,17 @@ public static class PersonContent
         value.CorrelatedUserId, ValuesSha256(value.DisplayName, value.WorkEmail, value.PersonalContact), value.LastChangedBy, value.LastChangedAt);
     public static string ValuesSha256(string displayName, string? workEmail, PersonalContactDetails? contact) =>
         ContentDigest.OfJson(new PersonValues(displayName, workEmail, contact));
+    public static Task<PersonPrepared> FreezeAsync(IImmutableContentStore store, PersonReadSnapshot before,
+        PersonRules after, OperationProvenance operation, CancellationToken ct = default) =>
+        FreezeAsync(store, before, after, operation, null, ct);
+
     public static async Task<PersonPrepared> FreezeAsync(IImmutableContentStore store, PersonReadSnapshot before,
-        PersonRules after, OperationProvenance operation, CancellationToken ct = default)
+        PersonRules after, OperationProvenance operation, PersonMemberLink? memberLink, CancellationToken ct = default)
     {
         var view = after.Current ?? throw new ImmutableContentIntegrityException("The person mutation has no resulting values.");
-        var changed = after.PendingEvents.Count != 0;
+        var changed = after.HasChanges;
         var body = await NativeContent.WriteAsync(store, before.Owner.TenantId, ViewSchema, view, ct).ConfigureAwait(false);
-        var mutation = new PersonChangeContent(before.Owner.Header, before.Owner.CurrentContent, Header(view), body, operation.CommandKind, changed);
+        var mutation = new PersonChangeContent(before.Owner.Header, before.Owner.CurrentContent, Header(view), body, operation.CommandKind, changed, memberLink);
         var change = await NativeContent.WriteAsync(store, before.Owner.TenantId, ChangeSchema, mutation, ct).ConfigureAwait(false);
         var frozen = operation.CommandKind == nameof(RecordPerson)
             ? await NativeContent.FreezeAsync(store, before.Owner.TenantId, RegistrationSchema, new PersonRegistration(before.Owner.Id), ct).ConfigureAwait(false)
@@ -92,10 +96,18 @@ public static class PersonContent
                     operation.Actor, operation.AcceptedAt) is not null)
                     return false;
                 break;
+            case nameof(LinkPersonToMember):
+                if (value.Mutation.MemberLink is not { } added || rules.LinkMember(added, operation.Actor, operation.AcceptedAt) is not null)
+                    return false;
+                break;
+            case nameof(UnlinkPersonFromMember):
+                if (value.Mutation.MemberLink is not { } removed || rules.UnlinkMember(removed, operation.Actor, operation.AcceptedAt) is not null)
+                    return false;
+                break;
             default:
                 return false;
         }
-        return rules.Current == value.View && (rules.PendingEvents.Count != 0) == value.Changed;
+        return rules.Current is not null && ContentDigest.OfJson(rules.Current) == ContentDigest.OfJson(value.View) && rules.HasChanges == value.Changed;
     }
     public static DomainEvent Fact(PersonPrepared value, OperationProvenance operation, ImmutableContentRef frozen) => operation.CommandKind switch
     {
@@ -104,6 +116,10 @@ public static class PersonContent
         nameof(ChangePersonDetails) => new PersonDetailsChanged(Header(value.View), value.Content, value.Change,
             value.Changed, operation, frozen, value.Result, DetailChanges(value.BeforeView!, value.View)),
         nameof(CorrelatePersonMembership) => new PersonMembershipCorrelationRecorded(Header(value.View), value.Content, value.Change, value.Changed, operation, frozen, value.Result),
+        nameof(LinkPersonToMember) => new PersonLinkedToMember(Header(value.View), value.Content, value.Change,
+            value.Changed, operation, frozen, value.Result, value.Mutation.MemberLink!),
+        nameof(UnlinkPersonFromMember) => new PersonUnlinkedFromMember(Header(value.View), value.Content, value.Change,
+            value.Changed, operation, frozen, value.Result, value.Mutation.MemberLink!),
         _ => throw new ImmutableContentIntegrityException("Another person native command kind."),
     };
     public static PersonDetailChanges DetailChanges(PersonView before, PersonView after) => new(

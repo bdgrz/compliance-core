@@ -1,5 +1,6 @@
 using Cntryl.Portia;
 using Bdgrz.Compliance.Features.AccessControl.Contracts;
+using Bdgrz.Compliance.Features.AccessControl.Services;
 using Bdgrz.Compliance.Features.AccessControl.Models;
 using Bdgrz.Compliance.Features.AccessControl.Readers;
 using Bdgrz.Compliance.Features.AccessReviews.Contracts;
@@ -46,6 +47,7 @@ public sealed class PersonRules
     readonly Uuid _tenantId;
     readonly List<DomainEvent> _pending = [];
     bool _created;
+    bool _memberLinksChanged;
     long _revision;
     string? _initialDisplayName;
     string? _initialWorkEmail;
@@ -73,6 +75,7 @@ public sealed class PersonRules
     public Uuid? CorrelatedUserId => _correlatedUserId;
     public PersonView? Current { get; private set; }
     public IReadOnlyList<DomainEvent> PendingEvents => _pending;
+    public bool HasChanges => _pending.Count != 0 || _memberLinksChanged;
     void RaiseEvent(DomainEvent value)
     {
         Observe(value);
@@ -203,6 +206,47 @@ public sealed class PersonRules
             changedAt));
         return null;
     }
+
+    public CommandFailure? LinkMember(PersonMemberLink link, ActorReference actor, DateTimeOffset changedAt)
+    {
+        if (!_created)
+            return CommandFailure.MissingRecord("The person was not found.");
+        if (!ValidLink(link))
+            return CommandFailure.InvalidContent("A member link requires its exact authoritative admission.");
+        var links = Current!.MemberLinks ?? [];
+        var existing = links.FirstOrDefault(value => value.MemberId == link.MemberId);
+        if (existing is not null)
+            return existing == link ? null : CommandFailure.StateConflict("This member has another admitted link on the person.");
+        ChangeLinks(links.Append(link), actor, changedAt);
+        return null;
+    }
+
+    public CommandFailure? UnlinkMember(PersonMemberLink link, ActorReference actor, DateTimeOffset changedAt)
+    {
+        if (!_created)
+            return CommandFailure.MissingRecord("The person was not found.");
+        var links = Current!.MemberLinks ?? [];
+        if (!ValidLink(link) || !links.Contains(link))
+            return CommandFailure.StateConflict("The exact admitted member link was not found on the person.");
+        ChangeLinks(links.Where(value => value != link), actor, changedAt);
+        return null;
+    }
+
+    void ChangeLinks(IEnumerable<PersonMemberLink> links, ActorReference actor, DateTimeOffset changedAt)
+    {
+        _revision++;
+        _memberLinksChanged = true;
+        Current = Current! with
+        {
+            Revision = _revision,
+            MemberLinks = links.OrderBy(value => value.MemberId.ToString(), StringComparer.Ordinal).ToArray(),
+            LastChangedBy = actor,
+            LastChangedAt = changedAt,
+        };
+    }
+
+    bool ValidLink(PersonMemberLink? link) => link is not null && link.UserId != Uuid.Empty &&
+        link.MemberId == RbacIds.Member(_tenantId, link.UserId) && link.LinkId != Uuid.Empty && link.Generation > 0 && link.AdmissionEventId != Uuid.Empty;
 
     static RequestError? Validate(string displayName, string? workEmail)
     {

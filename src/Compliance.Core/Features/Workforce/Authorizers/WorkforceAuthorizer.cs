@@ -39,6 +39,9 @@ sealed class WorkforceAuthorizer(ITenantMembershipDirectoryReader memberships,
     public async ValueTask<Result> AuthorizeAsync(IRequestContext<IWorkforceRequest> context,
         CancellationToken ct)
     {
+        if (context.Request is ApplyPersonMemberLink or ConcludeMemberPersonLink)
+            return RequestActor.IsSystem(context.Actor) ? Result.Success : Result.Failure(new RequestError(
+                RequestErrorKind.Forbidden, "Only committed member association reactions may apply internal link commands."));
         if (!UserIdentityClaims.TryGetBdgrzSubject(context.Actor, out var userId))
             return Result.Failure(new RequestError(RequestErrorKind.Unauthorized,
                 "The workforce roster requires a Bdgrz user identity."));
