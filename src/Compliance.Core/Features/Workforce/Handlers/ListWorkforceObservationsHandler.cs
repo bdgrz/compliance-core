@@ -44,7 +44,7 @@ public sealed class ListWorkforceObservationsHandler(IWorkforceObservationDirect
             page = await directory.ListAsync(request.TenantId, request.Kind, request.Limit ?? 50,
                 request.Cursor, ct).ConfigureAwait(false);
         }
-        catch (KvDirectoryQueryException)
+        catch (WorkforceDirectoryQueryException)
         {
             return Invalid("The workforce observation cursor is invalid.");
         }

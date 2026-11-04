@@ -44,7 +44,7 @@ public sealed class ListWorkforceSourceObservationsHandler(IWorkforceSourceDirec
             return Result<Page<WorkforceSourceView>>.Success(new Page<WorkforceSourceView>(
                 [.. page.Items.Select(item => WorkforceSourceRedaction.Apply(item, false, false))], page.NextCursor));
         }
-        catch (KvDirectoryQueryException)
+        catch (WorkforceDirectoryQueryException)
         {
             return Invalid("The source observation cursor is invalid.");
         }

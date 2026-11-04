@@ -1,3 +1,5 @@
+using Bdgrz.Compliance.Features.Workforce.Projections;
+using Bdgrz.Compliance.Tests.Testing;
 using Bdgrz.Compliance.Features.AccessControl.Models;
 using Bdgrz.Compliance.Features.Workforce.Events;
 using Bdgrz.Compliance.Features.Workforce.Models;
@@ -26,7 +28,8 @@ public sealed class ServiceIdentityNamedProjectionTests
     public async Task ShouldProjectExactNamedChangeGivenRecordedIdentity(string operation)
     {
         // Arrange
-        var directory = new FitzServiceIdentityDirectory(new InMemoryKvClient());
+        await using var database = await CassieRepositoryTestDatabase.OpenAsync(CassieWorkforceSchema.Statements);
+        await using var directory = new CassieServiceIdentityDirectory(database.Database);
         var initial = operation == "enable" ? "disabled" : "active";
         await ApplyAsync(directory, new ServiceIdentityRecorded(Tenant, Identity,
             new ServiceIdentityTerms("Bot", "bot", "Approved purpose", "production", initial,
@@ -71,7 +74,8 @@ public sealed class ServiceIdentityNamedProjectionTests
     public async Task ShouldPreserveSharedJustificationGivenSharedAccountProjection()
     {
         // Arrange
-        var directory = new FitzServiceIdentityDirectory(new InMemoryKvClient());
+        await using var database = await CassieRepositoryTestDatabase.OpenAsync(CassieWorkforceSchema.Statements);
+        await using var directory = new CassieServiceIdentityDirectory(database.Database);
         var recorded = new ServiceIdentityRecorded(Tenant, Identity,
             new ServiceIdentityTerms("Emergency admin", "shared_account", "Break glass", null, "active",
                 "person", Owner, Today.AddMonths(6), SharedJustification: "Emergency administration"), Author, Now);
@@ -86,7 +90,7 @@ public sealed class ServiceIdentityNamedProjectionTests
         Assert.Equal("Emergency administration", view.SharedJustification);
     }
 
-    static async Task ApplyAsync(FitzServiceIdentityDirectory directory, DomainEvent fact)
+    static async Task ApplyAsync(CassieServiceIdentityDirectory directory, DomainEvent fact)
     {
         await using var batch = await directory.BeginAsync(new ProjectionBatchContext(
             new CheckpointIdentity("ServiceIdentityDirectoryV1",

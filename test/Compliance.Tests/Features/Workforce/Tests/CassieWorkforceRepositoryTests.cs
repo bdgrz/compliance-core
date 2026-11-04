@@ -99,6 +99,51 @@ public sealed class CassieWorkforceRepositoryTests
         Assert.Equal(checkpoint, await scenario.Store.LoadCheckpointAsync(rebuild));
     }
 
+    [Theory]
+    [InlineData("person")]
+    [InlineData("relationship")]
+    [InlineData("identity")]
+    [InlineData("source")]
+    [InlineData("observation")]
+    [InlineData("resolution")]
+    public async Task ShouldRefuseWithoutRowsGivenFactOutsideActiveTenant(string kind)
+    {
+        // Arrange
+        await using var database = await CassieRepositoryTestDatabase.OpenAsync(CassieWorkforceSchema.Statements);
+        var tenant = Uuid.CreateVersion4();
+        await using var scenario = Create(database.Database, kind, tenant, Uuid.CreateVersion4());
+        var alienIdentity = new CheckpointIdentity(scenario.Identity.ComponentName,
+            EventStreamPattern.ForPattern(Uuid.CreateVersion4().ToString(), scenario.Identity.Pattern.Area));
+
+        // Act
+        Exception? failure;
+        await using (await scenario.Store.BeginAsync(new ProjectionBatchContext(alienIdentity, ProjectionCheckpoint.Start)))
+            failure = await Record.ExceptionAsync(async () => await scenario.Apply());
+
+        // Assert
+        Assert.IsType<InvalidOperationException>(failure);
+        Assert.False(await scenario.Exists(tenant));
+        Assert.Equal(ProjectionCheckpoint.Start, await scenario.Store.LoadCheckpointAsync(alienIdentity));
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("invalid")]
+    [InlineData("1.invalid.invalid.invalid")]
+    public async Task ShouldRejectCursorGivenMalformedContinuation(string cursor)
+    {
+        // Arrange
+        await using var database = await CassieRepositoryTestDatabase.OpenAsync(CassieWorkforceSchema.Statements);
+        await using var people = new CassiePersonDirectory(database.Database);
+
+        // Act
+        var failure = await Record.ExceptionAsync(async () => await people.ListAsync(Uuid.CreateVersion4(), 1, cursor));
+
+        // Assert
+        Assert.IsType<WorkforceDirectoryQueryException>(failure);
+        Assert.Equal("The workforce cursor is invalid.", failure!.Message);
+    }
+
     [Fact]
     public async Task ShouldRejectCursorGivenAnotherTenantOrDirectory()
     {

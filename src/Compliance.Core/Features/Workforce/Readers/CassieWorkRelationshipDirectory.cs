@@ -1,24 +1,14 @@
-using Cntryl.Fitz;
 using Cntryl.Fitz.Extensions;
 using Cntryl.Portia;
 using Bdgrz.Compliance.Features.AccessControl.Models;
-using Bdgrz.Compliance.Features.AccessControl.Readers;
-using Bdgrz.Compliance.Features.AuditPackages.Rules;
-using Bdgrz.Compliance.Features.Evidence.Models;
-using Bdgrz.Compliance.Features.NamedRecords.Processes;
-using Bdgrz.Compliance.Features.Operations.Models;
-using Bdgrz.Compliance.Features.Processes.Processes;
-using Bdgrz.Compliance.Features.Tenants.Processes;
-using Bdgrz.Compliance.Features.Exports.Commands;
-using Bdgrz.Compliance.Features.Work.Commands;
 using Bdgrz.Compliance.Features.Workforce.Events;
 using Bdgrz.Compliance.Features.Workforce.Models;
 using Bdgrz.Compliance.Features.Workforce.Projections;
+
 namespace Bdgrz.Compliance.Features.Workforce.Readers;
 
-sealed class FitzWorkRelationshipDirectory(IKvClient client)
-    : FitzKvProjectionStore(client, "kv://bdgrz/work-relationship-directory-v1/projection",
-            "WorkRelationshipDirectoryV1"),
+sealed class CassieWorkRelationshipDirectory(CassieProjectionDatabase database)
+    : CassieWorkforceRepository(database, "WorkRelationshipDirectoryV1", "work-relationships"),
         IWorkRelationshipDirectoryReader, IWorkRelationshipDirectoryProjection
 {
     public const string ManualSource = "manual";
@@ -33,8 +23,7 @@ sealed class FitzWorkRelationshipDirectory(IKvClient client)
         switch (domainEvent)
         {
             case WorkRelationshipRecorded recorded:
-                await WorkRelationshipDirectorySchema.Relationships.InsertAsync(Transaction,
-                    new WorkRelationshipView(recorded.TenantId, recorded.RelationshipId, 1,
+                await InsertRelationshipAsync(new WorkRelationshipView(recorded.TenantId, recorded.RelationshipId, 1,
                         recorded.PersonId, recorded.SourceWorkerId, recorded.Terms.WorkerType,
                         recorded.Terms.LifecycleStatus, recorded.Terms.StartDate,
                         recorded.Terms.EndDate, recorded.Terms.Department,
@@ -43,14 +32,12 @@ sealed class FitzWorkRelationshipDirectory(IKvClient client)
                         recorded.Terms.EmploymentStatusReason, Source: recorded.Source), ct).ConfigureAwait(false);
                 break;
             case WorkRelationshipRevised revised:
-                var current = await WorkRelationshipDirectorySchema.Relationships.GetAsync(
-                    Transaction, revised.RelationshipId, ct).ConfigureAwait(false);
+                var current = await FindRelationshipAsync(revised.RelationshipId, ct).ConfigureAwait(false);
                 if (current is null || current.TenantId != revised.TenantId ||
                     current.Revision + 1 != revised.Revision)
                     throw new InvalidOperationException(
                         "A work relationship revision cannot project before its predecessor.");
-                await WorkRelationshipDirectorySchema.Relationships.ReplaceAsync(Transaction,
-                    current, current with
+                await ReplaceRelationshipAsync(current with
                     {
                         Revision = revised.Revision,
                         WorkerType = revised.Terms.WorkerType,
@@ -118,31 +105,34 @@ sealed class FitzWorkRelationshipDirectory(IKvClient client)
         long revision, ActorReference actor, DateTimeOffset changedAt,
         Func<WorkRelationshipView, WorkRelationshipView> change, CancellationToken ct)
     {
-        var current = await WorkRelationshipDirectorySchema.Relationships.GetAsync(
-            Transaction, relationshipId, ct).ConfigureAwait(false);
+        var current = await FindRelationshipAsync(relationshipId, ct).ConfigureAwait(false);
         if (current is null || current.TenantId != tenantId || current.SourceWorkerId != workerIdentifier ||
             current.Revision + 1 != revision)
             throw new InvalidOperationException(
                 "A named work relationship fact cannot project before its matching predecessor.");
-        await WorkRelationshipDirectorySchema.Relationships.ReplaceAsync(Transaction, current,
-            change(current) with { Revision = revision, LastChangedBy = actor, LastChangedAt = changedAt }, ct)
+        await ReplaceRelationshipAsync(change(current) with { Revision = revision, LastChangedBy = actor, LastChangedAt = changedAt }, ct)
             .ConfigureAwait(false);
     }
 
-    public async ValueTask<WorkRelationshipView?> GetAsync(Uuid tenantId, Uuid relationshipId,
-        CancellationToken ct = default)
+    public async ValueTask<WorkRelationshipView?> GetAsync(Uuid tenantId, Uuid relationshipId, CancellationToken ct = default)
     {
-        await using var tx = await BeginReadAsync(tenantId.ToString(), ct).ConfigureAwait(false);
-        return await WorkRelationshipDirectorySchema.Relationships.GetAsync(tx, relationshipId, ct)
-            .ConfigureAwait(false);
+        var view = await ReadRowAsync("workforce_work_relationships", tenantId, relationshipId,
+            ComplianceCoreJsonContext.Default.WorkRelationshipView, ct).ConfigureAwait(false);
+        return view?.TenantId == tenantId ? view : null;
     }
 
-    public async ValueTask<Page<WorkRelationshipView>> ListAsync(Uuid tenantId, int limit,
-        string? cursor, CancellationToken ct = default)
-    {
-        await using var tx = await BeginReadAsync(tenantId.ToString(), ct).ConfigureAwait(false);
-        return await WorkRelationshipDirectorySchema.Relationships.QueryAsync(tx,
-            WorkRelationshipDirectorySchema.BySourceWorkerId.Query().Take(Math.Clamp(limit, 1, 200))
-                .After(cursor), ct).ConfigureAwait(false);
-    }
+    public ValueTask<Page<WorkRelationshipView>> ListAsync(Uuid tenantId, int limit,
+        string? cursor, CancellationToken ct = default) =>
+        ReadPageAsync("workforce_work_relationships", tenantId, ComplianceCoreJsonContext.Default.WorkRelationshipView, limit, cursor, "all", ct);
+
+    ValueTask<WorkRelationshipView?> FindRelationshipAsync(Uuid id, CancellationToken ct) =>
+        FindCurrentAsync("workforce_work_relationships", id, ComplianceCoreJsonContext.Default.WorkRelationshipView, ct);
+
+    ValueTask InsertRelationshipAsync(WorkRelationshipView row, CancellationToken ct) =>
+        InsertRowAsync("workforce_work_relationships", row.TenantId, row.RelationshipId, row,
+            ComplianceCoreJsonContext.Default.WorkRelationshipView, ct, ("sort_key", row.SourceWorkerId));
+
+    ValueTask ReplaceRelationshipAsync(WorkRelationshipView row, CancellationToken ct) =>
+        ReplaceRowAsync("workforce_work_relationships", row.TenantId, row.RelationshipId, row,
+            ComplianceCoreJsonContext.Default.WorkRelationshipView, ct, ("sort_key", row.SourceWorkerId));
 }

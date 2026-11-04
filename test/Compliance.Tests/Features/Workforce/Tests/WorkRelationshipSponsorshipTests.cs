@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.Workforce.Projections;
 using System.Security.Claims;
 using Bdgrz.Compliance.Features.AccessControl.Authorizers;
 using Bdgrz.Compliance.Features.AccessControl.Models;
@@ -31,7 +32,7 @@ public sealed class WorkRelationshipSponsorshipTests
         bool expected)
     {
         // Arrange
-        var fixture = await Fixture.CreateAsync();
+        await using var fixture = await Fixture.CreateAsync();
         if (status is not null)
             await fixture.SeedSponsorAsync(status, workerType);
 
@@ -50,7 +51,7 @@ public sealed class WorkRelationshipSponsorshipTests
     public async Task ShouldShowGapWithoutBlockingOtherChangesGivenSponsorLaterEnds()
     {
         // Arrange
-        var fixture = await Fixture.CreateAsync();
+        await using var fixture = await Fixture.CreateAsync();
         await fixture.SeedSponsorAsync("active");
         var before = await fixture.Sponsorship.EvaluateAsync(fixture.Tenant, [fixture.View], CancellationToken.None);
 
@@ -73,7 +74,7 @@ public sealed class WorkRelationshipSponsorshipTests
     public async Task ShouldClearGapGivenAnotherActiveInternalRelationshipForSponsor()
     {
         // Arrange
-        var fixture = await Fixture.CreateAsync();
+        await using var fixture = await Fixture.CreateAsync();
         await fixture.SeedSponsorAsync("ended");
         var before = await fixture.Sponsorship.EvaluateAsync(fixture.Tenant, [fixture.View], CancellationToken.None);
 
@@ -92,7 +93,7 @@ public sealed class WorkRelationshipSponsorshipTests
     public async Task ShouldRetainGapGivenEndedExternalRelationshipWithoutActiveSponsor()
     {
         // Arrange
-        var fixture = await Fixture.CreateAsync("ended");
+        await using var fixture = await Fixture.CreateAsync("ended");
 
         // Act
         var result = await fixture.Sponsorship.EvaluateAsync(fixture.Tenant, [fixture.View], CancellationToken.None);
@@ -106,7 +107,7 @@ public sealed class WorkRelationshipSponsorshipTests
     public async Task ShouldExcludeOrdinaryWorkersGivenNoSponsor()
     {
         // Arrange
-        var fixture = await Fixture.CreateAsync();
+        await using var fixture = await Fixture.CreateAsync();
         var ordinary = fixture.View with { WorkerType = "employee", SponsorPersonId = null, Unsponsored = true };
 
         // Act
@@ -121,7 +122,7 @@ public sealed class WorkRelationshipSponsorshipTests
     public async Task ShouldReturnTransientConflictGivenSponsorProjectionBehindSource()
     {
         // Arrange
-        var fixture = await Fixture.CreateAsync();
+        await using var fixture = await Fixture.CreateAsync();
         var pending = DomainEventSeed.Attach(new WorkRelationshipRecorded(fixture.Tenant,
             WorkRelationship.IdFor(fixture.Tenant, "SP-100"), fixture.Sponsor, "SP-100",
             new WorkRelationshipTerms("employee", "active", Start, null, null, null, null), Author, Now),
@@ -141,7 +142,7 @@ public sealed class WorkRelationshipSponsorshipTests
     public async Task ShouldRefuseForeignRelationshipGivenTenantMismatch()
     {
         // Arrange
-        var fixture = await Fixture.CreateAsync();
+        await using var fixture = await Fixture.CreateAsync();
 
         // Act
         var result = await fixture.Sponsorship.EvaluateAsync(Uuid.CreateVersion4(), [fixture.View], CancellationToken.None);
@@ -156,7 +157,7 @@ public sealed class WorkRelationshipSponsorshipTests
     public async Task ShouldShowGapWithoutPrivateFieldsGivenSingleOrListRead(bool list)
     {
         // Arrange
-        var fixture = await Fixture.CreateAsync();
+        await using var fixture = await Fixture.CreateAsync();
         var consistency = new WorkRelationshipReadConsistency(fixture.Primary, new OwnerReader(fixture.Owner), fixture.Source);
         var actor = new ClaimsPrincipal(new ClaimsIdentity([new Claim("iss", "bdgrz"),
             new Claim("sub", Uuid.CreateVersion4().ToString())], "BdgrzSession"));
@@ -185,22 +186,38 @@ public sealed class WorkRelationshipSponsorshipTests
         Assert.True(view.RestrictedFieldsRedacted);
     }
 
-    sealed class Fixture
+    sealed class Fixture : IAsyncDisposable
     {
+        readonly CassieRepositoryTestDatabase _database;
+
         public Uuid Tenant { get; } = Uuid.CreateVersion4();
         public Uuid Person { get; } = Uuid.CreateVersion4();
         public Uuid Sponsor { get; } = Uuid.CreateVersion4();
         public WorkRelationship Owner { get; private set; } = null!;
         public WorkRelationshipView View { get; private set; } = null!;
-        public FitzWorkRelationshipDirectory Primary { get; } = new(new InMemoryKvClient());
-        public FitzWorkforceObservationDirectory Observations { get; } = new(new InMemoryKvClient());
+        public CassieWorkRelationshipDirectory Primary { get; }
+        public CassieWorkforceObservationDirectory Observations { get; }
         public InMemoryEventStore Source { get; } = new();
         public WorkRelationshipSponsorship Sponsorship => new(Observations,
             new WorkforceObservationReadConsistency(Observations, Source));
 
+        Fixture(CassieRepositoryTestDatabase database)
+        {
+            _database = database;
+            Primary = new CassieWorkRelationshipDirectory(database.Database);
+            Observations = new CassieWorkforceObservationDirectory(database.Database);
+        }
+
+        public async ValueTask DisposeAsync()
+        {
+            await Primary.DisposeAsync();
+            await Observations.DisposeAsync();
+            await _database.DisposeAsync();
+        }
+
         public static async Task<Fixture> CreateAsync(string status = "active")
         {
-            var fixture = new Fixture();
+            var fixture = new Fixture(await CassieRepositoryTestDatabase.OpenAsync(CassieWorkforceSchema.Statements));
             fixture.Owner = new WorkRelationship(fixture.Tenant, WorkRelationship.IdFor(fixture.Tenant, "X-100"));
             var terms = new WorkRelationshipTerms("external_collaborator",
                 status, Start, status == "ended" ? Start.AddMonths(1) : null, "Engineering", Uuid.CreateVersion4(),

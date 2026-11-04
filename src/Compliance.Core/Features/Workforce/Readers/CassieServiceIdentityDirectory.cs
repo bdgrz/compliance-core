@@ -1,36 +1,18 @@
-using Cntryl.Fitz;
 using Cntryl.Fitz.Extensions;
 using Cntryl.Portia;
 using Bdgrz.Compliance.Features.AccessControl.Models;
-using Bdgrz.Compliance.Features.AccessControl.Readers;
-using Bdgrz.Compliance.Features.AccessControl.Services;
-using Bdgrz.Compliance.Features.AuditPackages.Rules;
-using Bdgrz.Compliance.Features.AuditorRequests.Models;
-using Bdgrz.Compliance.Features.Evidence.Models;
-using Bdgrz.Compliance.Features.NamedRecords.Processes;
-using Bdgrz.Compliance.Features.Operations.History;
-using Bdgrz.Compliance.Features.Operations.Models;
-using Bdgrz.Compliance.Features.Processes.Processes;
-using Bdgrz.Compliance.Features.Programs.Readers;
-using Bdgrz.Compliance.Features.Providers.History;
-using Bdgrz.Compliance.Features.SourceFacts.Rules;
-using Bdgrz.Compliance.Features.Tenants.Processes;
-using Bdgrz.Compliance.Features.UserIdentities.Models;
-using Bdgrz.Compliance.Features.Work.Models;
-using Bdgrz.Compliance.Features.AccessControl.Aggregates;
-using Bdgrz.Compliance.Features.Exports.Commands;
 using Bdgrz.Compliance.Features.Workforce.Events;
 using Bdgrz.Compliance.Features.Workforce.Models;
 using Bdgrz.Compliance.Features.Workforce.Projections;
+
 namespace Bdgrz.Compliance.Features.Workforce.Readers;
 
 /// <summary>
 ///     Projects governed non-human identities. Stored rows never carry ownership state: it depends
 ///     on the clock and the roster, so readers evaluate it on read.
 /// </summary>
-sealed class FitzServiceIdentityDirectory(IKvClient client)
-    : FitzKvProjectionStore(client, "kv://bdgrz/service-identity-directory-v1/projection",
-            "ServiceIdentityDirectoryV1"),
+sealed class CassieServiceIdentityDirectory(CassieProjectionDatabase database)
+    : CassieWorkforceRepository(database, "ServiceIdentityDirectoryV1", "service-identities"),
         IServiceIdentityDirectoryReader, IServiceIdentityDirectoryProjection
 {
     public const string ManualSource = "manual";
@@ -46,8 +28,7 @@ sealed class FitzServiceIdentityDirectory(IKvClient client)
         {
             case ServiceIdentityRecorded recorded:
                 var terms = recorded.Terms;
-                await ServiceIdentityDirectorySchema.Identities.InsertAsync(Transaction,
-                    new ServiceIdentityView(recorded.TenantId, recorded.ServiceIdentityId, 1,
+                await InsertIdentityAsync(new ServiceIdentityView(recorded.TenantId, recorded.ServiceIdentityId, 1,
                         terms.DisplayName, terms.IdentityKind, terms.Purpose, terms.Environment,
                         terms.LifecycleStatus, terms.OwnerKind, terms.OwnerId, terms.ReviewBy,
                         ManualSource, false, [], recorded.Actor, recorded.ChangedAt, terms.ExpiresOn,
@@ -55,14 +36,12 @@ sealed class FitzServiceIdentityDirectory(IKvClient client)
                     .ConfigureAwait(false);
                 break;
             case ServiceIdentityRevised revised:
-                var current = await ServiceIdentityDirectorySchema.Identities.GetAsync(Transaction,
-                    revised.ServiceIdentityId, ct).ConfigureAwait(false);
+                var current = await FindIdentityAsync(revised.ServiceIdentityId, ct).ConfigureAwait(false);
                 if (current is null || current.TenantId != revised.TenantId ||
                     current.Revision + 1 != revised.Revision)
                     throw new InvalidOperationException(
                         "A service identity revision cannot project before its predecessor.");
-                await ServiceIdentityDirectorySchema.Identities.ReplaceAsync(Transaction, current,
-                    current with
+                await ReplaceIdentityAsync(current with
                     {
                         Revision = revised.Revision,
                         DisplayName = revised.Terms.DisplayName,
@@ -119,10 +98,10 @@ sealed class FitzServiceIdentityDirectory(IKvClient client)
     async ValueTask ApplyNamedAsync(Uuid tenantId, Uuid identityId, long revision,
         Func<ServiceIdentityView, ServiceIdentityView> change, ActorReference actor, DateTimeOffset changedAt, CancellationToken ct)
     {
-        var current = await ServiceIdentityDirectorySchema.Identities.GetAsync(Transaction, identityId, ct).ConfigureAwait(false);
+        var current = await FindIdentityAsync(identityId, ct).ConfigureAwait(false);
         if (current is null || current.TenantId != tenantId || current.Revision + 1 != revision || current.LifecycleStatus == "retired")
             throw new InvalidOperationException("A named service identity fact requires its tenant's non-retired predecessor.");
-        await ServiceIdentityDirectorySchema.Identities.ReplaceAsync(Transaction, current, change(current) with
+        await ReplaceIdentityAsync(change(current) with
         {
             Revision = revision,
             LastChangedBy = actor,
@@ -130,20 +109,25 @@ sealed class FitzServiceIdentityDirectory(IKvClient client)
         }, ct).ConfigureAwait(false);
     }
 
-    public async ValueTask<ServiceIdentityView?> GetAsync(Uuid tenantId, Uuid serviceIdentityId,
-        CancellationToken ct = default)
+    public async ValueTask<ServiceIdentityView?> GetAsync(Uuid tenantId, Uuid serviceIdentityId, CancellationToken ct = default)
     {
-        await using var tx = await BeginReadAsync(tenantId.ToString(), ct).ConfigureAwait(false);
-        return await ServiceIdentityDirectorySchema.Identities.GetAsync(tx, serviceIdentityId, ct)
-            .ConfigureAwait(false);
+        var view = await ReadRowAsync("workforce_service_identities", tenantId, serviceIdentityId,
+            ComplianceCoreJsonContext.Default.ServiceIdentityView, ct).ConfigureAwait(false);
+        return view?.TenantId == tenantId ? view : null;
     }
 
-    public async ValueTask<Page<ServiceIdentityView>> ListAsync(Uuid tenantId, int limit,
-        string? cursor, CancellationToken ct = default)
-    {
-        await using var tx = await BeginReadAsync(tenantId.ToString(), ct).ConfigureAwait(false);
-        return await ServiceIdentityDirectorySchema.Identities.QueryAsync(tx,
-            ServiceIdentityDirectorySchema.ByDisplayName.Query().Take(Math.Clamp(limit, 1, 200))
-                .After(cursor), ct).ConfigureAwait(false);
-    }
+    public ValueTask<Page<ServiceIdentityView>> ListAsync(Uuid tenantId, int limit,
+        string? cursor, CancellationToken ct = default) =>
+        ReadPageAsync("workforce_service_identities", tenantId, ComplianceCoreJsonContext.Default.ServiceIdentityView, limit, cursor, "all", ct);
+
+    ValueTask<ServiceIdentityView?> FindIdentityAsync(Uuid id, CancellationToken ct) =>
+        FindCurrentAsync("workforce_service_identities", id, ComplianceCoreJsonContext.Default.ServiceIdentityView, ct);
+
+    ValueTask InsertIdentityAsync(ServiceIdentityView row, CancellationToken ct) =>
+        InsertRowAsync("workforce_service_identities", row.TenantId, row.ServiceIdentityId, row,
+            ComplianceCoreJsonContext.Default.ServiceIdentityView, ct, ("sort_key", row.DisplayName.ToUpperInvariant()));
+
+    ValueTask ReplaceIdentityAsync(ServiceIdentityView row, CancellationToken ct) =>
+        ReplaceRowAsync("workforce_service_identities", row.TenantId, row.ServiceIdentityId, row,
+            ComplianceCoreJsonContext.Default.ServiceIdentityView, ct, ("sort_key", row.DisplayName.ToUpperInvariant()));
 }

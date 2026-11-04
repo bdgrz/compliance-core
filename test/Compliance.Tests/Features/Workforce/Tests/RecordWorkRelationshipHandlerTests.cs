@@ -1,3 +1,4 @@
+using Bdgrz.Compliance.Features.Workforce.Projections;
 using System.Security.Claims;
 using Bdgrz.Compliance.Tests.Testing;
 using Cntryl.Fitz.Testing;
@@ -495,16 +496,19 @@ public sealed class RecordWorkRelationshipHandlerTests
     sealed class Scenario : IAsyncDisposable
     {
         readonly ServiceProvider _provider;
+        readonly CassieRepositoryTestDatabase _database;
         readonly AsyncServiceScope _scope;
         bool _sponsorProjected;
 
-        Scenario(ServiceProvider provider)
+        Scenario(ServiceProvider provider, CassieRepositoryTestDatabase database)
         {
             _provider = provider;
+            _database = database;
+            Roster = new CassieWorkforceObservationDirectory(database.Database);
             _scope = provider.CreateAsyncScope();
         }
 
-        public FitzWorkforceObservationDirectory Roster { get; } = new(new InMemoryKvClient());
+        public CassieWorkforceObservationDirectory Roster { get; }
         public Uuid TenantId { get; } = Uuid.CreateVersion4();
         public Uuid PersonId { get; } = Uuid.CreateVersion4();
         public Uuid ManagerId { get; } = Uuid.CreateVersion4();
@@ -524,7 +528,8 @@ public sealed class RecordWorkRelationshipHandlerTests
             services.AddPortia();
             services.AddPersonNativeFixtures();
             var scenario = new Scenario(services.BuildServiceProvider(
-                new ServiceProviderOptions { ValidateScopes = true }));
+                new ServiceProviderOptions { ValidateScopes = true }),
+                await CassieRepositoryTestDatabase.OpenAsync(CassieWorkforceSchema.Statements));
             foreach (var id in new[] { scenario.PersonId, scenario.ManagerId, scenario.OtherManagerId })
             {
                 var person = new PersonRules(scenario.TenantId, id);
@@ -622,6 +627,8 @@ public sealed class RecordWorkRelationshipHandlerTests
         {
             await _scope.DisposeAsync();
             await _provider.DisposeAsync();
+            await Roster.DisposeAsync();
+            await _database.DisposeAsync();
         }
     }
 

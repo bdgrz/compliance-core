@@ -1,34 +1,11 @@
-using Cntryl.Fitz;
+using System.Globalization;
 using Cntryl.Fitz.Extensions;
 using Cntryl.Portia;
 using Bdgrz.Compliance.Features.AccessControl.Models;
-using Bdgrz.Compliance.Features.AccessControl.Processes;
-using Bdgrz.Compliance.Features.AccessControl.Readers;
-using Bdgrz.Compliance.Features.Applications.Models;
-using Bdgrz.Compliance.Features.AuditPackages.Rules;
-using Bdgrz.Compliance.Features.AuditorRequests.Models;
-using Bdgrz.Compliance.Features.Evidence.Models;
-using Bdgrz.Compliance.Features.NamedRecords.Processes;
-using Bdgrz.Compliance.Features.Operations.Models;
-using Bdgrz.Compliance.Features.Processes.Processes;
-using Bdgrz.Compliance.Features.Programs.Readers;
-using Bdgrz.Compliance.Features.Providers.History;
-using Bdgrz.Compliance.Features.Readiness.Models;
-using Bdgrz.Compliance.Features.Responsibilities.Models;
-using Bdgrz.Compliance.Features.SourceFacts.Models;
-using Bdgrz.Compliance.Features.SourceFacts.Rules;
-using Bdgrz.Compliance.Features.Tenants.Processes;
-using Bdgrz.Compliance.Features.UserIdentities.Models;
-using Bdgrz.Compliance.Features.Workforce.Projections;
-using Bdgrz.Compliance.Features.Workforce.Services;
-using Bdgrz.Compliance.Features.AccessControl.Aggregates;
-using Bdgrz.Compliance.Features.AccessControl.Events;
-using Bdgrz.Compliance.Features.Exports.Commands;
-using Bdgrz.Compliance.Features.Incidents.Commands;
-using Bdgrz.Compliance.Features.Tenants.Authorizers;
-using Bdgrz.Compliance.Features.Work.Commands;
 using Bdgrz.Compliance.Features.Workforce.Events;
 using Bdgrz.Compliance.Features.Workforce.Models;
+using Bdgrz.Compliance.Features.Workforce.Projections;
+
 namespace Bdgrz.Compliance.Features.Workforce.Readers;
 
 /// <summary>
@@ -36,9 +13,8 @@ namespace Bdgrz.Compliance.Features.Workforce.Readers;
 ///     previous one (M0-D06). Observations are compliance work only: nothing here grants or revokes
 ///     platform access. Manager changes are restricted and never produce list-visible observations.
 /// </summary>
-sealed class FitzWorkforceObservationDirectory(IKvClient client)
-    : FitzKvProjectionStore(client, "kv://bdgrz/workforce-observations-v1/projection",
-            "WorkforceObservationsV1"),
+sealed class CassieWorkforceObservationDirectory(CassieProjectionDatabase database)
+    : CassieWorkforceRepository(database, "WorkforceObservationsV1", "work-relationships"),
         IWorkforceObservationDirectoryReader, IWorkforceObservationProjection
 {
     public ValueTask<ProjectionCheckpoint> LoadCheckpointAsync(Uuid tenantId,
@@ -54,7 +30,7 @@ sealed class FitzWorkforceObservationDirectory(IKvClient client)
                 var initial = new RosterRelationshipSnapshot(recorded.TenantId,
                     recorded.RelationshipId, recorded.PersonId, recorded.SourceWorkerId, 1,
                     recorded.Terms);
-                await WorkforceObservationSchema.Relationships.InsertAsync(Transaction, initial, ct)
+                await InsertSnapshotAsync(initial, ct)
                     .ConfigureAwait(false);
                 var ended = recorded.Terms.LifecycleStatus == "ended";
                 await ObserveAsync(initial, ended ? "leaver" : "joiner",
@@ -62,15 +38,13 @@ sealed class FitzWorkforceObservationDirectory(IKvClient client)
                     recorded.Actor, recorded.ChangedAt, ct).ConfigureAwait(false);
                 break;
             case WorkRelationshipRevised revised:
-                var current = await WorkforceObservationSchema.Relationships.GetAsync(Transaction,
-                    revised.RelationshipId, ct).ConfigureAwait(false);
+                var current = await FindSnapshotAsync(revised.RelationshipId, ct).ConfigureAwait(false);
                 if (current is null || current.TenantId != revised.TenantId ||
                     current.Revision + 1 != revised.Revision)
                     throw new InvalidOperationException(
                         "A work relationship revision cannot be observed before its predecessor.");
                 var next = current with { Revision = revised.Revision, Terms = revised.Terms };
-                await WorkforceObservationSchema.Relationships.ReplaceAsync(Transaction, current,
-                    next, ct).ConfigureAwait(false);
+                await ReplaceSnapshotAsync(next, ct).ConfigureAwait(false);
                 var wasEnded = current.Terms.LifecycleStatus == "ended";
                 var isEnded = revised.Terms.LifecycleStatus == "ended";
                 if (!wasEnded && isEnded)
@@ -140,75 +114,55 @@ sealed class FitzWorkforceObservationDirectory(IKvClient client)
         string? observationKind, DateOnly effectiveDate, ActorReference actor, DateTimeOffset changedAt,
         IReadOnlyList<string> changedFields, CancellationToken ct)
     {
-        var current = await WorkforceObservationSchema.Relationships.GetAsync(Transaction, relationshipId, ct)
+        var current = await FindSnapshotAsync(relationshipId, ct)
             .ConfigureAwait(false);
         if (current is null || current.TenantId != tenantId || current.SourceWorkerId != workerIdentifier ||
             current.Revision + 1 != revision)
             throw new InvalidOperationException(
                 "A named work relationship fact cannot be observed before its matching predecessor.");
         var next = current with { Revision = revision, Terms = change(current.Terms) };
-        await WorkforceObservationSchema.Relationships.ReplaceAsync(Transaction, current, next, ct)
+        await ReplaceSnapshotAsync(next, ct)
             .ConfigureAwait(false);
         if (observationKind is not null)
             await ObserveAsync(next, observationKind, effectiveDate, changedFields, actor, changedAt, ct).ConfigureAwait(false);
     }
 
-    public async ValueTask<Page<WorkforceObservationView>> ListAsync(Uuid tenantId, string? kind,
-        int limit, string? cursor, CancellationToken ct = default)
-    {
-        await using var tx = await BeginReadAsync(tenantId.ToString(), ct).ConfigureAwait(false);
-        var take = Math.Clamp(limit, 1, 200);
-        return kind is null
-            ? await WorkforceObservationSchema.Observations.QueryAsync(tx,
-                WorkforceObservationSchema.ByObservedAt.Query().Take(take).After(cursor), ct)
-                .ConfigureAwait(false)
-            : await WorkforceObservationSchema.Observations.QueryAsync(tx,
-                WorkforceObservationSchema.ByKind.Query().WithPrefix(kind).Take(take)
-                    .After(cursor), ct).ConfigureAwait(false);
-    }
+    public ValueTask<Page<WorkforceObservationView>> ListAsync(Uuid tenantId, string? kind,
+        int limit, string? cursor, CancellationToken ct = default) =>
+        kind is null
+            ? ReadPageAsync("workforce_observations", tenantId, ComplianceCoreJsonContext.Default.WorkforceObservationView,
+                limit, cursor, "all", ct)
+            : ReadPageAsync("workforce_observations", tenantId, ComplianceCoreJsonContext.Default.WorkforceObservationView,
+                limit, cursor, $"kind:{kind.Length}:{kind}", ct, filter: " AND kind = @kind", parameters: [("kind", kind)]);
 
     public async ValueTask<WorkforceObservationView?> GetAsync(Uuid tenantId, Uuid observationId,
         CancellationToken ct = default)
     {
-        await using var tx = await BeginReadAsync(tenantId.ToString(), ct).ConfigureAwait(false);
-        var view = await WorkforceObservationSchema.Observations.GetAsync(tx, observationId, ct)
-            .ConfigureAwait(false);
+        var view = await ReadRowAsync("workforce_observations", tenantId, observationId,
+            ComplianceCoreJsonContext.Default.WorkforceObservationView, ct).ConfigureAwait(false);
         return view?.TenantId == tenantId ? view : null;
     }
 
     public async ValueTask<bool> HasActiveInternalRelationshipAsync(Uuid tenantId, Uuid personId,
         CancellationToken ct = default)
     {
-        await using var tx = await BeginReadAsync(tenantId.ToString(), ct).ConfigureAwait(false);
-        string? cursor = null;
-        do
-        {
-            var page = await WorkforceObservationSchema.Relationships.QueryAsync(tx,
-                WorkforceObservationSchema.ByPerson.Query().WithPrefix(personId.ToString())
-                    .Take(200).After(cursor), ct).ConfigureAwait(false);
-            if (page.Items.Any(item => item.TenantId == tenantId && item.Terms.LifecycleStatus == "active" &&
-                    item.Terms.WorkerType is "employee" or "contractor"))
-                return true;
-            cursor = page.NextCursor;
-        } while (cursor is not null);
-        return false;
+        await using var read = await OpenReadAsync(ct).ConfigureAwait(false);
+        await using var command = read.CreateCommand("SELECT model_id FROM workforce_relationship_snapshots WHERE projection_key = @scope AND person_id = @person " +
+            "AND lifecycle_status = 'active' AND (worker_type = 'employee' OR worker_type = 'contractor') LIMIT 1");
+        Bind(command, ("scope", LiveProjectionKey(tenantId)), ("person", personId.ToString()));
+        return await command.ExecuteScalarAsync(ct).ConfigureAwait(false) is not null;
     }
 
     public async ValueTask<IReadOnlyList<string>> ListRelationshipStatusesAsync(Uuid tenantId,
         Uuid personId, CancellationToken ct = default)
     {
-        await using var tx = await BeginReadAsync(tenantId.ToString(), ct).ConfigureAwait(false);
+        await using var read = await OpenReadAsync(ct).ConfigureAwait(false);
+        await using var command = read.CreateCommand("SELECT lifecycle_status FROM workforce_relationship_snapshots WHERE projection_key = @scope AND person_id = @person ORDER BY model_id");
+        Bind(command, ("scope", LiveProjectionKey(tenantId)), ("person", personId.ToString()));
         var statuses = new List<string>();
-        string? cursor = null;
-        do
-        {
-            var page = await WorkforceObservationSchema.Relationships.QueryAsync(tx,
-                WorkforceObservationSchema.ByPerson.Query().WithPrefix(personId.ToString())
-                    .Take(200).After(cursor), ct).ConfigureAwait(false);
-            statuses.AddRange(page.Items.Where(item => item.TenantId == tenantId)
-                .Select(static item => item.Terms.LifecycleStatus));
-            cursor = page.NextCursor;
-        } while (cursor is not null);
+        await using var rows = await command.ExecuteReaderAsync(ct).ConfigureAwait(false);
+        while (await rows.ReadAsync(ct).ConfigureAwait(false))
+            statuses.Add(rows.GetString(0));
         return statuses;
     }
 
@@ -227,10 +181,28 @@ sealed class FitzWorkforceObservationDirectory(IKvClient client)
     ValueTask ObserveAsync(RosterRelationshipSnapshot relationship, string kind,
         DateOnly effectiveDate, IReadOnlyList<string> changedFields, ActorReference actor,
         DateTimeOffset observedAt, CancellationToken ct) =>
-        WorkforceObservationSchema.Observations.InsertAsync(Transaction,
+        InsertObservationAsync(
             new WorkforceObservationView(relationship.TenantId,
                 Uuid.CreateVersion5(relationship.RelationshipId,
                     $"observation:{relationship.Revision}"), kind, "open",
                 relationship.RelationshipId, relationship.PersonId, relationship.SourceWorkerId,
                 relationship.Revision, effectiveDate, changedFields, actor, observedAt), ct);
+
+    ValueTask<RosterRelationshipSnapshot?> FindSnapshotAsync(Uuid id, CancellationToken ct) =>
+        FindCurrentAsync("workforce_relationship_snapshots", id, ComplianceCoreJsonContext.Default.RosterRelationshipSnapshot, ct);
+
+    ValueTask InsertSnapshotAsync(RosterRelationshipSnapshot row, CancellationToken ct) =>
+        InsertRowAsync("workforce_relationship_snapshots", row.TenantId, row.RelationshipId, row,
+            ComplianceCoreJsonContext.Default.RosterRelationshipSnapshot, ct,
+            ("person_id", row.PersonId.ToString()), ("worker_type", row.Terms.WorkerType), ("lifecycle_status", row.Terms.LifecycleStatus));
+
+    ValueTask ReplaceSnapshotAsync(RosterRelationshipSnapshot row, CancellationToken ct) =>
+        ReplaceRowAsync("workforce_relationship_snapshots", row.TenantId, row.RelationshipId, row,
+            ComplianceCoreJsonContext.Default.RosterRelationshipSnapshot, ct,
+            ("person_id", row.PersonId.ToString()), ("worker_type", row.Terms.WorkerType), ("lifecycle_status", row.Terms.LifecycleStatus));
+
+    ValueTask InsertObservationAsync(WorkforceObservationView row, CancellationToken ct) =>
+        InsertRowAsync("workforce_observations", row.TenantId, row.ObservationId, row,
+            ComplianceCoreJsonContext.Default.WorkforceObservationView, ct,
+            ("sort_key", row.ObservedAt.UtcDateTime.ToString("yyyy-MM-ddTHH:mm:ss.fffffffZ", CultureInfo.InvariantCulture)), ("kind", row.Kind));
 }

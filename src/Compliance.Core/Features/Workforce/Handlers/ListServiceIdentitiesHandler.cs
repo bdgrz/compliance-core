@@ -42,7 +42,7 @@ public sealed class ListServiceIdentitiesHandler(IServiceIdentityDirectoryReader
             page = await directory.ListAsync(request.TenantId, request.Limit ?? 50,
                 request.Cursor, ct).ConfigureAwait(false);
         }
-        catch (KvDirectoryQueryException)
+        catch (WorkforceDirectoryQueryException)
         {
             return Result<Page<ServiceIdentityView>>.Failure(new RequestError(
                 RequestErrorKind.Validation, "The service identity cursor is invalid."));

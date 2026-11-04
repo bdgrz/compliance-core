@@ -1,3 +1,5 @@
+using Bdgrz.Compliance.Features.Workforce.Projections;
+using Bdgrz.Compliance.Tests.Testing;
 using System.Security.Claims;
 using Cntryl.Fitz.Testing;
 using Cntryl.Portia;
@@ -73,7 +75,7 @@ using Bdgrz.Compliance.Features.Workforce.Models;
 using Bdgrz.Compliance.Features.Workforce.Queries;
 namespace Bdgrz.Compliance.Tests.Features.Workforce.Tests;
 
-public sealed class FitzServiceIdentityDirectoryTests
+public sealed class CassieServiceIdentityDirectoryTests
 {
     static readonly DateTimeOffset Now = new(2026, 9, 30, 12, 0, 0, TimeSpan.Zero);
     static readonly DateOnly Today = new(2026, 9, 30);
@@ -83,9 +85,9 @@ public sealed class FitzServiceIdentityDirectoryTests
     public async Task ShouldListOnlyUnownedWorkGivenExpiredReviewAndEndedOwner()
     {
         // Arrange
-        var kv = new InMemoryKvClient();
-        var identities = new FitzServiceIdentityDirectory(kv);
-        var roster = new FitzWorkforceObservationDirectory(kv);
+        await using var database = await CassieRepositoryTestDatabase.OpenAsync(CassieWorkforceSchema.Statements);
+        await using var identities = new CassieServiceIdentityDirectory(database.Database);
+        await using var roster = new CassieWorkforceObservationDirectory(database.Database);
         var tenantId = Uuid.CreateVersion4();
         var active = Uuid.CreateVersion4();
         var leaver = Uuid.CreateVersion4();
@@ -118,9 +120,9 @@ public sealed class FitzServiceIdentityDirectoryTests
     public async Task ShouldProjectExpiryAndReportExpiredGivenExpiryDatePassed()
     {
         // Arrange
-        var kv = new InMemoryKvClient();
-        var identities = new FitzServiceIdentityDirectory(kv);
-        var roster = new FitzWorkforceObservationDirectory(kv);
+        await using var database = await CassieRepositoryTestDatabase.OpenAsync(CassieWorkforceSchema.Statements);
+        await using var identities = new CassieServiceIdentityDirectory(database.Database);
+        await using var roster = new CassieWorkforceObservationDirectory(database.Database);
         var tenantId = Uuid.CreateVersion4();
         var ownerId = Uuid.CreateVersion4();
         await ApplyRosterAsync(roster, tenantId, Relationship(tenantId, ownerId, "E-1", "active"));
@@ -139,8 +141,8 @@ public sealed class FitzServiceIdentityDirectoryTests
         Assert.Null(page.Value.Items[1].ExpiresOn);
     }
 
-    static ListServiceIdentitiesHandler Handler(FitzServiceIdentityDirectory identities,
-        FitzWorkforceObservationDirectory roster, TimeProvider clock)
+    static ListServiceIdentitiesHandler Handler(CassieServiceIdentityDirectory identities,
+        CassieWorkforceObservationDirectory roster, TimeProvider clock)
     {
         var events = new InMemoryEventStore();
         return new ListServiceIdentitiesHandler(identities,
@@ -163,7 +165,7 @@ public sealed class FitzServiceIdentityDirectoryTests
             new WorkRelationshipTerms("employee", status, new DateOnly(2025, 1, 6),
                 status == "ended" ? new DateOnly(2026, 9, 1) : null, null, null, null), Author, Now);
 
-    static async ValueTask ApplyAsync(FitzServiceIdentityDirectory directory, Uuid tenantId,
+    static async ValueTask ApplyAsync(CassieServiceIdentityDirectory directory, Uuid tenantId,
         params DomainEvent[] events)
     {
         await using var batch = await directory.BeginAsync(new ProjectionBatchContext(
@@ -175,7 +177,7 @@ public sealed class FitzServiceIdentityDirectoryTests
         await batch.CommitAsync(ProjectionCheckpoint.Start);
     }
 
-    static async ValueTask ApplyRosterAsync(FitzWorkforceObservationDirectory directory,
+    static async ValueTask ApplyRosterAsync(CassieWorkforceObservationDirectory directory,
         Uuid tenantId, params DomainEvent[] events)
     {
         await using var batch = await directory.BeginAsync(new ProjectionBatchContext(

@@ -53,7 +53,7 @@ public sealed class ListPeopleHandler(IPersonDirectoryReader directory,
             page = await directory.ListAsync(request.TenantId, request.Limit ?? 50,
                 request.Cursor, ct).ConfigureAwait(false);
         }
-        catch (KvDirectoryQueryException)
+        catch (WorkforceDirectoryQueryException)
         {
             return Result<Page<PersonView>>.Failure(new RequestError(RequestErrorKind.Validation,
                 "The person cursor is invalid."));

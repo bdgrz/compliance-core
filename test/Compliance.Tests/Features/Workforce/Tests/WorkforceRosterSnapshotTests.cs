@@ -402,17 +402,24 @@ public sealed class WorkforceRosterSnapshotTests
     sealed class Harness : IAsyncDisposable
     {
         readonly ServiceProvider _provider;
-        readonly FitzPersonDirectory _people = new(new InMemoryKvClient());
-        readonly FitzWorkRelationshipDirectory _relationships = new(new InMemoryKvClient());
+        readonly CassieRepositoryTestDatabase _database;
+        readonly CassiePersonDirectory _people;
+        readonly CassieWorkRelationshipDirectory _relationships;
         readonly Uuid _userId = Uuid.CreateVersion4();
         WorkRelationshipView? _advanceDuringRead;
 
-        Harness(ServiceProvider provider) => _provider = provider;
+        Harness(ServiceProvider provider, CassieRepositoryTestDatabase database)
+        {
+            _provider = provider;
+            _database = database;
+            _people = new CassiePersonDirectory(database.Database);
+            _relationships = new CassieWorkRelationshipDirectory(database.Database);
+        }
 
         public Uuid TenantId { get; } = Uuid.CreateVersion4();
         public string ActorDisplay => _userId.ToString();
 
-        public static ValueTask<Harness> CreateAsync()
+        public static async ValueTask<Harness> CreateAsync()
         {
             var services = new ServiceCollection();
             var store = new InMemoryEventStore();
@@ -421,7 +428,8 @@ public sealed class WorkforceRosterSnapshotTests
             services.AddSingleton(TimeProvider.System);
             services.AddPortia();
             services.AddPersonNativeFixtures();
-            return ValueTask.FromResult(new Harness(services.BuildServiceProvider()));
+            return new Harness(services.BuildServiceProvider(),
+                await CassieRepositoryTestDatabase.OpenAsync(CassieWorkforceSchema.Statements));
         }
 
         IAggregateReader Reader => _provider.GetRequiredService<IAggregateReader>();
@@ -532,7 +540,7 @@ public sealed class WorkforceRosterSnapshotTests
         {
             var consistency = new WorkRelationshipReadConsistency(_relationships, Reader,
                 _provider.GetRequiredService<IDomainEventReader>());
-            var roster = new FitzWorkforceObservationDirectory(new InMemoryKvClient());
+            await using var roster = new CassieWorkforceObservationDirectory(_database.Database);
             return new GetWorkRelationshipHandler(consistency, permissions,
                     new WorkRelationshipSponsorship(roster,
                         new WorkforceObservationReadConsistency(roster, new InMemoryEventStore())))
@@ -626,7 +634,13 @@ public sealed class WorkforceRosterSnapshotTests
         public ValueTask<PopulationSnapshot> HydrateAsync(Uuid snapshotId) =>
             Reader.HydrateAsync(new PopulationSnapshot(TenantId, snapshotId));
 
-        public ValueTask DisposeAsync() => _provider.DisposeAsync();
+        public async ValueTask DisposeAsync()
+        {
+            await _provider.DisposeAsync();
+            await _people.DisposeAsync();
+            await _relationships.DisposeAsync();
+            await _database.DisposeAsync();
+        }
     }
 
     sealed record FreezeAttempt(RequestError? Error, Uuid RequestId);

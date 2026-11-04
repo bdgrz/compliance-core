@@ -1,3 +1,5 @@
+using Bdgrz.Compliance.Features.Workforce.Projections;
+using Bdgrz.Compliance.Tests.Testing;
 using Bdgrz.Compliance.Features.AccessControl.Models;
 using Bdgrz.Compliance.Features.Workforce.Aggregates;
 using Bdgrz.Compliance.Features.Workforce.Events;
@@ -24,7 +26,7 @@ public sealed class WorkforceLifecycleObservationTests
         string after)
     {
         // Arrange
-        var directory = new FitzWorkforceObservationDirectory(new InMemoryKvClient());
+        var directory = new CassieWorkforceObservationDirectory(database.Database);
         var recorded = Recorded(before);
         await ApplyAsync(directory, recorded.TenantId, recorded);
 
@@ -54,7 +56,8 @@ public sealed class WorkforceLifecycleObservationTests
     public async Task ShouldAcceptLaterRevisionGivenAllNamedLifecycleFacts()
     {
         // Arrange
-        var directory = new FitzWorkforceObservationDirectory(new InMemoryKvClient());
+        await using var database = await CassieRepositoryTestDatabase.OpenAsync(CassieWorkforceSchema.Statements);
+        await using var directory = new CassieWorkforceObservationDirectory(database.Database);
         var recorded = Recorded("pending");
         await ApplyAsync(directory, recorded.TenantId, recorded);
 
@@ -80,7 +83,8 @@ public sealed class WorkforceLifecycleObservationTests
     public async Task ShouldRefuseWithoutChangingOwnershipStatusGivenMissingPredecessor(string kind)
     {
         // Arrange
-        var directory = new FitzWorkforceObservationDirectory(new InMemoryKvClient());
+        await using var database = await CassieRepositoryTestDatabase.OpenAsync(CassieWorkforceSchema.Statements);
+        await using var directory = new CassieWorkforceObservationDirectory(database.Database);
         var recorded = Recorded("active");
         await ApplyAsync(directory, recorded.TenantId, recorded);
 
@@ -99,7 +103,8 @@ public sealed class WorkforceLifecycleObservationTests
     public async Task ShouldRefuseWithoutChangingOwnershipStatusGivenMismatchedFactIdentity(bool tenantMismatch)
     {
         // Arrange
-        var directory = new FitzWorkforceObservationDirectory(new InMemoryKvClient());
+        await using var database = await CassieRepositoryTestDatabase.OpenAsync(CassieWorkforceSchema.Statements);
+        await using var directory = new CassieWorkforceObservationDirectory(database.Database);
         var recorded = Recorded("active");
         await ApplyAsync(directory, recorded.TenantId, recorded);
         var ending = new WorkRelationshipEnded(tenantMismatch ? Uuid.CreateVersion4() : recorded.TenantId,
@@ -130,7 +135,7 @@ public sealed class WorkforceLifecycleObservationTests
         _ => throw new ArgumentOutOfRangeException(nameof(kind)),
     };
 
-    static async ValueTask ApplyAsync(FitzWorkforceObservationDirectory directory, Uuid tenant,
+    static async ValueTask ApplyAsync(CassieWorkforceObservationDirectory directory, Uuid tenant,
         params DomainEvent[] events)
     {
         await using var batch = await directory.BeginAsync(new ProjectionBatchContext(

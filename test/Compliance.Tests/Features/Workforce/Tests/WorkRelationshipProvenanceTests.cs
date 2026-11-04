@@ -1,3 +1,5 @@
+using Bdgrz.Compliance.Features.Workforce.Projections;
+using Bdgrz.Compliance.Tests.Testing;
 using Bdgrz.Compliance.Features.AccessControl.Models;
 using Bdgrz.Compliance.Features.Workforce.Aggregates;
 using Bdgrz.Compliance.Features.Workforce.Events;
@@ -142,7 +144,8 @@ public sealed class WorkRelationshipProvenanceTests
     public async Task ShouldProjectExternalProvenanceWithoutReplacingWorkerIdentifierGivenExternalSource(string kind)
     {
         // Arrange
-        var directory = new FitzWorkRelationshipDirectory(new InMemoryKvClient());
+        await using var database = await CassieRepositoryTestDatabase.OpenAsync(CassieWorkforceSchema.Statements);
+        await using var directory = new CassieWorkRelationshipDirectory(database.Database);
         var id = WorkRelationship.IdFor(Tenant, "ORG-44");
         var source = Source with { SourceKind = kind };
         var fact = new WorkRelationshipRecorded(Tenant, id, Person, "ORG-44", Terms, Author, Now, source);
@@ -163,7 +166,8 @@ public sealed class WorkRelationshipProvenanceTests
     public async Task ShouldKeepManualSourceGivenNoExternalIdentifier()
     {
         // Arrange
-        var directory = new FitzWorkRelationshipDirectory(new InMemoryKvClient());
+        await using var database = await CassieRepositoryTestDatabase.OpenAsync(CassieWorkforceSchema.Statements);
+        await using var directory = new CassieWorkRelationshipDirectory(database.Database);
         var relationship = New();
         Assert.True(relationship.Record(Person, "ORG-44", Terms, Author, Now).IsSuccess);
         var fact = Assert.IsType<WorkRelationshipRecorded>(Assert.Single(
@@ -181,7 +185,7 @@ public sealed class WorkRelationshipProvenanceTests
 
     static WorkRelationship New() => new(Tenant, WorkRelationship.IdFor(Tenant, "ORG-44"));
 
-    static async ValueTask ApplyAsync(FitzWorkRelationshipDirectory directory, DomainEvent fact)
+    static async ValueTask ApplyAsync(CassieWorkRelationshipDirectory directory, DomainEvent fact)
     {
         await using var batch = await directory.BeginAsync(new ProjectionBatchContext(
             new CheckpointIdentity("WorkRelationshipDirectoryV1",
