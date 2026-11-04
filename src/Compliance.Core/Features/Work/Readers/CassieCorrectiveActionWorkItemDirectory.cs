@@ -53,28 +53,40 @@ sealed class CassieCorrectiveActionWorkItemDirectory(CassieProjectionDatabase da
             throw new InvalidOperationException("Corrective-action work must use its bound tenant projection batch.");
         var view = await findings.ReadViewAsync(tenantId, programId, findingId, clock.GetUtcNow(), ct).ConfigureAwait(false)
             ?? throw new InvalidOperationException("A finding fact cannot be projected before its raise is visible.");
-        await ValidatePreviousRowsAsync(tenantId, programId, findingId, ct).ConfigureAwait(false);
-        await using (var delete = CreateCommand("""
-            DELETE FROM work_corrective_actions
-            WHERE projection_key = @projection AND tenant_id = @tenant AND program_id = @program AND finding_id = @finding
-            """))
+        var wanted = Candidates(view).Select(candidate => AccountableWorkItemView.FromCandidate(tenantId, programId, candidate))
+            .ToDictionary(static item => item.WorkItemId);
+        var previous = await ReadPreviousRowsAsync(tenantId, programId, findingId, ct).ConfigureAwait(false);
+        foreach (var item in previous)
         {
+            if (wanted.ContainsKey(item.WorkItemId))
+                continue;
+            await using var delete = CreateCommand("""
+                DELETE FROM work_corrective_actions
+                WHERE row_key = @row_key AND projection_key = @projection AND tenant_id = @tenant
+                    AND program_id = @program AND finding_id = @finding AND work_item_id = @work_item
+                """);
             Scope(delete, tenantId, programId, findingId);
+            _ = delete.Parameters.Add(new CassieParameter { ParameterName = "row_key", Value = RowKey(programId, item.WorkItemId) });
+            _ = delete.Parameters.Add(new CassieParameter { ParameterName = "work_item", Value = item.WorkItemId.ToString() });
             _ = await delete.ExecuteNonQueryAsync(ct).ConfigureAwait(false);
         }
-        foreach (var candidate in Candidates(view))
+        foreach (var item in wanted.Values)
         {
-            var item = AccountableWorkItemView.FromCandidate(tenantId, programId, candidate);
             await using var insert = CreateCommand("""
                 INSERT INTO work_corrective_actions (row_key, projection_key, tenant_id, program_id, finding_id, work_item_id, payload)
                 VALUES (@row_key, @projection, @tenant, @program, @finding, @work_item, @payload)
+                ON CONFLICT (row_key) DO UPDATE SET payload = EXCLUDED.payload
+                WHERE work_corrective_actions.projection_key = @projection AND work_corrective_actions.tenant_id = @tenant
+                    AND work_corrective_actions.program_id = @program AND work_corrective_actions.finding_id = @finding
+                    AND work_corrective_actions.work_item_id = @work_item
                 """);
             Scope(insert, tenantId, programId, findingId);
             _ = insert.Parameters.Add(new CassieParameter { ParameterName = "row_key", Value = RowKey(programId, item.WorkItemId) });
             _ = insert.Parameters.Add(new CassieParameter { ParameterName = "work_item", Value = item.WorkItemId.ToString() });
             _ = insert.Parameters.Add(new CassieParameter { ParameterName = "payload",
                 Value = JsonSerializer.Serialize(item, ComplianceCoreJsonContext.Default.AccountableWorkItemView) });
-            _ = await insert.ExecuteNonQueryAsync(ct).ConfigureAwait(false);
+            if (await insert.ExecuteNonQueryAsync(ct).ConfigureAwait(false) != 1)
+                throw new InvalidOperationException("A corrective action work identity cannot move to another tenant, program, or finding.");
         }
         await using var revision = CreateCommand("""
             INSERT INTO work_corrective_action_revisions (projection_key, tenant_id, revision) VALUES (@projection, @tenant, 1)
@@ -142,8 +154,9 @@ sealed class CassieCorrectiveActionWorkItemDirectory(CassieProjectionDatabase da
         CurrentProjectionKey.Length.ToString(CultureInfo.InvariantCulture), ":", CurrentProjectionKey,
         programId.ToString(), ":", workItemId.ToString());
 
-    async ValueTask ValidatePreviousRowsAsync(Uuid tenantId, Uuid programId, Uuid findingId, CancellationToken ct)
+    async ValueTask<List<AccountableWorkItemView>> ReadPreviousRowsAsync(Uuid tenantId, Uuid programId, Uuid findingId, CancellationToken ct)
     {
+        var previous = new List<AccountableWorkItemView>();
         await using var command = CreateCommand("""
             SELECT payload FROM work_corrective_actions
             WHERE projection_key = @projection AND tenant_id = @tenant AND program_id = @program AND finding_id = @finding
@@ -156,7 +169,9 @@ sealed class CassieCorrectiveActionWorkItemDirectory(CassieProjectionDatabase da
             if (item is null || item.TenantId != tenantId || item.ProgramId != programId || item.FindingId != findingId ||
                 item.Kind != WorkSource.CorrectiveAction || item.WorkItemId != WorkCandidate.IdFor(item.SourceId, WorkSource.CorrectiveAction))
                 throw new InvalidOperationException("A corrective action work item cannot change tenant, program, or source scope.");
+            previous.Add(item);
         }
+        return previous;
     }
 
     void Scope(CassieCommand command, Uuid tenantId, Uuid programId, Uuid findingId)
