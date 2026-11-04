@@ -76,10 +76,15 @@ abstract class CassieWorkforceRepository : CassieProjectionRepository
         var after = WorkforceDirectoryCursor.Decode(cursor, cursorScope);
         var take = Math.Clamp(limit, 1, 200);
         var fetchLimit = (take + 1).ToString(CultureInfo.InvariantCulture);
+        var sortIsId = sortColumn == "model_id";
+        var selectedColumns = sortIsId
+            ? "row_json, model_id AS page_sort"
+            : $"row_json, {sortColumn} AS page_sort, model_id AS page_id";
+        var orderColumns = sortIsId ? "model_id" : $"{sortColumn}, model_id";
         await using var read = await OpenReadAsync(ct).ConfigureAwait(false);
-        await using var command = read.CreateCommand($"SELECT row_json, {sortColumn} AS page_sort, model_id AS page_id FROM {table} WHERE projection_key = @scope{filter}" +
+        await using var command = read.CreateCommand($"SELECT {selectedColumns} FROM {table} WHERE projection_key = @scope{filter}" +
             (after is null ? "" : $" AND ({sortColumn} > @after OR ({sortColumn} = @after AND model_id > @after_id))") +
-            $" ORDER BY {sortColumn}, model_id LIMIT {fetchLimit}");
+            $" ORDER BY {orderColumns} LIMIT {fetchLimit}");
         Bind(command, ("scope", scope));
         Bind(command, parameters);
         if (after is { } position)
@@ -98,7 +103,7 @@ abstract class CassieWorkforceRepository : CassieProjectionRepository
             }
             rows.Add(Deserialize(reader.GetString(0), json));
             lastSort = reader.GetString(1);
-            lastId = reader.GetString(2);
+            lastId = sortIsId ? lastSort : reader.GetString(2);
         }
         return new Page<T>(rows, more ? WorkforceDirectoryCursor.Encode(cursorScope, lastSort!, lastId!) : null);
     }
