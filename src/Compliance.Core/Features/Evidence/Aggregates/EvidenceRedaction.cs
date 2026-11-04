@@ -51,11 +51,13 @@ public sealed class EvidenceRedaction : Aggregate
         On<EvidenceRedactionApproved>(ev => ApplyApproval(ev, ev.TenantId, ev.RedactionId, ev.ExpectedRevision, ev.Approval));
         On<EvidenceRedactionPreparedV2>(ev => ApplyPreparation(ev, ev.TenantId, ev.RedactionId, ev.ExpectedRevision, ev.Preparation));
         On<EvidenceRedactionApprovedV2>(ev => ApplyApproval(ev, ev.TenantId, ev.RedactionId, ev.ExpectedRevision, ev.Approval));
+        On<EvidenceRedactionRejected>(ApplyRejection);
     }
 
     public long Revision { get; private set; }
     public EvidenceRedactionPreparationFact? CurrentPreparation { get; private set; }
     public EvidenceRedactionApprovalFact? CurrentApproval { get; private set; }
+    public EvidenceRedactionRejectionFact? CurrentRejection { get; private set; }
     internal DomainEvent? CurrentPreparationFact { get; private set; }
     internal NativeAcceptance Acceptance { get; }
     internal EvidenceRedactionReplayCut ReplayCut { get; } = new();
@@ -67,14 +69,42 @@ public sealed class EvidenceRedaction : Aggregate
     internal Result<EvidenceRedactionPreparationFact> DecidePrepare(Uuid commandId, long expectedRevision,
         EvidenceRedactionSourceCapsule original, EvidenceRedactionSourceCapsule derived, string provenance,
         string reason, ActorReference actor, DateTimeOffset at) =>
-        EvidenceRedactionRules.Prepare(_tenantId, Id, Revision, CurrentPreparation, _lastChangedAt, commandId,
-            expectedRevision, original, derived, provenance, reason, actor, at);
+        CurrentApproval is not null || CurrentRejection is not null
+            ? Result<EvidenceRedactionPreparationFact>.Failure(TerminalReview())
+            : EvidenceRedactionRules.Prepare(_tenantId, Id, Revision, CurrentPreparation, _lastChangedAt, commandId,
+                expectedRevision, original, derived, provenance, reason, actor, at);
 
     internal Result<EvidenceRedactionApprovalFact> DecideApprove(Uuid commandId, long expectedRevision,
         Uuid preparationId, long preparedRevision, ulong derivedPosition, ActorReference actor, DateTimeOffset at,
         DateTimeOffset availableAt, EvidenceRedactionWaiverSnapshot? waiver) =>
-        EvidenceRedactionRules.Approve(_tenantId, Id, Revision, CurrentPreparation, CurrentApproval, _lastChangedAt,
-            commandId, expectedRevision, preparationId, preparedRevision, derivedPosition, actor, at, availableAt, waiver);
+        CurrentRejection is not null
+            ? Result<EvidenceRedactionApprovalFact>.Failure(TerminalReview())
+            : EvidenceRedactionRules.Approve(_tenantId, Id, Revision, CurrentPreparation, CurrentApproval, _lastChangedAt,
+                commandId, expectedRevision, preparationId, preparedRevision, derivedPosition, actor, at, availableAt, waiver);
+
+    internal Result<EvidenceRedactionRejectionFact> DecideReject(Uuid commandId, long expectedRevision,
+        Uuid preparationId, long preparedRevision, ulong derivedPosition, ActorReference actor, DateTimeOffset at,
+        DateTimeOffset availableAt, string comments, EvidenceRedactionWaiverSnapshot? waiver)
+    {
+        comments = comments?.Trim() ?? string.Empty;
+        if (comments.Length is 0 or > 4000)
+            return Result<EvidenceRedactionRejectionFact>.Failure(new RequestError(RequestErrorKind.Validation,
+                "A rejection requires bounded review comments."));
+        var decision = DecideApprove(commandId, expectedRevision, preparationId, preparedRevision, derivedPosition,
+            actor, at, availableAt, waiver);
+        return decision.IsSuccess
+            ? Result<EvidenceRedactionRejectionFact>.Success(new(commandId, decision.Value.Revision,
+                preparationId, preparedRevision, derivedPosition, availableAt, actor, at, comments, waiver))
+            : Result<EvidenceRedactionRejectionFact>.Failure(decision.Error!);
+    }
+
+    internal static EvidenceRedactionApprovalFact ApprovalProof(EvidenceRedactionRejectionFact rejected) =>
+        new(rejected.ReviewId, rejected.Revision, rejected.PreparationId, rejected.PreparedRevision,
+            rejected.DerivedSourcePosition, rejected.DerivedAvailableAt, rejected.ReviewedBy,
+            rejected.ReviewedAt, rejected.SeparationOfDutiesWaiver);
+
+    static RequestError TerminalReview() => new(RequestErrorKind.Conflict,
+        "A reviewed redaction is terminal; prepare a new redaction identity for another derivative.");
 
     internal Result Append(DomainEvent fact, EvidenceRedactionPreparedCut cut)
     {
@@ -86,8 +116,8 @@ public sealed class EvidenceRedaction : Aggregate
         if (cut != EvidenceRedactionPreparedCut.Of(this) || HasSelectedLegacy || Acceptance.SelectedFact is not null ||
             fact is not INativeOperationFact native || native.Operation is null ||
             native.Operation.AuthoredIntentSha256 is not { Length: 64 } ||
-            !NativeOwnerHistory.IsOwnRoot(this, native.Operation, fact is EvidenceRedactionPreparedV2
-                ? nameof(PrepareEvidenceRedaction) : nameof(ApproveEvidenceRedaction), (ulong)Revision) ||
+            !NativeKind(fact, native.Operation.CommandKind) ||
+            !NativeOwnerHistory.IsOwnRoot(this, native.Operation, native.Operation.CommandKind, (ulong)Revision) ||
             native.Operation.LogicalId != Acceptance.SelectedLogicalId ||
             native.Operation.Owner != Stream || native.Operation.RootOperationId != native.Operation.LogicalId ||
             native.Operation.FirstOwner != Stream || native.Operation.AffectedOwner != Stream || native.Operation.ExpectedRevisionOwner != Stream ||
@@ -104,6 +134,26 @@ public sealed class EvidenceRedaction : Aggregate
             _emitting = false;
         }
         return Result.Success;
+    }
+
+    internal static bool NativeKind(DomainEvent fact, string kind) => fact switch
+    {
+        EvidenceRedactionPreparedV2 => kind == nameof(PrepareEvidenceRedaction),
+        EvidenceRedactionApprovedV2 => kind is nameof(ApproveEvidenceRedaction) or nameof(ReviewEvidenceRedaction),
+        EvidenceRedactionRejected => kind == nameof(ReviewEvidenceRedaction),
+        _ => false,
+    };
+
+    void ApplyRejection(EvidenceRedactionRejected fact)
+    {
+        var value = fact.Rejection;
+        var decided = DecideReject(value.ReviewId, fact.ExpectedRevision, value.PreparationId,
+            value.PreparedRevision, value.DerivedSourcePosition, value.ReviewedBy, value.ReviewedAt,
+            value.DerivedAvailableAt, value.Comments, value.SeparationOfDutiesWaiver);
+        if (fact.TenantId != _tenantId || fact.RedactionId != Id || !decided.IsSuccess || decided.Value != value)
+            throw new ImmutableContentIntegrityException("Redaction rejection must preserve the exact current preparation and independent decision.");
+        Observe(fact, value.ReviewId);
+        (Revision, CurrentRejection, _lastChangedAt) = (value.Revision, value, value.ReviewedAt);
     }
 
     void ApplyPreparation(DomainEvent fact, Uuid tenantId, Uuid redactionId, long expectedRevision,
@@ -163,6 +213,7 @@ public sealed class EvidenceRedaction : Aggregate
     {
         EvidenceRedactionPreparedV2 value => value.OperationResult,
         EvidenceRedactionApprovedV2 value => value.OperationResult,
+        EvidenceRedactionRejected value => value.OperationResult,
         _ => null,
     };
 

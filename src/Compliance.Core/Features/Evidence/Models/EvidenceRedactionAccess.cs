@@ -13,11 +13,12 @@ using Bdgrz.Compliance.Features.Evidence.Commands;
 using Bdgrz.Compliance.Features.Evidence.Queries;
 namespace Bdgrz.Compliance.Features.Evidence.Models;
 
-sealed class EvidenceRedactionAccess(EvidenceArtifactReadAccess artifacts, IPermissionAuthorizer permissions)
+sealed class EvidenceRedactionAccess(EvidenceArtifactReadAccess artifacts, IPermissionAuthorizer permissions,
+    IAccessGrantRolePermissionAuthorizer? roles = null)
     : IRequestAuthorizer<IEvidenceRedactionMutationRequest>, IRequestAuthorizer<GetEvidenceRedaction>
 {
     public ValueTask<Result> AuthorizeAsync(IRequestContext<IEvidenceRedactionMutationRequest> context, CancellationToken ct) =>
-        RequireAsync(context, context.Request.TenantId, context.Request is ApproveEvidenceRedaction, ct);
+        RequireAsync(context, context.Request.TenantId, context.Request is ApproveEvidenceRedaction or ReviewEvidenceRedaction, ct);
 
     public ValueTask<Result> AuthorizeAsync(IRequestContext<GetEvidenceRedaction> context, CancellationToken ct) =>
         artifacts.RequireMembershipAsync(context, context.Request.TenantId, ct);
@@ -28,9 +29,15 @@ sealed class EvidenceRedactionAccess(EvidenceArtifactReadAccess artifacts, IPerm
         if (!member.IsSuccess)
             return member;
         UserIdentityClaims.TryGetBdgrzSubject(context.Actor, out var userId);
-        return await permissions.IsAllowedAsync(tenantId, userId, RbacIds.Member(tenantId, userId),
-            approval ? RbacPermissions.EvidenceRedactionApprove : RbacPermissions.EvidenceRedactionPrepare, ct).ConfigureAwait(false)
-            ? Result.Success : Result.Failure(new RequestError(RequestErrorKind.Forbidden,
-                "The member may not record this redaction decision."));
+        var memberId = RbacIds.Member(tenantId, userId);
+        var permission = approval ? RbacPermissions.EvidenceRedactionApprove : RbacPermissions.EvidenceRedactionPrepare;
+        var permitted = await permissions.IsAllowedAsync(tenantId, userId, memberId, permission, ct).ConfigureAwait(false);
+        var roleAllowed = roles is not null &&
+            (await roles.IsAllowedAsOrganizationRoleAsync(tenantId, userId, memberId,
+                BuiltInRbac.ComplianceManagementRoleId(tenantId), permission, ct).ConfigureAwait(false) ||
+             !approval && await roles.IsAllowedAsOrganizationRoleAsync(tenantId, userId, memberId,
+                 BuiltInRbac.ComplianceParticipationRoleId(tenantId), permission, ct).ConfigureAwait(false));
+        return permitted && roleAllowed ? Result.Success : Result.Failure(new RequestError(RequestErrorKind.Forbidden,
+            "Redaction preparation requires a current Contributor or Compliance Lead; review requires a Compliance Lead."));
     }
 }

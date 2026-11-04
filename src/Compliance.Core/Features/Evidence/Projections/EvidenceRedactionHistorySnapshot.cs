@@ -16,7 +16,8 @@ namespace Bdgrz.Compliance.Features.Evidence.Projections;
 /// <summary>Complete transient lineage; no command owner retains or caps these rows.</summary>
 sealed record EvidenceRedactionHistorySnapshot(Uuid TenantId, Uuid RedactionId, long Revision,
     IReadOnlyList<DomainEvent> Facts, IReadOnlyList<EvidenceRedactionPreparationFact> Preparations,
-    IReadOnlyList<EvidenceRedactionApprovalFact> Approvals, int LegacyFactCount)
+    IReadOnlyList<EvidenceRedactionApprovalFact> Approvals, int LegacyFactCount,
+    EvidenceRedactionRejectionFact? Rejection = null)
 {
     public EvidenceRedactionPreparationFact? CurrentPreparation => Preparations.Count == 0 ? null : Preparations[^1];
     public EvidenceRedactionApprovalFact? CurrentApproval => Approvals.LastOrDefault(value => value.PreparationId == CurrentPreparation?.PreparationId);
@@ -29,12 +30,14 @@ sealed record EvidenceRedactionHistorySnapshot(Uuid TenantId, Uuid RedactionId, 
             Array.AsReadOnly(Approvals.Select(value => new EvidenceRedactionApprovalView(value.ApprovalId, value.Revision,
                 value.PreparationId, value.PreparedRevision, value.ApprovedBy, value.ApprovedAt,
                 value.SeparationOfDutiesWaiver is not null, value.SeparationOfDutiesWaiver?.WaiverId)).ToArray()),
-            originalState, derivedState, current);
+            originalState, derivedState, current, Rejection);
 
     public EvidenceRedactionHistorySnapshot With(EvidenceRedactionPreparationFact value) =>
         this with { Revision = value.Revision, Preparations = Array.AsReadOnly(Preparations.Append(value).ToArray()) };
     public EvidenceRedactionHistorySnapshot With(EvidenceRedactionApprovalFact value) =>
         this with { Revision = value.Revision, Approvals = Array.AsReadOnly(Approvals.Append(value).ToArray()) };
+    public EvidenceRedactionHistorySnapshot With(EvidenceRedactionRejectionFact value) =>
+        this with { Revision = value.Revision, Rejection = value };
     static EvidenceRedactionArtifactView PublicIdentity(EvidenceRedactionSourceCapsule source) =>
         new(source.ArtifactId, source.ContentSha256, source.ContentLength, source.RegisteredAt);
 }
