@@ -1,4 +1,5 @@
 using Cntryl.Portia;
+using Bdgrz.Compliance.Features.AccessControl.Models;
 using Bdgrz.Compliance.Features.Controls.Aggregates;
 using Bdgrz.Compliance.Features.Controls.Commands;
 using Bdgrz.Compliance.Features.Controls.Models;
@@ -8,6 +9,7 @@ using Bdgrz.Compliance.Features.MethodologyTemplates.Services;
 using Bdgrz.Compliance.Features.Policies.Aggregates;
 using Bdgrz.Compliance.Features.Policies.Commands;
 using Bdgrz.Compliance.Features.Policies.Models;
+using Bdgrz.Compliance.Features.Policies.Rules;
 using Bdgrz.Compliance.Features.Risks.Aggregates;
 using Bdgrz.Compliance.Features.Risks.Commands;
 
@@ -215,6 +217,62 @@ public sealed class MethodologyTemplateDestinationCommandsTests
         Assert.Equal("template", command.Content.Provenance?.Origin);
         Assert.Equal($"methodology:{template}:{entry.EntryKey}", command.Content.Provenance?.SourceReference);
         Assert.Equal("2", command.Content.Provenance?.SourceVersion);
+    }
+
+    [Fact]
+    public void ShouldRefuseIdentifierReuseGivenSamePolicyContentFromDifferentTemplate()
+    {
+        // Arrange
+        var firstTemplate = Uuid.CreateVersion4();
+        var secondTemplate = Uuid.CreateVersion4();
+        var entry = Entry("policy") with { Policy = new("POL-01", PolicyContent()) };
+        var first = MethodologyTemplateDestinationCommands.Create(Tenant, Program, entry,
+            templateId: firstTemplate, templateVersion: 1);
+        var second = MethodologyTemplateDestinationCommands.Create(Tenant, Program, entry,
+            templateId: secondTemplate, templateVersion: 1);
+        var firstCommand = Assert.IsType<CreatePolicyDraft>(first.Value.Request);
+        var secondCommand = Assert.IsType<CreatePolicyDraft>(second.Value.Request);
+        var owner = new PolicyRules(Tenant, firstCommand.PolicyId);
+        var member = Uuid.CreateVersion4();
+        var actor = ActorReference.ForMember(member, "Compliance Lead");
+        var now = new DateTimeOffset(2026, 11, 4, 12, 0, 0, TimeSpan.Zero);
+        Assert.True(owner.Create(Program, firstCommand.PolicyId, firstCommand.Identifier, firstCommand.Content,
+            actor, member, now).IsSuccess);
+        owner.ClearPendingChanges();
+
+        // Act
+        var retry = owner.Create(Program, firstCommand.PolicyId, firstCommand.Identifier, firstCommand.Content,
+            actor, member, now.AddMinutes(1));
+        var reused = owner.Create(Program, secondCommand.PolicyId, secondCommand.Identifier, secondCommand.Content,
+            actor, member, now.AddMinutes(2));
+
+        // Assert
+        Assert.Equal(firstCommand.PolicyId, secondCommand.PolicyId);
+        Assert.NotEqual(PolicyRules.Hash(firstCommand.Content), PolicyRules.Hash(secondCommand.Content));
+        Assert.True(retry.IsSuccess, retry.Error?.Message);
+        Assert.Equal(RequestErrorKind.Conflict, reused.Error?.Kind);
+        Assert.Equal(new MethodologyTemplateEntryProvenance(firstTemplate, 1, entry.EntryKey),
+            owner.DraftContent?.TemplateOrigin);
+        Assert.Empty(owner.PendingChanges);
+    }
+
+    [Fact]
+    public void ShouldReplaceUntrustedPolicyOriginGivenCurrentVerifiedTemplateSource()
+    {
+        // Arrange
+        var template = Uuid.CreateVersion4();
+        var staleOrigin = new MethodologyTemplateEntryProvenance(Uuid.CreateVersion4(), 10, "another-entry");
+        var entry = Entry("policy") with
+        { Policy = new("POL-01", PolicyContent() with { TemplateOrigin = staleOrigin }) };
+
+        // Act
+        var result = MethodologyTemplateDestinationCommands.Create(Tenant, Program, entry,
+            templateId: template, templateVersion: 2);
+
+        // Assert
+        Assert.True(result.IsSuccess, result.Error?.Message);
+        var command = Assert.IsType<CreatePolicyDraft>(result.Value.Request);
+        Assert.Equal(new MethodologyTemplateEntryProvenance(template, 2, entry.EntryKey), command.Content.TemplateOrigin);
     }
 
     [Fact]
