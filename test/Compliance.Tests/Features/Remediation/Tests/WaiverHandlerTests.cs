@@ -35,9 +35,9 @@ public sealed class WaiverHandlerTests
         // Act
         var approved = await new ReviewWaiverHandler(fixture.Executor, fixture.Clock)
             .HandleAsync(Context(review, approver), CancellationToken.None);
-        var current = await get.HandleAsync(new RequestContext<GetWaiver>(new GetWaiver(tenant, request.WaiverId)),
+        var current = await get.HandleAsync(new Cntryl.Portia.RequestContext<GetWaiver>(new GetWaiver(tenant, request.WaiverId)),
             CancellationToken.None);
-        var foreign = await get.HandleAsync(new RequestContext<GetWaiver>(new GetWaiver(Uuid.CreateVersion4(), request.WaiverId)),
+        var foreign = await get.HandleAsync(new Cntryl.Portia.RequestContext<GetWaiver>(new GetWaiver(Uuid.CreateVersion4(), request.WaiverId)),
             CancellationToken.None);
         fixture.Clock.Now = request.ExpiresAt;
         var expired = await reader.ReadAsync(tenant, request.WaiverId);
@@ -76,9 +76,9 @@ public sealed class WaiverHandlerTests
 
         // Act
         var reviewed = await new ReviewWaiverHandler(fixture.Executor, fixture.Clock).HandleAsync(
-            new RequestContext<ReviewWaiver>(review, new RequestDispatchContext(actor, invocation)), CancellationToken.None);
+            new Cntryl.Portia.RequestContext<ReviewWaiver>(review, new RequestDispatchContext(actor, invocation)), CancellationToken.None);
         var revoked = await new RevokeWaiverHandler(fixture.Executor, fixture.Clock).HandleAsync(
-            new RequestContext<RevokeWaiver>(revoke, new RequestDispatchContext(actor, invocation)), CancellationToken.None);
+            new Cntryl.Portia.RequestContext<RevokeWaiver>(revoke, new RequestDispatchContext(actor, invocation)), CancellationToken.None);
         var owner = await fixture.Reader.HydrateAsync(new Waiver(tenant, id));
 
         // Assert
@@ -123,7 +123,7 @@ public sealed class WaiverHandlerTests
     static ClaimsPrincipal Actor(Uuid user) => new(new ClaimsIdentity(
         [new Claim("iss", "bdgrz"), new Claim("sub", user.ToString()), new Claim("name", "Member")], "BdgrzSession"));
 
-    static RequestContext<T> Context<T>(T request, Uuid user) where T : IRequestBase, IIdentifiedRequest =>
+    static Cntryl.Portia.RequestContext<T> Context<T>(T request, Uuid user) where T : IRequestBase, IIdentifiedRequest =>
         new(request, new RequestDispatchContext(Actor(user),
             new HttpInvocation("POST", "/waivers", "/waivers", "waiver"),
             new RequestMetadata(request.RequestId, Uuid.CreateVersion4(), null)));

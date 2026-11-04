@@ -84,7 +84,7 @@ public sealed class WaiverAuthorizationTests
             [new WaiverScopeRecord("control_occurrence", Uuid.CreateVersion4(), 1)], "Reason", "Compensation", Now.AddDays(1)),
     };
 
-    static RequestContext<IWaiverManagementRequest> Context(IWaiverManagementRequest request, string transport)
+    static Cntryl.Portia.RequestContext<IWaiverManagementRequest> Context(IWaiverManagementRequest request, string transport)
     {
         RequestInvocation invocation = transport switch
         {
@@ -94,6 +94,6 @@ public sealed class WaiverAuthorizationTests
         };
         var actor = new ClaimsPrincipal(new ClaimsIdentity(
             [new Claim("iss", "bdgrz"), new Claim("sub", User.ToString())], "BdgrzSession"));
-        return new RequestContext<IWaiverManagementRequest>(request, new RequestDispatchContext(actor, invocation));
+        return new Cntryl.Portia.RequestContext<IWaiverManagementRequest>(request, new RequestDispatchContext(actor, invocation));
     }
 }
