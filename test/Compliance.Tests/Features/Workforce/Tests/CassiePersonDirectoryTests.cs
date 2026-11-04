@@ -1,4 +1,8 @@
+using System.Text.Json;
+using Cntryl.Cassie.Commands;
+using Microsoft.Extensions.DependencyInjection;
 using Bdgrz.Compliance.Features.Workforce.Projections;
+using Bdgrz.Compliance.Features.Workforce.Models;
 using Bdgrz.Compliance.Tests.Testing;
 using Cntryl.Fitz.Testing;
 using Cntryl.Portia;
@@ -207,6 +211,71 @@ public sealed class CassiePersonDirectoryTests
         Assert.Equal(3, current.Revision);
         Assert.Equal(userId, current.CorrelatedUserId);
         Assert.Equal(editor, current.LastChangedBy);
+    }
+
+    [Fact]
+    public async Task ShouldRefuseNativeReplacementWithoutMutationGivenPreviousPersonIdentityDiffers()
+    {
+        // Arrange
+        await using var database = await CassieRepositoryTestDatabase.OpenAsync(CassieWorkforceSchema.Statements);
+        await using var fixture = await AttestWorkforceManagementWallTests.Fixture.CreateAsync();
+        await using var scope = fixture.Provider.CreateAsyncScope();
+        var events = scope.ServiceProvider.GetRequiredService<IDomainEventReader>();
+        var source = new Person(fixture.TenantId, fixture.PersonId).Stream;
+        await using var directory = new CassiePersonDirectory(database.Database,
+            scope.ServiceProvider.GetRequiredService<PersonReader>());
+        var checkpoint = ProjectionCheckpoint.Start;
+        await using (var batch = await directory.BeginAsync(new ProjectionBatchContext(
+                         Identity(fixture.TenantId), checkpoint)))
+        {
+            await foreach (var record in events.ReadAsync(source, 0))
+            {
+                await directory.ApplyAsync(record.Event);
+                checkpoint = new ProjectionCheckpoint(record.NextCursor);
+            }
+            await batch.CommitAsync(checkpoint);
+        }
+        var previous = Assert.IsType<PersonView>(await directory.GetAsync(fixture.TenantId, fixture.PersonId));
+        var foreignPersonId = Uuid.CreateVersion4();
+        var poisoned = JsonSerializer.Serialize(previous with { PersonId = foreignPersonId },
+            ComplianceCoreJsonContext.Default.PersonView);
+        await using (var connection = await database.DataSource.OpenConnectionAsync())
+        await using (var command = connection.CreateCommand())
+        {
+            command.CommandText = "UPDATE workforce_people SET row_json = @json WHERE model_id = @person";
+            _ = command.Parameters.Add(new CassieParameter { ParameterName = "json", Value = poisoned });
+            _ = command.Parameters.Add(new CassieParameter { ParameterName = "person", Value = fixture.PersonId.ToString() });
+            Assert.Equal(1, await command.ExecuteNonQueryAsync());
+        }
+        var changed = await fixture.ExecuteAsync("person_details");
+        Assert.True(changed.IsSuccess, changed.Error?.Message);
+        PersonDetailsChanged? next = null;
+        await foreach (var record in events.ReadAsync(source, 0))
+            if (record.Event is PersonDetailsChanged details)
+                next = details;
+        Assert.NotNull(next);
+        Assert.True(next.Changed);
+        Assert.Equal(previous.Revision + 1, next.Header.Revision);
+        Assert.Equal(fixture.PersonId, next.Header.PersonId);
+        Assert.Equal(fixture.TenantId, next.Header.TenantId);
+        var verified = await scope.ServiceProvider.GetRequiredService<PersonReader>().ReadFactAsync(next);
+        Assert.Equal("Ada King", verified.DisplayName);
+
+        // Act
+        await using (await directory.BeginAsync(new ProjectionBatchContext(Identity(fixture.TenantId), checkpoint)))
+            await Assert.ThrowsAsync<InvalidOperationException>(async () => await directory.ApplyAsync(next));
+
+        // Assert
+        Assert.Equal(checkpoint, await directory.LoadCheckpointAsync(fixture.TenantId));
+        await using var afterConnection = await database.DataSource.OpenConnectionAsync();
+        await using var afterCommand = afterConnection.CreateCommand();
+        afterCommand.CommandText = "SELECT row_json FROM workforce_people WHERE model_id = @person";
+        _ = afterCommand.Parameters.Add(new CassieParameter { ParameterName = "person", Value = fixture.PersonId.ToString() });
+        Assert.Equal(poisoned, Assert.IsType<string>(await afterCommand.ExecuteScalarAsync()));
+        var retained = Assert.IsType<PersonView>(await directory.GetAsync(fixture.TenantId, fixture.PersonId));
+        Assert.Equal(foreignPersonId, retained.PersonId);
+        Assert.Equal(previous.Revision, retained.Revision);
+        Assert.Equal(previous.DisplayName, retained.DisplayName);
     }
 
     static PersonRecorded Recorded(Uuid tenantId, string name) => new(tenantId,

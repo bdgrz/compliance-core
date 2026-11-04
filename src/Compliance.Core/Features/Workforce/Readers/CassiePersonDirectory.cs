@@ -54,7 +54,8 @@ sealed class CassiePersonDirectory(CassieProjectionDatabase database, PersonRead
                 }
                 else
                 {
-                    if (prior.TenantId != verified.TenantId || verified.Revision != prior.Revision + (native.Changed ? 1 : 0) ||
+                    if (prior.PersonId != verified.PersonId || prior.TenantId != verified.TenantId ||
+                        verified.Revision != prior.Revision + (native.Changed ? 1 : 0) ||
                         !native.Changed && (prior with { PersonalContact = null, RestrictedFieldsRedacted = true }) != verified)
                         throw new InvalidOperationException("A native person projection requires its exact preceding revision.");
                     if (prior != verified)
