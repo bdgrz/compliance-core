@@ -152,6 +152,9 @@ sealed class FitzWorkforceObservationDirectory(IKvClient client)
         return view?.TenantId == tenantId ? view : null;
     }
 
+    public ValueTask<bool> HasActiveInternalRelationshipAsync(Uuid tenantId, Uuid personId,
+        CancellationToken ct = default) => ValueTask.FromResult(false);
+
     public async ValueTask<IReadOnlyList<string>> ListRelationshipStatusesAsync(Uuid tenantId,
         Uuid personId, CancellationToken ct = default)
     {
